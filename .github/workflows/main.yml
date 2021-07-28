@@ -1,0 +1,207 @@
+name: CI
+on:
+  push:
+    branches: [main]
+    tags-ignore: [dev]
+  pull_request:
+    branches: [main]
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build_engine:
+    name: Build Engine
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Cache SpiderMonkey object files
+      uses: actions/cache@v2
+      id: sm-cache
+      with:
+        path: |
+          c-dependencies/spidermonkey/lib
+          c-dependencies/spidermonkey/include
+        key: cache-${{ hashFiles('c-dependencies/spidermonkey/build-engine.sh') }}-${{ hashFiles('c-dependencies/spidermonkey/gecko-revision') }}-${{ hashFiles('c-dependencies/spidermonkey/object-files.list') }}
+
+    - name: "Build SpiderMonkey"
+      if: steps.sm-cache.outputs.cache-hit != 'true'
+      run: |
+        cd c-dependencies/spidermonkey/
+        bash ./build-engine.sh
+
+    - name: "Install wasi-sdk (linux)"
+      run: |
+        set -x
+        curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz
+        tar xf wasi-sdk-12.0-linux.tar.gz
+        sudo mkdir -p /opt/wasi-sdk
+        sudo mv wasi-sdk-12.0/* /opt/wasi-sdk/
+
+    - name: "Install Binaryen (linux)"
+      run: |
+        set -x
+        export BINARYEN_VERSION=100
+        curl -sS -L "https://github.com/WebAssembly/binaryen/releases/download/version_${BINARYEN_VERSION}/binaryen-version_${BINARYEN_VERSION}-x86_64-linux.tar.gz" | tar xzf - &&
+        echo "$PWD/binaryen-version_${BINARYEN_VERSION}/bin" >> $GITHUB_PATH
+
+    - name: "Build JS runtime"
+      run: |
+        set -x
+        mkdir dist
+        cd dist
+        make -f ../c-dependencies/js-compute-runtime/Makefile
+        rm *.{d,o}
+        cd ..
+
+    - uses: actions/upload-artifact@v1
+      with:
+        name: engine
+        path: dist
+
+  # Perform release builds of `js-compute-runtime`. Builds on
+  # Windows/Mac/Linux, and artifacts are uploaded after the build is finished.
+  # Note that we also run tests here to test exactly what we're deploying.
+  build:
+    name: Build js-compute-runtime
+    needs: [build_engine]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+        - build: x86_64-linux
+          os: ubuntu-latest
+          rust: stable
+        - build: x86_64-macos
+          os: macos-latest
+          rust: stable
+        - build: x86_64-windows
+          os: windows-latest
+          rust: stable
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - uses: ./.github/actions/install-rust
+      with:
+        toolchain: ${{ matrix.rust }}
+
+    - name: Configure Cargo target
+      run: |
+        echo CARGO_BUILD_TARGET=${{ matrix.target }} >> $GITHUB_ENV
+        rustup target add ${{ matrix.target }}
+      if: matrix.target != ''
+
+    - name: Download Engine
+      uses: actions/download-artifact@v1
+      with:
+        name: engine
+
+    # Build `js-compute-runtime`
+    - run: PREBUILT_ENGINE=engine/js-compute-runtime.wasm cargo build --release
+
+    # Test what we just built.
+    # (Disabled for now since we don't actually have any tests for this prototype :/)
+    # - run: |
+    #     cargo test
+    #   env:
+    #     RUST_BACKTRACE: 1
+
+    # ... and now perform some goop to move all the relevant artifacts into
+    # something that we'll upload from this action.
+
+    - run: mkdir dist
+
+    # Move binaries to dist folder
+    - run: cp target/release/js-compute-runtime dist
+      if: matrix.os != 'windows-latest' && matrix.target == ''
+    - run: cp target/release/js-compute-runtime.exe dist
+      if: matrix.build == 'x86_64-windows'
+
+    - uses: actions/upload-artifact@v1
+      with:
+        name: bins-${{ matrix.build }}
+        path: dist
+
+  # Consumes all published artifacts from all the previous build steps, creates
+  # a bunch of tarballs for all of them, and then publishes the tarballs
+  # themselves as an artifact (for inspection) and then optionally creates
+  # github releases and/or tags for pushes.
+  publish:
+    name: Publish
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - run: rustup update stable && rustup default stable
+
+    # Download all the artifacts that we'll be publishing. Should keep an eye on
+    # the `download-artifact` repository to see if we can ever get something
+    # like "download all artifacts" or "download this list of artifacts"
+    - name: Download x86_64 macOS binaries
+      uses: actions/download-artifact@v1
+      with:
+        name: bins-x86_64-macos
+    - name: Download x86_64 Linux binaries
+      uses: actions/download-artifact@v1
+      with:
+        name: bins-x86_64-linux
+    - name: Download x86_64 Windows binaries
+      uses: actions/download-artifact@v1
+      with:
+        name: bins-x86_64-windows
+
+    - name: Calculate tag name
+      run: |
+        name=dev
+        if [[ $GITHUB_REF == refs/tags/v* ]]; then
+          name=${GITHUB_REF:10}
+        fi
+        echo ::set-output name=val::$name
+        echo TAG=$name >> $GITHUB_ENV
+      id: tagname
+
+    # Assemble all the build artifacts into tarballs and zip archives.
+    - name: Assemble tarballs
+      run: |
+        ./ci/build-tarballs.sh x86_64-linux
+        ./ci/build-tarballs.sh x86_64-macos
+        ./ci/build-tarballs.sh x86_64-windows .exe
+
+    # Upload all assembled tarballs as an artifact of the github action run, so
+    # that way even PRs can inspect the output.
+    - uses: actions/upload-artifact@v1
+      with:
+        name: tarballs
+        path: dist
+
+    # ... and if this was an actual push (tag or `main`) then we publish a
+    # new release. This'll automatically publish a tag release or update `dev`
+    # with this `sha`
+    - name: Publish Release
+      uses: ./.github/actions/github-release
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+      with:
+        files: "dist/*"
+        name: ${{ steps.tagname.outputs.val }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+  cargo-audit:
+    env:
+      CARGO_AUDIT_VERSION: 0.11.2
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/cache@v1
+      with:
+        path: ${{ runner.tool_cache }}/cargo-audit
+        key: cargo-audit-bin-${{ env.CARGO_AUDIT_VERSION }}
+    - run: echo "${{ runner.tool_cache }}/cargo-audit/bin" >> $GITHUB_PATH
+    - run: |
+        cargo install --root ${{ runner.tool_cache }}/cargo-audit --version ${{ env.CARGO_AUDIT_VERSION }} cargo-audit
+        cargo audit

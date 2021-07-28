@@ -1,0 +1,3 @@
+[submodule "c-dependencies/spidermonkey"]
+	path = c-dependencies/spidermonkey
+	url = https://github.com/tschneidereit/spidermonkey-wasi-embedding.git

@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "name": "sm-wasi",
+            "includePath": [
+                "${workspaceFolder}/c-dependencies/spidermonkey/include",
+                "/opt/wasi-sdk/share/wasi-sysroot/include/"
+            ],
+            "defines": [
+                "__wasi__"
+            ],
+            "macFrameworkPath": [
+                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"
+            ],
+            "compilerPath": "/opt/wasi-sdk/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x86",
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "forcedInclude": [
+                "${workspaceFolder}/.vscode/vscode-preinclude.h"
+            ]
+        }
+    ],
+    "version": 4
+}
