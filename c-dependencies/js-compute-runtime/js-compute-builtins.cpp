@@ -3581,7 +3581,7 @@ namespace URLSearchParams {
   };};
 
   namespace detail {
-    bool append(JSContext* cx, HandleObject self, HandleValue key, HandleValue val, const char* fun_name) {
+    bool append(JSContext* cx, HandleObject self, HandleValue key, HandleValue val, const char* _) {
       const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
 
       auto name = encode(cx, key);
@@ -3689,7 +3689,6 @@ namespace URLSearchParams {
         return false;
     }
 
-    free(values.ptr);
     args.rval().setObject(*result);
     return true;
   }

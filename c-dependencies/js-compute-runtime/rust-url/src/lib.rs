@@ -340,6 +340,14 @@ pub struct CVec<T> {
     cap: usize,
 }
 
+impl<T> Drop for CVec<T> {
+    fn drop(&mut self) {
+        unsafe {
+            self.ptr.drop_in_place();
+        }
+    }
+}
+
 #[repr(C)]
 pub struct JSSearchParam<'a> {
     name: SpecSlice<'a>,
