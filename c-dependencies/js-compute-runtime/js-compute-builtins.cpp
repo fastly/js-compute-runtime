@@ -7,6 +7,9 @@
 #include "../xqd.h"
 #include "js-compute-builtins.h"
 
+#include "rust-url/rust-url.h"
+
+#include "js/Array.h"
 #include "js/ArrayBuffer.h"
 #include "js/Conversions.h"
 #include "js/experimental/TypedData.h"
@@ -69,6 +72,8 @@ public:
   }
 };
 
+using jsurl::SpecSlice, jsurl::SpecString, jsurl::JSUrl, jsurl::JSUrlSearchParams, jsurl::JSSearchParam;
+
 static JS::PersistentRootedObjectVector* pending_requests;
 static JS::PersistentRootedObjectVector* pending_body_reads;
 
@@ -90,6 +95,15 @@ UniqueChars encode(JSContext* cx, HandleValue val, size_t* encoded_len) {
   if (!str) return nullptr;
 
   return encode(cx, str, encoded_len);
+}
+
+SpecString encode(JSContext* cx, HandleValue val) {
+  SpecString slice(nullptr, 0, 0);
+  auto chars = encode(cx, val, &slice.len);
+  if (!chars) return slice;
+  slice.data = (uint8_t*)chars.release();
+  slice.cap = slice.len;
+  return slice;
 }
 
 /* Returns false if an exception is set on `cx` and the caller should immediately
@@ -267,15 +281,18 @@ static const uint32_t class_flags = 0;
            JS_DeleteProperty(cx, global, class_.name); \
   } \
 
-#define METHOD_HEADER(required_argc) \
+#define METHOD_HEADER_WITH_NAME(required_argc, name) \
   /* \
-  // printf("method: %s\n", __func__); \
+  // printf("method: %s\n", name); \
   */ \
   CallArgs args = CallArgsFromVp(argc, vp); \
-  if (!args.requireAtLeast(cx, __func__, required_argc)) \
+  if (!args.requireAtLeast(cx, name, required_argc)) \
     return false; \
   RootedObject self(cx, &args.thisv().toObject()); \
-  if (!check_receiver(cx, self, __func__)) return false; \
+  if (!check_receiver(cx, self, name)) return false; \
+
+#define METHOD_HEADER(required_argc) \
+  METHOD_HEADER_WITH_NAME(required_argc, __func__)
 
 namespace Logger {
   namespace Slots { enum {
@@ -1978,6 +1995,110 @@ namespace TextDecoder {
   }
 }
 
+
+bool report_sequence_or_record_arg_error(JSContext* cx, const char* name, const char* alt_text) {
+  JS_ReportErrorUTF8(cx, "Failed to construct %s object. If defined, the first "
+                          "argument must be either a [ ['name', 'value'], ... ] sequence, "
+                          "or a { 'name' : 'value', ... } record%s.", name, alt_text);
+  return false;
+}
+/**
+ * Extract <key,value> pairs from the given value if it is either a sequence<sequence<Value>
+ * or a record<Value, Value>.
+ */
+template<auto apply>
+bool maybe_consume_sequence_or_record(JSContext* cx, HandleValue initv, HandleObject target,
+                                      bool* consumed, const char* ctor_name,
+                                      const char* alt_text = "")
+{
+    if (initv.isUndefined()) {
+      *consumed = true;
+      return true;
+    }
+
+    RootedValue key(cx);
+    RootedValue value(cx);
+
+    // First, try consuming args[0] as a sequence<sequence<Value>>.
+    JS::ForOfIterator it(cx);
+    if (!it.init(initv, JS::ForOfIterator::AllowNonIterable))
+      return false;
+
+    // Note: this currently doesn't treat strings as iterable even though they are.
+    // We don't have any constructors that want to iterate over strings, and this
+    // makes things a lot easier.
+    if (initv.isObject() && it.valueIsIterable()) {
+      RootedValue entry(cx);
+
+      while (true) {
+        bool done;
+        if (!it.next(&entry, &done))
+          return false;
+
+        if (done)
+          break;
+
+        if (!entry.isObject())
+          return report_sequence_or_record_arg_error(cx, ctor_name, alt_text);
+
+        JS::ForOfIterator entr_iter(cx);
+        if (!entr_iter.init(entry, JS::ForOfIterator::AllowNonIterable))
+          return false;
+
+        if (!entr_iter.valueIsIterable())
+          return report_sequence_or_record_arg_error(cx, ctor_name, alt_text);
+
+        {
+          bool done;
+
+          // Extract key.
+          if (!entr_iter.next(&key, &done))
+            return false;
+          if (done)
+            return report_sequence_or_record_arg_error(cx, ctor_name, alt_text);
+
+          // Extract value.
+          if (!entr_iter.next(&value, &done))
+            return false;
+          if (done)
+            return report_sequence_or_record_arg_error(cx, ctor_name, alt_text);
+
+          // Ensure that there aren't any further entries.
+          if (!entr_iter.next(&entry, &done))
+            return false;
+          if (!done)
+            return report_sequence_or_record_arg_error(cx, ctor_name, alt_text);
+
+          if (!apply(cx, target, key, value, ctor_name))
+            return false;
+        }
+      }
+      *consumed = true;
+    } else if (initv.isObject()) {
+      // init isn't an iterator, so if it's an object, it must be a record to be valid input.
+      RootedObject init(cx, &initv.toObject());
+      JS::RootedIdVector ids(cx);
+      if (!js::GetPropertyKeys(cx, init, JSITER_OWNONLY | JSITER_SYMBOLS, &ids))
+        return false;
+
+      JS::RootedId curId(cx);
+      for (size_t i = 0; i < ids.length(); ++i) {
+        curId = ids[i];
+        key = js::IdToValue(curId);
+
+        if (!JS_GetPropertyById(cx, init, curId, &value))
+          return false;
+
+        if (!apply(cx, target, key, value, ctor_name))
+          return false;
+      }
+      *consumed = true;
+    } else {
+      *consumed = false;
+    }
+
+    return true;
+}
 namespace Headers {
   namespace Slots { enum {
     BackingMap,
@@ -2397,13 +2518,6 @@ namespace Headers {
 
       return append_header_value_to_map(cx, self, normalized_name, &normalized_value);
     }
-
-    JSObject* report_ctor_arg_error(JSContext* cx) {
-      JS_ReportErrorUTF8(cx, "Failed to construct Headers object. If defined, the first "
-                              "argument must be either a [ [\"name\", \"value\"], ... ] sequence, "
-                              "or a { \"name\" : \"value\", ... } record.");
-      return nullptr;
-    }
   }
 
   bool delazify(JSContext* cx, HandleObject headers) {
@@ -2415,81 +2529,16 @@ namespace Headers {
     RootedObject headers(cx, create(cx, mode, owner));
     if (!headers) return nullptr;
 
-    if (initv.isUndefined())
-      return headers;
-
-    RootedValue name(cx);
-    RootedValue values(cx);
-
-    // First, try consuming args[0] as a sequence<sequence<ByteString>>.
-    JS::ForOfIterator it(cx);
-    if (!it.init(initv, JS::ForOfIterator::AllowNonIterable))
+    bool consumed = false;
+    if (!maybe_consume_sequence_or_record<detail::append_header_value>(cx, initv, headers,
+                                                                       &consumed, "Headers"))
+    {
       return nullptr;
+    }
 
-    if (it.valueIsIterable()) {
-      RootedValue entry(cx);
-
-      while (true) {
-        bool done;
-        if (!it.next(&entry, &done))
-          return nullptr;
-
-        if (done)
-          break;
-
-        if (!entry.isObject())
-          return detail::report_ctor_arg_error(cx);
-
-        JS::ForOfIterator entr_iter(cx);
-        if (!entr_iter.init(entry, JS::ForOfIterator::AllowNonIterable))
-          return nullptr;
-
-        if (!entr_iter.valueIsIterable())
-          return detail::report_ctor_arg_error(cx);
-
-        {
-          bool done;
-
-          // Extract header name.
-          if (!entr_iter.next(&name, &done))
-            return nullptr;
-          if (done)
-            return detail::report_ctor_arg_error(cx);
-
-          // Extract header values.
-          if (!entr_iter.next(&values, &done))
-            return nullptr;
-          if (done)
-            return detail::report_ctor_arg_error(cx);
-
-          // Ensure that there aren't any further entries.
-          if (!entr_iter.next(&entry, &done))
-            return nullptr;
-          if (!done)
-            return detail::report_ctor_arg_error(cx);
-
-          if (!detail::append_header_value(cx, headers, name, values, "Headers constructor"))
-            return nullptr;
-        }
-      }
-    } else {
-      // init isn't an iterator, so it must be a record.
-      RootedObject init(cx, &initv.toObject());
-      JS::RootedIdVector ids(cx);
-      if (!js::GetPropertyKeys(cx, init, JSITER_OWNONLY | JSITER_SYMBOLS, &ids))
-        return nullptr;
-
-      JS::RootedId curId(cx);
-      for (size_t i = 0; i < ids.length(); ++i) {
-        curId = ids[i];
-        name = js::IdToValue(curId);
-
-        if (!JS_GetPropertyById(cx, init, curId, &values))
-          return nullptr;
-
-        if (!detail::append_header_value(cx, headers, name, values, "Headers constructor"))
-          return nullptr;
-      }
+    if (!consumed) {
+      report_sequence_or_record_arg_error(cx, "Headers", "");
+      return nullptr;
     }
 
     return headers;
@@ -2497,11 +2546,6 @@ namespace Headers {
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.get(0).isUndefined()) {
-      if (!args[0].isObject())
-        return detail::report_ctor_arg_error(cx);
-    }
-
     RootedObject headers(cx, create(cx, Mode::Standalone, nullptr, args.get(0)));
     if (!headers) return false;
 
@@ -3238,6 +3282,583 @@ namespace FetchEvent {
 }
 
 
+namespace URLSearchParams {
+  JSObject* create(JSContext* cx, jsurl::JSUrl* url);
+  JSUrlSearchParams* get_params(JSObject* self);
+}
+
+namespace URL {
+  namespace Slots { enum {
+    Url,
+    Params,
+    Count
+  };};
+
+  const unsigned ctor_length = 1;
+
+  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  JSObject* create(JSContext* cx, HandleValue url_val, HandleValue base_val);
+
+  bool constructor(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "URL", 1))
+      return false;
+
+    RootedObject self(cx, create(cx, args.get(0), args.get(1)));
+    if (!self) return false;
+
+    args.rval().setObject(*self);
+    return true;
+  }
+
+#define ACCESSOR_GET(field) \
+  bool field##_get(JSContext* cx, unsigned argc, Value* vp) { \
+    METHOD_HEADER(0) \
+    const JSUrl* url = (JSUrl*)JS::GetReservedSlot(self, Slots::Url).toPrivate(); \
+    const SpecSlice slice = jsurl::field(url); \
+    RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)slice.data, slice.len))); \
+    if (!str) return false; \
+    args.rval().setString(str); \
+    return true; \
+  } \
+
+#define ACCESSOR_SET(field) \
+  bool field##_set(JSContext* cx, unsigned argc, Value* vp) { \
+    METHOD_HEADER(1) \
+    JSUrl* url = (JSUrl*)JS::GetReservedSlot(self, Slots::Url).toPrivate(); \
+    \
+    SpecString str = encode(cx, args.get(0)); \
+    if (!str.data) return false; \
+    jsurl::set_##field(url, &str); \
+    \
+    args.rval().set(args.get(0)); \
+    return true; \
+  }
+
+#define ACCESSOR(field) \
+  ACCESSOR_GET(field) \
+  ACCESSOR_SET(field)
+
+  ACCESSOR(hash)
+  ACCESSOR(host)
+  ACCESSOR(hostname)
+  ACCESSOR(href)
+  ACCESSOR(password)
+  ACCESSOR(pathname)
+  ACCESSOR(port)
+  ACCESSOR(protocol)
+  ACCESSOR(search)
+  ACCESSOR(username)
+
+  bool origin_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+    const JSUrl* url = (JSUrl*)JS::GetReservedSlot(self, Slots::Url).toPrivate();
+    SpecString slice = jsurl::origin(url);
+    RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)slice.data, slice.len)));
+    if (!str) return false;
+    args.rval().setString(str);
+    return true;
+  }
+
+  bool searchParams_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+    JS::Value params_val = JS::GetReservedSlot(self, Slots::Params);
+    RootedObject params(cx);
+    if (params_val.isNullOrUndefined()) {
+      JSUrl* url = (JSUrl*)JS::GetReservedSlot(self, Slots::Url).toPrivate();
+      params = URLSearchParams::create(cx, url);
+      if (!params) return false;
+      JS::SetReservedSlot(self, Slots::Params, JS::ObjectValue(*params));
+    } else {
+      params = &params_val.toObject();
+    }
+
+    args.rval().setObject(*params);
+    return true;
+  }
+
+  bool toString(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+    return href_get(cx, argc, vp);
+  }
+
+  bool toJSON(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+    return href_get(cx, argc, vp);
+  }
+
+  const JSFunctionSpec methods[] = {
+    JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
+    JS_FN("toJSON", toJSON, 0, JSPROP_ENUMERATE),
+    JS_FS_END
+  };
+
+  const JSPropertySpec properties[] = {
+    JS_PSGS("hash", hash_get, hash_set, JSPROP_ENUMERATE),
+    JS_PSGS("host", host_get, host_set, JSPROP_ENUMERATE),
+    JS_PSGS("hostname", hostname_get, hostname_set, JSPROP_ENUMERATE),
+    JS_PSGS("href", href_get, href_set, JSPROP_ENUMERATE),
+    JS_PSG("origin", origin_get, JSPROP_ENUMERATE),
+    JS_PSGS("password", password_get, password_set, JSPROP_ENUMERATE),
+    JS_PSGS("pathname", pathname_get, pathname_set, JSPROP_ENUMERATE),
+    JS_PSGS("port", port_get, port_set, JSPROP_ENUMERATE),
+    JS_PSGS("protocol", protocol_get, protocol_set, JSPROP_ENUMERATE),
+    JS_PSGS("search", search_get, search_set, JSPROP_ENUMERATE),
+    JS_PSG("searchParams", searchParams_get, JSPROP_ENUMERATE),
+    JS_PSGS("username", username_get, username_set, JSPROP_ENUMERATE),
+    JS_PS_END
+  };
+
+  CLASS_BOILERPLATE(URL)
+
+  JSObject* create(JSContext* cx, HandleValue url_val, HandleValue base_val) {
+    RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!self) return nullptr;
+
+    JSUrl* base = nullptr;
+
+    if (!base_val.isUndefined()) {
+      auto str = encode(cx, base_val);
+      if (!str.data) return nullptr;
+
+      JSUrl* base = jsurl::new_jsurl(&str);
+      if (!base) {
+        JS_ReportErrorUTF8(cx, "URL constructor: %s is not a valid URL.", (char*)str.data);
+        return nullptr;
+      }
+    }
+
+    auto str = encode(cx, url_val);
+    if (!str.data) return nullptr;
+
+    JSUrl* url;
+    if (base) {
+      url = jsurl::new_jsurl_with_base(&str, base);
+    } else {
+      url = jsurl::new_jsurl(&str);
+    }
+
+    JS::SetReservedSlot(self, Slots::Url, JS::PrivateValue(url));
+
+    return self;
+  }
+}
+
+
+#define ITERTYPE_ENTRIES 0
+#define ITERTYPE_KEYS 1
+#define ITERTYPE_VALUES 2
+
+namespace URLSearchParamsIterator {
+  namespace Slots { enum {
+    Params,
+    Type,
+    Index,
+    Count
+  };};
+
+  const unsigned ctor_length = 0;
+  // This constructor will be deleted from the class prototype right after class initialization.
+  bool constructor(JSContext* cx, unsigned argc, Value* vp) {
+    MOZ_RELEASE_ASSERT(false, "Should be deleted");
+    return false;
+  }
+
+  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+
+  bool next(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+    RootedObject params_obj(cx, &JS::GetReservedSlot(self, Slots::Params).toObject());
+    const auto params = URLSearchParams::get_params(params_obj);
+    size_t index = JS::GetReservedSlot(self, Slots::Index).toInt32();
+    uint8_t type = JS::GetReservedSlot(self, Slots::Type).toInt32();
+
+    RootedObject result(cx, JS_NewPlainObject(cx));
+    if (!result) return false;
+
+    auto param = JSSearchParam(SpecSlice(nullptr, 0), SpecSlice(nullptr, 0), false);
+    jsurl::params_at(params, index, &param);
+
+    if (param.done) {
+      JS_DefineProperty(cx, result, "done", true, JSPROP_ENUMERATE);
+      JS_DefineProperty(cx, result, "value", JS::UndefinedHandleValue, JSPROP_ENUMERATE);
+
+      args.rval().setObject(*result);
+      return true;
+    }
+
+    JS_DefineProperty(cx, result, "done", false, JSPROP_ENUMERATE);
+
+    RootedValue key_val(cx);
+    RootedValue val_val(cx);
+
+    if (type != ITERTYPE_VALUES) {
+      auto chars = JS::UTF8Chars((char*)param.name.data, param.name.len);
+      RootedString str(cx, JS_NewStringCopyUTF8N(cx, chars));
+      if (!str) return false;
+      key_val = JS::StringValue(str);
+    }
+
+    if (type != ITERTYPE_KEYS) {
+      auto chars = JS::UTF8Chars((char*)param.value.data, param.value.len);
+      RootedString str(cx, JS_NewStringCopyUTF8N(cx, chars));
+      if (!str) return false;
+      val_val = JS::StringValue(str);
+    }
+
+    RootedValue result_val(cx);
+
+    switch (type) {
+      case ITERTYPE_ENTRIES: {
+        RootedObject pair(cx, JS::NewArrayObject(cx, 2));
+        if (!pair) return false;
+        JS_DefineElement(cx, pair, 0, key_val, JSPROP_ENUMERATE);
+        JS_DefineElement(cx, pair, 1, val_val, JSPROP_ENUMERATE);
+        result_val = JS::ObjectValue(*pair);
+        break;
+      }
+      case ITERTYPE_KEYS: {
+        result_val = key_val;
+        break;
+      }
+      case ITERTYPE_VALUES: {
+        result_val = val_val;
+        break;
+      }
+      default:
+        MOZ_RELEASE_ASSERT(false, "Invalid iter type");
+    }
+
+    JS_DefineProperty(cx, result, "value", result_val, JSPROP_ENUMERATE);
+
+    JS::SetReservedSlot(self, Slots::Index, JS::Int32Value(index + 1));
+    args.rval().setObject(*result);
+    return true;
+  }
+
+  const JSFunctionSpec methods[] = {
+    JS_FN("next", next, 0, JSPROP_ENUMERATE),
+  JS_FS_END};
+
+  const JSPropertySpec properties[] = {JS_PS_END};
+
+  CLASS_BOILERPLATE_CUSTOM_INIT(URLSearchParamsIterator)
+
+  bool init_class(JSContext* cx, HandleObject global) {
+    RootedObject iterator_proto(cx, JS::GetRealmIteratorPrototype(cx));
+    if (!iterator_proto) return false;
+
+    if (!init_class_impl(cx, global, iterator_proto))
+      return false;
+
+    // Delete both the `URLSearchParamsIterator` global property and the `constructor`
+    // property on `URLSearchParamsIterator.prototype`.
+    // The latter because Iterators don't have their own constructor on the prototype.
+    return JS_DeleteProperty(cx, global, class_.name) &&
+           JS_DeleteProperty(cx, proto_obj, "constructor");
+  }
+
+  JSObject* create(JSContext* cx, HandleObject params, uint8_t type) {
+    MOZ_RELEASE_ASSERT(type <= ITERTYPE_VALUES);
+
+    RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!self) return nullptr;
+
+    JS::SetReservedSlot(self, Slots::Params, JS::ObjectValue(*params));
+    JS::SetReservedSlot(self, Slots::Type, JS::Int32Value(type));
+    JS::SetReservedSlot(self, Slots::Index, JS::Int32Value(0));
+
+    return self;
+  }
+}
+
+
+namespace URLSearchParams {
+  namespace Slots { enum {
+    Url,
+    Params,
+    Count
+  };};
+
+  namespace detail {
+    bool append(JSContext* cx, HandleObject self, HandleValue key, HandleValue val, const char* fun_name) {
+      const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+
+      auto name = encode(cx, key);
+      if (!name.data) return false;
+
+      auto value = encode(cx, val);
+      if (!value.data) return false;
+
+      jsurl::params_append(params, name, value);
+      return true;
+    }
+  }
+
+  JSUrlSearchParams* get_params(JSObject* self) {
+    return (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+  }
+
+  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  JSObject* create(JSContext* cx, HandleValue params_val);
+
+  const unsigned ctor_length = 1;
+
+  bool constructor(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject self(cx, create(cx, args.get(0)));
+    if (!self) return false;
+
+    args.rval().setObject(*self);
+    return true;
+  }
+
+  bool append(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(2)
+    if (!detail::append(cx, self, args[0], args[1], "append"))
+      return false;
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  bool delete_(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(1, "delete")
+    const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+
+    auto name = encode(cx, args.get(0));
+    if (!name.data) return false;
+
+    jsurl::params_delete(params, &name);
+    args.rval().setUndefined();
+    return true;
+  }
+
+  bool has(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+    const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+
+    auto name = encode(cx, args.get(0));
+    if (!name.data) return false;
+
+    args.rval().setBoolean(jsurl::params_has(params, &name));
+    return true;
+  }
+
+  bool get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+    const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+
+    auto name = encode(cx, args.get(0));
+    if (!name.data) return false;
+
+    const SpecSlice slice = jsurl::params_get(params, &name);
+    if (!slice.data) {
+      args.rval().setNull();
+      return true;
+    }
+
+    RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)slice.data, slice.len)));
+    if (!str) return false;
+    args.rval().setString(str);
+    return true;
+  }
+
+  bool getAll(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+    const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+
+    auto name = encode(cx, args.get(0));
+    if (!name.data) return false;
+
+    const jsurl::CVec<SpecSlice> values = jsurl::params_get_all(params, &name);
+
+    RootedObject result(cx, JS::NewArrayObject(cx, values.len));
+    if (!result) return false;
+
+    RootedString str(cx);
+    RootedValue str_val(cx);
+    for (size_t i = 0; i < values.len; i++) {
+      const SpecSlice value = values.ptr[i];
+      str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)value.data, value.len));
+      if (!str) return false;
+
+      str_val.setString(str);
+      if (!JS_SetElement(cx, result, i, str_val))
+        return false;
+    }
+
+    free(values.ptr);
+    args.rval().setObject(*result);
+    return true;
+  }
+
+  bool set(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(2)
+    const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+
+    auto name = encode(cx, args[0]);
+    if (!name.data) return false;
+
+    auto value = encode(cx, args[1]);
+    if (!value.data) return false;
+
+    jsurl::params_set(params, name, value);
+    return true;
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  bool sort(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+    const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+    jsurl::params_sort(params);
+    args.rval().setUndefined();
+    return true;
+  }
+
+  bool toString(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+    const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+
+    const SpecSlice slice = jsurl::params_to_string(params);
+    RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)slice.data, slice.len)));
+    if (!str) return false;
+
+    args.rval().setString(str);
+    return true;
+  }
+
+  bool forEach(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+    const auto params = get_params(self);
+
+    if (!args[0].isObject() || !JS::IsCallable(&args[0].toObject())) {
+      JS_ReportErrorASCII(cx, "Failed to execute 'forEach' on 'URLSearchParams': "
+                              "parameter 1 is not of type 'Function'");
+      return false;
+    }
+
+    HandleValue callback = args[0];
+    HandleValue thisv = args.get(1);
+
+    JS::RootedValueArray<3> newArgs(cx);
+    newArgs[2].setObject(*self);
+    RootedValue rval(cx);
+
+    auto param = JSSearchParam(SpecSlice(nullptr, 0), SpecSlice(nullptr, 0), false);
+    RootedString name_str(cx);
+    RootedString val_str(cx);
+    size_t index = 0;
+    while (true) {
+      jsurl::params_at(params, index, &param);
+      if (param.done)
+        break;
+
+      name_str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)param.name.data, param.name.len));
+      if (!name_str) return false;
+      newArgs[1].setString(name_str);
+
+      val_str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)param.value.data, param.value.len));
+      if (!val_str) return false;
+      newArgs[0].setString(val_str);
+
+      if (!JS::Call(cx, thisv, callback, newArgs, &rval))
+        return false;
+
+      index++;
+    }
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  template<auto type>
+  bool get_iter(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+
+    RootedObject iter(cx, URLSearchParamsIterator::create(cx, self, type));
+    if (!iter) return false;
+    args.rval().setObject(*iter);
+    return true;
+  }
+
+  const JSFunctionSpec methods[] = {
+    JS_FN("append", append, 2, JSPROP_ENUMERATE),
+    JS_FN("delete", delete_, 1, JSPROP_ENUMERATE),
+    JS_FN("has", has, 1, JSPROP_ENUMERATE),
+    JS_FN("get", get, 1, JSPROP_ENUMERATE),
+    JS_FN("getAll", getAll, 1, JSPROP_ENUMERATE),
+    JS_FN("set", set, 2, JSPROP_ENUMERATE),
+    JS_FN("sort", sort, 0, JSPROP_ENUMERATE),
+    JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
+    JS_FN("forEach", forEach, 0, JSPROP_ENUMERATE),
+    JS_FN("entries", get_iter<ITERTYPE_ENTRIES>, 0, 0),
+    JS_FN("keys", get_iter<ITERTYPE_KEYS>, 0, 0),
+    JS_FN("values", get_iter<ITERTYPE_VALUES>, 0, 0),
+    // [Symbol.iterator] added in init_class.
+    JS_FS_END
+  };
+
+  const JSPropertySpec properties[] = {JS_PS_END};
+
+  CLASS_BOILERPLATE_CUSTOM_INIT(URLSearchParams)
+
+  bool init_class(JSContext* cx, HandleObject global) {
+    if (!init_class_impl(cx, global))
+      return false;
+
+    RootedValue entries(cx);
+    if (!JS_GetProperty(cx, proto_obj, "entries", &entries))
+      return false;
+
+    JS::SymbolCode code = JS::SymbolCode::iterator;
+    JS::RootedId iteratorId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, code)));
+    return JS_DefinePropertyById(cx, proto_obj, iteratorId, entries, 0);
+  }
+
+  JSObject* create(JSContext* cx, HandleValue params_val) {
+    RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!self) return nullptr;
+
+    auto params = jsurl::new_params();
+    JS::SetReservedSlot(self, Slots::Params, JS::PrivateValue(params));
+
+    bool consumed = false;
+    const char* alt_text = ", or a value that can be stringified";
+    if (!maybe_consume_sequence_or_record<detail::append>(cx, params_val, self, &consumed,
+                                                          "URLSearchParams", alt_text))
+    {
+      return nullptr;
+    }
+
+    if (!consumed) {
+      auto init = encode(cx, params_val);
+      if (!init.data) return nullptr;
+
+      jsurl::params_init(params, &init);
+    }
+
+    return self;
+  }
+
+  JSObject* create(JSContext* cx, JSUrl* url) {
+    RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!self) return nullptr;
+
+    JSUrlSearchParams* params = jsurl::url_search_params(url);
+    if (!params) return nullptr;
+
+    JS::SetReservedSlot(self, Slots::Params, JS::PrivateValue(params));
+    JS::SetReservedSlot(self, Slots::Url, JS::PrivateValue(url));
+
+    return self;
+  }
+}
+
+
 JSObject* PromiseRejectedWithPendingError(JSContext* cx) {
   RootedValue exn(cx);
   if (!JS_IsExceptionPending(cx) || !JS_GetPendingException(cx, &exn)) {
@@ -3435,6 +4056,9 @@ bool define_fastly_sys(JSContext* cx, HandleObject global) {
   if (!TextEncoder::init_class(cx, global)) return false;
   if (!TextDecoder::init_class(cx, global)) return false;
   if (!Logger::init_class(cx, global)) return false;
+  if (!URL::init_class(cx, global)) return false;
+  if (!URLSearchParams::init_class(cx, global)) return false;
+  if (!URLSearchParamsIterator::init_class(cx, global)) return false;
 
   response_sent = false;
   pending_requests = new JS::PersistentRootedObjectVector(cx);
