@@ -40,6 +40,7 @@ using JS::HandleObject;
 using JS::MutableHandleValue;
 
 using JS::PersistentRooted;
+using JS::PersistentRootedVector;
 
 #ifdef MEM_STATS
 size_t size_of_cb(const void* ptr) {
@@ -74,6 +75,9 @@ JSContext* CONTEXT = nullptr;
 
 JS::PersistentRootedObject GLOBAL;
 JS::PersistentRootedObject unhandledRejectedPromises;
+
+static JS::PersistentRootedObjectVector* FETCH_HANDLERS;
+static PersistentRooted<JSObject*> FETCH_EVENT;
 
 void gc_callback(JSContext* cx, JSGCStatus status, JS::GCReason reason, void* data) {
   if (debug_logging_enabled())
@@ -177,18 +181,22 @@ static bool report_unhandled_promise_rejections(JSContext* cx) {
   return true;
 }
 
+static void DumpPendingException(JSContext* cx, const char* description) {
+  JS::ExceptionStack exception(cx);
+  if (!JS::GetPendingExceptionStack(cx, &exception)) {
+    fprintf(stderr, "Error: exception pending after %s, but got another error "
+            "when trying to retrieve it. Aborting.\n", description);
+  } else {
+    fprintf(stderr, "Exception while %s: ", description);
+    dump_value(cx, exception.exception(), stderr);
+    print_stack(cx, exception.stack(), stderr);
+  }
+}
+
 static void abort(JSContext* cx, const char* description) {
   // Note: we unconditionally print messages here, since they almost always indicate serious bugs.
   if (JS_IsExceptionPending(cx)) {
-    JS::ExceptionStack exception(cx);
-    if (!JS::GetPendingExceptionStack(cx, &exception)) {
-      fprintf(stderr, "Error: exception pending after %s, but got another error "
-              "when trying to retrieve it. Aborting.\n", description);
-    } else {
-      fprintf(stderr, "Exception while %s: ", description);
-      dump_value(cx, exception.exception(), stderr);
-      print_stack(cx, exception.stack(), stderr);
-    }
+    DumpPendingException(cx, description);
   } else {
     fprintf(stderr, "Error while %s, but no exception is pending. "
             "Aborting, since that doesn't seem recoverable at all.\n", description);
@@ -201,8 +209,8 @@ static void abort(JSContext* cx, const char* description) {
   }
 
   // Respond with status `500` if no response was ever sent.
-  if (INITIALIZED && !did_send_response())
-    send_error_response(cx);
+  if (INITIALIZED && !FetchEvent::response_started(FETCH_EVENT))
+    FetchEvent::respondWithError(cx, FETCH_EVENT);
 
   fflush(stderr);
   exit(1);
@@ -275,9 +283,6 @@ bool eval_stdin(JSContext* cx, MutableHandleValue result) {
   return true;
 }
 
-static PersistentRooted<Value> HANDLE_REQUEST;
-static PersistentRooted<JSObject*> REQUEST_EVENT;
-
 static bool addEventListener(JSContext* cx, unsigned argc, Value* vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "addEventListener", 2))
@@ -293,19 +298,13 @@ static bool addEventListener(JSContext* cx, unsigned argc, Value* vp) {
     exit(1);
   }
 
-  if (!HANDLE_REQUEST.isUndefined()) {
-    fprintf(stderr, "Error: Can't add more than one listener for the 'fetch' event\n");
-    exit(1);
-  }
-
   RootedValue val(cx, args[1]);
   if (!val.isObject() || !JS_ObjectIsFunction(&val.toObject())) {
     fprintf(stderr, "Error: addEventListener: Argument 2 is not a function.\n");
     exit(1);
   }
 
-  HANDLE_REQUEST.init(cx, val);
-  return true;
+  return FETCH_HANDLERS->append(&val.toObject());
 }
 
 void init() {
@@ -317,6 +316,7 @@ void init() {
   JSContext* cx = CONTEXT;
   RootedObject global(cx, GLOBAL);
   JSAutoRealm ar(cx, global);
+  FETCH_HANDLERS = new JS::PersistentRootedObjectVector(cx);
 
   define_fastly_sys(cx, global);
   if (!JS_DefineFunction(cx, global, "addEventListener", addEventListener, 2, 0))
@@ -326,29 +326,24 @@ void init() {
   if (!eval_stdin(cx, &result))
     abort(cx, "evaluating JS");
 
-  if (!result.isUndefined()) {
-    if (!dump_value(cx, result, stdout))
-      exit(1);
-  }
-
-  REQUEST_EVENT.init(cx, create_downstream_request_event(cx));
-  if (!REQUEST_EVENT.get())
+  FETCH_EVENT.init(cx, FetchEvent::create(cx));
+  if (!FETCH_EVENT.get())
     exit(1);
 
-  if (HANDLE_REQUEST.isUndefined()) {
+  if (FETCH_HANDLERS->length() == 0) {
     RootedValue val(cx);
-    if (!JS_GetProperty(cx, global, "handleRequest", &val) ||
+    if (!JS_GetProperty(cx, global, "onfetch", &val) ||
         !val.isObject() || !JS_ObjectIsFunction(&val.toObject()))
     {
       // The error message only mentions `addEventListener`, even though we also support
-      // a `handleRequest` top-level function as an alternative. We're treating the latter
+      // an `onfetch` top-level function as an alternative. We're treating the latter
       // as undocumented functionality for the time being.
       fprintf(stderr, "Error: no `fetch` event handler registered during initialization. "
                       "Make sure to call `addEventListener('fetch', your_handler)`.\n");
       exit(1);
     }
-
-    HANDLE_REQUEST.init(cx, val);
+    if (!FETCH_HANDLERS->append(&val.toObject()))
+      abort(cx, "Adding onfetch as a fetch event handler");
   }
 
   fflush(stdout);
@@ -364,16 +359,30 @@ void init() {
 
 WIZER_INIT(init);
 
-static void call_request_handler(JSContext* cx, double* total_compute) {
+static void dispatch_fetch_event(JSContext* cx, double* total_compute) {
   auto pre_handler = system_clock::now();
 
-  RootedValue result(cx);
-  RootedValue val(cx);
-  val.setObject(*REQUEST_EVENT);
-  HandleValueArray argsv = HandleValueArray(val);
+  HandleObject event_obj = FETCH_EVENT;
+  FetchEvent::start_dispatching(event_obj);
 
-  if (!JS_CallFunctionValue(cx, GLOBAL, HANDLE_REQUEST, argsv, &val))
-    abort(cx, "calling request handler");
+  RootedValue result(cx);
+  RootedValue event_val(cx);
+  event_val.setObject(*event_obj);
+  HandleValueArray argsv = HandleValueArray(event_val);
+  RootedValue handler(cx);
+  RootedValue rval(cx);
+
+  for (size_t i = 0; i < FETCH_HANDLERS->length(); i++) {
+    handler.setObject(*(*FETCH_HANDLERS)[i]);
+    if (!JS_CallFunctionValue(cx, GLOBAL, handler, argsv, &rval)) {
+      DumpPendingException(cx, "dispatching FetchEvent\n");
+      JS_ClearPendingException(cx);
+    }
+    if (FetchEvent::state(FETCH_EVENT) != FetchEvent::State::unhandled)
+      break;
+  }
+
+  FetchEvent::stop_dispatching(event_obj);
 
   double diff = duration_cast<microseconds>(system_clock::now() - pre_handler).count();
   *total_compute += diff;
@@ -442,7 +451,7 @@ int main(int argc, const char *argv[]) {
   JSAutoRealm ar(cx, GLOBAL);
   js::ResetMathRandomSeed(cx);
 
-  call_request_handler(cx, &total_compute);
+  dispatch_fetch_event(cx, &total_compute);
 
   // Loop until no more resolved promises or backend requests are pending.
   if (debug_logging_enabled()) {
@@ -460,8 +469,8 @@ int main(int argc, const char *argv[]) {
 
     // Respond with status `500` if any promise rejections were left unhandled
     // and no response was ever sent.
-    if (!did_send_response())
-      send_error_response(cx);
+    if (!FetchEvent::response_started(FETCH_EVENT))
+      FetchEvent::respondWithError(cx, FETCH_EVENT);
   }
 
   auto end = system_clock::now();
