@@ -42,8 +42,6 @@ static_assert(HEADER_MAX_LEN < HOSTCALL_BUFFER_LEN);
 static_assert(METHOD_MAX_LEN < HOSTCALL_BUFFER_LEN);
 static_assert(URI_MAX_LEN < HOSTCALL_BUFFER_LEN);
 
-static bool response_sent;
-
 
 class OwnedHostCallBuffer {
   static char* hostcall_buffer;
@@ -143,6 +141,25 @@ static bool resolved_promise_with_value(JSContext* cx, JS::HandleValue value,
   if (args) {
     args->rval().setObject(*promise);
   }
+  return true;
+}
+
+JSObject* PromiseRejectedWithPendingError(JSContext* cx) {
+  RootedValue exn(cx);
+  if (!JS_IsExceptionPending(cx) || !JS_GetPendingException(cx, &exn)) {
+    return nullptr;
+  }
+  JS_ClearPendingException(cx);
+  return JS::CallOriginalPromiseReject(cx, exn);
+}
+
+inline bool ReturnPromiseRejectedWithPendingError(JSContext* cx, const JS::CallArgs& args) {
+  JSObject* promise = PromiseRejectedWithPendingError(cx);
+  if (!promise) {
+    return false;
+  }
+
+  args.rval().setObject(*promise);
   return true;
 }
 
@@ -2973,7 +2990,9 @@ namespace ServiceInfo {
 
 namespace FetchEvent {
   namespace Slots { enum {
+    Dispatch,
     Request,
+    State,
     ClientInfo,
     ServiceInfo,
     Count
@@ -3115,13 +3134,7 @@ namespace FetchEvent {
     // Read the next chunk.
     RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
     if (!promise) return false;
-    if (!JS::AddPromiseReactionsIgnoringUnhandledRejection(cx, promise,
-                                                           then_handler, catch_handler))
-    {
-      return false;
-    }
-
-    return true;
+    return JS::AddPromiseReactions(cx, promise, then_handler, catch_handler);
   }
 
   bool body_reader_catch_handler(JSContext* cx, unsigned argc, Value* vp) {
@@ -3209,11 +3222,8 @@ namespace FetchEvent {
 
     RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
     if (!promise) return false;
-    if (!JS::AddPromiseReactionsIgnoringUnhandledRejection(cx, promise,
-                                                           then_handler, catch_handler))
-    {
+    if (!JS::AddPromiseReactions(cx, promise, then_handler, catch_handler))
       return false;
-    }
 
     if (!start_response(cx, response_obj, true))
       return false;
@@ -3221,16 +3231,28 @@ namespace FetchEvent {
     return true;
   }
 
-  bool respondWith(JSContext* cx, unsigned argc, Value* vp) {
-    METHOD_HEADER(1)
+  // Steps in this function refer to the spec at
+  // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
+  bool then_handler(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
 
-    // TODO: support Promise<Response>
+    // Step 10.1
+    // Note: the `then` handler is only invoked after all Promise resolution has happened.
+    // (Even if there were multiple Promises to unwrap first.)
+    // That means that at this point we're guaranteed to have the final value instead of a
+    // Promise wrapping it, so either the value is a Response, or we have to bail.
     if (!Response::is_instance(args.get(0))) {
-      JS_ReportErrorUTF8(cx, "respondWith must be called with a Response "
-                             "object as the first argument");
-      return false;
+      JS_ReportErrorUTF8(cx, "FetchEvent#respondWith must be called with a Response "
+                             "object or a Promise resolving to a Response object as "
+                             "the first argument");
+      RootedObject rejection(cx, PromiseRejectedWithPendingError(cx));
+      if (!rejection) return false;
+      args.rval().setObject(*rejection);
+      return respondWithError(cx, event);
     }
 
+    // Step 10.2 (very roughly: the way we handle responses and their bodies is very different.)
     RootedObject response_obj(cx, &args[0].toObject());
 
     // Ensure that all headers are stored client-side, so we retain access to them after
@@ -3245,15 +3267,80 @@ namespace FetchEvent {
     if (RequestOrResponse::body_stream(response_obj)) {
       if (!respond_streaming(cx, response_obj))
         return false;
+      set_state(event, State::responseStreaming);
     } else {
       if (!respond_blocking(cx, response_obj))
         return false;
+      set_state(event, State::responseDone);
     }
 
-    response_sent = true;
+    return true;
+  }
+
+  // Steps in this function refer to the spec at
+  // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
+  bool catch_handler(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
+
+    // TODO: verify that this is the right behavior.
+    // Steps 9.1-2
+    return respondWithError(cx, event);
+  }
+
+  // Steps in this function refer to the spec at
+  // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
+  bool respondWith(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+
+    // Step 2
+    if (!is_dispatching(self)) {
+      JS_ReportErrorUTF8(cx, "FetchEvent#respondWith must be called synchronously from "
+                             "within a FetchEvent handler");
+      return false;
+    }
+
+    // Step 3
+    if (state(self) != State::unhandled) {
+      JS_ReportErrorUTF8(cx,
+                         "FetchEvent#respondWith can't be called twice on the same event");
+      return false;
+    }
+
+    // Steps 5-7 (very roughly)
+    set_state(self, State::waitToRespond);
+
+    // Coercion of argument `r` to a Promise<Response>
+    RootedObject response_promise(cx, JS::CallOriginalPromiseResolve(cx, args.get(0)));
+    if (!response_promise) return false;
+
+    // Step 9 (continued in `catch_handler` above)
+    JSFunction* catch_fun = js::NewFunctionWithReserved(cx, catch_handler, 1, 0, "catch_handler");
+    if (!catch_fun) return false;
+    RootedObject catch_handler(cx, JS_GetFunctionObject(catch_fun));
+    js::SetFunctionNativeReserved(catch_handler, 0, JS::ObjectValue(*self));
+
+    // Step 10 (continued in `then_handler` above)
+    JSFunction* then_fun = js::NewFunctionWithReserved(cx, then_handler, 1, 0, "then_handler");
+    if (!then_fun) return false;
+    RootedObject then_handler(cx, JS_GetFunctionObject(then_fun));
+    js::SetFunctionNativeReserved(then_handler, 0, JS::ObjectValue(*self));
+
+    if (!JS::AddPromiseReactions(cx, response_promise, then_handler, catch_handler))
+      return false;
 
     args.rval().setUndefined();
     return true;
+  }
+
+  bool respondWithError(JSContext* cx, HandleObject self) {
+    set_state(self, State::responsedWithError);
+    ResponseHandle response { INVALID_HANDLE };
+    BodyHandle body { INVALID_HANDLE };
+    return HANDLE_RESULT(cx, xqd_resp_new(&response)) &&
+          HANDLE_RESULT(cx, xqd_body_new(&body)) &&
+          HANDLE_RESULT(cx, xqd_resp_status_set(response, 500)) &&
+          HANDLE_RESULT(cx, xqd_resp_send_downstream(response, body, false));
   }
 
   const JSFunctionSpec methods[] = {
@@ -3276,8 +3363,41 @@ namespace FetchEvent {
     if (!request) return nullptr;
 
     JS::SetReservedSlot(self, Slots::Request, JS::ObjectValue(*request));
+    JS::SetReservedSlot(self, Slots::Dispatch, JS::FalseValue());
+    JS::SetReservedSlot(self, Slots::State, JS::Int32Value((int)State::unhandled));
 
     return self;
+  }
+
+  bool is_dispatching(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return JS::GetReservedSlot(self, Slots::Dispatch).toBoolean();
+  }
+
+  void start_dispatching(JSObject* self) {
+    MOZ_ASSERT(!is_dispatching(self));
+    JS::SetReservedSlot(self, Slots::Dispatch, JS::TrueValue());
+  }
+
+  void stop_dispatching(JSObject* self) {
+    MOZ_ASSERT(is_dispatching(self));
+    JS::SetReservedSlot(self, Slots::Dispatch, JS::FalseValue());
+  }
+
+  State state(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return (State)JS::GetReservedSlot(self, Slots::State).toInt32();
+  }
+
+  void set_state(JSObject* self, State new_state) {
+    MOZ_ASSERT(is_instance(self));
+    MOZ_ASSERT((uint)new_state > (uint)state(self));
+    JS::SetReservedSlot(self, Slots::State, JS::Int32Value((int)new_state));
+  }
+
+  bool response_started(JSObject* self) {
+    State current_state = state(self);
+    return current_state != State::unhandled && current_state != State::waitToRespond;
   }
 }
 
@@ -3858,25 +3978,6 @@ namespace URLSearchParams {
 }
 
 
-JSObject* PromiseRejectedWithPendingError(JSContext* cx) {
-  RootedValue exn(cx);
-  if (!JS_IsExceptionPending(cx) || !JS_GetPendingException(cx, &exn)) {
-    return nullptr;
-  }
-  JS_ClearPendingException(cx);
-  return JS::CallOriginalPromiseReject(cx, exn);
-}
-
-inline bool ReturnPromiseRejectedWithPendingError(JSContext* cx, const JS::CallArgs& args) {
-  JSObject* promise = PromiseRejectedWithPendingError(cx);
-  if (!promise) {
-    return false;
-  }
-
-  args.rval().setObject(*promise);
-  return true;
-}
-
 // TODO: throw in all Request methods/getters that rely on host calls once a
 // request has been sent. The host won't let us act on them anymore anyway.
 bool fetch(JSContext* cx, unsigned argc, Value* vp) {
@@ -3927,10 +4028,6 @@ bool fetch(JSContext* cx, unsigned argc, Value* vp) {
 
   args.rval().setObject(*response_promise);
   return true;
-}
-
-bool did_send_response() {
-  return response_sent;
 }
 
 bool has_pending_requests() {
@@ -4059,24 +4156,14 @@ bool define_fastly_sys(JSContext* cx, HandleObject global) {
   if (!URLSearchParams::init_class(cx, global)) return false;
   if (!URLSearchParamsIterator::init_class(cx, global)) return false;
 
-  response_sent = false;
   pending_requests = new JS::PersistentRootedObjectVector(cx);
   pending_body_reads = new JS::PersistentRootedObjectVector(cx);
 
   return JS_DefineFunction(cx, global, "fetch", fetch, 2, JSPROP_ENUMERATE);
 }
 
-JSObject* create_downstream_request_event(JSContext* cx) {
+JSObject* create_fetch_event(JSContext* cx) {
     return FetchEvent::create(cx);
-}
-
-bool send_error_response(JSContext* cx) {
-  ResponseHandle response { INVALID_HANDLE };
-  BodyHandle body { INVALID_HANDLE };
-  return HANDLE_RESULT(cx, xqd_resp_new(&response)) &&
-         HANDLE_RESULT(cx, xqd_body_new(&body)) &&
-         HANDLE_RESULT(cx, xqd_resp_status_set(response, 500)) &&
-         HANDLE_RESULT(cx, xqd_resp_send_downstream(response, body, false));
 }
 
 UniqueChars stringify_value(JSContext* cx, JS::HandleValue value) {

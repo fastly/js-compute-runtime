@@ -16,10 +16,26 @@
 
 bool define_fastly_sys(JSContext* cx, JS::HandleObject global);
 
-JSObject* create_downstream_request_event(JSContext* cx);
+namespace FetchEvent {
+  enum class State {
+    unhandled,
+    waitToRespond,
+    responseStreaming,
+    responseDone,
+    responsedWithError,
+  };
 
-bool did_send_response();
-bool send_error_response(JSContext* cx);
+  JSObject* create(JSContext* cx);
+
+  State state(JSObject* self);
+  void set_state(JSObject* self, State state);
+  bool is_dispatching(JSObject* self);
+  void start_dispatching(JSObject* self);
+  void stop_dispatching(JSObject* self);
+
+  bool response_started(JSObject* self);
+  bool respondWithError(JSContext* cx, JS::HandleObject self);
+}
 
 bool has_pending_requests();
 bool process_network_io(JSContext* cx);
