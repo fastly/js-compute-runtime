@@ -3238,6 +3238,10 @@ namespace FetchEvent {
     RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
 
     // Step 10.1
+    // Note: the `then` handler is only invoked after all Promise resolution has happened.
+    // (Even if there were multiple Promises to unwrap first.)
+    // That means that at this point we're guaranteed to have the final value instead of a
+    // Promise wrapping it, so either the value is a Response, or we have to bail.
     if (!Response::is_instance(args.get(0))) {
       JS_ReportErrorUTF8(cx, "FetchEvent#respondWith must be called with a Response "
                              "object or a Promise resolving to a Response object as "
