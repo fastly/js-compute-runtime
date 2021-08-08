@@ -70,6 +70,8 @@ public:
   }
 };
 
+char* OwnedHostCallBuffer::hostcall_buffer;
+
 using jsurl::SpecSlice, jsurl::SpecString, jsurl::JSUrl, jsurl::JSUrlSearchParams, jsurl::JSSearchParam;
 
 static JS::PersistentRootedObjectVector* pending_requests;
