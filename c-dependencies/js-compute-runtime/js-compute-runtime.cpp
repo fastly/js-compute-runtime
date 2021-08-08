@@ -365,15 +365,13 @@ void init() {
 
 WIZER_INIT(init);
 
-static void dispatch_fetch_event(JSContext* cx, double* total_compute) {
+static void dispatch_fetch_event(JSContext* cx, HandleObject event, double* total_compute) {
   auto pre_handler = system_clock::now();
 
-  HandleObject event_obj = FETCH_EVENT;
-  FetchEvent::start_dispatching(event_obj);
+  FetchEvent::start_dispatching(event);
 
   RootedValue result(cx);
-  RootedValue event_val(cx);
-  event_val.setObject(*event_obj);
+  RootedValue event_val(cx, JS::ObjectValue(*event));
   HandleValueArray argsv = HandleValueArray(event_val);
   RootedValue handler(cx);
   RootedValue rval(cx);
@@ -388,7 +386,7 @@ static void dispatch_fetch_event(JSContext* cx, double* total_compute) {
       break;
   }
 
-  FetchEvent::stop_dispatching(event_obj);
+  FetchEvent::stop_dispatching(event);
 
   double diff = duration_cast<microseconds>(system_clock::now() - pre_handler).count();
   *total_compute += diff;
@@ -457,7 +455,9 @@ int main(int argc, const char *argv[]) {
   JSAutoRealm ar(cx, GLOBAL);
   js::ResetMathRandomSeed(cx);
 
-  dispatch_fetch_event(cx, &total_compute);
+  HandleObject fetch_event = FETCH_EVENT;
+
+  dispatch_fetch_event(cx, fetch_event, &total_compute);
 
   // Loop until no more resolved promises or backend requests are pending.
   if (debug_logging_enabled()) {
@@ -466,9 +466,22 @@ int main(int argc, const char *argv[]) {
   }
 
   do {
+    // First, drain the promise reactions queue.
     process_pending_jobs(cx, &total_compute);
+
+    // Then, check if the fetch event is still active, i.e. had pending promises
+    // added to it using `respondWith` or `waitUntil`.
+    if (!FetchEvent::is_active(fetch_event))
+      break;
+
+    // Process async tasks.
     wait_for_backends(cx, &total_compute);
   } while (js::HasJobsPending(cx) || has_pending_requests());
+
+  if (debug_logging_enabled() && has_pending_requests()) {
+    fprintf(stderr, "Service terminated with async tasks pending. "
+                    "Use FetchEvent#waitUntil to extend the service's lifetime if needed.\n");
+  }
 
   if (JS::SetSize(cx, unhandledRejectedPromises) > 0) {
     report_unhandled_promise_rejections(cx);

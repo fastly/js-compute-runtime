@@ -29,6 +29,10 @@ namespace FetchEvent {
 
   State state(JSObject* self);
   void set_state(JSObject* self, State state);
+
+  // https://w3c.github.io/ServiceWorker/#extendableevent-active
+  bool is_active(JSObject* self);
+
   bool is_dispatching(JSObject* self);
   void start_dispatching(JSObject* self);
   void stop_dispatching(JSObject* self);
