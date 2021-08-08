@@ -2995,10 +2995,42 @@ namespace FetchEvent {
     Dispatch,
     Request,
     State,
+    PendingPromiseCount,
+    DecPendingPromiseCountFunc,
     ClientInfo,
     ServiceInfo,
     Count
   };};
+
+  namespace detail {
+    void inc_pending_promise_count(JSObject* self) {
+      MOZ_ASSERT(is_instance(self));
+      auto count = JS::GetReservedSlot(self, Slots::PendingPromiseCount).toInt32();
+      count++;
+      MOZ_ASSERT(count > 0);
+      JS::SetReservedSlot(self, Slots::PendingPromiseCount, JS::Int32Value(count));
+    }
+
+    void dec_pending_promise_count(JSObject* self) {
+      MOZ_ASSERT(is_instance(self));
+      auto count = JS::GetReservedSlot(self, Slots::PendingPromiseCount).toInt32();
+      MOZ_ASSERT(count > 0);
+      count--;
+      JS::SetReservedSlot(self, Slots::PendingPromiseCount, JS::Int32Value(count));
+    }
+
+    bool add_pending_promise(JSContext* cx, HandleObject self, HandleObject promise) {
+      MOZ_ASSERT(is_instance(self));
+      MOZ_ASSERT(JS::IsPromiseObject(promise));
+      RootedObject handler(cx);
+      handler = &JS::GetReservedSlot(self, Slots::DecPendingPromiseCountFunc).toObject();
+      if (!JS::AddPromiseReactions(cx, promise, handler, handler))
+        return false;
+
+      inc_pending_promise_count(self);
+      return true;
+    }
+  }
 
   const unsigned ctor_length = 0;
 
@@ -3235,7 +3267,7 @@ namespace FetchEvent {
 
   // Steps in this function refer to the spec at
   // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
-  bool then_handler(JSContext* cx, unsigned argc, Value* vp) {
+  bool response_promise_then_handler(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
 
@@ -3281,7 +3313,7 @@ namespace FetchEvent {
 
   // Steps in this function refer to the spec at
   // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
-  bool catch_handler(JSContext* cx, unsigned argc, Value* vp) {
+  bool response_promise_catch_handler(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
 
@@ -3294,6 +3326,10 @@ namespace FetchEvent {
   // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
   bool respondWith(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
+
+    // Coercion of argument `r` to a Promise<Response>
+    RootedObject response_promise(cx, JS::CallOriginalPromiseResolve(cx, args.get(0)));
+    if (!response_promise) return false;
 
     // Step 2
     if (!is_dispatching(self)) {
@@ -3309,21 +3345,22 @@ namespace FetchEvent {
       return false;
     }
 
+    // Step 4
+    detail::add_pending_promise(cx, self, response_promise);
+
     // Steps 5-7 (very roughly)
     set_state(self, State::waitToRespond);
 
-    // Coercion of argument `r` to a Promise<Response>
-    RootedObject response_promise(cx, JS::CallOriginalPromiseResolve(cx, args.get(0)));
-    if (!response_promise) return false;
-
-    // Step 9 (continued in `catch_handler` above)
-    JSFunction* catch_fun = js::NewFunctionWithReserved(cx, catch_handler, 1, 0, "catch_handler");
+    // Step 9 (continued in `response_promise_catch_handler` above)
+    JSFunction* catch_fun = js::NewFunctionWithReserved(cx, response_promise_catch_handler, 1, 0,
+                                                        "catch_handler");
     if (!catch_fun) return false;
     RootedObject catch_handler(cx, JS_GetFunctionObject(catch_fun));
     js::SetFunctionNativeReserved(catch_handler, 0, JS::ObjectValue(*self));
 
-    // Step 10 (continued in `then_handler` above)
-    JSFunction* then_fun = js::NewFunctionWithReserved(cx, then_handler, 1, 0, "then_handler");
+    // Step 10 (continued in `response_promise_then_handler` above)
+    JSFunction* then_fun = js::NewFunctionWithReserved(cx, response_promise_then_handler, 1, 0,
+                                                       "then_handler");
     if (!then_fun) return false;
     RootedObject then_handler(cx, JS_GetFunctionObject(then_fun));
     js::SetFunctionNativeReserved(then_handler, 0, JS::ObjectValue(*self));
@@ -3336,6 +3373,7 @@ namespace FetchEvent {
   }
 
   bool respondWithError(JSContext* cx, HandleObject self) {
+    MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
     set_state(self, State::responsedWithError);
     ResponseHandle response { INVALID_HANDLE };
     BodyHandle body { INVALID_HANDLE };
@@ -3345,8 +3383,44 @@ namespace FetchEvent {
           HANDLE_RESULT(cx, xqd_resp_send_downstream(response, body, false));
   }
 
+  // Step 5 of https://w3c.github.io/ServiceWorker/#wait-until-method
+  bool dec_pending_promise_count(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
+
+    // Step 5.1
+    detail::dec_pending_promise_count(event);
+
+    // Note: step 5.2 not relevant to our implementation.
+    return true;
+  }
+
+  // Steps in this function refer to the spec at
+  // https://w3c.github.io/ServiceWorker/#wait-until-method
+  bool waitUntil(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+
+    RootedObject promise(cx, JS::CallOriginalPromiseResolve(cx, args.get(0)));
+    if (!promise) return false;
+
+    // Step 2
+    if (!is_active(self)) {
+      JS_ReportErrorUTF8(cx, "FetchEvent#waitUntil called on inactive event");
+      return false;
+    }
+
+    // Steps 3-4
+    detail::add_pending_promise(cx, self, promise);
+
+    // Note: step 5 implemented in dec_pending_promise_count
+
+    args.rval().setUndefined();
+    return true;
+  }
+
   const JSFunctionSpec methods[] = {
     JS_FN("respondWith", respondWith, 1, 0),
+    JS_FN("waitUntil", waitUntil, 1, 0),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
@@ -3364,11 +3438,26 @@ namespace FetchEvent {
     RootedObject request(cx, prepare_downstream_request(cx));
     if (!request) return nullptr;
 
+    JSFunction* dec_count_fun = js::NewFunctionWithReserved(cx, dec_pending_promise_count, 1, 0,
+                                                       "dec_pending_promise_count");
+    if (!dec_count_fun) return nullptr;
+    RootedObject dec_count_handler(cx, JS_GetFunctionObject(dec_count_fun));
+    js::SetFunctionNativeReserved(dec_count_handler, 0, JS::ObjectValue(*self));
+
     JS::SetReservedSlot(self, Slots::Request, JS::ObjectValue(*request));
     JS::SetReservedSlot(self, Slots::Dispatch, JS::FalseValue());
     JS::SetReservedSlot(self, Slots::State, JS::Int32Value((int)State::unhandled));
+    JS::SetReservedSlot(self, Slots::PendingPromiseCount, JS::Int32Value(0));
+    JS::SetReservedSlot(self, Slots::DecPendingPromiseCountFunc,
+                        JS::ObjectValue(*dec_count_handler));
 
     return self;
+  }
+
+  bool is_active(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return JS::GetReservedSlot(self, Slots::Dispatch).toBoolean() ||
+           JS::GetReservedSlot(self, Slots::PendingPromiseCount).toInt32() > 0;
   }
 
   bool is_dispatching(JSObject* self) {
