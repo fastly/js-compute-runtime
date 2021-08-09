@@ -1272,6 +1272,8 @@ static bool normalize_http_method(char* method) {
       if (strcmp(method, name) == 0) {
         return false;
       }
+
+      // Note: Safe because `strcasecmp` returning 0 above guarantees same-length strings.
       strcpy(method, name);
       return true;
     }
