@@ -13,6 +13,7 @@
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
 
 #include "js/CompilationAndEvaluation.h"
+#include "js/ContextOptions.h"
 #include "js/Initialization.h"
 #include "js/SourceText.h"
 
@@ -117,6 +118,11 @@ bool init_js() {
       return false;
   if (!js::UseInternalJobQueues(cx) || !JS::InitSelfHostedCode(cx))
       return false;
+
+  JS::ContextOptionsRef(cx)
+    .setPrivateClassFields(true)
+    .setPrivateClassMethods(true)
+    .setErgnomicBrandChecks(true);
 
   // TODO: check if we should set a different creation zone.
   JS::RealmOptions options;
