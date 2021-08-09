@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <arpa/inet.h>
 
 #include "../xqd.h"
@@ -1259,6 +1260,26 @@ namespace CacheOverride {
   }
 }
 
+
+// https://fetch.spec.whatwg.org/#concept-method-normalize
+// Returns `true` if the method name was normalized, `false` otherwise.
+static bool normalize_http_method(char* method) {
+  static const char* names[6] = { "DELETE", "GET", "HEAD", "OPTIONS", "POST", "PUT" };
+
+  for (size_t i = 0; i < 6; i++) {
+    auto name = names[i];
+    if (strcasecmp(method, name) == 0) {
+      if (strcmp(method, name) == 0) {
+        return false;
+      }
+      strcpy(method, name);
+      return true;
+    }
+  }
+
+  return false;
+}
+
 namespace Request {
   namespace Slots { enum {
     Request = RequestOrResponse::Slots::RequestOrResponse,
@@ -1507,7 +1528,7 @@ namespace Request {
 
     RequestOrResponse::set_url(request, StringValue(url_str));
 
-    // TODO: apply cache, cacheOverride, and referrer from init object.
+    // TODO: apply cache and referrer from init object.
 
     if (init_val.isObject()) {
       RootedObject init(cx, &init_val.toObject());
@@ -1524,6 +1545,12 @@ namespace Request {
         size_t method_len;
         method = encode(cx, method_str, &method_len);
         if (!method) return nullptr;
+
+        if (normalize_http_method(method.get())) {
+          // Replace the JS string with the normalized name.
+          method_str = JS_NewStringCopyN(cx, method.get(), method_len);
+          if (!method_str) return nullptr;
+        }
 
         if (!HANDLE_RESULT(cx, xqd_req_method_set(request_handle, method.get(), method_len)))
           return nullptr;
