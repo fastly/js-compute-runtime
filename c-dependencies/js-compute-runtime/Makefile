@@ -1,18 +1,20 @@
 # DEFINES := -DDEBUG -DJS_DEBUG
 
 INIT_JS ?= test.js
+WIZER ?= wizer
 
 ROOT_SRC?=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))/..
 SM_SRC=$(ROOT_SRC)/spidermonkey/
-SM_OBJ=$(SM_SRC)lib/*
+SM_OBJ=$(SM_SRC)lib/*.o
+SM_OBJ+=$(SM_SRC)lib/*.a
 FSM_SRC=$(ROOT_SRC)/js-compute-runtime/
 
-WASI_CC ?= /opt/wasi-sdk/bin/clang
 WASI_CXX ?= /opt/wasi-sdk/bin/clang++
-WIZER ?= wizer
 
-CXX_FLAGS := -std=gnu++17 -Wall -Werror
-CXX_OPT ?= O2
+CXX_OPT ?= -O2
+
+CXX_FLAGS := -std=gnu++17 -Wall -Werror -Qunused-arguments -fno-sized-deallocation -fno-aligned-new -mthread-model single -fPIC -fno-rtti -fno-exceptions -fno-math-errno -pipe -fno-omit-frame-pointer -funwind-tables
+LD_FLAGS := -Wl,-z,noexecstack -Wl,-z,text -Wl,-z,relro -Wl,-z,nocopyreloc -Wl,-z,stack-size=1048576 -Wl,--stack-first
 
 ifeq (,$(findstring g,$(CXX_OPT)))
 ifneq (,$(shell which wasm-opt))
@@ -27,8 +29,6 @@ RUST_URL_SRC := $(FSM_SRC)rust-url
 RUST_URL_RS_FILES := $(shell find $(RUST_URL_SRC)/src -name '*.rs')
 RUST_URL_LIB := $(RUST_URL_SRC)/target/wasm32-wasi/release/librust_url.a
 
-SM_RUST_LIB = $(wildcard libjsrust/*.o)
-
 .PHONY: all clean
 
 all: js-compute-runtime.wasm
@@ -40,10 +40,10 @@ $(RUST_URL_LIB): $(RUST_URL_RS_FILES) $(RUST_URL_SRC)/Cargo.toml $(RUST_URL_SRC)
 	cd $(RUST_URL_SRC) && cargo build --target=wasm32-wasi --release
 
 %.o: $(FSM_SRC)%.cpp $(FSM_SRC)Makefile $(RUST_URL_LIB)
-	$(WASI_CXX) $(CXX_FLAGS) $(DEFINES) -I $(SM_SRC)include -$(CXX_OPT) -MMD -MP -c -o $@ $<
+	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
 
 js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
-	$(WASI_CXX) $(CXX_FLAGS) $(DEFINES) -fvisibility=hidden -Wl,--allow-undefined -Wl,--stack-first -Wl,-z,stack-size=1048576 -mexec-model=command -$(CXX_OPT) -o $@ $^
+	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) $(LD_FLAGS) -o $@ $^
 	$(WASM_STRIP)
 
 initialized-js-compute-runtime.wasm: js-compute-runtime.wasm $(INIT_JS)
