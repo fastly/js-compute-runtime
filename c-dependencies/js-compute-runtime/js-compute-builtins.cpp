@@ -2670,9 +2670,20 @@ namespace Headers {
   typedef int HeaderRemoveOperation(int handle, const char *name, size_t name_len);
 
   bool delete_(JSContext* cx, unsigned argc, Value* vp) {
-    METHOD_HEADER(1)
+    METHOD_HEADER_WITH_NAME(1, "delete")
 
     NORMALIZE_NAME(args[0], "Headers.delete")
+
+    bool has;
+    RootedObject map(cx, detail::backing_map(self));
+    if (!JS::MapDelete(cx, map, normalized_name, &has))
+      return false;
+
+    // If no header with the given name exists, `delete` is a no-op.
+    if (!has) {
+      args.rval().setUndefined();
+      return true;
+    }
 
     Mode mode = detail::mode(self);
     if (mode != Mode::Standalone) {
@@ -2684,11 +2695,6 @@ namespace Headers {
       if (!HANDLE_RESULT(cx, op(detail::handle(self), name_chars.get(), name_len)))
         return false;
     }
-
-    bool has;
-    RootedObject map(cx, detail::backing_map(self));
-    if (!JS::MapDelete(cx, map, normalized_name, &has))
-      return false;
 
     args.rval().setUndefined();
     return true;
