@@ -29,6 +29,7 @@ namespace FetchEvent {
 
   // There can only ever be a single FetchEvent instance in a service, so we can treat it as a
   // singleton for easy access.
+  // Returns a nullptr if the FetchEvent hasn't been created yet.
   JS::HandleObject instance();
 
   State state(JSObject* self);
