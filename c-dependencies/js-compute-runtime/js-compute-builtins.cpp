@@ -2819,45 +2819,19 @@ namespace Headers {
 }
 
 static JSString* get_geo_info(JSContext* cx, HandleString address_str) {
-  RequestHandle request = { INVALID_HANDLE };
-  BodyHandle body = { INVALID_HANDLE };
-  const char* url = "http://www.fastly.com/geolocation";
-
-  if (!(HANDLE_RESULT(cx, xqd_req_new(&request)) &&
-        HANDLE_RESULT(cx, xqd_body_new(&body)) &&
-        HANDLE_RESULT(cx, xqd_req_uri_set(request, url, strlen(url)))))
-  {
-    return nullptr;
-  }
-
-  const char* header_name = "Fastly-XQD-API";
-  const char* api_name = "geolocation";
-  if (!HANDLE_RESULT(cx, xqd_req_header_append(request, header_name, strlen(header_name),
-                                               api_name, strlen(api_name))))
-  {
-    return nullptr;
-  }
-
-  header_name = "Fastly-XQD-arg1";
   size_t address_len;
   UniqueChars address = encode(cx, address_str, &address_len);
+  if (!address) return nullptr;
 
-  if (!HANDLE_RESULT(cx, xqd_req_header_append(request, header_name, strlen(header_name),
-                                               address.get(), address_len)))
+  OwnedHostCallBuffer buffer;
+  size_t nwritten = 0;
+  if (!HANDLE_RESULT(cx, xqd_geo_lookup(address.get(), address_len, buffer.get(),
+                     HOSTCALL_BUFFER_LEN, &nwritten)))
   {
     return nullptr;
   }
 
-  ResponseHandle response = { INVALID_HANDLE };
-  if (!HANDLE_RESULT(cx, xqd_req_send(request, body, "geo", strlen("geo"), &response, &body)))
-    return nullptr;
-
-  size_t bytes_read;
-  UniqueChars buf(read_from_handle_all<xqd_body_read, BodyHandle>(cx, body, &bytes_read, false));
-  if (!buf)
-    return nullptr;
-
-  return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), bytes_read));
+  return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buffer.get(), nwritten));
 }
 
 namespace ClientInfo {
