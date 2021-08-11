@@ -78,7 +78,6 @@ JS::PersistentRootedObject GLOBAL;
 JS::PersistentRootedObject unhandledRejectedPromises;
 
 static JS::PersistentRootedObjectVector* FETCH_HANDLERS;
-static PersistentRooted<JSObject*> FETCH_EVENT;
 
 void gc_callback(JSContext* cx, JSGCStatus status, JS::GCReason reason, void* data) {
   if (debug_logging_enabled())
@@ -215,8 +214,9 @@ static void abort(JSContext* cx, const char* description) {
   }
 
   // Respond with status `500` if no response was ever sent.
-  if (INITIALIZED && !FetchEvent::response_started(FETCH_EVENT))
-    FetchEvent::respondWithError(cx, FETCH_EVENT);
+  HandleObject fetch_event = FetchEvent::instance();
+  if (INITIALIZED && !FetchEvent::response_started(fetch_event))
+    FetchEvent::respondWithError(cx, fetch_event);
 
   fflush(stderr);
   exit(1);
@@ -332,8 +332,7 @@ void init() {
   if (!eval_stdin(cx, &result))
     abort(cx, "evaluating JS");
 
-  FETCH_EVENT.init(cx, FetchEvent::create(cx));
-  if (!FETCH_EVENT.get())
+  if (!FetchEvent::create(cx))
     exit(1);
 
   if (FETCH_HANDLERS->length() == 0) {
@@ -382,7 +381,7 @@ static void dispatch_fetch_event(JSContext* cx, HandleObject event, double* tota
       DumpPendingException(cx, "dispatching FetchEvent\n");
       JS_ClearPendingException(cx);
     }
-    if (FetchEvent::state(FETCH_EVENT) != FetchEvent::State::unhandled)
+    if (FetchEvent::state(event) != FetchEvent::State::unhandled)
       break;
   }
 
@@ -455,7 +454,7 @@ int main(int argc, const char *argv[]) {
   JSAutoRealm ar(cx, GLOBAL);
   js::ResetMathRandomSeed(cx);
 
-  HandleObject fetch_event = FETCH_EVENT;
+  HandleObject fetch_event = FetchEvent::instance();
 
   dispatch_fetch_event(cx, fetch_event, &total_compute);
 
@@ -488,8 +487,8 @@ int main(int argc, const char *argv[]) {
 
     // Respond with status `500` if any promise rejections were left unhandled
     // and no response was ever sent.
-    if (!FetchEvent::response_started(FETCH_EVENT))
-      FetchEvent::respondWithError(cx, FETCH_EVENT);
+    if (!FetchEvent::response_started(fetch_event))
+      FetchEvent::respondWithError(cx, fetch_event);
   }
 
   auto end = system_clock::now();

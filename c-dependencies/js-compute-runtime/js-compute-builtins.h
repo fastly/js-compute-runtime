@@ -27,6 +27,10 @@ namespace FetchEvent {
 
   JSObject* create(JSContext* cx);
 
+  // There can only ever be a single FetchEvent instance in a service, so we can treat it as a
+  // singleton for easy access.
+  JS::HandleObject instance();
+
   State state(JSObject* self);
   void set_state(JSObject* self, State state);
 

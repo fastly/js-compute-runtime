@@ -3037,6 +3037,8 @@ namespace FetchEvent {
     Count
   };};
 
+static PersistentRooted<JSObject*> INSTANCE;
+
   namespace detail {
     void inc_pending_promise_count(JSObject* self) {
       MOZ_ASSERT(is_instance(self));
@@ -3169,8 +3171,10 @@ namespace FetchEvent {
     if (!JS_GetProperty(cx, chunk_obj, "done", &done_val))
       return false;
 
-    if (done_val.toBoolean())
+    if (done_val.toBoolean()) {
+      FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
       return HANDLE_RESULT(cx, xqd_body_close(body_handle));
+    }
 
     RootedValue val(cx);
     if (!JS_GetProperty(cx, chunk_obj, "value", &val))
@@ -3218,10 +3222,11 @@ namespace FetchEvent {
     fprintf(stderr, "Warning: body ReadableStream closed during streaming response. Exception: ");
     dump_value(cx, args.get(0), stderr);
 
+    FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
     return HANDLE_RESULT(cx, xqd_body_close(RequestOrResponse::body_handle(response)));
   }
 
-  bool respond_streaming(JSContext* cx, HandleObject response_obj) {
+  bool respond_maybe_streaming(JSContext* cx, HandleObject response_obj, bool* streaming) {
     RootedObject stream(cx, RequestOrResponse::body_stream(response_obj));
     MOZ_ASSERT(stream);
 
@@ -3250,6 +3255,7 @@ namespace FetchEvent {
       // Then, send the response without streaming. We know that content won't append to this body
       // handle, because we don't expose any means to do so, so it's ok for it to be closed
       // immediately.
+      *streaming = false;
       return start_response(cx, response_obj, false);
     }
 
@@ -3264,8 +3270,10 @@ namespace FetchEvent {
     // It's ok for the stream to be closed, as its contents might
     // already have fully been written to the body handle.
     // In that case, we can do a blocking send instead.
-    if (is_closed)
+    if (is_closed) {
+      *streaming = false;
       return start_response(cx, response_obj, false);
+    }
 
     // Create handlers for both `then` and `catch`.
     // These are functions with two reserved slots, in which we store all information required
@@ -3297,6 +3305,7 @@ namespace FetchEvent {
     if (!start_response(cx, response_obj, true))
       return false;
 
+    *streaming = true;
     return true;
   }
 
@@ -3333,16 +3342,17 @@ namespace FetchEvent {
           return false;
     }
 
+    FetchEvent::detail::inc_pending_promise_count(FetchEvent::instance());
+    bool streaming = false;
     if (RequestOrResponse::body_stream(response_obj)) {
-      if (!respond_streaming(cx, response_obj))
+      if (!respond_maybe_streaming(cx, response_obj, &streaming))
         return false;
-      set_state(event, State::responseStreaming);
     } else {
       if (!respond_blocking(cx, response_obj))
         return false;
-      set_state(event, State::responseDone);
     }
 
+    set_state(event, streaming ? State::responseStreaming : State::responseDone);
     return true;
   }
 
@@ -3474,7 +3484,7 @@ namespace FetchEvent {
     if (!request) return nullptr;
 
     JSFunction* dec_count_fun = js::NewFunctionWithReserved(cx, dec_pending_promise_count, 1, 0,
-                                                       "dec_pending_promise_count");
+                                                            "dec_pending_promise_count");
     if (!dec_count_fun) return nullptr;
     RootedObject dec_count_handler(cx, JS_GetFunctionObject(dec_count_fun));
     js::SetFunctionNativeReserved(dec_count_handler, 0, JS::ObjectValue(*self));
@@ -3486,12 +3496,22 @@ namespace FetchEvent {
     JS::SetReservedSlot(self, Slots::DecPendingPromiseCountFunc,
                         JS::ObjectValue(*dec_count_handler));
 
+    INSTANCE.init(cx, self);
     return self;
+  }
+
+  HandleObject instance() {
+    MOZ_ASSERT(INSTANCE.get());
+    return INSTANCE;
   }
 
   bool is_active(JSObject* self) {
     MOZ_ASSERT(is_instance(self));
+    // Note: we also treat the FetchEvent as active if it's in `responseStreaming` state
+    // because that requires us to extend the service's lifetime as well.
+    // In the spec this is achieved using individual promise counts for the body read operations.
     return JS::GetReservedSlot(self, Slots::Dispatch).toBoolean() ||
+           state(self) == State::responseStreaming ||
            JS::GetReservedSlot(self, Slots::PendingPromiseCount).toInt32() > 0;
   }
 
