@@ -292,6 +292,10 @@ WASM_IMPORT("fastly_dictionary", "get")
 int xqd_dictionary_get(DictionaryHandle dict_handle, const char *key, size_t key_len,
                         char *value, size_t value_max_len, size_t *nwritten);
 
+WASM_IMPORT("fastly_geo", "lookup")
+int xqd_geo_lookup(const char* addr_octets, size_t addr_len, char *buf, size_t buf_len,
+                   size_t *nwritten);
+
 #ifdef __cplusplus
 }
 #endif
