@@ -314,6 +314,13 @@ static const uint32_t class_flags = 0;
 #define METHOD_HEADER(required_argc) \
   METHOD_HEADER_WITH_NAME(required_argc, __func__)
 
+#define REQUEST_HANDLER_ONLY(name) \
+  if (!FetchEvent::instance()) { \
+    JS_ReportErrorUTF8(cx, "%s can only be used during request handling, " \
+                           "not during initialization", name); \
+    return false; \
+  }
+
 namespace Logger {
   namespace Slots { enum {
     Endpoint,
@@ -395,7 +402,8 @@ namespace Fastly {
 
   bool getGeolocationForIpAddress(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.requireAtLeast(cx, __func__, 1))
+    REQUEST_HANDLER_ONLY("fastly.getGeolocationForIpAddress");
+    if (!args.requireAtLeast(cx, "fastly.getGeolocationForIpAddress", 1))
       return false;
 
     RootedString address_str(cx, JS::ToString(cx, args[0]));
@@ -408,11 +416,11 @@ namespace Fastly {
     return JS_ParseJSON(cx, geo_info_str, args.rval());
   }
 
-  // TODO: throw a proper error when trying to create a logger during the init phase.
-  // Alternatively, allow doing so to reduce per-request work, but then throw when trying
+  // TODO: consider allowing logger creation during initialization, but then throw when trying
   // to log.
   bool getLogger(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
+    REQUEST_HANDLER_ONLY("fastly.getLogger");
     RootedObject self(cx, &args.thisv().toObject());
     if (!args.requireAtLeast(cx, "fastly.getLogger", 1))
       return false;
@@ -1376,6 +1384,7 @@ namespace Request {
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
+    REQUEST_HANDLER_ONLY("The Request builtin");
     if (!args.requireAtLeast(cx, "Request", 1))
       return false;
 
@@ -1643,6 +1652,7 @@ namespace Response {
   // handle it in a good way, and not be superfluously slow.
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
+    REQUEST_HANDLER_ONLY("The Response builtin");
 
     // TODO: enable creating Response objects during the init phase, and only
     // creating the host-side representation when processing requests.
@@ -1826,6 +1836,7 @@ namespace Dictionary {
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
+    REQUEST_HANDLER_ONLY("The Dictionary builtin");
     if (!args.requireAtLeast(cx, "Dictionary", 1))
       return false;
 
@@ -3475,7 +3486,6 @@ static PersistentRooted<JSObject*> INSTANCE;
   }
 
   HandleObject instance() {
-    MOZ_ASSERT(INSTANCE.get());
     return INSTANCE;
   }
 
@@ -4102,6 +4112,9 @@ namespace URLSearchParams {
 // request has been sent. The host won't let us act on them anymore anyway.
 bool fetch(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
+
+  REQUEST_HANDLER_ONLY("fetch")
+
   if (!args.requireAtLeast(cx, "fetch", 1)) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
