@@ -17,6 +17,7 @@
 #include "js/JSON.h"
 #include "js/shadow/Object.h"
 #include "js/Stream.h"
+#include "js/experimental/TypedData.h"
 #include "js/Value.h"
 
 using JS::CallArgs;
@@ -321,6 +322,13 @@ static const uint32_t class_flags = 0;
     return false; \
   }
 
+#define INIT_ONLY(name) \
+  if (FetchEvent::instance()) { \
+    JS_ReportErrorUTF8(cx, "%s can only be used during initialization, " \
+                           "not during request handling", name); \
+    return false; \
+  }
+
 namespace Logger {
   namespace Slots { enum {
     Endpoint,
@@ -436,11 +444,52 @@ namespace Fastly {
     return true;
   }
 
+  bool includeBytes(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    INIT_ONLY("fastly.includeBytes");
+    RootedObject self(cx, &args.thisv().toObject());
+    if (!args.requireAtLeast(cx, "fastly.includeBytes", 1))
+      return false;
+
+    size_t path_len;
+    UniqueChars path = encode(cx, args[0], &path_len);
+    if (!path) return false;
+
+    FILE* fp = fopen(path.get(), "r");
+    if (!fp) {
+      JS_ReportErrorUTF8(cx, "Error opening file %s", path.get());
+      return false;
+    }
+
+    fseek(fp, 0L, SEEK_END);
+    size_t size = ftell(fp);
+    rewind(fp);
+    RootedObject typed_array(cx, JS_NewUint8Array(cx, size));
+    if (!typed_array) return false;
+
+    size_t read_bytes;
+    {
+      JS::AutoCheckCannotGC noGC(cx);
+      bool is_shared;
+      void* buffer = JS_GetArrayBufferViewData(typed_array, &is_shared, noGC);
+      read_bytes = fread(buffer, 1, size, fp);
+    }
+
+    if (read_bytes != size) {
+      JS_ReportErrorUTF8(cx, "Failed to read contents of file %s", path.get());
+      return false;
+    }
+
+    args.rval().setObject(*typed_array);
+    return true;
+  }
+
   const JSFunctionSpec methods[] = {
     JS_FN("dump", dump, 1, 0),
     JS_FN("enableDebugLogging", enableDebugLogging, 1, JSPROP_ENUMERATE),
     JS_FN("getGeolocationForIpAddress", getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
     JS_FN("getLogger", getLogger, 1, JSPROP_ENUMERATE),
+    JS_FN("includeBytes", includeBytes, 1, JSPROP_ENUMERATE),
     JS_FS_END
   };
 
@@ -529,7 +578,7 @@ namespace Crypto {
         return false;
     }
 
-    JS::AutoAssertNoGC noGC(cx);
+    JS::AutoCheckCannotGC noGC(cx);
     bool is_shared;
     void* buffer = JS_GetArrayBufferViewData(typed_array, &is_shared, noGC);
     arc4random_buf(buffer, byte_length);
@@ -681,19 +730,38 @@ namespace RequestOrResponse {
     // TODO: properly implement the spec steps for extracting the body and setting the content-type.
     // (https://fetch.spec.whatwg.org/#dom-response)
 
-    if (body_val.isObject() && JS::IsReadableStream(&body_val.toObject())) {
+    // TODO: Support the other possible inputs to Body.
+
+    RootedObject body_obj(cx, body_val.isObject() ? &body_val.toObject() : nullptr);
+
+    if (body_obj && JS::IsReadableStream(body_obj)) {
       JS_SetReservedSlot(obj, RequestOrResponse::Slots::BodyStream, body_val);
     } else {
-      // TODO: Support BufferSource and the other possible inputs to Body.
+      mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
+      UniqueChars text;
+      char* buf;
+      size_t length;
+
+      if (body_obj && JS_IsArrayBufferViewObject(body_obj)) {
+        // Short typed arrays have inline data which can move on GC, so assert that no GC happens.
+        // (Which it doesn't, because we're not allocating before `buf` goes out of scope.)
+        maybeNoGC.emplace(cx);
+        JS::AutoCheckCannotGC& noGC = maybeNoGC.ref();
+        bool is_shared;
+        length = JS_GetArrayBufferViewByteLength(body_obj);
+        buf = (char*)JS_GetArrayBufferViewData(body_obj, &is_shared, noGC);
+      } else if (body_obj && JS::IsArrayBufferObject(body_obj)) {
+        bool is_shared;
+        JS::GetArrayBufferLengthAndData(body_obj, &length, &is_shared, (uint8_t**)&buf);
+      } else {
+        text = encode(cx, body_val, &length);
+        if (!text) return false;
+        buf = text.get();
+      }
+
       BodyHandle body_handle = RequestOrResponse::body_handle(obj);
-
-      size_t utf8Length;
-      UniqueChars text = encode(cx, body_val, &utf8Length);
-      if (!text) return false;
-
       size_t num_written = 0;
-      int result = xqd_body_write(body_handle, text.get(), utf8Length, BodyWriteEndBack,
-                                  &num_written);
+      int result = xqd_body_write(body_handle, buf, length, BodyWriteEndBack, &num_written);
       if (!HANDLE_RESULT(cx, result))
         return false;
     }
