@@ -47,4 +47,4 @@ js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
 	$(WASM_STRIP)
 
 initialized-js-compute-runtime.wasm: js-compute-runtime.wasm $(INIT_JS)
-	cat $(INIT_JS) | $(WIZER) --allow-wasi -r _start=wizer.resume -o $@ $<
+	cat $(INIT_JS) | $(WIZER) --allow-wasi --dir=. -r _start=wizer.resume -o $@ $<
