@@ -4226,6 +4226,9 @@ bool fetch(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject request(cx, Request::create(cx, args[0], args.get(1)));
+  if (!request) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
 
   RootedString backend(cx, Request::backend(request));
   if (!backend) {
