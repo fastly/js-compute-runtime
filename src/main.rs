@@ -152,7 +152,7 @@ fn wizen(engine_path: &Option<PathBuf>, output_path: &Path) -> anyhow::Result<()
 
     let mut wizer = Wizer::new();
     wizer.allow_wasi(true);
-    wizer.dir("");
+    wizer.dir(".");
     wizer.func_rename("_start", "wizer.resume");
     let initialized_wasm = wizer.run(&engine_wasm_bytes).with_context(|| {
         format!("failed to initialize JS")
