@@ -4297,13 +4297,24 @@ bool process_pending_requests(JSContext* cx) {
     return false;
 
   HandleObject request = (*pending_requests)[done_index];
+  RootedObject response_promise(cx, Request::response_promise(request));
+
+  if (response_handle.handle == INVALID_HANDLE) {
+    pending_requests->erase(const_cast<JSObject**>(request.address()));
+    JS_ReportErrorUTF8(cx, "NetworkError when attempting to fetch resource.");
+    RootedValue exn(cx);
+    if (!JS_IsExceptionPending(cx) || !JS_GetPendingException(cx, &exn)) {
+      return false;
+    }
+    JS_ClearPendingException(cx);
+    return JS::RejectPromise(cx, response_promise, exn);
+  }
+
   RootedObject response(cx, Response::create(cx, response_handle, body, true));
   if (!response) return false;
 
   RequestOrResponse::set_url(response, RequestOrResponse::url(request));
   RootedValue response_val(cx, JS::ObjectValue(*response));
-
-  RootedObject response_promise(cx, Request::response_promise(request));
 
   pending_requests->erase(const_cast<JSObject**>(request.address()));
 
