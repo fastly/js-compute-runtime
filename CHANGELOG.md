@@ -1,4 +1,4 @@
-## 0.2.0 (2021-08-17)
+## 0.2.0 (2021-08-22)
 
 ### Enhancements
 
@@ -30,6 +30,9 @@
 
 - Don't trap when trying to delete a non-existent header
   [#16](https://github.com/fastly/js-compute-runtime/pull/16)
+
+- Reject fetch promise on network error
+  [#29](https://github.com/fastly/js-compute-runtime/pull/29)
 
 ## 0.1.0 (2021-07-29)
 
