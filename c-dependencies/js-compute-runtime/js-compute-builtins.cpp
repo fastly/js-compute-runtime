@@ -3777,7 +3777,7 @@ namespace URL {
       auto str = encode(cx, base_val);
       if (!str.data) return nullptr;
 
-      JSUrl* base = jsurl::new_jsurl(&str);
+      base = jsurl::new_jsurl(&str);
       if (!base) {
         JS_ReportErrorUTF8(cx, "URL constructor: %s is not a valid URL.", (char*)str.data);
         return nullptr;
@@ -3792,6 +3792,11 @@ namespace URL {
       url = jsurl::new_jsurl_with_base(&str, base);
     } else {
       url = jsurl::new_jsurl(&str);
+    }
+
+    if (!url) {
+      JS_ReportErrorUTF8(cx, "URL constructor: %s is not a valid URL.", (char*)str.data);
+      return nullptr;
     }
 
     JS::SetReservedSlot(self, Slots::Url, JS::PrivateValue(url));

@@ -1,3 +1,10 @@
+## 0.2.1 (2021-08-27)
+
+### Fixes
+
+- Properly support `base` argument in `URL` constructor
+  [#33](https://github.com/fastly/js-compute-runtime/pull/33)
+
 ## 0.2.0 (2021-08-24)
 
 ### Enhancements
