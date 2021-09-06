@@ -6,5 +6,8 @@ edition = "2018"
 [lib]
 crate-type = ["staticlib"]
 
+[profile.release]
+debug = true
+
 [dependencies]
 url = "2.2.2"
