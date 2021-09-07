@@ -4326,6 +4326,18 @@ bool process_pending_requests(JSContext* cx) {
   return JS::ResolvePromise(cx, response_promise, response_val);
 }
 
+bool error_stream_controller_with_pending_exception(JSContext* cx, HandleObject controller) {
+  RootedValue exn(cx);
+  if (!JS_GetPendingException(cx, &exn))
+    return false;
+  JS_ClearPendingException(cx);
+
+  JS::RootedValueArray<1> args(cx);
+  args[0].set(exn);
+  RootedValue r(cx);
+  return JS::Call(cx, controller, "error", args, &r);
+}
+
 bool process_next_body_read(JSContext* cx) {
   if (pending_body_reads->length() == 0) return true;
 
@@ -4340,12 +4352,14 @@ bool process_next_body_read(JSContext* cx) {
 
   BodyHandle body = RequestOrResponse::body_handle(owner);
   char* bytes = static_cast<char*>(JS_malloc(cx, HANDLE_READ_CHUNK_SIZE));
-  if (!bytes) return false;
+  if (!bytes) {
+    return error_stream_controller_with_pending_exception(cx, controller);
+  }
   size_t nwritten;
   int result = xqd_body_read(body, bytes, HANDLE_READ_CHUNK_SIZE, &nwritten);
   if (!HANDLE_RESULT(cx, result)) {
     JS_free(cx, bytes);
-    return false;
+    return error_stream_controller_with_pending_exception(cx, controller);
   }
 
   if (nwritten == 0) {
@@ -4356,14 +4370,14 @@ bool process_next_body_read(JSContext* cx) {
   char* new_bytes = static_cast<char*>(JS_realloc(cx, bytes, HANDLE_READ_CHUNK_SIZE, nwritten));
   if (!new_bytes) {
     JS_free(cx, bytes);
-    return false;
+    return error_stream_controller_with_pending_exception(cx, controller);
   }
   bytes = new_bytes;
 
   RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, nwritten, bytes));
   if (!buffer) {
     JS_free(cx, bytes);
-    return false;
+    return error_stream_controller_with_pending_exception(cx, controller);
   }
 
   RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, nwritten));
@@ -4372,9 +4386,9 @@ bool process_next_body_read(JSContext* cx) {
   JS::RootedValueArray<1> enqueue_args(cx);
   enqueue_args[0].setObject(*byte_array);
   RootedValue r(cx);
-  if (!JS::Call(cx, controller, "enqueue", enqueue_args, &r))
-    return false;
-
+  if (!JS::Call(cx, controller, "enqueue", enqueue_args, &r)) {
+    return error_stream_controller_with_pending_exception(cx, controller);
+  }
 
   return true;
 }
