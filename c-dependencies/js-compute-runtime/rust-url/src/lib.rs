@@ -201,6 +201,15 @@ pub unsafe extern "C" fn new_params() -> *mut JSUrlSearchParams {
 #[no_mangle]
 pub extern "C" fn params_init(params: &mut JSUrlSearchParams, init: &SpecString) {
     let init = unsafe { slice::from_raw_parts(init.data, init.len) };
+
+    // https://url.spec.whatwg.org/#dom-urlsearchparams-urlsearchparams
+    // Step 1
+    let init = if init.len() > 0 && init[0] == '?' as u8 {
+        &init[1..]
+    } else {
+        init
+    };
+
     params.list = form_urlencoded::parse(init).into_owned().collect();
     params.update_url_or_str();
 }
