@@ -1,0 +1,11 @@
+{
+  "TextDecoder decode() with explicit undefined": {
+    "status": 1
+  },
+  "TextDecoder decode() with undefined and undefined": {
+    "status": 1
+  },
+  "TextDecoder decode() with undefined and options": {
+    "status": 1
+  }
+}

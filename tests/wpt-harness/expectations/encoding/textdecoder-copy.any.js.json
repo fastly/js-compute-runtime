@@ -1,0 +1,8 @@
+{
+  "Modify buffer after passing it in (ArrayBuffer)": {
+    "status": 1
+  },
+  "Modify buffer after passing it in (SharedArrayBuffer)": {
+    "status": 1
+  }
+}

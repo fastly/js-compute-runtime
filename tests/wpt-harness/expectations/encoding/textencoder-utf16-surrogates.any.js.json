@@ -1,0 +1,23 @@
+{
+  "USVString handling: lone surrogate lead": {
+    "status": 0
+  },
+  "USVString handling: lone surrogate trail": {
+    "status": 0
+  },
+  "USVString handling: unmatched surrogate lead": {
+    "status": 0
+  },
+  "USVString handling: unmatched surrogate trail": {
+    "status": 0
+  },
+  "USVString handling: swapped surrogate pair": {
+    "status": 0
+  },
+  "USVString handling: properly encoded MUSICAL SYMBOL G CLEF (U+1D11E)": {
+    "status": 0
+  },
+  "USVString default": {
+    "status": 1
+  }
+}

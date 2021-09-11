@@ -1,0 +1,29 @@
+{
+  "Check default value for type attribute": {
+    "status": 0
+  },
+  "Check default value for url attribute": {
+    "status": 0
+  },
+  "Check default value for ok attribute": {
+    "status": 0
+  },
+  "Check default value for status attribute": {
+    "status": 0
+  },
+  "Check default value for statusText attribute": {
+    "status": 0
+  },
+  "Check default value for body attribute": {
+    "status": 0
+  },
+  "Check status init values and associated getter": {
+    "status": 0
+  },
+  "Check statusText init values and associated getter": {
+    "status": 0
+  },
+  "Test that Response.headers has the [SameObject] extended attribute": {
+    "status": 0
+  }
+}

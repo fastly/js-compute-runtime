@@ -1,0 +1,260 @@
+{
+  "Running templatedRSEmpty with ReadableStream (empty)": {
+    "status": 0
+  },
+  "ReadableStream (empty): instances have the correct methods and properties": {
+    "status": 0
+  },
+  "ReadableStream (empty): calling getReader with invalid arguments should throw appropriate errors": {
+    "status": 0
+  },
+  "Running templatedRSEmptyReader with ReadableStream (empty) reader": {
+    "status": 0
+  },
+  "ReadableStream (empty) reader: instances have the correct methods and properties": {
+    "status": 0
+  },
+  "ReadableStream (empty) reader: locked should be true": {
+    "status": 0
+  },
+  "ReadableStream (empty) reader: read() should never settle": {
+    "status": 0
+  },
+  "ReadableStream (empty) reader: two read()s should both never settle": {
+    "status": 0
+  },
+  "ReadableStream (empty) reader: read() should return distinct promises each time": {
+    "status": 0
+  },
+  "ReadableStream (empty) reader: getReader() again on the stream should fail": {
+    "status": 0
+  },
+  "ReadableStream (empty) reader: releasing the lock with pending read requests should throw but the read requests should stay pending": {
+    "status": 0
+  },
+  "ReadableStream (empty) reader: releasing the lock should cause further read() calls to reject with a TypeError": {
+    "status": 0
+  },
+  "ReadableStream (empty) reader: releasing the lock should cause closed calls to reject with a TypeError": {
+    "status": 0
+  },
+  "ReadableStream (empty) reader: releasing the lock should cause locked to become false": {
+    "status": 0
+  },
+  "ReadableStream (empty) reader: canceling via the reader should cause the reader to act closed": {
+    "status": 0
+  },
+  "ReadableStream (empty) reader: canceling via the stream should fail": {
+    "status": 0
+  },
+  "Running templatedRSClosed with ReadableStream (closed via call in start)": {
+    "status": 0
+  },
+  "ReadableStream (closed via call in start): cancel() should return a distinct fulfilled promise each time": {
+    "status": 0
+  },
+  "ReadableStream (closed via call in start): locked should be false": {
+    "status": 0
+  },
+  "ReadableStream (closed via call in start): getReader() should be OK": {
+    "status": 0
+  },
+  "ReadableStream (closed via call in start): should be able to acquire multiple readers if they are released in succession": {
+    "status": 0
+  },
+  "ReadableStream (closed via call in start): should not be able to acquire a second reader if we don't release the first one": {
+    "status": 0
+  },
+  "Running templatedRSClosedReader with ReadableStream reader (closed before getting reader)": {
+    "status": 0
+  },
+  "ReadableStream reader (closed before getting reader): read() should fulfill with { value: undefined, done: true }": {
+    "status": 0
+  },
+  "ReadableStream reader (closed before getting reader): read() multiple times should fulfill with { value: undefined, done: true }": {
+    "status": 0
+  },
+  "ReadableStream reader (closed before getting reader): read() should work when used within another read() fulfill callback": {
+    "status": 0
+  },
+  "ReadableStream reader (closed before getting reader): closed should fulfill with undefined": {
+    "status": 0
+  },
+  "ReadableStream reader (closed before getting reader): releasing the lock should cause closed to reject and change identity": {
+    "status": 0
+  },
+  "ReadableStream reader (closed before getting reader): cancel() should return a distinct fulfilled promise each time": {
+    "status": 0
+  },
+  "Running templatedRSClosedReader with ReadableStream reader (closed after getting reader)": {
+    "status": 0
+  },
+  "ReadableStream reader (closed after getting reader): read() should fulfill with { value: undefined, done: true }": {
+    "status": 0
+  },
+  "ReadableStream reader (closed after getting reader): read() multiple times should fulfill with { value: undefined, done: true }": {
+    "status": 0
+  },
+  "ReadableStream reader (closed after getting reader): read() should work when used within another read() fulfill callback": {
+    "status": 0
+  },
+  "ReadableStream reader (closed after getting reader): closed should fulfill with undefined": {
+    "status": 0
+  },
+  "ReadableStream reader (closed after getting reader): releasing the lock should cause closed to reject and change identity": {
+    "status": 0
+  },
+  "ReadableStream reader (closed after getting reader): cancel() should return a distinct fulfilled promise each time": {
+    "status": 0
+  },
+  "Running templatedRSClosed with ReadableStream (closed via cancel)": {
+    "status": 0
+  },
+  "ReadableStream (closed via cancel): cancel() should return a distinct fulfilled promise each time": {
+    "status": 0
+  },
+  "ReadableStream (closed via cancel): locked should be false": {
+    "status": 0
+  },
+  "ReadableStream (closed via cancel): getReader() should be OK": {
+    "status": 0
+  },
+  "ReadableStream (closed via cancel): should be able to acquire multiple readers if they are released in succession": {
+    "status": 0
+  },
+  "ReadableStream (closed via cancel): should not be able to acquire a second reader if we don't release the first one": {
+    "status": 0
+  },
+  "Running templatedRSClosedReader with ReadableStream reader (closed via cancel after getting reader)": {
+    "status": 0
+  },
+  "ReadableStream reader (closed via cancel after getting reader): read() should fulfill with { value: undefined, done: true }": {
+    "status": 0
+  },
+  "ReadableStream reader (closed via cancel after getting reader): read() multiple times should fulfill with { value: undefined, done: true }": {
+    "status": 0
+  },
+  "ReadableStream reader (closed via cancel after getting reader): read() should work when used within another read() fulfill callback": {
+    "status": 0
+  },
+  "ReadableStream reader (closed via cancel after getting reader): closed should fulfill with undefined": {
+    "status": 0
+  },
+  "ReadableStream reader (closed via cancel after getting reader): releasing the lock should cause closed to reject and change identity": {
+    "status": 0
+  },
+  "ReadableStream reader (closed via cancel after getting reader): cancel() should return a distinct fulfilled promise each time": {
+    "status": 0
+  },
+  "Running templatedRSErrored with ReadableStream (errored via call in start)": {
+    "status": 0
+  },
+  "ReadableStream (errored via call in start): getReader() should return a reader that acts errored": {
+    "status": 0
+  },
+  "ReadableStream (errored via call in start): read() twice should give the error each time": {
+    "status": 0
+  },
+  "ReadableStream (errored via call in start): locked should be false": {
+    "status": 0
+  },
+  "Running templatedRSErroredSyncOnly with ReadableStream (errored via call in start)": {
+    "status": 0
+  },
+  "ReadableStream (errored via call in start): should be able to obtain a second reader, with the correct closed promise": {
+    "status": 0
+  },
+  "ReadableStream (errored via call in start): should not be able to obtain additional readers if we don't release the first lock": {
+    "status": 0
+  },
+  "ReadableStream (errored via call in start): cancel() should return a distinct rejected promise each time": {
+    "status": 0
+  },
+  "ReadableStream (errored via call in start): reader cancel() should return a distinct rejected promise each time": {
+    "status": 0
+  },
+  "Running templatedRSErrored with ReadableStream (errored via returning a rejected promise in start)": {
+    "status": 0
+  },
+  "ReadableStream (errored via returning a rejected promise in start): getReader() should return a reader that acts errored": {
+    "status": 0
+  },
+  "ReadableStream (errored via returning a rejected promise in start): read() twice should give the error each time": {
+    "status": 0
+  },
+  "ReadableStream (errored via returning a rejected promise in start): locked should be false": {
+    "status": 0
+  },
+  "Running templatedRSErroredReader with ReadableStream (errored via returning a rejected promise in start) reader": {
+    "status": 0
+  },
+  "ReadableStream (errored via returning a rejected promise in start) reader: closed should reject with the error": {
+    "status": 0
+  },
+  "ReadableStream (errored via returning a rejected promise in start) reader: releasing the lock should cause closed to reject and change identity": {
+    "status": 0
+  },
+  "ReadableStream (errored via returning a rejected promise in start) reader: read() should reject with the error": {
+    "status": 0
+  },
+  "Running templatedRSErroredReader with ReadableStream reader (errored before getting reader)": {
+    "status": 0
+  },
+  "ReadableStream reader (errored before getting reader): closed should reject with the error": {
+    "status": 0
+  },
+  "ReadableStream reader (errored before getting reader): releasing the lock should cause closed to reject and change identity": {
+    "status": 0
+  },
+  "ReadableStream reader (errored before getting reader): read() should reject with the error": {
+    "status": 0
+  },
+  "Running templatedRSErroredReader with ReadableStream reader (errored after getting reader)": {
+    "status": 0
+  },
+  "ReadableStream reader (errored after getting reader): closed should reject with the error": {
+    "status": 0
+  },
+  "ReadableStream reader (errored after getting reader): releasing the lock should cause closed to reject and change identity": {
+    "status": 0
+  },
+  "ReadableStream reader (errored after getting reader): read() should reject with the error": {
+    "status": 0
+  },
+  "Running templatedRSTwoChunksOpenReader with ReadableStream (two chunks enqueued, still open) reader": {
+    "status": 0
+  },
+  "ReadableStream (two chunks enqueued, still open) reader: calling read() twice without waiting will eventually give both chunks (sequential)": {
+    "status": 0
+  },
+  "ReadableStream (two chunks enqueued, still open) reader: calling read() twice without waiting will eventually give both chunks (nested)": {
+    "status": 0
+  },
+  "ReadableStream (two chunks enqueued, still open) reader: read() should return distinct promises each time": {
+    "status": 0
+  },
+  "ReadableStream (two chunks enqueued, still open) reader: cancel() after a read() should still give that single read result": {
+    "status": 0
+  },
+  "Running templatedRSTwoChunksClosedReader with ReadableStream (two chunks enqueued, then closed) reader": {
+    "status": 0
+  },
+  "ReadableStream (two chunks enqueued, then closed) reader: third read(), without waiting, should give { value: undefined, done: true } (sequential)": {
+    "status": 0
+  },
+  "ReadableStream (two chunks enqueued, then closed) reader: third read(), without waiting, should give { value: undefined, done: true } (nested)": {
+    "status": 0
+  },
+  "ReadableStream (two chunks enqueued, then closed) reader: draining the stream via read() should cause the reader closed promise to fulfill, but locked stays true": {
+    "status": 0
+  },
+  "ReadableStream (two chunks enqueued, then closed) reader: releasing the lock after the stream is closed should cause locked to become false": {
+    "status": 0
+  },
+  "ReadableStream (two chunks enqueued, then closed) reader: releasing the lock should cause further read() calls to reject with a TypeError": {
+    "status": 0
+  },
+  "ReadableStream (two chunks enqueued, then closed) reader: reader's closed property always returns the same promise": {
+    "status": 0
+  }
+}

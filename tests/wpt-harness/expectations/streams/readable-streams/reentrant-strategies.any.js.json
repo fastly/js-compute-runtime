@@ -1,0 +1,32 @@
+{
+  "enqueue() inside size() should work": {
+    "status": 0
+  },
+  "close() inside size() should not crash": {
+    "status": 0
+  },
+  "close request inside size() should work": {
+    "status": 0
+  },
+  "error() inside size() should work": {
+    "status": 0
+  },
+  "desiredSize inside size() should work": {
+    "status": 0
+  },
+  "cancel() inside size() should work": {
+    "status": 0
+  },
+  "pipeTo() inside size() should behave as expected": {
+    "status": 0
+  },
+  "read() inside of size() should behave as expected": {
+    "status": 0
+  },
+  "getReader() inside size() should work": {
+    "status": 0
+  },
+  "tee() inside size() should work": {
+    "status": 0
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "Accept-Charset is a forbidden request header": {
+    "status": 1
+  },
+  "Accept-Encoding is a forbidden request header": {
+    "status": 1
+  },
+  "Access-Control-Request-Headers is a forbidden request header": {
+    "status": 1
+  },
+  "Access-Control-Request-Method is a forbidden request header": {
+    "status": 1
+  },
+  "Connection is a forbidden request header": {
+    "status": 1
+  },
+  "Content-Length is a forbidden request header": {
+    "status": 1
+  },
+  "Cookie is a forbidden request header": {
+    "status": 1
+  },
+  "Cookie2 is a forbidden request header": {
+    "status": 1
+  },
+  "Date is a forbidden request header": {
+    "status": 1
+  },
+  "DNT is a forbidden request header": {
+    "status": 1
+  },
+  "Expect is a forbidden request header": {
+    "status": 1
+  },
+  "Host is a forbidden request header": {
+    "status": 1
+  },
+  "Keep-Alive is a forbidden request header": {
+    "status": 1
+  },
+  "Origin is a forbidden request header": {
+    "status": 1
+  },
+  "Referer is a forbidden request header": {
+    "status": 1
+  },
+  "TE is a forbidden request header": {
+    "status": 1
+  },
+  "Trailer is a forbidden request header": {
+    "status": 1
+  },
+  "Transfer-Encoding is a forbidden request header": {
+    "status": 1
+  },
+  "Upgrade is a forbidden request header": {
+    "status": 1
+  },
+  "Via is a forbidden request header": {
+    "status": 1
+  },
+  "Proxy- is a forbidden request header": {
+    "status": 1
+  },
+  "Proxy-Test is a forbidden request header": {
+    "status": 1
+  },
+  "Sec- is a forbidden request header": {
+    "status": 1
+  },
+  "Sec-Test is a forbidden request header": {
+    "status": 1
+  }
+}

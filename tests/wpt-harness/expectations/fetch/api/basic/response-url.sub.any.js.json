@@ -1,0 +1,14 @@
+{
+  "Testing response url getter with http://web-platform.test:8000/ada": {
+    "status": 0
+  },
+  "Testing response url getter with http://web-platform.test:8000/#": {
+    "status": 1
+  },
+  "Testing response url getter with http://web-platform.test:8000/#ada": {
+    "status": 1
+  },
+  "Testing response url getter with http://web-platform.test:8000#ada": {
+    "status": 1
+  }
+}

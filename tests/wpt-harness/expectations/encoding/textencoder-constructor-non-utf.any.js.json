@@ -1,0 +1,239 @@
+{
+  "Encoding argument supported for decode: UTF-8": {
+    "status": 0
+  },
+  "Encoding argument not considered for encode: UTF-8": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: IBM866": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: IBM866": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-2": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-2": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-3": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-3": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-4": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-4": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-5": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-5": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-6": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-6": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-7": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-7": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-8": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-8": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-8-I": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-8-I": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-10": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-10": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-13": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-13": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-14": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-14": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-15": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-15": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-8859-16": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-8859-16": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: KOI8-R": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: KOI8-R": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: KOI8-U": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: KOI8-U": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: macintosh": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: macintosh": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: windows-874": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: windows-874": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: windows-1250": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: windows-1250": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: windows-1251": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: windows-1251": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: windows-1252": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: windows-1252": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: windows-1253": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: windows-1253": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: windows-1254": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: windows-1254": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: windows-1255": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: windows-1255": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: windows-1256": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: windows-1256": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: windows-1257": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: windows-1257": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: windows-1258": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: windows-1258": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: x-mac-cyrillic": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: x-mac-cyrillic": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: GBK": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: GBK": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: gb18030": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: gb18030": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: Big5": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: Big5": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: EUC-JP": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: EUC-JP": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: ISO-2022-JP": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: ISO-2022-JP": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: Shift_JIS": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: Shift_JIS": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: EUC-KR": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: EUC-KR": {
+    "status": 0
+  },
+  "Encoding argument not considered for encode: replacement": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: UTF-16BE": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: UTF-16BE": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: UTF-16LE": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: UTF-16LE": {
+    "status": 0
+  },
+  "Encoding argument supported for decode: x-user-defined": {
+    "status": 1
+  },
+  "Encoding argument not considered for encode: x-user-defined": {
+    "status": 0
+  }
+}

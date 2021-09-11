@@ -1,0 +1,62 @@
+{
+  "Fetch with PUT with body": {
+    "status": 0
+  },
+  "Fetch with POST with text body": {
+    "status": 0
+  },
+  "Fetch with POST with URLSearchParams body": {
+    "status": 0
+  },
+  "Fetch with POST with Blob body": {
+    "status": 1
+  },
+  "Fetch with POST with ArrayBuffer body": {
+    "status": 0
+  },
+  "Fetch with POST with Uint8Array body": {
+    "status": 0
+  },
+  "Fetch with POST with Int8Array body": {
+    "status": 0
+  },
+  "Fetch with POST with Float32Array body": {
+    "status": 0
+  },
+  "Fetch with POST with Float64Array body": {
+    "status": 0
+  },
+  "Fetch with POST with DataView body": {
+    "status": 0
+  },
+  "Fetch with POST with Blob body with mime type": {
+    "status": 1
+  },
+  "Fetch with POST with ReadableStream containing String": {
+    "status": 1
+  },
+  "Fetch with POST with ReadableStream containing null": {
+    "status": 1
+  },
+  "Fetch with POST with ReadableStream containing number": {
+    "status": 1
+  },
+  "Fetch with POST with ReadableStream containing ArrayBuffer": {
+    "status": 1
+  },
+  "Fetch with POST with ReadableStream containing Blob": {
+    "status": 1
+  },
+  "Fetch with POST with text body on 421 response should be retried once on new connection.": {
+    "status": 1
+  },
+  "Fetch with POST with ReadableStream on 421 response should return the response and not retry.": {
+    "status": 0
+  },
+  "Feature detect for POST with ReadableStream": {
+    "status": 1
+  },
+  "Feature detect for POST with ReadableStream, using request object": {
+    "status": 1
+  }
+}

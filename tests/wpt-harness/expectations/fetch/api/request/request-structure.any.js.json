@@ -1,0 +1,62 @@
+{
+  "Request has clone method": {
+    "status": 1
+  },
+  "Request has arrayBuffer method": {
+    "status": 0
+  },
+  "Request has blob method": {
+    "status": 1
+  },
+  "Request has formData method": {
+    "status": 1
+  },
+  "Request has json method": {
+    "status": 0
+  },
+  "Request has text method": {
+    "status": 0
+  },
+  "Check method attribute": {
+    "status": 0
+  },
+  "Check url attribute": {
+    "status": 0
+  },
+  "Check headers attribute": {
+    "status": 0
+  },
+  "Check destination attribute": {
+    "status": 1
+  },
+  "Check referrer attribute": {
+    "status": 1
+  },
+  "Check referrerPolicy attribute": {
+    "status": 1
+  },
+  "Check mode attribute": {
+    "status": 1
+  },
+  "Check credentials attribute": {
+    "status": 1
+  },
+  "Check cache attribute": {
+    "status": 1
+  },
+  "Check redirect attribute": {
+    "status": 1
+  },
+  "Check integrity attribute": {
+    "status": 1
+  },
+  "Check isReloadNavigation attribute": {
+    "status": 1
+  },
+  "Check isHistoryNavigation attribute": {
+    "status": 1
+  },
+  "Check bodyUsed attribute": {
+    "status": 0
+  }
+}

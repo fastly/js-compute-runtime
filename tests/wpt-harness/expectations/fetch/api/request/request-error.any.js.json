@@ -1,0 +1,65 @@
+{
+  "RequestInit's window is not null": {
+    "status": 1
+  },
+  "Input URL is not valid": {
+    "status": 1
+  },
+  "Input URL has credentials": {
+    "status": 1
+  },
+  "RequestInit's mode is navigate": {
+    "status": 1
+  },
+  "RequestInit's referrer is invalid": {
+    "status": 1
+  },
+  "RequestInit's method is invalid": {
+    "status": 1
+  },
+  "RequestInit's method is forbidden": {
+    "status": 1
+  },
+  "RequestInit's mode is no-cors and method is not simple": {
+    "status": 1
+  },
+  "RequestInit's cache mode is only-if-cached and mode is not same-origin": {
+    "status": 1
+  },
+  "Request with cache mode: only-if-cached and fetch mode cors": {
+    "status": 1
+  },
+  "Request with cache mode: only-if-cached and fetch mode no-cors": {
+    "status": 1
+  },
+  "Bad referrerPolicy init parameter value": {
+    "status": 1
+  },
+  "Bad mode init parameter value": {
+    "status": 1
+  },
+  "Bad credentials init parameter value": {
+    "status": 1
+  },
+  "Bad cache init parameter value": {
+    "status": 1
+  },
+  "Bad redirect init parameter value": {
+    "status": 1
+  },
+  "Request should get its content-type from the init request": {
+    "status": 1
+  },
+  "Request should not get its content-type from the init request if init headers are provided": {
+    "status": 0
+  },
+  "Request should get its content-type from the body if none is provided": {
+    "status": 1
+  },
+  "Request should get its content-type from init headers if one is provided": {
+    "status": 1
+  },
+  "Request with cache mode: only-if-cached and fetch mode: same-origin": {
+    "status": 0
+  }
+}

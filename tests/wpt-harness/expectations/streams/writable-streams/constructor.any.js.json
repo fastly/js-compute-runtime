@@ -1,0 +1,38 @@
+{
+  "controller argument should be passed to start method": {
+    "status": 0
+  },
+  "controller argument should be passed to write method": {
+    "status": 0
+  },
+  "controller argument should not be passed to close method": {
+    "status": 0
+  },
+  "highWaterMark should be reflected to desiredSize": {
+    "status": 0
+  },
+  "WritableStream should be writable and ready should fulfill immediately if the strategy does not apply backpressure": {
+    "status": 0
+  },
+  "WritableStream should be constructible with no arguments": {
+    "status": 0
+  },
+  "underlyingSink argument should be converted after queuingStrategy argument": {
+    "status": 0
+  },
+  "WritableStream instances should have standard methods and properties": {
+    "status": 0
+  },
+  "WritableStreamDefaultController constructor should throw": {
+    "status": 0
+  },
+  "WritableStreamDefaultController constructor should throw when passed an initialised WritableStream": {
+    "status": 0
+  },
+  "WritableStreamDefaultWriter should throw unless passed a WritableStream": {
+    "status": 0
+  },
+  "WritableStreamDefaultWriter constructor should throw when stream argument is locked": {
+    "status": 0
+  }
+}

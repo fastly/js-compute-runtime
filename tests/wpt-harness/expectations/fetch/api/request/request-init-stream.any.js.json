@@ -1,0 +1,23 @@
+{
+  "Constructing a Request with a stream holds the original object.": {
+    "status": 0
+  },
+  "Constructing a Request with a stream on which getReader() is called": {
+    "status": 1
+  },
+  "Constructing a Request with a stream on which read() is called": {
+    "status": 1
+  },
+  "Constructing a Request with a stream on which read() and releaseLock() are called": {
+    "status": 1
+  },
+  "Constructing a Request with a Request on which body.getReader() is called": {
+    "status": 1
+  },
+  "Constructing a Request with a Request on which body.getReader().read() is called": {
+    "status": 1
+  },
+  "Constructing a Request with a Request on which read() and releaseLock() are called": {
+    "status": 1
+  }
+}

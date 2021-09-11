@@ -1,0 +1,188 @@
+{
+  "Aborting a WritableStream before it starts should cause the writer's unsettled ready promise to reject": {
+    "status": 0
+  },
+  "Aborting a WritableStream should cause the writer's fulfilled ready promise to reset to a rejected one": {
+    "status": 0
+  },
+  "abort() on a released writer rejects": {
+    "status": 0
+  },
+  "Aborting a WritableStream immediately prevents future writes": {
+    "status": 0
+  },
+  "Aborting a WritableStream prevents further writes after any that are in progress": {
+    "status": 0
+  },
+  "Fulfillment value of writer.abort() call must be undefined even if the underlying sink returns a non-undefined value": {
+    "status": 0
+  },
+  "WritableStream if sink's abort throws, the promise returned by writer.abort() rejects": {
+    "status": 0
+  },
+  "WritableStream if sink's abort throws, the promise returned by multiple writer.abort()s is the same and rejects": {
+    "status": 0
+  },
+  "WritableStream if sink's abort throws, the promise returned by ws.abort() rejects": {
+    "status": 0
+  },
+  "WritableStream if sink's abort throws, for an abort performed during a write, the promise returned by ws.abort() rejects": {
+    "status": 0
+  },
+  "Aborting a WritableStream passes through the given reason": {
+    "status": 0
+  },
+  "Aborting a WritableStream puts it in an errored state with the error passed to abort()": {
+    "status": 0
+  },
+  "Aborting a WritableStream causes any outstanding write() promises to be rejected with the reason supplied": {
+    "status": 0
+  },
+  "Closing but then immediately aborting a WritableStream causes the stream to error": {
+    "status": 0
+  },
+  "Closing a WritableStream and aborting it while it closes causes the stream to ignore the abort attempt": {
+    "status": 0
+  },
+  "Aborting a WritableStream after it is closed is a no-op": {
+    "status": 0
+  },
+  "WritableStream should NOT call underlying sink's close if no abort is supplied (historical)": {
+    "status": 0
+  },
+  "returning a thenable from abort() should work": {
+    "status": 0
+  },
+  ".closed should not resolve before fulfilled write()": {
+    "status": 0
+  },
+  ".closed should not resolve before rejected write(); write() error should not overwrite abort() error": {
+    "status": 0
+  },
+  "writes should be satisfied in order when aborting": {
+    "status": 0
+  },
+  "writes should be satisfied in order after rejected write when aborting": {
+    "status": 0
+  },
+  "close() should reject with abort reason why abort() is first error": {
+    "status": 0
+  },
+  "underlying abort() should not be called until underlying write() completes": {
+    "status": 0
+  },
+  "underlying abort() should not be called if underlying close() has started": {
+    "status": 0
+  },
+  "if underlying close() has started and then rejects, the abort() and close() promises should reject with the underlying close rejection reason": {
+    "status": 0
+  },
+  "an abort() that happens during a write() should trigger the underlying abort() even with a close() queued": {
+    "status": 0
+  },
+  "if a writer is created for a stream with a pending abort, its ready should be rejected with the abort error": {
+    "status": 0
+  },
+  "writer close() promise should resolve before abort() promise": {
+    "status": 0
+  },
+  "writer.ready should reject on controller error without waiting for underlying write": {
+    "status": 0
+  },
+  "writer.abort() while there is an in-flight write, and then finish the write with rejection": {
+    "status": 0
+  },
+  "writer.abort(), controller.error() while there is an in-flight write, and then finish the write": {
+    "status": 0
+  },
+  "writer.abort(), controller.error() while there is an in-flight close, and then finish the close": {
+    "status": 0
+  },
+  "controller.error(), writer.abort() while there is an in-flight write, and then finish the write": {
+    "status": 0
+  },
+  "controller.error(), writer.abort() while there is an in-flight close, and then finish the close": {
+    "status": 0
+  },
+  "releaseLock() while aborting should reject the original closed promise": {
+    "status": 0
+  },
+  "releaseLock() during delayed async abort() should reject the writer.closed promise": {
+    "status": 0
+  },
+  "sink abort() should not be called until sink start() is done": {
+    "status": 0
+  },
+  "if start attempts to error the controller after abort() has been called, then it should lose": {
+    "status": 0
+  },
+  "stream abort() promise should still resolve if sink start() rejects": {
+    "status": 0
+  },
+  "writer abort() during sink start() should replace the writer.ready promise synchronously": {
+    "status": 0
+  },
+  "promises returned from other writer methods should be rejected when writer abort() happens during sink start()": {
+    "status": 0
+  },
+  "abort() should succeed despite rejection from write": {
+    "status": 0
+  },
+  "abort() should be rejected with the rejection returned from close()": {
+    "status": 0
+  },
+  "a rejecting sink.write() should not prevent sink.abort() from being called": {
+    "status": 0
+  },
+  "when start errors after stream abort(), underlying sink abort() should be called anyway": {
+    "status": 0
+  },
+  "when calling abort() twice on the same stream, both should give the same promise that fulfills with undefined": {
+    "status": 0
+  },
+  "when calling abort() twice on the same stream, but sequentially so so there's no pending abort the second time, both should fulfill with undefined": {
+    "status": 0
+  },
+  "calling abort() on an errored stream should fulfill with undefined": {
+    "status": 0
+  },
+  "sink abort() should not be called if stream was erroring due to controller.error() before abort() was called": {
+    "status": 0
+  },
+  "sink abort() should not be called if stream was erroring due to bad strategy before abort() was called": {
+    "status": 0
+  },
+  "abort with no arguments should set the stored error to undefined": {
+    "status": 0
+  },
+  "abort with an undefined argument should set the stored error to undefined": {
+    "status": 0
+  },
+  "abort with a string argument should set the stored error to that argument": {
+    "status": 0
+  },
+  "abort on a locked stream should reject": {
+    "status": 0
+  },
+  "WritableStreamDefaultController.signal": {
+    "status": 1
+  },
+  "the abort signal is signalled synchronously - write": {
+    "status": 1
+  },
+  "the abort signal is signalled synchronously - close": {
+    "status": 1
+  },
+  "the abort signal is not signalled on error": {
+    "status": 1
+  },
+  "the abort signal is not signalled on write failure": {
+    "status": 1
+  },
+  "the abort signal is not signalled on close failure": {
+    "status": 1
+  },
+  "recursive abort() call": {
+    "status": 1
+  }
+}

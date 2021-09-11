@@ -1,0 +1,86 @@
+{
+  "Float arrays": {
+    "status": 1
+  },
+  "Integer array: Int8Array": {
+    "status": 0
+  },
+  "Large length: Int8Array": {
+    "status": 1
+  },
+  "Null arrays: Int8Array": {
+    "status": 0
+  },
+  "Integer array: Int16Array": {
+    "status": 0
+  },
+  "Large length: Int16Array": {
+    "status": 1
+  },
+  "Null arrays: Int16Array": {
+    "status": 0
+  },
+  "Integer array: Int32Array": {
+    "status": 0
+  },
+  "Large length: Int32Array": {
+    "status": 1
+  },
+  "Null arrays: Int32Array": {
+    "status": 0
+  },
+  "Integer array: BigInt64Array": {
+    "status": 0
+  },
+  "Large length: BigInt64Array": {
+    "status": 1
+  },
+  "Null arrays: BigInt64Array": {
+    "status": 0
+  },
+  "Integer array: Uint8Array": {
+    "status": 0
+  },
+  "Large length: Uint8Array": {
+    "status": 1
+  },
+  "Null arrays: Uint8Array": {
+    "status": 0
+  },
+  "Integer array: Uint8ClampedArray": {
+    "status": 0
+  },
+  "Large length: Uint8ClampedArray": {
+    "status": 1
+  },
+  "Null arrays: Uint8ClampedArray": {
+    "status": 0
+  },
+  "Integer array: Uint16Array": {
+    "status": 0
+  },
+  "Large length: Uint16Array": {
+    "status": 1
+  },
+  "Null arrays: Uint16Array": {
+    "status": 0
+  },
+  "Integer array: Uint32Array": {
+    "status": 0
+  },
+  "Large length: Uint32Array": {
+    "status": 1
+  },
+  "Null arrays: Uint32Array": {
+    "status": 0
+  },
+  "Integer array: BigUint64Array": {
+    "status": 0
+  },
+  "Large length: BigUint64Array": {
+    "status": 1
+  },
+  "Null arrays: BigUint64Array": {
+    "status": 0
+  }
+}

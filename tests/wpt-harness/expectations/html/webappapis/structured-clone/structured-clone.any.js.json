@@ -1,0 +1,347 @@
+{
+  "primitive undefined": {
+    "status": 0
+  },
+  "primitive null": {
+    "status": 0
+  },
+  "primitive true": {
+    "status": 0
+  },
+  "primitive false": {
+    "status": 0
+  },
+  "primitive string, empty string": {
+    "status": 0
+  },
+  "primitive string, lone high surrogate": {
+    "status": 0
+  },
+  "primitive string, lone low surrogate": {
+    "status": 0
+  },
+  "primitive string, NUL": {
+    "status": 0
+  },
+  "primitive string, astral character": {
+    "status": 0
+  },
+  "primitive number, 0.2": {
+    "status": 0
+  },
+  "primitive number, 0": {
+    "status": 0
+  },
+  "primitive number, -0": {
+    "status": 0
+  },
+  "primitive number, NaN": {
+    "status": 0
+  },
+  "primitive number, Infinity": {
+    "status": 0
+  },
+  "primitive number, -Infinity": {
+    "status": 0
+  },
+  "primitive number, 9007199254740992": {
+    "status": 0
+  },
+  "primitive number, -9007199254740992": {
+    "status": 0
+  },
+  "primitive number, 9007199254740994": {
+    "status": 0
+  },
+  "primitive number, -9007199254740994": {
+    "status": 0
+  },
+  "primitive BigInt, 0n": {
+    "status": 0
+  },
+  "primitive BigInt, -0n": {
+    "status": 0
+  },
+  "primitive BigInt, -9007199254740994000n": {
+    "status": 0
+  },
+  "primitive BigInt, -9007199254740994000900719925474099400090071992547409940009007199254740994000n": {
+    "status": 0
+  },
+  "Array primitives": {
+    "status": 0
+  },
+  "Object primitives": {
+    "status": 0
+  },
+  "Boolean true": {
+    "status": 0
+  },
+  "Boolean false": {
+    "status": 0
+  },
+  "Array Boolean objects": {
+    "status": 0
+  },
+  "Object Boolean objects": {
+    "status": 0
+  },
+  "String empty string": {
+    "status": 0
+  },
+  "String lone high surrogate": {
+    "status": 0
+  },
+  "String lone low surrogate": {
+    "status": 0
+  },
+  "String NUL": {
+    "status": 0
+  },
+  "String astral character": {
+    "status": 0
+  },
+  "Array String objects": {
+    "status": 0
+  },
+  "Object String objects": {
+    "status": 0
+  },
+  "Number 0.2": {
+    "status": 0
+  },
+  "Number 0": {
+    "status": 0
+  },
+  "Number -0": {
+    "status": 0
+  },
+  "Number NaN": {
+    "status": 0
+  },
+  "Number Infinity": {
+    "status": 0
+  },
+  "Number -Infinity": {
+    "status": 0
+  },
+  "Number 9007199254740992": {
+    "status": 0
+  },
+  "Number -9007199254740992": {
+    "status": 0
+  },
+  "Number 9007199254740994": {
+    "status": 0
+  },
+  "Number -9007199254740994": {
+    "status": 0
+  },
+  "BigInt -9007199254740994n": {
+    "status": 0
+  },
+  "Array Number objects": {
+    "status": 0
+  },
+  "Object Number objects": {
+    "status": 0
+  },
+  "Date 0": {
+    "status": 0
+  },
+  "Date -0": {
+    "status": 0
+  },
+  "Date -8.64e15": {
+    "status": 0
+  },
+  "Date 8.64e15": {
+    "status": 0
+  },
+  "Array Date objects": {
+    "status": 0
+  },
+  "Object Date objects": {
+    "status": 0
+  },
+  "RegExp flags and lastIndex": {
+    "status": 0
+  },
+  "RegExp sticky flag": {
+    "status": 0
+  },
+  "RegExp unicode flag": {
+    "status": 0
+  },
+  "RegExp empty": {
+    "status": 0
+  },
+  "RegExp slash": {
+    "status": 0
+  },
+  "RegExp new line": {
+    "status": 0
+  },
+  "Array RegExp object, RegExp flags and lastIndex": {
+    "status": 0
+  },
+  "Array RegExp object, RegExp sticky flag": {
+    "status": 0
+  },
+  "Array RegExp object, RegExp unicode flag": {
+    "status": 0
+  },
+  "Array RegExp object, RegExp empty": {
+    "status": 0
+  },
+  "Array RegExp object, RegExp slash": {
+    "status": 0
+  },
+  "Array RegExp object, RegExp new line": {
+    "status": 0
+  },
+  "Object RegExp object, RegExp flags and lastIndex": {
+    "status": 0
+  },
+  "Object RegExp object, RegExp sticky flag": {
+    "status": 0
+  },
+  "Object RegExp object, RegExp unicode flag": {
+    "status": 0
+  },
+  "Object RegExp object, RegExp empty": {
+    "status": 0
+  },
+  "Object RegExp object, RegExp slash": {
+    "status": 0
+  },
+  "Object RegExp object, RegExp new line": {
+    "status": 0
+  },
+  "Blob basic": {
+    "status": 1
+  },
+  "Blob unpaired high surrogate (invalid utf-8)": {
+    "status": 1
+  },
+  "Blob unpaired low surrogate (invalid utf-8)": {
+    "status": 1
+  },
+  "Blob paired surrogates (invalid utf-8)": {
+    "status": 1
+  },
+  "Blob empty": {
+    "status": 1
+  },
+  "Blob NUL": {
+    "status": 1
+  },
+  "Array Blob object, Blob basic": {
+    "status": 1
+  },
+  "Array Blob object, Blob unpaired high surrogate (invalid utf-8)": {
+    "status": 1
+  },
+  "Array Blob object, Blob unpaired low surrogate (invalid utf-8)": {
+    "status": 1
+  },
+  "Array Blob object, Blob paired surrogates (invalid utf-8)": {
+    "status": 1
+  },
+  "Array Blob object, Blob empty": {
+    "status": 1
+  },
+  "Array Blob object, Blob NUL": {
+    "status": 1
+  },
+  "Array Blob object, two Blobs": {
+    "status": 1
+  },
+  "Object Blob object, Blob basic": {
+    "status": 1
+  },
+  "Object Blob object, Blob unpaired high surrogate (invalid utf-8)": {
+    "status": 1
+  },
+  "Object Blob object, Blob unpaired low surrogate (invalid utf-8)": {
+    "status": 1
+  },
+  "Object Blob object, Blob paired surrogates (invalid utf-8)": {
+    "status": 1
+  },
+  "Object Blob object, Blob empty": {
+    "status": 1
+  },
+  "Object Blob object, Blob NUL": {
+    "status": 1
+  },
+  "File basic": {
+    "status": 1
+  },
+  "Array sparse": {
+    "status": 0
+  },
+  "Array with non-index property": {
+    "status": 0
+  },
+  "Object with index property and length": {
+    "status": 0
+  },
+  "Array with circular reference": {
+    "status": 0
+  },
+  "Object with circular reference": {
+    "status": 0
+  },
+  "Array with identical property values": {
+    "status": 0
+  },
+  "Object with identical property values": {
+    "status": 0
+  },
+  "Object with property on prototype": {
+    "status": 0
+  },
+  "Object with non-enumerable property": {
+    "status": 0
+  },
+  "Object with non-writable property": {
+    "status": 0
+  },
+  "Object with non-configurable property": {
+    "status": 0
+  },
+  "ObjectPrototype must lose its exotic-ness when cloned": {
+    "status": 0
+  },
+  "Serializing a non-serializable platform object fails": {
+    "status": 1
+  },
+  "An object whose interface is deleted from the global must still deserialize": {
+    "status": 1
+  },
+  "A subclass instance will deserialize as its closest serializable superclass": {
+    "status": 1
+  },
+  "ArrayBuffer": {
+    "status": 0
+  },
+  "MessagePort": {
+    "status": 1
+  },
+  "A detached ArrayBuffer cannot be transferred": {
+    "status": 1
+  },
+  "A detached platform object cannot be transferred": {
+    "status": 1
+  },
+  "Transferring a non-transferable platform object fails": {
+    "status": 1
+  },
+  "An object whose interface is deleted from the global object must still be received": {
+    "status": 1
+  },
+  "A subclass instance will be received as its closest transferable superclass": {
+    "status": 1
+  }
+}

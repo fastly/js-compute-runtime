@@ -1,0 +1,77 @@
+{
+  "idl_test setup": {
+    "status": 0
+  },
+  "idl_test validation": {
+    "status": 0
+  },
+  "TextDecoder includes TextDecoderCommon: member names are unique": {
+    "status": 0
+  },
+  "TextEncoder includes TextEncoderCommon: member names are unique": {
+    "status": 0
+  },
+  "TextDecoderStream includes TextDecoderCommon: member names are unique": {
+    "status": 0
+  },
+  "TextDecoderStream includes GenericTransformStream: member names are unique": {
+    "status": 0
+  },
+  "TextEncoderStream includes TextEncoderCommon: member names are unique": {
+    "status": 0
+  },
+  "TextEncoderStream includes GenericTransformStream: member names are unique": {
+    "status": 0
+  },
+  "TextDecoder interface: existence and properties of interface object": {
+    "status": 1
+  },
+  "TextDecoder must be primary interface of new TextDecoder()": {
+    "status": 0
+  },
+  "Stringification of new TextDecoder()": {
+    "status": 1
+  },
+  "TextDecoder interface: new TextDecoder() must not have property \"undefined\"": {
+    "status": 0
+  },
+  "TextDecoder interface: new TextDecoder() must not have property \"decode\"": {
+    "status": 1
+  },
+  "TextDecoder interface: new TextDecoder() must not have property \"encoding\"": {
+    "status": 1
+  },
+  "TextDecoder interface: new TextDecoder() must not have property \"fatal\"": {
+    "status": 0
+  },
+  "TextDecoder interface: new TextDecoder() must not have property \"ignoreBOM\"": {
+    "status": 0
+  },
+  "TextEncoder interface: existence and properties of interface object": {
+    "status": 1
+  },
+  "TextEncoder must be primary interface of new TextEncoder()": {
+    "status": 0
+  },
+  "Stringification of new TextEncoder()": {
+    "status": 1
+  },
+  "TextEncoder interface: new TextEncoder() must not have property \"undefined\"": {
+    "status": 0
+  },
+  "TextEncoder interface: new TextEncoder() must not have property \"encode\"": {
+    "status": 1
+  },
+  "TextEncoder interface: new TextEncoder() must not have property \"encodeInto\"": {
+    "status": 0
+  },
+  "TextEncoder interface: new TextEncoder() must not have property \"encoding\"": {
+    "status": 1
+  },
+  "TextDecoderStream interface: existence and properties of interface object": {
+    "status": 0
+  },
+  "TextEncoderStream interface: existence and properties of interface object": {
+    "status": 0
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "desiredSize on a released writer": {
+    "status": 0
+  },
+  "desiredSize initial value": {
+    "status": 0
+  },
+  "desiredSize on a writer for a closed stream": {
+    "status": 0
+  },
+  "desiredSize on a writer for an errored stream": {
+    "status": 0
+  },
+  "ws.getWriter() on a closing WritableStream": {
+    "status": 0
+  },
+  "ws.getWriter() on a closed WritableStream": {
+    "status": 0
+  },
+  "ws.getWriter() on an aborted WritableStream": {
+    "status": 0
+  },
+  "ws.getWriter() on an errored WritableStream": {
+    "status": 0
+  },
+  "closed and ready on a released writer": {
+    "status": 0
+  },
+  "WritableStream should call underlying sink methods as methods": {
+    "status": 0
+  },
+  "methods should not not have .apply() or .call() called": {
+    "status": 0
+  },
+  "WritableStream's strategy.size should not be called as a method": {
+    "status": 0
+  },
+  "redundant releaseLock() is no-op": {
+    "status": 0
+  },
+  "ready promise should fire before closed on releaseLock": {
+    "status": 0
+  },
+  "Subclassing WritableStream should work": {
+    "status": 0
+  },
+  "the locked getter should return true if the stream has a writer": {
+    "status": 0
+  }
+}

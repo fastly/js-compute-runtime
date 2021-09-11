@@ -1,0 +1,50 @@
+{
+  "Fetching aaa://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching cap://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching cid://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching dav://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching dict://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching dns://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching geo://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching im://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching imap://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching ipp://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching ldap://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching mailto://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching nfs://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching pop://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching rtsp://web-platform.test:8000/ is KO": {
+    "status": 1
+  },
+  "Fetching snmp://web-platform.test:8000/ is KO": {
+    "status": 1
+  }
+}

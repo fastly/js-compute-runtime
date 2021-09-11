@@ -1,0 +1,74 @@
+{
+  "Fetch with GET": {
+    "status": 1
+  },
+  "Fetch with HEAD": {
+    "status": 1
+  },
+  "Fetch with PUT without body": {
+    "status": 1
+  },
+  "Fetch with PUT with body": {
+    "status": 1
+  },
+  "Fetch with POST without body": {
+    "status": 1
+  },
+  "Fetch with POST with text body": {
+    "status": 1
+  },
+  "Fetch with POST with FormData body": {
+    "status": 1
+  },
+  "Fetch with POST with URLSearchParams body": {
+    "status": 1
+  },
+  "Fetch with POST with Blob body": {
+    "status": 1
+  },
+  "Fetch with POST with ArrayBuffer body": {
+    "status": 1
+  },
+  "Fetch with POST with Uint8Array body": {
+    "status": 1
+  },
+  "Fetch with POST with Int8Array body": {
+    "status": 1
+  },
+  "Fetch with POST with Float32Array body": {
+    "status": 1
+  },
+  "Fetch with POST with Float64Array body": {
+    "status": 1
+  },
+  "Fetch with POST with DataView body": {
+    "status": 1
+  },
+  "Fetch with POST with Blob body with mime type": {
+    "status": 1
+  },
+  "Fetch with Chicken": {
+    "status": 1
+  },
+  "Fetch with Chicken with body": {
+    "status": 1
+  },
+  "Fetch with GET and mode \"cors\" does not need an Origin header": {
+    "status": 1
+  },
+  "Fetch with POST and mode \"same-origin\" needs an Origin header": {
+    "status": 1
+  },
+  "Fetch with POST and mode \"no-cors\" needs an Origin header": {
+    "status": 1
+  },
+  "Fetch with PUT and mode \"same-origin\" needs an Origin header": {
+    "status": 1
+  },
+  "Fetch with TacO and mode \"same-origin\" needs an Origin header": {
+    "status": 1
+  },
+  "Fetch with TacO and mode \"cors\" needs an Origin header": {
+    "status": 1
+  }
+}

@@ -74,5 +74,6 @@
         "typeinfo": "cpp",
         "unordered_map": "cpp",
         "utility": "cpp"
-    }
+    },
+    "git.ignoreLimitWarning": true
 }

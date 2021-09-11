@@ -1,0 +1,59 @@
+{
+  "Create headers from no parameter": {
+    "status": 0
+  },
+  "Create headers from undefined parameter": {
+    "status": 0
+  },
+  "Create headers from empty object": {
+    "status": 0
+  },
+  "Create headers with null should throw": {
+    "status": 0
+  },
+  "Create headers with 1 should throw": {
+    "status": 1
+  },
+  "Create headers with sequence": {
+    "status": 0
+  },
+  "Create headers with record": {
+    "status": 0
+  },
+  "Create headers with existing headers": {
+    "status": 0
+  },
+  "Create headers with existing headers with custom iterator": {
+    "status": 0
+  },
+  "Check append method": {
+    "status": 0
+  },
+  "Check set method": {
+    "status": 0
+  },
+  "Check has method": {
+    "status": 0
+  },
+  "Check delete method": {
+    "status": 0
+  },
+  "Check get method": {
+    "status": 0
+  },
+  "Check keys method": {
+    "status": 1
+  },
+  "Check values method": {
+    "status": 1
+  },
+  "Check entries method": {
+    "status": 1
+  },
+  "Check Symbol.iterator method": {
+    "status": 1
+  },
+  "Check forEach method": {
+    "status": 1
+  }
+}
