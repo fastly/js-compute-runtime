@@ -418,6 +418,12 @@ namespace Logger {
   }
 }
 
+namespace URL {
+  bool is_instance(JS::Value);
+  JSObject* create(JSContext* cx, SpecString url_str, const JSUrl* base = nullptr);
+  JSObject* create(JSContext* cx, HandleValue url_val, HandleObject base_obj);
+}
+
 static JSString* get_geo_info(JSContext* cx, HandleString address_str);
 
 namespace Fastly {
@@ -531,12 +537,41 @@ namespace Fastly {
     JS_FS_END
   };
 
+  static PersistentRooted<JSObject*> baseURL;
+
+  bool baseURL_get(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setObjectOrNull(baseURL);
+    return true;
+  }
+
+  bool baseURL_set(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!URL::is_instance(args.get(0))) {
+      JS_ReportErrorUTF8(cx,
+                         "Invalid value assigned to fastly.baseURL, must be an instance of URL");
+      return false;
+    }
+
+    baseURL.set(&args.get(0).toObject());
+
+    args.rval().setObjectOrNull(baseURL);
+    return true;
+  }
+
+  const JSPropertySpec properties[] = {
+    JS_PSGS("baseURL", baseURL_get, baseURL_set, JSPROP_ENUMERATE),
+  JS_PS_END};
+
   static bool create(JSContext* cx, HandleObject global) {
     RootedObject fastly(cx, JS_NewPlainObject(cx));
     if (!fastly) return false;
 
+    baseURL.init(cx);
+
     if (!JS_DefineProperty(cx, global, "fastly", fastly, 0)) return false;
-    return JS_DefineFunctions(cx, fastly, methods);
+    return JS_DefineFunctions(cx, fastly, methods) &&
+           JS_DefineProperties(cx, fastly, properties);
   }
 }
 
@@ -1613,7 +1648,7 @@ namespace Request {
     // multiple times, or its headers are changed, etc.
     // This is costly, as it requires copying all the headers, etc, and
     // probably also the body, so we should only do it if really necessary.
-    if (input.isObject() && is_instance(input)) {
+    if (is_instance(input)) {
       RootedObject input_request(cx, &input.toObject());
       request_handle = Request::request_handle(input_request);
       body_handle = RequestOrResponse::body_handle(input_request);
@@ -1625,9 +1660,14 @@ namespace Request {
           return nullptr;
       }
     } else {
-      url_str = JS::ToString(cx, input);
+      RootedObject url_obj(cx, URL::create(cx, input, Fastly::baseURL));
+      if (!url_obj) return nullptr;
+
+      RootedValue url_val(cx, JS::ObjectValue(*url_obj));
+      url_str = JS::ToString(cx, url_val);
       if (!url_str) return nullptr;
 
+      // TODO: get the SpecSlice directly here instead of re-encoding.
       size_t url_len;
       UniqueChars url = encode(cx, url_str, &url_len);
       if (!url) return nullptr;
@@ -3220,6 +3260,34 @@ static PersistentRooted<JSObject*> INSTANCE;
     if (!url) return false;
     JS::SetReservedSlot(request, Request::Slots::URL, JS::StringValue(url));
 
+    // Set `fastly.baseURL` to the origin of the client request's URL.
+    // Note that this only happens if baseURL hasn't already been set to another value explicitly.
+    if (!Fastly::baseURL.get()) {
+      // Extracting the origin part from the URL is a bit cumbersome, unfortunately.
+      // We could create a JSUrl for the full URL and then reset its href to its origin, but that'd
+      // incur a bunch of allocation and be more code than manually finding the third '/' and only
+      // using the part before it. Since we're guaranteed to operate on an absolute URL, we're also
+      // guaranteed to have an origin of the form `protocol://host:port`, with the "//" being the
+      // only valid occurrence of slashes in the part we want.
+      char* chars = buf.get();
+      size_t origin_length = 0;
+      size_t slashes = 0;
+      for (size_t i = 0; i < bytes_read; i++) {
+        if (chars[i] == '/' && ++slashes == 3) {
+          origin_length = i;
+          break;
+        }
+      }
+
+      if (origin_length == 0) {
+        origin_length = bytes_read;
+      }
+
+      SpecString spec((uint8_t*)buf.release(), origin_length, bytes_read);
+      Fastly::baseURL = URL::create(cx, spec);
+      if (!Fastly::baseURL) return false;
+    }
+
     return true;
   }
 
@@ -3767,10 +3835,42 @@ namespace URL {
 
   CLASS_BOILERPLATE(URL)
 
-  JSObject* create(JSContext* cx, HandleValue url_val, HandleValue base_val) {
+  JSObject* create(JSContext* cx, SpecString url_str, const JSUrl* base) {
     RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
     if (!self) return nullptr;
 
+    JSUrl* url;
+    if (base) {
+      url = jsurl::new_jsurl_with_base(&url_str, base);
+    } else {
+      url = jsurl::new_jsurl(&url_str);
+    }
+
+    if (!url) {
+      JS_ReportErrorUTF8(cx, "URL constructor: %s is not a valid URL.", (char*)url_str.data);
+      return nullptr;
+    }
+
+    JS::SetReservedSlot(self, Slots::Url, JS::PrivateValue(url));
+
+    return self;
+  }
+
+  JSObject* create(JSContext* cx, HandleValue url_val, const JSUrl* base) {
+    auto str = encode(cx, url_val);
+    if (!str.data) return nullptr;
+
+    return create(cx, str, base);
+  }
+
+  JSObject* create(JSContext* cx, HandleValue url_val, HandleObject base_obj) {
+    MOZ_RELEASE_ASSERT(is_instance(base_obj));
+    const JSUrl* base = (JSUrl*)JS::GetReservedSlot(base_obj, Slots::Url).toPrivate();
+
+    return create(cx, url_val, base);
+  }
+
+  JSObject* create(JSContext* cx, HandleValue url_val, HandleValue base_val) {
     JSUrl* base = nullptr;
 
     if (!base_val.isUndefined()) {
@@ -3784,24 +3884,7 @@ namespace URL {
       }
     }
 
-    auto str = encode(cx, url_val);
-    if (!str.data) return nullptr;
-
-    JSUrl* url;
-    if (base) {
-      url = jsurl::new_jsurl_with_base(&str, base);
-    } else {
-      url = jsurl::new_jsurl(&str);
-    }
-
-    if (!url) {
-      JS_ReportErrorUTF8(cx, "URL constructor: %s is not a valid URL.", (char*)str.data);
-      return nullptr;
-    }
-
-    JS::SetReservedSlot(self, Slots::Url, JS::PrivateValue(url));
-
-    return self;
+    return create(cx, url_val, base);
   }
 }
 
