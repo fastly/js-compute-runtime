@@ -538,6 +538,7 @@ namespace Fastly {
   };
 
   static PersistentRooted<JSObject*> baseURL;
+  static PersistentRooted<JSString*> defaultBackend;
 
   bool baseURL_get(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -559,8 +560,25 @@ namespace Fastly {
     return true;
   }
 
+  bool defaultBackend_get(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setString(defaultBackend);
+    return true;
+  }
+
+  bool defaultBackend_set(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedString backend(cx, JS::ToString(cx, args.get(0)));
+    if (!backend) return false;
+
+    defaultBackend = backend;
+    args.rval().setUndefined();
+    return true;
+  }
+
   const JSPropertySpec properties[] = {
     JS_PSGS("baseURL", baseURL_get, baseURL_set, JSPROP_ENUMERATE),
+    JS_PSGS("defaultBackend", defaultBackend_get, defaultBackend_set, JSPROP_ENUMERATE),
   JS_PS_END};
 
   static bool create(JSContext* cx, HandleObject global) {
@@ -4319,6 +4337,9 @@ bool fetch(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedString backend(cx, Request::backend(request));
+  if (!backend) {
+    backend = Fastly::defaultBackend;
+  }
   if (!backend) {
     size_t bytes_read;
     RequestHandle handle = Request::request_handle(request);
