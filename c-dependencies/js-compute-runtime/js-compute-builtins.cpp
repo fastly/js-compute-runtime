@@ -2024,12 +2024,17 @@ namespace Dictionary {
 
     OwnedHostCallBuffer buffer;
     size_t nwritten = 0;
-    if (!HANDLE_RESULT(cx, xqd_dictionary_get(dictionary_handle(self), name.get(), name_len,
-                                              buffer.get(), DICTIONARY_ENTRY_MAX_LEN,
-                                              &nwritten)))
-    {
-      return false;
+    int status = xqd_dictionary_get(dictionary_handle(self), name.get(), name_len, buffer.get(),
+                                    DICTIONARY_ENTRY_MAX_LEN, &nwritten);
+    // Status code 10 indicates the key wasn't found, so we return null.
+    if (status == 10) {
+      args.rval().setNull();
+      return true;
     }
+
+    // Ensure that we throw an exception for all unexpected host errors.
+    if (!HANDLE_RESULT(cx, status))
+      return false;
 
     RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buffer.get(), nwritten)));
     if (!text) return false;
