@@ -180,7 +180,8 @@ static bool report_unhandled_promise_rejections(JSContext* cx) {
     promise = &promise_val.toObject();
     // Note: we unconditionally print these, since they almost always indicate serious bugs.
     fprintf(stderr, "Promise rejected but never handled: ");
-    dump_value(cx, JS::GetPromiseResult(promise), stderr);
+    RootedValue result(cx, JS::GetPromiseResult(promise));
+    dump_promise_rejection(cx, result, promise, stderr);
   }
 
   return true;
