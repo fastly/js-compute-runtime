@@ -13,7 +13,13 @@
 #include "js/Array.h"
 #include "js/ArrayBuffer.h"
 #include "js/Conversions.h"
+
+// TODO: remove these once the warnings are fixed
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winvalid-offsetof"
 #include "js/experimental/TypedData.h"
+#pragma clang diagnostic pop
+
 #include "js/JSON.h"
 #include "js/shadow/Object.h"
 #include "js/Stream.h"
