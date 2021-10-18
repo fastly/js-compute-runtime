@@ -3549,6 +3549,10 @@ static PersistentRooted<JSObject*> INSTANCE;
   bool response_promise_catch_handler(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
+    RootedObject promise(cx, &js::GetFunctionNativeReserved(&args.callee(), 1).toObject());
+
+    fprintf(stderr, "Error while running request handler: ");
+    dump_promise_rejection(cx, args.get(0), promise, stderr);
 
     // TODO: verify that this is the right behavior.
     // Steps 9.1-2
@@ -3590,6 +3594,7 @@ static PersistentRooted<JSObject*> INSTANCE;
     if (!catch_fun) return false;
     RootedObject catch_handler(cx, JS_GetFunctionObject(catch_fun));
     js::SetFunctionNativeReserved(catch_handler, 0, JS::ObjectValue(*self));
+    js::SetFunctionNativeReserved(catch_handler, 1, JS::ObjectValue(*response_promise));
 
     // Step 10 (continued in `response_promise_then_handler` above)
     JSFunction* then_fun = js::NewFunctionWithReserved(cx, response_promise_then_handler, 1, 0,
@@ -4586,6 +4591,41 @@ bool print_stack(JSContext* cx, HandleObject stack, FILE* fp) {
     return false;
   fprintf(fp, "%s\n", utf8chars.get());
   return true;
+}
+
+void dump_promise_rejection(JSContext* cx, HandleValue reason, HandleObject promise, FILE* fp) {
+  bool reported = false;
+  RootedObject stack(cx);
+
+  if (reason.isObject()) {
+    RootedObject err(cx, &reason.toObject());
+    JSErrorReport* report = JS_ErrorFromException(cx, err);
+    if (report) {
+      fprintf(stderr, "%s\n", report->message().c_str());
+      reported = true;
+    }
+
+    stack = JS::ExceptionStackOrNull(err);
+  }
+
+  // If the rejection reason isn't an `Error` object, we just dump the value as-is.
+  if (!reported) {
+    dump_value(cx, reason, stderr);
+  }
+
+  // If the rejection reason isn't an `Error` object, we can't get an exception stack from it.
+  // In that case, fall back to getting the stack from the promise resolution site.
+  // These should be identical in many cases, such as for exceptions thrown in async functions,
+  // but for some reason the resolution site stack seems to sometimes be wrong, so we only fall
+  // back to it as a last resort.
+  if (!stack) {
+    stack = JS::GetPromiseResolutionSite(promise);
+  }
+
+  if (stack) {
+    fprintf(stderr, "Stack:\n");
+    print_stack(cx, stack, stderr);
+  }
 }
 
 bool print_stack(JSContext* cx, FILE* fp) {
