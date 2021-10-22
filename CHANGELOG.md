@@ -1,3 +1,18 @@
+## 0.3.0 (2021-10-22)
+
+### Fixes
+
+* Strip leading `?` in `URLSearchParams` constructor (https://github.com/fastly/js-compute-runtime/pull/35)
+* Error the ReadableStream when a body read fails in the hostcall (https://github.com/fastly/js-compute-runtime/pull/36)
+* Report uncaught exceptions in the request handler to stderr (https://github.com/fastly/js-compute-runtime/pull/44)
+* Fix geo-lookup hostcall invocation (https://github.com/fastly/js-compute-runtime/pull/46)
+
+### Enhancements
+
+* Resolve URLs passed to `Request` and `fetch` relative to the client request URL's origin (https://github.com/fastly/js-compute-runtime/pull/38)
+* Return null instead of throwing on missing key in `Dictionary#get` (https://github.com/fastly/js-compute-runtime/pull/41)
+* Update to SpiderMonkey 94 beta (https://github.com/fastly/js-compute-runtime/pull/45)
+
 ## 0.2.1 (2021-08-27)
 
 ### Fixes
