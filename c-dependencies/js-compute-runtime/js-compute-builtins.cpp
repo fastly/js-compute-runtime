@@ -554,9 +554,13 @@ namespace Fastly {
 
   bool baseURL_set(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (!URL::is_instance(args.get(0))) {
+    if (args.get(0).isNullOrUndefined()) {
+      baseURL.set(nullptr);
+    }
+    else if (!URL::is_instance(args.get(0))) {
       JS_ReportErrorUTF8(cx,
-                         "Invalid value assigned to fastly.baseURL, must be an instance of URL");
+                         "Invalid value assigned to fastly.baseURL, must be an instance of "
+                         "URL, null, or undefined");
       return false;
     }
 
@@ -3290,6 +3294,8 @@ static PersistentRooted<JSObject*> INSTANCE;
   }
 
   static bool init_downstream_request(JSContext* cx, HandleObject request) {
+    MOZ_RELEASE_ASSERT(Request::request_handle(request).handle == INVALID_HANDLE);
+
     RequestHandle request_handle = { INVALID_HANDLE };
     BodyHandle body_handle = { INVALID_HANDLE };
     if (!HANDLE_RESULT(cx, xqd_req_body_downstream_get(&request_handle, &body_handle)))
@@ -3342,13 +3348,7 @@ static PersistentRooted<JSObject*> INSTANCE;
   bool request_get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
 
-    RootedObject request(cx, &JS::GetReservedSlot(self, Slots::Request).toObject());
-    if (Request::request_handle(request).handle == INVALID_HANDLE) {
-      if (!init_downstream_request(cx, request))
-        return false;
-    }
-
-    args.rval().setObject(*request);
+    args.rval().set(JS::GetReservedSlot(self, Slots::Request));
     return true;
   }
 
@@ -3716,6 +3716,11 @@ static PersistentRooted<JSObject*> INSTANCE;
     return INSTANCE;
   }
 
+  bool init_request(JSContext* cx, HandleObject self) {
+    RootedObject request(cx, &JS::GetReservedSlot(self, Slots::Request).toObject());
+    return init_downstream_request(cx, request);
+  }
+
   bool is_active(JSObject* self) {
     MOZ_ASSERT(is_instance(self));
     // Note: we also treat the FetchEvent as active if it's in `responseStreaming` state
@@ -3924,6 +3929,11 @@ namespace URL {
   }
 
   JSObject* create(JSContext* cx, HandleValue url_val, HandleValue base_val) {
+    if (is_instance(base_val)) {
+      RootedObject base_obj(cx, &base_val.toObject());
+      return create(cx, url_val, base_obj);
+    }
+
     JSUrl* base = nullptr;
 
     if (!base_val.isUndefined()) {

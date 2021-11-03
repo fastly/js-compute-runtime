@@ -456,6 +456,7 @@ int main(int argc, const char *argv[]) {
   js::ResetMathRandomSeed(cx);
 
   HandleObject fetch_event = FetchEvent::instance();
+  FetchEvent::init_request(cx, fetch_event);
 
   dispatch_fetch_event(cx, fetch_event, &total_compute);
 
