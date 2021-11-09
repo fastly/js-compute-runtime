@@ -424,6 +424,35 @@ namespace Logger {
   }
 }
 
+namespace Env {
+  bool env_get(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "fastly.env.get", 1))
+      return false;
+
+    size_t var_name_len;
+    UniqueChars var_name_chars = encode(cx, args[0], &var_name_len);
+    if (!var_name_chars) {
+      return false;
+    }
+    RootedString env_var(cx, JS_NewStringCopyZ(cx, getenv(var_name_chars.get())));
+    if (!env_var) return false;
+
+    args.rval().setString(env_var);
+    return true;
+  }
+
+  const JSFunctionSpec methods[] = {
+    JS_FN("get", env_get, 1, 0),
+  JS_FS_END};
+
+  JSObject* create(JSContext* cx) {
+    RootedObject env(cx, JS_NewPlainObject(cx));
+    if (!env || !JS_DefineFunctions(cx, env, methods)) return nullptr;
+    return env;
+  }
+}
+
 namespace URL {
   bool is_instance(JS::Value);
   JSObject* create(JSContext* cx, SpecString url_str, const JSUrl* base = nullptr);
@@ -435,6 +464,11 @@ static JSString* get_geo_info(JSContext* cx, HandleString address_str);
 namespace Fastly {
 
   static bool debug_logging_enabled = false;
+
+  static PersistentRooted<JSObject*> env;
+
+  static PersistentRooted<JSObject*> baseURL;
+  static PersistentRooted<JSString*> defaultBackend;
 
   bool dump(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -543,8 +577,11 @@ namespace Fastly {
     JS_FS_END
   };
 
-  static PersistentRooted<JSObject*> baseURL;
-  static PersistentRooted<JSString*> defaultBackend;
+  bool env_get(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setObject(*env);
+    return true;
+  }
 
   bool baseURL_get(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -587,6 +624,7 @@ namespace Fastly {
   }
 
   const JSPropertySpec properties[] = {
+    JS_PSG("env", env_get, JSPROP_ENUMERATE),
     JS_PSGS("baseURL", baseURL_get, baseURL_set, JSPROP_ENUMERATE),
     JS_PSGS("defaultBackend", defaultBackend_get, defaultBackend_set, JSPROP_ENUMERATE),
   JS_PS_END};
@@ -595,7 +633,10 @@ namespace Fastly {
     RootedObject fastly(cx, JS_NewPlainObject(cx));
     if (!fastly) return false;
 
+    env.init(cx, Env::create(cx));
+    if (!env) return false;
     baseURL.init(cx);
+    defaultBackend.init(cx);
 
     if (!JS_DefineProperty(cx, global, "fastly", fastly, 0)) return false;
     return JS_DefineFunctions(cx, fastly, methods) &&
@@ -3157,56 +3198,6 @@ namespace ClientInfo {
   }
 }
 
-namespace ServiceInfo {
-  namespace Slots { enum {
-    Count
-  };};
-
-  static constexpr char ENV_CACHE_GENERATION[] = "FASTLY_CACHE_GENERATION";
-  static constexpr char ENV_CUSTOMER_ID[] = "FASTLY_CUSTOMER_ID";
-  static constexpr char ENV_HOSTNAME[] = "FASTLY_HOSTNAME";
-  static constexpr char ENV_POP[] = "FASTLY_POP";
-  static constexpr char ENV_REGION[] = "FASTLY_REGION";
-  static constexpr char ENV_SERVICE_ID[] = "FASTLY_SERVICE_ID";
-  static constexpr char ENV_SERVICE_VERSION[] = "FASTLY_SERVICE_VERSION";
-  static constexpr char ENV_TRACE_ID[] = "FASTLY_TRACE_ID";
-
-  const unsigned ctor_length = 0;
-
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
-
-  template<const char* var_name>
-  bool env_var_get(JSContext* cx, unsigned argc, Value* vp) {
-    METHOD_HEADER(0)
-
-    RootedString env_var(cx, JS_NewStringCopyZ(cx, getenv(var_name)));
-    if (!env_var) return false;
-
-    args.rval().setString(env_var);
-    return true;
-  }
-
-  const JSFunctionSpec methods[] = {
-  JS_FS_END};
-
-  const JSPropertySpec properties[] = {
-    JS_PSG("cacheGeneration", env_var_get<ENV_CACHE_GENERATION>, 0),
-    JS_PSG("customerId", env_var_get<ENV_CUSTOMER_ID>, 0),
-    JS_PSG("hostname", env_var_get<ENV_HOSTNAME>, 0),
-    JS_PSG("pop", env_var_get<ENV_POP>, 0),
-    JS_PSG("region", env_var_get<ENV_REGION>, 0),
-    JS_PSG("serviceId", env_var_get<ENV_SERVICE_ID>, 0),
-    JS_PSG("serviceVersion", env_var_get<ENV_SERVICE_VERSION>, 0),
-    JS_PSG("traceId", env_var_get<ENV_TRACE_ID>, 0),
-  JS_PS_END};
-
-  CLASS_BOILERPLATE_NO_CTOR(ServiceInfo)
-
-  JSObject* create(JSContext* cx) {
-    return JS_NewObjectWithGivenProto(cx, &class_, proto_obj);
-  }
-}
-
 
 namespace FetchEvent {
   namespace Slots { enum {
@@ -3216,7 +3207,6 @@ namespace FetchEvent {
     PendingPromiseCount,
     DecPendingPromiseCountFunc,
     ClientInfo,
-    ServiceInfo,
     Count
   };};
 
@@ -3269,22 +3259,6 @@ static PersistentRooted<JSObject*> INSTANCE;
     }
 
     args.rval().set(clientInfo);
-    return true;
-  }
-
-  bool service_get(JSContext* cx, unsigned argc, Value* vp) {
-    METHOD_HEADER(0)
-    RootedValue serviceInfo(cx, JS::GetReservedSlot(self, Slots::ServiceInfo));
-
-    if (serviceInfo.isUndefined()) {
-      RootedObject obj(cx, ServiceInfo::create(cx));
-      if (!obj)
-        return false;
-      serviceInfo.setObject(*obj);
-      JS::SetReservedSlot(self, Slots::ServiceInfo, serviceInfo);
-    }
-
-    args.rval().set(serviceInfo);
     return true;
   }
 
@@ -3682,7 +3656,6 @@ static PersistentRooted<JSObject*> INSTANCE;
 
   const JSPropertySpec properties[] = {
     JS_PSG("client", client_get, 0),
-    JS_PSG("service", service_get, 0),
     JS_PSG("request", request_get, 0),
   JS_PS_END};
 
