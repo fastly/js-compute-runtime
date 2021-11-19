@@ -1,3 +1,9 @@
+## 0.2.3 (unreleased)
+
+### Fixes
+
+* Ensure we're not waiting for async tasks not passed to `FetchEvent#waitUntil` (https://github.com/fastly/js-compute-runtime/pull/53)
+
 ## 0.2.2 (2021-11-10)
 
 ### Fixes

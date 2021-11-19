@@ -3523,7 +3523,6 @@ static PersistentRooted<JSObject*> INSTANCE;
           return false;
     }
 
-    FetchEvent::detail::inc_pending_promise_count(FetchEvent::instance());
     bool streaming = false;
     if (RequestOrResponse::body_stream(response_obj)) {
       if (!respond_maybe_streaming(cx, response_obj, &streaming))
