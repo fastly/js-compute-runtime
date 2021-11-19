@@ -197,7 +197,7 @@ jobs:
 
   cargo-audit:
     env:
-      CARGO_AUDIT_VERSION: 0.11.2
+      CARGO_AUDIT_VERSION: 0.16.0
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
