@@ -44,6 +44,24 @@ using JS::MutableHandleValue;
 
 using JS::PersistentRooted;
 
+template<auto fun>
+bool internal_method(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject self(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
+    return fun(cx, self, args);
+}
+
+template<auto fun>
+JSObject* create_internal_method(JSContext* cx, HandleObject receiver, unsigned int nargs = 0,
+                                 const char* name = "")
+{
+  JSFunction* method = js::NewFunctionWithReserved(cx, internal_method<fun>, 1, 0, name);
+  if (!method) return nullptr;
+  RootedObject method_obj(cx, JS_GetFunctionObject(method));
+  js::SetFunctionNativeReserved(method_obj, 0, JS::ObjectValue(*receiver));
+  return method_obj;
+}
+
 // Ensure that all the things we want to use the hostcall buffer for actually fit into the buffer.
 #define HOSTCALL_BUFFER_LEN DICTIONARY_ENTRY_MAX_LEN
 static_assert(HEADER_MAX_LEN < HOSTCALL_BUFFER_LEN);
@@ -3321,11 +3339,11 @@ static PersistentRooted<JSObject*> INSTANCE;
     return start_response(cx, response_obj, false);
   }
 
-  bool body_reader_then_handler(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
+  bool body_reader_then_handler(JSContext* cx, HandleObject response, CallArgs args) {
     RootedObject then_handler(cx, &args.callee());
-    RootedObject catch_handler(cx, &js::GetFunctionNativeReserved(then_handler, 0).toObject());
-    RootedObject response(cx, &js::GetFunctionNativeReserved(catch_handler, 0).toObject());
+    // The reader is stored in the catch handler, which we need here as well.
+    // So we get that first, then the reader.
+    RootedObject catch_handler(cx, &js::GetFunctionNativeReserved(then_handler, 1).toObject());
     RootedObject reader(cx, &js::GetFunctionNativeReserved(catch_handler, 1).toObject());
     BodyHandle body_handle = RequestOrResponse::body_handle(response);
 
@@ -3375,9 +3393,7 @@ static PersistentRooted<JSObject*> INSTANCE;
     return JS::AddPromiseReactions(cx, promise, then_handler, catch_handler);
   }
 
-  bool body_reader_catch_handler(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject response(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
+  bool body_reader_catch_handler(JSContext* cx, HandleObject response, CallArgs args) {
     RootedObject reader(cx, &js::GetFunctionNativeReserved(&args.callee(), 1).toObject());
 
     // TODO: check if this should create a rejected promise instead, so an in-content handler
@@ -3447,20 +3463,17 @@ static PersistentRooted<JSObject*> INSTANCE;
     // on the then handler. This allows us to reuse these functions for the next read operation
     // in the then handler. The catch handler won't ever have a need to perform another operation
     // in this way.
-    JSFunction* catch_fun = js::NewFunctionWithReserved(cx, body_reader_catch_handler, 1, 0,
-                                                        "catch_handler");
-    if (!catch_fun) return false;
-    RootedObject catch_handler(cx, JS_GetFunctionObject(catch_fun));
+    RootedObject catch_handler(cx);
+    catch_handler = create_internal_method<body_reader_catch_handler>(cx, response_obj);
+    if (!catch_handler) return false;
 
-    js::SetFunctionNativeReserved(catch_handler, 0, JS::ObjectValue(*response_obj));
     js::SetFunctionNativeReserved(catch_handler, 1, JS::ObjectValue(*reader));
 
-    JSFunction* then_fun = js::NewFunctionWithReserved(cx, body_reader_then_handler, 1, 0,
-                                                       "then_handler");
-    if (!then_fun) return false;
-    RootedObject then_handler(cx, JS_GetFunctionObject(then_fun));
+    RootedObject then_handler(cx);
+    then_handler = create_internal_method<body_reader_then_handler>(cx, response_obj);
+    if (!then_handler) return false;
 
-    js::SetFunctionNativeReserved(then_handler, 0, JS::ObjectValue(*catch_handler));
+    js::SetFunctionNativeReserved(then_handler, 1, JS::ObjectValue(*catch_handler));
 
     RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
     if (!promise) return false;
@@ -3476,10 +3489,7 @@ static PersistentRooted<JSObject*> INSTANCE;
 
   // Steps in this function refer to the spec at
   // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
-  bool response_promise_then_handler(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
-
+  bool response_promise_then_handler(JSContext* cx, HandleObject event, CallArgs args) {
     // Step 10.1
     // Note: the `then` handler is only invoked after all Promise resolution has happened.
     // (Even if there were multiple Promises to unwrap first.)
@@ -3523,9 +3533,7 @@ static PersistentRooted<JSObject*> INSTANCE;
 
   // Steps in this function refer to the spec at
   // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
-  bool response_promise_catch_handler(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
+  bool response_promise_catch_handler(JSContext* cx, HandleObject event, CallArgs args) {
     RootedObject promise(cx, &js::GetFunctionNativeReserved(&args.callee(), 1).toObject());
 
     fprintf(stderr, "Error while running request handler: ");
@@ -3566,19 +3574,16 @@ static PersistentRooted<JSObject*> INSTANCE;
     set_state(self, State::waitToRespond);
 
     // Step 9 (continued in `response_promise_catch_handler` above)
-    JSFunction* catch_fun = js::NewFunctionWithReserved(cx, response_promise_catch_handler, 1, 0,
-                                                        "catch_handler");
-    if (!catch_fun) return false;
-    RootedObject catch_handler(cx, JS_GetFunctionObject(catch_fun));
-    js::SetFunctionNativeReserved(catch_handler, 0, JS::ObjectValue(*self));
+    RootedObject catch_handler(cx);
+    catch_handler = create_internal_method<response_promise_catch_handler>(cx, self);
+    if (!catch_handler) return false;
+
     js::SetFunctionNativeReserved(catch_handler, 1, JS::ObjectValue(*response_promise));
 
     // Step 10 (continued in `response_promise_then_handler` above)
-    JSFunction* then_fun = js::NewFunctionWithReserved(cx, response_promise_then_handler, 1, 0,
-                                                       "then_handler");
-    if (!then_fun) return false;
-    RootedObject then_handler(cx, JS_GetFunctionObject(then_fun));
-    js::SetFunctionNativeReserved(then_handler, 0, JS::ObjectValue(*self));
+    RootedObject then_handler(cx);
+    then_handler = create_internal_method<response_promise_then_handler>(cx, self);
+    if (!then_handler) return false;
 
     if (!JS::AddPromiseReactions(cx, response_promise, then_handler, catch_handler))
       return false;
@@ -3599,10 +3604,7 @@ static PersistentRooted<JSObject*> INSTANCE;
   }
 
   // Step 5 of https://w3c.github.io/ServiceWorker/#wait-until-method
-  bool dec_pending_promise_count(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
-
+  bool dec_pending_promise_count(JSContext* cx, HandleObject event, CallArgs args) {
     // Step 5.1
     detail::dec_pending_promise_count(event);
 
@@ -3652,11 +3654,8 @@ static PersistentRooted<JSObject*> INSTANCE;
     RootedObject request(cx, prepare_downstream_request(cx));
     if (!request) return nullptr;
 
-    JSFunction* dec_count_fun = js::NewFunctionWithReserved(cx, dec_pending_promise_count, 1, 0,
-                                                            "dec_pending_promise_count");
-    if (!dec_count_fun) return nullptr;
-    RootedObject dec_count_handler(cx, JS_GetFunctionObject(dec_count_fun));
-    js::SetFunctionNativeReserved(dec_count_handler, 0, JS::ObjectValue(*self));
+    RootedObject dec_count_handler(cx, create_internal_method<dec_pending_promise_count>(cx, self));
+    if (!dec_count_handler) return nullptr;
 
     JS::SetReservedSlot(self, Slots::Request, JS::ObjectValue(*request));
     JS::SetReservedSlot(self, Slots::Dispatch, JS::FalseValue());
