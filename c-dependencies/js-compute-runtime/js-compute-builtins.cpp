@@ -746,8 +746,14 @@ namespace Crypto {
   }
 }
 
-namespace BodyStreamSource {
-  JSObject* create(JSContext* cx, HandleObject owner);
+namespace NativeStreamSource {
+  typedef bool PullAlgorithm(JSContext* cx, CallArgs args, HandleObject stream, HandleObject owner,
+                             HandleObject controller);
+  typedef bool CancelAlgorithm(JSContext* cx, CallArgs args, HandleObject stream,
+                               HandleObject owner, HandleValue reason);
+
+  JSObject* create(JSContext* cx, HandleObject owner, HandleValue startPromise,
+                   PullAlgorithm* pull, CancelAlgorithm* cancel);
   static JSObject* get_stream_source(JSObject* stream);
   bool stream_has_native_source(JSObject* stream);
   bool lock_stream(JSContext* cx, HandleObject stream);
@@ -816,7 +822,7 @@ namespace RequestOrResponse {
 
   JSObject* body_source(JSObject* obj) {
     MOZ_RELEASE_ASSERT(has_body(obj));
-    return BodyStreamSource::get_stream_source(body_stream(obj));
+    return NativeStreamSource::get_stream_source(body_stream(obj));
   }
 
   bool mark_body_used(JSContext* cx, HandleObject obj) {
@@ -824,7 +830,7 @@ namespace RequestOrResponse {
 
     RootedObject stream(cx, body_stream(obj));
     if (stream)
-      return BodyStreamSource::lock_stream(cx, stream);
+      return NativeStreamSource::lock_stream(cx, stream);
 
     return true;
   }
@@ -986,8 +992,37 @@ namespace RequestOrResponse {
     return true;
   }
 
+  bool body_source_pull_algorithm(JSContext* cx, CallArgs args, HandleObject stream,
+                                  HandleObject owner, HandleObject controller)
+  {
+    // The actual read from the body needs to be delayed, because it'd otherwise
+    // be a blocking operation in case the backend didn't yet send any data.
+    // That would lead to situations where we block on I/O before processing
+    // all pending Promises, which in turn can result in operations happening in
+    // observably different behavior, up to and including causing deadlocks
+    // because a body read response is blocked on content making another request.
+    //
+    // (This deadlock happens in automated tests, but admittedly might not happen
+    // in real usage.)
+
+    if (!pending_body_reads->append(stream))
+      return false;
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  bool body_source_cancel_algorithm(JSContext* cx, CallArgs args, HandleObject stream,
+                                    HandleObject owner, HandleValue reason)
+  {
+    args.rval().setUndefined();
+    return true;
+  }
+
   JSObject* create_body_stream(JSContext* cx, HandleObject owner) {
-    RootedObject source(cx, BodyStreamSource::create(cx, owner));
+    RootedObject source(cx, NativeStreamSource::create(cx, owner, JS::UndefinedHandleValue,
+                                                       body_source_pull_algorithm,
+                                                       body_source_cancel_algorithm));
     if (!source) return nullptr;
 
     // Create a readable stream with a highwater mark of 0.0 to prevent an eager pull.
@@ -1000,7 +1035,7 @@ namespace RequestOrResponse {
     // This assert guarantees that we fail early in case SpiderMonkey ever changes how
     // the underlying source for streams is stored, instead of operating on invalid
     // values.
-    MOZ_RELEASE_ASSERT(BodyStreamSource::get_stream_source(body_stream) == source);
+    MOZ_RELEASE_ASSERT(NativeStreamSource::get_stream_source(body_stream) == source);
 
     JS_SetReservedSlot(owner, RequestOrResponse::Slots::BodyStream, JS::ObjectValue(*body_stream));
     return body_stream;
@@ -1031,7 +1066,8 @@ static JS::Value get_fixed_slot(JSObject* obj, size_t slot) {
   return nobj->fixedSlots()[slot];
 }
 
-// A JS class to use as the underlying source for native body streams.
+// A JS class to use as the underlying source for native readable streams, used for
+// Request/Response bodies and TransformStream.
 // In principle, SpiderMonkey has the concept of a native ReadableStreamUnderlyingSource
 // for just that, but in practice making that work turned out to be extremely difficult,
 // because it involves GC tracing through a non-GC object (because our underlying source
@@ -1043,11 +1079,15 @@ static JS::Value get_fixed_slot(JSObject* obj, size_t slot) {
 // To ensure we don't accidentally do unsafe things, we use various release asserts
 // verifying that we operate on the objects we expect. SpiderMonkey might change how
 // it stores the source, but at least we'd fail early.
-namespace BodyStreamSource {
+namespace NativeStreamSource {
   namespace Slots { enum {
-    Owner, // Request or Response object.
+    Owner, // Request or Response object, or TransformStream.
     Controller, // The ReadableStreamDefaultController.
     InternalReader, // Only used to lock the stream if it's consumed internally.
+    StartPromise, // Used as the return value of `start`, can be undefined.
+                  // Needed to properly implement TransformStream.
+    PullAlgorithm,
+    CancelAlgorithm,
     Count
   };};
 
@@ -1061,6 +1101,18 @@ namespace BodyStreamSource {
 
   JSObject* owner(JSObject* self) {
     return &JS::GetReservedSlot(self, Slots::Owner).toObject();
+  }
+
+  Value startPromise(JSObject* self) {
+    return JS::GetReservedSlot(self, Slots::StartPromise);
+  }
+
+  PullAlgorithm* pullAlgorithm(JSObject* self) {
+    return (PullAlgorithm*)JS::GetReservedSlot(self, Slots::PullAlgorithm).toPrivate();
+  }
+
+  CancelAlgorithm* cancelAlgorithm(JSObject* self) {
+    return (CancelAlgorithm*)JS::GetReservedSlot(self, Slots::CancelAlgorithm).toPrivate();
   }
 
   JSObject* controller(JSObject* self) {
@@ -1107,54 +1159,66 @@ namespace BodyStreamSource {
   bool start(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject self(cx, &args.thisv().toObject());
+    MOZ_RELEASE_ASSERT(is_instance(self));
 
     MOZ_RELEASE_ASSERT(args[0].isObject());
     RootedObject controller(cx, &args[0].toObject());
     MOZ_RELEASE_ASSERT(get_controller_source(controller) == self);
 
     JS::SetReservedSlot(self, Slots::Controller, args[0]);
-    args.rval().setUndefined();
+
+    // For TransformStream, StartAlgorithm returns the same Promise for both the readable
+    // and writable stream. All other native initializations of ReadableStream have StartAlgorithm
+    // return undefined. Instead of introducing both the StartAlgorithm as a pointer and
+    // startPromise as a value, we just store the latter or undefined, and always return it.
+    args.rval().set(startPromise(self));
     return true;
   }
 
   bool pull(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject self(cx, &args.thisv().toObject());
+    MOZ_RELEASE_ASSERT(is_instance(self));
+    RootedObject owner(cx, NativeStreamSource::owner(self));
     RootedObject controller(cx, &args[0].toObject());
-    MOZ_RELEASE_ASSERT(controller == BodyStreamSource::controller(self));
+    MOZ_RELEASE_ASSERT(controller == NativeStreamSource::controller(self));
     MOZ_RELEASE_ASSERT(get_controller_source(controller) == self.get());
 
-    // The actual read from the body needs to be delayed, because it'd otherwise
-    // be a blocking operation in case the backend didn't yet send any data.
-    // That would lead to situations where we block on I/O before processing
-    // all pending Promises, which in turn can result in operations happening in
-    // observably different behavior, up to and including causing deadlocks
-    // because a body read response is blocked on content making another request.
-    //
-    // (This deadlock happens in automated tests, but admittedly might not happen
-    // in real usage.)
+    PullAlgorithm* pull = pullAlgorithm(self);
+    return pull(cx, args, self, owner, controller);
+  }
 
-    if (!pending_body_reads->append(self))
-      return false;
+  bool cancel(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject self(cx, &args.thisv().toObject());
+    MOZ_RELEASE_ASSERT(is_instance(self));
+    RootedObject owner(cx, NativeStreamSource::owner(self));
+    HandleValue reason(args.get(0));
 
-    args.rval().setUndefined();
-    return true;
+    CancelAlgorithm* pull = cancelAlgorithm(self);
+    return pull(cx, args, self, owner, reason);
   }
 
   const JSFunctionSpec methods[] = {
     JS_FN("start", start, 1, 0),
     JS_FN("pull", pull, 1, 0),
+    JS_FN("cancel", cancel, 1, 0),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {JS_PS_END};
 
-  CLASS_BOILERPLATE_NO_CTOR(BodyStreamSource)
+  CLASS_BOILERPLATE_NO_CTOR(NativeStreamSource)
 
-  JSObject* create(JSContext* cx, HandleObject owner) {
+  JSObject* create(JSContext* cx, HandleObject owner, HandleValue startPromise,
+                   PullAlgorithm* pull, CancelAlgorithm* cancel)
+  {
     RootedObject source(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
     if (!source) return nullptr;
 
     JS::SetReservedSlot(source, Slots::Owner, JS::ObjectValue(*owner));
+    JS::SetReservedSlot(source, Slots::StartPromise, startPromise);
+    JS::SetReservedSlot(source, Slots::PullAlgorithm, JS::PrivateValue((void*)pull));
+    JS::SetReservedSlot(source, Slots::CancelAlgorithm, JS::PrivateValue((void*)cancel));
     return source;
   }
 }
@@ -3431,13 +3495,13 @@ static PersistentRooted<JSObject*> INSTANCE;
       return false;
     }
 
-    if (BodyStreamSource::stream_has_native_source(stream)) {
+    if (NativeStreamSource::stream_has_native_source(stream)) {
       // If the body stream is backed by a C@E body handle, we can directly pipe that handle
       // into the response body we're about to send.
 
       // First, move the source's body handle to the target.
-      RootedObject stream_source(cx, BodyStreamSource::get_stream_source(stream));
-      RootedObject source_owner(cx, BodyStreamSource::owner(stream_source));
+      RootedObject stream_source(cx, NativeStreamSource::get_stream_source(stream));
+      RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
       if (!RequestOrResponse::move_body_handle(cx, source_owner, response_obj))
         return false;
 
@@ -4457,8 +4521,8 @@ bool process_next_body_read(JSContext* cx) {
   RootedObject controller(cx);
   {
     HandleObject streamSource = (*pending_body_reads)[0];
-    owner = BodyStreamSource::owner(streamSource);
-    controller = BodyStreamSource::controller(streamSource);
+    owner = NativeStreamSource::owner(streamSource);
+    controller = NativeStreamSource::controller(streamSource);
     pending_body_reads->erase(const_cast<JSObject**>(streamSource.address()));
   }
 
@@ -4525,7 +4589,7 @@ bool define_fastly_sys(JSContext* cx, HandleObject global) {
   if (!Console::create(cx, global)) return false;
   if (!Crypto::create(cx, global)) return false;
 
-  if (!BodyStreamSource::init_class(cx, global)) return false;
+  if (!NativeStreamSource::init_class(cx, global)) return false;
   if (!Request::init_class(cx, global)) return false;
   if (!Response::init_class(cx, global)) return false;
   if (!Dictionary::init_class(cx, global)) return false;
