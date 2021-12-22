@@ -754,8 +754,8 @@ namespace NativeStreamSource {
 
   JSObject* create(JSContext* cx, HandleObject owner, HandleValue startPromise,
                    PullAlgorithm* pull, CancelAlgorithm* cancel);
-  static JSObject* get_stream_source(JSObject* stream);
-  bool stream_has_native_source(JSObject* stream);
+  static JSObject* get_stream_source(JSContext* cx, HandleObject stream);
+  bool stream_has_native_source(JSContext* cx, HandleObject stream);
   bool lock_stream(JSContext* cx, HandleObject stream);
 }
 
@@ -820,9 +820,10 @@ namespace RequestOrResponse {
     return val.isNullOrUndefined() ? nullptr : &val.toObject();
   }
 
-  JSObject* body_source(JSObject* obj) {
+  JSObject* body_source(JSContext* cx, HandleObject obj) {
     MOZ_RELEASE_ASSERT(has_body(obj));
-    return NativeStreamSource::get_stream_source(body_stream(obj));
+    RootedObject stream(cx, body_stream(obj));
+    return NativeStreamSource::get_stream_source(cx, stream);
   }
 
   bool mark_body_used(JSContext* cx, HandleObject obj) {
@@ -1035,7 +1036,7 @@ namespace RequestOrResponse {
     // This assert guarantees that we fail early in case SpiderMonkey ever changes how
     // the underlying source for streams is stored, instead of operating on invalid
     // values.
-    MOZ_RELEASE_ASSERT(NativeStreamSource::get_stream_source(body_stream) == source);
+    MOZ_RELEASE_ASSERT(NativeStreamSource::get_stream_source(cx, body_stream) == source);
 
     JS_SetReservedSlot(owner, RequestOrResponse::Slots::BodyStream, JS::ObjectValue(*body_stream));
     return body_stream;
@@ -1061,24 +1062,8 @@ namespace RequestOrResponse {
   }
 }
 
-static JS::Value get_fixed_slot(JSObject* obj, size_t slot) {
-  const auto* nobj = reinterpret_cast<const JS::shadow::Object*>(obj);
-  return nobj->fixedSlots()[slot];
-}
-
 // A JS class to use as the underlying source for native readable streams, used for
 // Request/Response bodies and TransformStream.
-// In principle, SpiderMonkey has the concept of a native ReadableStreamUnderlyingSource
-// for just that, but in practice making that work turned out to be extremely difficult,
-// because it involves GC tracing through a non-GC object (because our underlying source
-// needs access to the Request/Response object), which is ... non-trivial.
-//
-// This is a bit unfortunate, because SpiderMonkey doesn't provide an embedding API for
-// retrieving a JS object as the underlying source, so we have to resort to retrieving
-// it from a fixed slot directly, which isn't API exposed and could change.
-// To ensure we don't accidentally do unsafe things, we use various release asserts
-// verifying that we operate on the objects we expect. SpiderMonkey might change how
-// it stores the source, but at least we'd fail early.
 namespace NativeStreamSource {
   namespace Slots { enum {
     Owner, // Request or Response object, or TransformStream.
@@ -1092,12 +1077,6 @@ namespace NativeStreamSource {
   };};
 
   bool is_instance(JSObject* obj);
-
-  // Fixed slot SpiderMonkey stores the controller in on ReadableStream objects.
-  #define STREAM_SLOT_CONTROLLER 1
-  // Fixed slot SpiderMonkey stores the underlying source in on ReadableStream
-  // controller objects.
-  #define CONTROLLER_SLOT_SOURCE 3
 
   JSObject* owner(JSObject* self) {
     return &JS::GetReservedSlot(self, Slots::Owner).toObject();
@@ -1119,19 +1098,25 @@ namespace NativeStreamSource {
     return &JS::GetReservedSlot(self, Slots::Controller).toObject();
   }
 
-  static JSObject* get_controller_source(JSObject* controller) {
-    return &get_fixed_slot(controller, CONTROLLER_SLOT_SOURCE).toObject();
+  /**
+   * Returns the underlying source for the given controller iff it's an object,
+   * nullptr otherwise.
+   */
+  static JSObject* get_controller_source(JSContext* cx, HandleObject controller) {
+    RootedValue source(cx);
+    MOZ_ASSERT(JS::ReadableStreamControllerGetUnderlyingSource(cx, controller, &source));
+    return source.isObject() ? &source.toObject() : nullptr;
   }
 
-  static JSObject* get_stream_source(JSObject* stream) {
-    JSObject* controller = &get_fixed_slot(stream, STREAM_SLOT_CONTROLLER).toObject();
-    return get_controller_source(controller);
+  static JSObject* get_stream_source(JSContext* cx, HandleObject stream) {
+    RootedObject controller(cx, JS::ReadableStreamGetController(cx, stream));
+    return get_controller_source(cx, controller);
   }
 
-  bool stream_has_native_source(JSObject* stream) {
+  bool stream_has_native_source(JSContext* cx, HandleObject stream) {
     MOZ_RELEASE_ASSERT(JS::IsReadableStream(stream));
 
-    JSObject* source = get_stream_source(stream);
+    JSObject* source = get_stream_source(cx, stream);
     return is_instance(source);
   }
 
@@ -1142,7 +1127,7 @@ namespace NativeStreamSource {
     JS::ReadableStreamIsLocked(cx, stream, &locked);
     MOZ_RELEASE_ASSERT(!locked);
 
-    RootedObject self(cx, get_stream_source(stream));
+    RootedObject self(cx, get_stream_source(cx, stream));
     MOZ_RELEASE_ASSERT(is_instance(self));
 
     auto mode = JS::ReadableStreamReaderMode::Default;
@@ -1163,7 +1148,7 @@ namespace NativeStreamSource {
 
     MOZ_RELEASE_ASSERT(args[0].isObject());
     RootedObject controller(cx, &args[0].toObject());
-    MOZ_RELEASE_ASSERT(get_controller_source(controller) == self);
+    MOZ_RELEASE_ASSERT(get_controller_source(cx, controller) == self);
 
     JS::SetReservedSlot(self, Slots::Controller, args[0]);
 
@@ -1182,7 +1167,7 @@ namespace NativeStreamSource {
     RootedObject owner(cx, NativeStreamSource::owner(self));
     RootedObject controller(cx, &args[0].toObject());
     MOZ_RELEASE_ASSERT(controller == NativeStreamSource::controller(self));
-    MOZ_RELEASE_ASSERT(get_controller_source(controller) == self.get());
+    MOZ_RELEASE_ASSERT(get_controller_source(cx, controller) == self.get());
 
     PullAlgorithm* pull = pullAlgorithm(self);
     return pull(cx, args, self, owner, controller);
@@ -3495,12 +3480,12 @@ static PersistentRooted<JSObject*> INSTANCE;
       return false;
     }
 
-    if (NativeStreamSource::stream_has_native_source(stream)) {
+    if (NativeStreamSource::stream_has_native_source(cx, stream)) {
       // If the body stream is backed by a C@E body handle, we can directly pipe that handle
       // into the response body we're about to send.
 
       // First, move the source's body handle to the target.
-      RootedObject stream_source(cx, NativeStreamSource::get_stream_source(stream));
+      RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
       RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
       if (!RequestOrResponse::move_body_handle(cx, source_owner, response_obj))
         return false;
