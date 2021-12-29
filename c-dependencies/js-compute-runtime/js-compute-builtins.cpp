@@ -20,6 +20,7 @@
 #include "js/experimental/TypedData.h"
 #pragma clang diagnostic pop
 
+#include "js/friend/DumpFunctions.h"
 #include "js/JSON.h"
 #include "js/shadow/Object.h"
 #include "js/Stream.h"
@@ -31,6 +32,9 @@ using JS::CallArgsFromVp;
 using JS::UniqueChars;
 
 using JS::Value;
+using JS::ObjectValue;
+using JS::ObjectOrNullValue;
+using JS::PrivateValue;
 
 using JS::RootedValue;
 using JS::RootedObject;
@@ -881,7 +885,7 @@ namespace RequestOrResponse {
     // TODO: throw if method is GET or HEAD.
 
     // TODO: properly implement the spec steps for extracting the body and setting the content-type.
-    // (https://fetch.spec.whatwg.org/#dom-response)
+    //
 
     // TODO: Support the other possible inputs to Body.
 
@@ -1143,10 +1147,10 @@ namespace NativeStreamSource {
 
   const unsigned ctor_length = 0;
 
+  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+
   bool start(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject self(cx, &args.thisv().toObject());
-    MOZ_ASSERT(is_instance(self));
+    METHOD_HEADER(1)
 
     MOZ_ASSERT(args[0].isObject());
     RootedObject controller(cx, &args[0].toObject());
@@ -1163,9 +1167,8 @@ namespace NativeStreamSource {
   }
 
   bool pull(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject self(cx, &args.thisv().toObject());
-    MOZ_ASSERT(is_instance(self));
+    METHOD_HEADER(1)
+
     RootedObject owner(cx, NativeStreamSource::owner(self));
     RootedObject controller(cx, &args[0].toObject());
     MOZ_ASSERT(controller == NativeStreamSource::controller(self));
@@ -1176,9 +1179,8 @@ namespace NativeStreamSource {
   }
 
   bool cancel(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject self(cx, &args.thisv().toObject());
-    MOZ_ASSERT(is_instance(self));
+    METHOD_HEADER(0)
+
     RootedObject owner(cx, NativeStreamSource::owner(self));
     HandleValue reason(args.get(0));
 
@@ -1207,6 +1209,1285 @@ namespace NativeStreamSource {
     JS::SetReservedSlot(source, Slots::PullAlgorithm, JS::PrivateValue((void*)pull));
     JS::SetReservedSlot(source, Slots::CancelAlgorithm, JS::PrivateValue((void*)cancel));
     return source;
+  }
+}
+
+// A JS class to use as the underlying sink for native writable streams, used for
+// TransformStream.
+namespace NativeStreamSink {
+  typedef bool WriteAlgorithm(JSContext* cx, CallArgs args, HandleObject stream,
+                              HandleObject owner, HandleValue chunk);
+  typedef bool AbortAlgorithm(JSContext* cx, CallArgs args, HandleObject stream,
+                              HandleObject owner, HandleValue reason);
+  typedef bool CloseAlgorithm(JSContext* cx, CallArgs args, HandleObject stream,
+                              HandleObject owner);
+  namespace Slots { enum {
+    Owner, // TransformStream.
+    Controller, // The WritableStreamDefaultController.
+    InternalWriter, // Only used to lock the stream if it's consumed internally.
+    StartPromise, // Used as the return value of `start`, can be undefined.
+                  // Needed to properly implement TransformStream.
+    WriteAlgorithm,
+    AbortAlgorithm,
+    CloseAlgorithm,
+    // AbortAlgorithm, TODO: implement
+    Count
+  };};
+
+  bool is_instance(JSObject* obj);
+
+  JSObject* owner(JSObject* self) {
+    return &JS::GetReservedSlot(self, Slots::Owner).toObject();
+  }
+
+  Value startPromise(JSObject* self) {
+    return JS::GetReservedSlot(self, Slots::StartPromise);
+  }
+
+  WriteAlgorithm* writeAlgorithm(JSObject* self) {
+    return (WriteAlgorithm*)JS::GetReservedSlot(self, Slots::WriteAlgorithm).toPrivate();
+  }
+
+  AbortAlgorithm* abortAlgorithm(JSObject* self) {
+    return (AbortAlgorithm*)JS::GetReservedSlot(self, Slots::AbortAlgorithm).toPrivate();
+  }
+
+  CloseAlgorithm* closeAlgorithm(JSObject* self) {
+    return (CloseAlgorithm*)JS::GetReservedSlot(self, Slots::CloseAlgorithm).toPrivate();
+  }
+
+  JSObject* controller(JSObject* self) {
+    return &JS::GetReservedSlot(self, Slots::Controller).toObject();
+  }
+
+  /**
+   * Returns the underlying sink for the given controller iff it's an object,
+   * nullptr otherwise.
+   */
+  static JSObject* get_controller_sink(JSContext* cx, HandleObject controller) {
+    RootedValue sink(cx, JS::WritableStreamControllerGetUnderlyingSink(cx, controller));
+    return sink.isObject() ? &sink.toObject() : nullptr;
+  }
+
+  static JSObject* get_stream_sink(JSContext* cx, HandleObject stream) {
+    RootedObject controller(cx, JS::WritableStreamGetController(cx, stream));
+    return get_controller_sink(cx, controller);
+  }
+
+  bool stream_has_native_sink(JSContext* cx, HandleObject stream) {
+    MOZ_RELEASE_ASSERT(JS::IsWritableStream(stream));
+
+    JSObject* sink = get_stream_sink(cx, stream);
+    return is_instance(sink);
+  }
+
+  bool lock_stream(JSContext* cx, HandleObject stream) {
+    MOZ_ASSERT(JS::IsWritableStream(stream));
+    MOZ_ASSERT(!JS::WritableStreamIsLocked(cx, stream));
+
+    RootedObject self(cx, get_stream_sink(cx, stream));
+    MOZ_ASSERT(is_instance(self));
+
+    RootedObject writer(cx, JS::WritableStreamGetWriter(cx, stream));
+    if (!writer)
+      return false;
+
+    JS::SetReservedSlot(self, Slots::InternalWriter, JS::ObjectValue(*writer));
+    return true;
+  }
+
+  const unsigned ctor_length = 0;
+
+  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+
+  bool start(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+
+    MOZ_ASSERT(args[0].isObject());
+    RootedObject controller(cx, &args[0].toObject());
+    MOZ_ASSERT(get_controller_sink(cx, controller) == self);
+
+    JS::SetReservedSlot(self, Slots::Controller, args[0]);
+
+    // For TransformStream, StartAlgorithm returns the same Promise for both the readable
+    // and writable stream. All other native initializations of WritableStream have
+    // StartAlgorithm return undefined.
+    //
+    // Instead of introducing both the StartAlgorithm as a pointer and startPromise as a
+    // value, we just store the latter or undefined, and always return it.
+    args.rval().set(startPromise(self));
+    return true;
+  }
+
+  bool write(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+
+    RootedObject owner(cx, NativeStreamSink::owner(self));
+    HandleValue chunk(args[0]);
+
+    WriteAlgorithm* write = writeAlgorithm(self);
+    return write(cx, args, self, owner, chunk);
+  }
+
+  bool abort(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+
+    RootedObject owner(cx, NativeStreamSink::owner(self));
+    HandleValue reason(args[0]);
+
+    AbortAlgorithm* abort = abortAlgorithm(self);
+    return abort(cx, args, self, owner, reason);
+  }
+
+  bool close(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+
+    RootedObject owner(cx, NativeStreamSink::owner(self));
+
+    CloseAlgorithm* close = closeAlgorithm(self);
+    return close(cx, args, self, owner);
+  }
+
+  const JSFunctionSpec methods[] = {
+    JS_FN("start", start, 1, 0),
+    JS_FN("write", write, 2, 0),
+    JS_FN("abort", abort, 2, 0),
+    JS_FN("close", close, 1, 0),
+  JS_FS_END};
+
+  const JSPropertySpec properties[] = {JS_PS_END};
+
+  CLASS_BOILERPLATE_NO_CTOR(NativeStreamSink)
+
+  JSObject* create(JSContext* cx, HandleObject owner, HandleValue startPromise,
+                   WriteAlgorithm* write, CloseAlgorithm* close, AbortAlgorithm* abort)
+  {
+    RootedObject sink(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!sink) return nullptr;
+
+    JS::SetReservedSlot(sink, Slots::Owner, JS::ObjectValue(*owner));
+    JS::SetReservedSlot(sink, Slots::StartPromise, startPromise);
+    JS::SetReservedSlot(sink, Slots::WriteAlgorithm, JS::PrivateValue((void*)write));
+    JS::SetReservedSlot(sink, Slots::AbortAlgorithm, JS::PrivateValue((void*)abort));
+    JS::SetReservedSlot(sink, Slots::CloseAlgorithm, JS::PrivateValue((void*)close));
+    return sink;
+  }
+}
+
+namespace TransformStream {
+  namespace Slots { enum {
+    Controller,
+    Readable,
+    Writable,
+    Backpressure,
+    BackpressureChangePromise,
+    Count
+  };};
+
+  bool is_instance(JSObject* obj);
+
+  JSObject* readable(JSObject* self);
+  JSObject* controller(JSObject* self);
+  bool backpressure(JSObject* self);
+
+  bool ErrorWritableAndUnblockWrite(JSContext* cx, HandleObject stream, HandleValue error);
+  bool SetBackpressure(JSContext* cx, HandleObject stream, bool backpressure);
+  bool Error(JSContext* cx, HandleObject stream, HandleValue error);
+}
+
+namespace TransformStreamDefaultController {
+
+typedef JSObject* TransformAlgorithm(JSContext* cx, HandleObject controller, HandleValue chunk);
+typedef JSObject* FlushAlgorithm(JSContext* cx, HandleObject controller);
+
+  namespace Slots { enum {
+    Stream,
+    Transformer,
+    TransformAlgorithm,
+    TransformInput, // JS::Value to be used byTransformAlgorithm, e.g. a JSFunction to call.
+    FlushAlgorithm,
+    FlushInput, // JS::Value to be used by FlushAlgorithm, e.g. a JSFunction to call.
+    Count
+  };};
+
+  bool is_instance(JSObject* obj);
+
+  JSObject* stream(JSObject* controller) {
+    MOZ_ASSERT(is_instance(controller));
+    return &JS::GetReservedSlot(controller, Slots::Stream).toObject();
+  }
+
+  TransformAlgorithm* transformAlgorithm(JSObject* controller) {
+    MOZ_ASSERT(is_instance(controller));
+    return (TransformAlgorithm*)JS::GetReservedSlot(controller, Slots::TransformAlgorithm)
+                                .toPrivate();
+  }
+
+  FlushAlgorithm* flushAlgorithm(JSObject* controller) {
+    MOZ_ASSERT(is_instance(controller));
+    return (FlushAlgorithm*)JS::GetReservedSlot(controller, Slots::FlushAlgorithm).toPrivate();
+  }
+
+  const unsigned ctor_length = 0;
+
+  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+
+  bool Enqueue(JSContext* cx, HandleObject controller, HandleValue chunk);
+  bool Terminate(JSContext* cx, HandleObject controller);
+
+  /**
+   * https://streams.spec.whatwg.org/#ts-default-controller-desired-size
+   */
+  bool desiredSize_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "get desiredSize")
+
+    // 1.  Let readableController be [this].[stream].[readable].[controller].
+    JSObject* stream = ::TransformStreamDefaultController::stream(self);
+    JSObject* readable = TransformStream::readable(stream);
+    double value;
+    bool has_value;
+    if (!JS::ReadableStreamGetDesiredSize(cx, readable, &has_value, &value)) {
+      return false;
+    }
+
+    if (!has_value) {
+      args.rval().setNull();
+    } else {
+      args.rval().set(JS_NumberValue(value));
+    }
+
+    return true;
+  }
+
+  const JSPropertySpec properties[] = {
+    JS_PSG("desiredSize", desiredSize_get, 0),
+  JS_PS_END};
+
+  /**
+   * https://streams.spec.whatwg.org/#ts-default-controller-enqueue
+   */
+  bool enqueue_js(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "enqueue")
+
+    // 1.  Perform TransformStreamDefaultControllerEnqueue([this], chunk).
+    if (!Enqueue(cx, self, args.get(0))) {
+      return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  /**
+   * https://streams.spec.whatwg.org/#ts-default-controller-error
+   */
+  bool error_js(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "error")
+
+    // 1.  Perform TransformStreamDefaultControllerError(this, e).
+    // (inlined)
+    RootedObject stream(cx, ::TransformStreamDefaultController::stream(self));
+
+    if (!TransformStream::Error(cx, stream, args.get(0))) {
+      return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  /**
+   * https://streams.spec.whatwg.org/#ts-default-controller-terminate
+   */
+  bool terminate_js(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "terminate")
+
+    // 1.  Perform TransformStreamDefaultControllerTerminate(this).
+    if (!Terminate(cx, self)) {
+      return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  const JSFunctionSpec methods[] = {
+    JS_FN("enqueue", enqueue_js, 1, 0),
+    JS_FN("error", error_js, 1, 0),
+    JS_FN("terminate", terminate_js, 0, 0),
+  JS_FS_END};
+
+  CLASS_BOILERPLATE_NO_CTOR(TransformStreamDefaultController)
+
+  JSObject* create(JSContext* cx, HandleObject stream, TransformAlgorithm* transformAlgo,
+                   FlushAlgorithm* flushAlgo)
+  {
+    RootedObject controller(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!controller) return nullptr;
+
+    // 1.  Assert: stream [implements] `[TransformStream]`.
+    MOZ_ASSERT(TransformStream::is_instance(stream));
+
+    // 2.  Assert: stream.[controller] is undefined.
+    MOZ_ASSERT(JS::GetReservedSlot(stream, TransformStream::Slots::Controller)
+                   .isUndefined());
+
+    // 3.  Set controller.[stream] to stream.
+    JS::SetReservedSlot(controller, Slots::Stream, ObjectValue(*stream));
+
+    // 4.  Set stream.[controller] to controller.
+    JS::SetReservedSlot(stream, TransformStream::Slots::Controller,
+                        ObjectValue(*controller));
+
+    // 5.  Set controller.[transformAlgorithm] to transformAlgorithm.
+    JS::SetReservedSlot(controller, Slots::TransformAlgorithm,
+                        PrivateValue((void*)transformAlgo));
+
+    // 6.  Set controller.[flushAlgorithm] to flushAlgorithm.
+    JS::SetReservedSlot(controller, Slots::FlushAlgorithm, PrivateValue((void*)flushAlgo));
+
+    return controller;
+  }
+
+  void set_transformer(JSObject* controller, Value transformer, JSObject* transformFunction,
+                       JSObject* flushFunction)
+  {
+    JS::SetReservedSlot(controller, Slots::Transformer, transformer);
+    JS::SetReservedSlot(controller, Slots::TransformInput,
+                        ObjectOrNullValue(transformFunction));
+    JS::SetReservedSlot(controller, Slots::FlushInput, ObjectOrNullValue(flushFunction));
+  }
+
+  /**
+   * TransformStreamDefaultControllerEnqueue
+   */
+  bool Enqueue(JSContext* cx, HandleObject controller, HandleValue chunk) {
+    MOZ_ASSERT(is_instance(controller));
+
+    // 1.  Let stream be controller.[stream].
+    RootedObject stream(cx, ::TransformStreamDefaultController::stream(controller));
+
+    // 2.  Let readableController be stream.[readable].[controller].
+    RootedObject readable(cx, TransformStream::readable(stream));
+    RootedObject readableController(cx, JS::ReadableStreamGetController(cx, readable));
+    MOZ_ASSERT(readableController);
+
+    // 3.  If ! [ReadableStreamDefaultControllerCanCloseOrEnqueue](readableController) is false,
+    // throw a `TypeError` exception.
+    if (!JS::CheckReadableStreamControllerCanCloseOrEnqueue(cx, readableController, "enqueue")) {
+      return false;
+    }
+
+    // 4.  Let enqueueResult be ReadableStreamDefaultControllerEnqueue(readableController, chunk).
+    bool enqueueResult = JS::ReadableStreamEnqueue(cx, readable, chunk);
+
+    // 5.  If enqueueResult is an abrupt completion,
+    if (!enqueueResult) {
+      // 5.1.  Perform
+      // TransformStreamErrorWritableAndUnblockWrite(stream, enqueueResult.[Value]).
+      RootedValue resultValue(cx);
+      if (!JS_GetPendingException(cx, &resultValue)) {
+        return false;
+      }
+      JS_ClearPendingException(cx);
+
+      if (!TransformStream::ErrorWritableAndUnblockWrite(cx, stream, resultValue)) {
+        return false;
+      }
+
+      //     2.  Throw stream.[readable].[storedError].
+      RootedValue storedError(cx, JS::ReadableStreamGetStoredError(cx, readable));
+      JS_SetPendingException(cx, storedError);
+      return false;
+    }
+
+    // 6.  Let backpressure be ReadableStreamDefaultControllerHasBackpressure(readableController).
+    // (Inlined)
+    bool backpressure = !JS::ReadableStreamControllerShouldCallPull(cx, readableController);
+
+    // 7.  If backpressure is not stream.[backpressure],
+    if (backpressure != TransformStream::backpressure(stream)) {
+      //     1.  Assert: backpressure is true.
+      MOZ_ASSERT(backpressure);
+
+      //     2.  Perform ! TransformStreamSetBackpressure(stream, true).
+      TransformStream::SetBackpressure(cx, stream, true);
+    }
+
+    return true;
+  }
+
+  /**
+   * TransformStreamDefaultControllerTerminate
+   */
+  bool Terminate(JSContext* cx, HandleObject controller) {
+    MOZ_ASSERT(is_instance(controller));
+
+    // 1.  Let stream be controller.[stream].
+    RootedObject stream(cx, ::TransformStreamDefaultController::stream(controller));
+
+    // 2.  Let readableController be stream.[readable].[controller].
+    RootedObject readable(cx, TransformStream::readable(stream));
+    RootedObject readableController(cx, JS::ReadableStreamGetController(cx, readable));
+    MOZ_ASSERT(readableController);
+
+    // 3.  Perform ! [ReadableStreamDefaultControllerClose](readableController).
+    // Note: in https://github.com/whatwg/streams/pull/1029, the spec was changed to
+    // make ReadableStreamDefaultControllerClose (and -Enqueue) return early if
+    // ReadableStreamDefaultControllerCanCloseOrEnqueue is false. SpiderMonkey hasn't been
+    // updated accordingly, so it'll throw an exception instead.
+    // To avoid that, we do the check explicitly. While that also throws an exception, we can
+    // just clear it and move on.
+    // Note that this is future-proof: if SpiderMonkey is updated accordingly, it'll simply
+    // stop throwing an exception, and the `else` branch will never be taken.
+    if (JS::CheckReadableStreamControllerCanCloseOrEnqueue(cx, readableController, "close")) {
+      if (!JS::ReadableStreamClose(cx, readable)) {
+        return false;
+      }
+    } else {
+      JS_ClearPendingException(cx);
+    }
+
+    // 4.  Let error be a `[TypeError](https://tc39.es/ecma262/#sec-native-error-types-used-in-this-standard-typeerror)` exception indicating that the stream has been terminated.
+    // JSAPI doesn't allow us to create a proper error object with the right stack and all without
+    // actually throwing it. So we do that and then immediately clear the pending exception.
+    RootedValue error(cx);
+    JS_ReportErrorLatin1(cx, "The TransformStream has been terminated");
+    if (!JS_GetPendingException(cx, &error)) {
+      return false;
+    }
+    JS_ClearPendingException(cx);
+
+    // 5.  Perform ! [TransformStreamErrorWritableAndUnblockWrite](stream, error).
+    return TransformStream::ErrorWritableAndUnblockWrite(cx, stream, error);
+  }
+
+  /**
+   * Invoke the given callback in a way that treats it as a WebIDL callback returning `Promise<undefined>`, by first calling it and then running step 14 of
+   * <invoke a callback function> and the conversion step from
+   * https://webidl.spec.whatwg.org/#es-promise on the completion value.
+   */
+  JSObject* InvokePromiseReturningCallback(JSContext* cx, HandleValue receiver,
+                                           HandleValue callback, JS::HandleValueArray args)
+  {
+    RootedValue rval(cx);
+    if (!JS::Call(cx, receiver, callback, args, &rval)) {
+      return PromiseRejectedWithPendingError(cx);
+    }
+
+    return JS::CallOriginalPromiseResolve(cx, rval);
+  }
+
+  /**
+   * The TransformerAlgorithm to use for TransformStreams created using the JS constructor, with
+   * or without a `transformer` passed in.
+   *
+   * Steps 2.* and 4 of SetUpTransformStreamDefaultControllerFromTransformer.
+   */
+  JSObject* transform_algorithm_transformer(JSContext* cx, HandleObject controller,
+                                            HandleValue chunk)
+  {
+    MOZ_ASSERT(is_instance(controller));
+
+    // Step 2.  Let transformAlgorithm be the following steps, taking a chunk argument:
+    RootedValue transformFunction(cx);
+    transformFunction = JS::GetReservedSlot(controller, Slots::TransformInput);
+    if (!transformFunction.isObject()) {
+      // 2.1.  Let result be TransformStreamDefaultControllerEnqueue(controller, chunk).
+      if (!Enqueue(cx, controller, chunk)) {
+        // 2.2.  If result is an abrupt completion, return a promise rejected with result.[Value].
+        return PromiseRejectedWithPendingError(cx);
+      }
+
+      // 2.3.  Otherwise, return a promise resolved with undefined.
+      return JS::CallOriginalPromiseResolve(cx, JS::UndefinedHandleValue);
+    }
+
+    // Step 4.  If transformerDict[transform] exists, set transformAlgorithm to an algorithm which
+    // takes an argument chunk and returns the result of invoking transformerDict[transform] with
+    // argument list « chunk, controller » and callback this value transformer.
+    RootedValue transformer(cx, JS::GetReservedSlot(controller, Slots::Transformer));
+    JS::RootedValueArray<2> newArgs(cx);
+    newArgs[0].set(chunk);
+    newArgs[1].setObject(*controller);
+    return InvokePromiseReturningCallback(cx, transformer, transformFunction, newArgs);
+  }
+
+  /**
+   * The FlushAlgorithm to use for TransformStreams created using the JS constructor, with
+   * or without a `transformer` passed in.
+   *
+   * Steps 3 and 5 of SetUpTransformStreamDefaultControllerFromTransformer.
+   */
+  JSObject* flush_algorithm_transformer(JSContext* cx, HandleObject controller) {
+    MOZ_ASSERT(is_instance(controller));
+
+    // Step 3.  Let flushAlgorithm be an algorithm which returns a promise resolved with undefined.
+    RootedValue flushFunction(cx, JS::GetReservedSlot(controller, Slots::FlushInput));
+    if (!flushFunction.isObject()) {
+      return JS::CallOriginalPromiseResolve(cx, JS::UndefinedHandleValue);
+    }
+
+    // Step 5.  If transformerDict[flush] exists, set flushAlgorithm to an algorithm which returns the result of invoking transformerDict[flush] with argument list « controller » and callback this value transformer.
+    RootedValue transformer(cx, JS::GetReservedSlot(controller, Slots::Transformer));
+    JS::RootedValueArray<1> newArgs(cx);
+    newArgs[0].setObject(*controller);
+    return InvokePromiseReturningCallback(cx, transformer, flushFunction, newArgs);
+  }
+
+  /**
+   * SetUpTransformStreamDefaultController
+   * https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller
+   */
+  JSObject* SetUp(JSContext* cx, HandleObject stream,
+                  TransformAlgorithm* transformAlgo, FlushAlgorithm* flushAlgo)
+  {
+    MOZ_ASSERT(TransformStream::is_instance(stream));
+
+    // Step 1 of SetUpTransformStreamDefaultControllerFromTransformer and step 1-6 of this
+    // algorithm.
+    RootedObject controller(cx);
+    controller = TransformStreamDefaultController::create(cx, stream, transformAlgo, flushAlgo);
+    return controller;
+  }
+
+  /**
+   * SetUpTransformStreamDefaultControllerFromTransformer
+   * https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller-from-transformer
+   */
+  JSObject* SetUpFromTransformer(JSContext* cx, HandleObject stream, HandleValue transformer,
+                                 HandleObject transformFunction, HandleObject flushFunction)
+  {
+    MOZ_ASSERT(TransformStream::is_instance(stream));
+
+    // Step 1, moved into SetUpTransformStreamDefaultController.
+    // Step 6.  Perform ! [SetUpTransformStreamDefaultController](stream, controller, transformAlgorithm, flushAlgorithm).
+    RootedObject controller(cx);
+    controller = SetUp(cx, stream, transform_algorithm_transformer, flush_algorithm_transformer);
+    if (!controller) return nullptr;
+
+    // Set the additional bits required to execute the transformer-based transform and flush
+    // algorithms.
+    set_transformer(controller, transformer, transformFunction, flushFunction);
+
+    // Steps 2-5 implemented in dedicated functions above.
+    return controller;
+  }
+
+  /**
+   * Steps 2.* of TransformStreamDefaultControllerPerformTransform.
+   */
+  bool transformPromise_catch_handler(JSContext* cx, HandleObject controller, CallArgs args) {
+    RootedValue r(cx, args.get(0));
+    //     1.  Perform ! [TransformStreamError](controller.[stream], r).
+    RootedObject streamObj(cx, stream(controller));
+    if (!TransformStream::Error(cx, streamObj, r)) {
+      return false;
+    }
+
+    //     2.  Throw r.
+    JS_SetPendingException(cx, r);
+    return false;
+  }
+
+  /**
+   * TransformStreamDefaultControllerPerformTransform
+   */
+  JSObject* PerformTransform(JSContext* cx, HandleObject controller, HandleValue chunk) {
+    MOZ_ASSERT(is_instance(controller));
+
+    // 1.  Let transformPromise be the result of performing controller.[transformAlgorithm], passing chunk.
+    TransformAlgorithm* transformAlgo = transformAlgorithm(controller);
+    RootedObject transformPromise(cx, transformAlgo(cx, controller, chunk));
+    if (!transformPromise) {
+      return nullptr;
+    }
+
+    // 2.  Return the result of reacting to transformPromise with the following rejection
+    // steps given the argument r:
+    RootedObject catch_handler(cx);
+    catch_handler = create_internal_method<transformPromise_catch_handler>(cx, controller);
+    if (!catch_handler) {
+      return nullptr;
+    }
+
+    return JS::CallOriginalPromiseThen(cx, transformPromise, nullptr, catch_handler);
+  }
+
+  /**
+   * TransformStreamDefaultControllerClearAlgorithms
+   */
+  void ClearAlgorithms(JSObject* controller) {
+    MOZ_ASSERT(is_instance(controller));
+
+    // 1.  Set controller.[transformAlgorithm] to undefined.
+    JS::SetReservedSlot(controller, Slots::TransformAlgorithm, PrivateValue(nullptr));
+    JS::SetReservedSlot(controller, Slots::TransformInput, JS::UndefinedValue());
+
+    // 2.  Set controller.[flushAlgorithm] to undefined.
+    JS::SetReservedSlot(controller, Slots::FlushAlgorithm, PrivateValue(nullptr));
+    JS::SetReservedSlot(controller, Slots::FlushInput, JS::UndefinedValue());
+  }
+}
+
+bool ExtractFunction(JSContext* cx, HandleObject obj, const char* name,
+                     JS::MutableHandleObject func)
+{
+  RootedValue val(cx);
+  if (!JS_GetProperty(cx, obj, name, &val)) {
+    return false;
+  }
+
+  if (val.isUndefined()) {
+    return true;
+  }
+
+  if (!val.isObject() || !JS::IsCallable(&val.toObject())) {
+    JS_ReportErrorLatin1(cx, "%s should be a function", name);
+    return false;
+  }
+
+  func.set(&val.toObject());
+  return true;
+}
+
+bool ExtractStrategy(JSContext* cx, HandleValue strategy, double default_hwm,
+                     double* hwm, JS::MutableHandleFunction size)
+{
+  if (strategy.isUndefined()) {
+    *hwm = default_hwm;
+    return true;
+  }
+
+  if (!strategy.isObject()) {
+    JS_ReportErrorLatin1(cx,
+                         "Strategy passed to TransformStream constructor must be an object");
+    return false;
+  }
+
+  RootedObject strategy_obj(cx, &strategy.toObject());
+
+  RootedValue val(cx);
+  if (!JS_GetProperty(cx, strategy_obj, "highWaterMark", &val)) {
+    return false;
+  }
+
+  if (val.isUndefined()) {
+    *hwm = default_hwm;
+  } else {
+    if (!JS::ToNumber(cx, val, hwm)) {
+      return false;
+    }
+    if (mozilla::IsNaN(*hwm) || *hwm < 0) {
+      JS_ReportErrorLatin1(cx, "Invalid value for highWaterMark: %f", *hwm);
+      return false;
+    }
+  }
+
+  RootedObject size_obj(cx);
+  if (!ExtractFunction(cx, strategy_obj, "size", &size_obj)) {
+    return false;
+  }
+
+  // JSAPI wants JSHandleFunction instances for the size algorithm, so that's what it'll get.
+  if (size_obj) {
+    val.setObjectOrNull(size_obj);
+    size.set(JS_ValueToFunction(cx, val));
+  }
+
+  return true;
+}
+
+namespace TransformStream {
+  JSObject* create(JSContext* cx, double writableHighWaterMark,
+                   JS::HandleFunction writableSizeAlgorithm,
+                   double readableHighWaterMark,
+                   JS::HandleFunction readableSizeAlgorithm,
+                   HandleValue transformer, HandleObject startFunction,
+                   HandleObject transformFunction, HandleObject flushFunction);
+
+  /**
+   * https://streams.spec.whatwg.org/#ts-constructor
+   */
+  bool constructor(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject startFunction(cx);
+    RootedObject transformFunction(cx);
+    RootedObject flushFunction(cx);
+
+    // 1.  If transformer is missing, set it to null.
+    RootedValue transformer(cx, args.get(0));
+    if (transformer.isUndefined()) {
+      transformer.setNull();
+    }
+
+    if (transformer.isObject()) {
+      RootedObject transformerDict(cx, &transformer.toObject());
+
+      // 2.  Let transformerDict be transformer, [converted to an IDL value] of type `
+      //     [Transformer]`.
+      // Note: we do the extraction of dict entries manually, because no WebIDL codegen.
+      if (!ExtractFunction(cx, transformerDict, "start", &startFunction)) {
+        return false;
+      }
+
+      if (!ExtractFunction(cx, transformerDict, "transform", &transformFunction)) {
+        return false;
+      }
+
+      if (!ExtractFunction(cx, transformerDict, "flush", &flushFunction)) {
+        return false;
+      }
+
+      // 3.  If transformerDict["readableType"] [exists], throw a `[RangeError]` exception.
+      bool found;
+      if (!JS_HasProperty(cx, transformerDict, "readableType", &found)) {
+        return false;
+      }
+      if (found) {
+        JS_ReportErrorLatin1(cx, "transformer.readableType is reserved for future use");
+        return false;
+      }
+
+      // 4.  If transformerDict["writableType"] [exists], throw a `[RangeError]` exception.
+      if (!JS_HasProperty(cx, transformerDict, "writableType", &found)) {
+        return false;
+      }
+      if (found) {
+        JS_ReportErrorLatin1(cx, "transformer.writableType is reserved for future use");
+        return false;
+      }
+  }
+
+    // 5.  Let readableHighWaterMark be ? [ExtractHighWaterMark](readableStrategy, 0).
+    // 6.  Let readableSizeAlgorithm be ! [ExtractSizeAlgorithm](readableStrategy).
+    double readableHighWaterMark;
+    JS::RootedFunction readableSizeAlgorithm(cx);
+    if (!ExtractStrategy(cx, args.get(2), 0, &readableHighWaterMark,
+                         &readableSizeAlgorithm))
+    {
+      return false;
+    }
+
+    // 7.  Let writableHighWaterMark be ? [ExtractHighWaterMark](writableStrategy, 1).
+    // 8.  Let writableSizeAlgorithm be ! [ExtractSizeAlgorithm](writableStrategy).
+    double writableHighWaterMark;
+    JS::RootedFunction writableSizeAlgorithm(cx);
+    if (!ExtractStrategy(cx, args.get(1), 1, &writableHighWaterMark,
+                         &writableSizeAlgorithm))
+    {
+      return false;
+    }
+
+    // Steps 9-13.
+    RootedObject self(cx, create(cx, writableHighWaterMark, writableSizeAlgorithm,
+                                 readableHighWaterMark, readableSizeAlgorithm,
+                                 transformer, startFunction, transformFunction,
+                                 flushFunction));
+    if (!self) return false;
+
+    args.rval().setObject(*self);
+    return true;
+  }
+
+  const unsigned ctor_length = 0;
+
+  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+
+  JSObject* readable(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return &JS::GetReservedSlot(self, Slots::Readable).toObject();
+  }
+
+  JSObject* writable(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return &JS::GetReservedSlot(self, Slots::Writable).toObject();
+  }
+
+  JSObject* controller(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return &JS::GetReservedSlot(self, Slots::Controller).toObject();
+  }
+
+  bool backpressure(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return JS::GetReservedSlot(self, Slots::Backpressure).toBoolean();
+  }
+
+  JSObject* backpressureChangePromise(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return JS::GetReservedSlot(self, Slots::BackpressureChangePromise).toObjectOrNull();
+  }
+
+  bool readable_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "get readable")
+    args.rval().setObject(*readable(self));
+    return true;
+  }
+
+  bool writable_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "get writable")
+    args.rval().setObject(*writable(self));
+    return true;
+  }
+
+  const JSFunctionSpec methods[] = {JS_FS_END};
+
+  const JSPropertySpec properties[] = {
+    JS_PSG("readable", readable_get, 0),
+    JS_PSG("writable", writable_get, 0),
+  JS_PS_END};
+
+  CLASS_BOILERPLATE(TransformStream)
+
+  /**
+   * TransformStreamError
+   */
+  bool Error(JSContext* cx, HandleObject stream, HandleValue error) {
+    MOZ_ASSERT(is_instance(stream));
+
+    // 1.  Perform ReadableStreamDefaultControllerError(stream.[readable].[controller], e).
+    RootedObject readable(cx, ::TransformStream::readable(stream));
+    if (!JS::ReadableStreamError(cx, readable, error)) {
+      return false;
+    }
+
+    // 2.  Perform ! [TransformStreamErrorWritableAndUnblockWrite](stream, e).
+    return ErrorWritableAndUnblockWrite(cx, stream, error);
+  }
+
+  /**
+   * TransformStreamDefaultSourcePullAlgorithm
+   */
+  bool DefaultSourcePullAlgorithm(JSContext* cx, CallArgs args, HandleObject readable,
+                                  HandleObject stream, HandleObject controller)
+  {
+    // 1.  Assert: stream.[backpressure] is true.
+    MOZ_ASSERT(backpressure(stream));
+
+    // 2.  Assert: stream.[backpressureChangePromise] is not undefined.
+    MOZ_ASSERT(backpressureChangePromise(stream));
+
+    // 3.  Perform ! [TransformStreamSetBackpressure](stream, false).
+    if (!SetBackpressure(cx, stream, false)) {
+      return false;
+    }
+
+    // 4.  Return stream.[backpressureChangePromise].
+    args.rval().setObject(*backpressureChangePromise(stream));
+    return true;
+  }
+
+  /**
+   * Steps 7.* of InitializeTransformStream
+   */
+  bool DefaultSourceCancelAlgorithm(JSContext* cx, CallArgs args, HandleObject readable,
+                                    HandleObject stream, HandleValue reason)
+  {
+    MOZ_ASSERT(is_instance(stream));
+
+    // 1.  Perform ! [TransformStreamErrorWritableAndUnblockWrite](stream, reason).
+    if (!ErrorWritableAndUnblockWrite(cx, stream, reason)) {
+      return false;
+    }
+
+    // 2.  Return [a promise resolved with] undefined.
+    args.rval().setUndefined();
+    return true;
+  }
+
+  /**
+   * Steps 2 and 3.* of DefaultSinkWriteAlgorithm.
+   */
+  bool default_sink_write_algo_then_handler(JSContext* cx, HandleObject stream,
+                                            CallArgs args)
+  {
+    RootedObject then_handler(cx, &args.callee());
+    RootedValue chunk(cx, js::GetFunctionNativeReserved(then_handler, 1));
+
+    // 3.1.  Let writable be stream.[writable].
+    RootedObject writable(cx, ::TransformStream::writable(stream));
+
+    // 3.2.  Let state be writable.[state].
+    auto state = JS::WritableStreamGetState(cx, writable);
+
+    // 3.3.  If state is "`erroring`", throw writable.[storedError].
+    if (state == JS::WritableStreamState::Erroring) {
+      RootedValue storedError(cx, JS::WritableStreamGetStoredError(cx, writable));
+      JS_SetPendingException(cx, storedError);
+      return false;
+    }
+
+    // 3.4.  Assert: state is "`writable`".
+    MOZ_ASSERT(state == JS::WritableStreamState::Writable);
+
+    // 2.  Let controller be stream.[controller].
+    RootedObject controller(cx, TransformStream::controller(stream));
+
+    // 3.5.  Return TransformStreamDefaultControllerPerformTransform(controller, chunk).
+    RootedObject transformPromise(cx);
+    transformPromise = TransformStreamDefaultController::PerformTransform(cx, controller, chunk);
+    if (!transformPromise) {
+      return false;
+    }
+
+    args.rval().setObject(*transformPromise);
+    return true;
+  }
+
+  bool DefaultSinkWriteAlgorithm(JSContext* cx, CallArgs args, HandleObject writableController,
+                                 HandleObject stream, HandleValue chunk)
+  {
+    RootedObject writable(cx, ::TransformStream::writable(stream));
+
+    // 1.  Assert: stream.[writable].[state] is "`writable`".
+    MOZ_ASSERT(JS::WritableStreamGetState(cx, writable) ==
+               JS::WritableStreamState::Writable);
+
+    // 2. (reordered below)
+
+    // 3.  If stream.[backpressure] is true,
+    if (TransformStream::backpressure(stream)) {
+      //     1.  Let backpressureChangePromise be stream.[backpressureChangePromise].
+      RootedObject changePromise(cx, TransformStream::backpressureChangePromise(stream));
+
+      //     2.  Assert: backpressureChangePromise is not undefined.
+      MOZ_ASSERT(changePromise);
+
+      //     3.  Return the result of [reacting] to backpressureChangePromise with the following
+      //         fulfillment steps:
+      RootedObject then_handler(cx);
+      then_handler = create_internal_method<default_sink_write_algo_then_handler>(cx, stream);
+      if (!then_handler) return false;
+
+      // Store the chunk value on the then_handler function for later retrieval.
+      js::SetFunctionNativeReserved(then_handler, 1, chunk);
+
+      RootedObject result(cx);
+      result = JS::CallOriginalPromiseThen(cx, changePromise, then_handler, nullptr);
+      if (!result) {
+        return false;
+      }
+
+      args.rval().setObject(*result);
+      return true;
+    }
+
+    // 2.  Let controller be stream.[controller].
+    RootedObject controller(cx, TransformStream::controller(stream));
+
+    // 4.  Return ! [TransformStreamDefaultControllerPerformTransform](controller, chunk).
+    RootedObject transformPromise(cx);
+    transformPromise = TransformStreamDefaultController::PerformTransform(cx, controller, chunk);
+    if (!transformPromise) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+
+    args.rval().setObject(*transformPromise);
+    return true;
+  }
+
+  bool DefaultSinkAbortAlgorithm(JSContext* cx, CallArgs args,
+                                 HandleObject writableController, HandleObject stream,
+                                 HandleValue reason)
+  {
+    MOZ_ASSERT(is_instance(stream));
+
+    // 1.  Perform ! [TransformStreamError](stream, reason).
+    if (!Error(cx, stream, reason)) {
+      return false;
+    }
+
+    // 2.  Return [a promise resolved with] undefined.
+    RootedObject promise(cx, JS::CallOriginalPromiseResolve(cx, JS::UndefinedHandleValue));
+    if (!promise) {
+      return false;
+    }
+
+    args.rval().setObject(*promise);
+    return true;
+  }
+
+  /**
+   * Steps 5.1.1-2 of DefaultSinkCloseAlgorithm.
+   */
+  bool default_sink_close_algo_then_handler(JSContext* cx, HandleObject stream, CallArgs args) {
+    // 5.1.1.  If readable.[state] is "`errored`", throw readable.[storedError].
+    RootedObject then_handler(cx, &args.callee());
+    RootedObject readable(cx, &js::GetFunctionNativeReserved(then_handler, 1).toObject());
+    bool is_errored;
+    if (!JS::ReadableStreamIsErrored(cx, readable, &is_errored)) {
+      return false;
+    }
+
+    if (is_errored) {
+      RootedValue storedError(cx, JS::ReadableStreamGetStoredError(cx, readable));
+      JS_SetPendingException(cx, storedError);
+      return false;
+    }
+
+    // 5.1.2.  Perform ! [ReadableStreamDefaultControllerClose](readable.[controller]).
+    RootedObject readableController(cx, JS::ReadableStreamGetController(cx, readable));
+    // Note: in https://github.com/whatwg/streams/pull/1029, the spec was changed to
+    // make ReadableStreamDefaultControllerClose (and -Enqueue) return early if
+    // ReadableStreamDefaultControllerCanCloseOrEnqueue is false. SpiderMonkey hasn't been
+    // updated accordingly, so it'll throw an exception instead.
+    // To avoid that, we do the check explicitly. While that also throws an exception, we can
+    // just clear it and move on.
+    // Note that this is future-proof: if SpiderMonkey is updated accordingly, it'll simply
+    // stop throwing an exception, and the `else` branch will never be taken.
+    if (JS::CheckReadableStreamControllerCanCloseOrEnqueue(cx, readableController, "close")) {
+      return JS::ReadableStreamClose(cx, readable);
+    } else {
+      JS_ClearPendingException(cx);
+    }
+    return true;
+  }
+
+  /**
+   * Steps 5.2.1-2 of DefaultSinkCloseAlgorithm.
+   */
+  bool default_sink_close_algo_catch_handler(JSContext* cx, HandleObject stream, CallArgs args) {
+    // 5.2.1.  Perform ! [TransformStreamError](stream, r).
+    HandleValue r = args.get(0);
+    if (!Error(cx, stream, r)) {
+      return false;
+    }
+
+    // 5.2.2.  Throw readable.[storedError].
+    RootedObject then_handler(cx, &args.callee());
+    RootedObject readable(cx, &js::GetFunctionNativeReserved(then_handler, 1).toObject());
+    RootedValue storedError(cx, JS::ReadableStreamGetStoredError(cx, readable));
+    JS_SetPendingException(cx, storedError);
+    return false;
+  }
+
+  bool DefaultSinkCloseAlgorithm(JSContext* cx, CallArgs args,
+                                 HandleObject writableController, HandleObject stream)
+  {
+    MOZ_ASSERT(is_instance(stream));
+
+    // 1.  Let readable be stream.[readable].
+    RootedObject readable(cx, ::TransformStream::readable(stream));
+
+    // 2.  Let controller be stream.[controller].
+    RootedObject controller(cx, ::TransformStream::controller(stream));
+
+    // 3.  Let flushPromise be the result of performing controller.[flushAlgorithm].
+    auto flushAlgorithm = TransformStreamDefaultController::flushAlgorithm(controller);
+    RootedObject flushPromise(cx, flushAlgorithm(cx, controller));
+    if (!flushPromise) {
+      return false;
+    }
+
+    // 4.  Perform ! [TransformStreamDefaultControllerClearAlgorithms](controller).
+    TransformStreamDefaultController::ClearAlgorithms(controller);
+
+    // 5.  Return the result of [reacting] to flushPromise:
+    // 5.1.  If flushPromise was fulfilled, then:
+    // Sub-steps in handler above.
+    RootedObject then_handler(cx);
+    then_handler = create_internal_method<default_sink_close_algo_then_handler>(cx, stream);
+    if (!then_handler) return false;
+
+    // Store the readable on the then_handler function for later retrieval.
+    js::SetFunctionNativeReserved(then_handler, 1, ObjectValue(*readable));
+
+    // 5.2.  If flushPromise was rejected with reason r, then:
+    // Sub-steps in handler above.
+    RootedObject catch_handler(cx);
+    catch_handler = create_internal_method<default_sink_close_algo_catch_handler>(cx, stream);
+    if (!catch_handler) return false;
+
+    // Store the readable on the catch_handler function for later retrieval.
+    js::SetFunctionNativeReserved(catch_handler, 1, ObjectValue(*readable));
+
+    RootedObject result(cx);
+    result = JS::CallOriginalPromiseThen(cx, flushPromise, then_handler, catch_handler);
+    if (!result) {
+      return false;
+    }
+
+    args.rval().setObject(*result);
+    return true;
+  }
+
+  /**
+   * TransformStreamSetBackpressure
+   */
+  bool SetBackpressure(JSContext* cx, HandleObject stream, bool backpressure) {
+    // 1.  Assert: stream.[backpressure] is not backpressure.
+    MOZ_ASSERT(::TransformStream::backpressure(stream) != backpressure);
+
+    // 2.  If stream.[backpressureChangePromise] is not undefined, resolve stream.[backpressureChangePromise] with undefined.
+    RootedObject changePromise(cx, backpressureChangePromise(stream));
+    if (changePromise) {
+      if (!JS::ResolvePromise(cx, changePromise, JS::UndefinedHandleValue)) {
+        return false;
+      }
+    }
+
+    // 3.  Set stream.[backpressureChangePromise] to a new promise.
+    changePromise = JS::NewPromiseObject(cx, nullptr);
+    if (!changePromise) {
+      return false;
+    }
+    JS::SetReservedSlot(stream, Slots::BackpressureChangePromise, ObjectValue(*changePromise));
+
+    // 4.  Set stream.[backpressure] to backpressure.
+    JS::SetReservedSlot(stream, Slots::Backpressure, JS::BooleanValue(backpressure));
+
+    return true;
+  }
+
+  /**
+   * https://streams.spec.whatwg.org/#initialize-transform-stream
+   * Steps 9-13.
+   */
+  bool Initialize(JSContext* cx, HandleObject stream, HandleObject startPromise,
+                  double writableHighWaterMark, JS::HandleFunction writableSizeAlgorithm,
+                  double readableHighWaterMark, JS::HandleFunction readableSizeAlgorithm)
+  {
+    // Step 1.  Let startAlgorithm be an algorithm that returns startPromise.
+    // (Inlined)
+
+    // Steps 2-4 implemented as DefaultSink*Algorithm functions above.
+
+    // Step 5.  Set stream.[writable] to ! [CreateWritableStream](startAlgorithm, writeAlgorithm, closeAlgorithm, abortAlgorithm, writableHighWaterMark, writableSizeAlgorithm).
+    RootedValue startPromiseVal(cx, ObjectValue(*startPromise));
+    RootedObject sink(cx, NativeStreamSink::create(cx, stream, startPromiseVal,
+                                                   DefaultSinkWriteAlgorithm,
+                                                   DefaultSinkCloseAlgorithm,
+                                                   DefaultSinkAbortAlgorithm));
+    if (!sink) return false;
+
+    RootedObject writable(cx);
+    writable = JS::NewWritableDefaultStreamObject(cx, sink, writableSizeAlgorithm,
+                                                  writableHighWaterMark);
+    if (!writable) return false;
+
+    JS::SetReservedSlot(stream, Slots::Writable, ObjectValue(*writable));
+
+    // Step 6.  Let pullAlgorithm be the following steps:
+    auto pullAlgorithm = DefaultSourcePullAlgorithm;
+
+    // Step 7.  Let cancelAlgorithm be the following steps, taking a reason argument:
+    // (Sub-steps moved into DefaultSourceCancelAlgorithm)
+    auto cancelAlgorithm = DefaultSourceCancelAlgorithm;
+
+    // Step 8.  Set stream.[readable] to ! [CreateReadableStream](startAlgorithm, pullAlgorithm, cancelAlgorithm, readableHighWaterMark, readableSizeAlgorithm).
+    RootedObject source(cx, NativeStreamSource::create(cx, stream, startPromiseVal,
+                                                       pullAlgorithm, cancelAlgorithm));
+    if (!source) return false;
+
+    RootedObject readable(cx, JS::NewReadableDefaultStreamObject(cx, source,
+                                                                 readableSizeAlgorithm,
+                                                                 readableHighWaterMark));
+    if (!readable) return false;
+
+    JS::SetReservedSlot(stream, Slots::Readable, ObjectValue(*readable));
+
+    // Step 9.  Set stream.[backpressure] and stream.[backpressureChangePromise] to undefined.
+    // As the note in the spec says, it's valid to instead set `backpressure` to a
+    // boolean value early, which makes implementing SetBackpressure easier.
+    JS::SetReservedSlot(stream, Slots::Backpressure, JS::FalseValue());
+
+    // For similar reasons, ensure that the backpressureChangePromise slot is null.
+    JS::SetReservedSlot(stream, Slots::BackpressureChangePromise, JS::NullValue());
+
+    // Step 10. Perform ! [TransformStreamSetBackpressure](stream, true).
+    if (!SetBackpressure(cx, stream, true)) {
+      return false;
+    }
+
+    // Step 11. Set stream.[controller] to undefined.
+    JS::SetReservedSlot(stream, Slots::Controller, JS::UndefinedValue());
+
+    return true;
+  }
+
+  bool ErrorWritableAndUnblockWrite(JSContext* cx, HandleObject stream, HandleValue error) {
+    MOZ_ASSERT(is_instance(stream));
+
+    // 1.  Perform TransformStreamDefaultControllerClearAlgorithms(stream.[controller]).
+    TransformStreamDefaultController::ClearAlgorithms(controller(stream));
+
+    // 2.  Perform WritableStreamDefaultControllerErrorIfNeeded(stream.[writable].[controller], e).
+    // (inlined)
+    RootedObject writable(cx, ::TransformStream::writable(stream));
+    if (JS::WritableStreamGetState(cx, writable) == JS::WritableStreamState::Writable) {
+      if (!JS::WritableStreamError(cx, writable, error)) {
+        return false;
+      }
+    }
+
+    // 3.  If stream.[backpressure] is true, perform TransformStreamSetBackpressure(stream, false).
+    if (backpressure(stream)) {
+      if (!SetBackpressure(cx, stream, false)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * https://streams.spec.whatwg.org/#ts-constructor
+   * Steps 9-13.
+   */
+  JSObject* create(JSContext* cx, double writableHighWaterMark,
+                   JS::HandleFunction writableSizeAlgorithm,
+                   double readableHighWaterMark,
+                   JS::HandleFunction readableSizeAlgorithm,
+                   HandleValue transformer, HandleObject startFunction,
+                   HandleObject transformFunction, HandleObject flushFunction)
+  {
+    RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!self) return nullptr;
+
+    // Step 9.
+    RootedObject startPromise(cx, JS::NewPromiseObject(cx, nullptr));
+    if (!startPromise) return nullptr;
+
+    // Step 10.
+    if (!Initialize(cx, self, startPromise, writableHighWaterMark, writableSizeAlgorithm,
+                    readableHighWaterMark, readableSizeAlgorithm))
+    {
+      return nullptr;
+    }
+
+    // Step 11.
+    RootedObject controller(cx);
+    controller = TransformStreamDefaultController::SetUpFromTransformer(cx, self,
+                                                                        transformer,
+                                                                        transformFunction,
+                                                                        flushFunction);
+    if (!controller) {
+      return nullptr;
+    }
+
+    RootedValue rval(cx);
+
+    // Step 12.
+    // If transformerDict["start"], then resolve startPromise with the result of invoking
+    // transformerDict["start"] with argument list « this.[[[controller]]] » and callback
+    // this value transformer.
+    if (startFunction) {
+      JS::RootedValueArray<1> newArgs(cx);
+      newArgs[0].setObject(*controller);
+      if (!JS::Call(cx, transformer, startFunction, newArgs, &rval)) {
+        return nullptr;
+      }
+    }
+
+    // Step 13.
+    // Otherwise, resolve startPromise with undefined.
+    if (!JS::ResolvePromise(cx, startPromise, rval)) {
+      return nullptr;
+    }
+
+    return self;
   }
 }
 
@@ -4579,6 +5860,9 @@ bool define_fastly_sys(JSContext* cx, HandleObject global) {
   if (!Crypto::create(cx, global)) return false;
 
   if (!NativeStreamSource::init_class(cx, global)) return false;
+  if (!NativeStreamSink::init_class(cx, global)) return false;
+  if (!TransformStreamDefaultController::init_class(cx, global)) return false;
+  if (!TransformStream::init_class(cx, global)) return false;
   if (!Request::init_class(cx, global)) return false;
   if (!Response::init_class(cx, global)) return false;
   if (!Dictionary::init_class(cx, global)) return false;
