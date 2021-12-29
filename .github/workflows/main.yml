@@ -23,8 +23,7 @@ jobs:
       id: sm-cache
       with:
         path: |
-          c-dependencies/spidermonkey/lib
-          c-dependencies/spidermonkey/include
+          c-dependencies/spidermonkey/release
         key: cache-${{ hashFiles('c-dependencies/spidermonkey/build-engine.sh') }}-${{ hashFiles('c-dependencies/spidermonkey/gecko-revision') }}-${{ hashFiles('c-dependencies/spidermonkey/object-files.list') }}
 
     - name: "Build SpiderMonkey"
