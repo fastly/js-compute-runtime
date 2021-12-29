@@ -1104,7 +1104,9 @@ namespace NativeStreamSource {
    */
   static JSObject* get_controller_source(JSContext* cx, HandleObject controller) {
     RootedValue source(cx);
-    MOZ_ASSERT(JS::ReadableStreamControllerGetUnderlyingSource(cx, controller, &source));
+    bool success __attribute__((unused));
+    success = JS::ReadableStreamControllerGetUnderlyingSource(cx, controller, &source);
+    MOZ_ASSERT(success);
     return source.isObject() ? &source.toObject() : nullptr;
   }
 
@@ -1114,21 +1116,21 @@ namespace NativeStreamSource {
   }
 
   bool stream_has_native_source(JSContext* cx, HandleObject stream) {
-    MOZ_RELEASE_ASSERT(JS::IsReadableStream(stream));
+    MOZ_ASSERT(JS::IsReadableStream(stream));
 
     JSObject* source = get_stream_source(cx, stream);
     return is_instance(source);
   }
 
   bool lock_stream(JSContext* cx, HandleObject stream) {
-    MOZ_RELEASE_ASSERT(JS::IsReadableStream(stream));
+    MOZ_ASSERT(JS::IsReadableStream(stream));
 
     bool locked;
     JS::ReadableStreamIsLocked(cx, stream, &locked);
-    MOZ_RELEASE_ASSERT(!locked);
+    MOZ_ASSERT(!locked);
 
     RootedObject self(cx, get_stream_source(cx, stream));
-    MOZ_RELEASE_ASSERT(is_instance(self));
+    MOZ_ASSERT(is_instance(self));
 
     auto mode = JS::ReadableStreamReaderMode::Default;
     RootedObject reader(cx, JS::ReadableStreamGetReader(cx, stream, mode));
@@ -1144,11 +1146,11 @@ namespace NativeStreamSource {
   bool start(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject self(cx, &args.thisv().toObject());
-    MOZ_RELEASE_ASSERT(is_instance(self));
+    MOZ_ASSERT(is_instance(self));
 
-    MOZ_RELEASE_ASSERT(args[0].isObject());
+    MOZ_ASSERT(args[0].isObject());
     RootedObject controller(cx, &args[0].toObject());
-    MOZ_RELEASE_ASSERT(get_controller_source(cx, controller) == self);
+    MOZ_ASSERT(get_controller_source(cx, controller) == self);
 
     JS::SetReservedSlot(self, Slots::Controller, args[0]);
 
@@ -1163,11 +1165,11 @@ namespace NativeStreamSource {
   bool pull(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject self(cx, &args.thisv().toObject());
-    MOZ_RELEASE_ASSERT(is_instance(self));
+    MOZ_ASSERT(is_instance(self));
     RootedObject owner(cx, NativeStreamSource::owner(self));
     RootedObject controller(cx, &args[0].toObject());
-    MOZ_RELEASE_ASSERT(controller == NativeStreamSource::controller(self));
-    MOZ_RELEASE_ASSERT(get_controller_source(cx, controller) == self.get());
+    MOZ_ASSERT(controller == NativeStreamSource::controller(self));
+    MOZ_ASSERT(get_controller_source(cx, controller) == self.get());
 
     PullAlgorithm* pull = pullAlgorithm(self);
     return pull(cx, args, self, owner, controller);
@@ -1176,12 +1178,12 @@ namespace NativeStreamSource {
   bool cancel(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject self(cx, &args.thisv().toObject());
-    MOZ_RELEASE_ASSERT(is_instance(self));
+    MOZ_ASSERT(is_instance(self));
     RootedObject owner(cx, NativeStreamSource::owner(self));
     HandleValue reason(args.get(0));
 
-    CancelAlgorithm* pull = cancelAlgorithm(self);
-    return pull(cx, args, self, owner, reason);
+    CancelAlgorithm* cancel = cancelAlgorithm(self);
+    return cancel(cx, args, self, owner, reason);
   }
 
   const JSFunctionSpec methods[] = {
@@ -3269,6 +3271,8 @@ namespace FetchEvent {
     Count
   };};
 
+  bool is_instance(JSObject* obj);
+
 static PersistentRooted<JSObject*> INSTANCE;
 
   namespace detail {
@@ -3765,7 +3769,7 @@ static PersistentRooted<JSObject*> INSTANCE;
 
   void set_state(JSObject* self, State new_state) {
     MOZ_ASSERT(is_instance(self));
-    MOZ_ASSERT((uint)new_state > (uint)state(self));
+    MOZ_ASSERT((uint8_t)new_state > (uint8_t)state(self));
     JS::SetReservedSlot(self, Slots::State, JS::Int32Value((int)new_state));
   }
 
