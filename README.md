@@ -14,7 +14,7 @@ git submodule update --recursive --init
 
 to pull down or update submodules.
 
-**Warning** 1/5/2022 The currently attached version of spidermonkey wasi is pinned to and older version of the library which no longer compiles correctly with the js-compute-runtime. To correct it run the following
+**Warning** 1/5/2022 The currently attached version of spidermonkey wasi is pinned to an older version of the library which no longer compiles correctly with the js-compute-runtime. To correct it run the following
 
 ```sh
 git submodule -q foreach git pull -q origin main
