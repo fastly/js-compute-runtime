@@ -14,7 +14,7 @@ git submodule update --recursive --init
 
 to pull down or update submodules.
 
-***Note*** 1/5/2022 The currently attached version of spidermonkey wasi is pinned to and older version of the library which no longer compiles correctly with the js-compute-runtime. To correct it run the following
+**Warning** 1/5/2022 The currently attached version of spidermonkey wasi is pinned to and older version of the library which no longer compiles correctly with the js-compute-runtime. To correct it run the following
 
 ```sh
 git submodule -q foreach git pull -q origin main
@@ -28,7 +28,7 @@ To build from source, you need to ensure that the headers and object files for t
 (cd c-dependencies/spidermonkey && sh download-engine.sh)
 ```
 
-***Note*** 1/5/2022 Part 2 of above you need to run
+**Warning** 1/5/2022 Part 2 of above you need to run
 ```
 mv c-dependencies/spidermonkey/release/lib c-dependencies/spidermonkey/.
 mv c-dependencies/spidermonkey/release/includes c-dependencies/spidermonkey/.
