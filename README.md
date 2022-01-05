@@ -14,6 +14,19 @@ git submodule update --recursive --init
 
 to pull down or update submodules.
 
+In additon you need to have the following tools installed to successfully build.
+
+- Rust 
+  ```
+  curl -so rust.sh https://sh.rustup.rs && sh rust.sh -y
+  ```
+- Build tools
+- binaryen
+- rust target wasm32-wasi
+- cbindgen
+- wasi-sdk
+
+
 ### Building the JS Compute Runtime
 
 To build from source, you need to ensure that the headers and object files for the [SpiderMonkey JavaScript engine](https://spidermonkey.dev/) are available. It's recommended to download pre-built object files:
