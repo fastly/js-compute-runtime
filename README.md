@@ -8,13 +8,17 @@ The JS Compute Runtime for Fastly's [Compute@Edge platform](https://www.fastly.c
 
 Note that this repository uses Git submodules, so you will need to run
 
-```
+```sh
 git submodule update --recursive --init
 ```
 
 to pull down or update submodules.
 
+***Note*** 1/5/2022 The currently attached version of spidermonkey wasi is pinned to and older version of the library which no longer compiles correctly with the js-compute-runtime. To correct it run the following
 
+```sh
+git submodule -q foreach git pull -q origin main
+```
 
 
 ### Building the JS Compute Runtime
@@ -22,6 +26,12 @@ to pull down or update submodules.
 To build from source, you need to ensure that the headers and object files for the [SpiderMonkey JavaScript engine](https://spidermonkey.dev/) are available. It's recommended to download pre-built object files:
 ```sh
 (cd c-dependencies/spidermonkey && sh download-engine.sh)
+```
+
+***Note*** 1/5/2022 Part 2 of above you need to run
+```
+mv c-dependencies/spidermonkey/release/lib c-dependencies/spidermonkey/.
+mv c-dependencies/spidermonkey/release/includes c-dependencies/spidermonkey/.
 ```
 
 Alternatively, the engine can also be built from source using `c-dependencies/spidermonkey/build-engine.sh`. That should only be required if you want to modify the engine itself, however.
