@@ -14,17 +14,7 @@ git submodule update --recursive --init
 
 to pull down or update submodules.
 
-In additon you need to have the following tools installed to successfully build.
 
-- Rust 
-  ```
-  curl -so rust.sh https://sh.rustup.rs && sh rust.sh -y
-  ```
-- Build tools
-- binaryen
-- rust target wasm32-wasi
-- cbindgen
-- wasi-sdk
 
 
 ### Building the JS Compute Runtime
@@ -35,6 +25,37 @@ To build from source, you need to ensure that the headers and object files for t
 ```
 
 Alternatively, the engine can also be built from source using `c-dependencies/spidermonkey/build-engine.sh`. That should only be required if you want to modify the engine itself, however.
+
+In additon you need to have the following tools installed to successfully build.
+
+- Rust 
+  ```
+  curl -so rust.sh https://sh.rustup.rs && sh rust.sh -y
+  restart shell or run source $HOME/.cargo/env
+  ```
+- Build tools
+  ```
+  sudo apt install build-essential
+  ```
+- binaryen
+  ```
+  sudo apt install binaryen
+  ```
+- rust target wasm32-wasi
+  ```
+  rustup target add wasm32-wasi
+  ```
+- cbindgen
+  ```
+  cargo install cbindgen
+  ```
+- wasi-sdk
+  ```
+  curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz
+  tar xf wasi-sdk-12.0-linux.tar.gz
+  sudo mkdir -p /opt/wasi-sdk
+  sudo mv wasi-sdk-12.0/* /opt/wasi-sdk/
+  ```
 
 Once that is done, the runtime and the CLI tool for applying it to JS source code can be built using cargo:
 ```sh
