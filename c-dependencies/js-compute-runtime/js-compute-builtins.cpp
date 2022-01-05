@@ -342,10 +342,18 @@ static const uint32_t class_flags = 0;
            JS_DeleteProperty(cx, global, class_.name); \
   } \
 
+// Define this to make most methods print their name to stderr when invoked.
+// #define TRACE_METHOD_CALLS
+
+#ifdef TRACE_METHOD_CALLS
+#define TRACE_METHOD(name) \
+  DBG("%s\n", name)
+#else
+#define TRACE_METHOD(name)
+#endif
+
 #define METHOD_HEADER_WITH_NAME(required_argc, name) \
-  /* \
-  // printf("method: %s\n", name); \
-  */ \
+  TRACE_METHOD(name) \
   CallArgs args = CallArgsFromVp(argc, vp); \
   if (!args.requireAtLeast(cx, name, required_argc)) \
     return false; \
