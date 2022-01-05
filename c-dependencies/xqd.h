@@ -12,7 +12,8 @@ extern "C" {
 
 #define XQD_ABI_VERSION 0x01ULL
 
-#define HEADER_MAX_LEN 4096
+//max header size to match vcl
+#define HEADER_MAX_LEN 69000
 #define METHOD_MAX_LEN 1024
 #define URI_MAX_LEN 4096
 #define DICTIONARY_ENTRY_MAX_LEN 8000
