@@ -26,7 +26,7 @@ To build from source, you need to ensure that the headers and object files for t
 
 Alternatively, the engine can also be built from source using `c-dependencies/spidermonkey/build-engine.sh`. That should only be required if you want to modify the engine itself, however.
 
-In additon you need to have the following tools installed to successfully build.
+In additon you need to have the following tools installed to successfully build, and build from a linux based system.
 
 - Rust 
   ```
@@ -34,23 +34,23 @@ In additon you need to have the following tools installed to successfully build.
   restart shell or run source $HOME/.cargo/env
   ```
 - Build tools
-  ```
+  ```sh
   sudo apt install build-essential
   ```
 - binaryen
-  ```
+  ```sh
   sudo apt install binaryen
   ```
 - rust target wasm32-wasi
-  ```
+  ```sh
   rustup target add wasm32-wasi
   ```
 - cbindgen
-  ```
+  ```sh
   cargo install cbindgen
   ```
 - wasi-sdk
-  ```
+  ```sh
   curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz
   tar xf wasi-sdk-12.0-linux.tar.gz
   sudo mkdir -p /opt/wasi-sdk
@@ -60,6 +60,19 @@ In additon you need to have the following tools installed to successfully build.
 Once that is done, the runtime and the CLI tool for applying it to JS source code can be built using cargo:
 ```sh
 cargo build --release
+```
+
+####Build a windows executable
+To build for windows on a linux system you need to install the following modules:
+
+```
+sudo apt-get install gcc-mingw-w64
+rustup target add x86_64-pc-windows-gnu
+```
+
+then you can run the following
+```sh
+cargo build --target x86_64-pc-windows-gnu --release
 ```
 
 ## Testing
