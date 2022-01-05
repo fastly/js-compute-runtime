@@ -90,6 +90,20 @@ addEventListener('fetch', e => {
   console.log("Hello World!");
 });
 ```
+Create a fastly.toml file whichs is required for the application to run:
+```toml
+# This file describes a Fastly Compute@Edge package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
+authors = ["you@fastly.com"]
+description = "test service"
+language = "javascript"
+manifest_version = 2
+name = "test"
+service_id = ""
+
+```
+
 into a C@E service with your build of the CLI tool, run the following command:
 ```sh
 cargo run --release -- test.js test.wasm
