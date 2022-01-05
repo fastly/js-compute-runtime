@@ -170,28 +170,6 @@ static inline bool handle_fastly_result(JSContext* cx, int result, int line, con
 #define DBG(...) \
   printf("%s#%d: ", __func__, __LINE__); printf(__VA_ARGS__); fflush(stdout);
 
-static bool rejected_promise_with_current_exception(JSContext* cx, CallArgs* args = nullptr) {
-  RootedValue exn(cx);
-  if (!JS_GetPendingException(cx, &exn)) return false;
-  RootedObject promise(cx, JS::CallOriginalPromiseReject(cx, exn));
-  if (!promise) return false;
-  if (args) {
-    args->rval().setObject(*promise);
-  }
-  return true;
-}
-
-static bool resolved_promise_with_value(JSContext* cx, JS::HandleValue value,
-                                        CallArgs* args = nullptr)
-{
-  RootedObject promise(cx, JS::CallOriginalPromiseResolve(cx, value));
-  if (!promise) return false;
-  if (args) {
-    args->rval().setObject(*promise);
-  }
-  return true;
-}
-
 JSObject* PromiseRejectedWithPendingError(JSContext* cx) {
   RootedValue exn(cx);
   if (!JS_IsExceptionPending(cx) || !JS_GetPendingException(cx, &exn)) {
@@ -929,7 +907,7 @@ namespace RequestOrResponse {
     // TODO: mark body as consumed when operating on stream, too.
     if (body_used(self)) {
       JS_ReportErrorASCII(cx, "Body has already been consumed");
-      return rejected_promise_with_current_exception(cx, &args);
+      return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
     BodyHandle body = body_handle(self);
@@ -940,7 +918,7 @@ namespace RequestOrResponse {
     size_t bytes_read;
     UniqueChars buf(read_from_handle_all<xqd_body_read, BodyHandle>(cx, body, &bytes_read, true));
     if (!buf) {
-      return rejected_promise_with_current_exception(cx, &args);
+      return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
     if (!mark_body_used(cx, self))
@@ -953,27 +931,33 @@ namespace RequestOrResponse {
       RootedObject array_buffer(cx, JS::NewArrayBufferWithContents(cx, bytes_read, rawBuf));
       if (!array_buffer) {
         JS_free(cx, rawBuf);
-        return rejected_promise_with_current_exception(cx, &args);
+        return ReturnPromiseRejectedWithPendingError(cx, args);
       }
       result.setObject(*array_buffer);
     } else {
       RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), bytes_read)));
       if (!text) {
-        return rejected_promise_with_current_exception(cx, &args);
+        return ReturnPromiseRejectedWithPendingError(cx, args);
       }
 
       if (result_type == BodyReadResult::Text) {
         result.setString(text);
       } else if (result_type == BodyReadResult::JSON) {
           if (!JS_ParseJSON(cx, text, &result)) {
-            return rejected_promise_with_current_exception(cx, &args);
+            return ReturnPromiseRejectedWithPendingError(cx, args);
           }
       } else {
         MOZ_ASSERT_UNREACHABLE("Unsupported body read result type");
       }
     }
 
-    return resolved_promise_with_value(cx, result, &args);
+    RootedObject promise(cx, JS::CallOriginalPromiseResolve(cx, result));
+    if (!promise) {
+      return false;
+    }
+
+    args.rval().setObject(*promise);
+    return true;
   }
 
   JSObject* create_body_stream(JSContext* cx, HandleObject owner) {
