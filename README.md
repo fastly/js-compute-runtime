@@ -62,7 +62,7 @@ Once that is done, the runtime and the CLI tool for applying it to JS source cod
 cargo build --release
 ```
 
-####Build a windows executable
+#### Build a windows executable
 To build for windows on a linux system you need to install the following modules:
 
 ```
