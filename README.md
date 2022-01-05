@@ -90,7 +90,7 @@ addEventListener('fetch', e => {
   console.log("Hello World!");
 });
 ```
-Create a fastly.toml file whichs is required for the application to run:
+Create a fastly.toml file which is required for the application to run:
 ```toml
 # This file describes a Fastly Compute@Edge package. To learn more visit:
 # https://developer.fastly.com/reference/fastly-toml/
