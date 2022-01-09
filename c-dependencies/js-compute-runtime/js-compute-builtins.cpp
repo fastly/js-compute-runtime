@@ -1395,6 +1395,146 @@ namespace TransformStream {
   bool Error(JSContext* cx, HandleObject stream, HandleValue error);
 }
 
+namespace ReadableStream_additions {
+  static PersistentRooted<JSObject*> proto_obj;
+
+  bool is_instance(JSObject* obj) {
+    return JS::IsReadableStream(obj);
+  }
+
+  bool is_instance(JS::Value val) {
+    return val.isObject() && is_instance(&val.toObject());
+  }
+
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name) {
+    if (!is_instance(receiver)) {
+      JS_ReportErrorUTF8(cx,
+                         "Method %s called on receiver that's not an instance of ReadableStream",
+                         method_name);
+      return false;
+    }
+    return true;
+  };
+
+  static PersistentRooted<Value> original_pipeTo;
+
+  bool pipeTo(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return JS::Call(cx, args.thisv(), original_pipeTo, HandleValueArray(args), args.rval());
+  }
+
+  bool pipeThrough(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+
+    if (!args[0].isObject()) {
+      JS_ReportErrorLatin1(cx, "First argument to pipeThrough must be an object");
+      return false;
+    }
+
+    RootedObject transform(cx, &args[0].toObject());
+    RootedObject readable(cx);
+    RootedObject writable(cx);
+
+    RootedValue val(cx);
+    if (!JS_GetProperty(cx, transform, "readable", &val))
+      return false;
+    if (!val.isObject() || !JS::IsReadableStream(&val.toObject())) {
+      JS_ReportErrorLatin1(cx, "First argument to pipeThrough must be an object with a "
+                               "|readable| property that is an instance of ReadableStream");
+      return false;
+    }
+
+    readable = &val.toObject();
+
+    if (!JS_GetProperty(cx, transform, "writable", &val))
+      return false;
+    if (!val.isObject() || !JS::IsWritableStream(&val.toObject())) {
+      JS_ReportErrorLatin1(cx, "First argument to pipeThrough must be an object with a "
+                               "|writable| property that is an instance of WritableStream");
+      return false;
+    }
+    writable = &val.toObject();
+
+    // 1. If ! IsReadableStreamLocked(this) is true, throw a TypeError exception.
+    bool locked;
+    if (!JS::ReadableStreamIsLocked(cx, self, &locked)) {
+      return false;
+    }
+    if (locked) {
+      JS_ReportErrorLatin1(cx, "pipeThrough called on a ReadableStream that's already locked");
+      return false;
+    }
+
+    // 2. If ! IsWritableStreamLocked(transform["writable"]) is true, throw a TypeError exception.
+    if (JS::WritableStreamIsLocked(cx, writable)) {
+      JS_ReportErrorLatin1(cx, "The writable end of the transform object passed to pipeThrough "
+                               " passed to pipeThrough is already locked");
+      return false;
+    }
+
+    // 3. Let signal be options["signal"] if it exists, or undefined otherwise.
+    // (implicit, see note in step 4.)
+
+    // 4. Let promise be ! ReadableStreamPipeTo(this, transform["writable"], options
+    // ["preventClose"], options["preventAbort"], options["preventCancel"], signal).
+    // Note: instead of extracting the prevent* flags above, we just pass the |options|
+    // argument as-is. pipeTo will fail eagerly if it fails to extract the fields on
+    // |options|, so while skipping the extraction above changes the order in which errors
+    // are reported and the error messages a bit, it otherwise preserves semantics.
+    // In particular, the errors aren't reported as rejected promises, as would be the case
+    // for those reported in steps 1 and 2.
+    JS::RootedValueArray<2> newArgs(cx);
+    newArgs[0].setObject(*writable);
+    newArgs[1].set(args.get(1));
+    if (!JS::Call(cx, args.thisv(), original_pipeTo, newArgs, &val)) {
+      return false;
+    }
+
+    RootedObject promise(cx, &val.toObject());
+    MOZ_ASSERT(JS::IsPromiseObject(promise));
+
+    // 5. Set promise.[[PromiseIsHandled]] to true.
+    // JSAPI doesn't provide a straightforward way to do this, but we can just register
+    // null-reactions in a way that achieves it.
+    if (!JS::AddPromiseReactionsIgnoringUnhandledRejection(cx, promise, nullptr, nullptr)) {
+      return false;
+    }
+
+    // 6. Return transform["readable"].
+    args.rval().setObject(*readable);
+    return true;
+  }
+
+  bool initialize_additions(JSContext* cx, HandleObject global) {
+    RootedValue val(cx);
+    if (!JS_GetProperty(cx, global, "ReadableStream", &val))
+      return false;
+    RootedObject readableStream_builtin(cx, &val.toObject());
+
+    if (!JS_GetProperty(cx, readableStream_builtin, "prototype", &val)) {
+      return false;
+    }
+    proto_obj.init(cx, &val.toObject());
+    MOZ_ASSERT(proto_obj);
+
+    original_pipeTo.init(cx);
+    if (!JS_GetProperty(cx, proto_obj, "pipeTo", &original_pipeTo))
+      return false;
+    MOZ_ASSERT(JS::IsCallable(&original_pipeTo.toObject()));
+
+    if (!JS_DefineFunction(cx, proto_obj, "pipeTo", pipeTo, 1, JSPROP_ENUMERATE)) {
+      return false;
+    }
+
+    if (!JS_DefineFunction(cx, proto_obj, "pipeThrough", pipeThrough, 1, JSPROP_ENUMERATE)) {
+      return false;
+    }
+
+    return true;
+  }
+}
+
 namespace TransformStreamDefaultController {
 
 typedef JSObject* TransformAlgorithm(JSContext* cx, HandleObject controller, HandleValue chunk);
@@ -2039,7 +2179,14 @@ namespace TransformStream {
     JS_PSG("writable", writable_get, 0),
   JS_PS_END};
 
-  CLASS_BOILERPLATE(TransformStream)
+  CLASS_BOILERPLATE_CUSTOM_INIT(TransformStream)
+
+  bool init_class(JSContext* cx, HandleObject global) {
+    bool ok = init_class_impl(cx, global);
+    if (!ok) return false;
+
+    return ReadableStream_additions::initialize_additions(cx, global);
+  }
 
   /**
    * TransformStreamError
