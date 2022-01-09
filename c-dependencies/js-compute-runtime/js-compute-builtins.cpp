@@ -307,8 +307,8 @@ static const uint32_t class_flags = 0;
     return val.isObject() && is_instance(&val.toObject()); \
   } \
  \
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name) { \
-    if (!is_instance(self)) { \
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name) { \
+    if (!is_instance(receiver)) { \
       JS_ReportErrorUTF8(cx, "Method %s called on receiver that's not an instance of %s\n", \
                          method_name, class_.name); \
       return false; \
@@ -359,10 +359,10 @@ static const uint32_t class_flags = 0;
 #define METHOD_HEADER_WITH_NAME(required_argc, name) \
   TRACE_METHOD(name) \
   CallArgs args = CallArgsFromVp(argc, vp); \
+  if (!check_receiver(cx, args.thisv(), name)) return false; \
+  RootedObject self(cx, &args.thisv().toObject()); \
   if (!args.requireAtLeast(cx, name, required_argc)) \
     return false; \
-  RootedObject self(cx, &args.thisv().toObject()); \
-  if (!check_receiver(cx, self, name)) return false; \
 
 #define METHOD_HEADER(required_argc) \
   METHOD_HEADER_WITH_NAME(required_argc, __func__)
@@ -389,7 +389,7 @@ namespace Logger {
 
   const unsigned ctor_length = 1;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   static bool log(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -1147,7 +1147,7 @@ namespace NativeStreamSource {
 
   const unsigned ctor_length = 0;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool start(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -1298,7 +1298,7 @@ namespace NativeStreamSink {
 
   const unsigned ctor_length = 0;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool start(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -1430,7 +1430,7 @@ typedef JSObject* FlushAlgorithm(JSContext* cx, HandleObject controller);
 
   const unsigned ctor_length = 0;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool Enqueue(JSContext* cx, HandleObject controller, HandleValue chunk);
   bool Terminate(JSContext* cx, HandleObject controller);
@@ -1993,7 +1993,7 @@ namespace TransformStream {
 
   const unsigned ctor_length = 0;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   JSObject* readable(JSObject* self) {
     MOZ_ASSERT(is_instance(self));
@@ -2602,7 +2602,7 @@ namespace CacheOverride {
     return tag;
   }
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool mode_get(JSContext* cx, HandleObject self, MutableHandleValue rval) {
     const char* mode_chars;
@@ -2949,7 +2949,7 @@ namespace Request {
 
   const unsigned ctor_length = 1;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool method_get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
@@ -3269,7 +3269,7 @@ namespace Response {
 
   const unsigned ctor_length = 1;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool ok_get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
@@ -3407,7 +3407,7 @@ namespace Dictionary {
 
   const unsigned ctor_length = 1;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -3476,7 +3476,7 @@ namespace TextEncoder {
 
   const unsigned ctor_length = 0;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool encode(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -3553,7 +3553,7 @@ namespace TextDecoder {
 
   const unsigned ctor_length = 0;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool decode(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -4176,7 +4176,7 @@ namespace Headers {
 
   const unsigned ctor_length = 1;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -4498,7 +4498,7 @@ namespace ClientInfo {
 
   const unsigned ctor_length = 0;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool address_get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
@@ -4588,7 +4588,7 @@ static PersistentRooted<JSObject*> INSTANCE;
 
   const unsigned ctor_length = 0;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool client_get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
@@ -5075,7 +5075,7 @@ namespace URL {
 
   const unsigned ctor_length = 1;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
   JSObject* create(JSContext* cx, HandleValue url_val, HandleValue base_val);
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
@@ -5268,7 +5268,7 @@ namespace URLSearchParamsIterator {
     return false;
   }
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool next(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
@@ -5403,7 +5403,7 @@ namespace URLSearchParams {
     return (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
   }
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
   JSObject* create(JSContext* cx, HandleValue params_val);
 
   const unsigned ctor_length = 1;
