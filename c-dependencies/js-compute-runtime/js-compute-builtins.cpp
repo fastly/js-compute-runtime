@@ -300,7 +300,7 @@ static const uint32_t class_flags = 0;
   static PersistentRooted<JSObject*> proto_obj; \
  \
   bool is_instance(JSObject* obj) { \
-    return JS::GetClass(obj) == &class_; \
+    return !!obj && JS::GetClass(obj) == &class_; \
   } \
  \
   bool is_instance(JS::Value val) { \
@@ -759,8 +759,12 @@ namespace NativeStreamSource {
   JSObject* create(JSContext* cx, HandleObject owner, HandleValue startPromise,
                    PullAlgorithm* pull, CancelAlgorithm* cancel);
   static JSObject* get_stream_source(JSContext* cx, HandleObject stream);
+  JSObject* owner(JSObject* self);
+  JSObject* stream(JSObject* self);
   bool stream_has_native_source(JSContext* cx, HandleObject stream);
+  bool stream_is_body(JSContext* cx, HandleObject stream);
   bool lock_stream(JSContext* cx, HandleObject stream);
+  JSObject* piped_to_transform_stream(JSObject* source);
 }
 
 enum class BodyReadResult {
@@ -790,6 +794,34 @@ namespace Response {
   bool is_instance(JSObject* obj);
 }
 
+namespace TransformStream {
+  namespace Slots { enum {
+    Controller,
+    Readable,
+    Writable,
+    Backpressure,
+    BackpressureChangePromise,
+    Owner, // The target RequestOrResponse object if the stream's readable end is used as a body.
+    Count
+  };};
+
+  bool is_instance(JSObject* obj);
+
+  JSObject* owner(JSObject* self);
+  void set_owner(JSObject* self, JSObject* owner);
+  JSObject* readable(JSObject* self);
+  bool is_ts_readable(JSContext* cx, HandleObject readable);
+  bool readable_used_as_body(JSObject* self);
+  void set_readable_used_as_body(JSContext* cx, HandleObject readable, HandleObject target);
+  bool is_ts_writable(JSContext* cx, HandleObject writable);
+  JSObject* controller(JSObject* self);
+  bool backpressure(JSObject* self);
+
+  bool ErrorWritableAndUnblockWrite(JSContext* cx, HandleObject stream, HandleValue error);
+  bool SetBackpressure(JSContext* cx, HandleObject stream, bool backpressure);
+  bool Error(JSContext* cx, HandleObject stream, HandleValue error);
+}
+
 namespace RequestOrResponse {
   namespace Slots { enum {
     RequestOrResponse,
@@ -807,30 +839,35 @@ namespace RequestOrResponse {
   }
 
   uint32_t handle(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return static_cast<uint32_t>(JS::GetReservedSlot(obj, Slots::RequestOrResponse).toInt32());
   }
 
   bool has_body(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return JS::GetReservedSlot(obj, Slots::HasBody).toBoolean();
   }
 
   BodyHandle body_handle(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return BodyHandle { static_cast<uint32_t>(JS::GetReservedSlot(obj, Slots::Body).toInt32()) };
   }
 
   JSObject* body_stream(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     // Can't use toObjectOrNull here because the Value might be `undefined`.
     Value val = JS::GetReservedSlot(obj, Slots::BodyStream);
     return val.isNullOrUndefined() ? nullptr : &val.toObject();
   }
 
   JSObject* body_source(JSContext* cx, HandleObject obj) {
-    MOZ_RELEASE_ASSERT(has_body(obj));
+    MOZ_ASSERT(has_body(obj));
     RootedObject stream(cx, body_stream(obj));
     return NativeStreamSource::get_stream_source(cx, stream);
   }
 
   bool mark_body_used(JSContext* cx, HandleObject obj) {
+    MOZ_ASSERT(is_instance(obj));
     JS::SetReservedSlot(obj, Slots::BodyUsed, JS::BooleanValue(true));
 
     RootedObject stream(cx, body_stream(obj));
@@ -846,8 +883,8 @@ namespace RequestOrResponse {
    * Also marks the source object's body as consumed.
    */
   bool move_body_handle(JSContext* cx, HandleObject from, HandleObject to) {
-    MOZ_RELEASE_ASSERT(is_instance(from));
-    MOZ_RELEASE_ASSERT(is_instance(to));
+    MOZ_ASSERT(is_instance(from));
+    MOZ_ASSERT(is_instance(to));
 
 
     // Replace the receiving object's body handle with the body stream source's underlying handle.
@@ -862,21 +899,25 @@ namespace RequestOrResponse {
   }
 
   Value url(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     Value val = JS::GetReservedSlot(obj, Slots::URL);
-    MOZ_RELEASE_ASSERT(val.isString());
+    MOZ_ASSERT(val.isString());
     return val;
   }
 
   void set_url(JSObject* obj, Value url) {
-    MOZ_RELEASE_ASSERT(url.isString());
+    MOZ_ASSERT(is_instance(obj));
+    MOZ_ASSERT(url.isString());
     JS::SetReservedSlot(obj, Slots::URL, url);
   }
 
   bool body_used(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return JS::GetReservedSlot(obj, Slots::BodyUsed).toBoolean();
   }
 
   bool set_body(JSContext*cx, HandleObject obj, HandleValue body_val) {
+    MOZ_ASSERT(is_instance(obj));
     if (body_val.isNullOrUndefined()) {
       JS::SetReservedSlot(obj, Slots::HasBody, JS::BooleanValue(false));
       return true;
@@ -893,6 +934,9 @@ namespace RequestOrResponse {
 
     if (body_obj && JS::IsReadableStream(body_obj)) {
       JS_SetReservedSlot(obj, RequestOrResponse::Slots::BodyStream, body_val);
+      if (TransformStream::is_ts_readable(cx, body_obj)) {
+        TransformStream::set_readable_used_as_body(cx, body_obj, obj);
+      }
     } else {
       mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
       UniqueChars text;
@@ -937,6 +981,12 @@ namespace RequestOrResponse {
       JS_SetReservedSlot(obj, Slots::Headers, val);
     }
     return &val.toObject();
+  }
+
+  bool append_body(JSContext* cx, HandleObject self, HandleObject source) {
+    BodyHandle source_body = body_handle(source);
+    BodyHandle dest_body = body_handle(self);
+    return HANDLE_RESULT(cx, xqd_body_append(dest_body, source_body));
   }
 
   template<BodyReadResult result_type>
@@ -997,9 +1047,34 @@ namespace RequestOrResponse {
     return true;
   }
 
-  bool body_source_pull_algorithm(JSContext* cx, CallArgs args, HandleObject stream,
-                                  HandleObject owner, HandleObject controller)
+  bool body_source_pull_algorithm(JSContext* cx, CallArgs args, HandleObject source,
+                                  HandleObject body_owner, HandleObject controller)
   {
+    // If the stream has been piped to a TransformStream whose readable end was then passed
+    // to a Request or Response as the body, we can just append the entire source body to the
+    // destination using a single native hostcall, and then close the source stream, instead of
+    // reading and writing it in individual chunks.
+    // Note that even in situations where multiple streams are piped to the same destination
+    // this is guaranteed to happen in the right order: ReadableStream#pipeTo locks the destination
+    // WritableStream until the source ReadableStream is closed/canceled, so only one stream can
+    // ever be piped in at the same time.
+    RootedObject pipe_dest(cx, NativeStreamSource::piped_to_transform_stream(source));
+    if (pipe_dest) {
+      if (TransformStream::readable_used_as_body(pipe_dest)) {
+        RootedObject dest_owner(cx, TransformStream::owner(pipe_dest));
+        if (!RequestOrResponse::append_body(cx, dest_owner, body_owner)) {
+          return false;
+        }
+
+        RootedObject stream(cx, NativeStreamSource::stream(source));
+        bool success = JS::ReadableStreamClose(cx, stream);
+        MOZ_RELEASE_ASSERT(success);
+
+        args.rval().setUndefined();
+        return true;
+      }
+    }
+
     // The actual read from the body needs to be delayed, because it'd otherwise
     // be a blocking operation in case the backend didn't yet send any data.
     // That would lead to situations where we block on I/O before processing
@@ -1010,7 +1085,7 @@ namespace RequestOrResponse {
     // (This deadlock happens in automated tests, but admittedly might not happen
     // in real usage.)
 
-    if (!pending_body_reads->append(stream))
+    if (!pending_body_reads->append(source))
       return false;
 
     args.rval().setUndefined();
@@ -1066,6 +1141,11 @@ namespace RequestOrResponse {
   }
 }
 
+namespace NativeStreamSink {
+  static JSObject* get_stream_sink(JSContext* cx, HandleObject stream);
+  JSObject* owner(JSObject* self);
+}
+
 // A JS class to use as the underlying source for native readable streams, used for
 // Request/Response bodies and TransformStream.
 namespace NativeStreamSource {
@@ -1077,28 +1157,39 @@ namespace NativeStreamSource {
                   // Needed to properly implement TransformStream.
     PullAlgorithm,
     CancelAlgorithm,
+    PipedToTransformStream, // The TransformStream this source's stream is piped to, if any.
+                            // Only applies if the source backs a RequestOrResponse's body.
     Count
   };};
 
   bool is_instance(JSObject* obj);
 
   JSObject* owner(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
     return &JS::GetReservedSlot(self, Slots::Owner).toObject();
   }
 
+  JSObject* stream(JSObject* self) {
+    return RequestOrResponse::body_stream(owner(self));
+  }
+
   Value startPromise(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
     return JS::GetReservedSlot(self, Slots::StartPromise);
   }
 
   PullAlgorithm* pullAlgorithm(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
     return (PullAlgorithm*)JS::GetReservedSlot(self, Slots::PullAlgorithm).toPrivate();
   }
 
   CancelAlgorithm* cancelAlgorithm(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
     return (CancelAlgorithm*)JS::GetReservedSlot(self, Slots::CancelAlgorithm).toPrivate();
   }
 
   JSObject* controller(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
     return &JS::GetReservedSlot(self, Slots::Controller).toObject();
   }
 
@@ -1115,15 +1206,34 @@ namespace NativeStreamSource {
   }
 
   static JSObject* get_stream_source(JSContext* cx, HandleObject stream) {
+    MOZ_ASSERT(JS::IsReadableStream(stream));
     RootedObject controller(cx, JS::ReadableStreamGetController(cx, stream));
     return get_controller_source(cx, controller);
   }
 
   bool stream_has_native_source(JSContext* cx, HandleObject stream) {
-    MOZ_ASSERT(JS::IsReadableStream(stream));
-
     JSObject* source = get_stream_source(cx, stream);
     return is_instance(source);
+  }
+
+  bool stream_is_body(JSContext* cx, HandleObject stream) {
+    JSObject* stream_source = get_stream_source(cx, stream);
+    return NativeStreamSource::is_instance(stream_source) &&
+           RequestOrResponse::is_instance(owner(stream_source));
+  }
+
+  void set_stream_piped_to_ts_writable(JSContext* cx, HandleObject stream, HandleObject writable) {
+    RootedObject source(cx, NativeStreamSource::get_stream_source(cx, stream));
+    MOZ_ASSERT(is_instance(source));
+    RootedObject sink(cx, NativeStreamSink::get_stream_sink(cx, writable));
+    RootedObject transform_stream(cx, NativeStreamSink::owner(sink));
+    MOZ_ASSERT(transform_stream);
+    JS::SetReservedSlot(source, Slots::PipedToTransformStream, ObjectValue(*transform_stream));
+  }
+
+  JSObject* piped_to_transform_stream(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return JS::GetReservedSlot(self, Slots::PipedToTransformStream).toObjectOrNull();
   }
 
   bool lock_stream(JSContext* cx, HandleObject stream) {
@@ -1208,6 +1318,7 @@ namespace NativeStreamSource {
     JS::SetReservedSlot(source, Slots::StartPromise, startPromise);
     JS::SetReservedSlot(source, Slots::PullAlgorithm, JS::PrivateValue((void*)pull));
     JS::SetReservedSlot(source, Slots::CancelAlgorithm, JS::PrivateValue((void*)cancel));
+    JS::SetReservedSlot(source, Slots::PipedToTransformStream, JS::NullValue());
     return source;
   }
 }
@@ -1374,27 +1485,6 @@ namespace NativeStreamSink {
   }
 }
 
-namespace TransformStream {
-  namespace Slots { enum {
-    Controller,
-    Readable,
-    Writable,
-    Backpressure,
-    BackpressureChangePromise,
-    Count
-  };};
-
-  bool is_instance(JSObject* obj);
-
-  JSObject* readable(JSObject* self);
-  JSObject* controller(JSObject* self);
-  bool backpressure(JSObject* self);
-
-  bool ErrorWritableAndUnblockWrite(JSContext* cx, HandleObject stream, HandleValue error);
-  bool SetBackpressure(JSContext* cx, HandleObject stream, bool backpressure);
-  bool Error(JSContext* cx, HandleObject stream, HandleValue error);
-}
-
 namespace ReadableStream_additions {
   static PersistentRooted<JSObject*> proto_obj;
 
@@ -1420,7 +1510,17 @@ namespace ReadableStream_additions {
 
   bool pipeTo(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
-    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // If the receiver is backed by a native source and the destination is the writable end of a
+    // TransformStream, set the TransformStream as the owner of the receiver's source.
+    // This enables us to shortcut operations later on.
+    RootedObject target(cx, args[0].isObject() ? &args[0].toObject() : nullptr);
+    if (target && NativeStreamSource::stream_has_native_source(cx, self) &&
+        JS::IsWritableStream(target) && TransformStream::is_ts_writable(cx, target))
+    {
+        NativeStreamSource::set_stream_piped_to_ts_writable(cx, self, target);
+    }
+
     return JS::Call(cx, args.thisv(), original_pipeTo, HandleValueArray(args), args.rval());
   }
 
@@ -1535,6 +1635,12 @@ namespace ReadableStream_additions {
   }
 }
 
+/**
+ * Implementation of the WHATWG TransformStream builtin.
+ *
+ * All algorithm names and steps refer to spec algorithms defined at
+ * https://streams.spec.whatwg.org/#ts-default-controller-class
+ */
 namespace TransformStreamDefaultController {
 
 typedef JSObject* TransformAlgorithm(JSContext* cx, HandleObject controller, HandleValue chunk);
@@ -1544,7 +1650,7 @@ typedef JSObject* FlushAlgorithm(JSContext* cx, HandleObject controller);
     Stream,
     Transformer,
     TransformAlgorithm,
-    TransformInput, // JS::Value to be used byTransformAlgorithm, e.g. a JSFunction to call.
+    TransformInput, // JS::Value to be used by TransformAlgorithm, e.g. a JSFunction to call.
     FlushAlgorithm,
     FlushInput, // JS::Value to be used by FlushAlgorithm, e.g. a JSFunction to call.
     Count
@@ -2038,6 +2144,12 @@ bool ExtractStrategy(JSContext* cx, HandleValue strategy, double default_hwm,
   return true;
 }
 
+/**
+ * Implementation of the WHATWG TransformStream builtin.
+ *
+ * All algorithm names and steps refer to spec algorithms defined at
+ * https://streams.spec.whatwg.org/#ts-class
+ */
 namespace TransformStream {
   JSObject* create(JSContext* cx, double writableHighWaterMark,
                    JS::HandleFunction writableSizeAlgorithm,
@@ -2135,14 +2247,70 @@ namespace TransformStream {
 
   bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
+  /**
+   * The native object owning the sink underlying the TransformStream's readable end.
+   *
+   * This can e.g. be a RequestOrResponse if the readable is used as a body.
+   */
+  JSObject* owner(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return &JS::GetReservedSlot(self, Slots::Owner).toObject();
+  }
+
+  void set_owner(JSObject* self, JSObject* owner) {
+    MOZ_ASSERT(is_instance(self));
+    MOZ_ASSERT(RequestOrResponse::is_instance(owner));
+    MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Owner).isUndefined());
+    JS::SetReservedSlot(self, Slots::Owner, ObjectValue(*owner));
+  }
+
   JSObject* readable(JSObject* self) {
     MOZ_ASSERT(is_instance(self));
     return &JS::GetReservedSlot(self, Slots::Readable).toObject();
   }
 
+  bool is_ts_readable(JSContext* cx, HandleObject readable) {
+    JSObject* source = NativeStreamSource::get_stream_source(cx, readable);
+    if (!source || !NativeStreamSource::is_instance(source)) {
+      return false;
+    }
+    JSObject* stream_owner = NativeStreamSource::owner(source);
+    return stream_owner ? TransformStream::is_instance(stream_owner) : false;
+  }
+
+  bool readable_used_as_body(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    // For now the owner can only be a RequestOrResponse, so no further checks are needed.
+    return JS::GetReservedSlot(self, Slots::Owner).isObject();
+  }
+
+  /**
+   * Sets the |target| RequestOrResponse object as the owner of the TransformStream
+   * |readable| is the readable end of.
+   *
+   * This allows us to later on short-cut piping from native body to native body.
+   *
+   * Asserts that |readable| is the readable end of a TransformStream.
+   */
+  void set_readable_used_as_body(JSContext* cx, HandleObject readable, HandleObject target) {
+    MOZ_ASSERT(is_ts_readable(cx, readable));
+    JSObject* source = NativeStreamSource::get_stream_source(cx, readable);
+    JSObject* stream_owner = NativeStreamSource::owner(source);
+    set_owner(stream_owner, target);
+  }
+
   JSObject* writable(JSObject* self) {
     MOZ_ASSERT(is_instance(self));
     return &JS::GetReservedSlot(self, Slots::Writable).toObject();
+  }
+
+  bool is_ts_writable(JSContext* cx, HandleObject writable) {
+    JSObject* sink = NativeStreamSink::get_stream_sink(cx, writable);
+    if (!sink || !NativeStreamSink::is_instance(sink)) {
+      return false;
+    }
+    JSObject* stream_owner = NativeStreamSink::owner(sink);
+    return stream_owner ? is_instance(stream_owner) : false;
   }
 
   JSObject* controller(JSObject* self) {
@@ -3336,14 +3504,17 @@ namespace Response {
   static_assert((int)Slots::Response == (int)Request::Slots::Request);
 
   ResponseHandle response_handle(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return ResponseHandle { (uint32_t)(JS::GetReservedSlot(obj, Slots::Response).toInt32()) };
   }
 
   bool is_upstream(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return JS::GetReservedSlot(obj, Slots::IsUpstream).toBoolean();
   }
 
   uint16_t status(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return (uint16_t)JS::GetReservedSlot(obj, Slots::Status).toInt32();
   }
 
@@ -4912,10 +5083,9 @@ static PersistentRooted<JSObject*> INSTANCE;
       return false;
     }
 
-    if (NativeStreamSource::stream_has_native_source(cx, stream)) {
-      // If the body stream is backed by a C@E body handle, we can directly pipe that handle
-      // into the response body we're about to send.
-
+    // If the body stream is backed by a C@E body handle, we can directly pipe that handle
+    // into the response body we're about to send.
+    if (NativeStreamSource::stream_is_body(cx, stream)) {
       // First, move the source's body handle to the target.
       RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
       RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
