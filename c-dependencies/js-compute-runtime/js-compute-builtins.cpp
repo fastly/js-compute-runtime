@@ -48,22 +48,45 @@ using JS::MutableHandleValue;
 
 using JS::PersistentRooted;
 
-template<auto fun>
+typedef bool InternalMethod(JSContext* cx, HandleObject receiver, HandleValue extra,
+                            CallArgs args);
+template<InternalMethod fun>
 bool internal_method(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject self(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
-    return fun(cx, self, args);
+    RootedValue extra(cx, js::GetFunctionNativeReserved(&args.callee(), 1));
+    return fun(cx, self, extra, args);
 }
 
-template<auto fun>
-JSObject* create_internal_method(JSContext* cx, HandleObject receiver, unsigned int nargs = 0,
-                                 const char* name = "")
+template<InternalMethod fun>
+JSObject* create_internal_method(JSContext* cx, HandleObject receiver,
+                                 HandleValue extra = JS::UndefinedHandleValue,
+                                 unsigned int nargs = 0, const char* name = "")
 {
   JSFunction* method = js::NewFunctionWithReserved(cx, internal_method<fun>, 1, 0, name);
   if (!method) return nullptr;
   RootedObject method_obj(cx, JS_GetFunctionObject(method));
   js::SetFunctionNativeReserved(method_obj, 0, JS::ObjectValue(*receiver));
+  js::SetFunctionNativeReserved(method_obj, 1, extra);
   return method_obj;
+}
+
+template<InternalMethod fun>
+bool enqueue_internal_method(JSContext* cx, HandleObject receiver,
+                             HandleValue extra = JS::UndefinedHandleValue,
+                             unsigned int nargs = 0, const char* name = "")
+{
+  RootedObject method(cx, create_internal_method<fun>(cx, receiver, extra, nargs, name));
+  if (!method) {
+    return false;
+  }
+
+  RootedObject promise(cx, JS::CallOriginalPromiseResolve(cx, JS::UndefinedHandleValue));
+  if (!promise) {
+    return false;
+  }
+
+  return JS::AddPromiseReactions(cx, promise, method, nullptr);
 }
 
 // Ensure that all the things we want to use the hostcall buffer for actually fit into the buffer.
@@ -192,13 +215,21 @@ static inline bool handle_fastly_result(JSContext* cx, int result, int line, con
 #define DBG(...) \
   printf("%s#%d: ", __func__, __LINE__); printf(__VA_ARGS__); fflush(stdout);
 
-JSObject* PromiseRejectedWithPendingError(JSContext* cx) {
+bool RejectPromiseWithPendingError(JSContext* cx, HandleObject promise) {
   RootedValue exn(cx);
   if (!JS_IsExceptionPending(cx) || !JS_GetPendingException(cx, &exn)) {
-    return nullptr;
+    return false;
   }
   JS_ClearPendingException(cx);
-  return JS::CallOriginalPromiseReject(cx, exn);
+  return JS::RejectPromise(cx, promise, exn);
+}
+
+JSObject* PromiseRejectedWithPendingError(JSContext* cx) {
+  RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!promise || !RejectPromiseWithPendingError(cx, promise)) {
+    return nullptr;
+  }
+  return promise;
 }
 
 inline bool ReturnPromiseRejectedWithPendingError(JSContext* cx, const JS::CallArgs& args) {
@@ -827,6 +858,7 @@ namespace RequestOrResponse {
     RequestOrResponse,
     Body,
     BodyStream,
+    BodyAllPromise,
     HasBody,
     BodyUsed,
     Headers,
@@ -866,13 +898,26 @@ namespace RequestOrResponse {
     return NativeStreamSource::get_stream_source(cx, stream);
   }
 
-  bool mark_body_used(JSContext* cx, HandleObject obj) {
+  bool body_used(JSObject* obj) {
     MOZ_ASSERT(is_instance(obj));
+    return JS::GetReservedSlot(obj, Slots::BodyUsed).toBoolean();
+  }
+
+  bool mark_body_used(JSContext* cx, HandleObject obj) {
+    MOZ_ASSERT(!body_used(obj));
     JS::SetReservedSlot(obj, Slots::BodyUsed, JS::BooleanValue(true));
 
     RootedObject stream(cx, body_stream(obj));
-    if (stream)
-      return NativeStreamSource::lock_stream(cx, stream);
+    if (stream && NativeStreamSource::stream_is_body(cx, stream)) {
+      if (!NativeStreamSource::lock_stream(cx, stream)) {
+        // The only reason why marking the body as used could fail here is that it's a disturbed
+        // ReadableStream. To improve error reporting, we clear the current exception and throw
+        // a better one.
+        JS_ClearPendingException(cx);
+        JS_ReportErrorLatin1(cx, "The ReadableStream body is already locked and can't be consumed");
+        return false;
+      }
+    }
 
     return true;
   }
@@ -885,7 +930,7 @@ namespace RequestOrResponse {
   bool move_body_handle(JSContext* cx, HandleObject from, HandleObject to) {
     MOZ_ASSERT(is_instance(from));
     MOZ_ASSERT(is_instance(to));
-
+    MOZ_ASSERT(!body_used(from));
 
     // Replace the receiving object's body handle with the body stream source's underlying handle.
     // TODO: Let the host know we'll not use the old handle anymore, once C@E has a hostcall
@@ -909,11 +954,6 @@ namespace RequestOrResponse {
     MOZ_ASSERT(is_instance(obj));
     MOZ_ASSERT(url.isString());
     JS::SetReservedSlot(obj, Slots::URL, url);
-  }
-
-  bool body_used(JSObject* obj) {
-    MOZ_ASSERT(is_instance(obj));
-    return JS::GetReservedSlot(obj, Slots::BodyUsed).toBoolean();
   }
 
   bool set_body(JSContext*cx, HandleObject obj, HandleValue body_val) {
@@ -989,6 +1029,67 @@ namespace RequestOrResponse {
     return HANDLE_RESULT(cx, xqd_body_append(dest_body, source_body));
   }
 
+  typedef bool ParseBodyCB(JSContext* cx, HandleObject self, UniqueChars buf, size_t len);
+
+  template<BodyReadResult result_type>
+  bool parse_body(JSContext* cx, HandleObject self, UniqueChars buf, size_t len) {
+    RootedObject result_promise(cx, &JS::GetReservedSlot(self, Slots::BodyAllPromise).toObject());
+    JS::SetReservedSlot(self, Slots::BodyAllPromise, JS::UndefinedValue());
+    RootedValue result(cx);
+
+    if (result_type == BodyReadResult::ArrayBuffer) {
+      auto* rawBuf = buf.release();
+      RootedObject array_buffer(cx, JS::NewArrayBufferWithContents(cx, len, rawBuf));
+      if (!array_buffer) {
+        JS_free(cx, rawBuf);
+        return RejectPromiseWithPendingError(cx, result_promise);
+      }
+      result.setObject(*array_buffer);
+    } else {
+      RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), len)));
+      if (!text) {
+        return RejectPromiseWithPendingError(cx, result_promise);
+      }
+
+      if (result_type == BodyReadResult::Text) {
+        result.setString(text);
+      } else {
+        MOZ_ASSERT(result_type == BodyReadResult::JSON);
+          if (!JS_ParseJSON(cx, text, &result)) {
+            return RejectPromiseWithPendingError(cx, result_promise);
+          }
+      }
+    }
+
+    return JS::ResolvePromise(cx, result_promise, result);
+  }
+
+  bool consume_content_stream_for_bodyAll(JSContext* cx, HandleObject self, HandleObject stream,
+                                          HandleValue body_parser)
+  {
+    JS_ReportErrorLatin1(cx, "Consuming a content-provided ReadableStream as a body using "
+                             ".text(), .json(), or .arrayBuffer() not yet supported");
+    return false;
+  }
+
+  bool consume_body_handle_for_bodyAll(JSContext* cx, HandleObject self, HandleValue body_parser,
+                                       CallArgs args)
+  {
+    BodyHandle body = body_handle(self);
+    auto parse_body = (ParseBodyCB*)body_parser.toPrivate();
+
+    size_t bytes_read;
+    UniqueChars buf(read_from_handle_all<xqd_body_read, BodyHandle>(cx, body, &bytes_read, true));
+    if (!buf) {
+      RootedObject result_promise(cx);
+      result_promise = &JS::GetReservedSlot(self, Slots::BodyAllPromise).toObject();
+      JS::SetReservedSlot(self, Slots::BodyAllPromise, JS::UndefinedValue());
+      return RejectPromiseWithPendingError(cx, result_promise);
+    }
+
+    return parse_body(cx, self, std::move(buf), bytes_read);
+  }
+
   template<BodyReadResult result_type>
   bool bodyAll(JSContext* cx, CallArgs args, HandleObject self) {
     // TODO: mark body as consumed when operating on stream, too.
@@ -997,53 +1098,34 @@ namespace RequestOrResponse {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    BodyHandle body = body_handle(self);
-
-    // TODO: check if this should be lazified. JS code might expect to be able to trigger
-    // multiple requests for response body contents in parallel instead of blocking
-    // on them sequentially.
-    size_t bytes_read;
-    UniqueChars buf(read_from_handle_all<xqd_body_read, BodyHandle>(cx, body, &bytes_read, true));
-    if (!buf) {
+    if (!mark_body_used(cx, self)) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    if (!mark_body_used(cx, self))
-      return false;
+    RootedObject bodyAll_promise(cx, JS::NewPromiseObject(cx, nullptr));
+    if (!bodyAll_promise) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    JS::SetReservedSlot(self, Slots::BodyAllPromise, ObjectValue(*bodyAll_promise));
 
-    RootedValue result(cx);
+    RootedValue body_parser(cx, JS::PrivateValue((void*)parse_body<result_type>));
 
-    if (result_type == BodyReadResult::ArrayBuffer) {
-      auto* rawBuf = buf.release();
-      RootedObject array_buffer(cx, JS::NewArrayBufferWithContents(cx, bytes_read, rawBuf));
-      if (!array_buffer) {
-        JS_free(cx, rawBuf);
+    // If the body is a ReadableStream that's not backed by a BodyHandle,
+    // we need to manually read all chunks from the stream.
+    // TODO: ensure that we're properly shortcutting reads from TransformStream
+    // readables.
+    RootedObject stream(cx, body_stream(self));
+    if (stream && !NativeStreamSource::stream_is_body(cx, stream)) {
+      if (!consume_content_stream_for_bodyAll(cx, self, stream, body_parser)) {
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
-      result.setObject(*array_buffer);
     } else {
-      RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), bytes_read)));
-      if (!text) {
+      if (!enqueue_internal_method<consume_body_handle_for_bodyAll>(cx, self, body_parser)) {
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
-
-      if (result_type == BodyReadResult::Text) {
-        result.setString(text);
-      } else if (result_type == BodyReadResult::JSON) {
-          if (!JS_ParseJSON(cx, text, &result)) {
-            return ReturnPromiseRejectedWithPendingError(cx, args);
-          }
-      } else {
-        MOZ_ASSERT_UNREACHABLE("Unsupported body read result type");
-      }
     }
 
-    RootedObject promise(cx, JS::CallOriginalPromiseResolve(cx, result));
-    if (!promise) {
-      return false;
-    }
-
-    args.rval().setObject(*promise);
+    args.rval().setObject(*bodyAll_promise);
     return true;
   }
 
@@ -1241,7 +1323,10 @@ namespace NativeStreamSource {
 
     bool locked;
     JS::ReadableStreamIsLocked(cx, stream, &locked);
-    MOZ_ASSERT(!locked);
+    if (locked) {
+      JS_ReportErrorLatin1(cx, "Can't lock an already locked ReadableStream");
+      return false;
+    }
 
     RootedObject self(cx, get_stream_source(cx, stream));
     MOZ_ASSERT(is_instance(self));
@@ -1390,21 +1475,6 @@ namespace NativeStreamSink {
 
     JSObject* sink = get_stream_sink(cx, stream);
     return is_instance(sink);
-  }
-
-  bool lock_stream(JSContext* cx, HandleObject stream) {
-    MOZ_ASSERT(JS::IsWritableStream(stream));
-    MOZ_ASSERT(!JS::WritableStreamIsLocked(cx, stream));
-
-    RootedObject self(cx, get_stream_sink(cx, stream));
-    MOZ_ASSERT(is_instance(self));
-
-    RootedObject writer(cx, JS::WritableStreamGetWriter(cx, stream));
-    if (!writer)
-      return false;
-
-    JS::SetReservedSlot(self, Slots::InternalWriter, JS::ObjectValue(*writer));
-    return true;
   }
 
   const unsigned ctor_length = 0;
@@ -2023,7 +2093,9 @@ typedef JSObject* FlushAlgorithm(JSContext* cx, HandleObject controller);
   /**
    * Steps 2.* of TransformStreamDefaultControllerPerformTransform.
    */
-  bool transformPromise_catch_handler(JSContext* cx, HandleObject controller, CallArgs args) {
+  bool transformPromise_catch_handler(JSContext* cx, HandleObject controller, HandleValue extra,
+                                      CallArgs args)
+  {
     RootedValue r(cx, args.get(0));
     //     1.  Perform ! [TransformStreamError](controller.[stream], r).
     RootedObject streamObj(cx, stream(controller));
@@ -2415,12 +2487,9 @@ namespace TransformStream {
   /**
    * Steps 2 and 3.* of DefaultSinkWriteAlgorithm.
    */
-  bool default_sink_write_algo_then_handler(JSContext* cx, HandleObject stream,
+  bool default_sink_write_algo_then_handler(JSContext* cx, HandleObject stream, HandleValue chunk,
                                             CallArgs args)
   {
-    RootedObject then_handler(cx, &args.callee());
-    RootedValue chunk(cx, js::GetFunctionNativeReserved(then_handler, 1));
-
     // 3.1.  Let writable be stream.[writable].
     RootedObject writable(cx, ::TransformStream::writable(stream));
 
@@ -2473,11 +2542,9 @@ namespace TransformStream {
       //     3.  Return the result of [reacting] to backpressureChangePromise with the following
       //         fulfillment steps:
       RootedObject then_handler(cx);
-      then_handler = create_internal_method<default_sink_write_algo_then_handler>(cx, stream);
+      then_handler = create_internal_method<default_sink_write_algo_then_handler>(cx, stream,
+                                                                                  chunk);
       if (!then_handler) return false;
-
-      // Store the chunk value on the then_handler function for later retrieval.
-      js::SetFunctionNativeReserved(then_handler, 1, chunk);
 
       RootedObject result(cx);
       result = JS::CallOriginalPromiseThen(cx, changePromise, then_handler, nullptr);
@@ -2527,10 +2594,11 @@ namespace TransformStream {
   /**
    * Steps 5.1.1-2 of DefaultSinkCloseAlgorithm.
    */
-  bool default_sink_close_algo_then_handler(JSContext* cx, HandleObject stream, CallArgs args) {
+  bool default_sink_close_algo_then_handler(JSContext* cx, HandleObject stream, HandleValue extra,
+                                            CallArgs args)
+  {
     // 5.1.1.  If readable.[state] is "`errored`", throw readable.[storedError].
-    RootedObject then_handler(cx, &args.callee());
-    RootedObject readable(cx, &js::GetFunctionNativeReserved(then_handler, 1).toObject());
+    RootedObject readable(cx, &extra.toObject());
     bool is_errored;
     if (!JS::ReadableStreamIsErrored(cx, readable, &is_errored)) {
       return false;
@@ -2563,7 +2631,9 @@ namespace TransformStream {
   /**
    * Steps 5.2.1-2 of DefaultSinkCloseAlgorithm.
    */
-  bool default_sink_close_algo_catch_handler(JSContext* cx, HandleObject stream, CallArgs args) {
+  bool default_sink_close_algo_catch_handler(JSContext* cx, HandleObject stream,
+                                             HandleValue extra, CallArgs args)
+  {
     // 5.2.1.  Perform ! [TransformStreamError](stream, r).
     HandleValue r = args.get(0);
     if (!Error(cx, stream, r)) {
@@ -2571,8 +2641,7 @@ namespace TransformStream {
     }
 
     // 5.2.2.  Throw readable.[storedError].
-    RootedObject then_handler(cx, &args.callee());
-    RootedObject readable(cx, &js::GetFunctionNativeReserved(then_handler, 1).toObject());
+    RootedObject readable(cx, &extra.toObject());
     RootedValue storedError(cx, JS::ReadableStreamGetStoredError(cx, readable));
     JS_SetPendingException(cx, storedError);
     return false;
@@ -2603,20 +2672,16 @@ namespace TransformStream {
     // 5.1.  If flushPromise was fulfilled, then:
     // Sub-steps in handler above.
     RootedObject then_handler(cx);
-    then_handler = create_internal_method<default_sink_close_algo_then_handler>(cx, stream);
+    RootedValue extra(cx, ObjectValue(*readable));
+    then_handler = create_internal_method<default_sink_close_algo_then_handler>(cx, stream, extra);
     if (!then_handler) return false;
-
-    // Store the readable on the then_handler function for later retrieval.
-    js::SetFunctionNativeReserved(then_handler, 1, ObjectValue(*readable));
 
     // 5.2.  If flushPromise was rejected with reason r, then:
     // Sub-steps in handler above.
     RootedObject catch_handler(cx);
-    catch_handler = create_internal_method<default_sink_close_algo_catch_handler>(cx, stream);
+    catch_handler = create_internal_method<default_sink_close_algo_catch_handler>(cx, stream,
+                                                                                  extra);
     if (!catch_handler) return false;
-
-    // Store the readable on the catch_handler function for later retrieval.
-    js::SetFunctionNativeReserved(catch_handler, 1, ObjectValue(*readable));
 
     RootedObject result(cx);
     result = JS::CallOriginalPromiseThen(cx, flushPromise, then_handler, catch_handler);
@@ -4139,7 +4204,7 @@ namespace Headers {
       for (size_t i = 0; i < len; i++) {
         unsigned char ch = name_chars[i];
         if (ch > 127 || !VALID_NAME_CHARS[ch]) {
-          JS_ReportErrorASCII(cx, "%s: Invalid header name '%s'", fun_name, name_chars);
+          JS_ReportErrorUTF8(cx, "%s: Invalid header name '%s'", fun_name, name_chars);
           return nullptr;
         }
 
@@ -4999,11 +5064,13 @@ static PersistentRooted<JSObject*> INSTANCE;
     return start_response(cx, response_obj, false);
   }
 
-  bool body_reader_then_handler(JSContext* cx, HandleObject response, CallArgs args) {
+  bool body_reader_then_handler(JSContext* cx, HandleObject response, HandleValue extra,
+                                CallArgs args)
+  {
     RootedObject then_handler(cx, &args.callee());
     // The reader is stored in the catch handler, which we need here as well.
     // So we get that first, then the reader.
-    RootedObject catch_handler(cx, &js::GetFunctionNativeReserved(then_handler, 1).toObject());
+    RootedObject catch_handler(cx, &extra.toObject());
     RootedObject reader(cx, &js::GetFunctionNativeReserved(catch_handler, 1).toObject());
     BodyHandle body_handle = RequestOrResponse::body_handle(response);
 
@@ -5053,8 +5120,10 @@ static PersistentRooted<JSObject*> INSTANCE;
     return JS::AddPromiseReactions(cx, promise, then_handler, catch_handler);
   }
 
-  bool body_reader_catch_handler(JSContext* cx, HandleObject response, CallArgs args) {
-    RootedObject reader(cx, &js::GetFunctionNativeReserved(&args.callee(), 1).toObject());
+  bool body_reader_catch_handler(JSContext* cx, HandleObject response, HandleValue reader_val,
+                                 CallArgs args)
+  {
+    RootedObject reader(cx, &reader_val.toObject());
 
     // TODO: check if this should create a rejected promise instead, so an in-content handler
     // for unhandled rejections could deal with it.
@@ -5123,16 +5192,14 @@ static PersistentRooted<JSObject*> INSTANCE;
     // in the then handler. The catch handler won't ever have a need to perform another operation
     // in this way.
     RootedObject catch_handler(cx);
-    catch_handler = create_internal_method<body_reader_catch_handler>(cx, response_obj);
+    RootedValue extra(cx, ObjectValue(*reader));
+    catch_handler = create_internal_method<body_reader_catch_handler>(cx, response_obj, extra);
     if (!catch_handler) return false;
 
-    js::SetFunctionNativeReserved(catch_handler, 1, JS::ObjectValue(*reader));
-
     RootedObject then_handler(cx);
-    then_handler = create_internal_method<body_reader_then_handler>(cx, response_obj);
+    extra.setObject(*catch_handler);
+    then_handler = create_internal_method<body_reader_then_handler>(cx, response_obj, extra);
     if (!then_handler) return false;
-
-    js::SetFunctionNativeReserved(then_handler, 1, JS::ObjectValue(*catch_handler));
 
     RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
     if (!promise) return false;
@@ -5148,7 +5215,9 @@ static PersistentRooted<JSObject*> INSTANCE;
 
   // Steps in this function refer to the spec at
   // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
-  bool response_promise_then_handler(JSContext* cx, HandleObject event, CallArgs args) {
+  bool response_promise_then_handler(JSContext* cx, HandleObject event, HandleValue extra,
+                                     CallArgs args)
+  {
     // Step 10.1
     // Note: the `then` handler is only invoked after all Promise resolution has happened.
     // (Even if there were multiple Promises to unwrap first.)
@@ -5191,8 +5260,10 @@ static PersistentRooted<JSObject*> INSTANCE;
 
   // Steps in this function refer to the spec at
   // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
-  bool response_promise_catch_handler(JSContext* cx, HandleObject event, CallArgs args) {
-    RootedObject promise(cx, &js::GetFunctionNativeReserved(&args.callee(), 1).toObject());
+  bool response_promise_catch_handler(JSContext* cx, HandleObject event, HandleValue promise_val,
+                                      CallArgs args)
+  {
+    RootedObject promise(cx, &promise_val.toObject());
 
     fprintf(stderr, "Error while running request handler: ");
     dump_promise_rejection(cx, args.get(0), promise, stderr);
@@ -5233,10 +5304,9 @@ static PersistentRooted<JSObject*> INSTANCE;
 
     // Step 9 (continued in `response_promise_catch_handler` above)
     RootedObject catch_handler(cx);
-    catch_handler = create_internal_method<response_promise_catch_handler>(cx, self);
+    RootedValue extra(cx, ObjectValue(*response_promise));
+    catch_handler = create_internal_method<response_promise_catch_handler>(cx, self, extra);
     if (!catch_handler) return false;
-
-    js::SetFunctionNativeReserved(catch_handler, 1, JS::ObjectValue(*response_promise));
 
     // Step 10 (continued in `response_promise_then_handler` above)
     RootedObject then_handler(cx);
@@ -5262,7 +5332,9 @@ static PersistentRooted<JSObject*> INSTANCE;
   }
 
   // Step 5 of https://w3c.github.io/ServiceWorker/#wait-until-method
-  bool dec_pending_promise_count(JSContext* cx, HandleObject event, CallArgs args) {
+  bool dec_pending_promise_count(JSContext* cx, HandleObject event, HandleValue extra,
+                                 CallArgs args)
+  {
     // Step 5.1
     detail::dec_pending_promise_count(event);
 
