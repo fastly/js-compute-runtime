@@ -812,9 +812,11 @@ namespace Headers {
   };
 
   JSObject* create(JSContext* cx, Mode mode, HandleObject owner);
+  JSObject* create(JSContext* cx, Mode mode, HandleObject owner, HandleObject init_headers);
   JSObject* create(JSContext* cx, Mode mode, HandleObject owner, HandleValue initv);
 
   bool delazify(JSContext* cx, HandleObject headers);
+  bool maybe_add(JSContext* cx, HandleObject headers, const char* name, const char* value);
 }
 
 namespace Request {
@@ -853,6 +855,13 @@ namespace TransformStream {
   bool Error(JSContext* cx, HandleObject stream, HandleValue error);
 }
 
+namespace URLSearchParams {
+  bool is_instance(JSObject* obj);
+  JSObject* create(JSContext* cx, jsurl::JSUrl* url);
+  JSUrlSearchParams* get_params(JSObject* self);
+  SpecSlice serialize(JSContext* cx, HandleObject self);
+}
+
 namespace RequestOrResponse {
   namespace Slots { enum {
     RequestOrResponse,
@@ -887,9 +896,7 @@ namespace RequestOrResponse {
 
   JSObject* body_stream(JSObject* obj) {
     MOZ_ASSERT(is_instance(obj));
-    // Can't use toObjectOrNull here because the Value might be `undefined`.
-    Value val = JS::GetReservedSlot(obj, Slots::BodyStream);
-    return val.isNullOrUndefined() ? nullptr : &val.toObject();
+    return JS::GetReservedSlot(obj, Slots::BodyStream).toObjectOrNull();
   }
 
   JSObject* body_source(JSContext* cx, HandleObject obj) {
@@ -956,26 +963,63 @@ namespace RequestOrResponse {
     JS::SetReservedSlot(obj, Slots::URL, url);
   }
 
-  bool set_body(JSContext*cx, HandleObject obj, HandleValue body_val) {
-    MOZ_ASSERT(is_instance(obj));
-    if (body_val.isNullOrUndefined()) {
-      JS::SetReservedSlot(obj, Slots::HasBody, JS::BooleanValue(false));
-      return true;
-    }
+  /**
+   * Implementation of the `body is unusable` concept at
+   * https://fetch.spec.whatwg.org/#body-unusable
+   */
+  bool body_unusable(JSContext* cx, HandleObject body) {
+    MOZ_ASSERT(JS::IsReadableStream(body));
+    bool disturbed;
+    bool locked;
+    MOZ_RELEASE_ASSERT(JS::ReadableStreamIsDisturbed(cx, body, &disturbed) &&
+                       JS::ReadableStreamIsLocked(cx, body, &locked));
+    return disturbed || locked;
+  }
 
-    // TODO: throw if method is GET or HEAD.
+  /**
+   * Implementation of the `extract a body` algorithm at
+   * https://fetch.spec.whatwg.org/#concept-bodyinit-extract
+   *
+   * Note: our implementation is somewhat different from what the spec describes in
+   * that we immediately write all non-streaming body types to the host instead of
+   * creating a stream for them. We don't have threads, so there's nothing "in parallel"
+   * to be had anyway.
+   *
+   * Note: also includes the steps applying the `Content-Type` header from the
+   * Request and Response constructors in step 36 and 8 of those, respectively.
+   */
+  bool extract_body(JSContext*cx, HandleObject self, HandleValue body_val) {
+    MOZ_ASSERT(is_instance(self));
+    MOZ_ASSERT(!has_body(self));
+    MOZ_ASSERT(!body_val.isNullOrUndefined());
 
-    // TODO: properly implement the spec steps for extracting the body and setting the content-type.
-    //
+    const char* content_type = nullptr;
 
+    // We currently support five types of body inputs:
+    // - byte sequence
+    // - buffer source
+    // - USV strings
+    // - URLSearchParams
+    // - ReadableStream
+    // After the other other options are checked explicitly, all other inputs are
+    // encoded to a UTF8 string to be treated as a USV string.
     // TODO: Support the other possible inputs to Body.
 
     RootedObject body_obj(cx, body_val.isObject() ? &body_val.toObject() : nullptr);
 
     if (body_obj && JS::IsReadableStream(body_obj)) {
-      JS_SetReservedSlot(obj, RequestOrResponse::Slots::BodyStream, body_val);
+      if (body_unusable(cx, body_obj)) {
+        JS_ReportErrorLatin1(cx, "Can't use a ReadableStream that's locked or has ever been "
+                                 "read from or canceled as a Request or Response body.");
+        return false;
+      }
+
+      JS_SetReservedSlot(self, RequestOrResponse::Slots::BodyStream, body_val);
+
+      // Ensure that we take the right steps for shortcutting operations on TransformStreams
+      // later on.
       if (TransformStream::is_ts_readable(cx, body_obj)) {
-        TransformStream::set_readable_used_as_body(cx, body_obj, obj);
+        TransformStream::set_readable_used_as_body(cx, body_obj, self);
       }
     } else {
       mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
@@ -994,20 +1038,34 @@ namespace RequestOrResponse {
       } else if (body_obj && JS::IsArrayBufferObject(body_obj)) {
         bool is_shared;
         JS::GetArrayBufferLengthAndData(body_obj, &length, &is_shared, (uint8_t**)&buf);
+      } else if (body_obj && URLSearchParams::is_instance(body_obj)) {
+        SpecSlice slice = URLSearchParams::serialize(cx, body_obj);
+        buf = (char*)slice.data;
+        length = slice.len;
+        content_type = "application/x-www-form-urlencoded;charset=UTF-8";
       } else {
         text = encode(cx, body_val, &length);
         if (!text) return false;
         buf = text.get();
+        content_type = "text/plain;charset=UTF-8";
       }
 
-      BodyHandle body_handle = RequestOrResponse::body_handle(obj);
+      BodyHandle body_handle = RequestOrResponse::body_handle(self);
       size_t num_written = 0;
       int result = xqd_body_write(body_handle, buf, length, BodyWriteEndBack, &num_written);
       if (!HANDLE_RESULT(cx, result))
         return false;
     }
 
-    JS::SetReservedSlot(obj, Slots::HasBody, JS::BooleanValue(true));
+    // Step 36.3 of Request constructor / 8.4 of Response constructor.
+    if (content_type) {
+      RootedObject headers(cx, &JS::GetReservedSlot(self, Slots::Headers).toObject());
+      if (!Headers::maybe_add(cx, headers, "content-type", content_type)) {
+        return false;
+      }
+    }
+
+    JS::SetReservedSlot(self, Slots::HasBody, JS::BooleanValue(true));
     return true;
   }
 
@@ -1024,6 +1082,7 @@ namespace RequestOrResponse {
   }
 
   bool append_body(JSContext* cx, HandleObject self, HandleObject source) {
+    MOZ_ASSERT(!body_used(source));
     BodyHandle source_body = body_handle(source);
     BodyHandle dest_body = body_handle(self);
     return HANDLE_RESULT(cx, xqd_body_append(dest_body, source_body));
@@ -1098,15 +1157,26 @@ namespace RequestOrResponse {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    if (!mark_body_used(cx, self)) {
-      return ReturnPromiseRejectedWithPendingError(cx, args);
-    }
-
     RootedObject bodyAll_promise(cx, JS::NewPromiseObject(cx, nullptr));
     if (!bodyAll_promise) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
     JS::SetReservedSlot(self, Slots::BodyAllPromise, ObjectValue(*bodyAll_promise));
+
+    // If the Request/Response doesn't have a body, empty default results need to be returned.
+    if (!has_body(self)) {
+      UniqueChars chars;
+      if (!parse_body<result_type>(cx, self, std::move(chars), 0)) {
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+
+      args.rval().setObject(*bodyAll_promise);
+      return true;
+    }
+
+    if (!mark_body_used(cx, self)) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
 
     RootedValue body_parser(cx, JS::PrivateValue((void*)parse_body<result_type>));
 
@@ -1182,6 +1252,8 @@ namespace RequestOrResponse {
   }
 
   JSObject* create_body_stream(JSContext* cx, HandleObject owner) {
+    MOZ_ASSERT(is_instance(owner));
+    MOZ_ASSERT(!body_stream(owner));
     RootedObject source(cx, NativeStreamSource::create(cx, owner, JS::UndefinedHandleValue,
                                                        body_source_pull_algorithm,
                                                        body_source_cancel_algorithm));
@@ -1192,18 +1264,18 @@ namespace RequestOrResponse {
     // we enqueue a read from the host handle, which we quite often have no interest in
     // at all.
     RootedObject body_stream(cx, JS::NewReadableDefaultStreamObject(cx, source, nullptr, 0.0));
-    if (!body_stream) return nullptr;
+    if (!body_stream) {
+      return nullptr;
+    }
 
-    // This assert guarantees that we fail early in case SpiderMonkey ever changes how
-    // the underlying source for streams is stored, instead of operating on invalid
-    // values.
-    MOZ_RELEASE_ASSERT(NativeStreamSource::get_stream_source(cx, body_stream) == source);
+    // TODO: immediately lock the stream if the owner's body is already used.
 
-    JS_SetReservedSlot(owner, RequestOrResponse::Slots::BodyStream, JS::ObjectValue(*body_stream));
+    JS_SetReservedSlot(owner, Slots::BodyStream, JS::ObjectValue(*body_stream));
     return body_stream;
   }
 
   bool body_get(JSContext* cx, CallArgs args, HandleObject self, bool create_if_undefined) {
+    MOZ_ASSERT(is_instance(self));
     if (!has_body(self)) {
       args.rval().setNull();
       return true;
@@ -1215,10 +1287,7 @@ namespace RequestOrResponse {
       if (!body_stream) return false;
     }
 
-    if (body_stream) {
-      args.rval().setObject(*body_stream);
-    }
-
+    args.rval().setObjectOrNull(body_stream);
     return true;
   }
 }
@@ -1594,6 +1663,59 @@ namespace ReadableStream_additions {
     return JS::Call(cx, args.thisv(), original_pipeTo, HandleValueArray(args), args.rval());
   }
 
+  bool pipeThrough(JSContext* cx, HandleObject source_readable, HandleObject target_writable,
+                   HandleValue options)
+  {
+    // 1. If ! IsReadableStreamLocked(this) is true, throw a TypeError exception.
+    bool locked;
+    if (!JS::ReadableStreamIsLocked(cx, source_readable, &locked)) {
+      return false;
+    }
+    if (locked) {
+      JS_ReportErrorLatin1(cx, "pipeThrough called on a ReadableStream that's already locked");
+      return false;
+    }
+
+    // 2. If ! IsWritableStreamLocked(transform["writable"]) is true, throw a TypeError exception.
+    if (JS::WritableStreamIsLocked(cx, target_writable)) {
+      JS_ReportErrorLatin1(cx, "The writable end of the transform object passed to pipeThrough "
+                               " passed to pipeThrough is already locked");
+      return false;
+    }
+
+    // 3. Let signal be options["signal"] if it exists, or undefined otherwise.
+    // (implicit, see note in step 4.)
+
+    // 4. Let promise be ! ReadableStreamPipeTo(this, transform["writable"], options
+    // ["preventClose"], options["preventAbort"], options["preventCancel"], signal).
+    // Note: instead of extracting the prevent* flags above, we just pass the |options|
+    // argument as-is. pipeTo will fail eagerly if it fails to extract the fields on
+    // |options|, so while skipping the extraction above changes the order in which errors
+    // are reported and the error messages a bit, it otherwise preserves semantics.
+    // In particular, the errors aren't reported as rejected promises, as would be the case
+    // for those reported in steps 1 and 2.
+    JS::RootedValueArray<2> newArgs(cx);
+    newArgs[0].setObject(*target_writable);
+    newArgs[1].set(options);
+    RootedValue thisv(cx, ObjectValue(*source_readable));
+    RootedValue rval(cx);
+    if (!JS::Call(cx, thisv, original_pipeTo, newArgs, &rval)) {
+      return false;
+    }
+
+    RootedObject promise(cx, &rval.toObject());
+    MOZ_ASSERT(JS::IsPromiseObject(promise));
+
+    // 5. Set promise.[[PromiseIsHandled]] to true.
+    // JSAPI doesn't provide a straightforward way to do this, but we can just register
+    // null-reactions in a way that achieves it.
+    if (!JS::AddPromiseReactionsIgnoringUnhandledRejection(cx, promise, nullptr, nullptr)) {
+      return false;
+    }
+
+    return true;
+  }
+
   bool pipeThrough(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
 
@@ -1626,48 +1748,7 @@ namespace ReadableStream_additions {
     }
     writable = &val.toObject();
 
-    // 1. If ! IsReadableStreamLocked(this) is true, throw a TypeError exception.
-    bool locked;
-    if (!JS::ReadableStreamIsLocked(cx, self, &locked)) {
-      return false;
-    }
-    if (locked) {
-      JS_ReportErrorLatin1(cx, "pipeThrough called on a ReadableStream that's already locked");
-      return false;
-    }
-
-    // 2. If ! IsWritableStreamLocked(transform["writable"]) is true, throw a TypeError exception.
-    if (JS::WritableStreamIsLocked(cx, writable)) {
-      JS_ReportErrorLatin1(cx, "The writable end of the transform object passed to pipeThrough "
-                               " passed to pipeThrough is already locked");
-      return false;
-    }
-
-    // 3. Let signal be options["signal"] if it exists, or undefined otherwise.
-    // (implicit, see note in step 4.)
-
-    // 4. Let promise be ! ReadableStreamPipeTo(this, transform["writable"], options
-    // ["preventClose"], options["preventAbort"], options["preventCancel"], signal).
-    // Note: instead of extracting the prevent* flags above, we just pass the |options|
-    // argument as-is. pipeTo will fail eagerly if it fails to extract the fields on
-    // |options|, so while skipping the extraction above changes the order in which errors
-    // are reported and the error messages a bit, it otherwise preserves semantics.
-    // In particular, the errors aren't reported as rejected promises, as would be the case
-    // for those reported in steps 1 and 2.
-    JS::RootedValueArray<2> newArgs(cx);
-    newArgs[0].setObject(*writable);
-    newArgs[1].set(args.get(1));
-    if (!JS::Call(cx, args.thisv(), original_pipeTo, newArgs, &val)) {
-      return false;
-    }
-
-    RootedObject promise(cx, &val.toObject());
-    MOZ_ASSERT(JS::IsPromiseObject(promise));
-
-    // 5. Set promise.[[PromiseIsHandled]] to true.
-    // JSAPI doesn't provide a straightforward way to do this, but we can just register
-    // null-reactions in a way that achieves it.
-    if (!JS::AddPromiseReactionsIgnoringUnhandledRejection(cx, promise, nullptr, nullptr)) {
+    if (!pipeThrough(cx, self, writable, args.get(1))) {
       return false;
     }
 
@@ -2869,6 +2950,28 @@ namespace TransformStream {
 
     return self;
   }
+
+  /**
+   * Implementation of https://streams.spec.whatwg.org/#readablestream-create-a-proxy
+   */
+  JSObject* create_rs_proxy(JSContext* cx, HandleObject input_readable) {
+    MOZ_ASSERT(JS::IsReadableStream(input_readable));
+    RootedObject transform_stream(cx, create(cx, 1, nullptr, 0, nullptr, JS::UndefinedHandleValue,
+                                             nullptr, nullptr, nullptr));
+    if (!transform_stream) {
+      return nullptr;
+    }
+
+    RootedObject writable_end(cx, writable(transform_stream));
+
+    if (!ReadableStream_additions::pipeThrough(cx, input_readable, writable_end,
+                                               JS::UndefinedHandleValue))
+    {
+      return nullptr;
+    }
+
+    return readable(transform_stream);
+  }
 }
 
 namespace CacheOverride {
@@ -3267,22 +3370,8 @@ namespace Request {
     return val.isString() ? val.toString() : nullptr;
   }
 
-  // TODO: eagerly retrieve method and store client-side.
   JSString* method(JSContext*cx, HandleObject obj) {
-    Value val = JS::GetReservedSlot(obj, Slots::Method);
-    if (val.isNullOrUndefined()) {
-      char buf[16];
-      size_t num_written = 0;
-      if (!HANDLE_RESULT(cx, xqd_req_method_get(request_handle(obj), buf, 16, &num_written)))
-        return nullptr;
-
-      RootedString method(cx, JS_NewStringCopyN(cx, buf, num_written));
-      if (!method) return nullptr;
-
-      val = JS::StringValue(method);
-      JS_SetReservedSlot(obj, Slots::Method, val);
-    }
-    return val.toString();
+    return JS::GetReservedSlot(obj, Slots::Method).toString();
   }
 
   bool set_cache_override(JSContext* cx, HandleObject self, HandleValue cache_override_val) {
@@ -3414,7 +3503,19 @@ namespace Request {
     JS_PSG("bodyUsed", bodyUsed_get, 0),
   JS_PS_END};
 
-  CLASS_BOILERPLATE(Request)
+  CLASS_BOILERPLATE_CUSTOM_INIT(Request)
+
+  JSString* GET_atom;
+
+  bool init_class(JSContext* cx, HandleObject global) {
+    if (!init_class_impl(cx, global)) {
+      return false;
+    }
+
+    // Initialize a pinned (i.e., never-moved, living forever) atom for the default HTTP method.
+    GET_atom = JS_AtomizeAndPinString(cx, "GET");
+    return !!GET_atom;
+  }
 
   JSObject* create(JSContext* cx, RequestHandle request_handle, BodyHandle body_handle, bool is_downstream) {
     RootedObject request(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
@@ -3422,124 +3523,401 @@ namespace Request {
 
     JS::SetReservedSlot(request, Slots::Request, JS::Int32Value(request_handle.handle));
     JS::SetReservedSlot(request, Slots::Body, JS::Int32Value(body_handle.handle));
-    // TODO: properly set HasBody based on whether we actually do have a body.
-    JS::SetReservedSlot(request, Slots::HasBody, JS::BooleanValue(true));
-    JS::SetReservedSlot(request, Slots::BodyUsed, JS::BooleanValue(false));
+    JS::SetReservedSlot(request, Slots::BodyStream, JS::NullValue());
+    JS::SetReservedSlot(request, Slots::HasBody, JS::FalseValue());
+    JS::SetReservedSlot(request, Slots::BodyUsed, JS::FalseValue());
+    JS::SetReservedSlot(request, Slots::Method, JS::StringValue(GET_atom));
     JS::SetReservedSlot(request, Slots::IsDownstream, JS::BooleanValue(is_downstream));
 
     return request;
   }
 
+  /**
+   * Create a new Request object, roughly according to
+   * https://fetch.spec.whatwg.org/#dom-request
+   *
+   * "Roughly" because not all aspects of Request handling make sense in C@E.
+   * The places where we deviate from the spec are called out inline.
+   */
   JSObject* create(JSContext* cx, HandleValue input, HandleValue init_val) {
     RequestHandle request_handle = { INVALID_HANDLE };
+    if (!HANDLE_RESULT(cx, xqd_req_new(&request_handle))) {
+      return nullptr;
+    }
+
     BodyHandle body_handle = { INVALID_HANDLE };
+    if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle))) {
+      return nullptr;
+    }
+
+    RootedObject request(cx, create(cx, request_handle, body_handle, false));
+    if (!request) {
+      return nullptr;
+    }
+
     RootedString url_str(cx);
+    size_t method_len;
+    RootedString method_str(cx);
+    bool method_needs_normalization = false;
 
-    // TODO: clone the handles if needed, e.g. if the new request is sent
-    // multiple times, or its headers are changed, etc.
-    // This is costly, as it requires copying all the headers, etc, and
-    // probably also the body, so we should only do it if really necessary.
+    RootedObject input_request(cx);
+    RootedObject input_headers(cx);
+    bool input_has_body = false;
+
+    // 1.  Let `request` be null.
+    // 4.  Let `signal` be null.
+    // (implicit)
+
+    // 2.  Let `fallbackMode` be null.
+    // (N/A)
+
+    // 3.  Let `baseURL` be this’s relevant settings object’s API base URL.
+    // (implicit)
+
+    // 6.  Otherwise:
+    // (reordered because it's easier to check is_instance and otherwise stringify.)
     if (is_instance(input)) {
-      RootedObject input_request(cx, &input.toObject());
-      request_handle = Request::request_handle(input_request);
-      body_handle = RequestOrResponse::body_handle(input_request);
-      url_str = RequestOrResponse::url(input_request).toString();
-      if (is_downstream(input_request)) {
-        RootedObject headers(cx);
-        headers = RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, input_request);
-        if (!Headers::delazify(cx, headers))
+      input_request = &input.toObject();
+      input_has_body = RequestOrResponse::has_body(input_request);
+
+      // 1.  Assert: `input` is a `Request` object.
+      // 2.  Set `request` to `input`’s request.
+      // (implicit)
+
+      // 3.  Set `signal` to `input`’s signal.
+      // (signals not yet supported)
+
+      // 12.  Set `request` to a new request with the following properties:
+      // (moved into step 6 because we can leave everything at the default values if step 5 runs.)
+        // URL: `request`’s URL.
+        // Will actually be applied below.
+        url_str = RequestOrResponse::url(input_request).toString();
+
+        // method: `request`’s method.
+        method_str = Request::method(cx, input_request);
+        if (!method_str) {
           return nullptr;
+        }
+        method_len = JS::GetStringLength(method_str);
+
+        // referrer: `request`’s referrer.
+        // TODO: evaluate whether we want to implement support for setting the `referer` [sic]
+        // header based on this or not.
+
+        // cache mode: `request`’s cache mode.
+        // TODO: implement support for cache mode-based headers setting.
+
+        // Note: headers initialization is postponed, see step 32 below.
+        // header list: A copy of `request`’s header list.
+
+        // The following properties aren't applicable:
+        // unsafe-request flag: Set.
+        // client: This’s relevant settings object.
+        // window: `window`.
+        // priority: `request`’s priority
+        // origin: `request`’s origin.
+        // referrer policy: `request`’s referrer policy.
+        // mode: `request`’s mode.
+        // credentials mode: `request`’s credentials mode.
+        // redirect mode: `request`’s redirect mode.
+        // integrity metadata: `request`’s integrity metadata.
+        // keepalive: `request`’s keepalive.
+        // reload-navigation flag: `request`’s reload-navigation flag.
+        // history-navigation flag: `request`’s history-navigation flag.
+        // URL list: A clone of `request`’s URL list.
+    }
+
+    // 5.  If `input` is a string, then:
+    else {
+      // 1.  Let `parsedURL` be the result of parsing `input` with `baseURL`.
+      RootedObject parsedURL(cx, URL::create(cx, input, Fastly::baseURL));
+
+      // 2.  If `parsedURL` is failure, then throw a `TypeError`.
+      if (!parsedURL) {
+        return nullptr;
       }
-    } else {
-      RootedObject url_obj(cx, URL::create(cx, input, Fastly::baseURL));
-      if (!url_obj) return nullptr;
 
-      RootedValue url_val(cx, JS::ObjectValue(*url_obj));
+
+      // 3.  If `parsedURL` includes credentials, then throw a `TypeError`.
+      // (N/A)
+
+      // 4.  Set `request` to a new request whose URL is `parsedURL`.
+      // Instead, we store `url_str` to apply below.
+      RootedValue url_val(cx, JS::ObjectValue(*parsedURL));
       url_str = JS::ToString(cx, url_val);
-      if (!url_str) return nullptr;
+      if (!url_str) {
+        return nullptr;
+      }
 
-      // TODO: get the SpecSlice directly here instead of re-encoding.
-      size_t url_len;
-      UniqueChars url = encode(cx, url_str, &url_len);
-      if (!url) return nullptr;
+      // 5.  Set `fallbackMode` to "`cors`".
+      // (N/A)
+    }
 
-      if (!(HANDLE_RESULT(cx, xqd_req_new(&request_handle)) &&
-            HANDLE_RESULT(cx, xqd_req_uri_set(request_handle, url.get(), url_len)) &&
-            HANDLE_RESULT(cx, xqd_body_new(&body_handle))))
+    // Actually set the URL derived in steps 5 or 6 above.
+    RequestOrResponse::set_url(request, StringValue(url_str));
+    size_t url_len;
+    UniqueChars url = encode(cx, url_str, &url_len);
+    if (!url || !HANDLE_RESULT(cx, xqd_req_uri_set(request_handle, url.get(), url_len))) {
+      return nullptr;
+    }
+
+    // 7.  Let `origin` be this’s relevant settings object’s origin.
+    // 8.  Let `window` be "`client`".
+    // 9.  If `request`’s window is an environment settings object and its origin is same origin with `origin`, then set `window` to `request`’s window.
+    // 10.  If `init`["window"] exists and is non-null, then throw a `TypeError.
+    // 11.  If `init`["window"] exists, then set `window` to "`no-window`".
+    // (N/A)
+
+    // Extract all relevant properties from the init object.
+    // TODO: evaluate how much we care about precisely matching evaluation order.
+    // If "a lot", we need to make sure that all side effects that value conversions might trigger
+    // occur in the right order—presumably by running them all right here as WebIDL bindings would.
+    RootedValue method_val(cx);
+    RootedValue headers_val(cx);
+    RootedValue body_val(cx);
+    RootedValue backend_val(cx);
+    RootedValue cache_override(cx);
+    if (init_val.isObject()) {
+      RootedObject init(cx, init_val.toObjectOrNull());
+      if (!JS_GetProperty(cx, init, "method", &method_val) ||
+          !JS_GetProperty(cx, init, "headers", &headers_val) ||
+          !JS_GetProperty(cx, init, "body", &body_val) ||
+          !JS_GetProperty(cx, init, "backend", &backend_val)||
+          !JS_GetProperty(cx, init, "cacheOverride", &cache_override))
       {
+        return nullptr;
+      }
+    } else if (!init_val.isNullOrUndefined()) {
+      JS_ReportErrorLatin1(cx, "Request constructor: |init| parameter can't be converted to "
+                               "a dictionary");
+      return nullptr;
+    }
+
+    // 13.  If `init` is not empty, then:
+      // 1.  If `request`’s mode is "`navigate`", then set it to "`same-origin`".
+      // 2.  Unset `request`’s reload-navigation flag.
+      // 3.  Unset `request`’s history-navigation flag.
+      // 4.  Set `request`’s origin to "`client`".
+      // 5.  Set `request`’s referrer to "`client`".
+      // 6.  Set `request`’s referrer policy to the empty string.
+      // 7.  Set `request`’s URL to `request`’s current URL.
+      // 8.  Set `request`’s URL list to « `request`’s URL ».
+    // (N/A)
+
+    // 14.  If `init["referrer"]` exists, then:
+    // TODO: implement support for referrer application.
+      // 1.  Let `referrer` be `init["referrer"]`.
+      // 2.  If `referrer` is the empty string, then set `request`’s referrer to "`no-referrer`".
+      // 3.  Otherwise:
+      //   1.  Let `parsedReferrer` be the result of parsing `referrer` with `baseURL`.
+      //   2.  If `parsedReferrer` is failure, then throw a `TypeError`.
+
+      //   3.  If one of the following is true
+      //     *   `parsedReferrer`’s scheme is "`about`" and path is the string "`client`"
+      //     *   `parsedReferrer`’s origin is not same origin with `origin`
+      //     then set `request`’s referrer to "`client`".
+      //   (N/A)
+
+      //   4.  Otherwise, set `request`’s referrer to `parsedReferrer`.
+
+    // 15.  If `init["referrerPolicy"]` exists, then set `request`’s referrer policy to it.
+    // 16.  Let `mode` be `init["mode"]` if it exists, and `fallbackMode` otherwise.
+    // 17.  If `mode` is "`navigate`", then throw a `TypeError`.
+    // 18.  If `mode` is non-null, set `request`’s mode to `mode`.
+    // 19.  If `init["credentials"]` exists, then set `request`’s credentials mode to it.
+    // (N/A)
+
+    // 20.  If `init["cache"]` exists, then set `request`’s cache mode to it.
+    // TODO: implement support for cache mode application.
+
+    // 21.  If `request`’s cache mode is "`only-if-cached`" and `request`’s mode is _not_
+    //      "`same-origin`", then throw a TypeError.
+    // 22.  If `init["redirect"]` exists, then set `request`’s redirect mode to it.
+    // 23.  If `init["integrity"]` exists, then set `request`’s integrity metadata to it.
+    // 24.  If `init["keepalive"]` exists, then set `request`’s keepalive to it.
+    // (N/A)
+
+    // 25.  If `init["method"]` exists, then:
+    if (!method_val.isUndefined()) {
+      // 1.  Let `method` be `init["method"]`.
+      method_str = JS::ToString(cx, method_val);
+      if (!method_str) {
+        return nullptr;
+      }
+
+      // 2.  If `method` is not a method or `method` is a forbidden method, then throw a
+      //     `TypeError`.
+      // TODO: evaluate whether we should barr use of methods forbidden by the WHATWG spec.
+
+      // 3.  Normalize `method`.
+      // Delayed to below to reduce some code duplication.
+      method_needs_normalization = true;
+
+      // 4.  Set `request`’s method to `method`.
+      // Done below, unified with the non-init case.
+    }
+
+    // Apply the method derived in step 6 or 25.
+    // This only needs to happen if the method was set explicitly and isn't the default `GET`.
+    bool is_get = true;
+    if (method_str && !JS_StringEqualsLiteral(cx, method_str, "GET", &is_get)) {
+      return nullptr;
+    }
+
+    bool is_get_or_head = is_get;
+
+    if (!is_get) {
+      UniqueChars method = encode(cx, method_str, &method_len);
+      if (!method) {
+        return nullptr;
+      }
+
+      if (method_needs_normalization) {
+        if (normalize_http_method(method.get())) {
+          // Replace the JS string with the normalized name.
+          method_str = JS_NewStringCopyN(cx, method.get(), method_len);
+          if (!method_str) {
+            return nullptr;
+          }
+        }
+      }
+
+      is_get_or_head = strcmp(method.get(), "GET") == 0 || strcmp(method.get(), "HEAD") == 0;
+
+      JS::SetReservedSlot(request, Slots::Method, JS::StringValue(method_str));
+      if (!HANDLE_RESULT(cx, xqd_req_method_set(request_handle, method.get(), method_len))) {
         return nullptr;
       }
     }
 
-    RootedObject request(cx, create(cx, request_handle, body_handle, false));
-    if (!request) return nullptr;
+    // 26.  If `init["signal"]` exists, then set `signal` to it.
+    // (signals NYI)
 
-    RequestOrResponse::set_url(request, StringValue(url_str));
+    // 27.  Set this’s request to `request`.
+    // (implicit)
 
-    // TODO: apply cache and referrer from init object.
+    // 28.  Set this’s signal to a new `AbortSignal` object with this’s relevant Realm.
+    // 29.  If `signal` is not null, then make this’s signal follow `signal`.
+    // (signals NYI)
 
-    if (init_val.isObject()) {
-      RootedObject init(cx, &init_val.toObject());
+    // 30.  Set this’s headers to a new `Headers` object with this’s relevant Realm, whose header list is `request`’s header list and guard is "`request`".
+    // (implicit)
 
-      RootedValue method_val(cx);
-      if (!JS_GetProperty(cx, init, "method", &method_val))
+    // 31.  If this’s requests mode is "`no-cors`", then:
+      // 1.  If this’s requests method is not a CORS-safelisted method, then throw a `TypeError`.
+      // 2.  Set this’s headers’s guard to "`request-no-cors`".
+    // (N/A)
+
+    // 32.  If `init` is not empty, then:
+      // 1.  Let `headers` be a copy of this’s headers and its associated header list.
+      // 2.  If `init["headers"]` exists, then set `headers` to `init["headers"]`.
+      // 3.  Empty this’s headers’s header list.
+      // 4.  If `headers` is a `Headers` object, then for each `header` in its header list, append (`header`’s name, `header`’s value) to this’s headers.
+      // 5.  Otherwise, fill this’s headers with `headers`.
+    // Note: the substeps of 32 are somewhat convoluted because they don't just serve to ensure that the contents of `init["headers"]` are added to the request's headers, but also that all headers, including those from the `input` object are sanitized in accordance with the request's `mode`. Since we don't implement this sanitization, we do a much simpler thing: if `init["headers"]` exists, create the request's `headers` from that, otherwise create it from the `init` object's `headers`, or create a new, empty one.
+    RootedObject headers(cx);
+    if (!headers_val.isUndefined()) {
+      headers = Headers::create(cx, Headers::Mode::ProxyToRequest, request, headers_val);
+    } else {
+      headers = Headers::create(cx, Headers::Mode::ProxyToRequest, request, input_headers);
+    }
+
+    if (!headers) {
+      return nullptr;
+    }
+
+    JS::SetReservedSlot(request, Slots::Headers, JS::ObjectValue(*headers));
+
+    // 33.  Let `inputBody` be `input`’s requests body if `input` is a `Request` object;
+    //      otherwise null.
+    // (skipped)
+
+    // 34.  If either `init["body"]` exists and is non-null or `inputBody` is non-null, and `request`’s method is ``GET`` or ``HEAD``, then throw a TypeError.
+    if ((input_has_body || !body_val.isNullOrUndefined()) && is_get_or_head) {
+      JS_ReportErrorLatin1(cx, "Request constructor: HEAD or GET Request cannot have a body.");
+      return nullptr;
+    }
+
+    // 35.  Let `initBody` be null.
+    // (skipped)
+
+    // Note: steps 36-41 boil down to "if there's an init body, use that. Otherwise, if there's an
+    // input body, use that, but proxied through a TransformStream to make sure it's not consumed
+    // by something else in the meantime."
+    // Given that, we're restructuring things quite a bit below.
+
+    // 36.  If `init["body"]` exists and is non-null, then:
+    if (!body_val.isNullOrUndefined()) {
+      // 1.  Let `Content-Type` be null.
+      // 2.  Set `initBody` and `Content-Type` to the result of extracting `init["body"]`, with
+      //     `keepalive` set to `request`’s keepalive.
+      // 3.  If `Content-Type` is non-null and this’s headers’s header list does not contain
+      //     ``Content-Type``, then append (``Content-Type``, `Content-Type`) to this’s headers.
+      // Note: these steps are all inlined into RequestOrResponse::extract_body.
+      if (!RequestOrResponse::extract_body(cx, request, body_val)) {
         return nullptr;
+      }
+    } else if (input_has_body) {
+      // 37.  Let `inputOrInitBody` be `initBody` if it is non-null; otherwise `inputBody`.
+      // (implicit)
+      // 38.  If `inputOrInitBody` is non-null and `inputOrInitBody`’s source is null, then:
+        // 1.  If this’s requests mode is neither "`same-origin`" nor "`cors`", then throw a `TypeError.
+        // 2.  Set this’s requests use-CORS-preflight flag.
+      // (N/A)
+      // 39.  Let `finalBody` be `inputOrInitBody`.
+      // 40.  If `initBody` is null and `inputBody` is non-null, then:
+      // (implicit)
+        // 1.  If `input` is unusable, then throw a TypeError.
+        // 2.  Set `finalBody` to the result of creating a proxy for `inputBody`.
 
-      UniqueChars method;
-      if (!method_val.isUndefined()) {
-        RootedString method_str(cx, JS::ToString(cx, method_val));
-        if (!method_str) return nullptr;
+      // All the above steps boil down to "if the input request has an unusable body, throw.
+      // Otherwise, use the body."
+      // Our implementation is a bit more involved, because we might not have a body reified
+      // as a ReadableStream at all, in which case we can directly append the input body
+      // to the new request's body with a single hostcall.
 
-        size_t method_len;
-        method = encode(cx, method_str, &method_len);
-        if (!method) return nullptr;
+      RootedObject inputBody(cx, RequestOrResponse::body_stream(input_request));
 
-        if (normalize_http_method(method.get())) {
-          // Replace the JS string with the normalized name.
-          method_str = JS_NewStringCopyN(cx, method.get(), method_len);
-          if (!method_str) return nullptr;
+      // Throw an error if the input request's body isn't usable.
+      if (RequestOrResponse::body_used(input_request) ||
+          (inputBody && RequestOrResponse::body_unusable(cx, inputBody)))
+      {
+        JS_ReportErrorLatin1(cx, "Request constructor: the input request's body isn't usable.");
+        return nullptr;
+      }
+
+      if (!inputBody) {
+        // If `inputBody` is null, that means that it was never created, and hence content can't
+        // have access to it. Instead of reifying it here to pass it into a TransformStream, we
+        // just append the body on the host side and mark it as used on the input Request.
+        RequestOrResponse::append_body(cx, request, input_request);
+        RequestOrResponse::mark_body_used(cx, input_request);
+      } else {
+        inputBody = TransformStream::create_rs_proxy(cx, inputBody);
+        if (!inputBody) {
+          return nullptr;
         }
-
-        if (!HANDLE_RESULT(cx, xqd_req_method_set(request_handle, method.get(), method_len)))
-          return nullptr;
-        JS::SetReservedSlot(request, Slots::Method, JS::StringValue(method_str));
+        JS::SetReservedSlot(request, Slots::BodyStream, JS::ObjectValue(*inputBody));
       }
 
-      RootedValue body_val(cx);
-      if (!JS_GetProperty(cx, init, "body", &body_val))
-        return nullptr;
+      JS::SetReservedSlot(request, Slots::HasBody, JS::BooleanValue(true));
+    }
 
-      if (!body_val.isNullOrUndefined()) {
-        // TODO: throw if `method` is "GET" or "HEAD"
-        if (!RequestOrResponse::set_body(cx, request, body_val))
-          return nullptr;
+    // 41.  Set this’s requests body to `finalBody`.
+    // (implicit)
+
+    // Apply the C@E-proprietary `backend` property.
+    if (!backend_val.isUndefined()) {
+      RootedString backend(cx, JS::ToString(cx, backend_val));
+      if (!backend) {
+        return nullptr;
       }
+      JS::SetReservedSlot(request, Slots::Backend, JS::StringValue(backend));
+    }
 
-      RootedValue headers_val(cx);
-      if (!JS_GetProperty(cx, init, "headers", &headers_val))
+    // Apply the C@E-proprietary `cacheOverride` property.
+    if (!cache_override.isUndefined() && !set_cache_override(cx, request, cache_override)) {
         return nullptr;
-
-      if (!headers_val.isUndefined()) {
-        RootedObject headers(cx, Headers::create(cx, Headers::Mode::ProxyToRequest,
-                                                 request, headers_val));
-        if (!headers) return nullptr;
-        JS::SetReservedSlot(request, Slots::Headers, JS::ObjectValue(*headers));
-      }
-
-      RootedValue backend_val(cx);
-      if (!JS_GetProperty(cx, init, "backend", &backend_val))
-        return nullptr;
-      if (!backend_val.isUndefined()) {
-        RootedString backend(cx, JS::ToString(cx, backend_val));
-        if (!backend) return nullptr;
-        JS::SetReservedSlot(request, Slots::Backend, JS::StringValue(backend));
-      }
-
-      RootedValue cache_override(cx);
-      if (!JS_GetProperty(cx, init, "cacheOverride", &cache_override))
-        return nullptr;
-      if (!cache_override.isUndefined() && !set_cache_override(cx, request, cache_override))
-          return nullptr;
     }
 
     return request;
@@ -3557,6 +3935,7 @@ namespace Response {
     Headers = RequestOrResponse::Slots::Headers,
     IsUpstream = RequestOrResponse::Slots::Count,
     Status,
+    StatusMessage,
     Count
   };};
 
@@ -3583,69 +3962,135 @@ namespace Response {
     return (uint16_t)JS::GetReservedSlot(obj, Slots::Status).toInt32();
   }
 
+  JSString* status_message(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
+    return JS::GetReservedSlot(obj, Slots::StatusMessage).toString();
+  }
+
   JSObject* create(JSContext* cx, ResponseHandle response_handle, BodyHandle body_handle,
                    bool is_upstream);
 
-  // TODO: consider not creating a host-side representation for responses eagerly.
-  // Some applications create Response objects purely for internal use, e.g. to represent
-  // cache entries. While that's perhaps not ideal to begin with, it exists, so we should
-  // handle it in a good way, and not be superfluously slow.
+  /**
+   * The `Response` constructor https://fetch.spec.whatwg.org/#dom-response
+   */
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
     REQUEST_HANDLER_ONLY("The Response builtin");
 
+    RootedValue body_val(cx, args.get(0));
+    RootedValue init_val(cx, args.get(1));
+
+    RootedValue status_val(cx);
+    uint16_t status = 200;
+
+    RootedValue statusText_val(cx);
+    RootedString statusText(cx, JS_GetEmptyString(cx));
+    RootedValue headers_val(cx);
+
+    if (init_val.isObject()) {
+      RootedObject init(cx, init_val.toObjectOrNull());
+      if (!JS_GetProperty(cx, init, "status", &status_val) ||
+          !JS_GetProperty(cx, init, "statusText", &statusText_val) ||
+          !JS_GetProperty(cx, init, "headers", &headers_val))
+      {
+        return false;
+      }
+
+      if (!status_val.isUndefined() && !JS::ToUint16(cx, status_val, &status)) {
+        return false;
+      }
+
+      if (!statusText_val.isUndefined() && !(statusText = JS::ToString(cx, statusText_val))) {
+        return false;
+      }
+
+    } else if (!init_val.isNullOrUndefined()) {
+      JS_ReportErrorLatin1(cx, "Response constructor: |init| parameter can't be converted to "
+                               "a dictionary");
+      return false;
+    }
+
+    // 1.  If `init`["status"] is not in the range 200 to 599, inclusive, then `throw` a ``RangeError``.
+    if (status < 200 || status > 599) {
+      JS_ReportErrorLatin1(cx, "Response constructor: invalid status %u", status);
+      return false;
+    }
+
+    // 2.  If `init`["statusText"] does not match the `reason-phrase` token production, then `throw` a ``TypeError``.
+    // Skipped: the statusText can only be consumed by the content creating it, so we're lenient
+    // about its format.
+
+    // 3.  Set `this`’s `response` to a new `response`.
+    // TODO: consider not creating a host-side representation for responses eagerly.
+    // Some applications create Response objects purely for internal use, e.g. to represent
+    // cache entries. While that's perhaps not ideal to begin with, it exists, so we should
+    // handle it in a good way, and not be superfluously slow.
     // TODO: enable creating Response objects during the init phase, and only
     // creating the host-side representation when processing requests.
     ResponseHandle response_handle = { .handle = INVALID_HANDLE };
-    if (!HANDLE_RESULT(cx, xqd_resp_new(&response_handle)))
+    if (!HANDLE_RESULT(cx, xqd_resp_new(&response_handle))) {
       return false;
+    }
 
     BodyHandle body_handle = { .handle = INVALID_HANDLE };
-    if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle)))
+    if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle))) {
       return false;
+    }
 
     RootedObject response(cx, create(cx, response_handle, body_handle, false));
-    if (!response) return false;
-
-    if (!RequestOrResponse::set_body(cx, response, args.get(0)))
+    if (!response) {
       return false;
+    }
 
-    RequestOrResponse::set_url(response, JS::StringValue(JS_GetEmptyString(cx)));
+    RequestOrResponse::set_url(response, JS_GetEmptyStringValue(cx));
 
-    if (args.get(1).isObject()) {
-      RootedObject init(cx, &args[1].toObject());
+    // 4.  Set `this`’s `headers` to a `new` ``Headers`` object with `this`’s `relevant Realm`,
+    //     whose `header list` is `this`’s `response`’s `header list` and `guard` is "`response`".
+    // (implicit)
 
-      RootedValue status_val(cx);
-      if (!JS_GetProperty(cx, init, "status", &status_val))
+    // 5.  Set `this`’s `response`’s `status` to `init`["status"].
+    if (!HANDLE_RESULT(cx, xqd_resp_status_set(response_handle, status))) {
+      return false;
+    }
+    // To ensure that we really have the same status value as the host,
+    // we always read it back here.
+    if (!HANDLE_RESULT(cx, xqd_resp_status_get(response_handle, &status))) {
+      return false;
+    }
+
+    JS::SetReservedSlot(response, Slots::Status, JS::Int32Value(status));
+
+    // 6.  Set `this`’s `response`’s `status message` to `init`["statusText"].
+    JS::SetReservedSlot(response, Slots::StatusMessage, JS::StringValue(statusText));
+
+    // 7.  If `init`["headers"] `exists`, then `fill` `this`’s `headers` with `init`["headers"].
+    RootedObject headers(cx);
+    headers = Headers::create(cx, Headers::Mode::ProxyToResponse, response, headers_val);
+    if (!headers) {
+      return false;
+    }
+    JS::SetReservedSlot(response, Slots::Headers, JS::ObjectValue(*headers));
+
+    // 8.  If `body` is non-null, then:
+    if ((!body_val.isNullOrUndefined())) {
+      //     1.  If `init`["status"] is a `null body status`, then `throw` a ``TypeError``.
+      if (status == 204 || status == 205 || status == 304) {
+        JS_ReportErrorLatin1(cx, "Request constructor: HEAD or GET Request cannot have a body.");
         return false;
+      }
 
-      uint16_t status = 200;
-      if (!status_val.isUndefined() && !JS::ToUint16(cx, status_val, &status))
+      //     2.  Let `Content-Type` be null.
+      //     3.  Set `this`’s `response`’s `body` and `Content-Type` to the result of `extracting`
+      //         `body`.
+      //     4.  If `Content-Type` is non-null and `this`’s `response`’s `header list` `does not
+      //         contain` ``Content-Type``, then `append` (``Content-Type``, `Content-Type`) to
+      //         `this`’s `response`’s `header list`.
+      // Note: these steps are all inlined into RequestOrResponse::extract_body.
+      if (!RequestOrResponse::extract_body(cx, response, body_val)) {
         return false;
-
-      if (!HANDLE_RESULT(cx, xqd_resp_status_set(response_handle, status)))
-        return false;
-
-      RootedValue headers_val(cx);
-      if (!JS_GetProperty(cx, init, "headers", &headers_val))
-        return false;
-
-      if (!headers_val.isUndefined()) {
-        RootedObject headers(cx, Headers::create(cx, Headers::Mode::ProxyToResponse,
-                                                 response, headers_val));
-        if (!headers) return false;
-
-        JS::SetReservedSlot(response, Slots::Headers, JS::ObjectValue(*headers));
       }
     }
 
-    // To ensure that we really have the same status value as the host,
-    // we always read it back here.
-    uint16_t status = 0;
-    if (!HANDLE_RESULT(cx, xqd_resp_status_get(response_handle, &status)))
-      return false;
-
-    JS::SetReservedSlot(response, Slots::Status, JS::Int32Value(status));
     args.rval().setObject(*response);
     return true;
   }
@@ -3665,8 +4110,14 @@ namespace Response {
   bool status_get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
 
-    uint16_t status = Response::status(self);
-    args.rval().setInt32(status);
+    args.rval().setInt32(status(self));
+    return true;
+  }
+
+  bool statusText_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+
+    args.rval().setString(status_message(self));
     return true;
   }
 
@@ -3686,6 +4137,16 @@ namespace Response {
       return false;
 
     args.rval().setInt32(version);
+    return true;
+  }
+
+  JSString* type_default_atom;
+  JSString* type_error_atom;
+
+  bool type_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+
+    args.rval().setString(status(self) == 0 ? type_error_atom : type_default_atom);
     return true;
   }
 
@@ -3718,22 +4179,34 @@ namespace Response {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("arrayBuffer", bodyAll<BodyReadResult::ArrayBuffer>, 0, 0),
-    JS_FN("json", bodyAll<BodyReadResult::JSON>, 0, 0),
-    JS_FN("text", bodyAll<BodyReadResult::Text>, 0, 0),
+    JS_FN("arrayBuffer", bodyAll<BodyReadResult::ArrayBuffer>, 0, JSPROP_ENUMERATE),
+    JS_FN("json", bodyAll<BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
+    JS_FN("text", bodyAll<BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("ok", ok_get, 0),
-    JS_PSG("status", status_get, 0),
-    JS_PSG("version", version_get, 0),
-    JS_PSG("headers", headers_get, 0),
-    JS_PSG("body", body_get, 0),
-    JS_PSG("bodyUsed", bodyUsed_get, 0),
-    JS_PSG("url", url_get, 0),
+    JS_PSG("type", type_get, JSPROP_ENUMERATE),
+    JS_PSG("url", url_get, JSPROP_ENUMERATE),
+    JS_PSG("status", status_get, JSPROP_ENUMERATE),
+    JS_PSG("ok", ok_get, JSPROP_ENUMERATE),
+    JS_PSG("statusText", statusText_get, 0),
+    JS_PSG("version", version_get, JSPROP_ENUMERATE),
+    JS_PSG("headers", headers_get, JSPROP_ENUMERATE),
+    JS_PSG("body", body_get, JSPROP_ENUMERATE),
+    JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
-  CLASS_BOILERPLATE(Response)
+  CLASS_BOILERPLATE_CUSTOM_INIT(Response)
+
+  bool init_class(JSContext* cx, HandleObject global) {
+    if (!init_class_impl(cx, global)) {
+      return false;
+    }
+
+    // Initialize a pinned (i.e., never-moved, living forever) atom for the response type values.
+    return (type_default_atom = JS_AtomizeAndPinString(cx, "default")) &&
+           (type_error_atom = JS_AtomizeAndPinString(cx, "error"));
+  }
 
   JSObject* create(JSContext* cx, ResponseHandle response_handle, BodyHandle body_handle,
                    bool is_upstream)
@@ -3743,9 +4216,9 @@ namespace Response {
 
     JS::SetReservedSlot(response, Slots::Response, JS::Int32Value(response_handle.handle));
     JS::SetReservedSlot(response, Slots::Body, JS::Int32Value(body_handle.handle));
-    // TODO: only set HasBody for upstream responses if we actually do have a body.
-    JS::SetReservedSlot(response, Slots::HasBody, JS::BooleanValue(is_upstream));
-    JS::SetReservedSlot(response, Slots::BodyUsed, JS::BooleanValue(false));
+    JS::SetReservedSlot(response, Slots::BodyStream, JS::NullValue());
+    JS::SetReservedSlot(response, Slots::HasBody, JS::FalseValue());
+    JS::SetReservedSlot(response, Slots::BodyUsed, JS::FalseValue());
     JS::SetReservedSlot(response, Slots::IsUpstream, JS::BooleanValue(is_upstream));
 
     if (is_upstream) {
@@ -3754,6 +4227,10 @@ namespace Response {
         return nullptr;
 
       JS::SetReservedSlot(response, Slots::Status, JS::Int32Value(status));
+      JS::SetReservedSlot(response, Slots::StatusMessage, JS_GetEmptyStringValue(cx));
+      if (!(status == 204 || status == 205 || status == 304)) {
+        JS::SetReservedSlot(response, Slots::HasBody, JS::TrueValue());
+      }
     }
 
     return response;
@@ -4112,6 +4589,9 @@ namespace Headers {
     Count
   };};
 
+  bool is_instance(JSObject* obj);
+  bool is_instance(Value val);
+
   namespace detail {
     #define HEADERS_ITERATION_METHOD(argc) \
       METHOD_HEADER(argc) \
@@ -4156,18 +4636,22 @@ namespace Headers {
       if (!value_chars) return false; \
 
     JSObject* backing_map(JSObject* self) {
+      MOZ_ASSERT(is_instance(self));
       return &JS::GetReservedSlot(self, Slots::BackingMap).toObject();
     }
 
     Mode mode(JSObject* self) {
+      MOZ_ASSERT(is_instance(self));
       return static_cast<Mode>(JS::GetReservedSlot(self, Slots::Mode).toInt32());
     }
 
     bool lazy_values(JSObject* self) {
+      MOZ_ASSERT(is_instance(self));
       return JS::GetReservedSlot(self, Slots::HasLazyValues).toBoolean();
     }
 
     uint32_t handle(JSObject* self) {
+      MOZ_ASSERT(is_instance(self));
       return static_cast<uint32_t>(JS::GetReservedSlot(self, Slots::Handle).toInt32());
     }
 
@@ -4285,7 +4769,7 @@ namespace Headers {
     // Append an already normalized value for an already normalized header name
     // to the JS side map, but not the host.
     //
-    // Returns the resulting combined value in `value`.
+    // Returns the resulting combined value in `normalized_value`.
     bool append_header_value_to_map(JSContext* cx, HandleObject self,
                                     HandleValue normalized_name,
                                     MutableHandleValue normalized_value)
@@ -4529,6 +5013,55 @@ namespace Headers {
     return detail::ensure_all_header_values_from_handle(cx, headers, backing_map);
   }
 
+  JSObject* create(JSContext* cx, Mode mode, HandleObject owner, HandleObject init_headers) {
+    RootedObject headers(cx, create(cx, mode, owner));
+    if (!headers) {
+      return nullptr;
+    }
+
+    if (!init_headers) {
+      return headers;
+    }
+
+    if (!delazify(cx, init_headers)) {
+      return nullptr;
+    }
+
+    RootedObject headers_map(cx, detail::backing_map(headers));
+    RootedObject init_map(cx, detail::backing_map(init_headers));
+
+    RootedValue iterable(cx);
+    if (!JS::MapEntries(cx, init_map, &iterable))
+      return nullptr;
+
+    JS::ForOfIterator it(cx);
+    if (!it.init(iterable))
+      return nullptr;
+
+    RootedObject entry(cx);
+    RootedValue entry_val(cx);
+    RootedValue name_val(cx);
+    RootedValue value_val(cx);
+    while (true) {
+      bool done;
+      if (!it.next(&entry_val, &done))
+        return nullptr;
+
+      if (done)
+        break;
+
+      entry = &entry_val.toObject();
+      JS_GetElement(cx, entry, 1, &name_val);
+      JS_GetElement(cx, entry, 0, &value_val);
+
+      if (!JS::MapSet(cx, headers_map, name_val, value_val)) {
+        return nullptr;
+      }
+    }
+
+    return headers;
+  }
+
   JSObject* create(JSContext* cx, Mode mode, HandleObject owner, HandleValue initv) {
     RootedObject headers(cx, create(cx, mode, owner));
     if (!headers) return nullptr;
@@ -4621,6 +5154,39 @@ namespace Headers {
 
     args.rval().setUndefined();
     return true;
+  }
+
+  /**
+   * Adds the given header name/value to `self`'s list of headers iff `self` doesn't
+   * already contain a header with that name.
+   *
+   * Assumes that both the name and value are valid and normalized.
+   * TODO: fully skip normalization.
+   */
+  bool maybe_add(JSContext* cx, HandleObject self, const char* name, const char* value) {
+    MOZ_ASSERT(is_instance(self));
+    RootedString name_str(cx, JS_NewStringCopyN(cx, name, strlen(name)));
+    if (!name_str) {
+      return false;
+    }
+    RootedValue name_val(cx, JS::StringValue(name_str));
+
+    RootedObject map(cx, detail::backing_map(self));
+    bool has;
+    if (!JS::MapHas(cx, map, name_val, &has)) {
+      return false;
+    }
+    if (has) {
+      return true;
+    }
+
+    RootedString value_str(cx, JS_NewStringCopyN(cx, value, strlen(value)));
+    if (!value_str) {
+      return false;
+    }
+    RootedValue value_val(cx, JS::StringValue(value_str));
+
+    return detail::append_header_value(cx, self, name_val, value_val, "internal_maybe_add");
   }
 
   typedef int HeaderRemoveOperation(int handle, const char *name, size_t name_len);
@@ -4989,13 +5555,22 @@ static PersistentRooted<JSObject*> INSTANCE;
     return true;
   }
 
+  /**
+   * Create a Request object for the incoming request.
+   *
+   * Since this happens during initialization time, the object will not be fully initialized. It's
+   * filled in at runtime using `init_downstream_request`.
+   */
   static JSObject* prepare_downstream_request(JSContext* cx) {
       return Request::create(cx, RequestHandle { INVALID_HANDLE },
                              BodyHandle { INVALID_HANDLE }, true);
   }
 
+  /**
+   * Fully initialize the Request object based on the incoming request.
+   */
   static bool init_downstream_request(JSContext* cx, HandleObject request) {
-    MOZ_RELEASE_ASSERT(Request::request_handle(request).handle == INVALID_HANDLE);
+    MOZ_ASSERT(Request::request_handle(request).handle == INVALID_HANDLE);
 
     RequestHandle request_handle = { INVALID_HANDLE };
     BodyHandle body_handle = { INVALID_HANDLE };
@@ -5003,8 +5578,34 @@ static PersistentRooted<JSObject*> INSTANCE;
       return false;
 
     JS::SetReservedSlot(request, Request::Slots::Request, JS::Int32Value(request_handle.handle));
-    JS::SetReservedSlot(request, RequestOrResponse::Slots::Body,
-                        JS::Int32Value(body_handle.handle));
+    JS::SetReservedSlot(request, Request::Slots::Body, JS::Int32Value(body_handle.handle));
+
+    // Set the method.
+    OwnedHostCallBuffer buffer;
+    size_t num_written = 0;
+    if (!HANDLE_RESULT(cx, xqd_req_method_get(request_handle, buffer.get(), HOSTCALL_BUFFER_LEN,
+                                              &num_written)))
+    {
+      return false;
+    }
+
+    bool is_get = strncmp(buffer.get(), "GET", num_written) == 0;
+    if (!is_get) {
+      RootedString method(cx, JS_NewStringCopyN(cx, buffer.get(), num_written));
+      if (!method) {
+        return false;
+      }
+
+      JS::SetReservedSlot(request, Request::Slots::Method, JS::StringValue(method));
+    }
+
+    // Set whether we have a body depending on the method.
+    // TODO: verify if that's right. I.e. whether we should treat all requests that are not
+    // GET or HEAD as having a body, which might just be 0-length. It's not entirely clear what
+    // else we even could do here though.
+    if (!(is_get || strncmp(buffer.get(), "HEAD", num_written) == 0)) {
+      JS::SetReservedSlot(request, Request::Slots::HasBody, JS::TrueValue());
+    }
 
     size_t bytes_read;
     UniqueChars buf(read_from_handle_all<xqd_req_uri_get, RequestHandle>(cx, request_handle,
@@ -5449,12 +6050,6 @@ static PersistentRooted<JSObject*> INSTANCE;
   }
 }
 
-
-namespace URLSearchParams {
-  JSObject* create(JSContext* cx, jsurl::JSUrl* url);
-  JSUrlSearchParams* get_params(JSObject* self);
-}
-
 namespace URL {
   namespace Slots { enum {
     Url,
@@ -5792,6 +6387,10 @@ namespace URLSearchParams {
     return (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
   }
 
+  SpecSlice serialize(JSContext* cx, HandleObject self) {
+    return jsurl::params_to_string(get_params(self));
+  }
+
   bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
   JSObject* create(JSContext* cx, HandleValue params_val);
 
@@ -5913,9 +6512,7 @@ namespace URLSearchParams {
 
   bool toString(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
-    const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
-
-    const SpecSlice slice = jsurl::params_to_string(params);
+    SpecSlice slice = serialize(cx, self);
     RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)slice.data, slice.len)));
     if (!str) return false;
 
