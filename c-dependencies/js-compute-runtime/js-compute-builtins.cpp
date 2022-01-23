@@ -482,7 +482,7 @@ namespace Env {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("get", env_get, 1, 0),
+    JS_FN("get", env_get, 1, JSPROP_ENUMERATE),
   JS_FS_END};
 
   JSObject* create(JSContext* cx) {
@@ -1857,7 +1857,7 @@ typedef JSObject* FlushAlgorithm(JSContext* cx, HandleObject controller);
   }
 
   const JSPropertySpec properties[] = {
-    JS_PSG("desiredSize", desiredSize_get, 0),
+    JS_PSG("desiredSize", desiredSize_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
   /**
@@ -1909,9 +1909,9 @@ typedef JSObject* FlushAlgorithm(JSContext* cx, HandleObject controller);
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("enqueue", enqueue_js, 1, 0),
-    JS_FN("error", error_js, 1, 0),
-    JS_FN("terminate", terminate_js, 0, 0),
+    JS_FN("enqueue", enqueue_js, 1, JSPROP_ENUMERATE),
+    JS_FN("error", error_js, 1, JSPROP_ENUMERATE),
+    JS_FN("terminate", terminate_js, 0, JSPROP_ENUMERATE),
   JS_FS_END};
 
   CLASS_BOILERPLATE_NO_CTOR(TransformStreamDefaultController)
@@ -2496,8 +2496,8 @@ namespace TransformStream {
   const JSFunctionSpec methods[] = {JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("readable", readable_get, 0),
-    JS_PSG("writable", writable_get, 0),
+    JS_PSG("readable", readable_get, JSPROP_ENUMERATE),
+    JS_PSG("writable", writable_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
   CLASS_BOILERPLATE_CUSTOM_INIT(TransformStream)
@@ -3488,19 +3488,19 @@ namespace Request {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("arrayBuffer", bodyAll<BodyReadResult::ArrayBuffer>, 0, 0),
-    JS_FN("json", bodyAll<BodyReadResult::JSON>, 0, 0),
-    JS_FN("text", bodyAll<BodyReadResult::Text>, 0, 0),
-    JS_FN("setCacheOverride", setCacheOverride, 3, 0),
+    JS_FN("arrayBuffer", bodyAll<BodyReadResult::ArrayBuffer>, 0, JSPROP_ENUMERATE),
+    JS_FN("json", bodyAll<BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
+    JS_FN("text", bodyAll<BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
+    JS_FN("setCacheOverride", setCacheOverride, 3, JSPROP_ENUMERATE),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("method", method_get, 0),
-    JS_PSG("url", url_get, 0),
-    JS_PSG("version", version_get, 0),
-    JS_PSG("headers", headers_get, 0),
-    JS_PSG("body", body_get, 0),
-    JS_PSG("bodyUsed", bodyUsed_get, 0),
+    JS_PSG("method", method_get, JSPROP_ENUMERATE),
+    JS_PSG("url", url_get, JSPROP_ENUMERATE),
+    JS_PSG("version", version_get, JSPROP_ENUMERATE),
+    JS_PSG("headers", headers_get, JSPROP_ENUMERATE),
+    JS_PSG("body", body_get, JSPROP_ENUMERATE),
+    JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
   CLASS_BOILERPLATE_CUSTOM_INIT(Request)
@@ -4297,7 +4297,7 @@ namespace Dictionary {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("get", get, 1, 0),
+    JS_FN("get", get, 1, JSPROP_ENUMERATE),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {JS_PS_END};
@@ -4380,11 +4380,11 @@ namespace TextEncoder {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("encode", encode, 1, 0),
+    JS_FN("encode", encode, 1, JSPROP_ENUMERATE),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("encoding", encoding_get, 0),
+    JS_PSG("encoding", encoding_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
   CLASS_BOILERPLATE(TextEncoder)
@@ -4462,11 +4462,11 @@ namespace TextDecoder {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("decode", decode, 1, 0),
+    JS_FN("decode", decode, 1, JSPROP_ENUMERATE),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("encoding", encoding_get, 0),
+    JS_PSG("encoding", encoding_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
   CLASS_BOILERPLATE(TextDecoder)
@@ -5282,15 +5282,15 @@ namespace Headers {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("get", get, 1, 0),
-    JS_FN("has", has, 1, 0),
-    JS_FN("set", set, 2, 0),
-    JS_FN("append", append, 2, 0),
-    JS_FN("delete", delete_, 1, 0),
-    JS_FN("forEach", forEach, 1, 0),
-    JS_FN("entries", entries, 0, 0),
-    JS_FN("keys", keys, 0, 0),
-    JS_FN("values", values, 0, 0),
+    JS_FN("get", get, 1, JSPROP_ENUMERATE),
+    JS_FN("has", has, 1, JSPROP_ENUMERATE),
+    JS_FN("set", set, 2, JSPROP_ENUMERATE),
+    JS_FN("append", append, 2, JSPROP_ENUMERATE),
+    JS_FN("delete", delete_, 1, JSPROP_ENUMERATE),
+    JS_FN("forEach", forEach, 1, JSPROP_ENUMERATE),
+    JS_FN("entries", entries, 0, JSPROP_ENUMERATE),
+    JS_FN("keys", keys, 0, JSPROP_ENUMERATE),
+    JS_FN("values", values, 0, JSPROP_ENUMERATE),
     // [Symbol.iterator] added in init_class.
   JS_FS_END};
 
@@ -5478,8 +5478,8 @@ namespace ClientInfo {
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("address", address_get, 0),
-    JS_PSG("geo", geo_get, 0),
+    JS_PSG("address", address_get, JSPROP_ENUMERATE),
+    JS_PSG("geo", geo_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
   CLASS_BOILERPLATE_NO_CTOR(ClientInfo)
@@ -5967,13 +5967,13 @@ static PersistentRooted<JSObject*> INSTANCE;
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("respondWith", respondWith, 1, 0),
-    JS_FN("waitUntil", waitUntil, 1, 0),
+    JS_FN("respondWith", respondWith, 1, JSPROP_ENUMERATE),
+    JS_FN("waitUntil", waitUntil, 1, JSPROP_ENUMERATE),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("client", client_get, 0),
-    JS_PSG("request", request_get, 0),
+    JS_PSG("client", client_get, JSPROP_ENUMERATE),
+    JS_PSG("request", request_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
   CLASS_BOILERPLATE_NO_CTOR(FetchEvent)
