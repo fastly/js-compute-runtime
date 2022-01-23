@@ -6657,65 +6657,142 @@ namespace URLSearchParams {
 }
 
 
-// TODO: throw in all Request methods/getters that rely on host calls once a
-// request has been sent. The host won't let us act on them anymore anyway.
-bool fetch(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
+namespace GlobalProperties {
+  // TODO: throw in all Request methods/getters that rely on host calls once a
+  // request has been sent. The host won't let us act on them anymore anyway.
+  /**
+   * The `fetch` global function
+   * https://fetch.spec.whatwg.org/#fetch-method
+   */
+  bool fetch(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-  REQUEST_HANDLER_ONLY("fetch")
+    REQUEST_HANDLER_ONLY("fetch")
 
-  if (!args.requireAtLeast(cx, "fetch", 1)) {
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-
-  RootedObject request(cx, Request::create(cx, args[0], args.get(1)));
-  if (!request) {
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-
-  RootedString backend(cx, Request::backend(request));
-  if (!backend) {
-    backend = Fastly::defaultBackend;
-  }
-  if (!backend) {
-    size_t bytes_read;
-    RequestHandle handle = Request::request_handle(request);
-    UniqueChars buf(read_from_handle_all<xqd_req_uri_get, RequestHandle>(cx, handle, &bytes_read,
-                                                                         false));
-    if (buf) {
-      JS_ReportErrorUTF8(cx, "No backend specified for request with url %s. "
-                             "Must provide a `backend` property on the `init` object "
-                             "passed to either `new Request()` or `fetch`", buf.get());
+    if (!args.requireAtLeast(cx, "fetch", 1)) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
     }
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+
+    RootedObject request(cx, Request::create(cx, args[0], args.get(1)));
+    if (!request) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+
+    RootedString backend(cx, Request::backend(request));
+    if (!backend) {
+      backend = Fastly::defaultBackend;
+    }
+    if (!backend) {
+      size_t bytes_read;
+      RequestHandle handle = Request::request_handle(request);
+      UniqueChars buf(read_from_handle_all<xqd_req_uri_get, RequestHandle>(cx, handle, &bytes_read,
+                                                                          false));
+      if (buf) {
+        JS_ReportErrorUTF8(cx, "No backend specified for request with url %s. "
+                              "Must provide a `backend` property on the `init` object "
+                              "passed to either `new Request()` or `fetch`", buf.get());
+      }
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+
+    size_t backend_len;
+    UniqueChars backend_chars = encode(cx, backend, &backend_len);
+    if (!backend_chars)
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+
+    PendingRequestHandle request_handle = { INVALID_HANDLE };
+    RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
+    if (!response_promise)
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+
+    // TODO: ensure that we properly handle body handles forwarded from other Request/Response
+    // objects.
+    int result = xqd_req_send_async(Request::request_handle(request),
+                                    RequestOrResponse::body_handle(request),
+                                    backend_chars.get(), backend_len, &request_handle);
+    if (!HANDLE_RESULT(cx, result))
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+
+    if (!pending_requests->append(request))
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+
+    JS::SetReservedSlot(request, Request::Slots::PendingRequest, JS::Int32Value(request_handle.handle));
+    JS::SetReservedSlot(request, Request::Slots::ResponsePromise, JS::ObjectValue(*response_promise));
+
+    args.rval().setObject(*response_promise);
+    return true;
   }
 
-  size_t backend_len;
-  UniqueChars backend_chars = encode(cx, backend, &backend_len);
-  if (!backend_chars)
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+  /**
+   * The `queueMicrotask` global function
+   * https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#microtask-queuing
+   */
+  bool queueMicrotask(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "queueMicrotask", 1)) {
+      return false;
+    }
 
-  PendingRequestHandle request_handle = { INVALID_HANDLE };
-  RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
-  if (!response_promise)
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+    if (!args[0].isObject() || !JS::IsCallable(&args[0].toObject())) {
+      JS_ReportErrorLatin1(cx, "queueMicrotask: Argument 1 is not a function");
+      return false;
+    }
 
-  // TODO: ensure that we properly handle body handles forwarded from other Request/Response
-  // objects.
-  int result = xqd_req_send_async(Request::request_handle(request),
-                                  RequestOrResponse::body_handle(request),
-                                  backend_chars.get(), backend_len, &request_handle);
-  if (!HANDLE_RESULT(cx, result))
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+    RootedObject callback(cx, &args[0].toObject());
 
-  if (!pending_requests->append(request))
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+    RootedObject promise(cx, JS::CallOriginalPromiseResolve(cx, JS::UndefinedHandleValue));
+    if (!promise) {
+      return false;
+    }
 
-  JS::SetReservedSlot(request, Request::Slots::PendingRequest, JS::Int32Value(request_handle.handle));
-  JS::SetReservedSlot(request, Request::Slots::ResponsePromise, JS::ObjectValue(*response_promise));
+    if (!JS::AddPromiseReactions(cx, promise, callback, nullptr)) {
+      return false;
+    }
 
-  args.rval().setObject(*response_promise);
-  return true;
+    args.rval().setUndefined();
+    return true;
+  }
+
+  bool self_get(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setObject(*JS::CurrentGlobalOrNull(cx));
+    return true;
+  }
+
+  bool self_set(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "globalThis.self setter", 1)) {
+      return false;
+    }
+
+    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+    if (args.thisv() != ObjectValue(*global)) {
+      JS_ReportErrorLatin1(cx, "globalThis.self setter can only be called on the global object");
+      return false;
+    }
+
+    if (!JS_DefineProperty(cx, global, "self", args[0], JSPROP_ENUMERATE)) {
+      return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  const JSFunctionSpec methods[] = {
+    JS_FN("fetch", fetch, 2, JSPROP_ENUMERATE),
+    JS_FN("queueMicrotask", queueMicrotask, 1, JSPROP_ENUMERATE),
+    JS_FS_END
+  };
+
+  const JSPropertySpec properties[] = {
+    JS_PSGS("self", self_get, self_set, JSPROP_ENUMERATE),
+  JS_PS_END};
+
+  static bool init(JSContext* cx, HandleObject global) {
+    return JS_DefineFunctions(cx, global, methods) &&
+           JS_DefineProperties(cx, global, properties);
+  }
 }
 
 bool has_pending_requests() {
@@ -6848,7 +6925,8 @@ bool define_fastly_sys(JSContext* cx, HandleObject global) {
   // Allocating the reusable hostcall buffer here means it's baked into the
   // snapshot, and since it's all zeros, it won't increase the size of the snapshot.
   if (!OwnedHostCallBuffer::initialize(cx)) return false;
-  if (!JS_DefineProperty(cx, global, "self", global, JSPROP_ENUMERATE)) return false;
+
+  if (!GlobalProperties::init(cx, global)) return false;
 
   if (!Fastly::create(cx, global)) return false;
   if (!Console::create(cx, global)) return false;
@@ -6875,7 +6953,7 @@ bool define_fastly_sys(JSContext* cx, HandleObject global) {
   pending_requests = new JS::PersistentRootedObjectVector(cx);
   pending_body_reads = new JS::PersistentRootedObjectVector(cx);
 
-  return JS_DefineFunction(cx, global, "fetch", fetch, 2, JSPROP_ENUMERATE);
+  return true;
 }
 
 JSObject* create_fetch_event(JSContext* cx) {
