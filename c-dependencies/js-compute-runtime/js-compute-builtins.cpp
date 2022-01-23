@@ -4936,7 +4936,16 @@ namespace Headers {
         return true;
 
       RootedObject map(cx, detail::backing_map(self));
-      return JS::MapGet(cx, map, normalized_name, rval);
+      if (!JS::MapGet(cx, map, normalized_name, rval)) {
+        return false;
+      }
+
+      // Return `null` for non-existent headers.
+      if (rval.isUndefined()) {
+        rval.setNull();
+      }
+
+      return true;
     }
 
     static bool ensure_all_header_values_from_handle(JSContext* cx, HandleObject self,
