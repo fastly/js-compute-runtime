@@ -496,6 +496,7 @@ namespace URL {
   bool is_instance(JS::Value);
   JSObject* create(JSContext* cx, SpecString url_str, const JSUrl* base = nullptr);
   JSObject* create(JSContext* cx, HandleValue url_val, HandleObject base_obj);
+  SpecString origin(JSContext* cx, HandleObject self);
 }
 
 static JSString* get_geo_info(JSContext* cx, HandleString address_str);
@@ -5498,6 +5499,9 @@ namespace ClientInfo {
   }
 }
 
+namespace WorkerLocation {
+  static PersistentRooted<JSObject*> url;
+}
 
 namespace FetchEvent {
   namespace Slots { enum {
@@ -5625,31 +5629,17 @@ static PersistentRooted<JSObject*> INSTANCE;
     if (!url) return false;
     JS::SetReservedSlot(request, Request::Slots::URL, JS::StringValue(url));
 
+    // Set the URL for `globalThis.location` to the client request's URL.
+    SpecString spec((uint8_t*)buf.release(), bytes_read, bytes_read);
+    WorkerLocation::url = URL::create(cx, spec);
+    if (!WorkerLocation::url) {
+      return false;
+    }
+
     // Set `fastly.baseURL` to the origin of the client request's URL.
     // Note that this only happens if baseURL hasn't already been set to another value explicitly.
     if (!Fastly::baseURL.get()) {
-      // Extracting the origin part from the URL is a bit cumbersome, unfortunately.
-      // We could create a JSUrl for the full URL and then reset its href to its origin, but that'd
-      // incur a bunch of allocation and be more code than manually finding the third '/' and only
-      // using the part before it. Since we're guaranteed to operate on an absolute URL, we're also
-      // guaranteed to have an origin of the form `protocol://host:port`, with the "//" being the
-      // only valid occurrence of slashes in the part we want.
-      char* chars = buf.get();
-      size_t origin_length = 0;
-      size_t slashes = 0;
-      for (size_t i = 0; i < bytes_read; i++) {
-        if (chars[i] == '/' && ++slashes == 3) {
-          origin_length = i;
-          break;
-        }
-      }
-
-      if (origin_length == 0) {
-        origin_length = bytes_read;
-      }
-
-      SpecString spec((uint8_t*)buf.release(), origin_length, bytes_read);
-      Fastly::baseURL = URL::create(cx, spec);
+      Fastly::baseURL = URL::create(cx, URL::origin(cx, WorkerLocation::url));
       if (!Fastly::baseURL) return false;
     }
 
@@ -6084,14 +6074,18 @@ namespace URL {
   }
 
 #define ACCESSOR_GET(field) \
-  bool field##_get(JSContext* cx, unsigned argc, Value* vp) { \
-    METHOD_HEADER(0) \
+  bool field(JSContext* cx, HandleObject self, MutableHandleValue rval) { \
     const JSUrl* url = (JSUrl*)JS::GetReservedSlot(self, Slots::Url).toPrivate(); \
     const SpecSlice slice = jsurl::field(url); \
     RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)slice.data, slice.len))); \
     if (!str) return false; \
-    args.rval().setString(str); \
+    rval.setString(str); \
     return true; \
+  } \
+  \
+  bool field##_get(JSContext* cx, unsigned argc, Value* vp) { \
+    METHOD_HEADER(0) \
+    return field(cx, self, args.rval()); \
   } \
 
 #define ACCESSOR_SET(field) \
@@ -6122,14 +6116,26 @@ namespace URL {
   ACCESSOR(search)
   ACCESSOR(username)
 
-  bool origin_get(JSContext* cx, unsigned argc, Value* vp) {
-    METHOD_HEADER(0)
+#undef ACCESSOR_GET
+#undef ACCESSOR_SET
+#undef ACCESSOR
+
+  SpecString origin(JSContext* cx, HandleObject self) {
     const JSUrl* url = (JSUrl*)JS::GetReservedSlot(self, Slots::Url).toPrivate();
-    SpecString slice = jsurl::origin(url);
+    return jsurl::origin(url);
+  }
+
+  bool origin(JSContext* cx, HandleObject self, MutableHandleValue rval) {
+    SpecString slice = origin(cx, self);
     RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)slice.data, slice.len)));
     if (!str) return false;
-    args.rval().setString(str);
+    rval.setString(str);
     return true;
+  }
+
+  bool origin_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+    return origin(cx, self, args.rval());
   }
 
   bool searchParams_get(JSContext* cx, unsigned argc, Value* vp) {
@@ -6656,6 +6662,83 @@ namespace URLSearchParams {
   }
 }
 
+/**
+ * The `WorkerLocation` builtin, added to the global object as the data property `location`.
+ * https://html.spec.whatwg.org/multipage/workers.html#worker-locations
+ */
+namespace WorkerLocation {
+  namespace Slots { enum {
+    Count
+  };};
+
+  const unsigned ctor_length = 1;
+
+  bool constructor(JSContext* cx, unsigned argc, Value* vp) {
+    JS_ReportErrorLatin1(cx, "Illegal constructor WorkerLocation");
+    return false;
+  }
+
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
+
+#define ACCESSOR_GET(field) \
+  bool field##_get(JSContext* cx, unsigned argc, Value* vp) { \
+    METHOD_HEADER(0) \
+    REQUEST_HANDLER_ONLY("location." #field) \
+    return URL::field(cx, url, args.rval()); \
+  }
+
+  ACCESSOR_GET(href)
+  ACCESSOR_GET(origin)
+  ACCESSOR_GET(protocol)
+  ACCESSOR_GET(host)
+  ACCESSOR_GET(hostname)
+  ACCESSOR_GET(port)
+  ACCESSOR_GET(pathname)
+  ACCESSOR_GET(search)
+  ACCESSOR_GET(hash)
+
+#undef ACCESSOR_GET
+
+  bool toString(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+    return href_get(cx, argc, vp);
+  }
+
+  const JSFunctionSpec methods[] = {
+    JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
+    JS_FS_END
+  };
+
+  const JSPropertySpec properties[] = {
+    JS_PSG("href", href_get, JSPROP_ENUMERATE),
+    JS_PSG("origin", origin_get, JSPROP_ENUMERATE),
+    JS_PSG("protocol", protocol_get, JSPROP_ENUMERATE),
+    JS_PSG("host", host_get, JSPROP_ENUMERATE),
+    JS_PSG("hostname", hostname_get, JSPROP_ENUMERATE),
+    JS_PSG("port", port_get, JSPROP_ENUMERATE),
+    JS_PSG("pathname", pathname_get, JSPROP_ENUMERATE),
+    JS_PSG("search", search_get, JSPROP_ENUMERATE),
+    JS_PSG("hash", hash_get, JSPROP_ENUMERATE),
+    JS_PS_END
+  };
+
+  CLASS_BOILERPLATE_CUSTOM_INIT(WorkerLocation)
+
+  bool init_class(JSContext* cx, HandleObject global) {
+    if (!init_class_impl(cx, global)) {
+      return false;
+    }
+
+    url.init(cx);
+
+    RootedObject location(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!location) {
+      return false;
+    }
+
+    return JS_DefineProperty(cx, global, "location", location, JSPROP_ENUMERATE);
+  }
+}
 
 namespace GlobalProperties {
   // TODO: throw in all Request methods/getters that rely on host calls once a
@@ -6949,6 +7032,7 @@ bool define_fastly_sys(JSContext* cx, HandleObject global) {
   if (!URL::init_class(cx, global)) return false;
   if (!URLSearchParams::init_class(cx, global)) return false;
   if (!URLSearchParamsIterator::init_class(cx, global)) return false;
+  if (!WorkerLocation::init_class(cx, global)) return false;
 
   pending_requests = new JS::PersistentRootedObjectVector(cx);
   pending_body_reads = new JS::PersistentRootedObjectVector(cx);
