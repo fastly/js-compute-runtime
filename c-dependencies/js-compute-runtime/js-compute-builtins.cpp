@@ -25,6 +25,7 @@
 #include "js/shadow/Object.h"
 #include "js/Stream.h"
 #include "js/experimental/TypedData.h"
+#include "js/StructuredClone.h"
 #include "js/Value.h"
 
 using JS::CallArgs;
@@ -254,7 +255,8 @@ static char* read_from_handle_all(JSContext* cx, HandleType handle,
   // TODO: make use of malloc slack.
   char* buf = static_cast<char*>(JS_malloc(cx, buf_size));
   if (!buf) {
-      return nullptr;
+    JS_ReportOutOfMemory(cx);
+    return nullptr;
   }
 
   // For realloc below.
@@ -281,6 +283,7 @@ static char* read_from_handle_all(JSContext* cx, HandleType handle,
       new_buf = static_cast<char*>(JS_realloc(cx, buf, buf_size, new_size));
       if (!new_buf) {
         JS_free(cx, buf);
+        JS_ReportOutOfMemory(cx);
         return nullptr;
       }
       buf = new_buf;
@@ -291,6 +294,7 @@ static char* read_from_handle_all(JSContext* cx, HandleType handle,
   new_buf = static_cast<char*>(JS_realloc(cx, buf, buf_size, offset + 1));
   if (!buf) {
     JS_free(cx, buf);
+    JS_ReportOutOfMemory(cx);
     return nullptr;
   }
   buf = new_buf;
@@ -6383,9 +6387,13 @@ namespace URLSearchParams {
     Count
   };};
 
+  JSUrlSearchParams* get_params(JSObject* self) {
+    return (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+  }
+
   namespace detail {
     bool append(JSContext* cx, HandleObject self, HandleValue key, HandleValue val, const char* _) {
-      const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+      const auto params = get_params(self);
 
       auto name = encode(cx, key);
       if (!name.data) return false;
@@ -6396,10 +6404,6 @@ namespace URLSearchParams {
       jsurl::params_append(params, name, value);
       return true;
     }
-  }
-
-  JSUrlSearchParams* get_params(JSObject* self) {
-    return (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
   }
 
   SpecSlice serialize(JSContext* cx, HandleObject self) {
@@ -6623,7 +6627,7 @@ namespace URLSearchParams {
     return JS_DefinePropertyById(cx, proto_obj, iteratorId, entries, 0);
   }
 
-  JSObject* create(JSContext* cx, HandleValue params_val) {
+  JSObject* create(JSContext* cx, HandleValue params_val = JS::UndefinedHandleValue) {
     RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
     if (!self) return nullptr;
 
@@ -6862,9 +6866,100 @@ namespace GlobalProperties {
     return true;
   }
 
+  // Magic number used in structured cloning as a tag to identify a URLSearchParam.
+  #define SCTAG_DOM_URLSEARCHPARAMS JS_SCTAG_USER_MIN
+
+  /**
+   * Reads non-JS builtins during structured cloning.
+   *
+   * Currently the only relevant builtin is URLSearchParams, but that'll grow to include
+   * Blob and FormData, too.
+   */
+  JSObject* ReadStructuredClone(JSContext* cx, JSStructuredCloneReader* r,
+                                const JS::CloneDataPolicy& cloneDataPolicy,
+                                uint32_t tag, uint32_t len, void* closure)
+  {
+    MOZ_ASSERT(tag == SCTAG_DOM_URLSEARCHPARAMS);
+
+    RootedObject params_obj(cx, URLSearchParams::create(cx));
+    if (!params_obj) {
+      return nullptr;
+    }
+
+    void* bytes = JS_malloc(cx, len);
+    if (!bytes) {
+      JS_ReportOutOfMemory(cx);
+      return nullptr;
+    }
+
+    if (!JS_ReadBytes(r, bytes, len)) {
+      return nullptr;
+    }
+
+    SpecString init((uint8_t*)bytes, len, len);
+    jsurl::params_init(URLSearchParams::get_params(params_obj), &init);
+
+    return params_obj;
+  }
+
+  /**
+   * Writes non-JS builtins during structured cloning.
+   *
+   * Currently the only relevant builtin is URLSearchParams, but that'll grow to include
+   * Blob and FormData, too.
+   */
+  bool WriteStructuredClone(JSContext* cx, JSStructuredCloneWriter* w, JS::HandleObject obj,
+                            bool* sameProcessScopeRequired, void* closure)
+  {
+    if (!URLSearchParams::is_instance(obj)) {
+      JS_ReportErrorLatin1(cx, "The object could not be cloned");
+      return false;
+    }
+
+    auto slice = URLSearchParams::serialize(cx, obj);
+    if (!JS_WriteUint32Pair(w, SCTAG_DOM_URLSEARCHPARAMS, slice.len) ||
+        !JS_WriteBytes(w, (void*)slice.data, slice.len))
+    {
+      return false;
+    }
+
+    return true;
+  }
+
+  JSStructuredCloneCallbacks sc_callbacks = { ReadStructuredClone, WriteStructuredClone };
+
+  /**
+   * The `structuredClone` global function
+   * https://html.spec.whatwg.org/multipage/structured-data.html#dom-structuredclone
+   */
+  bool structuredClone(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "structuredClone", 1)) {
+      return false;
+    }
+
+    RootedValue transferables(cx);
+    if (args.get(1).isObject()) {
+      RootedObject options(cx, &args[1].toObject());
+      if (!JS_GetProperty(cx, options, "transfer", &transferables)) {
+        return false;
+      }
+    }
+
+    JSAutoStructuredCloneBuffer buf(JS::StructuredCloneScope::SameProcess, &sc_callbacks, nullptr);
+    JS::CloneDataPolicy policy;
+
+    if (!buf.write(cx, args[0], transferables, policy)) {
+      return false;
+    }
+
+    return buf.read(cx, args.rval());
+  }
+
   const JSFunctionSpec methods[] = {
     JS_FN("fetch", fetch, 2, JSPROP_ENUMERATE),
     JS_FN("queueMicrotask", queueMicrotask, 1, JSPROP_ENUMERATE),
+    JS_FN("structuredClone", structuredClone, 1, JSPROP_ENUMERATE),
     JS_FS_END
   };
 
