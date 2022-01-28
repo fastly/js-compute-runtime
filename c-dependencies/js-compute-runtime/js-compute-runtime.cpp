@@ -121,6 +121,7 @@ bool init_js() {
   JS::ContextOptionsRef(cx)
     .setPrivateClassFields(true)
     .setPrivateClassMethods(true)
+    .setClassStaticBlocks(true)
     .setErgnomicBrandChecks(true);
 
   // TODO: check if we should set a different creation zone.
