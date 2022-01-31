@@ -1060,6 +1060,12 @@ namespace RequestOrResponse {
       BodyHandle body_handle = RequestOrResponse::body_handle(self);
       size_t num_written = 0;
       int result = xqd_body_write(body_handle, buf, length, BodyWriteEndBack, &num_written);
+
+      // Ensure that the NoGC is reset, so throwing an error in HANDLE_RESULT succeeds.
+      if (maybeNoGC.isSome()) {
+        maybeNoGC.reset();
+      }
+
       if (!HANDLE_RESULT(cx, result))
         return false;
     }
@@ -1076,16 +1082,27 @@ namespace RequestOrResponse {
     return true;
   }
 
+  /**
+   * Returns the RequestOrResponse's Headers if it has been reified, nullptr if not.
+   */
+  JSObject* maybe_headers(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
+    return JS::GetReservedSlot(obj, Slots::Headers).toObjectOrNull();
+  }
+
+  /**
+   * Returns the RequestOrResponse's Headers, reifying it if necessary.
+   */
   template<auto mode>
-  JSObject* headers(JSContext*cx, HandleObject obj) {
-    Value val = JS::GetReservedSlot(obj, Slots::Headers);
-    if (val.isNullOrUndefined()) {
-      JSObject* headers = Headers::create(cx, mode, obj);
+  JSObject* headers(JSContext* cx, HandleObject obj) {
+    JSObject* headers = maybe_headers(obj);
+    if (!headers) {
+      headers = Headers::create(cx, mode, obj);
       if (!headers) return nullptr;
-      val = JS::ObjectValue(*headers);
-      JS_SetReservedSlot(obj, Slots::Headers, val);
+      JS_SetReservedSlot(obj, Slots::Headers, ObjectValue(*headers));
     }
-    return &val.toObject();
+
+    return headers;
   }
 
   bool append_body(JSContext* cx, HandleObject self, HandleObject source) {
@@ -3308,6 +3325,27 @@ namespace CacheOverride {
   JSObject* create(JSContext* cx) {
     return JS_NewObjectWithGivenProto(cx, &class_, proto_obj);
   }
+
+  /**
+   * Clone a CacheOverride instance by copying all its reserved slots.
+   *
+   * This works because CacheOverride slots only contain primitive values.
+   */
+  JSObject* clone(JSContext* cx, HandleObject self) {
+    MOZ_ASSERT(is_instance(self));
+    RootedObject result(cx, create(cx));
+    if (!result) {
+      return nullptr;
+    }
+
+    for (size_t i = 0; i < Slots::Count; i++) {
+      Value val = JS::GetReservedSlot(self, i);
+      MOZ_ASSERT(!val.isObject());
+      JS::SetReservedSlot(result, i, val);
+    }
+
+    return result;
+  }
 }
 
 
@@ -3343,6 +3381,7 @@ namespace Request {
     URL = RequestOrResponse::Slots::URL,
     Backend = RequestOrResponse::Slots::Count,
     Method,
+    CacheOverride,
     PendingRequest,
     ResponsePromise,
     IsDownstream,
@@ -3382,21 +3421,39 @@ namespace Request {
   }
 
   bool set_cache_override(JSContext* cx, HandleObject self, HandleValue cache_override_val) {
+    MOZ_ASSERT(is_instance(self));
     if (!CacheOverride::is_instance(cache_override_val)) {
       JS_ReportErrorUTF8(cx, "Value passed in as cacheOverride must be an "
                              "instance of CacheOverride");
       return false;
     }
 
-    RootedObject cache_override(cx, &cache_override_val.toObject());
-    RootedValue val(cx);
+    RootedObject input(cx, &cache_override_val.toObject());
+    JSObject* override = CacheOverride::clone(cx, input);
+    if (!override) {
+      return false;
+    }
 
-    uint32_t tag = CacheOverride::abi_tag(cache_override);
-    val = CacheOverride::ttl(cache_override);
+    JS::SetReservedSlot(self, Slots::CacheOverride, ObjectValue(*override));
+    return true;
+  }
+
+  /**
+   * Apply the CacheOverride to a host-side request handle.
+   */
+  bool apply_cache_override(JSContext* cx, HandleObject self) {
+    MOZ_ASSERT(is_instance(self));
+    RootedObject override(cx, JS::GetReservedSlot(self, Slots::CacheOverride).toObjectOrNull());
+    if (!override) {
+      return true;
+    }
+
+    uint32_t tag = CacheOverride::abi_tag(override);
+    RootedValue val(cx, CacheOverride::ttl(override));
     uint32_t ttl = val.isUndefined() ? 0 : val.toInt32();
-    val = CacheOverride::swr(cache_override);
+    val = CacheOverride::swr(override);
     uint32_t swr = val.isUndefined() ? 0 : val.toInt32();
-    val = CacheOverride::surrogate_key(cache_override);
+    val = CacheOverride::surrogate_key(override);
     UniqueChars sk_chars;
     size_t sk_len = 0;
     if (!val.isUndefined()) {
@@ -3528,12 +3585,13 @@ namespace Request {
     RootedObject request(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
     if (!request) return nullptr;
 
-    JS::SetReservedSlot(request, Slots::Request, JS::Int32Value(request_handle.handle));
+    JS::SetReservedSlot(request, Slots::Request, JS::Int32Value(request_handle.handle));JS::SetReservedSlot(request, Slots::Headers, JS::NullValue());
     JS::SetReservedSlot(request, Slots::Body, JS::Int32Value(body_handle.handle));
     JS::SetReservedSlot(request, Slots::BodyStream, JS::NullValue());
     JS::SetReservedSlot(request, Slots::HasBody, JS::FalseValue());
     JS::SetReservedSlot(request, Slots::BodyUsed, JS::FalseValue());
     JS::SetReservedSlot(request, Slots::Method, JS::StringValue(GET_atom));
+    JS::SetReservedSlot(request, Slots::CacheOverride, JS::NullValue());
     JS::SetReservedSlot(request, Slots::IsDownstream, JS::BooleanValue(is_downstream));
 
     return request;
@@ -3614,8 +3672,9 @@ namespace Request {
         // cache mode: `request`’s cache mode.
         // TODO: implement support for cache mode-based headers setting.
 
-        // Note: headers initialization is postponed, see step 32 below.
         // header list: A copy of `request`’s header list.
+        // Note: copying the headers is postponed, see step 32 below.
+        input_headers = RequestOrResponse::maybe_headers(input_request);
 
         // The following properties aren't applicable:
         // unsafe-request flag: Set.
@@ -3920,11 +3979,19 @@ namespace Request {
         return nullptr;
       }
       JS::SetReservedSlot(request, Slots::Backend, JS::StringValue(backend));
+    } else if (input_request) {
+      JS::SetReservedSlot(request, Slots::Backend,
+                          JS::GetReservedSlot(input_request, Slots::Backend));
     }
 
     // Apply the C@E-proprietary `cacheOverride` property.
-    if (!cache_override.isUndefined() && !set_cache_override(cx, request, cache_override)) {
+    if (!cache_override.isUndefined()) {
+      if (!set_cache_override(cx, request, cache_override)) {
         return nullptr;
+      }
+    } else if (input_request) {
+      JS::SetReservedSlot(request, Slots::CacheOverride,
+                          JS::GetReservedSlot(input_request, Slots::CacheOverride));
     }
 
     return request;
@@ -4221,7 +4288,7 @@ namespace Response {
     RootedObject response(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
     if (!response) return nullptr;
 
-    JS::SetReservedSlot(response, Slots::Response, JS::Int32Value(response_handle.handle));
+    JS::SetReservedSlot(response, Slots::Response, JS::Int32Value(response_handle.handle));JS::SetReservedSlot(response, Slots::Headers, JS::NullValue());
     JS::SetReservedSlot(response, Slots::Body, JS::Int32Value(body_handle.handle));
     JS::SetReservedSlot(response, Slots::BodyStream, JS::NullValue());
     JS::SetReservedSlot(response, Slots::HasBody, JS::FalseValue());
@@ -5067,10 +5134,10 @@ namespace Headers {
         break;
 
       entry = &entry_val.toObject();
-      JS_GetElement(cx, entry, 1, &name_val);
-      JS_GetElement(cx, entry, 0, &value_val);
+      JS_GetElement(cx, entry, 0, &name_val);
+      JS_GetElement(cx, entry, 1, &value_val);
 
-      if (!JS::MapSet(cx, headers_map, name_val, value_val)) {
+      if (!detail::append_header_value(cx, headers, name_val, value_val, "Headers constructor")) {
         return nullptr;
       }
     }
@@ -5706,6 +5773,7 @@ static PersistentRooted<JSObject*> INSTANCE;
       return false;
     }
 
+    int result;
     {
       JS::AutoCheckCannotGC nogc;
       JSObject* array = &val.toObject();
@@ -5713,11 +5781,12 @@ static PersistentRooted<JSObject*> INSTANCE;
       uint8_t* bytes = JS_GetUint8ArrayData(array, &is_shared, nogc);
       size_t length = JS_GetTypedArrayByteLength(array);
       size_t nwritten;
-      if (!HANDLE_RESULT(cx, xqd_body_write(body_handle, (char*)bytes, length,
-                                            BodyWriteEndBack, &nwritten)))
-      {
-        return false;
-      }
+      result = xqd_body_write(body_handle, (char*)bytes, length, BodyWriteEndBack, &nwritten);
+    }
+
+    // Needs to be outside the nogc block in case we need to create an exception.
+    if (!HANDLE_RESULT(cx, result)) {
+      return false;
     }
 
     // Read the next chunk.
@@ -6794,8 +6863,10 @@ namespace GlobalProperties {
     if (!response_promise)
       return ReturnPromiseRejectedWithPendingError(cx, args);
 
-    // TODO: ensure that we properly handle body handles forwarded from other Request/Response
-    // objects.
+    if (!Request::apply_cache_override(cx, request)) {
+      return false;
+    }
+
     int result = xqd_req_send_async(Request::request_handle(request),
                                     RequestOrResponse::body_handle(request),
                                     backend_chars.get(), backend_len, &request_handle);
