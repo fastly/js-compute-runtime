@@ -91,8 +91,8 @@ bool enqueue_internal_method(JSContext* cx, HandleObject receiver,
 }
 
 // Ensure that all the things we want to use the hostcall buffer for actually fit into the buffer.
-#define HOSTCALL_BUFFER_LEN DICTIONARY_ENTRY_MAX_LEN
-static_assert(HEADER_MAX_LEN < HOSTCALL_BUFFER_LEN);
+#define HOSTCALL_BUFFER_LEN HEADER_MAX_LEN
+static_assert(DICTIONARY_ENTRY_MAX_LEN < HOSTCALL_BUFFER_LEN);
 static_assert(METHOD_MAX_LEN < HOSTCALL_BUFFER_LEN);
 static_assert(URI_MAX_LEN < HOSTCALL_BUFFER_LEN);
 
