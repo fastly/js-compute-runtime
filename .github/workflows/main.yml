@@ -15,6 +15,11 @@ env:
 jobs:
   build_engine:
     name: Build Engine
+    strategy:
+      matrix:
+        include:
+          - profile: debug
+          - profile: release
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -26,14 +31,14 @@ jobs:
       id: sm-cache
       with:
         path: |
-          c-dependencies/spidermonkey/release
-        key: cache-${{ hashFiles('c-dependencies/spidermonkey/build-engine.sh') }}-${{ hashFiles('c-dependencies/spidermonkey/gecko-revision') }}-${{ hashFiles('c-dependencies/spidermonkey/object-files.list') }}
+          c-dependencies/spidermonkey/${{ matrix.profile }}
+        key: cache-${{ hashFiles('c-dependencies/spidermonkey/build-engine.sh') }}-${{ hashFiles('c-dependencies/spidermonkey/gecko-revision') }}-${{ hashFiles('c-dependencies/spidermonkey/object-files.list') }}-${{ matrix.profile }}
 
     - name: "Build SpiderMonkey"
       if: steps.sm-cache.outputs.cache-hit != 'true'
       run: |
         cd c-dependencies/spidermonkey/
-        bash ./build-engine.sh
+        bash ./build-engine.sh ${{ matrix.profile }}
 
     - name: "Install wasi-sdk (linux)"
       run: |
@@ -53,11 +58,21 @@ jobs:
     - name: "Install Binaryen (linux)"
       run: |
         set -x
-        export BINARYEN_VERSION=100
+        export BINARYEN_VERSION=105
         curl -sS -L "https://github.com/WebAssembly/binaryen/releases/download/version_${BINARYEN_VERSION}/binaryen-version_${BINARYEN_VERSION}-x86_64-linux.tar.gz" | tar xzf - &&
         echo "$PWD/binaryen-version_${BINARYEN_VERSION}/bin" >> $GITHUB_PATH
 
-    - name: "Build JS runtime"
+    - name: "Build JS runtime (debug)"
+      run: |
+        set -x
+        mkdir dist
+        cd dist
+        DEBUG=1 CXX_OPT="-g" make -f ../c-dependencies/js-compute-runtime/Makefile
+        rm *.{d,o}
+        cd ..
+      if: matrix.profile == 'debug'
+
+    - name: "Build JS runtime (release)"
       run: |
         set -x
         mkdir dist
@@ -65,10 +80,11 @@ jobs:
         make -f ../c-dependencies/js-compute-runtime/Makefile
         rm *.{d,o}
         cd ..
+      if: matrix.profile == 'debug'
 
     - uses: actions/upload-artifact@v1
       with:
-        name: engine
+        name: engine-${{ matrix.profile }}
         path: dist
 
   ensure_cargo_installs:
@@ -96,6 +112,11 @@ jobs:
 
   run_wpt:
     name: Run Web Platform Tests
+    strategy:
+      matrix:
+        include:
+          - profile: debug
+          - profile: release
     needs: [build_engine, ensure_cargo_installs]
     runs-on: ubuntu-latest
     steps:
@@ -106,7 +127,7 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v1
       with:
-        name: engine
+        name: engine-${{ matrix.profile }}
 
     - name: Restore Wizer from cache
       uses: actions/cache@v2.1.5
@@ -171,7 +192,7 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v1
       with:
-        name: engine
+        name: engine-release
 
     # Build `js-compute-runtime`
     - run: PREBUILT_ENGINE=engine/js-compute-runtime.wasm cargo build --release
