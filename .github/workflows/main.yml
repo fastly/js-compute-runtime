@@ -17,9 +17,7 @@ jobs:
     name: Build Engine
     strategy:
       matrix:
-        include:
-          - profile: debug
-          - profile: release
+        profile: [debug, release]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -70,7 +68,7 @@ jobs:
         DEBUG=1 CXX_OPT="-g" make -f ../c-dependencies/js-compute-runtime/Makefile
         rm *.{d,o}
         cd ..
-      if: matrix.profile == "debug"
+      if: matrix.profile == 'debug'
 
     - name: "Build JS runtime (release)"
       run: |
@@ -80,7 +78,7 @@ jobs:
         make -f ../c-dependencies/js-compute-runtime/Makefile
         rm *.{d,o}
         cd ..
-      if: matrix.profile == "release"
+      if: matrix.profile == 'release'
 
     - uses: actions/upload-artifact@v1
       with:
