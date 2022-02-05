@@ -48,16 +48,16 @@
     "status": 1
   },
   "Request should get its content-type from the init request": {
-    "status": 1
+    "status": 0
   },
   "Request should not get its content-type from the init request if init headers are provided": {
     "status": 0
   },
   "Request should get its content-type from the body if none is provided": {
-    "status": 1
+    "status": 0
   },
   "Request should get its content-type from init headers if one is provided": {
-    "status": 1
+    "status": 0
   },
   "Request with cache mode: only-if-cached and fetch mode: same-origin": {
     "status": 0

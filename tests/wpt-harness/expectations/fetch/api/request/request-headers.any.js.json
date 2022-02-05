@@ -147,19 +147,19 @@
     "status": 1
   },
   "Check that no-cors request constructor is filtering headers provided as part of request parameter": {
-    "status": 0
+    "status": 1
   },
   "Request should get its content-type from the init request": {
-    "status": 1
+    "status": 0
   },
   "Request should not get its content-type from the init request if init headers are provided": {
     "status": 0
   },
   "Request should get its content-type from the body if none is provided": {
-    "status": 1
+    "status": 0
   },
   "Request should get its content-type from init headers if one is provided": {
-    "status": 1
+    "status": 0
   },
   "Testing request header creations with various objects": {
     "status": 0
