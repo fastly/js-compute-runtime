@@ -70,7 +70,7 @@ jobs:
         DEBUG=1 CXX_OPT="-g" make -f ../c-dependencies/js-compute-runtime/Makefile
         rm *.{d,o}
         cd ..
-      if: matrix.profile == 'debug'
+      if: matrix.profile == "debug"
 
     - name: "Build JS runtime (release)"
       run: |
@@ -80,7 +80,7 @@ jobs:
         make -f ../c-dependencies/js-compute-runtime/Makefile
         rm *.{d,o}
         cd ..
-      if: matrix.profile == 'debug'
+      if: matrix.profile == "release"
 
     - uses: actions/upload-artifact@v1
       with:
@@ -226,7 +226,7 @@ jobs:
   # github releases and/or tags for pushes.
   publish:
     name: Publish
-    needs: [build]
+    needs: [build, run_wpt]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
