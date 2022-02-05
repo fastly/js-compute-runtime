@@ -141,7 +141,7 @@ jobs:
 
     - name: Build WPT runtime
       run: |
-        cd engine
+        cd engine-${{ matrix.profile }}
         bash ../tests/wpt-harness/build-wpt-runtime.sh
 
     - name: Prepare WPT hosts
@@ -151,7 +151,7 @@ jobs:
 
     - name: Run tests
       run: |
-        cd engine
+        cd engine-${{ matrix.profile }}
         node ../tests/wpt-harness/run-wpt.mjs
 
   # Perform release builds of `js-compute-runtime`. Builds on
@@ -193,7 +193,7 @@ jobs:
         name: engine-release
 
     # Build `js-compute-runtime`
-    - run: PREBUILT_ENGINE=engine/js-compute-runtime.wasm cargo build --release
+    - run: PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm cargo build --release
 
     # Test what we just built.
     # (Disabled for now since we don't actually have any tests for this prototype :/)
