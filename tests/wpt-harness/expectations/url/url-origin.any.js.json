@@ -782,10 +782,10 @@
   "Origin parsing: <http://example.com/U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿?U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿> against <about:blank>": {
     "status": 0
   },
-  "Origin parsing: <http://\u001f!\"$&'()*+,-.;=_`{}~/> against <about:blank>": {
+  "Origin parsing: <http://!\"$&'()*+,-.;=_`{}~/> against <about:blank>": {
     "status": 0
   },
-  "Origin parsing: <sc://\u001f!\"$&'()*+,-.;=_`{}~/> against <about:blank>": {
+  "Origin parsing: <sc://\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\u000b\f\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f!\"$%&'()*+,-.;=_`{}~/> against <about:blank>": {
     "status": 0
   },
   "Origin parsing: <ftp://%e2%98%83> against <about:blank>": {

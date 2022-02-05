@@ -336,22 +336,22 @@
     "status": 0
   },
   "Setting host with leading U+001F (https:)": {
-    "status": 0
+    "status": 1
   },
   "Setting hostname with leading U+001F (https:)": {
-    "status": 0
+    "status": 1
   },
   "Setting host with middle U+001F (https:)": {
-    "status": 0
+    "status": 1
   },
   "Setting hostname with middle U+001F (https:)": {
-    "status": 0
+    "status": 1
   },
   "Setting host with trailing U+001F (https:)": {
-    "status": 0
+    "status": 1
   },
   "Setting hostname with trailing U+001F (https:)": {
-    "status": 0
+    "status": 1
   },
   "Setting port with leading U+001F (https:)": {
     "status": 1

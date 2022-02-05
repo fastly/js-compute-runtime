@@ -82,5 +82,8 @@
   },
   "controller.close() should clear the list of pending read requests": {
     "status": 0
+  },
+  "Second reader can read chunks after first reader was released with pending read requests": {
+    "status": 1
   }
 }

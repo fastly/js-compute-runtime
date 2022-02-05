@@ -29,8 +29,8 @@
   "ReadableStream (empty) reader: getReader() again on the stream should fail": {
     "status": 0
   },
-  "ReadableStream (empty) reader: releasing the lock with pending read requests should throw but the read requests should stay pending": {
-    "status": 0
+  "ReadableStream (empty) reader: releasing the lock should reject all pending read requests": {
+    "status": 1
   },
   "ReadableStream (empty) reader: releasing the lock should cause further read() calls to reject with a TypeError": {
     "status": 0
