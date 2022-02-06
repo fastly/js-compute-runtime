@@ -65,7 +65,7 @@ jobs:
         set -x
         mkdir dist
         cd dist
-        DEBUG=1 CXX_OPT="-g" make -f ../c-dependencies/js-compute-runtime/Makefile
+        DEBUG=1 CXX_OPT="-O1" make -f ../c-dependencies/js-compute-runtime/Makefile
         rm *.{d,o}
         cd ..
       if: matrix.profile == 'debug'
