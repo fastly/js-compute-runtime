@@ -222,28 +222,18 @@ function padStart(value, length) {
 async function ensureWptServer(config, logLevel) {
   if (config.external) {
     let wptServer = { ...config };
-    console.info(`Using external WPT server`);
+    if (logLevel > LogLevel.Quiet) {
+      console.info(`Using external WPT server`);
+    }
     return wptServer;
   } else {
-    let wptServer = await startWptServer(config.path, logLevel);
-    console.info(`WPT server running`);
-    wptServer.process.stderr.on("data", data => {
-      if (logLevel >= LogLevel.Verbose) {
-        console.log(`wptServer stderr: ${data}`);
-      }
-      });
-    wptServer.process.stdout.on("data", data => {
-      if (logLevel >= LogLevel.VeryVerbose) {
-        console.log(`wptServer stdout: ${data}`);
-      }
-    });
-    return wptServer;
+    return await startWptServer(config.path, logLevel);
   }
 }
 
 async function startWptServer(path, logLevel) {
   if (logLevel > LogLevel.Quiet) {
-    console.info(`Starting WPT server ${path} ...`);
+    console.info(`Starting WPT server ...`);
   }
   let server = execFile(path, ["--no-h2", "serve"]);
   server.on("error", event => {
@@ -251,19 +241,24 @@ async function startWptServer(path, logLevel) {
     process.exit(1);
   });
 
+  if (logLevel >= LogLevel.VeryVerbose) {
+    server.stderr.on("data", data => {
+      console.log(`WPT server stderr: ${stripTrailingNewline(data)}`);
+    });
+    server.stdout.on("data", data => {
+      console.log(`WPT server stdout: ${stripTrailingNewline(data)}`);
+    });
+  }
+
 
   // Wait until the server has fully initialized.
   // `wpt.py serve` doesn't explicitly signal when it's done initializing, so we have to
   // read the tea leaves a bit, by waiting for a message that is among the very last to be
   // printed during initialization, well after the main http server has started.
   for await(let [chunk] of on(server.stdout, "data")) {
-    if (chunk[chunk.length - 1] == '\n') chunk = chunk.substr(0, chunk.length - 1);
-    if (logLevel >= LogLevel.VeryVerbose) {
-      console.debug(`WPT stdout: ${chunk}`);
-    }
     if (/wss on port \d+\] INFO - Listen on/.test(chunk)) {
       if (logLevel > LogLevel.Quiet) {
-        console.info(`WPT server up and running`);
+        console.info(`Started internal WPT server`);
       }
       return { process: server, ...config };
     }
@@ -273,42 +268,52 @@ async function startWptServer(path, logLevel) {
 async function ensureViceroy(config, logLevel) {
   if (config.external) {
     let viceroy = { ...config };
-    console.info(`Using external Viceroy host ${config.host}`);
+    if (logLevel > LogLevel.Quiet) {
+      console.info(`Using external Viceroy host ${config.host}`);
+    }
     return viceroy;
   } else {
     let viceroy = await startViceroy(config.runtime, config.configFile, logLevel);
-    console.info(`Viceroy now serving on host ${viceroy.host}`);
-    viceroy.process.stderr.on("data", data => {
-      if (logLevel >= LogLevel.Verbose) {
-        console.log(`viceroy stderr: ${data}`);
-      }
-      });
-    viceroy.process.stdout.on("data", data => {
-      if (logLevel >= LogLevel.VeryVerbose) {
-        console.log(`viceroy stdout: ${data}`);
-      }
-    });
+    if (logLevel > LogLevel.Quiet) {
+      console.info(`Started internal Viceroy host ${viceroy.host}`);
+    }
     return viceroy;
   }
 }
 
 async function startViceroy(runtime, config, logLevel) {
+  if (logLevel > LogLevel.Quiet) {
+    console.info(`Starting Viceroy server ...`);
+  }
   let viceroy = execFile("viceroy", [runtime, "-C", config]);
   viceroy.on("error", event => {
     console.error(`error starting Viceroy: ${event}`);
     process.exit(1);
   });
 
+  if (logLevel >= LogLevel.VeryVerbose) {
+    viceroy.stderr.on("data", data => {
+      console.log(`viceroy stderr: ${stripTrailingNewline(data)}`);
+    });
+    viceroy.stdout.on("data", data => {
+      console.log(`viceroy stdout: ${stripTrailingNewline(data)}`);
+    });
+  }
+
   // Wait until Viceroy has fully initialized and extract host from output.
   for await(const [chunk] of on(viceroy.stdout, "data")) {
-    if (logLevel >= LogLevel.VeryVerbose) {
-      console.debug(`Viceroy stdout: ${chunk}`);
-    }
     let result = chunk.match(/INFO Listening on (.+)/);
     if (result) {
       return { process: viceroy, host: result[1], ...config };
     }
   }
+}
+
+function stripTrailingNewline(str) {
+  if (str[str.length - 1] == '\n') {
+    return str.substr(0, str.length - 1);
+  }
+  return str;
 }
 
 function getExpectedResults(testPath) {
