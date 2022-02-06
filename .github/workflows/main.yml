@@ -152,7 +152,7 @@ jobs:
     - name: Run tests
       run: |
         cd engine-${{ matrix.profile }}
-        node ../tests/wpt-harness/run-wpt.mjs
+        node ../tests/wpt-harness/run-wpt.mjs -vv
 
   # Perform release builds of `js-compute-runtime`. Builds on
   # Windows/Mac/Linux, and artifacts are uploaded after the build is finished.
