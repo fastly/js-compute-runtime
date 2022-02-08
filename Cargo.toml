@@ -1,6 +1,6 @@
 [package]
 name = "js-compute-runtime"
-version = "0.2.2"
+version = "0.2.4"
 authors = ["Fastly <oss@fastly.com>"]
 edition = "2018"
 

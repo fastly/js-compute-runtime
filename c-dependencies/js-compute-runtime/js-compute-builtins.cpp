@@ -1275,7 +1275,7 @@ namespace RequestOrResponse {
     return true;
   }
 
-  bool body_reader_then_handler(JSContext* cx, HandleObject response, HandleValue extra,
+  bool body_reader_then_handler(JSContext* cx, HandleObject body_owner, HandleValue extra,
                                 CallArgs args)
   {
     RootedObject then_handler(cx, &args.callee());
@@ -1283,7 +1283,7 @@ namespace RequestOrResponse {
     // So we get that first, then the reader.
     RootedObject catch_handler(cx, &extra.toObject());
     RootedObject reader(cx, &js::GetFunctionNativeReserved(catch_handler, 1).toObject());
-    BodyHandle body_handle = RequestOrResponse::body_handle(response);
+    BodyHandle body_handle = RequestOrResponse::body_handle(body_owner);
 
     // We're guaranteed to work with a native ReadableStreamDefaultReader here, which in turn is
     // guaranteed to vend {done: bool, value: any} objects to read promise then callbacks.
@@ -1293,7 +1293,12 @@ namespace RequestOrResponse {
       return false;
 
     if (done_val.toBoolean()) {
-      FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+      // The only response we ever send is the one passed to `FetchEvent#respondWith` to send to
+      // the client. As such, we can be certain that if we have a response here, we can advance the
+      // FetchState to `responseDone`.
+      if (Response::is_instance(body_owner)) {
+        FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+      }
       return HANDLE_RESULT(cx, xqd_body_close(body_handle));
     }
 
@@ -1333,52 +1338,62 @@ namespace RequestOrResponse {
     return JS::AddPromiseReactions(cx, promise, then_handler, catch_handler);
   }
 
-  bool body_reader_catch_handler(JSContext* cx, HandleObject response, HandleValue reader_val,
+  bool body_reader_catch_handler(JSContext* cx, HandleObject body_owner, HandleValue reader_val,
                                  CallArgs args)
   {
     RootedObject reader(cx, &reader_val.toObject());
 
     // TODO: check if this should create a rejected promise instead, so an in-content handler
     // for unhandled rejections could deal with it.
-    // The body stream errored during the streaming response.
+    // The body stream errored during the streaming send.
     // Not much we can do, but at least close the stream, and warn.
-    fprintf(stderr, "Warning: body ReadableStream closed during streaming response. Exception: ");
+    fprintf(stderr, "Warning: body ReadableStream closed during body streaming. Exception: ");
     dump_value(cx, args.get(0), stderr);
 
-    FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
-    return HANDLE_RESULT(cx, xqd_body_close(RequestOrResponse::body_handle(response)));
+    // The only response we ever send is the one passed to `FetchEvent#respondWith` to send to
+    // the client. As such, we can be certain that if we have a response here, we can advance the
+    // FetchState to `responseDone`.
+    // (Note that even though we encountered an error, `responseDone` is the right state:
+    // `responsedWithError` is for when sending a response at all failed.)
+    if (Response::is_instance(body_owner)) {
+      FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+    }
+    return HANDLE_RESULT(cx, xqd_body_close(RequestOrResponse::body_handle(body_owner)));
   }
 
-  bool respond_maybe_streaming(JSContext* cx, HandleObject response_obj, bool* streaming) {
-    RootedObject stream(cx, RequestOrResponse::body_stream(response_obj));
-    MOZ_ASSERT(stream);
+  /**
+   * Ensures that the given |body_owner|'s body is properly streamed, if it requires
+   * streaming.
+   *
+   * If streaming is required, starts the process of reading from the ReadableStream representing
+   * the body and sets the |requires_streaming| bool to `true`.
+   */
+  bool maybe_stream_body(JSContext* cx, HandleObject body_owner, bool* requires_streaming) {
+    RootedObject stream(cx, RequestOrResponse::body_stream(body_owner));
+    if (!stream) {
+      return true;
+    }
 
-    bool locked_or_disturbed;
-    if (!JS::ReadableStreamIsLocked(cx, stream, &locked_or_disturbed))
-      return false;
-    if (!locked_or_disturbed && !JS::ReadableStreamIsDisturbed(cx, stream, &locked_or_disturbed))
-      return false;
-    if (locked_or_disturbed) {
+    if (RequestOrResponse::body_unusable(cx, stream)) {
       // TODO: Improve this message; `disturbed` is probably too spec-internal a term.
-      JS_ReportErrorUTF8(cx, "respondWith called with a Response containing "
-                             "a body stream that's locked or disturbed");
+      JS_ReportErrorUTF8(cx, "Can't send a body stream that's locked or disturbed");
       return false;
     }
 
     // If the body stream is backed by a C@E body handle, we can directly pipe that handle
-    // into the response body we're about to send.
+    // into the body we're about to send.
     if (NativeStreamSource::stream_is_body(cx, stream)) {
-      // First, move the source's body handle to the target.
+      // First, move the source's body handle to the target and lock the stream.
       RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
       RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
-      if (!RequestOrResponse::move_body_handle(cx, source_owner, response_obj))
+      if (!RequestOrResponse::move_body_handle(cx, source_owner, body_owner)) {
         return false;
+      }
 
-      // Then, send the response without streaming. We know that content won't append to this body
-      // handle, because we don't expose any means to do so, so it's ok for it to be closed
-      // immediately.
-      *streaming = false;
-      return start_response(cx, response_obj, false);
+      // Then, send the request/response without streaming. We know that content won't append to
+      // this body handle, because we don't expose any means to do so, so it's ok for it to be
+      // closed immediately.
+      return true;
     }
 
     RootedObject reader(cx, JS::ReadableStreamGetReader(cx, stream,
@@ -1393,8 +1408,7 @@ namespace RequestOrResponse {
     // already have fully been written to the body handle.
     // In that case, we can do a blocking send instead.
     if (is_closed) {
-      *streaming = false;
-      return start_response(cx, response_obj, false);
+      return true;
     }
 
     // Create handlers for both `then` and `catch`.
@@ -1406,12 +1420,12 @@ namespace RequestOrResponse {
     // in this way.
     RootedObject catch_handler(cx);
     RootedValue extra(cx, ObjectValue(*reader));
-    catch_handler = create_internal_method<body_reader_catch_handler>(cx, response_obj, extra);
+    catch_handler = create_internal_method<body_reader_catch_handler>(cx, body_owner, extra);
     if (!catch_handler) return false;
 
     RootedObject then_handler(cx);
     extra.setObject(*catch_handler);
-    then_handler = create_internal_method<body_reader_then_handler>(cx, response_obj, extra);
+    then_handler = create_internal_method<body_reader_then_handler>(cx, body_owner, extra);
     if (!then_handler) return false;
 
     RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
@@ -1419,10 +1433,7 @@ namespace RequestOrResponse {
     if (!JS::AddPromiseReactions(cx, promise, then_handler, catch_handler))
       return false;
 
-    if (!start_response(cx, response_obj, true))
-      return false;
-
-    *streaming = true;
+    *requires_streaming = true;
     return true;
   }
 
@@ -1821,6 +1832,7 @@ namespace ReadableStream_additions {
   };
 
   static PersistentRooted<Value> original_pipeTo;
+  static PersistentRooted<Value> overridden_pipeTo;
 
   bool pipeTo(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -1874,7 +1886,7 @@ namespace ReadableStream_additions {
     newArgs[1].set(options);
     RootedValue thisv(cx, ObjectValue(*source_readable));
     RootedValue rval(cx);
-    if (!JS::Call(cx, thisv, original_pipeTo, newArgs, &rval)) {
+    if (!JS::Call(cx, thisv, overridden_pipeTo, newArgs, &rval)) {
       return false;
     }
 
@@ -1945,13 +1957,18 @@ namespace ReadableStream_additions {
     MOZ_ASSERT(proto_obj);
 
     original_pipeTo.init(cx);
+    overridden_pipeTo.init(cx);
     if (!JS_GetProperty(cx, proto_obj, "pipeTo", &original_pipeTo))
       return false;
     MOZ_ASSERT(JS::IsCallable(&original_pipeTo.toObject()));
 
-    if (!JS_DefineFunction(cx, proto_obj, "pipeTo", pipeTo, 1, JSPROP_ENUMERATE)) {
+    JSFunction* pipeTo_fun = JS_DefineFunction(cx, proto_obj, "pipeTo", pipeTo, 1,
+                                               JSPROP_ENUMERATE);
+    if (!pipeTo_fun) {
       return false;
     }
+
+    overridden_pipeTo.setObject(*JS_GetFunctionObject(pipeTo_fun));
 
     if (!JS_DefineFunction(cx, proto_obj, "pipeThrough", pipeThrough, 1, JSPROP_ENUMERATE)) {
       return false;
@@ -4114,6 +4131,8 @@ namespace Request {
         if (!inputBody) {
           return nullptr;
         }
+
+        TransformStream::set_readable_used_as_body(cx, inputBody, request);
         JS::SetReservedSlot(request, Slots::BodyStream, JS::ObjectValue(*inputBody));
       }
 
@@ -5884,10 +5903,6 @@ static PersistentRooted<JSObject*> INSTANCE;
     return HANDLE_RESULT(cx, xqd_resp_send_downstream(response, body, streaming));
   }
 
-  bool respond_blocking(JSContext* cx, HandleObject response_obj) {
-    return start_response(cx, response_obj, false);
-  }
-
   // Steps in this function refer to the spec at
   // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
   bool response_promise_then_handler(JSContext* cx, HandleObject event, HandleValue extra,
@@ -5921,16 +5936,12 @@ static PersistentRooted<JSObject*> INSTANCE;
     }
 
     bool streaming = false;
-    if (RequestOrResponse::body_stream(response_obj)) {
-      if (!respond_maybe_streaming(cx, response_obj, &streaming))
-        return false;
-    } else {
-      if (!respond_blocking(cx, response_obj))
-        return false;
+    if (!RequestOrResponse::maybe_stream_body(cx, response_obj, &streaming)) {
+      return false;
     }
 
     set_state(event, streaming ? State::responseStreaming : State::responseDone);
-    return true;
+    return start_response(cx, response_obj, streaming);
   }
 
   // Steps in this function refer to the spec at
@@ -6867,9 +6878,22 @@ namespace GlobalProperties {
       return false;
     }
 
-    int result = xqd_req_send_async(Request::request_handle(request),
-                                    RequestOrResponse::body_handle(request),
-                                    backend_chars.get(), backend_len, &request_handle);
+    bool streaming = false;
+    if (!RequestOrResponse::maybe_stream_body(cx, request, &streaming)) {
+      return false;
+    }
+
+    int result;
+    if (streaming) {
+      result = xqd_req_send_async_streaming(Request::request_handle(request),
+                                            RequestOrResponse::body_handle(request),
+                                            backend_chars.get(), backend_len, &request_handle);
+    } else {
+      result = xqd_req_send_async(Request::request_handle(request),
+                                  RequestOrResponse::body_handle(request),
+                                  backend_chars.get(), backend_len, &request_handle);
+    }
+
     if (!HANDLE_RESULT(cx, result))
       return ReturnPromiseRejectedWithPendingError(cx, args);
 
