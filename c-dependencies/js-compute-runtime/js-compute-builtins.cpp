@@ -1275,6 +1275,157 @@ namespace RequestOrResponse {
     return true;
   }
 
+  bool body_reader_then_handler(JSContext* cx, HandleObject response, HandleValue extra,
+                                CallArgs args)
+  {
+    RootedObject then_handler(cx, &args.callee());
+    // The reader is stored in the catch handler, which we need here as well.
+    // So we get that first, then the reader.
+    RootedObject catch_handler(cx, &extra.toObject());
+    RootedObject reader(cx, &js::GetFunctionNativeReserved(catch_handler, 1).toObject());
+    BodyHandle body_handle = RequestOrResponse::body_handle(response);
+
+    // We're guaranteed to work with a native ReadableStreamDefaultReader here, which in turn is
+    // guaranteed to vend {done: bool, value: any} objects to read promise then callbacks.
+    RootedObject chunk_obj(cx, &args[0].toObject());
+    RootedValue done_val(cx);
+    if (!JS_GetProperty(cx, chunk_obj, "done", &done_val))
+      return false;
+
+    if (done_val.toBoolean()) {
+      FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+      return HANDLE_RESULT(cx, xqd_body_close(body_handle));
+    }
+
+    RootedValue val(cx);
+    if (!JS_GetProperty(cx, chunk_obj, "value", &val))
+      return false;
+
+    if (!val.isObject() || !JS_IsUint8Array(&val.toObject())) {
+      // TODO: check if this should create a rejected promise instead, so an in-content handler
+      // for unhandled rejections could deal with it.
+      // The read operation returned a chunk that's not a Uint8Array.
+      fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
+                      "Uint8Array. Received value: ");
+      dump_value(cx, val, stderr);
+      return false;
+    }
+
+    int result;
+    {
+      JS::AutoCheckCannotGC nogc;
+      JSObject* array = &val.toObject();
+      bool is_shared;
+      uint8_t* bytes = JS_GetUint8ArrayData(array, &is_shared, nogc);
+      size_t length = JS_GetTypedArrayByteLength(array);
+      size_t nwritten;
+      result = xqd_body_write(body_handle, (char*)bytes, length, BodyWriteEndBack, &nwritten);
+    }
+
+    // Needs to be outside the nogc block in case we need to create an exception.
+    if (!HANDLE_RESULT(cx, result)) {
+      return false;
+    }
+
+    // Read the next chunk.
+    RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
+    if (!promise) return false;
+    return JS::AddPromiseReactions(cx, promise, then_handler, catch_handler);
+  }
+
+  bool body_reader_catch_handler(JSContext* cx, HandleObject response, HandleValue reader_val,
+                                 CallArgs args)
+  {
+    RootedObject reader(cx, &reader_val.toObject());
+
+    // TODO: check if this should create a rejected promise instead, so an in-content handler
+    // for unhandled rejections could deal with it.
+    // The body stream errored during the streaming response.
+    // Not much we can do, but at least close the stream, and warn.
+    fprintf(stderr, "Warning: body ReadableStream closed during streaming response. Exception: ");
+    dump_value(cx, args.get(0), stderr);
+
+    FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+    return HANDLE_RESULT(cx, xqd_body_close(RequestOrResponse::body_handle(response)));
+  }
+
+  bool respond_maybe_streaming(JSContext* cx, HandleObject response_obj, bool* streaming) {
+    RootedObject stream(cx, RequestOrResponse::body_stream(response_obj));
+    MOZ_ASSERT(stream);
+
+    bool locked_or_disturbed;
+    if (!JS::ReadableStreamIsLocked(cx, stream, &locked_or_disturbed))
+      return false;
+    if (!locked_or_disturbed && !JS::ReadableStreamIsDisturbed(cx, stream, &locked_or_disturbed))
+      return false;
+    if (locked_or_disturbed) {
+      // TODO: Improve this message; `disturbed` is probably too spec-internal a term.
+      JS_ReportErrorUTF8(cx, "respondWith called with a Response containing "
+                             "a body stream that's locked or disturbed");
+      return false;
+    }
+
+    // If the body stream is backed by a C@E body handle, we can directly pipe that handle
+    // into the response body we're about to send.
+    if (NativeStreamSource::stream_is_body(cx, stream)) {
+      // First, move the source's body handle to the target.
+      RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
+      RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
+      if (!RequestOrResponse::move_body_handle(cx, source_owner, response_obj))
+        return false;
+
+      // Then, send the response without streaming. We know that content won't append to this body
+      // handle, because we don't expose any means to do so, so it's ok for it to be closed
+      // immediately.
+      *streaming = false;
+      return start_response(cx, response_obj, false);
+    }
+
+    RootedObject reader(cx, JS::ReadableStreamGetReader(cx, stream,
+                                                        JS::ReadableStreamReaderMode::Default));
+    if (!reader) return false;
+
+    bool is_closed;
+    if (!JS::ReadableStreamReaderIsClosed(cx, reader, &is_closed))
+      return false;
+
+    // It's ok for the stream to be closed, as its contents might
+    // already have fully been written to the body handle.
+    // In that case, we can do a blocking send instead.
+    if (is_closed) {
+      *streaming = false;
+      return start_response(cx, response_obj, false);
+    }
+
+    // Create handlers for both `then` and `catch`.
+    // These are functions with two reserved slots, in which we store all information required
+    // to perform the reactions.
+    // We store the actually required information on the catch handler, and a reference to that
+    // on the then handler. This allows us to reuse these functions for the next read operation
+    // in the then handler. The catch handler won't ever have a need to perform another operation
+    // in this way.
+    RootedObject catch_handler(cx);
+    RootedValue extra(cx, ObjectValue(*reader));
+    catch_handler = create_internal_method<body_reader_catch_handler>(cx, response_obj, extra);
+    if (!catch_handler) return false;
+
+    RootedObject then_handler(cx);
+    extra.setObject(*catch_handler);
+    then_handler = create_internal_method<body_reader_then_handler>(cx, response_obj, extra);
+    if (!then_handler) return false;
+
+    RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
+    if (!promise) return false;
+    if (!JS::AddPromiseReactions(cx, promise, then_handler, catch_handler))
+      return false;
+
+    if (!start_response(cx, response_obj, true))
+      return false;
+
+    *streaming = true;
+    return true;
+  }
+
   JSObject* create_body_stream(JSContext* cx, HandleObject owner) {
     MOZ_ASSERT(is_instance(owner));
     MOZ_ASSERT(!body_stream(owner));
@@ -5735,157 +5886,6 @@ static PersistentRooted<JSObject*> INSTANCE;
 
   bool respond_blocking(JSContext* cx, HandleObject response_obj) {
     return start_response(cx, response_obj, false);
-  }
-
-  bool body_reader_then_handler(JSContext* cx, HandleObject response, HandleValue extra,
-                                CallArgs args)
-  {
-    RootedObject then_handler(cx, &args.callee());
-    // The reader is stored in the catch handler, which we need here as well.
-    // So we get that first, then the reader.
-    RootedObject catch_handler(cx, &extra.toObject());
-    RootedObject reader(cx, &js::GetFunctionNativeReserved(catch_handler, 1).toObject());
-    BodyHandle body_handle = RequestOrResponse::body_handle(response);
-
-    // We're guaranteed to work with a native ReadableStreamDefaultReader here, which in turn is
-    // guaranteed to vend {done: bool, value: any} objects to read promise then callbacks.
-    RootedObject chunk_obj(cx, &args[0].toObject());
-    RootedValue done_val(cx);
-    if (!JS_GetProperty(cx, chunk_obj, "done", &done_val))
-      return false;
-
-    if (done_val.toBoolean()) {
-      FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
-      return HANDLE_RESULT(cx, xqd_body_close(body_handle));
-    }
-
-    RootedValue val(cx);
-    if (!JS_GetProperty(cx, chunk_obj, "value", &val))
-      return false;
-
-    if (!val.isObject() || !JS_IsUint8Array(&val.toObject())) {
-      // TODO: check if this should create a rejected promise instead, so an in-content handler
-      // for unhandled rejections could deal with it.
-      // The read operation returned a chunk that's not a Uint8Array.
-      fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
-                      "Uint8Array. Received value: ");
-      dump_value(cx, val, stderr);
-      return false;
-    }
-
-    int result;
-    {
-      JS::AutoCheckCannotGC nogc;
-      JSObject* array = &val.toObject();
-      bool is_shared;
-      uint8_t* bytes = JS_GetUint8ArrayData(array, &is_shared, nogc);
-      size_t length = JS_GetTypedArrayByteLength(array);
-      size_t nwritten;
-      result = xqd_body_write(body_handle, (char*)bytes, length, BodyWriteEndBack, &nwritten);
-    }
-
-    // Needs to be outside the nogc block in case we need to create an exception.
-    if (!HANDLE_RESULT(cx, result)) {
-      return false;
-    }
-
-    // Read the next chunk.
-    RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
-    if (!promise) return false;
-    return JS::AddPromiseReactions(cx, promise, then_handler, catch_handler);
-  }
-
-  bool body_reader_catch_handler(JSContext* cx, HandleObject response, HandleValue reader_val,
-                                 CallArgs args)
-  {
-    RootedObject reader(cx, &reader_val.toObject());
-
-    // TODO: check if this should create a rejected promise instead, so an in-content handler
-    // for unhandled rejections could deal with it.
-    // The body stream errored during the streaming response.
-    // Not much we can do, but at least close the stream, and warn.
-    fprintf(stderr, "Warning: body ReadableStream closed during streaming response. Exception: ");
-    dump_value(cx, args.get(0), stderr);
-
-    FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
-    return HANDLE_RESULT(cx, xqd_body_close(RequestOrResponse::body_handle(response)));
-  }
-
-  bool respond_maybe_streaming(JSContext* cx, HandleObject response_obj, bool* streaming) {
-    RootedObject stream(cx, RequestOrResponse::body_stream(response_obj));
-    MOZ_ASSERT(stream);
-
-    bool locked_or_disturbed;
-    if (!JS::ReadableStreamIsLocked(cx, stream, &locked_or_disturbed))
-      return false;
-    if (!locked_or_disturbed && !JS::ReadableStreamIsDisturbed(cx, stream, &locked_or_disturbed))
-      return false;
-    if (locked_or_disturbed) {
-      // TODO: Improve this message; `disturbed` is probably too spec-internal a term.
-      JS_ReportErrorUTF8(cx, "respondWith called with a Response containing "
-                             "a body stream that's locked or disturbed");
-      return false;
-    }
-
-    // If the body stream is backed by a C@E body handle, we can directly pipe that handle
-    // into the response body we're about to send.
-    if (NativeStreamSource::stream_is_body(cx, stream)) {
-      // First, move the source's body handle to the target.
-      RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
-      RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
-      if (!RequestOrResponse::move_body_handle(cx, source_owner, response_obj))
-        return false;
-
-      // Then, send the response without streaming. We know that content won't append to this body
-      // handle, because we don't expose any means to do so, so it's ok for it to be closed
-      // immediately.
-      *streaming = false;
-      return start_response(cx, response_obj, false);
-    }
-
-    RootedObject reader(cx, JS::ReadableStreamGetReader(cx, stream,
-                                                        JS::ReadableStreamReaderMode::Default));
-    if (!reader) return false;
-
-    bool is_closed;
-    if (!JS::ReadableStreamReaderIsClosed(cx, reader, &is_closed))
-      return false;
-
-    // It's ok for the stream to be closed, as its contents might
-    // already have fully been written to the body handle.
-    // In that case, we can do a blocking send instead.
-    if (is_closed) {
-      *streaming = false;
-      return start_response(cx, response_obj, false);
-    }
-
-    // Create handlers for both `then` and `catch`.
-    // These are functions with two reserved slots, in which we store all information required
-    // to perform the reactions.
-    // We store the actually required information on the catch handler, and a reference to that
-    // on the then handler. This allows us to reuse these functions for the next read operation
-    // in the then handler. The catch handler won't ever have a need to perform another operation
-    // in this way.
-    RootedObject catch_handler(cx);
-    RootedValue extra(cx, ObjectValue(*reader));
-    catch_handler = create_internal_method<body_reader_catch_handler>(cx, response_obj, extra);
-    if (!catch_handler) return false;
-
-    RootedObject then_handler(cx);
-    extra.setObject(*catch_handler);
-    then_handler = create_internal_method<body_reader_then_handler>(cx, response_obj, extra);
-    if (!then_handler) return false;
-
-    RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
-    if (!promise) return false;
-    if (!JS::AddPromiseReactions(cx, promise, then_handler, catch_handler))
-      return false;
-
-    if (!start_response(cx, response_obj, true))
-      return false;
-
-    *streaming = true;
-    return true;
   }
 
   // Steps in this function refer to the spec at
