@@ -1,3 +1,9 @@
+## 0.2.4 (2022-02-09)
+
+### Enhancements
+
+* Support streaming upstream request bodies (https://github.com/fastly/js-compute-runtime/pull/67)
+
 ## 0.2.3 (2022-02-01)
 
 ### Fixes
