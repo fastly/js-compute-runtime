@@ -23,8 +23,7 @@ jobs:
       id: sm-cache
       with:
         path: |
-          c-dependencies/spidermonkey/lib
-          c-dependencies/spidermonkey/include
+          c-dependencies/spidermonkey/release
         key: cache-${{ hashFiles('c-dependencies/spidermonkey/build-engine.sh') }}-${{ hashFiles('c-dependencies/spidermonkey/gecko-revision') }}-${{ hashFiles('c-dependencies/spidermonkey/object-files.list') }}
 
     - name: "Build SpiderMonkey"
@@ -41,8 +40,11 @@ jobs:
         sudo mkdir -p /opt/wasi-sdk
         sudo mv wasi-sdk-12.0/* /opt/wasi-sdk/
 
-    - name: "Install wasm32-wasi Rust target"
+    - name: "Install pinned Rust version and wasm32-wasi target"
       run: |
+        rustup set profile minimal
+        rustup update 1.57.0 --no-self-update
+        rustup default 1.57.0
         rustup target add wasm32-wasi
 
     - name: "Install Binaryen (linux)"
@@ -197,7 +199,7 @@ jobs:
 
   cargo-audit:
     env:
-      CARGO_AUDIT_VERSION: 0.11.2
+      CARGO_AUDIT_VERSION: 0.16.0
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

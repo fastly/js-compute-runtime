@@ -1,3 +1,31 @@
+## 0.2.4 (2022-02-09)
+
+### Enhancements
+
+* Support streaming upstream request bodies (https://github.com/fastly/js-compute-runtime/pull/67)
+
+## 0.2.3 (2022-02-01)
+
+### Fixes
+
+* Avoid waiting for async tasks that weren't passed to `FetchEvent#waitUntil` (https://github.com/fastly/js-compute-runtime/pull/53)
+* Significantly improve spec-compliance of Request and Response builtins (https://github.com/fastly/js-compute-runtime/pull/64)
+### Enhancements
+
+* Increase max supported header size from 4096 bytes to 69000 bytes (https://github.com/fastly/js-compute-runtime/pull/58)
+* Update to SpiderMonkey 96 beta (https://github.com/fastly/js-compute-runtime/pull/61)
+* Add full support for TransformStreams (https://github.com/fastly/js-compute-runtime/pull/61)
+* Support directly piping Request/Response bodies to other Requests/Responses instead of manually copying every chunk (https://github.com/fastly/js-compute-runtime/pull/62)
+* Add support for the `queueMicrotask` global function (https://github.com/fastly/js-compute-runtime/pull/65)
+* Add support for the `structuredClone` global function (https://github.com/fastly/js-compute-runtime/pull/65)
+* Add support for the `location` global object as an instance of `WorkerLocation` (https://github.com/fastly/js-compute-runtime/pull/65)
+* Support Big{Ui,I}nt64Array in crypto.getRandomValues (https://github.com/fastly/js-compute-runtime/pull/65)
+* Enable class static blocks syntax (https://github.com/fastly/js-compute-runtime/pull/65)
+
+### Fixes
+
+* Ensure we're not waiting for async tasks not passed to `FetchEvent#waitUntil` (https://github.com/fastly/js-compute-runtime/pull/53)
+
 ## 0.2.2 (2021-11-10)
 
 ### Fixes

@@ -20,10 +20,12 @@
 #include "js/experimental/TypedData.h"
 #pragma clang diagnostic pop
 
+#include "js/friend/DumpFunctions.h"
 #include "js/JSON.h"
 #include "js/shadow/Object.h"
 #include "js/Stream.h"
 #include "js/experimental/TypedData.h"
+#include "js/StructuredClone.h"
 #include "js/Value.h"
 
 using JS::CallArgs;
@@ -31,6 +33,9 @@ using JS::CallArgsFromVp;
 using JS::UniqueChars;
 
 using JS::Value;
+using JS::ObjectValue;
+using JS::ObjectOrNullValue;
+using JS::PrivateValue;
 
 using JS::RootedValue;
 using JS::RootedObject;
@@ -44,9 +49,50 @@ using JS::MutableHandleValue;
 
 using JS::PersistentRooted;
 
+typedef bool InternalMethod(JSContext* cx, HandleObject receiver, HandleValue extra,
+                            CallArgs args);
+template<InternalMethod fun>
+bool internal_method(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject self(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
+    RootedValue extra(cx, js::GetFunctionNativeReserved(&args.callee(), 1));
+    return fun(cx, self, extra, args);
+}
+
+template<InternalMethod fun>
+JSObject* create_internal_method(JSContext* cx, HandleObject receiver,
+                                 HandleValue extra = JS::UndefinedHandleValue,
+                                 unsigned int nargs = 0, const char* name = "")
+{
+  JSFunction* method = js::NewFunctionWithReserved(cx, internal_method<fun>, 1, 0, name);
+  if (!method) return nullptr;
+  RootedObject method_obj(cx, JS_GetFunctionObject(method));
+  js::SetFunctionNativeReserved(method_obj, 0, JS::ObjectValue(*receiver));
+  js::SetFunctionNativeReserved(method_obj, 1, extra);
+  return method_obj;
+}
+
+template<InternalMethod fun>
+bool enqueue_internal_method(JSContext* cx, HandleObject receiver,
+                             HandleValue extra = JS::UndefinedHandleValue,
+                             unsigned int nargs = 0, const char* name = "")
+{
+  RootedObject method(cx, create_internal_method<fun>(cx, receiver, extra, nargs, name));
+  if (!method) {
+    return false;
+  }
+
+  RootedObject promise(cx, JS::CallOriginalPromiseResolve(cx, JS::UndefinedHandleValue));
+  if (!promise) {
+    return false;
+  }
+
+  return JS::AddPromiseReactions(cx, promise, method, nullptr);
+}
+
 // Ensure that all the things we want to use the hostcall buffer for actually fit into the buffer.
-#define HOSTCALL_BUFFER_LEN DICTIONARY_ENTRY_MAX_LEN
-static_assert(HEADER_MAX_LEN < HOSTCALL_BUFFER_LEN);
+#define HOSTCALL_BUFFER_LEN HEADER_MAX_LEN
+static_assert(DICTIONARY_ENTRY_MAX_LEN < HOSTCALL_BUFFER_LEN);
 static_assert(METHOD_MAX_LEN < HOSTCALL_BUFFER_LEN);
 static_assert(URI_MAX_LEN < HOSTCALL_BUFFER_LEN);
 
@@ -170,35 +216,21 @@ static inline bool handle_fastly_result(JSContext* cx, int result, int line, con
 #define DBG(...) \
   printf("%s#%d: ", __func__, __LINE__); printf(__VA_ARGS__); fflush(stdout);
 
-static bool rejected_promise_with_current_exception(JSContext* cx, CallArgs* args = nullptr) {
+bool RejectPromiseWithPendingError(JSContext* cx, HandleObject promise) {
   RootedValue exn(cx);
-  if (!JS_GetPendingException(cx, &exn)) return false;
-  RootedObject promise(cx, JS::CallOriginalPromiseReject(cx, exn));
-  if (!promise) return false;
-  if (args) {
-    args->rval().setObject(*promise);
+  if (!JS_IsExceptionPending(cx) || !JS_GetPendingException(cx, &exn)) {
+    return false;
   }
-  return true;
-}
-
-static bool resolved_promise_with_value(JSContext* cx, JS::HandleValue value,
-                                        CallArgs* args = nullptr)
-{
-  RootedObject promise(cx, JS::CallOriginalPromiseResolve(cx, value));
-  if (!promise) return false;
-  if (args) {
-    args->rval().setObject(*promise);
-  }
-  return true;
+  JS_ClearPendingException(cx);
+  return JS::RejectPromise(cx, promise, exn);
 }
 
 JSObject* PromiseRejectedWithPendingError(JSContext* cx) {
-  RootedValue exn(cx);
-  if (!JS_IsExceptionPending(cx) || !JS_GetPendingException(cx, &exn)) {
+  RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!promise || !RejectPromiseWithPendingError(cx, promise)) {
     return nullptr;
   }
-  JS_ClearPendingException(cx);
-  return JS::CallOriginalPromiseReject(cx, exn);
+  return promise;
 }
 
 inline bool ReturnPromiseRejectedWithPendingError(JSContext* cx, const JS::CallArgs& args) {
@@ -223,7 +255,8 @@ static char* read_from_handle_all(JSContext* cx, HandleType handle,
   // TODO: make use of malloc slack.
   char* buf = static_cast<char*>(JS_malloc(cx, buf_size));
   if (!buf) {
-      return nullptr;
+    JS_ReportOutOfMemory(cx);
+    return nullptr;
   }
 
   // For realloc below.
@@ -250,6 +283,7 @@ static char* read_from_handle_all(JSContext* cx, HandleType handle,
       new_buf = static_cast<char*>(JS_realloc(cx, buf, buf_size, new_size));
       if (!new_buf) {
         JS_free(cx, buf);
+        JS_ReportOutOfMemory(cx);
         return nullptr;
       }
       buf = new_buf;
@@ -260,6 +294,7 @@ static char* read_from_handle_all(JSContext* cx, HandleType handle,
   new_buf = static_cast<char*>(JS_realloc(cx, buf, buf_size, offset + 1));
   if (!buf) {
     JS_free(cx, buf);
+    JS_ReportOutOfMemory(cx);
     return nullptr;
   }
   buf = new_buf;
@@ -300,15 +335,15 @@ static const uint32_t class_flags = 0;
   static PersistentRooted<JSObject*> proto_obj; \
  \
   bool is_instance(JSObject* obj) { \
-    return JS::GetClass(obj) == &class_; \
+    return !!obj && JS::GetClass(obj) == &class_; \
   } \
  \
   bool is_instance(JS::Value val) { \
     return val.isObject() && is_instance(&val.toObject()); \
   } \
  \
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name) { \
-    if (!is_instance(self)) { \
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name) { \
+    if (!is_instance(receiver)) { \
       JS_ReportErrorUTF8(cx, "Method %s called on receiver that's not an instance of %s\n", \
                          method_name, class_.name); \
       return false; \
@@ -346,15 +381,23 @@ static const uint32_t class_flags = 0;
            JS_DeleteProperty(cx, global, class_.name); \
   } \
 
+// Define this to make most methods print their name to stderr when invoked.
+// #define TRACE_METHOD_CALLS
+
+#ifdef TRACE_METHOD_CALLS
+#define TRACE_METHOD(name) \
+  DBG("%s\n", name)
+#else
+#define TRACE_METHOD(name)
+#endif
+
 #define METHOD_HEADER_WITH_NAME(required_argc, name) \
-  /* \
-  // printf("method: %s\n", name); \
-  */ \
+  TRACE_METHOD(name) \
   CallArgs args = CallArgsFromVp(argc, vp); \
+  if (!check_receiver(cx, args.thisv(), name)) return false; \
+  RootedObject self(cx, &args.thisv().toObject()); \
   if (!args.requireAtLeast(cx, name, required_argc)) \
     return false; \
-  RootedObject self(cx, &args.thisv().toObject()); \
-  if (!check_receiver(cx, self, name)) return false; \
 
 #define METHOD_HEADER(required_argc) \
   METHOD_HEADER_WITH_NAME(required_argc, __func__)
@@ -381,7 +424,7 @@ namespace Logger {
 
   const unsigned ctor_length = 1;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   static bool log(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -443,7 +486,7 @@ namespace Env {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("get", env_get, 1, 0),
+    JS_FN("get", env_get, 1, JSPROP_ENUMERATE),
   JS_FS_END};
 
   JSObject* create(JSContext* cx) {
@@ -457,6 +500,7 @@ namespace URL {
   bool is_instance(JS::Value);
   JSObject* create(JSContext* cx, SpecString url_str, const JSUrl* base = nullptr);
   JSObject* create(JSContext* cx, HandleValue url_val, HandleObject base_obj);
+  SpecString origin(JSContext* cx, HandleObject self);
 }
 
 static JSString* get_geo_info(JSContext* cx, HandleString address_str);
@@ -689,7 +733,9 @@ bool is_int_typed_array(JSObject* obj) {
          JS_IsUint16Array(obj) ||
          JS_IsInt32Array(obj) ||
          JS_IsUint32Array(obj) ||
-         JS_IsUint8ClampedArray(obj);
+         JS_IsUint8ClampedArray(obj) ||
+         JS_IsBigInt64Array(obj) ||
+         JS_IsBigUint64Array(obj);
 }
 
 namespace Crypto {
@@ -742,11 +788,21 @@ namespace Crypto {
   }
 }
 
-namespace BodyStreamSource {
-  JSObject* create(JSContext* cx, HandleObject owner);
-  static JSObject* get_stream_source(JSObject* stream);
-  bool stream_has_native_source(JSObject* stream);
+namespace NativeStreamSource {
+  typedef bool PullAlgorithm(JSContext* cx, CallArgs args, HandleObject stream, HandleObject owner,
+                             HandleObject controller);
+  typedef bool CancelAlgorithm(JSContext* cx, CallArgs args, HandleObject stream,
+                               HandleObject owner, HandleValue reason);
+
+  JSObject* create(JSContext* cx, HandleObject owner, HandleValue startPromise,
+                   PullAlgorithm* pull, CancelAlgorithm* cancel);
+  static JSObject* get_stream_source(JSContext* cx, HandleObject stream);
+  JSObject* owner(JSObject* self);
+  JSObject* stream(JSObject* self);
+  bool stream_has_native_source(JSContext* cx, HandleObject stream);
+  bool stream_is_body(JSContext* cx, HandleObject stream);
   bool lock_stream(JSContext* cx, HandleObject stream);
+  JSObject* piped_to_transform_stream(JSObject* source);
 }
 
 enum class BodyReadResult {
@@ -763,9 +819,11 @@ namespace Headers {
   };
 
   JSObject* create(JSContext* cx, Mode mode, HandleObject owner);
+  JSObject* create(JSContext* cx, Mode mode, HandleObject owner, HandleObject init_headers);
   JSObject* create(JSContext* cx, Mode mode, HandleObject owner, HandleValue initv);
 
   bool delazify(JSContext* cx, HandleObject headers);
+  bool maybe_add(JSContext* cx, HandleObject headers, const char* name, const char* value);
 }
 
 namespace Request {
@@ -776,11 +834,47 @@ namespace Response {
   bool is_instance(JSObject* obj);
 }
 
+namespace TransformStream {
+  namespace Slots { enum {
+    Controller,
+    Readable,
+    Writable,
+    Backpressure,
+    BackpressureChangePromise,
+    Owner, // The target RequestOrResponse object if the stream's readable end is used as a body.
+    Count
+  };};
+
+  bool is_instance(JSObject* obj);
+
+  JSObject* owner(JSObject* self);
+  void set_owner(JSObject* self, JSObject* owner);
+  JSObject* readable(JSObject* self);
+  bool is_ts_readable(JSContext* cx, HandleObject readable);
+  bool readable_used_as_body(JSObject* self);
+  void set_readable_used_as_body(JSContext* cx, HandleObject readable, HandleObject target);
+  bool is_ts_writable(JSContext* cx, HandleObject writable);
+  JSObject* controller(JSObject* self);
+  bool backpressure(JSObject* self);
+
+  bool ErrorWritableAndUnblockWrite(JSContext* cx, HandleObject stream, HandleValue error);
+  bool SetBackpressure(JSContext* cx, HandleObject stream, bool backpressure);
+  bool Error(JSContext* cx, HandleObject stream, HandleValue error);
+}
+
+namespace URLSearchParams {
+  bool is_instance(JSObject* obj);
+  JSObject* create(JSContext* cx, jsurl::JSUrl* url);
+  JSUrlSearchParams* get_params(JSObject* self);
+  SpecSlice serialize(JSContext* cx, HandleObject self);
+}
+
 namespace RequestOrResponse {
   namespace Slots { enum {
     RequestOrResponse,
     Body,
     BodyStream,
+    BodyAllPromise,
     HasBody,
     BodyUsed,
     Headers,
@@ -793,34 +887,51 @@ namespace RequestOrResponse {
   }
 
   uint32_t handle(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return static_cast<uint32_t>(JS::GetReservedSlot(obj, Slots::RequestOrResponse).toInt32());
   }
 
   bool has_body(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return JS::GetReservedSlot(obj, Slots::HasBody).toBoolean();
   }
 
   BodyHandle body_handle(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return BodyHandle { static_cast<uint32_t>(JS::GetReservedSlot(obj, Slots::Body).toInt32()) };
   }
 
   JSObject* body_stream(JSObject* obj) {
-    // Can't use toObjectOrNull here because the Value might be `undefined`.
-    Value val = JS::GetReservedSlot(obj, Slots::BodyStream);
-    return val.isNullOrUndefined() ? nullptr : &val.toObject();
+    MOZ_ASSERT(is_instance(obj));
+    return JS::GetReservedSlot(obj, Slots::BodyStream).toObjectOrNull();
   }
 
-  JSObject* body_source(JSObject* obj) {
-    MOZ_RELEASE_ASSERT(has_body(obj));
-    return BodyStreamSource::get_stream_source(body_stream(obj));
+  JSObject* body_source(JSContext* cx, HandleObject obj) {
+    MOZ_ASSERT(has_body(obj));
+    RootedObject stream(cx, body_stream(obj));
+    return NativeStreamSource::get_stream_source(cx, stream);
+  }
+
+  bool body_used(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
+    return JS::GetReservedSlot(obj, Slots::BodyUsed).toBoolean();
   }
 
   bool mark_body_used(JSContext* cx, HandleObject obj) {
+    MOZ_ASSERT(!body_used(obj));
     JS::SetReservedSlot(obj, Slots::BodyUsed, JS::BooleanValue(true));
 
     RootedObject stream(cx, body_stream(obj));
-    if (stream)
-      return BodyStreamSource::lock_stream(cx, stream);
+    if (stream && NativeStreamSource::stream_is_body(cx, stream)) {
+      if (!NativeStreamSource::lock_stream(cx, stream)) {
+        // The only reason why marking the body as used could fail here is that it's a disturbed
+        // ReadableStream. To improve error reporting, we clear the current exception and throw
+        // a better one.
+        JS_ClearPendingException(cx);
+        JS_ReportErrorLatin1(cx, "The ReadableStream body is already locked and can't be consumed");
+        return false;
+      }
+    }
 
     return true;
   }
@@ -831,9 +942,9 @@ namespace RequestOrResponse {
    * Also marks the source object's body as consumed.
    */
   bool move_body_handle(JSContext* cx, HandleObject from, HandleObject to) {
-    MOZ_RELEASE_ASSERT(is_instance(from));
-    MOZ_RELEASE_ASSERT(is_instance(to));
-
+    MOZ_ASSERT(is_instance(from));
+    MOZ_ASSERT(is_instance(to));
+    MOZ_ASSERT(!body_used(from));
 
     // Replace the receiving object's body handle with the body stream source's underlying handle.
     // TODO: Let the host know we'll not use the old handle anymore, once C@E has a hostcall
@@ -847,37 +958,76 @@ namespace RequestOrResponse {
   }
 
   Value url(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     Value val = JS::GetReservedSlot(obj, Slots::URL);
-    MOZ_RELEASE_ASSERT(val.isString());
+    MOZ_ASSERT(val.isString());
     return val;
   }
 
   void set_url(JSObject* obj, Value url) {
-    MOZ_RELEASE_ASSERT(url.isString());
+    MOZ_ASSERT(is_instance(obj));
+    MOZ_ASSERT(url.isString());
     JS::SetReservedSlot(obj, Slots::URL, url);
   }
 
-  bool body_used(JSObject* obj) {
-    return JS::GetReservedSlot(obj, Slots::BodyUsed).toBoolean();
+  /**
+   * Implementation of the `body is unusable` concept at
+   * https://fetch.spec.whatwg.org/#body-unusable
+   */
+  bool body_unusable(JSContext* cx, HandleObject body) {
+    MOZ_ASSERT(JS::IsReadableStream(body));
+    bool disturbed;
+    bool locked;
+    MOZ_RELEASE_ASSERT(JS::ReadableStreamIsDisturbed(cx, body, &disturbed) &&
+                       JS::ReadableStreamIsLocked(cx, body, &locked));
+    return disturbed || locked;
   }
 
-  bool set_body(JSContext*cx, HandleObject obj, HandleValue body_val) {
-    if (body_val.isNullOrUndefined()) {
-      JS::SetReservedSlot(obj, Slots::HasBody, JS::BooleanValue(false));
-      return true;
-    }
+  /**
+   * Implementation of the `extract a body` algorithm at
+   * https://fetch.spec.whatwg.org/#concept-bodyinit-extract
+   *
+   * Note: our implementation is somewhat different from what the spec describes in
+   * that we immediately write all non-streaming body types to the host instead of
+   * creating a stream for them. We don't have threads, so there's nothing "in parallel"
+   * to be had anyway.
+   *
+   * Note: also includes the steps applying the `Content-Type` header from the
+   * Request and Response constructors in step 36 and 8 of those, respectively.
+   */
+  bool extract_body(JSContext*cx, HandleObject self, HandleValue body_val) {
+    MOZ_ASSERT(is_instance(self));
+    MOZ_ASSERT(!has_body(self));
+    MOZ_ASSERT(!body_val.isNullOrUndefined());
 
-    // TODO: throw if method is GET or HEAD.
+    const char* content_type = nullptr;
 
-    // TODO: properly implement the spec steps for extracting the body and setting the content-type.
-    // (https://fetch.spec.whatwg.org/#dom-response)
-
+    // We currently support five types of body inputs:
+    // - byte sequence
+    // - buffer source
+    // - USV strings
+    // - URLSearchParams
+    // - ReadableStream
+    // After the other other options are checked explicitly, all other inputs are
+    // encoded to a UTF8 string to be treated as a USV string.
     // TODO: Support the other possible inputs to Body.
 
     RootedObject body_obj(cx, body_val.isObject() ? &body_val.toObject() : nullptr);
 
     if (body_obj && JS::IsReadableStream(body_obj)) {
-      JS_SetReservedSlot(obj, RequestOrResponse::Slots::BodyStream, body_val);
+      if (body_unusable(cx, body_obj)) {
+        JS_ReportErrorLatin1(cx, "Can't use a ReadableStream that's locked or has ever been "
+                                 "read from or canceled as a Request or Response body.");
+        return false;
+      }
+
+      JS_SetReservedSlot(self, RequestOrResponse::Slots::BodyStream, body_val);
+
+      // Ensure that we take the right steps for shortcutting operations on TransformStreams
+      // later on.
+      if (TransformStream::is_ts_readable(cx, body_obj)) {
+        TransformStream::set_readable_used_as_body(cx, body_obj, self);
+      }
     } else {
       mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
       UniqueChars text;
@@ -895,33 +1045,132 @@ namespace RequestOrResponse {
       } else if (body_obj && JS::IsArrayBufferObject(body_obj)) {
         bool is_shared;
         JS::GetArrayBufferLengthAndData(body_obj, &length, &is_shared, (uint8_t**)&buf);
+      } else if (body_obj && URLSearchParams::is_instance(body_obj)) {
+        SpecSlice slice = URLSearchParams::serialize(cx, body_obj);
+        buf = (char*)slice.data;
+        length = slice.len;
+        content_type = "application/x-www-form-urlencoded;charset=UTF-8";
       } else {
         text = encode(cx, body_val, &length);
         if (!text) return false;
         buf = text.get();
+        content_type = "text/plain;charset=UTF-8";
       }
 
-      BodyHandle body_handle = RequestOrResponse::body_handle(obj);
+      BodyHandle body_handle = RequestOrResponse::body_handle(self);
       size_t num_written = 0;
       int result = xqd_body_write(body_handle, buf, length, BodyWriteEndBack, &num_written);
+
+      // Ensure that the NoGC is reset, so throwing an error in HANDLE_RESULT succeeds.
+      if (maybeNoGC.isSome()) {
+        maybeNoGC.reset();
+      }
+
       if (!HANDLE_RESULT(cx, result))
         return false;
     }
 
-    JS::SetReservedSlot(obj, Slots::HasBody, JS::BooleanValue(true));
+    // Step 36.3 of Request constructor / 8.4 of Response constructor.
+    if (content_type) {
+      RootedObject headers(cx, &JS::GetReservedSlot(self, Slots::Headers).toObject());
+      if (!Headers::maybe_add(cx, headers, "content-type", content_type)) {
+        return false;
+      }
+    }
+
+    JS::SetReservedSlot(self, Slots::HasBody, JS::BooleanValue(true));
     return true;
   }
 
+  /**
+   * Returns the RequestOrResponse's Headers if it has been reified, nullptr if not.
+   */
+  JSObject* maybe_headers(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
+    return JS::GetReservedSlot(obj, Slots::Headers).toObjectOrNull();
+  }
+
+  /**
+   * Returns the RequestOrResponse's Headers, reifying it if necessary.
+   */
   template<auto mode>
-  JSObject* headers(JSContext*cx, HandleObject obj) {
-    Value val = JS::GetReservedSlot(obj, Slots::Headers);
-    if (val.isNullOrUndefined()) {
-      JSObject* headers = Headers::create(cx, mode, obj);
+  JSObject* headers(JSContext* cx, HandleObject obj) {
+    JSObject* headers = maybe_headers(obj);
+    if (!headers) {
+      headers = Headers::create(cx, mode, obj);
       if (!headers) return nullptr;
-      val = JS::ObjectValue(*headers);
-      JS_SetReservedSlot(obj, Slots::Headers, val);
+      JS_SetReservedSlot(obj, Slots::Headers, ObjectValue(*headers));
     }
-    return &val.toObject();
+
+    return headers;
+  }
+
+  bool append_body(JSContext* cx, HandleObject self, HandleObject source) {
+    MOZ_ASSERT(!body_used(source));
+    BodyHandle source_body = body_handle(source);
+    BodyHandle dest_body = body_handle(self);
+    return HANDLE_RESULT(cx, xqd_body_append(dest_body, source_body));
+  }
+
+  typedef bool ParseBodyCB(JSContext* cx, HandleObject self, UniqueChars buf, size_t len);
+
+  template<BodyReadResult result_type>
+  bool parse_body(JSContext* cx, HandleObject self, UniqueChars buf, size_t len) {
+    RootedObject result_promise(cx, &JS::GetReservedSlot(self, Slots::BodyAllPromise).toObject());
+    JS::SetReservedSlot(self, Slots::BodyAllPromise, JS::UndefinedValue());
+    RootedValue result(cx);
+
+    if (result_type == BodyReadResult::ArrayBuffer) {
+      auto* rawBuf = buf.release();
+      RootedObject array_buffer(cx, JS::NewArrayBufferWithContents(cx, len, rawBuf));
+      if (!array_buffer) {
+        JS_free(cx, rawBuf);
+        return RejectPromiseWithPendingError(cx, result_promise);
+      }
+      result.setObject(*array_buffer);
+    } else {
+      RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), len)));
+      if (!text) {
+        return RejectPromiseWithPendingError(cx, result_promise);
+      }
+
+      if (result_type == BodyReadResult::Text) {
+        result.setString(text);
+      } else {
+        MOZ_ASSERT(result_type == BodyReadResult::JSON);
+          if (!JS_ParseJSON(cx, text, &result)) {
+            return RejectPromiseWithPendingError(cx, result_promise);
+          }
+      }
+    }
+
+    return JS::ResolvePromise(cx, result_promise, result);
+  }
+
+  bool consume_content_stream_for_bodyAll(JSContext* cx, HandleObject self, HandleObject stream,
+                                          HandleValue body_parser)
+  {
+    JS_ReportErrorLatin1(cx, "Consuming a content-provided ReadableStream as a body using "
+                             ".text(), .json(), or .arrayBuffer() not yet supported");
+    return false;
+  }
+
+  bool consume_body_handle_for_bodyAll(JSContext* cx, HandleObject self, HandleValue body_parser,
+                                       CallArgs args)
+  {
+    BodyHandle body = body_handle(self);
+    auto parse_body = (ParseBodyCB*)body_parser.toPrivate();
+
+    size_t bytes_read;
+    UniqueChars buf(read_from_handle_all<xqd_body_read, BodyHandle>(cx, body, &bytes_read, true));
+    if (!buf) {
+      RootedObject result_promise(cx);
+      result_promise = &JS::GetReservedSlot(self, Slots::BodyAllPromise).toObject();
+      JS::SetReservedSlot(self, Slots::BodyAllPromise, JS::UndefinedValue());
+      return RejectPromiseWithPendingError(cx, result_promise);
+    }
+
+    return parse_body(cx, self, std::move(buf), bytes_read);
   }
 
   template<BodyReadResult result_type>
@@ -929,55 +1178,271 @@ namespace RequestOrResponse {
     // TODO: mark body as consumed when operating on stream, too.
     if (body_used(self)) {
       JS_ReportErrorASCII(cx, "Body has already been consumed");
-      return rejected_promise_with_current_exception(cx, &args);
+      return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    BodyHandle body = body_handle(self);
+    RootedObject bodyAll_promise(cx, JS::NewPromiseObject(cx, nullptr));
+    if (!bodyAll_promise) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    JS::SetReservedSlot(self, Slots::BodyAllPromise, ObjectValue(*bodyAll_promise));
 
-    // TODO: check if this should be lazified. JS code might expect to be able to trigger
-    // multiple requests for response body contents in parallel instead of blocking
-    // on them sequentially.
-    size_t bytes_read;
-    UniqueChars buf(read_from_handle_all<xqd_body_read, BodyHandle>(cx, body, &bytes_read, true));
-    if (!buf) {
-      return rejected_promise_with_current_exception(cx, &args);
+    // If the Request/Response doesn't have a body, empty default results need to be returned.
+    if (!has_body(self)) {
+      UniqueChars chars;
+      if (!parse_body<result_type>(cx, self, std::move(chars), 0)) {
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+
+      args.rval().setObject(*bodyAll_promise);
+      return true;
     }
 
-    if (!mark_body_used(cx, self))
+    if (!mark_body_used(cx, self)) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+
+    RootedValue body_parser(cx, JS::PrivateValue((void*)parse_body<result_type>));
+
+    // If the body is a ReadableStream that's not backed by a BodyHandle,
+    // we need to manually read all chunks from the stream.
+    // TODO: ensure that we're properly shortcutting reads from TransformStream
+    // readables.
+    RootedObject stream(cx, body_stream(self));
+    if (stream && !NativeStreamSource::stream_is_body(cx, stream)) {
+      if (!consume_content_stream_for_bodyAll(cx, self, stream, body_parser)) {
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+    } else {
+      if (!enqueue_internal_method<consume_body_handle_for_bodyAll>(cx, self, body_parser)) {
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+    }
+
+    args.rval().setObject(*bodyAll_promise);
+    return true;
+  }
+
+  bool body_source_pull_algorithm(JSContext* cx, CallArgs args, HandleObject source,
+                                  HandleObject body_owner, HandleObject controller)
+  {
+    // If the stream has been piped to a TransformStream whose readable end was then passed
+    // to a Request or Response as the body, we can just append the entire source body to the
+    // destination using a single native hostcall, and then close the source stream, instead of
+    // reading and writing it in individual chunks.
+    // Note that even in situations where multiple streams are piped to the same destination
+    // this is guaranteed to happen in the right order: ReadableStream#pipeTo locks the destination
+    // WritableStream until the source ReadableStream is closed/canceled, so only one stream can
+    // ever be piped in at the same time.
+    RootedObject pipe_dest(cx, NativeStreamSource::piped_to_transform_stream(source));
+    if (pipe_dest) {
+      if (TransformStream::readable_used_as_body(pipe_dest)) {
+        RootedObject dest_owner(cx, TransformStream::owner(pipe_dest));
+        if (!RequestOrResponse::append_body(cx, dest_owner, body_owner)) {
+          return false;
+        }
+
+        RootedObject stream(cx, NativeStreamSource::stream(source));
+        bool success = JS::ReadableStreamClose(cx, stream);
+        MOZ_RELEASE_ASSERT(success);
+
+        args.rval().setUndefined();
+        return true;
+      }
+    }
+
+    // The actual read from the body needs to be delayed, because it'd otherwise
+    // be a blocking operation in case the backend didn't yet send any data.
+    // That would lead to situations where we block on I/O before processing
+    // all pending Promises, which in turn can result in operations happening in
+    // observably different behavior, up to and including causing deadlocks
+    // because a body read response is blocked on content making another request.
+    //
+    // (This deadlock happens in automated tests, but admittedly might not happen
+    // in real usage.)
+
+    if (!pending_body_reads->append(source))
       return false;
 
-    RootedValue result(cx);
+    args.rval().setUndefined();
+    return true;
+  }
 
-    if (result_type == BodyReadResult::ArrayBuffer) {
-      auto* rawBuf = buf.release();
-      RootedObject array_buffer(cx, JS::NewArrayBufferWithContents(cx, bytes_read, rawBuf));
-      if (!array_buffer) {
-        JS_free(cx, rawBuf);
-        return rejected_promise_with_current_exception(cx, &args);
-      }
-      result.setObject(*array_buffer);
-    } else {
-      RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), bytes_read)));
-      if (!text) {
-        return rejected_promise_with_current_exception(cx, &args);
-      }
+  bool body_source_cancel_algorithm(JSContext* cx, CallArgs args, HandleObject stream,
+                                    HandleObject owner, HandleValue reason)
+  {
+    args.rval().setUndefined();
+    return true;
+  }
 
-      if (result_type == BodyReadResult::Text) {
-        result.setString(text);
-      } else if (result_type == BodyReadResult::JSON) {
-          if (!JS_ParseJSON(cx, text, &result)) {
-            return rejected_promise_with_current_exception(cx, &args);
-          }
-      } else {
-        MOZ_ASSERT_UNREACHABLE("Unsupported body read result type");
+  bool body_reader_then_handler(JSContext* cx, HandleObject body_owner, HandleValue extra,
+                                CallArgs args)
+  {
+    RootedObject then_handler(cx, &args.callee());
+    // The reader is stored in the catch handler, which we need here as well.
+    // So we get that first, then the reader.
+    RootedObject catch_handler(cx, &extra.toObject());
+    RootedObject reader(cx, &js::GetFunctionNativeReserved(catch_handler, 1).toObject());
+    BodyHandle body_handle = RequestOrResponse::body_handle(body_owner);
+
+    // We're guaranteed to work with a native ReadableStreamDefaultReader here, which in turn is
+    // guaranteed to vend {done: bool, value: any} objects to read promise then callbacks.
+    RootedObject chunk_obj(cx, &args[0].toObject());
+    RootedValue done_val(cx);
+    if (!JS_GetProperty(cx, chunk_obj, "done", &done_val))
+      return false;
+
+    if (done_val.toBoolean()) {
+      // The only response we ever send is the one passed to `FetchEvent#respondWith` to send to
+      // the client. As such, we can be certain that if we have a response here, we can advance the
+      // FetchState to `responseDone`.
+      if (Response::is_instance(body_owner)) {
+        FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
       }
+      return HANDLE_RESULT(cx, xqd_body_close(body_handle));
     }
 
-    return resolved_promise_with_value(cx, result, &args);
+    RootedValue val(cx);
+    if (!JS_GetProperty(cx, chunk_obj, "value", &val))
+      return false;
+
+    if (!val.isObject() || !JS_IsUint8Array(&val.toObject())) {
+      // TODO: check if this should create a rejected promise instead, so an in-content handler
+      // for unhandled rejections could deal with it.
+      // The read operation returned a chunk that's not a Uint8Array.
+      fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
+                      "Uint8Array. Received value: ");
+      dump_value(cx, val, stderr);
+      return false;
+    }
+
+    int result;
+    {
+      JS::AutoCheckCannotGC nogc;
+      JSObject* array = &val.toObject();
+      bool is_shared;
+      uint8_t* bytes = JS_GetUint8ArrayData(array, &is_shared, nogc);
+      size_t length = JS_GetTypedArrayByteLength(array);
+      size_t nwritten;
+      result = xqd_body_write(body_handle, (char*)bytes, length, BodyWriteEndBack, &nwritten);
+    }
+
+    // Needs to be outside the nogc block in case we need to create an exception.
+    if (!HANDLE_RESULT(cx, result)) {
+      return false;
+    }
+
+    // Read the next chunk.
+    RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
+    if (!promise) return false;
+    return JS::AddPromiseReactions(cx, promise, then_handler, catch_handler);
+  }
+
+  bool body_reader_catch_handler(JSContext* cx, HandleObject body_owner, HandleValue reader_val,
+                                 CallArgs args)
+  {
+    RootedObject reader(cx, &reader_val.toObject());
+
+    // TODO: check if this should create a rejected promise instead, so an in-content handler
+    // for unhandled rejections could deal with it.
+    // The body stream errored during the streaming send.
+    // Not much we can do, but at least close the stream, and warn.
+    fprintf(stderr, "Warning: body ReadableStream closed during body streaming. Exception: ");
+    dump_value(cx, args.get(0), stderr);
+
+    // The only response we ever send is the one passed to `FetchEvent#respondWith` to send to
+    // the client. As such, we can be certain that if we have a response here, we can advance the
+    // FetchState to `responseDone`.
+    // (Note that even though we encountered an error, `responseDone` is the right state:
+    // `responsedWithError` is for when sending a response at all failed.)
+    if (Response::is_instance(body_owner)) {
+      FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+    }
+    return HANDLE_RESULT(cx, xqd_body_close(RequestOrResponse::body_handle(body_owner)));
+  }
+
+  /**
+   * Ensures that the given |body_owner|'s body is properly streamed, if it requires
+   * streaming.
+   *
+   * If streaming is required, starts the process of reading from the ReadableStream representing
+   * the body and sets the |requires_streaming| bool to `true`.
+   */
+  bool maybe_stream_body(JSContext* cx, HandleObject body_owner, bool* requires_streaming) {
+    RootedObject stream(cx, RequestOrResponse::body_stream(body_owner));
+    if (!stream) {
+      return true;
+    }
+
+    if (RequestOrResponse::body_unusable(cx, stream)) {
+      // TODO: Improve this message; `disturbed` is probably too spec-internal a term.
+      JS_ReportErrorUTF8(cx, "Can't send a body stream that's locked or disturbed");
+      return false;
+    }
+
+    // If the body stream is backed by a C@E body handle, we can directly pipe that handle
+    // into the body we're about to send.
+    if (NativeStreamSource::stream_is_body(cx, stream)) {
+      // First, move the source's body handle to the target and lock the stream.
+      RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
+      RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
+      if (!RequestOrResponse::move_body_handle(cx, source_owner, body_owner)) {
+        return false;
+      }
+
+      // Then, send the request/response without streaming. We know that content won't append to
+      // this body handle, because we don't expose any means to do so, so it's ok for it to be
+      // closed immediately.
+      return true;
+    }
+
+    RootedObject reader(cx, JS::ReadableStreamGetReader(cx, stream,
+                                                        JS::ReadableStreamReaderMode::Default));
+    if (!reader) return false;
+
+    bool is_closed;
+    if (!JS::ReadableStreamReaderIsClosed(cx, reader, &is_closed))
+      return false;
+
+    // It's ok for the stream to be closed, as its contents might
+    // already have fully been written to the body handle.
+    // In that case, we can do a blocking send instead.
+    if (is_closed) {
+      return true;
+    }
+
+    // Create handlers for both `then` and `catch`.
+    // These are functions with two reserved slots, in which we store all information required
+    // to perform the reactions.
+    // We store the actually required information on the catch handler, and a reference to that
+    // on the then handler. This allows us to reuse these functions for the next read operation
+    // in the then handler. The catch handler won't ever have a need to perform another operation
+    // in this way.
+    RootedObject catch_handler(cx);
+    RootedValue extra(cx, ObjectValue(*reader));
+    catch_handler = create_internal_method<body_reader_catch_handler>(cx, body_owner, extra);
+    if (!catch_handler) return false;
+
+    RootedObject then_handler(cx);
+    extra.setObject(*catch_handler);
+    then_handler = create_internal_method<body_reader_then_handler>(cx, body_owner, extra);
+    if (!then_handler) return false;
+
+    RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
+    if (!promise) return false;
+    if (!JS::AddPromiseReactions(cx, promise, then_handler, catch_handler))
+      return false;
+
+    *requires_streaming = true;
+    return true;
   }
 
   JSObject* create_body_stream(JSContext* cx, HandleObject owner) {
-    RootedObject source(cx, BodyStreamSource::create(cx, owner));
+    MOZ_ASSERT(is_instance(owner));
+    MOZ_ASSERT(!body_stream(owner));
+    RootedObject source(cx, NativeStreamSource::create(cx, owner, JS::UndefinedHandleValue,
+                                                       body_source_pull_algorithm,
+                                                       body_source_cancel_algorithm));
     if (!source) return nullptr;
 
     // Create a readable stream with a highwater mark of 0.0 to prevent an eager pull.
@@ -985,18 +1450,18 @@ namespace RequestOrResponse {
     // we enqueue a read from the host handle, which we quite often have no interest in
     // at all.
     RootedObject body_stream(cx, JS::NewReadableDefaultStreamObject(cx, source, nullptr, 0.0));
-    if (!body_stream) return nullptr;
+    if (!body_stream) {
+      return nullptr;
+    }
 
-    // This assert guarantees that we fail early in case SpiderMonkey ever changes how
-    // the underlying source for streams is stored, instead of operating on invalid
-    // values.
-    MOZ_RELEASE_ASSERT(BodyStreamSource::get_stream_source(body_stream) == source);
+    // TODO: immediately lock the stream if the owner's body is already used.
 
-    JS_SetReservedSlot(owner, RequestOrResponse::Slots::BodyStream, JS::ObjectValue(*body_stream));
+    JS_SetReservedSlot(owner, Slots::BodyStream, JS::ObjectValue(*body_stream));
     return body_stream;
   }
 
   bool body_get(JSContext* cx, CallArgs args, HandleObject self, bool create_if_undefined) {
+    MOZ_ASSERT(is_instance(self));
     if (!has_body(self)) {
       args.rval().setNull();
       return true;
@@ -1008,80 +1473,118 @@ namespace RequestOrResponse {
       if (!body_stream) return false;
     }
 
-    if (body_stream) {
-      args.rval().setObject(*body_stream);
-    }
-
+    args.rval().setObjectOrNull(body_stream);
     return true;
   }
 }
 
-static JS::Value get_fixed_slot(JSObject* obj, size_t slot) {
-  const auto* nobj = reinterpret_cast<const JS::shadow::Object*>(obj);
-  return nobj->fixedSlots()[slot];
+namespace NativeStreamSink {
+  static JSObject* get_stream_sink(JSContext* cx, HandleObject stream);
+  JSObject* owner(JSObject* self);
 }
 
-// A JS class to use as the underlying source for native body streams.
-// In principle, SpiderMonkey has the concept of a native ReadableStreamUnderlyingSource
-// for just that, but in practice making that work turned out to be extremely difficult,
-// because it involves GC tracing through a non-GC object (because our underlying source
-// needs access to the Request/Response object), which is ... non-trivial.
-//
-// This is a bit unfortunate, because SpiderMonkey doesn't provide an embedding API for
-// retrieving a JS object as the underlying source, so we have to resort to retrieving
-// it from a fixed slot directly, which isn't API exposed and could change.
-// To ensure we don't accidentally do unsafe things, we use various release asserts
-// verifying that we operate on the objects we expect. SpiderMonkey might change how
-// it stores the source, but at least we'd fail early.
-namespace BodyStreamSource {
+// A JS class to use as the underlying source for native readable streams, used for
+// Request/Response bodies and TransformStream.
+namespace NativeStreamSource {
   namespace Slots { enum {
-    Owner, // Request or Response object.
+    Owner, // Request or Response object, or TransformStream.
     Controller, // The ReadableStreamDefaultController.
     InternalReader, // Only used to lock the stream if it's consumed internally.
+    StartPromise, // Used as the return value of `start`, can be undefined.
+                  // Needed to properly implement TransformStream.
+    PullAlgorithm,
+    CancelAlgorithm,
+    PipedToTransformStream, // The TransformStream this source's stream is piped to, if any.
+                            // Only applies if the source backs a RequestOrResponse's body.
     Count
   };};
 
   bool is_instance(JSObject* obj);
 
-  // Fixed slot SpiderMonkey stores the controller in on ReadableStream objects.
-  #define STREAM_SLOT_CONTROLLER 1
-  // Fixed slot SpiderMonkey stores the underlying source in on ReadableStream
-  // controller objects.
-  #define CONTROLLER_SLOT_SOURCE 3
-
   JSObject* owner(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
     return &JS::GetReservedSlot(self, Slots::Owner).toObject();
   }
 
+  JSObject* stream(JSObject* self) {
+    return RequestOrResponse::body_stream(owner(self));
+  }
+
+  Value startPromise(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return JS::GetReservedSlot(self, Slots::StartPromise);
+  }
+
+  PullAlgorithm* pullAlgorithm(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return (PullAlgorithm*)JS::GetReservedSlot(self, Slots::PullAlgorithm).toPrivate();
+  }
+
+  CancelAlgorithm* cancelAlgorithm(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return (CancelAlgorithm*)JS::GetReservedSlot(self, Slots::CancelAlgorithm).toPrivate();
+  }
+
   JSObject* controller(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
     return &JS::GetReservedSlot(self, Slots::Controller).toObject();
   }
 
-  static JSObject* get_controller_source(JSObject* controller) {
-    return &get_fixed_slot(controller, CONTROLLER_SLOT_SOURCE).toObject();
+  /**
+   * Returns the underlying source for the given controller iff it's an object,
+   * nullptr otherwise.
+   */
+  static JSObject* get_controller_source(JSContext* cx, HandleObject controller) {
+    RootedValue source(cx);
+    bool success __attribute__((unused));
+    success = JS::ReadableStreamControllerGetUnderlyingSource(cx, controller, &source);
+    MOZ_ASSERT(success);
+    return source.isObject() ? &source.toObject() : nullptr;
   }
 
-  static JSObject* get_stream_source(JSObject* stream) {
-    JSObject* controller = &get_fixed_slot(stream, STREAM_SLOT_CONTROLLER).toObject();
-    return get_controller_source(controller);
+  static JSObject* get_stream_source(JSContext* cx, HandleObject stream) {
+    MOZ_ASSERT(JS::IsReadableStream(stream));
+    RootedObject controller(cx, JS::ReadableStreamGetController(cx, stream));
+    return get_controller_source(cx, controller);
   }
 
-  bool stream_has_native_source(JSObject* stream) {
-    MOZ_RELEASE_ASSERT(JS::IsReadableStream(stream));
-
-    JSObject* source = get_stream_source(stream);
+  bool stream_has_native_source(JSContext* cx, HandleObject stream) {
+    JSObject* source = get_stream_source(cx, stream);
     return is_instance(source);
   }
 
+  bool stream_is_body(JSContext* cx, HandleObject stream) {
+    JSObject* stream_source = get_stream_source(cx, stream);
+    return NativeStreamSource::is_instance(stream_source) &&
+           RequestOrResponse::is_instance(owner(stream_source));
+  }
+
+  void set_stream_piped_to_ts_writable(JSContext* cx, HandleObject stream, HandleObject writable) {
+    RootedObject source(cx, NativeStreamSource::get_stream_source(cx, stream));
+    MOZ_ASSERT(is_instance(source));
+    RootedObject sink(cx, NativeStreamSink::get_stream_sink(cx, writable));
+    RootedObject transform_stream(cx, NativeStreamSink::owner(sink));
+    MOZ_ASSERT(transform_stream);
+    JS::SetReservedSlot(source, Slots::PipedToTransformStream, ObjectValue(*transform_stream));
+  }
+
+  JSObject* piped_to_transform_stream(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return JS::GetReservedSlot(self, Slots::PipedToTransformStream).toObjectOrNull();
+  }
+
   bool lock_stream(JSContext* cx, HandleObject stream) {
-    MOZ_RELEASE_ASSERT(JS::IsReadableStream(stream));
+    MOZ_ASSERT(JS::IsReadableStream(stream));
 
     bool locked;
     JS::ReadableStreamIsLocked(cx, stream, &locked);
-    MOZ_RELEASE_ASSERT(!locked);
+    if (locked) {
+      JS_ReportErrorLatin1(cx, "Can't lock an already locked ReadableStream");
+      return false;
+    }
 
-    RootedObject self(cx, get_stream_source(stream));
-    MOZ_RELEASE_ASSERT(is_instance(self));
+    RootedObject self(cx, get_stream_source(cx, stream));
+    MOZ_ASSERT(is_instance(self));
 
     auto mode = JS::ReadableStreamReaderMode::Default;
     RootedObject reader(cx, JS::ReadableStreamGetReader(cx, stream, mode));
@@ -1094,58 +1597,1572 @@ namespace BodyStreamSource {
 
   const unsigned ctor_length = 0;
 
-  bool start(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject self(cx, &args.thisv().toObject());
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
-    MOZ_RELEASE_ASSERT(args[0].isObject());
+  bool start(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+
+    MOZ_ASSERT(args[0].isObject());
     RootedObject controller(cx, &args[0].toObject());
-    MOZ_RELEASE_ASSERT(get_controller_source(controller) == self);
+    MOZ_ASSERT(get_controller_source(cx, controller) == self);
 
     JS::SetReservedSlot(self, Slots::Controller, args[0]);
-    args.rval().setUndefined();
+
+    // For TransformStream, StartAlgorithm returns the same Promise for both the readable
+    // and writable stream. All other native initializations of ReadableStream have StartAlgorithm
+    // return undefined. Instead of introducing both the StartAlgorithm as a pointer and
+    // startPromise as a value, we just store the latter or undefined, and always return it.
+    args.rval().set(startPromise(self));
     return true;
   }
 
   bool pull(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject self(cx, &args.thisv().toObject());
+    METHOD_HEADER(1)
+
+    RootedObject owner(cx, NativeStreamSource::owner(self));
     RootedObject controller(cx, &args[0].toObject());
-    MOZ_RELEASE_ASSERT(controller == BodyStreamSource::controller(self));
-    MOZ_RELEASE_ASSERT(get_controller_source(controller) == self.get());
+    MOZ_ASSERT(controller == NativeStreamSource::controller(self));
+    MOZ_ASSERT(get_controller_source(cx, controller) == self.get());
 
-    // The actual read from the body needs to be delayed, because it'd otherwise
-    // be a blocking operation in case the backend didn't yet send any data.
-    // That would lead to situations where we block on I/O before processing
-    // all pending Promises, which in turn can result in operations happening in
-    // observably different behavior, up to and including causing deadlocks
-    // because a body read response is blocked on content making another request.
+    PullAlgorithm* pull = pullAlgorithm(self);
+    return pull(cx, args, self, owner, controller);
+  }
+
+  bool cancel(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+
+    RootedObject owner(cx, NativeStreamSource::owner(self));
+    HandleValue reason(args.get(0));
+
+    CancelAlgorithm* cancel = cancelAlgorithm(self);
+    return cancel(cx, args, self, owner, reason);
+  }
+
+  const JSFunctionSpec methods[] = {
+    JS_FN("start", start, 1, 0),
+    JS_FN("pull", pull, 1, 0),
+    JS_FN("cancel", cancel, 1, 0),
+  JS_FS_END};
+
+  const JSPropertySpec properties[] = {JS_PS_END};
+
+  CLASS_BOILERPLATE_NO_CTOR(NativeStreamSource)
+
+  JSObject* create(JSContext* cx, HandleObject owner, HandleValue startPromise,
+                   PullAlgorithm* pull, CancelAlgorithm* cancel)
+  {
+    RootedObject source(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!source) return nullptr;
+
+    JS::SetReservedSlot(source, Slots::Owner, JS::ObjectValue(*owner));
+    JS::SetReservedSlot(source, Slots::StartPromise, startPromise);
+    JS::SetReservedSlot(source, Slots::PullAlgorithm, JS::PrivateValue((void*)pull));
+    JS::SetReservedSlot(source, Slots::CancelAlgorithm, JS::PrivateValue((void*)cancel));
+    JS::SetReservedSlot(source, Slots::PipedToTransformStream, JS::NullValue());
+    return source;
+  }
+}
+
+// A JS class to use as the underlying sink for native writable streams, used for
+// TransformStream.
+namespace NativeStreamSink {
+  typedef bool WriteAlgorithm(JSContext* cx, CallArgs args, HandleObject stream,
+                              HandleObject owner, HandleValue chunk);
+  typedef bool AbortAlgorithm(JSContext* cx, CallArgs args, HandleObject stream,
+                              HandleObject owner, HandleValue reason);
+  typedef bool CloseAlgorithm(JSContext* cx, CallArgs args, HandleObject stream,
+                              HandleObject owner);
+  namespace Slots { enum {
+    Owner, // TransformStream.
+    Controller, // The WritableStreamDefaultController.
+    InternalWriter, // Only used to lock the stream if it's consumed internally.
+    StartPromise, // Used as the return value of `start`, can be undefined.
+                  // Needed to properly implement TransformStream.
+    WriteAlgorithm,
+    AbortAlgorithm,
+    CloseAlgorithm,
+    // AbortAlgorithm, TODO: implement
+    Count
+  };};
+
+  bool is_instance(JSObject* obj);
+
+  JSObject* owner(JSObject* self) {
+    return &JS::GetReservedSlot(self, Slots::Owner).toObject();
+  }
+
+  Value startPromise(JSObject* self) {
+    return JS::GetReservedSlot(self, Slots::StartPromise);
+  }
+
+  WriteAlgorithm* writeAlgorithm(JSObject* self) {
+    return (WriteAlgorithm*)JS::GetReservedSlot(self, Slots::WriteAlgorithm).toPrivate();
+  }
+
+  AbortAlgorithm* abortAlgorithm(JSObject* self) {
+    return (AbortAlgorithm*)JS::GetReservedSlot(self, Slots::AbortAlgorithm).toPrivate();
+  }
+
+  CloseAlgorithm* closeAlgorithm(JSObject* self) {
+    return (CloseAlgorithm*)JS::GetReservedSlot(self, Slots::CloseAlgorithm).toPrivate();
+  }
+
+  JSObject* controller(JSObject* self) {
+    return &JS::GetReservedSlot(self, Slots::Controller).toObject();
+  }
+
+  /**
+   * Returns the underlying sink for the given controller iff it's an object,
+   * nullptr otherwise.
+   */
+  static JSObject* get_controller_sink(JSContext* cx, HandleObject controller) {
+    RootedValue sink(cx, JS::WritableStreamControllerGetUnderlyingSink(cx, controller));
+    return sink.isObject() ? &sink.toObject() : nullptr;
+  }
+
+  static JSObject* get_stream_sink(JSContext* cx, HandleObject stream) {
+    RootedObject controller(cx, JS::WritableStreamGetController(cx, stream));
+    return get_controller_sink(cx, controller);
+  }
+
+  bool stream_has_native_sink(JSContext* cx, HandleObject stream) {
+    MOZ_RELEASE_ASSERT(JS::IsWritableStream(stream));
+
+    JSObject* sink = get_stream_sink(cx, stream);
+    return is_instance(sink);
+  }
+
+  const unsigned ctor_length = 0;
+
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
+
+  bool start(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+
+    MOZ_ASSERT(args[0].isObject());
+    RootedObject controller(cx, &args[0].toObject());
+    MOZ_ASSERT(get_controller_sink(cx, controller) == self);
+
+    JS::SetReservedSlot(self, Slots::Controller, args[0]);
+
+    // For TransformStream, StartAlgorithm returns the same Promise for both the readable
+    // and writable stream. All other native initializations of WritableStream have
+    // StartAlgorithm return undefined.
     //
-    // (This deadlock happens in automated tests, but admittedly might not happen
-    // in real usage.)
+    // Instead of introducing both the StartAlgorithm as a pointer and startPromise as a
+    // value, we just store the latter or undefined, and always return it.
+    args.rval().set(startPromise(self));
+    return true;
+  }
 
-    if (!pending_body_reads->append(self))
+  bool write(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+
+    RootedObject owner(cx, NativeStreamSink::owner(self));
+    HandleValue chunk(args[0]);
+
+    WriteAlgorithm* write = writeAlgorithm(self);
+    return write(cx, args, self, owner, chunk);
+  }
+
+  bool abort(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+
+    RootedObject owner(cx, NativeStreamSink::owner(self));
+    HandleValue reason(args[0]);
+
+    AbortAlgorithm* abort = abortAlgorithm(self);
+    return abort(cx, args, self, owner, reason);
+  }
+
+  bool close(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+
+    RootedObject owner(cx, NativeStreamSink::owner(self));
+
+    CloseAlgorithm* close = closeAlgorithm(self);
+    return close(cx, args, self, owner);
+  }
+
+  const JSFunctionSpec methods[] = {
+    JS_FN("start", start, 1, 0),
+    JS_FN("write", write, 2, 0),
+    JS_FN("abort", abort, 2, 0),
+    JS_FN("close", close, 1, 0),
+  JS_FS_END};
+
+  const JSPropertySpec properties[] = {JS_PS_END};
+
+  CLASS_BOILERPLATE_NO_CTOR(NativeStreamSink)
+
+  JSObject* create(JSContext* cx, HandleObject owner, HandleValue startPromise,
+                   WriteAlgorithm* write, CloseAlgorithm* close, AbortAlgorithm* abort)
+  {
+    RootedObject sink(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!sink) return nullptr;
+
+    JS::SetReservedSlot(sink, Slots::Owner, JS::ObjectValue(*owner));
+    JS::SetReservedSlot(sink, Slots::StartPromise, startPromise);
+    JS::SetReservedSlot(sink, Slots::WriteAlgorithm, JS::PrivateValue((void*)write));
+    JS::SetReservedSlot(sink, Slots::AbortAlgorithm, JS::PrivateValue((void*)abort));
+    JS::SetReservedSlot(sink, Slots::CloseAlgorithm, JS::PrivateValue((void*)close));
+    return sink;
+  }
+}
+
+namespace ReadableStream_additions {
+  static PersistentRooted<JSObject*> proto_obj;
+
+  bool is_instance(JSObject* obj) {
+    return JS::IsReadableStream(obj);
+  }
+
+  bool is_instance(JS::Value val) {
+    return val.isObject() && is_instance(&val.toObject());
+  }
+
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name) {
+    if (!is_instance(receiver)) {
+      JS_ReportErrorUTF8(cx,
+                         "Method %s called on receiver that's not an instance of ReadableStream",
+                         method_name);
       return false;
+    }
+    return true;
+  };
+
+  static PersistentRooted<Value> original_pipeTo;
+  static PersistentRooted<Value> overridden_pipeTo;
+
+  bool pipeTo(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+
+    // If the receiver is backed by a native source and the destination is the writable end of a
+    // TransformStream, set the TransformStream as the owner of the receiver's source.
+    // This enables us to shortcut operations later on.
+    RootedObject target(cx, args[0].isObject() ? &args[0].toObject() : nullptr);
+    if (target && NativeStreamSource::stream_has_native_source(cx, self) &&
+        JS::IsWritableStream(target) && TransformStream::is_ts_writable(cx, target))
+    {
+        NativeStreamSource::set_stream_piped_to_ts_writable(cx, self, target);
+    }
+
+    return JS::Call(cx, args.thisv(), original_pipeTo, HandleValueArray(args), args.rval());
+  }
+
+  bool pipeThrough(JSContext* cx, HandleObject source_readable, HandleObject target_writable,
+                   HandleValue options)
+  {
+    // 1. If ! IsReadableStreamLocked(this) is true, throw a TypeError exception.
+    bool locked;
+    if (!JS::ReadableStreamIsLocked(cx, source_readable, &locked)) {
+      return false;
+    }
+    if (locked) {
+      JS_ReportErrorLatin1(cx, "pipeThrough called on a ReadableStream that's already locked");
+      return false;
+    }
+
+    // 2. If ! IsWritableStreamLocked(transform["writable"]) is true, throw a TypeError exception.
+    if (JS::WritableStreamIsLocked(cx, target_writable)) {
+      JS_ReportErrorLatin1(cx, "The writable end of the transform object passed to pipeThrough "
+                               " passed to pipeThrough is already locked");
+      return false;
+    }
+
+    // 3. Let signal be options["signal"] if it exists, or undefined otherwise.
+    // (implicit, see note in step 4.)
+
+    // 4. Let promise be ! ReadableStreamPipeTo(this, transform["writable"], options
+    // ["preventClose"], options["preventAbort"], options["preventCancel"], signal).
+    // Note: instead of extracting the prevent* flags above, we just pass the |options|
+    // argument as-is. pipeTo will fail eagerly if it fails to extract the fields on
+    // |options|, so while skipping the extraction above changes the order in which errors
+    // are reported and the error messages a bit, it otherwise preserves semantics.
+    // In particular, the errors aren't reported as rejected promises, as would be the case
+    // for those reported in steps 1 and 2.
+    JS::RootedValueArray<2> newArgs(cx);
+    newArgs[0].setObject(*target_writable);
+    newArgs[1].set(options);
+    RootedValue thisv(cx, ObjectValue(*source_readable));
+    RootedValue rval(cx);
+    if (!JS::Call(cx, thisv, overridden_pipeTo, newArgs, &rval)) {
+      return false;
+    }
+
+    RootedObject promise(cx, &rval.toObject());
+    MOZ_ASSERT(JS::IsPromiseObject(promise));
+
+    // 5. Set promise.[[PromiseIsHandled]] to true.
+    // JSAPI doesn't provide a straightforward way to do this, but we can just register
+    // null-reactions in a way that achieves it.
+    if (!JS::AddPromiseReactionsIgnoringUnhandledRejection(cx, promise, nullptr, nullptr)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  bool pipeThrough(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(1)
+
+    if (!args[0].isObject()) {
+      JS_ReportErrorLatin1(cx, "First argument to pipeThrough must be an object");
+      return false;
+    }
+
+    RootedObject transform(cx, &args[0].toObject());
+    RootedObject readable(cx);
+    RootedObject writable(cx);
+
+    RootedValue val(cx);
+    if (!JS_GetProperty(cx, transform, "readable", &val))
+      return false;
+    if (!val.isObject() || !JS::IsReadableStream(&val.toObject())) {
+      JS_ReportErrorLatin1(cx, "First argument to pipeThrough must be an object with a "
+                               "|readable| property that is an instance of ReadableStream");
+      return false;
+    }
+
+    readable = &val.toObject();
+
+    if (!JS_GetProperty(cx, transform, "writable", &val))
+      return false;
+    if (!val.isObject() || !JS::IsWritableStream(&val.toObject())) {
+      JS_ReportErrorLatin1(cx, "First argument to pipeThrough must be an object with a "
+                               "|writable| property that is an instance of WritableStream");
+      return false;
+    }
+    writable = &val.toObject();
+
+    if (!pipeThrough(cx, self, writable, args.get(1))) {
+      return false;
+    }
+
+    // 6. Return transform["readable"].
+    args.rval().setObject(*readable);
+    return true;
+  }
+
+  bool initialize_additions(JSContext* cx, HandleObject global) {
+    RootedValue val(cx);
+    if (!JS_GetProperty(cx, global, "ReadableStream", &val))
+      return false;
+    RootedObject readableStream_builtin(cx, &val.toObject());
+
+    if (!JS_GetProperty(cx, readableStream_builtin, "prototype", &val)) {
+      return false;
+    }
+    proto_obj.init(cx, &val.toObject());
+    MOZ_ASSERT(proto_obj);
+
+    original_pipeTo.init(cx);
+    overridden_pipeTo.init(cx);
+    if (!JS_GetProperty(cx, proto_obj, "pipeTo", &original_pipeTo))
+      return false;
+    MOZ_ASSERT(JS::IsCallable(&original_pipeTo.toObject()));
+
+    JSFunction* pipeTo_fun = JS_DefineFunction(cx, proto_obj, "pipeTo", pipeTo, 1,
+                                               JSPROP_ENUMERATE);
+    if (!pipeTo_fun) {
+      return false;
+    }
+
+    overridden_pipeTo.setObject(*JS_GetFunctionObject(pipeTo_fun));
+
+    if (!JS_DefineFunction(cx, proto_obj, "pipeThrough", pipeThrough, 1, JSPROP_ENUMERATE)) {
+      return false;
+    }
+
+    return true;
+  }
+}
+
+/**
+ * Implementation of the WHATWG TransformStream builtin.
+ *
+ * All algorithm names and steps refer to spec algorithms defined at
+ * https://streams.spec.whatwg.org/#ts-default-controller-class
+ */
+namespace TransformStreamDefaultController {
+
+typedef JSObject* TransformAlgorithm(JSContext* cx, HandleObject controller, HandleValue chunk);
+typedef JSObject* FlushAlgorithm(JSContext* cx, HandleObject controller);
+
+  namespace Slots { enum {
+    Stream,
+    Transformer,
+    TransformAlgorithm,
+    TransformInput, // JS::Value to be used by TransformAlgorithm, e.g. a JSFunction to call.
+    FlushAlgorithm,
+    FlushInput, // JS::Value to be used by FlushAlgorithm, e.g. a JSFunction to call.
+    Count
+  };};
+
+  bool is_instance(JSObject* obj);
+
+  JSObject* stream(JSObject* controller) {
+    MOZ_ASSERT(is_instance(controller));
+    return &JS::GetReservedSlot(controller, Slots::Stream).toObject();
+  }
+
+  TransformAlgorithm* transformAlgorithm(JSObject* controller) {
+    MOZ_ASSERT(is_instance(controller));
+    return (TransformAlgorithm*)JS::GetReservedSlot(controller, Slots::TransformAlgorithm)
+                                .toPrivate();
+  }
+
+  FlushAlgorithm* flushAlgorithm(JSObject* controller) {
+    MOZ_ASSERT(is_instance(controller));
+    return (FlushAlgorithm*)JS::GetReservedSlot(controller, Slots::FlushAlgorithm).toPrivate();
+  }
+
+  const unsigned ctor_length = 0;
+
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
+
+  bool Enqueue(JSContext* cx, HandleObject controller, HandleValue chunk);
+  bool Terminate(JSContext* cx, HandleObject controller);
+
+  /**
+   * https://streams.spec.whatwg.org/#ts-default-controller-desired-size
+   */
+  bool desiredSize_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "get desiredSize")
+
+    // 1.  Let readableController be [this].[stream].[readable].[controller].
+    JSObject* stream = ::TransformStreamDefaultController::stream(self);
+    JSObject* readable = TransformStream::readable(stream);
+    double value;
+    bool has_value;
+    if (!JS::ReadableStreamGetDesiredSize(cx, readable, &has_value, &value)) {
+      return false;
+    }
+
+    if (!has_value) {
+      args.rval().setNull();
+    } else {
+      args.rval().set(JS_NumberValue(value));
+    }
+
+    return true;
+  }
+
+  const JSPropertySpec properties[] = {
+    JS_PSG("desiredSize", desiredSize_get, JSPROP_ENUMERATE),
+  JS_PS_END};
+
+  /**
+   * https://streams.spec.whatwg.org/#ts-default-controller-enqueue
+   */
+  bool enqueue_js(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "enqueue")
+
+    // 1.  Perform TransformStreamDefaultControllerEnqueue([this], chunk).
+    if (!Enqueue(cx, self, args.get(0))) {
+      return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  /**
+   * https://streams.spec.whatwg.org/#ts-default-controller-error
+   */
+  bool error_js(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "error")
+
+    // 1.  Perform TransformStreamDefaultControllerError(this, e).
+    // (inlined)
+    RootedObject stream(cx, ::TransformStreamDefaultController::stream(self));
+
+    if (!TransformStream::Error(cx, stream, args.get(0))) {
+      return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  /**
+   * https://streams.spec.whatwg.org/#ts-default-controller-terminate
+   */
+  bool terminate_js(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "terminate")
+
+    // 1.  Perform TransformStreamDefaultControllerTerminate(this).
+    if (!Terminate(cx, self)) {
+      return false;
+    }
 
     args.rval().setUndefined();
     return true;
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("start", start, 1, 0),
-    JS_FN("pull", pull, 1, 0),
+    JS_FN("enqueue", enqueue_js, 1, JSPROP_ENUMERATE),
+    JS_FN("error", error_js, 1, JSPROP_ENUMERATE),
+    JS_FN("terminate", terminate_js, 0, JSPROP_ENUMERATE),
   JS_FS_END};
 
-  const JSPropertySpec properties[] = {JS_PS_END};
+  CLASS_BOILERPLATE_NO_CTOR(TransformStreamDefaultController)
 
-  CLASS_BOILERPLATE_NO_CTOR(BodyStreamSource)
+  JSObject* create(JSContext* cx, HandleObject stream, TransformAlgorithm* transformAlgo,
+                   FlushAlgorithm* flushAlgo)
+  {
+    RootedObject controller(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!controller) return nullptr;
 
-  JSObject* create(JSContext* cx, HandleObject owner) {
-    RootedObject source(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-    if (!source) return nullptr;
+    // 1.  Assert: stream [implements] `[TransformStream]`.
+    MOZ_ASSERT(TransformStream::is_instance(stream));
 
-    JS::SetReservedSlot(source, Slots::Owner, JS::ObjectValue(*owner));
-    return source;
+    // 2.  Assert: stream.[controller] is undefined.
+    MOZ_ASSERT(JS::GetReservedSlot(stream, TransformStream::Slots::Controller)
+                   .isUndefined());
+
+    // 3.  Set controller.[stream] to stream.
+    JS::SetReservedSlot(controller, Slots::Stream, ObjectValue(*stream));
+
+    // 4.  Set stream.[controller] to controller.
+    JS::SetReservedSlot(stream, TransformStream::Slots::Controller,
+                        ObjectValue(*controller));
+
+    // 5.  Set controller.[transformAlgorithm] to transformAlgorithm.
+    JS::SetReservedSlot(controller, Slots::TransformAlgorithm,
+                        PrivateValue((void*)transformAlgo));
+
+    // 6.  Set controller.[flushAlgorithm] to flushAlgorithm.
+    JS::SetReservedSlot(controller, Slots::FlushAlgorithm, PrivateValue((void*)flushAlgo));
+
+    return controller;
+  }
+
+  void set_transformer(JSObject* controller, Value transformer, JSObject* transformFunction,
+                       JSObject* flushFunction)
+  {
+    JS::SetReservedSlot(controller, Slots::Transformer, transformer);
+    JS::SetReservedSlot(controller, Slots::TransformInput,
+                        ObjectOrNullValue(transformFunction));
+    JS::SetReservedSlot(controller, Slots::FlushInput, ObjectOrNullValue(flushFunction));
+  }
+
+  /**
+   * TransformStreamDefaultControllerEnqueue
+   */
+  bool Enqueue(JSContext* cx, HandleObject controller, HandleValue chunk) {
+    MOZ_ASSERT(is_instance(controller));
+
+    // 1.  Let stream be controller.[stream].
+    RootedObject stream(cx, ::TransformStreamDefaultController::stream(controller));
+
+    // 2.  Let readableController be stream.[readable].[controller].
+    RootedObject readable(cx, TransformStream::readable(stream));
+    RootedObject readableController(cx, JS::ReadableStreamGetController(cx, readable));
+    MOZ_ASSERT(readableController);
+
+    // 3.  If ! [ReadableStreamDefaultControllerCanCloseOrEnqueue](readableController) is false,
+    // throw a `TypeError` exception.
+    if (!JS::CheckReadableStreamControllerCanCloseOrEnqueue(cx, readableController, "enqueue")) {
+      return false;
+    }
+
+    // 4.  Let enqueueResult be ReadableStreamDefaultControllerEnqueue(readableController, chunk).
+    bool enqueueResult = JS::ReadableStreamEnqueue(cx, readable, chunk);
+
+    // 5.  If enqueueResult is an abrupt completion,
+    if (!enqueueResult) {
+      // 5.1.  Perform
+      // TransformStreamErrorWritableAndUnblockWrite(stream, enqueueResult.[Value]).
+      RootedValue resultValue(cx);
+      if (!JS_GetPendingException(cx, &resultValue)) {
+        return false;
+      }
+      JS_ClearPendingException(cx);
+
+      if (!TransformStream::ErrorWritableAndUnblockWrite(cx, stream, resultValue)) {
+        return false;
+      }
+
+      //     2.  Throw stream.[readable].[storedError].
+      RootedValue storedError(cx, JS::ReadableStreamGetStoredError(cx, readable));
+      JS_SetPendingException(cx, storedError);
+      return false;
+    }
+
+    // 6.  Let backpressure be ReadableStreamDefaultControllerHasBackpressure(readableController).
+    // (Inlined)
+    bool backpressure = !JS::ReadableStreamControllerShouldCallPull(cx, readableController);
+
+    // 7.  If backpressure is not stream.[backpressure],
+    if (backpressure != TransformStream::backpressure(stream)) {
+      //     1.  Assert: backpressure is true.
+      MOZ_ASSERT(backpressure);
+
+      //     2.  Perform ! TransformStreamSetBackpressure(stream, true).
+      TransformStream::SetBackpressure(cx, stream, true);
+    }
+
+    return true;
+  }
+
+  /**
+   * TransformStreamDefaultControllerTerminate
+   */
+  bool Terminate(JSContext* cx, HandleObject controller) {
+    MOZ_ASSERT(is_instance(controller));
+
+    // 1.  Let stream be controller.[stream].
+    RootedObject stream(cx, ::TransformStreamDefaultController::stream(controller));
+
+    // 2.  Let readableController be stream.[readable].[controller].
+    RootedObject readable(cx, TransformStream::readable(stream));
+    RootedObject readableController(cx, JS::ReadableStreamGetController(cx, readable));
+    MOZ_ASSERT(readableController);
+
+    // 3.  Perform ! [ReadableStreamDefaultControllerClose](readableController).
+    // Note: in https://github.com/whatwg/streams/pull/1029, the spec was changed to
+    // make ReadableStreamDefaultControllerClose (and -Enqueue) return early if
+    // ReadableStreamDefaultControllerCanCloseOrEnqueue is false. SpiderMonkey hasn't been
+    // updated accordingly, so it'll throw an exception instead.
+    // To avoid that, we do the check explicitly. While that also throws an exception, we can
+    // just clear it and move on.
+    // Note that this is future-proof: if SpiderMonkey is updated accordingly, it'll simply
+    // stop throwing an exception, and the `else` branch will never be taken.
+    if (JS::CheckReadableStreamControllerCanCloseOrEnqueue(cx, readableController, "close")) {
+      if (!JS::ReadableStreamClose(cx, readable)) {
+        return false;
+      }
+    } else {
+      JS_ClearPendingException(cx);
+    }
+
+    // 4.  Let error be a `[TypeError](https://tc39.es/ecma262/#sec-native-error-types-used-in-this-standard-typeerror)` exception indicating that the stream has been terminated.
+    // JSAPI doesn't allow us to create a proper error object with the right stack and all without
+    // actually throwing it. So we do that and then immediately clear the pending exception.
+    RootedValue error(cx);
+    JS_ReportErrorLatin1(cx, "The TransformStream has been terminated");
+    if (!JS_GetPendingException(cx, &error)) {
+      return false;
+    }
+    JS_ClearPendingException(cx);
+
+    // 5.  Perform ! [TransformStreamErrorWritableAndUnblockWrite](stream, error).
+    return TransformStream::ErrorWritableAndUnblockWrite(cx, stream, error);
+  }
+
+  /**
+   * Invoke the given callback in a way that treats it as a WebIDL callback returning `Promise<undefined>`, by first calling it and then running step 14 of
+   * <invoke a callback function> and the conversion step from
+   * https://webidl.spec.whatwg.org/#es-promise on the completion value.
+   */
+  JSObject* InvokePromiseReturningCallback(JSContext* cx, HandleValue receiver,
+                                           HandleValue callback, JS::HandleValueArray args)
+  {
+    RootedValue rval(cx);
+    if (!JS::Call(cx, receiver, callback, args, &rval)) {
+      return PromiseRejectedWithPendingError(cx);
+    }
+
+    return JS::CallOriginalPromiseResolve(cx, rval);
+  }
+
+  /**
+   * The TransformerAlgorithm to use for TransformStreams created using the JS constructor, with
+   * or without a `transformer` passed in.
+   *
+   * Steps 2.* and 4 of SetUpTransformStreamDefaultControllerFromTransformer.
+   */
+  JSObject* transform_algorithm_transformer(JSContext* cx, HandleObject controller,
+                                            HandleValue chunk)
+  {
+    MOZ_ASSERT(is_instance(controller));
+
+    // Step 2.  Let transformAlgorithm be the following steps, taking a chunk argument:
+    RootedValue transformFunction(cx);
+    transformFunction = JS::GetReservedSlot(controller, Slots::TransformInput);
+    if (!transformFunction.isObject()) {
+      // 2.1.  Let result be TransformStreamDefaultControllerEnqueue(controller, chunk).
+      if (!Enqueue(cx, controller, chunk)) {
+        // 2.2.  If result is an abrupt completion, return a promise rejected with result.[Value].
+        return PromiseRejectedWithPendingError(cx);
+      }
+
+      // 2.3.  Otherwise, return a promise resolved with undefined.
+      return JS::CallOriginalPromiseResolve(cx, JS::UndefinedHandleValue);
+    }
+
+    // Step 4.  If transformerDict[transform] exists, set transformAlgorithm to an algorithm which
+    // takes an argument chunk and returns the result of invoking transformerDict[transform] with
+    // argument list « chunk, controller » and callback this value transformer.
+    RootedValue transformer(cx, JS::GetReservedSlot(controller, Slots::Transformer));
+    JS::RootedValueArray<2> newArgs(cx);
+    newArgs[0].set(chunk);
+    newArgs[1].setObject(*controller);
+    return InvokePromiseReturningCallback(cx, transformer, transformFunction, newArgs);
+  }
+
+  /**
+   * The FlushAlgorithm to use for TransformStreams created using the JS constructor, with
+   * or without a `transformer` passed in.
+   *
+   * Steps 3 and 5 of SetUpTransformStreamDefaultControllerFromTransformer.
+   */
+  JSObject* flush_algorithm_transformer(JSContext* cx, HandleObject controller) {
+    MOZ_ASSERT(is_instance(controller));
+
+    // Step 3.  Let flushAlgorithm be an algorithm which returns a promise resolved with undefined.
+    RootedValue flushFunction(cx, JS::GetReservedSlot(controller, Slots::FlushInput));
+    if (!flushFunction.isObject()) {
+      return JS::CallOriginalPromiseResolve(cx, JS::UndefinedHandleValue);
+    }
+
+    // Step 5.  If transformerDict[flush] exists, set flushAlgorithm to an algorithm which returns the result of invoking transformerDict[flush] with argument list « controller » and callback this value transformer.
+    RootedValue transformer(cx, JS::GetReservedSlot(controller, Slots::Transformer));
+    JS::RootedValueArray<1> newArgs(cx);
+    newArgs[0].setObject(*controller);
+    return InvokePromiseReturningCallback(cx, transformer, flushFunction, newArgs);
+  }
+
+  /**
+   * SetUpTransformStreamDefaultController
+   * https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller
+   */
+  JSObject* SetUp(JSContext* cx, HandleObject stream,
+                  TransformAlgorithm* transformAlgo, FlushAlgorithm* flushAlgo)
+  {
+    MOZ_ASSERT(TransformStream::is_instance(stream));
+
+    // Step 1 of SetUpTransformStreamDefaultControllerFromTransformer and step 1-6 of this
+    // algorithm.
+    RootedObject controller(cx);
+    controller = TransformStreamDefaultController::create(cx, stream, transformAlgo, flushAlgo);
+    return controller;
+  }
+
+  /**
+   * SetUpTransformStreamDefaultControllerFromTransformer
+   * https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller-from-transformer
+   */
+  JSObject* SetUpFromTransformer(JSContext* cx, HandleObject stream, HandleValue transformer,
+                                 HandleObject transformFunction, HandleObject flushFunction)
+  {
+    MOZ_ASSERT(TransformStream::is_instance(stream));
+
+    // Step 1, moved into SetUpTransformStreamDefaultController.
+    // Step 6.  Perform ! [SetUpTransformStreamDefaultController](stream, controller, transformAlgorithm, flushAlgorithm).
+    RootedObject controller(cx);
+    controller = SetUp(cx, stream, transform_algorithm_transformer, flush_algorithm_transformer);
+    if (!controller) return nullptr;
+
+    // Set the additional bits required to execute the transformer-based transform and flush
+    // algorithms.
+    set_transformer(controller, transformer, transformFunction, flushFunction);
+
+    // Steps 2-5 implemented in dedicated functions above.
+    return controller;
+  }
+
+  /**
+   * Steps 2.* of TransformStreamDefaultControllerPerformTransform.
+   */
+  bool transformPromise_catch_handler(JSContext* cx, HandleObject controller, HandleValue extra,
+                                      CallArgs args)
+  {
+    RootedValue r(cx, args.get(0));
+    //     1.  Perform ! [TransformStreamError](controller.[stream], r).
+    RootedObject streamObj(cx, stream(controller));
+    if (!TransformStream::Error(cx, streamObj, r)) {
+      return false;
+    }
+
+    //     2.  Throw r.
+    JS_SetPendingException(cx, r);
+    return false;
+  }
+
+  /**
+   * TransformStreamDefaultControllerPerformTransform
+   */
+  JSObject* PerformTransform(JSContext* cx, HandleObject controller, HandleValue chunk) {
+    MOZ_ASSERT(is_instance(controller));
+
+    // 1.  Let transformPromise be the result of performing controller.[transformAlgorithm], passing chunk.
+    TransformAlgorithm* transformAlgo = transformAlgorithm(controller);
+    RootedObject transformPromise(cx, transformAlgo(cx, controller, chunk));
+    if (!transformPromise) {
+      return nullptr;
+    }
+
+    // 2.  Return the result of reacting to transformPromise with the following rejection
+    // steps given the argument r:
+    RootedObject catch_handler(cx);
+    catch_handler = create_internal_method<transformPromise_catch_handler>(cx, controller);
+    if (!catch_handler) {
+      return nullptr;
+    }
+
+    return JS::CallOriginalPromiseThen(cx, transformPromise, nullptr, catch_handler);
+  }
+
+  /**
+   * TransformStreamDefaultControllerClearAlgorithms
+   */
+  void ClearAlgorithms(JSObject* controller) {
+    MOZ_ASSERT(is_instance(controller));
+
+    // 1.  Set controller.[transformAlgorithm] to undefined.
+    JS::SetReservedSlot(controller, Slots::TransformAlgorithm, PrivateValue(nullptr));
+    JS::SetReservedSlot(controller, Slots::TransformInput, JS::UndefinedValue());
+
+    // 2.  Set controller.[flushAlgorithm] to undefined.
+    JS::SetReservedSlot(controller, Slots::FlushAlgorithm, PrivateValue(nullptr));
+    JS::SetReservedSlot(controller, Slots::FlushInput, JS::UndefinedValue());
+  }
+}
+
+bool ExtractFunction(JSContext* cx, HandleObject obj, const char* name,
+                     JS::MutableHandleObject func)
+{
+  RootedValue val(cx);
+  if (!JS_GetProperty(cx, obj, name, &val)) {
+    return false;
+  }
+
+  if (val.isUndefined()) {
+    return true;
+  }
+
+  if (!val.isObject() || !JS::IsCallable(&val.toObject())) {
+    JS_ReportErrorLatin1(cx, "%s should be a function", name);
+    return false;
+  }
+
+  func.set(&val.toObject());
+  return true;
+}
+
+bool ExtractStrategy(JSContext* cx, HandleValue strategy, double default_hwm,
+                     double* hwm, JS::MutableHandleFunction size)
+{
+  if (strategy.isUndefined()) {
+    *hwm = default_hwm;
+    return true;
+  }
+
+  if (!strategy.isObject()) {
+    JS_ReportErrorLatin1(cx,
+                         "Strategy passed to TransformStream constructor must be an object");
+    return false;
+  }
+
+  RootedObject strategy_obj(cx, &strategy.toObject());
+
+  RootedValue val(cx);
+  if (!JS_GetProperty(cx, strategy_obj, "highWaterMark", &val)) {
+    return false;
+  }
+
+  if (val.isUndefined()) {
+    *hwm = default_hwm;
+  } else {
+    if (!JS::ToNumber(cx, val, hwm)) {
+      return false;
+    }
+    if (mozilla::IsNaN(*hwm) || *hwm < 0) {
+      JS_ReportErrorLatin1(cx, "Invalid value for highWaterMark: %f", *hwm);
+      return false;
+    }
+  }
+
+  RootedObject size_obj(cx);
+  if (!ExtractFunction(cx, strategy_obj, "size", &size_obj)) {
+    return false;
+  }
+
+  // JSAPI wants JSHandleFunction instances for the size algorithm, so that's what it'll get.
+  if (size_obj) {
+    val.setObjectOrNull(size_obj);
+    size.set(JS_ValueToFunction(cx, val));
+  }
+
+  return true;
+}
+
+/**
+ * Implementation of the WHATWG TransformStream builtin.
+ *
+ * All algorithm names and steps refer to spec algorithms defined at
+ * https://streams.spec.whatwg.org/#ts-class
+ */
+namespace TransformStream {
+  JSObject* create(JSContext* cx, double writableHighWaterMark,
+                   JS::HandleFunction writableSizeAlgorithm,
+                   double readableHighWaterMark,
+                   JS::HandleFunction readableSizeAlgorithm,
+                   HandleValue transformer, HandleObject startFunction,
+                   HandleObject transformFunction, HandleObject flushFunction);
+
+  /**
+   * https://streams.spec.whatwg.org/#ts-constructor
+   */
+  bool constructor(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject startFunction(cx);
+    RootedObject transformFunction(cx);
+    RootedObject flushFunction(cx);
+
+    // 1.  If transformer is missing, set it to null.
+    RootedValue transformer(cx, args.get(0));
+    if (transformer.isUndefined()) {
+      transformer.setNull();
+    }
+
+    if (transformer.isObject()) {
+      RootedObject transformerDict(cx, &transformer.toObject());
+
+      // 2.  Let transformerDict be transformer, [converted to an IDL value] of type `
+      //     [Transformer]`.
+      // Note: we do the extraction of dict entries manually, because no WebIDL codegen.
+      if (!ExtractFunction(cx, transformerDict, "start", &startFunction)) {
+        return false;
+      }
+
+      if (!ExtractFunction(cx, transformerDict, "transform", &transformFunction)) {
+        return false;
+      }
+
+      if (!ExtractFunction(cx, transformerDict, "flush", &flushFunction)) {
+        return false;
+      }
+
+      // 3.  If transformerDict["readableType"] [exists], throw a `[RangeError]` exception.
+      bool found;
+      if (!JS_HasProperty(cx, transformerDict, "readableType", &found)) {
+        return false;
+      }
+      if (found) {
+        JS_ReportErrorLatin1(cx, "transformer.readableType is reserved for future use");
+        return false;
+      }
+
+      // 4.  If transformerDict["writableType"] [exists], throw a `[RangeError]` exception.
+      if (!JS_HasProperty(cx, transformerDict, "writableType", &found)) {
+        return false;
+      }
+      if (found) {
+        JS_ReportErrorLatin1(cx, "transformer.writableType is reserved for future use");
+        return false;
+      }
+  }
+
+    // 5.  Let readableHighWaterMark be ? [ExtractHighWaterMark](readableStrategy, 0).
+    // 6.  Let readableSizeAlgorithm be ! [ExtractSizeAlgorithm](readableStrategy).
+    double readableHighWaterMark;
+    JS::RootedFunction readableSizeAlgorithm(cx);
+    if (!ExtractStrategy(cx, args.get(2), 0, &readableHighWaterMark,
+                         &readableSizeAlgorithm))
+    {
+      return false;
+    }
+
+    // 7.  Let writableHighWaterMark be ? [ExtractHighWaterMark](writableStrategy, 1).
+    // 8.  Let writableSizeAlgorithm be ! [ExtractSizeAlgorithm](writableStrategy).
+    double writableHighWaterMark;
+    JS::RootedFunction writableSizeAlgorithm(cx);
+    if (!ExtractStrategy(cx, args.get(1), 1, &writableHighWaterMark,
+                         &writableSizeAlgorithm))
+    {
+      return false;
+    }
+
+    // Steps 9-13.
+    RootedObject self(cx, create(cx, writableHighWaterMark, writableSizeAlgorithm,
+                                 readableHighWaterMark, readableSizeAlgorithm,
+                                 transformer, startFunction, transformFunction,
+                                 flushFunction));
+    if (!self) return false;
+
+    args.rval().setObject(*self);
+    return true;
+  }
+
+  const unsigned ctor_length = 0;
+
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
+
+  /**
+   * The native object owning the sink underlying the TransformStream's readable end.
+   *
+   * This can e.g. be a RequestOrResponse if the readable is used as a body.
+   */
+  JSObject* owner(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return &JS::GetReservedSlot(self, Slots::Owner).toObject();
+  }
+
+  void set_owner(JSObject* self, JSObject* owner) {
+    MOZ_ASSERT(is_instance(self));
+    MOZ_ASSERT(RequestOrResponse::is_instance(owner));
+    MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Owner).isUndefined());
+    JS::SetReservedSlot(self, Slots::Owner, ObjectValue(*owner));
+  }
+
+  JSObject* readable(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return &JS::GetReservedSlot(self, Slots::Readable).toObject();
+  }
+
+  bool is_ts_readable(JSContext* cx, HandleObject readable) {
+    JSObject* source = NativeStreamSource::get_stream_source(cx, readable);
+    if (!source || !NativeStreamSource::is_instance(source)) {
+      return false;
+    }
+    JSObject* stream_owner = NativeStreamSource::owner(source);
+    return stream_owner ? TransformStream::is_instance(stream_owner) : false;
+  }
+
+  bool readable_used_as_body(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    // For now the owner can only be a RequestOrResponse, so no further checks are needed.
+    return JS::GetReservedSlot(self, Slots::Owner).isObject();
+  }
+
+  /**
+   * Sets the |target| RequestOrResponse object as the owner of the TransformStream
+   * |readable| is the readable end of.
+   *
+   * This allows us to later on short-cut piping from native body to native body.
+   *
+   * Asserts that |readable| is the readable end of a TransformStream.
+   */
+  void set_readable_used_as_body(JSContext* cx, HandleObject readable, HandleObject target) {
+    MOZ_ASSERT(is_ts_readable(cx, readable));
+    JSObject* source = NativeStreamSource::get_stream_source(cx, readable);
+    JSObject* stream_owner = NativeStreamSource::owner(source);
+    set_owner(stream_owner, target);
+  }
+
+  JSObject* writable(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return &JS::GetReservedSlot(self, Slots::Writable).toObject();
+  }
+
+  bool is_ts_writable(JSContext* cx, HandleObject writable) {
+    JSObject* sink = NativeStreamSink::get_stream_sink(cx, writable);
+    if (!sink || !NativeStreamSink::is_instance(sink)) {
+      return false;
+    }
+    JSObject* stream_owner = NativeStreamSink::owner(sink);
+    return stream_owner ? is_instance(stream_owner) : false;
+  }
+
+  JSObject* controller(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return &JS::GetReservedSlot(self, Slots::Controller).toObject();
+  }
+
+  bool backpressure(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return JS::GetReservedSlot(self, Slots::Backpressure).toBoolean();
+  }
+
+  JSObject* backpressureChangePromise(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return JS::GetReservedSlot(self, Slots::BackpressureChangePromise).toObjectOrNull();
+  }
+
+  bool readable_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "get readable")
+    args.rval().setObject(*readable(self));
+    return true;
+  }
+
+  bool writable_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "get writable")
+    args.rval().setObject(*writable(self));
+    return true;
+  }
+
+  const JSFunctionSpec methods[] = {JS_FS_END};
+
+  const JSPropertySpec properties[] = {
+    JS_PSG("readable", readable_get, JSPROP_ENUMERATE),
+    JS_PSG("writable", writable_get, JSPROP_ENUMERATE),
+  JS_PS_END};
+
+  CLASS_BOILERPLATE_CUSTOM_INIT(TransformStream)
+
+  bool init_class(JSContext* cx, HandleObject global) {
+    bool ok = init_class_impl(cx, global);
+    if (!ok) return false;
+
+    return ReadableStream_additions::initialize_additions(cx, global);
+  }
+
+  /**
+   * TransformStreamError
+   */
+  bool Error(JSContext* cx, HandleObject stream, HandleValue error) {
+    MOZ_ASSERT(is_instance(stream));
+
+    // 1.  Perform ReadableStreamDefaultControllerError(stream.[readable].[controller], e).
+    RootedObject readable(cx, ::TransformStream::readable(stream));
+    if (!JS::ReadableStreamError(cx, readable, error)) {
+      return false;
+    }
+
+    // 2.  Perform ! [TransformStreamErrorWritableAndUnblockWrite](stream, e).
+    return ErrorWritableAndUnblockWrite(cx, stream, error);
+  }
+
+  /**
+   * TransformStreamDefaultSourcePullAlgorithm
+   */
+  bool DefaultSourcePullAlgorithm(JSContext* cx, CallArgs args, HandleObject readable,
+                                  HandleObject stream, HandleObject controller)
+  {
+    // 1.  Assert: stream.[backpressure] is true.
+    MOZ_ASSERT(backpressure(stream));
+
+    // 2.  Assert: stream.[backpressureChangePromise] is not undefined.
+    MOZ_ASSERT(backpressureChangePromise(stream));
+
+    // 3.  Perform ! [TransformStreamSetBackpressure](stream, false).
+    if (!SetBackpressure(cx, stream, false)) {
+      return false;
+    }
+
+    // 4.  Return stream.[backpressureChangePromise].
+    args.rval().setObject(*backpressureChangePromise(stream));
+    return true;
+  }
+
+  /**
+   * Steps 7.* of InitializeTransformStream
+   */
+  bool DefaultSourceCancelAlgorithm(JSContext* cx, CallArgs args, HandleObject readable,
+                                    HandleObject stream, HandleValue reason)
+  {
+    MOZ_ASSERT(is_instance(stream));
+
+    // 1.  Perform ! [TransformStreamErrorWritableAndUnblockWrite](stream, reason).
+    if (!ErrorWritableAndUnblockWrite(cx, stream, reason)) {
+      return false;
+    }
+
+    // 2.  Return [a promise resolved with] undefined.
+    args.rval().setUndefined();
+    return true;
+  }
+
+  /**
+   * Steps 2 and 3.* of DefaultSinkWriteAlgorithm.
+   */
+  bool default_sink_write_algo_then_handler(JSContext* cx, HandleObject stream, HandleValue chunk,
+                                            CallArgs args)
+  {
+    // 3.1.  Let writable be stream.[writable].
+    RootedObject writable(cx, ::TransformStream::writable(stream));
+
+    // 3.2.  Let state be writable.[state].
+    auto state = JS::WritableStreamGetState(cx, writable);
+
+    // 3.3.  If state is "`erroring`", throw writable.[storedError].
+    if (state == JS::WritableStreamState::Erroring) {
+      RootedValue storedError(cx, JS::WritableStreamGetStoredError(cx, writable));
+      JS_SetPendingException(cx, storedError);
+      return false;
+    }
+
+    // 3.4.  Assert: state is "`writable`".
+    MOZ_ASSERT(state == JS::WritableStreamState::Writable);
+
+    // 2.  Let controller be stream.[controller].
+    RootedObject controller(cx, TransformStream::controller(stream));
+
+    // 3.5.  Return TransformStreamDefaultControllerPerformTransform(controller, chunk).
+    RootedObject transformPromise(cx);
+    transformPromise = TransformStreamDefaultController::PerformTransform(cx, controller, chunk);
+    if (!transformPromise) {
+      return false;
+    }
+
+    args.rval().setObject(*transformPromise);
+    return true;
+  }
+
+  bool DefaultSinkWriteAlgorithm(JSContext* cx, CallArgs args, HandleObject writableController,
+                                 HandleObject stream, HandleValue chunk)
+  {
+    RootedObject writable(cx, ::TransformStream::writable(stream));
+
+    // 1.  Assert: stream.[writable].[state] is "`writable`".
+    MOZ_ASSERT(JS::WritableStreamGetState(cx, writable) ==
+               JS::WritableStreamState::Writable);
+
+    // 2. (reordered below)
+
+    // 3.  If stream.[backpressure] is true,
+    if (TransformStream::backpressure(stream)) {
+      //     1.  Let backpressureChangePromise be stream.[backpressureChangePromise].
+      RootedObject changePromise(cx, TransformStream::backpressureChangePromise(stream));
+
+      //     2.  Assert: backpressureChangePromise is not undefined.
+      MOZ_ASSERT(changePromise);
+
+      //     3.  Return the result of [reacting] to backpressureChangePromise with the following
+      //         fulfillment steps:
+      RootedObject then_handler(cx);
+      then_handler = create_internal_method<default_sink_write_algo_then_handler>(cx, stream,
+                                                                                  chunk);
+      if (!then_handler) return false;
+
+      RootedObject result(cx);
+      result = JS::CallOriginalPromiseThen(cx, changePromise, then_handler, nullptr);
+      if (!result) {
+        return false;
+      }
+
+      args.rval().setObject(*result);
+      return true;
+    }
+
+    // 2.  Let controller be stream.[controller].
+    RootedObject controller(cx, TransformStream::controller(stream));
+
+    // 4.  Return ! [TransformStreamDefaultControllerPerformTransform](controller, chunk).
+    RootedObject transformPromise(cx);
+    transformPromise = TransformStreamDefaultController::PerformTransform(cx, controller, chunk);
+    if (!transformPromise) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+
+    args.rval().setObject(*transformPromise);
+    return true;
+  }
+
+  bool DefaultSinkAbortAlgorithm(JSContext* cx, CallArgs args,
+                                 HandleObject writableController, HandleObject stream,
+                                 HandleValue reason)
+  {
+    MOZ_ASSERT(is_instance(stream));
+
+    // 1.  Perform ! [TransformStreamError](stream, reason).
+    if (!Error(cx, stream, reason)) {
+      return false;
+    }
+
+    // 2.  Return [a promise resolved with] undefined.
+    RootedObject promise(cx, JS::CallOriginalPromiseResolve(cx, JS::UndefinedHandleValue));
+    if (!promise) {
+      return false;
+    }
+
+    args.rval().setObject(*promise);
+    return true;
+  }
+
+  /**
+   * Steps 5.1.1-2 of DefaultSinkCloseAlgorithm.
+   */
+  bool default_sink_close_algo_then_handler(JSContext* cx, HandleObject stream, HandleValue extra,
+                                            CallArgs args)
+  {
+    // 5.1.1.  If readable.[state] is "`errored`", throw readable.[storedError].
+    RootedObject readable(cx, &extra.toObject());
+    bool is_errored;
+    if (!JS::ReadableStreamIsErrored(cx, readable, &is_errored)) {
+      return false;
+    }
+
+    if (is_errored) {
+      RootedValue storedError(cx, JS::ReadableStreamGetStoredError(cx, readable));
+      JS_SetPendingException(cx, storedError);
+      return false;
+    }
+
+    // 5.1.2.  Perform ! [ReadableStreamDefaultControllerClose](readable.[controller]).
+    RootedObject readableController(cx, JS::ReadableStreamGetController(cx, readable));
+    // Note: in https://github.com/whatwg/streams/pull/1029, the spec was changed to
+    // make ReadableStreamDefaultControllerClose (and -Enqueue) return early if
+    // ReadableStreamDefaultControllerCanCloseOrEnqueue is false. SpiderMonkey hasn't been
+    // updated accordingly, so it'll throw an exception instead.
+    // To avoid that, we do the check explicitly. While that also throws an exception, we can
+    // just clear it and move on.
+    // Note that this is future-proof: if SpiderMonkey is updated accordingly, it'll simply
+    // stop throwing an exception, and the `else` branch will never be taken.
+    if (JS::CheckReadableStreamControllerCanCloseOrEnqueue(cx, readableController, "close")) {
+      return JS::ReadableStreamClose(cx, readable);
+    } else {
+      JS_ClearPendingException(cx);
+    }
+    return true;
+  }
+
+  /**
+   * Steps 5.2.1-2 of DefaultSinkCloseAlgorithm.
+   */
+  bool default_sink_close_algo_catch_handler(JSContext* cx, HandleObject stream,
+                                             HandleValue extra, CallArgs args)
+  {
+    // 5.2.1.  Perform ! [TransformStreamError](stream, r).
+    HandleValue r = args.get(0);
+    if (!Error(cx, stream, r)) {
+      return false;
+    }
+
+    // 5.2.2.  Throw readable.[storedError].
+    RootedObject readable(cx, &extra.toObject());
+    RootedValue storedError(cx, JS::ReadableStreamGetStoredError(cx, readable));
+    JS_SetPendingException(cx, storedError);
+    return false;
+  }
+
+  bool DefaultSinkCloseAlgorithm(JSContext* cx, CallArgs args,
+                                 HandleObject writableController, HandleObject stream)
+  {
+    MOZ_ASSERT(is_instance(stream));
+
+    // 1.  Let readable be stream.[readable].
+    RootedObject readable(cx, ::TransformStream::readable(stream));
+
+    // 2.  Let controller be stream.[controller].
+    RootedObject controller(cx, ::TransformStream::controller(stream));
+
+    // 3.  Let flushPromise be the result of performing controller.[flushAlgorithm].
+    auto flushAlgorithm = TransformStreamDefaultController::flushAlgorithm(controller);
+    RootedObject flushPromise(cx, flushAlgorithm(cx, controller));
+    if (!flushPromise) {
+      return false;
+    }
+
+    // 4.  Perform ! [TransformStreamDefaultControllerClearAlgorithms](controller).
+    TransformStreamDefaultController::ClearAlgorithms(controller);
+
+    // 5.  Return the result of [reacting] to flushPromise:
+    // 5.1.  If flushPromise was fulfilled, then:
+    // Sub-steps in handler above.
+    RootedObject then_handler(cx);
+    RootedValue extra(cx, ObjectValue(*readable));
+    then_handler = create_internal_method<default_sink_close_algo_then_handler>(cx, stream, extra);
+    if (!then_handler) return false;
+
+    // 5.2.  If flushPromise was rejected with reason r, then:
+    // Sub-steps in handler above.
+    RootedObject catch_handler(cx);
+    catch_handler = create_internal_method<default_sink_close_algo_catch_handler>(cx, stream,
+                                                                                  extra);
+    if (!catch_handler) return false;
+
+    RootedObject result(cx);
+    result = JS::CallOriginalPromiseThen(cx, flushPromise, then_handler, catch_handler);
+    if (!result) {
+      return false;
+    }
+
+    args.rval().setObject(*result);
+    return true;
+  }
+
+  /**
+   * TransformStreamSetBackpressure
+   */
+  bool SetBackpressure(JSContext* cx, HandleObject stream, bool backpressure) {
+    // 1.  Assert: stream.[backpressure] is not backpressure.
+    MOZ_ASSERT(::TransformStream::backpressure(stream) != backpressure);
+
+    // 2.  If stream.[backpressureChangePromise] is not undefined, resolve stream.[backpressureChangePromise] with undefined.
+    RootedObject changePromise(cx, backpressureChangePromise(stream));
+    if (changePromise) {
+      if (!JS::ResolvePromise(cx, changePromise, JS::UndefinedHandleValue)) {
+        return false;
+      }
+    }
+
+    // 3.  Set stream.[backpressureChangePromise] to a new promise.
+    changePromise = JS::NewPromiseObject(cx, nullptr);
+    if (!changePromise) {
+      return false;
+    }
+    JS::SetReservedSlot(stream, Slots::BackpressureChangePromise, ObjectValue(*changePromise));
+
+    // 4.  Set stream.[backpressure] to backpressure.
+    JS::SetReservedSlot(stream, Slots::Backpressure, JS::BooleanValue(backpressure));
+
+    return true;
+  }
+
+  /**
+   * https://streams.spec.whatwg.org/#initialize-transform-stream
+   * Steps 9-13.
+   */
+  bool Initialize(JSContext* cx, HandleObject stream, HandleObject startPromise,
+                  double writableHighWaterMark, JS::HandleFunction writableSizeAlgorithm,
+                  double readableHighWaterMark, JS::HandleFunction readableSizeAlgorithm)
+  {
+    // Step 1.  Let startAlgorithm be an algorithm that returns startPromise.
+    // (Inlined)
+
+    // Steps 2-4 implemented as DefaultSink*Algorithm functions above.
+
+    // Step 5.  Set stream.[writable] to ! [CreateWritableStream](startAlgorithm, writeAlgorithm, closeAlgorithm, abortAlgorithm, writableHighWaterMark, writableSizeAlgorithm).
+    RootedValue startPromiseVal(cx, ObjectValue(*startPromise));
+    RootedObject sink(cx, NativeStreamSink::create(cx, stream, startPromiseVal,
+                                                   DefaultSinkWriteAlgorithm,
+                                                   DefaultSinkCloseAlgorithm,
+                                                   DefaultSinkAbortAlgorithm));
+    if (!sink) return false;
+
+    RootedObject writable(cx);
+    writable = JS::NewWritableDefaultStreamObject(cx, sink, writableSizeAlgorithm,
+                                                  writableHighWaterMark);
+    if (!writable) return false;
+
+    JS::SetReservedSlot(stream, Slots::Writable, ObjectValue(*writable));
+
+    // Step 6.  Let pullAlgorithm be the following steps:
+    auto pullAlgorithm = DefaultSourcePullAlgorithm;
+
+    // Step 7.  Let cancelAlgorithm be the following steps, taking a reason argument:
+    // (Sub-steps moved into DefaultSourceCancelAlgorithm)
+    auto cancelAlgorithm = DefaultSourceCancelAlgorithm;
+
+    // Step 8.  Set stream.[readable] to ! [CreateReadableStream](startAlgorithm, pullAlgorithm, cancelAlgorithm, readableHighWaterMark, readableSizeAlgorithm).
+    RootedObject source(cx, NativeStreamSource::create(cx, stream, startPromiseVal,
+                                                       pullAlgorithm, cancelAlgorithm));
+    if (!source) return false;
+
+    RootedObject readable(cx, JS::NewReadableDefaultStreamObject(cx, source,
+                                                                 readableSizeAlgorithm,
+                                                                 readableHighWaterMark));
+    if (!readable) return false;
+
+    JS::SetReservedSlot(stream, Slots::Readable, ObjectValue(*readable));
+
+    // Step 9.  Set stream.[backpressure] and stream.[backpressureChangePromise] to undefined.
+    // As the note in the spec says, it's valid to instead set `backpressure` to a
+    // boolean value early, which makes implementing SetBackpressure easier.
+    JS::SetReservedSlot(stream, Slots::Backpressure, JS::FalseValue());
+
+    // For similar reasons, ensure that the backpressureChangePromise slot is null.
+    JS::SetReservedSlot(stream, Slots::BackpressureChangePromise, JS::NullValue());
+
+    // Step 10. Perform ! [TransformStreamSetBackpressure](stream, true).
+    if (!SetBackpressure(cx, stream, true)) {
+      return false;
+    }
+
+    // Step 11. Set stream.[controller] to undefined.
+    JS::SetReservedSlot(stream, Slots::Controller, JS::UndefinedValue());
+
+    return true;
+  }
+
+  bool ErrorWritableAndUnblockWrite(JSContext* cx, HandleObject stream, HandleValue error) {
+    MOZ_ASSERT(is_instance(stream));
+
+    // 1.  Perform TransformStreamDefaultControllerClearAlgorithms(stream.[controller]).
+    TransformStreamDefaultController::ClearAlgorithms(controller(stream));
+
+    // 2.  Perform WritableStreamDefaultControllerErrorIfNeeded(stream.[writable].[controller], e).
+    // (inlined)
+    RootedObject writable(cx, ::TransformStream::writable(stream));
+    if (JS::WritableStreamGetState(cx, writable) == JS::WritableStreamState::Writable) {
+      if (!JS::WritableStreamError(cx, writable, error)) {
+        return false;
+      }
+    }
+
+    // 3.  If stream.[backpressure] is true, perform TransformStreamSetBackpressure(stream, false).
+    if (backpressure(stream)) {
+      if (!SetBackpressure(cx, stream, false)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * https://streams.spec.whatwg.org/#ts-constructor
+   * Steps 9-13.
+   */
+  JSObject* create(JSContext* cx, double writableHighWaterMark,
+                   JS::HandleFunction writableSizeAlgorithm,
+                   double readableHighWaterMark,
+                   JS::HandleFunction readableSizeAlgorithm,
+                   HandleValue transformer, HandleObject startFunction,
+                   HandleObject transformFunction, HandleObject flushFunction)
+  {
+    RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!self) return nullptr;
+
+    // Step 9.
+    RootedObject startPromise(cx, JS::NewPromiseObject(cx, nullptr));
+    if (!startPromise) return nullptr;
+
+    // Step 10.
+    if (!Initialize(cx, self, startPromise, writableHighWaterMark, writableSizeAlgorithm,
+                    readableHighWaterMark, readableSizeAlgorithm))
+    {
+      return nullptr;
+    }
+
+    // Step 11.
+    RootedObject controller(cx);
+    controller = TransformStreamDefaultController::SetUpFromTransformer(cx, self,
+                                                                        transformer,
+                                                                        transformFunction,
+                                                                        flushFunction);
+    if (!controller) {
+      return nullptr;
+    }
+
+    RootedValue rval(cx);
+
+    // Step 12.
+    // If transformerDict["start"], then resolve startPromise with the result of invoking
+    // transformerDict["start"] with argument list « this.[[[controller]]] » and callback
+    // this value transformer.
+    if (startFunction) {
+      JS::RootedValueArray<1> newArgs(cx);
+      newArgs[0].setObject(*controller);
+      if (!JS::Call(cx, transformer, startFunction, newArgs, &rval)) {
+        return nullptr;
+      }
+    }
+
+    // Step 13.
+    // Otherwise, resolve startPromise with undefined.
+    if (!JS::ResolvePromise(cx, startPromise, rval)) {
+      return nullptr;
+    }
+
+    return self;
+  }
+
+  /**
+   * Implementation of https://streams.spec.whatwg.org/#readablestream-create-a-proxy
+   */
+  JSObject* create_rs_proxy(JSContext* cx, HandleObject input_readable) {
+    MOZ_ASSERT(JS::IsReadableStream(input_readable));
+    RootedObject transform_stream(cx, create(cx, 1, nullptr, 0, nullptr, JS::UndefinedHandleValue,
+                                             nullptr, nullptr, nullptr));
+    if (!transform_stream) {
+      return nullptr;
+    }
+
+    RootedObject writable_end(cx, writable(transform_stream));
+
+    if (!ReadableStream_additions::pipeThrough(cx, input_readable, writable_end,
+                                               JS::UndefinedHandleValue))
+    {
+      return nullptr;
+    }
+
+    return readable(transform_stream);
   }
 }
 
@@ -1260,7 +3277,7 @@ namespace CacheOverride {
     return tag;
   }
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool mode_get(JSContext* cx, HandleObject self, MutableHandleValue rval) {
     const char* mode_chars;
@@ -1476,6 +3493,27 @@ namespace CacheOverride {
   JSObject* create(JSContext* cx) {
     return JS_NewObjectWithGivenProto(cx, &class_, proto_obj);
   }
+
+  /**
+   * Clone a CacheOverride instance by copying all its reserved slots.
+   *
+   * This works because CacheOverride slots only contain primitive values.
+   */
+  JSObject* clone(JSContext* cx, HandleObject self) {
+    MOZ_ASSERT(is_instance(self));
+    RootedObject result(cx, create(cx));
+    if (!result) {
+      return nullptr;
+    }
+
+    for (size_t i = 0; i < Slots::Count; i++) {
+      Value val = JS::GetReservedSlot(self, i);
+      MOZ_ASSERT(!val.isObject());
+      JS::SetReservedSlot(result, i, val);
+    }
+
+    return result;
+  }
 }
 
 
@@ -1511,6 +3549,7 @@ namespace Request {
     URL = RequestOrResponse::Slots::URL,
     Backend = RequestOrResponse::Slots::Count,
     Method,
+    CacheOverride,
     PendingRequest,
     ResponsePromise,
     IsDownstream,
@@ -1545,40 +3584,44 @@ namespace Request {
     return val.isString() ? val.toString() : nullptr;
   }
 
-  // TODO: eagerly retrieve method and store client-side.
   JSString* method(JSContext*cx, HandleObject obj) {
-    Value val = JS::GetReservedSlot(obj, Slots::Method);
-    if (val.isNullOrUndefined()) {
-      char buf[16];
-      size_t num_written = 0;
-      if (!HANDLE_RESULT(cx, xqd_req_method_get(request_handle(obj), buf, 16, &num_written)))
-        return nullptr;
-
-      RootedString method(cx, JS_NewStringCopyN(cx, buf, num_written));
-      if (!method) return nullptr;
-
-      val = JS::StringValue(method);
-      JS_SetReservedSlot(obj, Slots::Method, val);
-    }
-    return val.toString();
+    return JS::GetReservedSlot(obj, Slots::Method).toString();
   }
 
   bool set_cache_override(JSContext* cx, HandleObject self, HandleValue cache_override_val) {
+    MOZ_ASSERT(is_instance(self));
     if (!CacheOverride::is_instance(cache_override_val)) {
       JS_ReportErrorUTF8(cx, "Value passed in as cacheOverride must be an "
                              "instance of CacheOverride");
       return false;
     }
 
-    RootedObject cache_override(cx, &cache_override_val.toObject());
-    RootedValue val(cx);
+    RootedObject input(cx, &cache_override_val.toObject());
+    JSObject* override = CacheOverride::clone(cx, input);
+    if (!override) {
+      return false;
+    }
 
-    uint32_t tag = CacheOverride::abi_tag(cache_override);
-    val = CacheOverride::ttl(cache_override);
+    JS::SetReservedSlot(self, Slots::CacheOverride, ObjectValue(*override));
+    return true;
+  }
+
+  /**
+   * Apply the CacheOverride to a host-side request handle.
+   */
+  bool apply_cache_override(JSContext* cx, HandleObject self) {
+    MOZ_ASSERT(is_instance(self));
+    RootedObject override(cx, JS::GetReservedSlot(self, Slots::CacheOverride).toObjectOrNull());
+    if (!override) {
+      return true;
+    }
+
+    uint32_t tag = CacheOverride::abi_tag(override);
+    RootedValue val(cx, CacheOverride::ttl(override));
     uint32_t ttl = val.isUndefined() ? 0 : val.toInt32();
-    val = CacheOverride::swr(cache_override);
+    val = CacheOverride::swr(override);
     uint32_t swr = val.isUndefined() ? 0 : val.toInt32();
-    val = CacheOverride::surrogate_key(cache_override);
+    val = CacheOverride::surrogate_key(override);
     UniqueChars sk_chars;
     size_t sk_len = 0;
     if (!val.isUndefined()) {
@@ -1607,7 +3650,7 @@ namespace Request {
 
   const unsigned ctor_length = 1;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool method_get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
@@ -1677,147 +3720,448 @@ namespace Request {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("arrayBuffer", bodyAll<BodyReadResult::ArrayBuffer>, 0, 0),
-    JS_FN("json", bodyAll<BodyReadResult::JSON>, 0, 0),
-    JS_FN("text", bodyAll<BodyReadResult::Text>, 0, 0),
-    JS_FN("setCacheOverride", setCacheOverride, 3, 0),
+    JS_FN("arrayBuffer", bodyAll<BodyReadResult::ArrayBuffer>, 0, JSPROP_ENUMERATE),
+    JS_FN("json", bodyAll<BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
+    JS_FN("text", bodyAll<BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
+    JS_FN("setCacheOverride", setCacheOverride, 3, JSPROP_ENUMERATE),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("method", method_get, 0),
-    JS_PSG("url", url_get, 0),
-    JS_PSG("version", version_get, 0),
-    JS_PSG("headers", headers_get, 0),
-    JS_PSG("body", body_get, 0),
-    JS_PSG("bodyUsed", bodyUsed_get, 0),
+    JS_PSG("method", method_get, JSPROP_ENUMERATE),
+    JS_PSG("url", url_get, JSPROP_ENUMERATE),
+    JS_PSG("version", version_get, JSPROP_ENUMERATE),
+    JS_PSG("headers", headers_get, JSPROP_ENUMERATE),
+    JS_PSG("body", body_get, JSPROP_ENUMERATE),
+    JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
-  CLASS_BOILERPLATE(Request)
+  CLASS_BOILERPLATE_CUSTOM_INIT(Request)
+
+  JSString* GET_atom;
+
+  bool init_class(JSContext* cx, HandleObject global) {
+    if (!init_class_impl(cx, global)) {
+      return false;
+    }
+
+    // Initialize a pinned (i.e., never-moved, living forever) atom for the default HTTP method.
+    GET_atom = JS_AtomizeAndPinString(cx, "GET");
+    return !!GET_atom;
+  }
 
   JSObject* create(JSContext* cx, RequestHandle request_handle, BodyHandle body_handle, bool is_downstream) {
     RootedObject request(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
     if (!request) return nullptr;
 
-    JS::SetReservedSlot(request, Slots::Request, JS::Int32Value(request_handle.handle));
+    JS::SetReservedSlot(request, Slots::Request, JS::Int32Value(request_handle.handle));JS::SetReservedSlot(request, Slots::Headers, JS::NullValue());
     JS::SetReservedSlot(request, Slots::Body, JS::Int32Value(body_handle.handle));
-    // TODO: properly set HasBody based on whether we actually do have a body.
-    JS::SetReservedSlot(request, Slots::HasBody, JS::BooleanValue(true));
-    JS::SetReservedSlot(request, Slots::BodyUsed, JS::BooleanValue(false));
+    JS::SetReservedSlot(request, Slots::BodyStream, JS::NullValue());
+    JS::SetReservedSlot(request, Slots::HasBody, JS::FalseValue());
+    JS::SetReservedSlot(request, Slots::BodyUsed, JS::FalseValue());
+    JS::SetReservedSlot(request, Slots::Method, JS::StringValue(GET_atom));
+    JS::SetReservedSlot(request, Slots::CacheOverride, JS::NullValue());
     JS::SetReservedSlot(request, Slots::IsDownstream, JS::BooleanValue(is_downstream));
 
     return request;
   }
 
+  /**
+   * Create a new Request object, roughly according to
+   * https://fetch.spec.whatwg.org/#dom-request
+   *
+   * "Roughly" because not all aspects of Request handling make sense in C@E.
+   * The places where we deviate from the spec are called out inline.
+   */
   JSObject* create(JSContext* cx, HandleValue input, HandleValue init_val) {
     RequestHandle request_handle = { INVALID_HANDLE };
+    if (!HANDLE_RESULT(cx, xqd_req_new(&request_handle))) {
+      return nullptr;
+    }
+
     BodyHandle body_handle = { INVALID_HANDLE };
+    if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle))) {
+      return nullptr;
+    }
+
+    RootedObject request(cx, create(cx, request_handle, body_handle, false));
+    if (!request) {
+      return nullptr;
+    }
+
     RootedString url_str(cx);
+    size_t method_len;
+    RootedString method_str(cx);
+    bool method_needs_normalization = false;
 
-    // TODO: clone the handles if needed, e.g. if the new request is sent
-    // multiple times, or its headers are changed, etc.
-    // This is costly, as it requires copying all the headers, etc, and
-    // probably also the body, so we should only do it if really necessary.
+    RootedObject input_request(cx);
+    RootedObject input_headers(cx);
+    bool input_has_body = false;
+
+    // 1.  Let `request` be null.
+    // 4.  Let `signal` be null.
+    // (implicit)
+
+    // 2.  Let `fallbackMode` be null.
+    // (N/A)
+
+    // 3.  Let `baseURL` be this’s relevant settings object’s API base URL.
+    // (implicit)
+
+    // 6.  Otherwise:
+    // (reordered because it's easier to check is_instance and otherwise stringify.)
     if (is_instance(input)) {
-      RootedObject input_request(cx, &input.toObject());
-      request_handle = Request::request_handle(input_request);
-      body_handle = RequestOrResponse::body_handle(input_request);
-      url_str = RequestOrResponse::url(input_request).toString();
-      if (is_downstream(input_request)) {
-        RootedObject headers(cx);
-        headers = RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, input_request);
-        if (!Headers::delazify(cx, headers))
+      input_request = &input.toObject();
+      input_has_body = RequestOrResponse::has_body(input_request);
+
+      // 1.  Assert: `input` is a `Request` object.
+      // 2.  Set `request` to `input`’s request.
+      // (implicit)
+
+      // 3.  Set `signal` to `input`’s signal.
+      // (signals not yet supported)
+
+      // 12.  Set `request` to a new request with the following properties:
+      // (moved into step 6 because we can leave everything at the default values if step 5 runs.)
+        // URL: `request`’s URL.
+        // Will actually be applied below.
+        url_str = RequestOrResponse::url(input_request).toString();
+
+        // method: `request`’s method.
+        method_str = Request::method(cx, input_request);
+        if (!method_str) {
           return nullptr;
+        }
+        method_len = JS::GetStringLength(method_str);
+
+        // referrer: `request`’s referrer.
+        // TODO: evaluate whether we want to implement support for setting the `referer` [sic]
+        // header based on this or not.
+
+        // cache mode: `request`’s cache mode.
+        // TODO: implement support for cache mode-based headers setting.
+
+        // header list: A copy of `request`’s header list.
+        // Note: copying the headers is postponed, see step 32 below.
+        input_headers = RequestOrResponse::maybe_headers(input_request);
+
+        // The following properties aren't applicable:
+        // unsafe-request flag: Set.
+        // client: This’s relevant settings object.
+        // window: `window`.
+        // priority: `request`’s priority
+        // origin: `request`’s origin.
+        // referrer policy: `request`’s referrer policy.
+        // mode: `request`’s mode.
+        // credentials mode: `request`’s credentials mode.
+        // redirect mode: `request`’s redirect mode.
+        // integrity metadata: `request`’s integrity metadata.
+        // keepalive: `request`’s keepalive.
+        // reload-navigation flag: `request`’s reload-navigation flag.
+        // history-navigation flag: `request`’s history-navigation flag.
+        // URL list: A clone of `request`’s URL list.
+    }
+
+    // 5.  If `input` is a string, then:
+    else {
+      // 1.  Let `parsedURL` be the result of parsing `input` with `baseURL`.
+      RootedObject parsedURL(cx, URL::create(cx, input, Fastly::baseURL));
+
+      // 2.  If `parsedURL` is failure, then throw a `TypeError`.
+      if (!parsedURL) {
+        return nullptr;
       }
-    } else {
-      RootedObject url_obj(cx, URL::create(cx, input, Fastly::baseURL));
-      if (!url_obj) return nullptr;
 
-      RootedValue url_val(cx, JS::ObjectValue(*url_obj));
+
+      // 3.  If `parsedURL` includes credentials, then throw a `TypeError`.
+      // (N/A)
+
+      // 4.  Set `request` to a new request whose URL is `parsedURL`.
+      // Instead, we store `url_str` to apply below.
+      RootedValue url_val(cx, JS::ObjectValue(*parsedURL));
       url_str = JS::ToString(cx, url_val);
-      if (!url_str) return nullptr;
+      if (!url_str) {
+        return nullptr;
+      }
 
-      // TODO: get the SpecSlice directly here instead of re-encoding.
-      size_t url_len;
-      UniqueChars url = encode(cx, url_str, &url_len);
-      if (!url) return nullptr;
+      // 5.  Set `fallbackMode` to "`cors`".
+      // (N/A)
+    }
 
-      if (!(HANDLE_RESULT(cx, xqd_req_new(&request_handle)) &&
-            HANDLE_RESULT(cx, xqd_req_uri_set(request_handle, url.get(), url_len)) &&
-            HANDLE_RESULT(cx, xqd_body_new(&body_handle))))
+    // Actually set the URL derived in steps 5 or 6 above.
+    RequestOrResponse::set_url(request, StringValue(url_str));
+    size_t url_len;
+    UniqueChars url = encode(cx, url_str, &url_len);
+    if (!url || !HANDLE_RESULT(cx, xqd_req_uri_set(request_handle, url.get(), url_len))) {
+      return nullptr;
+    }
+
+    // 7.  Let `origin` be this’s relevant settings object’s origin.
+    // 8.  Let `window` be "`client`".
+    // 9.  If `request`’s window is an environment settings object and its origin is same origin with `origin`, then set `window` to `request`’s window.
+    // 10.  If `init`["window"] exists and is non-null, then throw a `TypeError.
+    // 11.  If `init`["window"] exists, then set `window` to "`no-window`".
+    // (N/A)
+
+    // Extract all relevant properties from the init object.
+    // TODO: evaluate how much we care about precisely matching evaluation order.
+    // If "a lot", we need to make sure that all side effects that value conversions might trigger
+    // occur in the right order—presumably by running them all right here as WebIDL bindings would.
+    RootedValue method_val(cx);
+    RootedValue headers_val(cx);
+    RootedValue body_val(cx);
+    RootedValue backend_val(cx);
+    RootedValue cache_override(cx);
+    if (init_val.isObject()) {
+      RootedObject init(cx, init_val.toObjectOrNull());
+      if (!JS_GetProperty(cx, init, "method", &method_val) ||
+          !JS_GetProperty(cx, init, "headers", &headers_val) ||
+          !JS_GetProperty(cx, init, "body", &body_val) ||
+          !JS_GetProperty(cx, init, "backend", &backend_val)||
+          !JS_GetProperty(cx, init, "cacheOverride", &cache_override))
       {
+        return nullptr;
+      }
+    } else if (!init_val.isNullOrUndefined()) {
+      JS_ReportErrorLatin1(cx, "Request constructor: |init| parameter can't be converted to "
+                               "a dictionary");
+      return nullptr;
+    }
+
+    // 13.  If `init` is not empty, then:
+      // 1.  If `request`’s mode is "`navigate`", then set it to "`same-origin`".
+      // 2.  Unset `request`’s reload-navigation flag.
+      // 3.  Unset `request`’s history-navigation flag.
+      // 4.  Set `request`’s origin to "`client`".
+      // 5.  Set `request`’s referrer to "`client`".
+      // 6.  Set `request`’s referrer policy to the empty string.
+      // 7.  Set `request`’s URL to `request`’s current URL.
+      // 8.  Set `request`’s URL list to « `request`’s URL ».
+    // (N/A)
+
+    // 14.  If `init["referrer"]` exists, then:
+    // TODO: implement support for referrer application.
+      // 1.  Let `referrer` be `init["referrer"]`.
+      // 2.  If `referrer` is the empty string, then set `request`’s referrer to "`no-referrer`".
+      // 3.  Otherwise:
+      //   1.  Let `parsedReferrer` be the result of parsing `referrer` with `baseURL`.
+      //   2.  If `parsedReferrer` is failure, then throw a `TypeError`.
+
+      //   3.  If one of the following is true
+      //     *   `parsedReferrer`’s scheme is "`about`" and path is the string "`client`"
+      //     *   `parsedReferrer`’s origin is not same origin with `origin`
+      //     then set `request`’s referrer to "`client`".
+      //   (N/A)
+
+      //   4.  Otherwise, set `request`’s referrer to `parsedReferrer`.
+
+    // 15.  If `init["referrerPolicy"]` exists, then set `request`’s referrer policy to it.
+    // 16.  Let `mode` be `init["mode"]` if it exists, and `fallbackMode` otherwise.
+    // 17.  If `mode` is "`navigate`", then throw a `TypeError`.
+    // 18.  If `mode` is non-null, set `request`’s mode to `mode`.
+    // 19.  If `init["credentials"]` exists, then set `request`’s credentials mode to it.
+    // (N/A)
+
+    // 20.  If `init["cache"]` exists, then set `request`’s cache mode to it.
+    // TODO: implement support for cache mode application.
+
+    // 21.  If `request`’s cache mode is "`only-if-cached`" and `request`’s mode is _not_
+    //      "`same-origin`", then throw a TypeError.
+    // 22.  If `init["redirect"]` exists, then set `request`’s redirect mode to it.
+    // 23.  If `init["integrity"]` exists, then set `request`’s integrity metadata to it.
+    // 24.  If `init["keepalive"]` exists, then set `request`’s keepalive to it.
+    // (N/A)
+
+    // 25.  If `init["method"]` exists, then:
+    if (!method_val.isUndefined()) {
+      // 1.  Let `method` be `init["method"]`.
+      method_str = JS::ToString(cx, method_val);
+      if (!method_str) {
+        return nullptr;
+      }
+
+      // 2.  If `method` is not a method or `method` is a forbidden method, then throw a
+      //     `TypeError`.
+      // TODO: evaluate whether we should barr use of methods forbidden by the WHATWG spec.
+
+      // 3.  Normalize `method`.
+      // Delayed to below to reduce some code duplication.
+      method_needs_normalization = true;
+
+      // 4.  Set `request`’s method to `method`.
+      // Done below, unified with the non-init case.
+    }
+
+    // Apply the method derived in step 6 or 25.
+    // This only needs to happen if the method was set explicitly and isn't the default `GET`.
+    bool is_get = true;
+    if (method_str && !JS_StringEqualsLiteral(cx, method_str, "GET", &is_get)) {
+      return nullptr;
+    }
+
+    bool is_get_or_head = is_get;
+
+    if (!is_get) {
+      UniqueChars method = encode(cx, method_str, &method_len);
+      if (!method) {
+        return nullptr;
+      }
+
+      if (method_needs_normalization) {
+        if (normalize_http_method(method.get())) {
+          // Replace the JS string with the normalized name.
+          method_str = JS_NewStringCopyN(cx, method.get(), method_len);
+          if (!method_str) {
+            return nullptr;
+          }
+        }
+      }
+
+      is_get_or_head = strcmp(method.get(), "GET") == 0 || strcmp(method.get(), "HEAD") == 0;
+
+      JS::SetReservedSlot(request, Slots::Method, JS::StringValue(method_str));
+      if (!HANDLE_RESULT(cx, xqd_req_method_set(request_handle, method.get(), method_len))) {
         return nullptr;
       }
     }
 
-    RootedObject request(cx, create(cx, request_handle, body_handle, false));
-    if (!request) return nullptr;
+    // 26.  If `init["signal"]` exists, then set `signal` to it.
+    // (signals NYI)
 
-    RequestOrResponse::set_url(request, StringValue(url_str));
+    // 27.  Set this’s request to `request`.
+    // (implicit)
 
-    // TODO: apply cache and referrer from init object.
+    // 28.  Set this’s signal to a new `AbortSignal` object with this’s relevant Realm.
+    // 29.  If `signal` is not null, then make this’s signal follow `signal`.
+    // (signals NYI)
 
-    if (init_val.isObject()) {
-      RootedObject init(cx, &init_val.toObject());
+    // 30.  Set this’s headers to a new `Headers` object with this’s relevant Realm, whose header list is `request`’s header list and guard is "`request`".
+    // (implicit)
 
-      RootedValue method_val(cx);
-      if (!JS_GetProperty(cx, init, "method", &method_val))
+    // 31.  If this’s requests mode is "`no-cors`", then:
+      // 1.  If this’s requests method is not a CORS-safelisted method, then throw a `TypeError`.
+      // 2.  Set this’s headers’s guard to "`request-no-cors`".
+    // (N/A)
+
+    // 32.  If `init` is not empty, then:
+      // 1.  Let `headers` be a copy of this’s headers and its associated header list.
+      // 2.  If `init["headers"]` exists, then set `headers` to `init["headers"]`.
+      // 3.  Empty this’s headers’s header list.
+      // 4.  If `headers` is a `Headers` object, then for each `header` in its header list, append (`header`’s name, `header`’s value) to this’s headers.
+      // 5.  Otherwise, fill this’s headers with `headers`.
+    // Note: the substeps of 32 are somewhat convoluted because they don't just serve to ensure that the contents of `init["headers"]` are added to the request's headers, but also that all headers, including those from the `input` object are sanitized in accordance with the request's `mode`. Since we don't implement this sanitization, we do a much simpler thing: if `init["headers"]` exists, create the request's `headers` from that, otherwise create it from the `init` object's `headers`, or create a new, empty one.
+    RootedObject headers(cx);
+    if (!headers_val.isUndefined()) {
+      headers = Headers::create(cx, Headers::Mode::ProxyToRequest, request, headers_val);
+    } else {
+      headers = Headers::create(cx, Headers::Mode::ProxyToRequest, request, input_headers);
+    }
+
+    if (!headers) {
+      return nullptr;
+    }
+
+    JS::SetReservedSlot(request, Slots::Headers, JS::ObjectValue(*headers));
+
+    // 33.  Let `inputBody` be `input`’s requests body if `input` is a `Request` object;
+    //      otherwise null.
+    // (skipped)
+
+    // 34.  If either `init["body"]` exists and is non-null or `inputBody` is non-null, and `request`’s method is ``GET`` or ``HEAD``, then throw a TypeError.
+    if ((input_has_body || !body_val.isNullOrUndefined()) && is_get_or_head) {
+      JS_ReportErrorLatin1(cx, "Request constructor: HEAD or GET Request cannot have a body.");
+      return nullptr;
+    }
+
+    // 35.  Let `initBody` be null.
+    // (skipped)
+
+    // Note: steps 36-41 boil down to "if there's an init body, use that. Otherwise, if there's an
+    // input body, use that, but proxied through a TransformStream to make sure it's not consumed
+    // by something else in the meantime."
+    // Given that, we're restructuring things quite a bit below.
+
+    // 36.  If `init["body"]` exists and is non-null, then:
+    if (!body_val.isNullOrUndefined()) {
+      // 1.  Let `Content-Type` be null.
+      // 2.  Set `initBody` and `Content-Type` to the result of extracting `init["body"]`, with
+      //     `keepalive` set to `request`’s keepalive.
+      // 3.  If `Content-Type` is non-null and this’s headers’s header list does not contain
+      //     ``Content-Type``, then append (``Content-Type``, `Content-Type`) to this’s headers.
+      // Note: these steps are all inlined into RequestOrResponse::extract_body.
+      if (!RequestOrResponse::extract_body(cx, request, body_val)) {
         return nullptr;
+      }
+    } else if (input_has_body) {
+      // 37.  Let `inputOrInitBody` be `initBody` if it is non-null; otherwise `inputBody`.
+      // (implicit)
+      // 38.  If `inputOrInitBody` is non-null and `inputOrInitBody`’s source is null, then:
+        // 1.  If this’s requests mode is neither "`same-origin`" nor "`cors`", then throw a `TypeError.
+        // 2.  Set this’s requests use-CORS-preflight flag.
+      // (N/A)
+      // 39.  Let `finalBody` be `inputOrInitBody`.
+      // 40.  If `initBody` is null and `inputBody` is non-null, then:
+      // (implicit)
+        // 1.  If `input` is unusable, then throw a TypeError.
+        // 2.  Set `finalBody` to the result of creating a proxy for `inputBody`.
 
-      UniqueChars method;
-      if (!method_val.isUndefined()) {
-        RootedString method_str(cx, JS::ToString(cx, method_val));
-        if (!method_str) return nullptr;
+      // All the above steps boil down to "if the input request has an unusable body, throw.
+      // Otherwise, use the body."
+      // Our implementation is a bit more involved, because we might not have a body reified
+      // as a ReadableStream at all, in which case we can directly append the input body
+      // to the new request's body with a single hostcall.
 
-        size_t method_len;
-        method = encode(cx, method_str, &method_len);
-        if (!method) return nullptr;
+      RootedObject inputBody(cx, RequestOrResponse::body_stream(input_request));
 
-        if (normalize_http_method(method.get())) {
-          // Replace the JS string with the normalized name.
-          method_str = JS_NewStringCopyN(cx, method.get(), method_len);
-          if (!method_str) return nullptr;
+      // Throw an error if the input request's body isn't usable.
+      if (RequestOrResponse::body_used(input_request) ||
+          (inputBody && RequestOrResponse::body_unusable(cx, inputBody)))
+      {
+        JS_ReportErrorLatin1(cx, "Request constructor: the input request's body isn't usable.");
+        return nullptr;
+      }
+
+      if (!inputBody) {
+        // If `inputBody` is null, that means that it was never created, and hence content can't
+        // have access to it. Instead of reifying it here to pass it into a TransformStream, we
+        // just append the body on the host side and mark it as used on the input Request.
+        RequestOrResponse::append_body(cx, request, input_request);
+        RequestOrResponse::mark_body_used(cx, input_request);
+      } else {
+        inputBody = TransformStream::create_rs_proxy(cx, inputBody);
+        if (!inputBody) {
+          return nullptr;
         }
 
-        if (!HANDLE_RESULT(cx, xqd_req_method_set(request_handle, method.get(), method_len)))
-          return nullptr;
-        JS::SetReservedSlot(request, Slots::Method, JS::StringValue(method_str));
+        TransformStream::set_readable_used_as_body(cx, inputBody, request);
+        JS::SetReservedSlot(request, Slots::BodyStream, JS::ObjectValue(*inputBody));
       }
 
-      RootedValue body_val(cx);
-      if (!JS_GetProperty(cx, init, "body", &body_val))
-        return nullptr;
+      JS::SetReservedSlot(request, Slots::HasBody, JS::BooleanValue(true));
+    }
 
-      if (!body_val.isNullOrUndefined()) {
-        // TODO: throw if `method` is "GET" or "HEAD"
-        if (!RequestOrResponse::set_body(cx, request, body_val))
-          return nullptr;
+    // 41.  Set this’s requests body to `finalBody`.
+    // (implicit)
+
+    // Apply the C@E-proprietary `backend` property.
+    if (!backend_val.isUndefined()) {
+      RootedString backend(cx, JS::ToString(cx, backend_val));
+      if (!backend) {
+        return nullptr;
       }
+      JS::SetReservedSlot(request, Slots::Backend, JS::StringValue(backend));
+    } else if (input_request) {
+      JS::SetReservedSlot(request, Slots::Backend,
+                          JS::GetReservedSlot(input_request, Slots::Backend));
+    }
 
-      RootedValue headers_val(cx);
-      if (!JS_GetProperty(cx, init, "headers", &headers_val))
+    // Apply the C@E-proprietary `cacheOverride` property.
+    if (!cache_override.isUndefined()) {
+      if (!set_cache_override(cx, request, cache_override)) {
         return nullptr;
-
-      if (!headers_val.isUndefined()) {
-        RootedObject headers(cx, Headers::create(cx, Headers::Mode::ProxyToRequest,
-                                                 request, headers_val));
-        if (!headers) return nullptr;
-        JS::SetReservedSlot(request, Slots::Headers, JS::ObjectValue(*headers));
       }
-
-      RootedValue backend_val(cx);
-      if (!JS_GetProperty(cx, init, "backend", &backend_val))
-        return nullptr;
-      if (!backend_val.isUndefined()) {
-        RootedString backend(cx, JS::ToString(cx, backend_val));
-        if (!backend) return nullptr;
-        JS::SetReservedSlot(request, Slots::Backend, JS::StringValue(backend));
-      }
-
-      RootedValue cache_override(cx);
-      if (!JS_GetProperty(cx, init, "cacheOverride", &cache_override))
-        return nullptr;
-      if (!cache_override.isUndefined() && !set_cache_override(cx, request, cache_override))
-          return nullptr;
+    } else if (input_request) {
+      JS::SetReservedSlot(request, Slots::CacheOverride,
+                          JS::GetReservedSlot(input_request, Slots::CacheOverride));
     }
 
     return request;
@@ -1835,6 +4179,7 @@ namespace Response {
     Headers = RequestOrResponse::Slots::Headers,
     IsUpstream = RequestOrResponse::Slots::Count,
     Status,
+    StatusMessage,
     Count
   };};
 
@@ -1847,87 +4192,156 @@ namespace Response {
   static_assert((int)Slots::Response == (int)Request::Slots::Request);
 
   ResponseHandle response_handle(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return ResponseHandle { (uint32_t)(JS::GetReservedSlot(obj, Slots::Response).toInt32()) };
   }
 
   bool is_upstream(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return JS::GetReservedSlot(obj, Slots::IsUpstream).toBoolean();
   }
 
   uint16_t status(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
     return (uint16_t)JS::GetReservedSlot(obj, Slots::Status).toInt32();
+  }
+
+  JSString* status_message(JSObject* obj) {
+    MOZ_ASSERT(is_instance(obj));
+    return JS::GetReservedSlot(obj, Slots::StatusMessage).toString();
   }
 
   JSObject* create(JSContext* cx, ResponseHandle response_handle, BodyHandle body_handle,
                    bool is_upstream);
 
-  // TODO: consider not creating a host-side representation for responses eagerly.
-  // Some applications create Response objects purely for internal use, e.g. to represent
-  // cache entries. While that's perhaps not ideal to begin with, it exists, so we should
-  // handle it in a good way, and not be superfluously slow.
+  /**
+   * The `Response` constructor https://fetch.spec.whatwg.org/#dom-response
+   */
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
     REQUEST_HANDLER_ONLY("The Response builtin");
 
+    RootedValue body_val(cx, args.get(0));
+    RootedValue init_val(cx, args.get(1));
+
+    RootedValue status_val(cx);
+    uint16_t status = 200;
+
+    RootedValue statusText_val(cx);
+    RootedString statusText(cx, JS_GetEmptyString(cx));
+    RootedValue headers_val(cx);
+
+    if (init_val.isObject()) {
+      RootedObject init(cx, init_val.toObjectOrNull());
+      if (!JS_GetProperty(cx, init, "status", &status_val) ||
+          !JS_GetProperty(cx, init, "statusText", &statusText_val) ||
+          !JS_GetProperty(cx, init, "headers", &headers_val))
+      {
+        return false;
+      }
+
+      if (!status_val.isUndefined() && !JS::ToUint16(cx, status_val, &status)) {
+        return false;
+      }
+
+      if (!statusText_val.isUndefined() && !(statusText = JS::ToString(cx, statusText_val))) {
+        return false;
+      }
+
+    } else if (!init_val.isNullOrUndefined()) {
+      JS_ReportErrorLatin1(cx, "Response constructor: |init| parameter can't be converted to "
+                               "a dictionary");
+      return false;
+    }
+
+    // 1.  If `init`["status"] is not in the range 200 to 599, inclusive, then `throw` a ``RangeError``.
+    if (status < 200 || status > 599) {
+      JS_ReportErrorLatin1(cx, "Response constructor: invalid status %u", status);
+      return false;
+    }
+
+    // 2.  If `init`["statusText"] does not match the `reason-phrase` token production, then `throw` a ``TypeError``.
+    // Skipped: the statusText can only be consumed by the content creating it, so we're lenient
+    // about its format.
+
+    // 3.  Set `this`’s `response` to a new `response`.
+    // TODO: consider not creating a host-side representation for responses eagerly.
+    // Some applications create Response objects purely for internal use, e.g. to represent
+    // cache entries. While that's perhaps not ideal to begin with, it exists, so we should
+    // handle it in a good way, and not be superfluously slow.
     // TODO: enable creating Response objects during the init phase, and only
     // creating the host-side representation when processing requests.
     ResponseHandle response_handle = { .handle = INVALID_HANDLE };
-    if (!HANDLE_RESULT(cx, xqd_resp_new(&response_handle)))
+    if (!HANDLE_RESULT(cx, xqd_resp_new(&response_handle))) {
       return false;
+    }
 
     BodyHandle body_handle = { .handle = INVALID_HANDLE };
-    if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle)))
+    if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle))) {
       return false;
+    }
 
     RootedObject response(cx, create(cx, response_handle, body_handle, false));
-    if (!response) return false;
-
-    if (!RequestOrResponse::set_body(cx, response, args.get(0)))
+    if (!response) {
       return false;
+    }
 
-    RequestOrResponse::set_url(response, JS::StringValue(JS_GetEmptyString(cx)));
+    RequestOrResponse::set_url(response, JS_GetEmptyStringValue(cx));
 
-    if (args.get(1).isObject()) {
-      RootedObject init(cx, &args[1].toObject());
+    // 4.  Set `this`’s `headers` to a `new` ``Headers`` object with `this`’s `relevant Realm`,
+    //     whose `header list` is `this`’s `response`’s `header list` and `guard` is "`response`".
+    // (implicit)
 
-      RootedValue status_val(cx);
-      if (!JS_GetProperty(cx, init, "status", &status_val))
+    // 5.  Set `this`’s `response`’s `status` to `init`["status"].
+    if (!HANDLE_RESULT(cx, xqd_resp_status_set(response_handle, status))) {
+      return false;
+    }
+    // To ensure that we really have the same status value as the host,
+    // we always read it back here.
+    if (!HANDLE_RESULT(cx, xqd_resp_status_get(response_handle, &status))) {
+      return false;
+    }
+
+    JS::SetReservedSlot(response, Slots::Status, JS::Int32Value(status));
+
+    // 6.  Set `this`’s `response`’s `status message` to `init`["statusText"].
+    JS::SetReservedSlot(response, Slots::StatusMessage, JS::StringValue(statusText));
+
+    // 7.  If `init`["headers"] `exists`, then `fill` `this`’s `headers` with `init`["headers"].
+    RootedObject headers(cx);
+    headers = Headers::create(cx, Headers::Mode::ProxyToResponse, response, headers_val);
+    if (!headers) {
+      return false;
+    }
+    JS::SetReservedSlot(response, Slots::Headers, JS::ObjectValue(*headers));
+
+    // 8.  If `body` is non-null, then:
+    if ((!body_val.isNullOrUndefined())) {
+      //     1.  If `init`["status"] is a `null body status`, then `throw` a ``TypeError``.
+      if (status == 204 || status == 205 || status == 304) {
+        JS_ReportErrorLatin1(cx, "Request constructor: HEAD or GET Request cannot have a body.");
         return false;
+      }
 
-      uint16_t status = 200;
-      if (!status_val.isUndefined() && !JS::ToUint16(cx, status_val, &status))
+      //     2.  Let `Content-Type` be null.
+      //     3.  Set `this`’s `response`’s `body` and `Content-Type` to the result of `extracting`
+      //         `body`.
+      //     4.  If `Content-Type` is non-null and `this`’s `response`’s `header list` `does not
+      //         contain` ``Content-Type``, then `append` (``Content-Type``, `Content-Type`) to
+      //         `this`’s `response`’s `header list`.
+      // Note: these steps are all inlined into RequestOrResponse::extract_body.
+      if (!RequestOrResponse::extract_body(cx, response, body_val)) {
         return false;
-
-      if (!HANDLE_RESULT(cx, xqd_resp_status_set(response_handle, status)))
-        return false;
-
-      RootedValue headers_val(cx);
-      if (!JS_GetProperty(cx, init, "headers", &headers_val))
-        return false;
-
-      if (!headers_val.isUndefined()) {
-        RootedObject headers(cx, Headers::create(cx, Headers::Mode::ProxyToResponse,
-                                                 response, headers_val));
-        if (!headers) return false;
-
-        JS::SetReservedSlot(response, Slots::Headers, JS::ObjectValue(*headers));
       }
     }
 
-    // To ensure that we really have the same status value as the host,
-    // we always read it back here.
-    uint16_t status = 0;
-    if (!HANDLE_RESULT(cx, xqd_resp_status_get(response_handle, &status)))
-      return false;
-
-    JS::SetReservedSlot(response, Slots::Status, JS::Int32Value(status));
     args.rval().setObject(*response);
     return true;
   }
 
   const unsigned ctor_length = 1;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool ok_get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
@@ -1940,8 +4354,14 @@ namespace Response {
   bool status_get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
 
-    uint16_t status = Response::status(self);
-    args.rval().setInt32(status);
+    args.rval().setInt32(status(self));
+    return true;
+  }
+
+  bool statusText_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+
+    args.rval().setString(status_message(self));
     return true;
   }
 
@@ -1961,6 +4381,16 @@ namespace Response {
       return false;
 
     args.rval().setInt32(version);
+    return true;
+  }
+
+  JSString* type_default_atom;
+  JSString* type_error_atom;
+
+  bool type_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+
+    args.rval().setString(status(self) == 0 ? type_error_atom : type_default_atom);
     return true;
   }
 
@@ -1993,22 +4423,34 @@ namespace Response {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("arrayBuffer", bodyAll<BodyReadResult::ArrayBuffer>, 0, 0),
-    JS_FN("json", bodyAll<BodyReadResult::JSON>, 0, 0),
-    JS_FN("text", bodyAll<BodyReadResult::Text>, 0, 0),
+    JS_FN("arrayBuffer", bodyAll<BodyReadResult::ArrayBuffer>, 0, JSPROP_ENUMERATE),
+    JS_FN("json", bodyAll<BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
+    JS_FN("text", bodyAll<BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("ok", ok_get, 0),
-    JS_PSG("status", status_get, 0),
-    JS_PSG("version", version_get, 0),
-    JS_PSG("headers", headers_get, 0),
-    JS_PSG("body", body_get, 0),
-    JS_PSG("bodyUsed", bodyUsed_get, 0),
-    JS_PSG("url", url_get, 0),
+    JS_PSG("type", type_get, JSPROP_ENUMERATE),
+    JS_PSG("url", url_get, JSPROP_ENUMERATE),
+    JS_PSG("status", status_get, JSPROP_ENUMERATE),
+    JS_PSG("ok", ok_get, JSPROP_ENUMERATE),
+    JS_PSG("statusText", statusText_get, 0),
+    JS_PSG("version", version_get, JSPROP_ENUMERATE),
+    JS_PSG("headers", headers_get, JSPROP_ENUMERATE),
+    JS_PSG("body", body_get, JSPROP_ENUMERATE),
+    JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
-  CLASS_BOILERPLATE(Response)
+  CLASS_BOILERPLATE_CUSTOM_INIT(Response)
+
+  bool init_class(JSContext* cx, HandleObject global) {
+    if (!init_class_impl(cx, global)) {
+      return false;
+    }
+
+    // Initialize a pinned (i.e., never-moved, living forever) atom for the response type values.
+    return (type_default_atom = JS_AtomizeAndPinString(cx, "default")) &&
+           (type_error_atom = JS_AtomizeAndPinString(cx, "error"));
+  }
 
   JSObject* create(JSContext* cx, ResponseHandle response_handle, BodyHandle body_handle,
                    bool is_upstream)
@@ -2016,11 +4458,11 @@ namespace Response {
     RootedObject response(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
     if (!response) return nullptr;
 
-    JS::SetReservedSlot(response, Slots::Response, JS::Int32Value(response_handle.handle));
+    JS::SetReservedSlot(response, Slots::Response, JS::Int32Value(response_handle.handle));JS::SetReservedSlot(response, Slots::Headers, JS::NullValue());
     JS::SetReservedSlot(response, Slots::Body, JS::Int32Value(body_handle.handle));
-    // TODO: only set HasBody for upstream responses if we actually do have a body.
-    JS::SetReservedSlot(response, Slots::HasBody, JS::BooleanValue(is_upstream));
-    JS::SetReservedSlot(response, Slots::BodyUsed, JS::BooleanValue(false));
+    JS::SetReservedSlot(response, Slots::BodyStream, JS::NullValue());
+    JS::SetReservedSlot(response, Slots::HasBody, JS::FalseValue());
+    JS::SetReservedSlot(response, Slots::BodyUsed, JS::FalseValue());
     JS::SetReservedSlot(response, Slots::IsUpstream, JS::BooleanValue(is_upstream));
 
     if (is_upstream) {
@@ -2029,6 +4471,10 @@ namespace Response {
         return nullptr;
 
       JS::SetReservedSlot(response, Slots::Status, JS::Int32Value(status));
+      JS::SetReservedSlot(response, Slots::StatusMessage, JS_GetEmptyStringValue(cx));
+      if (!(status == 204 || status == 205 || status == 304)) {
+        JS::SetReservedSlot(response, Slots::HasBody, JS::TrueValue());
+      }
     }
 
     return response;
@@ -2065,7 +4511,7 @@ namespace Dictionary {
 
   const unsigned ctor_length = 1;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -2095,7 +4541,7 @@ namespace Dictionary {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("get", get, 1, 0),
+    JS_FN("get", get, 1, JSPROP_ENUMERATE),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {JS_PS_END};
@@ -2134,7 +4580,7 @@ namespace TextEncoder {
 
   const unsigned ctor_length = 0;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool encode(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -2178,11 +4624,11 @@ namespace TextEncoder {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("encode", encode, 1, 0),
+    JS_FN("encode", encode, 1, JSPROP_ENUMERATE),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("encoding", encoding_get, 0),
+    JS_PSG("encoding", encoding_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
   CLASS_BOILERPLATE(TextEncoder)
@@ -2211,7 +4657,7 @@ namespace TextDecoder {
 
   const unsigned ctor_length = 0;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool decode(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -2260,11 +4706,11 @@ namespace TextDecoder {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("decode", decode, 1, 0),
+    JS_FN("decode", decode, 1, JSPROP_ENUMERATE),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("encoding", encoding_get, 0),
+    JS_PSG("encoding", encoding_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
   CLASS_BOILERPLATE(TextDecoder)
@@ -2387,6 +4833,9 @@ namespace Headers {
     Count
   };};
 
+  bool is_instance(JSObject* obj);
+  bool is_instance(Value val);
+
   namespace detail {
     #define HEADERS_ITERATION_METHOD(argc) \
       METHOD_HEADER(argc) \
@@ -2431,18 +4880,22 @@ namespace Headers {
       if (!value_chars) return false; \
 
     JSObject* backing_map(JSObject* self) {
+      MOZ_ASSERT(is_instance(self));
       return &JS::GetReservedSlot(self, Slots::BackingMap).toObject();
     }
 
     Mode mode(JSObject* self) {
+      MOZ_ASSERT(is_instance(self));
       return static_cast<Mode>(JS::GetReservedSlot(self, Slots::Mode).toInt32());
     }
 
     bool lazy_values(JSObject* self) {
+      MOZ_ASSERT(is_instance(self));
       return JS::GetReservedSlot(self, Slots::HasLazyValues).toBoolean();
     }
 
     uint32_t handle(JSObject* self) {
+      MOZ_ASSERT(is_instance(self));
       return static_cast<uint32_t>(JS::GetReservedSlot(self, Slots::Handle).toInt32());
     }
 
@@ -2479,7 +4932,7 @@ namespace Headers {
       for (size_t i = 0; i < len; i++) {
         unsigned char ch = name_chars[i];
         if (ch > 127 || !VALID_NAME_CHARS[ch]) {
-          JS_ReportErrorASCII(cx, "%s: Invalid header name '%s'", fun_name, name_chars);
+          JS_ReportErrorUTF8(cx, "%s: Invalid header name '%s'", fun_name, name_chars);
           return nullptr;
         }
 
@@ -2560,7 +5013,7 @@ namespace Headers {
     // Append an already normalized value for an already normalized header name
     // to the JS side map, but not the host.
     //
-    // Returns the resulting combined value in `value`.
+    // Returns the resulting combined value in `normalized_value`.
     bool append_header_value_to_map(JSContext* cx, HandleObject self,
                                     HandleValue normalized_name,
                                     MutableHandleValue normalized_value)
@@ -2727,7 +5180,16 @@ namespace Headers {
         return true;
 
       RootedObject map(cx, detail::backing_map(self));
-      return JS::MapGet(cx, map, normalized_name, rval);
+      if (!JS::MapGet(cx, map, normalized_name, rval)) {
+        return false;
+      }
+
+      // Return `null` for non-existent headers.
+      if (rval.isUndefined()) {
+        rval.setNull();
+      }
+
+      return true;
     }
 
     static bool ensure_all_header_values_from_handle(JSContext* cx, HandleObject self,
@@ -2804,6 +5266,55 @@ namespace Headers {
     return detail::ensure_all_header_values_from_handle(cx, headers, backing_map);
   }
 
+  JSObject* create(JSContext* cx, Mode mode, HandleObject owner, HandleObject init_headers) {
+    RootedObject headers(cx, create(cx, mode, owner));
+    if (!headers) {
+      return nullptr;
+    }
+
+    if (!init_headers) {
+      return headers;
+    }
+
+    if (!delazify(cx, init_headers)) {
+      return nullptr;
+    }
+
+    RootedObject headers_map(cx, detail::backing_map(headers));
+    RootedObject init_map(cx, detail::backing_map(init_headers));
+
+    RootedValue iterable(cx);
+    if (!JS::MapEntries(cx, init_map, &iterable))
+      return nullptr;
+
+    JS::ForOfIterator it(cx);
+    if (!it.init(iterable))
+      return nullptr;
+
+    RootedObject entry(cx);
+    RootedValue entry_val(cx);
+    RootedValue name_val(cx);
+    RootedValue value_val(cx);
+    while (true) {
+      bool done;
+      if (!it.next(&entry_val, &done))
+        return nullptr;
+
+      if (done)
+        break;
+
+      entry = &entry_val.toObject();
+      JS_GetElement(cx, entry, 0, &name_val);
+      JS_GetElement(cx, entry, 1, &value_val);
+
+      if (!detail::append_header_value(cx, headers, name_val, value_val, "Headers constructor")) {
+        return nullptr;
+      }
+    }
+
+    return headers;
+  }
+
   JSObject* create(JSContext* cx, Mode mode, HandleObject owner, HandleValue initv) {
     RootedObject headers(cx, create(cx, mode, owner));
     if (!headers) return nullptr;
@@ -2834,7 +5345,7 @@ namespace Headers {
 
   const unsigned ctor_length = 1;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(1)
@@ -2896,6 +5407,39 @@ namespace Headers {
 
     args.rval().setUndefined();
     return true;
+  }
+
+  /**
+   * Adds the given header name/value to `self`'s list of headers iff `self` doesn't
+   * already contain a header with that name.
+   *
+   * Assumes that both the name and value are valid and normalized.
+   * TODO: fully skip normalization.
+   */
+  bool maybe_add(JSContext* cx, HandleObject self, const char* name, const char* value) {
+    MOZ_ASSERT(is_instance(self));
+    RootedString name_str(cx, JS_NewStringCopyN(cx, name, strlen(name)));
+    if (!name_str) {
+      return false;
+    }
+    RootedValue name_val(cx, JS::StringValue(name_str));
+
+    RootedObject map(cx, detail::backing_map(self));
+    bool has;
+    if (!JS::MapHas(cx, map, name_val, &has)) {
+      return false;
+    }
+    if (has) {
+      return true;
+    }
+
+    RootedString value_str(cx, JS_NewStringCopyN(cx, value, strlen(value)));
+    if (!value_str) {
+      return false;
+    }
+    RootedValue value_val(cx, JS::StringValue(value_str));
+
+    return detail::append_header_value(cx, self, name_val, value_val, "internal_maybe_add");
   }
 
   typedef int HeaderRemoveOperation(int handle, const char *name, size_t name_len);
@@ -2991,15 +5535,15 @@ namespace Headers {
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("get", get, 1, 0),
-    JS_FN("has", has, 1, 0),
-    JS_FN("set", set, 2, 0),
-    JS_FN("append", append, 2, 0),
-    JS_FN("delete", delete_, 1, 0),
-    JS_FN("forEach", forEach, 1, 0),
-    JS_FN("entries", entries, 0, 0),
-    JS_FN("keys", keys, 0, 0),
-    JS_FN("values", values, 0, 0),
+    JS_FN("get", get, 1, JSPROP_ENUMERATE),
+    JS_FN("has", has, 1, JSPROP_ENUMERATE),
+    JS_FN("set", set, 2, JSPROP_ENUMERATE),
+    JS_FN("append", append, 2, JSPROP_ENUMERATE),
+    JS_FN("delete", delete_, 1, JSPROP_ENUMERATE),
+    JS_FN("forEach", forEach, 1, JSPROP_ENUMERATE),
+    JS_FN("entries", entries, 0, JSPROP_ENUMERATE),
+    JS_FN("keys", keys, 0, JSPROP_ENUMERATE),
+    JS_FN("values", values, 0, JSPROP_ENUMERATE),
     // [Symbol.iterator] added in init_class.
   JS_FS_END};
 
@@ -3156,7 +5700,7 @@ namespace ClientInfo {
 
   const unsigned ctor_length = 0;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool address_get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
@@ -3187,8 +5731,8 @@ namespace ClientInfo {
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("address", address_get, 0),
-    JS_PSG("geo", geo_get, 0),
+    JS_PSG("address", address_get, JSPROP_ENUMERATE),
+    JS_PSG("geo", geo_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
   CLASS_BOILERPLATE_NO_CTOR(ClientInfo)
@@ -3198,6 +5742,9 @@ namespace ClientInfo {
   }
 }
 
+namespace WorkerLocation {
+  static PersistentRooted<JSObject*> url;
+}
 
 namespace FetchEvent {
   namespace Slots { enum {
@@ -3209,6 +5756,8 @@ namespace FetchEvent {
     ClientInfo,
     Count
   };};
+
+  bool is_instance(JSObject* obj);
 
 static PersistentRooted<JSObject*> INSTANCE;
 
@@ -3244,7 +5793,7 @@ static PersistentRooted<JSObject*> INSTANCE;
 
   const unsigned ctor_length = 0;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool client_get(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
@@ -3262,13 +5811,22 @@ static PersistentRooted<JSObject*> INSTANCE;
     return true;
   }
 
+  /**
+   * Create a Request object for the incoming request.
+   *
+   * Since this happens during initialization time, the object will not be fully initialized. It's
+   * filled in at runtime using `init_downstream_request`.
+   */
   static JSObject* prepare_downstream_request(JSContext* cx) {
       return Request::create(cx, RequestHandle { INVALID_HANDLE },
                              BodyHandle { INVALID_HANDLE }, true);
   }
 
+  /**
+   * Fully initialize the Request object based on the incoming request.
+   */
   static bool init_downstream_request(JSContext* cx, HandleObject request) {
-    MOZ_RELEASE_ASSERT(Request::request_handle(request).handle == INVALID_HANDLE);
+    MOZ_ASSERT(Request::request_handle(request).handle == INVALID_HANDLE);
 
     RequestHandle request_handle = { INVALID_HANDLE };
     BodyHandle body_handle = { INVALID_HANDLE };
@@ -3276,8 +5834,34 @@ static PersistentRooted<JSObject*> INSTANCE;
       return false;
 
     JS::SetReservedSlot(request, Request::Slots::Request, JS::Int32Value(request_handle.handle));
-    JS::SetReservedSlot(request, RequestOrResponse::Slots::Body,
-                        JS::Int32Value(body_handle.handle));
+    JS::SetReservedSlot(request, Request::Slots::Body, JS::Int32Value(body_handle.handle));
+
+    // Set the method.
+    OwnedHostCallBuffer buffer;
+    size_t num_written = 0;
+    if (!HANDLE_RESULT(cx, xqd_req_method_get(request_handle, buffer.get(), HOSTCALL_BUFFER_LEN,
+                                              &num_written)))
+    {
+      return false;
+    }
+
+    bool is_get = strncmp(buffer.get(), "GET", num_written) == 0;
+    if (!is_get) {
+      RootedString method(cx, JS_NewStringCopyN(cx, buffer.get(), num_written));
+      if (!method) {
+        return false;
+      }
+
+      JS::SetReservedSlot(request, Request::Slots::Method, JS::StringValue(method));
+    }
+
+    // Set whether we have a body depending on the method.
+    // TODO: verify if that's right. I.e. whether we should treat all requests that are not
+    // GET or HEAD as having a body, which might just be 0-length. It's not entirely clear what
+    // else we even could do here though.
+    if (!(is_get || strncmp(buffer.get(), "HEAD", num_written) == 0)) {
+      JS::SetReservedSlot(request, Request::Slots::HasBody, JS::TrueValue());
+    }
 
     size_t bytes_read;
     UniqueChars buf(read_from_handle_all<xqd_req_uri_get, RequestHandle>(cx, request_handle,
@@ -3288,31 +5872,17 @@ static PersistentRooted<JSObject*> INSTANCE;
     if (!url) return false;
     JS::SetReservedSlot(request, Request::Slots::URL, JS::StringValue(url));
 
+    // Set the URL for `globalThis.location` to the client request's URL.
+    SpecString spec((uint8_t*)buf.release(), bytes_read, bytes_read);
+    WorkerLocation::url = URL::create(cx, spec);
+    if (!WorkerLocation::url) {
+      return false;
+    }
+
     // Set `fastly.baseURL` to the origin of the client request's URL.
     // Note that this only happens if baseURL hasn't already been set to another value explicitly.
     if (!Fastly::baseURL.get()) {
-      // Extracting the origin part from the URL is a bit cumbersome, unfortunately.
-      // We could create a JSUrl for the full URL and then reset its href to its origin, but that'd
-      // incur a bunch of allocation and be more code than manually finding the third '/' and only
-      // using the part before it. Since we're guaranteed to operate on an absolute URL, we're also
-      // guaranteed to have an origin of the form `protocol://host:port`, with the "//" being the
-      // only valid occurrence of slashes in the part we want.
-      char* chars = buf.get();
-      size_t origin_length = 0;
-      size_t slashes = 0;
-      for (size_t i = 0; i < bytes_read; i++) {
-        if (chars[i] == '/' && ++slashes == 3) {
-          origin_length = i;
-          break;
-        }
-      }
-
-      if (origin_length == 0) {
-        origin_length = bytes_read;
-      }
-
-      SpecString spec((uint8_t*)buf.release(), origin_length, bytes_read);
-      Fastly::baseURL = URL::create(cx, spec);
+      Fastly::baseURL = URL::create(cx, URL::origin(cx, WorkerLocation::url));
       if (!Fastly::baseURL) return false;
     }
 
@@ -3333,169 +5903,11 @@ static PersistentRooted<JSObject*> INSTANCE;
     return HANDLE_RESULT(cx, xqd_resp_send_downstream(response, body, streaming));
   }
 
-  bool respond_blocking(JSContext* cx, HandleObject response_obj) {
-    return start_response(cx, response_obj, false);
-  }
-
-  bool body_reader_then_handler(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject then_handler(cx, &args.callee());
-    RootedObject catch_handler(cx, &js::GetFunctionNativeReserved(then_handler, 0).toObject());
-    RootedObject response(cx, &js::GetFunctionNativeReserved(catch_handler, 0).toObject());
-    RootedObject reader(cx, &js::GetFunctionNativeReserved(catch_handler, 1).toObject());
-    BodyHandle body_handle = RequestOrResponse::body_handle(response);
-
-    // We're guaranteed to work with a native ReadableStreamDefaultReader here, which in turn is
-    // guaranteed to vend {done: bool, value: any} objects to read promise then callbacks.
-    RootedObject chunk_obj(cx, &args[0].toObject());
-    RootedValue done_val(cx);
-    if (!JS_GetProperty(cx, chunk_obj, "done", &done_val))
-      return false;
-
-    if (done_val.toBoolean()) {
-      FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
-      return HANDLE_RESULT(cx, xqd_body_close(body_handle));
-    }
-
-    RootedValue val(cx);
-    if (!JS_GetProperty(cx, chunk_obj, "value", &val))
-      return false;
-
-    if (!val.isObject() || !JS_IsUint8Array(&val.toObject())) {
-      // TODO: check if this should create a rejected promise instead, so an in-content handler
-      // for unhandled rejections could deal with it.
-      // The read operation returned a chunk that's not a Uint8Array.
-      fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
-                      "Uint8Array. Received value: ");
-      dump_value(cx, val, stderr);
-      return false;
-    }
-
-    {
-      JS::AutoCheckCannotGC nogc;
-      JSObject* array = &val.toObject();
-      bool is_shared;
-      uint8_t* bytes = JS_GetUint8ArrayData(array, &is_shared, nogc);
-      size_t length = JS_GetTypedArrayByteLength(array);
-      size_t nwritten;
-      if (!HANDLE_RESULT(cx, xqd_body_write(body_handle, (char*)bytes, length,
-                                            BodyWriteEndBack, &nwritten)))
-      {
-        return false;
-      }
-    }
-
-    // Read the next chunk.
-    RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
-    if (!promise) return false;
-    return JS::AddPromiseReactions(cx, promise, then_handler, catch_handler);
-  }
-
-  bool body_reader_catch_handler(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject response(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
-    RootedObject reader(cx, &js::GetFunctionNativeReserved(&args.callee(), 1).toObject());
-
-    // TODO: check if this should create a rejected promise instead, so an in-content handler
-    // for unhandled rejections could deal with it.
-    // The body stream errored during the streaming response.
-    // Not much we can do, but at least close the stream, and warn.
-    fprintf(stderr, "Warning: body ReadableStream closed during streaming response. Exception: ");
-    dump_value(cx, args.get(0), stderr);
-
-    FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
-    return HANDLE_RESULT(cx, xqd_body_close(RequestOrResponse::body_handle(response)));
-  }
-
-  bool respond_maybe_streaming(JSContext* cx, HandleObject response_obj, bool* streaming) {
-    RootedObject stream(cx, RequestOrResponse::body_stream(response_obj));
-    MOZ_ASSERT(stream);
-
-    bool locked_or_disturbed;
-    if (!JS::ReadableStreamIsLocked(cx, stream, &locked_or_disturbed))
-      return false;
-    if (!locked_or_disturbed && !JS::ReadableStreamIsDisturbed(cx, stream, &locked_or_disturbed))
-      return false;
-    if (locked_or_disturbed) {
-      // TODO: Improve this message; `disturbed` is probably too spec-internal a term.
-      JS_ReportErrorUTF8(cx, "respondWith called with a Response containing "
-                             "a body stream that's locked or disturbed");
-      return false;
-    }
-
-    if (BodyStreamSource::stream_has_native_source(stream)) {
-      // If the body stream is backed by a C@E body handle, we can directly pipe that handle
-      // into the response body we're about to send.
-
-      // First, move the source's body handle to the target.
-      RootedObject stream_source(cx, BodyStreamSource::get_stream_source(stream));
-      RootedObject source_owner(cx, BodyStreamSource::owner(stream_source));
-      if (!RequestOrResponse::move_body_handle(cx, source_owner, response_obj))
-        return false;
-
-      // Then, send the response without streaming. We know that content won't append to this body
-      // handle, because we don't expose any means to do so, so it's ok for it to be closed
-      // immediately.
-      *streaming = false;
-      return start_response(cx, response_obj, false);
-    }
-
-    RootedObject reader(cx, JS::ReadableStreamGetReader(cx, stream,
-                                                        JS::ReadableStreamReaderMode::Default));
-    if (!reader) return false;
-
-    bool is_closed;
-    if (!JS::ReadableStreamReaderIsClosed(cx, reader, &is_closed))
-      return false;
-
-    // It's ok for the stream to be closed, as its contents might
-    // already have fully been written to the body handle.
-    // In that case, we can do a blocking send instead.
-    if (is_closed) {
-      *streaming = false;
-      return start_response(cx, response_obj, false);
-    }
-
-    // Create handlers for both `then` and `catch`.
-    // These are functions with two reserved slots, in which we store all information required
-    // to perform the reactions.
-    // We store the actually required information on the catch handler, and a reference to that
-    // on the then handler. This allows us to reuse these functions for the next read operation
-    // in the then handler. The catch handler won't ever have a need to perform another operation
-    // in this way.
-    JSFunction* catch_fun = js::NewFunctionWithReserved(cx, body_reader_catch_handler, 1, 0,
-                                                        "catch_handler");
-    if (!catch_fun) return false;
-    RootedObject catch_handler(cx, JS_GetFunctionObject(catch_fun));
-
-    js::SetFunctionNativeReserved(catch_handler, 0, JS::ObjectValue(*response_obj));
-    js::SetFunctionNativeReserved(catch_handler, 1, JS::ObjectValue(*reader));
-
-    JSFunction* then_fun = js::NewFunctionWithReserved(cx, body_reader_then_handler, 1, 0,
-                                                       "then_handler");
-    if (!then_fun) return false;
-    RootedObject then_handler(cx, JS_GetFunctionObject(then_fun));
-
-    js::SetFunctionNativeReserved(then_handler, 0, JS::ObjectValue(*catch_handler));
-
-    RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
-    if (!promise) return false;
-    if (!JS::AddPromiseReactions(cx, promise, then_handler, catch_handler))
-      return false;
-
-    if (!start_response(cx, response_obj, true))
-      return false;
-
-    *streaming = true;
-    return true;
-  }
-
   // Steps in this function refer to the spec at
   // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
-  bool response_promise_then_handler(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
-
+  bool response_promise_then_handler(JSContext* cx, HandleObject event, HandleValue extra,
+                                     CallArgs args)
+  {
     // Step 10.1
     // Note: the `then` handler is only invoked after all Promise resolution has happened.
     // (Even if there were multiple Promises to unwrap first.)
@@ -3523,26 +5935,21 @@ static PersistentRooted<JSObject*> INSTANCE;
           return false;
     }
 
-    FetchEvent::detail::inc_pending_promise_count(FetchEvent::instance());
     bool streaming = false;
-    if (RequestOrResponse::body_stream(response_obj)) {
-      if (!respond_maybe_streaming(cx, response_obj, &streaming))
-        return false;
-    } else {
-      if (!respond_blocking(cx, response_obj))
-        return false;
+    if (!RequestOrResponse::maybe_stream_body(cx, response_obj, &streaming)) {
+      return false;
     }
 
     set_state(event, streaming ? State::responseStreaming : State::responseDone);
-    return true;
+    return start_response(cx, response_obj, streaming);
   }
 
   // Steps in this function refer to the spec at
   // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
-  bool response_promise_catch_handler(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
-    RootedObject promise(cx, &js::GetFunctionNativeReserved(&args.callee(), 1).toObject());
+  bool response_promise_catch_handler(JSContext* cx, HandleObject event, HandleValue promise_val,
+                                      CallArgs args)
+  {
+    RootedObject promise(cx, &promise_val.toObject());
 
     fprintf(stderr, "Error while running request handler: ");
     dump_promise_rejection(cx, args.get(0), promise, stderr);
@@ -3582,19 +5989,15 @@ static PersistentRooted<JSObject*> INSTANCE;
     set_state(self, State::waitToRespond);
 
     // Step 9 (continued in `response_promise_catch_handler` above)
-    JSFunction* catch_fun = js::NewFunctionWithReserved(cx, response_promise_catch_handler, 1, 0,
-                                                        "catch_handler");
-    if (!catch_fun) return false;
-    RootedObject catch_handler(cx, JS_GetFunctionObject(catch_fun));
-    js::SetFunctionNativeReserved(catch_handler, 0, JS::ObjectValue(*self));
-    js::SetFunctionNativeReserved(catch_handler, 1, JS::ObjectValue(*response_promise));
+    RootedObject catch_handler(cx);
+    RootedValue extra(cx, ObjectValue(*response_promise));
+    catch_handler = create_internal_method<response_promise_catch_handler>(cx, self, extra);
+    if (!catch_handler) return false;
 
     // Step 10 (continued in `response_promise_then_handler` above)
-    JSFunction* then_fun = js::NewFunctionWithReserved(cx, response_promise_then_handler, 1, 0,
-                                                       "then_handler");
-    if (!then_fun) return false;
-    RootedObject then_handler(cx, JS_GetFunctionObject(then_fun));
-    js::SetFunctionNativeReserved(then_handler, 0, JS::ObjectValue(*self));
+    RootedObject then_handler(cx);
+    then_handler = create_internal_method<response_promise_then_handler>(cx, self);
+    if (!then_handler) return false;
 
     if (!JS::AddPromiseReactions(cx, response_promise, then_handler, catch_handler))
       return false;
@@ -3615,10 +6018,9 @@ static PersistentRooted<JSObject*> INSTANCE;
   }
 
   // Step 5 of https://w3c.github.io/ServiceWorker/#wait-until-method
-  bool dec_pending_promise_count(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject event(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
-
+  bool dec_pending_promise_count(JSContext* cx, HandleObject event, HandleValue extra,
+                                 CallArgs args)
+  {
     // Step 5.1
     detail::dec_pending_promise_count(event);
 
@@ -3650,13 +6052,13 @@ static PersistentRooted<JSObject*> INSTANCE;
   }
 
   const JSFunctionSpec methods[] = {
-    JS_FN("respondWith", respondWith, 1, 0),
-    JS_FN("waitUntil", waitUntil, 1, 0),
+    JS_FN("respondWith", respondWith, 1, JSPROP_ENUMERATE),
+    JS_FN("waitUntil", waitUntil, 1, JSPROP_ENUMERATE),
   JS_FS_END};
 
   const JSPropertySpec properties[] = {
-    JS_PSG("client", client_get, 0),
-    JS_PSG("request", request_get, 0),
+    JS_PSG("client", client_get, JSPROP_ENUMERATE),
+    JS_PSG("request", request_get, JSPROP_ENUMERATE),
   JS_PS_END};
 
   CLASS_BOILERPLATE_NO_CTOR(FetchEvent)
@@ -3668,11 +6070,8 @@ static PersistentRooted<JSObject*> INSTANCE;
     RootedObject request(cx, prepare_downstream_request(cx));
     if (!request) return nullptr;
 
-    JSFunction* dec_count_fun = js::NewFunctionWithReserved(cx, dec_pending_promise_count, 1, 0,
-                                                            "dec_pending_promise_count");
-    if (!dec_count_fun) return nullptr;
-    RootedObject dec_count_handler(cx, JS_GetFunctionObject(dec_count_fun));
-    js::SetFunctionNativeReserved(dec_count_handler, 0, JS::ObjectValue(*self));
+    RootedObject dec_count_handler(cx, create_internal_method<dec_pending_promise_count>(cx, self));
+    if (!dec_count_handler) return nullptr;
 
     JS::SetReservedSlot(self, Slots::Request, JS::ObjectValue(*request));
     JS::SetReservedSlot(self, Slots::Dispatch, JS::FalseValue());
@@ -3726,7 +6125,7 @@ static PersistentRooted<JSObject*> INSTANCE;
 
   void set_state(JSObject* self, State new_state) {
     MOZ_ASSERT(is_instance(self));
-    MOZ_ASSERT((uint)new_state > (uint)state(self));
+    MOZ_ASSERT((uint8_t)new_state > (uint8_t)state(self));
     JS::SetReservedSlot(self, Slots::State, JS::Int32Value((int)new_state));
   }
 
@@ -3734,12 +6133,6 @@ static PersistentRooted<JSObject*> INSTANCE;
     State current_state = state(self);
     return current_state != State::unhandled && current_state != State::waitToRespond;
   }
-}
-
-
-namespace URLSearchParams {
-  JSObject* create(JSContext* cx, jsurl::JSUrl* url);
-  JSUrlSearchParams* get_params(JSObject* self);
 }
 
 namespace URL {
@@ -3751,7 +6144,7 @@ namespace URL {
 
   const unsigned ctor_length = 1;
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
   JSObject* create(JSContext* cx, HandleValue url_val, HandleValue base_val);
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
@@ -3767,14 +6160,18 @@ namespace URL {
   }
 
 #define ACCESSOR_GET(field) \
-  bool field##_get(JSContext* cx, unsigned argc, Value* vp) { \
-    METHOD_HEADER(0) \
+  bool field(JSContext* cx, HandleObject self, MutableHandleValue rval) { \
     const JSUrl* url = (JSUrl*)JS::GetReservedSlot(self, Slots::Url).toPrivate(); \
     const SpecSlice slice = jsurl::field(url); \
     RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)slice.data, slice.len))); \
     if (!str) return false; \
-    args.rval().setString(str); \
+    rval.setString(str); \
     return true; \
+  } \
+  \
+  bool field##_get(JSContext* cx, unsigned argc, Value* vp) { \
+    METHOD_HEADER(0) \
+    return field(cx, self, args.rval()); \
   } \
 
 #define ACCESSOR_SET(field) \
@@ -3805,14 +6202,26 @@ namespace URL {
   ACCESSOR(search)
   ACCESSOR(username)
 
-  bool origin_get(JSContext* cx, unsigned argc, Value* vp) {
-    METHOD_HEADER(0)
+#undef ACCESSOR_GET
+#undef ACCESSOR_SET
+#undef ACCESSOR
+
+  SpecString origin(JSContext* cx, HandleObject self) {
     const JSUrl* url = (JSUrl*)JS::GetReservedSlot(self, Slots::Url).toPrivate();
-    SpecString slice = jsurl::origin(url);
+    return jsurl::origin(url);
+  }
+
+  bool origin(JSContext* cx, HandleObject self, MutableHandleValue rval) {
+    SpecString slice = origin(cx, self);
     RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)slice.data, slice.len)));
     if (!str) return false;
-    args.rval().setString(str);
+    rval.setString(str);
     return true;
+  }
+
+  bool origin_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+    return origin(cx, self, args.rval());
   }
 
   bool searchParams_get(JSContext* cx, unsigned argc, Value* vp) {
@@ -3944,7 +6353,7 @@ namespace URLSearchParamsIterator {
     return false;
   }
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
 
   bool next(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
@@ -4060,9 +6469,13 @@ namespace URLSearchParams {
     Count
   };};
 
+  JSUrlSearchParams* get_params(JSObject* self) {
+    return (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+  }
+
   namespace detail {
     bool append(JSContext* cx, HandleObject self, HandleValue key, HandleValue val, const char* _) {
-      const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+      const auto params = get_params(self);
 
       auto name = encode(cx, key);
       if (!name.data) return false;
@@ -4075,11 +6488,11 @@ namespace URLSearchParams {
     }
   }
 
-  JSUrlSearchParams* get_params(JSObject* self) {
-    return (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
+  SpecSlice serialize(JSContext* cx, HandleObject self) {
+    return jsurl::params_to_string(get_params(self));
   }
 
-  bool check_receiver(JSContext* cx, HandleObject self, const char* method_name);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
   JSObject* create(JSContext* cx, HandleValue params_val);
 
   const unsigned ctor_length = 1;
@@ -4200,9 +6613,7 @@ namespace URLSearchParams {
 
   bool toString(JSContext* cx, unsigned argc, Value* vp) {
     METHOD_HEADER(0)
-    const auto params = (JSUrlSearchParams*)JS::GetReservedSlot(self, Slots::Params).toPrivate();
-
-    const SpecSlice slice = jsurl::params_to_string(params);
+    SpecSlice slice = serialize(cx, self);
     RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)slice.data, slice.len)));
     if (!str) return false;
 
@@ -4298,7 +6709,7 @@ namespace URLSearchParams {
     return JS_DefinePropertyById(cx, proto_obj, iteratorId, entries, 0);
   }
 
-  JSObject* create(JSContext* cx, HandleValue params_val) {
+  JSObject* create(JSContext* cx, HandleValue params_val = JS::UndefinedHandleValue) {
     RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
     if (!self) return nullptr;
 
@@ -4337,66 +6748,326 @@ namespace URLSearchParams {
   }
 }
 
+/**
+ * The `WorkerLocation` builtin, added to the global object as the data property `location`.
+ * https://html.spec.whatwg.org/multipage/workers.html#worker-locations
+ */
+namespace WorkerLocation {
+  namespace Slots { enum {
+    Count
+  };};
 
-// TODO: throw in all Request methods/getters that rely on host calls once a
-// request has been sent. The host won't let us act on them anymore anyway.
-bool fetch(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
+  const unsigned ctor_length = 1;
 
-  REQUEST_HANDLER_ONLY("fetch")
-
-  if (!args.requireAtLeast(cx, "fetch", 1)) {
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+  bool constructor(JSContext* cx, unsigned argc, Value* vp) {
+    JS_ReportErrorLatin1(cx, "Illegal constructor WorkerLocation");
+    return false;
   }
 
-  RootedObject request(cx, Request::create(cx, args[0], args.get(1)));
-  if (!request) {
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
+
+#define ACCESSOR_GET(field) \
+  bool field##_get(JSContext* cx, unsigned argc, Value* vp) { \
+    METHOD_HEADER(0) \
+    REQUEST_HANDLER_ONLY("location." #field) \
+    return URL::field(cx, url, args.rval()); \
   }
 
-  RootedString backend(cx, Request::backend(request));
-  if (!backend) {
-    backend = Fastly::defaultBackend;
+  ACCESSOR_GET(href)
+  ACCESSOR_GET(origin)
+  ACCESSOR_GET(protocol)
+  ACCESSOR_GET(host)
+  ACCESSOR_GET(hostname)
+  ACCESSOR_GET(port)
+  ACCESSOR_GET(pathname)
+  ACCESSOR_GET(search)
+  ACCESSOR_GET(hash)
+
+#undef ACCESSOR_GET
+
+  bool toString(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER(0)
+    return href_get(cx, argc, vp);
   }
-  if (!backend) {
-    size_t bytes_read;
-    RequestHandle handle = Request::request_handle(request);
-    UniqueChars buf(read_from_handle_all<xqd_req_uri_get, RequestHandle>(cx, handle, &bytes_read,
-                                                                         false));
-    if (buf) {
-      JS_ReportErrorUTF8(cx, "No backend specified for request with url %s. "
-                             "Must provide a `backend` property on the `init` object "
-                             "passed to either `new Request()` or `fetch`", buf.get());
+
+  const JSFunctionSpec methods[] = {
+    JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
+    JS_FS_END
+  };
+
+  const JSPropertySpec properties[] = {
+    JS_PSG("href", href_get, JSPROP_ENUMERATE),
+    JS_PSG("origin", origin_get, JSPROP_ENUMERATE),
+    JS_PSG("protocol", protocol_get, JSPROP_ENUMERATE),
+    JS_PSG("host", host_get, JSPROP_ENUMERATE),
+    JS_PSG("hostname", hostname_get, JSPROP_ENUMERATE),
+    JS_PSG("port", port_get, JSPROP_ENUMERATE),
+    JS_PSG("pathname", pathname_get, JSPROP_ENUMERATE),
+    JS_PSG("search", search_get, JSPROP_ENUMERATE),
+    JS_PSG("hash", hash_get, JSPROP_ENUMERATE),
+    JS_PS_END
+  };
+
+  CLASS_BOILERPLATE_CUSTOM_INIT(WorkerLocation)
+
+  bool init_class(JSContext* cx, HandleObject global) {
+    if (!init_class_impl(cx, global)) {
+      return false;
     }
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+
+    url.init(cx);
+
+    RootedObject location(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!location) {
+      return false;
+    }
+
+    return JS_DefineProperty(cx, global, "location", location, JSPROP_ENUMERATE);
   }
+}
 
-  size_t backend_len;
-  UniqueChars backend_chars = encode(cx, backend, &backend_len);
-  if (!backend_chars)
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+namespace GlobalProperties {
+  // TODO: throw in all Request methods/getters that rely on host calls once a
+  // request has been sent. The host won't let us act on them anymore anyway.
+  /**
+   * The `fetch` global function
+   * https://fetch.spec.whatwg.org/#fetch-method
+   */
+  bool fetch(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-  PendingRequestHandle request_handle = { INVALID_HANDLE };
-  RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
-  if (!response_promise)
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+    REQUEST_HANDLER_ONLY("fetch")
 
-  // TODO: ensure that we properly handle body handles forwarded from other Request/Response
-  // objects.
-  int result = xqd_req_send_async(Request::request_handle(request),
+    if (!args.requireAtLeast(cx, "fetch", 1)) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+
+    RootedObject request(cx, Request::create(cx, args[0], args.get(1)));
+    if (!request) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+
+    RootedString backend(cx, Request::backend(request));
+    if (!backend) {
+      backend = Fastly::defaultBackend;
+    }
+    if (!backend) {
+      size_t bytes_read;
+      RequestHandle handle = Request::request_handle(request);
+      UniqueChars buf(read_from_handle_all<xqd_req_uri_get, RequestHandle>(cx, handle, &bytes_read,
+                                                                          false));
+      if (buf) {
+        JS_ReportErrorUTF8(cx, "No backend specified for request with url %s. "
+                              "Must provide a `backend` property on the `init` object "
+                              "passed to either `new Request()` or `fetch`", buf.get());
+      }
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+
+    size_t backend_len;
+    UniqueChars backend_chars = encode(cx, backend, &backend_len);
+    if (!backend_chars)
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+
+    PendingRequestHandle request_handle = { INVALID_HANDLE };
+    RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
+    if (!response_promise)
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+
+    if (!Request::apply_cache_override(cx, request)) {
+      return false;
+    }
+
+    bool streaming = false;
+    if (!RequestOrResponse::maybe_stream_body(cx, request, &streaming)) {
+      return false;
+    }
+
+    int result;
+    if (streaming) {
+      result = xqd_req_send_async_streaming(Request::request_handle(request),
+                                            RequestOrResponse::body_handle(request),
+                                            backend_chars.get(), backend_len, &request_handle);
+    } else {
+      result = xqd_req_send_async(Request::request_handle(request),
                                   RequestOrResponse::body_handle(request),
                                   backend_chars.get(), backend_len, &request_handle);
-  if (!HANDLE_RESULT(cx, result))
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
 
-  if (!pending_requests->append(request))
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+    if (!HANDLE_RESULT(cx, result))
+      return ReturnPromiseRejectedWithPendingError(cx, args);
 
-  JS::SetReservedSlot(request, Request::Slots::PendingRequest, JS::Int32Value(request_handle.handle));
-  JS::SetReservedSlot(request, Request::Slots::ResponsePromise, JS::ObjectValue(*response_promise));
+    if (!pending_requests->append(request))
+      return ReturnPromiseRejectedWithPendingError(cx, args);
 
-  args.rval().setObject(*response_promise);
-  return true;
+    JS::SetReservedSlot(request, Request::Slots::PendingRequest, JS::Int32Value(request_handle.handle));
+    JS::SetReservedSlot(request, Request::Slots::ResponsePromise, JS::ObjectValue(*response_promise));
+
+    args.rval().setObject(*response_promise);
+    return true;
+  }
+
+  /**
+   * The `queueMicrotask` global function
+   * https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#microtask-queuing
+   */
+  bool queueMicrotask(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "queueMicrotask", 1)) {
+      return false;
+    }
+
+    if (!args[0].isObject() || !JS::IsCallable(&args[0].toObject())) {
+      JS_ReportErrorLatin1(cx, "queueMicrotask: Argument 1 is not a function");
+      return false;
+    }
+
+    RootedObject callback(cx, &args[0].toObject());
+
+    RootedObject promise(cx, JS::CallOriginalPromiseResolve(cx, JS::UndefinedHandleValue));
+    if (!promise) {
+      return false;
+    }
+
+    if (!JS::AddPromiseReactions(cx, promise, callback, nullptr)) {
+      return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  bool self_get(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setObject(*JS::CurrentGlobalOrNull(cx));
+    return true;
+  }
+
+  bool self_set(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "globalThis.self setter", 1)) {
+      return false;
+    }
+
+    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+    if (args.thisv() != ObjectValue(*global)) {
+      JS_ReportErrorLatin1(cx, "globalThis.self setter can only be called on the global object");
+      return false;
+    }
+
+    if (!JS_DefineProperty(cx, global, "self", args[0], JSPROP_ENUMERATE)) {
+      return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  // Magic number used in structured cloning as a tag to identify a URLSearchParam.
+  #define SCTAG_DOM_URLSEARCHPARAMS JS_SCTAG_USER_MIN
+
+  /**
+   * Reads non-JS builtins during structured cloning.
+   *
+   * Currently the only relevant builtin is URLSearchParams, but that'll grow to include
+   * Blob and FormData, too.
+   */
+  JSObject* ReadStructuredClone(JSContext* cx, JSStructuredCloneReader* r,
+                                const JS::CloneDataPolicy& cloneDataPolicy,
+                                uint32_t tag, uint32_t len, void* closure)
+  {
+    MOZ_ASSERT(tag == SCTAG_DOM_URLSEARCHPARAMS);
+
+    RootedObject params_obj(cx, URLSearchParams::create(cx));
+    if (!params_obj) {
+      return nullptr;
+    }
+
+    void* bytes = JS_malloc(cx, len);
+    if (!bytes) {
+      JS_ReportOutOfMemory(cx);
+      return nullptr;
+    }
+
+    if (!JS_ReadBytes(r, bytes, len)) {
+      return nullptr;
+    }
+
+    SpecString init((uint8_t*)bytes, len, len);
+    jsurl::params_init(URLSearchParams::get_params(params_obj), &init);
+
+    return params_obj;
+  }
+
+  /**
+   * Writes non-JS builtins during structured cloning.
+   *
+   * Currently the only relevant builtin is URLSearchParams, but that'll grow to include
+   * Blob and FormData, too.
+   */
+  bool WriteStructuredClone(JSContext* cx, JSStructuredCloneWriter* w, JS::HandleObject obj,
+                            bool* sameProcessScopeRequired, void* closure)
+  {
+    if (!URLSearchParams::is_instance(obj)) {
+      JS_ReportErrorLatin1(cx, "The object could not be cloned");
+      return false;
+    }
+
+    auto slice = URLSearchParams::serialize(cx, obj);
+    if (!JS_WriteUint32Pair(w, SCTAG_DOM_URLSEARCHPARAMS, slice.len) ||
+        !JS_WriteBytes(w, (void*)slice.data, slice.len))
+    {
+      return false;
+    }
+
+    return true;
+  }
+
+  JSStructuredCloneCallbacks sc_callbacks = { ReadStructuredClone, WriteStructuredClone };
+
+  /**
+   * The `structuredClone` global function
+   * https://html.spec.whatwg.org/multipage/structured-data.html#dom-structuredclone
+   */
+  bool structuredClone(JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "structuredClone", 1)) {
+      return false;
+    }
+
+    RootedValue transferables(cx);
+    if (args.get(1).isObject()) {
+      RootedObject options(cx, &args[1].toObject());
+      if (!JS_GetProperty(cx, options, "transfer", &transferables)) {
+        return false;
+      }
+    }
+
+    JSAutoStructuredCloneBuffer buf(JS::StructuredCloneScope::SameProcess, &sc_callbacks, nullptr);
+    JS::CloneDataPolicy policy;
+
+    if (!buf.write(cx, args[0], transferables, policy)) {
+      return false;
+    }
+
+    return buf.read(cx, args.rval());
+  }
+
+  const JSFunctionSpec methods[] = {
+    JS_FN("fetch", fetch, 2, JSPROP_ENUMERATE),
+    JS_FN("queueMicrotask", queueMicrotask, 1, JSPROP_ENUMERATE),
+    JS_FN("structuredClone", structuredClone, 1, JSPROP_ENUMERATE),
+    JS_FS_END
+  };
+
+  const JSPropertySpec properties[] = {
+    JS_PSGS("self", self_get, self_set, JSPROP_ENUMERATE),
+  JS_PS_END};
+
+  static bool init(JSContext* cx, HandleObject global) {
+    return JS_DefineFunctions(cx, global, methods) &&
+           JS_DefineProperties(cx, global, properties);
+  }
 }
 
 bool has_pending_requests() {
@@ -4467,8 +7138,8 @@ bool process_next_body_read(JSContext* cx) {
   RootedObject controller(cx);
   {
     HandleObject streamSource = (*pending_body_reads)[0];
-    owner = BodyStreamSource::owner(streamSource);
-    controller = BodyStreamSource::controller(streamSource);
+    owner = NativeStreamSource::owner(streamSource);
+    controller = NativeStreamSource::controller(streamSource);
     pending_body_reads->erase(const_cast<JSObject**>(streamSource.address()));
   }
 
@@ -4529,13 +7200,17 @@ bool define_fastly_sys(JSContext* cx, HandleObject global) {
   // Allocating the reusable hostcall buffer here means it's baked into the
   // snapshot, and since it's all zeros, it won't increase the size of the snapshot.
   if (!OwnedHostCallBuffer::initialize(cx)) return false;
-  if (!JS_DefineProperty(cx, global, "self", global, JSPROP_ENUMERATE)) return false;
+
+  if (!GlobalProperties::init(cx, global)) return false;
 
   if (!Fastly::create(cx, global)) return false;
   if (!Console::create(cx, global)) return false;
   if (!Crypto::create(cx, global)) return false;
 
-  if (!BodyStreamSource::init_class(cx, global)) return false;
+  if (!NativeStreamSource::init_class(cx, global)) return false;
+  if (!NativeStreamSink::init_class(cx, global)) return false;
+  if (!TransformStreamDefaultController::init_class(cx, global)) return false;
+  if (!TransformStream::init_class(cx, global)) return false;
   if (!Request::init_class(cx, global)) return false;
   if (!Response::init_class(cx, global)) return false;
   if (!Dictionary::init_class(cx, global)) return false;
@@ -4549,11 +7224,12 @@ bool define_fastly_sys(JSContext* cx, HandleObject global) {
   if (!URL::init_class(cx, global)) return false;
   if (!URLSearchParams::init_class(cx, global)) return false;
   if (!URLSearchParamsIterator::init_class(cx, global)) return false;
+  if (!WorkerLocation::init_class(cx, global)) return false;
 
   pending_requests = new JS::PersistentRootedObjectVector(cx);
   pending_body_reads = new JS::PersistentRootedObjectVector(cx);
 
-  return JS_DefineFunction(cx, global, "fetch", fetch, 2, JSPROP_ENUMERATE);
+  return true;
 }
 
 JSObject* create_fetch_event(JSContext* cx) {

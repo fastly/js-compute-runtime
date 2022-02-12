@@ -121,6 +121,7 @@ bool init_js() {
   JS::ContextOptionsRef(cx)
     .setPrivateClassFields(true)
     .setPrivateClassMethods(true)
+    .setClassStaticBlocks(true)
     .setErgnomicBrandChecks(true);
 
   // TODO: check if we should set a different creation zone.
@@ -263,8 +264,23 @@ bool eval_stdin(JSContext* cx, MutableHandleValue result) {
   JS::PrepareForFullGC(cx);
   JS::NonIncrementalGC(cx, JS::GCOptions::Shrink, JS::GCReason::API);
 
+  // Execute the top-level script.
   if (!JS_ExecuteScript(cx, script, result))
     return false;
+
+  // Ensure that any pending promise reactions are run before taking the snapshot.
+  while (js::HasJobsPending(cx)) {
+    js::RunJobs(cx);
+
+    if (JS_IsExceptionPending(cx))
+      abort(cx, "running Promise reactions");
+  }
+
+  // Report any promise rejections that weren't handled before snapshotting.
+  // TODO: decide whether we should abort in this case, instead of just reporting.
+  if (JS::SetSize(cx, unhandledRejectedPromises) > 0) {
+    report_unhandled_promise_rejections(cx);
+  }
 
   // TODO: check if it makes sense to increase the empty chunk count *before* running GC like this.
   // The working theory is that otherwise the engine might mark chunk pages as free that then later
