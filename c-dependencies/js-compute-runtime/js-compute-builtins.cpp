@@ -243,7 +243,7 @@ inline bool ReturnPromiseRejectedWithPendingError(JSContext* cx, const JS::CallA
   return true;
 }
 
-#define HANDLE_READ_CHUNK_SIZE 1024
+#define HANDLE_READ_CHUNK_SIZE 8192
 
 template<auto op, class HandleType>
 static char* read_from_handle_all(JSContext* cx, HandleType handle,

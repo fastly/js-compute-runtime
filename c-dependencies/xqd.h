@@ -15,7 +15,7 @@ extern "C" {
 //max header size to match vcl
 #define HEADER_MAX_LEN 69000
 #define METHOD_MAX_LEN 1024
-#define URI_MAX_LEN 4096
+#define URI_MAX_LEN 8192
 #define DICTIONARY_ENTRY_MAX_LEN 8000
 
 // TODO ACF 2020-01-17: these aren't very C-friendly names
