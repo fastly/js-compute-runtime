@@ -1,0 +1,42 @@
+name: SDK Integration Tests
+on: [push]
+jobs:
+  sdktest:
+    runs-on: ubuntu-latest
+    concurrency: 
+      group: SdkTestJob
+      cancel-in-progress: true
+    steps:
+      - name: Checkout fastly/js-compute-runtime
+        uses: actions/checkout@v2
+      - name: Checkout fastly/compute-sdk-ci-github-action
+        uses: actions/checkout@v2
+        with:
+          repository: fastly/compute-sdk-ci-github-action
+          ref: refs/heads/torch2424-tinygo-ci-fix
+          ssh-key: ${{ secrets.COMPUTE_SDK_GITHUB_ACTION_CI_PRIVATE_SSH_KEY }}
+          persist-credentials: false
+          path: ./compute-sdk-ci-github-action
+      - name: Install Fastly CLI
+        run: |
+        echo "Install Fastly CLI 1.7.0"
+        wget https://github.com/fastly/cli/releases/download/v1.7.0/fastly_1.7.0_linux_amd64.deb
+        sudo apt install ./fastly_1.7.0_linux_amd64.deb
+        shell: "bash"
+      - name: Install Viceroy
+        run: |
+        echo "Install Viceroy 0.2.9..."
+        wget https://github.com/fastly/Viceroy/releases/download/v0.2.9/viceroy_v0.2.9_linux-amd64.tar.gz
+        echo "7e1dfea8ebb770d96e449f36227a121fa3bc13fb74ae75d340bc302bcca9cc10eb1c8d9c6defc983a4e81ad4e83efb0c3052d895a5a45348835041e15c9f68a9  viceroy_v0.2.9_linux-amd64.tar.gz" | sha512sum --check
+        mkdir -p $HOME/bin
+        tar -xzf viceroy_v0.2.9_linux-amd64.tar.gz --directory $HOME/bin
+        echo "$HOME/bin" >> $GITHUB_PATH
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: compute-tinygo Integration Tests Job
+        uses: ./compute-sdk-ci-github-action/compute-sdk-test # Uses an action in the root directory
+        id: sdktest
+        with:
+          config: './_integration_tests/sdk-test-config.json'
+          fastly_token: ${{ secrets.FASTLY_TOKEN }}

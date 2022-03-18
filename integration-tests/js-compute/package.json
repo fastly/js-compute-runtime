@@ -1,0 +1,26 @@
+{
+  "scripts": {
+    "install:ci": "HUSKY_SKIP_INSTALL=true npm ci",
+    "build": "for f in fixtures/*.ts; do npm run build:single --test=`basename $f .ts`; done",
+    "build:single": "base=$npm_config_test; webpack \"./fixtures/$base.ts\"; js-compute-runtime --skip-pkg \"build/bundle.js\" \"build/$base.wasm\"",
+    "lint": "npx prettier --write ./fixtures/*.ts"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
+  "devDependencies": {
+    "husky": "^4.2.5",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.0.5",
+    "pretty-quick": "^2.0.1",
+    "ts-loader": "^8.1.0",
+    "typescript": "^4.3",
+    "webpack": "^5.30.0",
+    "webpack-cli": "^4.6.0"
+  },
+  "dependencies": {
+    "@fastly/js-compute": "file:../../javascript/js-compute"
+  }
+}

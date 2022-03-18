@@ -1,0 +1,34 @@
+{
+  "name": "js-compute SDK",
+  "services": [
+    {
+      "domain": "todo.edgecompute.app",
+      "id": "todo"
+    },
+    {
+      "domain": "todo2.edgecompute.app",
+      "id": todo2"
+    }
+  ],
+  "modules": {
+    "hello_world" : {
+      "build": "tinygo build -target=wasi -scheduler=asyncify -gc=leaking -wasm-abi=generic -o ./_integration_tests/fixtures/hello_world/hello_world.wasm ./_integration_tests/fixtures/hello_world && (cd ./_integration_tests/fixtures/hello_world && fastly compute pack --verbose --wasm-binary ./hello_world.wasm)",
+      "fastly_toml_path": "./_integration_tests/fixtures/hello_world/fastly.toml",
+      "wasm_path": "./_integration_tests/fixtures/hello_world/hello_world.wasm",
+      "pkg_path": "./_integration_tests/fixtures/hello_world/pkg/hello-world.tar.gz",
+      "tests": {
+        "POST /hello": {
+          "environments": ["viceroy", "c@e"],
+          "downstream_request": {
+            "method": "POST",
+            "pathname": "/hello"
+          },
+          "downstream_response": {
+            "status": 200,
+            "body": "Hello, TinyGo!"
+          }
+        }
+      }
+    }
+  }
+}
