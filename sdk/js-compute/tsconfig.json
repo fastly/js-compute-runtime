@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "es2019",
+    "module": "es2020",
+    "lib": ["es2019"],
+    "outDir": "./build",
+    "strict": false,
+    "moduleResolution": "node",
+    "skipLibCheck": false,
+    "forceConsistentCasingInFileNames": true
+  }
+}
