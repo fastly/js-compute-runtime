@@ -1,8 +1,7 @@
 {
   "scripts": {
     "install:ci": "HUSKY_SKIP_INSTALL=true npm ci",
-    "build": "for f in fixtures/*.ts; do npm run build:single --test=`basename $f .ts`; done",
-    "build:single": "base=$npm_config_test; webpack \"./fixtures/$base.ts\"; js-compute-runtime --skip-pkg \"build/bundle.js\" \"build/$base.wasm\"",
+    "build:test": "base=$npm_config_test; webpack \"./fixtures/$base/$base.ts\" --output-path \"./fixtures/$base\" --output-filename \"$base.js\"; js-compute-runtime --skip-pkg \"./fixtures/$base/$base.js\" \"./fixtures/$base/$base.wasm\"",
     "lint": "npx prettier --write ./fixtures/*.ts"
   },
   "husky": {

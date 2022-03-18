@@ -1,12 +1,12 @@
 # Manual Gitignore
 
-# Ignore AssemblyScript build artifacts
-integration_tests/*/build/**/*
+# Integration Tests build output
+integration-tests/**/fixtures/**/*.wasm
+integration-tests/**/fixtures/**/*.js
+integration-tests/**/fixtures/**/*.js.map
 
 # Ignore Reference Docs
-assemblyscript/*/reference-docs
-javascript/*/reference-docs
-
+# TODO
 
 # ---
 

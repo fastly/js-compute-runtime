@@ -11,11 +11,11 @@
     }
   ],
   "modules": {
-    "hello_world" : {
-      "build": "tinygo build -target=wasi -scheduler=asyncify -gc=leaking -wasm-abi=generic -o ./_integration_tests/fixtures/hello_world/hello_world.wasm ./_integration_tests/fixtures/hello_world && (cd ./_integration_tests/fixtures/hello_world && fastly compute pack --verbose --wasm-binary ./hello_world.wasm)",
-      "fastly_toml_path": "./_integration_tests/fixtures/hello_world/fastly.toml",
-      "wasm_path": "./_integration_tests/fixtures/hello_world/hello_world.wasm",
-      "pkg_path": "./_integration_tests/fixtures/hello_world/pkg/hello-world.tar.gz",
+    "hello-world" : {
+      "build": "(cd integration-tests/js-compute && npm run build:test --test=hello-world) && (cd ./integration-tests/js-compute/fixtures/hello-world && fastly compute pack --verbose --wasm-binary ./hello-world.wasm)",
+      "fastly_toml_path": "./integration-tests/js-compute/fixtures/hello-world/fastly.toml",
+      "wasm_path": "./integration-tests/js-compute/fixtures/hello-world/hello-world.wasm",
+      "pkg_path": "./integration-tests/js-compute/fixtures/hello-world/pkg/hello-world.tar.gz",
       "tests": {
         "POST /hello": {
           "environments": ["viceroy", "c@e"],
