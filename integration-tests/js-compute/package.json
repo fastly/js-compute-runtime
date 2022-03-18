@@ -21,6 +21,6 @@
     "webpack-cli": "^4.6.0"
   },
   "dependencies": {
-    "@fastly/js-compute": "file:../../javascript/js-compute"
+    "@fastly/js-compute": "file:../../sdk/js-compute"
   }
 }
