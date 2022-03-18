@@ -3,10 +3,12 @@ const path = require("path");
 module.exports = {
   stats: { errorDetails: true },
   target: "es2019",
+  /*
   output: {
     path: path.join(process.cwd(), "build"),
     filename: "bundle.js",
   },
+  */
   // mode: 'production',
   mode: "development",
   devtool: "cheap-module-source-map",

@@ -34,9 +34,9 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - name: compute-tinygo Integration Tests Job
+      - name: js-compute Integration Tests Job
         uses: ./compute-sdk-ci-github-action/compute-sdk-test # Uses an action in the root directory
         id: sdktest
         with:
-          config: './_integration_tests/sdk-test-config.json'
+          config: './integration-tests/sdk-test-config.json'
           fastly_token: ${{ secrets.FASTLY_TOKEN }}
