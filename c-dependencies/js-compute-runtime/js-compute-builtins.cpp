@@ -4715,7 +4715,7 @@ namespace Response {
     if ((!body_val.isNullOrUndefined())) {
       //     1.  If `init`["status"] is a `null body status`, then `throw` a ``TypeError``.
       if (status == 204 || status == 205 || status == 304) {
-        JS_ReportErrorLatin1(cx, "Request constructor: HEAD or GET Request cannot have a body.");
+        JS_ReportErrorLatin1(cx, "Response constructor: Response body is given with a null body status.");
         return false;
       }
 
