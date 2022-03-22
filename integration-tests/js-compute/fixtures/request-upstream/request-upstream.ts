@@ -4,7 +4,7 @@ addEventListener("fetch", (event) => {
   // Make a Request upstream to our origin
   let headers = new Headers();
   headers.set("UpstreamHeader", "UpstreamValue");
-  let upstreamRequest = new Request("http://provider.org/TheURL", {
+  let upstreamRequest = new Request("https://compute-sdk-test-backend.edgecompute.app/request_upstream", {
     headers,
   });
   let upstreamResponse = fetch(upstreamRequest, {
