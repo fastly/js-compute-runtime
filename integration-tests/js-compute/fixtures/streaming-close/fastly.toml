@@ -1,0 +1,25 @@
+# This file describes a Fastly Compute@Edge package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
+authors = ["aturner+ecp@fastly.com"]
+description = ""
+language = "javascript"
+manifest_version = 2
+name = "streaming-close"
+service_id = ""
+
+[local_server]
+
+  [local_server.backends]
+
+    [local_server.backends.TelemetryServer]
+      url = "http://localhost:8081/"
+
+    [local_server.backends.TheOrigin]
+      url = "https://compute-sdk-test-backend.edgecompute.app/"
+
+    [local_server.backends.TheOrigin2]
+      url = "https://compute-sdk-test-backend.edgecompute.app/"
+
+    [local_server.backends.example_backend]
+      url = "https://example.org/"

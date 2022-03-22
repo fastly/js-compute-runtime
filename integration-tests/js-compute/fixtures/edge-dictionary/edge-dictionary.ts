@@ -9,7 +9,7 @@ addEventListener("fetch", (event) => {
   let status = 200;
 
   if (downstreamRequest.method == "POST" && downstreamUrl.pathname == "/") {
-    let asDictionary = new Dictionary("assemblyscript_edge_dictionary");
+    let asDictionary = new Dictionary("edge_dictionary");
 
     let twitterValue = asDictionary.get("twitter");
     if (twitterValue) {

@@ -1,7 +1,7 @@
 /// <reference types="@fastly/js-compute" />
 
 addEventListener("fetch", (event) => {
-  let logger = fastly.getLogger("JavaScriptLog");
+  let logger = fastly.getLogger("ComputeLog");
   logger.log("Hello!");
 
   // Build a response

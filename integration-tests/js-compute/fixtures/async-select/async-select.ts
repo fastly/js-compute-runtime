@@ -9,12 +9,12 @@ interface RequestData {
 addEventListener("fetch", (event) => {
   let requestsData = [
     {
-      url: "http://provider1.org/TheURL1",
+      url: "https://compute-sdk-test-backend.edgecompute.app/async_select_1",
       backend: "TheOrigin",
       header: "fooname",
     },
     {
-      url: "http://provider2.org/TheURL2",
+      url: "https://compute-sdk-test-backend.edgecompute.app/async_select_2",
       backend: "TheOrigin2",
       header: "barname",
     },

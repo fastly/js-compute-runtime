@@ -19,7 +19,7 @@ addEventListener("fetch", (event) => {
   event.respondWith(response);
 
   // Make a request upstream
-  let upstreamRequest = new Request("http://provider.org/TheURL");
+  let upstreamRequest = new Request("https://compute-sdk-test-backend.edgecompute.app/streaming_close");
   let upstreamCacheOverride = new CacheOverride("pass");
   upstreamRequest.setCacheOverride(upstreamCacheOverride);
   fetch(upstreamRequest, {
@@ -75,7 +75,8 @@ addEventListener("fetch", (event) => {
     let teleHeaders = new Headers();
     teleHeaders.set("Vowels-Removed", vowelsRemoved.toString());
     let teleRequest = new Request("https://telemetry-server.com/example", {
-      headers: teleHeaders,
+      method: "POST",
+      headers: teleHeaders
     });
     await fetch(teleRequest, {
       backend: "TelemetryServer",

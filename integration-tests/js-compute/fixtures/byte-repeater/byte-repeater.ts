@@ -18,7 +18,7 @@ addEventListener("fetch", (event) => {
   event.respondWith(response);
 
   // Make a request upstream
-  let upstreamRequest = new Request("http://provider.org/TheURL");
+  let upstreamRequest = new Request("https://compute-sdk-test-backend.edgecompute.app/byte_repeater");
   upstreamRequest.setCacheOverride(new CacheOverride("pass"));
   fetch(upstreamRequest, {
     backend: "TheOrigin",
