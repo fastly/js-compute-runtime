@@ -226,6 +226,49 @@
           ]
         }
       }
+    },
+
+    "response-headers" : {
+      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=response-headers) && (cd ./integration-tests/js-compute/fixtures/response-headers && fastly compute pack --verbose --wasm-binary ./response-headers.wasm)",
+      "fastly_toml_path": "./integration-tests/js-compute/fixtures/response-headers/fastly.toml",
+      "wasm_path": "./integration-tests/js-compute/fixtures/response-headers/response-headers.wasm",
+      "pkg_path": "./integration-tests/js-compute/fixtures/response-headers/pkg/response-headers.tar.gz",
+      "tests": {
+        "POST /hello": {
+          "environments": ["viceroy", "c@e"],
+          "downstream_request": {
+            "method": "POST",
+            "pathname": "/hello"
+          },
+          "downstream_response": {
+            "status": 200,
+            "body": "Hello JS",
+            "headers": {
+              "JSHeader": "JSValue"
+            }
+          }
+        }
+      }
+    },
+
+    "request-limits" : {
+      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=request-limits) && (cd ./integration-tests/js-compute/fixtures/request-limits && fastly compute pack --verbose --wasm-binary ./request-limits.wasm)",
+      "fastly_toml_path": "./integration-tests/js-compute/fixtures/request-limits/fastly.toml",
+      "wasm_path": "./integration-tests/js-compute/fixtures/request-limits/request-limits.wasm",
+      "pkg_path": "./integration-tests/js-compute/fixtures/request-limits/pkg/request-limits.tar.gz",
+      "tests": {
+        "POST /hello?requests=7": {
+          "environments": ["viceroy", "c@e"],
+          "downstream_request": {
+            "method": "POST",
+            "pathname": "/hello?requests=7"
+          },
+          "downstream_response": {
+            "status": 200,
+            "body": "7"
+          }
+        }
+      }
     }
 
   }
