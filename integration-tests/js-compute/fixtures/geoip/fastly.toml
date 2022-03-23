@@ -5,7 +5,7 @@ authors = ["aturner+ecp@fastly.com"]
 description = ""
 language = "javascript"
 manifest_version = 2
-name = "response-headers"
+name = "geoip"
 service_id = ""
 
 [local_server]

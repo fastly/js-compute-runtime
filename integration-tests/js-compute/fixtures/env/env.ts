@@ -16,6 +16,7 @@ addEventListener("fetch", (event) => {
   }
 
   // Build a response
+  console.log(responseBody)
   let response = new Response(responseBody, {
     status,
   });
