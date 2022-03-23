@@ -2,12 +2,12 @@
   "name": "js-compute SDK",
   "services": [
     {
-      "domain": "todo.edgecompute.app",
-      "id": "todo"
+      "domain": "jointly-driven-stag.edgecompute.app",
+      "id": "5C90J7i8WNPHRbcB32Npxz"
     },
     {
-      "domain": "todo2.edgecompute.app",
-      "id": "todo2"
+      "domain": "legally-poetic-crab.edgecompute.app",
+      "id": "1VkDhW4l5mCzmvSlyk0h34"
     }
   ],
   "modules": {
@@ -266,6 +266,45 @@
           "downstream_response": {
             "status": 200,
             "body": "7"
+          }
+        }
+      }
+    },
+
+    "geoip" : {
+      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=geoip) && (cd ./integration-tests/js-compute/fixtures/geoip && fastly compute pack --verbose --wasm-binary ./geoip.wasm)",
+      "fastly_toml_path": "./integration-tests/js-compute/fixtures/geoip/fastly.toml",
+      "wasm_path": "./integration-tests/js-compute/fixtures/geoip/geoip.wasm",
+      "pkg_path": "./integration-tests/js-compute/fixtures/geoip/pkg/geoip.tar.gz",
+      "tests": {
+        "GET /": {
+          "environments": ["c@e"],
+          "downstream_request": {
+            "method": "GET",
+            "pathname": "/"
+          },
+          "downstream_response": {
+            "status": 200
+          }
+        }
+      }
+    },
+
+    "env" : {
+      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=env) && (cd ./integration-tests/js-compute/fixtures/env && fastly compute pack --verbose --wasm-binary ./env.wasm)",
+      "fastly_toml_path": "./integration-tests/js-compute/fixtures/env/fastly.toml",
+      "wasm_path": "./integration-tests/js-compute/fixtures/env/env.wasm",
+      "pkg_path": "./integration-tests/js-compute/fixtures/env/pkg/env.tar.gz",
+      "tests": {
+        "GET /": {
+          "environments": ["viceroy"],
+          "downstream_request": {
+            "method": "GET",
+            "pathname": "/"
+          },
+          "downstream_response": {
+            "status": 200,
+            "body": "localhost"
           }
         }
       }

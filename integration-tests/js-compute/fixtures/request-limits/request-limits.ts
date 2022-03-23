@@ -12,9 +12,8 @@ addEventListener("fetch", (event) => {
 
   // Loop and add the maximum limit of requests
   for (let i = 0; i < numRequestsToMake; i++) {
-    let request = new Request("http://provider1.org/TheURL", {
-      body: "JS Body",
-      method: "POST"
+    let request = new Request("https://compute-sdk-test-backend.edgecompute.app/", {
+      method: "GET"
     });
     let pendingRequest = fetch(request, {
       backend: "TheOrigin",
