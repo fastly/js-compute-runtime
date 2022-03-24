@@ -1,0 +1,32 @@
+{
+  "writableStrategy highWaterMark should work": {
+    "status": 0
+  },
+  "readableStrategy highWaterMark should work": {
+    "status": 0
+  },
+  "writable should have the correct size() function": {
+    "status": 0
+  },
+  "default writable strategy should be equivalent to { highWaterMark: 1 }": {
+    "status": 0
+  },
+  "default readable strategy should be equivalent to { highWaterMark: 0 }": {
+    "status": 0
+  },
+  "a RangeError should be thrown for an invalid highWaterMark": {
+    "status": 1
+  },
+  "writableStrategy highWaterMark should be converted to a number": {
+    "status": 0
+  },
+  "readableStrategy highWaterMark should be converted to a number": {
+    "status": 0
+  },
+  "a bad readableStrategy size function should cause writer.write() to reject on an identity transform": {
+    "status": 0
+  },
+  "a bad readableStrategy size function should error the stream on enqueue even when transformer.transform() catches the exception": {
+    "status": 0
+  }
+}

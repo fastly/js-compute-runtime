@@ -1,0 +1,14 @@
+{
+  "BOM is ignored if ignoreBOM option is specified: utf-8": {
+    "status": 1
+  },
+  "BOM is ignored if ignoreBOM option is specified: utf-16le": {
+    "status": 1
+  },
+  "BOM is ignored if ignoreBOM option is specified: utf-16be": {
+    "status": 1
+  },
+  "The ignoreBOM attribute of TextDecoder": {
+    "status": 1
+  }
+}

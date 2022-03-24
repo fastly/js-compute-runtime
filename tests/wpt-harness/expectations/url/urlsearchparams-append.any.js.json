@@ -1,0 +1,14 @@
+{
+  "Append same name": {
+    "status": 0
+  },
+  "Append empty strings": {
+    "status": 0
+  },
+  "Append null": {
+    "status": 0
+  },
+  "Append multiple": {
+    "status": 1
+  }
+}

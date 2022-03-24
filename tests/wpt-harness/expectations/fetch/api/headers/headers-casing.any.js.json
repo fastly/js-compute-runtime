@@ -1,0 +1,14 @@
+{
+  "Create headers, names use characters with different case": {
+    "status": 0
+  },
+  "Check append method, names use characters with different case": {
+    "status": 0
+  },
+  "Check set method, names use characters with different case": {
+    "status": 0
+  },
+  "Check delete method, names use characters with different case": {
+    "status": 0
+  }
+}

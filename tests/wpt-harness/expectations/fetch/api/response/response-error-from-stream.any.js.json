@@ -1,0 +1,38 @@
+{
+  "ReadableStreamDefaultReader Promise receives ReadableStream start() Error": {
+    "status": 0
+  },
+  "ReadableStreamDefaultReader Promise receives ReadableStream pull() Error": {
+    "status": 0
+  },
+  "ReadableStream start() Error propagates to Response.arrayBuffer() Promise": {
+    "status": 1
+  },
+  "ReadableStream start() Error propagates to Response.blob() Promise": {
+    "status": 1
+  },
+  "ReadableStream start() Error propagates to Response.formData() Promise": {
+    "status": 1
+  },
+  "ReadableStream start() Error propagates to Response.json() Promise": {
+    "status": 1
+  },
+  "ReadableStream start() Error propagates to Response.text() Promise": {
+    "status": 1
+  },
+  "ReadableStream pull() Error propagates to Response.arrayBuffer() Promise": {
+    "status": 1
+  },
+  "ReadableStream pull() Error propagates to Response.blob() Promise": {
+    "status": 1
+  },
+  "ReadableStream pull() Error propagates to Response.formData() Promise": {
+    "status": 1
+  },
+  "ReadableStream pull() Error propagates to Response.json() Promise": {
+    "status": 1
+  },
+  "ReadableStream pull() Error propagates to Response.text() Promise": {
+    "status": 1
+  }
+}

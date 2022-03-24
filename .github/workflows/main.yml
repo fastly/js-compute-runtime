@@ -8,10 +8,16 @@ on:
 defaults:
   run:
     shell: bash
+env:
+  wizer_version: 1.3.3
+  viceroy_version: 0.2.4
 
 jobs:
   build_engine:
     name: Build Engine
+    strategy:
+      matrix:
+        profile: [debug, release]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -23,14 +29,14 @@ jobs:
       id: sm-cache
       with:
         path: |
-          c-dependencies/spidermonkey/release
-        key: cache-${{ hashFiles('c-dependencies/spidermonkey/build-engine.sh') }}-${{ hashFiles('c-dependencies/spidermonkey/gecko-revision') }}-${{ hashFiles('c-dependencies/spidermonkey/object-files.list') }}
+          c-dependencies/spidermonkey/${{ matrix.profile }}
+        key: cache-${{ hashFiles('c-dependencies/spidermonkey/build-engine.sh') }}-${{ hashFiles('c-dependencies/spidermonkey/gecko-revision') }}-${{ hashFiles('c-dependencies/spidermonkey/object-files.list') }}-${{ matrix.profile }}
 
     - name: "Build SpiderMonkey"
       if: steps.sm-cache.outputs.cache-hit != 'true'
       run: |
         cd c-dependencies/spidermonkey/
-        bash ./build-engine.sh
+        bash ./build-engine.sh ${{ matrix.profile }}
 
     - name: "Install wasi-sdk (linux)"
       run: |
@@ -50,11 +56,21 @@ jobs:
     - name: "Install Binaryen (linux)"
       run: |
         set -x
-        export BINARYEN_VERSION=100
+        export BINARYEN_VERSION=105
         curl -sS -L "https://github.com/WebAssembly/binaryen/releases/download/version_${BINARYEN_VERSION}/binaryen-version_${BINARYEN_VERSION}-x86_64-linux.tar.gz" | tar xzf - &&
         echo "$PWD/binaryen-version_${BINARYEN_VERSION}/bin" >> $GITHUB_PATH
 
-    - name: "Build JS runtime"
+    - name: "Build JS runtime (debug)"
+      run: |
+        set -x
+        mkdir dist
+        cd dist
+        DEBUG=1 CXX_OPT="-O1" make -f ../c-dependencies/js-compute-runtime/Makefile
+        rm *.{d,o}
+        cd ..
+      if: matrix.profile == 'debug'
+
+    - name: "Build JS runtime (release)"
       run: |
         set -x
         mkdir dist
@@ -62,11 +78,81 @@ jobs:
         make -f ../c-dependencies/js-compute-runtime/Makefile
         rm *.{d,o}
         cd ..
+      if: matrix.profile == 'release'
 
     - uses: actions/upload-artifact@v1
       with:
-        name: engine
+        name: engine-${{ matrix.profile }}
         path: dist
+
+  ensure_cargo_installs:
+    name: Ensure that all required "cargo install" commands are run, or we have a cache hit
+    strategy:
+      matrix:
+        include:
+          - crate: wizer
+            version: 1.3.3 # Note: workflow-level env vars can't be used in matrix definitions
+            options: "--all-features"
+          - crate: viceroy
+            version: 0.2.4 # Note: workflow-level env vars can't be used in matrix definitions
+            options: ""
+    runs-on: ubuntu-latest
+    steps:
+    - name: Cache ${{ matrix.crate }} ${{ matrix.version }}
+      id: cache-crate
+      uses: actions/cache@v2.1.5
+      with:
+        path: "/home/runner/.cargo/bin/${{ matrix.crate }}"
+        key: crate-cache-${{ matrix.crate }}-${{ matrix.version }}
+    - name: Install ${{ matrix.crate }} ${{ matrix.version }}
+      run: cargo install ${{ matrix.crate }} ${{ matrix.options }} --version ${{ matrix.version }}
+      if: steps.cache-crate.outputs.cache-hit != 'true'
+
+  run_wpt:
+    name: Run Web Platform Tests
+    strategy:
+      matrix:
+        include:
+          - profile: debug
+          - profile: release
+    needs: [build_engine, ensure_cargo_installs]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Download Engine
+      uses: actions/download-artifact@v1
+      with:
+        name: engine-${{ matrix.profile }}
+
+    - name: Restore Wizer from cache
+      uses: actions/cache@v2.1.5
+      with:
+        path: "/home/runner/.cargo/bin/wizer"
+        key: crate-cache-wizer-${{ env.wizer_version }}
+
+    - name: Restore Viceroy from cache
+      uses: actions/cache@v2.1.5
+      with:
+        path: "/home/runner/.cargo/bin/viceroy"
+        key: crate-cache-viceroy-${{ env.viceroy_version }}
+
+    - name: Build WPT runtime
+      run: |
+        cd engine-${{ matrix.profile }}
+        bash ../tests/wpt-harness/build-wpt-runtime.sh
+
+    - name: Prepare WPT hosts
+      run: |
+        cd tests/wpt-harness/wpt
+        ./wpt make-hosts-file | sudo tee -a /etc/hosts
+
+    - name: Run tests
+      run: |
+        cd engine-${{ matrix.profile }}
+        node ../tests/wpt-harness/run-wpt.mjs -vv
 
   # Perform release builds of `js-compute-runtime`. Builds on
   # Windows/Mac/Linux, and artifacts are uploaded after the build is finished.
@@ -90,7 +176,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        submodules: true
+        submodules: false
     - uses: ./.github/actions/install-rust
       with:
         toolchain: ${{ matrix.rust }}
@@ -104,10 +190,10 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v1
       with:
-        name: engine
+        name: engine-release
 
     # Build `js-compute-runtime`
-    - run: PREBUILT_ENGINE=engine/js-compute-runtime.wasm cargo build --release
+    - run: PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm cargo build --release
 
     # Test what we just built.
     # (Disabled for now since we don't actually have any tests for this prototype :/)
@@ -138,7 +224,7 @@ jobs:
   # github releases and/or tags for pushes.
   publish:
     name: Publish
-    needs: [build]
+    needs: [build, run_wpt]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

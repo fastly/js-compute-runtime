@@ -1,0 +1,2216 @@
+{
+  "Loading data…": {
+    "status": 0
+  },
+  "Parsing: <http://example\t.\norg> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://user:pass@foo:21/bar;par?b#c> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <https://test:@test> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <https://:@test> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <non-special://test:@test/x> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <non-special://:@test/x> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http:foo.com> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <\t   :foo.com   \n> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: < foo.com  > against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <a:\t foo.com> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://f:21/ b ? d # e > against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <lolscheme:x x#x x> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://f:/c> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://f:0/c> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://f:00000000000000/c> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://f:00000000000000000000080/c> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://f:b/c> against <http://example.org/foo/bar>": {
+    "status": 1
+  },
+  "Parsing: <http://f: /c> against <http://example.org/foo/bar>": {
+    "status": 1
+  },
+  "Parsing: <http://f:\n/c> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://f:fifty-two/c> against <http://example.org/foo/bar>": {
+    "status": 1
+  },
+  "Parsing: <http://f:999999/c> against <http://example.org/foo/bar>": {
+    "status": 1
+  },
+  "Parsing: <non-special://f:999999/c> against <http://example.org/foo/bar>": {
+    "status": 1
+  },
+  "Parsing: <http://f: 21 / b ? d # e > against <http://example.org/foo/bar>": {
+    "status": 1
+  },
+  "Parsing: <> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <  \t> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <:foo.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <:foo.com\\> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <:> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <:a> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <:/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <:\\> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <:#> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <#> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <#/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <#\\> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <#;?> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <?> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: </> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <:23> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: </:23> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <\\x> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <\\\\x\\hello> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <::> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <::23> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <foo://> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://a:b@c:29/d> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http::@c:29> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://&a:foo(b]c@d:2/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://::@c@d:2> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://foo.com:b@d/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://foo.com/\\@> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http:\\\\foo.com\\> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http:\\\\a\\b:c\\d@foo.com\\> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <foo:/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <foo:/bar.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <foo://///////> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <foo://///////bar.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <foo:////://///> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <c:/foo> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <//foo/bar> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://foo/path;a??e#f#g> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://foo/abcd?efgh?ijkl> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://foo/abcd#foo?bar> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <[61:24:74]:98> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http:[61:27]/:foo> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://[1::2]:3:4> against <http://example.org/foo/bar>": {
+    "status": 1
+  },
+  "Parsing: <http://2001::1> against <http://example.org/foo/bar>": {
+    "status": 1
+  },
+  "Parsing: <http://2001::1]> against <http://example.org/foo/bar>": {
+    "status": 1
+  },
+  "Parsing: <http://2001::1]:80> against <http://example.org/foo/bar>": {
+    "status": 1
+  },
+  "Parsing: <http://[2001::1]> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://[::127.0.0.1]> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://[0:0:0:0:0:0:13.1.68.3]> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://[2001::1]:80> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http:/example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <ftp:/example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <https:/example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <madeupscheme:/example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <file:/example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <file://example:1/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://example:test/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://example%/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://[example]/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <ftps:/example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <gopher:/example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <ws:/example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <wss:/example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <data:/example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <javascript:/example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <mailto:/example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http:example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <ftp:example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <https:example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <madeupscheme:example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <ftps:example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <gopher:example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <ws:example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <wss:example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <data:example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <javascript:example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <mailto:example.com/> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: </a/b/c> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: </a/ /c> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: </a%2fc> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: </a/%2f/c> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <#β> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <data:text/html,test#test> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <tel:1234567890> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <ssh://example.com/foo/bar.git> against <http://example.org/>": {
+    "status": 0
+  },
+  "Parsing: <file:c:\\foo\\bar.html> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <  File:c|////foo\\bar.html> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <C|/foo/bar> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: </C|\\foo\\bar> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <//C|/foo/bar> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <//server/file> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <\\\\server\\file> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: </\\server/file> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <file:///foo/bar.txt> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <file:///home/me> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <//> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <///> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <///test> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <file://test> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <file://localhost> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <file://localhost/> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <file://localhost/test> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <test> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <file:test> against <file:///tmp/mock/path>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/././foo> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/./.foo> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/.> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/./> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/bar/..> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/bar/../> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/..bar> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/bar/../ton> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/bar/../ton/../../a> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/../../..> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/../../../ton> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/%2e> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/%2e%2> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/%2e./%2e%2e/.%2e/%2e.bar> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com////../..> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/bar//../..> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo/bar//..> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/%20foo> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo%> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo%2> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo%2zbar> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo%2Â©zbar> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo%41%7a> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo\t%91> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo%00%51> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/(%28:%3A%29)> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/%3A%3a%3C%3c> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/foo\tbar> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com\\\\foo\\\\bar> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/%7Ffp3%3Eju%3Dduvgw%3Dd> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/@asdf%40> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/你好你好> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/‥/foo> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/﻿/foo> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/‮/foo/‭/bar> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://www.google.com/foo?bar=baz#> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://www.google.com/foo?bar=baz# »> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <data:test# »> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://www.google.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://192.0x00A80001> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://www/foo%2Ehtml> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://www/foo/%2E/html> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://user:pass@/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://%25DOMAIN:foobar@foodomain.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http:\\\\www.google.com\\foo> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://foo:80/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://foo:81/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <httpa://foo:80/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://foo:-80/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://foo:443/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <https://foo:80/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ftp://foo:21/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ftp://foo:80/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <gopher://foo:70/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <gopher://foo:443/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ws://foo:80/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ws://foo:81/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ws://foo:443/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ws://foo:815/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wss://foo:80/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wss://foo:81/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wss://foo:443/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wss://foo:815/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http:/example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ftp:/example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <https:/example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <madeupscheme:/example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file:/example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ftps:/example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <gopher:/example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ws:/example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wss:/example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <data:/example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <javascript:/example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <mailto:/example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http:example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ftp:example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <https:example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <madeupscheme:example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ftps:example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <gopher:example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ws:example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wss:example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <data:example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <javascript:example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <mailto:example.com/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http:@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http:/@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http:a:b@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http:/a:b@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://a:b@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://@pple.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http::b@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http:/:b@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://:b@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http:/:@/www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://user@/www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http:@/www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http:/@/www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://@/www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https:@/www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http:a:b@/www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http:/a:b@/www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a:b@/www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http::@/www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http:a:@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http:/a:@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://a:@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://www.@pple.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http:@:www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http:/@:www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://@:www.example.com> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://:@www.example.com> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: </> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: </test.txt> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <.> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <..> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <test.txt> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <./test.txt> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <../test.txt> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <../aaa/test.txt> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <../../test.txt> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <中/test.txt> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <http://www.example2.com> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <//www.example2.com> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <file:...> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <file:..> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <file:a> against <http://www.example.com/test>": {
+    "status": 0
+  },
+  "Parsing: <http://ExAmPlE.CoM> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://example example.com> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://Goo%20 goo%7C|.com> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://[]> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://[:]> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://GOO 　goo.com> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://GOO​⁠﻿goo.com> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <\u0000\u001b\u0004\u0012 http://example.com/\u001f \r > against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://www.foo。bar.com> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://﷐zyx.com> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://%ef%b7%90zyx.com> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <https://�> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://%EF%BF%BD> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://x/�?�#�> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://a.b.c.xn--pokxncvks> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://10.0.0.xn--pokxncvks> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a.b.c.XN--pokxncvks> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a.b.c.Xn--pokxncvks> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://10.0.0.XN--pokxncvks> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://10.0.0.xN--pokxncvks> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://Ｇｏ.com> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://％４１.com> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://%ef%bc%85%ef%bc%94%ef%bc%91.com> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://％００.com> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://%ef%bc%85%ef%bc%90%ef%bc%90.com> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://你好你好> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <https://faß.ExAmPlE/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <sc://faß.ExAmPlE/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://%zz%66%a.com> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://%25> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://hello%00> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://%30%78%63%30%2e%30%32%35%30.01> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://%30%78%63%30%2e%30%32%35%30.01%2e> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://192.168.0.257> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://%3g%78%63%30%2e%30%32%35%30%2E.01> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://192.168.0.1 hello> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <https://x x:12> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://０Ｘｃ０．０２５０．０１> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://./> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://../> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://[www.google.com]/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://[google.com]> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://[::1.2.3.4x]> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://[::1.2.3.]> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://[::1.2.]> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://[::1.]> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://foo:💩@example.com/bar> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <#> against <test:test>": {
+    "status": 0
+  },
+  "Parsing: <#x> against <mailto:x@x.com>": {
+    "status": 0
+  },
+  "Parsing: <#x> against <data:,>": {
+    "status": 0
+  },
+  "Parsing: <#x> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <#> against <test:test?test>": {
+    "status": 0
+  },
+  "Parsing: <https://@test@test@example:800/> against <http://doesnotmatter/>": {
+    "status": 0
+  },
+  "Parsing: <https://@@@example> against <http://doesnotmatter/>": {
+    "status": 0
+  },
+  "Parsing: <http://`{}:`{}@h/`{}?`{}> against <http://doesnotmatter/>": {
+    "status": 0
+  },
+  "Parsing: <http://host/?'> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <notspecial://host/?'> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: </some/path> against <http://user@example.org/smth>": {
+    "status": 0
+  },
+  "Parsing: <> against <http://user:pass@example.org:21/smth>": {
+    "status": 0
+  },
+  "Parsing: </some/path> against <http://user:pass@example.org:21/smth>": {
+    "status": 0
+  },
+  "Parsing: <i> against <sc:sd>": {
+    "status": 1
+  },
+  "Parsing: <i> against <sc:sd/sd>": {
+    "status": 1
+  },
+  "Parsing: <i> against <sc:/pa/pa>": {
+    "status": 0
+  },
+  "Parsing: <i> against <sc://ho/pa>": {
+    "status": 0
+  },
+  "Parsing: <i> against <sc:///pa/pa>": {
+    "status": 0
+  },
+  "Parsing: <../i> against <sc:sd>": {
+    "status": 1
+  },
+  "Parsing: <../i> against <sc:sd/sd>": {
+    "status": 1
+  },
+  "Parsing: <../i> against <sc:/pa/pa>": {
+    "status": 0
+  },
+  "Parsing: <../i> against <sc://ho/pa>": {
+    "status": 0
+  },
+  "Parsing: <../i> against <sc:///pa/pa>": {
+    "status": 0
+  },
+  "Parsing: </i> against <sc:sd>": {
+    "status": 1
+  },
+  "Parsing: </i> against <sc:sd/sd>": {
+    "status": 1
+  },
+  "Parsing: </i> against <sc:/pa/pa>": {
+    "status": 0
+  },
+  "Parsing: </i> against <sc://ho/pa>": {
+    "status": 0
+  },
+  "Parsing: </i> against <sc:///pa/pa>": {
+    "status": 0
+  },
+  "Parsing: <?i> against <sc:sd>": {
+    "status": 1
+  },
+  "Parsing: <?i> against <sc:sd/sd>": {
+    "status": 1
+  },
+  "Parsing: <?i> against <sc:/pa/pa>": {
+    "status": 0
+  },
+  "Parsing: <?i> against <sc://ho/pa>": {
+    "status": 0
+  },
+  "Parsing: <?i> against <sc:///pa/pa>": {
+    "status": 0
+  },
+  "Parsing: <#i> against <sc:sd>": {
+    "status": 0
+  },
+  "Parsing: <#i> against <sc:sd/sd>": {
+    "status": 0
+  },
+  "Parsing: <#i> against <sc:/pa/pa>": {
+    "status": 0
+  },
+  "Parsing: <#i> against <sc://ho/pa>": {
+    "status": 0
+  },
+  "Parsing: <#i> against <sc:///pa/pa>": {
+    "status": 0
+  },
+  "Parsing: <about:/../> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <data:/../> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <javascript:/../> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <mailto:/../> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <sc://ñ.test/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <sc://%/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <sc://@/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <sc://te@s:t@/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <sc://:/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <sc://:12/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <x> against <sc://ñ>": {
+    "status": 0
+  },
+  "Parsing: <sc:\\../> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <sc::a@example.net> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wow:%NBD> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wow:%1G> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wow:￿> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.com/U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿?U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <sc://a\u0000b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <sc://a b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <sc://a<b> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <sc://a>b> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <sc://a[b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <sc://a\\b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <sc://a]b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <sc://a^b> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <sc://a|b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <foo://ho\tst/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <foo://ho\nst/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <foo://ho\rst/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://a\u0000b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0001b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0002b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0003b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0004b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0005b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0006b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0007b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\bb/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u000bb/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\fb/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u000eb/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u000fb/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0010b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0011b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0012b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0013b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0014b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0015b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0016b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0017b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0018b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u0019b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u001ab/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u001bb/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u001cb/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u001db/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u001eb/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a\u001fb/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a%b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a<b> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a>b> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a[b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a]b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a^b> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://a|b/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ab/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho\tst/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://ho\nst/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://ho\rst/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://ho%00st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%01st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%02st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%03st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%04st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%05st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%06st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%07st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%08st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%09st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%0Ast/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%0Bst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%0Cst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%0Dst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%0Est/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%0Fst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%10st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%11st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%12st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%13st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%14st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%15st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%16st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%17st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%18st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%19st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%1Ast/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%1Bst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%1Cst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%1Dst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%1Est/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%1Fst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%20st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%23st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%25st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%2Fst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%3Ast/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%3Cst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%3Est/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%3Fst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%40st/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%5Bst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%5Cst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%5Dst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%7Cst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://ho%7Fst/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://!\"$&'()*+,-.;=_`{}~/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <sc://\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\u000b\f\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f!\"$%&'()*+,-.;=_`{}~/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ftp://example.com%80/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <ftp://example.com%A0/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://example.com%80/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://example.com%A0/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <ftp://%e2%98%83> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <https://%e2%98%83> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://127.0.0.1:10100/relative_import.html> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://facebook.com/?foo=%7B%22abc%22> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <https://localhost:3000/jqueryui@1.2.3> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <h\tt\nt\rp://h\to\ns\rt:9\t0\n0\r0/p\ta\nt\rh?q\tu\ne\rry#f\tr\na\rg> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <?a=b&c=d> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <??a=b&c=d> against <http://example.org/foo/bar>": {
+    "status": 1
+  },
+  "Parsing: <http:> against <http://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http:> against <https://example.org/foo/bar>": {
+    "status": 1
+  },
+  "Parsing: <sc:> against <https://example.org/foo/bar>": {
+    "status": 0
+  },
+  "Parsing: <http://foo.bar/baz?qux#foo\bbar> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.bar/baz?qux#foo\"bar> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.bar/baz?qux#foo<bar> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.bar/baz?qux#foo>bar> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.bar/baz?qux#foo`bar> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://1.2.3.4/> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://1.2.3.4./> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://192.168.257> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://192.168.257.> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://192.168.257.com> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://256> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://256.com> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://999999999> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://999999999.> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://999999999.com> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://10000000000> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://10000000000.com> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://4294967295> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://4294967296> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://0xffffffff> against <http://other.com/>": {
+    "status": 0
+  },
+  "Parsing: <http://0xffffffff1> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://256.256.256.256> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <https://0x.0x.0> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <https://0x100000000/test> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://256.0.0.1/test> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file:///C%3A/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file:///C%7C/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file://%43%3A> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://%43%7C> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://%43|> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://C%7C> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://%43%7C/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://%43%7C/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <asdf://%43|/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <asdf://%43%7C/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <pix/submit.gif> against <file:///C:/Users/Domenic/Dropbox/GitHub/tmpvar/jsdom/test/level2/html/files/anchor.html>": {
+    "status": 0
+  },
+  "Parsing: <..> against <file:///C:/>": {
+    "status": 0
+  },
+  "Parsing: <..> against <file:///>": {
+    "status": 0
+  },
+  "Parsing: </> against <file:///C:/a/b>": {
+    "status": 0
+  },
+  "Parsing: </> against <file://h/C:/a/b>": {
+    "status": 1
+  },
+  "Parsing: </> against <file://h/a/b>": {
+    "status": 0
+  },
+  "Parsing: <//d:> against <file:///C:/a/b>": {
+    "status": 0
+  },
+  "Parsing: <//d:/..> against <file:///C:/a/b>": {
+    "status": 0
+  },
+  "Parsing: <..> against <file:///ab:/>": {
+    "status": 0
+  },
+  "Parsing: <..> against <file:///1:/>": {
+    "status": 0
+  },
+  "Parsing: <> against <file:///test?test#test>": {
+    "status": 0
+  },
+  "Parsing: <file:> against <file:///test?test#test>": {
+    "status": 0
+  },
+  "Parsing: <?x> against <file:///test?test#test>": {
+    "status": 0
+  },
+  "Parsing: <file:?x> against <file:///test?test#test>": {
+    "status": 0
+  },
+  "Parsing: <#x> against <file:///test?test#test>": {
+    "status": 0
+  },
+  "Parsing: <file:#x> against <file:///test?test#test>": {
+    "status": 0
+  },
+  "Parsing: <file:\\\\//> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file:\\\\\\\\> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file:\\\\\\\\?fox> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file:\\\\\\\\#guppy> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://spider///> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file:\\\\localhost//> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file:///localhost//cat> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file://\\/localhost//cat> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://localhost//a//../..//> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: </////mouse> against <file:///elephant>": {
+    "status": 1
+  },
+  "Parsing: <\\//pig> against <file://lion/>": {
+    "status": 0
+  },
+  "Parsing: <\\/localhost//pig> against <file://lion/>": {
+    "status": 1
+  },
+  "Parsing: <//localhost//pig> against <file://lion/>": {
+    "status": 1
+  },
+  "Parsing: </..//localhost//pig> against <file://lion/>": {
+    "status": 1
+  },
+  "Parsing: <file://> against <file://ape/>": {
+    "status": 0
+  },
+  "Parsing: </rooibos> against <file://tea/>": {
+    "status": 0
+  },
+  "Parsing: </?chai> against <file://tea/>": {
+    "status": 0
+  },
+  "Parsing: <C|> against <file://host/dir/file>": {
+    "status": 1
+  },
+  "Parsing: <C|> against <file://host/D:/dir1/dir2/file>": {
+    "status": 1
+  },
+  "Parsing: <C|#> against <file://host/dir/file>": {
+    "status": 1
+  },
+  "Parsing: <C|?> against <file://host/dir/file>": {
+    "status": 1
+  },
+  "Parsing: <C|/> against <file://host/dir/file>": {
+    "status": 1
+  },
+  "Parsing: <C|\n/> against <file://host/dir/file>": {
+    "status": 1
+  },
+  "Parsing: <C|\\> against <file://host/dir/file>": {
+    "status": 1
+  },
+  "Parsing: <C> against <file://host/dir/file>": {
+    "status": 0
+  },
+  "Parsing: <C|a> against <file://host/dir/file>": {
+    "status": 0
+  },
+  "Parsing: </c:/foo/bar> against <file:///c:/baz/qux>": {
+    "status": 0
+  },
+  "Parsing: </c|/foo/bar> against <file:///c:/baz/qux>": {
+    "status": 0
+  },
+  "Parsing: <file:\\c:\\foo\\bar> against <file:///c:/baz/qux>": {
+    "status": 0
+  },
+  "Parsing: </c:/foo/bar> against <file://host/path>": {
+    "status": 1
+  },
+  "Parsing: <file://example.net/C:/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://1.2.3.4/C:/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://[1::8]/C:/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <C|/> against <file://host/>": {
+    "status": 1
+  },
+  "Parsing: </C:/> against <file://host/>": {
+    "status": 1
+  },
+  "Parsing: <file:C:/> against <file://host/>": {
+    "status": 1
+  },
+  "Parsing: <file:/C:/> against <file://host/>": {
+    "status": 1
+  },
+  "Parsing: <//C:/> against <file://host/>": {
+    "status": 0
+  },
+  "Parsing: <file://C:/> against <file://host/>": {
+    "status": 0
+  },
+  "Parsing: <///C:/> against <file://host/>": {
+    "status": 0
+  },
+  "Parsing: <file:///C:/> against <file://host/>": {
+    "status": 0
+  },
+  "Parsing: <file:/C|/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file://C|/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file:> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file:?q=v> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file:#frag> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file:///Y:> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file:///Y:/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file:///./Y> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file:///./Y:> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <\\\\\\.\\Y:> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file:///y:> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file:///y:/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file:///./y> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file:///./y:> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <\\\\\\.\\y:> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://localhost//a//../..//foo> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://localhost////foo> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file:////foo> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file:///one/two> against <file:///>": {
+    "status": 0
+  },
+  "Parsing: <file:////one/two> against <file:///>": {
+    "status": 1
+  },
+  "Parsing: <//one/two> against <file:///>": {
+    "status": 0
+  },
+  "Parsing: <///one/two> against <file:///>": {
+    "status": 0
+  },
+  "Parsing: <////one/two> against <file:///>": {
+    "status": 1
+  },
+  "Parsing: <file:///.//> against <file:////>": {
+    "status": 1
+  },
+  "Parsing: <file:.//p> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file:/.//p> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://[1:0::]> against <http://example.net/>": {
+    "status": 0
+  },
+  "Parsing: <http://[0:1:2:3:4:5:6:7:8]> against <http://example.net/>": {
+    "status": 1
+  },
+  "Parsing: <https://[0::0::0]> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://[0:.0]> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://[0:0:]> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://[0:1:2:3:4:5:6:7.0.0.0.1]> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://[0:1.00.0.0.0]> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://[0:1.290.0.0.0]> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <https://[0:1.23.23]> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://?> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://#> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://f:4294967377/c> against <http://example.org/>": {
+    "status": 1
+  },
+  "Parsing: <http://f:18446744073709551697/c> against <http://example.org/>": {
+    "status": 1
+  },
+  "Parsing: <http://f:340282366920938463463374607431768211537/c> against <http://example.org/>": {
+    "status": 1
+  },
+  "Parsing: <sc://ñ> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <sc://ñ?x> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <sc://ñ#x> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <#x> against <sc://ñ>": {
+    "status": 0
+  },
+  "Parsing: <?x> against <sc://ñ>": {
+    "status": 0
+  },
+  "Parsing: <sc://?> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <sc://#> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <///> against <sc://x/>": {
+    "status": 0
+  },
+  "Parsing: <////> against <sc://x/>": {
+    "status": 0
+  },
+  "Parsing: <////x/> against <sc://x/>": {
+    "status": 0
+  },
+  "Parsing: <tftp://foobar.com/someconfig;mode=netascii> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <telnet://user:pass@foobar.com:23/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ut2004://10.10.10.10:7777/Index.ut2> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <redis://foo:bar@somehost:6379/0?baz=bam&qux=baz> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <rsync://foo@host:911/sup> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <git://github.com/foo/bar.git> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <irc://myserver.com:6999/channel?passwd> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <dns://fw.example.org:9999/foo.bar.org?type=TXT> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <ldap://localhost:389/ou=People,o=JNDITutorial> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <git+https://github.com/foo/bar> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <urn:ietf:rfc:2648> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <tag:joe@example.org,2001:foo/bar> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <non-spec:/.//> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <non-spec:/..//> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <non-spec:/a/..//> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <non-spec:/.//path> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <non-spec:/..//path> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <non-spec:/a/..//path> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: </.//path> against <non-spec:/p>": {
+    "status": 1
+  },
+  "Parsing: </..//path> against <non-spec:/p>": {
+    "status": 1
+  },
+  "Parsing: <..//path> against <non-spec:/p>": {
+    "status": 1
+  },
+  "Parsing: <a/..//path> against <non-spec:/p>": {
+    "status": 1
+  },
+  "Parsing: <> against <non-spec:/..//p>": {
+    "status": 1
+  },
+  "Parsing: <path> against <non-spec:/..//p>": {
+    "status": 1
+  },
+  "Parsing: <../path> against <non-spec:/.//p>": {
+    "status": 0
+  },
+  "Parsing: <non-special://%E2%80%A0/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <non-special://H%4fSt/path> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <non-special://[1:2:0:0:5:0:0:0]/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <non-special://[1:2:0:0:0:0:0:3]/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <non-special://[1:2::3]:80/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <non-special://[:80/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <blob:https://example.com:443/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <blob:d3958f5c-0777-0845-9dcf-2cb28783acaf> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <blob:> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://0x7f.0.0.0x7g> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://0X7F.0.0.0X7G> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://[::127.0.0.0.1]> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://[0:1:0:1:0:1:0:1]> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://[1:0:1:0:1:0:1:0]> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.org/test?\"> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.org/test?#> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.org/test?<> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.org/test?>> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.org/test?⌣> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.org/test?%23%23> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.org/test?%GH> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.org/test?a#%EF> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://example.org/test?a#%GH> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <a> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <a/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <a//> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <test-a-colon.html> against <a:>": {
+    "status": 1
+  },
+  "Parsing: <test-a-colon-b.html> against <a:b>": {
+    "status": 1
+  },
+  "Parsing: <test-a-colon-slash.html> against <a:/>": {
+    "status": 0
+  },
+  "Parsing: <test-a-colon-slash-slash.html> against <a://>": {
+    "status": 0
+  },
+  "Parsing: <test-a-colon-slash-b.html> against <a:/b>": {
+    "status": 0
+  },
+  "Parsing: <test-a-colon-slash-slash-b.html> against <a://b>": {
+    "status": 0
+  },
+  "Parsing: <http://example.org/test?a#b\u0000c> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <non-spec://example.org/test?a#b\u0000c> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <non-spec:/test?a#b\u0000c> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <10.0.0.7:8080/foo.html> against <file:///some/dir/bar.html>": {
+    "status": 0
+  },
+  "Parsing: <a!@$*=/foo.html> against <file:///some/dir/bar.html>": {
+    "status": 0
+  },
+  "Parsing: <a1234567890-+.:foo/bar> against <http://example.com/dir/file>": {
+    "status": 0
+  },
+  "Parsing: <file://a­b/p> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file://a%C2%ADb/p> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <file://­/p> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://%C2%AD/p> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <file://xn--/p> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <#link> against <https://example.org/##link>": {
+    "status": 0
+  },
+  "Parsing: <non-special:cannot-be-a-base-url-\u0000\u0001\u001f\u001e~> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <https://www.example.com/path{path.html?query'=query#fragment<fragment> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <https://user:pass[@foo/bar> against <http://example.org>": {
+    "status": 0
+  },
+  "Parsing: <foo:// !\"$%&'()*+,-.;<=>@[\\]^_`{|}~@host/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wss:// !\"$%&'()*+,-.;<=>@[]^_`{|}~@host/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <foo://joe: !\"$%&'()*+,-.:;<=>@[\\]^_`{|}~@host/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wss://joe: !\"$%&'()*+,-.:;<=>@[]^_`{|}~@host/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <foo://!\"$%&'()*+,-.;=_`{}~/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wss://!\"$&'()*+,-.;=_`{}~/> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <foo://host/ !\"$%&'()*+,-./:;<=>@[\\]^_`{|}~> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wss://host/ !\"$%&'()*+,-./:;<=>@[\\]^_`{|}~> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <foo://host/dir/? !\"$%&'()*+,-./:;<=>?@[\\]^_`{|}~> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wss://host/dir/? !\"$%&'()*+,-./:;<=>?@[\\]^_`{|}~> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <foo://host/dir/# !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <wss://host/dir/# !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <abc:rootless> against <abc://host/path>": {
+    "status": 0
+  },
+  "Parsing: <abc:rootless> against <abc:/path>": {
+    "status": 0
+  },
+  "Parsing: <abc:rootless> against <abc:path>": {
+    "status": 0
+  },
+  "Parsing: <abc:/rooted> against <abc://host/path>": {
+    "status": 0
+  },
+  "Parsing: <#> against <null>": {
+    "status": 1
+  },
+  "Parsing: <?> against <null>": {
+    "status": 1
+  },
+  "Parsing: <http://1.2.3.4.5> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://1.2.3.4.5.> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://0..0x300/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://0..0x300./> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://256.256.256.256.256> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://256.256.256.256.256.> against <http://other.com/>": {
+    "status": 1
+  },
+  "Parsing: <http://1.2.3.08> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://1.2.3.08.> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://1.2.3.09> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://09.2.3.4> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://09.2.3.4.> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://01.2.3.4.5> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://01.2.3.4.5.> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://0x100.2.3.4> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://0x100.2.3.4.> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://0x1.2.3.4.5> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://0x1.2.3.4.5.> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.1.2.3.4> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.1.2.3.4.> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.2.3.4> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.2.3.4.> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.09> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.09.> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.0x4> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.0x4.> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.09..> against <about:blank>": {
+    "status": 0
+  },
+  "Parsing: <http://0999999999999999999/> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.0x> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://foo.0XFfFfFfFfFfFfFfFfFfAcE123> against <about:blank>": {
+    "status": 1
+  },
+  "Parsing: <http://💩.123/> against <about:blank>": {
+    "status": 1
+  }
+}

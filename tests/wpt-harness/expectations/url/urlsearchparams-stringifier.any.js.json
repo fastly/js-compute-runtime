@@ -1,0 +1,44 @@
+{
+  "Serialize space": {
+    "status": 0
+  },
+  "Serialize empty value": {
+    "status": 0
+  },
+  "Serialize empty name": {
+    "status": 0
+  },
+  "Serialize empty name and value": {
+    "status": 0
+  },
+  "Serialize +": {
+    "status": 0
+  },
+  "Serialize =": {
+    "status": 0
+  },
+  "Serialize &": {
+    "status": 0
+  },
+  "Serialize *-._": {
+    "status": 0
+  },
+  "Serialize %": {
+    "status": 0
+  },
+  "Serialize \\0": {
+    "status": 0
+  },
+  "Serialize 💩": {
+    "status": 0
+  },
+  "URLSearchParams.toString": {
+    "status": 0
+  },
+  "URLSearchParams connected to URL": {
+    "status": 1
+  },
+  "URLSearchParams must not do newline normalization": {
+    "status": 0
+  }
+}

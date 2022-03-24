@@ -1,0 +1,4 @@
+[local_server]
+  [local_server.backends]
+    [local_server.backends.wpt]
+      url = "http://web-platform.test:8000"

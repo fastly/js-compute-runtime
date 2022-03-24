@@ -1,0 +1,92 @@
+{
+  "UTF-8 with BOM with Request.text()": {
+    "status": 1
+  },
+  "UTF-8 with BOM with Response.text()": {
+    "status": 1
+  },
+  "UTF-8 with BOM with fetched data (UTF-8 charset)": {
+    "status": 1
+  },
+  "UTF-8 with BOM with fetched data (UTF-16 charset)": {
+    "status": 1
+  },
+  "UTF-8 with BOM (Response object)": {
+    "status": 0
+  },
+  "UTF-8 with BOM (Request object)": {
+    "status": 0
+  },
+  "UTF-8 without BOM with Request.text()": {
+    "status": 0
+  },
+  "UTF-8 without BOM with Response.text()": {
+    "status": 0
+  },
+  "UTF-8 without BOM with fetched data (UTF-8 charset)": {
+    "status": 0
+  },
+  "UTF-8 without BOM with fetched data (UTF-16 charset)": {
+    "status": 0
+  },
+  "UTF-8 without BOM (Response object)": {
+    "status": 0
+  },
+  "UTF-8 without BOM (Request object)": {
+    "status": 0
+  },
+  "UTF-16BE with BOM decoded as UTF-8 with Request.text()": {
+    "status": 1
+  },
+  "UTF-16BE with BOM decoded as UTF-8 with Response.text()": {
+    "status": 1
+  },
+  "UTF-16BE with BOM decoded as UTF-8 with fetched data (UTF-8 charset)": {
+    "status": 1
+  },
+  "UTF-16BE with BOM decoded as UTF-8 with fetched data (UTF-16 charset)": {
+    "status": 1
+  },
+  "UTF-16BE with BOM decoded as UTF-8 (Response object)": {
+    "status": 0
+  },
+  "UTF-16BE with BOM decoded as UTF-8 (Request object)": {
+    "status": 0
+  },
+  "UTF-16LE with BOM decoded as UTF-8 with Request.text()": {
+    "status": 1
+  },
+  "UTF-16LE with BOM decoded as UTF-8 with Response.text()": {
+    "status": 1
+  },
+  "UTF-16LE with BOM decoded as UTF-8 with fetched data (UTF-8 charset)": {
+    "status": 1
+  },
+  "UTF-16LE with BOM decoded as UTF-8 with fetched data (UTF-16 charset)": {
+    "status": 1
+  },
+  "UTF-16LE with BOM decoded as UTF-8 (Response object)": {
+    "status": 0
+  },
+  "UTF-16LE with BOM decoded as UTF-8 (Request object)": {
+    "status": 0
+  },
+  "UTF-16 without BOM decoded as UTF-8 with Request.text()": {
+    "status": 1
+  },
+  "UTF-16 without BOM decoded as UTF-8 with Response.text()": {
+    "status": 1
+  },
+  "UTF-16 without BOM decoded as UTF-8 with fetched data (UTF-8 charset)": {
+    "status": 1
+  },
+  "UTF-16 without BOM decoded as UTF-8 with fetched data (UTF-16 charset)": {
+    "status": 1
+  },
+  "UTF-16 without BOM decoded as UTF-8 (Response object)": {
+    "status": 0
+  },
+  "UTF-16 without BOM decoded as UTF-8 (Request object)": {
+    "status": 0
+  }
+}

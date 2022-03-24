@@ -1,0 +1,308 @@
+{
+  "URLSearchParams constructed with: test": {
+    "status": 0
+  },
+  "request.formData() with input: test": {
+    "status": 1
+  },
+  "response.formData() with input: test": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: ﻿test=﻿": {
+    "status": 0
+  },
+  "request.formData() with input: ﻿test=﻿": {
+    "status": 1
+  },
+  "response.formData() with input: ﻿test=﻿": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: %EF%BB%BFtest=%EF%BB%BF": {
+    "status": 0
+  },
+  "request.formData() with input: %EF%BB%BFtest=%EF%BB%BF": {
+    "status": 1
+  },
+  "response.formData() with input: %EF%BB%BFtest=%EF%BB%BF": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: %FE%FF": {
+    "status": 0
+  },
+  "request.formData() with input: %FE%FF": {
+    "status": 1
+  },
+  "response.formData() with input: %FE%FF": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: %FF%FE": {
+    "status": 0
+  },
+  "request.formData() with input: %FF%FE": {
+    "status": 1
+  },
+  "response.formData() with input: %FF%FE": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: †&†=x": {
+    "status": 0
+  },
+  "request.formData() with input: †&†=x": {
+    "status": 1
+  },
+  "response.formData() with input: †&†=x": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: %C2": {
+    "status": 0
+  },
+  "request.formData() with input: %C2": {
+    "status": 1
+  },
+  "response.formData() with input: %C2": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: %C2x": {
+    "status": 0
+  },
+  "request.formData() with input: %C2x": {
+    "status": 1
+  },
+  "response.formData() with input: %C2x": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: _charset_=windows-1252&test=%C2x": {
+    "status": 0
+  },
+  "request.formData() with input: _charset_=windows-1252&test=%C2x": {
+    "status": 1
+  },
+  "response.formData() with input: _charset_=windows-1252&test=%C2x": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: ": {
+    "status": 0
+  },
+  "request.formData() with input: ": {
+    "status": 1
+  },
+  "response.formData() with input: ": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: a": {
+    "status": 0
+  },
+  "request.formData() with input: a": {
+    "status": 1
+  },
+  "response.formData() with input: a": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: a=b": {
+    "status": 0
+  },
+  "request.formData() with input: a=b": {
+    "status": 1
+  },
+  "response.formData() with input: a=b": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: a=": {
+    "status": 0
+  },
+  "request.formData() with input: a=": {
+    "status": 1
+  },
+  "response.formData() with input: a=": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: =b": {
+    "status": 0
+  },
+  "request.formData() with input: =b": {
+    "status": 1
+  },
+  "response.formData() with input: =b": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: &": {
+    "status": 0
+  },
+  "request.formData() with input: &": {
+    "status": 1
+  },
+  "response.formData() with input: &": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: &a": {
+    "status": 0
+  },
+  "request.formData() with input: &a": {
+    "status": 1
+  },
+  "response.formData() with input: &a": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: a&": {
+    "status": 0
+  },
+  "request.formData() with input: a&": {
+    "status": 1
+  },
+  "response.formData() with input: a&": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: a&a": {
+    "status": 0
+  },
+  "request.formData() with input: a&a": {
+    "status": 1
+  },
+  "response.formData() with input: a&a": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: a&b&c": {
+    "status": 0
+  },
+  "request.formData() with input: a&b&c": {
+    "status": 1
+  },
+  "response.formData() with input: a&b&c": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: a=b&c=d": {
+    "status": 0
+  },
+  "request.formData() with input: a=b&c=d": {
+    "status": 1
+  },
+  "response.formData() with input: a=b&c=d": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: a=b&c=d&": {
+    "status": 0
+  },
+  "request.formData() with input: a=b&c=d&": {
+    "status": 1
+  },
+  "response.formData() with input: a=b&c=d&": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: &&&a=b&&&&c=d&": {
+    "status": 0
+  },
+  "request.formData() with input: &&&a=b&&&&c=d&": {
+    "status": 1
+  },
+  "response.formData() with input: &&&a=b&&&&c=d&": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: a=a&a=b&a=c": {
+    "status": 0
+  },
+  "request.formData() with input: a=a&a=b&a=c": {
+    "status": 1
+  },
+  "response.formData() with input: a=a&a=b&a=c": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: a==a": {
+    "status": 0
+  },
+  "request.formData() with input: a==a": {
+    "status": 1
+  },
+  "response.formData() with input: a==a": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: a=a+b+c+d": {
+    "status": 0
+  },
+  "request.formData() with input: a=a+b+c+d": {
+    "status": 1
+  },
+  "response.formData() with input: a=a+b+c+d": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: %=a": {
+    "status": 0
+  },
+  "request.formData() with input: %=a": {
+    "status": 1
+  },
+  "response.formData() with input: %=a": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: %a=a": {
+    "status": 0
+  },
+  "request.formData() with input: %a=a": {
+    "status": 1
+  },
+  "response.formData() with input: %a=a": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: %a_=a": {
+    "status": 0
+  },
+  "request.formData() with input: %a_=a": {
+    "status": 1
+  },
+  "response.formData() with input: %a_=a": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: %61=a": {
+    "status": 0
+  },
+  "request.formData() with input: %61=a": {
+    "status": 1
+  },
+  "response.formData() with input: %61=a": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: %61+%4d%4D=": {
+    "status": 0
+  },
+  "request.formData() with input: %61+%4d%4D=": {
+    "status": 1
+  },
+  "response.formData() with input: %61+%4d%4D=": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: id=0&value=%": {
+    "status": 0
+  },
+  "request.formData() with input: id=0&value=%": {
+    "status": 1
+  },
+  "response.formData() with input: id=0&value=%": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: b=%2sf%2a": {
+    "status": 0
+  },
+  "request.formData() with input: b=%2sf%2a": {
+    "status": 1
+  },
+  "response.formData() with input: b=%2sf%2a": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: b=%2%2af%2a": {
+    "status": 0
+  },
+  "request.formData() with input: b=%2%2af%2a": {
+    "status": 1
+  },
+  "response.formData() with input: b=%2%2af%2a": {
+    "status": 1
+  },
+  "URLSearchParams constructed with: b=%%2a": {
+    "status": 0
+  },
+  "request.formData() with input: b=%%2a": {
+    "status": 1
+  },
+  "response.formData() with input: b=%%2a": {
+    "status": 1
+  }
+}

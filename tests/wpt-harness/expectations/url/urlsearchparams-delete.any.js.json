@@ -1,0 +1,14 @@
+{
+  "Delete basics": {
+    "status": 0
+  },
+  "Deleting appended multiple": {
+    "status": 0
+  },
+  "Deleting all params removes ? from URL": {
+    "status": 1
+  },
+  "Removing non-existent param removes ? from URL": {
+    "status": 1
+  }
+}

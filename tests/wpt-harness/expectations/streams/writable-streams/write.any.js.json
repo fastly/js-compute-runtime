@@ -1,0 +1,41 @@
+{
+  "WritableStream should complete asynchronous writes before close resolves": {
+    "status": 0
+  },
+  "WritableStream should complete synchronous writes before close resolves": {
+    "status": 0
+  },
+  "fulfillment value of ws.write() call should be undefined even if the underlying sink returns a non-undefined value": {
+    "status": 0
+  },
+  "WritableStream should transition to waiting until write is acknowledged": {
+    "status": 0
+  },
+  "when write returns a rejected promise, queued writes and close should be cleared": {
+    "status": 0
+  },
+  "when sink's write throws an error, the stream should become errored and the promise should reject": {
+    "status": 0
+  },
+  "writer.write(), ready and closed reject with the error passed to controller.error() made before sink.write rejection": {
+    "status": 0
+  },
+  "a large queue of writes should be processed completely": {
+    "status": 0
+  },
+  "WritableStreamDefaultWriter should work when manually constructed": {
+    "status": 0
+  },
+  "returning a thenable from write() should work": {
+    "status": 0
+  },
+  "failing DefaultWriter constructor should not release an existing writer": {
+    "status": 0
+  },
+  "write() on a stream with HWM 0 should not cause the ready Promise to resolve": {
+    "status": 0
+  },
+  "writing to a released writer should reject the returned promise": {
+    "status": 0
+  }
+}

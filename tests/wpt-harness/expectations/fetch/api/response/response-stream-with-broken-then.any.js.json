@@ -1,0 +1,20 @@
+{
+  "Attempt to inject {done: false, value: bye} via Object.prototype.then.": {
+    "status": 1
+  },
+  "Attempt to inject value: undefined via Object.prototype.then.": {
+    "status": 1
+  },
+  "Attempt to inject undefined via Object.prototype.then.": {
+    "status": 1
+  },
+  "Attempt to inject 8.2 via Object.prototype.then.": {
+    "status": 1
+  },
+  "intercepting arraybuffer to text conversion via Object.prototype.then should not be possible": {
+    "status": 0
+  },
+  "intercepting arraybuffer to body readable stream conversion via Object.prototype.then should not be possible": {
+    "status": 0
+  }
+}

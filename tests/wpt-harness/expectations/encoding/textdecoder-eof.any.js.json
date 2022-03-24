@@ -1,0 +1,8 @@
+{
+  "TextDecoder end-of-queue handling": {
+    "status": 1
+  },
+  "TextDecoder end-of-queue handling using stream: true": {
+    "status": 1
+  }
+}

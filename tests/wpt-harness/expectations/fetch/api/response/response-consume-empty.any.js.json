@@ -1,0 +1,44 @@
+{
+  "Consume response's body as text": {
+    "status": 0
+  },
+  "Consume response's body as blob": {
+    "status": 1
+  },
+  "Consume response's body as arrayBuffer": {
+    "status": 0
+  },
+  "Consume response's body as json (error case)": {
+    "status": 0
+  },
+  "Consume response's body as formData with correct multipart type (error case)": {
+    "status": 1
+  },
+  "Consume response's body as formData with correct urlencoded type": {
+    "status": 1
+  },
+  "Consume response's body as formData without correct type (error case)": {
+    "status": 1
+  },
+  "Consume empty blob response body as arrayBuffer": {
+    "status": 1
+  },
+  "Consume empty text response body as arrayBuffer": {
+    "status": 0
+  },
+  "Consume empty blob response body as text": {
+    "status": 1
+  },
+  "Consume empty text response body as text": {
+    "status": 0
+  },
+  "Consume empty URLSearchParams response body as text": {
+    "status": 0
+  },
+  "Consume empty FormData response body as text": {
+    "status": 1
+  },
+  "Consume empty ArrayBuffer response body as text": {
+    "status": 0
+  }
+}

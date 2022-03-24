@@ -1,0 +1,44 @@
+{
+  "Piping must lock both the ReadableStream and WritableStream": {
+    "status": 0
+  },
+  "Piping finishing must unlock both the ReadableStream and WritableStream": {
+    "status": 0
+  },
+  "pipeTo must check the brand of its ReadableStream this value": {
+    "status": 1
+  },
+  "pipeTo must check the brand of its WritableStream argument": {
+    "status": 0
+  },
+  "pipeTo must fail if the ReadableStream is locked, and not lock the WritableStream": {
+    "status": 0
+  },
+  "pipeTo must fail if the WritableStream is locked, and not lock the ReadableStream": {
+    "status": 0
+  },
+  "Piping from a ReadableStream from which lots of chunks are synchronously readable": {
+    "status": 0
+  },
+  "Piping from a ReadableStream for which a chunk becomes asynchronously readable after the pipeTo": {
+    "status": 0
+  },
+  "an undefined rejection from pull should cause pipeTo() to reject when preventAbort is true": {
+    "status": 0
+  },
+  "an undefined rejection from pull should cause pipeTo() to reject when preventAbort is false": {
+    "status": 0
+  },
+  "an undefined rejection from write should cause pipeTo() to reject when preventCancel is true": {
+    "status": 0
+  },
+  "an undefined rejection from write should cause pipeTo() to reject when preventCancel is false": {
+    "status": 0
+  },
+  "pipeTo() should reject if an option getter grabs a writer": {
+    "status": 0
+  },
+  "pipeTo() promise should resolve if null is passed": {
+    "status": 1
+  }
+}

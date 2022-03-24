@@ -1,0 +1,32 @@
+{
+  "ReadableStream cancellation: integration test on an infinite stream derived from a random push source": {
+    "status": 0
+  },
+  "ReadableStream cancellation: cancel(reason) should pass through the given reason to the underlying source": {
+    "status": 0
+  },
+  "ReadableStream cancellation: cancel() on a locked stream should fail and not call the underlying source cancel": {
+    "status": 0
+  },
+  "ReadableStream cancellation: should fulfill promise when cancel callback went fine": {
+    "status": 0
+  },
+  "ReadableStream cancellation: returning a value from the underlying source's cancel should not affect the fulfillment value of the promise returned by the stream's cancel": {
+    "status": 0
+  },
+  "ReadableStream cancellation: should reject promise when cancel callback raises an exception": {
+    "status": 0
+  },
+  "ReadableStream cancellation: if the underlying source's cancel method returns a promise, the promise returned by the stream's cancel should fulfill when that one does (1)": {
+    "status": 0
+  },
+  "ReadableStream cancellation: if the underlying source's cancel method returns a promise, the promise returned by the stream's cancel should fulfill when that one does (2)": {
+    "status": 0
+  },
+  "ReadableStream cancellation: if the underlying source's cancel method returns a promise, the promise returned by the stream's cancel should reject when that one does": {
+    "status": 0
+  },
+  "ReadableStream cancellation: cancelling before start finishes should prevent pull() from being called": {
+    "status": 0
+  }
+}

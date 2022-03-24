@@ -1,0 +1,44 @@
+{
+  "UTF-7 should not be supported": {
+    "status": 1
+  },
+  "utf-7 should not be supported": {
+    "status": 1
+  },
+  "UTF-32 with BOM should decode as UTF-16LE": {
+    "status": 1
+  },
+  "UTF-32 with no BOM should decode as UTF-8": {
+    "status": 1
+  },
+  "utf-32 with BOM should decode as UTF-16LE": {
+    "status": 1
+  },
+  "utf-32 with no BOM should decode as UTF-8": {
+    "status": 1
+  },
+  "UTF-32LE with BOM should decode as UTF-16LE": {
+    "status": 1
+  },
+  "UTF-32LE with no BOM should decode as UTF-8": {
+    "status": 1
+  },
+  "utf-32le with BOM should decode as UTF-16LE": {
+    "status": 1
+  },
+  "utf-32le with no BOM should decode as UTF-8": {
+    "status": 1
+  },
+  "UTF-32be with no BOM should decode as UTF-8": {
+    "status": 1
+  },
+  "UTF-32be with BOM should decode as UTF-8": {
+    "status": 1
+  },
+  "utf-32be with no BOM should decode as UTF-8": {
+    "status": 1
+  },
+  "utf-32be with BOM should decode as UTF-8": {
+    "status": 1
+  }
+}

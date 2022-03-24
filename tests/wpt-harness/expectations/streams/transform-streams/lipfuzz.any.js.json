@@ -1,0 +1,62 @@
+{
+  "testing \"\" (length 1)": {
+    "status": 0
+  },
+  "testing \"\" (length 0)": {
+    "status": 0
+  },
+  "testing \"{{in1}}\" (length 1)": {
+    "status": 0
+  },
+  "testing \"z{{in1}}\" (length 1)": {
+    "status": 0
+  },
+  "testing \"{{in1}}q\" (length 1)": {
+    "status": 0
+  },
+  "testing \"{{in1}}{{in1}\" (length 1)": {
+    "status": 0
+  },
+  "testing \"{{in1}}{{in1},}\" (length 2)": {
+    "status": 0
+  },
+  "testing \"{{in1,}}\" (length 2)": {
+    "status": 0
+  },
+  "testing \"{{,in1}}\" (length 2)": {
+    "status": 0
+  },
+  "testing \"{,{in1}}\" (length 2)": {
+    "status": 0
+  },
+  "testing \"{{,in1}\" (length 2)": {
+    "status": 0
+  },
+  "testing \"{\" (length 1)": {
+    "status": 0
+  },
+  "testing \"{,\" (length 2)": {
+    "status": 0
+  },
+  "testing \"{,{,i,n,1,},}\" (length 7)": {
+    "status": 0
+  },
+  "testing \"{{in1}}{{in2}}{{in1}}\" (length 1)": {
+    "status": 0
+  },
+  "testing \"{{wrong}}\" (length 1)": {
+    "status": 0
+  },
+  "testing \"{{wron,g}}\" (length 2)": {
+    "status": 0
+  },
+  "testing \"{{quine}}\" (length 1)": {
+    "status": 0
+  },
+  "testing \"{{bogusPartial}}\" (length 1)": {
+    "status": 0
+  },
+  "testing \"{{bogusPartial}}}\" (length 1)": {
+    "status": 0
+  }
+}

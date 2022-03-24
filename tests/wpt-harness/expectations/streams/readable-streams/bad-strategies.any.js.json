@@ -1,0 +1,23 @@
+{
+  "Readable stream: throwing strategy.size getter": {
+    "status": 0
+  },
+  "Readable stream: strategy.size errors the stream and then throws": {
+    "status": 0
+  },
+  "Readable stream: strategy.size errors the stream and then returns Infinity": {
+    "status": 0
+  },
+  "Readable stream: throwing strategy.size method": {
+    "status": 0
+  },
+  "Readable stream: throwing strategy.highWaterMark getter": {
+    "status": 0
+  },
+  "Readable stream: invalid strategy.highWaterMark": {
+    "status": 0
+  },
+  "Readable stream: invalid strategy.size return value": {
+    "status": 0
+  }
+}

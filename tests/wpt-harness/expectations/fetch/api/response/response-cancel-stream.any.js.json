@@ -1,0 +1,20 @@
+{
+  "Cancelling a starting blob Response stream": {
+    "status": 0
+  },
+  "Cancelling a loading blob Response stream": {
+    "status": 0
+  },
+  "Cancelling a closed blob Response stream": {
+    "status": 0
+  },
+  "Cancelling a starting Response stream": {
+    "status": 0
+  },
+  "Cancelling a loading Response stream": {
+    "status": 0
+  },
+  "Cancelling a closed Response stream": {
+    "status": 0
+  }
+}

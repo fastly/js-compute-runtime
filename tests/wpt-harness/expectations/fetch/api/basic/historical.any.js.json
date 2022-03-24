@@ -1,0 +1,11 @@
+{
+  "Headers object no longer has a getAll() method": {
+    "status": 0
+  },
+  "'type' getter should not exist on Request objects": {
+    "status": 0
+  },
+  "Response object no longer has a trailer getter": {
+    "status": 0
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "start: errors in start cause WritableStream constructor to throw": {
+    "status": 0
+  },
+  "close: throwing method should cause writer close() and ready to reject": {
+    "status": 0
+  },
+  "close: returning a rejected promise should cause writer close() and ready to reject": {
+    "status": 0
+  },
+  "close: throwing getter should cause constructor to throw": {
+    "status": 0
+  },
+  "write: throwing getter should cause write() and closed to reject": {
+    "status": 0
+  },
+  "write: throwing method should cause write() and closed to reject": {
+    "status": 0
+  },
+  "write: returning a promise that becomes rejected after the writer write() should cause writer write() and ready to reject": {
+    "status": 0
+  },
+  "write: returning a rejected promise (second write) should cause writer write() and ready to reject": {
+    "status": 0
+  },
+  "start: non-function start method": {
+    "status": 0
+  },
+  "write: non-function write method": {
+    "status": 0
+  },
+  "close: non-function close method": {
+    "status": 0
+  },
+  "abort: non-function abort method with .apply": {
+    "status": 0
+  },
+  "abort: throwing getter should cause abort() and closed to reject": {
+    "status": 0
+  },
+  "abort: throwing method should cause abort() and closed to reject": {
+    "status": 0
+  }
+}

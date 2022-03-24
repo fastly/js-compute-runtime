@@ -1,0 +1,20 @@
+{
+  "ForEach Check": {
+    "status": 0
+  },
+  "For-of Check": {
+    "status": 0
+  },
+  "empty": {
+    "status": 0
+  },
+  "delete next param during iteration": {
+    "status": 0
+  },
+  "delete current param during iteration": {
+    "status": 0
+  },
+  "delete every param seen during iteration": {
+    "status": 0
+  }
+}

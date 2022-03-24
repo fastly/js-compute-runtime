@@ -1,0 +1,8 @@
+{
+  "keepalive flag": {
+    "status": 1
+  },
+  "keepalive flag with stream body": {
+    "status": 1
+  }
+}
