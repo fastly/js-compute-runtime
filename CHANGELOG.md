@@ -2,6 +2,7 @@
 
 ### Fixes
 
+* Increase max uri length to 8k (https://github.com/fastly/js-compute-runtime/pull/71)
 * Properly forward http headers to upstream requests even if the headers aren't ever read from (https://github.com/fastly/js-compute-runtime/pull/75)
 
 ## 0.2.4 (2022-02-09)
