@@ -1,3 +1,9 @@
+## 0.2.5 (2022-04-12)
+
+### Fixes
+
+* Properly forward http headers to upstream requests even if the headers aren't ever read from (https://github.com/fastly/js-compute-runtime/pull/75)
+
 ## 0.2.4 (2022-02-09)
 
 ### Enhancements

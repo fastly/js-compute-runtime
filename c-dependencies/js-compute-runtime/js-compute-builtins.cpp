@@ -3842,7 +3842,11 @@ namespace Request {
 
         // header list: A copy of `request`’s header list.
         // Note: copying the headers is postponed, see step 32 below.
-        input_headers = RequestOrResponse::maybe_headers(input_request);
+        input_headers = RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx,
+                          input_request);
+        if (!input_headers) {
+          return nullptr;
+        }
 
         // The following properties aren't applicable:
         // unsafe-request flag: Set.
