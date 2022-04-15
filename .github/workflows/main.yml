@@ -167,6 +167,9 @@ jobs:
         - build: x86_64-linux
           os: ubuntu-latest
           rust: stable
+        - build: legacy-linux
+          os: ubuntu-latest
+          rust: stable
         - build: x86_64-macos
           os: macos-latest
           rust: stable
@@ -194,6 +197,11 @@ jobs:
 
     # Build `js-compute-runtime`
     - run: PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm cargo build --release
+      if: matrix.build != 'legacy-linux'
+    - uses: ./.github/actions/github-release
+      if: matrix.build == 'legacy-linux'
+      with:
+        files: "dist/*"
 
     # Test what we just built.
     # (Disabled for now since we don't actually have any tests for this prototype :/)
