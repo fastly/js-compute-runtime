@@ -198,7 +198,7 @@ jobs:
     # Build `js-compute-runtime`
     - run: PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm cargo build --release
       if: matrix.build != 'legacy-linux'
-    - uses: ./.github/actions/github-release
+      - uses: ./.github/actions/binary-compatible-builds
       if: matrix.build == 'legacy-linux'
       with:
         files: "dist/*"
