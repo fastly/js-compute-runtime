@@ -200,8 +200,8 @@ jobs:
       if: matrix.build != 'legacy-linux'
     - uses: ./.github/actions/binary-compatible-builds
       if: matrix.build == 'legacy-linux'
-      with:
-        files: "dist/*"
+    - run: $CENTOS PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm cargo build --release
+      if: matrix.build == 'legacy-linux'
 
     # Test what we just built.
     # (Disabled for now since we don't actually have any tests for this prototype :/)
