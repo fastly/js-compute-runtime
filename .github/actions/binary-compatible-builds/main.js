@@ -59,6 +59,3 @@ exec('yum install -y git');
 exec('rm -f /opt/rh/devtoolset-8/root/usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.so');
 set_env("python", "python3");
 
-// Move into root of the project
-exec('ls -lahR');
-exec('./home/runner/work/js-compute-runtime/js-compute-runtime');
