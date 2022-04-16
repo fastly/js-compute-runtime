@@ -58,3 +58,5 @@ exec('yum install -y git');
 // right thing for now.
 exec('rm -f /opt/rh/devtoolset-8/root/usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.so');
 set_env("python", "python3");
+
+exec('ls -lahR')
