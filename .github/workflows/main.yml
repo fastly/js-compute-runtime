@@ -164,10 +164,10 @@ jobs:
     strategy:
       matrix:
         include:
-        - build: x86_64-linux
+        - build: x86_64-linux-latest
           os: ubuntu-latest
           rust: stable
-        - build: legacy-linux
+        - build: x86_64-linux-legacy
           os: ubuntu-latest
           rust: stable
         - build: x86_64-macos
@@ -197,13 +197,13 @@ jobs:
 
     # Build `js-compute-runtime`
     - run: PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm cargo build --release
-      if: matrix.build != 'legacy-linux'
+      if: matrix.build != 'x86_64-linux-legacy'
     - uses: ./.github/actions/binary-compatible-builds
-      if: matrix.build == 'legacy-linux'
+      if: matrix.build == 'x86_64-linux-legacy'
     - run: $CENTOS PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm cargo build --release
-      if: matrix.build == 'legacy-linux'
+      if: matrix.build == 'x86_64-linux-legacy'
     - run: $CENTOS ls -lahR
-      if: matrix.build == 'legacy-linux'
+      if: matrix.build == 'x86_64-linux-legacy'
 
 
     # Test what we just built.
@@ -250,10 +250,14 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: bins-x86_64-macos
-    - name: Download x86_64 Linux binaries
+    - name: Download x86_64 Latest Linux binaries
       uses: actions/download-artifact@v1
       with:
-        name: bins-x86_64-linux
+        name: bins-x86_64-linux-latest
+    - name: Download x86_64 Legacy Linux binaries
+      uses: actions/download-artifact@v1
+      with:
+        name: bins-x86_64-linux-legacy
     - name: Download x86_64 Windows binaries
       uses: actions/download-artifact@v1
       with:
@@ -272,7 +276,8 @@ jobs:
     # Assemble all the build artifacts into tarballs and zip archives.
     - name: Assemble tarballs
       run: |
-        ./ci/build-tarballs.sh x86_64-linux
+        ./ci/build-tarballs.sh x86_64-linux-latest
+        ./ci/build-tarballs.sh x86_64-linux-legacy
         ./ci/build-tarballs.sh x86_64-macos
         ./ci/build-tarballs.sh x86_64-windows .exe
 
