@@ -18,7 +18,8 @@ if (process.env.CENTOS !== undefined) {
   const env = {};
   for (const arg of process.argv.slice(2)) {
     if (arg.includes('=')) {
-      args.push(`--env ${arg}`);
+      args.push('--env');
+      args.push(arg);
     } else {
       args.push(arg);
     }
