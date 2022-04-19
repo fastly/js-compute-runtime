@@ -18,17 +18,13 @@ if (process.env.CENTOS !== undefined) {
   const env = {};
   for (const arg of process.argv.slice(2)) {
     if (arg.includes('=')) {
-      let envVar = arg.split('=');
-      env[envVar[0]] = envVar[1];
+      args.push(`--env ${arg}`);
     } else {
       args.push(arg);
     }
   }
-  console.log(env);
-  child_process.execFileSync('docker', args, {
-    env: env, 
-    ...stdio
-  });
+  console.log(args);
+  child_process.execFileSync('docker', args, stdio);
   return;
 }
 
