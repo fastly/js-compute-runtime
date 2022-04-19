@@ -13,11 +13,22 @@ function set_env(name, val) {
 // and then we'll run commands in there with the `$CENTOS` env var.
 
 if (process.env.CENTOS !== undefined) {
+  // Get Args and Environment Variables from the Github Action run
   const args = ['exec', '-w', process.cwd(), '-i', 'centos'];
+  const env = {};
   for (const arg of process.argv.slice(2)) {
-    args.push(arg);
+    if (arg.includes('=')) {
+      let envVar = arg.split('=');
+      env[envVar[0]] = envVar[1];
+    } else {
+      args.push(arg);
+    }
   }
-  child_process.execFileSync('docker', args, stdio);
+  console.log(env);
+  child_process.execFileSync('docker', args, {
+    env: env, 
+    ...stdio
+  });
   return;
 }
 
