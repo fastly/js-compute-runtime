@@ -1,0 +1,20 @@
+{
+  "the result of compressing [,Hello,Hello] with deflate should be 'HelloHello'": {
+    "status": 0
+  },
+  "the result of compressing [,Hello,Hello] with gzip should be 'HelloHello'": {
+    "status": 0
+  },
+  "the result of compressing [Hello,,Hello] with deflate should be 'HelloHello'": {
+    "status": 0
+  },
+  "the result of compressing [Hello,,Hello] with gzip should be 'HelloHello'": {
+    "status": 0
+  },
+  "the result of compressing [Hello,Hello,] with deflate should be 'HelloHello'": {
+    "status": 0
+  },
+  "the result of compressing [Hello,Hello,] with gzip should be 'HelloHello'": {
+    "status": 0
+  }
+}

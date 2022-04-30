@@ -1,5 +1,10 @@
 
 [
+  "compression/compression-bad-chunks.tentative.any.js",
+  "compression/compression-including-empty-chunk.tentative.any.js",
+  "compression/compression-multiple-chunks.tentative.any.js",
+  "compression/compression-output-length.tentative.any.js",
+  "compression/compression-stream.tentative.any.js",
   "encoding/api-basics.any.js",
   "encoding/api-surrogates-utf8.any.js",
   "encoding/encodeInto.any.js",
