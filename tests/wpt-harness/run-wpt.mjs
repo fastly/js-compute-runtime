@@ -16,6 +16,8 @@ function relativePath(path) {
   return new URL(path, import.meta.url).pathname;
 }
 
+const SLOW_PREFIX = "SLOW ";
+
 const config = {
   viceroy: {
     external: false,
@@ -42,6 +44,7 @@ const config = {
     sectionErrorTemplate: relativePath("results-section-error.template.html"),
   },
   interactive: false,
+  skipSlowTests: false,
   logLevel: LogLevel.Quiet,
 };
 
@@ -78,6 +81,10 @@ const ArgParsers = {
   "--interactive": {
     help: "Start a server instead of directly running tests",
     cmd: () => { config.interactive = true; }
+  },
+  "--skip-slow-tests": {
+    help: "Skip tests that take a long time, in particular in debug builds of the runtime",
+    cmd: () => { config.skipSlowTests = true; }
   },
   "-v": {
     help: "Verbose output",
@@ -336,10 +343,16 @@ function getTests(pattern) {
 
   let testPaths = JSON.parse(readFileSync(config.tests.list, { encoding: "utf-8" }));
   let totalCount = testPaths.length;
-  testPaths = testPaths.filter(path => path.indexOf(pattern) != -1);
+  if (config.skipSlowTests) {
+    testPaths = testPaths.filter(path => !path.startsWith(SLOW_PREFIX));
+  }
+  testPaths = testPaths.map(path => path.startsWith(SLOW_PREFIX) ?
+                                    path.substr(SLOW_PREFIX.length) :
+                                    path)
+    .filter(path => path.indexOf(pattern) != -1);
 
   config.logLevel >= LogLevel.Verbose &&
-    console.log(`Loaded ${totalCount} tests, of which ${testPaths.length} match pattern ${pattern}`);
+    console.log(`Loaded ${totalCount} tests, of which ${testPaths.length} match pattern ${pattern}${config.skipSlowTests ? " and aren't skipped for being slow" : ""}`);
   return { testPaths, totalCount };
 }
 

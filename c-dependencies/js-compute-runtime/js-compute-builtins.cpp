@@ -3264,6 +3264,8 @@ namespace CompressionStream {
   // https://chromium.googlesource.com/chromium/src/+/457f48d3d8635c8bca077232471228d75290cc29/third_party/blink/renderer/modules/compression/deflate_transformer.cc#29
   const size_t BUFFER_SIZE = 16384;
 
+  bool is_instance(JSObject* obj);
+
   JSObject* transform(JSObject* self) {
     MOZ_ASSERT(is_instance(self));
     return &JS::GetReservedSlot(self, Slots::Transform).toObject();
@@ -3347,6 +3349,10 @@ namespace CompressionStream {
       // 2.  Let _buffer_ be the result of compressing _chunk_ with _cs_'s format and context.
       // This just sets up step 2. The actual compression happen in the `do` loop below.
       zstream->avail_in = length;
+
+      // `data` is a live view into `chunk`. That's ok here because it'll be fully used in the `do`
+      // loop below before any content can execute again and could potentially invalidate the
+      // pointer to `data`.
       zstream->next_in = data;
     } else {
       // Step 1 of flush:
@@ -3366,6 +3372,11 @@ namespace CompressionStream {
 
     uint8_t* buffer = output_buffer(self);
 
+    // Call `deflate` in a loop, enqueuing compressed chunks until the input buffer has
+    // been fully consumed.
+    // That is the case when `zstream->avail_out` is non-zero, i.e. when the last chunk
+    // wasn't completely filled. See zlib docs for details:
+    // https://searchfox.org/mozilla-central/rev/87ecd21d3ca517f8d90e49b32bf042a754ed8f18/modules/zlib/src/zlib.h#319-324
     do {
       // 4.  Split _buffer_ into one or more non-empty pieces and convert them into `Uint8Array`s.
       // 5.  For each `Uint8Array` _array_, enqueue _array_ in _cs_'s transform.
@@ -3386,10 +3397,13 @@ namespace CompressionStream {
           return false;
         }
 
-        bool is_shared;
-        JS::AutoCheckCannotGC nogc;
-        uint8_t* out_buffer = JS_GetUint8ArrayData(out_obj, &is_shared, nogc);
-        memcpy(out_buffer, buffer, bytes);
+        {
+          bool is_shared;
+          JS::AutoCheckCannotGC nogc;
+          uint8_t* out_buffer = JS_GetUint8ArrayData(out_obj, &is_shared, nogc);
+          memcpy(out_buffer, buffer, bytes);
+        }
+
         RootedValue out_chunk(cx, ObjectValue(*out_obj));
         if (!TransformStreamDefaultController::Enqueue(cx, controller, out_chunk)) {
           return false;
@@ -3429,8 +3443,8 @@ namespace CompressionStream {
 
     // These fields shouldn't ever be accessed again, but we should be able to assert that.
     #ifdef DEBUG
-    JS::SetReservedSlot(stream, Slots::State, PrivateValue(nullptr));
-    JS::SetReservedSlot(stream, Slots::Buffer, PrivateValue(nullptr));
+    JS::SetReservedSlot(self, Slots::State, PrivateValue(nullptr));
+    JS::SetReservedSlot(self, Slots::Buffer, PrivateValue(nullptr));
     #endif
 
     args.rval().setUndefined();
