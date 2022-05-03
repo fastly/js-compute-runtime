@@ -27,6 +27,7 @@
 #include "js/experimental/TypedData.h"
 #include "js/StructuredClone.h"
 #include "js/Value.h"
+#include "zlib.h"
 
 using JS::CallArgs;
 using JS::CallArgsFromVp;
@@ -158,6 +159,27 @@ SpecString encode(JSContext* cx, HandleValue val) {
   slice.data = (uint8_t*)chars.release();
   slice.cap = slice.len;
   return slice;
+}
+
+uint8_t* value_to_buffer(JSContext* cx, HandleValue val, const char* val_desc, size_t* len) {
+  if (!val.isObject() || !(JS_IsArrayBufferViewObject(&val.toObject()) ||
+      JS::IsArrayBufferObject(&val.toObject())))
+  {
+    JS_ReportErrorUTF8(cx, "%s must be of type ArrayBuffer or ArrayBufferView", val_desc);
+    return nullptr;
+  }
+
+  RootedObject input(cx, &val.toObject());
+  uint8_t* data;
+  bool is_shared;
+
+  if (JS_IsArrayBufferViewObject(input)) {
+    js::GetArrayBufferViewLengthAndData(input, len, &is_shared, &data);
+  } else {
+    JS::GetArrayBufferLengthAndData(input, len, &is_shared, &data);
+  }
+
+  return data;
 }
 
 /* Returns false if an exception is set on `cx` and the caller should immediately
@@ -303,6 +325,28 @@ static char* read_from_handle_all(JSContext* cx, HandleType handle,
   *nwritten = offset;
 
   return buf;
+}
+
+/**
+ * Writes the given number of bytes from the given buffer to the given handle.
+ *
+ * The host doesn't necessarily write all bytes in any particular call to xqd_body_write,
+ * so to ensure all bytes are written, we call it in a loop.
+ */
+int write_to_body_all(BodyHandle handle, const char *buf, size_t len) {
+  size_t total_written = 0;
+  while (total_written < len) {
+    const char* chunk = buf + total_written;
+    size_t chunk_len = len - total_written;
+    size_t nwritten = 0;
+    int result = xqd_body_write(handle, chunk, chunk_len, BodyWriteEndBack, &nwritten);
+    if (result != 0) {
+      return result;
+    }
+    total_written += nwritten;
+  }
+
+  return 0;
 }
 
 #define MULTI_VALUE_HOSTCALL(op, accum) \
@@ -842,6 +886,8 @@ namespace TransformStream {
     Backpressure,
     BackpressureChangePromise,
     Owner, // The target RequestOrResponse object if the stream's readable end is used as a body.
+    UsedAsMixin, // `true` if the TransformStream is used in another transforming builtin,
+                 // such as CompressionStream.
     Count
   };};
 
@@ -853,6 +899,8 @@ namespace TransformStream {
   bool is_ts_readable(JSContext* cx, HandleObject readable);
   bool readable_used_as_body(JSObject* self);
   void set_readable_used_as_body(JSContext* cx, HandleObject readable, HandleObject target);
+  JSObject* ts_from_readable(JSContext* cx, HandleObject readable);
+  bool used_as_mixin(JSObject* self);
   bool is_ts_writable(JSContext* cx, HandleObject writable);
   JSObject* controller(JSObject* self);
   bool backpressure(JSObject* self);
@@ -1026,7 +1074,10 @@ namespace RequestOrResponse {
       // Ensure that we take the right steps for shortcutting operations on TransformStreams
       // later on.
       if (TransformStream::is_ts_readable(cx, body_obj)) {
-        TransformStream::set_readable_used_as_body(cx, body_obj, self);
+        // But only if the TransformStream isn't used as a mixin by other builtins.
+        if (!TransformStream::used_as_mixin(TransformStream::ts_from_readable(cx, body_obj))) {
+          TransformStream::set_readable_used_as_body(cx, body_obj, self);
+        }
       }
     } else {
       mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
@@ -1058,8 +1109,7 @@ namespace RequestOrResponse {
       }
 
       BodyHandle body_handle = RequestOrResponse::body_handle(self);
-      size_t num_written = 0;
-      int result = xqd_body_write(body_handle, buf, length, BodyWriteEndBack, &num_written);
+      int result = write_to_body_all(body_handle, buf, length);
 
       // Ensure that the NoGC is reset, so throwing an error in HANDLE_RESULT succeeds.
       if (maybeNoGC.isSome()) {
@@ -1323,8 +1373,7 @@ namespace RequestOrResponse {
       bool is_shared;
       uint8_t* bytes = JS_GetUint8ArrayData(array, &is_shared, nogc);
       size_t length = JS_GetTypedArrayByteLength(array);
-      size_t nwritten;
-      result = xqd_body_write(body_handle, (char*)bytes, length, BodyWriteEndBack, &nwritten);
+      result = write_to_body_all(body_handle, (char*)bytes, length);
     }
 
     // Needs to be outside the nogc block in case we need to create an exception.
@@ -2623,6 +2672,12 @@ namespace TransformStream {
     return stream_owner ? TransformStream::is_instance(stream_owner) : false;
   }
 
+  JSObject* ts_from_readable(JSContext* cx, HandleObject readable) {
+    MOZ_ASSERT(is_ts_readable(cx, readable));
+    JSObject* source = NativeStreamSource::get_stream_source(cx, readable);
+    return NativeStreamSource::owner(source);
+  }
+
   bool readable_used_as_body(JSObject* self) {
     MOZ_ASSERT(is_instance(self));
     // For now the owner can only be a RequestOrResponse, so no further checks are needed.
@@ -2635,13 +2690,13 @@ namespace TransformStream {
    *
    * This allows us to later on short-cut piping from native body to native body.
    *
-   * Asserts that |readable| is the readable end of a TransformStream.
+   * Asserts that |readable| is the readable end of a TransformStream, and that that
+   * TransformStream is not used as a mixin by another builtin.
    */
   void set_readable_used_as_body(JSContext* cx, HandleObject readable, HandleObject target) {
-    MOZ_ASSERT(is_ts_readable(cx, readable));
-    JSObject* source = NativeStreamSource::get_stream_source(cx, readable);
-    JSObject* stream_owner = NativeStreamSource::owner(source);
-    set_owner(stream_owner, target);
+    RootedObject ts(cx, ts_from_readable(cx, readable));
+    MOZ_ASSERT(!used_as_mixin(ts));
+    set_owner(ts, target);
   }
 
   JSObject* writable(JSObject* self) {
@@ -2671,6 +2726,16 @@ namespace TransformStream {
   JSObject* backpressureChangePromise(JSObject* self) {
     MOZ_ASSERT(is_instance(self));
     return JS::GetReservedSlot(self, Slots::BackpressureChangePromise).toObjectOrNull();
+  }
+
+  bool used_as_mixin(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return JS::GetReservedSlot(self, Slots::UsedAsMixin).toBoolean();
+  }
+
+  void set_used_as_mixin(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    JS::SetReservedSlot(self, Slots::UsedAsMixin, JS::TrueValue());
   }
 
   bool readable_get(JSContext* cx, unsigned argc, Value* vp) {
@@ -3057,6 +3122,10 @@ namespace TransformStream {
     // Step 11. Set stream.[controller] to undefined.
     JS::SetReservedSlot(stream, Slots::Controller, JS::UndefinedValue());
 
+    // Some transform streams are used as mixins in other builtins, which set
+    // this to `true` as part of their construction.
+    JS::SetReservedSlot(stream, Slots::UsedAsMixin, JS::FalseValue());
+
     return true;
   }
 
@@ -3165,6 +3234,329 @@ namespace TransformStream {
     return readable(transform_stream);
   }
 }
+
+
+/**
+ * Implementation of the WICG CompressionStream builtin.
+ *
+ * All algorithm names and steps refer to spec algorithms defined at
+ * https://streams.spec.whatwg.org/#ts-class
+ */
+namespace CompressionStream {
+  namespace Slots { enum {
+    Transform,
+    Format,
+    State,
+    Buffer,
+    Count
+  };};
+
+  enum class Format {
+    GZIP,
+    Deflate,
+  };
+
+  // Using compression level 2, as per the reasoning here:
+  // https://searchfox.org/mozilla-central/rev/ecd91b104714a8b2584a4c03175be50ccb3a7c67/dom/fetch/FetchUtil.cpp#603-609
+  const int COMPRESSION_LEVEL = 2;
+
+  // Using the same fixed encoding buffer size as Chromium, see
+  // https://chromium.googlesource.com/chromium/src/+/457f48d3d8635c8bca077232471228d75290cc29/third_party/blink/renderer/modules/compression/deflate_transformer.cc#29
+  const size_t BUFFER_SIZE = 16384;
+
+  bool is_instance(JSObject* obj);
+
+  JSObject* transform(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return &JS::GetReservedSlot(self, Slots::Transform).toObject();
+  }
+
+  Format format(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    return (Format)JS::GetReservedSlot(self, Slots::Format).toInt32();
+  }
+
+  z_stream* state(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    void* ptr = JS::GetReservedSlot(self, Slots::State).toPrivate();
+    MOZ_ASSERT(ptr);
+    return (z_stream*)ptr;
+  }
+
+  uint8_t* output_buffer(JSObject* self) {
+    MOZ_ASSERT(is_instance(self));
+    void* ptr = JS::GetReservedSlot(self, Slots::Buffer).toPrivate();
+    MOZ_ASSERT(ptr);
+    return (uint8_t*)ptr;
+  }
+
+  const unsigned ctor_length = 1;
+  JSObject* create(JSContext* cx, Format format);
+  bool check_receiver(JSContext* cx, HandleValue receiver, const char* method_name);
+
+  /**
+   * https://wicg.github.io/compression/#dom-compressionstream-compressionstream
+   */
+  bool constructor(JSContext* cx, unsigned argc, Value* vp) {
+    // 1.  If _format_ is unsupported in `CompressionStream`, then throw a `TypeError`.
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "CompressionStream constructor", 1)) {
+      return false;
+    }
+
+    size_t format_len;
+    UniqueChars format_chars = encode(cx, args[0], &format_len);
+    if (!format_chars) return false;
+
+    Format format;
+    if (!strcmp(format_chars.get(), "deflate")) {
+      format = Format::Deflate;
+    } else if (!strcmp(format_chars.get(), "gzip")) {
+      format = Format::GZIP;
+    } else {
+      JS_ReportErrorUTF8(cx, "'format' has to be \"deflate\" or \"gzip\", "
+                             "but got \"%s\"", format_chars.get());
+      return false;
+    }
+
+    // Steps 2-6.
+    RootedObject stream(cx, create(cx, format));
+    if (!stream) {
+      return false;
+    }
+
+    args.rval().setObject(*stream);
+    return true;
+  }
+
+  // Steps 1-5 of the transform algorithm, and 1-4 of the flush algorithm.
+  bool deflate_chunk(JSContext* cx, HandleObject self, HandleValue chunk, bool finished) {
+    z_stream* zstream = state(self);
+
+    if (!finished) {
+      // 1.  If _chunk_ is not a `BufferSource` type, then throw a `TypeError`.
+      // Step 2 of transform:
+      size_t length;
+      uint8_t* data = value_to_buffer(cx, chunk, "CompressionStream transform: chunks", &length);
+      if (!data) {
+        return false;
+      }
+
+      if (length == 0) {
+        return true;
+      }
+
+      // 2.  Let _buffer_ be the result of compressing _chunk_ with _cs_'s format and context.
+      // This just sets up step 2. The actual compression happen in the `do` loop below.
+      zstream->avail_in = length;
+
+      // `data` is a live view into `chunk`. That's ok here because it'll be fully used in the `do`
+      // loop below before any content can execute again and could potentially invalidate the
+      // pointer to `data`.
+      zstream->next_in = data;
+    } else {
+      // Step 1 of flush:
+      // 1.  Let _buffer_ be the result of compressing an empty input with _cs_'s format and
+      //     context, with the finish flag.
+      // This just sets up step 2. The actual compression happen in the `do` loop below.
+      zstream->avail_in = 0;
+      zstream->next_in = nullptr;
+    }
+
+    RootedObject controller(cx, TransformStream::controller(transform(self)));
+
+    // Steps 3-5 of transform are identical to steps 2-4 of flush, so numbers below refer to
+    // the former for those.
+    // Also, the compression happens in potentially smaller chunks in the `do` loop below, so
+    // the three steps are reordered and somewhat intertwined with each other.
+
+    uint8_t* buffer = output_buffer(self);
+
+    // Call `deflate` in a loop, enqueuing compressed chunks until the input buffer has
+    // been fully consumed.
+    // That is the case when `zstream->avail_out` is non-zero, i.e. when the last chunk
+    // wasn't completely filled. See zlib docs for details:
+    // https://searchfox.org/mozilla-central/rev/87ecd21d3ca517f8d90e49b32bf042a754ed8f18/modules/zlib/src/zlib.h#319-324
+    do {
+      // 4.  Split _buffer_ into one or more non-empty pieces and convert them into `Uint8Array`s.
+      // 5.  For each `Uint8Array` _array_, enqueue _array_ in _cs_'s transform.
+      // This loop does the actual compression, one output-buffer sized chunk at a time, and then
+      // creates and enqueues the Uint8Arrays immediately.
+      zstream->avail_out = BUFFER_SIZE;
+      zstream->next_out = buffer;
+      int err = deflate(zstream, finished ? Z_FINISH : Z_NO_FLUSH);
+      if (!((finished && err == Z_STREAM_END) || err == Z_OK)) {
+        JS_ReportErrorASCII(cx, "CompressionStream transform: error compressing chunk");
+        return false;
+      }
+
+      size_t bytes = BUFFER_SIZE - zstream->avail_out;
+      if (bytes) {
+        RootedObject out_obj(cx, JS_NewUint8Array(cx, bytes));
+        if (!out_obj) {
+          return false;
+        }
+
+        {
+          bool is_shared;
+          JS::AutoCheckCannotGC nogc;
+          uint8_t* out_buffer = JS_GetUint8ArrayData(out_obj, &is_shared, nogc);
+          memcpy(out_buffer, buffer, bytes);
+        }
+
+        RootedValue out_chunk(cx, ObjectValue(*out_obj));
+        if (!TransformStreamDefaultController::Enqueue(cx, controller, out_chunk)) {
+          return false;
+        }
+      }
+
+      // 3.  If _buffer_ is empty, return.
+    } while (zstream->avail_out == 0);
+
+    return true;
+  }
+
+  // https://wicg.github.io/compression/#compress-and-enqueue-a-chunk
+  // All steps inlined into `deflate_chunk`.
+  bool transformAlgorithm(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(1, "Compression stream transform algorithm")
+
+    if (!deflate_chunk(cx, self, args[0], false)) {
+      return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  // https://wicg.github.io/compression/#compress-flush-and-enqueue
+  // All steps inlined into `deflate_chunk`.
+  bool flushAlgorithm(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "Compression stream flush algorithm")
+
+    if (!deflate_chunk(cx, self, JS::UndefinedHandleValue, true)) {
+      return false;
+    }
+
+    deflateEnd(state(self));
+    JS_free(cx, output_buffer(self));
+
+    // These fields shouldn't ever be accessed again, but we should be able to assert that.
+    #ifdef DEBUG
+    JS::SetReservedSlot(self, Slots::State, PrivateValue(nullptr));
+    JS::SetReservedSlot(self, Slots::Buffer, PrivateValue(nullptr));
+    #endif
+
+    args.rval().setUndefined();
+    return true;
+  }
+
+  bool readable_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "get readable")
+    args.rval().setObject(*TransformStream::readable(transform(self)));
+    return true;
+  }
+
+  bool writable_get(JSContext* cx, unsigned argc, Value* vp) {
+    METHOD_HEADER_WITH_NAME(0, "get writable")
+    args.rval().setObject(*TransformStream::writable(transform(self)));
+    return true;
+  }
+
+  const JSFunctionSpec methods[] = {JS_FS_END};
+
+  const JSPropertySpec properties[] = {
+    JS_PSG("readable", readable_get, JSPROP_ENUMERATE),
+    JS_PSG("writable", writable_get, JSPROP_ENUMERATE),
+  JS_PS_END};
+
+  CLASS_BOILERPLATE_CUSTOM_INIT(CompressionStream)
+
+  static PersistentRooted<JSObject*> transformAlgo;
+  static PersistentRooted<JSObject*> flushAlgo;
+
+  bool init_class(JSContext* cx, HandleObject global) {
+    if (!init_class_impl(cx, global)) {
+      return false;
+    }
+
+    JSFunction* transformFun = JS_NewFunction(cx, transformAlgorithm, 1, 0, "CS Transform");
+    if (!transformFun) return false;
+    transformAlgo.init(cx, JS_GetFunctionObject(transformFun));
+
+    JSFunction* flushFun = JS_NewFunction(cx, flushAlgorithm, 1, 0, "CS Flush");
+    if (!flushFun) return false;
+    flushAlgo.init(cx, JS_GetFunctionObject(flushFun));
+
+    return true;
+  }
+
+  // Steps 2-6 of `new CompressionStream()`.
+  JSObject* create(JSContext* cx, Format format) {
+    RootedObject stream(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+    if (!stream) {
+      return nullptr;
+    }
+
+    RootedValue stream_val(cx, ObjectValue(*stream));
+
+    // 2.  Set this's format to _format_.
+    JS::SetReservedSlot(stream, Slots::Format, JS::Int32Value((int32_t)format));
+
+    // 3.  Let _transformAlgorithm_ be an algorithm which takes a _chunk_ argument and runs the
+    //     `compress and enqueue a chunk algorithm with this and _chunk_.
+    // 4.  Let _flushAlgorithm_ be an algorithm which takes no argument and runs the
+    //     `compress flush and enqueue` algorithm with this.
+    // (implicit)
+
+    // 5.  Set this's transform to a new `TransformStream`.
+    // 6.  [Set up](https://streams.spec.whatwg.org/#transformstream-set-up) this's transform with _transformAlgorithm_ set to _transformAlgorithm_ and _flushAlgorithm_ set to _flushAlgorithm_.
+    RootedObject transform(cx, TransformStream::create(cx, 1, nullptr, 0, nullptr, stream_val,
+                                                       nullptr, transformAlgo, flushAlgo));
+    if (!transform) {
+      return nullptr;
+    }
+
+    TransformStream::set_used_as_mixin(transform);
+    JS::SetReservedSlot(stream, Slots::Transform, ObjectValue(*transform));
+
+    // The remainder of the function deals with setting up the deflate state used for compressing
+    // chunks.
+    z_stream* zstream = (z_stream*)JS_malloc(cx, sizeof(z_stream));
+    if (!zstream) {
+      JS_ReportOutOfMemory(cx);
+      return nullptr;
+    }
+
+    memset(zstream, 0, sizeof(z_stream));
+    JS::SetReservedSlot(stream, Slots::State, PrivateValue(zstream));
+
+    uint8_t* buffer = (uint8_t*)JS_malloc(cx, BUFFER_SIZE);
+    if (!buffer) {
+      JS_ReportOutOfMemory(cx);
+      return nullptr;
+    }
+
+    JS::SetReservedSlot(stream, Slots::Buffer, PrivateValue(buffer));
+
+    // Using the same window bits as Chromium's Compression stream, see
+    // https://chromium.googlesource.com/chromium/src/+/457f48d3d8635c8bca077232471228d75290cc29/third_party/blink/renderer/modules/compression/deflate_transformer.cc#31
+    int window_bits = 15;
+    if (format == Format::GZIP) {
+      window_bits += 16;
+    }
+
+    int err = deflateInit2(zstream, COMPRESSION_LEVEL, Z_DEFLATED, window_bits, 8,
+                           Z_DEFAULT_STRATEGY);
+    if (err != Z_OK) {
+      JS_ReportErrorASCII(cx, "Error initializing compression stream");
+      return nullptr;
+    }
+
+    return stream;
+  }
+}
+
 
 namespace CacheOverride {
 
@@ -4667,27 +5059,15 @@ namespace TextDecoder {
     METHOD_HEADER(1)
 
     // Default to empty string if no input is given.
-    if (args.get(0).isUndefined()) {
+    if (args[0].isUndefined()) {
       args.rval().set(JS_GetEmptyStringValue(cx));
       return true;
     }
 
-    if (!args[0].isObject() || !(JS_IsArrayBufferViewObject(&args[0].toObject()) ||
-                                 JS::IsArrayBufferObject(&args[0].toObject())) )
-    {
-      JS_ReportErrorUTF8(cx, "TextDecoder#decode: input must be of type ArrayBuffer or ArrayBufferView");
-      return false;
-    }
-
-    RootedObject input(cx, &args[0].toObject());
     size_t length;
-    uint8_t* data;
-    bool is_shared;
-
-    if (JS_IsArrayBufferViewObject(input)) {
-      js::GetArrayBufferViewLengthAndData(input, &length, &is_shared, &data);
-    } else {
-      JS::GetArrayBufferLengthAndData(input, &length, &is_shared, &data);
+    uint8_t* data = value_to_buffer(cx, args[0], "TextDecoder#decode: input", &length);
+    if (!data) {
+      return false;
     }
 
     RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char*)data, length)));
@@ -7215,6 +7595,7 @@ bool define_fastly_sys(JSContext* cx, HandleObject global) {
   if (!NativeStreamSink::init_class(cx, global)) return false;
   if (!TransformStreamDefaultController::init_class(cx, global)) return false;
   if (!TransformStream::init_class(cx, global)) return false;
+  if (!CompressionStream::init_class(cx, global)) return false;
   if (!Request::init_class(cx, global)) return false;
   if (!Response::init_class(cx, global)) return false;
   if (!Dictionary::init_class(cx, global)) return false;
