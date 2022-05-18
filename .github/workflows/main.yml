@@ -164,10 +164,7 @@ jobs:
     strategy:
       matrix:
         include:
-        - build: x86_64-linux-latest
-          os: ubuntu-latest
-          rust: stable
-        - build: x86_64-linux-legacy
+        - build: x86_64-linux
           os: ubuntu-latest
           rust: stable
         - build: x86_64-macos
@@ -183,6 +180,7 @@ jobs:
     - uses: ./.github/actions/install-rust
       with:
         toolchain: ${{ matrix.rust }}
+    - uses: ./.github/actions/binary-compatible-builds
 
     - name: Configure Cargo target
       run: |
@@ -196,15 +194,7 @@ jobs:
         name: engine-release
 
     # Build `js-compute-runtime`
-    - run: PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm cargo build --release
-      if: matrix.build != 'x86_64-linux-legacy'
-    - uses: ./.github/actions/binary-compatible-builds
-      if: matrix.build == 'x86_64-linux-legacy'
-    - run: $CENTOS PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm cargo build --release
-      if: matrix.build == 'x86_64-linux-legacy'
-    - run: $CENTOS ls -lahR
-      if: matrix.build == 'x86_64-linux-legacy'
-
+    - run: PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm $CENTOS cargo build --release
 
     # Test what we just built.
     # (Disabled for now since we don't actually have any tests for this prototype :/)
@@ -250,14 +240,10 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: bins-x86_64-macos
-    - name: Download x86_64 Latest Linux binaries
+    - name: Download x86_64 Linux binaries
       uses: actions/download-artifact@v1
       with:
-        name: bins-x86_64-linux-latest
-    - name: Download x86_64 Legacy Linux binaries
-      uses: actions/download-artifact@v1
-      with:
-        name: bins-x86_64-linux-legacy
+        name: bins-x86_64-linux
     - name: Download x86_64 Windows binaries
       uses: actions/download-artifact@v1
       with:
@@ -276,8 +262,7 @@ jobs:
     # Assemble all the build artifacts into tarballs and zip archives.
     - name: Assemble tarballs
       run: |
-        ./ci/build-tarballs.sh x86_64-linux-latest
-        ./ci/build-tarballs.sh x86_64-linux-legacy
+        ./ci/build-tarballs.sh x86_64-linux
         ./ci/build-tarballs.sh x86_64-macos
         ./ci/build-tarballs.sh x86_64-windows .exe
 

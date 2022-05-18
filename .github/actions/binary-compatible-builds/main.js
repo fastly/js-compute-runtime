@@ -8,22 +8,32 @@ function set_env(name, val) {
   fs.appendFileSync(process.env['GITHUB_ENV'], `${name}=${val}\n`)
 }
 
-// In order to do legacy Linux build, we do fancy things with containers. 
-// We'll spawn an old CentOS container in the background with a super old glibc, 
-// and then we'll run commands in there with the `$CENTOS` env var.
+// On OSX all we need to do is configure our deployment target as old as
+// possible. For now 10.9 is the limit.
+if (process.platform == 'darwin') {
+  set_env("MACOSX_DEPLOYMENT_TARGET", "10.9");
+  set_env("python", "python3");
+  return;
+}
+
+// On Windows we build against the static CRT to reduce dll dependencies
+if (process.platform == 'win32') {
+  set_env("RUSTFLAGS", "-Ctarget-feature=+crt-static");
+  set_env("python", "python");
+  return;
+}
+
+// ... and on Linux we do fancy things with containers. We'll spawn an old
+// CentOS container in the background with a super old glibc, and then we'll run
+// commands in there with the `$CENTOS` env var.
 
 if (process.env.CENTOS !== undefined) {
-  // Get Args and Environment Variables from the Github Action run
-  const args = ['exec', '-w', process.cwd(), '-i', 'centos'];
-  const env = {};
+  const args = ['exec',
+                '--env', `PREBUILT_ENGINE=${process.env.PREBUILT_ENGINE || ''}`,
+                '-w', process.cwd(), '-i', 'centos'];
   for (const arg of process.argv.slice(2)) {
-    if (arg.includes('=')) {
-      args.splice(3, 0, '--env', arg);
-    } else {
-      args.push(arg);
-    }
+    args.push(arg);
   }
-  console.log(args);
   child_process.execFileSync('docker', args, stdio);
   return;
 }
@@ -65,4 +75,3 @@ exec('yum install -y git');
 // right thing for now.
 exec('rm -f /opt/rh/devtoolset-8/root/usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.so');
 set_env("python", "python3");
-
