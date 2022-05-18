@@ -181,6 +181,7 @@ jobs:
     - uses: ./.github/actions/install-rust
       with:
         toolchain: ${{ matrix.rust }}
+    - uses: ./.github/actions/binary-compatible-builds
 
     - name: Configure Cargo target
       run: |
@@ -194,7 +195,7 @@ jobs:
         name: engine-release
 
     # Build `js-compute-runtime`
-    - run: PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm cargo build --release
+    - run: PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm $CENTOS cargo build --release
 
     # Test what we just built.
     # (Disabled for now since we don't actually have any tests for this prototype :/)

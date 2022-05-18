@@ -1,5 +1,5 @@
 {
-  "name": "wasmtime-github-release",
+  "name": "js-compute-runtime-github-release",
   "version": "0.0.0",
   "main": "main.js",
   "dependencies": {
