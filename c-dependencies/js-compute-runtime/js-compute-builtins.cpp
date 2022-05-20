@@ -2566,6 +2566,9 @@ namespace TransformStream {
    */
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
+    if (!ThrowIfNotConstructing(cx, args, "TransformStream")) {
+      return false;
+    }
 
     RootedObject startFunction(cx);
     RootedObject transformFunction(cx);
@@ -3309,6 +3312,9 @@ namespace CompressionStream {
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     // 1.  If _format_ is unsupported in `CompressionStream`, then throw a `TypeError`.
     CallArgs args = CallArgsFromVp(argc, vp);
+    if (!ThrowIfNotConstructing(cx, args, "CompressionStream")) {
+      return false;
+    }
     if (!args.requireAtLeast(cx, "CompressionStream constructor", 1)) {
       return false;
     }
@@ -4039,6 +4045,9 @@ namespace Request {
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
     REQUEST_HANDLER_ONLY("The Request builtin");
+    if (!ThrowIfNotConstructing(cx, args, "Request")) {
+      return false;
+    }
     if (!args.requireAtLeast(cx, "Request", 1))
       return false;
 
@@ -4626,6 +4635,10 @@ namespace Response {
     CallArgs args = CallArgsFromVp(argc, vp);
     REQUEST_HANDLER_ONLY("The Response builtin");
 
+    if (!ThrowIfNotConstructing(cx, args, "Response")) {
+      return false;
+    }
+
     RootedValue body_val(cx, args.get(0));
     RootedValue init_val(cx, args.get(1));
 
@@ -4976,6 +4989,10 @@ namespace TextEncoder {
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    if (!ThrowIfNotConstructing(cx, args, "TextEncoder")) {
+      return false;
+    }
+
     RootedObject self(cx, create(cx));
     if (!self) return false;
 
@@ -5052,6 +5069,9 @@ namespace TextDecoder {
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
+    if (!ThrowIfNotConstructing(cx, args, "TextDecoder")) {
+      return false;
+    }
 
     RootedObject self(cx, create(cx));
     if (!self) return false;
@@ -5729,6 +5749,9 @@ namespace Headers {
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
+    if (!ThrowIfNotConstructing(cx, args, "Headers")) {
+      return false;
+    }
     RootedObject headers(cx, create(cx, Mode::Standalone, nullptr, args.get(0)));
     if (!headers) return false;
 
@@ -6542,6 +6565,9 @@ namespace URL {
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
+    if (!ThrowIfNotConstructing(cx, args, "URL")) {
+      return false;
+    }
     if (!args.requireAtLeast(cx, "URL", 1))
       return false;
 
@@ -6892,6 +6918,10 @@ namespace URLSearchParams {
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!ThrowIfNotConstructing(cx, args, "URLSearchParams")) {
+      return false;
+    }
 
     RootedObject self(cx, create(cx, args.get(0)));
     if (!self) return false;
