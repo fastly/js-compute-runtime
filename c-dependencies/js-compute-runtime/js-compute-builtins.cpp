@@ -182,6 +182,15 @@ uint8_t* value_to_buffer(JSContext* cx, HandleValue val, const char* val_desc, s
   return data;
 }
 
+inline bool ThrowIfNotConstructing(JSContext* cx, const CallArgs& args,
+                                   const char* builtinName) {
+  if (args.isConstructing()) {
+    return true;
+  }
+  JS_ReportErrorASCII(cx, "Constructor %s requires 'new'", builtinName);
+  return false;
+}
+
 /* Returns false if an exception is set on `cx` and the caller should immediately
    return to propagate the exception. */
 static inline bool handle_fastly_result(JSContext* cx, int result, int line, const char* func) {
