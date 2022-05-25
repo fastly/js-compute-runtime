@@ -182,6 +182,15 @@ uint8_t* value_to_buffer(JSContext* cx, HandleValue val, const char* val_desc, s
   return data;
 }
 
+inline bool ThrowIfNotConstructing(JSContext* cx, const CallArgs& args,
+                                   const char* builtinName) {
+  if (args.isConstructing()) {
+    return true;
+  }
+  JS_ReportErrorASCII(cx, "Constructor %s requires 'new'", builtinName);
+  return false;
+}
+
 /* Returns false if an exception is set on `cx` and the caller should immediately
    return to propagate the exception. */
 static inline bool handle_fastly_result(JSContext* cx, int result, int line, const char* func) {
@@ -445,6 +454,15 @@ static const uint32_t class_flags = 0;
 
 #define METHOD_HEADER(required_argc) \
   METHOD_HEADER_WITH_NAME(required_argc, __func__)
+
+#define CTOR_HEADER(name, required_argc) \
+  CallArgs args = CallArgsFromVp(argc, vp); \
+  if (!ThrowIfNotConstructing(cx, args, name)) { \
+      return false; \
+  } \
+  if (!args.requireAtLeast(cx, name " constructor", required_argc)) {\
+    return false; \
+  }
 
 #define REQUEST_HANDLER_ONLY(name) \
   if (!FetchEvent::instance()) { \
@@ -2556,7 +2574,7 @@ namespace TransformStream {
    * https://streams.spec.whatwg.org/#ts-constructor
    */
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    CTOR_HEADER("TransformStream", 0);
 
     RootedObject startFunction(cx);
     RootedObject transformFunction(cx);
@@ -3299,10 +3317,7 @@ namespace CompressionStream {
    */
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
     // 1.  If _format_ is unsupported in `CompressionStream`, then throw a `TypeError`.
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.requireAtLeast(cx, "CompressionStream constructor", 1)) {
-      return false;
-    }
+    CTOR_HEADER("CompressionStream", 1);
 
     size_t format_len;
     UniqueChars format_chars = encode(cx, args[0], &format_len);
@@ -3821,9 +3836,7 @@ namespace CacheOverride {
   JSObject* create(JSContext* cx);
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.requireAtLeast(cx, "CacheOverride", 1))
-      return false;
+    CTOR_HEADER("CacheOverride", 1);
 
     RootedObject self(cx, create(cx));
     if (!self) return false;
@@ -4028,11 +4041,8 @@ namespace Request {
   JSObject* create(JSContext* cx, HandleValue input, HandleValue init);
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
     REQUEST_HANDLER_ONLY("The Request builtin");
-    if (!args.requireAtLeast(cx, "Request", 1))
-      return false;
-
+    CTOR_HEADER("Request", 1);
     RootedObject request(cx, create(cx, args[0], args.get(1)));
     if (!request) return false;
 
@@ -4614,8 +4624,9 @@ namespace Response {
    * The `Response` constructor https://fetch.spec.whatwg.org/#dom-response
    */
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
     REQUEST_HANDLER_ONLY("The Response builtin");
+
+    CTOR_HEADER("Response", 0);
 
     RootedValue body_val(cx, args.get(0));
     RootedValue init_val(cx, args.get(1));
@@ -4892,10 +4903,8 @@ namespace Dictionary {
   JSObject* create(JSContext* cx, const char* name, size_t name_len);
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
     REQUEST_HANDLER_ONLY("The Dictionary builtin");
-    if (!args.requireAtLeast(cx, "Dictionary", 1))
-      return false;
+    CTOR_HEADER("Dictionary", 1);
 
     size_t name_len;
     UniqueChars name = encode(cx, args[0], &name_len);
@@ -4965,7 +4974,7 @@ namespace TextEncoder {
   JSObject* create(JSContext* cx);
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    CTOR_HEADER("TextEncoder", 0);
 
     RootedObject self(cx, create(cx));
     if (!self) return false;
@@ -5042,7 +5051,7 @@ namespace TextDecoder {
   JSObject* create(JSContext* cx);
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    CTOR_HEADER("TextDecoder", 0);
 
     RootedObject self(cx, create(cx));
     if (!self) return false;
@@ -5719,7 +5728,7 @@ namespace Headers {
   }
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    CTOR_HEADER("Headers", 0);
     RootedObject headers(cx, create(cx, Mode::Standalone, nullptr, args.get(0)));
     if (!headers) return false;
 
@@ -6532,9 +6541,7 @@ namespace URL {
   JSObject* create(JSContext* cx, HandleValue url_val, HandleValue base_val);
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.requireAtLeast(cx, "URL", 1))
-      return false;
+    CTOR_HEADER("URL", 1);
 
     RootedObject self(cx, create(cx, args.get(0), args.get(1)));
     if (!self) return false;
@@ -6882,7 +6889,7 @@ namespace URLSearchParams {
   const unsigned ctor_length = 1;
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    CTOR_HEADER("URLSearchParams", 0);
 
     RootedObject self(cx, create(cx, args.get(0)));
     if (!self) return false;
