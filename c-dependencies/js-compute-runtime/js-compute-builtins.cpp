@@ -6889,7 +6889,7 @@ namespace URLSearchParams {
   const unsigned ctor_length = 1;
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CTOR_HEADER("URLSearchParams", 1);
+    CTOR_HEADER("URLSearchParams", 0);
 
     RootedObject self(cx, create(cx, args.get(0)));
     if (!self) return false;
