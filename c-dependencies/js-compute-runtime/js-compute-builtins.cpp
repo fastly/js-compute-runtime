@@ -3836,9 +3836,7 @@ namespace CacheOverride {
   JSObject* create(JSContext* cx);
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.requireAtLeast(cx, "CacheOverride", 1))
-      return false;
+    CTOR_HEADER("CacheOverride", 1);
 
     RootedObject self(cx, create(cx));
     if (!self) return false;
@@ -4905,10 +4903,8 @@ namespace Dictionary {
   JSObject* create(JSContext* cx, const char* name, size_t name_len);
 
   bool constructor(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
     REQUEST_HANDLER_ONLY("The Dictionary builtin");
-    if (!args.requireAtLeast(cx, "Dictionary", 1))
-      return false;
+    CTOR_HEADER("Dictionary", 1);
 
     size_t name_len;
     UniqueChars name = encode(cx, args[0], &name_len);
