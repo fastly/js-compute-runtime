@@ -306,11 +306,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/cache@v1
+    - uses: actions/cache@v3.0.2
       id: cache-shellcheck
       with:
         path: ${{ runner.tool_cache }}/shellcheck
-        key: cargo-audit-bin-${{ env.SHELLCHECK_VERSION }}
+        key: shellcheck-${{ runner.os }}-${{ env.SHELLCHECK_VERSION }}
 
     - name: Download shellcheck
       if: steps.cache-shellcheck.output.cache-hit != 'true'
