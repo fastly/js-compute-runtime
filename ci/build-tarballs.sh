@@ -19,16 +19,16 @@ set -euo pipefail
 set -ex
 
 platform="$1"
-exe="$2"
+exe="${2:-}"
 
 rm -rf tmp
 mkdir tmp
-mkdir dist
+mkdir -p dist
 
 mktarball() {
   dir="$1"
   if [ "$exe" = "" ]; then
-    tar cJf "dist/$dir.tar.xz" -C tmp "$dir"
+    tar -cJf "dist/$dir.tar.xz" -C tmp "$dir"
   else
     (cd tmp && zip -r "../dist/$dir.zip" "$dir")
   fi
