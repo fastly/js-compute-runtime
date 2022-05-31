@@ -1,3 +1,13 @@
 /target
 /dist
 .DS_Store
+
+# clangd state
+c-dependencies/js-compute-runtime/compile_commands.json
+c-dependencies/js-compute-runtime/.cache/
+
+c-dependencies/js-compute-runtime/rusturl/
+c-dependencies/js-compute-runtime/compiler_flags
+c-dependencies/js-compute-runtime/*.o
+c-dependencies/js-compute-runtime/*.d
+c-dependencies/js-compute-runtime/*.wasm
