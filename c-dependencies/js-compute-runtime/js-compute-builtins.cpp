@@ -795,14 +795,14 @@ static bool console_out(JSContext *cx, unsigned argc, Value *vp) {
 }
 
 static constexpr char PREFIX_LOG[] = "Log";
-static constexpr char PREFIX_TRACE[] = "Trace";
+static constexpr char PREFIX_DEBUG[] = "Debug";
 static constexpr char PREFIX_INFO[] = "Info";
 static constexpr char PREFIX_WARN[] = "Warn";
 static constexpr char PREFIX_ERROR[] = "Error";
 
 const JSFunctionSpec methods[] = {
     JS_FN("log", (console_out<PREFIX_LOG, 3>), 1, JSPROP_ENUMERATE),
-    JS_FN("trace", (console_out<PREFIX_TRACE, 5>), 1, JSPROP_ENUMERATE),
+    JS_FN("debug", (console_out<PREFIX_DEBUG, 5>), 1, JSPROP_ENUMERATE),
     JS_FN("info", (console_out<PREFIX_INFO, 4>), 1, JSPROP_ENUMERATE),
     JS_FN("warn", (console_out<PREFIX_WARN, 4>), 1, JSPROP_ENUMERATE),
     JS_FN("error", (console_out<PREFIX_ERROR, 5>), 1, JSPROP_ENUMERATE),
