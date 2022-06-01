@@ -1,7 +1,7 @@
 #include <cassert>
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
-#include <chrono>
 #ifdef MEM_STATS
 #include <string>
 #endif
@@ -31,24 +31,22 @@ using std::chrono::system_clock;
 
 using JS::Value;
 
-using JS::RootedValue;
 using JS::RootedObject;
 using JS::RootedString;
+using JS::RootedValue;
 
+using JS::HandleObject;
 using JS::HandleValue;
 using JS::HandleValueArray;
-using JS::HandleObject;
 using JS::MutableHandleValue;
 
 using JS::PersistentRooted;
 using JS::PersistentRootedVector;
 
 #ifdef MEM_STATS
-size_t size_of_cb(const void* ptr) {
-  return ptr ? sizeof(ptr) : 0;
-}
+size_t size_of_cb(const void *ptr) { return ptr ? sizeof(ptr) : 0; }
 
-static bool dump_mem_stats(JSContext* cx) {
+static bool dump_mem_stats(JSContext *cx) {
   SimpleJSRuntimeStats rtStats(&size_of_cb);
   if (!JS::CollectRuntimeStats(cx, &rtStats, nullptr, false))
     return false;
@@ -56,56 +54,56 @@ static bool dump_mem_stats(JSContext* cx) {
   size_t rtTotal;
   ReportJSRuntimeExplicitTreeStats(rtStats, rtPath, nullptr, false, &rtTotal);
 
-  printf("compartment counts: %zu sys, %zu usr\n", JS::SystemCompartmentCount(cx), JS::UserCompartmentCount(cx));
-  printf("GC heap total: %zu\n", size_t(JS_GetGCParameter(cx, JSGC_TOTAL_CHUNKS)) * js::gc::ChunkSize);
-  printf("GC heap unused: %zu\n", size_t(JS_GetGCParameter(cx, JSGC_UNUSED_CHUNKS)) * js::gc::ChunkSize);
+  printf("compartment counts: %zu sys, %zu usr\n", JS::SystemCompartmentCount(cx),
+         JS::UserCompartmentCount(cx));
+  printf("GC heap total: %zu\n",
+         size_t(JS_GetGCParameter(cx, JSGC_TOTAL_CHUNKS)) * js::gc::ChunkSize);
+  printf("GC heap unused: %zu\n",
+         size_t(JS_GetGCParameter(cx, JSGC_UNUSED_CHUNKS)) * js::gc::ChunkSize);
 
   return true;
 }
 #endif // MEM_STATS
 
 /* The class of the global object. */
-static JSClass global_class = {
-    "global",
-    JSCLASS_GLOBAL_FLAGS,
-    &JS::DefaultGlobalClassOps
-};
+static JSClass global_class = {"global", JSCLASS_GLOBAL_FLAGS, &JS::DefaultGlobalClassOps};
 
 bool INITIALIZED = false;
-JSContext* CONTEXT = nullptr;
+JSContext *CONTEXT = nullptr;
 
 JS::PersistentRootedObject GLOBAL;
 JS::PersistentRootedObject unhandledRejectedPromises;
 
-static JS::PersistentRootedObjectVector* FETCH_HANDLERS;
+static JS::PersistentRootedObjectVector *FETCH_HANDLERS;
 
-void gc_callback(JSContext* cx, JSGCStatus status, JS::GCReason reason, void* data) {
+void gc_callback(JSContext *cx, JSGCStatus status, JS::GCReason reason, void *data) {
   if (debug_logging_enabled())
     printf("gc for reason %s, %s\n", JS::ExplainGCReason(reason), status ? "end" : "start");
 }
 
-static void rejection_tracker(JSContext* cx, bool mutedErrors, JS::HandleObject promise,
-                              JS::PromiseRejectionHandlingState state, void* data)
-{
+static void rejection_tracker(JSContext *cx, bool mutedErrors, JS::HandleObject promise,
+                              JS::PromiseRejectionHandlingState state, void *data) {
   RootedValue promiseVal(cx, JS::ObjectValue(*promise));
 
   switch (state) {
-    case JS::PromiseRejectionHandlingState::Unhandled: {
-      if (!JS::SetAdd(cx, unhandledRejectedPromises, promiseVal)) {
-        // Note: we unconditionally print these, since they almost always indicate serious bugs.
-        fprintf(stderr, "Adding an unhandled rejected promise to the promise "
-                        "rejection tracker failed");
-      }
-      return;
+  case JS::PromiseRejectionHandlingState::Unhandled: {
+    if (!JS::SetAdd(cx, unhandledRejectedPromises, promiseVal)) {
+      // Note: we unconditionally print these, since they almost always indicate
+      // serious bugs.
+      fprintf(stderr, "Adding an unhandled rejected promise to the promise "
+                      "rejection tracker failed");
     }
-    case JS::PromiseRejectionHandlingState::Handled: {
-      bool deleted = false;
-      if (!JS::SetDelete(cx, unhandledRejectedPromises, promiseVal, &deleted)) {
-        // Note: we unconditionally print these, since they almost always indicate serious bugs.
-        fprintf(stderr, "Removing an handled rejected promise from the promise "
-                        "rejection tracker failed");
-      }
+    return;
+  }
+  case JS::PromiseRejectionHandlingState::Handled: {
+    bool deleted = false;
+    if (!JS::SetDelete(cx, unhandledRejectedPromises, promiseVal, &deleted)) {
+      // Note: we unconditionally print these, since they almost always indicate
+      // serious bugs.
+      fprintf(stderr, "Removing an handled rejected promise from the promise "
+                      "rejection tracker failed");
     }
+  }
   }
 }
 
@@ -114,41 +112,40 @@ bool init_js() {
 
   JSContext *cx = JS_NewContext(JS::DefaultHeapMaxBytes);
   if (!cx)
-      return false;
+    return false;
   if (!js::UseInternalJobQueues(cx) || !JS::InitSelfHostedCode(cx))
-      return false;
+    return false;
 
   JS::ContextOptionsRef(cx)
-    .setPrivateClassFields(true)
-    .setPrivateClassMethods(true)
-    .setClassStaticBlocks(true)
-    .setErgnomicBrandChecks(true);
+      .setPrivateClassFields(true)
+      .setPrivateClassMethods(true)
+      .setClassStaticBlocks(true)
+      .setErgnomicBrandChecks(true);
 
   // TODO: check if we should set a different creation zone.
   JS::RealmOptions options;
   options.creationOptions()
-    .setStreamsEnabled(true)
-    .setReadableByteStreamsEnabled(true)
-    .setBYOBStreamReadersEnabled(true)
-    .setReadableStreamPipeToEnabled(true)
-    .setWritableStreamsEnabled(true)
-    .setIteratorHelpersEnabled(true)
-    .setWeakRefsEnabled(JS::WeakRefSpecifier::EnabledWithoutCleanupSome);
+      .setStreamsEnabled(true)
+      .setReadableByteStreamsEnabled(true)
+      .setBYOBStreamReadersEnabled(true)
+      .setReadableStreamPipeToEnabled(true)
+      .setWritableStreamsEnabled(true)
+      .setIteratorHelpersEnabled(true)
+      .setWeakRefsEnabled(JS::WeakRefSpecifier::EnabledWithoutCleanupSome);
 
   JS::DisableIncrementalGC(cx);
   // JS_SetGCParameter(cx, JSGC_MAX_EMPTY_CHUNK_COUNT, 1);
 
-  RootedObject global(cx, JS_NewGlobalObject(cx, &global_class, nullptr, JS::FireOnNewGlobalHook,
-                                             options));
+  RootedObject global(
+      cx, JS_NewGlobalObject(cx, &global_class, nullptr, JS::FireOnNewGlobalHook, options));
   if (!global)
-      return false;
+    return false;
 
   JSAutoRealm ar(cx, global);
   if (!JS::InitRealmStandardClasses(cx))
     return false;
 
   JS::SetPromiseRejectionTrackerCallback(cx, rejection_tracker);
-
 
   CONTEXT = cx;
   GLOBAL.init(cx, global);
@@ -159,7 +156,7 @@ bool init_js() {
   return true;
 }
 
-static bool report_unhandled_promise_rejections(JSContext* cx) {
+static bool report_unhandled_promise_rejections(JSContext *cx) {
   RootedValue iterable(cx);
   if (!JS::SetValues(cx, unhandledRejectedPromises, &iterable))
     return false;
@@ -179,7 +176,8 @@ static bool report_unhandled_promise_rejections(JSContext* cx) {
       break;
 
     promise = &promise_val.toObject();
-    // Note: we unconditionally print these, since they almost always indicate serious bugs.
+    // Note: we unconditionally print these, since they almost always indicate
+    // serious bugs.
     fprintf(stderr, "Promise rejected but never handled: ");
     RootedValue result(cx, JS::GetPromiseResult(promise));
     dump_promise_rejection(cx, result, promise, stderr);
@@ -188,11 +186,13 @@ static bool report_unhandled_promise_rejections(JSContext* cx) {
   return true;
 }
 
-static void DumpPendingException(JSContext* cx, const char* description) {
+static void DumpPendingException(JSContext *cx, const char *description) {
   JS::ExceptionStack exception(cx);
   if (!JS::GetPendingExceptionStack(cx, &exception)) {
-    fprintf(stderr, "Error: exception pending after %s, but got another error "
-            "when trying to retrieve it. Aborting.\n", description);
+    fprintf(stderr,
+            "Error: exception pending after %s, but got another error "
+            "when trying to retrieve it. Aborting.\n",
+            description);
   } else {
     fprintf(stderr, "Exception while %s: ", description);
     dump_value(cx, exception.exception(), stderr);
@@ -200,18 +200,21 @@ static void DumpPendingException(JSContext* cx, const char* description) {
   }
 }
 
-static void abort(JSContext* cx, const char* description) {
-  // Note: we unconditionally print messages here, since they almost always indicate serious bugs.
+static void abort(JSContext *cx, const char *description) {
+  // Note: we unconditionally print messages here, since they almost always
+  // indicate serious bugs.
   if (JS_IsExceptionPending(cx)) {
     DumpPendingException(cx, description);
   } else {
-    fprintf(stderr, "Error while %s, but no exception is pending. "
-            "Aborting, since that doesn't seem recoverable at all.\n", description);
+    fprintf(stderr,
+            "Error while %s, but no exception is pending. "
+            "Aborting, since that doesn't seem recoverable at all.\n",
+            description);
   }
 
   if (JS::SetSize(cx, unhandledRejectedPromises) > 0) {
-    fprintf(stderr,
-            "Additionally, some promises were rejected, but the rejection never handled:\n");
+    fprintf(stderr, "Additionally, some promises were rejected, but the "
+                    "rejection never handled:\n");
     report_unhandled_promise_rejections(cx);
   }
 
@@ -224,23 +227,25 @@ static void abort(JSContext* cx, const char* description) {
   exit(1);
 }
 
-bool eval_stdin(JSContext* cx, MutableHandleValue result) {
-  char* code = NULL;
+bool eval_stdin(JSContext *cx, MutableHandleValue result) {
+  char *code = NULL;
   size_t len = 0;
   if (getdelim(&code, &len, EOF, stdin) < 0) {
-      return false;
+    return false;
   }
 
   JS::CompileOptions opts(cx);
   opts.setForceFullParse();
-  // TODO: investigate passing a filename to Wizer and using that here to improve diagnostics.
-  // TODO: furthermore, investigate whether Wizer by now allows us to pass an actual path
-  // and open that, instead of having to redirect `stdin` for a subprocess of `js-compute-runtime`.
+  // TODO: investigate passing a filename to Wizer and using that here to
+  // improve diagnostics.
+  // TODO: furthermore, investigate whether Wizer by now allows us to pass an
+  // actual path and open that, instead of having to redirect `stdin` for a
+  // subprocess of `js-compute-runtime`.
   opts.setFileAndLine("<stdin>", 1);
 
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   if (!srcBuf.init(cx, code, strlen(code), JS::SourceOwnership::TakeOwnership)) {
-      return false;
+    return false;
   }
 
   JS::RootedScript script(cx);
@@ -251,16 +256,19 @@ bool eval_stdin(JSContext* cx, MutableHandleValue result) {
     // which is why this is scoped to just compilation.)
     JS::AutoDisableGenerationalGC noGGC(cx);
     script = JS::Compile(cx, opts, srcBuf);
-    if (!script) return false;
+    if (!script)
+      return false;
   }
 
-  // TODO: verify that it's better to perform a shrinking GC here, as manual testing
-  // indicates. Running a shrinking GC here causes *fewer* 4kb pages to be written to when
-  // processing a request, at least for one fairly large input script.
+  // TODO: verify that it's better to perform a shrinking GC here, as manual
+  // testing indicates. Running a shrinking GC here causes *fewer* 4kb pages to
+  // be written to when processing a request, at least for one fairly large
+  // input script.
   //
-  // A hypothesis for why this is the case could be that the objects allocated by parsing
-  // the script (but not evaluating it) tend to be read-only, so optimizing them for
-  // compactness makes sense and doesn't fragment writes later on.
+  // A hypothesis for why this is the case could be that the objects allocated
+  // by parsing the script (but not evaluating it) tend to be read-only, so
+  // optimizing them for compactness makes sense and doesn't fragment writes
+  // later on.
   JS::PrepareForFullGC(cx);
   JS::NonIncrementalGC(cx, JS::GCOptions::Shrink, JS::GCReason::API);
 
@@ -268,7 +276,8 @@ bool eval_stdin(JSContext* cx, MutableHandleValue result) {
   if (!JS_ExecuteScript(cx, script, result))
     return false;
 
-  // Ensure that any pending promise reactions are run before taking the snapshot.
+  // Ensure that any pending promise reactions are run before taking the
+  // snapshot.
   while (js::HasJobsPending(cx)) {
     js::RunJobs(cx);
 
@@ -277,47 +286,54 @@ bool eval_stdin(JSContext* cx, MutableHandleValue result) {
   }
 
   // Report any promise rejections that weren't handled before snapshotting.
-  // TODO: decide whether we should abort in this case, instead of just reporting.
+  // TODO: decide whether we should abort in this case, instead of just
+  // reporting.
   if (JS::SetSize(cx, unhandledRejectedPromises) > 0) {
     report_unhandled_promise_rejections(cx);
   }
 
-  // TODO: check if it makes sense to increase the empty chunk count *before* running GC like this.
-  // The working theory is that otherwise the engine might mark chunk pages as free that then later
-  // the allocator doesn't turn into chunks without further fragmentation. But that might be wrong.
+  // TODO: check if it makes sense to increase the empty chunk count *before*
+  // running GC like this. The working theory is that otherwise the engine might
+  // mark chunk pages as free that then later the allocator doesn't turn into
+  // chunks without further fragmentation. But that might be wrong.
   // JS_SetGCParameter(cx, JSGC_MAX_EMPTY_CHUNK_COUNT, 10);
 
-  // TODO: verify that it's better to *not* perform a shrinking GC here, as manual testing
-  // indicates. Running a shrinking GC here causes *more* 4kb pages to be written to when
-  // processing a request, at least for one fairly large input script.
+  // TODO: verify that it's better to *not* perform a shrinking GC here, as
+  // manual testing indicates. Running a shrinking GC here causes *more* 4kb
+  // pages to be written to when processing a request, at least for one fairly
+  // large input script.
   //
-  // A hypothesis for why this is the case could be that most writes are to object kinds that are
-  // initially allocated in the same vicinity, but that the shrinking GC causes them to be
-  // intermingled with other objects. I.e., writes become more fragmented due to the shrinking GC.
+  // A hypothesis for why this is the case could be that most writes are to
+  // object kinds that are initially allocated in the same vicinity, but that
+  // the shrinking GC causes them to be intermingled with other objects. I.e.,
+  // writes become more fragmented due to the shrinking GC.
   JS::PrepareForFullGC(cx);
   JS::NonIncrementalGC(cx, JS::GCOptions::Normal, JS::GCReason::API);
 
   // Ignore the first GC, but then print all others, because ideally GCs
   // should be rare, and developers should know about them.
-  // TODO: consider exposing a way to parameterize this, and/or specifying a dedicated log target
-  // for telemetry messages like this.
+  // TODO: consider exposing a way to parameterize this, and/or specifying a
+  // dedicated log target for telemetry messages like this.
   JS_SetGCCallback(cx, gc_callback, nullptr);
 
   return true;
 }
 
-static bool addEventListener(JSContext* cx, unsigned argc, Value* vp) {
+static bool addEventListener(JSContext *cx, unsigned argc, Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "addEventListener", 2))
     return false;
 
   size_t event_len;
   JS::UniqueChars event_chars = encode(cx, args[0], &event_len);
-  if (!event_chars) return false;
+  if (!event_chars)
+    return false;
 
   if (strncmp(event_chars.get(), "fetch", event_len)) {
-    fprintf(stderr, "Error: addEventListener only supports the event 'fetch' right now, "
-            "but got event '%s'\n", event_chars.get());
+    fprintf(stderr,
+            "Error: addEventListener only supports the event 'fetch' right now, "
+            "but got event '%s'\n",
+            event_chars.get());
     exit(1);
   }
 
@@ -331,12 +347,12 @@ static bool addEventListener(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 void init() {
-    assert(!INITIALIZED);
+  assert(!INITIALIZED);
 
   if (!init_js())
     exit(1);
 
-  JSContext* cx = CONTEXT;
+  JSContext *cx = CONTEXT;
   RootedObject global(cx, GLOBAL);
   JSAutoRealm ar(cx, global);
   FETCH_HANDLERS = new JS::PersistentRootedObjectVector(cx);
@@ -354,12 +370,11 @@ void init() {
 
   if (FETCH_HANDLERS->length() == 0) {
     RootedValue val(cx);
-    if (!JS_GetProperty(cx, global, "onfetch", &val) ||
-        !val.isObject() || !JS_ObjectIsFunction(&val.toObject()))
-    {
-      // The error message only mentions `addEventListener`, even though we also support
-      // an `onfetch` top-level function as an alternative. We're treating the latter
-      // as undocumented functionality for the time being.
+    if (!JS_GetProperty(cx, global, "onfetch", &val) || !val.isObject() ||
+        !JS_ObjectIsFunction(&val.toObject())) {
+      // The error message only mentions `addEventListener`, even though we also
+      // support an `onfetch` top-level function as an alternative. We're
+      // treating the latter as undocumented functionality for the time being.
       fprintf(stderr, "Error: no `fetch` event handler registered during initialization. "
                       "Make sure to call `addEventListener('fetch', your_handler)`.\n");
       exit(1);
@@ -381,7 +396,7 @@ void init() {
 
 WIZER_INIT(init);
 
-static void dispatch_fetch_event(JSContext* cx, HandleObject event, double* total_compute) {
+static void dispatch_fetch_event(JSContext *cx, HandleObject event, double *total_compute) {
   auto pre_handler = system_clock::now();
 
   FetchEvent::start_dispatching(event);
@@ -410,7 +425,7 @@ static void dispatch_fetch_event(JSContext* cx, HandleObject event, double* tota
     printf("Request handler took %fms\n", diff / 1000);
 }
 
-static void process_pending_jobs(JSContext* cx, double* total_compute) {
+static void process_pending_jobs(JSContext *cx, double *total_compute) {
   auto pre_reactions = system_clock::now();
   if (debug_logging_enabled()) {
     printf("Running promise reactions\n");
@@ -430,7 +445,7 @@ static void process_pending_jobs(JSContext* cx, double* total_compute) {
     printf("Running promise reactions took %fms\n", diff / 1000);
 }
 
-static void wait_for_backends(JSContext* cx, double* total_compute) {
+static void wait_for_backends(JSContext *cx, double *total_compute) {
   if (!has_pending_requests())
     return;
 
@@ -452,8 +467,8 @@ int main(int argc, const char *argv[]) {
   if (!INITIALIZED) {
     init();
     assert(INITIALIZED);
-      // fprintf(stderr, "js.wasm must be initialized with a JS source file using Wizer\n");
-      // exit(-1);
+    // fprintf(stderr, "js.wasm must be initialized with a JS source file using
+    // Wizer\n"); exit(-1);
   }
 
   double total_compute = 0;
@@ -467,7 +482,7 @@ int main(int argc, const char *argv[]) {
     fflush(stdout);
   }
 
-  JSContext* cx = CONTEXT;
+  JSContext *cx = CONTEXT;
   JSAutoRealm ar(cx, GLOBAL);
   js::ResetMathRandomSeed(cx);
 
@@ -497,7 +512,8 @@ int main(int argc, const char *argv[]) {
 
   if (debug_logging_enabled() && has_pending_requests()) {
     fprintf(stderr, "Service terminated with async tasks pending. "
-                    "Use FetchEvent#waitUntil to extend the service's lifetime if needed.\n");
+                    "Use FetchEvent#waitUntil to extend the service's lifetime "
+                    "if needed.\n");
   }
 
   if (JS::SetSize(cx, unhandledRejectedPromises) > 0) {
@@ -512,16 +528,14 @@ int main(int argc, const char *argv[]) {
   auto end = system_clock::now();
   double diff = duration_cast<microseconds>(end - start).count();
   if (debug_logging_enabled()) {
-    printf("Done. Total request processing time: %fms. Total compute time: %fms\n",
-           diff / 1000, total_compute / 1000);
+    printf("Done. Total request processing time: %fms. Total compute time: %fms\n", diff / 1000,
+           total_compute / 1000);
   }
 
   // Note: we deliberately skip shutdown, because it takes quite a while,
   // and serves no purpose for us.
-  // TODO: investigate also skipping the destructors deliberately run in wizer.h.
-  // GLOBAL = nullptr;
-  // CONTEXT = nullptr;
-  // JS_DestroyContext(cx);
+  // TODO: investigate also skipping the destructors deliberately run in
+  // wizer.h. GLOBAL = nullptr; CONTEXT = nullptr; JS_DestroyContext(cx);
   // JS_ShutDown();
 
   return 0;
