@@ -1,0 +1,9 @@
+# clangd state
+/compile_commands.json
+/.cache
+
+/rusturl
+/compiler_flags
+/*.o
+/*.d
+/*.wasm
