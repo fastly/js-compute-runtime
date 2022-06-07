@@ -12,7 +12,7 @@ extern "C" {
 
 #define XQD_ABI_VERSION 0x01ULL
 
-// max header size to match vcl
+//max header size to match vcl
 #define HEADER_MAX_LEN 69000
 #define METHOD_MAX_LEN 1024
 #define URI_MAX_LEN 8192
@@ -20,41 +20,41 @@ extern "C" {
 
 // TODO ACF 2020-01-17: these aren't very C-friendly names
 typedef struct {
-  uint32_t handle;
+    uint32_t handle;
 } BodyHandle;
 
 typedef struct {
-  uint32_t handle;
+    uint32_t handle;
 } RequestHandle;
 
 typedef struct {
-  uint32_t handle;
+    uint32_t handle;
 } ResponseHandle;
 
 typedef struct {
-  uint32_t handle;
+    uint32_t handle;
 } PendingRequestHandle;
 
 typedef struct {
-  uint32_t handle;
+    uint32_t handle;
 } LogEndpointHandle;
 
 typedef struct {
-  uint32_t handle;
+    uint32_t handle;
 } DictionaryHandle;
 
 #define INVALID_HANDLE (UINT32_MAX - 1)
 
 typedef enum BodyWriteEnd {
-  BodyWriteEndBack = 0,
-  BodyWriteEndFront = 1,
+    BodyWriteEndBack  = 0,
+    BodyWriteEndFront = 1,
 } BodyWriteEnd;
 
 #define CACHE_OVERRIDE_NONE (0u)
-#define CACHE_OVERRIDE_PASS (1u << 0)
-#define CACHE_OVERRIDE_TTL (1u << 1)
-#define CACHE_OVERRIDE_STALE_WHILE_REVALIDATE (1u << 2)
-#define CACHE_OVERRIDE_PCI (1u << 3)
+#define CACHE_OVERRIDE_PASS (1u<<0)
+#define CACHE_OVERRIDE_TTL (1u<<1)
+#define CACHE_OVERRIDE_STALE_WHILE_REVALIDATE (1u<<2)
+#define CACHE_OVERRIDE_PCI (1u<<3)
 
 // TODO ACF 2019-12-05: nicer type for the return value (XqdStatus)
 
@@ -91,7 +91,7 @@ WASM_IMPORT("fastly_log", "endpoint_get")
 int xqd_log_endpoint_get(const char *name, size_t name_len, LogEndpointHandle *endpoint_handle);
 
 WASM_IMPORT("fastly_log", "write")
-int xqd_log_write(LogEndpointHandle endpoint_handle, const char *msg, size_t msg_len,
+int xqd_log_write(LogEndpointHandle endpoint_handle, const char* msg, size_t msg_len,
                   size_t *nwritten);
 
 // Module fastly_http_req
@@ -101,18 +101,17 @@ int xqd_req_body_downstream_get(RequestHandle *req_handle_out, BodyHandle *body_
 /**
  * Set the cache override behavior for this request.
  *
- * The default behavior, equivalent to `CACHE_OVERRIDE_NONE`, respects the cache
- * control headers from the origin's response.
+ * The default behavior, equivalent to `CACHE_OVERRIDE_NONE`, respects the cache control headers
+ * from the origin's response.
  *
- * Calling this function with `CACHE_OVERRIDE_PASS` will ignore the subsequent
- * arguments and Pass unconditionally.
+ * Calling this function with `CACHE_OVERRIDE_PASS` will ignore the subsequent arguments and Pass
+ * unconditionally.
  *
- * To override, TTL, stale-while-revalidate, or stale-with-error, set the
- * appropriate bits in the tag using the corresponding constants, and pass the
- * override values in the appropriate arguments.
+ * To override, TTL, stale-while-revalidate, or stale-with-error, set the appropriate bits in the
+ * tag using the corresponding constants, and pass the override values in the appropriate arguments.
  *
- * xqd_req_cache_override_v2_set also includes an optional Surrogate-Key which
- * will be set or added to any received from the origin.
+ * xqd_req_cache_override_v2_set also includes an optional Surrogate-Key which will be set or added
+ * to any received from the origin.
  */
 WASM_IMPORT("fastly_http_req", "cache_override_set")
 int xqd_req_cache_override_set(RequestHandle req_handle, int tag, uint32_t ttl,
@@ -120,18 +119,17 @@ int xqd_req_cache_override_set(RequestHandle req_handle, int tag, uint32_t ttl,
 
 WASM_IMPORT("fastly_http_req", "cache_override_v2_set")
 int xqd_req_cache_override_v2_set(RequestHandle req_handle, int tag, uint32_t ttl,
-                                  uint32_t stale_while_revalidate, const char *surrogate_key,
-                                  size_t surrogate_key_len);
+                                  uint32_t stale_while_revalidate,
+                                  const char *surrogate_key, size_t surrogate_key_len);
 
 /**
  * `octets` must be a 16-byte array.
- * If, after a successful call, `nwritten` == 4, the value in `octets` is an
- * IPv4 address. Otherwise, if `nwritten` will is `16`, the value in `octets` is
- * an IPv6 address. Otherwise, `nwritten` will be `0`, and no address is
- * available.
+ * If, after a successful call, `nwritten` == 4, the value in `octets` is an IPv4 address.
+ * Otherwise, if `nwritten` will is `16`, the value in `octets` is an IPv6 address.
+ * Otherwise, `nwritten` will be `0`, and no address is available.
  */
 WASM_IMPORT("fastly_http_req", "downstream_client_ip_addr")
-int xqd_req_downstream_client_ip_addr_get(char *octets, size_t *nwritten);
+int xqd_req_downstream_client_ip_addr_get(char* octets, size_t *nwritten);
 
 // TODO:
 
@@ -172,7 +170,7 @@ int xqd_req_original_header_count(uint32_t *count);
 
 WASM_IMPORT("fastly_http_req", "header_value_get")
 int xqd_req_header_value_get(RequestHandle req_handle, const char *name, size_t name_len,
-                             char *value, size_t value_max_len, size_t *nwritten);
+                              char *value, size_t value_max_len, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "header_values_get")
 int xqd_req_header_values_get(RequestHandle req_handle, const char *name, size_t name_len,
@@ -279,8 +277,7 @@ WASM_IMPORT("fastly_http_resp", "version_set")
 int xqd_resp_version_set(ResponseHandle resp_handle, uint32_t version);
 
 WASM_IMPORT("fastly_http_resp", "send_downstream")
-int xqd_resp_send_downstream(ResponseHandle resp_handle, BodyHandle body_handle,
-                             uint32_t streaming);
+int xqd_resp_send_downstream(ResponseHandle resp_handle, BodyHandle body_handle, uint32_t streaming);
 
 WASM_IMPORT("fastly_http_resp", "status_get")
 int xqd_resp_status_get(ResponseHandle resp_handle, uint16_t *status_out);
@@ -293,11 +290,11 @@ WASM_IMPORT("fastly_dictionary", "open")
 int xqd_dictionary_open(const char *name, size_t name_len, DictionaryHandle *dict_handle_out);
 
 WASM_IMPORT("fastly_dictionary", "get")
-int xqd_dictionary_get(DictionaryHandle dict_handle, const char *key, size_t key_len, char *value,
-                       size_t value_max_len, size_t *nwritten);
+int xqd_dictionary_get(DictionaryHandle dict_handle, const char *key, size_t key_len,
+                        char *value, size_t value_max_len, size_t *nwritten);
 
 WASM_IMPORT("fastly_geo", "lookup")
-int xqd_geo_lookup(const char *addr_octets, size_t addr_len, char *buf, size_t buf_len,
+int xqd_geo_lookup(const char* addr_octets, size_t addr_len, char *buf, size_t buf_len,
                    size_t *nwritten);
 
 #ifdef __cplusplus
