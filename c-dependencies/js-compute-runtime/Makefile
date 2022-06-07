@@ -9,8 +9,8 @@ ifdef DEBUG
   CXX_OPT := $(CXX_OPT) -DDEBUG -DJS_DEBUG
   Q :=
 else
-  MODE=release
-  CARGO_FLAG=--release
+  MODE := release
+  CARGO_FLAG := --release
   Q := @
 endif
 
