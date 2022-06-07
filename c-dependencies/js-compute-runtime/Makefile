@@ -70,8 +70,8 @@ clean:
 distclean: clean
 	$(RM) $(FSM_DEP) compiler_flags
 
-# technically this depends on the value of the FSM_CPP variable
-compile_commands.json: compiler_flags
+.PHONY: compile_commands.json
+compile_commands.json:
 	$Q ( \
 		sep="["; \
 		for file in $(FSM_CPP); do \
