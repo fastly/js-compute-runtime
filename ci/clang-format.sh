@@ -49,7 +49,7 @@ for file in $(git ls-files | grep '\.\(cpp\|h\)$'); do
 
   formatted="${file}.formatted"
   clang-format "$file" > "$formatted"
-  if ! diff "$file" "$formatted" > /dev/null; then
+  if ! cmp -s "$file" "$formatted"; then
     if [ -z "$fix" ]; then
       rm "$formatted"
       echo "${file} needs formatting"
