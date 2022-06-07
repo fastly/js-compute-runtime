@@ -16,10 +16,10 @@
 
 set -euo pipefail
 
-set -ex
+set -x
 
-platform="$1"
-exe="${2:-}"
+platform=$1
+exe=$2
 
 rm -rf tmp
 mkdir tmp
