@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # A small shell script invoked from CI on the final Linux builder which actually
 # assembles the release artifacts for a particular platform. This will take the
@@ -14,28 +14,30 @@
 
 # where PLATFORM is e.g. x86_64-linux, aarch64-linux, ...
 
-set -ex
+set -euo pipefail
 
-platform=$1
-exe=$2
+set -x
+
+platform="$1"
+exe="${2:-}"
 
 rm -rf tmp
 mkdir tmp
 mkdir -p dist
 
 mktarball() {
-  dir=$1
+  dir="$1"
   if [ "$exe" = "" ]; then
-    tar cJf dist/$dir.tar.xz -C tmp $dir
+    tar -cJf "dist/$dir.tar.xz" -C tmp "$dir"
   else
-    (cd tmp && zip -r ../dist/$dir.zip $dir)
+    (cd tmp && zip -r "../dist/$dir.zip" "$dir")
   fi
 }
 
 # Create the main tarball of binaries
-bin_pkgname=js-compute-runtime-$TAG-$platform
-mkdir tmp/$bin_pkgname
-cp README.md tmp/$bin_pkgname
-mv bins-$platform/js-compute-runtime$exe tmp/$bin_pkgname
-chmod +x tmp/$bin_pkgname/js-compute-runtime$exe
-mktarball $bin_pkgname
+bin_pkgname="js-compute-runtime-$TAG-$platform"
+mkdir "tmp/$bin_pkgname"
+cp README.md "tmp/$bin_pkgname"
+mv "bins-$platform/js-compute-runtime$exe" "tmp/$bin_pkgname"
+chmod +x "tmp/$bin_pkgname/js-compute-runtime$exe"
+mktarball "$bin_pkgname"

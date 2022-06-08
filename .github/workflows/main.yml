@@ -299,3 +299,34 @@ jobs:
     - run: |
         cargo install --root ${{ runner.tool_cache }}/cargo-audit --version ${{ env.CARGO_AUDIT_VERSION }} cargo-audit
         cargo audit
+
+  shellcheck:
+    env:
+      SHELLCHECK_VERSION: v0.8.0
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/cache@v3.0.2
+      id: cache-shellcheck
+      with:
+        path: ${{ runner.tool_cache }}/shellcheck
+        key: shellcheck-${{ runner.os }}-${{ env.SHELLCHECK_VERSION }}
+
+    - name: Download shellcheck
+      if: steps.cache-shellcheck.output.cache-hit != 'true'
+      run: |
+        version="${{ env.SHELLCHECK_VERSION }}"
+        baseurl="https://github.com/koalaman/shellcheck/releases/download"
+
+        curl -Lso "shellcheck.tar.xz" \
+          "${baseurl}/${version}/shellcheck-${version}.linux.x86_64.tar.xz"
+
+        mkdir -p "${{ runner.tool_cache }}/shellcheck/bin"
+
+        tar -xf shellcheck.tar.xz -C "${{ runner.tool_cache }}/shellcheck/bin"
+
+    - name: Add shellcheck to path
+      run: echo "${{ runner.tool_cache }}/shellcheck/bin" >> $GITHUB_PATH
+
+    - name: Run shellcheck
+      run: ci/shellcheck.sh
