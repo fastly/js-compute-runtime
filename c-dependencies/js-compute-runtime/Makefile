@@ -34,7 +34,6 @@ all: js-compute-runtime.wasm
 compiler_flags:
 	echo '$(CXX_OPT) $(CXX_FLAGS)' | cmp -s - $@ || echo '$(CXX_OPT) $(CXX_FLAGS)' > $@
 
-WASM_STRIP = true
 ifeq (,$(findstring g,$(CXX_OPT)))
 ifneq (,$(shell which wasm-opt))
 WASM_STRIP = wasm-opt --strip-debug -o $1 $1
