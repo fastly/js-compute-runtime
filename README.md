@@ -24,7 +24,7 @@ To build from source, you need to ensure that the headers and object files for t
 
 Alternatively, the engine can also be built from source using `c-dependencies/spidermonkey/build-engine.sh`. That should only be required if you want to modify the engine itself, however.
 
-In additon you need to have the following tools installed to successfully build, and build from a linux based system.
+In addition you need to have the following tools installed to successfully build, and build from a linux based system.
 
 - Rust 
   ```
