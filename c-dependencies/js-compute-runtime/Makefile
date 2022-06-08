@@ -84,6 +84,9 @@ compile_commands.json:
 		echo ']' \
 	) > "$@"
 
+format: $(FSM_CPP)
+	$(ROOT_SRC)/../ci/clang-format.sh --fix
+
 # Useful for debugging, try `make print-FSM_CPP`
 print-%:
 	$Q echo "$($*)"

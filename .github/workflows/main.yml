@@ -330,3 +330,11 @@ jobs:
 
     - name: Run shellcheck
       run: ci/shellcheck.sh
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        clang-format --version
+        ci/clang-format.sh
