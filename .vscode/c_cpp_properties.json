@@ -21,7 +21,8 @@
             },
             "forcedInclude": [
                 "${workspaceFolder}/.vscode/vscode-preinclude.h"
-            ]
+            ],
+            "compileCommands": "${workspaceFolder}/c-dependencies/js-compute-runtime/compile_commands.json"
         }
     ],
     "version": 4
