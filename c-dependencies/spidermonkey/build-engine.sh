@@ -46,23 +46,24 @@ python3 \
 cd "${working_dir}"
 
 mode="release"
-flags="--optimize --no-debug --build-only"
-if [[ $1 == 'debug' ]]
-then
+flags=( --optimize )
+if [[ "${1:-}" == 'debug' ]]; then
   mode="debug"
-  flags="--optimize --debug"
+  flags+=(--debug)
+else
+  flags+=(--no-debug --build-only)
 fi
 rust_lib_dir="$mode"
 objdir="obj-$mode"
 outdir="$mode"
 
-echo "$flags" "$rust_lib_dir"
+echo -- "${flags[@]}" "$rust_lib_dir"
 
 # Build SpiderMonkey for WASI
 MOZ_FETCHES_DIR=~/.mozbuild \
   CC=~/.mozbuild/clang/bin/clang \
   gecko-dev/js/src/devtools/automation/autospider.py \
-  --objdir="$objdir" "$flags" wasi
+  --objdir="$objdir" "${flags[@]}" wasi
 
 # Copy header, object, and static lib files
 rm -rf "$outdir"
