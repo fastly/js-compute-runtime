@@ -4,7 +4,8 @@ WIZER ?= wizer
 
 CXX_OPT ?= -O2
 
-ifdef DEBUG
+DEBUG ?= false
+ifneq ($(DEBUG),false)
   MODE := debug
   CARGO_FLAG :=
   CXX_OPT := $(CXX_OPT) -DDEBUG -DJS_DEBUG
