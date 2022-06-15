@@ -7,6 +7,5 @@ addEventListener = function addEventListener_wpt(type, handler) {
   }
 }
 
-class Blob {}
 class FormData {}
 ;
