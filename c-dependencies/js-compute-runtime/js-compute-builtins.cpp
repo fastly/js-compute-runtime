@@ -160,9 +160,59 @@ SpecString encode(JSContext *cx, HandleValue val) {
   return slice;
 }
 
+bool is_buffer_source(HandleValue val) {
+  return val.isObject() &&
+         (JS_IsArrayBufferViewObject(&val.toObject()) || JS::IsArrayBufferObject(&val.toObject()));
+}
+
+uint8_t* get_buffer_source_copy(JSContext* cx, HandleValue val) {
+    // 1. Let esBufferSource be the result of converting bufferSource to an ECMAScript value.
+    RootedObject esBufferSource(cx, &val.toObject());
+    // 2. Let esArrayBuffer be esBufferSource.
+    JSObject* esArrayBuffer = esBufferSource;
+    // 3. Let offset be 0.
+    auto offset = 0;
+    // 4. Let length be 0.
+    auto length = 0;
+    // 5. If esBufferSource has a [[ViewedArrayBuffer]] internal slot, then:
+    if (JS_IsArrayBufferViewObject(esBufferSource)) {
+        // 1. Set esArrayBuffer to esBufferSource.[[ViewedArrayBuffer]].
+        bool is_shared;
+        esArrayBuffer = JS_GetArrayBufferViewBuffer(cx, esBufferSource, &is_shared);
+        // 2. Set offset to esBufferSource.[[ByteOffset]].
+        offset = JS_GetArrayBufferViewByteOffset(esBufferSource);
+        // 3. Set length to esBufferSource.[[ByteLength]].
+        length = JS_GetArrayBufferViewByteLength(esBufferSource);
+    // 6. Otherwise:
+    } else {
+        // 1. Assert: esBufferSource is an ArrayBuffer or SharedArrayBuffer object.
+        MOZ_ASSERT(
+          JS_InstanceOf(cx, esBufferSource, JS::ArrayBuffer::UnsharedClass, NULL) ||
+          JS_InstanceOf(cx, esBufferSource, JS::ArrayBuffer::SharedClass, NULL)
+        );
+        // 2. Set length to esBufferSource.[[ArrayBufferByteLength]].
+        length = JS_GetTypedArrayByteLength(esBufferSource);
+    }
+    // 7. If IsDetachedBuffer(esArrayBuffer) is true, then return the empty byte sequence.
+    if (JS::IsDetachedArrayBufferObject(esArrayBuffer)) {
+      uint8_t* empty = {};
+      return empty;
+    }
+    // 8. Let bytes be a new byte sequence of length equal to length.
+    // 9. For i in the range offset to offset + length − 1, inclusive, set bytes[i − offset] to
+    // GetValueFromBuffer(esArrayBuffer, i, Uint8, true, Unordered).
+    JS::AutoCheckCannotGC noGC(cx);
+    bool is_shared;
+    auto bytes = JS::GetArrayBufferData(esArrayBuffer, &is_shared, noGC);
+
+    uint8_t stolenData = static_cast<uint8_t*>(JS::ArrayBufferClone(
+                            cx, esArrayBuffer));
+    // 10. Return bytes.
+    return bytes;
+}
+
 uint8_t *value_to_buffer(JSContext *cx, HandleValue val, const char *val_desc, size_t *len) {
-  if (!val.isObject() ||
-      !(JS_IsArrayBufferViewObject(&val.toObject()) || JS::IsArrayBufferObject(&val.toObject()))) {
+  if (!is_buffer_source(val)) {
     JS_ReportErrorUTF8(cx, "%s must be of type ArrayBuffer or ArrayBufferView", val_desc);
     return nullptr;
   }
@@ -5189,6 +5239,439 @@ CLASS_BOILERPLATE(TextDecoder)
 JSObject *create(JSContext *cx) { return JS_NewObjectWithGivenProto(cx, &class_, proto_obj); }
 } // namespace TextDecoder
 
+namespace Blob {
+namespace Slots {
+enum {
+  Bytes,
+  Size,
+  Type,
+  Count,
+};
+};
+
+bool is_instance(JSObject *obj);
+bool is_instance(Value val);
+JSObject *create(JSContext *cx);
+JSObject *create(JSContext *cx, HandleValue blobParts, HandleObject options);
+bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
+
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!ThrowIfNotConstructing(cx, args, "Blob")) {
+    return false;
+  }
+
+  // 1. If invoked with zero parameters, return a new Blob object consisting of 0 bytes, with size
+  // set to 0, and with type set to the empty string.
+  HandleValue blobParts(args.get(0));
+  HandleValue optionsVal(args.get(1));
+  if (blobParts.isUndefined() && optionsVal.isUndefined()) {
+    RootedObject blob(cx, create(cx));
+    if (!blob)
+      return false;
+    args.rval().setObject(*blob);
+    return true;
+  }
+
+  // if options is undefined, set it to { type: "", endings: "transparent" }
+  if (optionsVal.isUndefined()) {
+    // create empty object assigned to `options` variable
+    RootedObject opts(cx, JS_NewPlainObject(cx));
+    // create empty string and assign to property `type` on `options` object
+    RootedValue type(cx);
+    const char *type_chars = "";
+    RootedString type_str(cx, JS_NewStringCopyZ(cx, type_chars));
+    type.setString(type_str);
+    JS_DefineProperty(cx, opts, "type", type, JSPROP_ENUMERATE);
+
+    // create "transparent" string and assign to property `endings` on `options` object
+    RootedValue endings(cx);
+    const char *endings_chars = "transparent";
+    RootedString endings_str(cx, JS_NewStringCopyZ(cx, endings_chars));
+    endings.setString(endings_str);
+    JS_DefineProperty(cx, opts, "endings", endings, JSPROP_ENUMERATE);
+
+    HandleObject optss(opts);
+    RootedObject blob(cx, create(cx, blobParts, optss));
+    if (!blob)
+      return false;
+    args.rval().setObject(*blob);
+    return true;
+  } else {
+    if (!optionsVal.isObject()) {
+      return false;
+    }
+    RootedObject options(cx, &optionsVal.toObject());
+    RootedObject blob(cx, create(cx, blobParts, options));
+    if (!blob)
+      return false;
+    args.rval().setObject(*blob);
+    return true;
+  }
+}
+
+const unsigned ctor_length = 0;
+
+bool arrayBuffer(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(0);
+
+  RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!result_promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  Value el_bytes = JS::GetReservedSlot(self, Slots::Bytes);
+  JSString *s = el_bytes.toString();
+
+  size_t length = JS_GetStringLength(s);
+
+  char *buffer = static_cast<char *>(JS_malloc(cx, length + 1));
+  if (!JS_EncodeStringToBuffer(cx, s, buffer, length)) {
+    free(buffer);
+    return false;
+  }
+
+  RootedObject array_buffer(cx, JS::NewArrayBufferWithContents(cx, length, buffer));
+  if (!array_buffer) {
+    JS_free(cx, buffer);
+    return RejectPromiseWithPendingError(cx, result_promise);
+  }
+
+  RootedValue result(cx);
+  result.setObject(*array_buffer);
+  JS::ResolvePromise(cx, result_promise, result);
+  args.rval().setObject(*result_promise);
+
+  return true;
+}
+
+bool slice(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(0);
+  RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!result_promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  RootedObject blob(cx, create(cx));
+  if (!blob)
+    return false;
+  args.rval().setObject(*blob);
+  return true;
+}
+
+bool stream(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(0);
+  RootedObject blob_stream(cx, JS::NewReadableDefaultStreamObject(cx, nullptr, nullptr, 0.0));
+  if (!blob_stream) {
+    return false;
+  }
+  args.rval().setObject(*blob_stream);
+  return true;
+}
+
+bool text(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(0);
+  RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!result_promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  RootedObject blob(cx, create(cx));
+  const char *chars = "";
+
+  RootedString str(cx, JS_NewStringCopyZ(cx, chars));
+  if (!str)
+    return false;
+  RootedValue result(cx);
+  result.setString(str);
+  JS::ResolvePromise(cx, result_promise, result);
+  args.rval().setObject(*result_promise);
+  return true;
+}
+
+const JSFunctionSpec methods[] = {JS_FN("arrayBuffer", arrayBuffer, 0, JSPROP_ENUMERATE),
+                                  JS_FN("slice", slice, 0, JSPROP_ENUMERATE),
+                                  JS_FN("stream", stream, 0, JSPROP_ENUMERATE),
+                                  JS_FN("text", text, 0, JSPROP_ENUMERATE), JS_FS_END};
+
+bool size_get(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(0);
+  double size = JS::GetReservedSlot(self, Slots::Size).toNumber();
+  args.rval().setNumber(size);
+  return true;
+}
+
+bool type_get(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(0);
+  JSString *type = JS::GetReservedSlot(self, Slots::Type).toString();
+  args.rval().setString(type);
+  return true;
+}
+
+const JSPropertySpec properties[] = {JS_PSG("size", size_get, JSPROP_ENUMERATE),
+                                     JS_PSG("type", type_get, JSPROP_ENUMERATE), JS_PS_END};
+
+CLASS_BOILERPLATE(Blob)
+
+JSObject *create(JSContext *cx) {
+  RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  MOZ_ASSERT(is_instance(self));
+  JS::SetReservedSlot(self, Slots::Size, JS::Int32Value(static_cast<int32_t>(0)));
+  RootedString str(cx, JS_NewStringCopyZ(cx, ""));
+  JS::SetReservedSlot(self, Slots::Type, JS::StringValue(str));
+  RootedString bytes(cx, JS_NewStringCopyZ(cx, ""));
+  JS::SetReservedSlot(self, Slots::Bytes, JS::StringValue(str));
+  return self;
+}
+
+JSObject *create(JSContext *cx, HandleValue blobParts, HandleObject options) {
+  RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  MOZ_ASSERT(is_instance(self));
+  // 2. Let bytes be the result of processing blob parts given blobParts and options.
+
+  // https://w3c.github.io/FileAPI/#process-blob-parts
+  // To process blob parts given a sequence of BlobPart's parts and BlobPropertyBag options, run the
+  // following steps:
+  // 1. Let bytes be an empty sequence of bytes.
+  // char* bytes = nullptr;
+  std::string bytes("");
+
+  // 2. For each element in parts:
+  JS::ForOfIterator it(cx);
+  if (!it.init(blobParts, JS::ForOfIterator::ThrowOnNonIterable))
+    return nullptr;
+
+  if (blobParts.isObject() && it.valueIsIterable()) {
+    RootedValue element(cx);
+
+    while (true) {
+      bool done;
+      if (!it.next(&element, &done)) {
+        return nullptr;
+      }
+
+      if (done) {
+        break;
+      }
+
+      // 1. If element is a USVString, run the following substeps:
+      if (element.isString()) {
+        // 1. Let s be element.
+        JSString *s = element.toString();
+
+        // 2. If the endings member of options is "native", set s to the result of converting line
+        // endings to native of element.
+        RootedValue endings(cx);
+        if (!JS_GetProperty(cx, options, "endings", &endings)) {
+          return nullptr;
+        }
+        bool is_native = true;
+        if (endings.isString()) {
+          if (!JS_StringEqualsLiteral(cx, endings.toString(), "native", &is_native)) {
+            return nullptr;
+          }
+        }
+        if (is_native) {
+          // https://w3c.github.io/FileAPI/#convert-line-endings-to-native
+          {
+            // 1. Let native line ending be be the code point U+000A LF.
+            std::u16string native = u"\n";
+            // 2. If the underlying platform’s conventions are to represent newlines as a carriage
+            // return and line feed sequence, set native line ending to the code point U+000D CR
+            // followed by the code point U+000A LF.
+            if (false) {
+              native = u"\r\n";
+            }
+            // 3. Set result to the empty string.
+            std::u16string result(u"");
+            // 4. Let position be a position variable for s, initially pointing at the start of s.
+            // 5. Let token be the result of collecting a sequence of code points that are not equal
+            // to U+000A LF or U+000D CR from s given position.
+            // 6. Append token to result.
+            // Note: This is https://infra.spec.whatwg.org/#collect-a-sequence-of-code-points
+            // but we can skip steps 1 and 3 by inlining the steps into
+            // https://w3c.github.io/FileAPI/#convert-line-endings-to-native
+            size_t position = 0;
+            size_t length = JS_GetStringLength(s);
+            while (position < length) {
+              char16_t ch;
+              if (!JS_GetStringCharAt(cx, s, position, &ch)) {
+                return nullptr;
+              }
+              if (ch == 0x000A) {
+                break;
+              } else {
+                result.push_back(ch);
+                position += 1;
+              }
+            }
+
+            // 7. While position is not past the end of s:
+            while (position < length) {
+              // 1. If the code point at position within s equals U+000D CR:
+              char16_t ch;
+              if (!JS_GetStringCharAt(cx, s, position, &ch)) {
+                return nullptr;
+              }
+              if (ch == 0x000D) {
+                // 1. Append native line ending to result.
+                result.append(native);
+                // 2. Advance position by 1.
+                position += 1;
+                // 3. If position is not past the end of s and the code point at position within s
+                // equals U+000A LF advance position by 1.
+                if (position < length) {
+                  char16_t ch;
+                  if (!JS_GetStringCharAt(cx, s, position, &ch)) {
+                    return nullptr;
+                  }
+                  if (ch == 0x000A) {
+                    position += 1;
+                  }
+                }
+                // 2. Otherwise if the code point at position within s equals U+000A LF, advance
+                // position by 1 and append native line ending to result.
+              } else if (ch == 0x000A) {
+                position += 1;
+                result.append(native);
+              }
+              // 3. Let token be the result of collecting a sequence of code points that are not
+              // equal to U+000A LF or U+000D CR from s given position.
+              // 4. Append token to result.
+              // Note: This is https://infra.spec.whatwg.org/#collect-a-sequence-of-code-points
+              // but we can skip steps 1 and 3 by inlining the steps into
+              // https://w3c.github.io/FileAPI/#convert-line-endings-to-native
+              while (position < length) {
+                char16_t ch;
+                if (!JS_GetStringCharAt(cx, s, position, &ch)) {
+                  return nullptr;
+                }
+                if (ch == 0x000A || ch == 0x000D) {
+                  break;
+                } else {
+                  result.push_back(ch);
+                  position += 1;
+                }
+              }
+            }
+
+            // 8. Return result.
+            s = JS_NewUCStringCopyZ(cx, result.c_str());
+          }
+        }
+
+        // 3. Append the result of UTF-8 encoding s to bytes.
+        size_t len;
+        UniqueChars s_utf8 = encode(cx, RootedString(cx, s), &len);
+        if (!s_utf8) {
+          return nullptr;
+        }
+
+        RootedString str(cx);
+        str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char *)s_utf8.get(), len));
+        if (!str)
+          return nullptr;
+
+        bytes.append(s_utf8.get());
+      }
+
+      // 2. If element is a BufferSource, get a copy of the bytes held by the buffer source, and
+      // append those bytes to bytes.
+      if (is_buffer_source(element)) {
+        printf("jjj1");
+        fflush(stdout);
+        bytes.append((char *)get_buffer_source_copy(cx,element));
+        printf("kkk1");
+        fflush(stdout);
+      }
+
+      // 3. If element is a Blob, append the bytes it represents to bytes.
+      if (element.isObject()) {
+        RootedObject el(cx, &element.toObject());
+        if (JS_InstanceOf(cx, el, &class_, NULL)) {
+          Value el_bytes = JS::GetReservedSlot(el, Slots::Bytes);
+          JSString *s = el_bytes.toString();
+
+          size_t length = JS_GetStringLength(s);
+
+          char *buffer = static_cast<char *>(JS_malloc(cx, length + 1));
+          if (!JS_EncodeStringToBuffer(cx, s, buffer, length)) {
+            free(buffer);
+            return nullptr;
+          }
+
+          bytes.append(buffer);
+        }
+      }
+    }
+  }
+
+  RootedValue type(cx);
+  if (!JS_GetProperty(cx, options, "type", &type)) {
+    return nullptr;
+  }
+  if (!type.isString()) {
+    return nullptr;
+  }
+  bool is_empty = true;
+  if (!JS_StringEqualsLiteral(cx, type.toString(), "", &is_empty)) {
+    return nullptr;
+  }
+  // 3. If the type member of the options argument is not the empty string, run the following
+  // sub-steps:
+  if (!is_empty) {
+    // 1. Let t be the type dictionary member. If t contains any characters outside the range U+0020
+    // to U+007E, then set t to the empty string and return from these substeps.
+    JSString *t = type.toString();
+    size_t position = 0;
+    size_t length = JS_GetStringLength(t);
+    while (position < length) {
+      char16_t ch;
+      if (!JS_GetStringCharAt(cx, t, position, &ch)) {
+        return nullptr;
+      }
+      if (!(0x0020 < ch && ch < 0x007E)) {
+        t = JS_GetEmptyString(cx);
+        break;
+      } else {
+        position += 1;
+      }
+    }
+
+    // 2. Convert every character in t to ASCII lowercase.
+    char *t_chars = JS_EncodeStringToASCII(cx, t).get();
+    for (size_t i = 0; i < length; i++) {
+      unsigned char ch = t_chars[i];
+      if (ch >= 'A' && ch <= 'Z') {
+        t_chars[i] = ch - 'A' + 'a';
+      }
+    }
+
+    t = JS_NewStringCopyN(cx, t_chars, length);
+    if (!t) {
+      return nullptr;
+    }
+  }
+  // 4. Return a Blob object referring to bytes as its associated byte sequence, with its size set
+  // to the length of bytes, and its type set to the value of t from the substeps above.
+  size_t length = bytes.length();
+  JS::SetReservedSlot(self, Slots::Size, JS::Int32Value(static_cast<int32_t>(length)));
+  JS::SetReservedSlot(self, Slots::Type, type);
+  RootedString str(cx, JS_NewStringCopyZ(cx, bytes.c_str()));
+  JS::SetReservedSlot(self, Slots::Bytes, JS::StringValue(str));
+  return self;
+}
+
+// JSObject* create(JSContext* cx, std::string bytes, HandleValue type) {
+//   RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+//   size_t length = bytes.length();
+//   JS::SetReservedSlot(self, Slots::Size, JS::Int32Value(static_cast<int32_t>(length)));
+//   JS::SetReservedSlot(self, Slots::Type, type);
+//   RootedString str(cx, JS_NewStringCopyZ(cx, bytes.c_str()));
+//   JS::SetReservedSlot(self, Slots::Bytes, JS::StringValue(str));
+//   return self;
+// }
+
+} // namespace Blob
+
 bool report_sequence_or_record_arg_error(JSContext *cx, const char *name, const char *alt_text) {
   JS_ReportErrorUTF8(cx,
                      "Failed to construct %s object. If defined, the first "
@@ -7738,6 +8221,8 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
   if (!URLSearchParamsIterator::init_class(cx, global))
     return false;
   if (!WorkerLocation::init_class(cx, global))
+    return false;
+  if (!Blob::init_class(cx, global))
     return false;
 
   pending_requests = new JS::PersistentRootedObjectVector(cx);
