@@ -666,10 +666,8 @@ dependencies = [
  "anyhow",
  "env_logger 0.8.4",
  "log",
- "sanitize-filename",
  "structopt",
  "tempfile",
- "toml",
  "wizer",
 ]
 
@@ -1004,16 +1002,6 @@ dependencies = [
  "linux-raw-sys",
  "once_cell",
  "winapi",
-]
-
-[[package]]
-name = "sanitize-filename"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf18934a12018228c5b55a6dae9df5d0641e3566b3630cb46cc55564068e7c2f"
-dependencies = [
- "lazy_static",
- "regex",
 ]
 
 [[package]]
