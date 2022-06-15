@@ -195,7 +195,15 @@ jobs:
         name: engine-release
 
     - name: Cache build
-      uses: Swatinem/rust-cache@v1.4.0
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       if: github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/v')
 
     # Build `js-compute-runtime`
