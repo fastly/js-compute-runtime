@@ -165,51 +165,50 @@ bool is_buffer_source(HandleValue val) {
          (JS_IsArrayBufferViewObject(&val.toObject()) || JS::IsArrayBufferObject(&val.toObject()));
 }
 
-uint8_t* get_buffer_source_copy(JSContext* cx, HandleValue val) {
-    // 1. Let esBufferSource be the result of converting bufferSource to an ECMAScript value.
-    RootedObject esBufferSource(cx, &val.toObject());
-    // 2. Let esArrayBuffer be esBufferSource.
-    JSObject* esArrayBuffer = esBufferSource;
-    // 3. Let offset be 0.
-    auto offset = 0;
-    // 4. Let length be 0.
-    auto length = 0;
-    // 5. If esBufferSource has a [[ViewedArrayBuffer]] internal slot, then:
-    if (JS_IsArrayBufferViewObject(esBufferSource)) {
-        // 1. Set esArrayBuffer to esBufferSource.[[ViewedArrayBuffer]].
-        bool is_shared;
-        esArrayBuffer = JS_GetArrayBufferViewBuffer(cx, esBufferSource, &is_shared);
-        // 2. Set offset to esBufferSource.[[ByteOffset]].
-        offset = JS_GetArrayBufferViewByteOffset(esBufferSource);
-        // 3. Set length to esBufferSource.[[ByteLength]].
-        length = JS_GetArrayBufferViewByteLength(esBufferSource);
-    // 6. Otherwise:
-    } else {
-        // 1. Assert: esBufferSource is an ArrayBuffer or SharedArrayBuffer object.
-        MOZ_ASSERT(
-          JS_InstanceOf(cx, esBufferSource, JS::ArrayBuffer::UnsharedClass, NULL) ||
-          JS_InstanceOf(cx, esBufferSource, JS::ArrayBuffer::SharedClass, NULL)
-        );
-        // 2. Set length to esBufferSource.[[ArrayBufferByteLength]].
-        length = JS_GetTypedArrayByteLength(esBufferSource);
-    }
-    // 7. If IsDetachedBuffer(esArrayBuffer) is true, then return the empty byte sequence.
-    if (JS::IsDetachedArrayBufferObject(esArrayBuffer)) {
-      uint8_t* empty = {};
-      return empty;
-    }
-    // 8. Let bytes be a new byte sequence of length equal to length.
-    // 9. For i in the range offset to offset + length − 1, inclusive, set bytes[i − offset] to
-    // GetValueFromBuffer(esArrayBuffer, i, Uint8, true, Unordered).
-    JS::AutoCheckCannotGC noGC(cx);
-    bool is_shared;
-    auto bytes = JS::GetArrayBufferData(esArrayBuffer, &is_shared, noGC);
+// uint8_t* get_buffer_source_copy(JSContext* cx, HandleValue val) {
+//     // 1. Let esBufferSource be the result of converting bufferSource to an ECMAScript value.
+//     RootedObject esBufferSource(cx, &val.toObject());
+//     // 2. Let esArrayBuffer be esBufferSource.
+//     JSObject* esArrayBuffer = esBufferSource;
+//     // 3. Let offset be 0.
+//     auto offset = 0;
+//     // 4. Let length be 0.
+//     auto length = 0;
+//     // 5. If esBufferSource has a [[ViewedArrayBuffer]] internal slot, then:
+//     if (JS_IsArrayBufferViewObject(esBufferSource)) {
+//         // 1. Set esArrayBuffer to esBufferSource.[[ViewedArrayBuffer]].
+//         bool is_shared;
+//         esArrayBuffer = JS_GetArrayBufferViewBuffer(cx, esBufferSource, &is_shared);
+//         // 2. Set offset to esBufferSource.[[ByteOffset]].
+//         offset = JS_GetArrayBufferViewByteOffset(esBufferSource);
+//         // 3. Set length to esBufferSource.[[ByteLength]].
+//         length = JS_GetArrayBufferViewByteLength(esBufferSource);
+//     // 6. Otherwise:
+//     } else {
+//         // 1. Assert: esBufferSource is an ArrayBuffer or SharedArrayBuffer object.
+//         MOZ_ASSERT(
+//           JS_InstanceOf(cx, esBufferSource, JS::ArrayBuffer::UnsharedClass, NULL) ||
+//           JS_InstanceOf(cx, esBufferSource, JS::ArrayBuffer::SharedClass, NULL)
+//         );
+//         // 2. Set length to esBufferSource.[[ArrayBufferByteLength]].
+//         length = JS_GetTypedArrayByteLength(esBufferSource);
+//     }
+//     // 7. If IsDetachedBuffer(esArrayBuffer) is true, then return the empty byte sequence.
+//     if (JS::IsDetachedArrayBufferObject(esArrayBuffer)) {
+//       uint8_t* empty = {};
+//       return empty;
+//     }
+//     // 8. Let bytes be a new byte sequence of length equal to length.
+//     // 9. For i in the range offset to offset + length − 1, inclusive, set bytes[i − offset] to
+//     GetValueFromBuffer(esArrayBuffer, i, Uint8, true, Unordered). JS::AutoCheckCannotGC noGC(cx);
+//     bool is_shared;
+//     auto bytes = JS::GetArrayBufferData(esArrayBuffer, &is_shared, noGC);
 
-    // uint8_t stolenData = static_cast<uint8_t*>(JS::ArrayBufferClone(cx, esArrayBuffer));
-
-    // 10. Return bytes.
-    return bytes;
-}
+//     uint8_t stolenData = static_cast<uint8_t*>(JS::ArrayBufferClone(
+//                             cx, esArrayBuffer));
+//     // 10. Return bytes.
+//     return bytes;
+// }
 
 uint8_t *value_to_buffer(JSContext *cx, HandleValue val, const char *val_desc, size_t *len) {
   if (!is_buffer_source(val)) {
