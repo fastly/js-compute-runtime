@@ -1,0 +1,10 @@
+name: "Compute SDK Test"
+description: "Test fixture Wasm modules with Fastly C@E (From a JS Github Action)"
+inputs:
+  config:
+    description: 'Configuration JSON of the wasm module, and their expectations'
+    required: true
+
+runs:
+  using: "node12"
+  main: dist/main.js

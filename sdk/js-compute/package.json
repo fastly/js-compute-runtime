@@ -1,0 +1,30 @@
+{
+  "name": "@fastly/js-compute",
+  "version": "0.2.5",
+  "js-compute-runtime-version": "0.2.4",
+  "license": "SEE LICENSE IN LICENSE",
+  "main": "js-compute-runtime-cli.js",
+  "types": "index.d.ts",
+  "bin": {
+    "js-compute-runtime": "js-compute-runtime-cli.js"
+  },
+  "files": [
+    "bin",
+    "reference-docs",
+    "js-compute-runtime-cli.js",
+    "index.d.ts",
+    "package.json",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "install:ci": "npm ci",
+    "docs": "npm run docs:clean && npm run docs:typedoc",
+    "docs:clean": "rm -rf reference-docs",
+    "docs:typedoc": "typedoc --theme minimal --disableSources --includeVersion --out reference-docs --tsconfig tsconfig.json --readme none index.d.ts"
+  },
+  "devDependencies": {
+    "typescript": "^4.2",
+    "typedoc": "^0.20.36"
+  }
+}

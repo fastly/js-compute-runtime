@@ -1,0 +1,21 @@
+{
+  "name": "compute-sdk-test",
+  "version": "1.0.0",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "npm run build:index",
+    "build:index": "ncc build main.js && mv dist/index.js dist/main.js"
+  },
+  "license": "APACHE-2.0",
+  "dependencies": {
+    "@actions/core": "^1.1.0",
+    "@actions/github": "^1.1.0",
+    "better-logging": "^4.5.1",
+    "chalk": "^4.1.2",
+    "is-port-reachable": "^3.0.0",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.31.1"
+  }
+}
