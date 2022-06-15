@@ -194,6 +194,10 @@ jobs:
       with:
         name: engine-release
 
+    - name: Cache build
+      uses: Swatinem/rust-cache@v1.4.0
+      if: github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/v')
+
     # Build `js-compute-runtime`
     - run: PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm $CENTOS cargo build --release
 
