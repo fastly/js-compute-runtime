@@ -205,8 +205,8 @@ uint8_t* get_buffer_source_copy(JSContext* cx, HandleValue val) {
     bool is_shared;
     auto bytes = JS::GetArrayBufferData(esArrayBuffer, &is_shared, noGC);
 
-    uint8_t stolenData = static_cast<uint8_t*>(JS::ArrayBufferClone(
-                            cx, esArrayBuffer));
+    // uint8_t stolenData = static_cast<uint8_t*>(JS::ArrayBufferClone(cx, esArrayBuffer));
+
     // 10. Return bytes.
     return bytes;
 }
@@ -5576,11 +5576,7 @@ JSObject *create(JSContext *cx, HandleValue blobParts, HandleObject options) {
       // 2. If element is a BufferSource, get a copy of the bytes held by the buffer source, and
       // append those bytes to bytes.
       if (is_buffer_source(element)) {
-        printf("jjj1");
-        fflush(stdout);
-        bytes.append((char *)get_buffer_source_copy(cx,element));
-        printf("kkk1");
-        fflush(stdout);
+        // bytes.append((char *)get_buffer_source_copy(cx,element));
       }
 
       // 3. If element is a Blob, append the bytes it represents to bytes.
