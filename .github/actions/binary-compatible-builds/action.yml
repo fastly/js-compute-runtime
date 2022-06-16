@@ -43,12 +43,6 @@ runs:
     - if: runner.os == 'Linux'
       shell: bash
       run: |
-        # FIXME(rust-lang/rust#80703) LD_LIBRARY_PATH shouldn't be necessary
-        docker run -di --name centos -v $PWD:$PWD -v $(rustc --print sysroot):/rust:ro \
-          --env LD_LIBRARY_PATH=/rust/lib \
-          --env PATH="/opt/rh/devtoolset-8/root/usr/bin:$PATH:/rust/bin" \
-          binary-compatible-builds
-
         cat >> $GITHUB_ENV <<EOF
         CENTOS=$GITHUB_ACTION_PATH/run-linux
         python=python3
