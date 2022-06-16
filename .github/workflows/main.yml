@@ -31,6 +31,7 @@ jobs:
         path: |
           c-dependencies/spidermonkey/${{ matrix.profile }}
         key: cache-${{ hashFiles('c-dependencies/spidermonkey/build-engine.sh') }}-${{ hashFiles('c-dependencies/spidermonkey/gecko-revision') }}-${{ hashFiles('c-dependencies/spidermonkey/object-files.list') }}-${{ matrix.profile }}
+      if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
     - name: "Build SpiderMonkey"
       if: steps.sm-cache.outputs.cache-hit != 'true'
@@ -46,12 +47,10 @@ jobs:
         sudo mkdir -p /opt/wasi-sdk
         sudo mv wasi-sdk-12.0/* /opt/wasi-sdk/
 
-    - name: "Install pinned Rust version and wasm32-wasi target"
+    - name: "Install pinned Rust version"
       run: |
-        rustup set profile minimal
-        rustup update 1.57.0 --no-self-update
-        rustup default 1.57.0
-        rustup target add wasm32-wasi
+        cd c-dependencies/js-compute-runtime
+        rustup show
 
     - name: "Install Binaryen (linux)"
       run: |
@@ -60,24 +59,24 @@ jobs:
         curl -sS -L "https://github.com/WebAssembly/binaryen/releases/download/version_${BINARYEN_VERSION}/binaryen-version_${BINARYEN_VERSION}-x86_64-linux.tar.gz" | tar xzf - &&
         echo "$PWD/binaryen-version_${BINARYEN_VERSION}/bin" >> $GITHUB_PATH
 
+    - name: Cache Rust dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          c-dependencies/js-compute-runtime/rusturl
+        key: ${{ runner.os }}-cargo-${{ hashFiles('c-dependencies/js-compute-runtime/**/Cargo.*') }}
+      if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+
     - name: "Build JS runtime (debug)"
-      run: |
-        set -x
-        mkdir dist
-        cd dist
-        DEBUG=1 CXX_OPT="-O1" make -f ../c-dependencies/js-compute-runtime/Makefile
-        rm *.{d,o}
-        cd ..
+      run: DEBUG=1 CXX_OPT="-O1" make -C c-dependencies/js-compute-runtime DESTDIR=$PWD install
       if: matrix.profile == 'debug'
 
     - name: "Build JS runtime (release)"
-      run: |
-        set -x
-        mkdir dist
-        cd dist
-        make -f ../c-dependencies/js-compute-runtime/Makefile
-        rm *.{d,o}
-        cd ..
+      run: make -C c-dependencies/js-compute-runtime DESTDIR=$PWD install
       if: matrix.profile == 'release'
 
     - uses: actions/upload-artifact@v1
@@ -204,7 +203,7 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      if: github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/v')
+      if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
     # Build `js-compute-runtime`
     - run: PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm $CENTOS cargo build --release

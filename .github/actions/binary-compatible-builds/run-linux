@@ -1,3 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-exec docker exec --env PREBUILT_ENGINE=${PREBUILT_ENGINE:-} -w $PWD -i centos "$@"
+set -euo pipefail
+exec docker run -i \
+  --env PREBUILT_ENGINE="$PREBUILT_ENGINE" \
+  --env PATH="/opt/rh/devtoolset-8/root/usr/bin:$PATH" \
+  -v "$HOME:$HOME" --workdir "$PWD" \
+  binary-compatible-builds "$@"
