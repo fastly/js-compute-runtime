@@ -1,0 +1,5 @@
+[toolchain]
+# we're stuck on 1.57 until we can upgrade past wasi-sdk-12
+channel = "1.57.0"
+targets = [ "wasm32-wasi" ]
+profile = "minimal"

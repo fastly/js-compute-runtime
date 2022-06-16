@@ -1,6 +1,7 @@
 SHELL:=/bin/bash
 INIT_JS ?= test.js
 WIZER ?= wizer
+DESTDIR ?= .
 
 CXX_OPT ?= -O2
 
@@ -29,7 +30,7 @@ CXX_FLAGS := -std=gnu++17 -Wall -Werror -Qunused-arguments -fno-sized-deallocati
 DEFINES ?=
 LD_FLAGS := -Wl,-z,noexecstack -Wl,-z,text -Wl,-z,relro -Wl,-z,nocopyreloc -Wl,-z,stack-size=1048576 -Wl,--stack-first
 
-.PHONY: all clean compile_commands.json
+.PHONY: all install clean distclean
 
 all: js-compute-runtime.wasm
 
@@ -64,6 +65,9 @@ js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
 
 initialized-js-compute-runtime.wasm: js-compute-runtime.wasm $(INIT_JS)
 	cat $(INIT_JS) | $(WIZER) --allow-wasi --dir=. -r _start=wizer.resume -o $@ $<
+
+install: js-compute-runtime.wasm
+	install -m 444 -Dt $(DESTDIR)/dist js-compute-runtime.wasm
 
 clean:
 	$(RM) compile_commands.json $(FSM_OBJ)
