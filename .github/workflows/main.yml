@@ -348,15 +348,15 @@ jobs:
       CARGO_AUDIT_VERSION: 0.16.0
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v1
-        with:
-          path: ${{ runner.tool_cache }}/cargo-audit
-          key: cargo-audit-bin-${{ env.CARGO_AUDIT_VERSION }}
-      - run: echo "${{ runner.tool_cache }}/cargo-audit/bin" >> $GITHUB_PATH
-      - run: |
-          cargo install --root ${{ runner.tool_cache }}/cargo-audit --version ${{ env.CARGO_AUDIT_VERSION }} cargo-audit
-          cargo audit
+    - uses: actions/checkout@v2
+    - uses: actions/cache@v1
+      with:
+        path: ${{ runner.tool_cache }}/cargo-audit
+        key: cargo-audit-bin-${{ env.CARGO_AUDIT_VERSION }}
+    - run: echo "${{ runner.tool_cache }}/cargo-audit/bin" >> $GITHUB_PATH
+    - run: |
+        cargo install --root ${{ runner.tool_cache }}/cargo-audit --version ${{ env.CARGO_AUDIT_VERSION }} cargo-audit
+        cargo audit
 
   shellcheck:
     env:
