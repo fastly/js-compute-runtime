@@ -6,16 +6,7 @@ function set_env(name, val) {
   fs.appendFileSync(process.env['GITHUB_ENV'], `${name}=${val}\n`)
 }
 
-if (process.platform === 'darwin') {
-  child_process.execSync(`curl https://sh.rustup.rs | sh -s -- -y --default-toolchain=none --profile=minimal`);
-  const bindir = `${process.env.HOME}/.cargo/bin`;
-  fs.appendFileSync(process.env['GITHUB_PATH'], `${bindir}\n`);
-  process.env.PATH = `${process.env.PATH}:${bindir}`;
-}
-
-child_process.execFileSync('rustup', ['set', 'profile', 'minimal']);
-child_process.execFileSync('rustup', ['update', toolchain, '--no-self-update']);
-child_process.execFileSync('rustup', ['default', toolchain]);
+child_process.execFileSync('rustup', ['show']);
 
 // Deny warnings on CI to keep our code warning-free as it lands in-tree. Don't
 // do this on nightly though since there's a fair amount of warning churn there.
