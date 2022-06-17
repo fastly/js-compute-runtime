@@ -13,9 +13,6 @@
   "modules": {
 
     "hello-world" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/hello-world/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/hello-world/hello-world.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/hello-world/pkg/hello-world.tar.gz",
       "tests": {
         "POST /hello": {
           "environments": ["viceroy", "c@e"],
@@ -32,9 +29,6 @@
     },
 
     "request-downstream" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/request-downstream/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/request-downstream/request-downstream.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/request-downstream/pkg/request-downstream.tar.gz",
       "tests": {
         "POST /hello": {
           "environments": ["viceroy"],
@@ -60,9 +54,6 @@
     },
 
     "async-select" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/async-select/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/async-select/async-select.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/async-select/pkg/async-select.tar.gz",
       "tests": {
         "POST /hello": {
           "environments": ["viceroy", "c@e"],
@@ -83,9 +74,6 @@
     },
 
     "byte-repeater" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/byte-repeater/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/byte-repeater/byte-repeater.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/byte-repeater/pkg/byte-repeater.tar.gz",
       "tests": {
         "GET /": {
           "environments": ["viceroy", "c@e"],
@@ -105,9 +93,6 @@
     },
 
     "edge-dictionary" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/edge-dictionary/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/edge-dictionary/edge-dictionary.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/edge-dictionary/pkg/edge-dictionary.tar.gz",
       "tests": {
         "POST /": {
           "environments": ["viceroy", "c@e"],
@@ -125,9 +110,6 @@
     },
 
     "request-upstream" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/request-upstream/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/request-upstream/request-upstream.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/request-upstream/pkg/request-upstream.tar.gz",
       "tests": {
         "POST /hello": {
           "environments": ["viceroy", "c@e"],
@@ -148,9 +130,6 @@
     },
 
     "log" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/log/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/log/log.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/log/pkg/log.tar.gz",
       "tests": {
         "GET /": {
           "environments": ["viceroy"],
@@ -169,9 +148,6 @@
     },
 
     "status" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/status/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/status/status.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/status/pkg/status.tar.gz",
       "tests": {
         "POST /hello": {
           "environments": ["viceroy", "c@e"],
@@ -188,9 +164,6 @@
     },
 
     "streaming-close" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/streaming-close/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/streaming-close/streaming-close.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/streaming-close/pkg/streaming-close.tar.gz",
       "tests": {
         "GET /": {
           "environments": ["viceroy"],
@@ -220,9 +193,6 @@
     },
 
     "response-headers" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/response-headers/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/response-headers/response-headers.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/response-headers/pkg/response-headers.tar.gz",
       "tests": {
         "POST /hello": {
           "environments": ["viceroy", "c@e"],
@@ -242,9 +212,6 @@
     },
 
     "request-limits" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/request-limits/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/request-limits/request-limits.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/request-limits/pkg/request-limits.tar.gz",
       "tests": {
         "POST /hello?requests=7": {
           "environments": ["viceroy", "c@e"],
@@ -261,9 +228,6 @@
     },
 
     "geoip" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/geoip/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/geoip/geoip.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/geoip/pkg/geoip.tar.gz",
       "tests": {
         "GET /": {
           "environments": ["c@e"],
@@ -279,9 +243,6 @@
     },
 
     "env" : {
-      "fastly_toml_path": "./integration-tests/js-compute/fixtures/env/fastly.toml",
-      "wasm_path": "./integration-tests/js-compute/fixtures/env/env.wasm",
-      "pkg_path": "./integration-tests/js-compute/fixtures/env/pkg/env.tar.gz",
       "tests": {
         "GET /": {
           "environments": ["viceroy"],

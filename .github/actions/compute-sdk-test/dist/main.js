@@ -7428,7 +7428,10 @@ const compareDownstreamResponse = __nccwpck_require__(193);
 
 
 // Get our config from the Github Action
-const configRelativePath = `./integration-tests/js-compute/sdk-test-config.json`;
+const integrationTestBase = `./integration-tests/js-compute`;
+const fixtureBase = `${integrationTestBase}/fixtures`;
+const configRelativePath = `${integrationTestBase}/sdk-test-config.json`;
+
 console.info(`Parsing SDK Test config: ${configRelativePath}`);
 const configAbsolutePath = path.resolve(configRelativePath);
 const config = JSON.parse(fs.readFileSync(configAbsolutePath));
@@ -7477,6 +7480,13 @@ const mainAsyncTask = async () => {
 
   // Iterate through the module tests, and run the Viceroy tests
   for (const moduleKey of moduleKeys) {
+    const testBase = `${fixtureBase}/${moduleKey}`;
+
+    // created/used by ./integration-tests/js-compute/build-one.sh
+    const fastlyTomlPath = `${testBase}/fastly.toml`;
+    const wasmPath = `${testBase}/${moduleKey}.wasm`;
+    const pkgPath = `${testBase}/pkg/${moduleKey}.tar.gz`;
+
     const module = modules[moduleKey];
     const moduleTestKeys = Object.keys(module.tests);
     console.info(`Running tests for the module: ${moduleKey} ...`);
@@ -7484,11 +7494,10 @@ const mainAsyncTask = async () => {
     // Spawn a new viceroy instance for the module
     viceroy = new Viceroy();
     const viceroyAddr = '127.0.0.1:8080';
-    await viceroy.spawn(module.wasm_path, {
-      config: module.fastly_toml_path,
+    await viceroy.spawn(wasmPath, {
+      config: fastlyTomlPath,
       addr: viceroyAddr
     })
-
 
     for (const testKey of moduleTestKeys) {
       const test = module.tests[testKey];
