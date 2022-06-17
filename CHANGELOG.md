@@ -1,3 +1,12 @@
+## unreleased
+
+### Enhancements
+
+- Removed the requirement for a fastly.toml file to be present when using js-compute-runtimes CLI to compile a WASM file
+
+- **Breaking change:** Removed --skip-pkg argument from js-compute-runtime's CLI
+  [#108](https://github.com/fastly/js-compute-runtime/pull/108)
+
 ## 0.2.5 (2022-04-12)
 
 ### Fixes
