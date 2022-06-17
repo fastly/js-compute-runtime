@@ -333,18 +333,15 @@ jobs:
         arch="x86_64"
         platform="linux"
 
-        rm -rf sdk/js-compute/bin # TODO: remove this when binaries aren't committed
-        mkdir -p "sdk/js-compute/bin/$platform-$arch"
-        mv "bins-$arch-$platform/js-compute-runtime" "sdk/js-compute/bin/$platform-$arch/js-compute-runtime"
+        mkdir -p "./target/release"
+        mv "bins-$arch-$platform/js-compute-runtime" "./target/release/js-compute-runtime"
 
-        chmod +x ./sdk/js-compute/bin/linux-x86_64/js-compute-runtime
-        ./sdk/js-compute/bin/linux-x86_64/js-compute-runtime --help
+        chmod +x ./target/release/js-compute-runtime
+        ./target/release/js-compute-runtime --help
 
     - name: js-compute Integration Tests Job
       uses: ./.github/actions/compute-sdk-test
       id: sdktest
-      with:
-        config: './integration-tests/js-compute/sdk-test-config.json'
 
   cargo-audit:
     env:

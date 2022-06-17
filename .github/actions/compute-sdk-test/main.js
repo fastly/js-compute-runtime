@@ -22,8 +22,6 @@ require('better-logging')(console, {
     return `${tag} ${chalk.white.bold(ctx.type)} ${ctx.msg}`;
   }
 });
-const core = require('@actions/core');
-const github = require('@actions/github');
 
 // Utility modules
 const Viceroy = require('./src/viceroy.js');
@@ -33,7 +31,7 @@ const compareDownstreamResponse = require('./src/compare-downstream-response.js'
 
 
 // Get our config from the Github Action
-const configRelativePath = `${core.getInput("config")}`;
+const configRelativePath = `./integration-tests/js-compute/sdk-test-config.json`;
 console.info(`Parsing SDK Test config: ${configRelativePath}`);
 const configAbsolutePath = path.resolve(configRelativePath);
 const config = JSON.parse(fs.readFileSync(configAbsolutePath));
@@ -214,7 +212,7 @@ const mainAsyncTask = async () => {
 mainAsyncTask().then(() => {
   process.exit(0);
 }).catch((error) => {
-  core.setFailed(error.message)
+  console.error(error.message);
   process.exit(1);
 });
 

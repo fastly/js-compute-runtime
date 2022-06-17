@@ -1,6 +1,8 @@
 # Manual Gitignore
 
 # Integration Tests build output
+integration-tests/**/fixtures/**/*.tar.gz
+integration-tests/**/fixtures/**/fastly.toml
 integration-tests/**/fixtures/**/*.wasm
 integration-tests/**/fixtures/**/*.js
 integration-tests/**/fixtures/**/*.js.map
@@ -123,7 +125,6 @@ dist
 # ---
 
 # Rust Git Ignore
-
 /target
 /dist
 .DS_Store
