@@ -48,7 +48,7 @@ const mainAsyncTask = async () => {
     const module = modules[key];
     console.info(`Compiling the fixture for: ${key} ...`);
     const moduleBuildStdout = childProcess.execSync(
-      module.build,
+      `./integration-tests/js-compute/build-one.sh ${key}`,
       {
         stdio: 'inherit'
       }

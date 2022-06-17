@@ -13,7 +13,6 @@
   "modules": {
 
     "hello-world" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=hello-world) && (cd ./integration-tests/js-compute/fixtures/hello-world && fastly compute pack --verbose --wasm-binary ./hello-world.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/hello-world/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/hello-world/hello-world.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/hello-world/pkg/hello-world.tar.gz",
@@ -33,7 +32,6 @@
     },
 
     "request-downstream" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=request-downstream) && (cd ./integration-tests/js-compute/fixtures/request-downstream && fastly compute pack --verbose --wasm-binary ./request-downstream.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/request-downstream/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/request-downstream/request-downstream.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/request-downstream/pkg/request-downstream.tar.gz",
@@ -62,7 +60,6 @@
     },
 
     "async-select" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=async-select) && (cd ./integration-tests/js-compute/fixtures/async-select && fastly compute pack --verbose --wasm-binary ./async-select.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/async-select/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/async-select/async-select.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/async-select/pkg/async-select.tar.gz",
@@ -86,7 +83,6 @@
     },
 
     "byte-repeater" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=byte-repeater) && (cd ./integration-tests/js-compute/fixtures/byte-repeater && fastly compute pack --verbose --wasm-binary ./byte-repeater.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/byte-repeater/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/byte-repeater/byte-repeater.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/byte-repeater/pkg/byte-repeater.tar.gz",
@@ -109,7 +105,6 @@
     },
 
     "edge-dictionary" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=edge-dictionary) && (cd ./integration-tests/js-compute/fixtures/edge-dictionary && fastly compute pack --verbose --wasm-binary ./edge-dictionary.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/edge-dictionary/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/edge-dictionary/edge-dictionary.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/edge-dictionary/pkg/edge-dictionary.tar.gz",
@@ -130,7 +125,6 @@
     },
 
     "request-upstream" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=request-upstream) && (cd ./integration-tests/js-compute/fixtures/request-upstream && fastly compute pack --verbose --wasm-binary ./request-upstream.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/request-upstream/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/request-upstream/request-upstream.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/request-upstream/pkg/request-upstream.tar.gz",
@@ -154,7 +148,6 @@
     },
 
     "log" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=log) && (cd ./integration-tests/js-compute/fixtures/log && fastly compute pack --verbose --wasm-binary ./log.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/log/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/log/log.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/log/pkg/log.tar.gz",
@@ -176,7 +169,6 @@
     },
 
     "status" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=status) && (cd ./integration-tests/js-compute/fixtures/status && fastly compute pack --verbose --wasm-binary ./status.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/status/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/status/status.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/status/pkg/status.tar.gz",
@@ -196,7 +188,6 @@
     },
 
     "streaming-close" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=streaming-close) && (cd ./integration-tests/js-compute/fixtures/streaming-close && fastly compute pack --verbose --wasm-binary ./streaming-close.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/streaming-close/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/streaming-close/streaming-close.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/streaming-close/pkg/streaming-close.tar.gz",
@@ -229,7 +220,6 @@
     },
 
     "response-headers" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=response-headers) && (cd ./integration-tests/js-compute/fixtures/response-headers && fastly compute pack --verbose --wasm-binary ./response-headers.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/response-headers/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/response-headers/response-headers.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/response-headers/pkg/response-headers.tar.gz",
@@ -252,7 +242,6 @@
     },
 
     "request-limits" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=request-limits) && (cd ./integration-tests/js-compute/fixtures/request-limits && fastly compute pack --verbose --wasm-binary ./request-limits.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/request-limits/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/request-limits/request-limits.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/request-limits/pkg/request-limits.tar.gz",
@@ -272,7 +261,6 @@
     },
 
     "geoip" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=geoip) && (cd ./integration-tests/js-compute/fixtures/geoip && fastly compute pack --verbose --wasm-binary ./geoip.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/geoip/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/geoip/geoip.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/geoip/pkg/geoip.tar.gz",
@@ -291,7 +279,6 @@
     },
 
     "env" : {
-      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=env) && (cd ./integration-tests/js-compute/fixtures/env && fastly compute pack --verbose --wasm-binary ./env.wasm)",
       "fastly_toml_path": "./integration-tests/js-compute/fixtures/env/fastly.toml",
       "wasm_path": "./integration-tests/js-compute/fixtures/env/env.wasm",
       "pkg_path": "./integration-tests/js-compute/fixtures/env/pkg/env.tar.gz",
