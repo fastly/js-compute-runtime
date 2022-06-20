@@ -3370,44 +3370,8 @@ uint8_t *output_buffer(JSObject *self) {
 }
 
 const unsigned ctor_length = 1;
-JSObject *create(JSContext *cx, Format format);
+JSObject *create(JSContext *cx, HandleObject stream, Format format);
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
-
-/**
- * https://wicg.github.io/compression/#dom-compressionstream-compressionstream
- */
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  // 1.  If _format_ is unsupported in `CompressionStream`, then throw a
-  // `TypeError`.
-  CTOR_HEADER("CompressionStream", 1);
-
-  size_t format_len;
-  UniqueChars format_chars = encode(cx, args[0], &format_len);
-  if (!format_chars)
-    return false;
-
-  Format format;
-  if (!strcmp(format_chars.get(), "deflate")) {
-    format = Format::Deflate;
-  } else if (!strcmp(format_chars.get(), "gzip")) {
-    format = Format::GZIP;
-  } else {
-    JS_ReportErrorUTF8(cx,
-                       "'format' has to be \"deflate\" or \"gzip\", "
-                       "but got \"%s\"",
-                       format_chars.get());
-    return false;
-  }
-
-  // Steps 2-6.
-  RootedObject stream(cx, create(cx, format));
-  if (!stream) {
-    return false;
-  }
-
-  args.rval().setObject(*stream);
-  return true;
-}
 
 // Steps 1-5 of the transform algorithm, and 1-4 of the flush algorithm.
 bool deflate_chunk(JSContext *cx, HandleObject self, HandleValue chunk, bool finished) {
@@ -3553,7 +3517,46 @@ const JSFunctionSpec methods[] = {JS_FS_END};
 const JSPropertySpec properties[] = {JS_PSG("readable", readable_get, JSPROP_ENUMERATE),
                                      JS_PSG("writable", writable_get, JSPROP_ENUMERATE), JS_PS_END};
 
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
+
 CLASS_BOILERPLATE_CUSTOM_INIT(CompressionStream)
+
+/**
+ * https://wicg.github.io/compression/#dom-compressionstream-compressionstream
+ */
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  // 1.  If _format_ is unsupported in `CompressionStream`, then throw a
+  // `TypeError`.
+  CTOR_HEADER("CompressionStream", 1);
+
+  size_t format_len;
+  UniqueChars format_chars = encode(cx, args[0], &format_len);
+  if (!format_chars)
+    return false;
+
+  Format format;
+  if (!strcmp(format_chars.get(), "deflate")) {
+    format = Format::Deflate;
+  } else if (!strcmp(format_chars.get(), "gzip")) {
+    format = Format::GZIP;
+  } else {
+    JS_ReportErrorUTF8(cx,
+                       "'format' has to be \"deflate\" or \"gzip\", "
+                       "but got \"%s\"",
+                       format_chars.get());
+    return false;
+  }
+
+  RootedObject compressionStreamInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  // Steps 2-6.
+  RootedObject stream(cx, create(cx, compressionStreamInstance, format));
+  if (!stream) {
+    return false;
+  }
+
+  args.rval().setObject(*stream);
+  return true;
+}
 
 static PersistentRooted<JSObject *> transformAlgo;
 static PersistentRooted<JSObject *> flushAlgo;
@@ -3577,12 +3580,7 @@ bool init_class(JSContext *cx, HandleObject global) {
 }
 
 // Steps 2-6 of `new CompressionStream()`.
-JSObject *create(JSContext *cx, Format format) {
-  RootedObject stream(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!stream) {
-    return nullptr;
-  }
-
+JSObject *create(JSContext *cx, HandleObject stream, Format format) {
   RootedValue stream_val(cx, ObjectValue(*stream));
 
   // 2.  Set this's format to _format_.
