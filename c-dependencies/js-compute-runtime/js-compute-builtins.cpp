@@ -7062,20 +7062,8 @@ SpecSlice serialize(JSContext *cx, HandleObject self) {
 }
 
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
-JSObject *create(JSContext *cx, HandleValue params_val);
 
 const unsigned ctor_length = 1;
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  CTOR_HEADER("URLSearchParams", 0);
-
-  RootedObject self(cx, create(cx, args.get(0)));
-  if (!self)
-    return false;
-
-  args.rval().setObject(*self);
-  return true;
-}
 
 bool append(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(2)
@@ -7269,8 +7257,21 @@ const JSFunctionSpec methods[] = {
     JS_FS_END};
 
 const JSPropertySpec properties[] = {JS_PS_END};
-
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
 CLASS_BOILERPLATE_CUSTOM_INIT(URLSearchParams)
+
+JSObject *create(JSContext *cx, HandleObject self, HandleValue params_val);
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  CTOR_HEADER("URLSearchParams", 0);
+
+  RootedObject urlSearchParamsInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  RootedObject self(cx, create(cx, urlSearchParamsInstance, args.get(0)));
+  if (!self)
+    return false;
+
+  args.rval().setObject(*self);
+  return true;
+}
 
 bool init_class(JSContext *cx, HandleObject global) {
   if (!init_class_impl(cx, global))
@@ -7285,11 +7286,8 @@ bool init_class(JSContext *cx, HandleObject global) {
   return JS_DefinePropertyById(cx, proto_obj, iteratorId, entries, 0);
 }
 
-JSObject *create(JSContext *cx, HandleValue params_val = JS::UndefinedHandleValue) {
-  RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!self)
-    return nullptr;
-
+JSObject *create(JSContext *cx, HandleObject self,
+                 HandleValue params_val = JS::UndefinedHandleValue) {
   auto params = jsurl::new_params();
   JS::SetReservedSlot(self, Slots::Params, JS::PrivateValue(params));
 
@@ -7310,11 +7308,14 @@ JSObject *create(JSContext *cx, HandleValue params_val = JS::UndefinedHandleValu
 
   return self;
 }
-
-JSObject *create(JSContext *cx, JSUrl *url) {
+JSObject *create(JSContext *cx, HandleValue params_val = JS::UndefinedHandleValue) {
   RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!self)
     return nullptr;
+
+  return URLSearchParams::create(cx, self, params_val);
+}
+JSObject *create(JSContext *cx, HandleObject self, JSUrl *url) {
 
   JSUrlSearchParams *params = jsurl::url_search_params(url);
   if (!params)
@@ -7324,6 +7325,12 @@ JSObject *create(JSContext *cx, JSUrl *url) {
   JS::SetReservedSlot(self, Slots::Url, JS::PrivateValue(url));
 
   return self;
+}
+JSObject *create(JSContext *cx, JSUrl *url) {
+  RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  if (!self)
+    return nullptr;
+  return URLSearchParams::create(cx, self, url);
 }
 } // namespace URLSearchParams
 
