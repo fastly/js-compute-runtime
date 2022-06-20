@@ -906,6 +906,11 @@ enum class Mode : int32_t { Standalone, ProxyToRequest, ProxyToResponse };
 JSObject *create(JSContext *cx, Mode mode, HandleObject owner);
 JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleObject init_headers);
 JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleValue initv);
+JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner);
+JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner,
+                 HandleObject init_headers);
+JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner,
+                 HandleValue initv);
 
 bool delazify(JSContext *cx, HandleObject headers);
 bool maybe_add(JSContext *cx, HandleObject headers, const char *name, const char *value);
@@ -5779,11 +5784,12 @@ bool delazify(JSContext *cx, HandleObject headers) {
   return detail::ensure_all_header_values_from_handle(cx, headers, backing_map);
 }
 
-JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleObject init_headers) {
-  RootedObject headers(cx, create(cx, mode, owner));
-  if (!headers) {
-    return nullptr;
-  }
+JSObject *create(JSContext *cx, HandleObject headers, Mode mode, HandleObject owner,
+                 HandleObject init_headers) {
+  // RootedObject headers(cx, create(cx, mode, owner));
+  // if (!headers) {
+  //   return nullptr;
+  // }
 
   if (!init_headers) {
     return headers;
@@ -5828,10 +5834,17 @@ JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleObject init
   return headers;
 }
 
-JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleValue initv) {
+JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleObject init_headers) {
   RootedObject headers(cx, create(cx, mode, owner));
-  if (!headers)
+  if (!headers) {
     return nullptr;
+  }
+
+  return Headers::create(cx, headers, mode, owner, init_headers);
+}
+
+JSObject *create(JSContext *cx, HandleObject headers, Mode mode, HandleObject owner,
+                 HandleValue initv) {
 
   bool consumed = false;
   if (!maybe_consume_sequence_or_record<detail::append_header_value>(cx, initv, headers, &consumed,
@@ -5847,14 +5860,12 @@ JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleValue initv
   return headers;
 }
 
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  CTOR_HEADER("Headers", 0);
-  RootedObject headers(cx, create(cx, Mode::Standalone, nullptr, args.get(0)));
+JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleValue initv) {
+  RootedObject headers(cx, create(cx, mode, owner));
   if (!headers)
-    return false;
+    return nullptr;
 
-  args.rval().setObject(*headers);
-  return true;
+  return Headers::create(cx, headers, mode, owner, initv);
 }
 
 const unsigned ctor_length = 1;
@@ -6057,7 +6068,19 @@ const JSFunctionSpec methods[] = {
 
 const JSPropertySpec properties[] = {JS_PS_END};
 
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
 CLASS_BOILERPLATE_CUSTOM_INIT(Headers)
+
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  CTOR_HEADER("Headers", 0);
+  RootedObject headersInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  RootedObject headers(cx, create(cx, headersInstance, Mode::Standalone, nullptr, args.get(0)));
+  if (!headers)
+    return false;
+
+  args.rval().setObject(*headers);
+  return true;
+}
 
 bool init_class(JSContext *cx, HandleObject global) {
   bool ok = init_class_impl(cx, global);
@@ -6073,11 +6096,7 @@ bool init_class(JSContext *cx, HandleObject global) {
   return JS_DefinePropertyById(cx, proto_obj, iteratorId, entries, 0);
 }
 
-JSObject *create(JSContext *cx, Mode mode, HandleObject owner) {
-  RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!self)
-    return nullptr;
-
+JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner) {
   JS_SetReservedSlot(self, Slots::Mode, JS::Int32Value(static_cast<int32_t>(mode)));
   uint32_t handle = UINT32_MAX - 1;
   if (mode != Mode::Standalone)
@@ -6100,6 +6119,13 @@ JSObject *create(JSContext *cx, Mode mode, HandleObject owner) {
   JS_SetReservedSlot(self, Slots::HasLazyValues, JS::BooleanValue(lazy));
 
   return self;
+}
+JSObject *create(JSContext *cx, Mode mode, HandleObject owner) {
+  RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  if (!self)
+    return nullptr;
+
+  return Headers::create(cx, self, mode, owner);
 }
 } // namespace Headers
 
