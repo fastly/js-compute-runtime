@@ -2599,100 +2599,11 @@ bool ExtractStrategy(JSContext *cx, HandleValue strategy, double default_hwm, do
  * https://streams.spec.whatwg.org/#ts-class
  */
 namespace TransformStream {
-JSObject *create(JSContext *cx, double writableHighWaterMark,
+JSObject *create(JSContext *cx, HandleObject self, double writableHighWaterMark,
                  JS::HandleFunction writableSizeAlgorithm, double readableHighWaterMark,
                  JS::HandleFunction readableSizeAlgorithm, HandleValue transformer,
                  HandleObject startFunction, HandleObject transformFunction,
                  HandleObject flushFunction);
-
-/**
- * https://streams.spec.whatwg.org/#ts-constructor
- */
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  CTOR_HEADER("TransformStream", 0);
-
-  RootedObject startFunction(cx);
-  RootedObject transformFunction(cx);
-  RootedObject flushFunction(cx);
-
-  // 1.  If transformer is missing, set it to null.
-  RootedValue transformer(cx, args.get(0));
-  if (transformer.isUndefined()) {
-    transformer.setNull();
-  }
-
-  if (transformer.isObject()) {
-    RootedObject transformerDict(cx, &transformer.toObject());
-
-    // 2.  Let transformerDict be transformer, [converted to an IDL value] of
-    // type `
-    //     [Transformer]`.
-    // Note: we do the extraction of dict entries manually, because no WebIDL
-    // codegen.
-    if (!ExtractFunction(cx, transformerDict, "start", &startFunction)) {
-      return false;
-    }
-
-    if (!ExtractFunction(cx, transformerDict, "transform", &transformFunction)) {
-      return false;
-    }
-
-    if (!ExtractFunction(cx, transformerDict, "flush", &flushFunction)) {
-      return false;
-    }
-
-    // 3.  If transformerDict["readableType"] [exists], throw a `[RangeError]`
-    // exception.
-    bool found;
-    if (!JS_HasProperty(cx, transformerDict, "readableType", &found)) {
-      return false;
-    }
-    if (found) {
-      JS_ReportErrorLatin1(cx, "transformer.readableType is reserved for future use");
-      return false;
-    }
-
-    // 4.  If transformerDict["writableType"] [exists], throw a `[RangeError]`
-    // exception.
-    if (!JS_HasProperty(cx, transformerDict, "writableType", &found)) {
-      return false;
-    }
-    if (found) {
-      JS_ReportErrorLatin1(cx, "transformer.writableType is reserved for future use");
-      return false;
-    }
-  }
-
-  // 5.  Let readableHighWaterMark be ? [ExtractHighWaterMark](readableStrategy,
-  // 0).
-  // 6.  Let readableSizeAlgorithm be !
-  // [ExtractSizeAlgorithm](readableStrategy).
-  double readableHighWaterMark;
-  JS::RootedFunction readableSizeAlgorithm(cx);
-  if (!ExtractStrategy(cx, args.get(2), 0, &readableHighWaterMark, &readableSizeAlgorithm)) {
-    return false;
-  }
-
-  // 7.  Let writableHighWaterMark be ? [ExtractHighWaterMark](writableStrategy,
-  // 1).
-  // 8.  Let writableSizeAlgorithm be !
-  // [ExtractSizeAlgorithm](writableStrategy).
-  double writableHighWaterMark;
-  JS::RootedFunction writableSizeAlgorithm(cx);
-  if (!ExtractStrategy(cx, args.get(1), 1, &writableHighWaterMark, &writableSizeAlgorithm)) {
-    return false;
-  }
-
-  // Steps 9-13.
-  RootedObject self(cx, create(cx, writableHighWaterMark, writableSizeAlgorithm,
-                               readableHighWaterMark, readableSizeAlgorithm, transformer,
-                               startFunction, transformFunction, flushFunction));
-  if (!self)
-    return false;
-
-  args.rval().setObject(*self);
-  return true;
-}
 
 const unsigned ctor_length = 0;
 
@@ -2814,7 +2725,99 @@ const JSFunctionSpec methods[] = {JS_FS_END};
 const JSPropertySpec properties[] = {JS_PSG("readable", readable_get, JSPROP_ENUMERATE),
                                      JS_PSG("writable", writable_get, JSPROP_ENUMERATE), JS_PS_END};
 
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
+
 CLASS_BOILERPLATE_CUSTOM_INIT(TransformStream)
+
+/**
+ * https://streams.spec.whatwg.org/#ts-constructor
+ */
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  CTOR_HEADER("TransformStream", 0);
+
+  RootedObject startFunction(cx);
+  RootedObject transformFunction(cx);
+  RootedObject flushFunction(cx);
+
+  // 1.  If transformer is missing, set it to null.
+  RootedValue transformer(cx, args.get(0));
+  if (transformer.isUndefined()) {
+    transformer.setNull();
+  }
+
+  if (transformer.isObject()) {
+    RootedObject transformerDict(cx, &transformer.toObject());
+
+    // 2.  Let transformerDict be transformer, [converted to an IDL value] of
+    // type `
+    //     [Transformer]`.
+    // Note: we do the extraction of dict entries manually, because no WebIDL
+    // codegen.
+    if (!ExtractFunction(cx, transformerDict, "start", &startFunction)) {
+      return false;
+    }
+
+    if (!ExtractFunction(cx, transformerDict, "transform", &transformFunction)) {
+      return false;
+    }
+
+    if (!ExtractFunction(cx, transformerDict, "flush", &flushFunction)) {
+      return false;
+    }
+
+    // 3.  If transformerDict["readableType"] [exists], throw a `[RangeError]`
+    // exception.
+    bool found;
+    if (!JS_HasProperty(cx, transformerDict, "readableType", &found)) {
+      return false;
+    }
+    if (found) {
+      JS_ReportErrorLatin1(cx, "transformer.readableType is reserved for future use");
+      return false;
+    }
+
+    // 4.  If transformerDict["writableType"] [exists], throw a `[RangeError]`
+    // exception.
+    if (!JS_HasProperty(cx, transformerDict, "writableType", &found)) {
+      return false;
+    }
+    if (found) {
+      JS_ReportErrorLatin1(cx, "transformer.writableType is reserved for future use");
+      return false;
+    }
+  }
+
+  // 5.  Let readableHighWaterMark be ? [ExtractHighWaterMark](readableStrategy,
+  // 0).
+  // 6.  Let readableSizeAlgorithm be !
+  // [ExtractSizeAlgorithm](readableStrategy).
+  double readableHighWaterMark;
+  JS::RootedFunction readableSizeAlgorithm(cx);
+  if (!ExtractStrategy(cx, args.get(2), 0, &readableHighWaterMark, &readableSizeAlgorithm)) {
+    return false;
+  }
+
+  // 7.  Let writableHighWaterMark be ? [ExtractHighWaterMark](writableStrategy,
+  // 1).
+  // 8.  Let writableSizeAlgorithm be !
+  // [ExtractSizeAlgorithm](writableStrategy).
+  double writableHighWaterMark;
+  JS::RootedFunction writableSizeAlgorithm(cx);
+  if (!ExtractStrategy(cx, args.get(1), 1, &writableHighWaterMark, &writableSizeAlgorithm)) {
+    return false;
+  }
+
+  // Steps 9-13.
+  RootedObject transformStreamInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  RootedObject self(cx, create(cx, transformStreamInstance, writableHighWaterMark,
+                               writableSizeAlgorithm, readableHighWaterMark, readableSizeAlgorithm,
+                               transformer, startFunction, transformFunction, flushFunction));
+  if (!self)
+    return false;
+
+  args.rval().setObject(*self);
+  return true;
+}
 
 bool init_class(JSContext *cx, HandleObject global) {
   bool ok = init_class_impl(cx, global);
@@ -3223,10 +3226,11 @@ bool ErrorWritableAndUnblockWrite(JSContext *cx, HandleObject stream, HandleValu
   return true;
 }
 
-/**
- * https://streams.spec.whatwg.org/#ts-constructor
- * Steps 9-13.
- */
+JSObject *create(JSContext *cx, HandleObject self, double writableHighWaterMark,
+                 JS::HandleFunction writableSizeAlgorithm, double readableHighWaterMark,
+                 JS::HandleFunction readableSizeAlgorithm, HandleValue transformer,
+                 HandleObject startFunction, HandleObject transformFunction,
+                 HandleObject flushFunction);
 JSObject *create(JSContext *cx, double writableHighWaterMark,
                  JS::HandleFunction writableSizeAlgorithm, double readableHighWaterMark,
                  JS::HandleFunction readableSizeAlgorithm, HandleValue transformer,
@@ -3235,6 +3239,20 @@ JSObject *create(JSContext *cx, double writableHighWaterMark,
   RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!self)
     return nullptr;
+
+  return TransformStream::create(cx, self, writableHighWaterMark, writableSizeAlgorithm,
+                                 readableHighWaterMark, readableSizeAlgorithm, transformer,
+                                 startFunction, transformFunction, flushFunction);
+}
+/**
+ * https://streams.spec.whatwg.org/#ts-constructor
+ * Steps 9-13.
+ */
+JSObject *create(JSContext *cx, HandleObject self, double writableHighWaterMark,
+                 JS::HandleFunction writableSizeAlgorithm, double readableHighWaterMark,
+                 JS::HandleFunction readableSizeAlgorithm, HandleValue transformer,
+                 HandleObject startFunction, HandleObject transformFunction,
+                 HandleObject flushFunction) {
 
   // Step 9.
   RootedObject startPromise(cx, JS::NewPromiseObject(cx, nullptr));
