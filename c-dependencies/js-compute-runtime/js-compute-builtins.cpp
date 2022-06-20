@@ -5105,19 +5105,6 @@ namespace Slots {
 enum { Count };
 };
 
-JSObject *create(JSContext *cx);
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  CTOR_HEADER("TextEncoder", 0);
-
-  RootedObject self(cx, create(cx));
-  if (!self)
-    return false;
-
-  args.rval().setObject(*self);
-  return true;
-}
-
 const unsigned ctor_length = 0;
 
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
@@ -5167,9 +5154,19 @@ bool encoding_get(JSContext *cx, unsigned argc, Value *vp) {
 const JSFunctionSpec methods[] = {JS_FN("encode", encode, 1, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSPropertySpec properties[] = {JS_PSG("encoding", encoding_get, JSPROP_ENUMERATE), JS_PS_END};
-
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
 CLASS_BOILERPLATE(TextEncoder)
 
+JSObject *create(JSContext *cx);
+
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  CTOR_HEADER("TextEncoder", 0);
+
+  RootedObject self(cx, JS_NewObjectForConstructor(cx, &class_, args));
+
+  args.rval().setObject(*self);
+  return true;
+}
 JSObject *create(JSContext *cx) { return JS_NewObjectWithGivenProto(cx, &class_, proto_obj); }
 } // namespace TextEncoder
 
