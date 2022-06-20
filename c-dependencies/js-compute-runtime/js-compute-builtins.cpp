@@ -584,7 +584,9 @@ JSObject *create(JSContext *cx) {
 
 namespace URL {
 bool is_instance(JS::Value);
+JSObject *create(JSContext *cx, HandleObject self, SpecString url_str, const JSUrl *base = nullptr);
 JSObject *create(JSContext *cx, SpecString url_str, const JSUrl *base = nullptr);
+JSObject *create(JSContext *cx, HandleObject self, HandleValue url_val, HandleObject base_obj);
 JSObject *create(JSContext *cx, HandleValue url_val, HandleObject base_obj);
 SpecString origin(JSContext *cx, HandleObject self);
 } // namespace URL
@@ -6675,18 +6677,6 @@ enum { Url, Params, Count };
 const unsigned ctor_length = 1;
 
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
-JSObject *create(JSContext *cx, HandleValue url_val, HandleValue base_val);
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  CTOR_HEADER("URL", 1);
-
-  RootedObject self(cx, create(cx, args.get(0), args.get(1)));
-  if (!self)
-    return false;
-
-  args.rval().setObject(*self);
-  return true;
-}
 
 #define ACCESSOR_GET(field)                                                                        \
   bool field(JSContext *cx, HandleObject self, MutableHandleValue rval) {                          \
@@ -6801,14 +6791,23 @@ const JSPropertySpec properties[] = {
     JS_PSG("searchParams", searchParams_get, JSPROP_ENUMERATE),
     JS_PSGS("username", username_get, username_set, JSPROP_ENUMERATE),
     JS_PS_END};
-
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
 CLASS_BOILERPLATE(URL)
+JSObject *create(JSContext *cx, HandleObject self, HandleValue url_val, HandleValue base_val);
 
-JSObject *create(JSContext *cx, SpecString url_str, const JSUrl *base) {
-  RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  CTOR_HEADER("URL", 1);
+
+  RootedObject urlInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  RootedObject self(cx, create(cx, urlInstance, args.get(0), args.get(1)));
   if (!self)
-    return nullptr;
+    return false;
 
+  args.rval().setObject(*self);
+  return true;
+}
+
+JSObject *create(JSContext *cx, HandleObject self, SpecString url_str, const JSUrl *base) {
   JSUrl *url;
   if (base) {
     url = jsurl::new_jsurl_with_base(&url_str, base);
@@ -6826,6 +6825,22 @@ JSObject *create(JSContext *cx, SpecString url_str, const JSUrl *base) {
   return self;
 }
 
+JSObject *create(JSContext *cx, SpecString url_str, const JSUrl *base) {
+  RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  if (!self)
+    return nullptr;
+
+  return URL::create(cx, self, url_str, base);
+}
+
+JSObject *create(JSContext *cx, HandleObject self, HandleValue url_val, const JSUrl *base) {
+  auto str = encode(cx, url_val);
+  if (!str.data)
+    return nullptr;
+
+  return create(cx, self, str, base);
+}
+
 JSObject *create(JSContext *cx, HandleValue url_val, const JSUrl *base) {
   auto str = encode(cx, url_val);
   if (!str.data)
@@ -6841,6 +6856,28 @@ JSObject *create(JSContext *cx, HandleValue url_val, HandleObject base_obj) {
   return create(cx, url_val, base);
 }
 
+JSObject *create(JSContext *cx, HandleObject self, HandleValue url_val, HandleValue base_val) {
+  if (is_instance(base_val)) {
+    RootedObject base_obj(cx, &base_val.toObject());
+    return create(cx, url_val, base_obj);
+  }
+
+  JSUrl *base = nullptr;
+
+  if (!base_val.isUndefined()) {
+    auto str = encode(cx, base_val);
+    if (!str.data)
+      return nullptr;
+
+    base = jsurl::new_jsurl(&str);
+    if (!base) {
+      JS_ReportErrorUTF8(cx, "URL constructor: %s is not a valid URL.", (char *)str.data);
+      return nullptr;
+    }
+  }
+
+  return create(cx, self, url_val, base);
+}
 JSObject *create(JSContext *cx, HandleValue url_val, HandleValue base_val) {
   if (is_instance(base_val)) {
     RootedObject base_obj(cx, &base_val.toObject());
