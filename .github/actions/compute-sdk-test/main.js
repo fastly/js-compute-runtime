@@ -45,10 +45,13 @@ async function spawnViceroy(testName, viceroyAddr) {
   const wasmPath = `${fixtureBase}/${testName}/${testName}.wasm`;
   const fastlyTomlPath = `${fixtureBase}/${testName}/fastly.toml`;
 
-  return viceroy.spawn(wasm, {
+  let viceroy = new Viceroy();
+  viceroy.spawn(wasm, {
     config: fastlyTomlPath,
     addr: viceroyAddr
   });
+
+  return viceroy;
 }
 
 function buildTest(testName, backendAddr) {
@@ -102,6 +105,7 @@ const mainAsyncTask = async () => {
     try {
       await compareUpstreamRequest(configRequest, req, isDownstreamResponseHandled);
     } catch (err) {
+      await backend.kill();
       await viceroy.kill();
       console.error(`[LocalUpstreamRequest (${localUpstreamRequestNumber})] ${err.message}`);
       process.exit(1);
@@ -160,6 +164,7 @@ const mainAsyncTask = async () => {
         });
       } catch(error) {
         await upstreamServer.close();
+        await backend.kill();
         await viceroy.kill();
         console.error(error);
         process.exit(1);
@@ -177,6 +182,7 @@ const mainAsyncTask = async () => {
           if (!viceroy.logs.includes(log)) {
             console.error(`[Logs: log not found] Expected: ${log}`);
             await upstreamServer.close();
+            await backend.kill();
             await viceroy.kill();
             process.exit(1);
           }
@@ -190,6 +196,7 @@ const mainAsyncTask = async () => {
       } catch (err) {
         console.error(err.message);
         await upstreamServer.close();
+        await backend.kill();
         await viceroy.kill();
         process.exit(1);
       }
@@ -212,7 +219,7 @@ const mainAsyncTask = async () => {
     try {
       await viceroy.kill();
     } catch(e) {
-      console.error('Could not kill Viceory. Error Below:');
+      console.error('Could not kill test Viceory instance. Error Below:');
       console.error(e);
       process.exit(1);
     }
@@ -220,6 +227,13 @@ const mainAsyncTask = async () => {
 
   // Viceroy is done! Close our upstream server and things
   await upstreamServer.close();
+  try {
+    await backend.kill();
+  } catch(e) {
+      console.error('Could not kill backend Viceory instance. Error Below:');
+      console.error(e);
+      process.exit(1);
+  }
 
   // Check if we have C@E Environement tests
   let shouldRunComputeTests = moduleKeys.some(moduleKey => {
