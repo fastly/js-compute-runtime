@@ -4086,19 +4086,6 @@ bool apply_cache_override(JSContext *cx, HandleObject self) {
                                                          sk_chars.get(), sk_len));
 }
 
-JSObject *create(JSContext *cx, HandleValue input, HandleValue init);
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  REQUEST_HANDLER_ONLY("The Request builtin");
-  CTOR_HEADER("Request", 1);
-  RootedObject request(cx, create(cx, args[0], args.get(1)));
-  if (!request)
-    return false;
-
-  args.rval().setObject(*request);
-  return true;
-}
-
 const unsigned ctor_length = 1;
 
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
@@ -4183,6 +4170,8 @@ const JSPropertySpec properties[] = {JS_PSG("method", method_get, JSPROP_ENUMERA
                                      JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
                                      JS_PS_END};
 
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
+
 CLASS_BOILERPLATE_CUSTOM_INIT(Request)
 
 JSString *GET_atom;
@@ -4198,23 +4187,19 @@ bool init_class(JSContext *cx, HandleObject global) {
   return !!GET_atom;
 }
 
-JSObject *create(JSContext *cx, RequestHandle request_handle, BodyHandle body_handle,
-                 bool is_downstream) {
-  RootedObject request(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!request)
-    return nullptr;
+JSObject *create(JSContext *cx, HandleObject requestInstance, RequestHandle request_handle,
+                 BodyHandle body_handle, bool is_downstream) {
+  JS::SetReservedSlot(requestInstance, Slots::Request, JS::Int32Value(request_handle.handle));
+  JS::SetReservedSlot(requestInstance, Slots::Headers, JS::NullValue());
+  JS::SetReservedSlot(requestInstance, Slots::Body, JS::Int32Value(body_handle.handle));
+  JS::SetReservedSlot(requestInstance, Slots::BodyStream, JS::NullValue());
+  JS::SetReservedSlot(requestInstance, Slots::HasBody, JS::FalseValue());
+  JS::SetReservedSlot(requestInstance, Slots::BodyUsed, JS::FalseValue());
+  JS::SetReservedSlot(requestInstance, Slots::Method, JS::StringValue(GET_atom));
+  JS::SetReservedSlot(requestInstance, Slots::CacheOverride, JS::NullValue());
+  JS::SetReservedSlot(requestInstance, Slots::IsDownstream, JS::BooleanValue(is_downstream));
 
-  JS::SetReservedSlot(request, Slots::Request, JS::Int32Value(request_handle.handle));
-  JS::SetReservedSlot(request, Slots::Headers, JS::NullValue());
-  JS::SetReservedSlot(request, Slots::Body, JS::Int32Value(body_handle.handle));
-  JS::SetReservedSlot(request, Slots::BodyStream, JS::NullValue());
-  JS::SetReservedSlot(request, Slots::HasBody, JS::FalseValue());
-  JS::SetReservedSlot(request, Slots::BodyUsed, JS::FalseValue());
-  JS::SetReservedSlot(request, Slots::Method, JS::StringValue(GET_atom));
-  JS::SetReservedSlot(request, Slots::CacheOverride, JS::NullValue());
-  JS::SetReservedSlot(request, Slots::IsDownstream, JS::BooleanValue(is_downstream));
-
-  return request;
+  return requestInstance;
 }
 
 /**
@@ -4224,7 +4209,8 @@ JSObject *create(JSContext *cx, RequestHandle request_handle, BodyHandle body_ha
  * "Roughly" because not all aspects of Request handling make sense in C@E.
  * The places where we deviate from the spec are called out inline.
  */
-JSObject *create(JSContext *cx, HandleValue input, HandleValue init_val) {
+JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
+                 HandleValue init_val) {
   RequestHandle request_handle = {INVALID_HANDLE};
   if (!HANDLE_RESULT(cx, xqd_req_new(&request_handle))) {
     return nullptr;
@@ -4235,7 +4221,7 @@ JSObject *create(JSContext *cx, HandleValue input, HandleValue init_val) {
     return nullptr;
   }
 
-  RootedObject request(cx, create(cx, request_handle, body_handle, false));
+  RootedObject request(cx, create(cx, requestInstance, request_handle, body_handle, false));
   if (!request) {
     return nullptr;
   }
@@ -4651,6 +4637,18 @@ JSObject *create(JSContext *cx, HandleValue input, HandleValue init_val) {
   }
 
   return request;
+}
+
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  REQUEST_HANDLER_ONLY("The Request builtin");
+  CTOR_HEADER("Request", 1);
+  RootedObject requestInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  RootedObject request(cx, create(cx, requestInstance, args[0], args.get(1)));
+  if (!request)
+    return false;
+
+  args.rval().setObject(*request);
+  return true;
 }
 } // namespace Request
 
@@ -6287,7 +6285,12 @@ bool client_get(JSContext *cx, unsigned argc, Value *vp) {
  * initialized. It's filled in at runtime using `init_downstream_request`.
  */
 static JSObject *prepare_downstream_request(JSContext *cx) {
-  return Request::create(cx, RequestHandle{INVALID_HANDLE}, BodyHandle{INVALID_HANDLE}, true);
+  RootedObject requestInstance(
+      cx, JS_NewObjectWithGivenProto(cx, &Request::class_, Request::proto_obj));
+  if (!requestInstance)
+    return nullptr;
+  return Request::create(cx, requestInstance, RequestHandle{INVALID_HANDLE},
+                         BodyHandle{INVALID_HANDLE}, true);
 }
 
 /**
@@ -7318,7 +7321,12 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  RootedObject request(cx, Request::create(cx, args[0], args.get(1)));
+  RootedObject requestInstance(
+      cx, JS_NewObjectWithGivenProto(cx, &Request::class_, Request::proto_obj));
+  if (!requestInstance)
+    return false;
+
+  RootedObject request(cx, Request::create(cx, requestInstance, args[0], args.get(1)));
   if (!request) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
