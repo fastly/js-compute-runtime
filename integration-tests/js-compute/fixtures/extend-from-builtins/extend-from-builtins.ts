@@ -13,7 +13,7 @@ const builtins = [
     // URL,
     // URLSearchParams,
   ]
-  
+
   addEventListener("fetch", event => {
     for (const builtin of builtins) {
       class customClass extends builtin {
