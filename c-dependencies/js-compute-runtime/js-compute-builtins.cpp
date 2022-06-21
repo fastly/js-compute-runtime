@@ -4996,21 +4996,6 @@ DictionaryHandle dictionary_handle(JSObject *obj) {
   return DictionaryHandle{static_cast<uint32_t>(val.toInt32())};
 }
 
-JSObject *create(JSContext *cx, const char *name, size_t name_len);
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  REQUEST_HANDLER_ONLY("The Dictionary builtin");
-  CTOR_HEADER("Dictionary", 1);
-
-  size_t name_len;
-  UniqueChars name = encode(cx, args[0], &name_len);
-  RootedObject dictionary(cx, create(cx, name.get(), name_len));
-  if (!dictionary)
-    return false;
-  args.rval().setObject(*dictionary);
-  return true;
-}
-
 const unsigned ctor_length = 1;
 
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
@@ -5046,20 +5031,25 @@ bool get(JSContext *cx, unsigned argc, Value *vp) {
 const JSFunctionSpec methods[] = {JS_FN("get", get, 1, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSPropertySpec properties[] = {JS_PS_END};
-
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
 CLASS_BOILERPLATE(Dictionary)
 
-JSObject *create(JSContext *cx, const char *name, size_t name_len) {
-  RootedObject dict(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!dict)
-    return nullptr;
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  REQUEST_HANDLER_ONLY("The Dictionary builtin");
+  CTOR_HEADER("Dictionary", 1);
+
+  size_t name_len;
+  UniqueChars name = encode(cx, args[0], &name_len);
+  RootedObject dictionary(cx, JS_NewObjectForConstructor(cx, &class_, args));
   DictionaryHandle dict_handle = {INVALID_HANDLE};
-  if (!HANDLE_RESULT(cx, xqd_dictionary_open(name, name_len, &dict_handle)))
-    return nullptr;
+  if (!HANDLE_RESULT(cx, xqd_dictionary_open(name.get(), name_len, &dict_handle)))
+    return false;
 
-  JS::SetReservedSlot(dict, Slots::Dictionary, JS::Int32Value((int)dict_handle.handle));
-
-  return dict;
+  JS::SetReservedSlot(dictionary, Slots::Dictionary, JS::Int32Value((int)dict_handle.handle));
+  if (!dictionary)
+    return false;
+  args.rval().setObject(*dictionary);
+  return true;
 }
 } // namespace Dictionary
 
