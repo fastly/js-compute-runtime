@@ -2,10 +2,16 @@
 
 # Integration Tests build output
 integration-tests/**/fixtures/**/*.tar.gz
-integration-tests/**/fixtures/**/fastly.toml
+integration-tests/**/fixtures/**/pkg/**/fastly.toml
 integration-tests/**/fixtures/**/*.wasm
 integration-tests/**/fixtures/**/*.js
 integration-tests/**/fixtures/**/*.js.map
+integration-tests/**/fixtures/**/compiler_flags
+integration-tests/**/fixtures/**/js-compute-builtins.d
+integration-tests/**/fixtures/**/js-compute-builtins.o
+integration-tests/**/fixtures/**/js-compute-runtime.d
+integration-tests/**/fixtures/**/js-compute-runtime.o
+integration-tests/**/fixtures/**/rusturl
 
 # Ignore Reference Docs
 # TODO
