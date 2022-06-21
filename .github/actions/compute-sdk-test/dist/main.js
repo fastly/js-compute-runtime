@@ -7443,7 +7443,7 @@ async function spawnViceroy(testName, viceroyAddr) {
   const fastlyTomlPath = `${fixtureBase}/${testName}/fastly.toml`;
 
   let viceroy = new Viceroy();
-  viceroy.spawn(wasm, {
+  viceroy.spawn(wasmPath, {
     config: fastlyTomlPath,
     addr: viceroyAddr
   });
