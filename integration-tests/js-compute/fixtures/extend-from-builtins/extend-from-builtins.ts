@@ -9,7 +9,7 @@ const builtins = [
     // Headers,
     CacheOverride,
     // TextEncoder,
-    // TextDecoder,
+    TextDecoder,
     // URL,
     // URLSearchParams,
   ]
