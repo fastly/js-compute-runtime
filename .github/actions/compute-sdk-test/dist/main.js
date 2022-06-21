@@ -7475,15 +7475,15 @@ const mainAsyncTask = async () => {
   const modules = config.modules;
   const moduleKeys = Object.keys(modules);
 
+  // build all the tests
+  moduleKeys.forEach(testName => buildTest(testName, backendAddr));
+
   // Start up the local backend
   childProcess.execSync('./integration-tests/js-compute/build-one.sh backend', {
     stdio: 'inherit',
   });
   let backendAddr = '127.0.0.1:8082';
   let backend = await spawnViceroy('backend', backendAddr);
-
-  // build all the tests
-  moduleKeys.forEach(testName => buildTest(testName, backendAddr));
 
   console.info(`Running the Viceroy environment tests ...`);
 
