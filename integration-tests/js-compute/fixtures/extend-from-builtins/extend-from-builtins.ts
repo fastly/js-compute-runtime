@@ -8,7 +8,7 @@ const builtins = [
     Dictionary,
     // Headers,
     CacheOverride,
-    // TextEncoder,
+    TextEncoder,
     TextDecoder,
     // URL,
     // URLSearchParams,
