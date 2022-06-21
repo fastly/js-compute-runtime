@@ -72,6 +72,6 @@
     "status": 1
   },
   "Subclassing TransformStream should work": {
-    "status": 1
+    "status": 0
   }
 }
