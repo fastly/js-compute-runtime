@@ -3899,14 +3899,24 @@ template <auto accessor_fn> bool accessor_set(JSContext *cx, unsigned argc, Valu
 
 const unsigned ctor_length = 1;
 
-JSObject *create(JSContext *cx);
+const JSFunctionSpec methods[] = {JS_FS_END};
+
+const JSPropertySpec properties[] = {
+    JS_PSGS("mode", accessor_get<mode_get>, accessor_set<mode_set>, JSPROP_ENUMERATE),
+    JS_PSGS("ttl", accessor_get<ttl_get>, accessor_set<ttl_set>, JSPROP_ENUMERATE),
+    JS_PSGS("swr", accessor_get<swr_get>, accessor_set<swr_set>, JSPROP_ENUMERATE),
+    JS_PSGS("surrogateKey", accessor_get<surrogate_key_get>, accessor_set<surrogate_key_set>,
+            JSPROP_ENUMERATE),
+    JS_PSGS("pci", accessor_get<pci_get>, accessor_set<pci_set>, JSPROP_ENUMERATE),
+    JS_PS_END};
+
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
+CLASS_BOILERPLATE(CacheOverride)
 
 bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   CTOR_HEADER("CacheOverride", 1);
 
-  RootedObject self(cx, create(cx));
-  if (!self)
-    return false;
+  RootedObject self(cx, JS_NewObjectForConstructor(cx, &class_, args));
 
   RootedValue val(cx);
   if (!mode_set(cx, self, args[0], &val))
@@ -3943,21 +3953,6 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   return true;
 }
 
-const JSFunctionSpec methods[] = {JS_FS_END};
-
-const JSPropertySpec properties[] = {
-    JS_PSGS("mode", accessor_get<mode_get>, accessor_set<mode_set>, JSPROP_ENUMERATE),
-    JS_PSGS("ttl", accessor_get<ttl_get>, accessor_set<ttl_set>, JSPROP_ENUMERATE),
-    JS_PSGS("swr", accessor_get<swr_get>, accessor_set<swr_set>, JSPROP_ENUMERATE),
-    JS_PSGS("surrogateKey", accessor_get<surrogate_key_get>, accessor_set<surrogate_key_set>,
-            JSPROP_ENUMERATE),
-    JS_PSGS("pci", accessor_get<pci_get>, accessor_set<pci_set>, JSPROP_ENUMERATE),
-    JS_PS_END};
-
-CLASS_BOILERPLATE(CacheOverride)
-
-JSObject *create(JSContext *cx) { return JS_NewObjectWithGivenProto(cx, &class_, proto_obj); }
-
 /**
  * Clone a CacheOverride instance by copying all its reserved slots.
  *
@@ -3965,7 +3960,7 @@ JSObject *create(JSContext *cx) { return JS_NewObjectWithGivenProto(cx, &class_,
  */
 JSObject *clone(JSContext *cx, HandleObject self) {
   MOZ_ASSERT(is_instance(self));
-  RootedObject result(cx, create(cx));
+  RootedObject result(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!result) {
     return nullptr;
   }
