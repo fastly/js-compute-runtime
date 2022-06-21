@@ -7475,6 +7475,8 @@ const mainAsyncTask = async () => {
   const modules = config.modules;
   const moduleKeys = Object.keys(modules);
 
+  const backendAddr = '127.0.0.1:8082';
+
   // build all the tests
   moduleKeys.forEach(testName => buildTest(testName, backendAddr));
 
@@ -7482,7 +7484,6 @@ const mainAsyncTask = async () => {
   childProcess.execSync('./integration-tests/js-compute/build-one.sh backend', {
     stdio: 'inherit',
   });
-  let backendAddr = '127.0.0.1:8082';
   let backend = await spawnViceroy('backend', backendAddr);
 
   console.info(`Running the Viceroy environment tests ...`);
