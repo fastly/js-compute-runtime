@@ -328,6 +328,26 @@
           }
         }
       }
+    },
+
+    "extend-from-builtins" : {
+      "build": "(cd integration-tests/js-compute && npm install && npm run build:test --test=extend-from-builtins) && (cd ./integration-tests/js-compute/fixtures/extend-from-builtins && fastly compute pack --verbose --wasm-binary ./extend-from-builtins.wasm)",
+      "fastly_toml_path": "./integration-tests/js-compute/fixtures/extend-from-builtins/fastly.toml",
+      "wasm_path": "./integration-tests/js-compute/fixtures/extend-from-builtins/extend-from-builtins.wasm",
+      "pkg_path": "./integration-tests/js-compute/fixtures/extend-from-builtins/pkg/extend-from-builtins.tar.gz",
+      "tests": {
+        "GET /": {
+          "environments": ["viceroy"],
+          "downstream_request": {
+            "method": "GET",
+            "pathname": "/"
+          },
+          "downstream_response": {
+            "status": 200,
+            "body": ""
+          }
+        }
+      }
     }
 
   }
