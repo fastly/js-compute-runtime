@@ -41,22 +41,49 @@ const config = JSON.parse(fs.readFileSync(configAbsolutePath));
 console.info('Running the SDK Config:');
 console.log(`${JSON.stringify(config, null, 2)}`);
 
+async function spawnViceroy(testName, viceroyAddr) {
+  const wasmPath = `${fixtureBase}/${testName}/${testName}.wasm`;
+  const fastlyTomlPath = `${fixtureBase}/${testName}/fastly.toml`;
+
+  return viceroy.spawn(wasm, {
+    config: fastlyTomlPath,
+    addr: viceroyAddr
+  });
+}
+
+function buildTest(testName, backendAddr) {
+  console.info(`Compiling the fixture for: ${testName} ...`);
+
+  childProcess.execSync(
+    `./integration-tests/js-compute/build-one.sh ${testName}`,
+    {
+      stdio: 'inherit'
+    }
+  );
+
+  childProcess.execSync(
+    `./integration-tests/js-compute/replace-host.sh ${testName} ${backendAddr}`,
+    {
+      stdio: 'inherit'
+    }
+  );
+}
+
 // Our main task, in which we compile and run tests
 const mainAsyncTask = async () => {
   // Iterate through our config and compile our wasm modules
   const modules = config.modules;
   const moduleKeys = Object.keys(modules);
 
-  moduleKeys.forEach(key => {
-    const module = modules[key];
-    console.info(`Compiling the fixture for: ${key} ...`);
-    const moduleBuildStdout = childProcess.execSync(
-      `./integration-tests/js-compute/build-one.sh ${key}`,
-      {
-        stdio: 'inherit'
-      }
-    );
+  // Start up the local backend
+  childProcess.execSync('./integration-tests/js-compute/build-one.sh backend', {
+    stdio: 'inherit',
   });
+  let backendAddr = '127.0.0.1:8082';
+  let backend = await spawnViceroy('backend', backendAddr);
+
+  // build all the tests
+  moduleKeys.forEach(testName => buildTest(testName, backendAddr));
 
   console.info(`Running the Viceroy environment tests ...`);
 

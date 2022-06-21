@@ -12,7 +12,14 @@ test="$1"
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 npm install -s
-npm run -s build:test --test="$test"
+
+if [ -f "fixtures/$test/$test.ts" ]; then
+  npm run -s build:test --test="$test"
+else
+  echo "Skipping typescript conversion for fixtures/$test/$test.js"
+fi
+
+../../target/release/js-compute-runtime "fixtures/$test/$test.js" "fixtures/$test/$test.wasm"
 
 cd fixtures/"$test"
 fastly compute pack --verbose --wasm-binary "./${test}.wasm"

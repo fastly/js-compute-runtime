@@ -13,7 +13,7 @@ service_id = ""
   [local_server.backends]
 
     [local_server.backends.TheOrigin]
-      url = "https://compute-sdk-test-backend.edgecompute.app/"
+      url = "https://JS_COMPUTE_TEST_BACKEND/"
 
     [local_server.backends.TheOrigin2]
-      url = "https://compute-sdk-test-backend.edgecompute.app/"
+      url = "https://JS_COMPUTE_TEST_BACKEND/"
