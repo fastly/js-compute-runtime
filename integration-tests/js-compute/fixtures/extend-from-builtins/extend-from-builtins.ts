@@ -5,7 +5,7 @@ const builtins = [
     CompressionStream,
     // Request,
     // Response,
-    // Dictionary,
+    Dictionary,
     // Headers,
     // CacheOverride,
     // TextEncoder,
