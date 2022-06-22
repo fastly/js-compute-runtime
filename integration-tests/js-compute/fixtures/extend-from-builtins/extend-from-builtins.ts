@@ -6,7 +6,7 @@ const builtins = [
     // Request,
     Response,
     Dictionary,
-    // Headers,
+    Headers,
     CacheOverride,
     TextEncoder,
     TextDecoder,
