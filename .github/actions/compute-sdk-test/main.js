@@ -46,7 +46,7 @@ async function spawnViceroy(testName, viceroyAddr) {
   const fastlyTomlPath = `${fixtureBase}/${testName}/fastly.toml`;
 
   let viceroy = new Viceroy();
-  viceroy.spawn(wasmPath, {
+  await viceroy.spawn(wasmPath, {
     config: fastlyTomlPath,
     addr: viceroyAddr
   });
@@ -87,6 +87,8 @@ const mainAsyncTask = async () => {
   childProcess.execSync('./integration-tests/js-compute/build-one.sh backend', {
     stdio: 'inherit',
   });
+
+  console.info(`Starting the generic backend on ${backendAddr}`);
   let backend = await spawnViceroy('backend', backendAddr);
 
   console.info(`Running the Viceroy environment tests ...`);
