@@ -1,3 +1,4 @@
+
 const compareHeaders = (configHeaders, wasmModuleHeaders) => {
 
   if (!configHeaders) {
@@ -20,6 +21,6 @@ const compareHeaders = (configHeaders, wasmModuleHeaders) => {
       throw new Error(`[Header Value mismatch] Expected: ${configHeaderValue} - Got: ${wasmModuleHeaderValue}`);
     }
   });
-}
+};
 
-module.exports = compareHeaders;
+export default compareHeaders;

@@ -1,9 +1,9 @@
-const childProcess = require('child_process');
+import childProcess from 'child_process';
 
-const isPortReachable = require('is-port-reachable');
-const chalk = require('chalk');
+import isPortReachable from 'is-port-reachable';
+import chalk from 'chalk';
 
-const killProcessAndWait = require('./kill-process-and-wait.js');
+import killProcessAndWait from './kill-process-and-wait.js';
 
 // Viceroy - JS Class to use Node's Child Process and Spawn and kill Viceroy
 // processes, using the Viceroy CLI
@@ -73,4 +73,4 @@ class Viceroy {
   }
 }
 
-module.exports = Viceroy; 
+export default Viceroy;

@@ -1,10 +1,12 @@
 // Node & 3P Modules
-const fs = require('fs');
-const path = require('path');
-const childProcess = require('child_process');
-const fetch = require('node-fetch');
-const chalk = require('chalk');
-require('better-logging')(console, {
+import fs from 'fs';
+import path from 'path';
+import childProcess from 'node:child_process';
+import fetch from 'node-fetch';
+import chalk from 'chalk';
+import betterLogging from 'better-logging';
+
+betterLogging(console, {
   format: ctx => {
 
     const tag = chalk.bold(`[compute-sdk-test]`); 
@@ -24,10 +26,10 @@ require('better-logging')(console, {
 });
 
 // Utility modules
-const Viceroy = require('./src/viceroy.js');
-const UpstreamServer = require('./src/upstream-server.js');
-const compareUpstreamRequest = require('./src/compare-upstream-request.js');
-const compareDownstreamResponse = require('./src/compare-downstream-response.js');
+import Viceroy from './src/viceroy.js';
+import UpstreamServer from './src/upstream-server.js';
+import compareUpstreamRequest from './src/compare-upstream-request.js';
+import compareDownstreamResponse from './src/compare-downstream-response.js';
 
 
 // Get our config from the Github Action

@@ -9,4 +9,4 @@ const killProcessAndWait = (childProcess) => {
   });
 }
 
-module.exports = killProcessAndWait;
+export default killProcessAndWait;
