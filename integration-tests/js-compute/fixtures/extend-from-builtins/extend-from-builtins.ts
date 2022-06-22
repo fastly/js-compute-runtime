@@ -10,7 +10,7 @@ const builtins = [
     CacheOverride,
     TextEncoder,
     TextDecoder,
-    // URL,
+    URL,
     URLSearchParams,
   ]
 
