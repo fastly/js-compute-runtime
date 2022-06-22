@@ -4851,143 +4851,6 @@ JSString *status_message(JSObject *obj) {
   return JS::GetReservedSlot(obj, Slots::StatusMessage).toString();
 }
 
-JSObject *create(JSContext *cx, ResponseHandle response_handle, BodyHandle body_handle,
-                 bool is_upstream);
-
-/**
- * The `Response` constructor https://fetch.spec.whatwg.org/#dom-response
- */
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  REQUEST_HANDLER_ONLY("The Response builtin");
-
-  CTOR_HEADER("Response", 0);
-
-  RootedValue body_val(cx, args.get(0));
-  RootedValue init_val(cx, args.get(1));
-
-  RootedValue status_val(cx);
-  uint16_t status = 200;
-
-  RootedValue statusText_val(cx);
-  RootedString statusText(cx, JS_GetEmptyString(cx));
-  RootedValue headers_val(cx);
-
-  if (init_val.isObject()) {
-    RootedObject init(cx, init_val.toObjectOrNull());
-    if (!JS_GetProperty(cx, init, "status", &status_val) ||
-        !JS_GetProperty(cx, init, "statusText", &statusText_val) ||
-        !JS_GetProperty(cx, init, "headers", &headers_val)) {
-      return false;
-    }
-
-    if (!status_val.isUndefined() && !JS::ToUint16(cx, status_val, &status)) {
-      return false;
-    }
-
-    if (!statusText_val.isUndefined() && !(statusText = JS::ToString(cx, statusText_val))) {
-      return false;
-    }
-
-  } else if (!init_val.isNullOrUndefined()) {
-    JS_ReportErrorLatin1(cx, "Response constructor: |init| parameter can't be converted to "
-                             "a dictionary");
-    return false;
-  }
-
-  // 1.  If `init`["status"] is not in the range 200 to 599, inclusive, then
-  // `throw` a ``RangeError``.
-  if (status < 200 || status > 599) {
-    JS_ReportErrorLatin1(cx, "Response constructor: invalid status %u", status);
-    return false;
-  }
-
-  // 2.  If `init`["statusText"] does not match the `reason-phrase` token
-  // production, then `throw` a ``TypeError``. Skipped: the statusText can only
-  // be consumed by the content creating it, so we're lenient about its format.
-
-  // 3.  Set `this`’s `response` to a new `response`.
-  // TODO: consider not creating a host-side representation for responses
-  // eagerly. Some applications create Response objects purely for internal use,
-  // e.g. to represent cache entries. While that's perhaps not ideal to begin
-  // with, it exists, so we should handle it in a good way, and not be
-  // superfluously slow.
-  // TODO: enable creating Response objects during the init phase, and only
-  // creating the host-side representation when processing requests.
-  ResponseHandle response_handle = {.handle = INVALID_HANDLE};
-  if (!HANDLE_RESULT(cx, xqd_resp_new(&response_handle))) {
-    return false;
-  }
-
-  BodyHandle body_handle = {.handle = INVALID_HANDLE};
-  if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle))) {
-    return false;
-  }
-
-  RootedObject response(cx, create(cx, response_handle, body_handle, false));
-  if (!response) {
-    return false;
-  }
-
-  RequestOrResponse::set_url(response, JS_GetEmptyStringValue(cx));
-
-  // 4.  Set `this`’s `headers` to a `new` ``Headers`` object with `this`’s
-  // `relevant Realm`,
-  //     whose `header list` is `this`’s `response`’s `header list` and `guard`
-  //     is "`response`".
-  // (implicit)
-
-  // 5.  Set `this`’s `response`’s `status` to `init`["status"].
-  if (!HANDLE_RESULT(cx, xqd_resp_status_set(response_handle, status))) {
-    return false;
-  }
-  // To ensure that we really have the same status value as the host,
-  // we always read it back here.
-  if (!HANDLE_RESULT(cx, xqd_resp_status_get(response_handle, &status))) {
-    return false;
-  }
-
-  JS::SetReservedSlot(response, Slots::Status, JS::Int32Value(status));
-
-  // 6.  Set `this`’s `response`’s `status message` to `init`["statusText"].
-  JS::SetReservedSlot(response, Slots::StatusMessage, JS::StringValue(statusText));
-
-  // 7.  If `init`["headers"] `exists`, then `fill` `this`’s `headers` with
-  // `init`["headers"].
-  RootedObject headers(cx);
-  headers = Headers::create(cx, Headers::Mode::ProxyToResponse, response, headers_val);
-  if (!headers) {
-    return false;
-  }
-  JS::SetReservedSlot(response, Slots::Headers, JS::ObjectValue(*headers));
-
-  // 8.  If `body` is non-null, then:
-  if ((!body_val.isNullOrUndefined())) {
-    //     1.  If `init`["status"] is a `null body status`, then `throw` a
-    //     ``TypeError``.
-    if (status == 204 || status == 205 || status == 304) {
-      JS_ReportErrorLatin1(cx, "Response constructor: Response body is given "
-                               "with a null body status.");
-      return false;
-    }
-
-    //     2.  Let `Content-Type` be null.
-    //     3.  Set `this`’s `response`’s `body` and `Content-Type` to the result
-    //     of `extracting`
-    //         `body`.
-    //     4.  If `Content-Type` is non-null and `this`’s `response`’s `header
-    //     list` `does not
-    //         contain` ``Content-Type``, then `append` (``Content-Type``,
-    //         `Content-Type`) to `this`’s `response`’s `header list`.
-    // Note: these steps are all inlined into RequestOrResponse::extract_body.
-    if (!RequestOrResponse::extract_body(cx, response, body_val)) {
-      return false;
-    }
-  }
-
-  args.rval().setObject(*response);
-  return true;
-}
-
 const unsigned ctor_length = 1;
 
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
@@ -5086,7 +4949,147 @@ const JSPropertySpec properties[] = {JS_PSG("type", type_get, JSPROP_ENUMERATE),
                                      JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
                                      JS_PS_END};
 
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
+
 CLASS_BOILERPLATE_CUSTOM_INIT(Response)
+
+JSObject *create(JSContext *cx, HandleObject response, ResponseHandle response_handle,
+                 BodyHandle body_handle, bool is_upstream);
+
+/**
+ * The `Response` constructor https://fetch.spec.whatwg.org/#dom-response
+ */
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  REQUEST_HANDLER_ONLY("The Response builtin");
+
+  CTOR_HEADER("Response", 0);
+
+  RootedValue body_val(cx, args.get(0));
+  RootedValue init_val(cx, args.get(1));
+
+  RootedValue status_val(cx);
+  uint16_t status = 200;
+
+  RootedValue statusText_val(cx);
+  RootedString statusText(cx, JS_GetEmptyString(cx));
+  RootedValue headers_val(cx);
+
+  if (init_val.isObject()) {
+    RootedObject init(cx, init_val.toObjectOrNull());
+    if (!JS_GetProperty(cx, init, "status", &status_val) ||
+        !JS_GetProperty(cx, init, "statusText", &statusText_val) ||
+        !JS_GetProperty(cx, init, "headers", &headers_val)) {
+      return false;
+    }
+
+    if (!status_val.isUndefined() && !JS::ToUint16(cx, status_val, &status)) {
+      return false;
+    }
+
+    if (!statusText_val.isUndefined() && !(statusText = JS::ToString(cx, statusText_val))) {
+      return false;
+    }
+
+  } else if (!init_val.isNullOrUndefined()) {
+    JS_ReportErrorLatin1(cx, "Response constructor: |init| parameter can't be converted to "
+                             "a dictionary");
+    return false;
+  }
+
+  // 1.  If `init`["status"] is not in the range 200 to 599, inclusive, then
+  // `throw` a ``RangeError``.
+  if (status < 200 || status > 599) {
+    JS_ReportErrorLatin1(cx, "Response constructor: invalid status %u", status);
+    return false;
+  }
+
+  // 2.  If `init`["statusText"] does not match the `reason-phrase` token
+  // production, then `throw` a ``TypeError``. Skipped: the statusText can only
+  // be consumed by the content creating it, so we're lenient about its format.
+
+  // 3.  Set `this`’s `response` to a new `response`.
+  // TODO: consider not creating a host-side representation for responses
+  // eagerly. Some applications create Response objects purely for internal use,
+  // e.g. to represent cache entries. While that's perhaps not ideal to begin
+  // with, it exists, so we should handle it in a good way, and not be
+  // superfluously slow.
+  // TODO: enable creating Response objects during the init phase, and only
+  // creating the host-side representation when processing requests.
+  ResponseHandle response_handle = {.handle = INVALID_HANDLE};
+  if (!HANDLE_RESULT(cx, xqd_resp_new(&response_handle))) {
+    return false;
+  }
+
+  BodyHandle body_handle = {.handle = INVALID_HANDLE};
+  if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle))) {
+    return false;
+  }
+
+  RootedObject responseInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  RootedObject response(cx, create(cx, responseInstance, response_handle, body_handle, false));
+  if (!response) {
+    return false;
+  }
+
+  RequestOrResponse::set_url(response, JS_GetEmptyStringValue(cx));
+
+  // 4.  Set `this`’s `headers` to a `new` ``Headers`` object with `this`’s
+  // `relevant Realm`,
+  //     whose `header list` is `this`’s `response`’s `header list` and `guard`
+  //     is "`response`".
+  // (implicit)
+
+  // 5.  Set `this`’s `response`’s `status` to `init`["status"].
+  if (!HANDLE_RESULT(cx, xqd_resp_status_set(response_handle, status))) {
+    return false;
+  }
+  // To ensure that we really have the same status value as the host,
+  // we always read it back here.
+  if (!HANDLE_RESULT(cx, xqd_resp_status_get(response_handle, &status))) {
+    return false;
+  }
+
+  JS::SetReservedSlot(response, Slots::Status, JS::Int32Value(status));
+
+  // 6.  Set `this`’s `response`’s `status message` to `init`["statusText"].
+  JS::SetReservedSlot(response, Slots::StatusMessage, JS::StringValue(statusText));
+
+  // 7.  If `init`["headers"] `exists`, then `fill` `this`’s `headers` with
+  // `init`["headers"].
+  RootedObject headers(cx);
+  headers = Headers::create(cx, Headers::Mode::ProxyToResponse, response, headers_val);
+  if (!headers) {
+    return false;
+  }
+  JS::SetReservedSlot(response, Slots::Headers, JS::ObjectValue(*headers));
+
+  // 8.  If `body` is non-null, then:
+  if ((!body_val.isNullOrUndefined())) {
+    //     1.  If `init`["status"] is a `null body status`, then `throw` a
+    //     ``TypeError``.
+    if (status == 204 || status == 205 || status == 304) {
+      JS_ReportErrorLatin1(cx, "Response constructor: Response body is given "
+                               "with a null body status.");
+      return false;
+    }
+
+    //     2.  Let `Content-Type` be null.
+    //     3.  Set `this`’s `response`’s `body` and `Content-Type` to the result
+    //     of `extracting`
+    //         `body`.
+    //     4.  If `Content-Type` is non-null and `this`’s `response`’s `header
+    //     list` `does not
+    //         contain` ``Content-Type``, then `append` (``Content-Type``,
+    //         `Content-Type`) to `this`’s `response`’s `header list`.
+    // Note: these steps are all inlined into RequestOrResponse::extract_body.
+    if (!RequestOrResponse::extract_body(cx, response, body_val)) {
+      return false;
+    }
+  }
+
+  args.rval().setObject(*response);
+  return true;
+}
 
 bool init_class(JSContext *cx, HandleObject global) {
   if (!init_class_impl(cx, global)) {
@@ -5099,12 +5102,8 @@ bool init_class(JSContext *cx, HandleObject global) {
          (type_error_atom = JS_AtomizeAndPinString(cx, "error"));
 }
 
-JSObject *create(JSContext *cx, ResponseHandle response_handle, BodyHandle body_handle,
-                 bool is_upstream) {
-  RootedObject response(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!response)
-    return nullptr;
-
+JSObject *create(JSContext *cx, HandleObject response, ResponseHandle response_handle,
+                 BodyHandle body_handle, bool is_upstream) {
   JS::SetReservedSlot(response, Slots::Response, JS::Int32Value(response_handle.handle));
   JS::SetReservedSlot(response, Slots::Headers, JS::NullValue());
   JS::SetReservedSlot(response, Slots::Body, JS::Int32Value(body_handle.handle));
@@ -7633,7 +7632,12 @@ bool process_pending_requests(JSContext *cx) {
     return JS::RejectPromise(cx, response_promise, exn);
   }
 
-  RootedObject response(cx, Response::create(cx, response_handle, body, true));
+  RootedObject response_instance(
+      cx, JS_NewObjectWithGivenProto(cx, &Response::class_, Response::proto_obj));
+  if (!response_instance)
+    return false;
+
+  RootedObject response(cx, Response::create(cx, response_instance, response_handle, body, true));
   if (!response)
     return false;
 

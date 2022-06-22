@@ -4,7 +4,7 @@ const builtins = [
     TransformStream,
     CompressionStream,
     // Request,
-    // Response,
+    Response,
     Dictionary,
     // Headers,
     CacheOverride,
