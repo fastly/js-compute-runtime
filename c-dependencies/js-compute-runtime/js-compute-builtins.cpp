@@ -6742,11 +6742,11 @@ bool searchParams_get(JSContext *cx, unsigned argc, Value *vp) {
   RootedObject params(cx);
   if (params_val.isNullOrUndefined()) {
     JSUrl *url = (JSUrl *)JS::GetReservedSlot(self, Slots::Url).toPrivate();
-    RootedObject url_search_params_intance(
+    RootedObject url_search_params_instance(
         cx, JS_NewObjectWithGivenProto(cx, &URLSearchParams::class_, URLSearchParams::proto_obj));
-    if (!self)
+    if (!url_search_params_instance)
       return false;
-    params = URLSearchParams::create(cx, url_search_params_intance, url);
+    params = URLSearchParams::create(cx, url_search_params_instance, url);
     if (!params)
       return false;
     JS::SetReservedSlot(self, Slots::Params, JS::ObjectValue(*params));
