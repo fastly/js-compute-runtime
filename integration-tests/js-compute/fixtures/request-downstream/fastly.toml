@@ -13,7 +13,7 @@ service_id = ""
   [local_server.backends]
 
     [local_server.backends.TheOrigin]
-      url = "https://JS_COMPUTE_TEST_BACKEND/"
+      url = "JS_COMPUTE_TEST_BACKEND/"
 
     [local_server.backends.TheOrigin2]
-      url = "https://JS_COMPUTE_TEST_BACKEND/"
+      url = "JS_COMPUTE_TEST_BACKEND/"

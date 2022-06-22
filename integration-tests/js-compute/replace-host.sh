@@ -4,10 +4,10 @@ set -euo pipefail
 
 if [ "$#" -lt 2 ]; then
   cat <<EOF
-Usage: $0 <test-fixture> <override_host>
+Usage: $0 <test-fixture> <override_host_and_protocol>
 
-Replace the host part of each backend's url with another one. This will only
-replace instances of "JS_COMPUTE_TEST_BACKEND", as other urls might be
+Replace the host and protocol part of each backend's url with another one. This
+will only replace instances of "JS_COMPUTE_TEST_BACKEND", as other urls might be
 meaningful for an individual test.
 EOF
   exit 1

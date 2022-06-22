@@ -7462,7 +7462,7 @@ function buildTest(testName, backendAddr) {
   );
 
   childProcess.execSync(
-    `./integration-tests/js-compute/replace-host.sh ${testName} ${backendAddr}`,
+    `./integration-tests/js-compute/replace-host.sh ${testName} http://${backendAddr}`,
     {
       stdio: 'inherit'
     }
