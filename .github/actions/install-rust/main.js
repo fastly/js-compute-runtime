@@ -1,6 +1,7 @@
-const child_process = require('child_process');
+import child_process from 'child_process';
+import fs from 'fs';
+
 const toolchain = process.env.INPUT_TOOLCHAIN;
-const fs = require('fs');
 
 function set_env(name, val) {
   fs.appendFileSync(process.env['GITHUB_ENV'], `${name}=${val}\n`)
