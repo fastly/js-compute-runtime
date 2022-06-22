@@ -1,7 +1,7 @@
 {
   "scripts": {
     "install:ci": "npm ci",
-    "build:test": "base=$npm_config_test; webpack \"./fixtures/$base/$base.ts\" --output-path \"./fixtures/$base\" --output-filename \"$base.js\"; ../../target/release/js-compute-runtime \"./fixtures/$base/$base.js\" \"./fixtures/$base/$base.wasm\"",
+    "build:test": "base=$npm_config_test; webpack \"./fixtures/$base/$base.ts\" --output-path \"./fixtures/$base\" --output-filename \"$base.js\"; true",
     "lint": "npx prettier --write ./fixtures/**/*.ts"
   },
   "devDependencies": {

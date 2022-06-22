@@ -31,12 +31,46 @@ const compareDownstreamResponse = require('./src/compare-downstream-response.js'
 
 
 // Get our config from the Github Action
-const configRelativePath = `./integration-tests/js-compute/sdk-test-config.json`;
+const integrationTestBase = `./integration-tests/js-compute`;
+const fixtureBase = `${integrationTestBase}/fixtures`;
+const configRelativePath = `${integrationTestBase}/sdk-test-config.json`;
+
 console.info(`Parsing SDK Test config: ${configRelativePath}`);
 const configAbsolutePath = path.resolve(configRelativePath);
 const config = JSON.parse(fs.readFileSync(configAbsolutePath));
 console.info('Running the SDK Config:');
 console.log(`${JSON.stringify(config, null, 2)}`);
+
+async function spawnViceroy(testName, viceroyAddr) {
+  const wasmPath = `${fixtureBase}/${testName}/${testName}.wasm`;
+  const fastlyTomlPath = `${fixtureBase}/${testName}/fastly.toml`;
+
+  let viceroy = new Viceroy();
+  await viceroy.spawn(wasmPath, {
+    config: fastlyTomlPath,
+    addr: viceroyAddr
+  });
+
+  return viceroy;
+}
+
+function buildTest(testName, backendAddr) {
+  console.info(`Compiling the fixture for: ${testName} ...`);
+
+  childProcess.execSync(
+    `./integration-tests/js-compute/build-one.sh ${testName}`,
+    {
+      stdio: 'inherit'
+    }
+  );
+
+  childProcess.execSync(
+    `./integration-tests/js-compute/replace-host.sh ${testName} http://${backendAddr}`,
+    {
+      stdio: 'inherit'
+    }
+  );
+}
 
 // Our main task, in which we compile and run tests
 const mainAsyncTask = async () => {
@@ -44,16 +78,15 @@ const mainAsyncTask = async () => {
   const modules = config.modules;
   const moduleKeys = Object.keys(modules);
 
-  moduleKeys.forEach(key => {
-    const module = modules[key];
-    console.info(`Compiling the fixture for: ${key} ...`);
-    const moduleBuildStdout = childProcess.execSync(
-      module.build,
-      {
-        stdio: 'inherit'
-      }
-    );
-  });
+  const backendAddr = '127.0.0.1:8082';
+
+  // build all the tests
+  moduleKeys.forEach(testName => buildTest(testName, backendAddr));
+  buildTest('backend', backendAddr);
+
+  // Start up the local backend
+  console.info(`Starting the generic backend on ${backendAddr}`);
+  let backend = await spawnViceroy('backend', backendAddr);
 
   console.info(`Running the Viceroy environment tests ...`);
 
@@ -72,6 +105,7 @@ const mainAsyncTask = async () => {
     try {
       await compareUpstreamRequest(configRequest, req, isDownstreamResponseHandled);
     } catch (err) {
+      await backend.kill();
       await viceroy.kill();
       console.error(`[LocalUpstreamRequest (${localUpstreamRequestNumber})] ${err.message}`);
       process.exit(1);
@@ -80,6 +114,12 @@ const mainAsyncTask = async () => {
 
   // Iterate through the module tests, and run the Viceroy tests
   for (const moduleKey of moduleKeys) {
+    const testBase = `${fixtureBase}/${moduleKey}`;
+
+    // created/used by ./integration-tests/js-compute/build-one.sh
+    const fastlyTomlPath = `${testBase}/fastly.toml`;
+    const wasmPath = `${testBase}/${moduleKey}.wasm`;
+
     const module = modules[moduleKey];
     const moduleTestKeys = Object.keys(module.tests);
     console.info(`Running tests for the module: ${moduleKey} ...`);
@@ -87,11 +127,10 @@ const mainAsyncTask = async () => {
     // Spawn a new viceroy instance for the module
     viceroy = new Viceroy();
     const viceroyAddr = '127.0.0.1:8080';
-    await viceroy.spawn(module.wasm_path, {
-      config: module.fastly_toml_path,
+    await viceroy.spawn(wasmPath, {
+      config: fastlyTomlPath,
       addr: viceroyAddr
     })
-
 
     for (const testKey of moduleTestKeys) {
       const test = module.tests[testKey];
@@ -124,6 +163,7 @@ const mainAsyncTask = async () => {
         });
       } catch(error) {
         await upstreamServer.close();
+        await backend.kill();
         await viceroy.kill();
         console.error(error);
         process.exit(1);
@@ -141,6 +181,7 @@ const mainAsyncTask = async () => {
           if (!viceroy.logs.includes(log)) {
             console.error(`[Logs: log not found] Expected: ${log}`);
             await upstreamServer.close();
+            await backend.kill();
             await viceroy.kill();
             process.exit(1);
           }
@@ -154,6 +195,7 @@ const mainAsyncTask = async () => {
       } catch (err) {
         console.error(err.message);
         await upstreamServer.close();
+        await backend.kill();
         await viceroy.kill();
         process.exit(1);
       }
@@ -176,7 +218,7 @@ const mainAsyncTask = async () => {
     try {
       await viceroy.kill();
     } catch(e) {
-      console.error('Could not kill Viceory. Error Below:');
+      console.error('Could not kill test Viceroy instance. Error Below:');
       console.error(e);
       process.exit(1);
     }
@@ -184,6 +226,13 @@ const mainAsyncTask = async () => {
 
   // Viceroy is done! Close our upstream server and things
   await upstreamServer.close();
+  try {
+    await backend.kill();
+  } catch(e) {
+      console.error('Could not kill backend Viceroy instance. Error Below:');
+      console.error(e);
+      process.exit(1);
+  }
 
   // Check if we have C@E Environement tests
   let shouldRunComputeTests = moduleKeys.some(moduleKey => {

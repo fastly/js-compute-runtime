@@ -5,7 +5,7 @@ authors = ["aturner+ecp@fastly.com"]
 description = ""
 language = "javascript"
 manifest_version = 2
-name = "log"
+name = "edge-dictionary"
 service_id = ""
 
 [local_server]
@@ -13,10 +13,16 @@ service_id = ""
   [local_server.backends]
 
     [local_server.backends.TheOrigin]
-      url = "https://compute-sdk-test-backend.edgecompute.app/"
+      url = "https://JS_COMPUTE_TEST_BACKEND/"
 
     [local_server.backends.TheOrigin2]
-      url = "https://compute-sdk-test-backend.edgecompute.app/"
+      url = "JS_COMPUTE_TEST_BACKEND/"
 
     [local_server.backends.example_backend]
       url = "https://example.org/"
+
+  [local_server.dictionaries]
+
+    [local_server.dictionaries.edge_dictionary]
+      file = "./integration-tests/js-compute/fixtures/edge-dictionary/edge-dictionary.json"
+      format = "json"

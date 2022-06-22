@@ -5,7 +5,7 @@ authors = ["aturner+ecp@fastly.com"]
 description = ""
 language = "javascript"
 manifest_version = 2
-name = "status"
+name = "hello-world"
 service_id = ""
 
 [local_server]
@@ -13,10 +13,4 @@ service_id = ""
   [local_server.backends]
 
     [local_server.backends.TheOrigin]
-      url = "https://compute-sdk-test-backend.edgecompute.app/"
-
-    [local_server.backends.TheOrigin2]
-      url = "https://compute-sdk-test-backend.edgecompute.app/"
-
-    [local_server.backends.example_backend]
-      url = "https://example.org/"
+      url = "JS_COMPUTE_TEST_BACKEND/"

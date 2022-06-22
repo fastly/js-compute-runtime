@@ -5,7 +5,7 @@ authors = ["aturner+ecp@fastly.com"]
 description = ""
 language = "javascript"
 manifest_version = 2
-name = "request-downstream"
+name = "status"
 service_id = ""
 
 [local_server]
@@ -13,7 +13,10 @@ service_id = ""
   [local_server.backends]
 
     [local_server.backends.TheOrigin]
-      url = "https://compute-sdk-test-backend.edgecompute.app/"
+      url = "JS_COMPUTE_TEST_BACKEND/"
 
     [local_server.backends.TheOrigin2]
-      url = "https://compute-sdk-test-backend.edgecompute.app/"
+      url = "JS_COMPUTE_TEST_BACKEND/"
+
+    [local_server.backends.example_backend]
+      url = "https://example.org/"
