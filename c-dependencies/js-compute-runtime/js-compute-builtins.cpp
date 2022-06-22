@@ -954,11 +954,63 @@ bool SetBackpressure(JSContext *cx, HandleObject stream, bool backpressure);
 bool Error(JSContext *cx, HandleObject stream, HandleValue error);
 } // namespace TransformStream
 
+#define ITERTYPE_ENTRIES 0
+#define ITERTYPE_KEYS 1
+#define ITERTYPE_VALUES 2
 namespace URLSearchParams {
-bool is_instance(JSObject *obj);
-JSObject *create(JSContext *cx, jsurl::JSUrl *url);
+
+namespace Slots {
+enum { Url, Params, Count };
+};
+
 JSUrlSearchParams *get_params(JSObject *self);
+
+namespace detail {
+bool append(JSContext *cx, HandleObject self, HandleValue key, HandleValue val, const char *_);
+} // namespace detail
+
 SpecSlice serialize(JSContext *cx, HandleObject self);
+
+bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
+
+const unsigned ctor_length = 1;
+
+bool append(JSContext *cx, unsigned argc, Value *vp);
+
+bool delete_(JSContext *cx, unsigned argc, Value *vp);
+
+bool has(JSContext *cx, unsigned argc, Value *vp);
+
+bool get(JSContext *cx, unsigned argc, Value *vp);
+
+bool getAll(JSContext *cx, unsigned argc, Value *vp);
+
+bool set(JSContext *cx, unsigned argc, Value *vp);
+
+bool sort(JSContext *cx, unsigned argc, Value *vp);
+
+bool toString(JSContext *cx, unsigned argc, Value *vp);
+
+bool forEach(JSContext *cx, unsigned argc, Value *vp);
+
+template <auto type> bool get_iter(JSContext *cx, unsigned argc, Value *vp);
+
+const JSFunctionSpec methods[] = {
+    JS_FN("append", append, 2, JSPROP_ENUMERATE), JS_FN("delete", delete_, 1, JSPROP_ENUMERATE),
+    JS_FN("has", has, 1, JSPROP_ENUMERATE), JS_FN("get", get, 1, JSPROP_ENUMERATE),
+    JS_FN("getAll", getAll, 1, JSPROP_ENUMERATE), JS_FN("set", set, 2, JSPROP_ENUMERATE),
+    JS_FN("sort", sort, 0, JSPROP_ENUMERATE), JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
+    JS_FN("forEach", forEach, 0, JSPROP_ENUMERATE),
+    JS_FN("entries", get_iter<ITERTYPE_ENTRIES>, 0, 0),
+    JS_FN("keys", get_iter<ITERTYPE_KEYS>, 0, 0), JS_FN("values", get_iter<ITERTYPE_VALUES>, 0, 0),
+    // [Symbol.iterator] added in init_class.
+    JS_FS_END};
+
+const JSPropertySpec properties[] = {JS_PS_END};
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
+CLASS_BOILERPLATE_CUSTOM_INIT(URLSearchParams)
+
+JSObject *create(JSContext *cx, HandleObject self, jsurl::JSUrl *url);
 } // namespace URLSearchParams
 
 namespace RequestOrResponse {
@@ -6690,7 +6742,11 @@ bool searchParams_get(JSContext *cx, unsigned argc, Value *vp) {
   RootedObject params(cx);
   if (params_val.isNullOrUndefined()) {
     JSUrl *url = (JSUrl *)JS::GetReservedSlot(self, Slots::Url).toPrivate();
-    params = URLSearchParams::create(cx, url);
+    RootedObject url_search_params_intance(
+        cx, JS_NewObjectWithGivenProto(cx, &URLSearchParams::class_, URLSearchParams::proto_obj));
+    if (!self)
+      return false;
+    params = URLSearchParams::create(cx, url_search_params_intance, url);
     if (!params)
       return false;
     JS::SetReservedSlot(self, Slots::Params, JS::ObjectValue(*params));
@@ -6792,10 +6848,6 @@ JSObject *create(JSContext *cx, HandleValue url_val, HandleValue base_val) {
   return create(cx, url_val, base);
 }
 } // namespace URL
-
-#define ITERTYPE_ENTRIES 0
-#define ITERTYPE_KEYS 1
-#define ITERTYPE_VALUES 2
 
 namespace URLSearchParamsIterator {
 namespace Slots {
@@ -6923,9 +6975,6 @@ JSObject *create(JSContext *cx, HandleObject params, uint8_t type) {
 } // namespace URLSearchParamsIterator
 
 namespace URLSearchParams {
-namespace Slots {
-enum { Url, Params, Count };
-};
 
 JSUrlSearchParams *get_params(JSObject *self) {
   return (JSUrlSearchParams *)JS::GetReservedSlot(self, Slots::Params).toPrivate();
@@ -6953,20 +7002,6 @@ SpecSlice serialize(JSContext *cx, HandleObject self) {
 }
 
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
-JSObject *create(JSContext *cx, HandleValue params_val);
-
-const unsigned ctor_length = 1;
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  CTOR_HEADER("URLSearchParams", 0);
-
-  RootedObject self(cx, create(cx, args.get(0)));
-  if (!self)
-    return false;
-
-  args.rval().setObject(*self);
-  return true;
-}
 
 bool append(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(2)
@@ -7148,20 +7183,18 @@ template <auto type> bool get_iter(JSContext *cx, unsigned argc, Value *vp) {
   return true;
 }
 
-const JSFunctionSpec methods[] = {
-    JS_FN("append", append, 2, JSPROP_ENUMERATE), JS_FN("delete", delete_, 1, JSPROP_ENUMERATE),
-    JS_FN("has", has, 1, JSPROP_ENUMERATE), JS_FN("get", get, 1, JSPROP_ENUMERATE),
-    JS_FN("getAll", getAll, 1, JSPROP_ENUMERATE), JS_FN("set", set, 2, JSPROP_ENUMERATE),
-    JS_FN("sort", sort, 0, JSPROP_ENUMERATE), JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
-    JS_FN("forEach", forEach, 0, JSPROP_ENUMERATE),
-    JS_FN("entries", get_iter<ITERTYPE_ENTRIES>, 0, 0),
-    JS_FN("keys", get_iter<ITERTYPE_KEYS>, 0, 0), JS_FN("values", get_iter<ITERTYPE_VALUES>, 0, 0),
-    // [Symbol.iterator] added in init_class.
-    JS_FS_END};
+JSObject *create(JSContext *cx, HandleObject self, HandleValue params_val);
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  CTOR_HEADER("URLSearchParams", 0);
 
-const JSPropertySpec properties[] = {JS_PS_END};
+  RootedObject urlSearchParamsInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  RootedObject self(cx, create(cx, urlSearchParamsInstance, args.get(0)));
+  if (!self)
+    return false;
 
-CLASS_BOILERPLATE_CUSTOM_INIT(URLSearchParams)
+  args.rval().setObject(*self);
+  return true;
+}
 
 bool init_class(JSContext *cx, HandleObject global) {
   if (!init_class_impl(cx, global))
@@ -7176,11 +7209,8 @@ bool init_class(JSContext *cx, HandleObject global) {
   return JS_DefinePropertyById(cx, proto_obj, iteratorId, entries, 0);
 }
 
-JSObject *create(JSContext *cx, HandleValue params_val = JS::UndefinedHandleValue) {
-  RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!self)
-    return nullptr;
-
+JSObject *create(JSContext *cx, HandleObject self,
+                 HandleValue params_val = JS::UndefinedHandleValue) {
   auto params = jsurl::new_params();
   JS::SetReservedSlot(self, Slots::Params, JS::PrivateValue(params));
 
@@ -7202,10 +7232,7 @@ JSObject *create(JSContext *cx, HandleValue params_val = JS::UndefinedHandleValu
   return self;
 }
 
-JSObject *create(JSContext *cx, JSUrl *url) {
-  RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!self)
-    return nullptr;
+JSObject *create(JSContext *cx, HandleObject self, JSUrl *url) {
 
   JSUrlSearchParams *params = jsurl::url_search_params(url);
   if (!params)
@@ -7452,7 +7479,9 @@ JSObject *ReadStructuredClone(JSContext *cx, JSStructuredCloneReader *r,
                               uint32_t len, void *closure) {
   MOZ_ASSERT(tag == SCTAG_DOM_URLSEARCHPARAMS);
 
-  RootedObject params_obj(cx, URLSearchParams::create(cx));
+  RootedObject urlSearchParamsInstance(
+      cx, JS_NewObjectWithGivenProto(cx, &URLSearchParams::class_, URLSearchParams::proto_obj));
+  RootedObject params_obj(cx, URLSearchParams::create(cx, urlSearchParamsInstance));
   if (!params_obj) {
     return nullptr;
   }

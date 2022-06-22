@@ -11,7 +11,7 @@ const builtins = [
     TextEncoder,
     TextDecoder,
     // URL,
-    // URLSearchParams,
+    URLSearchParams,
   ]
 
   addEventListener("fetch", event => {
