@@ -82,12 +82,9 @@ const mainAsyncTask = async () => {
 
   // build all the tests
   moduleKeys.forEach(testName => buildTest(testName, backendAddr));
+  buildTest('backend', backendAddr);
 
   // Start up the local backend
-  childProcess.execSync('./integration-tests/js-compute/build-one.sh backend', {
-    stdio: 'inherit',
-  });
-
   console.info(`Starting the generic backend on ${backendAddr}`);
   let backend = await spawnViceroy('backend', backendAddr);
 
