@@ -20,6 +20,3 @@ else
 fi
 
 ../../target/release/js-compute-runtime "fixtures/$test/$test.js" "fixtures/$test/$test.wasm"
-
-cd fixtures/"$test"
-fastly compute pack --verbose --wasm-binary "./${test}.wasm"

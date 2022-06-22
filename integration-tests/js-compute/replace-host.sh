@@ -16,6 +16,7 @@ fi
 fixtures_dir="$(dirname "${BASH_SOURCE[0]}")/fixtures"
 
 fastly_toml="$fixtures_dir/$1/fastly.toml"
+fastly_toml_in="$fixtures_dir/$1/fastly.toml.in"
 override_host="$2"
 
-sed -i'' -e "s|JS_COMPUTE_TEST_BACKEND|$override_host|" "$fastly_toml"
+sed -e "s|JS_COMPUTE_TEST_BACKEND|$override_host|" "$fastly_toml_in" > "$fastly_toml"

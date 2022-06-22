@@ -7519,7 +7519,6 @@ const mainAsyncTask = async () => {
     // created/used by ./integration-tests/js-compute/build-one.sh
     const fastlyTomlPath = `${testBase}/fastly.toml`;
     const wasmPath = `${testBase}/${moduleKey}.wasm`;
-    const pkgPath = `${testBase}/pkg/${moduleKey}.tar.gz`;
 
     const module = modules[moduleKey];
     const moduleTestKeys = Object.keys(module.tests);
@@ -7619,7 +7618,7 @@ const mainAsyncTask = async () => {
     try {
       await viceroy.kill();
     } catch(e) {
-      console.error('Could not kill test Viceory instance. Error Below:');
+      console.error('Could not kill test Viceroy instance. Error Below:');
       console.error(e);
       process.exit(1);
     }
@@ -7630,7 +7629,7 @@ const mainAsyncTask = async () => {
   try {
     await backend.kill();
   } catch(e) {
-      console.error('Could not kill backend Viceory instance. Error Below:');
+      console.error('Could not kill backend Viceroy instance. Error Below:');
       console.error(e);
       process.exit(1);
   }
