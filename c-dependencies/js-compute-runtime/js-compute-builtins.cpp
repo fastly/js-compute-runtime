@@ -6809,6 +6809,8 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   CTOR_HEADER("URL", 1);
 
   RootedObject urlInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  if (!urlInstance)
+    return false;
   RootedObject self(cx, create(cx, urlInstance, args.get(0), args.get(1)));
   if (!self)
     return false;
