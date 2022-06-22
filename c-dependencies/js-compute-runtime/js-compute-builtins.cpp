@@ -1053,13 +1053,120 @@ enum class BodyReadResult {
 
 namespace Headers {
 enum class Mode : int32_t { Standalone, ProxyToRequest, ProxyToResponse };
+namespace Slots {
+enum { BackingMap, Handle, Mode, HasLazyValues, Count };
+};
 
-JSObject *create(JSContext *cx, Mode mode, HandleObject owner);
-JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleObject init_headers);
-JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleValue initv);
+bool is_instance(JSObject *obj);
+bool is_instance(Value val);
+
+namespace detail {
+#define HEADERS_ITERATION_METHOD(argc)                                                             \
+  METHOD_HEADER(argc)                                                                              \
+  RootedObject backing_map(cx, detail::backing_map(self));                                         \
+  if (!detail::ensure_all_header_values_from_handle(cx, self, backing_map))                        \
+    return false;
+
+static const char VALID_NAME_CHARS[128] = {
+    0, 0, 0, 0, 0, 0, 0, 0, //   0
+    0, 0, 0, 0, 0, 0, 0, 0, //   8
+    0, 0, 0, 0, 0, 0, 0, 0, //  16
+    0, 0, 0, 0, 0, 0, 0, 0, //  24
+
+    0, 1, 0, 1, 1, 1, 1, 1, //  32
+    0, 0, 1, 1, 0, 1, 1, 0, //  40
+    1, 1, 1, 1, 1, 1, 1, 1, //  48
+    1, 1, 0, 0, 0, 0, 0, 0, //  56
+
+    0, 1, 1, 1, 1, 1, 1, 1, //  64
+    1, 1, 1, 1, 1, 1, 1, 1, //  72
+    1, 1, 1, 1, 1, 1, 1, 1, //  80
+    1, 1, 1, 0, 0, 0, 1, 1, //  88
+
+    1, 1, 1, 1, 1, 1, 1, 1, //  96
+    1, 1, 1, 1, 1, 1, 1, 1, // 104
+    1, 1, 1, 1, 1, 1, 1, 1, // 112
+    1, 1, 1, 0, 1, 0, 1, 0  // 120
+};
+
+#define NORMALIZE_NAME(name, fun_name)                                                             \
+  RootedValue normalized_name(cx, name);                                                           \
+  size_t name_len;                                                                                 \
+  UniqueChars name_chars =                                                                         \
+      detail::normalize_header_name(cx, &normalized_name, &name_len, fun_name);                    \
+  if (!name_chars)                                                                                 \
+    return false;
+
+#define NORMALIZE_VALUE(value, fun_name)                                                           \
+  RootedValue normalized_value(cx, value);                                                         \
+  size_t value_len;                                                                                \
+  UniqueChars value_chars =                                                                        \
+      detail::normalize_header_value(cx, &normalized_value, &value_len, fun_name);                 \
+  if (!value_chars)                                                                                \
+    return false;
+
+JSObject *backing_map(JSObject *self);
+Mode mode(JSObject *self);
+bool lazy_values(JSObject *self);
+uint32_t handle(JSObject *self);
+UniqueChars normalize_header_name(JSContext *cx, MutableHandleValue name_val, size_t *name_len,
+                                  const char *fun_name);
+UniqueChars normalize_header_value(JSContext *cx, MutableHandleValue value_val, size_t *value_len,
+                                   const char *fun_name);
+
+static PersistentRooted<JSString *> comma;
+bool append_header_value_to_map(JSContext *cx, HandleObject self, HandleValue normalized_name,
+                                MutableHandleValue normalized_value);
+bool get_header_names_from_handle(JSContext *cx, uint32_t handle, Mode mode,
+                                  HandleObject backing_map);
+static bool retrieve_value_for_header_from_handle(JSContext *cx, HandleObject self,
+                                                  HandleValue name, MutableHandleValue value);
+static bool ensure_value_for_header(JSContext *cx, HandleObject self, HandleValue normalized_name,
+                                    MutableHandleValue values);
+bool get_header_value_for_name(JSContext *cx, HandleObject self, HandleValue name,
+                               MutableHandleValue rval, const char *fun_name);
+static bool ensure_all_header_values_from_handle(JSContext *cx, HandleObject self,
+                                                 HandleObject backing_map);
+typedef int AppendHeaderOperation(int handle, const char *name, size_t name_len, const char *value,
+                                  size_t value_len);
+bool append_header_value(JSContext *cx, HandleObject self, HandleValue name, HandleValue value,
+                         const char *fun_name);
+} // namespace detail
 
 bool delazify(JSContext *cx, HandleObject headers);
-bool maybe_add(JSContext *cx, HandleObject headers, const char *name, const char *value);
+JSObject *create(JSContext *cx, HandleObject headers, Mode mode, HandleObject owner,
+                 HandleValue initv);
+const unsigned ctor_length = 1;
+bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
+bool get(JSContext *cx, unsigned argc, Value *vp);
+typedef int HeaderValuesSetOperation(int handle, const char *name, size_t name_len,
+                                     const char *values, size_t values_len);
+bool set(JSContext *cx, unsigned argc, Value *vp);
+bool has(JSContext *cx, unsigned argc, Value *vp);
+bool append(JSContext *cx, unsigned argc, Value *vp);
+bool maybe_add(JSContext *cx, HandleObject self, const char *name, const char *value);
+typedef int HeaderRemoveOperation(int handle, const char *name, size_t name_len);
+bool delete_(JSContext *cx, unsigned argc, Value *vp);
+bool forEach(JSContext *cx, unsigned argc, Value *vp);
+bool entries(JSContext *cx, unsigned argc, Value *vp);
+bool keys(JSContext *cx, unsigned argc, Value *vp);
+bool values(JSContext *cx, unsigned argc, Value *vp);
+const JSFunctionSpec methods[] = {
+    JS_FN("get", get, 1, JSPROP_ENUMERATE), JS_FN("has", has, 1, JSPROP_ENUMERATE),
+    JS_FN("set", set, 2, JSPROP_ENUMERATE), JS_FN("append", append, 2, JSPROP_ENUMERATE),
+    JS_FN("delete", delete_, 1, JSPROP_ENUMERATE), JS_FN("forEach", forEach, 1, JSPROP_ENUMERATE),
+    JS_FN("entries", entries, 0, JSPROP_ENUMERATE), JS_FN("keys", keys, 0, JSPROP_ENUMERATE),
+    JS_FN("values", values, 0, JSPROP_ENUMERATE),
+    // [Symbol.iterator] added in init_class.
+    JS_FS_END};
+const JSPropertySpec properties[] = {JS_PS_END};
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
+CLASS_BOILERPLATE_CUSTOM_INIT(Headers)
+JSObject *create(JSContext *cx, HandleObject headers, Mode mode, HandleObject owner,
+                 HandleObject init_headers);
+JSObject *create(JSContext *cx, HandleObject headers, Mode mode, HandleObject owner,
+                 HandleValue initv);
+JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner);
 } // namespace Headers
 
 namespace Request {
@@ -1340,7 +1447,11 @@ JSObject *maybe_headers(JSObject *obj) {
 template <auto mode> JSObject *headers(JSContext *cx, HandleObject obj) {
   JSObject *headers = maybe_headers(obj);
   if (!headers) {
-    headers = Headers::create(cx, mode, obj);
+    RootedObject headersInstance(
+        cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
+    if (!headersInstance)
+      return nullptr;
+    headers = Headers::create(cx, headersInstance, mode, obj);
     if (!headers)
       return nullptr;
     JS_SetReservedSlot(obj, Slots::Headers, ObjectValue(*headers));
@@ -4670,9 +4781,21 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
   // empty one.
   RootedObject headers(cx);
   if (!headers_val.isUndefined()) {
-    headers = Headers::create(cx, Headers::Mode::ProxyToRequest, request, headers_val);
+    RootedObject headersInstance(
+        cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
+    if (!headersInstance)
+      return nullptr;
+
+    headers =
+        Headers::create(cx, headersInstance, Headers::Mode::ProxyToRequest, request, headers_val);
   } else {
-    headers = Headers::create(cx, Headers::Mode::ProxyToRequest, request, input_headers);
+    RootedObject headersInstance(
+        cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
+    if (!headersInstance)
+      return nullptr;
+
+    headers =
+        Headers::create(cx, headersInstance, Headers::Mode::ProxyToRequest, request, input_headers);
   }
 
   if (!headers) {
@@ -5057,12 +5180,17 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   // 7.  If `init`["headers"] `exists`, then `fill` `this`’s `headers` with
   // `init`["headers"].
   RootedObject headers(cx);
-  headers = Headers::create(cx, Headers::Mode::ProxyToResponse, response, headers_val);
+  RootedObject headersInstance(
+      cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
+  if (!headersInstance)
+    return false;
+
+  headers =
+      Headers::create(cx, headersInstance, Headers::Mode::ProxyToResponse, response, headers_val);
   if (!headers) {
     return false;
   }
   JS::SetReservedSlot(response, Slots::Headers, JS::ObjectValue(*headers));
-
   // 8.  If `body` is non-null, then:
   if ((!body_val.isNullOrUndefined())) {
     //     1.  If `init`["status"] is a `null body status`, then `throw` a
@@ -5429,58 +5557,7 @@ bool maybe_consume_sequence_or_record(JSContext *cx, HandleValue initv, HandleOb
   return true;
 }
 namespace Headers {
-namespace Slots {
-enum { BackingMap, Handle, Mode, HasLazyValues, Count };
-};
-
-bool is_instance(JSObject *obj);
-bool is_instance(Value val);
-
 namespace detail {
-#define HEADERS_ITERATION_METHOD(argc)                                                             \
-  METHOD_HEADER(argc)                                                                              \
-  RootedObject backing_map(cx, detail::backing_map(self));                                         \
-  if (!detail::ensure_all_header_values_from_handle(cx, self, backing_map))                        \
-    return false;
-
-static const char VALID_NAME_CHARS[128] = {
-    0, 0, 0, 0, 0, 0, 0, 0, //   0
-    0, 0, 0, 0, 0, 0, 0, 0, //   8
-    0, 0, 0, 0, 0, 0, 0, 0, //  16
-    0, 0, 0, 0, 0, 0, 0, 0, //  24
-
-    0, 1, 0, 1, 1, 1, 1, 1, //  32
-    0, 0, 1, 1, 0, 1, 1, 0, //  40
-    1, 1, 1, 1, 1, 1, 1, 1, //  48
-    1, 1, 0, 0, 0, 0, 0, 0, //  56
-
-    0, 1, 1, 1, 1, 1, 1, 1, //  64
-    1, 1, 1, 1, 1, 1, 1, 1, //  72
-    1, 1, 1, 1, 1, 1, 1, 1, //  80
-    1, 1, 1, 0, 0, 0, 1, 1, //  88
-
-    1, 1, 1, 1, 1, 1, 1, 1, //  96
-    1, 1, 1, 1, 1, 1, 1, 1, // 104
-    1, 1, 1, 1, 1, 1, 1, 1, // 112
-    1, 1, 1, 0, 1, 0, 1, 0  // 120
-};
-
-#define NORMALIZE_NAME(name, fun_name)                                                             \
-  RootedValue normalized_name(cx, name);                                                           \
-  size_t name_len;                                                                                 \
-  UniqueChars name_chars =                                                                         \
-      detail::normalize_header_name(cx, &normalized_name, &name_len, fun_name);                    \
-  if (!name_chars)                                                                                 \
-    return false;
-
-#define NORMALIZE_VALUE(value, fun_name)                                                           \
-  RootedValue normalized_value(cx, value);                                                         \
-  size_t value_len;                                                                                \
-  UniqueChars value_chars =                                                                        \
-      detail::normalize_header_value(cx, &normalized_value, &value_len, fun_name);                 \
-  if (!value_chars)                                                                                \
-    return false;
-
 JSObject *backing_map(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return &JS::GetReservedSlot(self, Slots::BackingMap).toObject();
@@ -5614,8 +5691,6 @@ UniqueChars normalize_header_value(JSContext *cx, MutableHandleValue value_val, 
   *value_len = len;
   return value;
 }
-
-static PersistentRooted<JSString *> comma;
 
 // Append an already normalized value for an already normalized header name
 // to the JS side map, but not the host.
@@ -5868,8 +5943,9 @@ bool delazify(JSContext *cx, HandleObject headers) {
   return detail::ensure_all_header_values_from_handle(cx, headers, backing_map);
 }
 
-JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleObject init_headers) {
-  RootedObject headers(cx, create(cx, mode, owner));
+JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner,
+                 HandleObject init_headers) {
+  RootedObject headers(cx, create(cx, self, mode, owner));
   if (!headers) {
     return nullptr;
   }
@@ -5917,8 +5993,9 @@ JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleObject init
   return headers;
 }
 
-JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleValue initv) {
-  RootedObject headers(cx, create(cx, mode, owner));
+JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner,
+                 HandleValue initv) {
+  RootedObject headers(cx, create(cx, self, mode, owner));
   if (!headers)
     return nullptr;
 
@@ -5935,18 +6012,6 @@ JSObject *create(JSContext *cx, Mode mode, HandleObject owner, HandleValue initv
 
   return headers;
 }
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  CTOR_HEADER("Headers", 0);
-  RootedObject headers(cx, create(cx, Mode::Standalone, nullptr, args.get(0)));
-  if (!headers)
-    return false;
-
-  args.rval().setObject(*headers);
-  return true;
-}
-
-const unsigned ctor_length = 1;
 
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
 
@@ -6135,18 +6200,16 @@ bool values(JSContext *cx, unsigned argc, Value *vp) {
   return JS::MapValues(cx, backing_map, args.rval());
 }
 
-const JSFunctionSpec methods[] = {
-    JS_FN("get", get, 1, JSPROP_ENUMERATE), JS_FN("has", has, 1, JSPROP_ENUMERATE),
-    JS_FN("set", set, 2, JSPROP_ENUMERATE), JS_FN("append", append, 2, JSPROP_ENUMERATE),
-    JS_FN("delete", delete_, 1, JSPROP_ENUMERATE), JS_FN("forEach", forEach, 1, JSPROP_ENUMERATE),
-    JS_FN("entries", entries, 0, JSPROP_ENUMERATE), JS_FN("keys", keys, 0, JSPROP_ENUMERATE),
-    JS_FN("values", values, 0, JSPROP_ENUMERATE),
-    // [Symbol.iterator] added in init_class.
-    JS_FS_END};
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  CTOR_HEADER("Headers", 0);
+  RootedObject headersInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  RootedObject headers(cx, create(cx, headersInstance, Mode::Standalone, nullptr, args.get(0)));
+  if (!headers)
+    return false;
 
-const JSPropertySpec properties[] = {JS_PS_END};
-
-CLASS_BOILERPLATE_CUSTOM_INIT(Headers)
+  args.rval().setObject(*headers);
+  return true;
+}
 
 bool init_class(JSContext *cx, HandleObject global) {
   bool ok = init_class_impl(cx, global);
@@ -6162,11 +6225,7 @@ bool init_class(JSContext *cx, HandleObject global) {
   return JS_DefinePropertyById(cx, proto_obj, iteratorId, entries, 0);
 }
 
-JSObject *create(JSContext *cx, Mode mode, HandleObject owner) {
-  RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!self)
-    return nullptr;
-
+JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner) {
   JS_SetReservedSlot(self, Slots::Mode, JS::Int32Value(static_cast<int32_t>(mode)));
   uint32_t handle = UINT32_MAX - 1;
   if (mode != Mode::Standalone)
