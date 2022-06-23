@@ -1,4 +1,4 @@
-const http = require('http');
+import http from 'http';
 
 // Upstream Server - A local node HTTP Server that was can assign as a backend
 // To verify Upstream requests sent by a wasm module
@@ -93,6 +93,6 @@ class UpstreamServer {
       this.server.close();
     }
   }
-}
+};
 
-module.exports = UpstreamServer;
+export default UpstreamServer;

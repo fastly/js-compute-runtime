@@ -1,4 +1,4 @@
-const compareHeaders = require('./compare-headers.js');
+import compareHeaders from './compare-headers.js';
 
 // Function to compare a response from a server (Viceroy, C@E, etc...)
 // With a JSON Response Object in our config
@@ -63,7 +63,6 @@ const compareDownstreamResponse = async (configResponse, actualResponse) => {
       }
     }
   }
-}
+};
 
-module.exports = compareDownstreamResponse;
-
+export default compareDownstreamResponse;
