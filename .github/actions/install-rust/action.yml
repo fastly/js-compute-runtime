@@ -8,5 +8,20 @@ inputs:
     default: 'stable'
 
 runs:
-  using: 'node16'
-  main: 'main.js'
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        rustup show
+
+        # Save disk space by avoiding incremental compilation.
+        echo 'CARGO_INCREMENTAL=0' >> "$GITHUB_ENV"
+
+        # Turn down debuginfo from 2 to 1 to help save disk space
+        echo 'CARGO_PROFILE_DEV_DEBUG=1' >> "$GITHUB_ENV"
+        echo 'CARGO_PROFILE_TEST_DEBUG=1' >> "$GITHUB_ENV"
+
+    - if: ${{ ! startsWith(inputs.toolchain, 'nightly') }}
+      shell: bash
+      run: |
+        echo 'RUSTFLAGS=-D warnings' >> "$GITHUB_ENV"
