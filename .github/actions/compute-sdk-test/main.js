@@ -1,5 +1,6 @@
 // Node & 3P Modules
 import fs from 'fs';
+import fsPromises from 'fs/promises';
 import path from 'path';
 import childProcess from 'node:child_process';
 import fetch from 'node-fetch';
@@ -31,17 +32,9 @@ import UpstreamServer from './src/upstream-server.js';
 import compareUpstreamRequest from './src/compare-upstream-request.js';
 import compareDownstreamResponse from './src/compare-downstream-response.js';
 
-
 // Get our config from the Github Action
 const integrationTestBase = `./integration-tests/js-compute`;
 const fixtureBase = `${integrationTestBase}/fixtures`;
-const configRelativePath = `${integrationTestBase}/sdk-test-config.json`;
-
-console.info(`Parsing SDK Test config: ${configRelativePath}`);
-const configAbsolutePath = path.resolve(configRelativePath);
-const config = JSON.parse(fs.readFileSync(configAbsolutePath));
-console.info('Running the SDK Config:');
-console.log(`${JSON.stringify(config, null, 2)}`);
 
 async function spawnViceroy(testName, viceroyAddr) {
   const wasmPath = `${fixtureBase}/${testName}/${testName}.wasm`;
@@ -59,31 +52,57 @@ async function spawnViceroy(testName, viceroyAddr) {
 function buildTest(testName, backendAddr) {
   console.info(`Compiling the fixture for: ${testName} ...`);
 
-  childProcess.execSync(
-    `./integration-tests/js-compute/build-one.sh ${testName}`,
-    {
-      stdio: 'inherit'
-    }
-  );
+  try {
+    childProcess.execSync(`./integration-tests/js-compute/build-one.sh ${testName}`);
+  } catch(e) {
+    console.error(`Failed to compile ${testName}`);
+    console.log(e.stdout.toString("utf-8"));
+    process.exit(1);
+  }
 
-  childProcess.execSync(
-    `./integration-tests/js-compute/replace-host.sh ${testName} http://${backendAddr}`,
-    {
-      stdio: 'inherit'
-    }
-  );
+  try {
+    childProcess.execSync(`./integration-tests/js-compute/replace-host.sh ${testName} http://${backendAddr}`);
+  } catch(e) {
+    console.error(`Failed to compile ${testName}`);
+    console.log(e.stdout.toString("utf-8"));
+    process.exit(1);
+  }
 }
+
+async function discoverTests(fixturesPath) {
+  let tests = {};
+
+  // discover all of our test cases
+  let fixtures = await fsPromises.readdir(fixturesPath, { withFileTypes: true });
+  for (const ent of fixtures) {
+    if (!ent.isDirectory()) {
+      continue;
+    }
+
+    let jsonText;
+    try {
+      jsonText = await fsPromises.readFile(`${fixturesPath}/${ent.name}/tests.json`);
+    } catch(err) {
+      continue;
+    }
+
+    tests[ent.name] = JSON.parse(jsonText);
+  }
+
+  return tests;
+}
+
 
 // Our main task, in which we compile and run tests
 const mainAsyncTask = async () => {
-  // Iterate through our config and compile our wasm modules
-  const modules = config.modules;
-  const moduleKeys = Object.keys(modules);
 
   const backendAddr = '127.0.0.1:8082';
 
+  const testCases = await discoverTests(fixtureBase);
+  const testNames = Object.keys(testCases);
+
   // build all the tests
-  moduleKeys.forEach(testName => buildTest(testName, backendAddr));
+  testNames.forEach(testName => buildTest(testName, backendAddr));
   buildTest('backend', backendAddr);
 
   // Start up the local backend
@@ -115,16 +134,16 @@ const mainAsyncTask = async () => {
   });
 
   // Iterate through the module tests, and run the Viceroy tests
-  for (const moduleKey of moduleKeys) {
-    const testBase = `${fixtureBase}/${moduleKey}`;
+  for (const testName of testNames) {
+    const testBase = `${fixtureBase}/${testName}`;
 
     // created/used by ./integration-tests/js-compute/build-one.sh
     const fastlyTomlPath = `${testBase}/fastly.toml`;
-    const wasmPath = `${testBase}/${moduleKey}.wasm`;
+    const wasmPath = `${testBase}/${testName}.wasm`;
 
-    const module = modules[moduleKey];
-    const moduleTestKeys = Object.keys(module.tests);
-    console.info(`Running tests for the module: ${moduleKey} ...`);
+    const tests = testCases[testName];
+    const moduleTestKeys = Object.keys(tests);
+    console.info(`Running tests for the module: ${testName} ...`);
 
     // Spawn a new viceroy instance for the module
     viceroy = new Viceroy();
@@ -135,9 +154,9 @@ const mainAsyncTask = async () => {
     })
 
     for (const testKey of moduleTestKeys) {
-      const test = module.tests[testKey];
+      const test = tests[testKey];
 
-      // Check if this module should be tested in viceroy
+      // Check if this case should be tested in viceroy
       if (!test.environments.includes("viceroy")) {
         continue;
       }
@@ -237,13 +256,13 @@ const mainAsyncTask = async () => {
   }
 
   // Check if we have C@E Environement tests
-  let shouldRunComputeTests = moduleKeys.some(moduleKey => {
-    const module = modules[moduleKey];
-    const moduleTestKeys = Object.keys(module.tests);
+  let shouldRunComputeTests = testNames.some(testName => {
+    const tests = testCases[testName];
+    const moduleTestKeys = Object.keys(tests);
 
     return moduleTestKeys.some(testKey => {
+      const test = tests[testKey];
 
-      const test = module.tests[testKey];
       // Check if this module should be tested in viceroy
       if (test.environments.includes("c@e")) {
         return true;
@@ -264,6 +283,7 @@ mainAsyncTask().then(() => {
   process.exit(0);
 }).catch((error) => {
   console.error(error.message);
+  console.dir(error);
   process.exit(1);
 });
 
