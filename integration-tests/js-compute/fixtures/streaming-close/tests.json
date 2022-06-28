@@ -1,0 +1,26 @@
+{
+  "GET /": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": [
+        "wll",
+        " smth\n"
+      ]
+    },
+    "local_upstream_requests": [
+      {
+        "method": "POST",
+        "pathname": "/example",
+        "headers": {
+          "Vowels-Removed": "2"
+        },
+        "timing": "afterDownstreamRequest" 
+      }
+    ]
+  }
+}

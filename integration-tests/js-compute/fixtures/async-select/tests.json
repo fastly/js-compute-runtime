@@ -1,0 +1,17 @@
+{
+  "POST /hello": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "POST",
+      "pathname": "/hello"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "FooName": "FooValue",
+        "BarName": "BarValue"
+      },
+      "body": "pong"
+    }
+  }
+}
