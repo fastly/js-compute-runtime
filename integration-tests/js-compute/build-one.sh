@@ -11,7 +11,7 @@ test="$1"
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-npm install -s
+npm ci -s
 
 if [ -f "fixtures/$test/$test.ts" ]; then
   npm run -s build:test --test="$test"
