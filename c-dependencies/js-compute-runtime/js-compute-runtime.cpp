@@ -235,7 +235,12 @@ bool eval_stdin(JSContext *cx, MutableHandleValue result) {
   }
 
   JS::CompileOptions opts(cx);
+
+  // This ensures that we're eagerly loading the sript, and not lazily generating bytecode for
+  // functions.
+  // https://searchfox.org/mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0/js/public/CompileOptions.h#571-574
   opts.setForceFullParse();
+
   // TODO: investigate passing a filename to Wizer and using that here to
   // improve diagnostics.
   // TODO: furthermore, investigate whether Wizer by now allows us to pass an
