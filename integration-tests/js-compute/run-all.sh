@@ -2,8 +2,7 @@
 
 set -euo pipefail
 
-root="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. && pwd)"
-action="${root}/.github/actions/compute-sdk-test"
+cd "$(dirname "${BASH_SOURCE[0]}")"/../..
 
 failed=
 
@@ -26,15 +25,14 @@ if [ -n "$failed" ]; then
   exit 1
 fi
 
-if [ ! -f "${root}/target/release/js-compute-runtime" ]; then
-  cd "${root}"
+if [ ! -f "target/release/js-compute-runtime" ]; then
   cargo build --release
 fi
 
 # build the action
-cd "${action}"
-npm ci
+(
+  cd .github/actions/compute-sdk-test
+  npm ci
+)
 
-cd "$root"
-
-node "${action}/main.js"
+node ".github/actions/compute-sdk-test/main.js"
