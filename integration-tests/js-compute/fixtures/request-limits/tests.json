@@ -1,0 +1,13 @@
+{
+  "POST /hello?requests=7": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "POST",
+      "pathname": "/hello?requests=7"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "7"
+    }
+  }
+}
