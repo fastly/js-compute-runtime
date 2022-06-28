@@ -3,7 +3,7 @@
 const builtins = [
     TransformStream,
     CompressionStream,
-    // Request,
+    Request,
     Response,
     Dictionary,
     Headers,
