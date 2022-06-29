@@ -1,6 +1,6 @@
 {
   "name": "@fastly/js-compute",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "js-compute-runtime-version": "0.2.4",
   "license": "SEE LICENSE IN LICENSE",
   "main": "js-compute-runtime-cli.js",
