@@ -31,49 +31,49 @@ import Viceroy from './src/viceroy.js';
 import UpstreamServer from './src/upstream-server.js';
 import compareUpstreamRequest from './src/compare-upstream-request.js';
 import compareDownstreamResponse from './src/compare-downstream-response.js';
+import tests from './src/test-suite.js';
 
-// Get our config from the Github Action
-const integrationTestBase = `./integration-tests/js-compute`;
-const fixtureBase = `${integrationTestBase}/fixtures`;
 
-async function spawnViceroy(testName, viceroyAddr) {
-  const wasmPath = `${fixtureBase}/${testName}/${testName}.wasm`;
-  const fastlyTomlPath = `${fixtureBase}/${testName}/fastly.toml`;
+async function spawnViceroy(config, testName, viceroyAddr) {
+  console.info(`Spawning a viceroy instance for ${testName} on ${viceroyAddr}`);
 
   let viceroy = new Viceroy();
-  await viceroy.spawn(wasmPath, {
-    config: fastlyTomlPath,
+
+  await viceroy.spawn(config.wasmPath(testName), {
+    config: config.fastlyTomlPath(testName),
     addr: viceroyAddr
   });
 
   return viceroy;
 }
 
-function buildTest(testName, backendAddr) {
+function buildTest(config, testName, backendAddr) {
   console.info(`Compiling the fixture for: ${testName} ...`);
 
   try {
-    childProcess.execSync(`./integration-tests/js-compute/build-one.sh ${testName}`);
+    childProcess.execSync(`${config.buildScript} ${testName}`);
   } catch(e) {
     console.error(`Failed to compile ${testName}`);
-    console.log(e.stdout.toString("utf-8"));
+    console.info(e.stdout.toString("utf-8"));
     process.exit(1);
   }
 
   try {
-    childProcess.execSync(`./integration-tests/js-compute/replace-host.sh ${testName} http://${backendAddr}`);
+    childProcess.execSync(`${config.replaceHostScript} ${testName} http://${backendAddr}`);
   } catch(e) {
     console.error(`Failed to compile ${testName}`);
-    console.log(e.stdout.toString("utf-8"));
+    console.info(e.stdout.toString("utf-8"));
     process.exit(1);
   }
 }
 
-async function discoverTests(fixturesPath) {
+async function discoverTests(config) {
+  console.info(`Looking for tests in ${config.fixtureBase}`);
+
   let tests = {};
 
   // discover all of our test cases
-  let fixtures = await fsPromises.readdir(fixturesPath, { withFileTypes: true });
+  let fixtures = await fsPromises.readdir(config.fixtureBase, { withFileTypes: true });
   for (const ent of fixtures) {
     if (!ent.isDirectory()) {
       continue;
@@ -81,7 +81,7 @@ async function discoverTests(fixturesPath) {
 
     let jsonText;
     try {
-      jsonText = await fsPromises.readFile(`${fixturesPath}/${ent.name}/tests.json`);
+      jsonText = await fsPromises.readFile(config.testJsonPath(ent.name));
     } catch(err) {
       continue;
     }
@@ -96,18 +96,21 @@ async function discoverTests(fixturesPath) {
 // Our main task, in which we compile and run tests
 const mainAsyncTask = async () => {
 
+  // Get our config from the Github Action
+  const config = new tests.TestConfig('./integration-tests/js-compute');
+
   const backendAddr = '127.0.0.1:8082';
 
-  const testCases = await discoverTests(fixtureBase);
+  const testCases = await discoverTests(config);
   const testNames = Object.keys(testCases);
 
   // build all the tests
-  testNames.forEach(testName => buildTest(testName, backendAddr));
-  buildTest('backend', backendAddr);
+  testNames.forEach(testName => buildTest(config, testName, backendAddr));
+  buildTest(config, 'backend', backendAddr);
 
   // Start up the local backend
   console.info(`Starting the generic backend on ${backendAddr}`);
-  let backend = await spawnViceroy('backend', backendAddr);
+  let backend = await spawnViceroy(config, 'backend', backendAddr);
 
   console.info(`Running the Viceroy environment tests ...`);
 
@@ -135,23 +138,13 @@ const mainAsyncTask = async () => {
 
   // Iterate through the module tests, and run the Viceroy tests
   for (const testName of testNames) {
-    const testBase = `${fixtureBase}/${testName}`;
-
-    // created/used by ./integration-tests/js-compute/build-one.sh
-    const fastlyTomlPath = `${testBase}/fastly.toml`;
-    const wasmPath = `${testBase}/${testName}.wasm`;
-
     const tests = testCases[testName];
     const moduleTestKeys = Object.keys(tests);
     console.info(`Running tests for the module: ${testName} ...`);
 
     // Spawn a new viceroy instance for the module
-    viceroy = new Viceroy();
     const viceroyAddr = '127.0.0.1:8080';
-    await viceroy.spawn(wasmPath, {
-      config: fastlyTomlPath,
-      addr: viceroyAddr
-    })
+    viceroy = await spawnViceroy(config, testName, viceroyAddr);
 
     for (const testKey of moduleTestKeys) {
       const test = tests[testKey];
@@ -161,7 +154,7 @@ const mainAsyncTask = async () => {
         continue;
       }
 
-      console.log(`Running the test ${testKey} ...`);
+      console.info(`Running the test ${testKey} ...`);
 
       // Prepare our upstream server for this specific test
       isDownstreamResponseHandled = false;
