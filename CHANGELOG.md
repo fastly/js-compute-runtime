@@ -2,10 +2,25 @@
 
 ### Enhancements
 
-- Removed the requirement for a fastly.toml file to be present when using js-compute-runtimes CLI to compile a WASM file
+### Fixes
 
+## 0.3.0
+
+### Enhancements
+
+- Implement the CompressionStream buitin
+  [#84](https://github.com/fastly/js-compute-runtime/pull/84)
+- Removed the requirement for a fastly.toml file to be present when using js-compute-runtimes CLI to compile a WASM file
 - **Breaking change:** Removed --skip-pkg argument from js-compute-runtime's CLI
   [#108](https://github.com/fastly/js-compute-runtime/pull/108)
+
+### Fixes
+
+- Fix the behavior of `console.debug`
+- Fix the response error message text
+- Throw an error if constructors are called as plain functions
+- Fix the behavior of `console.debug`
+- Allow builtin classes to be extended
 
 ## 0.2.5 (2022-04-12)
 
