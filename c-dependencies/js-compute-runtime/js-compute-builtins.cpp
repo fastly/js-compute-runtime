@@ -43,6 +43,7 @@
 #include "builtins/logger.h"
 #include "builtins/native-stream-sink.h"
 #include "builtins/native-stream-source.h"
+#include "builtins/object-store.h"
 #include "builtins/transform-stream-default-controller.h"
 #include "builtins/transform-stream.h"
 #include "builtins/url.h"
@@ -403,20 +404,6 @@ bool is_instance(JSObject *obj);
 }
 
 namespace RequestOrResponse {
-namespace Slots {
-enum {
-  RequestOrResponse,
-  Body,
-  BodyStream,
-  BodyAllPromise,
-  HasBody,
-  BodyUsed,
-  Headers,
-  URL,
-  Count
-};
-};
-
 bool is_instance(JSObject *obj) { return Request::is_instance(obj) || Response::is_instance(obj); }
 
 uint32_t handle(JSObject *obj) {
@@ -659,13 +646,13 @@ bool append_body(JSContext *cx, HandleObject self, HandleObject source) {
 
 typedef bool ParseBodyCB(JSContext *cx, HandleObject self, UniqueChars buf, size_t len);
 
-template <BodyReadResult result_type>
+template <RequestOrResponse::BodyReadResult result_type>
 bool parse_body(JSContext *cx, HandleObject self, UniqueChars buf, size_t len) {
   RootedObject result_promise(cx, &JS::GetReservedSlot(self, Slots::BodyAllPromise).toObject());
   JS::SetReservedSlot(self, Slots::BodyAllPromise, JS::UndefinedValue());
   RootedValue result(cx);
 
-  if (result_type == BodyReadResult::ArrayBuffer) {
+  if (result_type == RequestOrResponse::BodyReadResult::ArrayBuffer) {
     auto *rawBuf = buf.release();
     RootedObject array_buffer(cx, JS::NewArrayBufferWithContents(cx, len, rawBuf));
     if (!array_buffer) {
@@ -679,10 +666,10 @@ bool parse_body(JSContext *cx, HandleObject self, UniqueChars buf, size_t len) {
       return RejectPromiseWithPendingError(cx, result_promise);
     }
 
-    if (result_type == BodyReadResult::Text) {
+    if (result_type == RequestOrResponse::BodyReadResult::Text) {
       result.setString(text);
     } else {
-      MOZ_ASSERT(result_type == BodyReadResult::JSON);
+      MOZ_ASSERT(result_type == RequestOrResponse::BodyReadResult::JSON);
       if (!JS_ParseJSON(cx, text, &result)) {
         return RejectPromiseWithPendingError(cx, result_promise);
       }
@@ -716,7 +703,7 @@ bool consume_body_handle_for_bodyAll(JSContext *cx, HandleObject self, HandleVal
   return parse_body(cx, self, std::move(buf), bytes_read);
 }
 
-template <BodyReadResult result_type>
+template <RequestOrResponse::BodyReadResult result_type>
 bool bodyAll(JSContext *cx, CallArgs args, HandleObject self) {
   // TODO: mark body as consumed when operating on stream, too.
   if (body_used(self)) {
@@ -842,6 +829,7 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
     // `responseDone`.
     if (Response::is_instance(body_owner)) {
       FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+      return HANDLE_RESULT(cx, xqd_body_close(body_handle));
     }
 
     if (!HANDLE_RESULT(cx, xqd_body_close(body_handle))) {
@@ -1216,7 +1204,8 @@ bool headers_get(JSContext *cx, unsigned argc, Value *vp) {
   return true;
 }
 
-template <BodyReadResult result_type> bool bodyAll(JSContext *cx, unsigned argc, Value *vp) {
+template <RequestOrResponse::BodyReadResult result_type>
+bool bodyAll(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(0)
   return RequestOrResponse::bodyAll<result_type>(cx, args, self);
 }
@@ -1243,9 +1232,10 @@ bool setCacheOverride(JSContext *cx, unsigned argc, Value *vp) {
 }
 
 const JSFunctionSpec methods[] = {
-    JS_FN("arrayBuffer", bodyAll<BodyReadResult::ArrayBuffer>, 0, JSPROP_ENUMERATE),
-    JS_FN("json", bodyAll<BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
-    JS_FN("text", bodyAll<BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
+    JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
+          JSPROP_ENUMERATE),
+    JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
+    JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setCacheOverride", setCacheOverride, 3, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSPropertySpec properties[] = {JS_PSG("method", method_get, JSPROP_ENUMERATE),
@@ -2058,7 +2048,8 @@ bool headers_get(JSContext *cx, unsigned argc, Value *vp) {
   return true;
 }
 
-template <BodyReadResult result_type> bool bodyAll(JSContext *cx, unsigned argc, Value *vp) {
+template <RequestOrResponse::BodyReadResult result_type>
+bool bodyAll(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(0)
   return RequestOrResponse::bodyAll<result_type>(cx, args, self);
 }
@@ -2075,9 +2066,11 @@ bool bodyUsed_get(JSContext *cx, unsigned argc, Value *vp) {
 }
 
 const JSFunctionSpec methods[] = {
-    JS_FN("arrayBuffer", bodyAll<BodyReadResult::ArrayBuffer>, 0, JSPROP_ENUMERATE),
-    JS_FN("json", bodyAll<BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
-    JS_FN("text", bodyAll<BodyReadResult::Text>, 0, JSPROP_ENUMERATE), JS_FS_END};
+    JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
+          JSPROP_ENUMERATE),
+    JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
+    JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
+    JS_FS_END};
 
 const JSPropertySpec properties[] = {JS_PSG("type", type_get, JSPROP_ENUMERATE),
                                      JS_PSG("url", url_get, JSPROP_ENUMERATE),
@@ -4147,14 +4140,16 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!WorkerLocation::init_class(cx, global))
     return false;
+  if (!ObjectStore::init_class(cx, global))
+    return false;
+  if (!ObjectStoreEntry::init_class(cx, global))
+    return false;
 
   pending_requests = new JS::PersistentRootedObjectVector(cx);
   pending_body_reads = new JS::PersistentRootedObjectVector(cx);
 
   return true;
 }
-
-JSObject *create_fetch_event(JSContext *cx) { return FetchEvent::create(cx); }
 
 UniqueChars stringify_value(JSContext *cx, JS::HandleValue value) {
   JS::RootedString str(cx, JS_ValueToSource(cx, value));

@@ -10,6 +10,7 @@ const builtins = [
   TextDecoder,
   URL,
   URLSearchParams,
+  ObjectStore,
 ];
 
 addEventListener("fetch", (event) => {
@@ -25,7 +26,8 @@ addEventListener("fetch", (event) => {
             super("gzip");
             break;
           }
-          case "Dictionary": {
+          case "Dictionary":
+          case "ObjectStore": {
             super("example");
             break;
           }

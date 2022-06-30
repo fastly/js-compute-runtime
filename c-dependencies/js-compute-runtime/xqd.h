@@ -43,6 +43,10 @@ typedef struct {
   uint32_t handle;
 } DictionaryHandle;
 
+typedef struct {
+  uint32_t handle;
+} ObjectStoreHandle;
+
 #define INVALID_HANDLE (UINT32_MAX - 1)
 
 typedef enum BodyWriteEnd {
@@ -293,6 +297,17 @@ int xqd_dictionary_open(const char *name, size_t name_len, DictionaryHandle *dic
 WASM_IMPORT("fastly_dictionary", "get")
 int xqd_dictionary_get(DictionaryHandle dict_handle, const char *key, size_t key_len, char *value,
                        size_t value_max_len, size_t *nwritten);
+
+// Module fastly_object_store
+WASM_IMPORT("fastly_object_store", "open")
+int fastly_object_store_open(const char *name, size_t name_len,
+                             ObjectStoreHandle *object_store_handle_out);
+WASM_IMPORT("fastly_object_store", "lookup")
+int fastly_object_store_lookup(ObjectStoreHandle object_store_handle, const char *key,
+                               size_t key_len, BodyHandle *opt_body_handle_out);
+WASM_IMPORT("fastly_object_store", "insert")
+int fastly_object_store_insert(ObjectStoreHandle object_store_handle, const char *key,
+                               size_t key_len, BodyHandle body_handle);
 
 WASM_IMPORT("fastly_geo", "lookup")
 int xqd_geo_lookup(const char *addr_octets, size_t addr_len, char *buf, size_t buf_len,

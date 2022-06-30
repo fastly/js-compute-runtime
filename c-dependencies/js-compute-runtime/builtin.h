@@ -43,8 +43,8 @@
                                                                                                    \
   bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name) {          \
     if (!is_instance(receiver)) {                                                                  \
-      JS_ReportErrorUTF8(cx, "Method %s called on receiver that's not an instance of %s\n",        \
-                         method_name, class_.name);                                                \
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_INSTANCE,         \
+                                method_name, class_.name);                                         \
       return false;                                                                                \
     }                                                                                              \
     return true;                                                                                   \
@@ -154,8 +154,8 @@ public:
 
   static bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name) {
     if (!Impl::is_instance(receiver)) {
-      JS_ReportErrorUTF8(cx, "Method %s called on receiver that's not an instance of %s\n",
-                         method_name, Impl::class_.name);
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_INSTANCE,
+                                method_name, Impl::class_.name);
       return false;
     }
 

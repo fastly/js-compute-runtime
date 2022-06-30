@@ -39,9 +39,22 @@
  */
 
 // clang-format off
-MSG_DEF(JSMSG_NOT_AN_ERROR,                    0, JSEXN_ERR, "<Error #0 is reserved>")
-MSG_DEF(JSMSG_BUILTIN_CTOR_NO_NEW,             1, JSEXN_TYPEERR, "calling a builtin {0} constructor without new is forbidden")
-MSG_DEF(JSMSG_INVALID_BUFFER_ARG,              2, JSEXN_TYPEERR, "{0} must be of type ArrayBuffer or ArrayBufferView but got \"{1}\"")
-MSG_DEF(JSMSG_INVALID_COMPRESSION_FORMAT,      1, JSEXN_TYPEERR, "'format' has to be \"deflate\", \"deflate-raw\", or \"gzip\", but got \"{0}\"")
-MSG_DEF(JSMSG_DECOMPRESSING_ERROR,             0, JSEXN_TYPEERR, "DecompressionStream transform: error decompressing chunk")
+MSG_DEF(JSMSG_NOT_AN_ERROR,                                    0, JSEXN_ERR, "<Error #0 is reserved>")
+MSG_DEF(JSMSG_BUILTIN_CTOR_NO_NEW,                             1, JSEXN_TYPEERR, "calling a builtin {0} constructor without new is forbidden")
+MSG_DEF(JSMSG_INCOMPATIBLE_INSTANCE,                           2, JSEXN_TYPEERR, "Method {0} called on receiver that's not an instance of {1}")
+MSG_DEF(JSMSG_INVALID_BUFFER_ARG,                              2, JSEXN_TYPEERR, "{0} must be of type ArrayBuffer or ArrayBufferView but got \"{1}\"")
+MSG_DEF(JSMSG_INVALID_COMPRESSION_FORMAT,                      1, JSEXN_TYPEERR, "'format' has to be \"deflate\", \"deflate-raw\", or \"gzip\", but got \"{0}\"")
+MSG_DEF(JSMSG_DECOMPRESSING_ERROR,                             0, JSEXN_TYPEERR, "DecompressionStream transform: error decompressing chunk")
+MSG_DEF(JSMSG_OBJECT_STORE_NAME_EMPTY,                         0, JSEXN_TYPEERR, "ObjectStore constructor: name can not be an empty string")
+MSG_DEF(JSMSG_OBJECT_STORE_NAME_TOO_LONG,                      0, JSEXN_TYPEERR, "ObjectStore constructor: name can not be more than 255 characters")
+MSG_DEF(JSMSG_OBJECT_STORE_NAME_NO_CONTROL_CHARACTERS,         0, JSEXN_TYPEERR, "ObjectStore constructor: name can not contain control characters (\\u0000-\\u001F)")
+MSG_DEF(JSMSG_OBJECT_STORE_DOES_NOT_EXIST,                     1, JSEXN_TYPEERR, "ObjectStore constructor: No ObjectStore named '{0}' exists")
+MSG_DEF(JSMSG_OBJECT_STORE_KEY_EMPTY,                          0, JSEXN_TYPEERR, "ObjectStore key can not be an empty string")
+MSG_DEF(JSMSG_OBJECT_STORE_KEY_TOO_LONG,                       0, JSEXN_TYPEERR, "ObjectStore key can not be more than 1024 characters")
+MSG_DEF(JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER,              1, JSEXN_TYPEERR, "ObjectStore key can not contain {0} character")
+MSG_DEF(JSMSG_OBJECT_STORE_KEY_ACME,                           0, JSEXN_TYPEERR, "ObjectStore key can not start with .well-known/acme-challenge/")
+MSG_DEF(JSMSG_OBJECT_STORE_KEY_RELATIVE,                       0, JSEXN_TYPEERR, "ObjectStore key can not be '.' or '..'")
+MSG_DEF(JSMSG_OBJECT_STORE_PUT_CONTENT_STREAM,                 0, JSEXN_TYPEERR, "Content-provided streams are not yet supported for streaming into ObjectStore")
+MSG_DEF(JSMSG_OBJECT_STORE_PUT_OVER_30_MB,                     0, JSEXN_TYPEERR, "ObjectStore value can not be more than 30 Megabytes in size")
+MSG_DEF(JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED,             0, JSEXN_TYPEERR, "Can't use a ReadableStream that's locked or has ever been read from or canceled")
 //clang-format on

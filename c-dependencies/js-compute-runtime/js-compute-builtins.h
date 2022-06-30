@@ -77,9 +77,38 @@ void markWizeningAsFinished();
 bool define_fastly_sys(JSContext *cx, JS::HandleObject global);
 
 namespace RequestOrResponse {
+namespace Slots {
+enum {
+  RequestOrResponse,
+  Body,
+  BodyStream,
+  BodyAllPromise,
+  HasBody,
+  BodyUsed,
+  Headers,
+  URL,
+  Count
+};
+};
 bool is_instance(JSObject *obj);
 JSObject *body_stream(JSObject *obj);
+enum class BodyReadResult {
+  ArrayBuffer,
+  JSON,
+  Text,
+};
+
+bool body_used(JSObject *obj);
+bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self, bool create_if_undefined);
+bool body_unusable(JSContext *cx, JS::HandleObject body);
+BodyHandle body_handle(JSObject *obj);
+template <BodyReadResult result_type>
+bool bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
 } // namespace RequestOrResponse
+
+int write_to_body_all(BodyHandle handle, const char *buf, size_t len);
+
+bool RejectPromiseWithPendingError(JSContext *cx, JS::HandleObject promise);
 
 namespace URL {
 bool is_instance(JS::Value val);
