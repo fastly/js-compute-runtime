@@ -5,6 +5,21 @@ import chalk from 'chalk';
 
 import killProcessAndWait from './kill-process-and-wait.js';
 
+async function timeout(millis, message) {
+  if (message === undefined) {
+    message = `timeout reached after ${millis} milliseconds`;
+  }
+
+  return new Promise((_resolve, reject) => setTimeout(() => reject(message), millis));
+}
+
+async function viceroyReady(viceroyHostname, viceroyPort) {
+  let isViceroyReady = false;
+  while (!isViceroyReady) {
+    isViceroyReady = await isPortReachable(viceroyPort, {host: viceroyHostname});
+  }
+}
+
 // Viceroy - JS Class to use Node's Child Process and Spawn and kill Viceroy
 // processes, using the Viceroy CLI
 class Viceroy {
@@ -52,13 +67,16 @@ class Viceroy {
       this.logs = `${this.logs}\n${data}`;
     });
 
+    // Wait for 10 seconds before deciding that viceroy has failed to start
+    const VICEROY_READY_TIMEOUT = 10000;
     try {
-      let isViceroyReady = false;
-      while (!isViceroyReady) {
-        isViceroyReady = await isPortReachable(viceroyPort, {host: viceroyHostname});
-      }
+      await Promise.race([
+        viceroyReady(viceroyHostname, viceroyPort),
+        timeout(VICEROY_READY_TIMEOUT, "Viceroy failed to start"),
+      ]);
     } catch (err) {
       console.error(err);
+      console.dir(err);
       await killProcessAndWait(this.viceroyProcess);
       process.exit(1);
     }
