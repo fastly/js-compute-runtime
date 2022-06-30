@@ -7140,7 +7140,7 @@ class Viceroy {
     });
 
     // Wait for 10 seconds before deciding that viceroy has failed to start
-    const VICEROY_READY_TIMEOUT = 10000;
+    const VICEROY_READY_TIMEOUT = 20000;
     try {
       await Promise.race([
         viceroyReady(viceroyHostname, viceroyPort),
