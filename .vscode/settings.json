@@ -74,7 +74,12 @@
         "typeinfo": "cpp",
         "unordered_map": "cpp",
         "utility": "cpp",
-        "*.msg": "cpp"
+        "*.idl": "cpp",
+        "*.inc": "cpp",
+        "*.msg": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "unordered_set": "cpp"
     },
     "git.ignoreLimitWarning": true
 }
