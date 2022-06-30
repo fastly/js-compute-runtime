@@ -325,8 +325,8 @@ async function startViceroy(runtime, config, logLevel) {
     });
   }
 
-  // give viceroy 10 seconds to become available
-  const VICEROY_READY_TIMEOUT = 10000;
+  // give viceroy 20 seconds to become available
+  const VICEROY_READY_TIMEOUT = 20000;
   return await Promise.race([
     viceroyReady(viceroy, config),
     timeout(VICEROY_READY_TIMEOUT, "Viceroy failed to start"),
