@@ -4,6 +4,7 @@
             "name": "sm-wasi",
             "includePath": [
                 "${workspaceFolder}/c-dependencies/spidermonkey/debug/include",
+                "${workspaceFolder}/c-dependencies/spidermonkey/release/include",
                 "/opt/wasi-sdk/share/wasi-sysroot/include/"
             ],
             "defines": [

@@ -73,7 +73,13 @@
         "thread": "cpp",
         "typeinfo": "cpp",
         "unordered_map": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "*.idl": "cpp",
+        "*.inc": "cpp",
+        "*.msg": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "unordered_set": "cpp"
     },
     "git.ignoreLimitWarning": true
 }
