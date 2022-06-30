@@ -288,6 +288,24 @@ async function ensureViceroy(config, logLevel) {
   }
 }
 
+async function timeout(millis, message) {
+  if (message === undefined) {
+    message = `timeout reached after ${millis} milliseconds`;
+  }
+
+  return new Promise((_resolve, reject) => setTimeout(() => reject(message), millis));
+}
+
+async function viceroyReady(viceroy, config) {
+  // Wait until Viceroy has fully initialized and extract host from output.
+  for await(const [chunk] of on(viceroy.stdout, "data")) {
+    let result = chunk.match(/INFO Listening on (.+)/);
+    if (result) {
+      return { process: viceroy, host: result[1], ...config };
+    }
+  }
+}
+
 async function startViceroy(runtime, config, logLevel) {
   if (logLevel > LogLevel.Quiet) {
     console.info(`Starting Viceroy server ...`);
@@ -307,13 +325,12 @@ async function startViceroy(runtime, config, logLevel) {
     });
   }
 
-  // Wait until Viceroy has fully initialized and extract host from output.
-  for await(const [chunk] of on(viceroy.stdout, "data")) {
-    let result = chunk.match(/INFO Listening on (.+)/);
-    if (result) {
-      return { process: viceroy, host: result[1], ...config };
-    }
-  }
+  // give viceroy 10 seconds to become available
+  const VICEROY_READY_TIMEOUT = 10000;
+  return await Promise.race([
+    viceroyReady(viceroy, config),
+    timeout(VICEROY_READY_TIMEOUT, "Viceroy failed to start"),
+  ]);
 }
 
 function stripTrailingNewline(str) {
