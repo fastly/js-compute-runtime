@@ -27,13 +27,22 @@ jobs:
       with:
         submodules: true
 
+    - uses: ./.github/actions/cache-crates
+      with:
+        lockfiles: 'c-dependencies/js-compute-runtime/**/Cargo.lock'
+
     - name: Cache SpiderMonkey object files
       uses: actions/cache@v2
       id: sm-cache
       with:
         path: |
           c-dependencies/spidermonkey/${{ matrix.profile }}
-        key: cache-${{ hashFiles('c-dependencies/spidermonkey/build-engine.sh') }}-${{ hashFiles('c-dependencies/spidermonkey/gecko-revision') }}-${{ hashFiles('c-dependencies/spidermonkey/object-files.list') }}-${{ matrix.profile }}
+        key: cache-${{ hashFiles(
+            'c-dependencies/rust-toolchain.toml',
+            'c-dependencies/spidermonkey/build-engine.sh',
+            'c-dependencies/spidermonkey/gecko-revision',
+            'c-dependencies/spidermonkey/object-files.list',
+          ) }}-${{ matrix.profile }}
       if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
     - name: "Build SpiderMonkey"
@@ -62,16 +71,15 @@ jobs:
         curl -sS -L "https://github.com/WebAssembly/binaryen/releases/download/version_${BINARYEN_VERSION}/binaryen-version_${BINARYEN_VERSION}-x86_64-linux.tar.gz" | tar xzf - &&
         echo "$PWD/binaryen-version_${BINARYEN_VERSION}/bin" >> $GITHUB_PATH
 
-    - name: Cache Rust dependencies
+    - name: Cache built Rust dependencies
       uses: actions/cache@v3
       with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          c-dependencies/js-compute-runtime/rusturl
-        key: ${{ runner.os }}-cargo-${{ hashFiles('c-dependencies/js-compute-runtime/**/Cargo.*') }}
+        path: c-dependencies/js-compute-runtime/rusturl
+        key: engine-cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('c-dependencies/rust-toolchain.toml', 'c-dependencies/js-compute-runtime/**/Cargo.lock') }}
+        # We trust cargo to only reuse valid parts of the cache when dependencies change.
+        restore-keys: engine-cargo-${{ runner.os }}-${{ runner.arch }}-
+      # Out of an abundance of caution, ensure that tagged releases rebuild all
+      # crates from source.
       if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
     - name: "Build JS runtime (debug)"
@@ -185,27 +193,24 @@ jobs:
         toolchain: ${{ matrix.rust }}
     - uses: ./.github/actions/binary-compatible-builds
 
-    - name: Configure Cargo target
-      run: |
-        echo CARGO_BUILD_TARGET=${{ matrix.target }} >> $GITHUB_ENV
-        rustup target add ${{ matrix.target }}
-      if: matrix.target != ''
-
     - name: Download Engine
       uses: actions/download-artifact@v1
       with:
         name: engine-release
 
+    - uses: ./.github/actions/cache-crates
+      with:
+        lockfiles: 'Cargo.lock'
+
     - name: Cache build
       uses: actions/cache@v3
       with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        path: target/
+        key: runtime-cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}
+        # We trust cargo to only reuse valid parts of the cache when dependencies change.
+        restore-keys: runtime-cargo-${{ runner.os }}-${{ runner.arch }}-
+      # Out of an abundance of caution, ensure that tagged releases rebuild all
+      # crates from source.
       if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
     # Build `js-compute-runtime`
@@ -244,9 +249,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
-    - run: rustup update stable && rustup default stable
 
     # Download all the artifacts that we'll be publishing. Should keep an eye on
     # the `download-artifact` repository to see if we can ever get something
