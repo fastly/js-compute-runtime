@@ -2,8 +2,12 @@ use anyhow::Context;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use tempfile::NamedTempFile;
+use std::io::Write;
 use structopt::StructOpt;
 use wizer::Wizer;
+
+mod regex;
 
 #[derive(StructOpt)]
 pub struct Options {
@@ -44,8 +48,6 @@ fn initialize_js(input_path: &PathBuf,
                  engine_wasm_path: Option<PathBuf>) -> anyhow::Result<()>
 {
     log::debug!("Creating Wasm file for JS input");
-    let js_file = fs::File::open(input_path)
-    .with_context(|| format!("failed to open JS file: {}", input_path.display()))?;
 
     let self_path = std::env::args().next().unwrap();
     let mut command = Command::new(self_path);
@@ -56,13 +58,32 @@ fn initialize_js(input_path: &PathBuf,
         .arg(path);
     }
 
+    command.arg("--internal-wizening-mode");
+
+    let source = fs::read_to_string(input_path)?;
+    let lits = regex::find_literals(&source);
+    let mut temp = NamedTempFile::new()?;
+    if !lits.is_empty() {
+
+        write!(temp, "{}", &source)?;
+        write!(temp, ";\nfunction precompileRegex(r) {{ r.exec('a'); r.exec('\\u1000'); }};\n")?;
+        for regex in lits.into_iter() {
+            write!(temp, "precompileRegex(/{}/);\n", regex)?;
+        }
+
+        let js_file = fs::File::open(temp.path())
+        .with_context(|| format!("failed to open JS file: {}", input_path.display()))?;
+        command.arg(temp.path()).stdin(js_file);
+    } else {
+        let js_file = fs::File::open(input_path)
+        .with_context(|| format!("failed to open JS file: {}", input_path.display()))?;
+        command.arg(input_path).stdin(js_file);
+    }
+
     let status = command
-    .arg("--internal-wizening-mode")
-    .arg(input_path)
-    .arg(output_path)
-    .stdin(js_file)
-    .status()
-    .expect("Failed to invoke wizening mode");
+            .arg(output_path)
+            .status()
+            .expect("Failed to invoke wizening mode");
 
     if !status.success() {
         eprintln!("Wizer failed with status: {}", status);
