@@ -31,6 +31,10 @@ jobs:
       with:
         lockfiles: 'c-dependencies/js-compute-runtime/**/Cargo.lock'
 
+    - uses: ./.github/actions/install-rust
+      with:
+        path: c-dependencies
+
     - name: Cache SpiderMonkey object files
       uses: actions/cache@v2
       id: sm-cache
@@ -58,10 +62,6 @@ jobs:
         tar xf wasi-sdk-12.0-linux.tar.gz
         sudo mkdir -p /opt/wasi-sdk
         sudo mv wasi-sdk-12.0/* /opt/wasi-sdk/
-
-    - uses: ./.github/actions/install-rust
-      with:
-        path: c-dependencies
 
     - name: "Install Binaryen (linux)"
       run: |
