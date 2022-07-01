@@ -14,5 +14,8 @@
   },
   "dependencies": {
     "@fastly/js-compute": "file:../../sdk/js-compute"
+  },
+  "volta": {
+    "node": "16.15.1"
   }
 }
