@@ -17,7 +17,7 @@ npm ci -s
 if [ -f "fixtures/$test/$test.ts" ]; then
   # TODO: we explicitly ignore errors from webpack, as the tests includes uses
   # of apis that are not yet typed by /sdk/js-compute/index.t.ts
-  npm run webpack -- "./fixtures/$test/$test.ts" \
+  NODE_OPTIONS=--openssl-legacy-provider npm run webpack -- "./fixtures/$test/$test.ts" \
     --output-path "./fixtures/$test" \
     --output-filename "$test.js" || true
 else
