@@ -1,4 +1,6 @@
 /// <reference types="@fastly/js-compute" />
+declare const CompressionStream: any;
+declare const ObjectStore: any;
 
 const builtins = [
     TransformStream,
@@ -12,7 +14,7 @@ const builtins = [
     TextDecoder,
     URL,
     URLSearchParams,
-    ObjectStore,
+    // ObjectStore,
   ]
 
   addEventListener("fetch", event => {
