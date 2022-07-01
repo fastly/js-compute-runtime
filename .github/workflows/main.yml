@@ -340,14 +340,6 @@ jobs:
       uses: ./.github/actions/compute-sdk-test
       id: sdktest
 
-  dependency-review:
-    name: Dependency Review
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/dependency-review-action@v2
-      with:
-        allow-licenses: Apache-2.0, MIT, BSD-3-Clause
-
   shellcheck:
     env:
       SHELLCHECK_VERSION: v0.8.0
