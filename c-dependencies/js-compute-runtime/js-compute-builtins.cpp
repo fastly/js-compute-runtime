@@ -5182,6 +5182,7 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
 }
 } // namespace TextDecoder
 
+#ifdef ENABLE_OBJECT_STORE
 namespace ObjectStoreEntry {
 namespace Slots {
 enum {
@@ -5609,6 +5610,7 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   return true;
 }
 } // namespace ObjectStore
+#endif
 
 bool report_sequence_or_record_arg_error(JSContext *cx, const char *name, const char *alt_text) {
   JS_ReportErrorUTF8(cx,
@@ -7972,10 +7974,12 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!WorkerLocation::init_class(cx, global))
     return false;
+  #ifdef ENABLE_OBJECT_STORE
   if (!ObjectStore::init_class(cx, global))
     return false;
   if (!ObjectStoreEntry::init_class(cx, global))
     return false;
+  #endif
 
   pending_requests = new JS::PersistentRootedObjectVector(cx);
   pending_body_reads = new JS::PersistentRootedObjectVector(cx);
