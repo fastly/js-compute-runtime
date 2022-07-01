@@ -159,6 +159,7 @@ jobs:
         ./wpt make-hosts-file | sudo tee -a /etc/hosts
 
     - name: Run tests
+      timeout-minutes: 20
       run: |
         cd engine-${{ matrix.profile }}
         # Skip slow tests when testing the debug runtime.
@@ -336,6 +337,7 @@ jobs:
         ./target/release/js-compute-runtime --help
 
     - name: js-compute Integration Tests Job
+      timeout-minutes: 20
       uses: ./.github/actions/compute-sdk-test
       id: sdktest
 
