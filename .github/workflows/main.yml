@@ -42,10 +42,10 @@ jobs:
         path: |
           c-dependencies/spidermonkey/${{ matrix.profile }}
         key: cache-${{ hashFiles(
-            'c-dependencies/rust-toolchain.toml',
             'c-dependencies/spidermonkey/build-engine.sh',
             'c-dependencies/spidermonkey/gecko-revision',
             'c-dependencies/spidermonkey/object-files.list',
+            'c-dependencies/rust-toolchain.toml'
           ) }}-${{ matrix.profile }}
       if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
