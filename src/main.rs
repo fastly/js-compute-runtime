@@ -1,9 +1,9 @@
 use anyhow::Context;
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::NamedTempFile;
-use std::io::Write;
 use structopt::StructOpt;
 use wizer::Wizer;
 
@@ -63,22 +63,18 @@ fn initialize_js(input_path: &PathBuf,
     let source = fs::read_to_string(input_path)?;
     let lits = regex::find_literals(&source);
     let mut temp = NamedTempFile::new()?;
-    if !lits.is_empty() {
 
-        write!(temp, "{}", &source)?;
-        write!(temp, ";\nfunction precompileRegex(r) {{ r.exec('a'); r.exec('\\u1000'); }};\n")?;
-        for regex in lits.into_iter() {
-            write!(temp, "precompileRegex(/{}/);\n", regex)?;
-        }
-
-        let js_file = fs::File::open(temp.path())
-        .with_context(|| format!("failed to open JS file: {}", input_path.display()))?;
-        command.arg(temp.path()).stdin(js_file);
+    let path = if !lits.is_empty() {
+        writeln!(temp, "{}", &source)?;
+        regex::precompile(&lits, &mut temp)?;
+        &temp.path()
     } else {
-        let js_file = fs::File::open(input_path)
-        .with_context(|| format!("failed to open JS file: {}", input_path.display()))?;
-        command.arg(input_path).stdin(js_file);
-    }
+        input_path.as_path()
+    };
+
+    let js_file = fs::File::open(path)
+    .with_context(|| format!("failed to open JS file: {}", path.display()))?;
+    command.arg(path).stdin(js_file);
 
     let status = command
             .arg(output_path)

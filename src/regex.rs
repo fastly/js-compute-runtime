@@ -1,39 +1,61 @@
+use std::io::{self, Write};
+use tree_sitter::{Parser, Query, QueryCursor};
 
-/// Given some source javascript text, find regular expression literals with a heuristic, and
-/// return them in a vector.
-pub fn find_literals(mut text: &str) -> Vec<String> {
+pub struct RegexLiteral<'a> {
+    pub pattern: &'a str,
+    pub flags: &'a str,
+}
 
+/// Given some source javascript text, find regular expression literals.
+pub fn find_literals<'a>(text: &'a str) -> Vec<RegexLiteral<'a>> {
     let mut regex_literals = Vec::new();
 
-    while let Some(mut pos) = text.find('/') {
-        pos += 1;
-        text = &text[pos..];
+    let mut parser = Parser::new();
+    parser
+        .set_language(tree_sitter_javascript::language())
+        .expect("Error loading the tree-sitter javascript grammar!");
 
-        if text.is_empty() {
-            break
+    let parsed = parser.parse(text, None).unwrap();
+
+    let regex_query = Query::new(
+        tree_sitter_javascript::language(),
+        "(regex pattern: (regex_pattern) @pattern flags: (regex_flags)? @flags)",
+    )
+    .expect("Failed to compile regex query");
+
+    let mut cursor = QueryCursor::new();
+    let source = text.as_bytes();
+    for m in cursor.matches(&regex_query, parsed.root_node(), source) {
+        let mut lit = RegexLiteral {
+            pattern: m.captures[0].node.utf8_text(source).unwrap(),
+            flags: "",
+        };
+
+        if m.captures.len() == 2 {
+            lit.flags = m.captures[1].node.utf8_text(source).unwrap();
         }
 
-        if text.chars().nth(0).unwrap() == '/' {
-            text = &text[1..];
-            continue
-        }
-
-        if let Some(end) = text.find('/') {
-            if let Some(eol) = text.find('\n') {
-
-                // regex literals don't span lines
-                if eol < end {
-                    text = &text[end..];
-                    continue
-                }
-            }
-
-            regex_literals.push(String::from(&text[0..end]));
-            text = &text[end+1..]
-        } else {
-            break
-        }
+        regex_literals.push(lit);
     }
 
     regex_literals
+}
+
+const PREAMBLE: &str = ";{
+// Precompiled regular expressions
+const precompile = (r) => { r.exec('a'); r.exec('\\u1000'); }";
+
+/// Emit a block of javascript that will pre-compile the regular expressions given. As spidermonkey
+/// will intern regular expressions, duplicating them at the top level and testing them with both
+/// an ascii and utf8 string should ensure that they won't be re-compiled when run in the fetch
+/// handler.
+pub fn precompile<'a, Out: Write>(literals: &[RegexLiteral<'a>], out: &mut Out) -> io::Result<()> {
+    writeln!(out, "{}", PREAMBLE)?;
+
+    for r in literals {
+        writeln!(out, "precompile(/{}/{});", r.pattern, r.flags)?;
+    }
+
+    writeln!(out, "}}")?;
+    Ok(())
 }

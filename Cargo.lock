@@ -668,6 +668,8 @@ dependencies = [
  "log",
  "structopt",
  "tempfile",
+ "tree-sitter",
+ "tree-sitter-javascript",
  "wizer",
 ]
 
@@ -1219,6 +1221,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90442985ee2f57c9e1b548ee72ae842f4a9a20e3f417cc38dbc5dc684d9bb4ee"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "tree-sitter"
+version = "0.20.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "268bf3e3ca0c09e5d21b59c2638e12cb6dcf7ea2681250a696a2d0936cb57ba0"
+dependencies = [
+ "cc",
+ "regex",
+]
+
+[[package]]
+name = "tree-sitter-javascript"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2490fab08630b2c8943c320f7b63473cbf65511c8d83aec551beb9b4375906ed"
+dependencies = [
+ "cc",
+ "tree-sitter",
 ]
 
 [[package]]
