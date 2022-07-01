@@ -59,10 +59,9 @@ jobs:
         sudo mkdir -p /opt/wasi-sdk
         sudo mv wasi-sdk-12.0/* /opt/wasi-sdk/
 
-    - name: "Install pinned Rust version"
-      run: |
-        cd c-dependencies/js-compute-runtime
-        rustup show
+    - uses: ./.github/actions/install-rust
+      with:
+        path: c-dependencies
 
     - name: "Install Binaryen (linux)"
       run: |
@@ -177,20 +176,13 @@ jobs:
         include:
         - build: x86_64-linux
           os: ubuntu-latest
-          rust: stable
         - build: x86_64-macos
           os: macos-latest
-          rust: stable
         - build: x86_64-windows
           os: windows-latest
-          rust: stable
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: false
     - uses: ./.github/actions/install-rust
-      with:
-        toolchain: ${{ matrix.rust }}
     - uses: ./.github/actions/binary-compatible-builds
 
     - name: Download Engine
