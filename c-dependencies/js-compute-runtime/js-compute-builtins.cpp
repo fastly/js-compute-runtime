@@ -3958,7 +3958,7 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   size_t name_len;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
   UniqueChars name = encode(cx, name_arg, &name_len);
-   if (!name) {
+  if (!name) {
     return false;
   }
 
@@ -3980,10 +3980,11 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
 
   auto name_chars = name.get();
 
-  for (int i=0; i < name_len; i++) {
+  for (int i = 0; i < name_len; i++) {
     char character = name_chars[i];
     if (std::iscntrl(static_cast<unsigned char>(character)) != 0) {
-      JS_ReportErrorASCII(cx, "ObjectStore name can not contain control characters (\\u0000-\\u001F)");
+      JS_ReportErrorASCII(cx,
+                          "ObjectStore name can not contain control characters (\\u0000-\\u001F)");
       return false;
     }
   }
@@ -6378,12 +6379,12 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!WorkerLocation::init_class(cx, global))
     return false;
-  #ifdef ENABLE_OBJECT_STORE
+#ifdef ENABLE_OBJECT_STORE
   if (!ObjectStore::init_class(cx, global))
     return false;
   if (!ObjectStoreEntry::init_class(cx, global))
     return false;
-  #endif
+#endif
 
   pending_requests = new JS::PersistentRootedObjectVector(cx);
   pending_body_reads = new JS::PersistentRootedObjectVector(cx);

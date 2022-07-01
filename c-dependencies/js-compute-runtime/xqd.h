@@ -307,7 +307,7 @@ int fastly_kv_lookup(ObjectStoreHandle object_store_handle, const char *key, siz
                      BodyHandle *opt_body_handle_out);
 WASM_IMPORT("fastly_kv", "insert")
 int fastly_kv_insert(ObjectStoreHandle object_store_handle, const char *key, size_t key_len,
-                    BodyHandle body_handle, uint32_t max_age, size_t *inserted);
+                     BodyHandle body_handle, uint32_t max_age, size_t *inserted);
 #endif
 
 WASM_IMPORT("fastly_geo", "lookup")
