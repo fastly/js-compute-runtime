@@ -8,7 +8,7 @@ inputs:
   lockfiles:
     description: 'Path glob for Cargo.lock files to use as cache keys'
     required: false
-    default: **/Cargo.lock
+    default: '**/Cargo.lock'
 
 runs:
   using: "composite"
