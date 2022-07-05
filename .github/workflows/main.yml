@@ -13,7 +13,7 @@ defaults:
     shell: bash
 env:
   wizer_version: 1.3.3
-  viceroy_version: 0.2.14
+  viceroy_version: 0.2.9
 
 jobs:
   build_engine:
@@ -103,7 +103,7 @@ jobs:
             version: 1.3.3 # Note: workflow-level env vars can't be used in matrix definitions
             options: "--all-features"
           - crate: viceroy
-            version: 0.2.14 # Note: workflow-level env vars can't be used in matrix definitions
+            version: 0.2.9 # Note: workflow-level env vars can't be used in matrix definitions
             options: ""
     runs-on: ubuntu-latest
     steps:
@@ -159,7 +159,7 @@ jobs:
         ./wpt make-hosts-file | sudo tee -a /etc/hosts
 
     - name: Run tests
-      timeout-minutes: 20
+      # timeout-minutes: 20
       run: |
         cd engine-${{ matrix.profile }}
         # Skip slow tests when testing the debug runtime.
@@ -232,13 +232,24 @@ jobs:
         name: bins-${{ matrix.build }}
         path: dist
 
-  # Consumes all published artifacts from all the previous build steps, creates
+# Consumes all published artifacts from all the previous build steps, creates
   # a bunch of tarballs for all of them, and then publishes the tarballs
   # themselves as an artifact (for inspection) and then optionally creates
   # github releases and/or tags for pushes.
   publish:
     name: Publish
-    needs: [build, run_wpt]
+    needs:
+      - run_wpt
+      - sdktest
+      - e2e-async-select
+      - e2e-byte-repeater
+      - e2e-edge-dictionary
+      - e2e-geoip
+      - e2e-hello-world
+      - e2e-request-limits
+      - e2e-request-upstream
+      - e2e-response-headers
+      - e2e-status
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -306,9 +317,9 @@ jobs:
 
     - name: Install Fastly CLI
       run: |
-        echo "Install Fastly CLI 1.7.0"
-        wget https://github.com/fastly/cli/releases/download/v1.7.0/fastly_1.7.0_linux_amd64.deb
-        sudo apt install ./fastly_1.7.0_linux_amd64.deb
+        echo "Install Fastly CLI 3.1.1"
+        wget https://github.com/fastly/cli/releases/download/v3.1.1/fastly_3.1.1_linux_amd64.deb
+        sudo apt install ./fastly_3.1.1_linux_amd64.deb
 
     - name: Install Viceroy
       run: |
@@ -338,7 +349,7 @@ jobs:
         ./target/release/js-compute-runtime --help
 
     - name: js-compute Integration Tests Job
-      timeout-minutes: 20
+      # timeout-minutes: 20
       uses: ./.github/actions/compute-sdk-test
       id: sdktest
 
@@ -380,6 +391,105 @@ jobs:
     - run: |
         clang-format --version
         ci/clang-format.sh
-
     - run: |
         ci/rustfmt.sh
+
+  e2e-async-select:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: ./.github/actions/e2e
+      with:
+        fixture: 'async-select'
+        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
+  e2e-byte-repeater:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: ./.github/actions/e2e
+      with:
+        fixture: 'byte-repeater'
+        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
+  e2e-edge-dictionary:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: ./.github/actions/e2e
+      with:
+        fixture: 'edge-dictionary'
+        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
+  e2e-geoip:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: ./.github/actions/e2e
+      with:
+        fixture: 'geoip'
+        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
+  e2e-hello-world:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: ./.github/actions/e2e
+      with:
+        fixture: 'hello-world'
+        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
+  e2e-request-limits:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: ./.github/actions/e2e
+      with:
+        fixture: 'request-limits'
+        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
+  e2e-request-upstream:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: ./.github/actions/e2e
+      with:
+        fixture: 'request-upstream'
+        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
+  e2e-response-headers:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: ./.github/actions/e2e
+      with:
+        fixture: 'response-headers'
+        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
+  e2e-status:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: ./.github/actions/e2e
+      with:
+        fixture: 'status'
+        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}

@@ -4,7 +4,6 @@
 integration-tests/**/fixtures/**/*.tar.gz
 integration-tests/**/fixtures/**/fastly.toml
 integration-tests/**/fixtures/**/*.wasm
-integration-tests/**/fixtures/**/*.js
 integration-tests/**/fixtures/**/*.js.map
 integration-tests/**/fixtures/**/compiler_flags
 integration-tests/**/fixtures/**/js-compute-builtins.d

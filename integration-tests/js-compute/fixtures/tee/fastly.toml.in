@@ -3,9 +3,13 @@
 
 authors = [""]
 description = "A minimal boilerplate application to bootstrap JavaScript projects on Compute@Edge"
-language = "javascript"
+language = "other"
 manifest_version = 2
 name = "compute-sdk-test-backend"
+service_id = ""
+
+[scripts]
+  build = "mkdir -p bin && cargo run --release -- app.js bin/main.wasm"
 
 [local_server]
 

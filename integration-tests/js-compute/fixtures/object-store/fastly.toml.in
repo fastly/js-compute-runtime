@@ -4,7 +4,10 @@
 
 authors = ["me@jakechampion.name"]
 description = ""
-language = "javascript"
+language = "other"
 manifest_version = 2
-name = "app"
+name = "object-store"
 service_id = ""
+
+[scripts]
+  build = "mkdir -p bin && CXX_OPT='-DENABLE_OBJECT_STORE' cargo run --release -- app.js bin/main.wasm"
