@@ -3,7 +3,7 @@
 
 authors = ["aturner+ecp@fastly.com"]
 description = ""
-language = "javascript"
+language = "other"
 manifest_version = 2
 name = "byte_repeater"
 service_id = ""
@@ -14,3 +14,17 @@ service_id = ""
 
     [local_server.backends.TheOrigin]
       url = "JS_COMPUTE_TEST_BACKEND/"
+
+[scripts]
+  build = "mkdir -p bin && cargo run --release -- app.js bin/main.wasm"
+
+[setup]
+
+  [setup.backends]
+
+    [setup.backends.TheOrigin]
+      address = "compute-sdk-test-backend.edgecompute.app"
+      port = 443
+    [setup.backends.TheOrigin2]
+      address = "compute-sdk-test-backend.edgecompute.app"
+      port = 443

@@ -1,6 +1,6 @@
 addEventListener("fetch", event => event.respondWith(handleRequest(event.request)));
 
-async function handleRequest(req: Request) {
+async function handleRequest(req) {
   let [body1, _body2] = req.body.tee();
 
   // Regression test for making requests whose bodies are streams that result

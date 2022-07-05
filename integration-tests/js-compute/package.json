@@ -1,21 +1,6 @@
 {
-  "scripts": {
-    "install:ci": "npm ci",
-    "webpack": "webpack",
-    "lint": "npx prettier --write ./fixtures/**/*.ts"
-  },
-  "devDependencies": {
-    "npm-run-all": "^4.1.5",
-    "prettier": "^2.0.5",
-    "ts-loader": "^8.1.0",
-    "typescript": "^4.3",
-    "webpack": "^5.30.0",
-    "webpack-cli": "^4.6.0"
-  },
+  "type": "module",
   "dependencies": {
-    "@fastly/js-compute": "file:../../sdk/js-compute"
-  },
-  "volta": {
-    "node": "16.15.1"
+    "zx": "^7.0.3"
   }
 }

@@ -299,7 +299,6 @@ int xqd_dictionary_get(DictionaryHandle dict_handle, const char *key, size_t key
                        size_t value_max_len, size_t *nwritten);
 
 // Module fastly_kv
-#ifdef ENABLE_OBJECT_STORE
 WASM_IMPORT("fastly_kv", "open")
 int fastly_kv_open(const char *name, size_t name_len, ObjectStoreHandle *object_store_handle_out);
 WASM_IMPORT("fastly_kv", "lookup")
@@ -308,7 +307,6 @@ int fastly_kv_lookup(ObjectStoreHandle object_store_handle, const char *key, siz
 WASM_IMPORT("fastly_kv", "insert")
 int fastly_kv_insert(ObjectStoreHandle object_store_handle, const char *key, size_t key_len,
                      BodyHandle body_handle, uint32_t max_age, size_t *inserted);
-#endif
 
 WASM_IMPORT("fastly_geo", "lookup")
 int xqd_geo_lookup(const char *addr_octets, size_t addr_len, char *buf, size_t buf_len,
