@@ -10,6 +10,7 @@ fi
 test="$1"
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
+root="$(pwd)/../.."
 
 npm ci -s
 
@@ -23,4 +24,10 @@ else
   echo "Skipping typescript conversion for fixtures/$test/$test.js"
 fi
 
-../../target/release/js-compute-runtime "fixtures/$test/$test.js" "fixtures/$test/$test.wasm"
+# NOTE: we run `js-compute-runtime` in the test directory, as there are some
+# assumptions about project path that are derived from the cwd of the executable
+# instead of the location of the js source.
+(
+  cd "fixtures/$test"
+  "$root/target/release/js-compute-runtime" "$test.js" "$test.wasm"
+)
