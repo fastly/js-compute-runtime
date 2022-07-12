@@ -1,9 +1,12 @@
 use anyhow::Context;
 use std::fs;
+use std::io::{Seek, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use structopt::StructOpt;
 use wizer::Wizer;
+
+mod regex;
 
 #[derive(StructOpt)]
 pub struct Options {
@@ -39,30 +42,42 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn initialize_js(input_path: &PathBuf,
-                 output_path: &PathBuf,
-                 engine_wasm_path: Option<PathBuf>) -> anyhow::Result<()>
-{
+fn initialize_js(
+    input_path: &PathBuf,
+    output_path: &PathBuf,
+    engine_wasm_path: Option<PathBuf>,
+) -> anyhow::Result<()> {
     log::debug!("Creating Wasm file for JS input");
-    let js_file = fs::File::open(input_path)
-    .with_context(|| format!("failed to open JS file: {}", input_path.display()))?;
 
     let self_path = std::env::args().next().unwrap();
     let mut command = Command::new(self_path);
 
     if let Some(path) = engine_wasm_path {
-        command
-        .arg("--engine-wasm")
-        .arg(path);
+        command.arg("--engine-wasm").arg(path);
     }
 
+    command.arg("--internal-wizening-mode");
+
+    let source = fs::read_to_string(input_path)?;
+    let lits = regex::find_literals(&source);
+
+    let js_file = if !lits.is_empty() {
+        let mut temp = tempfile::tempfile()?;
+        writeln!(temp, "{}", &source)?;
+        regex::precompile(&lits, &mut temp)?;
+        temp.rewind()?;
+        temp
+    } else {
+        fs::File::open(input_path)
+            .with_context(|| format!("failed to open JS file: {}", input_path.display()))?
+    };
+
+    command.arg(input_path).stdin(js_file);
+
     let status = command
-    .arg("--internal-wizening-mode")
-    .arg(input_path)
-    .arg(output_path)
-    .stdin(js_file)
-    .status()
-    .expect("Failed to invoke wizening mode");
+        .arg(output_path)
+        .status()
+        .expect("Failed to invoke wizening mode");
 
     if !status.success() {
         eprintln!("Wizer failed with status: {}", status);
@@ -74,22 +89,18 @@ fn initialize_js(input_path: &PathBuf,
 
 fn wizen(engine_path: &Option<PathBuf>, output_path: &Path) -> anyhow::Result<()> {
     let engine_wasm_bytes = match engine_path {
-        None => {
-            std::include_bytes!(concat!(env!("OUT_DIR"), "/js-compute-runtime.wasm")).to_vec()
-        },
-        Some(path) => {
-            fs::read(path)
-                .with_context(|| format!("failed to read JS engine wasm {}", path.display()))?
-        }
+        None => std::include_bytes!(concat!(env!("OUT_DIR"), "/js-compute-runtime.wasm")).to_vec(),
+        Some(path) => fs::read(path)
+            .with_context(|| format!("failed to read JS engine wasm {}", path.display()))?,
     };
 
     let mut wizer = Wizer::new();
     wizer.allow_wasi(true)?;
     wizer.dir(".");
     wizer.func_rename("_start", "wizer.resume");
-    let initialized_wasm = wizer.run(&engine_wasm_bytes).with_context(|| {
-        format!("failed to initialize JS")
-    })?;
+    let initialized_wasm = wizer
+        .run(&engine_wasm_bytes)
+        .with_context(|| format!("failed to initialize JS"))?;
 
     if let Some(parent) = output_path.parent() {
         fs::create_dir_all(parent)
