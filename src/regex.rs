@@ -7,7 +7,7 @@ pub struct RegexLiteral<'a> {
 }
 
 /// Given some source javascript text, find regular expression literals.
-pub fn find_literals<'a>(text: &'a str) -> Vec<RegexLiteral<'a>> {
+pub fn find_literals(text: &str) -> Vec<RegexLiteral> {
     let mut regex_literals = Vec::new();
 
     let mut parser = Parser::new();
@@ -49,7 +49,7 @@ const precompile = (r) => { r.exec('a'); r.exec('\\u1000'); }";
 /// will intern regular expressions, duplicating them at the top level and testing them with both
 /// an ascii and utf8 string should ensure that they won't be re-compiled when run in the fetch
 /// handler.
-pub fn precompile<'a, Out: Write>(literals: &[RegexLiteral<'a>], out: &mut Out) -> io::Result<()> {
+pub fn precompile<Out: Write>(literals: &[RegexLiteral], out: &mut Out) -> io::Result<()> {
     writeln!(out, "{}", PREAMBLE)?;
 
     for r in literals {
