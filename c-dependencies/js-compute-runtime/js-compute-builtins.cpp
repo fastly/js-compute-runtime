@@ -1653,7 +1653,18 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
     if (Response::is_instance(body_owner)) {
       FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
     }
-    return HANDLE_RESULT(cx, xqd_body_close(body_handle));
+
+    if (!HANDLE_RESULT(cx, xqd_body_close(body_handle))) {
+      return false;
+    }
+
+    if (Request::is_instance(body_owner)) {
+      if (!pending_requests->append(body_owner)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   RootedValue val(cx);
@@ -1692,10 +1703,8 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
   return JS::AddPromiseReactions(cx, promise, then_handler, catch_handler);
 }
 
-bool body_reader_catch_handler(JSContext *cx, HandleObject body_owner, HandleValue reader_val,
+bool body_reader_catch_handler(JSContext *cx, HandleObject body_owner, HandleValue extra,
                                CallArgs args) {
-  RootedObject reader(cx, &reader_val.toObject());
-
   // TODO: check if this should create a rejected promise instead, so an
   // in-content handler for unhandled rejections could deal with it. The body
   // stream errored during the streaming send. Not much we can do, but at least
@@ -7482,8 +7491,12 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   if (!HANDLE_RESULT(cx, result))
     return ReturnPromiseRejectedWithPendingError(cx, args);
 
-  if (!pending_requests->append(request))
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+  // If the request body is streamed, we need to wait for streaming to complete before marking the
+  // request as pending.
+  if (!streaming) {
+    if (!pending_requests->append(request))
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
 
   JS::SetReservedSlot(request, Request::Slots::PendingRequest,
                       JS::Int32Value(request_handle.handle));
