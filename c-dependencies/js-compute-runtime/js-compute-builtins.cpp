@@ -1634,8 +1634,7 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
   // The reader is stored in the catch handler, which we need here as well.
   // So we get that first, then the reader.
   RootedObject catch_handler(cx, &extra.toObject());
-  RootedObject closure(cx, &js::GetFunctionNativeReserved(catch_handler, 1).toObject());
-
+  RootedObject reader(cx, &js::GetFunctionNativeReserved(catch_handler, 1).toObject());
   BodyHandle body_handle = RequestOrResponse::body_handle(body_owner);
 
   // We're guaranteed to work with a native ReadableStreamDefaultReader here,
@@ -1659,16 +1658,8 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
       return false;
     }
 
-    // If the owner is a Request, it's now safe to push it into the pending requests queue as its
-    // body is closed.
-    RootedValue ownerVal{cx};
-    if (!JS_GetProperty(cx, closure, "owner", &ownerVal)) {
-      return false;
-    }
-
-    RootedObject owner{cx, &ownerVal.toObject()};
-    if (Request::is_instance(owner)) {
-      if (!pending_requests->append(owner)) {
+    if (Request::is_instance(body_owner)) {
+      if (!pending_requests->append(body_owner)) {
         return false;
       }
     }
@@ -1706,21 +1697,13 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
   }
 
   // Read the next chunk.
-  RootedValue readerVal{cx};
-  if (!JS_GetProperty(cx, closure, "reader", &readerVal)) {
-    return false;
-  }
-
-  RootedObject reader{cx, &readerVal.toObject()};
   RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
-  if (!promise) {
+  if (!promise)
     return false;
-  }
-
   return JS::AddPromiseReactions(cx, promise, then_handler, catch_handler);
 }
 
-bool body_reader_catch_handler(JSContext *cx, HandleObject body_owner, HandleValue closure,
+bool body_reader_catch_handler(JSContext *cx, HandleObject body_owner, HandleValue extra,
                                CallArgs args) {
   // TODO: check if this should create a rejected promise instead, so an
   // in-content handler for unhandled rejections could deal with it. The body
@@ -1802,36 +1785,24 @@ bool maybe_stream_body(JSContext *cx, HandleObject body_owner, bool *requires_st
   // operation in the then handler. The catch handler won't ever have a need to
   // perform another operation in this way.
   RootedObject catch_handler(cx);
-
-  RootedObject extra(cx, JS_NewPlainObject(cx));
-  if (!extra) {
-    return false;
-  }
-
-  // TODO: atomize the property ids once and reuse them.
-  JS_DefineProperty(cx, extra, "reader", reader, JSPROP_ENUMERATE);
-  JS_DefineProperty(cx, extra, "owner", body_owner, JSPROP_ENUMERATE);
-
-  RootedValue closure{cx, ObjectValue(*extra)};
-  catch_handler = create_internal_method<body_reader_catch_handler>(cx, body_owner, closure);
+  RootedValue extra(cx, ObjectValue(*reader));
+  catch_handler = create_internal_method<body_reader_catch_handler>(cx, body_owner, extra);
   if (!catch_handler)
     return false;
 
   RootedObject then_handler(cx);
-  closure.setObject(*catch_handler);
-  then_handler = create_internal_method<body_reader_then_handler>(cx, body_owner, closure);
+  extra.setObject(*catch_handler);
+  then_handler = create_internal_method<body_reader_then_handler>(cx, body_owner, extra);
   if (!then_handler)
     return false;
 
   RootedObject promise(cx, JS::ReadableStreamDefaultReaderRead(cx, reader));
   if (!promise)
     return false;
-
   if (!JS::AddPromiseReactions(cx, promise, then_handler, catch_handler))
     return false;
 
   *requires_streaming = true;
-
   return true;
 }
 
