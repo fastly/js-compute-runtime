@@ -9,6 +9,6 @@ bool init_class(JSContext *cx, JS::HandleObject global);
 
 // Create an instance of the logger class.
 JSObject *create(JSContext *cx, const char *name);
-}
+} // namespace Logger
 
 #endif
