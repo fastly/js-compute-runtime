@@ -1,4 +1,4 @@
-#include "builtins/logger.h"
+#include "logger.h"
 #include "xqd.h"
 
 namespace Logger {
@@ -6,9 +6,11 @@ namespace Slots {
 enum { Endpoint, Count };
 };
 
-const unsigned ctor_length = 1;
-
 bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
+
+namespace {
+
+const unsigned ctor_length = 1;
 
 static bool log(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
@@ -31,6 +33,8 @@ static bool log(JSContext *cx, unsigned argc, JS::Value *vp) {
 const JSFunctionSpec methods[] = {JS_FN("log", log, 1, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSPropertySpec properties[] = {JS_PS_END};
+
+} // namespace
 
 CLASS_BOILERPLATE_NO_CTOR(Logger)
 
