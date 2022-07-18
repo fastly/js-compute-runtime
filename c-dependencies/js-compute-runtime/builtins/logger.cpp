@@ -1,6 +1,5 @@
-#include "logger.h"
-#include "../xqd.h"
-#include "builtin.h"
+#include "builtins/logger.h"
+#include "xqd.h"
 
 namespace Logger {
 namespace Slots {

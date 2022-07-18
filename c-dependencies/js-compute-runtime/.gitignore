@@ -4,6 +4,7 @@
 
 /rusturl
 /compiler_flags
-/*.o
-/*.d
 /*.wasm
+
+*.o
+*.d

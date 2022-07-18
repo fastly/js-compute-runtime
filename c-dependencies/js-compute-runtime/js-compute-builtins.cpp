@@ -5,7 +5,7 @@
 #include <string.h>
 #include <strings.h>
 
-#include "../xqd.h"
+#include "xqd.h"
 #include "js-compute-builtins.h"
 
 #include "rust-url/rust-url.h"
@@ -30,7 +30,7 @@
 #include "zlib.h"
 
 #include "builtin.h"
-#include "logger.h"
+#include "builtins/logger.h"
 
 using JS::CallArgs;
 using JS::CallArgsFromVp;
