@@ -5,8 +5,8 @@
 #include <string.h>
 #include <strings.h>
 
-#include "xqd.h"
 #include "js-compute-builtins.h"
+#include "xqd.h"
 
 #include "rust-url/rust-url.h"
 
