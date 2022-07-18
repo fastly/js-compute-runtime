@@ -26,7 +26,7 @@ FSM_SRC := $(ROOT_SRC)/js-compute-runtime/
 WASI_CXX ?= /opt/wasi-sdk/bin/clang++
 
 
-CXX_FLAGS := -std=gnu++17 -Wall -Werror -Qunused-arguments -fno-sized-deallocation -fno-aligned-new -mthread-model single -fPIC -fno-rtti -fno-exceptions -fno-math-errno -pipe -fno-omit-frame-pointer -funwind-tables
+CXX_FLAGS := -std=gnu++17 -Wall -Werror -Qunused-arguments -fno-sized-deallocation -fno-aligned-new -mthread-model single -fPIC -fno-rtti -fno-exceptions -fno-math-errno -pipe -fno-omit-frame-pointer -funwind-tables -I$(FSM_SRC)
 DEFINES ?=
 LD_FLAGS := -Wl,-z,noexecstack -Wl,-z,text -Wl,-z,relro -Wl,-z,nocopyreloc -Wl,-z,stack-size=1048576 -Wl,--stack-first
 
@@ -43,7 +43,7 @@ WASM_STRIP = wasm-opt --strip-debug -o $1 $1
 endif
 endif
 
-FSM_CPP := $(wildcard $(FSM_SRC)*.cpp)
+FSM_CPP := $(wildcard $(FSM_SRC)*.cpp) $(wildcard $(FSM_SRC)builtins/*.cpp)
 FSM_DEP := $(patsubst $(FSM_SRC)%.cpp,$(OBJDIR)%.d,$(FSM_CPP))
 FSM_OBJ := $(patsubst $(FSM_SRC)%.cpp,$(OBJDIR)%.o,$(FSM_CPP))
 RUST_URL_SRC := $(FSM_SRC)rust-url
@@ -57,6 +57,9 @@ $(RUST_URL_LIB): $(RUST_URL_RS_FILES) $(RUST_URL_SRC)/Cargo.toml $(RUST_URL_SRC)
 	cargo build --manifest-path $(RUST_URL_SRC)/Cargo.toml --target-dir ./rusturl --target=wasm32-wasi $(CARGO_FLAG)
 
 %.o: $(FSM_SRC)%.cpp $(FSM_SRC)Makefile $(RUST_URL_LIB) compiler_flags
+	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
+
+builtins/%.o: $(FSM_SRC)builtins/%.cpp $(FSM_SRC)Makefile $(RUST_URL_LIB) compiler_flags
 	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
 
 js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
@@ -84,7 +87,7 @@ compile_commands.json:
 			sep=","; \
 			echo "{ \"directory\": \"$(FSM_SRC)\","; \
 			echo "  \"command\": \"$(WASI_CXX) $(CXX_FLAGS) $(DEFINES) -I $(SM_SRC)include\","; \
-			echo -n "  \"file\": \"$$(basename $$file)\"}"; \
+			echo -n "  \"file\": \"$${file#$(FSM_SRC)}\"}"; \
 		done; \
 		echo; \
 		echo ']' \
