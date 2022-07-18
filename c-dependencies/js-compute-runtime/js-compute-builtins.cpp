@@ -50,6 +50,16 @@ using JS::MutableHandleValue;
 
 using JS::PersistentRooted;
 
+enum class Mode { PreWizening, PostWizening };
+
+Mode execution_mode = Mode::PreWizening;
+
+bool hasWizeningFinished() { return execution_mode == Mode::PostWizening; }
+
+bool isWizening() { return execution_mode == Mode::PreWizening; }
+
+void markWizeningAsFinished() { execution_mode = Mode::PostWizening; }
+
 typedef bool InternalMethod(JSContext *cx, HandleObject receiver, HandleValue extra, CallArgs args);
 template <InternalMethod fun> bool internal_method(JSContext *cx, unsigned argc, Value *vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -487,7 +497,7 @@ static const uint32_t class_flags = 0;
   }
 
 #define REQUEST_HANDLER_ONLY(name)                                                                 \
-  if (!FetchEvent::instance()) {                                                                   \
+  if (isWizening()) {                                                                              \
     JS_ReportErrorUTF8(cx,                                                                         \
                        "%s can only be used during request handling, "                             \
                        "not during initialization",                                                \
@@ -496,7 +506,7 @@ static const uint32_t class_flags = 0;
   }
 
 #define INIT_ONLY(name)                                                                            \
-  if (FetchEvent::instance()) {                                                                    \
+  if (hasWizeningFinished()) {                                                                     \
     JS_ReportErrorUTF8(cx,                                                                         \
                        "%s can only be used during initialization, "                               \
                        "not during request handling",                                              \
