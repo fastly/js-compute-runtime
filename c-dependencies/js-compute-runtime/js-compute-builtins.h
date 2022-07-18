@@ -14,6 +14,10 @@
 
 #pragma clang diagnostic pop
 
+bool hasWizeningFinished();
+bool isWizening();
+void markWizeningAsFinished();
+
 bool define_fastly_sys(JSContext *cx, JS::HandleObject global);
 
 namespace FetchEvent {

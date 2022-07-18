@@ -68,7 +68,6 @@ static bool dump_mem_stats(JSContext *cx) {
 /* The class of the global object. */
 static JSClass global_class = {"global", JSCLASS_GLOBAL_FLAGS, &JS::DefaultGlobalClassOps};
 
-bool INITIALIZED = false;
 JSContext *CONTEXT = nullptr;
 
 JS::PersistentRootedObject GLOBAL;
@@ -220,7 +219,7 @@ static void abort(JSContext *cx, const char *description) {
 
   // Respond with status `500` if no response was ever sent.
   HandleObject fetch_event = FetchEvent::instance();
-  if (INITIALIZED && !FetchEvent::response_started(fetch_event))
+  if (hasWizeningFinished() && !FetchEvent::response_started(fetch_event))
     FetchEvent::respondWithError(cx, fetch_event);
 
   fflush(stderr);
@@ -352,7 +351,7 @@ static bool addEventListener(JSContext *cx, unsigned argc, Value *vp) {
 }
 
 void init() {
-  assert(!INITIALIZED);
+  assert(isWizening());
 
   if (!init_js())
     exit(1);
@@ -396,7 +395,7 @@ void init() {
   dump_mem_stats(cx);
 #endif
 
-  INITIALIZED = true;
+  markWizeningAsFinished();
 }
 
 WIZER_INIT(init);
@@ -469,9 +468,9 @@ static void wait_for_backends(JSContext *cx, double *total_compute) {
 }
 
 int main(int argc, const char *argv[]) {
-  if (!INITIALIZED) {
+  if (isWizening()) {
     init();
-    assert(INITIALIZED);
+    assert(hasWizeningFinished());
     // fprintf(stderr, "js.wasm must be initialized with a JS source file using
     // Wizer\n"); exit(-1);
   }
