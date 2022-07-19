@@ -34,6 +34,8 @@ fn build_engine(src: &PathBuf, out_dir: &Path) {
     let makefile_path = src.join("js-compute-runtime").join("Makefile");
     let status = Command::new("make")
         .current_dir(out_dir)
+        .arg("-j")
+        .arg(var_os("NUM_JOBS").unwrap())
         .arg("-f")
         .arg(makefile_path)
         .status()

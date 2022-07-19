@@ -59,7 +59,10 @@ $(RUST_URL_LIB): $(RUST_URL_RS_FILES) $(RUST_URL_SRC)/Cargo.toml $(RUST_URL_SRC)
 %.o: $(FSM_SRC)%.cpp $(FSM_SRC)Makefile $(RUST_URL_LIB) compiler_flags
 	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
 
-builtins/%.o: $(FSM_SRC)builtins/%.cpp $(FSM_SRC)Makefile $(RUST_URL_LIB) compiler_flags
+builtins:
+	$Q mkdir -p builtins
+
+builtins/%.o: $(FSM_SRC)builtins/%.cpp $(FSM_SRC)Makefile $(RUST_URL_LIB) compiler_flags | builtins
 	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
 
 js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
