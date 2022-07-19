@@ -6,8 +6,6 @@
 #include <strings.h>
 
 #include "js-compute-builtins.h"
-#include "xqd.h"
-
 #include "rust-url/rust-url.h"
 
 #include "js/Array.h"
@@ -29,7 +27,11 @@
 #include "js/shadow/Object.h"
 #include "zlib.h"
 
+#include "geo_ip.h"
+#include "host_call.h"
+
 #include "builtin.h"
+#include "builtins/env.h"
 #include "builtins/logger.h"
 
 using JS::CallArgs;
@@ -107,34 +109,6 @@ bool enqueue_internal_method(JSContext *cx, HandleObject receiver,
 static_assert(DICTIONARY_ENTRY_MAX_LEN < HOSTCALL_BUFFER_LEN);
 static_assert(METHOD_MAX_LEN < HOSTCALL_BUFFER_LEN);
 static_assert(URI_MAX_LEN < HOSTCALL_BUFFER_LEN);
-
-class OwnedHostCallBuffer {
-  static char *hostcall_buffer;
-  char *borrowed_buffer;
-
-public:
-  static bool initialize(JSContext *cx) {
-    // Ensure the buffer is all zeros so it doesn't add too much to the
-    // snapshot.
-    hostcall_buffer = (char *)js_calloc(HOSTCALL_BUFFER_LEN);
-    return !!hostcall_buffer;
-  }
-
-  OwnedHostCallBuffer() {
-    MOZ_RELEASE_ASSERT(hostcall_buffer != nullptr);
-    borrowed_buffer = hostcall_buffer;
-    hostcall_buffer = nullptr;
-  }
-
-  char *get() { return borrowed_buffer; }
-
-  ~OwnedHostCallBuffer() {
-    // TODO: consider adding a build config that makes this zero the buffer.
-    hostcall_buffer = borrowed_buffer;
-  }
-};
-
-char *OwnedHostCallBuffer::hostcall_buffer;
 
 using jsurl::SpecSlice, jsurl::SpecString, jsurl::JSUrl, jsurl::JSUrlSearchParams,
     jsurl::JSSearchParam;
@@ -309,35 +283,6 @@ int write_to_body_all(BodyHandle handle, const char *buf, size_t len) {
   return 0;
 }
 
-namespace Env {
-bool env_get(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "fastly.env.get", 1))
-    return false;
-
-  size_t var_name_len;
-  UniqueChars var_name_chars = encode(cx, args[0], &var_name_len);
-  if (!var_name_chars) {
-    return false;
-  }
-  RootedString env_var(cx, JS_NewStringCopyZ(cx, getenv(var_name_chars.get())));
-  if (!env_var)
-    return false;
-
-  args.rval().setString(env_var);
-  return true;
-}
-
-const JSFunctionSpec methods[] = {JS_FN("get", env_get, 1, JSPROP_ENUMERATE), JS_FS_END};
-
-JSObject *create(JSContext *cx) {
-  RootedObject env(cx, JS_NewPlainObject(cx));
-  if (!env || !JS_DefineFunctions(cx, env, methods))
-    return nullptr;
-  return env;
-}
-} // namespace Env
-
 #define ITERTYPE_ENTRIES 0
 #define ITERTYPE_KEYS 1
 #define ITERTYPE_VALUES 2
@@ -495,8 +440,6 @@ JSObject *create(JSContext *cx, HandleObject self, HandleValue url_val, HandleOb
 
 JSObject *create(JSContext *cx, HandleObject self, HandleValue url_val, HandleValue base_val);
 } // namespace URL
-
-static JSString *get_geo_info(JSContext *cx, HandleString address_str);
 
 namespace Fastly {
 
@@ -6015,42 +5958,6 @@ JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner
   return self;
 }
 } // namespace Headers
-
-static JSString *get_geo_info(JSContext *cx, HandleString address_str) {
-  size_t address_len;
-  UniqueChars address = encode(cx, address_str, &address_len);
-  if (!address)
-    return nullptr;
-
-  int format = AF_INET;
-  size_t octets_len = 4;
-  const char *caddress = address.get();
-  for (size_t i = 0; i < address_len; i++) {
-    if (caddress[i] == ':') {
-      format = AF_INET6;
-      octets_len = 16;
-      break;
-    }
-  }
-
-  char octets[sizeof(struct in6_addr)];
-  if (inet_pton(format, caddress, octets) != 1) {
-    // While get_geo_info can be invoked through FetchEvent#client.geo, too,
-    // that path can't result in an invalid address here, so we can be more
-    // specific in the error message.
-    JS_ReportErrorLatin1(cx, "Invalid address passed to fastly.getGeolocationForIpAddress");
-    return nullptr;
-  }
-
-  OwnedHostCallBuffer buffer;
-  size_t nwritten = 0;
-  if (!HANDLE_RESULT(
-          cx, xqd_geo_lookup(octets, octets_len, buffer.get(), HOSTCALL_BUFFER_LEN, &nwritten))) {
-    return nullptr;
-  }
-
-  return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buffer.get(), nwritten));
-}
 
 namespace ClientInfo {
 namespace Slots {

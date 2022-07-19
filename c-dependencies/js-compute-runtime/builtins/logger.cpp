@@ -1,5 +1,5 @@
 #include "logger.h"
-#include "xqd.h"
+#include "host_call.h"
 
 namespace Logger {
 namespace Slots {
