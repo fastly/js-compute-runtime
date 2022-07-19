@@ -14,6 +14,8 @@
 
 #pragma clang diagnostic pop
 
+#include "rust-url/rust-url.h"
+
 bool hasWizeningFinished();
 bool isWizening();
 void markWizeningAsFinished();
@@ -54,7 +56,9 @@ bool respondWithError(JSContext *cx, JS::HandleObject self);
 bool has_pending_requests();
 bool process_network_io(JSContext *cx);
 
+JS::UniqueChars encode(JSContext *cx, JS::HandleString val, size_t *encoded_len);
 JS::UniqueChars encode(JSContext *cx, JS::HandleValue val, size_t *encoded_len);
+jsurl::SpecString encode(JSContext *cx, JS::HandleValue val);
 
 bool debug_logging_enabled();
 bool dump_value(JSContext *cx, JS::Value value, FILE *fp);
