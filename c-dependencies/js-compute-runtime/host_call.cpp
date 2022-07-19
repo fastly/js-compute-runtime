@@ -22,4 +22,3 @@ OwnedHostCallBuffer::~OwnedHostCallBuffer() {
 }
 
 char *OwnedHostCallBuffer::hostcall_buffer;
-

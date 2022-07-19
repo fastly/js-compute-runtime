@@ -107,7 +107,6 @@ public:
   ~OwnedHostCallBuffer();
 
   char *get();
-
 };
 
 #endif

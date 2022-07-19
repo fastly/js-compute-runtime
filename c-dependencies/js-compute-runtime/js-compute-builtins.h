@@ -15,6 +15,7 @@
 #pragma clang diagnostic pop
 
 #include "rust-url/rust-url.h"
+#include "xqd.h"
 
 bool hasWizeningFinished();
 bool isWizening();
