@@ -35,7 +35,7 @@ fn build_engine(src: &PathBuf, out_dir: &Path) {
     let status = Command::new("make")
         .current_dir(out_dir)
         .arg("-j")
-        .arg("2")
+        .arg(var_os("NUM_JOBS").unwrap())
         .arg("-f")
         .arg(makefile_path)
         .status()
