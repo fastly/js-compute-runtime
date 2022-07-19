@@ -31,6 +31,7 @@
 
 #include "builtin.h"
 #include "builtins/logger.h"
+#include "builtins/env.h"
 
 using JS::CallArgs;
 using JS::CallArgsFromVp;
@@ -308,35 +309,6 @@ int write_to_body_all(BodyHandle handle, const char *buf, size_t len) {
 
   return 0;
 }
-
-namespace Env {
-bool env_get(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "fastly.env.get", 1))
-    return false;
-
-  size_t var_name_len;
-  UniqueChars var_name_chars = encode(cx, args[0], &var_name_len);
-  if (!var_name_chars) {
-    return false;
-  }
-  RootedString env_var(cx, JS_NewStringCopyZ(cx, getenv(var_name_chars.get())));
-  if (!env_var)
-    return false;
-
-  args.rval().setString(env_var);
-  return true;
-}
-
-const JSFunctionSpec methods[] = {JS_FN("get", env_get, 1, JSPROP_ENUMERATE), JS_FS_END};
-
-JSObject *create(JSContext *cx) {
-  RootedObject env(cx, JS_NewPlainObject(cx));
-  if (!env || !JS_DefineFunctions(cx, env, methods))
-    return nullptr;
-  return env;
-}
-} // namespace Env
 
 #define ITERTYPE_ENTRIES 0
 #define ITERTYPE_KEYS 1
