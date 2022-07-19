@@ -30,12 +30,12 @@
   }
 
 #define CLASS_BOILERPLATE_CUSTOM_INIT(cls)                                                         \
-  static constexpr const JSClassOps class_ops = {};                                                \
-  static const uint32_t class_flags = 0;                                                           \
+  constexpr const JSClassOps class_ops = {};                                                       \
+  const uint32_t class_flags = 0;                                                                  \
                                                                                                    \
   const JSClass class_ = {#cls, JSCLASS_HAS_RESERVED_SLOTS(Slots::Count) | class_flags,            \
                           &class_ops};                                                             \
-  static JS::PersistentRooted<JSObject *> proto_obj;                                               \
+  JS::PersistentRooted<JSObject *> proto_obj;                                                      \
                                                                                                    \
   bool is_instance(JSObject *obj) { return !!obj && JS::GetClass(obj) == &class_; }                \
                                                                                                    \
@@ -122,5 +122,14 @@
                        name);                                                                      \
     return false;                                                                                  \
   }
+
+inline bool ThrowIfNotConstructing(JSContext *cx, const JS::CallArgs &args,
+                                   const char *builtinName) {
+  if (args.isConstructing()) {
+    return true;
+  }
+  JS_ReportErrorASCII(cx, "Constructor %s requires 'new'", builtinName);
+  return false;
+}
 
 #endif
