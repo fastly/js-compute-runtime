@@ -1,10 +1,14 @@
 {
   "name": "@fastly/js-compute",
   "version": "0.3.0",
-  "js-compute-runtime-version": "0.2.4",
+  "js-compute-runtime-version": "0.3.0",
   "license": "SEE LICENSE IN LICENSE",
   "main": "js-compute-runtime-cli.js",
   "types": "index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fastly/js-compute-runtime"
+  },
   "bin": {
     "js-compute-runtime": "js-compute-runtime-cli.js"
   },
