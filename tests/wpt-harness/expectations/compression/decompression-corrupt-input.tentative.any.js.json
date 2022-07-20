@@ -1,0 +1,77 @@
+{
+  "the unchanged input for 'deflate' should decompress successfully": {
+    "status": 0
+  },
+  "truncating the input for 'deflate' should give an error": {
+    "status": 1
+  },
+  "trailing junk for 'deflate' should give an error": {
+    "status": 0
+  },
+  "format 'deflate' field CMF should be error for 0": {
+    "status": 0
+  },
+  "format 'deflate' field FLG should be success for 218": {
+    "status": 0
+  },
+  "format 'deflate' field FLG should be success for 1": {
+    "status": 0
+  },
+  "format 'deflate' field FLG should be success for 94": {
+    "status": 0
+  },
+  "format 'deflate' field FLG should be error for 157": {
+    "status": 0
+  },
+  "format 'deflate' field DATA should be success for 4": {
+    "status": 0
+  },
+  "format 'deflate' field DATA should be error for 5": {
+    "status": 0
+  },
+  "format 'deflate' field ADLER should be error for 255": {
+    "status": 0
+  },
+  "the unchanged input for 'gzip' should decompress successfully": {
+    "status": 0
+  },
+  "truncating the input for 'gzip' should give an error": {
+    "status": 1
+  },
+  "trailing junk for 'gzip' should give an error": {
+    "status": 0
+  },
+  "format 'gzip' field ID should be error for 255": {
+    "status": 0
+  },
+  "format 'gzip' field CM should be error for 0": {
+    "status": 0
+  },
+  "format 'gzip' field FLG should be success for 1": {
+    "status": 0
+  },
+  "format 'gzip' field FLG should be error for 2": {
+    "status": 0
+  },
+  "format 'gzip' field MTIME should be success for 255": {
+    "status": 0
+  },
+  "format 'gzip' field XFL should be success for 255": {
+    "status": 0
+  },
+  "format 'gzip' field OS should be success for 128": {
+    "status": 0
+  },
+  "format 'gzip' field DATA should be error for 3": {
+    "status": 0
+  },
+  "format 'gzip' field DATA should be success for 4": {
+    "status": 0
+  },
+  "format 'gzip' field CRC should be error for 0": {
+    "status": 0
+  },
+  "format 'gzip' field ISIZE should be error for 1": {
+    "status": 0
+  }
+}

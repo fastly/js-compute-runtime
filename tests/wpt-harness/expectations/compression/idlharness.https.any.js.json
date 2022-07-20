@@ -1,0 +1,62 @@
+{
+  "idl_test setup": {
+    "status": 0
+  },
+  "idl_test validation": {
+    "status": 0
+  },
+  "CompressionStream includes GenericTransformStream: member names are unique": {
+    "status": 0
+  },
+  "DecompressionStream includes GenericTransformStream: member names are unique": {
+    "status": 0
+  },
+  "CompressionStream interface: existence and properties of interface object": {
+    "status": 0
+  },
+  "CompressionStream interface object length": {
+    "status": 0
+  },
+  "CompressionStream interface object name": {
+    "status": 0
+  },
+  "CompressionStream interface: existence and properties of interface prototype object": {
+    "status": 0
+  },
+  "CompressionStream interface: existence and properties of interface prototype object's \"constructor\" property": {
+    "status": 0
+  },
+  "CompressionStream interface: existence and properties of interface prototype object's @@unscopables property": {
+    "status": 0
+  },
+  "CompressionStream must be primary interface of new CompressionStream(\"deflate\")": {
+    "status": 0
+  },
+  "Stringification of new CompressionStream(\"deflate\")": {
+    "status": 0
+  },
+  "DecompressionStream interface: existence and properties of interface object": {
+    "status": 0
+  },
+  "DecompressionStream interface object length": {
+    "status": 0
+  },
+  "DecompressionStream interface object name": {
+    "status": 0
+  },
+  "DecompressionStream interface: existence and properties of interface prototype object": {
+    "status": 0
+  },
+  "DecompressionStream interface: existence and properties of interface prototype object's \"constructor\" property": {
+    "status": 0
+  },
+  "DecompressionStream interface: existence and properties of interface prototype object's @@unscopables property": {
+    "status": 0
+  },
+  "DecompressionStream must be primary interface of new DecompressionStream(\"deflate\")": {
+    "status": 0
+  },
+  "Stringification of new DecompressionStream(\"deflate\")": {
+    "status": 0
+  }
+}
