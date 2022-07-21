@@ -1,45 +1,45 @@
 {
   "chunk of type undefined should error the stream for gzip": {
-    "status": 1
+    "status": 0
   },
   "chunk of type undefined should error the stream for deflate": {
-    "status": 1
+    "status": 0
   },
   "chunk of type undefined should error the stream for deflate-raw": {
     "status": 1
   },
   "chunk of type null should error the stream for gzip": {
-    "status": 1
+    "status": 0
   },
   "chunk of type null should error the stream for deflate": {
-    "status": 1
+    "status": 0
   },
   "chunk of type null should error the stream for deflate-raw": {
     "status": 1
   },
   "chunk of type numeric should error the stream for gzip": {
-    "status": 1
+    "status": 0
   },
   "chunk of type numeric should error the stream for deflate": {
-    "status": 1
+    "status": 0
   },
   "chunk of type numeric should error the stream for deflate-raw": {
     "status": 1
   },
   "chunk of type object, not BufferSource should error the stream for gzip": {
-    "status": 1
+    "status": 0
   },
   "chunk of type object, not BufferSource should error the stream for deflate": {
-    "status": 1
+    "status": 0
   },
   "chunk of type object, not BufferSource should error the stream for deflate-raw": {
     "status": 1
   },
   "chunk of type array should error the stream for gzip": {
-    "status": 1
+    "status": 0
   },
   "chunk of type array should error the stream for deflate": {
-    "status": 1
+    "status": 0
   },
   "chunk of type array should error the stream for deflate-raw": {
     "status": 1

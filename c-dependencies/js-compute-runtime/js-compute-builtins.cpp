@@ -177,7 +177,8 @@ SpecString encode(JSContext *cx, HandleValue val) {
 uint8_t *value_to_buffer(JSContext *cx, HandleValue val, const char *val_desc, size_t *len) {
   if (!val.isObject() ||
       !(JS_IsArrayBufferViewObject(&val.toObject()) || JS::IsArrayBufferObject(&val.toObject()))) {
-    JS_ReportErrorUTF8(cx, "%s must be of type ArrayBuffer or ArrayBufferView", val_desc);
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_BUFFER_ARG, val_desc,
+                             val.type());
     return nullptr;
   }
 
