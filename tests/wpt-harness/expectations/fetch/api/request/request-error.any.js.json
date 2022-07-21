@@ -48,7 +48,7 @@
     "status": 1
   },
   "Untitled": {
-    "status": 1
+    "status": 0
   },
   "Request should get its content-type from the init request": {
     "status": 0

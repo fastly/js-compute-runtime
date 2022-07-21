@@ -55,6 +55,29 @@ using JS::MutableHandleValue;
 
 using JS::PersistentRooted;
 
+struct JSErrorFormatString;
+
+enum JSErrNum {
+#define MSG_DEF(name, count, exception, format) name,
+#include "./error-numbers.msg"
+#undef MSG_DEF
+  JSErrNum_Limit
+};
+
+const JSErrorFormatString js_ErrorFormatString[JSErrNum_Limit] = {
+#define MSG_DEF(name, count, exception, format) {#name, format, count, exception},
+#include "./error-numbers.msg"
+#undef MSG_DEF
+};
+
+const JSErrorFormatString *GetErrorMessage(void *userRef, unsigned errorNumber) {
+  if (errorNumber > 0 && errorNumber < JSErrNum_Limit) {
+    return &js_ErrorFormatString[errorNumber];
+  }
+
+  return nullptr;
+}
+
 enum class Mode { PreWizening, PostWizening };
 
 Mode execution_mode = Mode::PreWizening;
@@ -175,7 +198,8 @@ inline bool ThrowIfNotConstructing(JSContext *cx, const CallArgs &args, const ch
   if (args.isConstructing()) {
     return true;
   }
-  JS_ReportErrorASCII(cx, "Constructor %s requires 'new'", builtinName);
+
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BUILTIN_CTOR_NO_NEW, builtinName);
   return false;
 }
 

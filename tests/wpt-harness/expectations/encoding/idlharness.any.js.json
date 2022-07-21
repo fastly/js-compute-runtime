@@ -24,7 +24,7 @@
     "status": 0
   },
   "TextDecoder interface: existence and properties of interface object": {
-    "status": 1
+    "status": 0
   },
   "TextDecoder interface object length": {
     "status": 0
@@ -75,7 +75,7 @@
     "status": 1
   },
   "TextEncoder interface: existence and properties of interface object": {
-    "status": 1
+    "status": 0
   },
   "TextEncoder interface object length": {
     "status": 0
