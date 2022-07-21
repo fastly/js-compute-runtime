@@ -3336,6 +3336,7 @@ enum { Transform, Format, State, Buffer, Count };
 enum class Format {
   GZIP,
   Deflate,
+  DeflateRaw,
 };
 
 // Using compression level 2, as per the reasoning here:
@@ -3578,6 +3579,8 @@ JSObject *create(JSContext *cx, HandleObject stream, Format format) {
   int window_bits = 15;
   if (format == Format::GZIP) {
     window_bits += 16;
+  } else if (format == Format::DeflateRaw) {
+    window_bits = -15;
   }
 
   int err =
@@ -3604,7 +3607,9 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
     return false;
 
   Format format;
-  if (!strcmp(format_chars.get(), "deflate")) {
+  if (!strcmp(format_chars.get(), "deflate-raw")) {
+    format = Format::DeflateRaw;
+  } else if (!strcmp(format_chars.get(), "deflate")) {
     format = Format::Deflate;
   } else if (!strcmp(format_chars.get(), "gzip")) {
     format = Format::GZIP;
