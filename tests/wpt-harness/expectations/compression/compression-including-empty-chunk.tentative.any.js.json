@@ -6,7 +6,7 @@
     "status": 0
   },
   "the result of compressing [,Hello,Hello] with deflate-raw should be 'HelloHello'": {
-    "status": 1
+    "status": 0
   },
   "the result of compressing [Hello,,Hello] with deflate should be 'HelloHello'": {
     "status": 0
@@ -15,7 +15,7 @@
     "status": 0
   },
   "the result of compressing [Hello,,Hello] with deflate-raw should be 'HelloHello'": {
-    "status": 1
+    "status": 0
   },
   "the result of compressing [Hello,Hello,] with deflate should be 'HelloHello'": {
     "status": 0
@@ -24,6 +24,6 @@
     "status": 0
   },
   "the result of compressing [Hello,Hello,] with deflate-raw should be 'HelloHello'": {
-    "status": 1
+    "status": 0
   }
 }
