@@ -4,5 +4,26 @@
   },
   "Fetch with POST with ReadableStream": {
     "status": 1
+  },
+  "Fetch with POST with ReadableStream on 421 response should return the response and not retry.": {
+    "status": 0
+  },
+  "Feature detect for POST with ReadableStream": {
+    "status": 1
+  },
+  "Feature detect for POST with ReadableStream, using request object": {
+    "status": 1
+  },
+  "Streaming upload with body containing a String": {
+    "status": 1
+  },
+  "Streaming upload with body containing null": {
+    "status": 1
+  },
+  "Streaming upload with body containing a number": {
+    "status": 1
+  },
+  "Streaming upload should fail on a 401 response": {
+    "status": 1
   }
 }

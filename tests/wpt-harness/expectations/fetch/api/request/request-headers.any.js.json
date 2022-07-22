@@ -17,6 +17,9 @@
   "Adding valid request header \"secb: OK\"": {
     "status": 0
   },
+  "Adding valid request header \"Set-Cookie2: OK\"": {
+    "status": 0
+  },
   "Adding invalid request header \"Accept-Charset: KO\"": {
     "status": 1
   },
@@ -66,6 +69,9 @@
     "status": 1
   },
   "Adding invalid request header \"Referer: KO\"": {
+    "status": 1
+  },
+  "Adding invalid request header \"Set-Cookie: KO\"": {
     "status": 1
   },
   "Adding invalid request header \"TE: KO\"": {

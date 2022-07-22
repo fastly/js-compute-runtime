@@ -4,5 +4,8 @@
   },
   "the length of gzipped data should be shorter than that of the original data": {
     "status": 0
+  },
+  "the length of deflated (with -raw) data should be shorter than that of the original data": {
+    "status": 1
   }
 }

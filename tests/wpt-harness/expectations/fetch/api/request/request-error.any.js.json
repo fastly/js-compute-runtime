@@ -47,6 +47,9 @@
   "Bad redirect init parameter value": {
     "status": 1
   },
+  "Untitled": {
+    "status": 1
+  },
   "Request should get its content-type from the init request": {
     "status": 0
   },

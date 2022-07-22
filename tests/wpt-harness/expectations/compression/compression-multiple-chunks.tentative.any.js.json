@@ -5,11 +5,17 @@
   "compressing 2 chunks with gzip should work": {
     "status": 0
   },
+  "compressing 2 chunks with deflate-raw should work": {
+    "status": 1
+  },
   "compressing 3 chunks with deflate should work": {
     "status": 0
   },
   "compressing 3 chunks with gzip should work": {
     "status": 0
+  },
+  "compressing 3 chunks with deflate-raw should work": {
+    "status": 1
   },
   "compressing 4 chunks with deflate should work": {
     "status": 0
@@ -17,11 +23,17 @@
   "compressing 4 chunks with gzip should work": {
     "status": 0
   },
+  "compressing 4 chunks with deflate-raw should work": {
+    "status": 1
+  },
   "compressing 5 chunks with deflate should work": {
     "status": 0
   },
   "compressing 5 chunks with gzip should work": {
     "status": 0
+  },
+  "compressing 5 chunks with deflate-raw should work": {
+    "status": 1
   },
   "compressing 6 chunks with deflate should work": {
     "status": 0
@@ -29,11 +41,17 @@
   "compressing 6 chunks with gzip should work": {
     "status": 0
   },
+  "compressing 6 chunks with deflate-raw should work": {
+    "status": 1
+  },
   "compressing 7 chunks with deflate should work": {
     "status": 0
   },
   "compressing 7 chunks with gzip should work": {
     "status": 0
+  },
+  "compressing 7 chunks with deflate-raw should work": {
+    "status": 1
   },
   "compressing 8 chunks with deflate should work": {
     "status": 0
@@ -41,11 +59,17 @@
   "compressing 8 chunks with gzip should work": {
     "status": 0
   },
+  "compressing 8 chunks with deflate-raw should work": {
+    "status": 1
+  },
   "compressing 9 chunks with deflate should work": {
     "status": 0
   },
   "compressing 9 chunks with gzip should work": {
     "status": 0
+  },
+  "compressing 9 chunks with deflate-raw should work": {
+    "status": 1
   },
   "compressing 10 chunks with deflate should work": {
     "status": 0
@@ -53,11 +77,17 @@
   "compressing 10 chunks with gzip should work": {
     "status": 0
   },
+  "compressing 10 chunks with deflate-raw should work": {
+    "status": 1
+  },
   "compressing 11 chunks with deflate should work": {
     "status": 0
   },
   "compressing 11 chunks with gzip should work": {
     "status": 0
+  },
+  "compressing 11 chunks with deflate-raw should work": {
+    "status": 1
   },
   "compressing 12 chunks with deflate should work": {
     "status": 0
@@ -65,11 +95,17 @@
   "compressing 12 chunks with gzip should work": {
     "status": 0
   },
+  "compressing 12 chunks with deflate-raw should work": {
+    "status": 1
+  },
   "compressing 13 chunks with deflate should work": {
     "status": 0
   },
   "compressing 13 chunks with gzip should work": {
     "status": 0
+  },
+  "compressing 13 chunks with deflate-raw should work": {
+    "status": 1
   },
   "compressing 14 chunks with deflate should work": {
     "status": 0
@@ -77,16 +113,25 @@
   "compressing 14 chunks with gzip should work": {
     "status": 0
   },
+  "compressing 14 chunks with deflate-raw should work": {
+    "status": 1
+  },
   "compressing 15 chunks with deflate should work": {
     "status": 0
   },
   "compressing 15 chunks with gzip should work": {
     "status": 0
   },
+  "compressing 15 chunks with deflate-raw should work": {
+    "status": 1
+  },
   "compressing 16 chunks with deflate should work": {
     "status": 0
   },
   "compressing 16 chunks with gzip should work": {
     "status": 0
+  },
+  "compressing 16 chunks with deflate-raw should work": {
+    "status": 1
   }
 }

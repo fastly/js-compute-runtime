@@ -26,28 +26,79 @@
   "TextDecoder interface: existence and properties of interface object": {
     "status": 1
   },
+  "TextDecoder interface object length": {
+    "status": 0
+  },
+  "TextDecoder interface object name": {
+    "status": 0
+  },
+  "TextDecoder interface: existence and properties of interface prototype object": {
+    "status": 0
+  },
+  "TextDecoder interface: existence and properties of interface prototype object's \"constructor\" property": {
+    "status": 0
+  },
+  "TextDecoder interface: existence and properties of interface prototype object's @@unscopables property": {
+    "status": 0
+  },
+  "TextDecoder interface: operation decode(optional BufferSource, optional TextDecodeOptions)": {
+    "status": 1
+  },
+  "TextDecoder interface: attribute encoding": {
+    "status": 1
+  },
+  "TextDecoder interface: attribute fatal": {
+    "status": 1
+  },
+  "TextDecoder interface: attribute ignoreBOM": {
+    "status": 1
+  },
   "TextDecoder must be primary interface of new TextDecoder()": {
     "status": 0
   },
   "Stringification of new TextDecoder()": {
     "status": 1
   },
-  "TextDecoder interface: new TextDecoder() must not have property \"undefined\"": {
+  "TextDecoder interface: new TextDecoder() must inherit property \"decode(optional BufferSource, optional TextDecodeOptions)\" with the proper type": {
     "status": 0
   },
-  "TextDecoder interface: new TextDecoder() must not have property \"decode\"": {
+  "TextDecoder interface: calling decode(optional BufferSource, optional TextDecodeOptions) on new TextDecoder() with too few arguments must throw TypeError": {
+    "status": 0
+  },
+  "TextDecoder interface: new TextDecoder() must inherit property \"encoding\" with the proper type": {
+    "status": 0
+  },
+  "TextDecoder interface: new TextDecoder() must inherit property \"fatal\" with the proper type": {
     "status": 1
   },
-  "TextDecoder interface: new TextDecoder() must not have property \"encoding\"": {
+  "TextDecoder interface: new TextDecoder() must inherit property \"ignoreBOM\" with the proper type": {
     "status": 1
-  },
-  "TextDecoder interface: new TextDecoder() must not have property \"fatal\"": {
-    "status": 0
-  },
-  "TextDecoder interface: new TextDecoder() must not have property \"ignoreBOM\"": {
-    "status": 0
   },
   "TextEncoder interface: existence and properties of interface object": {
+    "status": 1
+  },
+  "TextEncoder interface object length": {
+    "status": 0
+  },
+  "TextEncoder interface object name": {
+    "status": 0
+  },
+  "TextEncoder interface: existence and properties of interface prototype object": {
+    "status": 0
+  },
+  "TextEncoder interface: existence and properties of interface prototype object's \"constructor\" property": {
+    "status": 0
+  },
+  "TextEncoder interface: existence and properties of interface prototype object's @@unscopables property": {
+    "status": 0
+  },
+  "TextEncoder interface: operation encode(optional USVString)": {
+    "status": 1
+  },
+  "TextEncoder interface: operation encodeInto(USVString, Uint8Array)": {
+    "status": 1
+  },
+  "TextEncoder interface: attribute encoding": {
     "status": 1
   },
   "TextEncoder must be primary interface of new TextEncoder()": {
@@ -56,22 +107,67 @@
   "Stringification of new TextEncoder()": {
     "status": 1
   },
-  "TextEncoder interface: new TextEncoder() must not have property \"undefined\"": {
+  "TextEncoder interface: new TextEncoder() must inherit property \"encode(optional USVString)\" with the proper type": {
     "status": 0
   },
-  "TextEncoder interface: new TextEncoder() must not have property \"encode\"": {
-    "status": 1
-  },
-  "TextEncoder interface: new TextEncoder() must not have property \"encodeInto\"": {
+  "TextEncoder interface: calling encode(optional USVString) on new TextEncoder() with too few arguments must throw TypeError": {
     "status": 0
   },
-  "TextEncoder interface: new TextEncoder() must not have property \"encoding\"": {
+  "TextEncoder interface: new TextEncoder() must inherit property \"encodeInto(USVString, Uint8Array)\" with the proper type": {
     "status": 1
+  },
+  "TextEncoder interface: calling encodeInto(USVString, Uint8Array) on new TextEncoder() with too few arguments must throw TypeError": {
+    "status": 1
+  },
+  "TextEncoder interface: new TextEncoder() must inherit property \"encoding\" with the proper type": {
+    "status": 0
   },
   "TextDecoderStream interface: existence and properties of interface object": {
-    "status": 0
+    "status": 1
+  },
+  "TextDecoderStream interface object length": {
+    "status": 1
+  },
+  "TextDecoderStream interface object name": {
+    "status": 1
+  },
+  "TextDecoderStream interface: existence and properties of interface prototype object": {
+    "status": 1
+  },
+  "TextDecoderStream interface: existence and properties of interface prototype object's \"constructor\" property": {
+    "status": 1
+  },
+  "TextDecoderStream interface: existence and properties of interface prototype object's @@unscopables property": {
+    "status": 1
+  },
+  "TextDecoderStream interface: attribute encoding": {
+    "status": 1
+  },
+  "TextDecoderStream interface: attribute fatal": {
+    "status": 1
+  },
+  "TextDecoderStream interface: attribute ignoreBOM": {
+    "status": 1
   },
   "TextEncoderStream interface: existence and properties of interface object": {
-    "status": 0
+    "status": 1
+  },
+  "TextEncoderStream interface object length": {
+    "status": 1
+  },
+  "TextEncoderStream interface object name": {
+    "status": 1
+  },
+  "TextEncoderStream interface: existence and properties of interface prototype object": {
+    "status": 1
+  },
+  "TextEncoderStream interface: existence and properties of interface prototype object's \"constructor\" property": {
+    "status": 1
+  },
+  "TextEncoderStream interface: existence and properties of interface prototype object's @@unscopables property": {
+    "status": 1
+  },
+  "TextEncoderStream interface: attribute encoding": {
+    "status": 1
   }
 }
