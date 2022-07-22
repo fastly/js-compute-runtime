@@ -2,6 +2,9 @@
   "Float arrays": {
     "status": 1
   },
+  "DataView": {
+    "status": 1
+  },
   "Integer array: Int8Array": {
     "status": 0
   },

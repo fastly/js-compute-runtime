@@ -50,13 +50,7 @@
   "Fetch with POST with text body on 421 response should be retried once on new connection.": {
     "status": 1
   },
-  "Fetch with POST with ReadableStream on 421 response should return the response and not retry.": {
-    "status": 0
-  },
-  "Feature detect for POST with ReadableStream": {
-    "status": 1
-  },
-  "Feature detect for POST with ReadableStream, using request object": {
+  "Streaming upload shouldn't work on Http/1.1.": {
     "status": 1
   }
 }

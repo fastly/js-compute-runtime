@@ -218,6 +218,30 @@
   "Object RegExp object, RegExp new line": {
     "status": 0
   },
+  "Empty Error object": {
+    "status": 1
+  },
+  "Error object": {
+    "status": 1
+  },
+  "EvalError object": {
+    "status": 1
+  },
+  "RangeError object": {
+    "status": 1
+  },
+  "ReferenceError object": {
+    "status": 1
+  },
+  "SyntaxError object": {
+    "status": 1
+  },
+  "TypeError object": {
+    "status": 1
+  },
+  "URIError object": {
+    "status": 1
+  },
   "Blob basic": {
     "status": 1
   },
@@ -309,6 +333,9 @@
     "status": 0
   },
   "Object with non-configurable property": {
+    "status": 0
+  },
+  "Object with a getter that throws": {
     "status": 0
   },
   "ObjectPrototype must lose its exotic-ness when cloned": {

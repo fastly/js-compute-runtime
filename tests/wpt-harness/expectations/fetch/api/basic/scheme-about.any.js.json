@@ -16,5 +16,8 @@
   },
   "Fetching about:unicorn with method GET is KO": {
     "status": 1
+  },
+  "Fetching about:blank with range header does not affect behavior": {
+    "status": 1
   }
 }
