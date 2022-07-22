@@ -1374,14 +1374,8 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
   if (!JS_GetProperty(cx, chunk_obj, "value", &val))
     return false;
 
+  // The read operation returned something that's not a Uint8Array
   if (!val.isObject() || !JS_IsUint8Array(&val.toObject())) {
-    // TODO: check if this should create a rejected promise instead, so an
-    // in-content handler for unhandled rejections could deal with it. The read
-    // operation returned a chunk that's not a Uint8Array.
-    fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
-                    "Uint8Array. Received value: ");
-    dump_value(cx, val, stderr);
-
     // reject the request promise
     if (Request::is_instance(body_owner)) {
       RootedObject response_promise(cx, Request::response_promise(body_owner));
@@ -1397,6 +1391,10 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
       return JS::RejectPromise(cx, response_promise, exn);
     }
 
+    // TODO: should we also create a rejected promise if a response reads something that's not a Uint8Array?
+    fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
+                    "Uint8Array. Received value: ");
+    dump_value(cx, val, stderr);
     return false;
   }
 
