@@ -11,5 +11,5 @@ jobs:
     steps:
     - uses: actions/dependency-review-action@v2
       with:
-        allow-licenses: Apache-2.0, MIT, BSD-3-Clause
+        allow-licenses: Apache-2.0, MIT, BSD-3-Clause, ISC, BSD-2-Clause
 
