@@ -1391,7 +1391,8 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
       return JS::RejectPromise(cx, response_promise, exn);
     }
 
-    // TODO: should we also create a rejected promise if a response reads something that's not a Uint8Array?
+    // TODO: should we also create a rejected promise if a response reads something that's not a
+    // Uint8Array?
     fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
                     "Uint8Array. Received value: ");
     dump_value(cx, val, stderr);
