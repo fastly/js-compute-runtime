@@ -4,7 +4,8 @@
             "name": "sm-wasi",
             "includePath": [
                 "${workspaceFolder}/c-dependencies/spidermonkey/debug/include",
-                "/opt/wasi-sdk/share/wasi-sysroot/include/"
+                "/opt/wasi-sdk/share/wasi-sysroot/include/",
+                "${workspaceFolder}/c-dependencies/js-compute-runtime"
             ],
             "defines": [
                 "__wasi__"

@@ -4701,6 +4701,199 @@ JSString *status_message(JSObject *obj) {
   return JS::GetReservedSlot(obj, Slots::StatusMessage).toString();
 }
 
+// TODO(jake): Remove this when the reason phrase host-call is implemented
+void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code) {
+  auto phrase = "";
+
+  switch (code) {
+  case 100: // 100 Continue - https://tools.ietf.org/html/rfc7231#section-6.2.1
+    phrase = "Continue";
+    break;
+  case 101: // 101 Switching Protocols - https://tools.ietf.org/html/rfc7231#section-6.2.2
+    phrase = "Switching Protocols";
+    break;
+  case 102: // 102 Processing - https://tools.ietf.org/html/rfc2518
+    phrase = "Processing";
+    break;
+  case 200: // 200 OK - https://tools.ietf.org/html/rfc7231#section-6.3.1
+    phrase = "OK";
+    break;
+  case 201: // 201 Created - https://tools.ietf.org/html/rfc7231#section-6.3.2
+    phrase = "Created";
+    break;
+  case 202: // 202 Accepted - https://tools.ietf.org/html/rfc7231#section-6.3.3
+    phrase = "Accepted";
+    break;
+  case 203: // 203 Non-Authoritative Information - https://tools.ietf.org/html/rfc7231#section-6.3.4
+    phrase = "Non Authoritative Information";
+    break;
+  case 204: // 204 No Content - https://tools.ietf.org/html/rfc7231#section-6.3.5
+    phrase = "No Content";
+    break;
+  case 205: // 205 Reset Content - https://tools.ietf.org/html/rfc7231#section-6.3.6
+    phrase = "Reset Content";
+    break;
+  case 206: // 206 Partial Content - https://tools.ietf.org/html/rfc7233#section-4.1
+    phrase = "Partial Content";
+    break;
+  case 207: // 207 Multi-Status - https://tools.ietf.org/html/rfc4918
+    phrase = "Multi-Status";
+    break;
+  case 208: // 208 Already Reported - https://tools.ietf.org/html/rfc5842
+    phrase = "Already Reported";
+    break;
+  case 226: // 226 IM Used - https://tools.ietf.org/html/rfc3229
+    phrase = "IM Used";
+    break;
+  case 300: // 300 Multiple Choices - https://tools.ietf.org/html/rfc7231#section-6.4.1
+    phrase = "Multiple Choices";
+    break;
+  case 301: // 301 Moved Permanently - https://tools.ietf.org/html/rfc7231#section-6.4.2
+    phrase = "Moved Permanently";
+    break;
+  case 302: // 302 Found - https://tools.ietf.org/html/rfc7231#section-6.4.3
+    phrase = "Found";
+    break;
+  case 303: // 303 See Other - https://tools.ietf.org/html/rfc7231#section-6.4.4
+    phrase = "See Other";
+    break;
+  case 304: // 304 Not Modified - https://tools.ietf.org/html/rfc7232#section-4.1
+    phrase = "Not Modified";
+    break;
+  case 305: // 305 Use Proxy - https://tools.ietf.org/html/rfc7231#section-6.4.5
+    phrase = "Use Proxy";
+    break;
+  case 307: // 307 Temporary Redirect - https://tools.ietf.org/html/rfc7231#section-6.4.7
+    phrase = "Temporary Redirect";
+    break;
+  case 308: // 308 Permanent Redirect - https://tools.ietf.org/html/rfc7238
+    phrase = "Permanent Redirect";
+    break;
+  case 400: // 400 Bad Request - https://tools.ietf.org/html/rfc7231#section-6.5.1
+    phrase = "Bad Request";
+    break;
+  case 401: // 401 Unauthorized - https://tools.ietf.org/html/rfc7235#section-3.1
+    phrase = "Unauthorized";
+    break;
+  case 402: // 402 Payment Required - https://tools.ietf.org/html/rfc7231#section-6.5.2
+    phrase = "Payment Required";
+    break;
+  case 403: // 403 Forbidden - https://tools.ietf.org/html/rfc7231#section-6.5.3
+    phrase = "Forbidden";
+    break;
+  case 404: // 404 Not Found - https://tools.ietf.org/html/rfc7231#section-6.5.4
+    phrase = "Not Found";
+    break;
+  case 405: // 405 Method Not Allowed - https://tools.ietf.org/html/rfc7231#section-6.5.5
+    phrase = "Method Not Allowed";
+    break;
+  case 406: // 406 Not Acceptable - https://tools.ietf.org/html/rfc7231#section-6.5.6
+    phrase = "Not Acceptable";
+    break;
+  case 407: // 407 Proxy Authentication Required - https://tools.ietf.org/html/rfc7235#section-3.2
+    phrase = "Proxy Authentication Required";
+    break;
+  case 408: // 408 Request Timeout - https://tools.ietf.org/html/rfc7231#section-6.5.7
+    phrase = "Request Timeout";
+    break;
+  case 409: // 409 Conflict - https://tools.ietf.org/html/rfc7231#section-6.5.8
+    phrase = "Conflict";
+    break;
+  case 410: // 410 Gone - https://tools.ietf.org/html/rfc7231#section-6.5.9
+    phrase = "Gone";
+    break;
+  case 411: // 411 Length Required - https://tools.ietf.org/html/rfc7231#section-6.5.10
+    phrase = "Length Required";
+    break;
+  case 412: // 412 Precondition Failed - https://tools.ietf.org/html/rfc7232#section-4.2
+    phrase = "Precondition Failed";
+    break;
+  case 413: // 413 Payload Too Large - https://tools.ietf.org/html/rfc7231#section-6.5.11
+    phrase = "Payload Too Large";
+    break;
+  case 414: // 414 URI Too Long - https://tools.ietf.org/html/rfc7231#section-6.5.12
+    phrase = "URI Too Long";
+    break;
+  case 415: // 415 Unsupported Media Type - https://tools.ietf.org/html/rfc7231#section-6.5.13
+    phrase = "Unsupported Media Type";
+    break;
+  case 416: // 416 Range Not Satisfiable - https://tools.ietf.org/html/rfc7233#section-4.4
+    phrase = "Range Not Satisfiable";
+    break;
+  case 417: // 417 Expectation Failed - https://tools.ietf.org/html/rfc7231#section-6.5.14
+    phrase = "Expectation Failed";
+    break;
+  case 418: // 418 I'm a teapot - https://tools.ietf.org/html/rfc2324
+    phrase = "I'm a teapot";
+    break;
+  case 421: // 421 Misdirected Request - http://tools.ietf.org/html/rfc7540#section-9.1.2
+    phrase = "Misdirected Request";
+    break;
+  case 422: // 422 Unprocessable Entity - https://tools.ietf.org/html/rfc4918
+    phrase = "Unprocessable Entity";
+    break;
+  case 423: // 423 Locked - https://tools.ietf.org/html/rfc4918
+    phrase = "Locked";
+    break;
+  case 424: // 424 Failed Dependency - https://tools.ietf.org/html/rfc4918
+    phrase = "Failed Dependency";
+    break;
+  case 426: // 426 Upgrade Required - https://tools.ietf.org/html/rfc7231#section-6.5.15
+    phrase = "Upgrade Required";
+    break;
+  case 428: // 428 Precondition Required - https://tools.ietf.org/html/rfc6585
+    phrase = "Precondition Required";
+    break;
+  case 429: // 429 Too Many Requests - https://tools.ietf.org/html/rfc6585
+    phrase = "Too Many Requests";
+    break;
+  case 431: // 431 Request Header Fields Too Large - https://tools.ietf.org/html/rfc6585
+    phrase = "Request Header Fields Too Large";
+    break;
+  case 451: // 451 Unavailable For Legal Reasons - http://tools.ietf.org/html/rfc7725
+    phrase = "Unavailable For Legal Reasons";
+    break;
+  case 500: // 500 Internal Server Error - https://tools.ietf.org/html/rfc7231#section-6.6.1
+    phrase = "Internal Server Error";
+    break;
+  case 501: // 501 Not Implemented - https://tools.ietf.org/html/rfc7231#section-6.6.2
+    phrase = "Not Implemented";
+    break;
+  case 502: // 502 Bad Gateway - https://tools.ietf.org/html/rfc7231#section-6.6.3
+    phrase = "Bad Gateway";
+    break;
+  case 503: // 503 Service Unavailable - https://tools.ietf.org/html/rfc7231#section-6.6.4
+    phrase = "Service Unavailable";
+    break;
+  case 504: // 504 Gateway Timeout - https://tools.ietf.org/html/rfc7231#section-6.6.5
+    phrase = "Gateway Timeout";
+    break;
+  case 505: // 505 HTTP Version Not Supported - https://tools.ietf.org/html/rfc7231#section-6.6.6
+    phrase = "HTTP Version Not Supported";
+    break;
+  case 506: // 506 Variant Also Negotiates - https://tools.ietf.org/html/rfc2295
+    phrase = "Variant Also Negotiates";
+    break;
+  case 507: // 507 Insufficient Storage - https://tools.ietf.org/html/rfc4918
+    phrase = "Insufficient Storage";
+    break;
+  case 508: // 508 Loop Detected - https://tools.ietf.org/html/rfc5842
+    phrase = "Loop Detected";
+    break;
+  case 510: // 510 Not Extended - https://tools.ietf.org/html/rfc2774
+    phrase = "Not Extended";
+    break;
+  case 511: // 511 Network Authentication Required - https://tools.ietf.org/html/rfc6585
+    phrase = "Network Authentication Required";
+    break;
+  default:
+    phrase = "";
+    break;
+  }
+  JS::SetReservedSlot(obj, Slots::StatusMessage,
+                      JS::StringValue(JS_NewStringCopyN(cx, phrase, strlen(phrase))));
+}
+
 const unsigned ctor_length = 1;
 
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
@@ -4792,7 +4985,7 @@ const JSPropertySpec properties[] = {JS_PSG("type", type_get, JSPROP_ENUMERATE),
                                      JS_PSG("url", url_get, JSPROP_ENUMERATE),
                                      JS_PSG("status", status_get, JSPROP_ENUMERATE),
                                      JS_PSG("ok", ok_get, JSPROP_ENUMERATE),
-                                     JS_PSG("statusText", statusText_get, 0),
+                                     JS_PSG("statusText", statusText_get, JSPROP_ENUMERATE),
                                      JS_PSG("version", version_get, JSPROP_ENUMERATE),
                                      JS_PSG("headers", headers_get, JSPROP_ENUMERATE),
                                      JS_PSG("body", body_get, JSPROP_ENUMERATE),
@@ -4973,7 +5166,8 @@ JSObject *create(JSContext *cx, HandleObject response, ResponseHandle response_h
       return nullptr;
 
     JS::SetReservedSlot(response, Slots::Status, JS::Int32Value(status));
-    JS::SetReservedSlot(response, Slots::StatusMessage, JS_GetEmptyStringValue(cx));
+    set_status_message_from_code(cx, response, status);
+
     if (!(status == 204 || status == 205 || status == 304)) {
       JS::SetReservedSlot(response, Slots::HasBody, JS::TrueValue());
     }
