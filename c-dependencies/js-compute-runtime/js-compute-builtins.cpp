@@ -65,6 +65,10 @@ bool isWizening() { return execution_mode == Mode::PreWizening; }
 
 void markWizeningAsFinished() { execution_mode = Mode::PostWizening; }
 
+namespace Request {
+JSObject *response_promise(JSObject *obj);
+}
+
 typedef bool InternalMethod(JSContext *cx, HandleObject receiver, HandleValue extra, CallArgs args);
 template <InternalMethod fun> bool internal_method(JSContext *cx, unsigned argc, Value *vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -1377,6 +1381,22 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
     fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
                     "Uint8Array. Received value: ");
     dump_value(cx, val, stderr);
+
+    // reject the request promise
+    if (Request::is_instance(body_owner)) {
+      RootedObject response_promise(cx, Request::response_promise(body_owner));
+      RootedValue exn(cx);
+
+      // TODO: this should be a TypeError, but I'm not sure how to make that work
+      JS_ReportErrorUTF8(cx, "TypeError");
+      if (!JS_GetPendingException(cx, &exn)) {
+        return false;
+      }
+      JS_ClearPendingException(cx);
+
+      return JS::RejectPromise(cx, response_promise, exn);
+    }
+
     return false;
   }
 
