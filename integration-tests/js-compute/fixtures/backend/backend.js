@@ -2,7 +2,7 @@
 
 let spinLoopString = '';
 
-async function handleRequest(event) {
+function handleRequest(event) {
 
   // Get the client request from the event
   let req = event.request;
@@ -113,13 +113,6 @@ async function handleRequest(event) {
     return new Response("Compute SDK Test Backend");
   }
 
-  // tee
-
-  if (method == "POST" && url.pathname == "/tee") {
-    const text = await event.request.text();
-    return new Response(text);
-  }
-
   // local_upstream_request
 
   if (method == "GET" && url.pathname == "/local_upstream_request") {
@@ -148,6 +141,6 @@ async function handleRequest(event) {
   return new Response("The page you requested could not be found", {
     status: 404
   });
-}
+};
 
 addEventListener("fetch", event => event.respondWith(handleRequest(event)));
