@@ -168,6 +168,7 @@ async function run() {
     console.log(`Running ${testPaths.length} of ${totalCount} tests ...\n`);
 
     let expectationsUpdated = 0;
+    let unexpectedFailure = false;
 
     let stats = await runTests(testPaths, viceroy,
       (testPath, results, stats) => {
@@ -199,6 +200,8 @@ async function run() {
             console.log(`Removing expectations file ${expectPath}`);
             rmSync(expectPath);
             expectationsUpdated++;
+          } else {
+            unexpectedFailure = true;
           }
         } else {
           console.log(`EXPECTED ERROR: ${testPath} (${stats.duration}ms)`);
@@ -213,7 +216,7 @@ async function run() {
 
     if (config.tests.updateExpectations) {
       console.log(`Expectations updated: ${expectationsUpdated}`);
-    } else if (stats.unexpectedFail + stats.unexpectedPass != 0) {
+    } else if (stats.unexpectedFail + stats.unexpectedPass != 0 || unexpectedFailure) {
       process.exitCode = 1;
     }
   }
