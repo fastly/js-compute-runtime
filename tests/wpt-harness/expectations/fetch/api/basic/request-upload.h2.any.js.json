@@ -6,7 +6,7 @@
     "status": 1
   },
   "Fetch with POST with ReadableStream on 421 response should return the response and not retry.": {
-    "status": 0
+    "status": 1
   },
   "Feature detect for POST with ReadableStream": {
     "status": 1
