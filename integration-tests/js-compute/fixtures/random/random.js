@@ -5,6 +5,10 @@ function random3Decimals() {
 let a = random3Decimals();
 let b = random3Decimals();
 
+// This tests can fail sporadically as it is testing randomness.
+// If it fails, rerun the tests and it should pass, if it does not
+// then we may have another bug with how we are seeding the random
+// number generator in SpiderMonkey.
 addEventListener("fetch", event => {
   if (a === b) {
     return event.respondWith(new Response('The first 4 digits were repeated in sequential calls to Math.random() during wizening\n\n' + JSON.stringify({ a, b }, undefined, 4), { status: 500 }));
