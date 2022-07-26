@@ -364,7 +364,8 @@ const JSFunctionSpec methods[] = {
     // [Symbol.iterator] added in init_class.
     JS_FS_END};
 
-const JSPropertySpec properties[] = {JS_PS_END};
+const JSPropertySpec properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "URLSearchParams", JSPROP_READONLY), JS_PS_END};
 bool constructor(JSContext *cx, unsigned argc, Value *vp);
 CLASS_BOILERPLATE_CUSTOM_INIT(URLSearchParams)
 
@@ -457,6 +458,7 @@ const JSPropertySpec properties[] = {
     JS_PSGS("search", search_get, search_set, JSPROP_ENUMERATE),
     JS_PSG("searchParams", searchParams_get, JSPROP_ENUMERATE),
     JS_PSGS("username", username_get, username_set, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "URL", JSPROP_READONLY),
     JS_PS_END};
 bool constructor(JSContext *cx, unsigned argc, Value *vp);
 CLASS_BOILERPLATE(URL)
@@ -2724,8 +2726,10 @@ bool writable_get(JSContext *cx, unsigned argc, Value *vp) {
 
 const JSFunctionSpec methods[] = {JS_FS_END};
 
-const JSPropertySpec properties[] = {JS_PSG("readable", readable_get, JSPROP_ENUMERATE),
-                                     JS_PSG("writable", writable_get, JSPROP_ENUMERATE), JS_PS_END};
+const JSPropertySpec properties[] = {
+    JS_PSG("readable", readable_get, JSPROP_ENUMERATE),
+    JS_PSG("writable", writable_get, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "TransformStream", JSPROP_READONLY), JS_PS_END};
 
 bool constructor(JSContext *cx, unsigned argc, Value *vp);
 
@@ -4257,6 +4261,7 @@ const JSPropertySpec properties[] = {
     JS_PSGS("surrogateKey", accessor_get<surrogate_key_get>, accessor_set<surrogate_key_set>,
             JSPROP_ENUMERATE),
     JS_PSGS("pci", accessor_get<pci_get>, accessor_set<pci_set>, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "CacheOverride", JSPROP_READONLY),
     JS_PS_END};
 
 bool constructor(JSContext *cx, unsigned argc, Value *vp);
@@ -4524,6 +4529,7 @@ const JSPropertySpec properties[] = {JS_PSG("method", method_get, JSPROP_ENUMERA
                                      JS_PSG("headers", headers_get, JSPROP_ENUMERATE),
                                      JS_PSG("body", body_get, JSPROP_ENUMERATE),
                                      JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
+                                     JS_STRING_SYM_PS(toStringTag, "Request", JSPROP_READONLY),
                                      JS_PS_END};
 
 bool constructor(JSContext *cx, unsigned argc, Value *vp);
@@ -5357,6 +5363,7 @@ const JSPropertySpec properties[] = {JS_PSG("type", type_get, JSPROP_ENUMERATE),
                                      JS_PSG("headers", headers_get, JSPROP_ENUMERATE),
                                      JS_PSG("body", body_get, JSPROP_ENUMERATE),
                                      JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
+                                     JS_STRING_SYM_PS(toStringTag, "Response", JSPROP_READONLY),
                                      JS_PS_END};
 
 bool constructor(JSContext *cx, unsigned argc, Value *vp);
@@ -5664,7 +5671,9 @@ bool encoding_get(JSContext *cx, unsigned argc, Value *vp) {
 
 const JSFunctionSpec methods[] = {JS_FN("encode", encode, 1, JSPROP_ENUMERATE), JS_FS_END};
 
-const JSPropertySpec properties[] = {JS_PSG("encoding", encoding_get, JSPROP_ENUMERATE), JS_PS_END};
+const JSPropertySpec properties[] = {JS_PSG("encoding", encoding_get, JSPROP_ENUMERATE),
+                                     JS_STRING_SYM_PS(toStringTag, "TextEncoder", JSPROP_READONLY),
+                                     JS_PS_END};
 bool constructor(JSContext *cx, unsigned argc, Value *vp);
 CLASS_BOILERPLATE(TextEncoder)
 
@@ -5725,7 +5734,9 @@ bool encoding_get(JSContext *cx, unsigned argc, Value *vp) {
 
 const JSFunctionSpec methods[] = {JS_FN("decode", decode, 1, JSPROP_ENUMERATE), JS_FS_END};
 
-const JSPropertySpec properties[] = {JS_PSG("encoding", encoding_get, JSPROP_ENUMERATE), JS_PS_END};
+const JSPropertySpec properties[] = {JS_PSG("encoding", encoding_get, JSPROP_ENUMERATE),
+                                     JS_STRING_SYM_PS(toStringTag, "TextDecoder", JSPROP_READONLY),
+                                     JS_PS_END};
 bool constructor(JSContext *cx, unsigned argc, Value *vp);
 CLASS_BOILERPLATE(TextDecoder)
 
@@ -7277,7 +7288,8 @@ bool next(JSContext *cx, unsigned argc, Value *vp) {
 
 const JSFunctionSpec methods[] = {JS_FN("next", next, 0, JSPROP_ENUMERATE), JS_FS_END};
 
-const JSPropertySpec properties[] = {JS_PS_END};
+const JSPropertySpec properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "URLSearchParamsIterator", JSPROP_READONLY), JS_PS_END};
 
 CLASS_BOILERPLATE_CUSTOM_INIT(URLSearchParamsIterator)
 
@@ -7636,6 +7648,7 @@ const JSPropertySpec properties[] = {JS_PSG("href", href_get, JSPROP_ENUMERATE),
                                      JS_PSG("pathname", pathname_get, JSPROP_ENUMERATE),
                                      JS_PSG("search", search_get, JSPROP_ENUMERATE),
                                      JS_PSG("hash", hash_get, JSPROP_ENUMERATE),
+                                     JS_STRING_SYM_PS(toStringTag, "Location", JSPROP_READONLY),
                                      JS_PS_END};
 
 CLASS_BOILERPLATE_CUSTOM_INIT(WorkerLocation)

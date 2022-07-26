@@ -54,6 +54,11 @@ const builtins = [
           "Extending from `"+builtin.name+"`: Expected `instance instanceof customClass` to be `true`, instead found: `false`"
         );
       }
+      if (instance.name === customClass.name) {
+        throw new Error(
+          "Extending from `"+builtin.name+"`: Expected `instance.name === customClass.name` to be `true`, instead found: `false`"
+        );
+      }
       if (Reflect.has(instance, "shrimp") !== true) {
         throw new Error(
           "Extending from `"+builtin.name+"`: Expected `Reflect.has(instance, \"shrimp\")` to be `true`, instead found: `false`"
