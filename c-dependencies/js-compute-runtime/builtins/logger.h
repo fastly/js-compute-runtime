@@ -3,12 +3,23 @@
 
 #include "builtin.h"
 
-namespace Logger {
-// Register the Logger class.
-bool init_class(JSContext *cx, JS::HandleObject global);
+namespace builtins {
 
-// Create an instance of the logger class.
-JSObject *create(JSContext *cx, const char *name);
-} // namespace Logger
+class Logger : public BuiltinNoConstructor<Logger> {
+private:
+  static bool log(JSContext *cx, unsigned argc, JS::Value *vp);
+
+public:
+  static constexpr const char *class_name = "Logger";
+
+  enum Slots { Endpoint, Count };
+
+  static const JSFunctionSpec methods[];
+  static const JSPropertySpec properties[];
+
+  static JSObject *create(JSContext *cx, const char *name);
+};
+
+} // namespace builtins
 
 #endif

@@ -534,7 +534,7 @@ bool getLogger(JSContext *cx, unsigned argc, Value *vp) {
   if (!name)
     return false;
 
-  RootedObject logger(cx, Logger::create(cx, name.get()));
+  RootedObject logger(cx, builtins::Logger::create(cx, name.get()));
   if (!logger)
     return false;
 
@@ -8106,7 +8106,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!TextDecoder::init_class(cx, global))
     return false;
-  if (!Logger::init_class(cx, global))
+  if (!builtins::Logger::init_class(cx, global))
     return false;
   if (!URL::init_class(cx, global))
     return false;

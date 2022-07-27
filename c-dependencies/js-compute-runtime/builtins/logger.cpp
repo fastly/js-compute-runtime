@@ -1,21 +1,13 @@
 #include "logger.h"
 #include "host_call.h"
 
-namespace Logger {
-namespace Slots {
-enum { Endpoint, Count };
-};
+namespace builtins {
 
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
-
-namespace {
-
-const unsigned ctor_length = 1;
-
-static bool log(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
-  auto endpoint = LogEndpointHandle{(uint32_t)JS::GetReservedSlot(self, Slots::Endpoint).toInt32()};
+  auto endpoint =
+      LogEndpointHandle{(uint32_t)JS::GetReservedSlot(self, Logger::Slots::Endpoint).toInt32()};
 
   size_t msg_len;
   JS::UniqueChars msg = encode(cx, args.get(0), &msg_len);
@@ -30,15 +22,11 @@ static bool log(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-const JSFunctionSpec methods[] = {JS_FN("log", log, 1, JSPROP_ENUMERATE), JS_FS_END};
+const JSFunctionSpec Logger::methods[] = {JS_FN("log", log, 1, JSPROP_ENUMERATE), JS_FS_END};
 
-const JSPropertySpec properties[] = {JS_PS_END};
+const JSPropertySpec Logger::properties[] = {JS_PS_END};
 
-} // namespace
-
-CLASS_BOILERPLATE_NO_CTOR(Logger)
-
-JSObject *create(JSContext *cx, const char *name) {
+JSObject *Logger::create(JSContext *cx, const char *name) {
   JS::RootedObject logger(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!logger)
     return nullptr;
@@ -52,4 +40,5 @@ JSObject *create(JSContext *cx, const char *name) {
 
   return logger;
 }
-} // namespace Logger
+
+} // namespace builtins
