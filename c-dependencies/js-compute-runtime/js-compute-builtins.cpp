@@ -206,16 +206,6 @@ JSObject *PromiseRejectedWithPendingError(JSContext *cx) {
   return promise;
 }
 
-inline bool ReturnPromiseRejectedWithPendingError(JSContext *cx, const JS::CallArgs &args) {
-  JSObject *promise = PromiseRejectedWithPendingError(cx);
-  if (!promise) {
-    return false;
-  }
-
-  args.rval().setObject(*promise);
-  return true;
-}
-
 #define HANDLE_READ_CHUNK_SIZE 8192
 
 template <auto op, class HandleType>
