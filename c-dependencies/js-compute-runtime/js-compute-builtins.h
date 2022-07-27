@@ -86,6 +86,11 @@ void markWizeningAsFinished();
 
 bool define_fastly_sys(JSContext *cx, JS::HandleObject global);
 
+namespace RequestOrResponse {
+bool is_instance(JSObject *obj);
+JSObject *body_stream(JSObject *obj);
+} // namespace RequestOrResponse
+
 namespace FetchEvent {
 enum class State {
   unhandled,
