@@ -180,15 +180,6 @@ uint8_t *value_to_buffer(JSContext *cx, HandleValue val, const char *val_desc, s
   return data;
 }
 
-inline bool ThrowIfNotConstructing(JSContext *cx, const CallArgs &args, const char *builtinName) {
-  if (args.isConstructing()) {
-    return true;
-  }
-
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BUILTIN_CTOR_NO_NEW, builtinName);
-  return false;
-}
-
 bool RejectPromiseWithPendingError(JSContext *cx, HandleObject promise) {
   RootedValue exn(cx);
   if (!JS_IsExceptionPending(cx) || !JS_GetPendingException(cx, &exn)) {

@@ -45,6 +45,15 @@ inline bool ReturnPromiseRejectedWithPendingError(JSContext *cx, const JS::CallA
   return true;
 }
 
+inline bool ThrowIfNotConstructing(JSContext *cx, const JS::CallArgs &args,
+                                   const char *builtinName) {
+  if (args.isConstructing()) {
+    return true;
+  }
+
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BUILTIN_CTOR_NO_NEW, builtinName);
+  return false;
+}
 bool hasWizeningFinished();
 bool isWizening();
 void markWizeningAsFinished();
