@@ -17,6 +17,22 @@
 #include "rust-url/rust-url.h"
 #include "xqd.h"
 
+struct JSErrorFormatString;
+
+enum JSErrNum {
+#define MSG_DEF(name, count, exception, format) name,
+#include "./error-numbers.msg"
+#undef MSG_DEF
+  JSErrNum_Limit
+};
+
+const JSErrorFormatString js_ErrorFormatString[JSErrNum_Limit] = {
+#define MSG_DEF(name, count, exception, format) {#name, format, count, exception},
+#include "./error-numbers.msg"
+#undef MSG_DEF
+};
+
+const JSErrorFormatString *GetErrorMessage(void *userRef, unsigned errorNumber);
 bool hasWizeningFinished();
 bool isWizening();
 void markWizeningAsFinished();
