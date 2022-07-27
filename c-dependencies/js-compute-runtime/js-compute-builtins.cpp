@@ -77,27 +77,6 @@ namespace Request {
 JSObject *response_promise(JSObject *obj);
 }
 
-typedef bool InternalMethod(JSContext *cx, HandleObject receiver, HandleValue extra, CallArgs args);
-template <InternalMethod fun> bool internal_method(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject self(cx, &js::GetFunctionNativeReserved(&args.callee(), 0).toObject());
-  RootedValue extra(cx, js::GetFunctionNativeReserved(&args.callee(), 1));
-  return fun(cx, self, extra, args);
-}
-
-template <InternalMethod fun>
-JSObject *create_internal_method(JSContext *cx, HandleObject receiver,
-                                 HandleValue extra = JS::UndefinedHandleValue,
-                                 unsigned int nargs = 0, const char *name = "") {
-  JSFunction *method = js::NewFunctionWithReserved(cx, internal_method<fun>, 1, 0, name);
-  if (!method)
-    return nullptr;
-  RootedObject method_obj(cx, JS_GetFunctionObject(method));
-  js::SetFunctionNativeReserved(method_obj, 0, JS::ObjectValue(*receiver));
-  js::SetFunctionNativeReserved(method_obj, 1, extra);
-  return method_obj;
-}
-
 template <InternalMethod fun>
 bool enqueue_internal_method(JSContext *cx, HandleObject receiver,
                              HandleValue extra = JS::UndefinedHandleValue, unsigned int nargs = 0,
