@@ -33,6 +33,18 @@ const JSErrorFormatString js_ErrorFormatString[JSErrNum_Limit] = {
 };
 
 const JSErrorFormatString *GetErrorMessage(void *userRef, unsigned errorNumber);
+
+JSObject *PromiseRejectedWithPendingError(JSContext *cx);
+inline bool ReturnPromiseRejectedWithPendingError(JSContext *cx, const JS::CallArgs &args) {
+  JSObject *promise = PromiseRejectedWithPendingError(cx);
+  if (!promise) {
+    return false;
+  }
+
+  args.rval().setObject(*promise);
+  return true;
+}
+
 bool hasWizeningFinished();
 bool isWizening();
 void markWizeningAsFinished();
