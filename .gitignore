@@ -14,7 +14,7 @@ integration-tests/**/fixtures/**/js-compute-runtime.o
 integration-tests/**/fixtures/**/rusturl
 
 # Ignore Reference Docs
-# TODO
+sdk/js-compute/reference-docs/
 
 # ---
 
