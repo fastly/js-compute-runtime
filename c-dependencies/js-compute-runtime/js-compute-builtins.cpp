@@ -1280,6 +1280,7 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
     // `responseDone`.
     if (Response::is_instance(body_owner)) {
       FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+      return HANDLE_RESULT(cx, xqd_body_close(body_handle));
     }
 
     if (!HANDLE_RESULT(cx, xqd_body_close(body_handle))) {
@@ -3580,6 +3581,437 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   return true;
 }
 } // namespace TextDecoder
+
+#ifdef ENABLE_OBJECT_STORE
+namespace ObjectStoreEntry {
+namespace Slots {
+enum {
+  Body = RequestOrResponse::Slots::Body,
+  BodyStream = RequestOrResponse::Slots::BodyStream,
+  HasBody = RequestOrResponse::Slots::HasBody,
+  BodyUsed = RequestOrResponse::Slots::BodyUsed,
+  Count
+};
+};
+
+const unsigned ctor_length = 0;
+
+bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
+
+template <BodyReadResult result_type> bool bodyAll(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(0)
+  return RequestOrResponse::bodyAll<result_type>(cx, args, self);
+}
+
+bool body_get(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(0)
+  return RequestOrResponse::body_get(cx, args, self, true);
+}
+
+bool bodyUsed_get(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(0)
+  args.rval().setBoolean(RequestOrResponse::body_used(self));
+  return true;
+}
+
+const JSFunctionSpec methods[] = {
+    JS_FN("arrayBuffer", bodyAll<BodyReadResult::ArrayBuffer>, 0, JSPROP_ENUMERATE),
+    JS_FN("json", bodyAll<BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
+    JS_FN("text", bodyAll<BodyReadResult::Text>, 0, JSPROP_ENUMERATE), JS_FS_END};
+
+const JSPropertySpec properties[] = {JS_PSG("body", body_get, JSPROP_ENUMERATE),
+                                     JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE), JS_PS_END};
+
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  JS_ReportErrorUTF8(cx, "ObjectStoreEntry can't be instantiated directly");
+  return false;
+}
+
+CLASS_BOILERPLATE(ObjectStoreEntry)
+
+JSObject *create(JSContext *cx, BodyHandle body_handle) {
+  RootedObject objectStoreEntry(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  if (!objectStoreEntry)
+    return nullptr;
+
+  JS::SetReservedSlot(objectStoreEntry, Slots::Body, JS::Int32Value((int)body_handle.handle));
+  JS::SetReservedSlot(objectStoreEntry, Slots::BodyStream, JS::NullValue());
+  JS::SetReservedSlot(objectStoreEntry, Slots::HasBody, JS::TrueValue());
+  JS::SetReservedSlot(objectStoreEntry, Slots::BodyUsed, JS::FalseValue());
+
+  return objectStoreEntry;
+}
+} // namespace ObjectStoreEntry
+
+namespace ObjectStore {
+namespace Slots {
+enum { ObjectStore, Count };
+};
+
+bool is_instance(JSObject *obj);
+bool is_instance(JS::Value val);
+
+ObjectStoreHandle object_store_handle(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, Slots::ObjectStore);
+  return ObjectStoreHandle{static_cast<uint32_t>(val.toInt32())};
+}
+
+const unsigned ctor_length = 1;
+
+bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
+
+bool lookup(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(1)
+
+  RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!result_promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  size_t key_len;
+  // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
+  UniqueChars key = encode(cx, args.get(0), &key_len);
+  if (!key) {
+    return false;
+  }
+
+  // If the converted string has a length of 0 then we throw an Error
+  // because ObjectStore Keys have to be at-least 1 character.
+  // TODO: Decide if this should be a RangeError
+  if (key_len == 0) {
+    JS_ReportErrorUTF8(cx, "ObjectStore key can not be an empty string");
+    return false;
+  }
+
+  // If the converted string has a length of more than 1024 then we throw an Error
+  // because ObjectStore Keys have to be less than 1025 characters.
+  // TODO: Decide if this should be a RangeError
+  if (key_len > 1024) {
+    JS_ReportErrorUTF8(cx, "ObjectStore key can not be more than 1024 characters");
+    return false;
+  }
+
+  char *key_chars = key.get();
+
+  if (strchr(key_chars, '#') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain # character");
+    return false;
+  }
+  if (strchr(key_chars, '?') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain ? character");
+    return false;
+  }
+  if (strchr(key_chars, '*') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain * character");
+    return false;
+  }
+  if (strchr(key_chars, '[') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain [ character");
+    return false;
+  }
+  if (strchr(key_chars, ']') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain ] character");
+    return false;
+  }
+  if (strchr(key_chars, '\n') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain newline character");
+    return false;
+  }
+  if (strchr(key_chars, '\r') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain carriage return character");
+    return false;
+  }
+  auto acme_challenge = ".well-known/acme-challenge/";
+  if (strncmp(key_chars, acme_challenge, strlen(acme_challenge)) == 0) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not start with .well-known/acme-challenge/");
+    return false;
+  }
+
+  if (strcmp(key_chars, ".") == 0) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not be \".\"");
+    return false;
+  }
+  if (strcmp(key_chars, "..") == 0) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not be \"..\"");
+    return false;
+  }
+
+  BodyHandle body_handle = {INVALID_HANDLE};
+  int status = fastly_kv_lookup(object_store_handle(self), key_chars, key_len, &body_handle);
+  // Ensure that we throw an exception for all unexpected host errors.
+  if (!HANDLE_RESULT(cx, status)) {
+    return false;
+  }
+
+  // If the handle is invalid it means no entry was found
+  // When no entry is found, we are going to resolve the Promise with `null`.
+  if (body_handle.handle == INVALID_HANDLE) {
+    RootedValue result(cx);
+    result.setNull();
+    JS::ResolvePromise(cx, result_promise, result);
+  } else {
+    RootedObject entry(cx, ObjectStoreEntry::create(cx, body_handle));
+    if (!entry) {
+      return false;
+    }
+    RootedValue result(cx);
+    result.setObject(*entry);
+    JS::ResolvePromise(cx, result_promise, result);
+  }
+
+  args.rval().setObject(*result_promise);
+  return true;
+}
+
+bool put(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(2)
+
+  RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!result_promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  size_t key_len;
+  // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
+  UniqueChars key = encode(cx, args.get(0), &key_len);
+  if (!key) {
+    return false;
+  }
+
+  // If the converted string has a length of 0 then we throw an Error
+  // because ObjectStore Keys have to be at-least 1 character.
+  // TODO: Decide if this should be a RangeError
+  if (key_len == 0) {
+    JS_ReportErrorUTF8(cx, "ObjectStore key can not be an empty string");
+    return false;
+  }
+
+  // If the converted string has a length of more than 1024 then we throw an Error
+  // because ObjectStore Keys have to be less than 1025 characters.
+  // TODO: Decide if this should be a RangeError
+  if (key_len > 1024) {
+    JS_ReportErrorUTF8(cx, "ObjectStore key can not be more than 1024 characters");
+    return false;
+  }
+
+  char *key_chars = key.get();
+
+  if (strchr(key_chars, '#') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain # character");
+    return false;
+  }
+  if (strchr(key_chars, '?') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain ? character");
+    return false;
+  }
+  if (strchr(key_chars, '*') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain * character");
+    return false;
+  }
+  if (strchr(key_chars, '[') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain [ character");
+    return false;
+  }
+  if (strchr(key_chars, ']') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain ] character");
+    return false;
+  }
+  if (strchr(key_chars, '\n') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain newline character");
+    return false;
+  }
+  if (strchr(key_chars, '\r') != NULL) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not contain carriage return character");
+    return false;
+  }
+  auto acme_challenge = ".well-known/acme-challenge/";
+  if (strncmp(key_chars, acme_challenge, strlen(acme_challenge)) == 0) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not start with .well-known/acme-challenge/");
+    return false;
+  }
+
+  if (strcmp(key_chars, ".") == 0) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not be \".\"");
+    return false;
+  }
+  if (strcmp(key_chars, "..") == 0) {
+    JS_ReportErrorASCII(cx, "ObjectStore key can not be \"..\"");
+    return false;
+  }
+
+  HandleValue body_val = args.get(1);
+
+  // We currently support five types of body inputs:
+  // - byte sequence
+  // - buffer source
+  // - USV strings
+  // - URLSearchParams
+  // - ReadableStream
+  // After the other other options are checked explicitly, all other inputs are
+  // encoded to a UTF8 string to be treated as a USV string.
+  // TODO: Support the other possible inputs to Body.
+
+  RootedObject body_obj(cx, body_val.isObject() ? &body_val.toObject() : nullptr);
+
+  if (body_obj && JS::IsReadableStream(body_obj)) {
+    JS_ReportErrorLatin1(cx, "Streaming into an ObjectStore is not yet supported");
+    return false;
+  } else {
+    mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
+    UniqueChars text;
+    char *buf;
+    size_t length;
+
+    if (body_obj && JS_IsArrayBufferViewObject(body_obj)) {
+      // Short typed arrays have inline data which can move on GC, so assert
+      // that no GC happens. (Which it doesn't, because we're not allocating
+      // before `buf` goes out of scope.)
+      maybeNoGC.emplace(cx);
+      JS::AutoCheckCannotGC &noGC = maybeNoGC.ref();
+      bool is_shared;
+      length = JS_GetArrayBufferViewByteLength(body_obj);
+      buf = (char *)JS_GetArrayBufferViewData(body_obj, &is_shared, noGC);
+    } else if (body_obj && JS::IsArrayBufferObject(body_obj)) {
+      bool is_shared;
+      JS::GetArrayBufferLengthAndData(body_obj, &length, &is_shared, (uint8_t **)&buf);
+    } else if (body_obj && URLSearchParams::is_instance(body_obj)) {
+      SpecSlice slice = URLSearchParams::serialize(cx, body_obj);
+      buf = (char *)slice.data;
+      length = slice.len;
+    } else {
+      // Convert into a String following https://tc39.es/ecma262/#sec-tostring
+      text = encode(cx, body_val, &length);
+      // 30MB in bytes is the max size allowed for ObjectStore.
+      if (length > 30 * 1024 * 1024) {
+        JS_ReportErrorLatin1(cx, "ObjectStore value can not be more than 30 Megaytes in size.");
+        return false;
+      }
+      if (!text) {
+        return false;
+      }
+      buf = text.get();
+    }
+
+    BodyHandle body_handle = {INVALID_HANDLE};
+    if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle))) {
+      return false;
+    }
+
+    if (body_handle.handle == INVALID_HANDLE) {
+      return false;
+    }
+
+    int result = write_to_body_all(body_handle, buf, length);
+
+    // Ensure that the NoGC is reset, so throwing an error in HANDLE_RESULT
+    // succeeds.
+    if (maybeNoGC.isSome()) {
+      maybeNoGC.reset();
+    }
+
+    if (!HANDLE_RESULT(cx, result)) {
+      return false;
+    }
+
+    size_t inserted = 0;
+    // max-age is ignored for Object Store
+    uint32_t max_age = 0;
+
+    int status = fastly_kv_insert(object_store_handle(self), key_chars, key_len, body_handle,
+                                  max_age, &inserted);
+    // Ensure that we throw an exception for all unexpected host errors.
+    if (!HANDLE_RESULT(cx, status)) {
+      return RejectPromiseWithPendingError(cx, result_promise);
+    }
+
+    if (inserted != 1) {
+      JS_ReportErrorASCII(cx, "Failed to insert key-value pair into the ObjectStore");
+      return false;
+    }
+
+    // The insert was successful so we return a Promise which resolves to undefined
+    RootedValue rval(cx);
+    rval.setUndefined();
+    JS::ResolvePromise(cx, result_promise, rval);
+    args.rval().setObject(*result_promise);
+
+    return true;
+  }
+
+  return false;
+}
+
+const JSFunctionSpec methods[] = {JS_FN("lookup", lookup, 1, JSPROP_ENUMERATE),
+                                  JS_FN("put", put, 1, JSPROP_ENUMERATE), JS_FS_END};
+
+const JSPropertySpec properties[] = {JS_PS_END};
+
+bool constructor(JSContext *cx, unsigned argc, Value *vp);
+CLASS_BOILERPLATE(ObjectStore)
+
+bool constructor(JSContext *cx, unsigned argc, Value *vp) {
+  REQUEST_HANDLER_ONLY("The ObjectStore builtin");
+  CTOR_HEADER("ObjectStore", 1);
+
+  HandleValue name_arg = args.get(0);
+
+  size_t name_len;
+  // Convert into a String following https://tc39.es/ecma262/#sec-tostring
+  UniqueChars name = encode(cx, name_arg, &name_len);
+  if (!name) {
+    return false;
+  }
+
+  // If the converted string has a length of 0 then we throw an Error
+  // because ObjectStore names have to be at-least 1 character.
+  // TODO: Decide if this should be a RangeError
+  if (name_len == 0) {
+    JS_ReportErrorUTF8(cx, "ObjectStore name can not be an empty string");
+    return false;
+  }
+
+  // If the converted string has a length of more than 255 then we throw an Error
+  // because ObjectStore names have to be less than 1025 characters.
+  // TODO: Decide if this should be a RangeError
+  if (name_len > 255) {
+    JS_ReportErrorUTF8(cx, "ObjectStore name can not be more than 255 characters");
+    return false;
+  }
+
+  auto name_chars = name.get();
+
+  for (int i = 0; i < name_len; i++) {
+    char character = name_chars[i];
+    if (std::iscntrl(static_cast<unsigned char>(character)) != 0) {
+      JS_ReportErrorASCII(cx,
+                          "ObjectStore name can not contain control characters (\\u0000-\\u001F)");
+      return false;
+    }
+  }
+
+  ObjectStoreHandle object_store_handle = {INVALID_HANDLE};
+  int status = fastly_kv_open(name_chars, name_len, &object_store_handle);
+  if (status == 2) {
+    JS_ReportErrorASCII(cx, "ObjectStore constructor: No ObjectStore named '%s' exists",
+                        name_chars);
+    return false;
+  }
+
+  if (!HANDLE_RESULT(cx, fastly_kv_open(name_chars, name_len, &object_store_handle))) {
+    return false;
+  }
+
+  RootedObject object_store(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  if (!object_store) {
+    return false;
+  }
+  JS::SetReservedSlot(object_store, Slots::ObjectStore,
+                      JS::Int32Value((int)object_store_handle.handle));
+  args.rval().setObject(*object_store);
+  return true;
+}
+} // namespace ObjectStore
+#endif
 
 bool report_sequence_or_record_arg_error(JSContext *cx, const char *name, const char *alt_text) {
   JS_ReportErrorUTF8(cx,
@@ -5947,6 +6379,12 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!WorkerLocation::init_class(cx, global))
     return false;
+#ifdef ENABLE_OBJECT_STORE
+  if (!ObjectStore::init_class(cx, global))
+    return false;
+  if (!ObjectStoreEntry::init_class(cx, global))
+    return false;
+#endif
 
   pending_requests = new JS::PersistentRootedObjectVector(cx);
   pending_body_reads = new JS::PersistentRootedObjectVector(cx);

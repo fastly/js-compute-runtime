@@ -1,4 +1,6 @@
 /// <reference types="@fastly/js-compute" />
+declare const CompressionStream: any;
+declare const ObjectStore: any;
 
 const builtins = [
     TransformStream,
@@ -12,6 +14,7 @@ const builtins = [
     TextDecoder,
     URL,
     URLSearchParams,
+    // ObjectStore,
   ]
 
   addEventListener("fetch", event => {
@@ -27,8 +30,9 @@ const builtins = [
               super("gzip")
               break;
             }
-            case "Dictionary": {
-              super("example")
+            case "Dictionary":
+            case "ObjectStore": {
+              super("hello")
               break
             }
             case "Request":
