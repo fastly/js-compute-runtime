@@ -18,7 +18,7 @@ class TestConfig {
   }
 
   wasmPath(testName) {
-    return `${this.fixtureBase}/${testName}/${testName}.wasm`;
+    return `${this.fixtureBase}/${testName}/app.wasm`;
   }
 
   fastlyTomlPath(testName) {
@@ -32,6 +32,6 @@ class TestConfig {
   testJsonPath(testName) {
     return `${this.fixtureBase}/${testName}/tests.json`;
   }
-};
+}
 
 export default { TestConfig };

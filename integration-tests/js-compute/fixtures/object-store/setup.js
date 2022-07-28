@@ -1,25 +1,36 @@
+#!/usr/bin/env node
+
 import { $ as zx, fetch } from 'zx'
 import { retry } from 'zx/experimental'
 
-zx.verbose = false
+const startTime = Date.now();
+
 async function $(...args) {
     return await retry(10, () => zx(...args))
 }
+zx.verbose = false;
+if (process.env.FASTLY_API_TOKEN === undefined) {
+    try {
+        process.env.FASTLY_API_TOKEN = String(await zx`fastly profile token`).trim()
+    } catch {
+        console.error('No environment variable named FASTLY_API_TOKEN has been set and no default fastly profile exists.');
+        console.error('In order to run the tests, either create a fastly profile using `fastly profile create` or export a fastly token under the name FASTLY_API_TOKEN');
+        process.exit(1)
+    }
+}
+const FASTLY_API_TOKEN = process.env.FASTLY_API_TOKEN;
 
-const startTime = Date.now();
-let domain = await $`fastly domain list --version latest --json`
-domain = JSON.parse(domain)[0].Name
-
-let FASTLY_KEY = String(await $`fastly profile token `).trim()
+zx.verbose = true;
 
 let stores = await fetch("https://api.fastly.com/resources/stores/object", {
     method: 'GET',
     headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        "Fastly-Key": FASTLY_KEY
+        "Fastly-Key": FASTLY_API_TOKEN
     }
 })
+
 let STORE_ID = (await stores.json()).data.find(({ name }) => name === 'test-store')?.id
 if (!STORE_ID) {
     STORE_ID = await fetch("https://api.fastly.com/resources/stores/object", {
@@ -27,7 +38,7 @@ if (!STORE_ID) {
         headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            "Fastly-Key": FASTLY_KEY
+            "Fastly-Key": FASTLY_API_TOKEN
         },
         body: '{"name":"test-store"}'
     })
@@ -43,43 +54,11 @@ if (!STORE_ID) {
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
             Accept: "application/json",
-            "Fastly-Key": FASTLY_KEY
+            "Fastly-Key": FASTLY_API_TOKEN
         },
         body: `name=test-store&resource_id=${STORE_ID}`
     })
     await $`fastly service-version activate --version=${VERSION}`
 }
 
-
-let test_paths = await (await fetch(`https://${domain}`)).json()
-let counter = 0;
-try {
-    await Promise.all(test_paths.map(async path => {
-        return retry(10, async () => {
-            let url = `https://${domain}${path}`
-            let response = await fetch(url);
-            let body = await response.text()
-            if (response.ok) {
-                console.log(`Passed ${url}`)
-                counter += 1;
-            } else {
-                console.log()
-                console.log(`Failed ${url}`)
-                console.log()
-                console.error(body)
-                process.exit()
-            }
-        })
-    }))
-    console.log(`All ${counter} tests passed! Took ${(Date.now() - startTime) / 1000} seconds to complete`)
-} catch (error) {
-    console.error(error)
-    process.exitCode = 1;
-}
-
-// await fetch(`https://api.fastly.com/resources/stores/object/${STORE_ID}`, {
-//     method: 'DELETE',
-//     headers: {
-//         "Fastly-Key": FASTLY_KEY
-//     }
-// })
+console.log(`Set up has finished! Took ${(Date.now() - startTime) / 1000} seconds to complete`);

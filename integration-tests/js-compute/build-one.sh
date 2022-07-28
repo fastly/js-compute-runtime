@@ -12,16 +12,16 @@ test="$1"
 cd "$(dirname "${BASH_SOURCE[0]}")"
 root="$(pwd)/../.."
 
-npm ci -s
+# npm ci -s
 
-if [ -f "fixtures/$test/$test.ts" ]; then
+if [ -f "fixtures/$test/app.ts" ]; then
   # TODO: we explicitly ignore errors from webpack, as the tests includes uses
   # of apis that are not yet typed by /sdk/js-compute/index.t.ts
-  npm run webpack -- "./fixtures/$test/$test.ts" \
+  npm run webpack -- "./fixtures/$test/app.ts" \
     --output-path "./fixtures/$test" \
-    --output-filename "$test.js" || true
+    --output-filename "app.js" || true
 else
-  echo "Skipping typescript conversion for fixtures/$test/$test.js"
+  echo "Skipping typescript conversion for fixtures/$test/app.js"
 fi
 
 # NOTE: we run `js-compute-runtime` in the test directory, as there are some
@@ -29,5 +29,5 @@ fi
 # instead of the location of the js source.
 (
   cd "fixtures/$test"
-  "$root/target/release/js-compute-runtime" "$test.js" "$test.wasm"
+  "$root/target/release/js-compute-runtime" "app.js" "app.wasm"
 )

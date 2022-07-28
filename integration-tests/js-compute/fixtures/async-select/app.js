@@ -1,11 +1,3 @@
-/// <reference types="@fastly/js-compute" />
-
-interface RequestData {
-  url: string;
-  backend: string;
-  header: string;
-}
-
 addEventListener("fetch", (event) => {
   let requestsData = [
     {
@@ -28,8 +20,8 @@ addEventListener("fetch", (event) => {
   event.respondWith(processUpstreamRequests(pending, requestsData));
 });
 async function processUpstreamRequests(
-  requests: Promise<Response>[],
-  requestsData: RequestData[]
+  requests,
+  requestsData
 ) {
   // Create our response headers we will be sending downstream
   let responseHeaders = new Headers();
@@ -40,7 +32,7 @@ async function processUpstreamRequests(
     // copy over to our response headers
     let { url, header } = requestsData.find(
       (data) => data.url == response.url
-    ) as RequestData;
+    );
 
     // Set the appropriate header on our response
     let headerValue = response.headers.get(header);
@@ -61,7 +53,7 @@ async function processUpstreamRequests(
   });
 }
 
-async function* select<T>(promises: Promise<T>[]) {
+async function* select(promises) {
   promises = promises.map((promise) => {
     promise.finally(() => {
       promises.splice(promises.indexOf(promise), 1);

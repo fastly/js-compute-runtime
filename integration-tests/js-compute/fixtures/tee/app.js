@@ -1,6 +1,6 @@
 addEventListener("fetch", event => event.respondWith(handleRequest(event.request)));
 
-async function handleRequest(req: Request) {
+async function handleRequest(req) {
 
   if (req.url.endsWith("/tee")) {
     let [body1, _body2] = req.body.tee();
