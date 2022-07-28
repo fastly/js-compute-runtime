@@ -1,0 +1,12 @@
+{
+  "bootstrap-sha": "513f6da5f39c7266a5b6dda036c5e3d1b1cc1288",
+  "skip-github-release": true,
+  "packages": {
+    "sdk/js-compute": {
+      "release-type": "node"
+    },
+    ".": {
+      "release-type": "rust"
+    }
+  }
+}
