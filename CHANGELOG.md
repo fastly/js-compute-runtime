@@ -1,3 +1,13 @@
+## 0.4.0
+
+### Enhancements
+
+- Implement the DecompressionStream builtin [`#160`](https://github.com/fastly/js-compute-runtime/pull/160)
+- Improve performace of Regular Expression literals via precompilation [`#146`](https://github.com/fastly/js-compute-runtime/pull/146)
+
+### Fixes
+
+- Calling `tee` on the client request no longer causes the application to hang [`#156`](https://github.com/fastly/js-compute-runtime/pull/156)
 
 ## 0.3.0
 
