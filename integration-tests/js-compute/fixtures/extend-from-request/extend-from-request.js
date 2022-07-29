@@ -1,7 +1,5 @@
-/// <reference types="@fastly/js-compute" />
-
 class MyRequest extends Request {
-  constructor(input: RequestInfo, init?: RequestInit) {
+  constructor(input, init) {
     super(input, init);
   }
   bar() {

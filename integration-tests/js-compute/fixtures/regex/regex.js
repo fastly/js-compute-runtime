@@ -1,11 +1,9 @@
-/// <reference types="@fastly/js-compute" />
-
 // The useragent_parser package is MIT licensed at the time this function was
 // inlined into this test:
 // https://github.com/Financial-Times/useragent_parser/blob/fdc6bff8f05cfb8fb8c8cd752f8739b9b356001f/package.json#L13
 //
 // begin https://unpkg.com/@financial-times/useragent_parser@1.6.3/lib/ua_parser.js
-function useragent_parser(ua: null | string) {
+function useragent_parser(ua) {
   const family = "Other";
   let major;
   let minor;
@@ -2096,7 +2094,7 @@ function useragent_parser(ua: null | string) {
 }
 // end https://unpkg.com/@financial-times/useragent_parser@1.6.3/lib/ua_parser.js
 
-function duration(fn: () => void) {
+function duration(fn) {
   const start = new Date().getTime();
   fn();
   const end = new Date().getTime();

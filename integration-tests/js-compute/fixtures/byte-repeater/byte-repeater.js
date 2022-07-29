@@ -1,12 +1,10 @@
-/// <reference types="@fastly/js-compute" />
-
 addEventListener("fetch", (event) => {
   let headers = new Headers();
   headers.set("AssemblyScriptHeader", "AssemblyScriptValue");
 
-  let streamController!: ReadableStreamDefaultController;
+  let streamController;
   let stream = new ReadableStream({
-    start: (controller: ReadableStreamDefaultController) => {
+    start: (controller) => {
       streamController = controller;
     },
   });
@@ -41,7 +39,7 @@ addEventListener("fetch", (event) => {
       }
 
       // Otherwise get the byte and repeat them
-      let upstreamBytes: Uint8Array = chunk.value;
+      let upstreamBytes = chunk.value;
       let downstreamBytes = new Uint8Array(upstreamBytes.length * 2);
       for (let i = 0; i < upstreamBytes.length; i++) {
         let downstreamIndex = i * 2;

@@ -1,13 +1,11 @@
-/// <reference types="@fastly/js-compute" />
-
 addEventListener("fetch", (event) => {
   // Build a response
   let headers = new Headers();
   headers.set("JSHeader", "JSValue");
 
-  let streamController!: ReadableStreamDefaultController;
+  let streamController;
   let stream = new ReadableStream({
-    start: (controller: ReadableStreamDefaultController) => {
+    start: (controller) => {
       streamController = controller;
     },
   });

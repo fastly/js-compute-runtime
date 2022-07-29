@@ -1,5 +1,3 @@
-/// <reference types="@fastly/js-compute" />
-
 const builtins = [
   TransformStream,
   CompressionStream,

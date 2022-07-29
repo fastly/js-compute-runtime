@@ -9,17 +9,36 @@ let b = random3Decimals();
 // If it fails, rerun the tests and it should pass, if it does not
 // then we may have another bug with how we are seeding the random
 // number generator in SpiderMonkey.
-addEventListener("fetch", event => {
+addEventListener("fetch", (event) => {
   if (a === b) {
-    return event.respondWith(new Response('The first 4 digits were repeated in sequential calls to Math.random() during wizening\n\n' + JSON.stringify({ a, b }, undefined, 4), { status: 500 }));
+    return event.respondWith(
+      new Response(
+        "The first 4 digits were repeated in sequential calls to Math.random() during wizening\n\n" +
+          JSON.stringify({ a, b }, undefined, 4),
+        { status: 500 }
+      )
+    );
   }
 
   let c = random3Decimals();
   let d = random3Decimals();
   if (c === d) {
-    return event.respondWith(new Response('The first 4 digits were repeated in sequential calls to Math.random() during request handling\n\n' + JSON.stringify({ c, d }, undefined, 4), { status: 500 }));
+    return event.respondWith(
+      new Response(
+        "The first 4 digits were repeated in sequential calls to Math.random() during request handling\n\n" +
+          JSON.stringify({ c, d }, undefined, 4),
+        { status: 500 }
+      )
+    );
   }
 
-
-  return event.respondWith(new Response(JSON.stringify({ initialisedResults: [a, b], results: [c, d] }, undefined, 4)));
+  return event.respondWith(
+    new Response(
+      JSON.stringify(
+        { initialisedResults: [a, b], results: [c, d] },
+        undefined,
+        4
+      )
+    )
+  );
 });
