@@ -3,7 +3,10 @@
 
 authors = ["jchampion@fastly.com"]
 description = ""
-language = "javascript"
+language = "other"
 manifest_version = 2
 name = "random"
 service_id = ""
+
+[scripts]
+  build = "mkdir -p bin && ../../../../target/release/js-compute-runtime app.js app.wasm"
