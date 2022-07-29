@@ -303,11 +303,10 @@ jobs:
     - name: Checkout fastly/js-compute-runtime
       uses: actions/checkout@v2
 
-    - name: Install Fastly CLI
-      run: |
-        echo "Install Fastly CLI 1.7.0"
-        wget https://github.com/fastly/cli/releases/download/v1.7.0/fastly_1.7.0_linux_amd64.deb
-        sudo apt install ./fastly_1.7.0_linux_amd64.deb
+    - name: Set up Fastly CLI
+      uses: fastly/compute-actions/setup@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install Viceroy
       run: |

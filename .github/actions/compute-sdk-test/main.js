@@ -51,6 +51,7 @@ function buildTest(config, testName, backendAddr) {
   console.info(`Compiling the fixture for: ${testName} ...`);
 
   try {
+    childProcess.execSync(`${config.replaceHostScript} ${testName} http://${backendAddr}`);
     childProcess.execSync(`${config.buildScript} ${testName}`);
   } catch(e) {
     console.error(`Failed to compile ${testName}`);
@@ -58,13 +59,6 @@ function buildTest(config, testName, backendAddr) {
     process.exit(1);
   }
 
-  try {
-    childProcess.execSync(`${config.replaceHostScript} ${testName} http://${backendAddr}`);
-  } catch(e) {
-    console.error(`Failed to compile ${testName}`);
-    console.info(e.stdout.toString("utf-8"));
-    process.exit(1);
-  }
 }
 
 async function discoverTests(config) {
