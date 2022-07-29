@@ -1,7 +1,5 @@
-/// <reference types="@fastly/js-compute" />
-
 addEventListener("fetch", (event) => {
-  let geo: Geolocation = fastly.getGeolocationForIpAddress("2.216.196.179");
+  let geo = fastly.getGeolocationForIpAddress("2.216.196.179");
 
   // Json response should be
   /*
@@ -53,13 +51,7 @@ addEventListener("fetch", (event) => {
   event.respondWith(new Response(JSON.stringify(geo)));
 });
 
-function assert(condition: boolean) {
-  if (!condition) {
-    throw new Error("assert failed!");
-  }
-}
-
-function assert_eq<T>(left: T, right: T) {
+function assert_eq(left, right) {
   if (left !== right) {
     throw new Error(`assert failed! ${left} !== ${right}`);
   }

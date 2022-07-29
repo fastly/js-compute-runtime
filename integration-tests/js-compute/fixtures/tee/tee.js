@@ -2,7 +2,7 @@ addEventListener("fetch", (event) =>
   event.respondWith(handleRequest(event.request))
 );
 
-async function handleRequest(req: Request) {
+async function handleRequest(req) {
   if (req.url.endsWith("/tee")) {
     let [body1, _body2] = req.body.tee();
 
@@ -38,7 +38,7 @@ async function handleRequest(req: Request) {
     });
 
     return res
-      .then((_) => new Response("Error wasn't raised"))
+      .then(() => new Response("Error wasn't raised"))
       .catch((err) => {
         console.log(err.toString());
         return new Response(err.toString());

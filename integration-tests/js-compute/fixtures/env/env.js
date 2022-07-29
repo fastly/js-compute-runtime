@@ -1,5 +1,3 @@
-/// <reference types="@fastly/js-compute" />
-
 addEventListener("fetch", (event) => {
   // Get the request from the client
   let downstreamRequest = event.request;
@@ -8,22 +6,15 @@ addEventListener("fetch", (event) => {
   let responseBody = "";
   let status = 200;
 
-  if (downstreamRequest.method == "POST" && downstreamUrl.pathname == "/") {
-    let asDictionary = new Dictionary("edge_dictionary");
-
-    let twitterValue = asDictionary.get("twitter");
-    if (twitterValue) {
-      responseBody = twitterValue;
-    } else {
-      responseBody = "twitter key does not exist";
-      status = 500;
-    }
+  if (downstreamRequest.method == "GET" && downstreamUrl.pathname == "/") {
+    responseBody = fastly.env.get("FASTLY_HOSTNAME");
   } else {
     responseBody = "Bad Request";
     status = 400;
   }
 
   // Build a response
+  console.log(responseBody);
   let response = new Response(responseBody, {
     status,
   });

@@ -1,5 +1,3 @@
-/// <reference types="@fastly/js-compute" />
-
 addEventListener("fetch", (event) => {
   // Get the request from the client
   let downstreamRequest = event.request;

@@ -1,9 +1,4 @@
-// TODO: port this to typescript
-
-let spinLoopString = '';
-
 async function handleRequest(event) {
-
   // Get the client request from the event
   let req = event.request;
   let method = req.method;
@@ -20,22 +15,21 @@ async function handleRequest(event) {
   if (method == "GET" && url.pathname == "/async_select_1") {
     return new Response("the world of tomorrow!", {
       headers: {
-        'FooName': 'FooValue'
-      }
+        FooName: "FooValue",
+      },
     });
   }
   if (method == "GET" && url.pathname == "/async_select_2") {
     return new Response("the world of tomorrow!", {
       headers: {
-        'BarName': 'BarValue'
-      }
+        BarName: "BarValue",
+      },
     });
   }
 
   // byte_repeater
 
   if (method == "GET" && url.pathname == "/byte_repeater") {
-
     let streamController;
     let stream = new ReadableStream({
       start: (controller) => {
@@ -50,9 +44,9 @@ async function handleRequest(event) {
     let delayAndStreamResponseTask = async () => {
       let cacheOverride = new CacheOverride("pass", { ttl: 0 });
       let upstreamRequest = new Request("https://httpbin.org/delay/1", {});
-      let upstreamResponse = await fetch(upstreamRequest, {
+      await fetch(upstreamRequest, {
         backend: "httpbin",
-        cacheOverride
+        cacheOverride,
       });
       streamController.enqueue(new TextEncoder().encode("56789012\n"));
       streamController.close();
@@ -65,21 +59,20 @@ async function handleRequest(event) {
 
   if (method == "GET" && url.pathname == "/request_upstream") {
     let headers = new Headers();
-    headers.set('OriginHeader', 'OriginValue');
-    headers.append('x-cat', "meow");
-    headers.append('x-cat', "nyan");
-    headers.append('x-cat', "mrrow");
-    headers.append('x-cat', "miau");
+    headers.set("OriginHeader", "OriginValue");
+    headers.append("x-cat", "meow");
+    headers.append("x-cat", "nyan");
+    headers.append("x-cat", "mrrow");
+    headers.append("x-cat", "miau");
 
     return new Response("Hello from Origin", {
-      headers
+      headers,
     });
   }
 
   // streaming_close
 
   if (method == "GET" && url.pathname == "/streaming_close") {
-
     let streamController;
     let stream = new ReadableStream({
       start: (controller) => {
@@ -95,9 +88,9 @@ async function handleRequest(event) {
       // Make a delay response
       let cacheOverride = new CacheOverride("pass", { ttl: 0 });
       let upstreamRequest = new Request("https://httpbin.org/delay/1", {});
-      let upstreamResponse = await fetch(upstreamRequest, {
+      await fetch(upstreamRequest, {
         backend: "httpbin",
-        cacheOverride
+        cacheOverride,
       });
       streamController.enqueue(new TextEncoder().encode(" smith\n"));
       streamController.close();
@@ -109,7 +102,7 @@ async function handleRequest(event) {
   // logs
 
   if (method == "GET" && url.pathname == "/logs") {
-    console.log("ComputeLog :: Hello!")
+    console.log("ComputeLog :: Hello!");
     return new Response("Compute SDK Test Backend");
   }
 
@@ -127,15 +120,15 @@ async function handleRequest(event) {
       // Make a delay response
       let cacheOverride = new CacheOverride("pass", { ttl: 0 });
       let upstreamRequest = new Request("https://httpbin.org/delay/1", {});
-      let upstreamResponse = await fetch(upstreamRequest, {
+      await fetch(upstreamRequest, {
         backend: "httpbin",
-        cacheOverride
+        cacheOverride,
       });
 
       // Make a request upstream
       await fetch("http://localhost:8081/test", {
         backend: "localserver",
-        cacheOverride
+        cacheOverride,
       });
     };
 
@@ -143,11 +136,10 @@ async function handleRequest(event) {
     return new Response("Compute SDK Test Backend");
   }
 
-
   // Catch all other requests and return a 404.
   return new Response("The page you requested could not be found", {
-    status: 404
+    status: 404,
   });
 }
 
-addEventListener("fetch", event => event.respondWith(handleRequest(event)));
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
