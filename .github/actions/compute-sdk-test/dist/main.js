@@ -7490,6 +7490,7 @@ function buildTest(config, testName, backendAddr) {
   console.info(`Compiling the fixture for: ${testName} ...`);
 
   try {
+    external_node_child_process_namespaceObject.execSync(`${config.replaceHostScript} ${testName} http://${backendAddr}`);
     external_node_child_process_namespaceObject.execSync(`${config.buildScript} ${testName}`);
   } catch(e) {
     console.error(`Failed to compile ${testName}`);
@@ -7497,13 +7498,6 @@ function buildTest(config, testName, backendAddr) {
     process.exit(1);
   }
 
-  try {
-    external_node_child_process_namespaceObject.execSync(`${config.replaceHostScript} ${testName} http://${backendAddr}`);
-  } catch(e) {
-    console.error(`Failed to compile ${testName}`);
-    console.info(e.stdout.toString("utf-8"));
-    process.exit(1);
-  }
 }
 
 async function discoverTests(config) {

@@ -9,13 +9,10 @@ fi
 
 test="$1"
 
-cd "$(dirname "${BASH_SOURCE[0]}")"
-root="$(pwd)/../.."
-
 # NOTE: we run `js-compute-runtime` in the test directory, as there are some
 # assumptions about project path that are derived from the cwd of the executable
 # instead of the location of the js source.
 (
-  cd "fixtures/$test"
-  "$root/target/release/js-compute-runtime" "app.js" "app.wasm"
+  cd "$(dirname "${BASH_SOURCE[0]}")/fixtures/$test"
+  fastly compute build -i
 )
