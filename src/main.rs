@@ -15,7 +15,7 @@ pub struct Options {
     input: PathBuf,
 
     /// The file path to write the output Wasm module to.
-    #[structopt(default_value = "bin/index.wasm")]
+    #[structopt(default_value = "bin/main.wasm")]
     output: PathBuf,
 
     /// The JS engine Wasm file path.
