@@ -511,6 +511,30 @@ declare interface Fastly {
  */
 declare var fastly: Fastly;
 
+type CompressionStreamFormat = "deflate" | "deflate-raw" | "gzip"
+
+interface CompressionStream {
+  readonly readable: ReadableStream<Uint8Array>;
+  readonly writable: WritableStream<Uint8Array>;
+}
+
+declare var CompressionStream: {
+  prototype: CompressionStream;
+  new(format: CompressionStreamFormat): CompressionStream;
+};
+
+type DecompressionStreamFormat = "deflate" | "deflate-raw" | "gzip"
+
+interface DecompressionStream {
+  readonly readable: ReadableStream<Uint8Array>;
+  readonly writable: WritableStream<Uint8Array>;
+}
+
+declare var DecompressionStream: {
+  prototype: DecompressionStream;
+  new(format: DecompressionStreamFormat): DecompressionStream;
+};
+
 // Note: the contents below here are, partially modified, copies of content from TypeScript's
 // `lib.dom.d.ts` file.
 // We used to keep them in a separate file, referenced using a `/// reference path="..."`
