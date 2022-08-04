@@ -405,7 +405,7 @@ declare class URLSearchParams {
  */
 declare interface Console {
   log(message: any);
-  trace(message: any);
+  debug(message: any);
   info(message: any);
   warn(message: any);
   error(message: any);
