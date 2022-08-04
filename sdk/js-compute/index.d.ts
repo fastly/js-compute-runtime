@@ -458,6 +458,10 @@ declare interface Logger {
  * Fastly-specific APIs available to Compute@Edge JS services
  */
 declare interface Fastly {
+  set baseURL(base: URL | null | undefined);
+  get baseURL(): URL | null;
+  set defaultBackend(backend: string);
+  get defaultBackend(): string;
   /**
    * Property to access the environment variables for the C@E service.
    */
