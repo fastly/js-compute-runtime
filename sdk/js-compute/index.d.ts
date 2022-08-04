@@ -503,7 +503,7 @@ export declare interface Fastly {
    *
    * @experimental
    */
-  includeBytes(path: String): Uint8Array;
+  includeBytes(path: string): Uint8Array;
 }
 
 /**
