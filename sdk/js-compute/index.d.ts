@@ -3,16 +3,22 @@ interface EventMap {
   "fetch": FetchEvent;
 }
 
-interface FetchEventListener {
-  (event: FetchEvent): void;
+interface EventListenerMap {
+  "fetch": FetchEventListener;
 }
+
+interface FetchEventListener {
+  (this: typeof globalThis, event: FetchEvent): any
+}
+
+declare var onfetch: FetchEventListener;
 
 /**
  * This is a fetch specific implementation of [addEventListener](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener), and is very similar to [handling FetchEvent from a Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/FetchEvent/request).
  *
  * For Fastly C@E, this will be the entrypoint in handling your downstream request from your client.
  */
-declare function addEventListener<K extends keyof EventMap>(type: K, listener: (this: typeof globalThis, event: EventMap[K]) => any): void;
+declare function addEventListener<K extends keyof EventMap>(type: K, listener: EventListenerMap[K]): void;
 
 /**
  * A Fastly C@E specific implementation of [FetchEvent](https://developer.mozilla.org/en-US/docs/Web/API/FetchEvent/FetchEvent).
