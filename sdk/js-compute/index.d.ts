@@ -54,7 +54,7 @@ declare interface FetchEvent {
    *
    * @param response - Response to send back down to the client
    */
-  respondWith(response: Response | Promise<Response>): void;
+  respondWith(response: Response | PromiseLike<Response>): void;
 
   /**
    * Extend the service's lifetime to ensure asynchronous operations succeed.
