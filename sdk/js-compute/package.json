@@ -1,8 +1,12 @@
 {
   "name": "@fastly/js-compute",
   "version": "0.4.0",
-  "js-compute-runtime-version": "0.3.0",
-  "license": "SEE LICENSE IN LICENSE",
+  "js-compute-runtime-version": "0.4.0",
+  "engines": {
+    "node": "^16 || ^18"
+  },
+  "type": "module",
+  "license": "Apache-2.0",
   "main": "js-compute-runtime-cli.js",
   "types": "index.d.ts",
   "repository": {
