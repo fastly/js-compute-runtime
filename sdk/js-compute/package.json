@@ -27,6 +27,7 @@
   ],
   "scripts": {
     "install:ci": "npm ci",
+    "test": "tsd",
     "docs": "npm run docs:clean && npm run docs:typedoc",
     "docs:clean": "rm -rf reference-docs",
     "docs:typedoc": "typedoc --theme minimal --disableSources --includeVersion --out reference-docs --tsconfig tsconfig.json --readme none index.d.ts"
