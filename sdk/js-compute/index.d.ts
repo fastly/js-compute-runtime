@@ -562,11 +562,12 @@ and limitations under the License.
  */
 
 /**
- * Constructor parameter for the
- * [Fetch API Body](https://developer.mozilla.org/en-US/docs/Web/API/Body) and its implementations
+ * Used within the
+ * [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request/Request) and
+ * [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response) constructors.
  * ({@linkcode Request}, and {@linkcode Response})
  */
-declare type BodyInit = ArrayBufferView | ArrayBuffer | ReadableStream | string | URLSearchParams | null;
+declare type BodyInit = ReadableStream | ArrayBufferView | ArrayBuffer | URLSearchParams | string;
 
 /**
  * Body for Fetch HTTP Requests and Responses
@@ -576,35 +577,57 @@ declare type BodyInit = ArrayBufferView | ArrayBuffer | ReadableStream | string 
 declare interface Body {
   readonly body: ReadableStream<Uint8Array> | null;
   readonly bodyUsed: boolean;
-
   arrayBuffer(): Promise<ArrayBuffer>;
+  // blob(): Promise<Blob>;
+  // formData(): Promise<FormData>;
   json(): Promise<any>;
   text(): Promise<string>;
 }
 
 /**
- * Constructor parameter for the
- * [Fetch API Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+ * Constructor parameter for
+ * [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
  *
- * Usually this an URL to the resource you are requesting.
+ * Usually this a URL to the resource you are requesting.
  */
-declare type RequestInfo = string | Request;
+declare type RequestInfo = Request | string;
 
 /**
- * Constructor parameter for the
- * [Fetch API Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+ * Constructor parameter for
+ * [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
  *
  * This contains information to send along with the request (Headers, body, etc...), as well as
  * Fastly specific information.
  */
 declare interface RequestInit {
-  method?: string;
-  headers?: HeadersInit;
+  /** A BodyInit object or null to set request's body. */
   body?: BodyInit | null;
+  // /** A string indicating how the request will interact with the browser's cache to set request's cache. */
+  // cache?: RequestCache;
+  // /** A string indicating whether credentials will be sent with the request always, never, or only when sent to a same-origin URL. Sets request's credentials. */
+  // credentials?: RequestCredentials;
+  /** A Headers object, an object literal, or an array of two-item arrays to set request's headers. */
+  headers?: HeadersInit;
+  // /** A cryptographic hash of the resource to be fetched by request. Sets request's integrity. */
+  // integrity?: string;
+  // /** A boolean to set request's keepalive. */
+  // keepalive?: boolean;
+  /** A string to set request's method. */
+  method?: string;
+  // /** A string to indicate whether the request will use CORS, or will be restricted to same-origin URLs. Sets request's mode. */
+  // mode?: RequestMode;
+  // /** A string indicating whether request follows redirects, results in an error upon encountering a redirect, or returns the redirect (in an opaque fashion). Sets request's redirect. */
+  // redirect?: RequestRedirect;
+  // /** A string whose value is a same-origin URL, "about:client", or the empty string, to set request's referrer. */
+  // referrer?: string;
+  // /** A referrer policy to set request's referrerPolicy. */
+  // referrerPolicy?: ReferrerPolicy;
+  // /** An AbortSignal to set request's signal. */
+  // signal?: AbortSignal | null;
+  // /** Can only be null. Used to disassociate request from any Window. */
+  // window?: null;
 
-  /**
-   * The Fastly configured backend the request should be sent to.
-   */
+  /** The Fastly configured backend the request should be sent to. */
   backend?: string;
   cacheOverride?: CacheOverride;
 }
@@ -616,22 +639,44 @@ declare interface RequestInit {
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Request | Request on MDN}
  */
-declare class Request implements Body {
-  constructor(input: RequestInfo, init?: RequestInit);
-  headers: Headers;
-  method: string;
-  url: string;
-
-  body: ReadableStream<any>;
-  bodyUsed: boolean;
-  arrayBuffer(): Promise<ArrayBuffer>;
-  json(): Promise<any>;
-  text(): Promise<string>;
+interface Request extends Body {
+    // /** Returns the cache mode associated with request, which is a string indicating how the request will interact with the browser's cache when fetching. */
+    // readonly cache: RequestCache;
+    // /** Returns the credentials mode associated with request, which is a string indicating whether credentials will be sent with the request always, never, or only when sent to a same-origin URL. */
+    // readonly credentials: RequestCredentials;
+    // /** Returns the kind of resource requested by request, e.g., "document" or "script". */
+    // readonly destination: RequestDestination;
+    /** Returns a Headers object consisting of the headers associated with request. */
+    readonly headers: Headers;
+    // /** Returns request's subresource integrity metadata, which is a cryptographic hash of the resource being fetched. Its value consists of multiple hashes separated by whitespace. [SRI] */
+    // readonly integrity: string;
+    // /** Returns a boolean indicating whether or not request can outlive the global in which it was created. */
+    // readonly keepalive: boolean;
+    /** Returns request's HTTP method, which is "GET" by default. */
+    readonly method: string;
+    // /** Returns the mode associated with request, which is a string indicating whether the request will use CORS, or will be restricted to same-origin URLs. */
+    // readonly mode: RequestMode;
+    // /** Returns the redirect mode associated with request, which is a string indicating how redirects for the request will be handled during fetching. A request will follow redirects by default. */
+    // readonly redirect: RequestRedirect;
+    // /** Returns the referrer of request. Its value can be a same-origin URL if explicitly set in init, the empty string to indicate no referrer, and "about:client" when defaulting to the global's default. This is used during fetching to determine the value of the `Referer` header of the request being made. */
+    // readonly referrer: string;
+    // /** Returns the referrer policy associated with request. This is used during fetching to compute the value of the request's referrer. */
+    // readonly referrerPolicy: ReferrerPolicy;
+    // /** Returns the signal associated with request, which is an AbortSignal object indicating whether or not request has been aborted, and its abort event handler. */
+    // readonly signal: AbortSignal;
+    /** Returns the URL of request as a string. */
+    readonly url: string;
+    // clone(): Request;
 
   // Fastly extensions
   backend: string;
   setCacheOverride(override: CacheOverride);
 }
+
+declare var Request: {
+  prototype: Request;
+  new(input: RequestInfo | URL, init?: RequestInit): Request;
+};
 
 /**
  * Constructor parameter for the [Fetch API Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
@@ -640,6 +685,7 @@ declare class Request implements Body {
 declare interface ResponseInit {
   headers?: HeadersInit;
   status?: number;
+  statusText?: string;
 }
 
 /**
@@ -649,32 +695,31 @@ declare interface ResponseInit {
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Response | Response on MDN}
  */
-declare class Response implements Body {
-  constructor(body?: BodyInit, init?: ResponseInit);
-
-  // These methods aren't supported yet.
-  // static error(): Response;
-  // static redirect(url: string, status: number): Response;
+interface Response extends Body {
+  readonly headers: Headers;
+  readonly ok: boolean;
+  // readonly redirected: boolean;
+  readonly status: number;
+  readonly statusText: string;
+  // readonly type: ResponseType;
+  readonly url: string;
   // clone(): Response;
-
-  headers: Headers;
-  ok: boolean;
-  redirected: boolean;
-  status: number;
-  url: string;
-
-  body: ReadableStream<any>;
-  bodyUsed: boolean;
-  arrayBuffer(): Promise<ArrayBuffer>;
-  json(): Promise<any>;
-  text(): Promise<string>;
 }
 
+declare var Response: {
+  prototype: Response;
+  new(body?: BodyInit | null, init?: ResponseInit): Response;
+  // error(): Response;
+  // redirect(url: string | URL, status?: number): Response;
+};
+
 type ReadableStreamReader<T> = ReadableStreamDefaultReader<T>;
+// type ReadableStreamReader<T> = ReadableStreamDefaultReader<T> | ReadableStreamBYOBReader;
 type ReadableStreamController<T> = ReadableStreamDefaultController<T>;
+// type ReadableStreamController<T> = ReadableStreamDefaultController<T> | ReadableByteStreamController;
 
 interface UnderlyingSinkAbortCallback {
-  (reason: any): void | PromiseLike<void>;
+  (reason?: any): void | PromiseLike<void>;
 }
 
 interface UnderlyingSinkCloseCallback {
@@ -682,18 +727,15 @@ interface UnderlyingSinkCloseCallback {
 }
 
 interface UnderlyingSinkStartCallback {
-  (controller: WritableStreamDefaultController): void | PromiseLike<void>;
+  (controller: WritableStreamDefaultController): any;
 }
 
 interface UnderlyingSinkWriteCallback<W> {
-  (
-    chunk: W,
-    controller: WritableStreamDefaultController
-  ): void | PromiseLike<void>;
+  (chunk: W, controller: WritableStreamDefaultController): void | PromiseLike<void>;
 }
 
 interface UnderlyingSourceCancelCallback {
-  (reason: any): void | PromiseLike<void>;
+  (reason?: any): void | PromiseLike<void>;
 }
 
 interface UnderlyingSourcePullCallback<R> {
@@ -701,7 +743,7 @@ interface UnderlyingSourcePullCallback<R> {
 }
 
 interface UnderlyingSourceStartCallback<R> {
-  (controller: ReadableStreamController<R>): void | PromiseLike<void>;
+  (controller: ReadableStreamController<R>): any;
 }
 
 interface UnderlyingSink<W = any> {
@@ -713,11 +755,14 @@ interface UnderlyingSink<W = any> {
 }
 
 interface UnderlyingSource<R = any> {
+  autoAllocateChunkSize?: number;
   cancel?: UnderlyingSourceCancelCallback;
   pull?: UnderlyingSourcePullCallback<R>;
   start?: UnderlyingSourceStartCallback<R>;
-  type?: undefined;
+  type?: ReadableStreamType;
 }
+
+type ReadableStreamType = "bytes";
 
 interface StreamPipeOptions {
   preventAbort?: boolean;
@@ -736,8 +781,11 @@ interface StreamPipeOptions {
    * When this source readable stream closes, destination will be closed, unless preventClose is truthy. The returned promise will be fulfilled once this process completes, unless an error is encountered while closing the destination, in which case it will be rejected with that error.
    *
    * If destination starts out closed or closing, this source readable stream will be canceled, unless preventCancel is true. The returned promise will be rejected with an error indicating piping to a closed stream failed, or with any error that occurs during canceling the source.
+   *
+   * The signal option can be set to an AbortSignal to allow aborting an ongoing pipe operation via the corresponding AbortController. In this case, this source readable stream will be canceled, and destination aborted, unless the respective options preventCancel or preventAbort are set.
    */
   preventClose?: boolean;
+  // signal?: AbortSignal;
 }
 
 interface QueuingStrategySize<T = any> {
@@ -768,15 +816,24 @@ interface ReadableStreamDefaultReadValueResult<T> {
   value: T;
 }
 
-type ReadableStreamDefaultReadResult<T> =
-  | ReadableStreamDefaultReadValueResult<T>
-  | ReadableStreamDefaultReadDoneResult;
+type ReadableStreamDefaultReadResult<T> = ReadableStreamDefaultReadValueResult<T> | ReadableStreamDefaultReadDoneResult;
+
+interface ReadableWritablePair<R = any, W = any> {
+  readable: ReadableStream<R>;
+  /**
+   * Provides a convenient, chainable way of piping this readable stream through a transform stream (or any other { writable, readable } pair). It simply pipes the stream into the writable side of the supplied pair, and returns the readable side for further use.
+   *
+   * Piping a stream will lock it for the duration of the pipe, preventing any other consumer from acquiring a reader.
+   */
+  writable: WritableStream<W>;
+}
 
 /** This Streams API interface represents a readable stream of byte data. The Fetch API offers a concrete instance of a ReadableStream through the body property of a Response object. */
 interface ReadableStream<R = any> {
   readonly locked: boolean;
   cancel(reason?: any): Promise<void>;
   getReader(): ReadableStreamDefaultReader<R>;
+  pipeThrough<T>(transform: ReadableWritablePair<T, R>, options?: StreamPipeOptions): ReadableStream<T>;
   pipeTo(dest: WritableStream<R>, options?: StreamPipeOptions): Promise<void>;
   tee(): [ReadableStream<R>, ReadableStream<R>];
 }
@@ -788,10 +845,7 @@ interface ReadableStream<R = any> {
  */
 declare var ReadableStream: {
   prototype: ReadableStream;
-  new <R = any>(
-    underlyingSource?: UnderlyingSource<R>,
-    strategy?: QueuingStrategy<R>
-  ): ReadableStream<R>;
+  new<R = any>(underlyingSource?: UnderlyingSource<R>, strategy?: QueuingStrategy<R>): ReadableStream<R>;
 };
 
 interface ReadableStreamDefaultController<R = any> {
@@ -806,15 +860,14 @@ declare var ReadableStreamDefaultController: {
   new (): ReadableStreamDefaultController;
 };
 
-interface ReadableStreamDefaultReader<R = any>
-  extends ReadableStreamGenericReader {
+interface ReadableStreamDefaultReader<R = any> extends ReadableStreamGenericReader {
   read(): Promise<ReadableStreamDefaultReadResult<R>>;
   releaseLock(): void;
 }
 
 declare var ReadableStreamDefaultReader: {
   prototype: ReadableStreamDefaultReader;
-  new <R = any>(stream: ReadableStream<R>): ReadableStreamDefaultReader<R>;
+  new<R = any>(stream: ReadableStream<R>): ReadableStreamDefaultReader<R>;
 };
 
 interface ReadableStreamGenericReader {
@@ -836,10 +889,7 @@ interface WritableStream<W = any> {
  */
 declare var WritableStream: {
   prototype: WritableStream;
-  new <W = any>(
-    underlyingSink?: UnderlyingSink<W>,
-    strategy?: QueuingStrategy<W>
-  ): WritableStream<W>;
+  new<W = any>(underlyingSink?: UnderlyingSink<W>, strategy?: QueuingStrategy<W>): WritableStream<W>;
 };
 
 /** This Streams API interface represents a controller allowing control of a WritableStream's state. When constructing a WritableStream, the underlying sink is given a corresponding WritableStreamDefaultController instance to manipulate. */
@@ -909,36 +959,38 @@ interface TransformerFlushCallback<O> {
 }
 
 interface TransformerStartCallback<O> {
-    (controller: TransformStreamDefaultController<O>): any;
+  (controller: TransformStreamDefaultController<O>): void | PromiseLike<void>;
 }
 
 interface TransformerTransformCallback<I, O> {
     (chunk: I, controller: TransformStreamDefaultController<O>): void | PromiseLike<void>;
 }
 
-declare type HeadersInit = Headers | string[][] | { [key: string]: string };
+type HeadersInit = Headers | string[][] | Record<string, string>;
 
 /**
  * The Headers class as [specified by WHATWG](https://fetch.spec.whatwg.org/#headers-class)
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Headers | Headers on MDN}
  */
-declare class Headers implements Iterable<[string, string]> {
-  constructor(init?: HeadersInit);
-
-  forEach(callback: (value: string, name: string) => void): void;
+ interface Headers {
   append(name: string, value: string): void;
   delete(name: string): void;
   get(name: string): string | null;
   has(name: string): boolean;
   set(name: string, value: string): void;
-
+  forEach(callbackfn: (value: string, key: string, parent: Headers) => void, thisArg?: any): void;
   // Iterable methods
   entries(): IterableIterator<[string, string]>;
   keys(): IterableIterator<string>;
   values(): IterableIterator<[string]>;
   [Symbol.iterator](): Iterator<[string, string]>;
 }
+
+declare var Headers: {
+  prototype: Headers;
+  new(init?: HeadersInit): Headers;
+};
 
 /**
  * Fetch resources from backends.
@@ -954,10 +1006,7 @@ declare class Headers implements Iterable<[string, string]> {
  * @param resource - The resource to fetch, either a URL string or a {@link Request} object
  * @param init - An object containing settings to apply to the request
  */
-declare function fetch(
-  resource: RequestInfo,
-  init?: RequestInit
-): Promise<Response>;
+declare function fetch(input: RequestInfo, init?: RequestInit): Promise<Response>;
 
 interface VoidFunction {
   (): void;
@@ -972,18 +1021,19 @@ interface StructuredSerializeOptions {
 }
 
 type Transferable = ArrayBuffer;
+// type Transferable = ArrayBuffer | MessagePort | ImageBitmap;
 
 interface WorkerLocation {
-  readonly href: string;
-  readonly protocol: string;
+  readonly hash: string;
   readonly host: string;
   readonly hostname: string;
-  readonly origin: string;
-  readonly port: string;
-  readonly pathname: string;
-  readonly search: string;
-  readonly hash: string;
+  readonly href: string;
   toString(): string;
+  readonly origin: string;
+  readonly pathname: string;
+  readonly port: string;
+  readonly protocol: string;
+  readonly search: string;
 }
 
 declare var WorkerLocation: {
@@ -993,8 +1043,13 @@ declare var WorkerLocation: {
 
 declare var location: WorkerLocation;
 
+/** Basic cryptography features available in the current context. It allows access to a cryptographically strong random number generator and to cryptographic primitives. */
 interface Crypto {
+  // /** Available only in secure contexts. */
+  // readonly subtle: SubtleCrypto;
   getRandomValues<T extends ArrayBufferView | null>(array: T): T;
+  // /** Available only in secure contexts. */
+  // randomUUID(): string;
 }
 
 declare var Crypto: {
