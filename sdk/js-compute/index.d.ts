@@ -130,7 +130,7 @@ declare interface CacheOverride extends CacheOverrideInit {
 
 declare var CacheOverride: {
   prototype: CacheOverride;
-  new (mode: CacheOverrideMode, init?: CacheOverrideInit): CacheOverride;
+  new(mode: CacheOverrideMode, init?: CacheOverrideInit): CacheOverride;
 };
 
 /**
@@ -640,33 +640,33 @@ declare interface RequestInit {
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Request | Request on MDN}
  */
 interface Request extends Body {
-    // /** Returns the cache mode associated with request, which is a string indicating how the request will interact with the browser's cache when fetching. */
-    // readonly cache: RequestCache;
-    // /** Returns the credentials mode associated with request, which is a string indicating whether credentials will be sent with the request always, never, or only when sent to a same-origin URL. */
-    // readonly credentials: RequestCredentials;
-    // /** Returns the kind of resource requested by request, e.g., "document" or "script". */
-    // readonly destination: RequestDestination;
-    /** Returns a Headers object consisting of the headers associated with request. */
-    readonly headers: Headers;
-    // /** Returns request's subresource integrity metadata, which is a cryptographic hash of the resource being fetched. Its value consists of multiple hashes separated by whitespace. [SRI] */
-    // readonly integrity: string;
-    // /** Returns a boolean indicating whether or not request can outlive the global in which it was created. */
-    // readonly keepalive: boolean;
-    /** Returns request's HTTP method, which is "GET" by default. */
-    readonly method: string;
-    // /** Returns the mode associated with request, which is a string indicating whether the request will use CORS, or will be restricted to same-origin URLs. */
-    // readonly mode: RequestMode;
-    // /** Returns the redirect mode associated with request, which is a string indicating how redirects for the request will be handled during fetching. A request will follow redirects by default. */
-    // readonly redirect: RequestRedirect;
-    // /** Returns the referrer of request. Its value can be a same-origin URL if explicitly set in init, the empty string to indicate no referrer, and "about:client" when defaulting to the global's default. This is used during fetching to determine the value of the `Referer` header of the request being made. */
-    // readonly referrer: string;
-    // /** Returns the referrer policy associated with request. This is used during fetching to compute the value of the request's referrer. */
-    // readonly referrerPolicy: ReferrerPolicy;
-    // /** Returns the signal associated with request, which is an AbortSignal object indicating whether or not request has been aborted, and its abort event handler. */
-    // readonly signal: AbortSignal;
-    /** Returns the URL of request as a string. */
-    readonly url: string;
-    // clone(): Request;
+  // /** Returns the cache mode associated with request, which is a string indicating how the request will interact with the browser's cache when fetching. */
+  // readonly cache: RequestCache;
+  // /** Returns the credentials mode associated with request, which is a string indicating whether credentials will be sent with the request always, never, or only when sent to a same-origin URL. */
+  // readonly credentials: RequestCredentials;
+  // /** Returns the kind of resource requested by request, e.g., "document" or "script". */
+  // readonly destination: RequestDestination;
+  /** Returns a Headers object consisting of the headers associated with request. */
+  readonly headers: Headers;
+  // /** Returns request's subresource integrity metadata, which is a cryptographic hash of the resource being fetched. Its value consists of multiple hashes separated by whitespace. [SRI] */
+  // readonly integrity: string;
+  // /** Returns a boolean indicating whether or not request can outlive the global in which it was created. */
+  // readonly keepalive: boolean;
+  /** Returns request's HTTP method, which is "GET" by default. */
+  readonly method: string;
+  // /** Returns the mode associated with request, which is a string indicating whether the request will use CORS, or will be restricted to same-origin URLs. */
+  // readonly mode: RequestMode;
+  // /** Returns the redirect mode associated with request, which is a string indicating how redirects for the request will be handled during fetching. A request will follow redirects by default. */
+  // readonly redirect: RequestRedirect;
+  // /** Returns the referrer of request. Its value can be a same-origin URL if explicitly set in init, the empty string to indicate no referrer, and "about:client" when defaulting to the global's default. This is used during fetching to determine the value of the `Referer` header of the request being made. */
+  // readonly referrer: string;
+  // /** Returns the referrer policy associated with request. This is used during fetching to compute the value of the request's referrer. */
+  // readonly referrerPolicy: ReferrerPolicy;
+  // /** Returns the signal associated with request, which is an AbortSignal object indicating whether or not request has been aborted, and its abort event handler. */
+  // readonly signal: AbortSignal;
+  /** Returns the URL of request as a string. */
+  readonly url: string;
+  // clone(): Request;
 
   // Fastly extensions
   backend: string;
@@ -845,7 +845,7 @@ interface ReadableStream<R = any> {
  */
 declare var ReadableStream: {
   prototype: ReadableStream;
-  new<R = any>(underlyingSource?: UnderlyingSource<R>, strategy?: QueuingStrategy<R>): ReadableStream<R>;
+  new <R = any>(underlyingSource?: UnderlyingSource<R>, strategy?: QueuingStrategy<R>): ReadableStream<R>;
 };
 
 interface ReadableStreamDefaultController<R = any> {
@@ -857,7 +857,7 @@ interface ReadableStreamDefaultController<R = any> {
 
 declare var ReadableStreamDefaultController: {
   prototype: ReadableStreamDefaultController;
-  new (): ReadableStreamDefaultController;
+  new(): ReadableStreamDefaultController;
 };
 
 interface ReadableStreamDefaultReader<R = any> extends ReadableStreamGenericReader {
@@ -867,7 +867,7 @@ interface ReadableStreamDefaultReader<R = any> extends ReadableStreamGenericRead
 
 declare var ReadableStreamDefaultReader: {
   prototype: ReadableStreamDefaultReader;
-  new<R = any>(stream: ReadableStream<R>): ReadableStreamDefaultReader<R>;
+  new <R = any>(stream: ReadableStream<R>): ReadableStreamDefaultReader<R>;
 };
 
 interface ReadableStreamGenericReader {
@@ -889,7 +889,7 @@ interface WritableStream<W = any> {
  */
 declare var WritableStream: {
   prototype: WritableStream;
-  new<W = any>(underlyingSink?: UnderlyingSink<W>, strategy?: QueuingStrategy<W>): WritableStream<W>;
+  new <W = any>(underlyingSink?: UnderlyingSink<W>, strategy?: QueuingStrategy<W>): WritableStream<W>;
 };
 
 /** This Streams API interface represents a controller allowing control of a WritableStream's state. When constructing a WritableStream, the underlying sink is given a corresponding WritableStreamDefaultController instance to manipulate. */
@@ -899,7 +899,7 @@ interface WritableStreamDefaultController {
 
 declare var WritableStreamDefaultController: {
   prototype: WritableStreamDefaultController;
-  new (): WritableStreamDefaultController;
+  new(): WritableStreamDefaultController;
 };
 
 /** This Streams API interface is the object returned by WritableStream.getWriter() and once created locks the < writer to the WritableStream ensuring that no other streams can write to the underlying sink. */
@@ -931,7 +931,7 @@ interface TransformStream<I = any, O = any> {
 
 declare var TransformStream: {
   prototype: TransformStream;
-  new<I = any, O = any>(transformer?: Transformer<I, O>, writableStrategy?: QueuingStrategy<I>, readableStrategy?: QueuingStrategy<O>): TransformStream<I, O>;
+  new <I = any, O = any>(transformer?: Transformer<I, O>, writableStrategy?: QueuingStrategy<I>, readableStrategy?: QueuingStrategy<O>): TransformStream<I, O>;
 };
 
 interface TransformStreamDefaultController<O = any> {
@@ -947,15 +947,15 @@ declare var TransformStreamDefaultController: {
 };
 
 interface Transformer<I = any, O = any> {
-    flush?: TransformerFlushCallback<O>;
-    readableType?: undefined;
-    start?: TransformerStartCallback<O>;
-    transform?: TransformerTransformCallback<I, O>;
-    writableType?: undefined;
+  flush?: TransformerFlushCallback<O>;
+  readableType?: undefined;
+  start?: TransformerStartCallback<O>;
+  transform?: TransformerTransformCallback<I, O>;
+  writableType?: undefined;
 }
 
 interface TransformerFlushCallback<O> {
-    (controller: TransformStreamDefaultController<O>): void | PromiseLike<void>;
+  (controller: TransformStreamDefaultController<O>): void | PromiseLike<void>;
 }
 
 interface TransformerStartCallback<O> {
@@ -963,7 +963,7 @@ interface TransformerStartCallback<O> {
 }
 
 interface TransformerTransformCallback<I, O> {
-    (chunk: I, controller: TransformStreamDefaultController<O>): void | PromiseLike<void>;
+  (chunk: I, controller: TransformStreamDefaultController<O>): void | PromiseLike<void>;
 }
 
 type HeadersInit = Headers | string[][] | Record<string, string>;
@@ -973,7 +973,7 @@ type HeadersInit = Headers | string[][] | Record<string, string>;
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Headers | Headers on MDN}
  */
- interface Headers {
+interface Headers {
   append(name: string, value: string): void;
   delete(name: string): void;
   get(name: string): string | null;
