@@ -28,7 +28,8 @@
     "docs:typedoc": "typedoc --theme minimal --disableSources --includeVersion --out reference-docs --tsconfig tsconfig.json --readme none index.d.ts"
   },
   "devDependencies": {
-    "typescript": "^4.2",
-    "typedoc": "^0.20.36"
+    "tsd": "^0.22.0",
+    "typedoc": "^0.20.36",
+    "typescript": "^4.2"
   }
 }
