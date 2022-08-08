@@ -9,7 +9,7 @@ name = "geoip"
 service_id = ""
 
 [scripts]
-  build = "mkdir -p bin && ../../../../target/release/js-compute-runtime app.js app.wasm"
+  build = "../../../../target/release/js-compute-runtime"
 
 [local_server]
 
