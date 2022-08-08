@@ -37,15 +37,7 @@ std::optional<char> find_invalid_character_for_object_store_key(const char *str)
 }
 
 namespace ObjectStoreEntry {
-namespace Slots {
-enum {
-  Body = RequestOrResponse::Slots::Body,
-  BodyStream = RequestOrResponse::Slots::BodyStream,
-  HasBody = RequestOrResponse::Slots::HasBody,
-  BodyUsed = RequestOrResponse::Slots::BodyUsed,
-  Count
-};
-};
+namespace Slots = RequestOrResponse::Slots;
 
 const unsigned ctor_length = 0;
 
