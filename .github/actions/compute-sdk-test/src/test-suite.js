@@ -18,7 +18,7 @@ class TestConfig {
   }
 
   wasmPath(testName) {
-    return `${this.fixtureBase}/${testName}/app.wasm`;
+    return `${this.fixtureBase}/${testName}/bin/main.wasm`;
   }
 
   fastlyTomlPath(testName) {
