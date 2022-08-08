@@ -303,7 +303,7 @@ WASM_IMPORT("fastly_object_store", "open")
 int fastly_object_store_open(const char *name, size_t name_len,
                              ObjectStoreHandle *object_store_handle_out);
 WASM_IMPORT("fastly_object_store", "lookup")
-int fastly_object_store_lookup(ObjectStoreHandle object_store_handle, const char *key,
+int fastly_object_store_get(ObjectStoreHandle object_store_handle, const char *key,
                                size_t key_len, BodyHandle *opt_body_handle_out);
 WASM_IMPORT("fastly_object_store", "insert")
 int fastly_object_store_insert(ObjectStoreHandle object_store_handle, const char *key,

@@ -508,24 +508,24 @@ routes.set('/', () => {
         });
     }
 
-    // ObjectStore lookup method
+    // ObjectStore get method
     {
-        routes.set("/object-store/lookup/called-as-constructor", async () => {
+        routes.set("/object-store/get/called-as-constructor", async () => {
             let error = assertThrows(() => {
-                new ObjectStore.prototype.lookup('1')
-            }, TypeError, `ObjectStore.prototype.lookup is not a constructor`)
+                new ObjectStore.prototype.get('1')
+            }, TypeError, `ObjectStore.prototype.get is not a constructor`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/called-unbound", async () => {
+        routes.set("/object-store/get/called-unbound", async () => {
             let error = await assertRejects(async () => {
-                await ObjectStore.prototype.lookup.call(undefined, '1')
-            }, TypeError, "Method lookup called on receiver that's not an instance of ObjectStore")
+                await ObjectStore.prototype.get.call(undefined, '1')
+            }, TypeError, "Method get called on receiver that's not an instance of ObjectStore")
             if (error) { return error }
             return pass()
         });
         // https://tc39.es/ecma262/#sec-tostring
-        routes.set("/object-store/lookup/key-parameter-calls-7.1.17-ToString", async () => {
+        routes.set("/object-store/get/key-parameter-calls-7.1.17-ToString", async () => {
             let sentinel;
             const test = async () => {
                 sentinel = Symbol();
@@ -535,7 +535,7 @@ routes.set('/', () => {
                     }
                 }
                 const store = createValidStore()
-                await store.lookup(key)
+                await store.get(key)
             }
             let error = await assertRejects(test)
             if (error) { return error }
@@ -547,121 +547,121 @@ routes.set('/', () => {
             }
             error = await assertRejects(async () => {
                 const store = createValidStore()
-                await store.lookup(Symbol())
+                await store.get(Symbol())
             }, TypeError, `can't convert symbol to string`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/key-parameter-not-supplied", async () => {
+        routes.set("/object-store/get/key-parameter-not-supplied", async () => {
             let error = await assertRejects(async () => {
                 const store = createValidStore()
-                await store.lookup()
-            }, TypeError, `lookup: At least 1 argument required, but only 0 passed`)
+                await store.get()
+            }, TypeError, `get: At least 1 argument required, but only 0 passed`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/key-parameter-empty-string", async () => {
+        routes.set("/object-store/get/key-parameter-empty-string", async () => {
             let error = await assertRejects(async () => {
                 const store = createValidStore()
-                await store.lookup('')
+                await store.get('')
             }, TypeError, `ObjectStore key can not be an empty string`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/key-parameter-1024-character-string", async () => {
+        routes.set("/object-store/get/key-parameter-1024-character-string", async () => {
             let error = await assertResolves(async () => {
                 const store = createValidStore()
-                await store.lookup('a'.repeat(1024))
+                await store.get('a'.repeat(1024))
             })
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/key-parameter-1025-character-string", async () => {
+        routes.set("/object-store/get/key-parameter-1025-character-string", async () => {
             let error = await assertRejects(async () => {
                 const store = createValidStore()
-                await store.lookup('a'.repeat(1025))
+                await store.get('a'.repeat(1025))
             }, TypeError, `ObjectStore key can not be more than 1024 characters`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/key-parameter-containing-newline", async () => {
+        routes.set("/object-store/get/key-parameter-containing-newline", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
-                await store.lookup('\n')
+                await store.get('\n')
             }, TypeError, `ObjectStore key can not contain newline character`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/key-parameter-containing-carriage-return", async () => {
+        routes.set("/object-store/get/key-parameter-containing-carriage-return", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
-                await store.lookup('\r')
+                await store.get('\r')
             }, TypeError, `ObjectStore key can not contain carriage return character`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/key-parameter-starting-with-well-known-acme-challenge", async () => {
+        routes.set("/object-store/get/key-parameter-starting-with-well-known-acme-challenge", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
-                await store.lookup('.well-known/acme-challenge/')
+                await store.get('.well-known/acme-challenge/')
             }, TypeError, `ObjectStore key can not start with .well-known/acme-challenge/`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/key-parameter-single-dot", async () => {
+        routes.set("/object-store/get/key-parameter-single-dot", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
-                await store.lookup('.')
+                await store.get('.')
             }, TypeError, `ObjectStore key can not be '.' or '..'`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/key-parameter-double-dot", async () => {
+        routes.set("/object-store/get/key-parameter-double-dot", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
-                await store.lookup('..')
+                await store.get('..')
             }, TypeError, `ObjectStore key can not be '.' or '..'`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/key-parameter-containing-special-characters", async () => {
+        routes.set("/object-store/get/key-parameter-containing-special-characters", async () => {
             const specialCharacters = ['[', ']', '*', '?', '#'];
             for (const character of specialCharacters) {
                 let error = await assertRejects(async () => {
                     let store = createValidStore()
-                    await store.lookup(character)
+                    await store.get(character)
                 }, TypeError, `ObjectStore key can not contain ${character} character`)
                 if (error) { return error }
             }
             return pass()
         });
-        routes.set("/object-store/lookup/key-does-not-exist-returns-null", async () => {
+        routes.set("/object-store/get/key-does-not-exist-returns-null", async () => {
             let store = createValidStore()
-            let result = store.lookup(Math.random())
-            let error = assert(result instanceof Promise, true, `store.lookup(Math.random()) instanceof Promise`)
+            let result = store.get(Math.random())
+            let error = assert(result instanceof Promise, true, `store.get(Math.random()) instanceof Promise`)
             if (error) { return error }
-            error = assert(await result, null, `await store.lookup(Math.random())`)
+            error = assert(await result, null, `await store.get(Math.random())`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/key-does-not-exist-returns-null", async () => {
+        routes.set("/object-store/get/key-does-not-exist-returns-null", async () => {
             let store = createValidStore()
-            let result = store.lookup(Math.random())
-            let error = assert(result instanceof Promise, true, `store.lookup(Math.random()) instanceof Promise`)
+            let result = store.get(Math.random())
+            let error = assert(result instanceof Promise, true, `store.get(Math.random()) instanceof Promise`)
             if (error) { return error }
-            error = assert(await result, null, `await store.lookup(Math.random())`)
+            error = assert(await result, null, `await store.get(Math.random())`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/lookup/key-exists", async () => {
+        routes.set("/object-store/get/key-exists", async () => {
             let store = createValidStore()
             let key = `key-exists-${Math.random()}`;
             await store.put(key, 'hello')
-            let result = store.lookup(key)
-            let error = assert(result instanceof Promise, true, `store.lookup(key) instanceof Promise`)
+            let result = store.get(key)
+            let error = assert(result instanceof Promise, true, `store.get(key) instanceof Promise`)
             if (error) { return error }
             result = await result
-            error = assert(result instanceof ObjectStoreEntry, true, `(await store.lookup(key) instanceof ObjectStoreEntry)`)
+            error = assert(result instanceof ObjectStoreEntry, true, `(await store.get(key) instanceof ObjectStoreEntry)`)
             if (error) { return error }
             return pass()
         });
@@ -676,7 +676,7 @@ routes.set('/', () => {
         let store = createValidStore()
         let key = `entry-text-valid`;
         await store.put(key, 'hello')
-        let entry = await store.lookup(key)
+        let entry = await store.get(key)
         let result = entry.text()
         let error = assert(result instanceof Promise, true, `entry.text() instanceof Promise`)
         if (error) { return error }
@@ -690,7 +690,7 @@ routes.set('/', () => {
         let key = `entry-json-valid}`;
         const obj = { a: 1, b: 2, c: 3 }
         await store.put(key, JSON.stringify(obj))
-        let entry = await store.lookup(key)
+        let entry = await store.get(key)
         let result = entry.json()
         let error = assert(result instanceof Promise, true, `entry.json() instanceof Promise`)
         if (error) { return error }
@@ -703,7 +703,7 @@ routes.set('/', () => {
         let store = createValidStore()
         let key = `entry-json-invalid`;
         await store.put(key, "132abc;['-=9")
-        let entry = await store.lookup(key)
+        let entry = await store.get(key)
         let error = await assertRejects(() => entry.json(), SyntaxError, `JSON.parse: unexpected non-whitespace character after JSON data at line 1 column 4 of the JSON data`)
         if (error) { return error }
         return pass()
@@ -712,7 +712,7 @@ routes.set('/', () => {
         let store = createValidStore()
         let key = `entry-arraybuffer-valid`;
         await store.put(key, new Int8Array([0, 1, 2, 3]))
-        let entry = await store.lookup(key)
+        let entry = await store.get(key)
         let result = entry.arrayBuffer()
         let error = assert(result instanceof Promise, true, `entry.arrayBuffer() instanceof Promise`)
         if (error) { return error }
@@ -726,7 +726,7 @@ routes.set('/', () => {
         let store = createValidStore()
         let key = `entry-body`;
         await store.put(key, 'body body body')
-        let entry = await store.lookup(key)
+        let entry = await store.get(key)
         let result = entry.body;
         let error = assert(result instanceof ReadableStream, true, `entry.body instanceof ReadableStream`)
         if (error) { return error }
@@ -739,7 +739,7 @@ routes.set('/', () => {
         let store = createValidStore()
         let key = `entry-bodyUsed`;
         await store.put(key, 'body body body')
-        let entry = await store.lookup(key)
+        let entry = await store.get(key)
         let error = assert(entry.bodyUsed, false, `entry.bodyUsed`)
         if (error) { return error }
         await entry.text();
@@ -952,7 +952,7 @@ async function objectStoreInterfaceTests() {
     if (error) { return error }
 
     actual = Reflect.ownKeys(ObjectStore.prototype)
-    expected = ["constructor", "lookup", "put"]
+    expected = ["constructor", "get", "put"]
     error = assert(actual, expected, `Reflect.ownKeys(ObjectStore.prototype)`)
     if (error) { return error }
 
@@ -961,9 +961,9 @@ async function objectStoreInterfaceTests() {
     error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype, 'constructor')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype, 'lookup')
-    expected = { "writable": true, "enumerable": true, "configurable": true, value: ObjectStore.prototype.lookup }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype, 'lookup')`)
+    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype, 'get')
+    expected = { "writable": true, "enumerable": true, "configurable": true, value: ObjectStore.prototype.get }
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype, 'get')`)
     if (error) { return error }
 
     actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype, 'put')
@@ -973,7 +973,7 @@ async function objectStoreInterfaceTests() {
 
     error = assert(typeof ObjectStore.prototype.constructor, 'function', `typeof ObjectStore.prototype.constructor`)
     if (error) { return error }
-    error = assert(typeof ObjectStore.prototype.lookup, 'function', `typeof ObjectStore.prototype.lookup`)
+    error = assert(typeof ObjectStore.prototype.get, 'function', `typeof ObjectStore.prototype.get`)
     if (error) { return error }
     error = assert(typeof ObjectStore.prototype.put, 'function', `typeof ObjectStore.prototype.put`)
     if (error) { return error }
@@ -998,24 +998,24 @@ async function objectStoreInterfaceTests() {
     error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.constructor, 'name')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.lookup, 'length')
+    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.get, 'length')
     expected = {
         "value": 1,
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.lookup, 'length')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.get, 'length')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.lookup, 'name')
+    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.get, 'name')
     expected = {
-        "value": "lookup",
+        "value": "get",
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.lookup, 'name')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.get, 'name')`)
     if (error) { return error }
 
     actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.put, 'length')
