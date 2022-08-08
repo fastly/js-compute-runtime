@@ -829,7 +829,6 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
     // `responseDone`.
     if (Response::is_instance(body_owner)) {
       FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
-      return HANDLE_RESULT(cx, xqd_body_close(body_handle));
     }
 
     if (!HANDLE_RESULT(cx, xqd_body_close(body_handle))) {
