@@ -275,7 +275,7 @@ routes.set('/', () => {
             }, TypeError, `Content-provided streams are not yet supported for streaming into ObjectStore`)
             if (error) { return error }
             return pass()
-            // TODO: uncomment this when streams are supported
+            // TODO: uncomment this when conte-provided (guest) streams are supported
             // const stream = iteratableToStream([])
             // const store = createValidStore()
             // let result = store.put('readablestream-empty', stream)
@@ -306,7 +306,7 @@ routes.set('/', () => {
             }, Error, `Content-provided streams are not yet supported for streaming into ObjectStore`)
             if (error) { return error }
             return pass()
-            // TODO: uncomment this when streams are supported
+            // TODO: uncomment this when conte-provided (guest) streams are supported
             // const stream = iteratableToStream(['x'.repeat(30*1024*1024) + 'x'])
             // const store = createValidStore()
             // let result = store.put('readablestream-over-30mb', stream)
