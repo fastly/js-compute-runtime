@@ -199,7 +199,6 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   size_t key_len;
-  size_t key_len;
   std::optional<char *> key_chars = parse_and_validate_key(cx, args.get(0), &key_len);
   if (!key_chars) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -228,7 +227,8 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
     // If the body stream is backed by a C@E body handle, we can directly pipe
     // that handle into the object store.
     if (builtins::NativeStreamSource::stream_is_body(cx, body_obj)) {
-      JS::RootedObject stream_source(cx, builtins::NativeStreamSource::get_stream_source(cx, body_obj));
+      JS::RootedObject stream_source(cx,
+                                     builtins::NativeStreamSource::get_stream_source(cx, body_obj));
       JS::RootedObject source_owner(cx, builtins::NativeStreamSource::owner(stream_source));
       BodyHandle body = RequestOrResponse::body_handle(source_owner);
 
