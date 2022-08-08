@@ -164,8 +164,8 @@ bool get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
   BodyHandle body_handle = {INVALID_HANDLE};
-  int status = fastly_object_store_get(object_store_handle(self), key_chars.value(), key_len,
-                                          &body_handle);
+  int status =
+      fastly_object_store_get(object_store_handle(self), key_chars.value(), key_len, &body_handle);
   if (!HANDLE_RESULT(cx, status)) {
     return false;
   }
