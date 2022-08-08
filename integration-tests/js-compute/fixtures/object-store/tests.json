@@ -349,151 +349,151 @@
       "status": 200
     }
   },
-  "GET /object-store/lookup/called-as-constructor": {
+  "GET /object-store/get/called-as-constructor": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/called-as-constructor"
+      "pathname": "/object-store/get/called-as-constructor"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/called-unbound": {
+  "GET /object-store/get/called-unbound": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/called-unbound"
+      "pathname": "/object-store/get/called-unbound"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-parameter-calls-7.1.17-ToString": {
+  "GET /object-store/get/key-parameter-calls-7.1.17-ToString": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-parameter-calls-7.1.17-ToString"
+      "pathname": "/object-store/get/key-parameter-calls-7.1.17-ToString"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-parameter-not-supplied": {
+  "GET /object-store/get/key-parameter-not-supplied": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-parameter-not-supplied"
+      "pathname": "/object-store/get/key-parameter-not-supplied"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-parameter-empty-string": {
+  "GET /object-store/get/key-parameter-empty-string": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-parameter-empty-string"
+      "pathname": "/object-store/get/key-parameter-empty-string"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-parameter-1024-character-string": {
+  "GET /object-store/get/key-parameter-1024-character-string": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-parameter-1024-character-string"
+      "pathname": "/object-store/get/key-parameter-1024-character-string"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-parameter-1025-character-string": {
+  "GET /object-store/get/key-parameter-1025-character-string": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-parameter-1025-character-string"
+      "pathname": "/object-store/get/key-parameter-1025-character-string"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-parameter-containing-newline": {
+  "GET /object-store/get/key-parameter-containing-newline": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-parameter-containing-newline"
+      "pathname": "/object-store/get/key-parameter-containing-newline"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-parameter-containing-carriage-return": {
+  "GET /object-store/get/key-parameter-containing-carriage-return": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-parameter-containing-carriage-return"
+      "pathname": "/object-store/get/key-parameter-containing-carriage-return"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-parameter-starting-with-well-known-acme-challenge": {
+  "GET /object-store/get/key-parameter-starting-with-well-known-acme-challenge": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-parameter-starting-with-well-known-acme-challenge"
+      "pathname": "/object-store/get/key-parameter-starting-with-well-known-acme-challenge"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-parameter-single-dot": {
+  "GET /object-store/get/key-parameter-single-dot": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-parameter-single-dot"
+      "pathname": "/object-store/get/key-parameter-single-dot"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-parameter-double-dot": {
+  "GET /object-store/get/key-parameter-double-dot": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-parameter-double-dot"
+      "pathname": "/object-store/get/key-parameter-double-dot"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-parameter-containing-special-characters": {
+  "GET /object-store/get/key-parameter-containing-special-characters": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-parameter-containing-special-characters"
+      "pathname": "/object-store/get/key-parameter-containing-special-characters"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-does-not-exist-returns-null": {
+  "GET /object-store/get/key-does-not-exist-returns-null": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-does-not-exist-returns-null"
+      "pathname": "/object-store/get/key-does-not-exist-returns-null"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/lookup/key-exists": {
+  "GET /object-store/get/key-exists": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/lookup/key-exists"
+      "pathname": "/object-store/get/key-exists"
     },
     "downstream_response": {
       "status": 200

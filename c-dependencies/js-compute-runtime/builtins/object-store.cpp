@@ -158,7 +158,7 @@ std::optional<char *> parse_and_validate_key(JSContext *cx, JS::HandleValue val,
 
 bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
 
-bool lookup(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   JS::RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
@@ -172,7 +172,7 @@ bool lookup(JSContext *cx, unsigned argc, JS::Value *vp) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
   BodyHandle body_handle = {INVALID_HANDLE};
-  int status = fastly_object_store_lookup(object_store_handle(self), key_chars.value(), key_len,
+  int status = fastly_object_store_get(object_store_handle(self), key_chars.value(), key_len,
                                           &body_handle);
   if (!HANDLE_RESULT(cx, status)) {
     return false;
@@ -334,7 +334,7 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
   return false;
 }
 
-const JSFunctionSpec methods[] = {JS_FN("lookup", lookup, 1, JSPROP_ENUMERATE),
+const JSFunctionSpec methods[] = {JS_FN("get", get, 1, JSPROP_ENUMERATE),
                                   JS_FN("put", put, 1, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSPropertySpec properties[] = {JS_PS_END};
