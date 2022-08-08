@@ -257,7 +257,8 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
     size_t length;
 
     if (body_obj && JS_IsArrayBufferViewObject(body_obj)) {
-      // Short typed arrays have inline data which can move on GC, so assert
+      // `maybeNoGC` needs to be populated for the lifetime of `buf` because
+      // short typed arrays have inline data which can move on GC, so assert
       // that no GC happens. (Which it doesn't, because we're not allocating
       // before `buf` goes out of scope.)
       maybeNoGC.emplace(cx);
