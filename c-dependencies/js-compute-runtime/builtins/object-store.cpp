@@ -1,3 +1,9 @@
+#include <algorithm>
+#include <cstring>
+#include <iostream>
+#include <optional>
+#include <string>
+
 // TODO: remove these once the warnings are fixed
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
@@ -12,6 +18,23 @@
 #include "builtins/url.h"
 #include "host_call.h"
 #include "js-compute-builtins.h"
+
+std::string_view bad_chars{"#?*[]\n\r"};
+
+std::optional<char> find_invalid_character_for_object_store_key(const char *str) {
+  std::optional<char> res;
+
+  std::string_view view{str, strlen(str)};
+
+  auto it = std::find_if(view.begin(), view.end(),
+                         [](auto c) { return bad_chars.find(c) != std::string_view::npos; });
+
+  if (it != view.end()) {
+    res = *it;
+  }
+
+  return res;
+}
 
 namespace ObjectStoreEntry {
 namespace Slots {
@@ -91,6 +114,48 @@ ObjectStoreHandle object_store_handle(JSObject *obj) {
 
 const unsigned ctor_length = 1;
 
+std::optional<char *> parse_and_validate_key(JSContext *cx, JS::HandleValue val, size_t *key_len) {
+  // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
+  JS::UniqueChars key = encode(cx, val, key_len);
+  if (!key) {
+    return std::nullopt;
+  }
+
+  // If the converted string has a length of 0 then we throw an Error
+  // because ObjectStore Keys have to be at-least 1 character.
+  if (*key_len == 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_EMPTY);
+    return std::nullopt;
+  }
+
+  // If the converted string has a length of more than 1024 then we throw an Error
+  // because ObjectStore Keys have to be less than 1025 characters.
+  if (*key_len > 1024) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_TOO_LONG);
+    return std::nullopt;
+  }
+
+  char *key_chars = key.get();
+
+  if (auto res = find_invalid_character_for_object_store_key(key_chars)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, *res);
+    return std::nullopt;
+  }
+  auto acme_challenge = ".well-known/acme-challenge/";
+  if (strncmp(key_chars, acme_challenge, strlen(acme_challenge)) == 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_ACME);
+    return std::nullopt;
+  }
+
+  if (strcmp(key_chars, ".") == 0 || strcmp(key_chars, "..") == 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_RELATIVE);
+    return std::nullopt;
+  }
+
+  return key_chars;
+}
+
 bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
 
 bool lookup(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -102,77 +167,13 @@ bool lookup(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   size_t key_len;
-  // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  JS::UniqueChars key = encode(cx, args.get(0), &key_len);
-  if (!key) {
+  std::optional<char *> key_chars = parse_and_validate_key(cx, args.get(0), &key_len);
+  if (!key_chars) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
-
-  // If the converted string has a length of 0 then we throw an Error
-  // because ObjectStore Keys have to be at-least 1 character.
-  if (key_len == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_EMPTY);
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-
-  // If the converted string has a length of more than 1024 then we throw an Error
-  // because ObjectStore Keys have to be less than 1025 characters.
-  if (key_len > 1024) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_TOO_LONG);
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-
-  char *key_chars = key.get();
-
-  if (strchr(key_chars, '#') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "#");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  if (strchr(key_chars, '?') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "?");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  if (strchr(key_chars, '*') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "*");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  if (strchr(key_chars, '[') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "[");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  if (strchr(key_chars, ']') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "]");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  if (strchr(key_chars, '\n') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "newline");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  if (strchr(key_chars, '\r') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "carriage return");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  auto acme_challenge = ".well-known/acme-challenge/";
-  if (strncmp(key_chars, acme_challenge, strlen(acme_challenge)) == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_ACME);
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-
-  if (strcmp(key_chars, ".") == 0 || strcmp(key_chars, "..") == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_RELATIVE);
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-
   BodyHandle body_handle = {INVALID_HANDLE};
-  int status =
-      fastly_object_store_lookup(object_store_handle(self), key_chars, key_len, &body_handle);
+  int status = fastly_object_store_lookup(object_store_handle(self), key_chars.value(), key_len,
+                                          &body_handle);
   if (!HANDLE_RESULT(cx, status)) {
     return false;
   }
@@ -206,74 +207,11 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   size_t key_len;
-  // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  JS::UniqueChars key = encode(cx, args.get(0), &key_len);
-  if (!key) {
+  size_t key_len;
+  std::optional<char *> key_chars = parse_and_validate_key(cx, args.get(0), &key_len);
+  if (!key_chars) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
-
-  // If the converted string has a length of 0 then we throw an Error
-  // because ObjectStore Keys have to be at-least 1 character.
-  if (key_len == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_EMPTY);
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-
-  // If the converted string has a length of more than 1024 then we throw an Error
-  // because ObjectStore Keys have to be less than 1025 characters.
-  if (key_len > 1024) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_TOO_LONG);
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-
-  char *key_chars = key.get();
-
-  if (strchr(key_chars, '#') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "#");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  if (strchr(key_chars, '?') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "?");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  if (strchr(key_chars, '*') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "*");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  if (strchr(key_chars, '[') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "[");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  if (strchr(key_chars, ']') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "]");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  if (strchr(key_chars, '\n') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "newline");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  if (strchr(key_chars, '\r') != NULL) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "carriage return");
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  auto acme_challenge = ".well-known/acme-challenge/";
-  if (strncmp(key_chars, acme_challenge, strlen(acme_challenge)) == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_ACME);
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-
-  if (strcmp(key_chars, ".") == 0 || strcmp(key_chars, "..") == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_RELATIVE);
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-
   JS::HandleValue body_val = args.get(1);
 
   // We currently support five types of body inputs:
@@ -302,7 +240,8 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
       JS::RootedObject source_owner(cx, builtins::NativeStreamSource::owner(stream_source));
       BodyHandle body = RequestOrResponse::body_handle(source_owner);
 
-      int status = fastly_object_store_insert(object_store_handle(self), key_chars, key_len, body);
+      int status =
+          fastly_object_store_insert(object_store_handle(self), key_chars.value(), key_len, body);
       if (!HANDLE_RESULT(cx, status)) {
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
@@ -376,8 +315,8 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    int status =
-        fastly_object_store_insert(object_store_handle(self), key_chars, key_len, body_handle);
+    int status = fastly_object_store_insert(object_store_handle(self), key_chars.value(), key_len,
+                                            body_handle);
     // Ensure that we throw an exception for all unexpected host errors.
     if (!HANDLE_RESULT(cx, status)) {
       return RejectPromiseWithPendingError(cx, result_promise);
