@@ -61,7 +61,7 @@ bool Fastly::getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value 
   return JS_ParseJSON(cx, geo_info_str, args.rval());
 }
 
-// TODO: consider allowing logger creation during initialization, but then throw
+// TODO(performance): consider allowing logger creation during initialization, but then throw
 // when trying to log.
 bool Fastly::getLogger(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
