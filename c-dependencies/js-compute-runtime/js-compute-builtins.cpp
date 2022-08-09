@@ -116,7 +116,7 @@ using jsurl::SpecSlice, jsurl::SpecString, jsurl::JSUrl, jsurl::JSUrlSearchParam
 static JS::PersistentRootedObjectVector *pending_requests;
 static JS::PersistentRootedObjectVector *pending_body_reads;
 
-// TODO: introduce a version that writes into an existing buffer, and use that
+// TODO(performance): introduce a version that writes into an existing buffer, and use that
 // with the hostcall buffer where possible.
 UniqueChars encode(JSContext *cx, HandleString str, size_t *encoded_len) {
   UniqueChars text = JS_EncodeStringToUTF8(cx, str);
@@ -190,10 +190,10 @@ JSObject *PromiseRejectedWithPendingError(JSContext *cx) {
 template <auto op, class HandleType>
 static char *read_from_handle_all(JSContext *cx, HandleType handle, size_t *nwritten,
                                   bool read_until_zero) {
-  // TODO: investigate passing a size hint in situations where we might know
+  // TODO(performance): investigate passing a size hint in situations where we might know
   // the final size, e.g. via the `content-length` header.
   size_t buf_size = HANDLE_READ_CHUNK_SIZE;
-  // TODO: make use of malloc slack.
+  // TODO(performance): make use of malloc slack.
   char *buf = static_cast<char *>(JS_malloc(cx, buf_size));
   if (!buf) {
     JS_ReportOutOfMemory(cx);
@@ -217,7 +217,7 @@ static char *read_from_handle_all(JSContext *cx, HandleType handle, size_t *nwri
       break;
     }
 
-    // TODO: make use of malloc slack, and use a smarter buffer growth strategy.
+    // TODO(performance): make use of malloc slack, and use a smarter buffer growth strategy.
     size_t new_size = buf_size + HANDLE_READ_CHUNK_SIZE;
     new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, new_size));
     if (!new_buf) {
@@ -965,7 +965,7 @@ bool bodyAll(JSContext *cx, CallArgs args, HandleObject self) {
 
   // If the body is a ReadableStream that's not backed by a BodyHandle,
   // we need to manually read all chunks from the stream.
-  // TODO: ensure that we're properly shortcutting reads from TransformStream
+  // TODO(performance): ensure that we're properly shortcutting reads from TransformStream
   // readables.
   RootedObject stream(cx, body_stream(self));
   if (stream && !NativeStreamSource::stream_is_body(cx, stream)) {
@@ -2365,12 +2365,12 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   // be consumed by the content creating it, so we're lenient about its format.
 
   // 3.  Set `this`’s `response` to a new `response`.
-  // TODO: consider not creating a host-side representation for responses
+  // TODO(performance): consider not creating a host-side representation for responses
   // eagerly. Some applications create Response objects purely for internal use,
   // e.g. to represent cache entries. While that's perhaps not ideal to begin
   // with, it exists, so we should handle it in a good way, and not be
   // superfluously slow.
-  // TODO: enable creating Response objects during the init phase, and only
+  // TODO(performance): enable creating Response objects during the init phase, and only
   // creating the host-side representation when processing requests.
   ResponseHandle response_handle = {.handle = INVALID_HANDLE};
   if (!HANDLE_RESULT(cx, xqd_resp_new(&response_handle))) {
@@ -3319,7 +3319,7 @@ bool append(JSContext *cx, unsigned argc, Value *vp) {
  * doesn't already contain a header with that name.
  *
  * Assumes that both the name and value are valid and normalized.
- * TODO: fully skip normalization.
+ * TODO(performance): fully skip normalization.
  */
 bool maybe_add(JSContext *cx, HandleObject self, const char *name, const char *value) {
   MOZ_ASSERT(is_instance(self));
