@@ -31,6 +31,7 @@
 #include "host_call.h"
 
 #include "builtin.h"
+#include "builtins/cache-override.h"
 #include "builtins/compression-stream.h"
 #include "builtins/console.h"
 #include "builtins/decompression-stream.h"
@@ -1454,342 +1455,6 @@ bool body_get(JSContext *cx, CallArgs args, HandleObject self, bool create_if_un
 }
 } // namespace RequestOrResponse
 
-namespace CacheOverride {
-
-// The values stored in these slots are ultimately passed to the host
-// via the xqd_req_cache_override_v2_set hostcall.
-//
-// If `Mode` is not `Override`, all other values are ignored.
-//
-// If `Mode` is `Override`, the values are interpreted in the following way:
-//
-// If `TTL`, `SWR`, or `SurrogateKey` are `undefined`, they're ignored.
-// For each of them, if the value isn't `undefined`, a flag gets set in the
-// hostcall's `tag` parameter, and the value itself is encoded as a uint32
-// parameter.
-//
-// `PCI` is interpreted as a boolean, and a flag gets set in the hostcall's
-// `tag` parameter if `PCI` is true.
-namespace Slots {
-enum { Mode, TTL, SWR, SurrogateKey, PCI, Count };
-};
-
-enum class Mode { None, Pass, Override };
-
-// These values are defined by the Fastly ABI:
-// https://docs.rs/fastly-shared/0.6.1/src/fastly_shared/lib.rs.html#407-412
-enum class CacheOverrideTag {
-  None = 0,
-  Pass = 1 << 0,
-  TTL = 1 << 1,
-  SWR = 1 << 2,
-  PCI = 1 << 3,
-};
-
-Mode mode(JSObject *self) { return (Mode)JS::GetReservedSlot(self, Slots::Mode).toInt32(); }
-
-void set_mode(JSObject *self, Mode mode) {
-  JS::SetReservedSlot(self, Slots::Mode, JS::Int32Value((int32_t)mode));
-}
-
-JS::Value ttl(JSObject *self) {
-  if (mode(self) != Mode::Override)
-    return JS::UndefinedValue();
-  return JS::GetReservedSlot(self, Slots::TTL);
-}
-
-void set_ttl(JSObject *self, uint32_t ttl) {
-  MOZ_RELEASE_ASSERT(mode(self) == Mode::Override);
-  JS::SetReservedSlot(self, Slots::TTL, JS::Int32Value((int32_t)ttl));
-}
-
-JS::Value swr(JSObject *self) {
-  if (mode(self) != Mode::Override)
-    return JS::UndefinedValue();
-  return JS::GetReservedSlot(self, Slots::SWR);
-}
-
-void set_swr(JSObject *self, uint32_t swr) {
-  MOZ_RELEASE_ASSERT(mode(self) == Mode::Override);
-  JS::SetReservedSlot(self, Slots::SWR, JS::Int32Value((int32_t)swr));
-}
-
-JS::Value surrogate_key(JSObject *self) {
-  if (mode(self) != Mode::Override)
-    return JS::UndefinedValue();
-  return JS::GetReservedSlot(self, Slots::SurrogateKey);
-}
-
-void set_surrogate_key(JSObject *self, JSString *key) {
-  MOZ_RELEASE_ASSERT(mode(self) == Mode::Override);
-  JS::SetReservedSlot(self, Slots::SurrogateKey, JS::StringValue(key));
-}
-
-JS::Value pci(JSObject *self) {
-  if (mode(self) != Mode::Override)
-    return JS::UndefinedValue();
-  return JS::GetReservedSlot(self, Slots::PCI);
-}
-
-void set_pci(JSObject *self, bool pci) {
-  MOZ_RELEASE_ASSERT(mode(self) == Mode::Override);
-  JS::SetReservedSlot(self, Slots::PCI, JS::BooleanValue(pci));
-}
-
-uint32_t abi_tag(JSObject *self) {
-  switch (mode(self)) {
-  case Mode::None:
-    return (uint32_t)CacheOverrideTag::None;
-  case Mode::Pass:
-    return (uint32_t)CacheOverrideTag::Pass;
-  default:;
-  }
-
-  uint32_t tag = 0;
-  if (!ttl(self).isUndefined())
-    tag |= (uint32_t)CacheOverrideTag::TTL;
-  if (!swr(self).isUndefined())
-    tag |= (uint32_t)CacheOverrideTag::SWR;
-  if (!pci(self).isUndefined())
-    tag |= (uint32_t)CacheOverrideTag::PCI;
-
-  return tag;
-}
-
-bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
-
-bool mode_get(JSContext *cx, HandleObject self, MutableHandleValue rval) {
-  const char *mode_chars;
-  switch (mode(self)) {
-  case Mode::None:
-    mode_chars = "none";
-    break;
-  case Mode::Pass:
-    mode_chars = "pass";
-    break;
-  case Mode::Override:
-    mode_chars = "override";
-    break;
-  }
-
-  RootedString mode_str(cx, JS_NewStringCopyZ(cx, mode_chars));
-  if (!mode_str)
-    return false;
-
-  rval.setString(mode_str);
-  return true;
-}
-
-bool ensure_override(JSContext *cx, HandleObject self, const char *field) {
-  if (mode(self) == Mode::Override)
-    return true;
-
-  JS_ReportErrorUTF8(cx,
-                     "Can't set %s on CacheOverride object whose mode "
-                     "isn't \"override\"",
-                     field);
-  return false;
-}
-
-bool mode_set(JSContext *cx, HandleObject self, HandleValue val, MutableHandleValue rval) {
-  size_t mode_len;
-  UniqueChars mode_chars = encode(cx, val, &mode_len);
-  if (!mode_chars)
-    return false;
-
-  Mode mode;
-  if (!strcmp(mode_chars.get(), "none")) {
-    mode = Mode::None;
-  } else if (!strcmp(mode_chars.get(), "pass")) {
-    mode = Mode::Pass;
-  } else if (!strcmp(mode_chars.get(), "override")) {
-    mode = Mode::Override;
-  } else {
-    JS_ReportErrorUTF8(cx,
-                       "'mode' has to be \"none\", \"pass\", or \"override\", "
-                       "but got %s",
-                       mode_chars.get());
-    return false;
-  }
-
-  set_mode(self, mode);
-  return true;
-}
-
-bool ttl_get(JSContext *cx, HandleObject self, MutableHandleValue rval) {
-  rval.set(ttl(self));
-  return true;
-}
-
-bool ttl_set(JSContext *cx, HandleObject self, HandleValue val, MutableHandleValue rval) {
-  if (!ensure_override(cx, self, "a TTL"))
-    return false;
-
-  if (val.isUndefined()) {
-    JS::SetReservedSlot(self, Slots::TTL, val);
-  } else {
-    int32_t ttl;
-    if (!JS::ToInt32(cx, val, &ttl))
-      return false;
-
-    set_ttl(self, ttl);
-  }
-  rval.set(CacheOverride::ttl(self));
-  return true;
-}
-
-bool swr_get(JSContext *cx, HandleObject self, MutableHandleValue rval) {
-  rval.set(swr(self));
-  return true;
-}
-
-bool swr_set(JSContext *cx, HandleObject self, HandleValue val, MutableHandleValue rval) {
-  if (!ensure_override(cx, self, "SWR"))
-    return false;
-
-  if (val.isUndefined()) {
-    JS::SetReservedSlot(self, Slots::SWR, val);
-  } else {
-    int32_t swr;
-    if (!JS::ToInt32(cx, val, &swr))
-      return false;
-
-    set_swr(self, swr);
-  }
-  rval.set(CacheOverride::swr(self));
-  return true;
-}
-
-bool surrogate_key_get(JSContext *cx, HandleObject self, MutableHandleValue rval) {
-  rval.set(surrogate_key(self));
-  return true;
-}
-
-bool surrogate_key_set(JSContext *cx, HandleObject self, HandleValue val, MutableHandleValue rval) {
-  if (!ensure_override(cx, self, "a surrogate key"))
-    return false;
-
-  if (val.isUndefined()) {
-    JS::SetReservedSlot(self, Slots::SurrogateKey, val);
-  } else {
-    RootedString surrogate_key(cx, JS::ToString(cx, val));
-    if (!surrogate_key)
-      return false;
-
-    set_surrogate_key(self, surrogate_key);
-  }
-  rval.set(CacheOverride::surrogate_key(self));
-  return true;
-}
-
-bool pci_get(JSContext *cx, HandleObject self, MutableHandleValue rval) {
-  rval.set(pci(self));
-  return true;
-}
-
-bool pci_set(JSContext *cx, HandleObject self, HandleValue val, MutableHandleValue rval) {
-  if (!ensure_override(cx, self, "PCI"))
-    return false;
-
-  if (val.isUndefined()) {
-    JS::SetReservedSlot(self, Slots::PCI, val);
-  } else {
-    bool pci = JS::ToBoolean(val);
-    set_pci(self, pci);
-  }
-  rval.set(CacheOverride::pci(self));
-  return true;
-}
-
-template <auto accessor_fn> bool accessor_get(JSContext *cx, unsigned argc, Value *vp) {
-  METHOD_HEADER(0)
-  return accessor_fn(cx, self, args.rval());
-}
-
-template <auto accessor_fn> bool accessor_set(JSContext *cx, unsigned argc, Value *vp) {
-  METHOD_HEADER(1)
-  return accessor_fn(cx, self, args[0], args.rval());
-}
-
-const unsigned ctor_length = 1;
-
-const JSFunctionSpec methods[] = {JS_FS_END};
-
-const JSPropertySpec properties[] = {
-    JS_PSGS("mode", accessor_get<mode_get>, accessor_set<mode_set>, JSPROP_ENUMERATE),
-    JS_PSGS("ttl", accessor_get<ttl_get>, accessor_set<ttl_set>, JSPROP_ENUMERATE),
-    JS_PSGS("swr", accessor_get<swr_get>, accessor_set<swr_set>, JSPROP_ENUMERATE),
-    JS_PSGS("surrogateKey", accessor_get<surrogate_key_get>, accessor_set<surrogate_key_set>,
-            JSPROP_ENUMERATE),
-    JS_PSGS("pci", accessor_get<pci_get>, accessor_set<pci_set>, JSPROP_ENUMERATE),
-    JS_STRING_SYM_PS(toStringTag, "CacheOverride", JSPROP_READONLY),
-    JS_PS_END};
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp);
-CLASS_BOILERPLATE(CacheOverride)
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  CTOR_HEADER("CacheOverride", 1);
-
-  RootedObject self(cx, JS_NewObjectForConstructor(cx, &class_, args));
-
-  RootedValue val(cx);
-  if (!mode_set(cx, self, args[0], &val))
-    return false;
-
-  if (mode(self) == Mode::Override) {
-    if (!args.get(1).isObject()) {
-      JS_ReportErrorUTF8(cx, "Creating a CacheOverride object with mode \"override\" requires "
-                             "an init object for the override parameters as the second argument");
-      return false;
-    }
-
-    RootedObject override_init(cx, &args[1].toObject());
-
-    if (!JS_GetProperty(cx, override_init, "ttl", &val) || !ttl_set(cx, self, val, &val)) {
-      return false;
-    }
-
-    if (!JS_GetProperty(cx, override_init, "swr", &val) || !swr_set(cx, self, val, &val)) {
-      return false;
-    }
-
-    if (!JS_GetProperty(cx, override_init, "surrogateKey", &val) ||
-        !surrogate_key_set(cx, self, val, &val)) {
-      return false;
-    }
-
-    if (!JS_GetProperty(cx, override_init, "pci", &val) || !pci_set(cx, self, val, &val)) {
-      return false;
-    }
-  }
-
-  args.rval().setObject(*self);
-  return true;
-}
-
-/**
- * Clone a CacheOverride instance by copying all its reserved slots.
- *
- * This works because CacheOverride slots only contain primitive values.
- */
-JSObject *clone(JSContext *cx, HandleObject self) {
-  MOZ_ASSERT(is_instance(self));
-  RootedObject result(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!result) {
-    return nullptr;
-  }
-
-  for (size_t i = 0; i < Slots::Count; i++) {
-    Value val = JS::GetReservedSlot(self, i);
-    MOZ_ASSERT(!val.isObject());
-    JS::SetReservedSlot(result, i, val);
-  }
-
-  return result;
-}
-} // namespace CacheOverride
-
 // https://fetch.spec.whatwg.org/#concept-method-normalize
 // Returns `true` if the method name was normalized, `false` otherwise.
 static bool normalize_http_method(char *method) {
@@ -1864,14 +1529,14 @@ JSString *method(JSContext *cx, HandleObject obj) {
 
 bool set_cache_override(JSContext *cx, HandleObject self, HandleValue cache_override_val) {
   MOZ_ASSERT(is_instance(self));
-  if (!CacheOverride::is_instance(cache_override_val)) {
+  if (!builtins::CacheOverride::is_instance(cache_override_val)) {
     JS_ReportErrorUTF8(cx, "Value passed in as cacheOverride must be an "
                            "instance of CacheOverride");
     return false;
   }
 
   RootedObject input(cx, &cache_override_val.toObject());
-  JSObject *override = CacheOverride::clone(cx, input);
+  JSObject *override = builtins::CacheOverride::clone(cx, input);
   if (!override) {
     return false;
   }
@@ -1890,12 +1555,12 @@ bool apply_cache_override(JSContext *cx, HandleObject self) {
     return true;
   }
 
-  uint32_t tag = CacheOverride::abi_tag(override);
-  RootedValue val(cx, CacheOverride::ttl(override));
+  uint32_t tag = builtins::CacheOverride::abi_tag(override);
+  RootedValue val(cx, builtins::CacheOverride::ttl(override));
   uint32_t ttl = val.isUndefined() ? 0 : val.toInt32();
-  val = CacheOverride::swr(override);
+  val = builtins::CacheOverride::swr(override);
   uint32_t swr = val.isUndefined() ? 0 : val.toInt32();
-  val = CacheOverride::surrogate_key(override);
+  val = builtins::CacheOverride::surrogate_key(override);
   UniqueChars sk_chars;
   size_t sk_len = 0;
   if (!val.isUndefined()) {
@@ -5561,7 +5226,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!FetchEvent::init_class(cx, global))
     return false;
-  if (!CacheOverride::init_class(cx, global))
+  if (!builtins::CacheOverride::init_class(cx, global))
     return false;
   if (!TextEncoder::init_class(cx, global))
     return false;
