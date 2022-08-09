@@ -264,7 +264,7 @@ bool eval_stdin(JSContext *cx, MutableHandleValue result) {
       return false;
   }
 
-  // TODO: verify that it's better to perform a shrinking GC here, as manual
+  // TODO(performance): verify that it's better to perform a shrinking GC here, as manual
   // testing indicates. Running a shrinking GC here causes *fewer* 4kb pages to
   // be written to when processing a request, at least for one fairly large
   // input script.
@@ -296,13 +296,13 @@ bool eval_stdin(JSContext *cx, MutableHandleValue result) {
     report_unhandled_promise_rejections(cx);
   }
 
-  // TODO: check if it makes sense to increase the empty chunk count *before*
+  // TODO(performance): check if it makes sense to increase the empty chunk count *before*
   // running GC like this. The working theory is that otherwise the engine might
   // mark chunk pages as free that then later the allocator doesn't turn into
   // chunks without further fragmentation. But that might be wrong.
   // JS_SetGCParameter(cx, JSGC_MAX_EMPTY_CHUNK_COUNT, 10);
 
-  // TODO: verify that it's better to *not* perform a shrinking GC here, as
+  // TODO(performance): verify that it's better to *not* perform a shrinking GC here, as
   // manual testing indicates. Running a shrinking GC here causes *more* 4kb
   // pages to be written to when processing a request, at least for one fairly
   // large input script.
