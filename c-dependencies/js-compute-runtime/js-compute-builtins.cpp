@@ -34,6 +34,7 @@
 #include "builtins/cache-override.h"
 #include "builtins/compression-stream.h"
 #include "builtins/console.h"
+#include "builtins/crypto.h"
 #include "builtins/decompression-stream.h"
 #include "builtins/dictionary.h"
 #include "builtins/env.h"
@@ -426,65 +427,6 @@ JSObject *create(JSContext *cx, HandleObject self, HandleValue url_val, HandleOb
 
 JSObject *create(JSContext *cx, HandleObject self, HandleValue url_val, HandleValue base_val);
 } // namespace URL
-
-bool is_int_typed_array(JSObject *obj) {
-  return JS_IsInt8Array(obj) || JS_IsUint8Array(obj) || JS_IsInt16Array(obj) ||
-         JS_IsUint16Array(obj) || JS_IsInt32Array(obj) || JS_IsUint32Array(obj) ||
-         JS_IsUint8ClampedArray(obj) || JS_IsBigInt64Array(obj) || JS_IsBigUint64Array(obj);
-}
-
-namespace Crypto {
-
-#define MAX_BYTE_LENGTH 65536
-
-/**
- * Implementation of
- * https://www.w3.org/TR/WebCryptoAPI/#Crypto-method-getRandomValues
- * TODO: investigate ways to automatically wipe the buffer passed in here when
- * it is GC'd. Content can roughly approximate that using finalizers for views
- * of the buffer, but it's far from ideal.
- */
-bool get_random_values(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "crypto.getRandomValues", 1))
-    return false;
-
-  if (!args[0].isObject() || !is_int_typed_array(&args[0].toObject())) {
-    JS_ReportErrorUTF8(cx, "crypto.getRandomValues: input must be an integer-typed TypedArray");
-    return false;
-  }
-
-  RootedObject typed_array(cx, &args[0].toObject());
-  size_t byte_length = JS_GetArrayBufferViewByteLength(typed_array);
-  if (byte_length > MAX_BYTE_LENGTH) {
-    JS_ReportErrorUTF8(cx,
-                       "crypto.getRandomValues: input byteLength must be at most %u, "
-                       "but is %zu",
-                       MAX_BYTE_LENGTH, byte_length);
-    return false;
-  }
-
-  JS::AutoCheckCannotGC noGC(cx);
-  bool is_shared;
-  void *buffer = JS_GetArrayBufferViewData(typed_array, &is_shared, noGC);
-  arc4random_buf(buffer, byte_length);
-
-  args.rval().setObject(*typed_array);
-  return true;
-}
-
-const JSFunctionSpec methods[] = {JS_FN("getRandomValues", get_random_values, 1, JSPROP_ENUMERATE),
-                                  JS_FS_END};
-
-static bool create(JSContext *cx, HandleObject global) {
-  RootedObject crypto(cx, JS_NewPlainObject(cx));
-  if (!crypto)
-    return false;
-  if (!JS_DefineProperty(cx, global, "crypto", crypto, JSPROP_ENUMERATE))
-    return false;
-  return JS_DefineFunctions(cx, crypto, methods);
-}
-} // namespace Crypto
 
 enum class BodyReadResult {
   ArrayBuffer,
@@ -4947,7 +4889,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!Console::create(cx, global))
     return false;
-  if (!Crypto::create(cx, global))
+  if (!builtins::Crypto::create(cx, global))
     return false;
 
   if (!NativeStreamSource::init_class(cx, global))
