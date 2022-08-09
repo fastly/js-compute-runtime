@@ -36,6 +36,7 @@
 #include "builtins/console.h"
 #include "builtins/decompression-stream.h"
 #include "builtins/env.h"
+#include "builtins/fastly.h"
 #include "builtins/logger.h"
 #include "builtins/native-stream-sink.h"
 #include "builtins/native-stream-source.h"
@@ -424,193 +425,6 @@ JSObject *create(JSContext *cx, HandleObject self, HandleValue url_val, HandleOb
 
 JSObject *create(JSContext *cx, HandleObject self, HandleValue url_val, HandleValue base_val);
 } // namespace URL
-
-namespace Fastly {
-
-static bool debug_logging_enabled = false;
-
-static PersistentRooted<JSObject *> env;
-
-static PersistentRooted<JSObject *> baseURL;
-static PersistentRooted<JSString *> defaultBackend;
-
-bool dump(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, __func__, 1))
-    return false;
-
-  dump_value(cx, args[0], stdout);
-
-  args.rval().setUndefined();
-  return true;
-}
-
-bool enableDebugLogging(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, __func__, 1))
-    return false;
-
-  debug_logging_enabled = JS::ToBoolean(args[0]);
-
-  args.rval().setUndefined();
-  return true;
-}
-
-bool getGeolocationForIpAddress(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  REQUEST_HANDLER_ONLY("fastly.getGeolocationForIpAddress");
-  if (!args.requireAtLeast(cx, "fastly.getGeolocationForIpAddress", 1))
-    return false;
-
-  RootedString address_str(cx, JS::ToString(cx, args[0]));
-  if (!address_str)
-    return false;
-
-  RootedString geo_info_str(cx, get_geo_info(cx, address_str));
-  if (!geo_info_str)
-    return false;
-
-  return JS_ParseJSON(cx, geo_info_str, args.rval());
-}
-
-// TODO: consider allowing logger creation during initialization, but then throw
-// when trying to log.
-bool getLogger(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  REQUEST_HANDLER_ONLY("fastly.getLogger");
-  RootedObject self(cx, &args.thisv().toObject());
-  if (!args.requireAtLeast(cx, "fastly.getLogger", 1))
-    return false;
-
-  size_t name_len;
-  UniqueChars name = encode(cx, args[0], &name_len);
-  if (!name)
-    return false;
-
-  RootedObject logger(cx, builtins::Logger::create(cx, name.get()));
-  if (!logger)
-    return false;
-
-  args.rval().setObject(*logger);
-  return true;
-}
-
-bool includeBytes(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  INIT_ONLY("fastly.includeBytes");
-  RootedObject self(cx, &args.thisv().toObject());
-  if (!args.requireAtLeast(cx, "fastly.includeBytes", 1))
-    return false;
-
-  size_t path_len;
-  UniqueChars path = encode(cx, args[0], &path_len);
-  if (!path)
-    return false;
-
-  FILE *fp = fopen(path.get(), "r");
-  if (!fp) {
-    JS_ReportErrorUTF8(cx, "Error opening file %s", path.get());
-    return false;
-  }
-
-  fseek(fp, 0L, SEEK_END);
-  size_t size = ftell(fp);
-  rewind(fp);
-  RootedObject typed_array(cx, JS_NewUint8Array(cx, size));
-  if (!typed_array)
-    return false;
-
-  size_t read_bytes;
-  {
-    JS::AutoCheckCannotGC noGC(cx);
-    bool is_shared;
-    void *buffer = JS_GetArrayBufferViewData(typed_array, &is_shared, noGC);
-    read_bytes = fread(buffer, 1, size, fp);
-  }
-
-  if (read_bytes != size) {
-    JS_ReportErrorUTF8(cx, "Failed to read contents of file %s", path.get());
-    return false;
-  }
-
-  args.rval().setObject(*typed_array);
-  return true;
-}
-
-const JSFunctionSpec methods[] = {
-    JS_FN("dump", dump, 1, 0),
-    JS_FN("enableDebugLogging", enableDebugLogging, 1, JSPROP_ENUMERATE),
-    JS_FN("getGeolocationForIpAddress", getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
-    JS_FN("getLogger", getLogger, 1, JSPROP_ENUMERATE),
-    JS_FN("includeBytes", includeBytes, 1, JSPROP_ENUMERATE),
-    JS_FS_END};
-
-bool env_get(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setObject(*env);
-  return true;
-}
-
-bool baseURL_get(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setObjectOrNull(baseURL);
-  return true;
-}
-
-bool baseURL_set(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (args.get(0).isNullOrUndefined()) {
-    baseURL.set(nullptr);
-  } else if (!URL::is_instance(args.get(0))) {
-    JS_ReportErrorUTF8(cx, "Invalid value assigned to fastly.baseURL, must be an instance of "
-                           "URL, null, or undefined");
-    return false;
-  }
-
-  baseURL.set(&args.get(0).toObject());
-
-  args.rval().setObjectOrNull(baseURL);
-  return true;
-}
-
-bool defaultBackend_get(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setString(defaultBackend);
-  return true;
-}
-
-bool defaultBackend_set(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  RootedString backend(cx, JS::ToString(cx, args.get(0)));
-  if (!backend)
-    return false;
-
-  defaultBackend = backend;
-  args.rval().setUndefined();
-  return true;
-}
-
-const JSPropertySpec properties[] = {
-    JS_PSG("env", env_get, JSPROP_ENUMERATE),
-    JS_PSGS("baseURL", baseURL_get, baseURL_set, JSPROP_ENUMERATE),
-    JS_PSGS("defaultBackend", defaultBackend_get, defaultBackend_set, JSPROP_ENUMERATE), JS_PS_END};
-
-static bool create(JSContext *cx, HandleObject global) {
-  RootedObject fastly(cx, JS_NewPlainObject(cx));
-  if (!fastly)
-    return false;
-
-  env.init(cx, Env::create(cx));
-  if (!env)
-    return false;
-  baseURL.init(cx);
-  defaultBackend.init(cx);
-
-  if (!JS_DefineProperty(cx, global, "fastly", fastly, 0))
-    return false;
-  return JS_DefineFunctions(cx, fastly, methods) && JS_DefineProperties(cx, fastly, properties);
-}
-} // namespace Fastly
 
 bool is_int_typed_array(JSObject *obj) {
   return JS_IsInt8Array(obj) || JS_IsUint8Array(obj) || JS_IsInt16Array(obj) ||
@@ -1797,7 +1611,7 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
     if (!url_instance)
       return nullptr;
 
-    RootedObject parsedURL(cx, URL::create(cx, url_instance, input, Fastly::baseURL));
+    RootedObject parsedURL(cx, URL::create(cx, url_instance, input, builtins::Fastly::baseURL));
 
     // 2.  If `parsedURL` is failure, then throw a `TypeError`.
     if (!parsedURL) {
@@ -3940,13 +3754,13 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
   // Set `fastly.baseURL` to the origin of the client request's URL.
   // Note that this only happens if baseURL hasn't already been set to another
   // value explicitly.
-  if (!Fastly::baseURL.get()) {
+  if (!builtins::Fastly::baseURL.get()) {
     RootedObject url_instance(cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
     if (!url_instance)
       return false;
 
-    Fastly::baseURL = URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
-    if (!Fastly::baseURL)
+    builtins::Fastly::baseURL = URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
+    if (!builtins::Fastly::baseURL)
       return false;
   }
 
@@ -4823,7 +4637,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   RootedString backend(cx, Request::backend(request));
   if (!backend) {
-    backend = Fastly::defaultBackend;
+    backend = builtins::Fastly::defaultBackend;
   }
   if (!backend) {
     size_t bytes_read;
@@ -5195,7 +5009,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
   if (!GlobalProperties::init(cx, global))
     return false;
 
-  if (!Fastly::create(cx, global))
+  if (!builtins::Fastly::create(cx, global))
     return false;
   if (!Console::create(cx, global))
     return false;
@@ -5259,7 +5073,7 @@ UniqueChars stringify_value(JSContext *cx, JS::HandleValue value) {
   return JS_EncodeStringToUTF8(cx, str);
 }
 
-bool debug_logging_enabled() { return Fastly::debug_logging_enabled; }
+bool debug_logging_enabled() { return builtins::Fastly::debug_logging_enabled; }
 
 bool dump_value(JSContext *cx, JS::Value val, FILE *fp) {
   RootedValue value(cx, val);
