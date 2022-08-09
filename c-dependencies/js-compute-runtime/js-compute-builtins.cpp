@@ -35,6 +35,7 @@
 #include "builtins/compression-stream.h"
 #include "builtins/console.h"
 #include "builtins/decompression-stream.h"
+#include "builtins/dictionary.h"
 #include "builtins/env.h"
 #include "builtins/logger.h"
 #include "builtins/native-stream-sink.h"
@@ -2677,73 +2678,6 @@ JSObject *create(JSContext *cx, HandleObject response, ResponseHandle response_h
 }
 } // namespace Response
 
-namespace Dictionary {
-namespace Slots {
-enum { Dictionary, Count };
-};
-
-DictionaryHandle dictionary_handle(JSObject *obj) {
-  JS::Value val = JS::GetReservedSlot(obj, Slots::Dictionary);
-  return DictionaryHandle{static_cast<uint32_t>(val.toInt32())};
-}
-
-const unsigned ctor_length = 1;
-
-bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
-
-bool get(JSContext *cx, unsigned argc, Value *vp) {
-  METHOD_HEADER(1)
-
-  size_t name_len;
-  UniqueChars name = encode(cx, args[0], &name_len);
-
-  OwnedHostCallBuffer buffer;
-  size_t nwritten = 0;
-  int status = xqd_dictionary_get(dictionary_handle(self), name.get(), name_len, buffer.get(),
-                                  DICTIONARY_ENTRY_MAX_LEN, &nwritten);
-  // Status code 10 indicates the key wasn't found, so we return null.
-  if (status == 10) {
-    args.rval().setNull();
-    return true;
-  }
-
-  // Ensure that we throw an exception for all unexpected host errors.
-  if (!HANDLE_RESULT(cx, status))
-    return false;
-
-  RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buffer.get(), nwritten)));
-  if (!text)
-    return false;
-
-  args.rval().setString(text);
-  return true;
-}
-
-const JSFunctionSpec methods[] = {JS_FN("get", get, 1, JSPROP_ENUMERATE), JS_FS_END};
-
-const JSPropertySpec properties[] = {JS_PS_END};
-bool constructor(JSContext *cx, unsigned argc, Value *vp);
-CLASS_BOILERPLATE(Dictionary)
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  REQUEST_HANDLER_ONLY("The Dictionary builtin");
-  CTOR_HEADER("Dictionary", 1);
-
-  size_t name_len;
-  UniqueChars name = encode(cx, args[0], &name_len);
-  RootedObject dictionary(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  DictionaryHandle dict_handle = {INVALID_HANDLE};
-  if (!HANDLE_RESULT(cx, xqd_dictionary_open(name.get(), name_len, &dict_handle)))
-    return false;
-
-  JS::SetReservedSlot(dictionary, Slots::Dictionary, JS::Int32Value((int)dict_handle.handle));
-  if (!dictionary)
-    return false;
-  args.rval().setObject(*dictionary);
-  return true;
-}
-} // namespace Dictionary
-
 namespace TextEncoder {
 namespace Slots {
 enum { Count };
@@ -5218,7 +5152,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!Response::init_class(cx, global))
     return false;
-  if (!Dictionary::init_class(cx, global))
+  if (!builtins::Dictionary::init_class(cx, global))
     return false;
   if (!Headers::init_class(cx, global))
     return false;
