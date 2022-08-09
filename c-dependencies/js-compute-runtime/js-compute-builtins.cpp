@@ -599,7 +599,7 @@ static bool create(JSContext *cx, HandleObject global) {
   if (!fastly)
     return false;
 
-  env.init(cx, Env::create(cx));
+  env.init(cx, builtins::Env::create(cx));
   if (!env)
     return false;
   baseURL.init(cx);
