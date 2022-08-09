@@ -1,0 +1,15 @@
+{
+  "GET /": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/"
+    },
+    "downstream_response": {
+      "status": 200
+    },
+    "logs": [
+      "stdout :: Log: Happy birthday Aki and Yuki!"
+    ]
+  }
+}

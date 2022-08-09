@@ -4,12 +4,22 @@ namespace Console {
 template <const char *prefix, uint8_t prefix_len>
 static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  size_t msg_len;
-  JS::UniqueChars msg = encode(cx, args.get(0), &msg_len);
-  if (!msg)
-    return false;
+  std::string message = "";
+  auto length = args.length();
+  for (int i = 0; i < length; i++) {
+    size_t msg_len;
+    JS::UniqueChars msg = encode(cx, args.get(i), &msg_len);
+    if (!msg)
+      return false;
+    if (message.length()) {
+      message += " ";
+      message += msg.get();
+    } else {
+      message += msg.get();
+    }
+  }
 
-  printf("%s: %s\n", prefix, msg.get());
+  printf("%s: %s\n", prefix, message.c_str());
   fflush(stdout);
 
   args.rval().setUndefined();

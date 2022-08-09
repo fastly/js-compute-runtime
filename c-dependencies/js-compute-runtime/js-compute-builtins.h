@@ -91,6 +91,10 @@ bool is_instance(JSObject *obj);
 JSObject *body_stream(JSObject *obj);
 } // namespace RequestOrResponse
 
+namespace URL {
+bool is_instance(JS::Value val);
+}
+
 namespace FetchEvent {
 enum class State {
   unhandled,

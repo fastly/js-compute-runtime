@@ -31,10 +31,12 @@
 #include "host_call.h"
 
 #include "builtin.h"
+#include "builtins/cache-override.h"
 #include "builtins/compression-stream.h"
 #include "builtins/console.h"
 #include "builtins/decompression-stream.h"
 #include "builtins/env.h"
+#include "builtins/fastly.h"
 #include "builtins/logger.h"
 #include "builtins/native-stream-sink.h"
 #include "builtins/native-stream-source.h"
@@ -423,193 +425,6 @@ JSObject *create(JSContext *cx, HandleObject self, HandleValue url_val, HandleOb
 
 JSObject *create(JSContext *cx, HandleObject self, HandleValue url_val, HandleValue base_val);
 } // namespace URL
-
-namespace Fastly {
-
-static bool debug_logging_enabled = false;
-
-static PersistentRooted<JSObject *> env;
-
-static PersistentRooted<JSObject *> baseURL;
-static PersistentRooted<JSString *> defaultBackend;
-
-bool dump(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, __func__, 1))
-    return false;
-
-  dump_value(cx, args[0], stdout);
-
-  args.rval().setUndefined();
-  return true;
-}
-
-bool enableDebugLogging(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, __func__, 1))
-    return false;
-
-  debug_logging_enabled = JS::ToBoolean(args[0]);
-
-  args.rval().setUndefined();
-  return true;
-}
-
-bool getGeolocationForIpAddress(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  REQUEST_HANDLER_ONLY("fastly.getGeolocationForIpAddress");
-  if (!args.requireAtLeast(cx, "fastly.getGeolocationForIpAddress", 1))
-    return false;
-
-  RootedString address_str(cx, JS::ToString(cx, args[0]));
-  if (!address_str)
-    return false;
-
-  RootedString geo_info_str(cx, get_geo_info(cx, address_str));
-  if (!geo_info_str)
-    return false;
-
-  return JS_ParseJSON(cx, geo_info_str, args.rval());
-}
-
-// TODO: consider allowing logger creation during initialization, but then throw
-// when trying to log.
-bool getLogger(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  REQUEST_HANDLER_ONLY("fastly.getLogger");
-  RootedObject self(cx, &args.thisv().toObject());
-  if (!args.requireAtLeast(cx, "fastly.getLogger", 1))
-    return false;
-
-  size_t name_len;
-  UniqueChars name = encode(cx, args[0], &name_len);
-  if (!name)
-    return false;
-
-  RootedObject logger(cx, builtins::Logger::create(cx, name.get()));
-  if (!logger)
-    return false;
-
-  args.rval().setObject(*logger);
-  return true;
-}
-
-bool includeBytes(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  INIT_ONLY("fastly.includeBytes");
-  RootedObject self(cx, &args.thisv().toObject());
-  if (!args.requireAtLeast(cx, "fastly.includeBytes", 1))
-    return false;
-
-  size_t path_len;
-  UniqueChars path = encode(cx, args[0], &path_len);
-  if (!path)
-    return false;
-
-  FILE *fp = fopen(path.get(), "r");
-  if (!fp) {
-    JS_ReportErrorUTF8(cx, "Error opening file %s", path.get());
-    return false;
-  }
-
-  fseek(fp, 0L, SEEK_END);
-  size_t size = ftell(fp);
-  rewind(fp);
-  RootedObject typed_array(cx, JS_NewUint8Array(cx, size));
-  if (!typed_array)
-    return false;
-
-  size_t read_bytes;
-  {
-    JS::AutoCheckCannotGC noGC(cx);
-    bool is_shared;
-    void *buffer = JS_GetArrayBufferViewData(typed_array, &is_shared, noGC);
-    read_bytes = fread(buffer, 1, size, fp);
-  }
-
-  if (read_bytes != size) {
-    JS_ReportErrorUTF8(cx, "Failed to read contents of file %s", path.get());
-    return false;
-  }
-
-  args.rval().setObject(*typed_array);
-  return true;
-}
-
-const JSFunctionSpec methods[] = {
-    JS_FN("dump", dump, 1, 0),
-    JS_FN("enableDebugLogging", enableDebugLogging, 1, JSPROP_ENUMERATE),
-    JS_FN("getGeolocationForIpAddress", getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
-    JS_FN("getLogger", getLogger, 1, JSPROP_ENUMERATE),
-    JS_FN("includeBytes", includeBytes, 1, JSPROP_ENUMERATE),
-    JS_FS_END};
-
-bool env_get(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setObject(*env);
-  return true;
-}
-
-bool baseURL_get(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setObjectOrNull(baseURL);
-  return true;
-}
-
-bool baseURL_set(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (args.get(0).isNullOrUndefined()) {
-    baseURL.set(nullptr);
-  } else if (!URL::is_instance(args.get(0))) {
-    JS_ReportErrorUTF8(cx, "Invalid value assigned to fastly.baseURL, must be an instance of "
-                           "URL, null, or undefined");
-    return false;
-  }
-
-  baseURL.set(&args.get(0).toObject());
-
-  args.rval().setObjectOrNull(baseURL);
-  return true;
-}
-
-bool defaultBackend_get(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setString(defaultBackend);
-  return true;
-}
-
-bool defaultBackend_set(JSContext *cx, unsigned argc, Value *vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  RootedString backend(cx, JS::ToString(cx, args.get(0)));
-  if (!backend)
-    return false;
-
-  defaultBackend = backend;
-  args.rval().setUndefined();
-  return true;
-}
-
-const JSPropertySpec properties[] = {
-    JS_PSG("env", env_get, JSPROP_ENUMERATE),
-    JS_PSGS("baseURL", baseURL_get, baseURL_set, JSPROP_ENUMERATE),
-    JS_PSGS("defaultBackend", defaultBackend_get, defaultBackend_set, JSPROP_ENUMERATE), JS_PS_END};
-
-static bool create(JSContext *cx, HandleObject global) {
-  RootedObject fastly(cx, JS_NewPlainObject(cx));
-  if (!fastly)
-    return false;
-
-  env.init(cx, builtins::Env::create(cx));
-  if (!env)
-    return false;
-  baseURL.init(cx);
-  defaultBackend.init(cx);
-
-  if (!JS_DefineProperty(cx, global, "fastly", fastly, 0))
-    return false;
-  return JS_DefineFunctions(cx, fastly, methods) && JS_DefineProperties(cx, fastly, properties);
-}
-} // namespace Fastly
 
 bool is_int_typed_array(JSObject *obj) {
   return JS_IsInt8Array(obj) || JS_IsUint8Array(obj) || JS_IsInt16Array(obj) ||
@@ -1454,342 +1269,6 @@ bool body_get(JSContext *cx, CallArgs args, HandleObject self, bool create_if_un
 }
 } // namespace RequestOrResponse
 
-namespace CacheOverride {
-
-// The values stored in these slots are ultimately passed to the host
-// via the xqd_req_cache_override_v2_set hostcall.
-//
-// If `Mode` is not `Override`, all other values are ignored.
-//
-// If `Mode` is `Override`, the values are interpreted in the following way:
-//
-// If `TTL`, `SWR`, or `SurrogateKey` are `undefined`, they're ignored.
-// For each of them, if the value isn't `undefined`, a flag gets set in the
-// hostcall's `tag` parameter, and the value itself is encoded as a uint32
-// parameter.
-//
-// `PCI` is interpreted as a boolean, and a flag gets set in the hostcall's
-// `tag` parameter if `PCI` is true.
-namespace Slots {
-enum { Mode, TTL, SWR, SurrogateKey, PCI, Count };
-};
-
-enum class Mode { None, Pass, Override };
-
-// These values are defined by the Fastly ABI:
-// https://docs.rs/fastly-shared/0.6.1/src/fastly_shared/lib.rs.html#407-412
-enum class CacheOverrideTag {
-  None = 0,
-  Pass = 1 << 0,
-  TTL = 1 << 1,
-  SWR = 1 << 2,
-  PCI = 1 << 3,
-};
-
-Mode mode(JSObject *self) { return (Mode)JS::GetReservedSlot(self, Slots::Mode).toInt32(); }
-
-void set_mode(JSObject *self, Mode mode) {
-  JS::SetReservedSlot(self, Slots::Mode, JS::Int32Value((int32_t)mode));
-}
-
-JS::Value ttl(JSObject *self) {
-  if (mode(self) != Mode::Override)
-    return JS::UndefinedValue();
-  return JS::GetReservedSlot(self, Slots::TTL);
-}
-
-void set_ttl(JSObject *self, uint32_t ttl) {
-  MOZ_RELEASE_ASSERT(mode(self) == Mode::Override);
-  JS::SetReservedSlot(self, Slots::TTL, JS::Int32Value((int32_t)ttl));
-}
-
-JS::Value swr(JSObject *self) {
-  if (mode(self) != Mode::Override)
-    return JS::UndefinedValue();
-  return JS::GetReservedSlot(self, Slots::SWR);
-}
-
-void set_swr(JSObject *self, uint32_t swr) {
-  MOZ_RELEASE_ASSERT(mode(self) == Mode::Override);
-  JS::SetReservedSlot(self, Slots::SWR, JS::Int32Value((int32_t)swr));
-}
-
-JS::Value surrogate_key(JSObject *self) {
-  if (mode(self) != Mode::Override)
-    return JS::UndefinedValue();
-  return JS::GetReservedSlot(self, Slots::SurrogateKey);
-}
-
-void set_surrogate_key(JSObject *self, JSString *key) {
-  MOZ_RELEASE_ASSERT(mode(self) == Mode::Override);
-  JS::SetReservedSlot(self, Slots::SurrogateKey, JS::StringValue(key));
-}
-
-JS::Value pci(JSObject *self) {
-  if (mode(self) != Mode::Override)
-    return JS::UndefinedValue();
-  return JS::GetReservedSlot(self, Slots::PCI);
-}
-
-void set_pci(JSObject *self, bool pci) {
-  MOZ_RELEASE_ASSERT(mode(self) == Mode::Override);
-  JS::SetReservedSlot(self, Slots::PCI, JS::BooleanValue(pci));
-}
-
-uint32_t abi_tag(JSObject *self) {
-  switch (mode(self)) {
-  case Mode::None:
-    return (uint32_t)CacheOverrideTag::None;
-  case Mode::Pass:
-    return (uint32_t)CacheOverrideTag::Pass;
-  default:;
-  }
-
-  uint32_t tag = 0;
-  if (!ttl(self).isUndefined())
-    tag |= (uint32_t)CacheOverrideTag::TTL;
-  if (!swr(self).isUndefined())
-    tag |= (uint32_t)CacheOverrideTag::SWR;
-  if (!pci(self).isUndefined())
-    tag |= (uint32_t)CacheOverrideTag::PCI;
-
-  return tag;
-}
-
-bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
-
-bool mode_get(JSContext *cx, HandleObject self, MutableHandleValue rval) {
-  const char *mode_chars;
-  switch (mode(self)) {
-  case Mode::None:
-    mode_chars = "none";
-    break;
-  case Mode::Pass:
-    mode_chars = "pass";
-    break;
-  case Mode::Override:
-    mode_chars = "override";
-    break;
-  }
-
-  RootedString mode_str(cx, JS_NewStringCopyZ(cx, mode_chars));
-  if (!mode_str)
-    return false;
-
-  rval.setString(mode_str);
-  return true;
-}
-
-bool ensure_override(JSContext *cx, HandleObject self, const char *field) {
-  if (mode(self) == Mode::Override)
-    return true;
-
-  JS_ReportErrorUTF8(cx,
-                     "Can't set %s on CacheOverride object whose mode "
-                     "isn't \"override\"",
-                     field);
-  return false;
-}
-
-bool mode_set(JSContext *cx, HandleObject self, HandleValue val, MutableHandleValue rval) {
-  size_t mode_len;
-  UniqueChars mode_chars = encode(cx, val, &mode_len);
-  if (!mode_chars)
-    return false;
-
-  Mode mode;
-  if (!strcmp(mode_chars.get(), "none")) {
-    mode = Mode::None;
-  } else if (!strcmp(mode_chars.get(), "pass")) {
-    mode = Mode::Pass;
-  } else if (!strcmp(mode_chars.get(), "override")) {
-    mode = Mode::Override;
-  } else {
-    JS_ReportErrorUTF8(cx,
-                       "'mode' has to be \"none\", \"pass\", or \"override\", "
-                       "but got %s",
-                       mode_chars.get());
-    return false;
-  }
-
-  set_mode(self, mode);
-  return true;
-}
-
-bool ttl_get(JSContext *cx, HandleObject self, MutableHandleValue rval) {
-  rval.set(ttl(self));
-  return true;
-}
-
-bool ttl_set(JSContext *cx, HandleObject self, HandleValue val, MutableHandleValue rval) {
-  if (!ensure_override(cx, self, "a TTL"))
-    return false;
-
-  if (val.isUndefined()) {
-    JS::SetReservedSlot(self, Slots::TTL, val);
-  } else {
-    int32_t ttl;
-    if (!JS::ToInt32(cx, val, &ttl))
-      return false;
-
-    set_ttl(self, ttl);
-  }
-  rval.set(CacheOverride::ttl(self));
-  return true;
-}
-
-bool swr_get(JSContext *cx, HandleObject self, MutableHandleValue rval) {
-  rval.set(swr(self));
-  return true;
-}
-
-bool swr_set(JSContext *cx, HandleObject self, HandleValue val, MutableHandleValue rval) {
-  if (!ensure_override(cx, self, "SWR"))
-    return false;
-
-  if (val.isUndefined()) {
-    JS::SetReservedSlot(self, Slots::SWR, val);
-  } else {
-    int32_t swr;
-    if (!JS::ToInt32(cx, val, &swr))
-      return false;
-
-    set_swr(self, swr);
-  }
-  rval.set(CacheOverride::swr(self));
-  return true;
-}
-
-bool surrogate_key_get(JSContext *cx, HandleObject self, MutableHandleValue rval) {
-  rval.set(surrogate_key(self));
-  return true;
-}
-
-bool surrogate_key_set(JSContext *cx, HandleObject self, HandleValue val, MutableHandleValue rval) {
-  if (!ensure_override(cx, self, "a surrogate key"))
-    return false;
-
-  if (val.isUndefined()) {
-    JS::SetReservedSlot(self, Slots::SurrogateKey, val);
-  } else {
-    RootedString surrogate_key(cx, JS::ToString(cx, val));
-    if (!surrogate_key)
-      return false;
-
-    set_surrogate_key(self, surrogate_key);
-  }
-  rval.set(CacheOverride::surrogate_key(self));
-  return true;
-}
-
-bool pci_get(JSContext *cx, HandleObject self, MutableHandleValue rval) {
-  rval.set(pci(self));
-  return true;
-}
-
-bool pci_set(JSContext *cx, HandleObject self, HandleValue val, MutableHandleValue rval) {
-  if (!ensure_override(cx, self, "PCI"))
-    return false;
-
-  if (val.isUndefined()) {
-    JS::SetReservedSlot(self, Slots::PCI, val);
-  } else {
-    bool pci = JS::ToBoolean(val);
-    set_pci(self, pci);
-  }
-  rval.set(CacheOverride::pci(self));
-  return true;
-}
-
-template <auto accessor_fn> bool accessor_get(JSContext *cx, unsigned argc, Value *vp) {
-  METHOD_HEADER(0)
-  return accessor_fn(cx, self, args.rval());
-}
-
-template <auto accessor_fn> bool accessor_set(JSContext *cx, unsigned argc, Value *vp) {
-  METHOD_HEADER(1)
-  return accessor_fn(cx, self, args[0], args.rval());
-}
-
-const unsigned ctor_length = 1;
-
-const JSFunctionSpec methods[] = {JS_FS_END};
-
-const JSPropertySpec properties[] = {
-    JS_PSGS("mode", accessor_get<mode_get>, accessor_set<mode_set>, JSPROP_ENUMERATE),
-    JS_PSGS("ttl", accessor_get<ttl_get>, accessor_set<ttl_set>, JSPROP_ENUMERATE),
-    JS_PSGS("swr", accessor_get<swr_get>, accessor_set<swr_set>, JSPROP_ENUMERATE),
-    JS_PSGS("surrogateKey", accessor_get<surrogate_key_get>, accessor_set<surrogate_key_set>,
-            JSPROP_ENUMERATE),
-    JS_PSGS("pci", accessor_get<pci_get>, accessor_set<pci_set>, JSPROP_ENUMERATE),
-    JS_STRING_SYM_PS(toStringTag, "CacheOverride", JSPROP_READONLY),
-    JS_PS_END};
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp);
-CLASS_BOILERPLATE(CacheOverride)
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  CTOR_HEADER("CacheOverride", 1);
-
-  RootedObject self(cx, JS_NewObjectForConstructor(cx, &class_, args));
-
-  RootedValue val(cx);
-  if (!mode_set(cx, self, args[0], &val))
-    return false;
-
-  if (mode(self) == Mode::Override) {
-    if (!args.get(1).isObject()) {
-      JS_ReportErrorUTF8(cx, "Creating a CacheOverride object with mode \"override\" requires "
-                             "an init object for the override parameters as the second argument");
-      return false;
-    }
-
-    RootedObject override_init(cx, &args[1].toObject());
-
-    if (!JS_GetProperty(cx, override_init, "ttl", &val) || !ttl_set(cx, self, val, &val)) {
-      return false;
-    }
-
-    if (!JS_GetProperty(cx, override_init, "swr", &val) || !swr_set(cx, self, val, &val)) {
-      return false;
-    }
-
-    if (!JS_GetProperty(cx, override_init, "surrogateKey", &val) ||
-        !surrogate_key_set(cx, self, val, &val)) {
-      return false;
-    }
-
-    if (!JS_GetProperty(cx, override_init, "pci", &val) || !pci_set(cx, self, val, &val)) {
-      return false;
-    }
-  }
-
-  args.rval().setObject(*self);
-  return true;
-}
-
-/**
- * Clone a CacheOverride instance by copying all its reserved slots.
- *
- * This works because CacheOverride slots only contain primitive values.
- */
-JSObject *clone(JSContext *cx, HandleObject self) {
-  MOZ_ASSERT(is_instance(self));
-  RootedObject result(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!result) {
-    return nullptr;
-  }
-
-  for (size_t i = 0; i < Slots::Count; i++) {
-    Value val = JS::GetReservedSlot(self, i);
-    MOZ_ASSERT(!val.isObject());
-    JS::SetReservedSlot(result, i, val);
-  }
-
-  return result;
-}
-} // namespace CacheOverride
-
 // https://fetch.spec.whatwg.org/#concept-method-normalize
 // Returns `true` if the method name was normalized, `false` otherwise.
 static bool normalize_http_method(char *method) {
@@ -1864,14 +1343,14 @@ JSString *method(JSContext *cx, HandleObject obj) {
 
 bool set_cache_override(JSContext *cx, HandleObject self, HandleValue cache_override_val) {
   MOZ_ASSERT(is_instance(self));
-  if (!CacheOverride::is_instance(cache_override_val)) {
+  if (!builtins::CacheOverride::is_instance(cache_override_val)) {
     JS_ReportErrorUTF8(cx, "Value passed in as cacheOverride must be an "
                            "instance of CacheOverride");
     return false;
   }
 
   RootedObject input(cx, &cache_override_val.toObject());
-  JSObject *override = CacheOverride::clone(cx, input);
+  JSObject *override = builtins::CacheOverride::clone(cx, input);
   if (!override) {
     return false;
   }
@@ -1890,12 +1369,12 @@ bool apply_cache_override(JSContext *cx, HandleObject self) {
     return true;
   }
 
-  uint32_t tag = CacheOverride::abi_tag(override);
-  RootedValue val(cx, CacheOverride::ttl(override));
+  uint32_t tag = builtins::CacheOverride::abi_tag(override);
+  RootedValue val(cx, builtins::CacheOverride::ttl(override));
   uint32_t ttl = val.isUndefined() ? 0 : val.toInt32();
-  val = CacheOverride::swr(override);
+  val = builtins::CacheOverride::swr(override);
   uint32_t swr = val.isUndefined() ? 0 : val.toInt32();
-  val = CacheOverride::surrogate_key(override);
+  val = builtins::CacheOverride::surrogate_key(override);
   UniqueChars sk_chars;
   size_t sk_len = 0;
   if (!val.isUndefined()) {
@@ -2132,7 +1611,7 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
     if (!url_instance)
       return nullptr;
 
-    RootedObject parsedURL(cx, URL::create(cx, url_instance, input, Fastly::baseURL));
+    RootedObject parsedURL(cx, URL::create(cx, url_instance, input, builtins::Fastly::baseURL));
 
     // 2.  If `parsedURL` is failure, then throw a `TypeError`.
     if (!parsedURL) {
@@ -4275,13 +3754,13 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
   // Set `fastly.baseURL` to the origin of the client request's URL.
   // Note that this only happens if baseURL hasn't already been set to another
   // value explicitly.
-  if (!Fastly::baseURL.get()) {
+  if (!builtins::Fastly::baseURL.get()) {
     RootedObject url_instance(cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
     if (!url_instance)
       return false;
 
-    Fastly::baseURL = URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
-    if (!Fastly::baseURL)
+    builtins::Fastly::baseURL = URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
+    if (!builtins::Fastly::baseURL)
       return false;
   }
 
@@ -5158,7 +4637,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   RootedString backend(cx, Request::backend(request));
   if (!backend) {
-    backend = Fastly::defaultBackend;
+    backend = builtins::Fastly::defaultBackend;
   }
   if (!backend) {
     size_t bytes_read;
@@ -5530,7 +5009,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
   if (!GlobalProperties::init(cx, global))
     return false;
 
-  if (!Fastly::create(cx, global))
+  if (!builtins::Fastly::create(cx, global))
     return false;
   if (!Console::create(cx, global))
     return false;
@@ -5561,7 +5040,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!FetchEvent::init_class(cx, global))
     return false;
-  if (!CacheOverride::init_class(cx, global))
+  if (!builtins::CacheOverride::init_class(cx, global))
     return false;
   if (!TextEncoder::init_class(cx, global))
     return false;
@@ -5594,7 +5073,7 @@ UniqueChars stringify_value(JSContext *cx, JS::HandleValue value) {
   return JS_EncodeStringToUTF8(cx, str);
 }
 
-bool debug_logging_enabled() { return Fastly::debug_logging_enabled; }
+bool debug_logging_enabled() { return builtins::Fastly::debug_logging_enabled; }
 
 bool dump_value(JSContext *cx, JS::Value val, FILE *fp) {
   RootedValue value(cx, val);
