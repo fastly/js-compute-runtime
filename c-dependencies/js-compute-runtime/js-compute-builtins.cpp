@@ -600,7 +600,7 @@ JSObject *body_stream(JSObject *obj) {
 JSObject *body_source(JSContext *cx, HandleObject obj) {
   MOZ_ASSERT(has_body(obj));
   RootedObject stream(cx, body_stream(obj));
-  return NativeStreamSource::get_stream_source(cx, stream);
+  return builtins::NativeStreamSource::get_stream_source(cx, stream);
 }
 
 bool body_used(JSObject *obj) {
@@ -613,8 +613,8 @@ bool mark_body_used(JSContext *cx, HandleObject obj) {
   JS::SetReservedSlot(obj, Slots::BodyUsed, JS::BooleanValue(true));
 
   RootedObject stream(cx, body_stream(obj));
-  if (stream && NativeStreamSource::stream_is_body(cx, stream)) {
-    if (!NativeStreamSource::lock_stream(cx, stream)) {
+  if (stream && builtins::NativeStreamSource::stream_is_body(cx, stream)) {
+    if (!builtins::NativeStreamSource::lock_stream(cx, stream)) {
       // The only reason why marking the body as used could fail here is that
       // it's a disturbed ReadableStream. To improve error reporting, we clear
       // the current exception and throw a better one.
@@ -911,7 +911,7 @@ bool bodyAll(JSContext *cx, CallArgs args, HandleObject self) {
   // TODO(performance): ensure that we're properly shortcutting reads from TransformStream
   // readables.
   RootedObject stream(cx, body_stream(self));
-  if (stream && !NativeStreamSource::stream_is_body(cx, stream)) {
+  if (stream && !builtins::NativeStreamSource::stream_is_body(cx, stream)) {
     if (!consume_content_stream_for_bodyAll(cx, self, stream, body_parser)) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
@@ -936,7 +936,7 @@ bool body_source_pull_algorithm(JSContext *cx, CallArgs args, HandleObject sourc
   // order: ReadableStream#pipeTo locks the destination WritableStream until the
   // source ReadableStream is closed/canceled, so only one stream can ever be
   // piped in at the same time.
-  RootedObject pipe_dest(cx, NativeStreamSource::piped_to_transform_stream(source));
+  RootedObject pipe_dest(cx, builtins::NativeStreamSource::piped_to_transform_stream(source));
   if (pipe_dest) {
     if (TransformStream::readable_used_as_body(pipe_dest)) {
       RootedObject dest_owner(cx, TransformStream::owner(pipe_dest));
@@ -944,7 +944,7 @@ bool body_source_pull_algorithm(JSContext *cx, CallArgs args, HandleObject sourc
         return false;
       }
 
-      RootedObject stream(cx, NativeStreamSource::stream(source));
+      RootedObject stream(cx, builtins::NativeStreamSource::stream(source));
       bool success = JS::ReadableStreamClose(cx, stream);
       MOZ_RELEASE_ASSERT(success);
 
@@ -1110,10 +1110,10 @@ bool maybe_stream_body(JSContext *cx, HandleObject body_owner, bool *requires_st
 
   // If the body stream is backed by a C@E body handle, we can directly pipe
   // that handle into the body we're about to send.
-  if (NativeStreamSource::stream_is_body(cx, stream)) {
+  if (builtins::NativeStreamSource::stream_is_body(cx, stream)) {
     // First, move the source's body handle to the target and lock the stream.
-    RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
-    RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
+    RootedObject stream_source(cx, builtins::NativeStreamSource::get_stream_source(cx, stream));
+    RootedObject source_owner(cx, builtins::NativeStreamSource::owner(stream_source));
     if (!RequestOrResponse::move_body_handle(cx, source_owner, body_owner)) {
       return false;
     }
@@ -1172,9 +1172,9 @@ bool maybe_stream_body(JSContext *cx, HandleObject body_owner, bool *requires_st
 JSObject *create_body_stream(JSContext *cx, HandleObject owner) {
   MOZ_ASSERT(is_instance(owner));
   MOZ_ASSERT(!body_stream(owner));
-  RootedObject source(cx, NativeStreamSource::create(cx, owner, JS::UndefinedHandleValue,
-                                                     body_source_pull_algorithm,
-                                                     body_source_cancel_algorithm));
+  RootedObject source(cx, builtins::NativeStreamSource::create(cx, owner, JS::UndefinedHandleValue,
+                                                               body_source_pull_algorithm,
+                                                               body_source_cancel_algorithm));
   if (!source)
     return nullptr;
 
@@ -4813,8 +4813,8 @@ bool process_next_body_read(JSContext *cx) {
   RootedObject controller(cx);
   {
     HandleObject streamSource = (*pending_body_reads)[0];
-    owner = NativeStreamSource::owner(streamSource);
-    controller = NativeStreamSource::controller(streamSource);
+    owner = builtins::NativeStreamSource::owner(streamSource);
+    controller = builtins::NativeStreamSource::controller(streamSource);
     pending_body_reads->erase(const_cast<JSObject **>(streamSource.address()));
   }
 
@@ -4892,7 +4892,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
   if (!builtins::Crypto::create(cx, global))
     return false;
 
-  if (!NativeStreamSource::init_class(cx, global))
+  if (!builtins::NativeStreamSource::init_class(cx, global))
     return false;
   if (!NativeStreamSink::init_class(cx, global))
     return false;
