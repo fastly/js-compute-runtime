@@ -146,7 +146,7 @@ bool deflate_chunk(JSContext *cx, JS::HandleObject self, JS::HandleValue chunk, 
       }
 
       JS::RootedValue out_chunk(cx, JS::ObjectValue(*out_obj));
-      if (!TransformStreamDefaultController::Enqueue(cx, controller, out_chunk)) {
+      if (!builtins::TransformStreamDefaultController::Enqueue(cx, controller, out_chunk)) {
         return false;
       }
     }

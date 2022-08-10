@@ -16,40 +16,38 @@
  * All algorithm names and steps refer to spec algorithms defined at
  * https://streams.spec.whatwg.org/#ts-default-controller-class
  */
-namespace TransformStreamDefaultController {
-bool is_instance(JSObject *obj);
-
-JSObject *stream(JSObject *controller) {
+// A JS class to use as the underlying sink for native writable streams, used
+// for TransformStream.
+namespace builtins {
+JSObject *TransformStreamDefaultController::stream(JSObject *controller) {
   MOZ_ASSERT(is_instance(controller));
   return &JS::GetReservedSlot(controller, Slots::Stream).toObject();
 }
 
-TransformAlgorithm *transformAlgorithm(JSObject *controller) {
+TransformStreamDefaultController::TransformAlgorithmImplementation *
+TransformStreamDefaultController::transformAlgorithm(JSObject *controller) {
   MOZ_ASSERT(is_instance(controller));
-  return (TransformAlgorithm *)JS::GetReservedSlot(controller, Slots::TransformAlgorithm)
+  return (TransformAlgorithmImplementation *)JS::GetReservedSlot(controller,
+                                                                 Slots::TransformAlgorithm)
       .toPrivate();
 }
 
-FlushAlgorithm *flushAlgorithm(JSObject *controller) {
+TransformStreamDefaultController::FlushAlgorithmImplementation *
+TransformStreamDefaultController::flushAlgorithm(JSObject *controller) {
   MOZ_ASSERT(is_instance(controller));
-  return (FlushAlgorithm *)JS::GetReservedSlot(controller, Slots::FlushAlgorithm).toPrivate();
+  return (FlushAlgorithmImplementation *)JS::GetReservedSlot(controller, Slots::FlushAlgorithm)
+      .toPrivate();
 }
-
-const unsigned ctor_length = 0;
-
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
-
-bool Enqueue(JSContext *cx, JS::HandleObject controller, JS::HandleValue chunk);
-bool Terminate(JSContext *cx, JS::HandleObject controller);
 
 /**
  * https://streams.spec.whatwg.org/#ts-default-controller-desired-size
  */
-bool desiredSize_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool TransformStreamDefaultController::desiredSize_get(JSContext *cx, unsigned argc,
+                                                       JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "get desiredSize")
 
   // 1.  Let readableController be [this].[stream].[readable].[controller].
-  JSObject *stream = ::TransformStreamDefaultController::stream(self);
+  JSObject *stream = TransformStreamDefaultController::stream(self);
   JSObject *readable = TransformStream::readable(stream);
   double value;
   bool has_value;
@@ -66,13 +64,10 @@ bool desiredSize_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-const JSPropertySpec properties[] = {JS_PSG("desiredSize", desiredSize_get, JSPROP_ENUMERATE),
-                                     JS_PS_END};
-
 /**
  * https://streams.spec.whatwg.org/#ts-default-controller-enqueue
  */
-bool enqueue_js(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool TransformStreamDefaultController::enqueue_js(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "enqueue")
 
   // 1.  Perform TransformStreamDefaultControllerEnqueue([this], chunk).
@@ -87,12 +82,12 @@ bool enqueue_js(JSContext *cx, unsigned argc, JS::Value *vp) {
 /**
  * https://streams.spec.whatwg.org/#ts-default-controller-error
  */
-bool error_js(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool TransformStreamDefaultController::error_js(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "error")
 
   // 1.  Perform TransformStreamDefaultControllerError(this, e).
   // (inlined)
-  JS::RootedObject stream(cx, ::TransformStreamDefaultController::stream(self));
+  JS::RootedObject stream(cx, TransformStreamDefaultController::stream(self));
 
   if (!TransformStream::Error(cx, stream, args.get(0))) {
     return false;
@@ -105,7 +100,7 @@ bool error_js(JSContext *cx, unsigned argc, JS::Value *vp) {
 /**
  * https://streams.spec.whatwg.org/#ts-default-controller-terminate
  */
-bool terminate_js(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool TransformStreamDefaultController::terminate_js(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "terminate")
 
   // 1.  Perform TransformStreamDefaultControllerTerminate(this).
@@ -117,14 +112,18 @@ bool terminate_js(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-const JSFunctionSpec methods[] = {JS_FN("enqueue", enqueue_js, 1, JSPROP_ENUMERATE),
-                                  JS_FN("error", error_js, 1, JSPROP_ENUMERATE),
-                                  JS_FN("terminate", terminate_js, 0, JSPROP_ENUMERATE), JS_FS_END};
+const JSFunctionSpec TransformStreamDefaultController::methods[] = {
+    JS_FN("enqueue", enqueue_js, 1, JSPROP_ENUMERATE),
+    JS_FN("error", error_js, 1, JSPROP_ENUMERATE),
+    JS_FN("terminate", terminate_js, 0, JSPROP_ENUMERATE), JS_FS_END};
 
-CLASS_BOILERPLATE_NO_CTOR(TransformStreamDefaultController)
+const JSPropertySpec TransformStreamDefaultController::properties[] = {
+    JS_PSG("desiredSize", desiredSize_get, JSPROP_ENUMERATE), JS_PS_END};
 
-JSObject *create(JSContext *cx, JS::HandleObject stream, TransformAlgorithm *transformAlgo,
-                 FlushAlgorithm *flushAlgo) {
+JSObject *TransformStreamDefaultController::create(
+    JSContext *cx, JS::HandleObject stream,
+    TransformStreamDefaultController::TransformAlgorithmImplementation *transformAlgo,
+    TransformStreamDefaultController::FlushAlgorithmImplementation *flushAlgo) {
   JS::RootedObject controller(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!controller)
     return nullptr;
@@ -151,8 +150,9 @@ JSObject *create(JSContext *cx, JS::HandleObject stream, TransformAlgorithm *tra
   return controller;
 }
 
-void set_transformer(JSObject *controller, JS::Value transformer, JSObject *transformFunction,
-                     JSObject *flushFunction) {
+void TransformStreamDefaultController::set_transformer(JSObject *controller, JS::Value transformer,
+                                                       JSObject *transformFunction,
+                                                       JSObject *flushFunction) {
   JS::SetReservedSlot(controller, Slots::Transformer, transformer);
   JS::SetReservedSlot(controller, Slots::TransformInput, JS::ObjectOrNullValue(transformFunction));
   JS::SetReservedSlot(controller, Slots::FlushInput, JS::ObjectOrNullValue(flushFunction));
@@ -161,11 +161,12 @@ void set_transformer(JSObject *controller, JS::Value transformer, JSObject *tran
 /**
  * TransformStreamDefaultControllerEnqueue
  */
-bool Enqueue(JSContext *cx, JS::HandleObject controller, JS::HandleValue chunk) {
+bool TransformStreamDefaultController::Enqueue(JSContext *cx, JS::HandleObject controller,
+                                               JS::HandleValue chunk) {
   MOZ_ASSERT(is_instance(controller));
 
   // 1.  Let stream be controller.[stream].
-  JS::RootedObject stream(cx, ::TransformStreamDefaultController::stream(controller));
+  JS::RootedObject stream(cx, TransformStreamDefaultController::stream(controller));
 
   // 2.  Let readableController be stream.[readable].[controller].
   JS::RootedObject readable(cx, TransformStream::readable(stream));
@@ -224,11 +225,11 @@ bool Enqueue(JSContext *cx, JS::HandleObject controller, JS::HandleValue chunk) 
 /**
  * TransformStreamDefaultControllerTerminate
  */
-bool Terminate(JSContext *cx, JS::HandleObject controller) {
+bool TransformStreamDefaultController::Terminate(JSContext *cx, JS::HandleObject controller) {
   MOZ_ASSERT(is_instance(controller));
 
   // 1.  Let stream be controller.[stream].
-  JS::RootedObject stream(cx, ::TransformStreamDefaultController::stream(controller));
+  JS::RootedObject stream(cx, TransformStreamDefaultController::stream(controller));
 
   // 2.  Let readableController be stream.[readable].[controller].
   JS::RootedObject readable(cx, TransformStream::readable(stream));
@@ -275,8 +276,8 @@ bool Terminate(JSContext *cx, JS::HandleObject controller) {
  * of <invoke a callback function> and the conversion step from
  * https://webidl.spec.whatwg.org/#es-promise on the completion value.
  */
-JSObject *InvokePromiseReturningCallback(JSContext *cx, JS::HandleValue receiver,
-                                         JS::HandleValue callback, JS::HandleValueArray args) {
+JSObject *TransformStreamDefaultController::InvokePromiseReturningCallback(
+    JSContext *cx, JS::HandleValue receiver, JS::HandleValue callback, JS::HandleValueArray args) {
   JS::RootedValue rval(cx);
   if (!JS::Call(cx, receiver, callback, args, &rval)) {
     return PromiseRejectedWithPendingError(cx);
@@ -291,8 +292,8 @@ JSObject *InvokePromiseReturningCallback(JSContext *cx, JS::HandleValue receiver
  *
  * Steps 2.* and 4 of SetUpTransformStreamDefaultControllerFromTransformer.
  */
-JSObject *transform_algorithm_transformer(JSContext *cx, JS::HandleObject controller,
-                                          JS::HandleValue chunk) {
+JSObject *TransformStreamDefaultController::transform_algorithm_transformer(
+    JSContext *cx, JS::HandleObject controller, JS::HandleValue chunk) {
   MOZ_ASSERT(is_instance(controller));
 
   // Step 2.  Let transformAlgorithm be the following steps, taking a chunk
@@ -329,7 +330,9 @@ JSObject *transform_algorithm_transformer(JSContext *cx, JS::HandleObject contro
  *
  * Steps 3 and 5 of SetUpTransformStreamDefaultControllerFromTransformer.
  */
-JSObject *flush_algorithm_transformer(JSContext *cx, JS::HandleObject controller) {
+JSObject *
+TransformStreamDefaultController::flush_algorithm_transformer(JSContext *cx,
+                                                              JS::HandleObject controller) {
   MOZ_ASSERT(is_instance(controller));
 
   // Step 3.  Let flushAlgorithm be an algorithm which returns a promise
@@ -352,8 +355,9 @@ JSObject *flush_algorithm_transformer(JSContext *cx, JS::HandleObject controller
  * SetUpTransformStreamDefaultController
  * https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller
  */
-JSObject *SetUp(JSContext *cx, JS::HandleObject stream, TransformAlgorithm *transformAlgo,
-                FlushAlgorithm *flushAlgo) {
+JSObject *TransformStreamDefaultController::SetUp(JSContext *cx, JS::HandleObject stream,
+                                                  TransformAlgorithmImplementation *transformAlgo,
+                                                  FlushAlgorithmImplementation *flushAlgo) {
   MOZ_ASSERT(TransformStream::is_instance(stream));
 
   // Step 1 of SetUpTransformStreamDefaultControllerFromTransformer and step 1-6
@@ -367,8 +371,11 @@ JSObject *SetUp(JSContext *cx, JS::HandleObject stream, TransformAlgorithm *tran
  * SetUpTransformStreamDefaultControllerFromTransformer
  * https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller-from-transformer
  */
-JSObject *SetUpFromTransformer(JSContext *cx, JS::HandleObject stream, JS::HandleValue transformer,
-                               JS::HandleObject transformFunction, JS::HandleObject flushFunction) {
+JSObject *TransformStreamDefaultController::SetUpFromTransformer(JSContext *cx,
+                                                                 JS::HandleObject stream,
+                                                                 JS::HandleValue transformer,
+                                                                 JS::HandleObject transformFunction,
+                                                                 JS::HandleObject flushFunction) {
   MOZ_ASSERT(TransformStream::is_instance(stream));
 
   // Step 1, moved into SetUpTransformStreamDefaultController.
@@ -390,8 +397,10 @@ JSObject *SetUpFromTransformer(JSContext *cx, JS::HandleObject stream, JS::Handl
 /**
  * Steps 2.* of TransformStreamDefaultControllerPerformTransform.
  */
-bool transformPromise_catch_handler(JSContext *cx, JS::HandleObject controller,
-                                    JS::HandleValue extra, JS::CallArgs args) {
+bool TransformStreamDefaultController::transformPromise_catch_handler(JSContext *cx,
+                                                                      JS::HandleObject controller,
+                                                                      JS::HandleValue extra,
+                                                                      JS::CallArgs args) {
   JS::RootedValue r(cx, args.get(0));
   //     1.  Perform ! [TransformStreamError](controller.[stream], r).
   JS::RootedObject streamObj(cx, stream(controller));
@@ -407,12 +416,14 @@ bool transformPromise_catch_handler(JSContext *cx, JS::HandleObject controller,
 /**
  * TransformStreamDefaultControllerPerformTransform
  */
-JSObject *PerformTransform(JSContext *cx, JS::HandleObject controller, JS::HandleValue chunk) {
+JSObject *TransformStreamDefaultController::PerformTransform(JSContext *cx,
+                                                             JS::HandleObject controller,
+                                                             JS::HandleValue chunk) {
   MOZ_ASSERT(is_instance(controller));
 
   // 1.  Let transformPromise be the result of performing
   // controller.[transformAlgorithm], passing chunk.
-  TransformAlgorithm *transformAlgo = transformAlgorithm(controller);
+  TransformAlgorithmImplementation *transformAlgo = transformAlgorithm(controller);
   JS::RootedObject transformPromise(cx, transformAlgo(cx, controller, chunk));
   if (!transformPromise) {
     return nullptr;
@@ -432,7 +443,7 @@ JSObject *PerformTransform(JSContext *cx, JS::HandleObject controller, JS::Handl
 /**
  * TransformStreamDefaultControllerClearAlgorithms
  */
-void ClearAlgorithms(JSObject *controller) {
+void TransformStreamDefaultController::ClearAlgorithms(JSObject *controller) {
   MOZ_ASSERT(is_instance(controller));
 
   // 1.  Set controller.[transformAlgorithm] to undefined.
@@ -443,4 +454,4 @@ void ClearAlgorithms(JSObject *controller) {
   JS::SetReservedSlot(controller, Slots::FlushAlgorithm, JS::PrivateValue(nullptr));
   JS::SetReservedSlot(controller, Slots::FlushInput, JS::UndefinedValue());
 }
-} // namespace TransformStreamDefaultController
+} // namespace builtins

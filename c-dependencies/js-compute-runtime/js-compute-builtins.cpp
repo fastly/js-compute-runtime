@@ -4896,7 +4896,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!builtins::NativeStreamSink::init_class(cx, global))
     return false;
-  if (!TransformStreamDefaultController::init_class(cx, global))
+  if (!builtins::TransformStreamDefaultController::init_class(cx, global))
     return false;
   if (!TransformStream::init_class(cx, global))
     return false;
