@@ -4887,7 +4887,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
 
   if (!builtins::Fastly::create(cx, global))
     return false;
-  if (!Console::create(cx, global))
+  if (!builtins::Console::create(cx, global))
     return false;
   if (!builtins::Crypto::create(cx, global))
     return false;
