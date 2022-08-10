@@ -1,11 +1,8 @@
 
 #include "env.h"
+namespace builtins {
 
-namespace Env {
-
-namespace {
-
-bool env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "fastly.env.get", 1))
     return false;
@@ -23,14 +20,15 @@ bool env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-const JSFunctionSpec methods[] = {JS_FN("get", env_get, 1, JSPROP_ENUMERATE), JS_FS_END};
+const JSFunctionSpec Env::methods[] = {JS_FN("get", env_get, 1, JSPROP_ENUMERATE), JS_FS_END};
 
-} // namespace
+const JSPropertySpec Env::properties[] = {JS_PS_END};
 
-JSObject *create(JSContext *cx) {
+JSObject *Env::create(JSContext *cx) {
   JS::RootedObject env(cx, JS_NewPlainObject(cx));
   if (!env || !JS_DefineFunctions(cx, env, methods))
     return nullptr;
   return env;
 }
-} // namespace Env
+
+} // namespace builtins
