@@ -38,9 +38,9 @@ bool pipeTo(JSContext *cx, unsigned argc, JS::Value *vp) {
   // writable end of a TransformStream, set the TransformStream as the owner of
   // the receiver's source. This enables us to shortcut operations later on.
   JS::RootedObject target(cx, args[0].isObject() ? &args[0].toObject() : nullptr);
-  if (target && NativeStreamSource::stream_has_native_source(cx, self) &&
+  if (target && builtins::NativeStreamSource::stream_has_native_source(cx, self) &&
       JS::IsWritableStream(target) && TransformStream::is_ts_writable(cx, target)) {
-    NativeStreamSource::set_stream_piped_to_ts_writable(cx, self, target);
+    builtins::NativeStreamSource::set_stream_piped_to_ts_writable(cx, self, target);
   }
 
   return JS::Call(cx, args.thisv(), original_pipeTo, JS::HandleValueArray(args), args.rval());
@@ -279,18 +279,18 @@ JSObject *readable(JSObject *self) {
 }
 
 bool is_ts_readable(JSContext *cx, JS::HandleObject readable) {
-  JSObject *source = NativeStreamSource::get_stream_source(cx, readable);
-  if (!source || !NativeStreamSource::is_instance(source)) {
+  JSObject *source = builtins::NativeStreamSource::get_stream_source(cx, readable);
+  if (!source || !builtins::NativeStreamSource::is_instance(source)) {
     return false;
   }
-  JSObject *stream_owner = NativeStreamSource::owner(source);
+  JSObject *stream_owner = builtins::NativeStreamSource::owner(source);
   return stream_owner ? TransformStream::is_instance(stream_owner) : false;
 }
 
 JSObject *ts_from_readable(JSContext *cx, JS::HandleObject readable) {
   MOZ_ASSERT(is_ts_readable(cx, readable));
-  JSObject *source = NativeStreamSource::get_stream_source(cx, readable);
-  return NativeStreamSource::owner(source);
+  JSObject *source = builtins::NativeStreamSource::get_stream_source(cx, readable);
+  return builtins::NativeStreamSource::owner(source);
 }
 
 bool readable_used_as_body(JSObject *self) {
@@ -817,8 +817,8 @@ bool Initialize(JSContext *cx, JS::HandleObject stream, JS::HandleObject startPr
   // Step 8.  Set stream.[readable] to ! [CreateReadableStream](startAlgorithm,
   // pullAlgorithm, cancelAlgorithm, readableHighWaterMark,
   // readableSizeAlgorithm).
-  JS::RootedObject source(
-      cx, NativeStreamSource::create(cx, stream, startPromiseVal, pullAlgorithm, cancelAlgorithm));
+  JS::RootedObject source(cx, builtins::NativeStreamSource::create(cx, stream, startPromiseVal,
+                                                                   pullAlgorithm, cancelAlgorithm));
   if (!source)
     return false;
 

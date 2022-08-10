@@ -13,31 +13,35 @@
 
 // A JS class to use as the underlying source for native readable streams, used
 // for Request/Response bodies and TransformStream.
-namespace NativeStreamSource {
+namespace builtins {
 
-JSObject *owner(JSObject *self) {
+JSObject *NativeStreamSource::owner(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return &JS::GetReservedSlot(self, Slots::Owner).toObject();
 }
 
-JSObject *stream(JSObject *self) { return RequestOrResponse::body_stream(owner(self)); }
+JSObject *NativeStreamSource::stream(JSObject *self) {
+  return RequestOrResponse::body_stream(owner(self));
+}
 
-JS::Value startPromise(JSObject *self) {
+JS::Value NativeStreamSource::startPromise(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return JS::GetReservedSlot(self, Slots::StartPromise);
 }
 
-PullAlgorithm *pullAlgorithm(JSObject *self) {
+NativeStreamSource::PullAlgorithmImplementation *NativeStreamSource::pullAlgorithm(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
-  return (PullAlgorithm *)JS::GetReservedSlot(self, Slots::PullAlgorithm).toPrivate();
+  return (PullAlgorithmImplementation *)JS::GetReservedSlot(self, Slots::PullAlgorithm).toPrivate();
 }
 
-CancelAlgorithm *cancelAlgorithm(JSObject *self) {
+NativeStreamSource::CancelAlgorithmImplementation *
+NativeStreamSource::cancelAlgorithm(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
-  return (CancelAlgorithm *)JS::GetReservedSlot(self, Slots::CancelAlgorithm).toPrivate();
+  return (CancelAlgorithmImplementation *)JS::GetReservedSlot(self, Slots::CancelAlgorithm)
+      .toPrivate();
 }
 
-JSObject *controller(JSObject *self) {
+JSObject *NativeStreamSource::controller(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return &JS::GetReservedSlot(self, Slots::Controller).toObject();
 }
@@ -46,7 +50,7 @@ JSObject *controller(JSObject *self) {
  * Returns the underlying source for the given controller iff it's an object,
  * nullptr otherwise.
  */
-static JSObject *get_controller_source(JSContext *cx, JS::HandleObject controller) {
+JSObject *NativeStreamSource::get_controller_source(JSContext *cx, JS::HandleObject controller) {
   JS::RootedValue source(cx);
   bool success __attribute__((unused));
   success = JS::ReadableStreamControllerGetUnderlyingSource(cx, controller, &source);
@@ -54,25 +58,25 @@ static JSObject *get_controller_source(JSContext *cx, JS::HandleObject controlle
   return source.isObject() ? &source.toObject() : nullptr;
 }
 
-JSObject *get_stream_source(JSContext *cx, JS::HandleObject stream) {
+JSObject *NativeStreamSource::get_stream_source(JSContext *cx, JS::HandleObject stream) {
   MOZ_ASSERT(JS::IsReadableStream(stream));
   JS::RootedObject controller(cx, JS::ReadableStreamGetController(cx, stream));
   return get_controller_source(cx, controller);
 }
 
-bool stream_has_native_source(JSContext *cx, JS::HandleObject stream) {
+bool NativeStreamSource::stream_has_native_source(JSContext *cx, JS::HandleObject stream) {
   JSObject *source = get_stream_source(cx, stream);
   return is_instance(source);
 }
 
-bool stream_is_body(JSContext *cx, JS::HandleObject stream) {
+bool NativeStreamSource::stream_is_body(JSContext *cx, JS::HandleObject stream) {
   JSObject *stream_source = get_stream_source(cx, stream);
   return NativeStreamSource::is_instance(stream_source) &&
          RequestOrResponse::is_instance(owner(stream_source));
 }
 
-void set_stream_piped_to_ts_writable(JSContext *cx, JS::HandleObject stream,
-                                     JS::HandleObject writable) {
+void NativeStreamSource::set_stream_piped_to_ts_writable(JSContext *cx, JS::HandleObject stream,
+                                                         JS::HandleObject writable) {
   JS::RootedObject source(cx, NativeStreamSource::get_stream_source(cx, stream));
   MOZ_ASSERT(is_instance(source));
   JS::RootedObject sink(cx, NativeStreamSink::get_stream_sink(cx, writable));
@@ -81,12 +85,12 @@ void set_stream_piped_to_ts_writable(JSContext *cx, JS::HandleObject stream,
   JS::SetReservedSlot(source, Slots::PipedToTransformStream, JS::ObjectValue(*transform_stream));
 }
 
-JSObject *piped_to_transform_stream(JSObject *self) {
+JSObject *NativeStreamSource::piped_to_transform_stream(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return JS::GetReservedSlot(self, Slots::PipedToTransformStream).toObjectOrNull();
 }
 
-bool lock_stream(JSContext *cx, JS::HandleObject stream) {
+bool NativeStreamSource::lock_stream(JSContext *cx, JS::HandleObject stream) {
   MOZ_ASSERT(JS::IsReadableStream(stream));
 
   bool locked;
@@ -108,11 +112,7 @@ bool lock_stream(JSContext *cx, JS::HandleObject stream) {
   return true;
 }
 
-const unsigned ctor_length = 0;
-
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
-
-bool start(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool NativeStreamSource::start(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   MOZ_ASSERT(args[0].isObject());
@@ -130,7 +130,7 @@ bool start(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool pull(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool NativeStreamSource::pull(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   JS::RootedObject owner(cx, NativeStreamSource::owner(self));
@@ -138,29 +138,30 @@ bool pull(JSContext *cx, unsigned argc, JS::Value *vp) {
   MOZ_ASSERT(controller == NativeStreamSource::controller(self));
   MOZ_ASSERT(get_controller_source(cx, controller) == self.get());
 
-  PullAlgorithm *pull = pullAlgorithm(self);
+  PullAlgorithmImplementation *pull = pullAlgorithm(self);
   return pull(cx, args, self, owner, controller);
 }
 
-bool cancel(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool NativeStreamSource::cancel(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   JS::RootedObject owner(cx, NativeStreamSource::owner(self));
   JS::HandleValue reason(args.get(0));
 
-  CancelAlgorithm *cancel = cancelAlgorithm(self);
+  CancelAlgorithmImplementation *cancel = cancelAlgorithm(self);
   return cancel(cx, args, self, owner, reason);
 }
 
-const JSFunctionSpec methods[] = {JS_FN("start", start, 1, 0), JS_FN("pull", pull, 1, 0),
-                                  JS_FN("cancel", cancel, 1, 0), JS_FS_END};
+const JSFunctionSpec NativeStreamSource::methods[] = {JS_FN("start", start, 1, 0),
+                                                      JS_FN("pull", pull, 1, 0),
+                                                      JS_FN("cancel", cancel, 1, 0), JS_FS_END};
 
-const JSPropertySpec properties[] = {JS_PS_END};
+const JSPropertySpec NativeStreamSource::properties[] = {JS_PS_END};
 
-CLASS_BOILERPLATE_NO_CTOR(NativeStreamSource)
-
-JSObject *create(JSContext *cx, JS::HandleObject owner, JS::HandleValue startPromise,
-                 PullAlgorithm *pull, CancelAlgorithm *cancel) {
+JSObject *NativeStreamSource::create(JSContext *cx, JS::HandleObject owner,
+                                     JS::HandleValue startPromise,
+                                     PullAlgorithmImplementation *pull,
+                                     CancelAlgorithmImplementation *cancel) {
   JS::RootedObject source(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!source)
     return nullptr;
@@ -172,4 +173,4 @@ JSObject *create(JSContext *cx, JS::HandleObject owner, JS::HandleValue startPro
   JS::SetReservedSlot(source, Slots::PipedToTransformStream, JS::NullValue());
   return source;
 }
-} // namespace NativeStreamSource
+} // namespace builtins
