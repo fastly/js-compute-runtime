@@ -563,7 +563,8 @@ bool default_sink_write_algo_then_handler(JSContext *cx, JS::HandleObject stream
   // 3.5.  Return TransformStreamDefaultControllerPerformTransform(controller,
   // chunk).
   JS::RootedObject transformPromise(cx);
-  transformPromise = TransformStreamDefaultController::PerformTransform(cx, controller, chunk);
+  transformPromise =
+      builtins::TransformStreamDefaultController::PerformTransform(cx, controller, chunk);
   if (!transformPromise) {
     return false;
   }
@@ -615,7 +616,8 @@ bool DefaultSinkWriteAlgorithm(JSContext *cx, JS::CallArgs args,
   // 4.  Return ! [TransformStreamDefaultControllerPerformTransform](controller,
   // chunk).
   JS::RootedObject transformPromise(cx);
-  transformPromise = TransformStreamDefaultController::PerformTransform(cx, controller, chunk);
+  transformPromise =
+      builtins::TransformStreamDefaultController::PerformTransform(cx, controller, chunk);
   if (!transformPromise) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
@@ -711,7 +713,7 @@ bool DefaultSinkCloseAlgorithm(JSContext *cx, JS::CallArgs args,
 
   // 3.  Let flushPromise be the result of performing
   // controller.[flushAlgorithm].
-  auto flushAlgorithm = TransformStreamDefaultController::flushAlgorithm(controller);
+  auto flushAlgorithm = builtins::TransformStreamDefaultController::flushAlgorithm(controller);
   JS::RootedObject flushPromise(cx, flushAlgorithm(cx, controller));
   if (!flushPromise) {
     return false;
@@ -719,7 +721,7 @@ bool DefaultSinkCloseAlgorithm(JSContext *cx, JS::CallArgs args,
 
   // 4.  Perform !
   // [TransformStreamDefaultControllerClearAlgorithms](controller).
-  TransformStreamDefaultController::ClearAlgorithms(controller);
+  builtins::TransformStreamDefaultController::ClearAlgorithms(controller);
 
   // 5.  Return the result of [reacting] to flushPromise:
   // 5.1.  If flushPromise was fulfilled, then:
@@ -859,7 +861,7 @@ bool ErrorWritableAndUnblockWrite(JSContext *cx, JS::HandleObject stream, JS::Ha
 
   // 1.  Perform
   // TransformStreamDefaultControllerClearAlgorithms(stream.[controller]).
-  TransformStreamDefaultController::ClearAlgorithms(controller(stream));
+  builtins::TransformStreamDefaultController::ClearAlgorithms(controller(stream));
 
   // 2.  Perform
   // WritableStreamDefaultControllerErrorIfNeeded(stream.[writable].[controller],
@@ -905,7 +907,7 @@ JSObject *create(JSContext *cx, JS::HandleObject self, double writableHighWaterM
 
   // Step 11.
   JS::RootedObject controller(cx);
-  controller = TransformStreamDefaultController::SetUpFromTransformer(
+  controller = builtins::TransformStreamDefaultController::SetUpFromTransformer(
       cx, self, transformer, transformFunction, flushFunction);
   if (!controller) {
     return nullptr;
