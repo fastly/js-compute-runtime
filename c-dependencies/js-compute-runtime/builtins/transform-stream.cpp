@@ -321,11 +321,11 @@ JSObject *writable(JSObject *self) {
 }
 
 bool is_ts_writable(JSContext *cx, JS::HandleObject writable) {
-  JSObject *sink = NativeStreamSink::get_stream_sink(cx, writable);
-  if (!sink || !NativeStreamSink::is_instance(sink)) {
+  JSObject *sink = builtins::NativeStreamSink::get_stream_sink(cx, writable);
+  if (!sink || !builtins::NativeStreamSink::is_instance(sink)) {
     return false;
   }
-  JSObject *stream_owner = NativeStreamSink::owner(sink);
+  JSObject *stream_owner = builtins::NativeStreamSink::owner(sink);
   return stream_owner ? is_instance(stream_owner) : false;
 }
 
@@ -794,8 +794,8 @@ bool Initialize(JSContext *cx, JS::HandleObject stream, JS::HandleObject startPr
   // writableSizeAlgorithm).
   JS::RootedValue startPromiseVal(cx, JS::ObjectValue(*startPromise));
   JS::RootedObject sink(
-      cx, NativeStreamSink::create(cx, stream, startPromiseVal, DefaultSinkWriteAlgorithm,
-                                   DefaultSinkCloseAlgorithm, DefaultSinkAbortAlgorithm));
+      cx, builtins::NativeStreamSink::create(cx, stream, startPromiseVal, DefaultSinkWriteAlgorithm,
+                                             DefaultSinkCloseAlgorithm, DefaultSinkAbortAlgorithm));
   if (!sink)
     return false;
 
