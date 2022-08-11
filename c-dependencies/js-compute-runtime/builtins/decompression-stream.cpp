@@ -105,7 +105,7 @@ bool inflate_chunk(JSContext *cx, JS::HandleObject self, JS::HandleValue chunk, 
     zstream->next_in = nullptr;
   }
 
-  JS::RootedObject controller(cx, TransformStream::controller(transform(self)));
+  JS::RootedObject controller(cx, builtins::TransformStream::controller(transform(self)));
 
   // Steps 3-5 of transform are identical to steps 3-5 of flush, so numbers
   // below refer to the former for those. Also, the compression happens in
@@ -198,13 +198,13 @@ bool flushAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool readable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "get readable")
-  args.rval().setObject(*TransformStream::readable(transform(self)));
+  args.rval().setObject(*builtins::TransformStream::readable(transform(self)));
   return true;
 }
 
 bool writable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "get writable")
-  args.rval().setObject(*TransformStream::writable(transform(self)));
+  args.rval().setObject(*builtins::TransformStream::writable(transform(self)));
   return true;
 }
 
@@ -241,13 +241,14 @@ JSObject *create(JSContext *cx, JS::HandleObject stream, Format format) {
   // 6.  [Set up](https://streams.spec.whatwg.org/#transformstream-set-up)
   // this's transform with _transformAlgorithm_ set to _transformAlgorithm_ and
   // _flushAlgorithm_ set to _flushAlgorithm_.
-  JS::RootedObject transform(cx, TransformStream::create(cx, 1, nullptr, 0, nullptr, stream_val,
-                                                         nullptr, transformAlgo, flushAlgo));
+  JS::RootedObject transform(cx, builtins::TransformStream::create(cx, 1, nullptr, 0, nullptr,
+                                                                   stream_val, nullptr,
+                                                                   transformAlgo, flushAlgo));
   if (!transform) {
     return nullptr;
   }
 
-  TransformStream::set_used_as_mixin(transform);
+  builtins::TransformStream::set_used_as_mixin(transform);
   JS::SetReservedSlot(stream, Slots::Transform, JS::ObjectValue(*transform));
 
   // The remainder of the function deals with setting up the inflate state used

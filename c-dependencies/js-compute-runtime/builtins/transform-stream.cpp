@@ -39,7 +39,7 @@ bool pipeTo(JSContext *cx, unsigned argc, JS::Value *vp) {
   // the receiver's source. This enables us to shortcut operations later on.
   JS::RootedObject target(cx, args[0].isObject() ? &args[0].toObject() : nullptr);
   if (target && builtins::NativeStreamSource::stream_has_native_source(cx, self) &&
-      JS::IsWritableStream(target) && TransformStream::is_ts_writable(cx, target)) {
+      JS::IsWritableStream(target) && builtins::TransformStream::is_ts_writable(cx, target)) {
     builtins::NativeStreamSource::set_stream_piped_to_ts_writable(cx, self, target);
   }
 
@@ -247,38 +247,31 @@ bool ExtractStrategy(JSContext *cx, JS::HandleValue strategy, double default_hwm
  * All algorithm names and steps refer to spec algorithms defined at
  * https://streams.spec.whatwg.org/#ts-class
  */
-namespace TransformStream {
-
-bool is_instance(JSObject *obj);
-
-const unsigned ctor_length = 0;
-
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
-
+namespace builtins {
 /**
  * The native object owning the sink underlying the TransformStream's readable
  * end.
  *
  * This can e.g. be a RequestOrResponse if the readable is used as a body.
  */
-JSObject *owner(JSObject *self) {
+JSObject *TransformStream::owner(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return &JS::GetReservedSlot(self, TransformStream::Slots::Owner).toObject();
 }
 
-void set_owner(JSObject *self, JSObject *owner) {
+void TransformStream::set_owner(JSObject *self, JSObject *owner) {
   MOZ_ASSERT(is_instance(self));
   MOZ_ASSERT(RequestOrResponse::is_instance(owner));
   MOZ_ASSERT(JS::GetReservedSlot(self, TransformStream::Slots::Owner).isUndefined());
   JS::SetReservedSlot(self, TransformStream::Slots::Owner, JS::ObjectValue(*owner));
 }
 
-JSObject *readable(JSObject *self) {
+JSObject *TransformStream::readable(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return &JS::GetReservedSlot(self, TransformStream::Slots::Readable).toObject();
 }
 
-bool is_ts_readable(JSContext *cx, JS::HandleObject readable) {
+bool TransformStream::is_ts_readable(JSContext *cx, JS::HandleObject readable) {
   JSObject *source = builtins::NativeStreamSource::get_stream_source(cx, readable);
   if (!source || !builtins::NativeStreamSource::is_instance(source)) {
     return false;
@@ -287,13 +280,13 @@ bool is_ts_readable(JSContext *cx, JS::HandleObject readable) {
   return stream_owner ? TransformStream::is_instance(stream_owner) : false;
 }
 
-JSObject *ts_from_readable(JSContext *cx, JS::HandleObject readable) {
+JSObject *TransformStream::ts_from_readable(JSContext *cx, JS::HandleObject readable) {
   MOZ_ASSERT(is_ts_readable(cx, readable));
   JSObject *source = builtins::NativeStreamSource::get_stream_source(cx, readable);
   return builtins::NativeStreamSource::owner(source);
 }
 
-bool readable_used_as_body(JSObject *self) {
+bool TransformStream::readable_used_as_body(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   // For now the owner can only be a RequestOrResponse, so no further checks are
   // needed.
@@ -309,18 +302,19 @@ bool readable_used_as_body(JSObject *self) {
  * Asserts that |readable| is the readable end of a TransformStream, and that
  * that TransformStream is not used as a mixin by another builtin.
  */
-void set_readable_used_as_body(JSContext *cx, JS::HandleObject readable, JS::HandleObject target) {
+void TransformStream::set_readable_used_as_body(JSContext *cx, JS::HandleObject readable,
+                                                JS::HandleObject target) {
   JS::RootedObject ts(cx, ts_from_readable(cx, readable));
   MOZ_ASSERT(!used_as_mixin(ts));
   set_owner(ts, target);
 }
 
-JSObject *writable(JSObject *self) {
+JSObject *TransformStream::writable(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return &JS::GetReservedSlot(self, TransformStream::Slots::Writable).toObject();
 }
 
-bool is_ts_writable(JSContext *cx, JS::HandleObject writable) {
+bool TransformStream::is_ts_writable(JSContext *cx, JS::HandleObject writable) {
   JSObject *sink = builtins::NativeStreamSink::get_stream_sink(cx, writable);
   if (!sink || !builtins::NativeStreamSink::is_instance(sink)) {
     return false;
@@ -329,62 +323,54 @@ bool is_ts_writable(JSContext *cx, JS::HandleObject writable) {
   return stream_owner ? is_instance(stream_owner) : false;
 }
 
-JSObject *controller(JSObject *self) {
+JSObject *TransformStream::controller(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return &JS::GetReservedSlot(self, TransformStream::Slots::Controller).toObject();
 }
 
-bool backpressure(JSObject *self) {
+bool TransformStream::backpressure(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return JS::GetReservedSlot(self, TransformStream::Slots::Backpressure).toBoolean();
 }
 
-JSObject *backpressureChangePromise(JSObject *self) {
+JSObject *TransformStream::backpressureChangePromise(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return JS::GetReservedSlot(self, TransformStream::Slots::BackpressureChangePromise)
       .toObjectOrNull();
 }
 
-bool used_as_mixin(JSObject *self) {
+bool TransformStream::used_as_mixin(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return JS::GetReservedSlot(self, TransformStream::Slots::UsedAsMixin).toBoolean();
 }
 
-void set_used_as_mixin(JSObject *self) {
+void TransformStream::set_used_as_mixin(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   JS::SetReservedSlot(self, TransformStream::Slots::UsedAsMixin, JS::TrueValue());
 }
 
-bool readable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool TransformStream::readable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "get readable")
   args.rval().setObject(*readable(self));
   return true;
 }
 
-bool writable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool TransformStream::writable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "get writable")
   args.rval().setObject(*writable(self));
   return true;
 }
 
-const JSFunctionSpec methods[] = {JS_FS_END};
+const JSFunctionSpec TransformStream::methods[] = {JS_FS_END};
 
-const JSPropertySpec properties[] = {JS_PSG("readable", readable_get, JSPROP_ENUMERATE),
-                                     JS_PSG("writable", writable_get, JSPROP_ENUMERATE), JS_PS_END};
+const JSPropertySpec TransformStream::properties[] = {
+    JS_PSG("readable", readable_get, JSPROP_ENUMERATE),
+    JS_PSG("writable", writable_get, JSPROP_ENUMERATE), JS_PS_END};
 
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-
-CLASS_BOILERPLATE_CUSTOM_INIT(TransformStream)
-
-JSObject *create(JSContext *cx, JS::HandleObject self, double writableHighWaterMark,
-                 JS::HandleFunction writableSizeAlgorithm, double readableHighWaterMark,
-                 JS::HandleFunction readableSizeAlgorithm, JS::HandleValue transformer,
-                 JS::HandleObject startFunction, JS::HandleObject transformFunction,
-                 JS::HandleObject flushFunction);
 /**
  * https://streams.spec.whatwg.org/#ts-constructor
  */
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool TransformStream::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   CTOR_HEADER("TransformStream", 0);
 
   JS::RootedObject startFunction(cx);
@@ -472,7 +458,7 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool init_class(JSContext *cx, JS::HandleObject global) {
+bool TransformStream::init_class(JSContext *cx, JS::HandleObject global) {
   bool ok = init_class_impl(cx, global);
   if (!ok)
     return false;
@@ -483,12 +469,12 @@ bool init_class(JSContext *cx, JS::HandleObject global) {
 /**
  * TransformStreamError
  */
-bool Error(JSContext *cx, JS::HandleObject stream, JS::HandleValue error) {
+bool TransformStream::Error(JSContext *cx, JS::HandleObject stream, JS::HandleValue error) {
   MOZ_ASSERT(is_instance(stream));
 
   // 1.  Perform
   // ReadableStreamDefaultControllerError(stream.[readable].[controller], e).
-  JS::RootedObject readable(cx, ::TransformStream::readable(stream));
+  JS::RootedObject readable(cx, TransformStream::readable(stream));
   if (!JS::ReadableStreamError(cx, readable, error)) {
     return false;
   }
@@ -500,8 +486,9 @@ bool Error(JSContext *cx, JS::HandleObject stream, JS::HandleValue error) {
 /**
  * TransformStreamDefaultSourcePullAlgorithm
  */
-bool DefaultSourcePullAlgorithm(JSContext *cx, JS::CallArgs args, JS::HandleObject readable,
-                                JS::HandleObject stream, JS::HandleObject controller) {
+bool TransformStream::DefaultSourcePullAlgorithm(JSContext *cx, JS::CallArgs args,
+                                                 JS::HandleObject readable, JS::HandleObject stream,
+                                                 JS::HandleObject controller) {
   // 1.  Assert: stream.[backpressure] is true.
   MOZ_ASSERT(backpressure(stream));
 
@@ -521,8 +508,10 @@ bool DefaultSourcePullAlgorithm(JSContext *cx, JS::CallArgs args, JS::HandleObje
 /**
  * Steps 7.* of InitializeTransformStream
  */
-bool DefaultSourceCancelAlgorithm(JSContext *cx, JS::CallArgs args, JS::HandleObject readable,
-                                  JS::HandleObject stream, JS::HandleValue reason) {
+bool TransformStream::DefaultSourceCancelAlgorithm(JSContext *cx, JS::CallArgs args,
+                                                   JS::HandleObject readable,
+                                                   JS::HandleObject stream,
+                                                   JS::HandleValue reason) {
   MOZ_ASSERT(is_instance(stream));
 
   // 1.  Perform ! [TransformStreamErrorWritableAndUnblockWrite](stream,
@@ -539,10 +528,11 @@ bool DefaultSourceCancelAlgorithm(JSContext *cx, JS::CallArgs args, JS::HandleOb
 /**
  * Steps 2 and 3.* of DefaultSinkWriteAlgorithm.
  */
-bool default_sink_write_algo_then_handler(JSContext *cx, JS::HandleObject stream,
-                                          JS::HandleValue chunk, JS::CallArgs args) {
+bool TransformStream::default_sink_write_algo_then_handler(JSContext *cx, JS::HandleObject stream,
+                                                           JS::HandleValue chunk,
+                                                           JS::CallArgs args) {
   // 3.1.  Let writable be stream.[writable].
-  JS::RootedObject writable(cx, ::TransformStream::writable(stream));
+  JS::RootedObject writable(cx, TransformStream::writable(stream));
 
   // 3.2.  Let state be writable.[state].
   auto state = JS::WritableStreamGetState(cx, writable);
@@ -573,10 +563,10 @@ bool default_sink_write_algo_then_handler(JSContext *cx, JS::HandleObject stream
   return true;
 }
 
-bool DefaultSinkWriteAlgorithm(JSContext *cx, JS::CallArgs args,
-                               JS::HandleObject writableController, JS::HandleObject stream,
-                               JS::HandleValue chunk) {
-  JS::RootedObject writable(cx, ::TransformStream::writable(stream));
+bool TransformStream::DefaultSinkWriteAlgorithm(JSContext *cx, JS::CallArgs args,
+                                                JS::HandleObject writableController,
+                                                JS::HandleObject stream, JS::HandleValue chunk) {
+  JS::RootedObject writable(cx, TransformStream::writable(stream));
 
   // 1.  Assert: stream.[writable].[state] is "`writable`".
   MOZ_ASSERT(JS::WritableStreamGetState(cx, writable) == JS::WritableStreamState::Writable);
@@ -626,9 +616,9 @@ bool DefaultSinkWriteAlgorithm(JSContext *cx, JS::CallArgs args,
   return true;
 }
 
-bool DefaultSinkAbortAlgorithm(JSContext *cx, JS::CallArgs args,
-                               JS::HandleObject writableController, JS::HandleObject stream,
-                               JS::HandleValue reason) {
+bool TransformStream::DefaultSinkAbortAlgorithm(JSContext *cx, JS::CallArgs args,
+                                                JS::HandleObject writableController,
+                                                JS::HandleObject stream, JS::HandleValue reason) {
   MOZ_ASSERT(is_instance(stream));
 
   // 1.  Perform ! [TransformStreamError](stream, reason).
@@ -649,8 +639,9 @@ bool DefaultSinkAbortAlgorithm(JSContext *cx, JS::CallArgs args,
 /**
  * Steps 5.1.1-2 of DefaultSinkCloseAlgorithm.
  */
-bool default_sink_close_algo_then_handler(JSContext *cx, JS::HandleObject stream,
-                                          JS::HandleValue extra, JS::CallArgs args) {
+bool TransformStream::default_sink_close_algo_then_handler(JSContext *cx, JS::HandleObject stream,
+                                                           JS::HandleValue extra,
+                                                           JS::CallArgs args) {
   // 5.1.1.  If readable.[state] is "`errored`", throw readable.[storedError].
   JS::RootedObject readable(cx, &extra.toObject());
   bool is_errored;
@@ -686,8 +677,9 @@ bool default_sink_close_algo_then_handler(JSContext *cx, JS::HandleObject stream
 /**
  * Steps 5.2.1-2 of DefaultSinkCloseAlgorithm.
  */
-bool default_sink_close_algo_catch_handler(JSContext *cx, JS::HandleObject stream,
-                                           JS::HandleValue extra, JS::CallArgs args) {
+bool TransformStream::default_sink_close_algo_catch_handler(JSContext *cx, JS::HandleObject stream,
+                                                            JS::HandleValue extra,
+                                                            JS::CallArgs args) {
   // 5.2.1.  Perform ! [TransformStreamError](stream, r).
   JS::HandleValue r = args.get(0);
   if (!Error(cx, stream, r)) {
@@ -701,15 +693,16 @@ bool default_sink_close_algo_catch_handler(JSContext *cx, JS::HandleObject strea
   return false;
 }
 
-bool DefaultSinkCloseAlgorithm(JSContext *cx, JS::CallArgs args,
-                               JS::HandleObject writableController, JS::HandleObject stream) {
+bool TransformStream::DefaultSinkCloseAlgorithm(JSContext *cx, JS::CallArgs args,
+                                                JS::HandleObject writableController,
+                                                JS::HandleObject stream) {
   MOZ_ASSERT(is_instance(stream));
 
   // 1.  Let readable be stream.[readable].
-  JS::RootedObject readable(cx, ::TransformStream::readable(stream));
+  JS::RootedObject readable(cx, TransformStream::readable(stream));
 
   // 2.  Let controller be stream.[controller].
-  JS::RootedObject controller(cx, ::TransformStream::controller(stream));
+  JS::RootedObject controller(cx, TransformStream::controller(stream));
 
   // 3.  Let flushPromise be the result of performing
   // controller.[flushAlgorithm].
@@ -752,9 +745,9 @@ bool DefaultSinkCloseAlgorithm(JSContext *cx, JS::CallArgs args,
 /**
  * TransformStreamSetBackpressure
  */
-bool SetBackpressure(JSContext *cx, JS::HandleObject stream, bool backpressure) {
+bool TransformStream::SetBackpressure(JSContext *cx, JS::HandleObject stream, bool backpressure) {
   // 1.  Assert: stream.[backpressure] is not backpressure.
-  MOZ_ASSERT(::TransformStream::backpressure(stream) != backpressure);
+  MOZ_ASSERT(TransformStream::backpressure(stream) != backpressure);
 
   // 2.  If stream.[backpressureChangePromise] is not undefined, resolve
   // stream.[backpressureChangePromise] with undefined.
@@ -783,9 +776,11 @@ bool SetBackpressure(JSContext *cx, JS::HandleObject stream, bool backpressure) 
  * https://streams.spec.whatwg.org/#initialize-transform-stream
  * Steps 9-13.
  */
-bool Initialize(JSContext *cx, JS::HandleObject stream, JS::HandleObject startPromise,
-                double writableHighWaterMark, JS::HandleFunction writableSizeAlgorithm,
-                double readableHighWaterMark, JS::HandleFunction readableSizeAlgorithm) {
+bool TransformStream::Initialize(JSContext *cx, JS::HandleObject stream,
+                                 JS::HandleObject startPromise, double writableHighWaterMark,
+                                 JS::HandleFunction writableSizeAlgorithm,
+                                 double readableHighWaterMark,
+                                 JS::HandleFunction readableSizeAlgorithm) {
   // Step 1.  Let startAlgorithm be an algorithm that returns startPromise.
   // (Inlined)
 
@@ -856,7 +851,8 @@ bool Initialize(JSContext *cx, JS::HandleObject stream, JS::HandleObject startPr
   return true;
 }
 
-bool ErrorWritableAndUnblockWrite(JSContext *cx, JS::HandleObject stream, JS::HandleValue error) {
+bool TransformStream::ErrorWritableAndUnblockWrite(JSContext *cx, JS::HandleObject stream,
+                                                   JS::HandleValue error) {
   MOZ_ASSERT(is_instance(stream));
 
   // 1.  Perform
@@ -866,7 +862,7 @@ bool ErrorWritableAndUnblockWrite(JSContext *cx, JS::HandleObject stream, JS::Ha
   // 2.  Perform
   // WritableStreamDefaultControllerErrorIfNeeded(stream.[writable].[controller],
   // e). (inlined)
-  JS::RootedObject writable(cx, ::TransformStream::writable(stream));
+  JS::RootedObject writable(cx, TransformStream::writable(stream));
   if (JS::WritableStreamGetState(cx, writable) == JS::WritableStreamState::Writable) {
     if (!JS::WritableStreamError(cx, writable, error)) {
       return false;
@@ -888,11 +884,12 @@ bool ErrorWritableAndUnblockWrite(JSContext *cx, JS::HandleObject stream, JS::Ha
  * https://streams.spec.whatwg.org/#ts-constructor
  * Steps 9-13.
  */
-JSObject *create(JSContext *cx, JS::HandleObject self, double writableHighWaterMark,
-                 JS::HandleFunction writableSizeAlgorithm, double readableHighWaterMark,
-                 JS::HandleFunction readableSizeAlgorithm, JS::HandleValue transformer,
-                 JS::HandleObject startFunction, JS::HandleObject transformFunction,
-                 JS::HandleObject flushFunction) {
+JSObject *
+TransformStream::create(JSContext *cx, JS::HandleObject self, double writableHighWaterMark,
+                        JS::HandleFunction writableSizeAlgorithm, double readableHighWaterMark,
+                        JS::HandleFunction readableSizeAlgorithm, JS::HandleValue transformer,
+                        JS::HandleObject startFunction, JS::HandleObject transformFunction,
+                        JS::HandleObject flushFunction) {
 
   // Step 9.
   JS::RootedObject startPromise(cx, JS::NewPromiseObject(cx, nullptr));
@@ -936,11 +933,13 @@ JSObject *create(JSContext *cx, JS::HandleObject self, double writableHighWaterM
   return self;
 }
 
-JSObject *create(JSContext *cx, double writableHighWaterMark,
-                 JS::HandleFunction writableSizeAlgorithm, double readableHighWaterMark,
-                 JS::HandleFunction readableSizeAlgorithm, JS::HandleValue transformer,
-                 JS::HandleObject startFunction, JS::HandleObject transformFunction,
-                 JS::HandleObject flushFunction) {
+JSObject *TransformStream::create(JSContext *cx, double writableHighWaterMark,
+                                  JS::HandleFunction writableSizeAlgorithm,
+                                  double readableHighWaterMark,
+                                  JS::HandleFunction readableSizeAlgorithm,
+                                  JS::HandleValue transformer, JS::HandleObject startFunction,
+                                  JS::HandleObject transformFunction,
+                                  JS::HandleObject flushFunction) {
   JS::RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!self)
     return nullptr;
@@ -954,7 +953,7 @@ JSObject *create(JSContext *cx, double writableHighWaterMark,
  * Implementation of
  * https://streams.spec.whatwg.org/#readablestream-create-a-proxy
  */
-JSObject *create_rs_proxy(JSContext *cx, JS::HandleObject input_readable) {
+JSObject *TransformStream::create_rs_proxy(JSContext *cx, JS::HandleObject input_readable) {
   MOZ_ASSERT(JS::IsReadableStream(input_readable));
   JS::RootedObject transform_stream(
       cx, create(cx, 1, nullptr, 0, nullptr, JS::UndefinedHandleValue, nullptr, nullptr, nullptr));
@@ -971,4 +970,4 @@ JSObject *create_rs_proxy(JSContext *cx, JS::HandleObject input_readable) {
 
   return readable(transform_stream);
 }
-} // namespace TransformStream
+} // namespace builtins

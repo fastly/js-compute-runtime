@@ -546,11 +546,12 @@ bool extract_body(JSContext *cx, HandleObject self, HandleValue body_val) {
 
     // Ensure that we take the right steps for shortcutting operations on
     // TransformStreams later on.
-    if (TransformStream::is_ts_readable(cx, body_obj)) {
+    if (builtins::TransformStream::is_ts_readable(cx, body_obj)) {
       // But only if the TransformStream isn't used as a mixin by other
       // builtins.
-      if (!TransformStream::used_as_mixin(TransformStream::ts_from_readable(cx, body_obj))) {
-        TransformStream::set_readable_used_as_body(cx, body_obj, self);
+      if (!builtins::TransformStream::used_as_mixin(
+              builtins::TransformStream::ts_from_readable(cx, body_obj))) {
+        builtins::TransformStream::set_readable_used_as_body(cx, body_obj, self);
       }
     }
   } else {
@@ -767,8 +768,8 @@ bool body_source_pull_algorithm(JSContext *cx, CallArgs args, HandleObject sourc
   // piped in at the same time.
   RootedObject pipe_dest(cx, builtins::NativeStreamSource::piped_to_transform_stream(source));
   if (pipe_dest) {
-    if (TransformStream::readable_used_as_body(pipe_dest)) {
-      RootedObject dest_owner(cx, TransformStream::owner(pipe_dest));
+    if (builtins::TransformStream::readable_used_as_body(pipe_dest)) {
+      RootedObject dest_owner(cx, builtins::TransformStream::owner(pipe_dest));
       if (!RequestOrResponse::append_body(cx, dest_owner, body_owner)) {
         return false;
       }
@@ -1691,12 +1692,12 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
       RequestOrResponse::append_body(cx, request, input_request);
       RequestOrResponse::mark_body_used(cx, input_request);
     } else {
-      inputBody = TransformStream::create_rs_proxy(cx, inputBody);
+      inputBody = builtins::TransformStream::create_rs_proxy(cx, inputBody);
       if (!inputBody) {
         return nullptr;
       }
 
-      TransformStream::set_readable_used_as_body(cx, inputBody, request);
+      builtins::TransformStream::set_readable_used_as_body(cx, inputBody, request);
       JS::SetReservedSlot(request, Slots::BodyStream, JS::ObjectValue(*inputBody));
     }
 
@@ -4105,7 +4106,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!builtins::TransformStreamDefaultController::init_class(cx, global))
     return false;
-  if (!TransformStream::init_class(cx, global))
+  if (!builtins::TransformStream::init_class(cx, global))
     return false;
   if (!CompressionStream::init_class(cx, global))
     return false;
