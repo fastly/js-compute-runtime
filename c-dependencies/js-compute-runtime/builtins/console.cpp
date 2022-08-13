@@ -5,22 +5,39 @@ namespace builtins {
 template <const char *prefix, uint8_t prefix_len>
 static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  std::string message = "";
+  std::string fullLogLine = "";
   auto length = args.length();
   for (int i = 0; i < length; i++) {
-    size_t msg_len;
-    JS::UniqueChars msg = encode(cx, args.get(i), &msg_len);
-    if (!msg)
-      return false;
-    if (message.length()) {
-      message += " ";
+    std::string message = "";
+    size_t message_len;
+    JS::HandleValue arg = args.get(i);
+    if (arg.isSymbol()) {
+      JS::RootedSymbol sym(cx, arg.toSymbol());
+      // auto d = arg.toSymbol();
+      JS::RootedString desc(cx, JS::GetSymbolDescription(sym));
+      auto msg = encode(cx, desc, &message_len);
+      if (!msg) {
+        return false;
+      }
+      message += "Symbol(";
       message += msg.get();
+      message += ")";
     } else {
+      auto msg = encode(cx, arg, &message_len);
+      if (!msg) {
+        return false;
+      }
       message += msg.get();
+    }
+    if (fullLogLine.length()) {
+      fullLogLine += " ";
+      fullLogLine += message;
+    } else {
+      fullLogLine += message;
     }
   }
 
-  printf("%s: %s\n", prefix, message.c_str());
+  printf("%s: %s\n", prefix, fullLogLine.c_str());
   fflush(stdout);
 
   args.rval().setUndefined();
