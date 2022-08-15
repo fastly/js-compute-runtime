@@ -123,7 +123,40 @@ static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
         }
         message += " }";
         break;
-      } else if (JS::IsWeakMapObject(&arg.toObject())) {
+      } else if (cls == js::ESClass::Promise) {
+        JS::PromiseState state = JS::GetPromiseState(obj);
+        switch (state) {
+        case JS::PromiseState::Pending: {
+          message += "Promise { <pending> }";
+          break;
+        }
+        case JS::PromiseState::Fulfilled: {
+          message += "Promise { ";
+          JS::RootedValue value(cx, JS::GetPromiseResult(obj));
+          JS::RootedString value_source(cx, JS_ValueToSource(cx, value));
+          auto msg = encode(cx, value_source, &message_len);
+          if (!msg) {
+            return false;
+          }
+          message += msg.get();
+          message += " }";
+          break;
+        }
+        case JS::PromiseState::Rejected: {
+          message += "Promise { <rejected> ";
+          JS::RootedValue value(cx, JS::GetPromiseResult(obj));
+          JS::RootedString value_source(cx, JS_ValueToSource(cx, value));
+          auto msg = encode(cx, value_source, &message_len);
+          if (!msg) {
+            return false;
+          }
+          message += msg.get();
+          message += " }";
+          break;
+        }
+        }
+        break;
+      } else if (JS::IsWeakMapObject(obj)) {
         message += "WeakMap { <items unknown> }";
         break;
       } else {

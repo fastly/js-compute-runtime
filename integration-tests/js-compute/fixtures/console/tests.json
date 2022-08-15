@@ -28,7 +28,10 @@
       "stdout :: Log: Date new Date(1660570213378)",
       "stdout :: Log: string cake",
       "stdout :: Log: RegExp /magic/",
-      "stdout :: Log: WeakMap WeakMap { <items unknown> }"
+      "stdout :: Log: WeakMap WeakMap { <items unknown> }",
+      "stdout :: Log: Promise Promise { <pending> }",
+      "stdout :: Log: resolved promise Promise { 9 }",
+      "stdout :: Log: rejected promise Promise { <rejected> (new Error(\"oops\", \"<stdin>\", 74)) }"
     ]
   }
 }
