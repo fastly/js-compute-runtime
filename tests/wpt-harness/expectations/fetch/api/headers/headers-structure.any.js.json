@@ -1,26 +1,26 @@
 {
   "Headers has append method": {
-    "status": 0
+    "status": "PASS"
   },
   "Headers has delete method": {
-    "status": 0
+    "status": "PASS"
   },
   "Headers has get method": {
-    "status": 0
+    "status": "PASS"
   },
   "Headers has has method": {
-    "status": 0
+    "status": "PASS"
   },
   "Headers has set method": {
-    "status": 0
+    "status": "PASS"
   },
   "Headers has entries method": {
-    "status": 0
+    "status": "PASS"
   },
   "Headers has keys method": {
-    "status": 0
+    "status": "PASS"
   },
   "Headers has values method": {
-    "status": 0
+    "status": "PASS"
   }
 }

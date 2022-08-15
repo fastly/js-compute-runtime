@@ -1,8 +1,8 @@
 {
   "Has basics": {
-    "status": 0
+    "status": "PASS"
   },
   "has() following delete()": {
-    "status": 0
+    "status": "PASS"
   }
 }

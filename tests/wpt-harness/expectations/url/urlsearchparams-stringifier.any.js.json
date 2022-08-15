@@ -1,44 +1,44 @@
 {
   "Serialize space": {
-    "status": 0
+    "status": "PASS"
   },
   "Serialize empty value": {
-    "status": 0
+    "status": "PASS"
   },
   "Serialize empty name": {
-    "status": 0
+    "status": "PASS"
   },
   "Serialize empty name and value": {
-    "status": 0
+    "status": "PASS"
   },
   "Serialize +": {
-    "status": 0
+    "status": "PASS"
   },
   "Serialize =": {
-    "status": 0
+    "status": "PASS"
   },
   "Serialize &": {
-    "status": 0
+    "status": "PASS"
   },
   "Serialize *-._": {
-    "status": 0
+    "status": "PASS"
   },
   "Serialize %": {
-    "status": 0
+    "status": "PASS"
   },
   "Serialize \\0": {
-    "status": 0
+    "status": "PASS"
   },
   "Serialize 💩": {
-    "status": 0
+    "status": "PASS"
   },
   "URLSearchParams.toString": {
-    "status": 0
+    "status": "PASS"
   },
   "URLSearchParams connected to URL": {
-    "status": 1
+    "status": "FAIL"
   },
   "URLSearchParams must not do newline normalization": {
-    "status": 0
+    "status": "PASS"
   }
 }

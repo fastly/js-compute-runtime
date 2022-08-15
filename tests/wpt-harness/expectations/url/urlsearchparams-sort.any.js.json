@@ -1,53 +1,53 @@
 {
   "Parse and sort: z=b&a=b&z=a&a=a": {
-    "status": 0
+    "status": "PASS"
   },
   "URL parse and sort: z=b&a=b&z=a&a=a": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse and sort: �=x&￼&�=a": {
-    "status": 0
+    "status": "PASS"
   },
   "URL parse and sort: �=x&￼&�=a": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse and sort: ﬃ&🌈": {
-    "status": 0
+    "status": "PASS"
   },
   "URL parse and sort: ﬃ&🌈": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse and sort: é&e�&é": {
-    "status": 0
+    "status": "PASS"
   },
   "URL parse and sort: é&e�&é": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse and sort: z=z&a=a&z=y&a=b&z=x&a=c&z=w&a=d&z=v&a=e&z=u&a=f&z=t&a=g": {
-    "status": 0
+    "status": "PASS"
   },
   "URL parse and sort: z=z&a=a&z=y&a=b&z=x&a=c&z=w&a=d&z=v&a=e&z=u&a=f&z=t&a=g": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse and sort: bbb&bb&aaa&aa=x&aa=y": {
-    "status": 0
+    "status": "PASS"
   },
   "URL parse and sort: bbb&bb&aaa&aa=x&aa=y": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse and sort: z=z&=f&=t&=x": {
-    "status": 0
+    "status": "PASS"
   },
   "URL parse and sort: z=z&=f&=t&=x": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse and sort: a🌈&a💩": {
-    "status": 0
+    "status": "PASS"
   },
   "URL parse and sort: a🌈&a💩": {
-    "status": 0
+    "status": "PASS"
   },
   "Sorting non-existent params removes ? from URL": {
-    "status": 1
+    "status": "FAIL"
   }
 }

@@ -1,8 +1,8 @@
 {
   "TransformStream constructor should not call setters for highWaterMark or size": {
-    "status": 0
+    "status": "PASS"
   },
   "TransformStream should use the original value of ReadableStream and WritableStream": {
-    "status": 0
+    "status": "PASS"
   }
 }

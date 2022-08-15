@@ -1,8 +1,8 @@
 {
   "Ensure the correct JSON parser is used": {
-    "status": 1
+    "status": "FAIL"
   },
   "Ensure UTF-16 results in an error": {
-    "status": 1
+    "status": "FAIL"
   }
 }

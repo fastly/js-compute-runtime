@@ -1,77 +1,77 @@
 {
   "TransformStream can be constructed with a transform function": {
-    "status": 0
+    "status": "PASS"
   },
   "TransformStream can be constructed with no transform function": {
-    "status": 0
+    "status": "PASS"
   },
   "TransformStream writable starts in the writable state": {
-    "status": 0
+    "status": "PASS"
   },
   "Identity TransformStream: can read from readable what is put into writable": {
-    "status": 0
+    "status": "PASS"
   },
   "Uppercaser sync TransformStream: can read from readable transformed version of what is put into writable": {
-    "status": 0
+    "status": "PASS"
   },
   "Uppercaser-doubler sync TransformStream: can read both chunks put into the readable": {
-    "status": 0
+    "status": "PASS"
   },
   "Uppercaser async TransformStream: can read from readable transformed version of what is put into writable": {
-    "status": 0
+    "status": "PASS"
   },
   "Uppercaser-doubler async TransformStream: can read both chunks put into the readable": {
-    "status": 0
+    "status": "PASS"
   },
   "TransformStream: by default, closing the writable closes the readable (when there are no queued writes)": {
-    "status": 0
+    "status": "PASS"
   },
   "TransformStream: by default, closing the writable waits for transforms to finish before closing both": {
-    "status": 0
+    "status": "PASS"
   },
   "TransformStream: by default, closing the writable closes the readable after sync enqueues and async done": {
-    "status": 0
+    "status": "PASS"
   },
   "TransformStream: by default, closing the writable closes the readable after async enqueues and async done": {
-    "status": 0
+    "status": "PASS"
   },
   "Transform stream should call transformer methods as methods": {
-    "status": 0
+    "status": "PASS"
   },
   "methods should not not have .apply() or .call() called": {
-    "status": 0
+    "status": "PASS"
   },
   "TransformStream start, transform, and flush should be strictly ordered": {
-    "status": 0
+    "status": "PASS"
   },
   "it should be possible to call transform() synchronously": {
-    "status": 0
+    "status": "PASS"
   },
   "closing the writable should close the readable when there are no queued chunks, even with backpressure": {
-    "status": 0
+    "status": "PASS"
   },
   "enqueue() should throw after controller.terminate()": {
-    "status": 0
+    "status": "PASS"
   },
   "enqueue() should throw after readable.cancel()": {
-    "status": 0
+    "status": "PASS"
   },
   "controller.terminate() should do nothing the second time it is called": {
-    "status": 0
+    "status": "PASS"
   },
   "terminate() should do nothing after readable.cancel()": {
-    "status": 0
+    "status": "PASS"
   },
   "start() should not be called twice": {
-    "status": 0
+    "status": "PASS"
   },
   "specifying a defined readableType should throw": {
-    "status": 1
+    "status": "FAIL"
   },
   "specifying a defined writableType should throw": {
-    "status": 1
+    "status": "FAIL"
   },
   "Subclassing TransformStream should work": {
-    "status": 0
+    "status": "PASS"
   }
 }

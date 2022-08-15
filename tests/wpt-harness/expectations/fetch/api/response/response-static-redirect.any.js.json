@@ -1,35 +1,35 @@
 {
   "Check default redirect response": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check response returned by static method redirect(), status = 301": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check response returned by static method redirect(), status = 302": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check response returned by static method redirect(), status = 303": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check response returned by static method redirect(), status = 307": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check response returned by static method redirect(), status = 308": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check error returned when giving invalid url to redirect()": {
-    "status": 0
+    "status": "PASS"
   },
   "Check error returned when giving invalid status to redirect(), status = 200": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check error returned when giving invalid status to redirect(), status = 309": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check error returned when giving invalid status to redirect(), status = 400": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check error returned when giving invalid status to redirect(), status = 500": {
-    "status": 1
+    "status": "FAIL"
   }
 }

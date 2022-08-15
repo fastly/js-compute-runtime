@@ -1,17 +1,17 @@
 {
   "controller.error() should error the stream": {
-    "status": 0
+    "status": "PASS"
   },
   "controller.error() on erroring stream should not throw": {
-    "status": 0
+    "status": "PASS"
   },
   "surplus calls to controller.error() should be a no-op": {
-    "status": 0
+    "status": "PASS"
   },
   "controller.error() on errored stream should not throw": {
-    "status": 0
+    "status": "PASS"
   },
   "controller.error() on closed stream should not throw": {
-    "status": 0
+    "status": "PASS"
   }
 }

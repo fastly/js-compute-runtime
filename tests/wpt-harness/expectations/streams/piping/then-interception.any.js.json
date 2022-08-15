@@ -1,8 +1,8 @@
 {
   "piping should not be observable": {
-    "status": 0
+    "status": "PASS"
   },
   "tee should not be observable": {
-    "status": 0
+    "status": "PASS"
   }
 }

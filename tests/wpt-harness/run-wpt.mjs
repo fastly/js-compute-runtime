@@ -179,7 +179,7 @@ async function run() {
           let expectations = {};
           for (let result of results) {
             expectations[result.name] = {
-              status: result.status,
+              status: result.status === 0 ? 'PASS' : 'FAIL',
             };
           }
 
@@ -421,13 +421,13 @@ async function runTests(testPaths, viceroy, resultCallback, errorCallback) {
 
         if (result.status == 0) {
           stats.pass++;
-          if (!expectation || expectation.status != 0) {
+          if (!expectation || expectation.status === 'FAIL') {
             result.expected = false;
             console.log(`${expectation ? "UNEXPECTED" : "NEW"} PASS
             NAME:    ${result.name}`);
             stats.unexpectedPass++;
           }
-        } else if (!expectation || expectation.status == 0) {
+        } else if (!expectation || expectation.status === 'PASS') {
           result.expected = false;
           console.log(`${expectation ? "UNEXPECTED" : "NEW"} FAIL
   NAME:    ${result.name}
@@ -441,7 +441,7 @@ async function runTests(testPaths, viceroy, resultCallback, errorCallback) {
           stats.missing++;
           console.log(`MISSING TEST
   NAME:    ${name}
-  EXPECTED RESULT: ${expectation.status == 0 ? "PASS" : "FAIL"}`);
+  EXPECTED RESULT: ${expectation.status}`);
         }
       }
 

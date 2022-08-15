@@ -1,17 +1,17 @@
 {
   "ReadableStream tee() should not touch Object.prototype properties": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream tee() should not call the global ReadableStream": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream async iterator should use the original values of getReader() and ReadableStreamDefaultReader methods": {
-    "status": 1
+    "status": "FAIL"
   },
   "tee() should not call Promise.prototype.then()": {
-    "status": 0
+    "status": "PASS"
   },
   "pipeTo() should not call Promise.prototype.then()": {
-    "status": 0
+    "status": "PASS"
   }
 }

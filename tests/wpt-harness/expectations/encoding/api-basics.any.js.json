@@ -1,20 +1,20 @@
 {
   "Default encodings": {
-    "status": 0
+    "status": "PASS"
   },
   "Default inputs": {
-    "status": 1
+    "status": "FAIL"
   },
   "Encode/decode round trip: utf-8": {
-    "status": 0
+    "status": "PASS"
   },
   "Decode sample: utf-16le": {
-    "status": 1
+    "status": "FAIL"
   },
   "Decode sample: utf-16be": {
-    "status": 1
+    "status": "FAIL"
   },
   "Decode sample: utf-16": {
-    "status": 1
+    "status": "FAIL"
   }
 }

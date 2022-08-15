@@ -1,8 +1,8 @@
 {
   "Check response returned by static method error()": {
-    "status": 1
+    "status": "FAIL"
   },
   "the 'guard' of the Headers instance should be immutable": {
-    "status": 1
+    "status": "FAIL"
   }
 }

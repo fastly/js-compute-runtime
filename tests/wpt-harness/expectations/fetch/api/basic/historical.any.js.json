@@ -1,11 +1,11 @@
 {
   "Headers object no longer has a getAll() method": {
-    "status": 0
+    "status": "PASS"
   },
   "'type' getter should not exist on Request objects": {
-    "status": 0
+    "status": "PASS"
   },
   "Response object no longer has a trailer getter": {
-    "status": 0
+    "status": "PASS"
   }
 }

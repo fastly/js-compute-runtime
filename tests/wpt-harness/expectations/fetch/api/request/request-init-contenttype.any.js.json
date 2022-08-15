@@ -1,56 +1,56 @@
 {
   "Default Content-Type for Request with empty body": {
-    "status": 0
+    "status": "PASS"
   },
   "Default Content-Type for Request with Blob body (no type set)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Default Content-Type for Request with Blob body (empty type)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Default Content-Type for Request with Blob body (set type)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Default Content-Type for Request with buffer source body": {
-    "status": 0
+    "status": "PASS"
   },
   "Default Content-Type for Request with FormData body": {
-    "status": 1
+    "status": "FAIL"
   },
   "Default Content-Type for Request with URLSearchParams body": {
-    "status": 0
+    "status": "PASS"
   },
   "Default Content-Type for Request with string body": {
-    "status": 0
+    "status": "PASS"
   },
   "Default Content-Type for Request with ReadableStream body": {
-    "status": 0
+    "status": "PASS"
   },
   "Can override Content-Type for Request with empty body": {
-    "status": 0
+    "status": "PASS"
   },
   "Can override Content-Type for Request with Blob body (no type set)": {
-    "status": 0
+    "status": "PASS"
   },
   "Can override Content-Type for Request with Blob body (empty type)": {
-    "status": 0
+    "status": "PASS"
   },
   "Can override Content-Type for Request with Blob body (set type)": {
-    "status": 0
+    "status": "PASS"
   },
   "Can override Content-Type for Request with buffer source body": {
-    "status": 0
+    "status": "PASS"
   },
   "Can override Content-Type for Request with FormData body": {
-    "status": 0
+    "status": "PASS"
   },
   "Can override Content-Type for Request with URLSearchParams body": {
-    "status": 0
+    "status": "PASS"
   },
   "Can override Content-Type for Request with string body": {
-    "status": 0
+    "status": "PASS"
   },
   "Can override Content-Type for Request with ReadableStream body": {
-    "status": 0
+    "status": "PASS"
   }
 }

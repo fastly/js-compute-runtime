@@ -1,14 +1,14 @@
 {
   "RequestCache \"no-cache\" mode revalidates stale responses found in the cache with Etag and stale response": {
-    "status": 0
+    "status": "PASS"
   },
   "RequestCache \"no-cache\" mode revalidates stale responses found in the cache with Last-Modified and stale response": {
-    "status": 0
+    "status": "PASS"
   },
   "RequestCache \"no-cache\" mode revalidates fresh responses found in the cache with Etag and fresh response": {
-    "status": 0
+    "status": "PASS"
   },
   "RequestCache \"no-cache\" mode revalidates fresh responses found in the cache with Last-Modified and fresh response": {
-    "status": 0
+    "status": "PASS"
   }
 }
