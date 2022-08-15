@@ -11,7 +11,7 @@
     "logs": [
       "stdout :: Log: Happy birthday Aki and Yuki!",
       "stdout :: Log: Map Map(2) { 1 => 2, (function foo () {}) => ({}) }",
-      "stdout :: Log: Set { 1, 2, 3 }",
+      "stdout :: Log: Set(3) { 1, 2, 3 }",
       "stdout :: Log: Array [1, 2, 3, 4, 5]",
       "stdout :: Log: Object ({a:1, b:2, c:3})",
       "stdout :: Log: function (function () { })",
