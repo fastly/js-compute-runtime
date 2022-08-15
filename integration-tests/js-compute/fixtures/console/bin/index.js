@@ -1,9 +1,10 @@
 addEventListener("fetch", () => {
     console.log("Happy", "birthday", "Aki", "and", "Yuki!");
     let arg;
-    // arg = new Map();
-    // arg.set(1, 2)
-    // console.log('Map', arg)
+    arg = new Map();
+    arg.set(1, 2)
+    arg.set(function foo () {}, {})
+    console.log('Map', arg)
     arg = new Set([1, 2, 3])
     console.log('Set',arg)
     arg = [1, 2, 3, 4, 5]
