@@ -27,7 +27,8 @@
       "stdout :: Log: BigInt 10n",
       "stdout :: Log: Date new Date(1660570213378)",
       "stdout :: Log: string cake",
-      "stdout :: Log: RegExp /magic/"
+      "stdout :: Log: RegExp /magic/",
+      "stdout :: Log: WeakMap WeakMap { <items unknown> }"
     ]
   }
 }

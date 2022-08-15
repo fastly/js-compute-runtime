@@ -48,9 +48,13 @@ static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
         bool firstValue = true;
         while (true) {
           bool done;
-          if (!it.next(&entry_val, &done)) {return false;}
+          if (!it.next(&entry_val, &done)) {
+            return false;
+          }
 
-          if (done){break;}
+          if (done) {
+            break;
+          }
 
           JS::RootedString source(cx, JS_ValueToSource(cx, entry_val));
           auto msg = encode(cx, source, &message_len);
@@ -87,9 +91,13 @@ static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
         bool firstValue = true;
         while (true) {
           bool done;
-          if (!it.next(&entry_val, &done)) {return false;}
+          if (!it.next(&entry_val, &done)) {
+            return false;
+          }
 
-          if (done){break;}
+          if (done) {
+            break;
+          }
           if (firstValue) {
             firstValue = false;
           } else {
@@ -114,6 +122,9 @@ static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
           message += msg.get();
         }
         message += " }";
+        break;
+      } else if (JS::IsWeakMapObject(&arg.toObject())) {
+        message += "WeakMap { <items unknown> }";
         break;
       } else {
         JS::RootedString source(cx, JS_ValueToSource(cx, arg));

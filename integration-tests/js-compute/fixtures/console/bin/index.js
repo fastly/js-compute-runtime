@@ -63,8 +63,8 @@ addEventListener("fetch", () => {
     // console.log('BigInt64Array', arg)
     // arg = new BigUint64Array
     // console.log('BigUint64Array', arg)
-    // arg = new WeakMap
-    // console.log('WeakMap', arg)
+    arg = new WeakMap
+    console.log('WeakMap', arg)
     // arg = new WeakSet
     // console.log('WeakSet', arg)
     // arg = new Promise((resolve, reject) => { })
