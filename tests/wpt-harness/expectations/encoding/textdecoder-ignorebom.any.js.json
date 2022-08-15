@@ -1,14 +1,14 @@
 {
   "BOM is ignored if ignoreBOM option is specified: utf-8": {
-    "status": 1
+    "status": "FAIL"
   },
   "BOM is ignored if ignoreBOM option is specified: utf-16le": {
-    "status": 1
+    "status": "FAIL"
   },
   "BOM is ignored if ignoreBOM option is specified: utf-16be": {
-    "status": 1
+    "status": "FAIL"
   },
   "The ignoreBOM attribute of TextDecoder": {
-    "status": 1
+    "status": "FAIL"
   }
 }

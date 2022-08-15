@@ -1,83 +1,83 @@
 {
   "Basic URLSearchParams construction": {
-    "status": 0
+    "status": "PASS"
   },
   "URLSearchParams constructor, no arguments": {
-    "status": 0
+    "status": "PASS"
   },
   "URLSearchParams constructor, remove leading \"?\"": {
-    "status": 0
+    "status": "PASS"
   },
   "URLSearchParams constructor, DOMException as argument": {
-    "status": 1
+    "status": "FAIL"
   },
   "URLSearchParams constructor, empty string as argument": {
-    "status": 0
+    "status": "PASS"
   },
   "URLSearchParams constructor, {} as argument": {
-    "status": 0
+    "status": "PASS"
   },
   "URLSearchParams constructor, string.": {
-    "status": 0
+    "status": "PASS"
   },
   "URLSearchParams constructor, object.": {
-    "status": 0
+    "status": "PASS"
   },
   "URLSearchParams constructor, FormData.": {
-    "status": 1
+    "status": "FAIL"
   },
   "Parse +": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse encoded +": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse space": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse %20": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse \\0": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse %00": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse ⎄": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse %e2%8e%84": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse 💩": {
-    "status": 0
+    "status": "PASS"
   },
   "Parse %f0%9f%92%a9": {
-    "status": 0
+    "status": "PASS"
   },
   "Constructor with sequence of sequences of strings": {
-    "status": 1
+    "status": "FAIL"
   },
   "Construct with object with +": {
-    "status": 0
+    "status": "PASS"
   },
   "Construct with object with two keys": {
-    "status": 0
+    "status": "PASS"
   },
   "Construct with array with two keys": {
-    "status": 0
+    "status": "PASS"
   },
   "Construct with 2 unpaired surrogates (no trailing)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Construct with 3 unpaired surrogates (no leading)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Construct with object with NULL, non-ASCII, and surrogate keys": {
-    "status": 0
+    "status": "PASS"
   },
   "Custom [Symbol.iterator]": {
-    "status": 0
+    "status": "PASS"
   }
 }

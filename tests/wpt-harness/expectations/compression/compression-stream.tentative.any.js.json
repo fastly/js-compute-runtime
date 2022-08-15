@@ -1,23 +1,23 @@
 {
   "CompressionStream constructor should throw on invalid format": {
-    "status": 1
+    "status": "FAIL"
   },
   "deflated empty data should be reinflated back to its origin": {
-    "status": 0
+    "status": "PASS"
   },
   "deflated small amount data should be reinflated back to its origin": {
-    "status": 0
+    "status": "PASS"
   },
   "deflated large amount data should be reinflated back to its origin": {
-    "status": 0
+    "status": "PASS"
   },
   "gzipped empty data should be reinflated back to its origin": {
-    "status": 0
+    "status": "PASS"
   },
   "gzipped small amount data should be reinflated back to its origin": {
-    "status": 0
+    "status": "PASS"
   },
   "gzipped large amount data should be reinflated back to its origin": {
-    "status": 0
+    "status": "PASS"
   }
 }

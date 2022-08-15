@@ -1,50 +1,50 @@
 {
   "Fetching aaa://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching cap://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching cid://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching dav://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching dict://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching dns://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching geo://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching im://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching imap://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching ipp://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching ldap://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching mailto://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching nfs://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching pop://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching rtsp://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   },
   "Fetching snmp://web-platform.test:8000/ is KO": {
-    "status": 1
+    "status": "FAIL"
   }
 }

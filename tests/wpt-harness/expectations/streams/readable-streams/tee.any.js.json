@@ -1,80 +1,80 @@
 {
   "ReadableStream teeing: rs.tee() returns an array of two ReadableStreams": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: should be able to read one branch to the end without affecting the other": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: values should be equal across each branch": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: errors in the source should propagate to both branches": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: canceling branch1 should not impact branch2": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: canceling branch2 should not impact branch1": {
-    "status": 0
+    "status": "PASS"
   },
   "Running templatedRSTeeCancel with ReadableStream teeing": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: canceling both branches should aggregate the cancel reasons into an array": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: canceling both branches in reverse order should aggregate the cancel reasons into an array": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: failing to cancel the original stream should cause cancel() to reject on branches": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: erroring a teed stream should properly handle canceled branches": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: erroring a teed stream should error both branches": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: closing the original should immediately close the branches": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: erroring the original should immediately error the branches": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: canceling branch1 should finish when branch2 reads until end of stream": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: canceling branch1 should finish when original stream errors": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: canceling both branches in sequence with delay": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: failing to cancel when canceling both branches in sequence with delay": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStreamTee should not use a modified ReadableStream constructor from the global object": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStreamTee should not pull more chunks than can fit in the branch queue": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStreamTee should only pull enough to fill the emptiest queue": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStreamTee should not pull when original is already errored": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStreamTee stops pulling when original stream errors while branch 1 is reading": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStreamTee stops pulling when original stream errors while branch 2 is reading": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStreamTee stops pulling when original stream errors while both branches are reading": {
-    "status": 0
+    "status": "PASS"
   },
   "ReadableStream teeing: enqueue() and close() while both branches are pulling": {
-    "status": 0
+    "status": "PASS"
   }
 }

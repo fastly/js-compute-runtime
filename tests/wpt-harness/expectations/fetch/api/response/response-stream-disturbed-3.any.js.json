@@ -1,38 +1,38 @@
 {
   "Getting blob after reading the Response body (body source: fetch)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Getting text after reading the Response body (body source: fetch)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Getting json after reading the Response body (body source: fetch)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Getting arrayBuffer after reading the Response body (body source: fetch)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Getting blob after reading the Response body (body source: stream)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Getting text after reading the Response body (body source: stream)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Getting json after reading the Response body (body source: stream)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Getting arrayBuffer after reading the Response body (body source: stream)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Getting blob after reading the Response body (body source: string)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Getting text after reading the Response body (body source: string)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Getting json after reading the Response body (body source: string)": {
-    "status": 1
+    "status": "FAIL"
   },
   "Getting arrayBuffer after reading the Response body (body source: string)": {
-    "status": 1
+    "status": "FAIL"
   }
 }

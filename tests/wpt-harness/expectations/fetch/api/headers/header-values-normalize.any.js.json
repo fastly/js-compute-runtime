@@ -1,95 +1,95 @@
 {
   "fetch() with value %00": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %01": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %02": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %03": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %04": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %05": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %06": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %07": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %08": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %09": {
-    "status": 0
+    "status": "PASS"
   },
   "fetch() with value %0A": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %0D": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %0E": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %0F": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %10": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %11": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %12": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %13": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %14": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %15": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %16": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %17": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %18": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %19": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %1A": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %1B": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %1C": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %1D": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %1E": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %1F": {
-    "status": 1
+    "status": "FAIL"
   },
   "fetch() with value %20": {
-    "status": 0
+    "status": "PASS"
   }
 }

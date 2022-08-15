@@ -1,5 +1,5 @@
 {
   "Testing conditional GET with ETags": {
-    "status": 1
+    "status": "FAIL"
   }
 }

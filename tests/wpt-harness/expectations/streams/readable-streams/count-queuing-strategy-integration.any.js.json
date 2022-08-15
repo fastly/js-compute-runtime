@@ -1,14 +1,14 @@
 {
   "Can construct a readable stream with a valid CountQueuingStrategy": {
-    "status": 0
+    "status": "PASS"
   },
   "Correctly governs a ReadableStreamController's desiredSize property (HWM = 0)": {
-    "status": 0
+    "status": "PASS"
   },
   "Correctly governs a ReadableStreamController's desiredSize property (HWM = 1)": {
-    "status": 0
+    "status": "PASS"
   },
   "Correctly governs a ReadableStreamController's desiredSize property (HWM = 4)": {
-    "status": 0
+    "status": "PASS"
   }
 }

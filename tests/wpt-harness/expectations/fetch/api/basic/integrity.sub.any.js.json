@@ -1,47 +1,47 @@
 {
   "Empty string integrity": {
-    "status": 0
+    "status": "PASS"
   },
   "SHA-256 integrity": {
-    "status": 0
+    "status": "PASS"
   },
   "SHA-384 integrity": {
-    "status": 0
+    "status": "PASS"
   },
   "SHA-512 integrity": {
-    "status": 0
+    "status": "PASS"
   },
   "Invalid integrity": {
-    "status": 1
+    "status": "FAIL"
   },
   "Multiple integrities: valid stronger than invalid": {
-    "status": 0
+    "status": "PASS"
   },
   "Multiple integrities: invalid stronger than valid": {
-    "status": 1
+    "status": "FAIL"
   },
   "Multiple integrities: invalid as strong as valid": {
-    "status": 0
+    "status": "PASS"
   },
   "Multiple integrities: both are valid": {
-    "status": 0
+    "status": "PASS"
   },
   "Multiple integrities: both are invalid": {
-    "status": 1
+    "status": "FAIL"
   },
   "CORS empty integrity": {
-    "status": 0
+    "status": "PASS"
   },
   "CORS SHA-512 integrity": {
-    "status": 0
+    "status": "PASS"
   },
   "CORS invalid integrity": {
-    "status": 1
+    "status": "FAIL"
   },
   "Empty string integrity for opaque response": {
-    "status": 1
+    "status": "FAIL"
   },
   "SHA-* integrity for opaque response": {
-    "status": 1
+    "status": "FAIL"
   }
 }

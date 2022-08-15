@@ -1,62 +1,62 @@
 {
   "Request has clone method": {
-    "status": 1
+    "status": "FAIL"
   },
   "Request has arrayBuffer method": {
-    "status": 0
+    "status": "PASS"
   },
   "Request has blob method": {
-    "status": 1
+    "status": "FAIL"
   },
   "Request has formData method": {
-    "status": 1
+    "status": "FAIL"
   },
   "Request has json method": {
-    "status": 0
+    "status": "PASS"
   },
   "Request has text method": {
-    "status": 0
+    "status": "PASS"
   },
   "Check method attribute": {
-    "status": 0
+    "status": "PASS"
   },
   "Check url attribute": {
-    "status": 0
+    "status": "PASS"
   },
   "Check headers attribute": {
-    "status": 0
+    "status": "PASS"
   },
   "Check destination attribute": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check referrer attribute": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check referrerPolicy attribute": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check mode attribute": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check credentials attribute": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check cache attribute": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check redirect attribute": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check integrity attribute": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check isReloadNavigation attribute": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check isHistoryNavigation attribute": {
-    "status": 1
+    "status": "FAIL"
   },
   "Check bodyUsed attribute": {
-    "status": 0
+    "status": "PASS"
   }
 }

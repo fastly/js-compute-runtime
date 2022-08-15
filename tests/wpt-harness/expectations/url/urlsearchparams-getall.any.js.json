@@ -1,8 +1,8 @@
 {
   "getAll() basics": {
-    "status": 0
+    "status": "PASS"
   },
   "getAll() multiples": {
-    "status": 0
+    "status": "PASS"
   }
 }
