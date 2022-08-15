@@ -1,3 +1,6 @@
+#include "js/BigInt.h"
+#include "js/RegExp.h"
+
 #include "console.h"
 
 namespace builtins {
@@ -11,23 +14,38 @@ static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
     std::string message = "";
     size_t message_len;
     JS::HandleValue arg = args.get(i);
-    if (arg.isSymbol()) {
-      JS::RootedSymbol sym(cx, arg.toSymbol());
-      // auto d = arg.toSymbol();
-      JS::RootedString desc(cx, JS::GetSymbolDescription(sym));
-      auto msg = encode(cx, desc, &message_len);
-      if (!msg) {
-        return false;
-      }
-      message += "Symbol(";
-      message += msg.get();
-      message += ")";
-    } else {
+    auto type = arg.type();
+    switch (type) {
+    case JS::ValueType::Undefined: {
+      message += "undefined";
+      break;
+    }
+    // case JS::ValueType::Object: {
+    //   break;
+    // }
+    case JS::ValueType::String: {
       auto msg = encode(cx, arg, &message_len);
       if (!msg) {
         return false;
       }
       message += msg.get();
+      break;
+    }
+    case JS::ValueType::Symbol:
+    case JS::ValueType::BigInt:
+    case JS::ValueType::Double:
+    case JS::ValueType::Int32:
+    case JS::ValueType::Boolean:
+    case JS::ValueType::Null:
+    default: {
+      JS::RootedString source(cx, JS_ValueToSource(cx, arg));
+      auto msg = encode(cx, source, &message_len);
+      if (!msg) {
+        return false;
+      }
+      message += msg.get();
+      break;
+    }
     }
     if (fullLogLine.length()) {
       fullLogLine += " ";

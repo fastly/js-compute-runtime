@@ -9,7 +9,22 @@
       "status": 200
     },
     "logs": [
-      "stdout :: Log: Happy birthday Aki and Yuki!"
+      "stdout :: Log: Happy birthday Aki and Yuki!",
+      "stdout :: Log: Array [1, 2, 3, 4, 5]",
+      "stdout :: Log: Object ({a:1, b:2, c:3})",
+      "stdout :: Log: function (function () { })",
+      "stdout :: Log: boolean true",
+      "stdout :: Log: null null",
+      "stdout :: Log: Infinity Infinity",
+      "stdout :: Log: NaN NaN",
+      "stdout :: Log: Symbol Symbol(\"wow\")",
+      "stdout :: Log: Error (new Error(\"uh oh\", \"<stdin>\", 29))",
+      "stdout :: Log: Number 1",
+      "stdout :: Log: Number 1.111",
+      "stdout :: Log: BigInt 10n",
+      "stdout :: Log: Date new Date(1660570213378)",
+      "stdout :: Log: string cake",
+      "stdout :: Log: RegExp /magic/"
     ]
   }
 }
