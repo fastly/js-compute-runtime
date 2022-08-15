@@ -10,10 +10,12 @@
     },
     "logs": [
       "stdout :: Log: Happy birthday Aki and Yuki!",
+      "stdout :: Log: Set { 1, 2, 3 }",
       "stdout :: Log: Array [1, 2, 3, 4, 5]",
       "stdout :: Log: Object ({a:1, b:2, c:3})",
       "stdout :: Log: function (function () { })",
       "stdout :: Log: boolean true",
+      "stdout :: Log: undefined undefined",
       "stdout :: Log: null null",
       "stdout :: Log: Infinity Infinity",
       "stdout :: Log: NaN NaN",

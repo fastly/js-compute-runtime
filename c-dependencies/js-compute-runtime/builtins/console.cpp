@@ -20,9 +20,63 @@ static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
       message += "undefined";
       break;
     }
-    // case JS::ValueType::Object: {
-    //   break;
-    // }
+    case JS::ValueType::Object: {
+      JS::RootedObject obj(cx, &arg.toObject());
+      js::ESClass cls;
+      if (!JS::GetBuiltinClass(cx, obj, &cls)) {
+        return false;
+      }
+
+      // All ToSource functions must be able to handle wrapped objects!
+      if (cls == js::ESClass::Set) {
+        message += "Set(";
+        uint32_t size = JS::SetSize(cx, obj);
+        message += std::to_string(size);
+        message += ") { ";
+        JS::Rooted<JS::Value> iterable(cx);
+        if (!JS::SetValues(cx, obj, &iterable)) {
+          return false;
+        }
+        JS::ForOfIterator it(cx);
+        if (!it.init(iterable)) {
+          return false;
+        }
+
+        JS::RootedObject entry(cx);
+        JS::RootedValue entry_val(cx);
+        JS::RootedValue name_val(cx);
+        JS::RootedValue value_val(cx);
+        bool firstValue = true;
+        while (true) {
+          bool done;
+          if (!it.next(&entry_val, &done)) {return false;}
+
+          if (done){break;}
+
+          JS::RootedString source(cx, JS_ValueToSource(cx, entry_val));
+          auto msg = encode(cx, source, &message_len);
+          if (!msg) {
+            return false;
+          }
+          if (firstValue) {
+            firstValue = false;
+          } else {
+            message += ", ";
+          }
+          message += msg.get();
+        }
+        message += " }";
+        break;
+      } else {
+        JS::RootedString source(cx, JS_ValueToSource(cx, arg));
+        auto msg = encode(cx, source, &message_len);
+        if (!msg) {
+          return false;
+        }
+        message += msg.get();
+        break;
+      }
+    }
     case JS::ValueType::String: {
       auto msg = encode(cx, arg, &message_len);
       if (!msg) {
@@ -31,12 +85,6 @@ static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
       message += msg.get();
       break;
     }
-    case JS::ValueType::Symbol:
-    case JS::ValueType::BigInt:
-    case JS::ValueType::Double:
-    case JS::ValueType::Int32:
-    case JS::ValueType::Boolean:
-    case JS::ValueType::Null:
     default: {
       JS::RootedString source(cx, JS_ValueToSource(cx, arg));
       auto msg = encode(cx, source, &message_len);

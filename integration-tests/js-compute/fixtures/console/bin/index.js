@@ -4,8 +4,8 @@ addEventListener("fetch", () => {
     // arg = new Map();
     // arg.set(1, 2)
     // console.log('Map', arg)
-    // arg = new Set([1, 2, 3])
-    // console.log('Set',arg)
+    arg = new Set([1, 2, 3])
+    console.log('Set',arg)
     arg = [1, 2, 3, 4, 5]
     console.log('Array',arg)
     arg = { a: 1, b: 2, c: 3 }
@@ -14,8 +14,8 @@ addEventListener("fetch", () => {
     console.log('function',arg)
     arg = true
     console.log('boolean',arg)
-    // arg = undefined
-    // console.log('undefined',arg)
+    arg = undefined
+    console.log('undefined',arg)
     arg = null
     console.log('null',arg)
     // arg = new Proxy({}, {})
