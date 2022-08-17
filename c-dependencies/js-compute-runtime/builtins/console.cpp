@@ -219,7 +219,7 @@ JS::Result<std::string> ToSource(JSContext *cx, JS::HandleValue val,
     }
 
     if (cls == js::ESClass::Array || cls == js::ESClass::Date || cls == js::ESClass::Error ||
-               cls == js::ESClass::RegExp) {
+        cls == js::ESClass::RegExp) {
       JS::RootedString source(cx, JS_ValueToSource(cx, val));
       size_t message_len;
       auto msg = encode(cx, source, &message_len);
