@@ -78,4 +78,10 @@ addEventListener("fetch", () => {
     console.log('Response:', arg)
     arg = new Request('', {body:'I am the body', method: 'POST'})
     console.log('Request:', arg)
+    arg = new ReadableStream
+    console.log('ReadableStream:', arg)
+    arg = new TransformStream
+    console.log('TransformStream:', arg)
+    arg = new WritableStream
+    console.log('WritableStream:', arg)
 });

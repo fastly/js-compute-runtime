@@ -47,7 +47,10 @@
       "stdout :: Log: resolved promise: Promise { 9 }",
       "stdout :: Log: rejected promise: Promise { <rejected> (new Error(\"oops\", \"<stdin>\", 74)) }",
       "stdout :: Log: Response: {type=default, url=, status=200, ok=true, statusText=, version=2, headers={}, body={locked=false, }, bodyUsed=false, }",
-      "stdout :: Log: Request: {method=POST, url=http://127.0.0.1:7676/, version=2, headers={}, body=null, bodyUsed=false, }"
+      "stdout :: Log: Request: {method=POST, url=http://127.0.0.1:7676/, version=2, headers={}, body=null, bodyUsed=false, }",
+      "stdout :: Log: ReadableStream: {locked: false, }",
+      "stdout :: Log: TransformStream: {readable: {locked: false, }, writable: {}}",
+      "stdout :: Log: WritableStream: {}"
     ]
   }
 }
