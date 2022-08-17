@@ -167,6 +167,7 @@ JS::Result<std::string> ObjectToSource(JSContext *cx, JS::HandleObject obj,
 
   JS::RootedValue value(cx);
   size_t length = ids.length();
+  bool firstValue = true;
   for (size_t i = 0; i < length; ++i) {
     const auto &id = ids[i];
     if (!JS_GetPropertyById(cx, obj, id, &value)) {
@@ -174,6 +175,11 @@ JS::Result<std::string> ObjectToSource(JSContext *cx, JS::HandleObject obj,
     }
 
     if (!value.isObject() || !JS_ObjectIsFunction(&value.toObject())) {
+      if (firstValue) {
+        firstValue = false;
+      } else {
+        output += ", ";
+      }
       if (id.isSymbol()) {
         JS::RootedValue v(cx, SymbolValue(id.toSymbol()));
         auto idSource = ToSource(cx, v, visitedObjects);
@@ -195,13 +201,7 @@ JS::Result<std::string> ObjectToSource(JSContext *cx, JS::HandleObject obj,
         return JS::Result<std::string>(JS::Error());
       }
       output += valSource.unwrap();
-      output += ", ";
     }
-  }
-  // Remove the last addition of ", " from the output
-  if (length) {
-    output.pop_back();
-    output.pop_back();
   }
 
   output += "}";
