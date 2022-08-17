@@ -151,8 +151,8 @@ JS::Result<std::string> SetToSource(JSContext *cx, JS::HandleObject obj,
 /**
  * Turn a handle of an Object into a string which represents the object.
  * This function will go through every property on the object (including non-enumerable properties)
- * Each property name and property value within the object will be converted into it's ToSource representation.
- * Note: functions and methods within the object are not included in the output
+ * Each property name and property value within the object will be converted into it's ToSource
+ * representation. Note: functions and methods within the object are not included in the output
  *
  * E.G. The object `{ a: 1, b: 2, c: 3, d(){}, get f(){}, g: function bar() {} }`
  *  would be represented as "{a: 1, b: {c: 2}, c: 3, f: undefined}"
