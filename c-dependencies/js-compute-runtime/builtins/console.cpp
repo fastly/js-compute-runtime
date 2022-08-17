@@ -2,6 +2,15 @@
 
 JS::Result<std::string> ToSource(JSContext *cx, JS::HandleValue val,
                                  JS::MutableHandleObjectVector visitedObjects);
+
+/**
+ * Turn a handle of a Promise into a string which represents the promise.
+ * - If the promise is pending this will return "Promise { <pending> }"
+ * - If the promise is rejected this will return "Promise { <rejected> (rejected-value)}"
+ *  where rejected-value would be the ToSource representation of the rejected value.
+ * - If the promise is resolved this will return "Promise { resolved-value}"
+ *  where resolved-value would be the ToSource representation of the resolved value.
+ */
 JS::Result<std::string> PromiseToSource(JSContext *cx, JS::HandleObject obj,
                                         JS::MutableHandleObjectVector visitedObjects) {
   std::string message = "Promise { ";
@@ -35,6 +44,11 @@ JS::Result<std::string> PromiseToSource(JSContext *cx, JS::HandleObject obj,
   }
   return message;
 }
+
+/**
+ * Turn a handle of a Map into a string which represents the map.
+ * Each key and value within the map will be converted into it's ToSource representation.
+ */
 JS::Result<std::string> MapToSource(JSContext *cx, JS::HandleObject obj,
                                     JS::MutableHandleObjectVector visitedObjects) {
   std::string message = "Map(";
@@ -88,6 +102,11 @@ JS::Result<std::string> MapToSource(JSContext *cx, JS::HandleObject obj,
   message += " }";
   return message;
 }
+
+/**
+ * Turn a handle of a Set into a string which represents the set.
+ * Each value within the set will be converted into it's ToSource representation.
+ */
 JS::Result<std::string> SetToSource(JSContext *cx, JS::HandleObject obj,
                                     JS::MutableHandleObjectVector visitedObjects) {
   std::string message = "Set(";
@@ -129,6 +148,15 @@ JS::Result<std::string> SetToSource(JSContext *cx, JS::HandleObject obj,
   return message;
 }
 
+/**
+ * Turn a handle of an Object into a string which represents the object.
+ * This function will go through every property on the object (including non-enumerable properties)
+ * Each property name and property value within the object will be converted into it's ToSource representation.
+ * Note: functions and methods within the object are not included in the output
+ *
+ * E.G. The object `{ a: 1, b: 2, c: 3, d(){}, get f(){}, g: function bar() {} }`
+ *  would be represented as "{a: 1, b: {c: 2}, c: 3, f: undefined}"
+ */
 JS::Result<std::string> ObjectToSource(JSContext *cx, JS::HandleObject obj,
                                        JS::MutableHandleObjectVector visitedObjects) {
   std::string output = "{";
@@ -181,6 +209,9 @@ JS::Result<std::string> ObjectToSource(JSContext *cx, JS::HandleObject obj,
   return output;
 }
 
+/**
+ * Turn a handle of any value into a string which represents it.
+ */
 JS::Result<std::string> ToSource(JSContext *cx, JS::HandleValue val,
                                  JS::MutableHandleObjectVector visitedObjects) {
 
