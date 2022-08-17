@@ -1,10 +1,9 @@
-#include "js/BigInt.h"
-#include "js/RegExp.h"
-
 #include "console.h"
 
-JS::Result<std::string> PromiseToSource(JSContext *cx, JS::HandleObject obj) {
-  size_t message_len;
+JS::Result<std::string> ToSource(JSContext *cx, JS::HandleValue val,
+                                 JS::MutableHandleObjectVector visitedObjects);
+JS::Result<std::string> PromiseToSource(JSContext *cx, JS::HandleObject obj,
+                                        JS::MutableHandleObjectVector visitedObjects) {
   std::string message = "Promise { ";
   JS::PromiseState state = JS::GetPromiseState(obj);
   switch (state) {
@@ -14,32 +13,30 @@ JS::Result<std::string> PromiseToSource(JSContext *cx, JS::HandleObject obj) {
   }
   case JS::PromiseState::Fulfilled: {
     JS::RootedValue value(cx, JS::GetPromiseResult(obj));
-    JS::RootedString value_source(cx, JS_ValueToSource(cx, value));
-    auto msg = encode(cx, value_source, &message_len);
-    if (!msg) {
+    auto value_source = ToSource(cx, value, visitedObjects);
+    if (value_source.isErr()) {
       return JS::Result<std::string>(JS::Error());
     }
-    message += msg.get();
+    message += value_source.unwrap();
     message += " }";
     break;
   }
   case JS::PromiseState::Rejected: {
     message += "<rejected> ";
     JS::RootedValue value(cx, JS::GetPromiseResult(obj));
-    JS::RootedString value_source(cx, JS_ValueToSource(cx, value));
-    auto msg = encode(cx, value_source, &message_len);
-    if (!msg) {
+    auto value_source = ToSource(cx, value, visitedObjects);
+    if (value_source.isErr()) {
       return JS::Result<std::string>(JS::Error());
     }
-    message += msg.get();
+    message += value_source.unwrap();
     message += " }";
     break;
   }
   }
   return message;
 }
-JS::Result<std::string> MapToSource(JSContext *cx, JS::HandleObject obj) {
-  size_t message_len;
+JS::Result<std::string> MapToSource(JSContext *cx, JS::HandleObject obj,
+                                    JS::MutableHandleObjectVector visitedObjects) {
   std::string message = "Map(";
   uint32_t size = JS::MapSize(cx, obj);
   message += std::to_string(size);
@@ -76,25 +73,23 @@ JS::Result<std::string> MapToSource(JSContext *cx, JS::HandleObject obj) {
     entry = &entry_val.toObject();
     JS_GetElement(cx, entry, 0, &name_val);
     JS_GetElement(cx, entry, 1, &value_val);
-    JS::RootedString name_source(cx, JS_ValueToSource(cx, name_val));
-    auto msg = encode(cx, name_source, &message_len);
-    if (!msg) {
+    auto name_source = ToSource(cx, name_val, visitedObjects);
+    if (name_source.isErr()) {
       return JS::Result<std::string>(JS::Error());
     }
-    message += msg.get();
+    message += name_source.unwrap();
     message += " => ";
-    JS::RootedString value_source(cx, JS_ValueToSource(cx, value_val));
-    msg = encode(cx, value_source, &message_len);
-    if (!msg) {
+    auto value_source = ToSource(cx, value_val, visitedObjects);
+    if (value_source.isErr()) {
       return JS::Result<std::string>(JS::Error());
     }
-    message += msg.get();
+    message += value_source.unwrap();
   }
   message += " }";
   return message;
 }
-JS::Result<std::string> SetToSource(JSContext *cx, JS::HandleObject obj) {
-  size_t message_len;
+JS::Result<std::string> SetToSource(JSContext *cx, JS::HandleObject obj,
+                                    JS::MutableHandleObjectVector visitedObjects) {
   std::string message = "Set(";
   uint32_t size = JS::SetSize(cx, obj);
   message += std::to_string(size);
@@ -119,10 +114,8 @@ JS::Result<std::string> SetToSource(JSContext *cx, JS::HandleObject obj) {
     if (done) {
       break;
     }
-
-    JS::RootedString source(cx, JS_ValueToSource(cx, entry_val));
-    auto msg = encode(cx, source, &message_len);
-    if (!msg) {
+    auto source = ToSource(cx, entry_val, visitedObjects);
+    if (source.isErr()) {
       return JS::Result<std::string>(JS::Error());
     }
     if (firstValue) {
@@ -130,60 +123,99 @@ JS::Result<std::string> SetToSource(JSContext *cx, JS::HandleObject obj) {
     } else {
       message += ", ";
     }
-    message += msg.get();
+    message += source.unwrap();
   }
   message += " }";
   return message;
 }
 
-JS::Result<std::string> ToSource(JSContext *cx, JS::HandleValue val) {
-  auto type = val.type();
-  switch (type) {
-    case JS::ValueType::Undefined: {
-      std::string sourceString = "undefined";
-      return sourceString;
-    }
-    case JS::ValueType::Null: {
-      std::string sourceString = "null";
-      return sourceString;
-    }
-    case JS::ValueType::Object: {
-      JS::RootedObject obj(cx, &val.toObject());
-      js::ESClass cls;
-      if (!JS::GetBuiltinClass(cx, obj, &cls)) {
-        return JS::Result<std::string>(JS::Error());
-      }
+JS::Result<std::string> ObjectToSource(JSContext *cx, JS::HandleObject obj,
+                                       JS::MutableHandleObjectVector visitedObjects) {
+  std::string output = "{";
+  JS::RootedIdVector ids(cx);
+  if (!js::GetPropertyKeys(cx, obj, 0, &ids)) {
+    return JS::Result<std::string>(JS::Error());
+  }
 
-      if (cls == js::ESClass::Set) {
-        return SetToSource(cx, obj);
-      } else if (cls == js::ESClass::Map) {
-        return MapToSource(cx, obj);
-      } else if (cls == js::ESClass::Promise) {
-        return PromiseToSource(cx, obj);
-      } else if (JS::IsWeakMapObject(obj)) {
-        std::string sourceString = "WeakMap { <items unknown> }";
-        return sourceString;
-      } else {
-        JS::RootedString source(cx, JS_ValueToSource(cx, val));
-        size_t message_len;
-        auto msg = encode(cx, source, &message_len);
-        if (!msg) {
+  JS::RootedValue value(cx);
+  for (size_t i = 0, length = ids.length(); i < length; ++i) {
+    const auto &id = ids[i];
+    if (!JS_GetPropertyById(cx, obj, id, &value)) {
+      return JS::Result<std::string>(JS::Error());
+    }
+
+    if (!value.isObject() || !JS_ObjectIsFunction(&value.toObject())) {
+      if (id.isSymbol()) {
+        JS::RootedValue v(cx, SymbolValue(id.toSymbol()));
+        auto idSource = ToSource(cx, v, visitedObjects);
+        if (idSource.isErr()) {
           return JS::Result<std::string>(JS::Error());
         }
-        std::string sourceString(msg.get(), message_len);
-        return sourceString;
+        output += idSource.unwrap();
+      } else {
+        JS::RootedValue idValue(cx, js::IdToValue(id));
+        JS::Result<std::string> idSource = ToSource(cx, idValue, visitedObjects);
+        if (idSource.isErr()) {
+          return JS::Result<std::string>(JS::Error());
+        }
+        output += idSource.unwrap();
       }
-    }
-    case JS::ValueType::String: {
-      size_t message_len;
-      auto msg = encode(cx, val, &message_len);
-      if (!msg) {
+      output += ": ";
+      JS::Result<std::string> valSource = ToSource(cx, value, visitedObjects);
+      if (valSource.isErr()) {
         return JS::Result<std::string>(JS::Error());
       }
-      std::string sourceString(msg.get(), message_len);
+      output += valSource.unwrap();
+      if (i != length - 1) {
+        output += ", ";
+      }
+    }
+  }
+
+  output += "}";
+
+  return output;
+}
+
+JS::Result<std::string> ToSource(JSContext *cx, JS::HandleValue val,
+                                 JS::MutableHandleObjectVector visitedObjects) {
+
+  auto type = val.type();
+  switch (type) {
+  case JS::ValueType::Undefined: {
+    std::string sourceString = "undefined";
+    return sourceString;
+  }
+  case JS::ValueType::Null: {
+    std::string sourceString = "null";
+    return sourceString;
+  }
+  case JS::ValueType::Object: {
+    JS::RootedObject obj(cx, &val.toObject());
+
+    for (const auto &curObject : visitedObjects) {
+      if (obj.get() == curObject) {
+        std::string circular = "<Circular>";
+        return circular;
+      }
+    }
+
+    if (!visitedObjects.emplaceBack(obj)) {
+      return JS::Result<std::string>(JS::Error());
+    }
+
+    if (JS_ObjectIsFunction(obj)) {
+      auto msg = JS::InformalValueTypeName(val);
+      std::string sourceString(msg);
       return sourceString;
     }
-    default: {
+    js::ESClass cls;
+    if (!JS::GetBuiltinClass(cx, obj, &cls)) {
+      return JS::Result<std::string>(JS::Error());
+    }
+
+    if (cls == js::ESClass::Array || cls == js::ESClass::Date || cls == js::ESClass::Error ||
+               cls == js::ESClass::RegExp) {
       JS::RootedString source(cx, JS_ValueToSource(cx, val));
       size_t message_len;
       auto msg = encode(cx, source, &message_len);
@@ -192,22 +224,62 @@ JS::Result<std::string> ToSource(JSContext *cx, JS::HandleValue val) {
       }
       std::string sourceString(msg.get(), message_len);
       return sourceString;
+    } else if (cls == js::ESClass::Set) {
+      return SetToSource(cx, obj, visitedObjects);
+    } else if (cls == js::ESClass::Map) {
+      return MapToSource(cx, obj, visitedObjects);
+    } else if (cls == js::ESClass::Promise) {
+      return PromiseToSource(cx, obj, visitedObjects);
+    } else {
+      if (JS::IsWeakMapObject(obj)) {
+        std::string sourceString = "WeakMap { <items unknown> }";
+        return sourceString;
+      }
+      auto cls = JS::GetClass(obj);
+      std::string className(cls->name);
+      if (className == "WeakSet") {
+        std::string sourceString = "WeakSet { <items unknown> }";
+        return sourceString;
+      }
+      return ObjectToSource(cx, obj, visitedObjects);
     }
+  }
+  case JS::ValueType::String: {
+    size_t message_len;
+    auto msg = encode(cx, val, &message_len);
+    if (!msg) {
+      return JS::Result<std::string>(JS::Error());
+    }
+    std::string sourceString(msg.get(), message_len);
+    return sourceString;
+  }
+  default: {
+    JS::RootedString source(cx, JS_ValueToSource(cx, val));
+    size_t message_len;
+    auto msg = encode(cx, source, &message_len);
+    if (!msg) {
+      return JS::Result<std::string>(JS::Error());
+    }
+    std::string sourceString(msg.get(), message_len);
+    return sourceString;
+  }
   }
 }
 
 namespace builtins {
-
 
 template <const char *prefix, uint8_t prefix_len>
 static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   std::string fullLogLine = "";
   auto length = args.length();
+  JS::RootedObjectVector visitedObjects(cx);
   for (int i = 0; i < length; i++) {
     JS::HandleValue arg = args.get(i);
-    auto source = ToSource(cx, arg);
-    if (source.isErr()) {return false;}
+    auto source = ToSource(cx, arg, &visitedObjects);
+    if (source.isErr()) {
+      return false;
+    }
     std::string message = source.unwrap();
     if (fullLogLine.length()) {
       fullLogLine += " ";
