@@ -138,7 +138,8 @@ JS::Result<std::string> ObjectToSource(JSContext *cx, JS::HandleObject obj,
   }
 
   JS::RootedValue value(cx);
-  for (size_t i = 0, length = ids.length(); i < length; ++i) {
+  size_t length = ids.length();
+  for (size_t i = 0; i < length; ++i) {
     const auto &id = ids[i];
     if (!JS_GetPropertyById(cx, obj, id, &value)) {
       return JS::Result<std::string>(JS::Error());
@@ -166,10 +167,13 @@ JS::Result<std::string> ObjectToSource(JSContext *cx, JS::HandleObject obj,
         return JS::Result<std::string>(JS::Error());
       }
       output += valSource.unwrap();
-      if (i != length - 1) {
-        output += ", ";
-      }
+      output += ", ";
     }
+  }
+  // Remove the last addition of ", " from the output
+  if (length) {
+    output.pop_back();
+    output.pop_back();
   }
 
   output += "}";
