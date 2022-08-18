@@ -35,7 +35,7 @@ addEventListener("fetch", () => {
     console.log('Number:',arg)
     arg = 10n
     console.log('BigInt:',arg)
-    arg = new Date
+    arg = new Date('2022-08-18T09:57:47.120Z')
     console.log('Date:',arg)
     arg = 'cake'
     console.log('string:',arg)
@@ -76,7 +76,7 @@ addEventListener("fetch", () => {
     arg.catch(()=> {})
     arg = new Response('Me? I am the response')
     console.log('Response:', arg)
-    arg = new Request('', {body:'I am the body', method: 'POST'})
+    arg = new Request('https://www.fastly.com', {body:'I am the body', method: 'POST'})
     console.log('Request:', arg)
     arg = new ReadableStream
     console.log('ReadableStream:', arg)
