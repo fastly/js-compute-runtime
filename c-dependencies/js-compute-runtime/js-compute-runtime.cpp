@@ -478,7 +478,7 @@ int main(int argc, const char *argv[]) {
   double total_compute = 0;
   auto start = system_clock::now();
 
-  __wasilibc_initialize_environ();
+  __wasilibc_ensure_environ();
 
   if (debug_logging_enabled()) {
     printf("Running JS handleRequest function for C@E service version %s\n",
