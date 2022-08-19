@@ -1,6 +1,8 @@
 #ifndef JS_COMPUTE_RUNTIME_BUILTIN_H
 #define JS_COMPUTE_RUNTIME_BUILTIN_H
 
+#include <tuple>
+
 #include "js-compute-builtins.h"
 
 #define DBG(...)                                                                                   \
@@ -145,6 +147,19 @@ public:
       JSCLASS_HAS_RESERVED_SLOTS(Impl::Slots::Count) | class_flags,
       &class_ops,
   };
+
+  static inline JS::Result<std::tuple<JS::CallArgs, JS::Rooted<JSObject *> *>> MethodHeaderWithName(int required_argc, JSContext *cx, unsigned argc,JS::Value *vp, const char *name) {
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    if (!check_receiver(cx, args.thisv(), name)) {
+      return JS::Result<std::tuple<JS::CallArgs, JS::Rooted<JSObject *> *>>(JS::Error());
+    }
+    JS::Rooted<JSObject *> self(cx, &args.thisv().toObject());
+    if (!args.requireAtLeast(cx, name, required_argc)) {
+      return JS::Result<std::tuple<JS::CallArgs, JS::Rooted<JSObject *> *>>(JS::Error());
+    }
+
+    return JS::Result<std::tuple<JS::CallArgs, JS::Rooted<JSObject *> *>>(std::make_tuple(args, &self));
+  }
 
   static JS::PersistentRooted<JSObject *> proto_obj;
 

@@ -3357,8 +3357,8 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
     return false;
 
   SpecString spec((uint8_t *)buf.release(), bytes_read, bytes_read);
-  WorkerLocation::url = URL::create(cx, url_instance, spec);
-  if (!WorkerLocation::url) {
+  builtins::WorkerLocation::url = URL::create(cx, url_instance, spec);
+  if (!builtins::WorkerLocation::url) {
     return false;
   }
 
@@ -3370,7 +3370,7 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
     if (!url_instance)
       return false;
 
-    builtins::Fastly::baseURL = URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
+    builtins::Fastly::baseURL = URL::create(cx, url_instance, URL::origin(cx, builtins::WorkerLocation::url));
     if (!builtins::Fastly::baseURL)
       return false;
   }
@@ -4068,7 +4068,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!URLSearchParamsIterator::init_class(cx, global))
     return false;
-  if (!WorkerLocation::init_class(cx, global))
+  if (!builtins::WorkerLocation::init_class(cx, global))
     return false;
   if (!ObjectStore::init_class(cx, global))
     return false;
