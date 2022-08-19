@@ -7,7 +7,6 @@ namespace builtins {
 
 class WorkerLocation : public BuiltinImpl<WorkerLocation> {
 private:
-
 public:
   static constexpr const char *class_name = "WorkerLocation";
   static const int ctor_length = 1;

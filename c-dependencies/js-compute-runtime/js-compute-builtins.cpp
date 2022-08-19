@@ -3370,7 +3370,8 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
     if (!url_instance)
       return false;
 
-    builtins::Fastly::baseURL = URL::create(cx, url_instance, URL::origin(cx, builtins::WorkerLocation::url));
+    builtins::Fastly::baseURL =
+        URL::create(cx, url_instance, URL::origin(cx, builtins::WorkerLocation::url));
     if (!builtins::Fastly::baseURL)
       return false;
   }
