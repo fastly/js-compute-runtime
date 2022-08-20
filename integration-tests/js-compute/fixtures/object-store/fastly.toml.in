@@ -9,4 +9,4 @@ name = "app"
 service_id = ""
 
 [scripts]
-  build = "mkdir -p bin && cargo run --release app.js bin/main.wasm"
+  build = "../../../../target/release/js-compute-runtime"
