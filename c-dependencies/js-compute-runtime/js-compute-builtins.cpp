@@ -4150,6 +4150,8 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
   return true;
 }
 
+JSObject *create_fetch_event(JSContext *cx) { return FetchEvent::create(cx); }
+
 UniqueChars stringify_value(JSContext *cx, JS::HandleValue value) {
   JS::RootedString str(cx, JS_ValueToSource(cx, value));
   if (!str)
