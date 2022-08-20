@@ -309,14 +309,12 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Install Viceroy
-      run: |
-        echo "Install Viceroy 0.2.9..."
-        wget https://github.com/fastly/Viceroy/releases/download/v0.2.9/viceroy_v0.2.9_linux-amd64.tar.gz
-        echo "7e1dfea8ebb770d96e449f36227a121fa3bc13fb74ae75d340bc302bcca9cc10eb1c8d9c6defc983a4e81ad4e83efb0c3052d895a5a45348835041e15c9f68a9  viceroy_v0.2.9_linux-amd64.tar.gz" | sha512sum --check
-        mkdir -p $HOME/bin
-        tar -xzf viceroy_v0.2.9_linux-amd64.tar.gz --directory $HOME/bin
-        echo "$HOME/bin" >> $GITHUB_PATH
+    - name: Restore Viceroy from cache
+      uses: actions/cache@v2.1.5
+      with:
+        path: "/home/runner/.cargo/bin/viceroy"
+        key: crate-cache-viceroy-${{ env.viceroy_version }}
+
 
     - name: Download x86_64 Linux binaries
       uses: actions/download-artifact@v1
