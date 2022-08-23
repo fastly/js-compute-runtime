@@ -123,6 +123,7 @@ static JS::PersistentRootedObjectVector *pending_body_reads;
 
 // TODO(performance): introduce a version that writes into an existing buffer, and use that
 // with the hostcall buffer where possible.
+// https://github.com/fastly/js-compute-runtime/issues/215
 UniqueChars encode(JSContext *cx, HandleString str, size_t *encoded_len) {
   UniqueChars text = JS_EncodeStringToUTF8(cx, str);
   if (!text)
@@ -197,8 +198,10 @@ static char *read_from_handle_all(JSContext *cx, HandleType handle, size_t *nwri
                                   bool read_until_zero) {
   // TODO(performance): investigate passing a size hint in situations where we might know
   // the final size, e.g. via the `content-length` header.
+  // https://github.com/fastly/js-compute-runtime/issues/216
   size_t buf_size = HANDLE_READ_CHUNK_SIZE;
   // TODO(performance): make use of malloc slack.
+  // https://github.com/fastly/js-compute-runtime/issues/217
   char *buf = static_cast<char *>(JS_malloc(cx, buf_size));
   if (!buf) {
     JS_ReportOutOfMemory(cx);
@@ -223,6 +226,7 @@ static char *read_from_handle_all(JSContext *cx, HandleType handle, size_t *nwri
     }
 
     // TODO(performance): make use of malloc slack, and use a smarter buffer growth strategy.
+    // https://github.com/fastly/js-compute-runtime/issues/217
     size_t new_size = buf_size + HANDLE_READ_CHUNK_SIZE;
     new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, new_size));
     if (!new_buf) {
@@ -740,6 +744,7 @@ bool bodyAll(JSContext *cx, CallArgs args, HandleObject self) {
   // we need to manually read all chunks from the stream.
   // TODO(performance): ensure that we're properly shortcutting reads from TransformStream
   // readables.
+  // https://github.com/fastly/js-compute-runtime/issues/218
   RootedObject stream(cx, body_stream(self));
   if (stream && !builtins::NativeStreamSource::stream_is_body(cx, stream)) {
     if (!consume_content_stream_for_bodyAll(cx, self, stream, body_parser)) {
@@ -2148,8 +2153,10 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   // e.g. to represent cache entries. While that's perhaps not ideal to begin
   // with, it exists, so we should handle it in a good way, and not be
   // superfluously slow.
+  // https://github.com/fastly/js-compute-runtime/issues/219
   // TODO(performance): enable creating Response objects during the init phase, and only
   // creating the host-side representation when processing requests.
+  // https://github.com/fastly/js-compute-runtime/issues/220
   ResponseHandle response_handle = {.handle = INVALID_HANDLE};
   if (!HANDLE_RESULT(cx, xqd_resp_new(&response_handle))) {
     return false;
@@ -2926,6 +2933,7 @@ bool append(JSContext *cx, unsigned argc, Value *vp) {
  *
  * Assumes that both the name and value are valid and normalized.
  * TODO(performance): fully skip normalization.
+ * https://github.com/fastly/js-compute-runtime/issues/221
  */
 bool maybe_add(JSContext *cx, HandleObject self, const char *name, const char *value) {
   MOZ_ASSERT(is_instance(self));
