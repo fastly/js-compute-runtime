@@ -273,6 +273,7 @@ bool eval_stdin(JSContext *cx, MutableHandleValue result) {
   // by parsing the script (but not evaluating it) tend to be read-only, so
   // optimizing them for compactness makes sense and doesn't fragment writes
   // later on.
+  // https://github.com/fastly/js-compute-runtime/issues/222
   JS::PrepareForFullGC(cx);
   JS::NonIncrementalGC(cx, JS::GCOptions::Shrink, JS::GCReason::API);
 
@@ -300,6 +301,7 @@ bool eval_stdin(JSContext *cx, MutableHandleValue result) {
   // running GC like this. The working theory is that otherwise the engine might
   // mark chunk pages as free that then later the allocator doesn't turn into
   // chunks without further fragmentation. But that might be wrong.
+  // https://github.com/fastly/js-compute-runtime/issues/223
   // JS_SetGCParameter(cx, JSGC_MAX_EMPTY_CHUNK_COUNT, 10);
 
   // TODO(performance): verify that it's better to *not* perform a shrinking GC here, as
@@ -311,6 +313,7 @@ bool eval_stdin(JSContext *cx, MutableHandleValue result) {
   // object kinds that are initially allocated in the same vicinity, but that
   // the shrinking GC causes them to be intermingled with other objects. I.e.,
   // writes become more fragmented due to the shrinking GC.
+  // https://github.com/fastly/js-compute-runtime/issues/224
   JS::PrepareForFullGC(cx);
   JS::NonIncrementalGC(cx, JS::GCOptions::Normal, JS::GCReason::API);
 
