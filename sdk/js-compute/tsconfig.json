@@ -8,5 +8,7 @@
     "moduleResolution": "node",
     "skipLibCheck": false,
     "forceConsistentCasingInFileNames": true
-  }
+  },
+  "include": ["index.d.ts"],
+  "exclude": ["index.test-d.ts"]
 }
