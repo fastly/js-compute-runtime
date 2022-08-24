@@ -356,7 +356,7 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // If the converted string has a length of more than 255 then we throw an Error
-  // because ObjectStore names have to be less than 1025 characters.
+  // because ObjectStore names have to be less than 255 characters.
   if (name_len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_NAME_TOO_LONG);
     return false;
