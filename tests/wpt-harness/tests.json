@@ -107,6 +107,7 @@
   "fetch/api/response/response-stream-disturbed-by-pipe.any.js",
   "fetch/api/response/response-stream-with-broken-then.any.js",
   "fetch/api/basic/text-utf8.any.js",
+  "html/webappapis/atob/base64.any.js",
   "streams/readable-streams/bad-strategies.any.js",
   "streams/readable-streams/bad-underlying-sources.any.js",
   "streams/readable-streams/cancel.any.js",

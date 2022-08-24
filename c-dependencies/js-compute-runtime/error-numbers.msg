@@ -57,4 +57,5 @@ MSG_DEF(JSMSG_OBJECT_STORE_KEY_RELATIVE,                       0, JSEXN_TYPEERR,
 MSG_DEF(JSMSG_OBJECT_STORE_PUT_CONTENT_STREAM,                 0, JSEXN_TYPEERR, "Content-provided streams are not yet supported for streaming into ObjectStore")
 MSG_DEF(JSMSG_OBJECT_STORE_PUT_OVER_30_MB,                     0, JSEXN_TYPEERR, "ObjectStore value can not be more than 30 Megabytes in size")
 MSG_DEF(JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED,             0, JSEXN_TYPEERR, "Can't use a ReadableStream that's locked or has ever been read from or canceled")
+MSG_DEF(JSMSG_INVALID_CHARACTER_ERROR,                         0, JSEXN_ERR, "String contains an invalid character")
 //clang-format on
