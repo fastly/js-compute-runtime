@@ -166,7 +166,7 @@ export declare class Dictionary {
  *
  * Can be retrieved for the incoming request's client IP address using the
  * {@linkcode ClientInfo#geo} accessor, and for arbitrary addresses using
- * {@linkcode fastly.getGeolocationForIpAddress}.
+ * {@linkcode Fastly.getGeolocationForIpAddress}.
  */
 export declare interface Geolocation {
   /**
@@ -515,7 +515,7 @@ export declare class TextDecoder {
  * Simple interface for logging to
  * [third party logging providers](https://developer.fastly.com/learning/integrations/logging)
  *
- * Instances of Logger for specific endpoints can be created using {@linkcode fastly.getLogger}.
+ * Instances of Logger for specific endpoints can be created using {@linkcode Fastly.getLogger}.
  */
 export declare interface Logger {
   /**
@@ -891,7 +891,7 @@ type ReadableStreamDefaultReadResult<T> = ReadableStreamDefaultReadValueResult<T
 export interface ReadableWritablePair<R = any, W = any> {
   readable: ReadableStream<R>;
   /**
-   * Provides a convenient, chainable way of piping this readable stream through a transform stream (or any other { writable, readable } pair). It simply pipes the stream into the writable side of the supplied pair, and returns the readable side for further use.
+   * Provides a convenient, chainable way of piping this readable stream through a transform stream (or any other \{ writable, readable \} pair). It simply pipes the stream into the writable side of the supplied pair, and returns the readable side for further use.
    *
    * Piping a stream will lock it for the duration of the pipe, preventing any other consumer from acquiring a reader.
    */

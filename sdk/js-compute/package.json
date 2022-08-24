@@ -30,11 +30,14 @@
     "test": "tsd",
     "docs": "npm run docs:clean && npm run docs:typedoc",
     "docs:clean": "rm -rf reference-docs",
-    "docs:typedoc": "typedoc --theme minimal --disableSources --includeVersion --out reference-docs --tsconfig tsconfig.json --readme none index.d.ts"
+    "docs:typedoc": "typedoc --theme ./node_modules/typedoc-loopingz-theme/bin/default  --disableSources --includeVersion --out reference-docs --tsconfig tsconfig.json --readme none --exclude index.test-d.ts index.d.ts"
   },
   "devDependencies": {
     "tsd": "^0.22.0",
-    "typedoc": "^0.23.10",
+    "typedoc": "^0.21",
     "typescript": "^4.2"
+  },
+  "dependencies": {
+    "typedoc-loopingz-theme": "^1.1.3"
   }
 }
