@@ -23,15 +23,19 @@ JS::PersistentRooted<JSObject *> WorkerLocation::url;
     return URL::field(cx, WorkerLocation::url, args.rval());                                       \
   }
 
-WorkerLocation_ACCESSOR_GET(href) WorkerLocation_ACCESSOR_GET(origin)
-    WorkerLocation_ACCESSOR_GET(protocol) WorkerLocation_ACCESSOR_GET(host)
-        WorkerLocation_ACCESSOR_GET(hostname) WorkerLocation_ACCESSOR_GET(port)
-            WorkerLocation_ACCESSOR_GET(pathname) WorkerLocation_ACCESSOR_GET(search)
-                WorkerLocation_ACCESSOR_GET(hash)
+WorkerLocation_ACCESSOR_GET(href);
+WorkerLocation_ACCESSOR_GET(origin);
+WorkerLocation_ACCESSOR_GET(protocol);
+WorkerLocation_ACCESSOR_GET(host);
+WorkerLocation_ACCESSOR_GET(hostname);
+WorkerLocation_ACCESSOR_GET(port);
+WorkerLocation_ACCESSOR_GET(pathname);
+WorkerLocation_ACCESSOR_GET(search);
+WorkerLocation_ACCESSOR_GET(hash);
 
 #undef WorkerLocation_ACCESSOR_GET
 
-                    bool WorkerLocation::toString(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool WorkerLocation::toString(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   return href_get(cx, argc, vp);
 }
