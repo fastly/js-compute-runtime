@@ -51,6 +51,8 @@
 #include "builtins/url.h"
 #include "builtins/worker-location.h"
 
+using namespace std::literals;
+
 using JS::CallArgs;
 using JS::CallArgsFromVp;
 using JS::UniqueChars;
@@ -3714,8 +3716,8 @@ static const uint8_t base64DecodeTable[] = {
 // clang-format on
 
 bool base64CharacterToValue(char character, uint8_t *value) {
-  static const size_t mask = 0x7f;
-  size_t index = static_cast<uint8_t>(character);
+  static const size_t mask = 127;
+  auto index = static_cast<size_t>(character);
 
   if (index & ~mask) {
     return false;
@@ -3725,7 +3727,7 @@ bool base64CharacterToValue(char character, uint8_t *value) {
   return *value != 255;
 }
 
-inline JS::Result<std::string> base64Decode4to3(std::string input) {
+inline JS::Result<std::string> base64Decode4to3(std::string_view input) {
   std::string output = "";
   uint8_t w, x, y, z;
   // 8.1 Find the code point pointed to by position in the second column of Table 1: The Base 64
@@ -3744,7 +3746,7 @@ inline JS::Result<std::string> base64Decode4to3(std::string input) {
   return output;
 }
 
-inline JS::Result<std::string> base64Decode3to2(std::string input) {
+inline JS::Result<std::string> base64Decode3to2(std::string_view input) {
   std::string output = "";
   uint8_t w, x, y;
   // 8.1 Find the code point pointed to by position in the second column of Table 1: The Base 64
@@ -3763,7 +3765,7 @@ inline JS::Result<std::string> base64Decode3to2(std::string input) {
   return output;
 }
 
-inline JS::Result<std::string> base64Decode2to1(std::string input) {
+inline JS::Result<std::string> base64Decode2to1(std::string_view input) {
   std::string output = "";
   uint8_t w, x;
   // 8.1 Find the code point pointed to by position in the second column of Table 1: The Base 64
@@ -3779,28 +3781,52 @@ inline JS::Result<std::string> base64Decode2to1(std::string input) {
   output += (uint8_t(w << 2 | x >> 4));
   return output;
 }
+
+bool isAsciiWhitespace(char c) {
+  switch (c) {
+  case '\t':
+  case '\n':
+  case '\f':
+  case '\r':
+  case ' ':
+    return true;
+  default:
+    return false;
+  }
+}
+
 // https://infra.spec.whatwg.org/#forgiving-base64-decode
-JS::Result<std::string> forgivingBase64Decode(std::string input) {
+JS::Result<std::string> forgivingBase64Decode(std::string_view data) {
   // 1. Remove all ASCII whitespace from data.
   // ASCII whitespace is U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, or U+0020 SPACE.
-  std::regex whitespace("[\t\n\f\r ]+");
-  input = std::regex_replace(input, whitespace, "");
-  uint32_t inputLength = input.length();
+  auto hasWhitespace = std::find_if(data.begin(), data.end(), &isAsciiWhitespace);
+  std::string dataWithoutAsciiWhitespace;
+
+  if (hasWhitespace) {
+    dataWithoutAsciiWhitespace = data;
+    dataWithoutAsciiWhitespace.erase(std::remove_if(dataWithoutAsciiWhitespace.begin(),
+                                                    dataWithoutAsciiWhitespace.end(),
+                                                    &isAsciiWhitespace),
+                                     dataWithoutAsciiWhitespace.end());
+    data = dataWithoutAsciiWhitespace;
+  }
+  std::string_view data_view(data);
+  size_t length = data_view.length();
 
   // 2. If data’s code point length divides by 4 leaving no remainder, then:
-  if (inputLength && (inputLength % 4 == 0)) {
+  if (length && (length % 4 == 0)) {
     // 2.1 If data ends with one or two U+003D (=) code points, then remove them from data.
-    if (input[inputLength - 1] == '=') {
-      if (input[inputLength - 2] == '=') {
-        inputLength -= 2;
+    if (data_view.at(length - 1) == '=') {
+      if (data_view.at(length - 2) == '=') {
+        data_view.remove_suffix(2);
       } else {
-        inputLength -= 1;
+        data_view.remove_suffix(1);
       }
     }
   }
 
   // 3. If data’s code point length divides by 4 leaving a remainder of 1, then return failure.
-  if ((inputLength % 4 == 1)) {
+  if ((data_view.length() % 4 == 1)) {
     return JS::Result<std::string>(JS::Error());
   }
 
@@ -3823,23 +3849,22 @@ JS::Result<std::string> forgivingBase64Decode(std::string input) {
 
   // 7. Let position be a position variable for data, initially pointing at the start of data.
 
-  // We don't use a position variable, instead we erase from the `input` each time we have dealt
-  // with some characters.
+  // We don't use a position variable, instead we remove_prefix from the `data` each time we have
+  // dealt with some characters.
 
-  while (inputLength >= 4) {
-    auto out_result = base64Decode4to3(input);
+  while (data_view.length() >= 4) {
+    auto out_result = base64Decode4to3(data_view);
     if (out_result.isErr()) {
       return JS::Result<std::string>(JS::Error());
     }
     output += out_result.unwrap();
 
-    input.erase(0, 4);
-    inputLength -= 4;
+    data_view.remove_prefix(4);
   }
 
-  switch (inputLength) {
+  switch (data_view.length()) {
   case 3: {
-    auto out_result = base64Decode3to2(input);
+    auto out_result = base64Decode3to2(data_view);
     if (out_result.isErr()) {
       return JS::Result<std::string>(JS::Error());
     }
@@ -3847,7 +3872,7 @@ JS::Result<std::string> forgivingBase64Decode(std::string input) {
     break;
   }
   case 2: {
-    auto out_result = base64Decode2to1(input);
+    auto out_result = base64Decode2to1(data_view);
     if (out_result.isErr()) {
       return JS::Result<std::string>(JS::Error());
     }
@@ -3885,7 +3910,6 @@ bool atob(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
   auto decoded = decoded_result.unwrap();
-
   RootedString decodedData(cx, JS_NewStringCopyN(cx, decoded.c_str(), decoded.length()));
   if (!decodedData) {
     return false;
@@ -3901,14 +3925,14 @@ const char base[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                       "0123456789+/";
 
 inline uint8_t CharTo8Bit(char character) { return uint8_t(character); }
-inline std::string base64Encode3to4(std::string aSrc) {
+inline std::string base64Encode3to4(std::string_view data) {
   std::string out = "";
   uint32_t b32 = 0;
   int i, j = 18;
 
   for (i = 0; i < 3; ++i) {
     b32 <<= 8;
-    b32 |= CharTo8Bit(aSrc[i]);
+    b32 |= CharTo8Bit(data[i]);
   }
 
   for (i = 0; i < 4; ++i) {
@@ -3918,10 +3942,10 @@ inline std::string base64Encode3to4(std::string aSrc) {
   return out;
 }
 
-inline std::string base64Encode2to4(std::string aSrc) {
+inline std::string base64Encode2to4(std::string_view data) {
   std::string out = "";
-  uint8_t src0 = CharTo8Bit(aSrc[0]);
-  uint8_t src1 = CharTo8Bit(aSrc[1]);
+  uint8_t src0 = CharTo8Bit(data[0]);
+  uint8_t src1 = CharTo8Bit(data[1]);
   out += base[(uint32_t)((src0 >> 2) & 0x3F)];
   out += base[(uint32_t)(((src0 & 0x03) << 4) | ((src1 >> 4) & 0x0F))];
   out += base[(uint32_t)((src1 & 0x0F) << 2)];
@@ -3929,9 +3953,9 @@ inline std::string base64Encode2to4(std::string aSrc) {
   return out;
 }
 
-inline std::string base64Encode1to4(std::string aSrc) {
+inline std::string base64Encode1to4(std::string_view data) {
   std::string out = "";
-  uint8_t src0 = CharTo8Bit(aSrc[0]);
+  uint8_t src0 = CharTo8Bit(data[0]);
   out += base[(uint32_t)((src0 >> 2) & 0x3F)];
   out += base[(uint32_t)((src0 & 0x03) << 4)];
   out += '=';
@@ -3944,12 +3968,12 @@ inline std::string base64Encode1to4(std::string aSrc) {
 // section 4 of RFC 4648 to data and return the result. [RFC4648] Note: This is named
 // forgiving-base64 encode for symmetry with forgiving-base64 decode, which is different from the
 // RFC as it defines error handling for certain inputs.
-std::string forgivingBase64Encode(std::string data) {
+std::string forgivingBase64Encode(std::string_view data) {
   int length = data.length();
   std::string out = "";
   while (length >= 3) {
     out += base64Encode3to4(data);
-    data.erase(0, 3);
+    data.remove_prefix(3);
     length -= 3;
   }
 
