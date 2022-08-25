@@ -1,7 +1,7 @@
 #include "console.h"
 #include "mozilla/Result.h"
 
-JS::Result<std::string> ToSource(JSContext *cx, JS::HandleValue val,
+JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::HandleValue val,
                                  JS::MutableHandleObjectVector visitedObjects);
 
 /**
@@ -12,53 +12,53 @@ JS::Result<std::string> ToSource(JSContext *cx, JS::HandleValue val,
  * - If the promise is resolved this will return "Promise { resolved-value}"
  *  where resolved-value would be the ToSource representation of the resolved value.
  */
-JS::Result<std::string> PromiseToSource(JSContext *cx, JS::HandleObject obj,
+JS::Result<mozilla::Ok> PromiseToSource(JSContext *cx, std::string &sourceOut, JS::HandleObject obj,
                                         JS::MutableHandleObjectVector visitedObjects) {
-  std::string message = "Promise { ";
+  sourceOut += "Promise { ";
   JS::PromiseState state = JS::GetPromiseState(obj);
   switch (state) {
   case JS::PromiseState::Pending: {
-    message += "<pending> }";
+    sourceOut += "<pending> }";
     break;
   }
   case JS::PromiseState::Fulfilled: {
     JS::RootedValue value(cx, JS::GetPromiseResult(obj));
     std::string source;
-    MOZ_TRY_VAR(source, ToSource(cx, value, visitedObjects));
-    message += source;
-    message += " }";
+    MOZ_TRY(ToSource(cx, source, value, visitedObjects));
+    sourceOut += source;
+    sourceOut += " }";
     break;
   }
   case JS::PromiseState::Rejected: {
-    message += "<rejected> ";
+    sourceOut += "<rejected> ";
     JS::RootedValue value(cx, JS::GetPromiseResult(obj));
     std::string source;
-    MOZ_TRY_VAR(source, ToSource(cx, value, visitedObjects));
-    message += source;
-    message += " }";
+    MOZ_TRY(ToSource(cx, source, value, visitedObjects));
+    sourceOut += source;
+    sourceOut += " }";
     break;
   }
   }
-  return message;
+  return mozilla::Ok();
 }
 
 /**
  * Turn a handle of a Map into a string which represents the map.
  * Each key and value within the map will be converted into it's ToSource representation.
  */
-JS::Result<std::string> MapToSource(JSContext *cx, JS::HandleObject obj,
+JS::Result<mozilla::Ok> MapToSource(JSContext *cx, std::string &sourceOut, JS::HandleObject obj,
                                     JS::MutableHandleObjectVector visitedObjects) {
-  std::string message = "Map(";
+  sourceOut += "Map(";
   uint32_t size = JS::MapSize(cx, obj);
-  message += std::to_string(size);
-  message += ") { ";
+  sourceOut += std::to_string(size);
+  sourceOut += ") { ";
   JS::Rooted<JS::Value> iterable(cx);
   if (!JS::MapEntries(cx, obj, &iterable)) {
-    return JS::Result<std::string>(JS::Error());
+    return JS::Result<mozilla::Ok>(JS::Error());
   }
   JS::ForOfIterator it(cx);
   if (!it.init(iterable)) {
-    return JS::Result<std::string>(JS::Error());
+    return JS::Result<mozilla::Ok>(JS::Error());
   }
 
   JS::RootedObject entry(cx);
@@ -69,7 +69,7 @@ JS::Result<std::string> MapToSource(JSContext *cx, JS::HandleObject obj,
   while (true) {
     bool done;
     if (!it.next(&entry_val, &done)) {
-      return JS::Result<std::string>(JS::Error());
+      return JS::Result<mozilla::Ok>(JS::Error());
     }
 
     if (done) {
@@ -78,41 +78,41 @@ JS::Result<std::string> MapToSource(JSContext *cx, JS::HandleObject obj,
     if (firstValue) {
       firstValue = false;
     } else {
-      message += ", ";
+      sourceOut += ", ";
     }
 
     entry = &entry_val.toObject();
     JS_GetElement(cx, entry, 0, &name_val);
     JS_GetElement(cx, entry, 1, &value_val);
     std::string name;
-    MOZ_TRY_VAR(name, ToSource(cx, name_val, visitedObjects));
-    message += name;
-    message += " => ";
+    MOZ_TRY(ToSource(cx, name, name_val, visitedObjects));
+    sourceOut += name;
+    sourceOut += " => ";
     std::string value;
-    MOZ_TRY_VAR(value, ToSource(cx, value_val, visitedObjects));
-    message += value;
+    MOZ_TRY(ToSource(cx, value, value_val, visitedObjects));
+    sourceOut += value;
   }
-  message += " }";
-  return message;
+  sourceOut += " }";
+  return mozilla::Ok();
 }
 
 /**
  * Turn a handle of a Set into a string which represents the set.
  * Each value within the set will be converted into it's ToSource representation.
  */
-JS::Result<std::string> SetToSource(JSContext *cx, JS::HandleObject obj,
+JS::Result<mozilla::Ok> SetToSource(JSContext *cx, std::string &sourceOut, JS::HandleObject obj,
                                     JS::MutableHandleObjectVector visitedObjects) {
-  std::string message = "Set(";
+  sourceOut += "Set(";
   uint32_t size = JS::SetSize(cx, obj);
-  message += std::to_string(size);
-  message += ") { ";
+  sourceOut += std::to_string(size);
+  sourceOut += ") { ";
   JS::Rooted<JS::Value> iterable(cx);
   if (!JS::SetValues(cx, obj, &iterable)) {
-    return JS::Result<std::string>(JS::Error());
+    return JS::Result<mozilla::Ok>(JS::Error());
   }
   JS::ForOfIterator it(cx);
   if (!it.init(iterable)) {
-    return JS::Result<std::string>(JS::Error());
+    return JS::Result<mozilla::Ok>(JS::Error());
   }
 
   JS::RootedValue entry_val(cx);
@@ -120,23 +120,23 @@ JS::Result<std::string> SetToSource(JSContext *cx, JS::HandleObject obj,
   while (true) {
     bool done;
     if (!it.next(&entry_val, &done)) {
-      return JS::Result<std::string>(JS::Error());
+      return JS::Result<mozilla::Ok>(JS::Error());
     }
 
     if (done) {
       break;
     }
     std::string entry;
-    MOZ_TRY_VAR(entry, ToSource(cx, entry_val, visitedObjects));
+    MOZ_TRY(ToSource(cx, entry, entry_val, visitedObjects));
     if (firstValue) {
       firstValue = false;
     } else {
-      message += ", ";
+      sourceOut += ", ";
     }
-    message += entry;
+    sourceOut += entry;
   }
-  message += " }";
-  return message;
+  sourceOut += " }";
+  return mozilla::Ok();
 }
 
 /**
@@ -148,12 +148,12 @@ JS::Result<std::string> SetToSource(JSContext *cx, JS::HandleObject obj,
  * E.G. The object `{ a: 1, b: 2, c: 3, d(){}, get f(){}, g: function bar() {} }`
  *  would be represented as "{a: 1, b: {c: 2}, c: 3, f: undefined}"
  */
-JS::Result<std::string> ObjectToSource(JSContext *cx, JS::HandleObject obj,
+JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS::HandleObject obj,
                                        JS::MutableHandleObjectVector visitedObjects) {
-  std::string output = "{";
+  sourceOut += "{";
   JS::RootedIdVector ids(cx);
   if (!js::GetPropertyKeys(cx, obj, 0, &ids)) {
-    return JS::Result<std::string>(JS::Error());
+    return JS::Result<mozilla::Ok>(JS::Error());
   }
 
   JS::RootedValue value(cx);
@@ -162,76 +162,74 @@ JS::Result<std::string> ObjectToSource(JSContext *cx, JS::HandleObject obj,
   for (size_t i = 0; i < length; ++i) {
     const auto &id = ids[i];
     if (!JS_GetPropertyById(cx, obj, id, &value)) {
-      return JS::Result<std::string>(JS::Error());
+      return JS::Result<mozilla::Ok>(JS::Error());
     }
 
     if (!value.isObject() || !JS_ObjectIsFunction(&value.toObject())) {
       if (firstValue) {
         firstValue = false;
       } else {
-        output += ", ";
+        sourceOut += ", ";
       }
       if (id.isSymbol()) {
         JS::RootedValue v(cx, SymbolValue(id.toSymbol()));
         std::string source;
-        MOZ_TRY_VAR(source, ToSource(cx, v, visitedObjects));
-        output += source;
+        MOZ_TRY(ToSource(cx, source, v, visitedObjects));
+        sourceOut += source;
       } else {
         JS::RootedValue idValue(cx, js::IdToValue(id));
         std::string source;
-        MOZ_TRY_VAR(source, ToSource(cx, idValue, visitedObjects));
-        output += source;
+        MOZ_TRY(ToSource(cx, source, idValue, visitedObjects));
+        sourceOut += source;
       }
-      output += ": ";
+      sourceOut += ": ";
       std::string source;
-      MOZ_TRY_VAR(source, ToSource(cx, value, visitedObjects));
-      output += source;
+      MOZ_TRY(ToSource(cx, source, value, visitedObjects));
+      sourceOut += source;
     }
   }
 
-  output += "}";
-
-  return output;
+  sourceOut += "}";
+  return mozilla::Ok();
 }
 
 /**
  * Turn a handle of any value into a string which represents it.
  */
-JS::Result<std::string> ToSource(JSContext *cx, JS::HandleValue val,
+JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::HandleValue val,
                                  JS::MutableHandleObjectVector visitedObjects) {
 
   auto type = val.type();
   switch (type) {
   case JS::ValueType::Undefined: {
-    std::string sourceString = "undefined";
-    return sourceString;
+    sourceOut += "undefined";
+    return mozilla::Ok();
   }
   case JS::ValueType::Null: {
-    std::string sourceString = "null";
-    return sourceString;
+    sourceOut += "null";
+    return mozilla::Ok();
   }
   case JS::ValueType::Object: {
     JS::RootedObject obj(cx, &val.toObject());
 
     for (const auto &curObject : visitedObjects) {
       if (obj.get() == curObject) {
-        std::string circular = "<Circular>";
-        return circular;
+        sourceOut += "<Circular>";
+        return mozilla::Ok();
       }
     }
 
     if (!visitedObjects.emplaceBack(obj)) {
-      return JS::Result<std::string>(JS::Error());
+      return JS::Result<mozilla::Ok>(JS::Error());
     }
 
     if (JS_ObjectIsFunction(obj)) {
-      auto msg = JS::InformalValueTypeName(val);
-      std::string sourceString(msg);
-      return sourceString;
+      sourceOut += JS::InformalValueTypeName(val);
+      return mozilla::Ok();
     }
     js::ESClass cls;
     if (!JS::GetBuiltinClass(cx, obj, &cls)) {
-      return JS::Result<std::string>(JS::Error());
+      return JS::Result<mozilla::Ok>(JS::Error());
     }
 
     if (cls == js::ESClass::Array || cls == js::ESClass::Date || cls == js::ESClass::Error ||
@@ -240,48 +238,65 @@ JS::Result<std::string> ToSource(JSContext *cx, JS::HandleValue val,
       size_t message_len;
       auto msg = encode(cx, source, &message_len);
       if (!msg) {
-        return JS::Result<std::string>(JS::Error());
+        return JS::Result<mozilla::Ok>(JS::Error());
       }
       std::string sourceString(msg.get(), message_len);
-      return sourceString;
+      sourceOut += sourceString;
+      return mozilla::Ok();
     } else if (cls == js::ESClass::Set) {
-      return SetToSource(cx, obj, visitedObjects);
+      std::string sourceString;
+      MOZ_TRY(SetToSource(cx, sourceString, obj, visitedObjects));
+      sourceOut += sourceString;
+      return mozilla::Ok();
     } else if (cls == js::ESClass::Map) {
-      return MapToSource(cx, obj, visitedObjects);
+      std::string sourceString;
+      MOZ_TRY(MapToSource(cx, sourceString, obj, visitedObjects));
+      sourceOut += sourceString;
+      return mozilla::Ok();
     } else if (cls == js::ESClass::Promise) {
-      return PromiseToSource(cx, obj, visitedObjects);
+      std::string sourceString;
+      MOZ_TRY(PromiseToSource(cx, sourceString, obj, visitedObjects));
+      sourceOut += sourceString;
+      return mozilla::Ok();
     } else {
       if (JS::IsWeakMapObject(obj)) {
         std::string sourceString = "WeakMap { <items unknown> }";
-        return sourceString;
+        sourceOut += sourceString;
+        return mozilla::Ok();
       }
       auto cls = JS::GetClass(obj);
       std::string className(cls->name);
       if (className == "WeakSet") {
         std::string sourceString = "WeakSet { <items unknown> }";
-        return sourceString;
+        sourceOut += sourceString;
+        return mozilla::Ok();
       }
-      return ObjectToSource(cx, obj, visitedObjects);
+      std::string sourceString;
+      MOZ_TRY(ObjectToSource(cx, sourceString, obj, visitedObjects));
+      sourceOut += sourceString;
+      return mozilla::Ok();
     }
   }
   case JS::ValueType::String: {
     size_t message_len;
     auto msg = encode(cx, val, &message_len);
     if (!msg) {
-      return JS::Result<std::string>(JS::Error());
+      return JS::Result<mozilla::Ok>(JS::Error());
     }
     std::string sourceString(msg.get(), message_len);
-    return sourceString;
+    sourceOut += sourceString;
+    return mozilla::Ok();
   }
   default: {
     JS::RootedString source(cx, JS_ValueToSource(cx, val));
     size_t message_len;
     auto msg = encode(cx, source, &message_len);
     if (!msg) {
-      return JS::Result<std::string>(JS::Error());
+      return JS::Result<mozilla::Ok>(JS::Error());
     }
     std::string sourceString(msg.get(), message_len);
-    return sourceString;
+    sourceOut += sourceString;
+    return mozilla::Ok();
   }
   }
 }
@@ -296,11 +311,12 @@ static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedObjectVector visitedObjects(cx);
   for (int i = 0; i < length; i++) {
     JS::HandleValue arg = args.get(i);
-    auto source = ToSource(cx, arg, &visitedObjects);
-    if (source.isErr()) {
+    std::string source = "";
+    auto result = ToSource(cx, source, arg, &visitedObjects);
+    if (result.isErr()) {
       return false;
     }
-    std::string message = source.unwrap();
+    std::string message = source;
     if (fullLogLine.length()) {
       fullLogLine += " ";
       fullLogLine += message;
