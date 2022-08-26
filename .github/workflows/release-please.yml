@@ -11,3 +11,19 @@ jobs:
       - uses: google-github-actions/release-please-action@v3
         with:
           command: manifest
+          token: ${{ secrets.JS_COMPUTE_RUNTIME_GITHUB_TOKEN }}
+      - uses: actions/checkout@v2
+        if: ${{ steps.release.outputs.releases_created }}
+      - uses: actions/setup-node@v2
+        with:
+          cache: 'npm'
+          node-version: 18
+          registry-url: 'https://registry.npmjs.org'
+        if: ${{ steps.release.outputs.releases_created }}
+      - run: (cd sdk/js-compute && npm ci)
+        if: ${{ steps.release.outputs.releases_created }}
+      - run: (cd sdk/js-compute && npm publish)
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          FASTLY_API_TOKEN: ${{secrets.FASTLY_API_TOKEN}}
+        if: ${{ steps.release.outputs.releases_created }}
