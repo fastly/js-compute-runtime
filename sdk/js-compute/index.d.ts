@@ -1063,6 +1063,25 @@ export declare var Headers: {
 };
 
 /**
+ * The atob() function decodes a string of data which has been encoded using Base64 encoding.
+ * 
+ * @param data A binary string (i.e., a string in which each character in the string is treated as a byte of binary data) containing base64-encoded data.
+ * @returns An ASCII string containing decoded data from `data`.
+ * 
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/atob | atob on MDN}
+ */
+export declare function atob(data: string): string;
+
+/**
+ *  The btoa() method creates a Base64-encoded ASCII string from a binary string (i.e., a string in which each character in the string is treated as a byte of binary data). 
+ * @param data The binary string to encode.
+ * @returns  An ASCII string containing the Base64 representation of `data`. 
+ * 
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/btoa | btoa on MDN}
+ */
+export declare function btoa(data: string): string;
+
+/**
  * Fetch resources from backends.
  *
  * **Note**: Compute@Edge requires all outgoing requests to go to a predefined

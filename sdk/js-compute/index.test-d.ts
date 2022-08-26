@@ -1,5 +1,29 @@
 import {expectError, expectType} from 'tsd';
-import { ObjectStore, ObjectStoreEntry, addEventListener, CacheOverride, CacheOverrideInit, CacheOverrideMode, ClientInfo, CompressionStream, CompressionStreamFormat, Console, console, DecompressionStream, DecompressionStreamFormat, Dictionary, Env, EventMap, fastly, Fastly, FetchEvent, FetchEventListener, Geolocation, Logger, onfetch, ReadableStream, Request, Response, TextDecoder, TextEncoder, URL, URLSearchParams, WritableStream } from ".";
+import { addEventListener, atob, btoa, CacheOverride, CacheOverrideInit, CacheOverrideMode, ClientInfo, CompressionStream, CompressionStreamFormat, Console, console, DecompressionStream, DecompressionStreamFormat, Dictionary, Env, EventMap, fastly, Fastly, FetchEvent, FetchEventListener, Geolocation, Logger, onfetch, ObjectStore, ObjectStoreEntry, ReadableStream, Request, Response, TextDecoder, TextEncoder, URL, URLSearchParams, WritableStream } from ".";
+
+// atob
+{    
+    expectError(atob());
+    expectError(atob(1));
+    expectError(atob({}));
+    expectError(atob([]));
+    expectError(atob(true));
+    expectError(atob(Symbol()));
+    expectError(atob(function(){}));
+    expectType<string>(atob(''));
+}
+
+// btoa
+{    
+    expectError(btoa());
+    expectError(btoa(1));
+    expectError(btoa({}));
+    expectError(btoa([]));
+    expectError(btoa(true));
+    expectError(btoa(Symbol()));
+    expectError(btoa(function(){}));
+    expectType<string>(btoa(''));
+}
 
 // ObjectStore
 {
