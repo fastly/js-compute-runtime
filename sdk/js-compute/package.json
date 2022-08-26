@@ -28,16 +28,17 @@
   "scripts": {
     "install:ci": "npm ci",
     "test": "tsd",
-    "docs": "npm run docs:clean && npm run docs:typedoc",
-    "docs:clean": "rm -rf reference-docs",
-    "docs:typedoc": "typedoc --theme ./node_modules/typedoc-loopingz-theme/bin/default  --disableSources --includeVersion --out reference-docs --tsconfig tsconfig.json --readme none --exclude index.test-d.ts index.d.ts"
+    "docs": "npm run docs:clean && npm run docs:typedoc && npm run docs:build-compute-app",
+    "docs:clean": "rm -rf reference-docs compute-js",
+    "docs:typedoc": "typedoc --theme ./node_modules/typedoc-loopingz-theme/bin/default  --disableSources --includeVersion --out reference-docs --tsconfig tsconfig.json --readme none --exclude index.test-d.ts index.d.ts",
+    "docs:build-compute-app": "compute-js-static-publish --public-dir=./reference-docs --name js-compute-reference-docs --service-id 1B3wrEgiLdTaCjsmK5Jq25 --description '@fastly/js-compute reference documentation'",
+    "postpublish": "npm run docs && cd ./compute-js && fastly compute publish"
   },
   "devDependencies": {
+    "@fastly/compute-js-static-publish": "^2.0.0",
     "tsd": "^0.22.0",
     "typedoc": "^0.21",
+    "typedoc-loopingz-theme": "^1.1.3",
     "typescript": "^4.2"
-  },
-  "dependencies": {
-    "typedoc-loopingz-theme": "^1.1.3"
   }
 }
