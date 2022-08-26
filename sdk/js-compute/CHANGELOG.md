@@ -4,6 +4,18 @@
 
 -
 
+## [0.5.0](https://github.com/fastly/js-compute-runtime/compare/js-compute-v0.4.1...js-compute-v0.5.0) (2022-08-26)
+
+
+### Features
+
+* add btoa and atob native implementations ([#227](https://github.com/fastly/js-compute-runtime/issues/227)) ([8b8c31f](https://github.com/fastly/js-compute-runtime/commit/8b8c31fa9ad70337b1060a3242b8e3495ae47df3))
+
+
+### Bug Fixes
+
+* Fix our api website implementation ([#229](https://github.com/fastly/js-compute-runtime/issues/229)) ([a54a137](https://github.com/fastly/js-compute-runtime/commit/a54a1371f8a63d1ac11a6f8ecb1d95e6baf96174))
+
 ## 0.2.4 (2022-02-09)
 
 ### Changed

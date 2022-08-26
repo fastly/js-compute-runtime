@@ -9,6 +9,19 @@
 
 - Calling `tee` on the client request no longer causes the application to hang [`#156`](https://github.com/fastly/js-compute-runtime/pull/156)
 
+## [0.5.0](https://github.com/fastly/js-compute-runtime/compare/js-compute-runtime-v0.4.1...js-compute-runtime-v0.5.0) (2022-08-26)
+
+
+### Features
+
+* add btoa and atob native implementations ([#227](https://github.com/fastly/js-compute-runtime/issues/227)) ([8b8c31f](https://github.com/fastly/js-compute-runtime/commit/8b8c31fa9ad70337b1060a3242b8e3495ae47df3))
+* Improve console output for all types ([#204](https://github.com/fastly/js-compute-runtime/issues/204)) ([a621d26](https://github.com/fastly/js-compute-runtime/commit/a621d26a27ee9ee18b01c5b110a5e74538f671f4))
+
+
+### Bug Fixes
+
+* Fix our api website implementation ([#229](https://github.com/fastly/js-compute-runtime/issues/229)) ([a54a137](https://github.com/fastly/js-compute-runtime/commit/a54a1371f8a63d1ac11a6f8ecb1d95e6baf96174))
+
 ## 0.3.0
 
 ### Enhancements
