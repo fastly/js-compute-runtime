@@ -1,8 +1,110 @@
-## Unreleased
+## 0.5.0
+
+### Features
+
+#### Object-store support
+
+This release adds support for Fastly [Object-store](https://developer.fastly.com/reference/api/object-store/), which is globally consistent key-value storage accessible across the Fastly Network. This makes it possible for your Compute@Edge application to read and write from Object-stores.
+
+We've added two classes, `ObjectStore`, and `ObjectStoreEntry`. `ObjectStore` is used to interact with a particular Object-store and `ObjectStoreEntry` is a particular value within an Object-store. We've made `ObjectStoreEntry` have a similar API as `Response` to make it simpler to read and write from Object-stores. I.e. `ObjectStoreEntry` has a `body` property which is a `ReadableStream` and has `arrayBuffer`/`json`/`text` methods - just like `Response`.
+
+The way to use these classes is best shown with an example:
+```js
+async function app(event) {
+  // Create a connection the the Object-store named 'example-store'
+  const store = new ObjectStore('example-store')
+  
+  // Create or update the 'hello' key with the contents 'world'
+  await store.put('hello', 'world')
+  
+  // Retrieve the contents of the 'hello' key
+  // Note: Object-stores are eventually consistent, this means that the updated contents associated may not be available to read from all
+  // Fastly edge locations immediately and some edge locations may continue returning the previous contents associated with the key.
+  const hello = await store.lookup('hello')
+  
+  // Read the contents of the `hello` key into a string
+  const hellotext = await hello.text()
+  return new Response(hellotext)
+}
+
+addEventListener("fetch", event => {
+  event.respondWith(app(event))
+})
+```
+
+#### Added `btoa` and `atob` global functions
+
+These two functions enable you to encode to ([btoa](https://developer.mozilla.org/en-US/docs/Web/API/btoa)) and decode from ([atob](https://developer.mozilla.org/en-US/docs/Web/API/atob)) Base64 strings. They follow the same specification as the `atob` and `btoa` functions that exist in web-browsers.
+
+```js
+addEventListener("fetch", event => {
+  event.respondWith(new Response(atob(btoa('hello from fastly'))))
+})
+```
+
+
+#### Improved Console Support
+
+Previously our console methods only supported a single argument and would convert the argument to a string via `String(argument)`, this unfortunately made it difficult to log out complex objects such as Request objects or similar.
+
+We've updated our console methods and they now support any number of arguments. As well as supporting any number of arguments, we've also changed the implementation to have better support for logging out complex objects.
+
+This is a before and after example of what happens when logging a Request with our console methods.
+
+Before:
+```js
+const request = new Request('https://www.fastly.com', {body:'I am the body', method: 'POST'});
+console.log(request); // outputs `[object Object]`.
+```
+
+After:
+```js
+const request = new Request('https://www.fastly.com', {body:'I am the body', method: 'POST'});
+console.log(request); // outputs `Request: {method: POST, url: https://www.fastly.com/, version: 2, headers: {}, body: null, bodyUsed: false}`.
+```
+
+
+### Summary
+
+* Implemented ObjectStore and ObjectStoreEntry classes for interacting with Fastly ObjectStore ([#110](https://github.com/fastly/js-compute-runtime/issues/110))
+* Improved console output for all types ([#204](https://github.com/fastly/js-compute-runtime/issues/204))
+* add btoa and atob native implementations ([#227](https://github.com/fastly/js-compute-runtime/issues/227)) ([8b8c31f](https://github.com/fastly/js-compute-runtime/commit/8b8c31fa9ad70337b1060a3242b8e3495ae47df3))
+
+
+## 0.4.0
+
+### Enhancements
+
+- Implement the DecompressionStream builtin [`#160`](https://github.com/fastly/js-compute-runtime/pull/160)
+- Improve performace of Regular Expression literals via precompilation [`#146`](https://github.com/fastly/js-compute-runtime/pull/146)
+
+### Fixes
+
+- Calling `tee` on the client request no longer causes the application to hang [`#156`](https://github.com/fastly/js-compute-runtime/pull/156)
+
+## 0.3.0 (2022-06-29)
+
+### Enhancements
+
+- Implement the CompressionStream builtin
+  [#84](https://github.com/fastly/js-compute-runtime/pull/84)
+- Removed the requirement for a fastly.toml file to be present when using js-compute-runtimes CLI to compile a WASM file
+- **Breaking change:** Removed --skip-pkg argument from js-compute-runtime's CLI
+  [#108](https://github.com/fastly/js-compute-runtime/pull/108)
+- **Breaking change:** Removed `console.trace` method
+
+### Fixes
+
+- Fix the response error message text
+- Throw an error if constructors are called as plain functions
+- Fix the behavior of `console.debug`
+- Allow builtin classes to be extended
+
+## 0.2.5  (2022-04-20)
 
 ### Changed
 
--
+- Updated the js-compute-runtime to 0.2.5 : Increased max uri length to 8k, and properly forwards http headers to upstream requests even if the headers aren't ever read from
 
 ## 0.2.4 (2022-02-09)
 
