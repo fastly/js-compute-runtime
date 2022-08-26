@@ -13,6 +13,7 @@
 #include "js/Array.h"
 #include "js/ArrayBuffer.h"
 #include "js/Conversions.h"
+#include "mozilla/Result.h"
 
 // TODO: remove these once the warnings are fixed
 #pragma clang diagnostic push
@@ -3727,14 +3728,13 @@ bool base64CharacterToValue(char character, uint8_t *value) {
   return *value != 255;
 }
 
-inline JS::Result<std::string> base64Decode4to3(std::string_view input) {
-  std::string output = "";
+inline JS::Result<mozilla::Ok> base64Decode4to3(std::string_view input, std::string &output) {
   uint8_t w, x, y, z;
   // 8.1 Find the code point pointed to by position in the second column of Table 1: The Base 64
   // Alphabet of RFC 4648. Let n be the number given in the first cell of the same row. [RFC4648]
   if (!base64CharacterToValue(input[0], &w) || !base64CharacterToValue(input[1], &x) ||
       !base64CharacterToValue(input[2], &y) || !base64CharacterToValue(input[3], &z)) {
-    return JS::Result<std::string>(JS::Error());
+    return JS::Result<mozilla::Ok>(JS::Error());
   }
 
   // 8.3 If buffer has accumulated 24 bits, interpret them as three 8-bit big-endian numbers. Append
@@ -3743,17 +3743,16 @@ inline JS::Result<std::string> base64Decode4to3(std::string_view input) {
   output += (uint8_t(w << 2 | x >> 4));
   output += (uint8_t(x << 4 | y >> 2));
   output += (uint8_t(y << 6 | z));
-  return output;
+  return mozilla::Ok();
 }
 
-inline JS::Result<std::string> base64Decode3to2(std::string_view input) {
-  std::string output = "";
+inline JS::Result<mozilla::Ok> base64Decode3to2(std::string_view input, std::string &output) {
   uint8_t w, x, y;
   // 8.1 Find the code point pointed to by position in the second column of Table 1: The Base 64
   // Alphabet of RFC 4648. Let n be the number given in the first cell of the same row. [RFC4648]
   if (!base64CharacterToValue(input[0], &w) || !base64CharacterToValue(input[1], &x) ||
       !base64CharacterToValue(input[2], &y)) {
-    return JS::Result<std::string>(JS::Error());
+    return JS::Result<mozilla::Ok>(JS::Error());
   }
   // 9. If buffer is not empty, it contains either 12 or 18 bits. If it contains 12 bits, then
   // discard the last four and interpret the remaining eight as an 8-bit big-endian number. If it
@@ -3762,16 +3761,15 @@ inline JS::Result<std::string> base64Decode3to2(std::string_view input) {
   // to output, in the same order.
   output += (uint8_t(w << 2 | x >> 4));
   output += (uint8_t(x << 4 | y >> 2));
-  return output;
+  return mozilla::Ok();
 }
 
-inline JS::Result<std::string> base64Decode2to1(std::string_view input) {
-  std::string output = "";
+inline JS::Result<mozilla::Ok> base64Decode2to1(std::string_view input, std::string &output) {
   uint8_t w, x;
   // 8.1 Find the code point pointed to by position in the second column of Table 1: The Base 64
   // Alphabet of RFC 4648. Let n be the number given in the first cell of the same row. [RFC4648]
   if (!base64CharacterToValue(input[0], &w) || !base64CharacterToValue(input[1], &x)) {
-    return JS::Result<std::string>(JS::Error());
+    return JS::Result<mozilla::Ok>(JS::Error());
   }
   // 9. If buffer is not empty, it contains either 12 or 18 bits. If it contains 12 bits, then
   // discard the last four and interpret the remaining eight as an 8-bit big-endian number. If it
@@ -3779,7 +3777,7 @@ inline JS::Result<std::string> base64Decode2to1(std::string_view input) {
   // big-endian numbers. Append the one or two bytes with values equal to those one or two numbers
   // to output, in the same order.
   output += (uint8_t(w << 2 | x >> 4));
-  return output;
+  return mozilla::Ok();
 }
 
 bool isAsciiWhitespace(char c) {
@@ -3804,7 +3802,8 @@ JS::Result<std::string> forgivingBase64Decode(std::string_view data) {
 
   if (hasWhitespace) {
     dataWithoutAsciiWhitespace = data;
-    dataWithoutAsciiWhitespace.erase(std::remove_if(dataWithoutAsciiWhitespace.begin(),
+    dataWithoutAsciiWhitespace.erase(std::remove_if(dataWithoutAsciiWhitespace.begin() +
+                                                        std::distance(data.begin(), hasWhitespace),
                                                     dataWithoutAsciiWhitespace.end(),
                                                     &isAsciiWhitespace),
                                      dataWithoutAsciiWhitespace.end());
@@ -3841,6 +3840,7 @@ JS::Result<std::string> forgivingBase64Decode(std::string_view data) {
 
   // 5. Let output be an empty byte sequence.
   std::string output = "";
+  output.reserve(data_view.length() / 3);
 
   // 6. Let buffer be an empty buffer that can have bits appended to it.
 
@@ -3853,30 +3853,17 @@ JS::Result<std::string> forgivingBase64Decode(std::string_view data) {
   // dealt with some characters.
 
   while (data_view.length() >= 4) {
-    auto out_result = base64Decode4to3(data_view);
-    if (out_result.isErr()) {
-      return JS::Result<std::string>(JS::Error());
-    }
-    output += out_result.unwrap();
-
+    MOZ_TRY(base64Decode4to3(data_view, output));
     data_view.remove_prefix(4);
   }
 
   switch (data_view.length()) {
   case 3: {
-    auto out_result = base64Decode3to2(data_view);
-    if (out_result.isErr()) {
-      return JS::Result<std::string>(JS::Error());
-    }
-    output += out_result.unwrap();
+    MOZ_TRY(base64Decode3to2(data_view, output));
     break;
   }
   case 2: {
-    auto out_result = base64Decode2to1(data_view);
-    if (out_result.isErr()) {
-      return JS::Result<std::string>(JS::Error());
-    }
-    output += out_result.unwrap();
+    MOZ_TRY(base64Decode2to1(data_view, output));
     break;
   }
   case 1:
@@ -3925,8 +3912,7 @@ const char base[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                       "0123456789+/";
 
 inline uint8_t CharTo8Bit(char character) { return uint8_t(character); }
-inline std::string base64Encode3to4(std::string_view data) {
-  std::string out = "";
+inline void base64Encode3to4(std::string_view data, std::string &output) {
   uint32_t b32 = 0;
   int i, j = 18;
 
@@ -3936,31 +3922,26 @@ inline std::string base64Encode3to4(std::string_view data) {
   }
 
   for (i = 0; i < 4; ++i) {
-    out += base[(uint32_t)((b32 >> j) & 0x3F)];
+    output += base[(uint32_t)((b32 >> j) & 0x3F)];
     j -= 6;
   }
-  return out;
 }
 
-inline std::string base64Encode2to4(std::string_view data) {
-  std::string out = "";
+inline void base64Encode2to4(std::string_view data, std::string &output) {
   uint8_t src0 = CharTo8Bit(data[0]);
   uint8_t src1 = CharTo8Bit(data[1]);
-  out += base[(uint32_t)((src0 >> 2) & 0x3F)];
-  out += base[(uint32_t)(((src0 & 0x03) << 4) | ((src1 >> 4) & 0x0F))];
-  out += base[(uint32_t)((src1 & 0x0F) << 2)];
-  out += '=';
-  return out;
+  output += base[(uint32_t)((src0 >> 2) & 0x3F)];
+  output += base[(uint32_t)(((src0 & 0x03) << 4) | ((src1 >> 4) & 0x0F))];
+  output += base[(uint32_t)((src1 & 0x0F) << 2)];
+  output += '=';
 }
 
-inline std::string base64Encode1to4(std::string_view data) {
-  std::string out = "";
+inline void base64Encode1to4(std::string_view data, std::string &output) {
   uint8_t src0 = CharTo8Bit(data[0]);
-  out += base[(uint32_t)((src0 >> 2) & 0x3F)];
-  out += base[(uint32_t)((src0 & 0x03) << 4)];
-  out += '=';
-  out += '=';
-  return out;
+  output += base[(uint32_t)((src0 >> 2) & 0x3F)];
+  output += base[(uint32_t)((src0 & 0x03) << 4)];
+  output += '=';
+  output += '=';
 }
 
 // https://infra.spec.whatwg.org/#forgiving-base64-encode
@@ -3970,26 +3951,28 @@ inline std::string base64Encode1to4(std::string_view data) {
 // RFC as it defines error handling for certain inputs.
 std::string forgivingBase64Encode(std::string_view data) {
   int length = data.length();
-  std::string out = "";
+  std::string output = "";
+  // The Base64 version of a string will be at least 133% the size of the string.
+  output.reserve(length * 1.33);
   while (length >= 3) {
-    out += base64Encode3to4(data);
+    base64Encode3to4(data, output);
     data.remove_prefix(3);
     length -= 3;
   }
 
   switch (length) {
   case 2:
-    out += base64Encode2to4(data);
+    base64Encode2to4(data, output);
     break;
   case 1:
-    out += base64Encode1to4(data);
+    base64Encode1to4(data, output);
     break;
   case 0:
     break;
   default:
     MOZ_ASSERT_UNREACHABLE("coding error");
   }
-  return out;
+  return output;
 }
 
 // The btoa(data) method must throw an "InvalidCharacterError" DOMException
