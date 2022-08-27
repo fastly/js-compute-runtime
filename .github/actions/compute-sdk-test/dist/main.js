@@ -3011,43 +3011,6 @@ module.exports = (flag, argv = process.argv) => {
 
 /***/ }),
 
-/***/ 4157:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const net = __nccwpck_require__(1631);
-
-module.exports = async (port, {timeout = 1000, host} = {}) => {
-	const promise = new Promise(((resolve, reject) => {
-		const socket = new net.Socket();
-
-		const onError = () => {
-			socket.destroy();
-			reject();
-		};
-
-		socket.setTimeout(timeout);
-		socket.once('error', onError);
-		socket.once('timeout', onError);
-
-		socket.connect(port, host, () => {
-			socket.end();
-			resolve();
-		});
-	}));
-
-	try {
-		await promise;
-		return true;
-	} catch (_) {
-		return false;
-	}
-};
-
-
-/***/ }),
-
 /***/ 467:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -7098,14 +7061,6 @@ module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("https");
 
 /***/ }),
 
-/***/ 1631:
-/***/ ((module) => {
-
-"use strict";
-module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("net");
-
-/***/ }),
-
 /***/ 2087:
 /***/ ((module) => {
 
@@ -7233,8 +7188,42 @@ var source = __nccwpck_require__(8818);
 var better_logging = __nccwpck_require__(1269);
 ;// CONCATENATED MODULE: external "child_process"
 const external_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("child_process");
-// EXTERNAL MODULE: ./node_modules/is-port-reachable/index.js
-var is_port_reachable = __nccwpck_require__(4157);
+;// CONCATENATED MODULE: external "node:net"
+const external_node_net_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:net");
+;// CONCATENATED MODULE: ./node_modules/is-port-reachable/index.js
+
+
+async function isPortReachable(port, {host, timeout = 1000} = {}) {
+	if (typeof host !== 'string') {
+		throw new TypeError('Specify a `host`');
+	}
+
+	const promise = new Promise(((resolve, reject) => {
+		const socket = new external_node_net_namespaceObject.Socket();
+
+		const onError = () => {
+			socket.destroy();
+			reject();
+		};
+
+		socket.setTimeout(timeout);
+		socket.once('error', onError);
+		socket.once('timeout', onError);
+
+		socket.connect(port, host, () => {
+			socket.end();
+			resolve();
+		});
+	}));
+
+	try {
+		await promise;
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 ;// CONCATENATED MODULE: ./src/kill-process-and-wait.js
 // Kill a spawned process (e.g Viceroy), and (a)wait for it
 // to be completely killed
@@ -7268,7 +7257,7 @@ async function timeout(millis, message) {
 async function viceroyReady(viceroyHostname, viceroyPort) {
   let isViceroyReady = false;
   while (!isViceroyReady) {
-    isViceroyReady = await is_port_reachable(viceroyPort, {host: viceroyHostname});
+    isViceroyReady = await isPortReachable(viceroyPort, {host: viceroyHostname});
   }
 }
 
