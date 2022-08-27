@@ -4,7 +4,7 @@
     "lint": "npx prettier --write ./fixtures/**/*.js"
   },
   "devDependencies": {
-    "prettier": "^2.0.5"
+    "prettier": "^2.7.1"
   },
   "dependencies": {
     "@fastly/js-compute": "file:../../sdk/js-compute"
