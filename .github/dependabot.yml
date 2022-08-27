@@ -1,0 +1,36 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "cargo"
+    directory: "/c-dependencies/js-compute-runtime/rust-url"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "npm"
+    directory: "/integration-tests/js-compute"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "npm"
+    directory: ".github/actions/compute-sdk-test"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "npm"
+    directory: ".github/actions/github-release"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "npm"
+    directory: "/sdk/js-compute"
+    schedule:
+      interval: "daily"
