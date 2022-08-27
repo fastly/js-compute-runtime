@@ -7,21 +7,26 @@ import { createRequire as __WEBPACK_EXTERNAL_createRequire } from "module";
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.safePick = exports.pick = exports.Bucket = exports.useValueOrFallback = exports.Record = void 0;
-var record_1 = __nccwpck_require__(4263);
-Object.defineProperty(exports, "Record", ({ enumerable: true, get: function () { return record_1.Record; } }));
-var useValueOrFallback_1 = __nccwpck_require__(4382);
-Object.defineProperty(exports, "useValueOrFallback", ({ enumerable: true, get: function () { return useValueOrFallback_1.useValueOrFallback; } }));
-var Bucket_1 = __nccwpck_require__(34);
+exports.useValueOrFallback = exports.safePick = exports.pick = exports.DataClass = exports.Channel = exports.Bucket = void 0;
+// Classes
+var Bucket_1 = __nccwpck_require__(5162);
 Object.defineProperty(exports, "Bucket", ({ enumerable: true, get: function () { return Bucket_1.Bucket; } }));
-var pick_1 = __nccwpck_require__(5095);
+var Channel_1 = __nccwpck_require__(5393);
+Object.defineProperty(exports, "Channel", ({ enumerable: true, get: function () { return Channel_1.Channel; } }));
+var DataClass_1 = __nccwpck_require__(5695);
+Object.defineProperty(exports, "DataClass", ({ enumerable: true, get: function () { return DataClass_1.DataClass; } }));
+// Functions
+var pick_1 = __nccwpck_require__(3087);
 Object.defineProperty(exports, "pick", ({ enumerable: true, get: function () { return pick_1.pick; } }));
-Object.defineProperty(exports, "safePick", ({ enumerable: true, get: function () { return pick_1.safePick; } }));
+var safePick_1 = __nccwpck_require__(4151);
+Object.defineProperty(exports, "safePick", ({ enumerable: true, get: function () { return safePick_1.safePick; } }));
+var useValueOrFallback_1 = __nccwpck_require__(850);
+Object.defineProperty(exports, "useValueOrFallback", ({ enumerable: true, get: function () { return useValueOrFallback_1.useValueOrFallback; } }));
 
 
 /***/ }),
 
-/***/ 34:
+/***/ 5162:
 /***/ (function(__unused_webpack_module, exports) {
 
 "use strict";
@@ -45,17 +50,15 @@ exports.Bucket = void 0;
  * A bucket is used to convert any asynchronously occurring event into an async generator.
  *
  * ```ts
- * (async () => {
- *   const bucket = new Bucket<number>();
+ * const bucket = new Bucket<number>();
  *
- *   setInterval(() => {
- *     bucket.push(Date.now());
- *   }, 1000);
+ * setInterval(() => {
+ *   bucket.push(Date.now());
+ * }, 1000);
  *
- *   for await (const timeStamp of bucket) {
- *     console.log(timeStamp);
- *   }
- * })();
+ * for await (const timeStamp of bucket) {
+ *   console.log(timeStamp);
+ * }
  * ```
  */
 class Bucket {
@@ -109,13 +112,160 @@ exports.Bucket = Bucket;
 
 /***/ }),
 
-/***/ 5095:
+/***/ 5393:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
+var __await = (this && this.__await) || function (v) { return this instanceof __await ? (this.v = v, this) : new __await(v); }
+var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _arguments, generator) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var g = generator.apply(thisArg, _arguments || []), i, q = [];
+    return i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i;
+    function verb(n) { if (g[n]) i[n] = function (v) { return new Promise(function (a, b) { q.push([n, v, a, b]) > 1 || resume(n, v); }); }; }
+    function resume(n, v) { try { step(g[n](v)); } catch (e) { settle(q[0][3], e); } }
+    function step(r) { r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r); }
+    function fulfill(value) { resume("next", value); }
+    function reject(value) { resume("throw", value); }
+    function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Channel = void 0;
+const Bucket_1 = __nccwpck_require__(5162);
+/**
+ * A Channel allows for message passing between two or more asynchronous function with the option of being notified when a sent message is received.
+ *
+ * ```ts
+ * const channel = new Channel<number>();
+ *
+ * const sender = async (i = 0): Promise<void> => {
+ *   await channel.send(i);
+ *   return sender(i + 1);
+ * }
+ *
+ * sender();
+ * await channel.receive(); // 0
+ * await channel.receive(); // 1
+ * await channel.receive(); // 2
+ * await channel.receive(); // 3
+ * ```
+ */
+class Channel {
+    constructor() {
+        this.awaitReceiveMap = new WeakMap();
+        this.bucket = new Bucket_1.Bucket();
+    }
+    send(value) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const wrapper = { value };
+            const receivePromise = new Promise((resolve) => {
+                this.awaitReceiveMap.set(wrapper, () => resolve());
+            });
+            this.bucket.push(wrapper);
+            return receivePromise;
+        });
+    }
+    receive() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { value: wrapper } = yield this.bucket.next();
+            const receiveCallback = this.awaitReceiveMap.get(wrapper);
+            if (receiveCallback) {
+                receiveCallback();
+                this.awaitReceiveMap.delete(wrapper);
+            }
+            return wrapper.value;
+        });
+    }
+    get generator() {
+        return this.getGenerator();
+    }
+    getGenerator() {
+        return __asyncGenerator(this, arguments, function* getGenerator_1() {
+            var e_1, _a;
+            try {
+                for (var _b = __asyncValues(this.bucket), _c; _c = yield __await(_b.next()), !_c.done;) {
+                    const wrapper = _c.value;
+                    const receiveCallback = this.awaitReceiveMap.get(wrapper);
+                    if (receiveCallback) {
+                        receiveCallback();
+                        this.awaitReceiveMap.delete(wrapper);
+                    }
+                    yield yield __await(wrapper.value);
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) yield __await(_a.call(_b));
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+        });
+    }
+}
+exports.Channel = Channel;
+
+
+/***/ }),
+
+/***/ 5695:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.safePick = exports.pick = void 0;
+exports.DataClass = void 0;
+/**
+ * A DataClass is a class with a auto generated constructor that takes a plain old javascript object with the same fields as the DataClass.
+ *
+ * ```ts
+ * class MyDataClass extends DataClass<MyDataClass> {
+ *   public question!: string;
+ *   public answer!: number;
+ * }
+ * const myDataClass = new MyDataClass({
+ *   question: 'The answer to life, the universe and everything',
+ *   answer: 42,
+ * });
+ * myDataClass.answer // 42
+ * ```
+ */
+class DataClass {
+    constructor(e) {
+        Object.keys(e).forEach((k) => {
+            // @ts-ignore
+            this[k] = e[k];
+        });
+    }
+}
+exports.DataClass = DataClass;
+
+
+/***/ }),
+
+/***/ 3087:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.pick = void 0;
 /**
  * Create subsets of objects in a type-safe way
  *
@@ -133,8 +283,22 @@ exports.safePick = exports.pick = void 0;
  * }
  * ```
  */
-const pick = (obj, ...include) => Object.fromEntries(Object.entries(obj).filter(([k]) => include.indexOf(k) > -1));
+const pick = (obj, ...include) => include.reduce((res, k) => {
+    res[k] = obj[k];
+    return res;
+}, {});
 exports.pick = pick;
+
+
+/***/ }),
+
+/***/ 4151:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.safePick = void 0;
 /**
  * Create subsets of objects in a value-safe & type-safe way
  *
@@ -152,48 +316,16 @@ exports.pick = pick;
  * }
  * ```
  */
-const safePick = (obj, fallback, ...include) => Object.assign((0, exports.pick)(fallback, ...include), (0, exports.pick)(obj, ...include));
+const safePick = (obj, fallback, ...include) => include.reduce((res, k) => {
+    res[k] = k in obj ? obj[k] : fallback[k];
+    return res;
+}, {});
 exports.safePick = safePick;
 
 
 /***/ }),
 
-/***/ 4263:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Record = void 0;
-/**
- * A Record is a class with a auto generated constructor that takes a plain old javascript object with the same fields as the Record.
- *
- * ```ts
- * class MyRecord extends Record<MyRecord> {
- *   public question!: string;
- *   public answer!: number;
- * }
- * const myRecord = new MyRecord({
- *   question: 'The answer to life, the universe and everything',
- *   answer: 42,
- * });
- * myRecord.answer // 42
- * ```
- */
-class Record {
-    constructor(e) {
-        Object.keys(e).forEach((k) => {
-            // @ts-ignore
-            this[k] = e[k];
-        });
-    }
-}
-exports.Record = Record;
-
-
-/***/ }),
-
-/***/ 4382:
+/***/ 850:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -412,7 +544,11 @@ Object.defineProperty(module, 'exports', {
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -464,23 +600,27 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.expressMiddleware = void 0;
 const chalk_1 = __importDefault(__nccwpck_require__(8818));
 const typescript_helpers_1 = __nccwpck_require__(8926);
-const config_1 = __nccwpck_require__(8882);
-const expressMiddleware = (hostObj, config = {}) => {
-    if (hostObj === undefined || hostObj.line === undefined) {
-        throw new Error('BetterLogging.expressMiddleware requires an object decorated by betterLogging as its first argument.');
+const configCache_1 = __nccwpck_require__(3054);
+const expressMiddleware = (hostObjOrLogFunction, config = {}) => {
+    const logFunction = typeof hostObjOrLogFunction === 'function'
+        ? hostObjOrLogFunction
+        : hostObjOrLogFunction === null || hostObjOrLogFunction === void 0 ? void 0 : hostObjOrLogFunction.info;
+    const betterLoggingConfig = configCache_1.ConfigCache.getConfig(logFunction);
+    if (logFunction === undefined || betterLoggingConfig === null) {
+        throw new Error('BetterLogging.expressMiddleware requires its first argument to be either an object decorated by betterLogging, or a logging function that belongs to an object decorated by betterLogging.');
     }
-    ;
+    const { color } = betterLoggingConfig;
     return (req, res, next) => {
         const method = {
             order: (0, typescript_helpers_1.useValueOrFallback)(config.method, 'order', 1),
             show: (0, typescript_helpers_1.useValueOrFallback)(config.method, 'show', true),
-            color: (0, typescript_helpers_1.useValueOrFallback)(config.method, 'color', config_1.DefaultConfig.color.base),
+            color: (0, typescript_helpers_1.useValueOrFallback)(config.method, 'color', color.base),
             value: (0, typescript_helpers_1.useValueOrFallback)(req, 'method', ''),
         };
         const ip = {
             order: (0, typescript_helpers_1.useValueOrFallback)(config.ip, 'order', 2),
             show: (0, typescript_helpers_1.useValueOrFallback)(config.ip, 'show', true),
-            color: (0, typescript_helpers_1.useValueOrFallback)(config.ip, 'color', config_1.DefaultConfig.color.base),
+            color: (0, typescript_helpers_1.useValueOrFallback)(config.ip, 'color', color.base),
             value: (0, typescript_helpers_1.useValueOrFallback)(req, 'ip', ''),
         };
         const path = {
@@ -501,12 +641,13 @@ const expressMiddleware = (hostObj, config = {}) => {
             color: (0, typescript_helpers_1.useValueOrFallback)(config.header, 'color', chalk_1.default.reset),
             value: (0, typescript_helpers_1.useValueOrFallback)(req, 'headers', {}),
         };
-        hostObj.info([method, ip, path, body, header]
+        logFunction([method, ip, path, body, header]
+            .filter((a) => a.show)
             .sort((a, b) => a.order - b.order)
-            .map(obj => !obj.show ? '' : obj.color(`${typeof obj.value === 'object'
+            .map((obj) => obj.color(`${typeof obj.value === 'object'
             ? JSON.stringify(obj.value)
             : obj.value}`))
-            .filter(v => v.length > 0)
+            .filter((v) => v.length > 0)
             .join(' '));
         next();
     };
@@ -526,12 +667,12 @@ exports.resolveConfig = exports.DefaultConfig = exports.Config = void 0;
 const typescript_helpers_1 = __nccwpck_require__(8926);
 const messageConstructionStrategy_1 = __nccwpck_require__(2198);
 const dark_1 = __nccwpck_require__(418);
-class Config extends typescript_helpers_1.Record {
+class Config extends typescript_helpers_1.DataClass {
 }
 exports.Config = Config;
 exports.DefaultConfig = new Config({
     messageConstructionStrategy: messageConstructionStrategy_1.MessageConstructionStrategy.ALL,
-    format: (ctx) => `${ctx.time24} ${ctx.type} ${ctx.msg}`,
+    format: (ctx) => `${ctx.time} ${ctx.type} ${ctx.msg}`,
     formatStamp: (content) => `[${content}]`,
     saveToFile: null,
     color: dark_1.theme,
@@ -581,6 +722,39 @@ exports.resolveConfig = resolveConfig;
 
 /***/ }),
 
+/***/ 3054:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ConfigCache = void 0;
+const configs = new WeakMap();
+const setConfig = (key, config) => {
+    if (typeof key === 'function') {
+        configs.set(key, config);
+        return;
+    }
+    const { debug, error, info, line, log, warn } = key;
+    setConfig(debug, config);
+    setConfig(error, config);
+    setConfig(info, config);
+    setConfig(line, config);
+    setConfig(log, config);
+    setConfig(warn, config);
+};
+const getConfig = (key) => {
+    var _a, _b;
+    if (typeof key === 'function') {
+        return (_a = configs.get(key)) !== null && _a !== void 0 ? _a : null;
+    }
+    return (_b = configs.get(key.info)) !== null && _b !== void 0 ? _b : null;
+};
+exports.ConfigCache = { setConfig, getConfig };
+
+
+/***/ }),
+
 /***/ 7299:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -604,7 +778,10 @@ const decorateObject = (target, implementation, fs, config) => {
         }
     }
     const funcFactory = (type) => (msg, ...args) => {
-        const [message, remainingArgs] = (0, formatMessage_1.formatMessage)(type, config, [msg, ...args]);
+        const [message, remainingArgs] = (0, formatMessage_1.formatMessage)(type, config, [
+            msg,
+            ...args,
+        ]);
         if (config.saveToFile !== null) {
             (0, writeToFile_1.writeLogToFile)(fs, config.saveToFile, message, remainingArgs);
         }
@@ -664,19 +841,20 @@ const fast_safe_stringify_1 = __importDefault(__nccwpck_require__(7676));
 const messageConstructionStrategy_1 = __nccwpck_require__(2198);
 const constructFormattingContext = (logType, config, message) => {
     const typeColor = config.color.type[logType];
+    const date = new Date();
+    const isoDate = date.toISOString();
     const STAMP = (innerContent, innerColor = config.color.base) => {
         const stamp = config.formatStamp(innerColor(innerContent));
         return config.color.base(stamp);
     };
-    return ({
+    return {
         msg: message,
         type: STAMP(logType, typeColor),
-        time24: STAMP(new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false })),
-        time12: STAMP(new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true })),
-        date: STAMP(new Date().toLocaleString('en-UK', { year: 'numeric', month: 'numeric', day: 'numeric' })),
-        unix: STAMP('' + new Date().valueOf()),
+        date: STAMP(isoDate.substring(0, isoDate.indexOf('T'))),
+        time: STAMP(isoDate.substring(isoDate.indexOf('T') + 1, isoDate.indexOf('Z'))),
+        unix: STAMP('' + date.valueOf()),
         STAMP: (content, color) => STAMP(`${content}`, color),
-    });
+    };
 };
 const constructMessage = (strategy, args) => {
     const processArgument = (arg) => {
@@ -717,6 +895,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LoggerContext = void 0;
 const decorateObject_1 = __nccwpck_require__(7299);
 const config_1 = __nccwpck_require__(8882);
+const configCache_1 = __nccwpck_require__(3054);
 class LoggerContext {
     constructor(implementation, fs) {
         /*
@@ -770,6 +949,7 @@ class LoggerContext {
     decorate(target, config = {}) {
         const patchedConfig = (0, config_1.resolveConfig)(config);
         (0, decorateObject_1.decorateObject)(target, this.implementation, this.fs, patchedConfig);
+        configCache_1.ConfigCache.setConfig(target, patchedConfig);
         return true;
     }
 }
@@ -839,7 +1019,7 @@ exports.theme = {
         warn: chalk_1.default.yellowBright,
         error: chalk_1.default.redBright,
         debug: chalk_1.default.cyan,
-    }
+    },
 };
 
 
@@ -864,7 +1044,7 @@ exports.theme = {
         warn: chalk_1.default.yellowBright,
         error: chalk_1.default.redBright,
         debug: chalk_1.default.cyan,
-    }
+    },
 };
 
 
@@ -908,7 +1088,7 @@ exports.theme = {
         warn: chalk_1.default.yellowBright,
         error: chalk_1.default.redBright,
         debug: chalk_1.default.cyan,
-    }
+    },
 };
 
 
@@ -934,7 +1114,7 @@ exports.theme = {
         warn: identity,
         error: identity,
         debug: identity,
-    }
+    },
 };
 
 
