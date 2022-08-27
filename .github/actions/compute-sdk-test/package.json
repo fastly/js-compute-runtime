@@ -13,7 +13,7 @@
     "@actions/github": "^1.1.0",
     "better-logging": "^5.0.0",
     "chalk": "^4.1.2",
-    "is-port-reachable": "^3.0.0",
+    "is-port-reachable": "^4.0.0",
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {
