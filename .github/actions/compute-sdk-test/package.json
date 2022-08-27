@@ -12,11 +12,11 @@
     "@actions/core": "^1.9.1",
     "@actions/github": "^5.0.3",
     "better-logging": "^5.0.0",
-    "chalk": "^4.1.2",
+    "chalk": "^5.0.1",
     "is-port-reachable": "^4.0.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^3.2.10"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.31.1"
+    "@vercel/ncc": "^0.34.0"
   }
 }
