@@ -20,7 +20,7 @@ async function app(event) {
   // Retrieve the contents of the 'hello' key
   // Note: Object-stores are eventually consistent, this means that the updated contents associated may not be available to read from all
   // Fastly edge locations immediately and some edge locations may continue returning the previous contents associated with the key.
-  const hello = await store.lookup('hello')
+  const hello = await store.get('hello')
   
   // Read the contents of the `hello` key into a string
   const hellotext = await hello.text()
