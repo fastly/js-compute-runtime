@@ -1,3 +1,9 @@
+## 0.5.1
+
+### Fixes
+
+- Removed `type: "module"` from the @fastly/js-compute package.json file as the package still uses `require`
+
 ## 0.5.0
 
 ### Features
