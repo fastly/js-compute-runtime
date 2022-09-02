@@ -1,5 +1,5 @@
+/// <reference path="./index.d.ts" />
 import {expectError, expectType} from 'tsd';
-import { addEventListener, atob, btoa, CacheOverride, CacheOverrideInit, CacheOverrideMode, ClientInfo, CompressionStream, CompressionStreamFormat, Console, console, DecompressionStream, DecompressionStreamFormat, Dictionary, Env, EventMap, fastly, Fastly, FetchEvent, FetchEventListener, Geolocation, Logger, onfetch, ObjectStore, ObjectStoreEntry, ReadableStream, Request, Response, TextDecoder, TextEncoder, URL, URLSearchParams, WritableStream } from ".";
 
 // atob
 {    
