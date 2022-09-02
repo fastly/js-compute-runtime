@@ -108,19 +108,19 @@ import {expectError, expectType} from 'tsd';
     expectType<CacheOverride>(new CacheOverride("override", {}))
     const cacheOverride = new CacheOverride('none');
     expectType<CacheOverrideMode>(cacheOverride.mode)
-    expectType<boolean>(cacheOverride.pci)
-    expectType<number>(cacheOverride.ttl)
-    expectType<number>(cacheOverride.swr)
-    expectType<string>(cacheOverride.surrogateKey)
+    expectType<boolean | undefined>(cacheOverride.pci)
+    expectType<number | undefined>(cacheOverride.ttl)
+    expectType<number | undefined>(cacheOverride.swr)
+    expectType<string | undefined>(cacheOverride.surrogateKey)
 }
 
 // CacheOverrideInit
 {
     const cacheOverrideInit = {} as CacheOverrideInit
-    expectType<boolean>(cacheOverrideInit.pci)
-    expectType<number>(cacheOverrideInit.ttl)
-    expectType<number>(cacheOverrideInit.swr)
-    expectType<string>(cacheOverrideInit.surrogateKey)
+    expectType<boolean | undefined>(cacheOverrideInit.pci)
+    expectType<number | undefined>(cacheOverrideInit.ttl)
+    expectType<number | undefined>(cacheOverrideInit.swr)
+    expectType<string | undefined>(cacheOverrideInit.surrogateKey)
 }
 
 // ClientInfo
@@ -267,11 +267,11 @@ import {expectError, expectType} from 'tsd';
 // console
 {
     expectType<Console>(console)
-    expectType<(message: any)=>any>(console.log);
-    expectType<(message: any)=>any>(console.debug);
-    expectType<(message: any)=>any>(console.info);
-    expectType<(message: any)=>any>(console.warn);
-    expectType<(message: any)=>any>(console.error);
+    expectType<(message: any)=>void>(console.log);
+    expectType<(message: any)=>void>(console.debug);
+    expectType<(message: any)=>void>(console.info);
+    expectType<(message: any)=>void>(console.warn);
+    expectType<(message: any)=>void>(console.error);
 }
 
 // TextDecoder
@@ -299,7 +299,7 @@ import {expectError, expectType} from 'tsd';
 // Logger
 {
     const logger = {} as Logger
-    expectType<(message:any) => any>(logger.log)
+    expectType<(message:any) => void>(logger.log)
 }
 
 // Fastly
@@ -313,7 +313,7 @@ import {expectError, expectType} from 'tsd';
     fastly.defaultBackend = '.';
     expectType<Env>(fastly.env);
     expectType<(endpoint: string)=> Logger>(fastly.getLogger);
-    expectType<(enabled: boolean) => any>(fastly.enableDebugLogging);
+    expectType<(enabled: boolean) => void>(fastly.enableDebugLogging);
     expectType<(address: string)=>Geolocation>(fastly.getGeolocationForIpAddress);
     expectType<(path: string)=>Uint8Array>(fastly.includeBytes);
 }

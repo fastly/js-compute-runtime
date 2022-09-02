@@ -474,11 +474,11 @@ declare class URLSearchParams {
  * **Note**: Messages are prefixed with the respective logel level, starting with an upper-case letter, e.g. `"Log: "`.
  */
 declare interface Console {
-  log(message: any);
-  debug(message: any);
-  info(message: any);
-  warn(message: any);
-  error(message: any);
+  log(message: any): void;
+  debug(message: any): void;
+  info(message: any): void;
+  warn(message: any): void;
+  error(message: any): void;
 }
 
 /**
@@ -521,7 +521,7 @@ declare interface Logger {
   /**
    * Send the given message, converted to a string, to this Logger instance's endpoint
    */
-  log(message: any);
+  log(message: any): void;
 }
 
 /**
@@ -553,7 +553,7 @@ declare interface Fastly {
    *
    * @experimental
    */
-  enableDebugLogging(enabled: boolean);
+  enableDebugLogging(enabled: boolean): void;
 
   /**
    * Retrieve geolocation information about the given IP address.
@@ -740,7 +740,7 @@ interface Request extends Body {
 
   // Fastly extensions
   backend: string;
-  setCacheOverride(override: CacheOverride);
+  setCacheOverride(override: CacheOverride): void;
 }
 
 declare var Request: {

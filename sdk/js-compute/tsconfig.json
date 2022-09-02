@@ -4,7 +4,7 @@
     "module": "es2020",
     "lib": ["es2019"],
     "outDir": "./build",
-    "strict": false,
+    "strict": true,
     "moduleResolution": "node",
     "skipLibCheck": false,
     "forceConsistentCasingInFileNames": true
