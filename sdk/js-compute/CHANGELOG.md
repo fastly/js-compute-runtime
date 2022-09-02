@@ -1,3 +1,12 @@
+## 0.5.2
+
+### Fixes
+
+- Explicitly declare void as the return type for functions which return nothing - this allows our package to work with typescript's `strict:true` option ([#253](https://github.com/fastly/js-compute-runtime/pull/253))
+
+- Declare ambient types for our npm package instead of exports as we do not yet export anythink from the package ([#252](https://github.com/fastly/js-compute-runtime/pull/252))
+
+
 ## 0.5.1
 
 ### Fixes
