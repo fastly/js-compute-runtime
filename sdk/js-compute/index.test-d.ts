@@ -108,19 +108,19 @@ import { addEventListener, atob, btoa, CacheOverride, CacheOverrideInit, CacheOv
     expectType<CacheOverride>(new CacheOverride("override", {}))
     const cacheOverride = new CacheOverride('none');
     expectType<CacheOverrideMode>(cacheOverride.mode)
-    expectType<boolean>(cacheOverride.pci)
-    expectType<number>(cacheOverride.ttl)
-    expectType<number>(cacheOverride.swr)
-    expectType<string>(cacheOverride.surrogateKey)
+    expectType<boolean | undefined>(cacheOverride.pci)
+    expectType<number | undefined>(cacheOverride.ttl)
+    expectType<number | undefined>(cacheOverride.swr)
+    expectType<string | undefined>(cacheOverride.surrogateKey)
 }
 
 // CacheOverrideInit
 {
     const cacheOverrideInit = {} as CacheOverrideInit
-    expectType<boolean>(cacheOverrideInit.pci)
-    expectType<number>(cacheOverrideInit.ttl)
-    expectType<number>(cacheOverrideInit.swr)
-    expectType<string>(cacheOverrideInit.surrogateKey)
+    expectType<boolean | undefined>(cacheOverrideInit.pci)
+    expectType<number | undefined>(cacheOverrideInit.ttl)
+    expectType<number | undefined>(cacheOverrideInit.swr)
+    expectType<string | undefined>(cacheOverrideInit.surrogateKey)
 }
 
 // ClientInfo
