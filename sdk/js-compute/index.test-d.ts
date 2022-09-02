@@ -267,11 +267,11 @@ import { addEventListener, atob, btoa, CacheOverride, CacheOverrideInit, CacheOv
 // console
 {
     expectType<Console>(console)
-    expectType<(message: any)=>any>(console.log);
-    expectType<(message: any)=>any>(console.debug);
-    expectType<(message: any)=>any>(console.info);
-    expectType<(message: any)=>any>(console.warn);
-    expectType<(message: any)=>any>(console.error);
+    expectType<(message: any)=>void>(console.log);
+    expectType<(message: any)=>void>(console.debug);
+    expectType<(message: any)=>void>(console.info);
+    expectType<(message: any)=>void>(console.warn);
+    expectType<(message: any)=>void>(console.error);
 }
 
 // TextDecoder
@@ -299,7 +299,7 @@ import { addEventListener, atob, btoa, CacheOverride, CacheOverrideInit, CacheOv
 // Logger
 {
     const logger = {} as Logger
-    expectType<(message:any) => any>(logger.log)
+    expectType<(message:any) => void>(logger.log)
 }
 
 // Fastly
@@ -313,7 +313,7 @@ import { addEventListener, atob, btoa, CacheOverride, CacheOverrideInit, CacheOv
     fastly.defaultBackend = '.';
     expectType<Env>(fastly.env);
     expectType<(endpoint: string)=> Logger>(fastly.getLogger);
-    expectType<(enabled: boolean) => any>(fastly.enableDebugLogging);
+    expectType<(enabled: boolean) => void>(fastly.enableDebugLogging);
     expectType<(address: string)=>Geolocation>(fastly.getGeolocationForIpAddress);
     expectType<(path: string)=>Uint8Array>(fastly.includeBytes);
 }
