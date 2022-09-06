@@ -474,11 +474,11 @@ declare class URLSearchParams {
  * **Note**: Messages are prefixed with the respective logel level, starting with an upper-case letter, e.g. `"Log: "`.
  */
 declare interface Console {
-  log(message: any): void;
-  debug(message: any): void;
-  info(message: any): void;
-  warn(message: any): void;
-  error(message: any): void;
+  log(...objects: any[]): void;
+  debug(...objects: any[]): void;
+  info(...objects: any[]): void;
+  warn(...objects: any[]): void;
+  error(...objects: any[]): void;
 }
 
 /**
