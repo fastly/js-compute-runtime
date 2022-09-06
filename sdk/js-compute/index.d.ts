@@ -467,11 +467,11 @@ declare class URLSearchParams {
  * Interface for logging to stdout for
  * [live log monitoring](https://developer.fastly.com/learning/compute/testing/#live-log-monitoring-in-your-console).
  *
- * **Note**: relative to the `Console` builtin in browsers, this implementation is fairly basic for
- * now. It only supports a single argument, and does a basic `toString` operation on it. Use e.g.
- * `JSON.stringify` on the input to retain more information on internal object structure.
+ * **Note**: This implementation accepts any number of arguments. String representations of each object are appended
+ * together in the order listed and output. Unlike the `Console` built-in in browsers and Node.js, this implementation
+ * does not perform string substitution.
  *
- * **Note**: Messages are prefixed with the respective logel level, starting with an upper-case letter, e.g. `"Log: "`.
+ * **Note**: Messages are prefixed with the respective log level, starting with an upper-case letter, e.g. `"Log: "`.
  */
 declare interface Console {
   log(...objects: any[]): void;
