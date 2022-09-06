@@ -267,11 +267,11 @@ import {expectError, expectType} from 'tsd';
 // console
 {
     expectType<Console>(console)
-    expectType<(message: any)=>void>(console.log);
-    expectType<(message: any)=>void>(console.debug);
-    expectType<(message: any)=>void>(console.info);
-    expectType<(message: any)=>void>(console.warn);
-    expectType<(message: any)=>void>(console.error);
+    expectType<(...objects: any[])=>void>(console.log);
+    expectType<(...objects: any[])=>void>(console.debug);
+    expectType<(...objects: any[])=>void>(console.info);
+    expectType<(...objects: any[])=>void>(console.warn);
+    expectType<(...objects: any[])=>void>(console.error);
 }
 
 // TextDecoder
