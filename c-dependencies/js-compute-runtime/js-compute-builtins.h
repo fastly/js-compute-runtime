@@ -104,6 +104,7 @@ bool body_unusable(JSContext *cx, JS::HandleObject body);
 BodyHandle body_handle(JSObject *obj);
 template <BodyReadResult result_type>
 bool bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
+JS::Value url(JSObject *obj);
 } // namespace RequestOrResponse
 
 int write_to_body_all(BodyHandle handle, const char *buf, size_t len);

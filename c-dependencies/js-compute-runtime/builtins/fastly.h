@@ -18,6 +18,7 @@ public:
 
   static JS::PersistentRooted<JSObject *> baseURL;
   static JS::PersistentRooted<JSString *> defaultBackend;
+  static bool allowDynamicBackends;
 
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
@@ -32,6 +33,8 @@ public:
   static bool baseURL_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool defaultBackend_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool defaultBackend_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool allowDynamicBackends_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool create(JSContext *cx, JS::HandleObject global);
 };
 

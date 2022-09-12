@@ -36,6 +36,7 @@
 #include "sequence.hpp"
 
 #include "builtin.h"
+#include "builtins/backend.h"
 #include "builtins/cache-override.h"
 #include "builtins/compression-stream.h"
 #include "builtins/config-store.h"
@@ -4038,10 +4039,10 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
 
   RootedString backend(cx, Request::backend(request));
-  if (!backend) {
+  if (!backend && builtins::Fastly::allowDynamicBackends == false) {
     backend = builtins::Fastly::defaultBackend;
   }
-  if (!backend) {
+  if (!backend && builtins::Fastly::allowDynamicBackends == false) {
     size_t bytes_read;
     RequestHandle handle = Request::request_handle(request);
     UniqueChars buf(
@@ -4054,6 +4055,14 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
                          buf.get());
     }
     return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  if (!backend && builtins::Fastly::allowDynamicBackends) {
+    JS::RootedObject dynamicBackend(cx, builtins::Backend::create(cx, request));
+    if (!dynamicBackend) {
+      return false;
+    }
+    backend.set(builtins::Backend::name(cx, dynamicBackend));
   }
 
   size_t backend_len;
@@ -4424,6 +4433,8 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
   if (!GlobalProperties::init(cx, global))
     return false;
 
+  if (!builtins::Backend::init_class(cx, global))
+    return false;
   if (!builtins::Fastly::create(cx, global))
     return false;
   if (!builtins::Console::create(cx, global))
