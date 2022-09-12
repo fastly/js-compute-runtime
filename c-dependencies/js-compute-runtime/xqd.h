@@ -52,6 +52,45 @@ typedef struct {
   uint32_t handle;
 } ObjectStoreHandle;
 
+// The values need to match https://docs.rs/fastly-sys/0.8.7/src/fastly_sys/lib.rs.html#86-108
+#define BACKEND_CONFIG_RESERVED (1u << 0)
+#define BACKEND_CONFIG_HOST_OVERRIDE (1u << 1)
+#define BACKEND_CONFIG_CONNECT_TIMEOUT (1u << 2)
+#define BACKEND_CONFIG_FIRST_BYTE_TIMEOUT (1u << 3)
+#define BACKEND_CONFIG_BETWEEN_BYTES_TIMEOUT (1u << 4)
+#define BACKEND_CONFIG_USE_SSL (1u << 5)
+#define BACKEND_CONFIG_SSL_MIN_VERSION (1u << 6)
+#define BACKEND_CONFIG_SSL_MAX_VERSION (1u << 7)
+#define BACKEND_CONFIG_CERT_HOSTNAME (1u << 8)
+#define BACKEND_CONFIG_CA_CERT (1u << 9)
+#define BACKEND_CONFIG_CIPHERS (1u << 10)
+#define BACKEND_CONFIG_SNI_HOSTNAME (1u << 11)
+
+typedef enum TLS {
+  VERSION_1 = 0,
+  VERSION_1_1 = 1,
+  VERSION_1_2 = 2,
+  VERSION_1_3 = 3,
+} TLS;
+
+typedef struct DynamicBackendConfig {
+  char *host_override;
+  uint32_t host_override_len;
+  uint32_t connect_timeout_ms;
+  uint32_t first_byte_timeout_ms;
+  uint32_t between_bytes_timeout_ms;
+  uint32_t ssl_min_version;
+  uint32_t ssl_max_version;
+  char *cert_hostname;
+  uint32_t cert_hostname_len;
+  char *ca_cert;
+  uint32_t ca_cert_len;
+  char *ciphers;
+  uint32_t ciphers_len;
+  char *sni_hostname;
+  uint32_t sni_hostname_len;
+} DynamicBackendConfig;
+
 #define INVALID_HANDLE (UINT32_MAX - 1)
 
 typedef enum BodyWriteEnd {
@@ -104,6 +143,12 @@ int xqd_log_write(LogEndpointHandle endpoint_handle, const char *msg, size_t msg
                   size_t *nwritten);
 
 // Module fastly_http_req
+WASM_IMPORT("fastly_http_req", "register_dynamic_backend")
+int xqd_req_register_dynamic_backend(const char *name_prefix, size_t name_prefix_len,
+                                     const char *target, size_t target_len,
+                                     uint32_t backend_config_mask,
+                                     DynamicBackendConfig *backend_configuration);
+
 WASM_IMPORT("fastly_http_req", "body_downstream_get")
 int xqd_req_body_downstream_get(RequestHandle *req_handle_out, BodyHandle *body_handle_out);
 
