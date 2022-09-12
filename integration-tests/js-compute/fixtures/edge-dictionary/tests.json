@@ -1,10 +1,9 @@
 {
-  "POST /": {
+  "GET /": {
     "environments": ["viceroy", "c@e"],
     "downstream_request": {
-      "method": "POST",
-      "pathname": "/",
-      "body": "What is the Fastly Twitter?"
+      "method": "GET",
+      "pathname": "/"
     },
     "downstream_response": {
       "status": 200,

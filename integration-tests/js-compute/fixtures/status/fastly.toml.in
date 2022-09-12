@@ -10,16 +10,3 @@ service_id = ""
 
 [scripts]
   build = "../../../../target/release/js-compute-runtime"
-
-[local_server]
-
-  [local_server.backends]
-
-    [local_server.backends.TheOrigin]
-      url = "JS_COMPUTE_TEST_BACKEND/"
-
-    [local_server.backends.TheOrigin2]
-      url = "JS_COMPUTE_TEST_BACKEND/"
-
-    [local_server.backends.example_backend]
-      url = "https://example.org/"

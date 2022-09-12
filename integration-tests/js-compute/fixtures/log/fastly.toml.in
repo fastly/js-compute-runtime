@@ -23,3 +23,17 @@ service_id = ""
 
     [local_server.backends.example_backend]
       url = "https://example.org/"
+
+[setup]
+
+  [setup.backends]
+
+    [setup.backends.TheOrigin]
+      address = "compute-sdk-test-backend.edgecompute.app"
+      port = 443
+    [setup.backends.TheOrigin2]
+      address = "compute-sdk-test-backend.edgecompute.app"
+      port = 443
+    [setup.backends.example_backend]
+      address = "example.org"
+      port = 443

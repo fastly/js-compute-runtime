@@ -1,0 +1,46 @@
+name: 'End to end tests'
+description: 'Run end-to-end tests for the provided fixture'
+
+inputs:
+  fixture:
+    description: 'The name of the fixture to test'
+    required: true
+  fastly-api-token:
+    description: 'The Fastly API token to use for interacting with Fastly API'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Fastly CLI
+      shell: bash
+      run: |
+        echo "Install Fastly CLI 3.1.1"
+        wget https://github.com/fastly/cli/releases/download/v3.1.1/fastly_3.1.1_linux_amd64.deb
+        sudo apt install ./fastly_3.1.1_linux_amd64.deb
+
+    - name: Download x86_64 Linux binaries
+      uses: actions/download-artifact@v1
+      with:
+        name: bins-x86_64-linux
+
+    # Move the downloaded binary from the build step into the bins directory in
+    # the integration-tests directory
+    - name: Move x86_64 Linux binaries
+      shell: bash
+      run: |
+        arch="x86_64"
+        platform="linux"
+
+        mkdir -p "./target/release"
+        mv "bins-$arch-$platform/js-compute-runtime" "./target/release/js-compute-runtime"
+
+        chmod +x ./target/release/js-compute-runtime
+        ./target/release/js-compute-runtime --help
+
+    - run: cd ./integration-tests/js-compute && npm ci
+      shell: bash
+    - run: cd ./integration-tests/js-compute && ./test.js ${{ inputs.fixture }}
+      shell: bash
+      env: # Or as an environment variable
+        FASTLY_API_TOKEN: ${{ inputs.fastly-api-token }}

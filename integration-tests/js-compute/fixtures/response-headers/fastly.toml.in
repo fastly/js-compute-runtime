@@ -17,3 +17,17 @@ service_id = ""
 
     [local_server.backends.TheOrigin]
       url = "JS_COMPUTE_TEST_BACKEND/"
+
+[setup]
+
+  [setup.backends]
+
+    [setup.backends.TheOrigin]
+      address = "compute-sdk-test-backend.edgecompute.app"
+      port = 443
+    [setup.backends.TheOrigin2]
+      address = "compute-sdk-test-backend.edgecompute.app"
+      port = 443
+    [setup.backends.example_backend]
+      address = "example.org"
+      port = 443

@@ -6,6 +6,7 @@ description = "A minimal boilerplate application to bootstrap JavaScript project
 language = "other"
 manifest_version = 2
 name = "compute-sdk-test-backend"
+service_id = ""
 
 [scripts]
   build = "../../../../target/release/js-compute-runtime"

@@ -5,8 +5,23 @@ authors = ["me@jakechampion.name"]
 description = ""
 language = "other"
 manifest_version = 2
-name = "app"
+name = "object-store"
 service_id = ""
+
+[local_server]
+
+  [local_server.backends]
+
+    [local_server.backends.TheOrigin]
+      url = "JS_COMPUTE_TEST_BACKEND/"
 
 [scripts]
   build = "../../../../target/release/js-compute-runtime"
+
+[setup]
+
+  [setup.backends]
+
+    [setup.backends.TheOrigin]
+      address = "compute-sdk-test-backend.edgecompute.app"
+      port = 443

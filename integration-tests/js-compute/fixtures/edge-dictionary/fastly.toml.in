@@ -12,20 +12,14 @@ service_id = ""
   build = "../../../../target/release/js-compute-runtime"
 
 [local_server]
-
-  [local_server.backends]
-
-    [local_server.backends.TheOrigin]
-      url = "https://JS_COMPUTE_TEST_BACKEND/"
-
-    [local_server.backends.TheOrigin2]
-      url = "JS_COMPUTE_TEST_BACKEND/"
-
-    [local_server.backends.example_backend]
-      url = "https://example.org/"
-
   [local_server.dictionaries]
-
     [local_server.dictionaries.edge_dictionary]
       file = "./integration-tests/js-compute/fixtures/edge-dictionary/edge-dictionary.json"
       format = "json"
+
+[setup]
+  [setup.dictionaries]
+    [setup.dictionaries.edge_dictionary]
+      [setup.dictionaries.edge_dictionary.items]
+        [setup.dictionaries.edge_dictionary.items.twitter]
+        value = "https://twitter.com/fastly"

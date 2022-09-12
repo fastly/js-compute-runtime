@@ -184,7 +184,8 @@ routes.set('/', () => {
         routes.set("/object-store/put/key-parameter-1024-character-string", async () => {
             let error = await assertResolves(async () => {
                 const store = createValidStore()
-                await store.put('a'.repeat(1024), '')
+                const key = 'a'.repeat(1024)
+                await store.put(key, '')
             })
             if (error) { return error }
             return pass()
@@ -192,7 +193,8 @@ routes.set('/', () => {
         routes.set("/object-store/put/key-parameter-1025-character-string", async () => {
             let error = await assertRejects(async () => {
                 const store = createValidStore()
-                await store.put('a'.repeat(1025), '')
+                const key = 'a'.repeat(1025)
+                await store.put(key, '')
             }, TypeError, `ObjectStore key can not be more than 1024 characters`)
             if (error) { return error }
             return pass()
@@ -571,7 +573,8 @@ routes.set('/', () => {
         routes.set("/object-store/get/key-parameter-1024-character-string", async () => {
             let error = await assertResolves(async () => {
                 const store = createValidStore()
-                await store.get('a'.repeat(1024))
+                const key = 'a'.repeat(1024)
+                await store.get(key)
             })
             if (error) { return error }
             return pass()
@@ -579,7 +582,8 @@ routes.set('/', () => {
         routes.set("/object-store/get/key-parameter-1025-character-string", async () => {
             let error = await assertRejects(async () => {
                 const store = createValidStore()
-                await store.get('a'.repeat(1025))
+                const key = 'a'.repeat(1025)
+                await store.get(key)
             }, TypeError, `ObjectStore key can not be more than 1024 characters`)
             if (error) { return error }
             return pass()
@@ -687,7 +691,7 @@ routes.set('/', () => {
     });
     routes.set("/object-store-entry/json/valid", async () => {
         let store = createValidStore()
-        let key = `entry-json-valid}`;
+        let key = `entry-json-valid`;
         const obj = { a: 1, b: 2, c: 3 }
         await store.put(key, JSON.stringify(obj))
         let entry = await store.get(key)
@@ -1042,7 +1046,7 @@ async function objectStoreInterfaceTests() {
 }
 
 function createValidStore() {
-    return new ObjectStore('example-test-store')
+    return new ObjectStore('example-test-object-store')
 }
 
 function iteratableToStream(iterable) {

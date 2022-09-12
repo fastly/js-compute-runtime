@@ -6,6 +6,7 @@ description = "A minimal boilerplate application to bootstrap JavaScript project
 language = "other"
 manifest_version = 2
 name = "compute-sdk-test-backend"
+service_id = ""
 
 [scripts]
   build = "../../../../target/release/js-compute-runtime"
@@ -18,3 +19,14 @@ name = "compute-sdk-test-backend"
       url = "https://httpbin.org/"
     [local_server.backends.localserver]
       url = "http://localhost:8081/"
+
+[setup]
+
+  [setup.backends]
+
+    [setup.backends.TheOrigin]
+      address = "compute-sdk-test-backend.edgecompute.app"
+      port = 443
+    [setup.backends.TheOrigin2]
+      address = "compute-sdk-test-backend.edgecompute.app"
+      port = 443
