@@ -305,11 +305,50 @@ routes.set('/', () => {
         return pass()
       });
 
-      routes.set("/backend/constructor/parameter-target-property-valid-string", async () => {
-        let error = assertDoesNotThrow(() => {
-          new Backend({ name: 'target-property-valid-string', target: "www.fastly.com" })
-        })
-        if (error) { return error }
+      routes.set("/backend/constructor/parameter-target-property-valid-host", async () => {
+        const targets = [
+          "www.fastly.com",
+          "w-w-w.f-a-s-t-l-y.c-o-m",
+          "a".repeat(63) + ".com",
+          `${"a".repeat(63)}.${"a".repeat(63)}.${"a".repeat(63)}.${"a".repeat(57)}.com`,
+          "ai",
+          "w.a:1",
+          "fastly.com:1",
+          "fastly.com:80",
+          "fastly.com:443",
+          "fastly.com:65535",
+        ];
+        let i = 0;
+        for (const target of targets) {
+          let error = assertDoesNotThrow(() => {
+            new Backend({ name: 'target-property-valid-host-'+i, target })
+          })
+          if (error) { return error }
+          i++;
+        }
+        return pass()
+      });
+      
+      routes.set("/backend/constructor/parameter-target-property-invalid-host", async () => {
+        const targets = [
+          "-www.fastly.com",
+          "www.fastly.com-",
+          "a".repeat(64) + ".com",
+          `${"a".repeat(63)}.${"a".repeat(63)}.${"a".repeat(63)}.${"a".repeat(58)}.com`,
+          "w$.com",
+          "w.a:a",
+          "fastly.com:-1",
+          "fastly.com:0",
+          "fastly.com:65536",
+        ];
+        let i = 0;
+        for (const target of targets) {
+          let error = assertThrows(() => {
+            new Backend({ name: 'target-property-invalid-host-'+i, target })
+          }, TypeError, `Backend constructor: target does not contain a valid IPv4, IPv6, or hostname address`)
+          if (error) { return error }
+          i++;
+        }
         return pass()
       });
     }
