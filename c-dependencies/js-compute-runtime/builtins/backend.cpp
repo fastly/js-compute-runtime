@@ -1,6 +1,9 @@
+#include <charconv>
 #include <cctype>
 #include <iostream>
 #include <optional>
+#include <string>
+#include <string_view>
 
 // TODO: remove these once the warnings are fixed
 #pragma clang diagnostic push
@@ -23,7 +26,7 @@ bool isNotAlphaNumericDotOrDash(char character) {
   return !std::isalnum(character) && !isDash(character) && !isDot(character);
 }
 
-bool isValidHost(std::string host) {
+bool isValidHost(std::string_view host) {
   // ValidHostRegex =
   // "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])(:[0-9]+)$";
   auto firstCharacter = host.front();
@@ -33,7 +36,7 @@ bool isValidHost(std::string host) {
   }
   // split the hostname from the port
   int pos = host.find_first_of(':');
-  std::string hostname = host.substr(0, pos);
+  std::string_view hostname = host.substr(0, pos);
 
   auto lastCharacter = hostname.back();
   // check last character is in the regex [a-zA-Z0-9]
@@ -67,11 +70,15 @@ bool isValidHost(std::string host) {
   }
   // if there is a port - confirm it is all digits and is between 0 and 65536
   if (pos != std::string::npos) {
-    std::string port = host.substr(pos + 1);
+    std::string_view port = host.substr(pos + 1);
     if (!std::all_of(port.begin(), port.end(), ::isdigit)) {
       return false;
     }
-    auto value = std::stoi(port);
+    int value;
+    const std::from_chars_result result = std::from_chars(port.data(), port.data() + port.size(), value);
+    if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range) {
+      return false;
+    }
     if (value == 0 || value >= 65536) {
       return false;
     }
@@ -302,7 +309,7 @@ bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue targe
     return false;
   }
 
-  std::string targetString((char *)targetStringSlice.data, targetStringSlice.len);
+  std::string_view targetString((char *)targetStringSlice.data, targetStringSlice.len);
   auto length = targetString.length();
   if (length == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_EMPTY);
@@ -315,7 +322,7 @@ bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue targe
     return false;
   }
 
-  auto targetStr = JS_NewStringCopyN(cx, targetString.c_str(), targetString.length());
+  auto targetStr = JS_NewStringCopyN(cx, targetString.data(), targetString.length());
   if (!targetStr) {
     return false;
   }
@@ -358,7 +365,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
     return nullptr;
   }
   const jsurl::SpecString origin_specstring = jsurl::origin(url);
-  std::string origin((char *)origin_specstring.data, origin_specstring.len);
+  std::string_view origin((char *)origin_specstring.data, origin_specstring.len);
 
   auto use_ssl = origin.rfind("https://", 0) == 0;
   JS::SetReservedSlot(backend, Backend::Slots::UseSsl, JS::BooleanValue(use_ssl));
