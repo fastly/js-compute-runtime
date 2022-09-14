@@ -4,6 +4,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 // TODO: remove these once the warnings are fixed
 #pragma clang diagnostic push
@@ -15,20 +16,28 @@
 #include "host_call.h"
 #include "js/Conversions.h"
 
-bool isDash(char character) { return character == 45; }
-bool isDot(char character) { return character == 46; }
-
-bool isNotAlphaNumericOrDash(char character) {
-  return !std::isalnum(character) && !isDash(character);
+std::vector<std::string_view> split(std::string_view string, char delimiter) {
+  auto start = 0;
+  auto end = string.find(delimiter, start);
+  std::vector<std::string_view> result;
+  while (end != std::string::npos) {
+    result.push_back(string.substr(start, end - start));
+    start = end + 1;
+    end = string.find(delimiter, start);
+  }
+  result.push_back(string.substr(start));
+  return result;
 }
 
-bool isNotAlphaNumericDotOrDash(char character) {
-  return !std::isalnum(character) && !isDash(character) && !isDot(character);
-}
-
+// A "host" is a "hostname" and an optional "port" in the format hostname:port
+// A "hostname" is between 1 and 255 octets -- https://www.rfc-editor.org/rfc/rfc1123#page-13
+// A "hostname" must start with a letter or digit -- https://www.rfc-editor.org/rfc/rfc1123#page-13
+// A "hostname" is made up of "labels" delimited by a dot `.`
+// A "label" is between 1 and 63 octets
 bool isValidHost(std::string_view host) {
-  // ValidHostRegex =
-  // "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])(:[0-9]+)$";
+  if (host.length() < 1) {
+    return false;
+  }
   auto firstCharacter = host.front();
   // check first character is in the regex [a-zA-Z0-9]
   if (!std::isalnum(firstCharacter)) {
@@ -38,37 +47,42 @@ bool isValidHost(std::string_view host) {
   int pos = host.find_first_of(':');
   std::string_view hostname = host.substr(0, pos);
 
+  // hostnames can not be longer than 253 characters
+  // This is because a hostname is represented as a series of labels, and is terminated by a label of length zero. 
+  // A label consists of a length octet followed by that number of octets representing the name itself.
+  // https://www.rfc-editor.org/rfc/rfc1035#section-3.3
+  // https://www.rfc-editor.org/rfc/rfc2181#section-11
+  if (hostname.length() > 253) {
+    return false;
+  }
+
   auto lastCharacter = hostname.back();
   // check last character is in the regex [a-zA-Z0-9]
   if (!std::isalnum(lastCharacter)) {
     return false;
   }
 
-  // find the position of the last .
-  auto lastDot = hostname.rfind('.');
-  if (lastDot == std::string::npos) {
-    return true;
+  auto labels = split(hostname, '.');
+
+  for (auto label:labels) {
+    // Each label in a hostname can not be longer than 63 characters
+    // https://www.rfc-editor.org/rfc/rfc2181#section-11
+    if (label.length() > 63) {
+      return false;
+    }
+
+    // Each label can only contain the characters in the regex [a-zA-Z0-9\-]
+    auto it = std::find_if_not(label.begin(), label.end(), [&](auto character) {
+      return std::isalnum(character) || character == '-';
+    });
+    if (it != label.end()) {
+
+      return false;
+    }
   }
 
-  // check the character before the last . is in the regex [a-zA-Z0-9]
-  if (!std::isalnum(hostname.at(lastDot - 1))) {
-    return false;
-  }
-  // check all other characters before the last . are in the regex [a-zA-Z0-9\-.]
-  auto last = std::next(hostname.begin(), lastDot);
-  auto it = std::find_if(std::next(hostname.begin()), last, isNotAlphaNumericDotOrDash);
-
-  if (it != last) {
-    return false;
-  }
-  // check all characters after the last . (but not the last character) are in the regex
-  // [a-zA-Z0-9\-]
-  last = std::prev(hostname.end());
-  it = std::find_if(std::next(hostname.begin(), lastDot + 1), last, isNotAlphaNumericOrDash);
-  if (it != last) {
-    return false;
-  }
   // if there is a port - confirm it is all digits and is between 0 and 65536
+  // https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml
   if (pos != std::string::npos) {
     std::string_view port = host.substr(pos + 1);
     if (!std::all_of(port.begin(), port.end(), ::isdigit)) {

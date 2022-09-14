@@ -64,7 +64,7 @@ MSG_DEF(JSMSG_BACKEND_NAME_TOO_LONG,                           0, JSEXN_TYPEERR,
 MSG_DEF(JSMSG_BACKEND_NAME_EMPTY,                              0, JSEXN_TYPEERR, "Backend constructor: name can not be an empty string")
 MSG_DEF(JSMSG_BACKEND_TARGET_NOT_SET,                          0, JSEXN_TYPEERR, "Backend constructor: target can not be null or undefined")
 MSG_DEF(JSMSG_BACKEND_TARGET_EMPTY,                            0, JSEXN_TYPEERR, "Backend constructor: target can not be an empty string")
-MSG_DEF(JSMSG_BACKEND_TARGET_INVALID,                          0, JSEXN_TYPEERR, "Backend constructor: target is not a valid host or IP address")
+MSG_DEF(JSMSG_BACKEND_TARGET_INVALID,                          0, JSEXN_TYPEERR, "Backend constructor: target does not contain a valid IPv4, IPv6, or hostname address")
 MSG_DEF(JSMSG_BACKEND_CIPHERS_EMPTY,                           0, JSEXN_TYPEERR, "Backend constructor: ciphers can not be an empty string")
 MSG_DEF(JSMSG_BACKEND_HOST_OVERRIDE_EMPTY,                     0, JSEXN_TYPEERR, "Backend constructor: hostOverride can not be an empty string")
 MSG_DEF(JSMSG_BACKEND_CERTIFICATE_HOSTNAME_EMPTY,              0, JSEXN_TYPEERR, "Backend constructor: certificateHostname can not be an empty string")
