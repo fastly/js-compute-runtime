@@ -1,3 +1,4 @@
+#include <cctype>
 #include <iostream>
 #include <optional>
 
@@ -11,26 +12,15 @@
 #include "host_call.h"
 #include "js/Conversions.h"
 
-bool isDigit(char character) { return character >= 48 && character <= 57; }
-bool isLowerAlpha(char character) { return character >= 97 && character <= 122; }
-bool isUpperAlpha(char character) { return character >= 65 && character <= 90; }
-bool isAlphaNumeric(char character) {
-  if (!isDigit(character) && !isLowerAlpha(character) && !isUpperAlpha(character)) {
-    return false;
-  }
-  return true;
-}
 bool isDash(char character) { return character == 45; }
 bool isDot(char character) { return character == 46; }
 
 bool isNotAlphaNumericOrDash(char character) {
-  return !isDigit(character) && !isLowerAlpha(character) && !isUpperAlpha(character) &&
-         !isDash(character);
+  return !std::isalnum(character) && !isDash(character);
 }
 
 bool isNotAlphaNumericDotOrDash(char character) {
-  return !isDigit(character) && !isLowerAlpha(character) && !isUpperAlpha(character) &&
-         !isDash(character) && !isDot(character);
+  return !std::isalnum(character) && !isDash(character) && !isDot(character);
 }
 
 bool isValidHost(std::string host) {
@@ -38,7 +28,7 @@ bool isValidHost(std::string host) {
   // "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])(:[0-9]+)$";
   auto firstCharacter = host.front();
   // check first character is in the regex [a-zA-Z0-9]
-  if (!isAlphaNumeric(firstCharacter)) {
+  if (!std::isalnum(firstCharacter)) {
     return false;
   }
   // split the hostname from the port
@@ -47,7 +37,7 @@ bool isValidHost(std::string host) {
 
   auto lastCharacter = hostname.back();
   // check last character is in the regex [a-zA-Z0-9]
-  if (!isAlphaNumeric(lastCharacter)) {
+  if (!std::isalnum(lastCharacter)) {
     return false;
   }
 
@@ -58,7 +48,7 @@ bool isValidHost(std::string host) {
   }
 
   // check the character before the last . is in the regex [a-zA-Z0-9]
-  if (!isAlphaNumeric(hostname.at(lastDot - 1))) {
+  if (!std::isalnum(hostname.at(lastDot - 1))) {
     return false;
   }
   // check all other characters before the last . are in the regex [a-zA-Z0-9\-.]
