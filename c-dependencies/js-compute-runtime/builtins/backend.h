@@ -30,6 +30,8 @@ public:
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
+  inline static JS::PersistentRootedObject backends;
+
   static JSString *name(JSContext *cx, JSObject *self);
   static JS::Result<mozilla::Ok> register_dynamic_backend(JSContext *cx, JS::HandleObject request);
   static JSObject *create(JSContext *cx, JS::HandleObject request);

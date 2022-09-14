@@ -47,6 +47,14 @@ routes.set('/', () => {
     if (error) { return error }
     return pass()
   });
+  routes.set("/implicit-dynamic-backend/dynamic-backends-enabled-called-twice", async () => {
+    fastly.allowDynamicBackends = true;
+    let error = await assertResolves(() => fetch('https://httpbin.org/headers'));
+    if (error) { return error }
+    error = await assertResolves(() => fetch('https://httpbin.org/headers'));
+    if (error) { return error }
+    return pass()
+  });
 }
 
 // explicit dynamic backend
