@@ -1,5 +1,5 @@
-#include <charconv>
 #include <cctype>
+#include <charconv>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -48,9 +48,9 @@ bool isValidHost(std::string_view host) {
   std::string_view hostname = host.substr(0, pos);
 
   // hostnames can not be longer than 253 characters
-  // This is because a hostname is represented as a series of labels, and is terminated by a label of length zero. 
-  // A label consists of a length octet followed by that number of octets representing the name itself.
-  // https://www.rfc-editor.org/rfc/rfc1035#section-3.3
+  // This is because a hostname is represented as a series of labels, and is terminated by a label
+  // of length zero. A label consists of a length octet followed by that number of octets
+  // representing the name itself. https://www.rfc-editor.org/rfc/rfc1035#section-3.3
   // https://www.rfc-editor.org/rfc/rfc2181#section-11
   if (hostname.length() > 253) {
     return false;
@@ -64,7 +64,7 @@ bool isValidHost(std::string_view host) {
 
   auto labels = split(hostname, '.');
 
-  for (auto label:labels) {
+  for (auto label : labels) {
     // Each label in a hostname can not be longer than 63 characters
     // https://www.rfc-editor.org/rfc/rfc2181#section-11
     if (label.length() > 63) {
@@ -89,7 +89,8 @@ bool isValidHost(std::string_view host) {
       return false;
     }
     int value;
-    const std::from_chars_result result = std::from_chars(port.data(), port.data() + port.size(), value);
+    const std::from_chars_result result =
+        std::from_chars(port.data(), port.data() + port.size(), value);
     if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range) {
       return false;
     }
@@ -346,11 +347,6 @@ bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue targe
 }
 
 JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
-  JS::RootedObject backend(cx,
-                           JS_NewObjectWithGivenProto(cx, &Backend::class_, Backend::proto_obj));
-  if (!backend) {
-    return nullptr;
-  }
   JS::RootedValue request_url(cx, RequestOrResponse::url(request));
   auto url_string = encode(cx, request_url);
   if (!url_string.data) {
@@ -363,12 +359,37 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
     return nullptr;
   }
   const jsurl::SpecSlice slice = jsurl::host(url);
+  std::string aaa((char *)slice.data, slice.len);
   auto nameStr = JS_NewStringCopyN(cx, (char *)slice.data, slice.len);
   if (!nameStr) {
     return nullptr;
   }
+
+  // Check if we already constructed an implicit dynamic backend for this host.
+  bool found;
+  JS::RootedValue alreadyBuiltBackend(cx);
+  if (!JS_HasProperty(cx, Backend::backends, aaa.c_str(), &found)) {
+    return nullptr;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, Backend::backends, aaa.c_str(), &alreadyBuiltBackend)) {
+      return nullptr;
+    }
+    JS::RootedObject backend(cx, &alreadyBuiltBackend.toObject());
+    return backend;
+  }
+
+  auto backendInstance = JS_NewObjectWithGivenProto(cx, &Backend::class_, Backend::proto_obj);
+  if (!backendInstance) {
+    return nullptr;
+  }
+  JS::RootedValue backendVal(cx, JS::ObjectValue(*backendInstance));
+  JS::RootedObject backend(cx, backendInstance);
+  if (!backend) {
+    return nullptr;
+  }
+
   JS::RootedValue name(cx, JS::StringValue(nameStr));
-  // The backend name provided was too long; please keep it to <255
   if (!Backend::set_name(cx, backend, name)) {
     return nullptr;
   }
@@ -388,6 +409,9 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   if (result.isErr()) {
     return nullptr;
   } else {
+    if (!JS_SetProperty(cx, Backend::backends, aaa.c_str(), backendVal)) {
+      return nullptr;
+    }
     return backend;
   }
 }
@@ -710,6 +734,11 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool Backend::init_class(JSContext *cx, JS::HandleObject global) {
+  JS::RootedObject backends(cx, JS_NewPlainObject(cx));
+  if (!backends) {
+    return false;
+  }
+  Backend::backends.init(cx, backends);
   return BuiltinImpl<Backend>::init_class_impl(cx, global);
 }
 
