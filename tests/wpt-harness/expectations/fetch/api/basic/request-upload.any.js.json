@@ -48,7 +48,7 @@
     "status": "FAIL"
   },
   "Fetch with POST with text body on 421 response should be retried once on new connection.": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Streaming upload shouldn't work on Http/1.1.": {
     "status": "FAIL"

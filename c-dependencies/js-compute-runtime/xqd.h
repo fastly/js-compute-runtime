@@ -313,6 +313,9 @@ WASM_IMPORT("fastly_geo", "lookup")
 int xqd_geo_lookup(const char *addr_octets, size_t addr_len, char *buf, size_t buf_len,
                    size_t *nwritten);
 
+WASM_IMPORT("wasi_snapshot_preview1", "random_get")
+int32_t random_get(int32_t arg0, int32_t arg1);
+
 #ifdef __cplusplus
 }
 #endif
