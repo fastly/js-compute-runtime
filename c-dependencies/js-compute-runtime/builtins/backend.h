@@ -36,6 +36,8 @@ public:
   static JS::Result<mozilla::Ok> register_dynamic_backend(JSContext *cx, JS::HandleObject request);
   static JSObject *create(JSContext *cx, JS::HandleObject request);
   static bool set_target(JSContext *cx, JSObject *backend, JS::HandleValue target_val);
+  static bool set_timeout_slot(JSContext *cx, JSObject *backend, JS::HandleValue value,
+                               Backend::Slots slot, std::string property_name);
   static bool set_host_override(JSContext *cx, JSObject *backend, JS::HandleValue hostOverride_val);
   static bool set_name(JSContext *cx, JSObject *backend, JS::HandleValue name_val);
   static bool toString(JSContext *cx, unsigned argc, JS::Value *vp);
