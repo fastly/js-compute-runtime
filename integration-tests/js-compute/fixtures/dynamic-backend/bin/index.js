@@ -325,18 +325,41 @@ routes.set('/', () => {
           "fastly.com:80",
           "fastly.com:443",
           "fastly.com:65535",
+          // Basic zero IPv4 address.
+          "0.0.0.0",
+          // Basic non-zero IPv4 address.
+          "192.168.140.255",
+
+          // TODO: These are commented out as the hostcall currently yields an error of "invalid authority" when given an ipv6 address
+          // Localhost IPv6.
+          // "::1",
+          // Fully expanded IPv6 address.
+          // "fd7a:115c:a1e0:ab12:4843:cd96:626b:430b",
+          // IPv6 with elided fields in the middle.
+          // "fd7a:115c::626b:430b",
+          // IPv6 with elided fields at the end.
+          // "fd7a:115c:a1e0:ab12:4843:cd96::",
+          // IPv6 with single elided field at the end.
+          // "fd7a:115c:a1e0:ab12:4843:cd96:626b::",
+          // IPv6 with single elided field in the middle.
+          // "fd7a:115c:a1e0::4843:cd96:626b:430b",
+          // IPv6 with the trailing 32 bits written as IPv4 dotted decimal. (4in6)
+          // "::ffff:192.168.140.255",
+          // IPv6 with capital letters.
+          // "FD9E:1A04:F01D::1",
         ];
         let i = 0;
         for (const target of targets) {
           let error = assertDoesNotThrow(() => {
-            new Backend({ name: 'target-property-valid-host-'+i, target })
+            console.log(target)
+            new Backend({ name: 'target-property-valid-host-' + i, target })
           })
           if (error) { return error }
           i++;
         }
         return pass()
       });
-      
+
       routes.set("/backend/constructor/parameter-target-property-invalid-host", async () => {
         const targets = [
           "-www.fastly.com",
@@ -348,11 +371,47 @@ routes.set('/', () => {
           "fastly.com:-1",
           "fastly.com:0",
           "fastly.com:65536",
+          // IPv4 address in windows-style "print all the digits" form.
+          // "010.000.015.001",
+          // IPv4 address with a silly amount of leading zeros.
+          // "000001.00000002.00000003.000000004",
+          // 4-in-6 with octet with leading zero
+          // "::ffff:1.2.03.4", 
+          // Basic zero IPv6 address.
+          "::",
+          // IPv6 with not enough fields
+          "1:2:3:4:5:6:7",
+          // IPv6 with too many fields
+          "1:2:3:4:5:6:7:8:9",
+          // IPv6 with 8 fields and a :: expander
+          "1:2:3:4::5:6:7:8",
+          // IPv6 with a field bigger than 2b
+          "fe801::1",
+          // IPv6 with non-hex values in field
+          "fe80:tail:scal:e::",
+          // IPv6 with a zone delimiter but no zone.
+          "fe80::1%",
+          // IPv6 (without ellipsis) with too many fields for trailing embedded IPv4.
+          "ffff:ffff:ffff:ffff:ffff:ffff:ffff:192.168.140.255",
+          // IPv6 (with ellipsis) with too many fields for trailing embedded IPv4.
+          "ffff::ffff:ffff:ffff:ffff:ffff:ffff:192.168.140.255",
+          // IPv6 with invalid embedded IPv4.
+          "::ffff:192.168.140.bad",
+          // IPv6 with multiple ellipsis ::.
+          "fe80::1::1",
+          // IPv6 with invalid non hex/colon character.
+          "fe80:1?:1",
+          // IPv6 with truncated bytes after single colon.
+          "fe80:",
+          ":::1",
+          ":0:1",
+          ":",
         ];
         let i = 0;
         for (const target of targets) {
           let error = assertThrows(() => {
-            new Backend({ name: 'target-property-invalid-host-'+i, target })
+            console.log(target)
+            new Backend({ name: 'target-property-invalid-host-' + i, target })
           }, TypeError, `Backend constructor: target does not contain a valid IPv4, IPv6, or hostname address`)
           if (error) { return error }
           i++;
@@ -604,7 +663,7 @@ routes.set('/', () => {
     // useSSL property
     {
       routes.set("/backend/constructor/parameter-useSSL-property-valid-boolean", async () => {
-        const types = [{},[],Symbol(),1,"2"];
+        const types = [{}, [], Symbol(), 1, "2"];
         for (const type of types) {
           let error = assertDoesNotThrow(() => {
             new Backend({ name: 'useSSL-property-valid-boolean' + type, target: 'a', useSSL: type })
@@ -805,7 +864,7 @@ routes.set('/', () => {
     // checkCertificate property
     {
       routes.set("/backend/constructor/parameter-checkCertificate-property-valid-boolean", async () => {
-        const types = [{},[],Symbol(),1,"2"];
+        const types = [{}, [], Symbol(), 1, "2"];
         for (const type of types) {
           let error = assertDoesNotThrow(() => {
             new Backend({ name: 'checkCertificate-property-valid-boolean' + type, target: 'a', checkCertificate: type })
@@ -865,7 +924,7 @@ routes.set('/', () => {
         return pass()
       });
     }
-   
+
     // sniHostname property
     {
       routes.set("/backend/constructor/parameter-sniHostname-property-empty-string", async () => {
