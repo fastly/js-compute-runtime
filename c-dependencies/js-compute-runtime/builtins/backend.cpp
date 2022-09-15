@@ -437,6 +437,29 @@ bool Backend::set_host_override(JSContext *cx, JSObject *backend,
   return true;
 }
 
+/// Timeouts for backends must be less than 2^32 milliseconds, or
+/// about a month and a half.
+bool Backend::set_timeout_slot(JSContext *cx, JSObject *backend, JS::HandleValue value,
+                               Backend::Slots slot, std::string property_name) {
+  double native_value;
+  if (!JS::ToNumber(cx, value, &native_value)) {
+    return false;
+  }
+  int64_t timeout = std::round(native_value);
+  if (timeout < 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_NEGATIVE,
+                              property_name.c_str());
+    return false;
+  }
+  if (timeout >= std::pow(2, 32)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_TOO_BIG,
+                              property_name.c_str());
+    return false;
+  }
+  JS::SetReservedSlot(backend, slot, JS::Int32Value(timeout));
+  return true;
+}
+
 bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue target_val) {
   if (target_val.isNullOrUndefined()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_NOT_SET);
@@ -591,8 +614,6 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
   }
 
-  /// Timeouts for backends must be less than 2^32 milliseconds, or
-  /// about a month and a half.
   JS::RootedValue connectTimeout_val(cx);
   if (!JS_HasProperty(cx, configuration, "connectTimeout", &found)) {
     return false;
@@ -601,22 +622,10 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     if (!JS_GetProperty(cx, configuration, "connectTimeout", &connectTimeout_val)) {
       return false;
     }
-    double connectTimeout;
-    if (!JS::ToNumber(cx, connectTimeout_val, &connectTimeout)) {
+    if (!Backend::set_timeout_slot(cx, backend, connectTimeout_val, Backend::Slots::ConnectTimeout,
+                                   "connectTimeout")) {
       return false;
     }
-    int64_t connectTimeoutInt = std::round(connectTimeout);
-    if (connectTimeoutInt < 0) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BACKEND_CONNECT_TIMEOUT_NEGATIVE);
-      return false;
-    }
-    if (connectTimeoutInt >= std::pow(2, 32)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BACKEND_CONNECT_TIMEOUT_TOO_BIG);
-      return false;
-    }
-    JS::SetReservedSlot(backend, Backend::Slots::ConnectTimeout, JS::Int32Value(connectTimeoutInt));
   }
 
   /// Timeouts for backends must be less than 2^32 milliseconds, or
@@ -629,23 +638,10 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     if (!JS_GetProperty(cx, configuration, "firstByteTimeout", &firstByteTimeout_val)) {
       return false;
     }
-    double firstByteTimeout;
-    if (!JS::ToNumber(cx, firstByteTimeout_val, &firstByteTimeout)) {
+    if (!Backend::set_timeout_slot(cx, backend, firstByteTimeout_val,
+                                   Backend::Slots::FirstByteTimeout, "firstByteTimeout")) {
       return false;
     }
-    int64_t firstByteTimeoutInt = std::round(firstByteTimeout);
-    if (firstByteTimeoutInt < 0) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BACKEND_FIRST_BYTE_TIMEOUT_NEGATIVE);
-      return false;
-    }
-    if (firstByteTimeoutInt >= std::pow(2, 32)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BACKEND_FIRST_BYTE_TIMEOUT_TOO_BIG);
-      return false;
-    }
-    JS::SetReservedSlot(backend, Backend::Slots::FirstByteTimeout,
-                        JS::Int32Value(firstByteTimeoutInt));
   }
 
   /// Timeouts for backends must be less than 2^32 milliseconds, or
@@ -658,23 +654,10 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     if (!JS_GetProperty(cx, configuration, "betweenBytesTimeout", &betweenBytesTimeout_val)) {
       return false;
     }
-    double betweenBytesTimeout;
-    if (!JS::ToNumber(cx, betweenBytesTimeout_val, &betweenBytesTimeout)) {
+    if (!Backend::set_timeout_slot(cx, backend, betweenBytesTimeout_val,
+                                   Backend::Slots::BetweenBytesTimeout, "betweenBytesTimeout")) {
       return false;
     }
-    int64_t betweenBytesTimeoutInt = std::round(betweenBytesTimeout);
-    if (betweenBytesTimeoutInt < 0) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BACKEND_BETWEEN_BYTES_TIMEOUT_NEGATIVE);
-      return false;
-    }
-    if (betweenBytesTimeoutInt >= std::pow(2, 32)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BACKEND_BETWEEN_BYTES_TIMEOUT_TOO_BIG);
-      return false;
-    }
-    JS::SetReservedSlot(backend, Backend::Slots::BetweenBytesTimeout,
-                        JS::Int32Value(betweenBytesTimeoutInt));
   }
 
   /// Has to be either: 1; 1.1; 1.2; 1.3;
