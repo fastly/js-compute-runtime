@@ -5,6 +5,7 @@
 #pragma clang diagnostic pop
 
 #include "crypto.h"
+#include "xqd.h"
 
 bool is_int_typed_array(JSObject *obj) {
   return JS_IsInt8Array(obj) || JS_IsUint8Array(obj) || JS_IsInt16Array(obj) ||
@@ -44,7 +45,7 @@ bool Crypto::get_random_values(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::AutoCheckCannotGC noGC(cx);
   bool is_shared;
   void *buffer = JS_GetArrayBufferViewData(typed_array, &is_shared, noGC);
-  arc4random_buf(buffer, byte_length);
+  random_get((int32_t)buffer, byte_length);
 
   args.rval().setObject(*typed_array);
   return true;

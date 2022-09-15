@@ -6,7 +6,7 @@
     "status": "FAIL"
   },
   "Fetch with POST with ReadableStream on 421 response should return the response and not retry.": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Feature detect for POST with ReadableStream": {
     "status": "FAIL"

@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <cmath>
 #include <iostream>
 #include <regex> // std::regex
 #include <stdio.h>
@@ -4402,6 +4403,18 @@ bool process_network_io(JSContext *cx) {
   return true;
 }
 
+bool math_random(JSContext *cx, unsigned argc, Value *vp) {
+  int32_t storage;
+  int32_t *buf = &storage;
+  random_get((int32_t)buf, 8);
+  uint32_t value = std::abs(storage);
+  double newvalue = static_cast<float>(value) / std::powf(2.0, 32.0);
+
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setDouble(newvalue);
+  return true;
+}
+
 bool define_fastly_sys(JSContext *cx, HandleObject global) {
   // Allocating the reusable hostcall buffer here means it's baked into the
   // snapshot, and since it's all zeros, it won't increase the size of the
@@ -4466,6 +4479,17 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
 
   pending_requests = new JS::PersistentRootedObjectVector(cx);
   pending_body_reads = new JS::PersistentRootedObjectVector(cx);
+
+  JS::RootedValue math_val(cx);
+  if (!JS_GetProperty(cx, global, "Math", &math_val)) {
+    return false;
+  }
+  JS::RootedObject math(cx, &math_val.toObject());
+
+  const JSFunctionSpec funs[] = {JS_FN("random", math_random, 0, 0), JS_FS_END};
+  if (!JS_DefineFunctions(cx, math, funs)) {
+    return false;
+  }
 
   return true;
 }
