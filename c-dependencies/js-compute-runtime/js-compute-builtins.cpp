@@ -4039,30 +4039,30 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
 
   RootedString backend(cx, Request::backend(request));
-  if (!backend && builtins::Fastly::allowDynamicBackends == false) {
-    backend = builtins::Fastly::defaultBackend;
-  }
-  if (!backend && builtins::Fastly::allowDynamicBackends == false) {
-    size_t bytes_read;
-    RequestHandle handle = Request::request_handle(request);
-    UniqueChars buf(
-        read_from_handle_all<xqd_req_uri_get, RequestHandle>(cx, handle, &bytes_read, false));
-    if (buf) {
-      JS_ReportErrorUTF8(cx,
-                         "No backend specified for request with url %s. "
-                         "Must provide a `backend` property on the `init` object "
-                         "passed to either `new Request()` or `fetch`",
-                         buf.get());
+  if (!backend) {
+    if (builtins::Fastly::allowDynamicBackends) {
+      JS::RootedObject dynamicBackend(cx, builtins::Backend::create(cx, request));
+      if (!dynamicBackend) {
+        return false;
+      }
+      backend.set(builtins::Backend::name(cx, dynamicBackend));
+    } else {
+      backend = builtins::Fastly::defaultBackend;
+      if (!backend) {
+        size_t bytes_read;
+        RequestHandle handle = Request::request_handle(request);
+        UniqueChars buf(
+            read_from_handle_all<xqd_req_uri_get, RequestHandle>(cx, handle, &bytes_read, false));
+        if (buf) {
+          JS_ReportErrorUTF8(cx,
+                             "No backend specified for request with url %s. "
+                             "Must provide a `backend` property on the `init` object "
+                             "passed to either `new Request()` or `fetch`",
+                             buf.get());
+        }
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
     }
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-
-  if (!backend && builtins::Fastly::allowDynamicBackends) {
-    JS::RootedObject dynamicBackend(cx, builtins::Backend::create(cx, request));
-    if (!dynamicBackend) {
-      return false;
-    }
-    backend.set(builtins::Backend::name(cx, dynamicBackend));
   }
 
   size_t backend_len;
