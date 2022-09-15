@@ -82,13 +82,13 @@ routes.set('/', () => {
             if (error) { return error }
             return pass()
         });
-        // routes.set("/object-store/constructor/missing-store", async () => {
-        //     let error = assertThrows(() => {
-        //         new ObjectStore('missing')
-        //     }, Error, `ObjectStore constructor: No ObjectStore named 'missing' exists`)
-        //     if (error) { return error }
-        //     return pass()
-        // });
+        routes.set("/object-store/constructor/missing-store", async () => {
+            let error = assertThrows(() => {
+                new ObjectStore('missing')
+            }, Error, `ObjectStore constructor: No ObjectStore named 'missing' exists`)
+            if (error) { return error }
+            return pass()
+        });
         routes.set("/object-store/constructor/invalid-name", async () => {
             // control Characters (\\u0000-\\u001F) are not allowed
             const controlCharacters = [
