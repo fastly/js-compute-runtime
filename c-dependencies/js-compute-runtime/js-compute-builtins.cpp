@@ -4404,7 +4404,7 @@ bool process_network_io(JSContext *cx) {
 }
 
 bool math_random(JSContext *cx, unsigned argc, Value *vp) {
-  unt32_t storage;                                                                   
+  uint32_t storage;
   random_get((int32_t)(&storage), sizeof(storage));                                  
   double newvalue = static_cast<double>(storage) / std::pow(2.0, 32.0);
 
