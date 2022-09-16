@@ -4404,11 +4404,10 @@ bool process_network_io(JSContext *cx) {
 }
 
 bool math_random(JSContext *cx, unsigned argc, Value *vp) {
-  int32_t storage;
-  int32_t *buf = &storage;
-  random_get((int32_t)buf, sizeof(storage));
-  uint32_t value = storage + std::pow(2, 32);
-  double newvalue = static_cast<float>(value) / std::powf(2.0, 32.0);
+  unt32_t storage;
+  unt32_t *buf = &storage;
+  random_get((int32_t)(&buf), sizeof(storage));
+  double newvalue = static_cast<double>(storage) / std::pow(2.0, 32.0);
 
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setDouble(newvalue);
