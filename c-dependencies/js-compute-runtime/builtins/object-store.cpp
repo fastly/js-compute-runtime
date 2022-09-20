@@ -130,18 +130,34 @@ std::optional<std::string> parse_and_validate_key(JSContext *cx, JS::HandleValue
 
   std::string key(keyString.get(), key_len);
   auto key_chars = key.c_str();
-
-  if (auto res = find_invalid_character_for_object_store_key(key_chars)) {
-    if (*res == '\n') {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "newline");
-    } else if (*res == '\r') {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, "carriage return");
-    } else {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER, res);
+  auto res = find_invalid_character_for_object_store_key(key_chars);
+  if (res.has_value()) {
+    std::string character;
+    switch (res.value()) {
+    case '\n':
+      character = "newline";
+      break;
+    case '\r':
+      character = "carriage return";
+      break;
+    case '[':
+      character = '[';
+      break;
+    case ']':
+      character = ']';
+      break;
+    case '*':
+      character = '*';
+      break;
+    case '?':
+      character = '?';
+      break;
+    case '#':
+      character = '#';
+      break;
     }
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER,
+                             character.c_str());
     return std::nullopt;
   }
   auto acme_challenge = ".well-known/acme-challenge/";
