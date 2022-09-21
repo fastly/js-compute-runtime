@@ -9,7 +9,7 @@ jobs:
     name: Dependency Review
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/dependency-review-action@v2
+    - uses: actions/dependency-review-action@v2.2.0
       with:
         allow-licenses: Apache-2.0, MIT, BSD-3-Clause, ISC, BSD-2-Clause, MIT OR (CC0-1.0 AND MIT), CC0-1.0 OR MIT OR (CC0-1.0 AND MIT), CC-BY-3.0, CC0-1.0, MIT OR Apache-2.0, MIT AND Apache-2.0
-
+        fail-on-scopes: runtime
