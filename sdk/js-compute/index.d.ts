@@ -145,9 +145,27 @@ declare interface ClientInfo {
 }
 
 /**
+* Class for accessing [Fastly Edge Dictionaries](https://docs.fastly.com/en/guides/about-edge-dictionaries).
+*
+* **Note**: Can only be used when processing requests, not during build-time initialization.
+*/
+declare class ConfigStore {
+  /**
+   * Creates a new ConfigStore object
+   */
+  constructor(name: string);
+  /**
+   * Get a value for a key in the config-store.
+   */
+  get(key: string): string;
+}
+
+
+/**
  * Class for accessing [Fastly Edge Dictionaries](https://docs.fastly.com/en/guides/about-edge-dictionaries).
  *
  * **Note**: Can only be used when processing requests, not during build-time initialization.
+ * @deprecated This class has been renamed `ConfigStore`. Replace `Dictionary` with `ConfigStore` in your code to avoid having to migrate in the future when `Dictionary` is removed.
  */
 declare class Dictionary {
   /**
@@ -352,28 +370,28 @@ declare class ObjectStore {
  * Class for interacting with a [Fastly Object-store](https://developer.fastly.com/reference/api/object-store/) entry.
  */
 declare interface ObjectStoreEntry {
-/**
- * A ReadableStream with the contents of the entry. 
- */
-get body(): ReadableStream;
-/**
- * A boolean value that indicates whether the body has been read from already.
- */
-get bodyUsed(): boolean;
-/**
- * Reads the body and returns it as a promise that resolves with a string. 
- * The response is always decoded using UTF-8. 
- */
-text(): Promise<string>;
-/**
- * Reads the body and returns it as a promise that resolves with the result of parsing the body text as JSON.
- */
-json(): Promise<object>;
-/**
- * Reads the body and returns it as a promise that resolves with an ArrayBuffer. 
- */
-arrayBuffer(): Promise<ArrayBuffer>;
-// And eventually formData and blob once we support them on Request and Response, too.
+  /**
+   * A ReadableStream with the contents of the entry. 
+   */
+  get body(): ReadableStream;
+  /**
+   * A boolean value that indicates whether the body has been read from already.
+   */
+  get bodyUsed(): boolean;
+  /**
+   * Reads the body and returns it as a promise that resolves with a string. 
+   * The response is always decoded using UTF-8. 
+   */
+  text(): Promise<string>;
+  /**
+   * Reads the body and returns it as a promise that resolves with the result of parsing the body text as JSON.
+   */
+  json(): Promise<object>;
+  /**
+   * Reads the body and returns it as a promise that resolves with an ArrayBuffer. 
+   */
+  arrayBuffer(): Promise<ArrayBuffer>;
+  // And eventually formData and blob once we support them on Request and Response, too.
 }
 
 /**
