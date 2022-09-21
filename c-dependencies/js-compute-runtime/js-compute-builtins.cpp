@@ -38,6 +38,7 @@
 #include "builtin.h"
 #include "builtins/cache-override.h"
 #include "builtins/compression-stream.h"
+#include "builtins/config-store.h"
 #include "builtins/console.h"
 #include "builtins/crypto.h"
 #include "builtins/decompression-stream.h"
@@ -4445,6 +4446,8 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
   if (!Request::init_class(cx, global))
     return false;
   if (!Response::init_class(cx, global))
+    return false;
+  if (!builtins::ConfigStore::init_class(cx, global))
     return false;
   if (!builtins::Dictionary::init_class(cx, global))
     return false;

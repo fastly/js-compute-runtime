@@ -16,7 +16,8 @@ extern "C" {
 #define HEADER_MAX_LEN 69000
 #define METHOD_MAX_LEN 1024
 #define URI_MAX_LEN 8192
-#define DICTIONARY_ENTRY_MAX_LEN 8000
+#define CONFIG_STORE_ENTRY_MAX_LEN 8000
+#define DICTIONARY_ENTRY_MAX_LEN CONFIG_STORE_ENTRY_MAX_LEN
 
 // TODO ACF 2020-01-17: these aren't very C-friendly names
 typedef struct {
@@ -42,6 +43,10 @@ typedef struct {
 typedef struct {
   uint32_t handle;
 } DictionaryHandle;
+
+typedef struct {
+  uint32_t handle;
+} ConfigStoreHandle;
 
 typedef struct {
   uint32_t handle;
@@ -297,6 +302,13 @@ int xqd_dictionary_open(const char *name, size_t name_len, DictionaryHandle *dic
 WASM_IMPORT("fastly_dictionary", "get")
 int xqd_dictionary_get(DictionaryHandle dict_handle, const char *key, size_t key_len, char *value,
                        size_t value_max_len, size_t *nwritten);
+
+WASM_IMPORT("fastly_dictionary", "open")
+int xqd_config_store_open(const char *name, size_t name_len, ConfigStoreHandle *dict_handle_out);
+
+WASM_IMPORT("fastly_dictionary", "get")
+int xqd_config_store_get(ConfigStoreHandle dict_handle, const char *key, size_t key_len,
+                         char *value, size_t value_max_len, size_t *nwritten);
 
 // Module fastly_object_store
 WASM_IMPORT("fastly_object_store", "open")
