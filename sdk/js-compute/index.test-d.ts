@@ -133,6 +133,15 @@ import {expectError, expectType} from 'tsd';
     expectError(client.geo = {} as Geolocation)
 }
 
+// ConfigStore
+{
+    expectError(new ConfigStore())
+    expectError(ConfigStore('example'))
+    expectError(ConfigStore())
+    expectType<ConfigStore>(new ConfigStore('example'))
+    expectType<(key:string) => string>(new ConfigStore('example').get)
+}
+
 // Dictionary
 {
     expectError(new Dictionary())

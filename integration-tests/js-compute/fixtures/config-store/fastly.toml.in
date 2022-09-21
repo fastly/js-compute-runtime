@@ -1,0 +1,26 @@
+# This file describes a Fastly Compute@Edge package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
+authors = ["jchampion@fastly.com"]
+description = ""
+language = "other"
+manifest_version = 2
+name = "config-store"
+service_id = ""
+
+[scripts]
+  build = "../../../../target/release/js-compute-runtime"
+
+[local_server]
+  [local_server.dictionaries]
+    [local_server.dictionaries.testconfig]
+      format = "inline-toml"
+    [local_server.dictionaries.testconfig.contents]
+      "twitter" = "https://twitter.com/fastly"
+
+[setup]
+  [setup.dictionaries]
+    [setup.dictionaries.testconfig]
+      [setup.dictionaries.testconfig.items]
+        [setup.dictionaries.testconfig.items.twitter]
+        value = "https://twitter.com/fastly"
