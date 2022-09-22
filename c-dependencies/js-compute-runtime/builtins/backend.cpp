@@ -111,8 +111,7 @@ bool isValidIPv4(std::string_view ip) {
       return false;
     }
     int value;
-    const auto result =
-        std::from_chars(digits.data(), digits.data() + digits.size(), value);
+    const auto result = std::from_chars(digits.data(), digits.data() + digits.size(), value);
     if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range) {
       return false;
     }
@@ -472,7 +471,8 @@ bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue targe
     return false;
   }
 
-  std::string_view targetString(reinterpret_cast<char*>(targetStringSlice.data), targetStringSlice.len);
+  std::string_view targetString(reinterpret_cast<char *>(targetStringSlice.data),
+                                targetStringSlice.len);
   auto length = targetString.length();
   if (length == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_EMPTY);
@@ -522,7 +522,8 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
     return nullptr;
   }
   if (found) {
-    if (!JS_GetProperty(cx, Backend::backends, reinterpret_cast<const char *>(slice.data), &alreadyBuiltBackend)) {
+    if (!JS_GetProperty(cx, Backend::backends, reinterpret_cast<const char *>(slice.data),
+                        &alreadyBuiltBackend)) {
       return nullptr;
     }
     JS::RootedObject backend(cx, &alreadyBuiltBackend.toObject());
@@ -559,7 +560,8 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   if (result.isErr()) {
     return nullptr;
   } else {
-    if (!JS_SetProperty(cx, Backend::backends, reinterpret_cast<const char *>(slice.data), backendVal)) {
+    if (!JS_SetProperty(cx, Backend::backends, reinterpret_cast<const char *>(slice.data),
+                        backendVal)) {
       return nullptr;
     }
     return backend;
