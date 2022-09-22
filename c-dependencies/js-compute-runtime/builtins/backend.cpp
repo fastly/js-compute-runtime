@@ -335,7 +335,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   auto target_cstr = targetChars.get();
   if (hostOverride.has_value()) {
     backend_config_mask |= BACKEND_CONFIG_HOST_OVERRIDE;
-    definition.host_override = (char *)hostOverride.value().c_str();
+    definition.host_override = hostOverride.value().c_str();
     definition.host_override_len = hostOverride.value().length();
   } else {
     definition.host_override = nullptr;
@@ -343,7 +343,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   }
   if (certificateHostname.has_value()) {
     backend_config_mask |= BACKEND_CONFIG_CERT_HOSTNAME;
-    definition.cert_hostname = (char *)certificateHostname.value().c_str();
+    definition.cert_hostname = certificateHostname.value().c_str();
     definition.cert_hostname_len = certificateHostname.value().length();
   } else {
     definition.cert_hostname = nullptr;
@@ -351,7 +351,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   }
   if (caCertificate.has_value()) {
     backend_config_mask |= BACKEND_CONFIG_CA_CERT;
-    definition.ca_cert = (char *)caCertificate.value().c_str();
+    definition.ca_cert = caCertificate.value().c_str();
     definition.ca_cert_len = caCertificate.value().length();
   } else {
     definition.ca_cert = nullptr;
@@ -359,7 +359,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   }
   if (ciphers.has_value()) {
     backend_config_mask |= BACKEND_CONFIG_CIPHERS;
-    definition.ciphers = (char *)ciphers.value().c_str();
+    definition.ciphers = ciphers.value().c_str();
     definition.ciphers_len = ciphers.value().length();
   } else {
     definition.ciphers = nullptr;
@@ -367,7 +367,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   }
   if (sniHostname.has_value()) {
     backend_config_mask |= BACKEND_CONFIG_SNI_HOSTNAME;
-    definition.sni_hostname = (char *)sniHostname.value().c_str();
+    definition.sni_hostname = sniHostname.value().c_str();
     definition.sni_hostname_len = sniHostname.value().length();
   } else {
     definition.sni_hostname = nullptr;
