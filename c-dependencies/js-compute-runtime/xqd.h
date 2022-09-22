@@ -74,20 +74,20 @@ typedef enum TLS {
 } TLS;
 
 typedef struct DynamicBackendConfig {
-  char *host_override;
+  const char *host_override;
   uint32_t host_override_len;
   uint32_t connect_timeout_ms;
   uint32_t first_byte_timeout_ms;
   uint32_t between_bytes_timeout_ms;
   uint32_t ssl_min_version;
   uint32_t ssl_max_version;
-  char *cert_hostname;
+  const char *cert_hostname;
   uint32_t cert_hostname_len;
-  char *ca_cert;
+  const char *ca_cert;
   uint32_t ca_cert_len;
-  char *ciphers;
+  const char *ciphers;
   uint32_t ciphers_len;
-  char *sni_hostname;
+  const char *sni_hostname;
   uint32_t sni_hostname_len;
 } DynamicBackendConfig;
 
