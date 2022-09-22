@@ -510,7 +510,6 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
     return nullptr;
   }
   const jsurl::SpecSlice slice = jsurl::host(url);
-  std::string aaa((char *)slice.data, slice.len);
   auto nameStr = JS_NewStringCopyN(cx, (char *)slice.data, slice.len);
   if (!nameStr) {
     return nullptr;
@@ -519,11 +518,11 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   // Check if we already constructed an implicit dynamic backend for this host.
   bool found;
   JS::RootedValue alreadyBuiltBackend(cx);
-  if (!JS_HasProperty(cx, Backend::backends, aaa.c_str(), &found)) {
+  if (!JS_HasProperty(cx, Backend::backends, reinterpret_cast<const char *>(slice.data), &found)) {
     return nullptr;
   }
   if (found) {
-    if (!JS_GetProperty(cx, Backend::backends, aaa.c_str(), &alreadyBuiltBackend)) {
+    if (!JS_GetProperty(cx, Backend::backends, reinterpret_cast<const char *>(slice.data), &alreadyBuiltBackend)) {
       return nullptr;
     }
     JS::RootedObject backend(cx, &alreadyBuiltBackend.toObject());
@@ -560,7 +559,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   if (result.isErr()) {
     return nullptr;
   } else {
-    if (!JS_SetProperty(cx, Backend::backends, aaa.c_str(), backendVal)) {
+    if (!JS_SetProperty(cx, Backend::backends, reinterpret_cast<const char *>(slice.data), backendVal)) {
       return nullptr;
     }
     return backend;
