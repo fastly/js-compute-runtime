@@ -111,7 +111,7 @@ bool isValidIPv4(std::string_view ip) {
       return false;
     }
     int value;
-    const std::from_chars_result result =
+    const auto result =
         std::from_chars(digits.data(), digits.data() + digits.size(), value);
     if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range) {
       return false;
@@ -188,7 +188,7 @@ bool isValidHost(std::string_view host) {
 
   auto labels = split(hostname, '.');
 
-  for (auto label : labels) {
+  for (auto &label : labels) {
     // Each label in a hostname can not be longer than 63 characters
     // https://www.rfc-editor.org/rfc/rfc2181#section-11
     if (label.length() > 63) {
@@ -196,7 +196,7 @@ bool isValidHost(std::string_view host) {
     }
 
     // Each label can only contain the characters in the regex [a-zA-Z0-9\-]
-    auto it = std::find_if_not(label.begin(), label.end(), [&](auto character) {
+    auto it = std::find_if_not(label.begin(), label.end(), [](auto character) {
       return std::isalnum(character) || character == '-';
     });
     if (it != label.end()) {
@@ -209,7 +209,7 @@ bool isValidHost(std::string_view host) {
   // https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml
   if (pos != std::string::npos) {
     std::string_view port = host.substr(pos + 1);
-    if (!std::all_of(port.begin(), port.end(), ::isdigit)) {
+    if (!std::all_of(port.begin(), port.end(), [](auto c) { return std::isdigit(c); })) {
       return false;
     }
     int value;
@@ -231,6 +231,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   MOZ_ASSERT(is_instance(backend));
 
   DynamicBackendConfig definition;
+  std::memset(&definition, 0, sizeof(definition));
 
   unsigned int backend_config_mask = 0u;
 
@@ -471,7 +472,7 @@ bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue targe
     return false;
   }
 
-  std::string_view targetString((char *)targetStringSlice.data, targetStringSlice.len);
+  std::string_view targetString(reinterpret_cast<char*>(targetStringSlice.data), targetStringSlice.len);
   auto length = targetString.length();
   if (length == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_EMPTY);
