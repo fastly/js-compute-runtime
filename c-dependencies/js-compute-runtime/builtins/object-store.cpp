@@ -407,7 +407,7 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (!HANDLE_RESULT(cx, fastly_object_store_open(name_chars, name_len, &object_store_handle))) {
+  if (!HANDLE_RESULT(cx, status)) {
     return false;
   }
 
