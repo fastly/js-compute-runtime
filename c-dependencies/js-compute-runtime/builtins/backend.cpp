@@ -336,41 +336,26 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
     backend_config_mask |= BACKEND_CONFIG_HOST_OVERRIDE;
     definition.host_override = hostOverride.value().c_str();
     definition.host_override_len = hostOverride.value().length();
-  } else {
-    definition.host_override = nullptr;
-    definition.host_override_len = 0;
   }
   if (certificateHostname.has_value()) {
     backend_config_mask |= BACKEND_CONFIG_CERT_HOSTNAME;
     definition.cert_hostname = certificateHostname.value().c_str();
     definition.cert_hostname_len = certificateHostname.value().length();
-  } else {
-    definition.cert_hostname = nullptr;
-    definition.cert_hostname_len = 0;
   }
   if (caCertificate.has_value()) {
     backend_config_mask |= BACKEND_CONFIG_CA_CERT;
     definition.ca_cert = caCertificate.value().c_str();
     definition.ca_cert_len = caCertificate.value().length();
-  } else {
-    definition.ca_cert = nullptr;
-    definition.ca_cert_len = 0;
   }
   if (ciphers.has_value()) {
     backend_config_mask |= BACKEND_CONFIG_CIPHERS;
     definition.ciphers = ciphers.value().c_str();
     definition.ciphers_len = ciphers.value().length();
-  } else {
-    definition.ciphers = nullptr;
-    definition.ciphers_len = 0;
   }
   if (sniHostname.has_value()) {
     backend_config_mask |= BACKEND_CONFIG_SNI_HOSTNAME;
     definition.sni_hostname = sniHostname.value().c_str();
     definition.sni_hostname_len = sniHostname.value().length();
-  } else {
-    definition.sni_hostname = nullptr;
-    definition.sni_hostname_len = 0;
   }
 
   int result = xqd_req_register_dynamic_backend(name_cstr, name_len, target_cstr, target_len,
