@@ -273,23 +273,14 @@ routes.set('/', () => {
         });
         // - ReadableStream
         routes.set("/object-store/put/value-parameter-readablestream-empty", async () => {
-            // TODO: remove this when streams are supported
-            let error = await assertRejects(async () => {
-                const stream = iteratableToStream([])
-                const store = createValidStore()
-                await store.put('readablestream-empty', stream)
-            }, TypeError, `Content-provided streams are not yet supported for streaming into ObjectStore`)
+            const stream = iteratableToStream([])
+            const store = createValidStore()
+            let result = store.put('readablestream-empty', stream)
+            let error = assert(result instanceof Promise, true, `store.put('readablestream-empty', stream) instanceof Promise`)
+            if (error) { return error }
+            error = assert(await result, undefined, `await store.put('readablestream-empty', stream)`)
             if (error) { return error }
             return pass()
-            // TODO: uncomment this when conte-provided (guest) streams are supported
-            // const stream = iteratableToStream([])
-            // const store = createValidStore()
-            // let result = store.put('readablestream-empty', stream)
-            // let error = assert(result instanceof Promise, true, `store.put('readablestream-empty', stream) instanceof Promise`)
-            // if (error) { return error }
-            // error = assert(await result, undefined, `await store.put('readablestream-empty', stream)`)
-            // if (error) { return error }
-            // return pass()
         });
         routes.set("/object-store/put/value-parameter-readablestream-under-30mb", async () => {
             const res = await fetch('https://compute-sdk-test-backend.edgecompute.app/', {
@@ -304,23 +295,14 @@ routes.set('/', () => {
             return pass()
         });
         routes.set("/object-store/put/value-parameter-readablestream-over-30mb", async () => {
-            // TODO: remove this when streams are supported
-            let error = await assertRejects(async () => {
-                const stream = iteratableToStream(['x'.repeat(30 * 1024 * 1024) + 'x'])
-                const store = createValidStore()
-                await store.put('readablestream-over-30mb', stream)
-            }, Error, `Content-provided streams are not yet supported for streaming into ObjectStore`)
+            const stream = iteratableToStream(['x'.repeat(30*1024*1024) + 'x'])
+            const store = createValidStore()
+            let result = store.put('readablestream-over-30mb', stream)
+            let error = assert(result instanceof Promise, true, `store.put('readablestream-over-30mb', stream) instanceof Promise`)
+            if (error) { return error }
+            error = assert(await result, undefined, `await store.put('readablestream-over-30mb', stream)`)
             if (error) { return error }
             return pass()
-            // TODO: uncomment this when conte-provided (guest) streams are supported
-            // const stream = iteratableToStream(['x'.repeat(30*1024*1024) + 'x'])
-            // const store = createValidStore()
-            // let result = store.put('readablestream-over-30mb', stream)
-            // let error = assert(result instanceof Promise, true, `store.put('readablestream-over-30mb', stream) instanceof Promise`)
-            // if (error) { return error }
-            // error = assert(await result, undefined, `await store.put('readablestream-over-30mb', stream)`)
-            // if (error) { return error }
-            // return pass()
         });
         routes.set("/object-store/put/value-parameter-readablestream-locked", async () => {
             const stream = iteratableToStream([])
@@ -641,15 +623,6 @@ routes.set('/', () => {
                 }, TypeError, `ObjectStore key can not contain ${character} character`)
                 if (error) { return error }
             }
-            return pass()
-        });
-        routes.set("/object-store/get/key-does-not-exist-returns-null", async () => {
-            let store = createValidStore()
-            let result = store.get(Math.random())
-            let error = assert(result instanceof Promise, true, `store.get(Math.random()) instanceof Promise`)
-            if (error) { return error }
-            error = assert(await result, null, `await store.get(Math.random())`)
-            if (error) { return error }
             return pass()
         });
         routes.set("/object-store/get/key-does-not-exist-returns-null", async () => {
