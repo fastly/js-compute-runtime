@@ -7,6 +7,7 @@
 #include "js/Stream.h"
 
 #include "builtin.h"
+#include "builtins/object-store.h"
 #include "builtins/native-stream-sink.h"
 #include "builtins/native-stream-source.h"
 #include "js-compute-builtins.h"
@@ -72,7 +73,7 @@ bool NativeStreamSource::stream_has_native_source(JSContext *cx, JS::HandleObjec
 bool NativeStreamSource::stream_is_body(JSContext *cx, JS::HandleObject stream) {
   JSObject *stream_source = get_stream_source(cx, stream);
   return NativeStreamSource::is_instance(stream_source) &&
-         RequestOrResponse::is_instance(owner(stream_source));
+         (RequestOrResponse::is_instance(owner(stream_source)) || ObjectStoreEntry::is_instance(owner(stream_source)));
 }
 
 void NativeStreamSource::set_stream_piped_to_ts_writable(JSContext *cx, JS::HandleObject stream,

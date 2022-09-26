@@ -3,6 +3,8 @@
 
 #include "builtin.h"
 namespace ObjectStoreEntry {
+bool is_instance(JSObject *obj);
+JSObject *body_stream(JSObject *obj);
 // Register the class.
 bool init_class(JSContext *cx, JS::HandleObject global);
 } // namespace ObjectStoreEntry
