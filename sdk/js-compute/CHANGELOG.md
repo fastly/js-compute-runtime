@@ -2,7 +2,7 @@
 
 #### Dynamic Backend support
 
-Note: This feature is disabled by default for Fastly Services. Please contact [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711) to request the feature be enabled on the Fastly Services which required Dynamic Backends.
+Note: This feature is disabled by default for Fastly Services. Please contact [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711) to request the feature be enabled on the Fastly Services which require Dynamic Backends.
 
 This feature makes it possible to use the standard `fetch` within JavaScript applications.
 
