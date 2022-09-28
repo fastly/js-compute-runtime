@@ -1,3 +1,79 @@
+## 0.5.4 (2022-09-28)
+
+#### Dynamic Backend support
+
+This feature makes it possible to use the standard `fetch` within JavaScript applications.
+
+Dynamic Backends is a new feature which enables JavaScript applications to dynamically create new backend server definitions without having to deploy a new version of their Fastly Service. These backends function exactly the same as existing backends, and can be configured in all the same ways as existing backends can via the Fastly Service configuration.
+
+By default, Dynamic Backends are disabled within a JavaScript application as it can be a potential avenue for third-party JavaScript code to send requests, potentially including sensitive/secret data, off to destinations that the JavaScript project was not intending, which could be a security issue. To enable Dynamic Backends the application will need to set `fastly.allowDynamicBackends` is to `true`.
+
+There are two ways to make use of Dynamic Backends within JavaScript projects:
+
+The first way is by omitting the `backend` property definition on the Request instance. The JavaScript Runtime will then create a Dynamic Backend definition using default configuration options. This approach is useful for JavaScript applications as it means that a standard `fetch` call will now be possible, which means libraries that use the standard `fetch` will begin to work for applications deployed to Fastly.
+
+Below is as an example JavaScript application using the default Dynamic Backend option:
+```js
+// Enable dynamic backends -- warning, this is potentially dangerous as third-party dependencies could make requests to their own backends, potentially including your sensitive/secret data
+fastly.allowDynamicBackends = true;
+
+// For any request, return the fastly homepage -- without defining a backend!
+addEventListener("fetch", event => {
+  event.respondWith(fetch('https://www.fastly.com/'));
+});
+```
+
+The second way is by creating a new Dynamic Backend using the new `Backend` class. This approach is useful for JavaScript applications that want to have full control over the configuration of the new backend defintion, such as only allowing TLS 1.3 and disallowing older versions of TLS for requests made to the new backend.
+
+E.G.
+```js
+// Enable dynamic backends -- warning, this is potentially dangerous as third-party dependencies could make requests to their own backends, potentially including your sensitive/secret data
+fastly.allowDynamicBackends = true;
+
+// For any request, return the fastly homepage -- without defining a backend!
+addEventListener("fetch", event => {
+  // We are not defining all the possible fields here, the ones which are not defined will use their default value instead.
+  const backend = new Backend({
+    name: 'fastly',
+    target: 'fastly.com',
+    hostOverride: "www.fastly.com",
+    sslMinVersion: 1.3,
+    sslMaxVersion: 1.3,
+    sniHostname: "www.fastly.com",
+  });
+  event.respondWith(fetch('https://www.fastly.com/', {
+    backend // Here we are configuring this request to use the newly defined backend from above.
+  }));
+});
+```
+
+#### Config-store support and Dictionary deprecated
+
+We have renamed the `Dictionary` class to `ConfigStore`, the old name `Dictionary` still exists but is now deprecated. We recommend replacing `Dictionary` with `ConfigStore` in your code to avoid having to migrate in the future when `Dictionary` is fully removed.
+
+Below is an example application using the `ConfigStore` class:
+```js
+async function app(event) {
+  const store = new ConfigStore('example')
+  
+  // Retrieve the contents of the 'hello' key
+  const hello = await store.get('hello')
+  
+  return new Response(hello)
+}
+
+addEventListener("fetch", event => {
+  event.respondWith(app(event))
+})
+```
+
+
+### Added
+
+* Add ConfigStore class ([#270](https://github.com/fastly/js-compute-runtime/pull/270))
+* Add Dynamic Backends support ([#250](https://github.com/fastly/js-compute-runtime/issues/250))
+* Improved performance when constructing a ObjectStore instance ([#272](https://github.com/fastly/js-compute-runtime/pull/272)
+
 ## 0.5.3 (2022-09-16)
 
 ### Security Fixes
