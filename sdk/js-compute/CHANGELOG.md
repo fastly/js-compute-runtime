@@ -2,6 +2,8 @@
 
 #### Dynamic Backend support
 
+Note: This feature is disabled by default for Fastly Services. Please contact [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711) to request the feature be enabled on the Fastly Services which required Dynamic Backends.
+
 This feature makes it possible to use the standard `fetch` within JavaScript applications.
 
 Dynamic Backends is a new feature which enables JavaScript applications to dynamically create new backend server definitions without having to deploy a new version of their Fastly Service. These backends function exactly the same as existing backends, and can be configured in all the same ways as existing backends can via the Fastly Service configuration.
