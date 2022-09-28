@@ -10,7 +10,7 @@
   "license": "APACHE-2.0",
   "dependencies": {
     "@actions/core": "^1.9.1",
-    "@actions/github": "^5.0.3",
+    "@actions/github": "^5.1.0",
     "better-logging": "^5.0.0",
     "chalk": "^5.0.1",
     "is-port-reachable": "^4.0.0",
