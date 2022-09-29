@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "js-compute-builtins.h"
+#include "picosha2.h"
 #include "rust-url/rust-url.h"
 
 #include "js/Array.h"
@@ -1128,6 +1129,34 @@ JSString *method(JSContext *cx, HandleObject obj) {
   return JS::GetReservedSlot(obj, Slots::Method).toString();
 }
 
+bool set_cache_key(JSContext *cx, HandleObject self, HandleValue cache_key_val) {
+  MOZ_ASSERT(is_instance(self));
+  size_t key_len;
+  // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
+  JS::UniqueChars keyString = encode(cx, cache_key_val, &key_len);
+  if (!keyString) {
+    return false;
+  }
+  std::string key(keyString.get(), key_len);
+  std::string hex_str;
+  picosha2::hash256_hex_string(key, hex_str);
+
+  JSObject *headers = RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, self);
+  if (!headers) {
+    return false;
+  }
+  RootedObject headers_val(cx, headers);
+  RootedValue name_val(cx, JS::StringValue(JS_NewStringCopyN(cx, "fastly-xqd-cache-key", 20)));
+  RootedValue value_val(cx,
+                        JS::StringValue(JS_NewStringCopyN(cx, hex_str.c_str(), hex_str.length())));
+  if (!Headers::detail::append_header_value(cx, headers_val, name_val, value_val,
+                                            "Request.prototype.setCacheKey")) {
+    return false;
+  }
+
+  return true;
+}
+
 bool set_cache_override(JSContext *cx, HandleObject self, HandleValue cache_override_val) {
   MOZ_ASSERT(is_instance(self));
   if (!builtins::CacheOverride::is_instance(cache_override_val)) {
@@ -1245,12 +1274,25 @@ bool setCacheOverride(JSContext *cx, unsigned argc, Value *vp) {
   return true;
 }
 
+bool setCacheKey(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(1)
+
+  if (!set_cache_key(cx, self, args[0])) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
 const JSFunctionSpec methods[] = {
     JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
-    JS_FN("setCacheOverride", setCacheOverride, 3, JSPROP_ENUMERATE), JS_FS_END};
+    JS_FN("setCacheOverride", setCacheOverride, 3, JSPROP_ENUMERATE),
+    JS_FN("setCacheKey", setCacheKey, 3, JSPROP_ENUMERATE),
+    JS_FS_END};
 
 const JSPropertySpec properties[] = {JS_PSG("method", method_get, JSPROP_ENUMERATE),
                                      JS_PSG("url", url_get, JSPROP_ENUMERATE),
