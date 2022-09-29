@@ -1,0 +1,52 @@
+{
+  "GET /request/setCacheKey/called-as-constructor": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/setCacheKey/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/setCacheKey/called-unbound": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/setCacheKey/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/setCacheKey/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/setCacheKey/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/setCacheKey/key-parameter-not-supplied": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/setCacheKey/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/setCacheKey/key-valid": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/setCacheKey/key-valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  }
+}

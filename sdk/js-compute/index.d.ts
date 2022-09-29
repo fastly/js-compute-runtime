@@ -804,6 +804,7 @@ declare interface RequestInit {
   /** The Fastly configured backend the request should be sent to. */
   backend?: string;
   cacheOverride?: CacheOverride;
+  cacheKey?: string;
 }
 
 /**
@@ -845,6 +846,7 @@ interface Request extends Body {
   // Fastly extensions
   backend: string;
   setCacheOverride(override: CacheOverride): void;
+  setCacheKey(key: string): void;
 }
 
 declare var Request: {
