@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <cctype>
 #include <charconv>
 #include <iostream>
@@ -29,127 +30,19 @@ std::vector<std::string_view> split(std::string_view string, char delimiter) {
   return result;
 }
 
-// An IPv6 (normal) address has the format y:y:y:y:y:y:y:y, where y is
-// called a segment and can be any hexadecimal value between 0 and FFFF. The
-// segments are separated by colons, not periods. An IPv6 normal address
-// must have eight segments; however, a short form notation can be used in
-// the TS4500 management GUI for segments that are zero, or those that have
-// leading zeros.
-bool isValidNormalIPv6(std::string_view ip, int maxSegments = 8) {
-  // if more than two consecutive colons then invalid
-  // if no consecutive colons, then there must be 8 segments
-  // if consecutive colons then there must be between 3 and 7 segments inclusive
-  // each segment must be at most 4 hexadecimal digits
-  auto emptySegments = 0;
-  auto segments = split(ip, ':');
-  if (segments.size() < 3) {
-    return false;
-  }
-  if (segments.size() > maxSegments + 1) {
-    return false;
-  }
-  auto firstSegmentIsEmpty = segments.front().length() == 0;
-  auto lastSegmentIsEmpty = segments.back().length() == 0;
-  for (auto segment : segments) {
-    if (segment.length() == 0) {
-      emptySegments++;
-      if (emptySegments == 3) {
-        if (segments.size() == 3) {
-          return true;
-        } else {
-          return false;
-        }
-      }
-    }
-    if (segment.length() == 0) {
-      continue;
-    }
-    if (segment.length() > 4) {
-      return false;
-    }
-
-    for (auto c : segment) {
-      if (!std::isxdigit(c)) {
-        return false;
-      }
-    }
-  }
-
-  if (emptySegments == 0 && segments.size() != maxSegments) {
-    return false;
-  }
-
-  // This would indicate not enough segments are in the ip
-  // E.G. :y
-  if (emptySegments == 1 && firstSegmentIsEmpty && segments.size() != maxSegments) {
-    return false;
-  }
-
-  // E.G. y:y:y:y:y::y:y:y
-  if (emptySegments == 2 && lastSegmentIsEmpty && segments.size() == maxSegments + 1) {
-    return true;
-  }
-  // This would indicate the ip has multiple :: which is not allowed
-  // E.G. y::y::y
-  if (emptySegments > 1 && !firstSegmentIsEmpty && !lastSegmentIsEmpty) {
-    return false;
-  }
-
-  if (emptySegments && segments.size() > maxSegments) {
-    return false;
-  }
-  return true;
-}
-
-bool isValidIPv4(std::string_view ip) {
-  auto sections = split(ip, '.');
-  if (sections.size() != 4) {
-    return false;
-  }
-  for (auto digits : sections) {
-    if (digits.length() > 1 && digits.front() == '0') {
-      return false;
-    }
-    int value;
-    const auto result = std::from_chars(digits.data(), digits.data() + digits.size(), value);
-    if (result.ec == std::errc::invalid_argument || result.ec == std::errc::result_out_of_range) {
-      return false;
-    }
-    if (value > 255) {
-      return false;
-    }
-  }
-  return true;
-}
-
-// An IPv6 (dual) address combines an IPv6 and an IPv4 address and has the
-// following format: y:y:y:y:y:y:x.x.x.x. The IPv6 portion of the address
-// (indicated with y's) is always at the beginning, followed by the IPv4
-// portion (indicated with x's).
-// In the IPv6 portion of the address, y is called a segment and can be any
-// hexadecimal value between 0 and FFFF. The segments are separated by
-// colons, not periods. The IPv6 portion of the address must have six
-// segments but there is a short form notation for segments that are zero.
-// In the IPv4 portion of the address x is called an octet and must be a
-// decimal value between 0 and 255. The octets are separated by periods. The
-// IPv4 portion of the address must contain three periods and four octets.
-bool isValidDualIPv6(std::string_view ip) {
-  std::size_t found = ip.find_last_of(':');
-  auto ipv6 = ip[found - 1] == ':' ? ip.substr(0, found + 1) : ip.substr(0, found);
-  auto ipv4 = ip.substr(found + 1);
-  return isValidIPv4(ipv4) && isValidNormalIPv6(ipv6, 6);
-}
-
 bool isValidIP(std::string_view ip) {
+  int format = AF_INET;
+  size_t octets_len = 4;
   if (ip.find(':') != std::string::npos) {
-    if (ip.find('.') != std::string::npos) {
-      return isValidDualIPv6(ip);
-    } else {
-      return isValidNormalIPv6(ip);
-    }
-  } else {
-    return isValidIPv4(ip);
+    format = AF_INET6;
+    octets_len = 16;
   }
+
+  char octets[sizeof(struct in6_addr)];
+  if (inet_pton(format, ip.data(), octets) != 1) {
+    return false;
+  }
+  return true;
 }
 
 // A "host" is a "hostname" and an optional "port" in the format hostname:port
