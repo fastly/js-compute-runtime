@@ -351,7 +351,6 @@ routes.set('/', () => {
         let i = 0;
         for (const target of targets) {
           let error = assertDoesNotThrow(() => {
-            console.log(target)
             new Backend({ name: 'target-property-valid-host-' + i, target })
           })
           if (error) { return error }
@@ -410,7 +409,6 @@ routes.set('/', () => {
         let i = 0;
         for (const target of targets) {
           let error = assertThrows(() => {
-            console.log(target)
             new Backend({ name: 'target-property-invalid-host-' + i, target })
           }, TypeError, `Backend constructor: target does not contain a valid IPv4, IPv6, or hostname address`)
           if (error) { return error }
