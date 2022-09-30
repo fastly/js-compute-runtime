@@ -1,6 +1,5 @@
 #ifndef JS_COMPUTE_RUNTIME_BACKEND_H
 #define JS_COMPUTE_RUNTIME_BACKEND_H
-#include <iostream>
 
 #include "builtin.h"
 #include "openssl-cipher-configuration-parser.h"
