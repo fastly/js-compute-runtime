@@ -1,7 +1,7 @@
 #ifndef JS_COMPUTE_RUNTIME_BACKEND_H
 #define JS_COMPUTE_RUNTIME_BACKEND_H
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <set>
 #include <string>
 #include <vector>
@@ -45,7 +45,6 @@ enum class Protocol {
 };
 
 class Cipher {
-  std::string id;
   std::string openSSLAlias;
   KeyExchange kx;
   Authentication au;
@@ -90,7 +89,7 @@ public:
  */
 class OpenSSLCipherConfigurationParser {
 public:
-  // inline static std::map<std::string, std::vector<Cipher>> aliases;
+  // inline static std::unordered_map<std::string, std::vector<Cipher>> aliases;
   inline static bool initialized = false;
   inline static std::string SSL_PROTO_TLSv1_2 = "TLSv1.2";
   inline static std::string SSL_PROTO_TLSv1_0 = "TLSv1.0";
@@ -213,18 +212,18 @@ public:
 
   inline static std::string ALL = "ALL";
 
-  static void init(std::map<std::string, std::vector<Cipher>> *aliases);
+  static void init(std::unordered_map<std::string, std::vector<Cipher>> *aliases);
 
-  static void moveToEnd(std::map<std::string, std::vector<Cipher>> *aliases,
+  static void moveToEnd(std::unordered_map<std::string, std::vector<Cipher>> *aliases,
                         std::vector<Cipher> *ciphers, std::string cipher);
 
   static void moveToEnd(std::vector<Cipher> *ciphers, std::vector<Cipher> *toBeMovedCiphers);
 
   static void moveToStart(std::vector<Cipher> *ciphers, std::vector<Cipher> *toBeMovedCiphers);
-  static void add(std::map<std::string, std::vector<Cipher>> *aliases, std::vector<Cipher> *ciphers,
+  static void add(std::unordered_map<std::string, std::vector<Cipher>> *aliases, std::vector<Cipher> *ciphers,
                   std::string alias);
 
-  static void remove(std::map<std::string, std::vector<Cipher>> *aliases,
+  static void remove(std::unordered_map<std::string, std::vector<Cipher>> *aliases,
                      std::vector<Cipher> *ciphers, std::string alias);
 
   static void strengthSort(std::vector<Cipher> *ciphers);
