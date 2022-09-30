@@ -385,11 +385,11 @@ public:
                      std::vector<Cipher> &ciphers, std::string alias) {
     auto toRemove = aliases->at(alias);
     ciphers.erase(std::remove_if(ciphers.begin(), ciphers.end(),
-                                  [&](auto x) {
-                                    return find(toRemove.begin(), toRemove.end(), x) !=
-                                           toRemove.end();
-                                  }),
-                   ciphers.end());
+                                 [&](auto x) {
+                                   return find(toRemove.begin(), toRemove.end(), x) !=
+                                          toRemove.end();
+                                 }),
+                  ciphers.end());
   }
 
   static void strengthSort(std::vector<Cipher> &ciphers) {
