@@ -84,6 +84,7 @@ public:
  */
 class OpenSSLCipherConfigurationParser {
 public:
+  inline static std::once_flag initialized;
   // This unordered_map should stay aligned with the canonical list located at:
   // https://developer.fastly.com/learning/concepts/routing-traffic-to-fastly/#use-a-tls-configuration
   // The mapping is from OpenSSL cipher names as strings to a the cipher represented as a Cipher
@@ -252,8 +253,7 @@ public:
 
   // This function is used to setup all the OpenSSL aliases that we (Fastly) support.
   // Note: A number of aliases are not implemented as they would be empty, such as `LOW`
-  static void init(std::unordered_map<std::string, std::vector<Cipher>> *aliases, bool *initialized) {
-    *initialized = true;
+  static void init(std::unordered_map<std::string, std::vector<Cipher>> *aliases) {
     std::vector<Cipher> all;
     all.reserve(CIPHER.size());
     for (const auto &any : CIPHER) {
@@ -543,10 +543,7 @@ public:
      * All ciphers by their openssl alias name.
      */
     static std::unordered_map<std::string, std::vector<Cipher>> aliases;
-    static bool *initialized;
-    if (!*initialized) {
-      init(&aliases, initialized);
-    }
+    std::call_once(initialized, init, &aliases);
     auto elements = splitCipherSuiteString(std::string(expression));
     std::vector<Cipher> ciphers;
     std::vector<Cipher> removedCiphers;
