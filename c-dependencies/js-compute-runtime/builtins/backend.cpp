@@ -2,7 +2,7 @@
 #include <cctype>
 #include <charconv>
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <optional>
 #include <set>
 #include <string>
@@ -18,11 +18,11 @@
 #include "host_call.h"
 #include "js/Conversions.h"
 
-// This std::map should stay aligned with the canonical list located at:
+// This unordered_map should stay aligned with the canonical list located at:
 // https://developer.fastly.com/learning/concepts/routing-traffic-to-fastly/#use-a-tls-configuration
 // The mapping is from OpenSSL cipher names as strings to a the cipher represented as a Cipher
 // object
-std::map<std::string, Cipher> CIPHER{
+std::unordered_map<std::string, Cipher> CIPHER{
     {"DES-CBC3-SHA", Cipher(std::string("DES-CBC3-SHA"), KeyExchange::RSA, Authentication::RSA,
                             Encryption::TRIPLE_DES, MessageDigest::SHA1, Protocol::SSLv3,
                             EncryptionLevel::MEDIUM, 112)},
@@ -65,7 +65,7 @@ std::map<std::string, Cipher> CIPHER{
 
 // This function is used to setup all the OpenSSL aliases that we (Fastly) support.
 // Note: A number of aliases are not implemented as they would be empty, such as `LOW`
-void OpenSSLCipherConfigurationParser::init(std::map<std::string, std::vector<Cipher>> *aliases) {
+void OpenSSLCipherConfigurationParser::init(std::unordered_map<std::string, std::vector<Cipher>> *aliases) {
   initialized = true;
   std::vector<Cipher> all;
   all.reserve(CIPHER.size());
@@ -170,7 +170,7 @@ void OpenSSLCipherConfigurationParser::init(std::map<std::string, std::vector<Ci
 }
 
 void OpenSSLCipherConfigurationParser::moveToEnd(
-    std::map<std::string, std::vector<Cipher>> *aliases, std::vector<Cipher> *ciphers,
+    std::unordered_map<std::string, std::vector<Cipher>> *aliases, std::vector<Cipher> *ciphers,
     std::string cipher) {
   moveToEnd(ciphers, &aliases->at(cipher));
 }
@@ -191,13 +191,13 @@ void OpenSSLCipherConfigurationParser::moveToStart(std::vector<Cipher> *ciphers,
   });
 }
 
-void OpenSSLCipherConfigurationParser::add(std::map<std::string, std::vector<Cipher>> *aliases,
+void OpenSSLCipherConfigurationParser::add(std::unordered_map<std::string, std::vector<Cipher>> *aliases,
                                            std::vector<Cipher> *ciphers, std::string alias) {
   auto toAdd = aliases->at(alias);
   ciphers->insert(ciphers->end(), toAdd.begin(), toAdd.end());
 }
 
-void OpenSSLCipherConfigurationParser::remove(std::map<std::string, std::vector<Cipher>> *aliases,
+void OpenSSLCipherConfigurationParser::remove(std::unordered_map<std::string, std::vector<Cipher>> *aliases,
                                               std::vector<Cipher> *ciphers, std::string alias) {
   auto toRemove = aliases->at(alias);
   ciphers->erase(std::remove_if(ciphers->begin(), ciphers->end(),
@@ -382,7 +382,7 @@ std::vector<Cipher> OpenSSLCipherConfigurationParser::parse(std::string_view exp
   /**
    * All ciphers by their openssl alias name.
    */
-  static std::map<std::string, std::vector<Cipher>> aliases;
+  static std::unordered_map<std::string, std::vector<Cipher>> aliases;
   if (!initialized) {
     init(&aliases);
   }
