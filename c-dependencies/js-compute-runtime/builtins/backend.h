@@ -60,7 +60,7 @@ public:
       : openSSLAlias(openSSLAlias), kx(kx), au(au), enc(enc), mac(mac), protocol(protocol),
         level(level), strength_bits(strength_bits) {}
 
-  std::string getOpenSSLAlias() { return openSSLAlias; }
+  const std::string& getOpenSSLAlias() { return openSSLAlias; }
 
   KeyExchange getKx() { return kx; }
 
