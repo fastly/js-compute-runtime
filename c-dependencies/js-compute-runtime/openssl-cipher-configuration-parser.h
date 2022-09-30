@@ -276,23 +276,23 @@ public:
 
     // All cipher suites except the eNULL ciphers (which must be explicitly enabled if needed).
     // As of OpenSSL 1.0.0, the ALL cipher suites are sensibly ordered by default.
-    all = defaultSort(&all);
+    all = defaultSort(all);
     aliases->insert({ALL, all});
     // "High" encryption cipher suites. This currently means those with key lengths larger than 128
     // bits, and some cipher suites with 128-bit keys.
-    aliases->insert({HIGH, filterByEncryptionLevel(&all, std::set{EncryptionLevel::HIGH})});
+    aliases->insert({HIGH, filterByEncryptionLevel(all, std::set{EncryptionLevel::HIGH})});
     // "Medium" encryption cipher suites, currently some of those using 128 bit encryption.
-    aliases->insert({MEDIUM, filterByEncryptionLevel(&all, std::set{EncryptionLevel::MEDIUM})});
+    aliases->insert({MEDIUM, filterByEncryptionLevel(all, std::set{EncryptionLevel::MEDIUM})});
 
     // Cipher suites using RSA key exchange or authentication. RSA is an alias for kRSA.
-    auto krsa = filterByKeyExchange(&all, std::set{KeyExchange::RSA});
+    auto krsa = filterByKeyExchange(all, std::set{KeyExchange::RSA});
     aliases->insert({kRSA, krsa});
-    auto arsa = filterByAuthentication(&all, std::set{Authentication::RSA});
+    auto arsa = filterByAuthentication(all, std::set{Authentication::RSA});
     aliases->insert({aRSA, arsa});
     aliases->insert({RSA, krsa});
 
     // Cipher suites using ephemeral ECDH key agreement, including anonymous cipher suites.
-    auto ecdh = filterByKeyExchange(&all, std::set{KeyExchange::EECDH});
+    auto ecdh = filterByKeyExchange(all, std::set{KeyExchange::EECDH});
     aliases->insert({kEECDH, ecdh});
     aliases->insert({kECDHE, ecdh});
     aliases->insert({ECDH, ecdh});
@@ -305,17 +305,17 @@ public:
     // minimum version, if, for example, TLSv1.0 is negotiated then both TLSv1.0 and SSLv3.0 cipher
     // suites are available. Note: these cipher strings do not change the negotiated version of SSL
     // or TLS, they only affect the list of available cipher suites.
-    aliases->insert({SSL_PROTO_TLSv1_2, filterByProtocol(&all, std::set{Protocol::TLSv1_2})});
-    auto tlsv1 = filterByProtocol(&all, std::set{Protocol::TLSv1});
+    aliases->insert({SSL_PROTO_TLSv1_2, filterByProtocol(all, std::set{Protocol::TLSv1_2})});
+    auto tlsv1 = filterByProtocol(all, std::set{Protocol::TLSv1});
     aliases->insert({SSL_PROTO_TLSv1_0, tlsv1});
     aliases->insert({SSL_PROTO_TLSv1, tlsv1});
-    aliases->insert({SSL_PROTO_SSLv3, filterByProtocol(&all, std::set{Protocol::SSLv3})});
+    aliases->insert({SSL_PROTO_SSLv3, filterByProtocol(all, std::set{Protocol::SSLv3})});
 
     // cipher suites using 128 bit AES.
-    auto aes128 = filterByEncryption(&all, std::set{Encryption::AES128, Encryption::AES128GCM});
+    auto aes128 = filterByEncryption(all, std::set{Encryption::AES128, Encryption::AES128GCM});
     aliases->insert({AES128, aes128});
     // cipher suites using 256 bit AES.
-    auto aes256 = filterByEncryption(&all, std::set{Encryption::AES256, Encryption::AES256GCM});
+    auto aes256 = filterByEncryption(all, std::set{Encryption::AES256, Encryption::AES256GCM});
     aliases->insert({AES256, aes256});
     // cipher suites using either 128 or 256 bit AES.
     auto aes(aes128);
@@ -324,23 +324,23 @@ public:
 
     // AES in Galois Counter Mode (GCM).
     aliases->insert(
-        {AESGCM, filterByEncryption(&all, std::set{Encryption::AES128GCM, Encryption::AES256GCM})});
+        {AESGCM, filterByEncryption(all, std::set{Encryption::AES128GCM, Encryption::AES256GCM})});
 
     // Cipher suites using ChaCha20.
-    aliases->insert({CHACHA20, filterByEncryption(&all, std::set{Encryption::CHACHA20POLY1305})});
+    aliases->insert({CHACHA20, filterByEncryption(all, std::set{Encryption::CHACHA20POLY1305})});
 
     // Cipher suites using triple DES.
-    auto triple_des = filterByEncryption(&all, std::set{Encryption::TRIPLE_DES});
+    auto triple_des = filterByEncryption(all, std::set{Encryption::TRIPLE_DES});
     aliases->insert({TRIPLE_DES, triple_des});
 
     // Cipher suites using SHA1.
-    auto sha1 = filterByMessageDigest(&all, std::set{MessageDigest::SHA1});
+    auto sha1 = filterByMessageDigest(all, std::set{MessageDigest::SHA1});
     aliases->insert({SHA1, sha1});
     aliases->insert({SHA, sha1});
     // Cipher suites using SHA256.
-    aliases->insert({SHA256, filterByMessageDigest(&all, std::set{MessageDigest::SHA256})});
+    aliases->insert({SHA256, filterByMessageDigest(all, std::set{MessageDigest::SHA256})});
     // Cipher suites using SHA384.
-    aliases->insert({SHA384, filterByMessageDigest(&all, std::set{MessageDigest::SHA384})});
+    aliases->insert({SHA384, filterByMessageDigest(all, std::set{MessageDigest::SHA384})});
 
     // COMPLEMENTOFDEFAULT:
     // The ciphers included in ALL, but not enabled by default. Currently this includes all RC4 and
@@ -357,50 +357,50 @@ public:
   }
 
   static void moveToEnd(std::unordered_map<std::string, std::vector<Cipher>> *aliases,
-                        std::vector<Cipher> *ciphers, std::string cipher) {
-    moveToEnd(ciphers, &aliases->at(cipher));
+                        std::vector<Cipher> &ciphers, std::string cipher) {
+    moveToEnd(ciphers, aliases->at(cipher));
   }
 
-  static void moveToEnd(std::vector<Cipher> *ciphers, std::vector<Cipher> *ciphersToMoveToEnd) {
-    std::stable_partition(ciphers->begin(), ciphers->end(), [ciphersToMoveToEnd](auto cipher) {
-      return std::find(ciphersToMoveToEnd->begin(), ciphersToMoveToEnd->end(), cipher) ==
-             ciphersToMoveToEnd->end();
+  static void moveToEnd(std::vector<Cipher> &ciphers, std::vector<Cipher> &ciphersToMoveToEnd) {
+    std::stable_partition(ciphers.begin(), ciphers.end(), [ciphersToMoveToEnd](auto cipher) {
+      return std::find(ciphersToMoveToEnd.begin(), ciphersToMoveToEnd.end(), cipher) ==
+             ciphersToMoveToEnd.end();
     });
   }
 
-  static void moveToStart(std::vector<Cipher> *ciphers, std::vector<Cipher> *ciphersToMoveToStart) {
-    std::stable_partition(ciphers->begin(), ciphers->end(), [ciphersToMoveToStart](auto cipher) {
-      return std::find(ciphersToMoveToStart->begin(), ciphersToMoveToStart->end(), cipher) !=
-             ciphersToMoveToStart->end();
+  static void moveToStart(std::vector<Cipher> &ciphers, std::vector<Cipher> &ciphersToMoveToStart) {
+    std::stable_partition(ciphers.begin(), ciphers.end(), [ciphersToMoveToStart](auto cipher) {
+      return std::find(ciphersToMoveToStart.begin(), ciphersToMoveToStart.end(), cipher) !=
+             ciphersToMoveToStart.end();
     });
   }
 
   static void add(std::unordered_map<std::string, std::vector<Cipher>> *aliases,
-                  std::vector<Cipher> *ciphers, std::string alias) {
+                  std::vector<Cipher> &ciphers, std::string alias) {
     auto toAdd = aliases->at(alias);
-    ciphers->insert(ciphers->end(), toAdd.begin(), toAdd.end());
+    ciphers.insert(ciphers.end(), toAdd.begin(), toAdd.end());
   }
 
   static void remove(std::unordered_map<std::string, std::vector<Cipher>> *aliases,
-                     std::vector<Cipher> *ciphers, std::string alias) {
+                     std::vector<Cipher> &ciphers, std::string alias) {
     auto toRemove = aliases->at(alias);
-    ciphers->erase(std::remove_if(ciphers->begin(), ciphers->end(),
+    ciphers.erase(std::remove_if(ciphers.begin(), ciphers.end(),
                                   [&](auto x) {
                                     return find(toRemove.begin(), toRemove.end(), x) !=
                                            toRemove.end();
                                   }),
-                   ciphers->end());
+                   ciphers.end());
   }
 
-  static void strengthSort(std::vector<Cipher> *ciphers) {
+  static void strengthSort(std::vector<Cipher> &ciphers) {
     /*
      * This routine sorts the ciphers with descending strength. The sorting
      * must keep the pre-sorted sequence, so we apply the normal sorting
      * routine as '+' movement to the end of the list.
      */
     std::vector<int> strength_bits;
-    strength_bits.reserve(ciphers->size());
-    for (auto cipher : *ciphers) {
+    strength_bits.reserve(ciphers.size());
+    for (auto cipher : ciphers) {
       strength_bits.push_back(cipher.getStrength_bits());
     }
     // sort strength_bits in descending order.
@@ -409,7 +409,7 @@ public:
     std::sort(strength_bits.rbegin(), strength_bits.rend());
     for (auto strength : strength_bits) {
       auto ciphersToMoveToEnd = filterByStrengthBits(ciphers, strength);
-      moveToEnd(ciphers, &ciphersToMoveToEnd);
+      moveToEnd(ciphers, ciphersToMoveToEnd);
     }
   }
 
@@ -417,9 +417,9 @@ public:
    * See
    * https://github.com/openssl/openssl/blob/709651c9022e7be7e69cf8a2f6edf2c8722a6a1e/ssl/ssl_ciph.c#L1455
    */
-  static std::vector<Cipher> defaultSort(std::vector<Cipher> *ciphers) {
+  static std::vector<Cipher> defaultSort(std::vector<Cipher> &ciphers) {
     std::vector<Cipher> result;
-    result.reserve(ciphers->size());
+    result.reserve(ciphers.size());
     std::vector<Cipher> ecdh;
 
     /* Everything else being equal, prefer ephemeral ECDH over other key exchange mechanisms */
@@ -431,26 +431,26 @@ public:
                 Encryption::AES256GCM};
 
     /* Now arrange all ciphers by preference: */
-    auto ecdhaes = filterByEncryption(&ecdh, aes);
+    auto ecdhaes = filterByEncryption(ecdh, aes);
     result.insert(result.end(), ecdhaes.begin(), ecdhaes.end());
     auto ciphersaes = filterByEncryption(ciphers, aes);
     result.insert(result.end(), ciphersaes.begin(), ciphersaes.end());
 
     /* Add everything else */
     result.insert(result.end(), ecdh.begin(), ecdh.end());
-    result.insert(result.end(), ciphers->begin(), ciphers->end());
+    result.insert(result.end(), ciphers.begin(), ciphers.end());
 
     /* Move ciphers without forward secrecy to the end */
-    auto ciphersWithoutForwardSecrecy = filterByKeyExchange(&result, std::set{KeyExchange::RSA});
-    moveToEnd(&result, &ciphersWithoutForwardSecrecy);
+    auto ciphersWithoutForwardSecrecy = filterByKeyExchange(result, std::set{KeyExchange::RSA});
+    moveToEnd(result, ciphersWithoutForwardSecrecy);
 
-    strengthSort(&result);
+    strengthSort(result);
     return result;
   }
 
-  static std::vector<Cipher> filterByStrengthBits(std::vector<Cipher> *ciphers, int strength_bits) {
+  static std::vector<Cipher> filterByStrengthBits(std::vector<Cipher> &ciphers, int strength_bits) {
     std::vector<Cipher> result;
-    for (auto cipher : *ciphers) {
+    for (auto cipher : ciphers) {
       if (cipher.getStrength_bits() == strength_bits) {
         result.push_back(cipher);
       }
@@ -458,49 +458,49 @@ public:
     return result;
   }
 
-  static std::vector<Cipher> filterByProtocol(std::vector<Cipher> *ciphers,
+  static std::vector<Cipher> filterByProtocol(std::vector<Cipher> &ciphers,
                                               std::set<Protocol> protocol) {
     return filter(ciphers, protocol, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
                   std::nullopt);
   }
 
-  std::vector<Cipher> static filterByKeyExchange(std::vector<Cipher> *ciphers,
+  std::vector<Cipher> static filterByKeyExchange(std::vector<Cipher> &ciphers,
                                                  std::set<KeyExchange> kx) {
     return filter(ciphers, std::nullopt, kx, std::nullopt, std::nullopt, std::nullopt,
                   std::nullopt);
   }
 
-  std::vector<Cipher> static filterByAuthentication(std::vector<Cipher> *ciphers,
+  std::vector<Cipher> static filterByAuthentication(std::vector<Cipher> &ciphers,
                                                     std::set<Authentication> au) {
     return filter(ciphers, std::nullopt, std::nullopt, au, std::nullopt, std::nullopt,
                   std::nullopt);
   }
 
-  std::vector<Cipher> static filterByEncryption(std::vector<Cipher> *ciphers,
+  std::vector<Cipher> static filterByEncryption(std::vector<Cipher> &ciphers,
                                                 std::set<Encryption> enc) {
     return filter(ciphers, std::nullopt, std::nullopt, std::nullopt, enc, std::nullopt,
                   std::nullopt);
   }
 
-  std::vector<Cipher> static filterByEncryptionLevel(std::vector<Cipher> *ciphers,
+  std::vector<Cipher> static filterByEncryptionLevel(std::vector<Cipher> &ciphers,
                                                      std::set<EncryptionLevel> level) {
     return filter(ciphers, std::nullopt, std::nullopt, std::nullopt, std::nullopt, level,
                   std::nullopt);
   }
 
-  std::vector<Cipher> static filterByMessageDigest(std::vector<Cipher> *ciphers,
+  std::vector<Cipher> static filterByMessageDigest(std::vector<Cipher> &ciphers,
                                                    std::set<MessageDigest> mac) {
     return filter(ciphers, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
                   mac);
   }
 
   static std::vector<Cipher>
-  filter(std::vector<Cipher> *ciphers, std::optional<std::set<Protocol>> protocols,
+  filter(std::vector<Cipher> &ciphers, std::optional<std::set<Protocol>> protocols,
          std::optional<std::set<KeyExchange>> kx, std::optional<std::set<Authentication>> au,
          std::optional<std::set<Encryption>> enc, std::optional<std::set<EncryptionLevel>> level,
          std::optional<std::set<MessageDigest>> mac) {
     std::vector<Cipher> result;
-    for (auto cipher : *ciphers) {
+    for (auto cipher : ciphers) {
       if (protocols.has_value() && protocols->find(cipher.getProtocol()) != protocols->end()) {
         result.push_back(cipher);
       }
@@ -552,7 +552,7 @@ public:
       if (element.rfind(DELETE, 0) == 0) {
         auto alias = element.substr(1);
         if (aliases.find(alias) != aliases.end()) {
-          remove(&aliases, &ciphers, alias);
+          remove(&aliases, ciphers, alias);
         }
       } else if (element.rfind(EXCLUDE, 0) == 0) {
         auto alias = element.substr(1);
@@ -563,13 +563,13 @@ public:
       } else if (element.rfind(TO_END, 0) == 0) {
         auto alias = element.substr(1);
         if (aliases.find(alias) != aliases.end()) {
-          moveToEnd(&aliases, &ciphers, alias);
+          moveToEnd(&aliases, ciphers, alias);
         }
       } else if ("@STRENGTH" == element) {
-        strengthSort(&ciphers);
+        strengthSort(ciphers);
         break;
       } else if (aliases.find(element) != aliases.end()) {
-        add(&aliases, &ciphers, element);
+        add(&aliases, ciphers, element);
       } else if (element.find(AND) != std::string::npos) {
         auto intersections = split(element, std::string(1, AND).append("\\"));
         if (intersections.size() > 0 && aliases.find(intersections[0]) != aliases.end()) {
