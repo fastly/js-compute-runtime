@@ -6,6 +6,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+
 // TODO: remove these once the warnings are fixed
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
