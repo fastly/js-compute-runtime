@@ -405,32 +405,6 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   auto use_ssl = origin.rfind("https://", 0) == 0;
   JS::SetReservedSlot(backend, Backend::Slots::UseSsl, JS::BooleanValue(use_ssl));
 
-  // // The "origin" here may be a hostname, or it may be hostname:port. In the
-  // // former case, we want to default the port to 443 if SSL is enabled and 80
-  // // if it is not. In the latter case, when there's a colon, we want to split
-  // // these apart.
-  // int port;
-  // std::size_t found_port = origin.find(":", origin.find(':') + 1);
-  // if (found_port == std::string::npos) {
-  //   if (use_ssl) {
-  //     port = 443;
-  //   } else {
-  //     port = 80;
-  //   }
-  // } else {
-  //   std::string::iterator it = std::find_if(origin.begin() + found_port, origin.end(), [](char c)
-  //   {
-  //     return c != '0' || c != '1' || c != '2' || c != '3' || c != '4' || c != '5' || c != '6' ||
-  //            c != '7' || c != '8' || c != '9';
-  //   });
-
-  //   if (it == origin.end()) {
-  //     // TODO: Make this an error.
-  //     return nullptr;
-  //   }
-  //   port = std::stoi(origin.substr(found_port, std::distance(origin.begin(), it)));
-  // }
-
   auto result = Backend::register_dynamic_backend(cx, backend);
   if (result.isErr()) {
     return nullptr;
