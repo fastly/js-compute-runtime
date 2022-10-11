@@ -255,21 +255,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # Download all the artifacts that we'll be publishing. Should keep an eye on
-    # the `download-artifact` repository to see if we can ever get something
-    # like "download all artifacts" or "download this list of artifacts"
-    - name: Download x86_64 macOS binaries
-      uses: actions/download-artifact@v1
-      with:
-        name: bins-x86_64-macos
-    - name: Download x86_64 Linux binaries
-      uses: actions/download-artifact@v1
-      with:
-        name: bins-x86_64-linux
-    - name: Download x86_64 Windows binaries
-      uses: actions/download-artifact@v1
-      with:
-        name: bins-x86_64-windows
+    - name: Download binaries
+      uses: actions/download-artifact@v3
 
     - name: Calculate tag name
       run: |
