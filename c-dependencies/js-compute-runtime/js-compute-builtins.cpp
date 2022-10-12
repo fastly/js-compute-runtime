@@ -1137,7 +1137,7 @@ bool set_cache_key(JSContext *cx, HandleObject self, HandleValue cache_key_val) 
   if (!keyString) {
     return false;
   }
-  std::string key(keyString.get(), key_len);
+  std::string_view key(keyString.get(), key_len);
   std::string hex_str;
   picosha2::hash256_hex_string(key, hex_str);
 
