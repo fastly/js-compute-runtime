@@ -251,8 +251,8 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
     definition.sni_hostname_len = sniHostname.value().length();
   }
 
-  int result = xqd_req_register_dynamic_backend(name_cstr, name_len, target_cstr, target_len,
-                                                backend_config_mask, &definition);
+  auto result = xqd_req_register_dynamic_backend(name_cstr, name_len, target_cstr, target_len,
+                                                 backend_config_mask, &definition);
   if (!HANDLE_RESULT(cx, result)) {
     return JS::Result<mozilla::Ok>(JS::Error());
   } else {

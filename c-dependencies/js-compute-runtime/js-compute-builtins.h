@@ -14,6 +14,7 @@
 
 #pragma clang diagnostic pop
 
+#include "host_call.h"
 #include "rust-url/rust-url.h"
 #include "xqd.h"
 
@@ -107,7 +108,7 @@ bool bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
 JS::Value url(JSObject *obj);
 } // namespace RequestOrResponse
 
-int write_to_body_all(BodyHandle handle, const char *buf, size_t len);
+FastlyStatus write_to_body_all(BodyHandle handle, const char *buf, size_t len);
 
 bool RejectPromiseWithPendingError(JSContext *cx, JS::HandleObject promise);
 

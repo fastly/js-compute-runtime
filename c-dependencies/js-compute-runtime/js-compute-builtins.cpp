@@ -224,8 +224,7 @@ static char *read_from_handle_all(JSContext *cx, HandleType handle, size_t *nwri
   size_t offset = 0;
   while (true) {
     size_t num_written = 0;
-    int result = op(handle, buf + offset, HANDLE_READ_CHUNK_SIZE, &num_written);
-    if (!HANDLE_RESULT(cx, result)) {
+    if (!HANDLE_RESULT(cx, op(handle, buf + offset, HANDLE_READ_CHUNK_SIZE, &num_written))) {
       JS_free(cx, buf);
       return nullptr;
     }
@@ -269,20 +268,21 @@ static char *read_from_handle_all(JSContext *cx, HandleType handle, size_t *nwri
  * The host doesn't necessarily write all bytes in any particular call to
  * xqd_body_write, so to ensure all bytes are written, we call it in a loop.
  */
-int write_to_body_all(BodyHandle handle, const char *buf, size_t len) {
+FastlyStatus write_to_body_all(BodyHandle handle, const char *buf, size_t len) {
   size_t total_written = 0;
   while (total_written < len) {
     const char *chunk = buf + total_written;
     size_t chunk_len = len - total_written;
     size_t nwritten = 0;
-    int result = xqd_body_write(handle, chunk, chunk_len, BodyWriteEndBack, &nwritten);
-    if (result != 0) {
+    auto result = convert_to_fastly_status(
+        xqd_body_write(handle, chunk, chunk_len, BodyWriteEndBack, &nwritten));
+    if (result != FastlyStatus::Ok) {
       return result;
     }
     total_written += nwritten;
   }
 
-  return 0;
+  return FastlyStatus::Ok;
 }
 
 enum class BodyReadResult {
@@ -367,8 +367,8 @@ bool get_header_value_for_name(JSContext *cx, HandleObject self, HandleValue nam
                                MutableHandleValue rval, const char *fun_name);
 static bool ensure_all_header_values_from_handle(JSContext *cx, HandleObject self,
                                                  HandleObject backing_map);
-typedef int AppendHeaderOperation(int handle, const char *name, size_t name_len, const char *value,
-                                  size_t value_len);
+typedef FastlyStatus AppendHeaderOperation(int handle, const char *name, size_t name_len,
+                                           const char *value, size_t value_len);
 bool append_header_value(JSContext *cx, HandleObject self, HandleValue name, HandleValue value,
                          const char *fun_name);
 } // namespace detail
@@ -379,13 +379,13 @@ JSObject *create(JSContext *cx, HandleObject headers, Mode mode, HandleObject ow
 const unsigned ctor_length = 1;
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
 bool get(JSContext *cx, unsigned argc, Value *vp);
-typedef int HeaderValuesSetOperation(int handle, const char *name, size_t name_len,
-                                     const char *values, size_t values_len);
+typedef FastlyStatus HeaderValuesSetOperation(int handle, const char *name, size_t name_len,
+                                              const char *values, size_t values_len);
 bool set(JSContext *cx, unsigned argc, Value *vp);
 bool has(JSContext *cx, unsigned argc, Value *vp);
 bool append(JSContext *cx, unsigned argc, Value *vp);
 bool maybe_add(JSContext *cx, HandleObject self, const char *name, const char *value);
-typedef int HeaderRemoveOperation(int handle, const char *name, size_t name_len);
+typedef FastlyStatus HeaderRemoveOperation(int handle, const char *name, size_t name_len);
 bool delete_(JSContext *cx, unsigned argc, Value *vp);
 bool forEach(JSContext *cx, unsigned argc, Value *vp);
 bool entries(JSContext *cx, unsigned argc, Value *vp);
@@ -600,7 +600,7 @@ bool extract_body(JSContext *cx, HandleObject self, HandleValue body_val) {
     }
 
     BodyHandle body_handle = RequestOrResponse::body_handle(self);
-    int result = write_to_body_all(body_handle, buf, length);
+    auto result = write_to_body_all(body_handle, buf, length);
 
     // Ensure that the NoGC is reset, so throwing an error in HANDLE_RESULT
     // succeeds.
@@ -889,7 +889,7 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
     return false;
   }
 
-  int result;
+  FastlyStatus result;
   {
     JS::AutoCheckCannotGC nogc;
     JSObject *array = &val.toObject();
@@ -2639,15 +2639,15 @@ bool get_header_names_from_handle(JSContext *cx, uint32_t handle, Mode mode,
 
   MULTI_VALUE_HOSTCALL(
       {
-        int result;
+        FastlyStatus result;
         if (mode == Mode::ProxyToRequest) {
           RequestHandle request = {handle};
-          result = xqd_req_header_names_get(request, buffer.get(), HEADER_MAX_LEN, cursor,
-                                            &ending_cursor, &nwritten);
+          result = convert_to_fastly_status(xqd_req_header_names_get(
+              request, buffer.get(), HEADER_MAX_LEN, cursor, &ending_cursor, &nwritten));
         } else {
           ResponseHandle response = {handle};
-          result = xqd_resp_header_names_get(response, buffer.get(), HEADER_MAX_LEN, cursor,
-                                             &ending_cursor, &nwritten);
+          result = convert_to_fastly_status(xqd_resp_header_names_get(
+              response, buffer.get(), HEADER_MAX_LEN, cursor, &ending_cursor, &nwritten));
         }
 
         if (!HANDLE_RESULT(cx, result))
@@ -2689,15 +2689,17 @@ static bool retrieve_value_for_header_from_handle(JSContext *cx, HandleObject se
 
   MULTI_VALUE_HOSTCALL(
       {
-        int result;
+        FastlyStatus result;
         if (mode == Headers::Mode::ProxyToRequest) {
           RequestHandle request = {handle};
-          result = xqd_req_header_values_get(request, name_chars.get(), name_len, buffer.get(),
-                                             HEADER_MAX_LEN, cursor, &ending_cursor, &nwritten);
+          result = convert_to_fastly_status(
+              xqd_req_header_values_get(request, name_chars.get(), name_len, buffer.get(),
+                                        HEADER_MAX_LEN, cursor, &ending_cursor, &nwritten));
         } else {
           ResponseHandle response = {handle};
-          result = xqd_resp_header_values_get(response, name_chars.get(), name_len, buffer.get(),
-                                              HEADER_MAX_LEN, cursor, &ending_cursor, &nwritten);
+          result = convert_to_fastly_status(
+              xqd_resp_header_values_get(response, name_chars.get(), name_len, buffer.get(),
+                                         HEADER_MAX_LEN, cursor, &ending_cursor, &nwritten));
         }
 
         if (!HANDLE_RESULT(cx, result))
@@ -2807,8 +2809,8 @@ static bool ensure_all_header_values_from_handle(JSContext *cx, HandleObject sel
   return true;
 }
 
-typedef int AppendHeaderOperation(int handle, const char *name, size_t name_len, const char *value,
-                                  size_t value_len);
+typedef FastlyStatus AppendHeaderOperation(int handle, const char *name, size_t name_len,
+                                           const char *value, size_t value_len);
 
 // Appends a non-normalized value for a non-normalized header name to both
 // the JS side Map and, in non-standalone mode, the host.
@@ -2926,8 +2928,8 @@ bool get(JSContext *cx, unsigned argc, Value *vp) {
   return detail::get_header_value_for_name(cx, self, normalized_name, args.rval(), "Headers.get");
 }
 
-typedef int HeaderValuesSetOperation(int handle, const char *name, size_t name_len,
-                                     const char *values, size_t values_len);
+typedef FastlyStatus HeaderValuesSetOperation(int handle, const char *name, size_t name_len,
+                                              const char *values, size_t values_len);
 
 bool set(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(2)
@@ -3012,7 +3014,7 @@ bool maybe_add(JSContext *cx, HandleObject self, const char *name, const char *v
   return detail::append_header_value(cx, self, name_val, value_val, "internal_maybe_add");
 }
 
-typedef int HeaderRemoveOperation(int handle, const char *name, size_t name_len);
+typedef FastlyStatus HeaderRemoveOperation(int handle, const char *name, size_t name_len);
 
 bool delete_(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER_WITH_NAME(1, "delete")
@@ -4126,19 +4128,21 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
 
-  int result;
-  if (streaming) {
-    result = xqd_req_send_async_streaming(Request::request_handle(request),
-                                          RequestOrResponse::body_handle(request),
-                                          backend_chars.get(), backend_len, &request_handle);
-  } else {
-    result = xqd_req_send_async(Request::request_handle(request),
-                                RequestOrResponse::body_handle(request), backend_chars.get(),
-                                backend_len, &request_handle);
-  }
+  {
+    FastlyStatus result;
+    if (streaming) {
+      result = convert_to_fastly_status(xqd_req_send_async_streaming(
+          Request::request_handle(request), RequestOrResponse::body_handle(request),
+          backend_chars.get(), backend_len, &request_handle));
+    } else {
+      result = convert_to_fastly_status(xqd_req_send_async(
+          Request::request_handle(request), RequestOrResponse::body_handle(request),
+          backend_chars.get(), backend_len, &request_handle));
+    }
 
-  if (!HANDLE_RESULT(cx, result))
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+    if (!HANDLE_RESULT(cx, result))
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
 
   // If the request body is streamed, we need to wait for streaming to complete before marking the
   // request as pending.
@@ -4337,9 +4341,8 @@ bool process_pending_requests(JSContext *cx) {
   uint32_t done_index;
   ResponseHandle response_handle = {INVALID_HANDLE};
   BodyHandle body = {INVALID_HANDLE};
-  int result =
-      xqd_req_pending_req_select(handles.get(), count, &done_index, &response_handle, &body);
-  if (!HANDLE_RESULT(cx, result))
+  if (!HANDLE_RESULT(cx, xqd_req_pending_req_select(handles.get(), count, &done_index,
+                                                    &response_handle, &body)))
     return false;
 
   HandleObject request = (*pending_requests)[done_index];
@@ -4404,8 +4407,7 @@ bool process_next_body_read(JSContext *cx) {
     return error_stream_controller_with_pending_exception(cx, controller);
   }
   size_t nwritten;
-  int result = xqd_body_read(body, bytes, HANDLE_READ_CHUNK_SIZE, &nwritten);
-  if (!HANDLE_RESULT(cx, result)) {
+  if (!HANDLE_RESULT(cx, xqd_body_read(body, bytes, HANDLE_READ_CHUNK_SIZE, &nwritten))) {
     JS_free(cx, bytes);
     return error_stream_controller_with_pending_exception(cx, controller);
   }
