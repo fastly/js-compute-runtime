@@ -16,10 +16,11 @@ bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   OwnedHostCallBuffer buffer;
   size_t nwritten = 0;
-  int status = xqd_config_store_get(ConfigStore::config_store_handle(self), name.get(), name_len,
-                                    buffer.get(), CONFIG_STORE_ENTRY_MAX_LEN, &nwritten);
-  // Status code 10 indicates the key wasn't found, so we return null.
-  if (status == 10) {
+  auto status = convert_to_fastly_status(
+      xqd_config_store_get(ConfigStore::config_store_handle(self), name.get(), name_len,
+                           buffer.get(), CONFIG_STORE_ENTRY_MAX_LEN, &nwritten));
+  // FastlyStatus::none indicates the key wasn't found, so we return null.
+  if (status == FastlyStatus::None) {
     args.rval().setNull();
     return true;
   }

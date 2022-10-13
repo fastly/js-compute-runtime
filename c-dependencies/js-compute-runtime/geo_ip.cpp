@@ -11,6 +11,8 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
   if (!address)
     return nullptr;
 
+  // TODO: Remove all of this and rely on the host for validation as the hostcall only takes one
+  // user-supplied parameter
   int format = AF_INET;
   size_t octets_len = 4;
   const char *caddress = address.get();
@@ -27,6 +29,7 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
     // While get_geo_info can be invoked through FetchEvent#client.geo, too,
     // that path can't result in an invalid address here, so we can be more
     // specific in the error message.
+    // TODO: Make a TypeError
     JS_ReportErrorLatin1(cx, "Invalid address passed to fastly.getGeolocationForIpAddress");
     return nullptr;
   }
