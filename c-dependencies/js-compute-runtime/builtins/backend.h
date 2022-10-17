@@ -2,7 +2,6 @@
 #define JS_COMPUTE_RUNTIME_BACKEND_H
 
 #include "builtin.h"
-#include "openssl-cipher-configuration-parser.h"
 
 namespace builtins {
 
@@ -33,11 +32,7 @@ public:
 
   inline static JS::PersistentRootedObject backends;
 
-  static bool isCipherSuiteSupportedByFastly(std::string_view cipherSpec) {
-    auto ciphers = OpenSSLCipherConfigurationParser::parse(cipherSpec);
-    return ciphers.size() > 0;
-  }
-
+  static bool isCipherSuiteSupportedByFastly(std::string_view cipherSpec);
   static JSString *name(JSContext *cx, JSObject *self);
   static JS::Result<mozilla::Ok> register_dynamic_backend(JSContext *cx, JS::HandleObject request);
   static JSObject *create(JSContext *cx, JS::HandleObject request);
