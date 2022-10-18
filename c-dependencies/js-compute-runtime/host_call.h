@@ -9,7 +9,7 @@
 
 #include "xqd.h"
 
-typedef enum class FastlyStatus {
+enum class FastlyStatus {
   // Success value.
   // This indicates that a hostcall finished successfully.
   Ok = 0,
@@ -50,7 +50,7 @@ typedef enum class FastlyStatus {
   HttpHeadTooLarge = 11,
   // Invalid HTTP status.
   HttpInvalidStatus = 12,
-} FastlyStatus;
+};
 
 /* Returns false if an exception is set on `cx` and the caller should
    immediately return to propagate the exception. */
