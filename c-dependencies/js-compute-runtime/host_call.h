@@ -50,6 +50,8 @@ enum class FastlyStatus {
   HttpHeadTooLarge = 11,
   // Invalid HTTP status.
   HttpInvalidStatus = 12,
+  // Unknown status.
+  Unknown = 100,
 };
 
 /* Returns false if an exception is set on `cx` and the caller should
