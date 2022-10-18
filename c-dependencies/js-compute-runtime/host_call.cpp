@@ -36,7 +36,7 @@ FastlyStatus convert_to_fastly_status(int result) {
     return FastlyStatus::HttpInvalidStatus;
   default:
     MOZ_ASSERT_UNREACHABLE("coding error");
-    return FastlyStatus::None;
+    return FastlyStatus::Unknown;
   }
 }
 
