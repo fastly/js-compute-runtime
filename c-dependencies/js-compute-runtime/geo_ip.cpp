@@ -12,13 +12,10 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
 
   OwnedHostCallBuffer buffer;
   size_t nwritten = 0;
-  auto result = convert_to_fastly_status(xqd_geo_lookup(address.get(), address_len, buffer.get(), HOSTCALL_BUFFER_LEN, &nwritten));
+  auto result = convert_to_fastly_status(
+      xqd_geo_lookup(address.get(), address_len, buffer.get(), HOSTCALL_BUFFER_LEN, &nwritten));
   if (result == FastlyStatus::Inval) {
-    // While get_geo_info can be invoked through FetchEvent#client.geo, too,
-    // that path can't result in an invalid address here, so we can be more
-    // specific in the error message.
-    // TODO: Make a TypeError
-    JS_ReportErrorLatin1(cx, "Invalid address passed to fastly.getGeolocationForIpAddress");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_GEO_IP_INVALID);
     return nullptr;
   }
   if (!HANDLE_RESULT(cx, result)) {
