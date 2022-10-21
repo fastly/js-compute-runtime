@@ -52,6 +52,21 @@ typedef struct {
   uint32_t handle;
 } ObjectStoreHandle;
 
+// A handle to an object supporting generic async operations.
+// Can be either a `BodyHandle` or a `PendingRequestHandle`.
+//
+// Each async item has an associated I/O action:
+//
+// * Pending requests: awaiting the response headers / `Response` object
+// * Normal bodies: reading bytes from the body
+// * Streaming bodies: writing bytes to the body
+//
+// For writing bytes, note that there is a large host-side buffer that bytes can eagerly be written
+// into, even before the origin itself consumes that data.
+typedef struct {
+  uint32_t handle;
+} AsyncHandle;
+
 // The values need to match https://docs.rs/fastly-sys/0.8.7/src/fastly_sys/lib.rs.html#86-108
 #define BACKEND_CONFIG_RESERVED (1u << 0)
 #define BACKEND_CONFIG_HOST_OVERRIDE (1u << 1)
@@ -372,6 +387,30 @@ int xqd_geo_lookup(const char *addr_octets, size_t addr_len, char *buf, size_t b
 
 WASM_IMPORT("wasi_snapshot_preview1", "random_get")
 int32_t random_get(int32_t arg0, int32_t arg1);
+
+// Blocks until one of the given objects is ready for I/O, or the optional timeout expires.
+//
+// Valid object handles includes bodies and pending requests. See the `async_item_handle`
+// definition for more details, including what I/O actions are associated with each handle
+// type.
+//
+// The timeout is specified in milliseconds, or 0 if no timeout is desired.
+//
+// Returns the _index_ (not handle!) of the first object that is ready, or u32::MAX if the
+// timeout expires before any objects are ready for I/O.
+WASM_IMPORT("fastly_async_io", "select")
+int xqd_async_select(AsyncHandle handles[], size_t handles_len, uint32_t timeout_ms,
+                     uint32_t *ready_idx_out);
+
+// Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
+//
+// If an object is ready, the I/O action is guaranteed to complete without blocking.
+//
+// Valid object handles includes bodies and pending requests. See the `async_item_handle`
+// definition for more details, including what I/O actions are associated with each handle
+// type.
+WASM_IMPORT("fastly_async_io", "is_ready")
+int xqd_async_is_ready(AsyncHandle handle, uint32_t *is_ready_out);
 
 #ifdef __cplusplus
 }

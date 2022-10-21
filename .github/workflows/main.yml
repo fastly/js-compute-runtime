@@ -381,3 +381,14 @@ jobs:
       with:
         fixture: 'status'
         fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
+  e2e-timers:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: ./.github/actions/e2e
+      with:
+        fixture: 'timers'
+        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}

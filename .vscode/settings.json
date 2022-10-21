@@ -84,7 +84,10 @@
         "__tree": "cpp",
         "charconv": "cpp",
         "list": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "__functional_03": "cpp",
+        "__functional_base_03": "cpp",
+        "memory_resource": "cpp"
     },
     "git.ignoreLimitWarning": true
 }

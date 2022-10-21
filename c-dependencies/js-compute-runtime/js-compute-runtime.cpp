@@ -455,7 +455,7 @@ static void process_pending_jobs(JSContext *cx, double *total_compute) {
 }
 
 static void wait_for_backends(JSContext *cx, double *total_compute) {
-  if (!has_pending_requests())
+  if (!has_pending_async_tasks())
     return;
 
   auto pre_requests = system_clock::now();
@@ -464,7 +464,7 @@ static void wait_for_backends(JSContext *cx, double *total_compute) {
     fflush(stdout);
   }
 
-  if (!process_network_io(cx))
+  if (!process_pending_async_tasks(cx))
     abort(cx, "processing network requests");
 
   double diff = duration_cast<microseconds>(system_clock::now() - pre_requests).count();
@@ -517,9 +517,9 @@ int main(int argc, const char *argv[]) {
 
     // Process async tasks.
     wait_for_backends(cx, &total_compute);
-  } while (js::HasJobsPending(cx) || has_pending_requests());
+  } while (js::HasJobsPending(cx) || has_pending_async_tasks());
 
-  if (debug_logging_enabled() && has_pending_requests()) {
+  if (debug_logging_enabled() && has_pending_async_tasks()) {
     fprintf(stderr, "Service terminated with async tasks pending. "
                     "Use FetchEvent#waitUntil to extend the service's lifetime "
                     "if needed.\n");

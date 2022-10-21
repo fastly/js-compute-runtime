@@ -147,8 +147,8 @@ bool response_started(JSObject *self);
 bool respondWithError(JSContext *cx, JS::HandleObject self);
 } // namespace FetchEvent
 
-bool has_pending_requests();
-bool process_network_io(JSContext *cx);
+bool has_pending_async_tasks();
+bool process_pending_async_tasks(JSContext *cx);
 
 JS::UniqueChars encode(JSContext *cx, JS::HandleString val, size_t *encoded_len);
 JS::UniqueChars encode(JSContext *cx, JS::HandleValue val, size_t *encoded_len);
