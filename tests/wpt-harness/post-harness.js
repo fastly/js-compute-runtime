@@ -78,52 +78,6 @@ async function loadMetaScript(path, base) {
 
 addEventListener("fetch", event => event.respondWith(handleRequest(event)));
 
-{
-  let timeout_id = 0;
-  let cleared_ids = new Set();
-
-  function setTimeout(func, delay, ...args) {
-    return run_timeout(func, delay, args, false);
-  }
-
-  function setInterval(func, delay, ...args) {
-    return run_timeout(func, delay, args, true);
-  }
-
-  function run_timeout(func, delay, args, repeat) {
-    let id = timeout_id++;
-    let iterations = 100;
-    function wait() {
-      if (cleared_ids.has(id)) {
-        return;
-      }
-      if (iterations--) {
-        return Promise.resolve().then(wait);
-      }
-      try {
-        func(...args);
-      } catch (e) {
-        console.log(`Error caught running ${repeat ? "setInterval" : "setTimout"} callback: ${e}`);
-      }
-
-      if (repeat) {
-        iterations = 100;
-        wait();
-      }
-    }
-    wait();
-    return id;
-  }
-
-  function clearTimeout(id) {
-    cleared_ids.add(id);
-  }
-
-  function clearInterval(id) {
-    cleared_ids.add(id);
-  }
-}
-
 self.GLOBAL = {
   isWindow: () => false,
   isWorker: () => true,

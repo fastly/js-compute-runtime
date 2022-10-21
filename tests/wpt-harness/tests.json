@@ -176,5 +176,13 @@
   "url/urlsearchparams-sort.any.js",
   "url/urlsearchparams-stringifier.any.js",
   "WebCryptoAPI/getRandomValues.any.js",
-  "html/webappapis/structured-clone/structured-clone.any.js"
+  "html/webappapis/structured-clone/structured-clone.any.js",
+  "html/webappapis/timers/clearinterval-from-callback.any.js",
+  "html/webappapis/timers/cleartimeout-clearinterval.any.js",
+  "html/webappapis/timers/evil-spec-example.any.js",
+  "html/webappapis/timers/missing-timeout-setinterval.any.js",
+  "html/webappapis/timers/negative-setinterval.any.js",
+  "html/webappapis/timers/negative-settimeout.any.js",
+  "html/webappapis/timers/type-long-setinterval.any.js",
+  "html/webappapis/timers/type-long-settimeout.any.js"
 ]
