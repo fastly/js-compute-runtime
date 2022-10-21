@@ -1,6 +1,8 @@
 #include <arpa/inet.h>
+#include <chrono>
 #include <cmath>
 #include <iostream>
+#include <list>
 #include <regex> // std::regex
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,6 +59,10 @@
 #include "builtins/worker-location.h"
 
 using namespace std::literals;
+
+using std::chrono::ceil;
+using std::chrono::milliseconds;
+using std::chrono::system_clock;
 
 using JS::CallArgs;
 using JS::CallArgsFromVp;
@@ -128,8 +134,7 @@ static_assert(URI_MAX_LEN < HOSTCALL_BUFFER_LEN);
 using jsurl::SpecSlice, jsurl::SpecString, jsurl::JSUrl, jsurl::JSUrlSearchParams,
     jsurl::JSSearchParam;
 
-static JS::PersistentRootedObjectVector *pending_requests;
-static JS::PersistentRootedObjectVector *pending_body_reads;
+static JS::PersistentRootedObjectVector *pending_async_tasks;
 
 // TODO(performance): introduce a version that writes into an existing buffer, and use that
 // with the hostcall buffer where possible.
@@ -1087,7 +1092,7 @@ bool body_source_pull_algorithm(JSContext *cx, CallArgs args, HandleObject sourc
   // (This deadlock happens in automated tests, but admittedly might not happen
   // in real usage.)
 
-  if (!pending_body_reads->append(source))
+  if (!pending_async_tasks->append(source))
     return false;
 
   args.rval().setUndefined();
@@ -1131,7 +1136,7 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
     }
 
     if (Request::is_instance(body_owner)) {
-      if (!pending_requests->append(body_owner)) {
+      if (!pending_async_tasks->append(body_owner)) {
         return false;
       }
     }
@@ -3954,6 +3959,141 @@ bool response_started(JSObject *self) {
 }
 } // namespace FetchEvent
 
+using TimerArgumentsVector = std::vector<JS::Heap<JS::Value>>;
+
+namespace {
+class Timer {
+public:
+  uint32_t id;
+  JS::Heap<JSObject *> callback;
+  TimerArgumentsVector arguments;
+  uint32_t delay;
+  system_clock::time_point deadline;
+  bool repeat;
+
+  Timer(uint32_t id, HandleObject callback, uint32_t delay, JS::HandleValueVector args, bool repeat)
+      : id(id), callback(callback), delay(delay), repeat(repeat) {
+    deadline = system_clock::now() + system_clock::duration(delay * 1000);
+    arguments.reserve(args.length());
+    for (auto &arg : args) {
+      arguments.push_back(JS::Heap(arg));
+    }
+  }
+
+  void trace(JSTracer *trc) {
+    JS::TraceEdge(trc, &callback, "Timer callback");
+    for (auto &arg : arguments) {
+      JS::TraceEdge(trc, &arg, "Timer callback arguments");
+    }
+  }
+};
+
+class ScheduledTimers {
+public:
+  Timer *first() {
+    if (std::empty(timers)) {
+      return nullptr;
+    } else {
+      return timers.front();
+    }
+  }
+
+private:
+  std::list<Timer *> timers;
+  static uint32_t next_id;
+
+  void add_timer(Timer *timer) {
+    auto iter = timers.begin();
+
+    for (; iter != timers.end(); iter++) {
+      if ((*iter)->deadline > timer->deadline) {
+        break;
+      }
+    }
+
+    timers.insert(iter, timer);
+  }
+
+  void repeat_first() {
+    Timer *timer = first();
+    MOZ_ASSERT(timer);
+    timer->deadline = system_clock::now() + milliseconds(timer->delay);
+    timers.remove(timer);
+    add_timer(timer);
+  }
+
+public:
+  bool empty() { return timers.empty(); }
+
+  uint32_t add_timer(HandleObject callback, uint32_t delay, JS::HandleValueVector arguments,
+                     bool repeat) {
+    auto timer = new Timer(next_id++, callback, delay, arguments, repeat);
+    add_timer(timer);
+    return timer->id;
+  }
+
+  void remove_timer(uint32_t id) {
+    for (auto timer : timers) {
+      if (timer->id == id) {
+        timers.remove(timer);
+        break;
+      }
+    }
+  }
+
+  bool run_first_timer(JSContext *cx) {
+    RootedValue fun_val(cx);
+    JS::RootedVector<JS::Value> argv(cx);
+    uint32_t id;
+    {
+      Timer *timer = first();
+      MOZ_ASSERT(timer);
+      MOZ_ASSERT(system_clock::now() > timer->deadline);
+      id = timer->id;
+      RootedObject fun(cx, timer->callback);
+      fun_val.setObject(*fun.get());
+      if (!argv.initCapacity(timer->arguments.size())) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+      }
+
+      for (auto &arg : timer->arguments) {
+        argv.infallibleAppend(arg);
+      }
+    }
+
+    RootedObject fun(cx, &fun_val.toObject());
+
+    RootedValue rval(cx);
+    if (!JS::Call(cx, JS::NullHandleValue, fun, argv, &rval)) {
+      return false;
+    }
+
+    // Repeat / remove the first timer if it's still the one we just ran.
+    auto timer = first();
+    if (timer && timer->id == id) {
+      if (timer->repeat) {
+        repeat_first();
+      } else {
+        remove_timer(timer->id);
+      }
+    }
+
+    return true;
+  }
+
+  void trace(JSTracer *trc) {
+    for (auto &timer : timers) {
+      timer->trace(trc);
+    }
+  }
+};
+
+} // namespace
+
+uint32_t ScheduledTimers::next_id = 1;
+JS::PersistentRooted<js::UniquePtr<ScheduledTimers>> timers;
+
 namespace GlobalProperties {
 
 JS::Result<std::string> ConvertJSValueToByteString(JSContext *cx, JS::Handle<JS::Value> v) {
@@ -4425,7 +4565,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   // If the request body is streamed, we need to wait for streaming to complete before marking the
   // request as pending.
   if (!streaming) {
-    if (!pending_requests->append(request))
+    if (!pending_async_tasks->append(request))
       return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
@@ -4583,13 +4723,83 @@ bool structuredClone(JSContext *cx, unsigned argc, Value *vp) {
   return buf.read(cx, args.rval());
 }
 
-const JSFunctionSpec methods[] = {JS_FN("atob", atob, 1, JSPROP_ENUMERATE),
-                                  JS_FN("btoa", btoa, 1, JSPROP_ENUMERATE),
-                                  JS_FN("fetch", fetch, 2, JSPROP_ENUMERATE),
-                                  JS_FN("queueMicrotask", queueMicrotask, 1, JSPROP_ENUMERATE),
-                                  JS_FN("structuredClone", structuredClone, 1, JSPROP_ENUMERATE),
-                                  JS_FN("structuredClone", structuredClone, 1, JSPROP_ENUMERATE),
-                                  JS_FS_END};
+/**
+ * The `setTimeout` and `setInterval` global functions
+ * https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-settimeout
+ * https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-setinterval
+ */
+template <bool repeat> bool setTimeout_or_interval(JSContext *cx, unsigned argc, Value *vp) {
+  REQUEST_HANDLER_ONLY(repeat ? "setInterval" : "setTimeout");
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, repeat ? "setInterval" : "setTimeout", 1)) {
+    return false;
+  }
+
+  RootedObject handler(cx, &args[0].toObject());
+  if (!(args[0].isObject() && JS::IsCallable(&args[0].toObject()))) {
+    JS_ReportErrorASCII(cx, "First argument to %s must be a function",
+                        repeat ? "setInterval" : "setTimeout");
+    return false;
+  }
+
+  int32_t delay = 0;
+  if (args.length() > 1 && !JS::ToInt32(cx, args.get(1), &delay)) {
+    return false;
+  }
+  if (delay < 0) {
+    delay = 0;
+  }
+
+  JS::RootedValueVector handler_args(cx);
+  if (args.length() > 2 && !handler_args.initCapacity(args.length() - 2)) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
+  for (size_t i = 2; i < args.length(); i++) {
+    handler_args.infallibleAppend(args[i]);
+  }
+
+  uint32_t id = timers->add_timer(handler, delay, handler_args, repeat);
+
+  args.rval().setInt32(id);
+  return true;
+}
+
+/**
+ * The `clearTimeout` and `clearInterval` global functions
+ * https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-cleartimeout
+ * https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-clearinterval
+ */
+template <bool interval> bool clearTimeout_or_interval(JSContext *cx, unsigned argc, Value *vp) {
+  // REQUEST_HANDLER_ONLY(interval ? "clearInterval" : "clearTimeout");
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, interval ? "clearInterval" : "clearTimeout", 1)) {
+    return false;
+  }
+
+  int32_t id = 0;
+  if (!JS::ToInt32(cx, args[0], &id)) {
+    return false;
+  }
+
+  timers->remove_timer(uint32_t(id));
+
+  args.rval().setUndefined();
+  return true;
+}
+
+const JSFunctionSpec methods[] = {
+    JS_FN("atob", atob, 1, JSPROP_ENUMERATE),
+    JS_FN("btoa", btoa, 1, JSPROP_ENUMERATE),
+    JS_FN("clearInterval", clearTimeout_or_interval<true>, 1, JSPROP_ENUMERATE),
+    JS_FN("clearTimeout", clearTimeout_or_interval<false>, 1, JSPROP_ENUMERATE),
+    JS_FN("fetch", fetch, 2, JSPROP_ENUMERATE),
+    JS_FN("queueMicrotask", queueMicrotask, 1, JSPROP_ENUMERATE),
+    JS_FN("setInterval", setTimeout_or_interval<true>, 1, JSPROP_ENUMERATE),
+    JS_FN("setTimeout", setTimeout_or_interval<false>, 1, JSPROP_ENUMERATE),
+    JS_FN("structuredClone", structuredClone, 1, JSPROP_ENUMERATE),
+    JS_FN("structuredClone", structuredClone, 1, JSPROP_ENUMERATE),
+    JS_FS_END};
 
 const JSPropertySpec properties[] = {JS_PSGS("self", self_get, self_set, JSPROP_ENUMERATE),
                                      JS_PS_END};
@@ -4599,58 +4809,35 @@ static bool init(JSContext *cx, HandleObject global) {
 }
 } // namespace GlobalProperties
 
-bool has_pending_requests() {
-  return pending_requests->length() > 0 || pending_body_reads->length() > 0;
-}
+bool has_pending_async_tasks() { return pending_async_tasks->length() > 0 || !timers->empty(); }
 
-bool process_pending_requests(JSContext *cx) {
-  if (pending_requests->length() == 0)
-    return true;
+bool process_body_read(JSContext *cx, HandleObject streamSource);
 
-  size_t count = pending_requests->length();
-  auto handles = mozilla::MakeUnique<PendingRequestHandle[]>(sizeof(PendingRequestHandle) * count);
-  if (!handles)
-    return false;
-
-  for (size_t i = 0; i < count; i++) {
-    handles[i] = Request::pending_handle((*pending_requests)[i]);
-  }
-
-  uint32_t done_index;
+bool process_pending_request(JSContext *cx, HandleObject request) {
   ResponseHandle response_handle = {INVALID_HANDLE};
   BodyHandle body = {INVALID_HANDLE};
-  if (!HANDLE_RESULT(cx, xqd_req_pending_req_select(handles.get(), count, &done_index,
-                                                    &response_handle, &body)))
-    return false;
+  int result = xqd_req_pending_req_wait(Request::pending_handle(request), &response_handle, &body);
 
-  HandleObject request = (*pending_requests)[done_index];
   RootedObject response_promise(cx, Request::response_promise(request));
 
-  if (response_handle.handle == INVALID_HANDLE) {
-    pending_requests->erase(const_cast<JSObject **>(request.address()));
+  if (result != 0) {
     JS_ReportErrorUTF8(cx, "NetworkError when attempting to fetch resource.");
-    RootedValue exn(cx);
-    if (!JS_IsExceptionPending(cx) || !JS_GetPendingException(cx, &exn)) {
-      return false;
-    }
-    JS_ClearPendingException(cx);
-    return JS::RejectPromise(cx, response_promise, exn);
+    return RejectPromiseWithPendingError(cx, response_promise);
   }
 
   RootedObject response_instance(
       cx, JS_NewObjectWithGivenProto(cx, &Response::class_, Response::proto_obj));
-  if (!response_instance)
+  if (!response_instance) {
     return false;
+  }
 
   RootedObject response(cx, Response::create(cx, response_instance, response_handle, body, true));
-  if (!response)
+  if (!response) {
     return false;
+  }
 
   RequestOrResponse::set_url(response, RequestOrResponse::url(request));
   RootedValue response_val(cx, JS::ObjectValue(*response));
-
-  pending_requests->erase(const_cast<JSObject **>(request.address()));
-
   return JS::ResolvePromise(cx, response_promise, response_val);
 }
 
@@ -4666,18 +4853,9 @@ bool error_stream_controller_with_pending_exception(JSContext *cx, HandleObject 
   return JS::Call(cx, controller, "error", args, &r);
 }
 
-bool process_next_body_read(JSContext *cx) {
-  if (pending_body_reads->length() == 0)
-    return true;
-
-  RootedObject owner(cx);
-  RootedObject controller(cx);
-  {
-    HandleObject streamSource = (*pending_body_reads)[0];
-    owner = builtins::NativeStreamSource::owner(streamSource);
-    controller = builtins::NativeStreamSource::controller(streamSource);
-    pending_body_reads->erase(const_cast<JSObject **>(streamSource.address()));
-  }
+bool process_body_read(JSContext *cx, HandleObject streamSource) {
+  RootedObject owner(cx, builtins::NativeStreamSource::owner(streamSource));
+  RootedObject controller(cx, builtins::NativeStreamSource::controller(streamSource));
 
   BodyHandle body = RequestOrResponse::body_handle(owner);
   char *bytes = static_cast<char *>(JS_malloc(cx, HANDLE_READ_CHUNK_SIZE));
@@ -4685,7 +4863,8 @@ bool process_next_body_read(JSContext *cx) {
     return error_stream_controller_with_pending_exception(cx, controller);
   }
   size_t nwritten;
-  if (!HANDLE_RESULT(cx, xqd_body_read(body, bytes, HANDLE_READ_CHUNK_SIZE, &nwritten))) {
+  int result = xqd_body_read(body, bytes, HANDLE_READ_CHUNK_SIZE, &nwritten);
+  if (!HANDLE_RESULT(cx, result)) {
     JS_free(cx, bytes);
     return error_stream_controller_with_pending_exception(cx, controller);
   }
@@ -4722,17 +4901,76 @@ bool process_next_body_read(JSContext *cx) {
   return true;
 }
 
-bool process_network_io(JSContext *cx) {
-  if (!has_pending_requests())
+bool process_pending_async_tasks(JSContext *cx) {
+  MOZ_ASSERT(has_pending_async_tasks());
+
+  uint32_t timeout = 0;
+  if (!timers->empty()) {
+    Timer *timer = timers->first();
+    double diff = ceil<milliseconds>(timer->deadline - system_clock::now()).count();
+
+    // If a timeout is already overdue, run it immediately and return.
+    if (diff <= 0) {
+      return timers->run_first_timer(cx);
+    }
+
+    timeout = uint32_t(diff);
+  }
+
+  size_t count = pending_async_tasks->length();
+  auto handles = mozilla::MakeUnique<AsyncHandle[]>(sizeof(AsyncHandle) * count);
+  if (!handles) {
+    return false;
+  }
+
+  for (size_t i = 0; i < count; i++) {
+    HandleObject pending_obj = (*pending_async_tasks)[i];
+    if (Request::is_instance(pending_obj)) {
+      handles[i] = AsyncHandle{Request::pending_handle(pending_obj).handle};
+    } else {
+      MOZ_ASSERT(builtins::NativeStreamSource::is_instance(pending_obj));
+      RootedObject owner(cx, builtins::NativeStreamSource::owner(pending_obj));
+      handles[i] = AsyncHandle{RequestOrResponse::body_handle(owner).handle};
+    }
+  }
+
+  uint32_t ready_index;
+  auto xqd_result =
+      convert_to_fastly_status(xqd_async_select(handles.get(), count, timeout, &ready_index));
+
+  if (xqd_result == FastlyStatus::None) {
+    MOZ_ASSERT(!timers->empty());
+    return timers->run_first_timer(cx);
+  }
+
+  if (!HANDLE_RESULT(cx, xqd_result)) {
+    return false;
+  }
+
+  if (ready_index == UINT32_MAX) {
+    // The index will be UINT32_MAX if the timeout expires before any objects are ready for I/O.
     return true;
+  }
 
-  if (!process_pending_requests(cx))
-    return false;
+#ifdef DEBUG
+  uint32_t is_ready = 0;
+  xqd_result = convert_to_fastly_status(xqd_async_is_ready(handles[ready_index], &is_ready));
+  MOZ_ASSERT(xqd_result == FastlyStatus::Ok);
+  MOZ_ASSERT(is_ready);
+#endif
 
-  if (!process_next_body_read(cx))
-    return false;
+  HandleObject ready_obj = (*pending_async_tasks)[ready_index];
 
-  return true;
+  bool result = false;
+  if (Request::is_instance(ready_obj)) {
+    result = process_pending_request(cx, ready_obj);
+  } else {
+    MOZ_ASSERT(builtins::NativeStreamSource::is_instance(ready_obj));
+    result = process_body_read(cx, ready_obj);
+  }
+
+  pending_async_tasks->erase(const_cast<JSObject **>(ready_obj.address()));
+  return result;
 }
 
 bool math_random(JSContext *cx, unsigned argc, Value *vp) {
@@ -4811,8 +5049,9 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
   if (!ObjectStoreEntry::init_class(cx, global))
     return false;
 
-  pending_requests = new JS::PersistentRootedObjectVector(cx);
-  pending_body_reads = new JS::PersistentRootedObjectVector(cx);
+  pending_async_tasks = new JS::PersistentRootedObjectVector(cx);
+
+  timers.init(cx, js::MakeUnique<ScheduledTimers>());
 
   JS::RootedValue math_val(cx);
   if (!JS_GetProperty(cx, global, "Math", &math_val)) {
