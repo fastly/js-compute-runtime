@@ -80,7 +80,11 @@
         "map": "cpp",
         "set": "cpp",
         "unordered_set": "cpp",
-        "numeric": "cpp"
+        "numeric": "cpp",
+        "__tree": "cpp",
+        "charconv": "cpp",
+        "list": "cpp",
+        "regex": "cpp"
     },
     "git.ignoreLimitWarning": true
 }

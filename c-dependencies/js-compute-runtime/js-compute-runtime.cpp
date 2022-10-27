@@ -219,8 +219,9 @@ static void abort(JSContext *cx, const char *description) {
 
   // Respond with status `500` if no response was ever sent.
   HandleObject fetch_event = FetchEvent::instance();
-  if (hasWizeningFinished() && !FetchEvent::response_started(fetch_event))
+  if (hasWizeningFinished() && !FetchEvent::response_started(fetch_event)) {
     FetchEvent::respondWithError(cx, fetch_event);
+  }
 
   fflush(stderr);
   exit(1);
