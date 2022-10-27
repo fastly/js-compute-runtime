@@ -76,4 +76,6 @@ MSG_DEF(JSMSG_BACKEND_TLS_MIN_INVALID,                         0, JSEXN_RANGEERR
 MSG_DEF(JSMSG_BACKEND_TLS_MAX_INVALID,                         0, JSEXN_RANGEERR, "Backend constructor: tlsMaxVersion must be either 1, 1.1, 1.2, or 1.3")
 MSG_DEF(JSMSG_BACKEND_TLS_MIN_GREATER_THAN_TLS_MAX,            0, JSEXN_RANGEERR, "Backend constructor: tlsMinVersion must be less than or equal to tlsMaxVersion")
 MSG_DEF(JSMSG_BACKEND_PORT_INVALID,                            0, JSEXN_RANGEERR, "Backend constructor: port must be more than 0 and less than 2^16 (65,536)")
+MSG_DEF(JSMSG_RESPONSE_VALUE_NOT_UINT8ARRAY,                   0, JSEXN_TYPEERR, "Can't convert value to Uint8Array while consuming Body")
+MSG_DEF(JSMSG_RESPONSE_BODY_DISTURBED_OR_LOCKED,               0, JSEXN_TYPEERR, "Response body object should not be disturbed or locked")
 //clang-format on

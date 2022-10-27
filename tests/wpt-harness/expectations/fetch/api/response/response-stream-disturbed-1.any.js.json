@@ -15,13 +15,13 @@
     "status": "FAIL"
   },
   "Getting text after getting the Response body - not disturbed, not locked (body source: stream)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Getting json after getting the Response body - not disturbed, not locked (body source: stream)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Getting arrayBuffer after getting the Response body - not disturbed, not locked (body source: stream)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Getting blob after getting the Response body - not disturbed, not locked (body source: string)": {
     "status": "FAIL"
