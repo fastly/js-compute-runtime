@@ -4017,7 +4017,7 @@ private:
   void repeat_first() {
     Timer *timer = first();
     MOZ_ASSERT(timer);
-    timer->deadline = system_clock::now() + system_clock::duration(timer->delay * 1000);
+    timer->deadline = system_clock::now() + milliseconds(timer->delay);
     timers.remove(timer);
     add_timer(timer);
   }
