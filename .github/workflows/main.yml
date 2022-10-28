@@ -244,6 +244,7 @@ jobs:
       - e2e-async-select
       - e2e-byte-repeater
       - e2e-edge-dictionary
+      - e2e-error
       - e2e-geoip
       - e2e-hello-world
       - e2e-object-store
@@ -418,6 +419,17 @@ jobs:
     - uses: ./.github/actions/e2e
       with:
         fixture: 'edge-dictionary'
+        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
+  e2e-error:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: ./.github/actions/e2e
+      with:
+        fixture: 'error'
         fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
   e2e-geoip:
     runs-on: ubuntu-latest
