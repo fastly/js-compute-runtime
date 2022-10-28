@@ -3994,7 +3994,7 @@ public:
     if (std::empty(timers)) {
       return nullptr;
     } else {
-      return timers.front()
+      return timers.front();
     }
   }
 
