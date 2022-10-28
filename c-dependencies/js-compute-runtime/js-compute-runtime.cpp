@@ -418,10 +418,11 @@ static void dispatch_fetch_event(JSContext *cx, HandleObject event, double *tota
     handler.setObject(*(*FETCH_HANDLERS)[i]);
     if (!JS_CallFunctionValue(cx, GLOBAL, handler, argsv, &rval)) {
       DumpPendingException(cx, "dispatching FetchEvent\n");
-      JS_ClearPendingException(cx);
-    }
-    if (FetchEvent::state(event) != FetchEvent::State::unhandled)
       break;
+    }
+    if (FetchEvent::state(event) != FetchEvent::State::unhandled) {
+      break;
+    }
   }
 
   FetchEvent::stop_dispatching(event);
@@ -528,8 +529,17 @@ int main(int argc, const char *argv[]) {
 
     // Respond with status `500` if any promise rejections were left unhandled
     // and no response was ever sent.
-    if (!FetchEvent::response_started(fetch_event))
+    if (!FetchEvent::response_started(fetch_event)) {
       FetchEvent::respondWithError(cx, fetch_event);
+    }
+  }
+
+  // Respond with status `500` if an exception is pending
+  // and no response was ever sent.
+  if (JS_IsExceptionPending(cx)) {
+    if (!FetchEvent::response_started(fetch_event)) {
+      FetchEvent::respondWithError(cx, fetch_event);
+    }
   }
 
   auto end = system_clock::now();
