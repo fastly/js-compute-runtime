@@ -4014,6 +4014,8 @@ private:
     timers.insert(iter, timer);
   }
 
+  // `repeat_first` must only be called if the `timers` list is not empty
+  // The caller of repeat_first needs to check the `timers` list is not empty
   void repeat_first() {
     Timer *timer = first();
     MOZ_ASSERT(timer);
