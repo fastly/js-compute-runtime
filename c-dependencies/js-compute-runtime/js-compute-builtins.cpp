@@ -764,10 +764,22 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
     if (!JS::GetArrayLength(cx, contents, &contentsLength)) {
       return false;
     }
-    std::vector<uint8_t> allBytes;
+    // TODO(performance): investigate whether we can infer the size directly from `contents`
+    size_t buf_size = HANDLE_READ_CHUNK_SIZE;
+    // TODO(performance): make use of malloc slack.
+    // https://github.com/fastly/js-compute-runtime/issues/217
+    char *buf = static_cast<char *>(JS_malloc(cx, buf_size));
+    if (!buf) {
+      JS_ReportOutOfMemory(cx);
+      return false;
+    }
+    // For realloc below.
+    char *new_buf;
+    size_t offset = 0;
     for (uint32_t index = 0; index < contentsLength; index++) {
       RootedValue val(cx);
       if (!JS_GetElement(cx, contents, index, &val)) {
+        JS_free(cx, buf);
         return false;
       }
       {
@@ -776,14 +788,40 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
         JSObject *array = &val.toObject();
         MOZ_ASSERT(JS_IsUint8Array(array));
         bool is_shared;
-        uint8_t *bytes = JS_GetUint8ArrayData(array, &is_shared, nogc);
+        static_assert(CHAR_BIT == 8, "Strange char");
+        char *bytes = reinterpret_cast<char *>(JS_GetUint8ArrayData(array, &is_shared, nogc));
         size_t length = JS_GetTypedArrayByteLength(array);
-        allBytes.insert(allBytes.end(), bytes, bytes + length);
+        offset += length;
+        if (length + offset > buf_size) {
+          while (length + offset > buf_size) {
+            size_t new_size = buf_size + HANDLE_READ_CHUNK_SIZE;
+            new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, new_size));
+            if (!new_buf) {
+              JS_free(cx, buf);
+              JS_ReportOutOfMemory(cx);
+              return false;
+            }
+            buf = new_buf;
+            buf_size += HANDLE_READ_CHUNK_SIZE;
+          }
+        }
+        // strcat(buf, *bytes);
+        memcpy(buf, bytes, length);
+        // allBytes.insert(allBytes.end(), bytes, bytes + length);
       }
     }
+    new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, offset + 1));
+    if (!buf) {
+      JS_free(cx, buf);
+      JS_ReportOutOfMemory(cx);
+      return false;
+    }
+    buf = new_buf;
+    buf[offset] = '\0';
 #ifdef DEBUG
     bool foundBodyParser;
     if (!JS_HasElement(cx, catch_handler, 2, &foundBodyParser)) {
+      JS_free(cx, buf);
       return false;
     }
     MOZ_ASSERT(foundBodyParser);
@@ -791,17 +829,18 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
     // Now we can call parse_body on the result
     RootedValue body_parser(cx);
     if (!JS_GetElement(cx, catch_handler, 2, &body_parser)) {
+      JS_free(cx, buf);
       return false;
     }
     auto parse_body = (ParseBodyCB *)body_parser.toPrivate();
-    size_t bytes_read = allBytes.size();
-    UniqueChars buf(reinterpret_cast<char *>(allBytes.data()));
-    if (!buf) {
+    // size_t bytes_read = allBytes.size();
+    UniqueChars body(buf);
+    if (!body) {
       RootedObject result_promise(cx, &JS::GetReservedSlot(self, Slots::BodyAllPromise).toObject());
       JS::SetReservedSlot(self, Slots::BodyAllPromise, JS::UndefinedValue());
       return RejectPromiseWithPendingError(cx, result_promise);
     }
-    return parse_body(cx, self, std::move(buf), bytes_read);
+    return parse_body(cx, self, std::move(body), offset);
   }
 
   RootedValue val(cx);
