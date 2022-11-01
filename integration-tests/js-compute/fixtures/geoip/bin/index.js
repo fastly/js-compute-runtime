@@ -124,7 +124,7 @@ let ipv4Expected = {
   country_code: "GB",
   country_code3: "GBR",
   country_name: "united kingdom",
-  gmt_offset: 100,
+  gmt_offset: 0,
   latitude: 51.59,
   longitude: -0.08,
   metro_code: 826044,
