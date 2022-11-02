@@ -8,15 +8,17 @@ manifest_version = 2
 name = "object-store"
 service_id = ""
 
+[scripts]
+  build = "node ../../../../js-compute-runtime-cli.js"
+
 [local_server]
+  [local_server.object_store]
+  example-test-object-store = []
 
   [local_server.backends]
 
     [local_server.backends.TheOrigin]
       url = "JS_COMPUTE_TEST_BACKEND/"
-
-[scripts]
-  build = "node ../../../../js-compute-runtime-cli.js"
 
 [setup]
 
