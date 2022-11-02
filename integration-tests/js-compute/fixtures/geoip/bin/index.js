@@ -132,7 +132,7 @@ let ipv4Expected = {
   proxy_description: "?",
   proxy_type: "?",
   region: "HRY",
-  utc_offset: 100
+  utc_offset: 0
 };
 
 routes.set("/fastly/getgeolocationforipaddress/parameter-ipv4-string", async () => {
