@@ -788,12 +788,11 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
         JSObject *array = &val.toObject();
         MOZ_ASSERT(JS_IsUint8Array(array));
         bool is_shared;
-        static_assert(CHAR_BIT == 8, "Strange char");
-        char *bytes = reinterpret_cast<char *>(JS_GetUint8ArrayData(array, &is_shared, nogc));
         size_t length = JS_GetTypedArrayByteLength(array);
         offset += length;
-        if (length + offset > buf_size) {
-          while (length + offset > buf_size) {
+        // if buf is not big enough to fit the next uint8array's bytes then resize the
+        if (offset > buf_size) {
+          while (offset > buf_size) {
             size_t new_size = buf_size + HANDLE_READ_CHUNK_SIZE;
             new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, new_size));
             if (!new_buf) {
@@ -805,9 +804,14 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
             buf_size += HANDLE_READ_CHUNK_SIZE;
           }
         }
-        // strcat(buf, *bytes);
-        memcpy(buf, bytes, length);
-        // allBytes.insert(allBytes.end(), bytes, bytes + length);
+
+        static_assert(CHAR_BIT == 8, "Strange char");
+        auto bytes = reinterpret_cast<char *>(JS_GetUint8ArrayData(array, &is_shared, nogc));
+        if (index == 0) {
+          strcpy(buf, bytes);
+        } else {
+          strcat(buf, bytes);
+        }
       }
     }
     new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, offset + 1));
