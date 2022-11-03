@@ -768,7 +768,7 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
     size_t buf_size = HANDLE_READ_CHUNK_SIZE;
     // TODO(performance): make use of malloc slack.
     // https://github.com/fastly/js-compute-runtime/issues/217
-    char *buf = static_cast<char *>(JS_malloc(cx, buf_size));
+    auto buf = static_cast<char *>(JS_malloc(cx, buf_size));
     if (!buf) {
       JS_ReportOutOfMemory(cx);
       return false;
