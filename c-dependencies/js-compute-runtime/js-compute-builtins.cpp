@@ -815,7 +815,7 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
       }
     }
     new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, offset + 1));
-    if (!buf) {
+    if (!new_buf) {
       JS_free(cx, buf);
       JS_ReportOutOfMemory(cx);
       return false;
