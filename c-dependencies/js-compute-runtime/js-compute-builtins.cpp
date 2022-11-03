@@ -837,13 +837,7 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
       return false;
     }
     auto parse_body = (ParseBodyCB *)body_parser.toPrivate();
-    // size_t bytes_read = allBytes.size();
     UniqueChars body(buf);
-    if (!body) {
-      RootedObject result_promise(cx, &JS::GetReservedSlot(self, Slots::BodyAllPromise).toObject());
-      JS::SetReservedSlot(self, Slots::BodyAllPromise, JS::UndefinedValue());
-      return RejectPromiseWithPendingError(cx, result_promise);
-    }
     return parse_body(cx, self, std::move(body), offset);
   }
 
