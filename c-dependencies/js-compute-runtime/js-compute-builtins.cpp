@@ -792,11 +792,9 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
         if (length) {
           // if buf is not big enough to fit the next uint8array's bytes then resize the
           if (offset + length > buf_size) {
-            size_t new_size = buf_size + HANDLE_READ_CHUNK_SIZE;
-            while (offset > new_size) {
-              new_size += HANDLE_READ_CHUNK_SIZE;
-            }
-            new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, new_size));
+            size_t new_size =
+                buf_size + (HANDLE_READ_CHUNK_SIZE * ((length / HANDLE_READ_CHUNK_SIZE) + 1));
+            auto new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, new_size));
             if (!new_buf) {
               JS_free(cx, buf);
               JS_ReportOutOfMemory(cx);
