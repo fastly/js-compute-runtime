@@ -808,11 +808,7 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
 
           static_assert(CHAR_BIT == 8, "Strange char");
           auto bytes = reinterpret_cast<char *>(JS_GetUint8ArrayData(array, &is_shared, nogc));
-          if (index == 0) {
-            memcpy(buf, bytes, length);
-          } else {
-            memcpy(buf + offset, bytes, length);
-          }
+          memcpy(buf + offset, bytes, length);
           offset += length;
         }
       }
