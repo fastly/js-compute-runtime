@@ -776,6 +776,42 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
     // For realloc below.
     char *new_buf;
     size_t offset = 0;
+
+    // In this loop we are finding the length of each entry in `contents` and resizing the `buf` until it is large enough to fit all the entries in `contents`
+    for (uint32_t index = 0; index < contentsLength; index++) {
+      RootedValue val(cx);
+      if (!JS_GetElement(cx, contents, index, &val)) {
+        JS_free(cx, buf);
+        return false;
+      }
+      {
+        JS::AutoCheckCannotGC nogc;
+        MOZ_ASSERT(val.isObject());
+        JSObject *array = &val.toObject();
+        MOZ_ASSERT(JS_IsUint8Array(array));
+        size_t length = JS_GetTypedArrayByteLength(array);
+        if (length) {
+          // if buf is not big enough to fit the next uint8array's bytes then resize
+          if (offset + length > buf_size) {
+            size_t new_size =
+                buf_size + (HANDLE_READ_CHUNK_SIZE * ((length / HANDLE_READ_CHUNK_SIZE) + 1));
+            auto new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, new_size));
+            if (!new_buf) {
+              JS_free(cx, buf);
+              JS_ReportOutOfMemory(cx);
+              return false;
+            }
+            buf = new_buf;
+            buf_size = new_size;
+          }
+          offset += length;
+        }
+      }
+    }
+
+    // reset the offset for the next loop
+    offset = 0;
+    // In this loop we are inserting each entry in `contents` into `buf`
     for (uint32_t index = 0; index < contentsLength; index++) {
       RootedValue val(cx);
       if (!JS_GetElement(cx, contents, index, &val)) {
@@ -790,20 +826,6 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
         bool is_shared;
         size_t length = JS_GetTypedArrayByteLength(array);
         if (length) {
-          // if buf is not big enough to fit the next uint8array's bytes then resize the
-          if (offset + length > buf_size) {
-            size_t new_size =
-                buf_size + (HANDLE_READ_CHUNK_SIZE * ((length / HANDLE_READ_CHUNK_SIZE) + 1));
-            auto new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, new_size));
-            if (!new_buf) {
-              JS_free(cx, buf);
-              JS_ReportOutOfMemory(cx);
-              return false;
-            }
-            buf = new_buf;
-            buf_size = new_size;
-          }
-
           static_assert(CHAR_BIT == 8, "Strange char");
           auto bytes = reinterpret_cast<char *>(JS_GetUint8ArrayData(array, &is_shared, nogc));
           memcpy(buf + offset, bytes, length);
