@@ -768,20 +768,12 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
     size_t buf_size = HANDLE_READ_CHUNK_SIZE;
     // TODO(performance): make use of malloc slack.
     // https://github.com/fastly/js-compute-runtime/issues/217
-    auto buf = static_cast<char *>(JS_malloc(cx, buf_size));
-    if (!buf) {
-      JS_ReportOutOfMemory(cx);
-      return false;
-    }
-    // For realloc below.
-    char *new_buf;
     size_t offset = 0;
-
-    // In this loop we are finding the length of each entry in `contents` and resizing the `buf` until it is large enough to fit all the entries in `contents`
+    // In this loop we are finding the length of each entry in `contents` and resizing the `buf`
+    // until it is large enough to fit all the entries in `contents`
     for (uint32_t index = 0; index < contentsLength; index++) {
       RootedValue val(cx);
       if (!JS_GetElement(cx, contents, index, &val)) {
-        JS_free(cx, buf);
         return false;
       }
       {
@@ -791,24 +783,21 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
         MOZ_ASSERT(JS_IsUint8Array(array));
         size_t length = JS_GetTypedArrayByteLength(array);
         if (length) {
-          // if buf is not big enough to fit the next uint8array's bytes then resize
-          if (offset + length > buf_size) {
-            size_t new_size =
-                buf_size + (HANDLE_READ_CHUNK_SIZE * ((length / HANDLE_READ_CHUNK_SIZE) + 1));
-            auto new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, new_size));
-            if (!new_buf) {
-              JS_free(cx, buf);
-              JS_ReportOutOfMemory(cx);
-              return false;
-            }
-            buf = new_buf;
-            buf_size = new_size;
-          }
           offset += length;
+          // if buf is not big enough to fit the next uint8array's bytes then resize
+          if (offset > buf_size) {
+            buf_size =
+                buf_size + (HANDLE_READ_CHUNK_SIZE * ((length / HANDLE_READ_CHUNK_SIZE) + 1));
+          }
         }
       }
     }
 
+    auto buf = static_cast<char *>(JS_malloc(cx, buf_size + 1));
+    if (!buf) {
+      JS_ReportOutOfMemory(cx);
+      return false;
+    }
     // reset the offset for the next loop
     offset = 0;
     // In this loop we are inserting each entry in `contents` into `buf`
@@ -833,13 +822,6 @@ bool content_stream_read_then_handler(JSContext *cx, HandleObject self, HandleVa
         }
       }
     }
-    new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, offset + 1));
-    if (!new_buf) {
-      JS_free(cx, buf);
-      JS_ReportOutOfMemory(cx);
-      return false;
-    }
-    buf = new_buf;
     buf[offset] = '\0';
 #ifdef DEBUG
     bool foundBodyParser;
