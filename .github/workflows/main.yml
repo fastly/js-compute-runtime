@@ -250,6 +250,7 @@ jobs:
       - e2e-object-store
       - e2e-request-limits
       - e2e-request-upstream
+      - e2e-response
       - e2e-response-headers
       - e2e-status
     runs-on: ubuntu-latest
