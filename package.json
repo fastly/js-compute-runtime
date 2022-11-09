@@ -8,6 +8,7 @@
   "license": "Apache-2.0",
   "main": "js-compute-runtime-cli.js",
   "types": "index.d.ts",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/fastly/js-compute-runtime"
@@ -16,7 +17,6 @@
     "js-compute-runtime": "js-compute-runtime-cli.js"
   },
   "files": [
-    "bin",
     "reference-docs",
     "js-compute-runtime-cli.js",
     "index.d.ts",
@@ -29,14 +29,18 @@
     "test": "tsd",
     "docs": "npm run docs:clean && npm run docs:typedoc",
     "docs:clean": "rm -rf reference-docs",
-    "docs:typedoc": "typedoc --theme ./node_modules/typedoc-loopingz-theme/bin/default  --disableSources --includeVersion --out reference-docs --tsconfig tsconfig.json --readme none --exclude index.test-d.ts index.d.ts"
+    "docs:typedoc": "typedoc --theme ./node_modules/typedoc-loopingz-theme/bin/default  --disableSources --includeVersion --out reference-docs --tsconfig tsconfig.json --readme none --exclude index.test-d.ts index.d.ts",
+    "build": "make -C ./c-dependencies/js-compute-runtime && cp ./c-dependencies/js-compute-runtime/js-compute-runtime.wasm .",
+    "prepare": "npm run build"
   },
   "devDependencies": {
     "tsd": "^0.24.1",
     "typedoc": "^0.21",
+    "typedoc-loopingz-theme": "^1.1.3",
     "typescript": "^4.2"
   },
   "dependencies": {
-    "typedoc-loopingz-theme": "^1.1.3"
+    "@bytecode-alliance/wizer": "file:../../../../wizer/npm/wizer",
+    "@rauschma/stringio": "^1.4.0"
   }
 }
