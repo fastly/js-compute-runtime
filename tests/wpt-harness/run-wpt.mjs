@@ -22,7 +22,7 @@ const config = {
   viceroy: {
     external: false,
     configFile: relativePath("./viceroy.toml"),
-    host: "http://localhost:7878",
+    host: "http://127.0.0.1:7878",
     runtime: "wpt-runtime.wasm",
   },
   wptServer: {
