@@ -226,7 +226,7 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v1
       with:
-        name: engine-${{ matrix.profile }}
+        name: engine-release
     
     - run: npm ci
 
