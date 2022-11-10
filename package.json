@@ -31,7 +31,7 @@
     "docs:clean": "rm -rf reference-docs",
     "docs:typedoc": "typedoc --theme ./node_modules/typedoc-loopingz-theme/bin/default  --disableSources --includeVersion --out reference-docs --tsconfig tsconfig.json --readme none --exclude index.test-d.ts index.d.ts",
     "build": "make -C ./c-dependencies/js-compute-runtime && cp ./c-dependencies/js-compute-runtime/js-compute-runtime.wasm .",
-    "prepare": "npm run build"
+    "prepare": "[[ -z \"${SKIP_BUILD}\" ]] && npm run build"
   },
   "devDependencies": {
     "eslint": "^8.27.0",
