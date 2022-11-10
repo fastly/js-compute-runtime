@@ -138,7 +138,7 @@ jobs:
         path: "/home/runner/.cargo/bin/viceroy"
         key: crate-cache-viceroy-${{ env.viceroy_version }}
     
-    - run: npm ci
+    - run: npm i
 
     - name: Build WPT runtime
       run: |
@@ -228,7 +228,7 @@ jobs:
       with:
         name: engine-release
     
-    - run: npm ci
+    - run: npm i
 
     - name: js-compute Integration Tests Job
       timeout-minutes: 20
@@ -280,7 +280,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: npm ci
+    - run: npm i
       shell: bash
     - run: npm run test:types
 

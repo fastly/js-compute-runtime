@@ -25,7 +25,6 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "install:ci": "npm ci",
     "test": "tsd",
     "test:types": "tsd",
     "docs": "npm run docs:clean && npm run docs:typedoc",
