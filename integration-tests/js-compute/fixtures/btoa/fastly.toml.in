@@ -9,5 +9,5 @@ name = "btoa"
 service_id = ""
 
 [scripts]
-  build = "../../../../target/release/js-compute-runtime"
+  build = "node ../../../../js-compute-runtime-cli.js"
 
