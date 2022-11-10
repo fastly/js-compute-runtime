@@ -12,7 +12,6 @@ defaults:
   run:
     shell: bash
 env:
-  wizer_version: 1.3.3
   viceroy_version: 0.2.15
 
 jobs:
@@ -99,9 +98,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - crate: wizer
-            version: 1.3.3 # Note: workflow-level env vars can't be used in matrix definitions
-            options: "--all-features"
           - crate: viceroy
             version: 0.2.15 # Note: workflow-level env vars can't be used in matrix definitions
             options: ""
@@ -136,17 +132,13 @@ jobs:
       with:
         name: engine-${{ matrix.profile }}
 
-    - name: Restore Wizer from cache
-      uses: actions/cache@v2.1.5
-      with:
-        path: "/home/runner/.cargo/bin/wizer"
-        key: crate-cache-wizer-${{ env.wizer_version }}
-
     - name: Restore Viceroy from cache
       uses: actions/cache@v2.1.5
       with:
         path: "/home/runner/.cargo/bin/viceroy"
         key: crate-cache-viceroy-${{ env.viceroy_version }}
+    
+    - run: SKIP_BUILD=1 npm ci
 
     - name: Build WPT runtime
       run: |
@@ -231,24 +223,12 @@ jobs:
         path: "/home/runner/.cargo/bin/viceroy"
         key: crate-cache-viceroy-${{ env.viceroy_version }}
 
-
-    - name: Download x86_64 Linux binaries
+    - name: Download Engine
       uses: actions/download-artifact@v1
       with:
-        name: bins-x86_64-linux
-
-    # Move the downloaded binary from the build step into the bins directory in
-    # the integration-tests directory
-    - name: Move x86_64 Linux binaries
-      run: |
-        arch="x86_64"
-        platform="linux"
-
-        mkdir -p "./target/release"
-        mv "bins-$arch-$platform/js-compute-runtime" "./target/release/js-compute-runtime"
-
-        chmod +x ./target/release/js-compute-runtime
-        ./target/release/js-compute-runtime --help
+        name: engine-${{ matrix.profile }}
+    
+    - run: SKIP_BUILD=1 npm ci
 
     - name: js-compute Integration Tests Job
       timeout-minutes: 20
@@ -301,6 +281,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: SKIP_BUILD=1 npm ci
+      shell: bash
     - run: npm run test:types
 
   e2e-async-select:
