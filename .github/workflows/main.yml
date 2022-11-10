@@ -16,8 +16,8 @@ env:
   viceroy_version: 0.2.15
 
 jobs:
-  build_engine:
-    name: Build Engine
+  build:
+    name: Build
     strategy:
       matrix:
         profile: [debug, release]
@@ -82,17 +82,17 @@ jobs:
       if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
     - name: "Build JS runtime (debug)"
-      run: DEBUG=1 CXX_OPT="-O1" make -C c-dependencies/js-compute-runtime DESTDIR=$PWD install
+      run: DEBUG=1 CXX_OPT="-O1" npm run build
       if: matrix.profile == 'debug'
 
     - name: "Build JS runtime (release)"
-      run: make -C c-dependencies/js-compute-runtime DESTDIR=$PWD install
+      run: npm run build
       if: matrix.profile == 'release'
 
     - uses: actions/upload-artifact@v1
       with:
         name: engine-${{ matrix.profile }}
-        path: dist
+        path: js-compute-runtime.wasm
 
   ensure_cargo_installs:
     name: Ensure that all required "cargo install" commands are run, or we have a cache hit
@@ -124,7 +124,7 @@ jobs:
         include:
           - profile: debug
           - profile: release
-    needs: [build_engine, ensure_cargo_installs]
+    needs: [build, ensure_cargo_installs]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -165,73 +165,6 @@ jobs:
         # Skip slow tests when testing the debug runtime.
         node ../tests/wpt-harness/run-wpt.mjs -vv $(((${{ matrix.profile }} == "debug")) && echo "--skip-slow-tests")
 
-  # Perform release builds of `js-compute-runtime`. Builds on
-  # Windows/Mac/Linux, and artifacts are uploaded after the build is finished.
-  # Note that we also run tests here to test exactly what we're deploying.
-  build:
-    name: Build js-compute-runtime
-    needs: [build_engine]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-        - build: x86_64-linux
-          os: ubuntu-latest
-        - build: x86_64-macos
-          os: macos-latest
-        - build: x86_64-windows
-          os: windows-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: ./.github/actions/install-rust
-    - uses: ./.github/actions/binary-compatible-builds
-
-    - name: Download Engine
-      uses: actions/download-artifact@v1
-      with:
-        name: engine-release
-
-    - uses: ./.github/actions/cache-crates
-      with:
-        lockfiles: 'Cargo.lock'
-
-    - name: Cache build
-      uses: actions/cache@v3
-      with:
-        path: target/
-        key: runtime-cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}
-        # We trust cargo to only reuse valid parts of the cache when dependencies change.
-        restore-keys: runtime-cargo-${{ runner.os }}-${{ runner.arch }}-
-      # Out of an abundance of caution, ensure that tagged releases rebuild all
-      # crates from source.
-      if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
-
-    # Build `js-compute-runtime`
-    - run: PREBUILT_ENGINE=engine-release/js-compute-runtime.wasm $CENTOS cargo build --release
-
-    # Test what we just built.
-    # (Disabled for now since we don't actually have any tests for this prototype :/)
-    # - run: |
-    #     cargo test
-    #   env:
-    #     RUST_BACKTRACE: 1
-
-    # ... and now perform some goop to move all the relevant artifacts into
-    # something that we'll upload from this action.
-
-    - run: mkdir dist
-
-    # Move binaries to dist folder
-    - run: cp target/release/js-compute-runtime dist
-      if: matrix.os != 'windows-latest' && matrix.target == ''
-    - run: cp target/release/js-compute-runtime.exe dist
-      if: matrix.build == 'x86_64-windows'
-
-    - uses: actions/upload-artifact@v1
-      with:
-        name: bins-${{ matrix.build }}
-        path: dist
-
   # Consumes all published artifacts from all the previous build steps, creates
   # a bunch of tarballs for all of them, and then publishes the tarballs
   # themselves as an artifact (for inspection) and then optionally creates
@@ -257,9 +190,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Download binaries
-      uses: actions/download-artifact@v3
-
     - name: Calculate tag name
       run: |
         name=dev
@@ -270,20 +200,6 @@ jobs:
         echo TAG=$name >> $GITHUB_ENV
       id: tagname
 
-    # Assemble all the build artifacts into tarballs and zip archives.
-    - name: Assemble tarballs
-      run: |
-        ./ci/build-tarballs.sh x86_64-linux
-        ./ci/build-tarballs.sh x86_64-macos
-        ./ci/build-tarballs.sh x86_64-windows .exe
-
-    # Upload all assembled tarballs as an artifact of the github action run, so
-    # that way even PRs can inspect the output.
-    - uses: actions/upload-artifact@v1
-      with:
-        name: tarballs
-        path: dist
-
     # ... and if this was an actual push (tag or `main`) then we publish a
     # new release. This'll automatically publish a tag release or update `dev`
     # with this `sha`
@@ -291,7 +207,6 @@ jobs:
       uses: ./.github/actions/github-release
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
       with:
-        files: "dist/*"
         name: ${{ steps.tagname.outputs.val }}
         token: ${{ secrets.GITHUB_TOKEN }}
 
