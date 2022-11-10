@@ -16,7 +16,7 @@ service_id = ""
       url = "JS_COMPUTE_TEST_BACKEND/"
 
 [scripts]
-  build = "../../../../target/release/js-compute-runtime"
+  build = "node ../../../../js-compute-runtime-cli.js"
 
 [setup]
 
