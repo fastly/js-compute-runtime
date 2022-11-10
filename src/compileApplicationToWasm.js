@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { mkdir, readFile } from "node:fs/promises";
 import { isFile } from "./isFile.js";
 import { isFileOrDoesNotExist } from "./isFileOrDoesNotExist.js";
-import wizer from "@bytecode-alliance/wizer";
+import wizer from "@jakechampion/wizer";
 import Parser, { Query } from "tree-sitter";
 import JavaScript from "tree-sitter-javascript";
 
