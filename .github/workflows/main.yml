@@ -386,7 +386,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: npm cit
-      working-directory: ./sdk/js-compute
 
   e2e-async-select:
     runs-on: ubuntu-latest
