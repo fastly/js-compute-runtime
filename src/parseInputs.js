@@ -1,5 +1,5 @@
-import { fileURLToPath } from 'node:url';
-import { dirname, join, isAbsolute } from 'node:path';
+import { fileURLToPath } from "node:url";
+import { dirname, join, isAbsolute } from "node:path";
 import { unknownArgument } from "./unknownArgument.js";
 import { tooManyEngines } from "./tooManyEngines.js";
 
@@ -7,26 +7,27 @@ export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
   let customEngineSet = false;
-  let wasmEngine = join(__dirname, '../js-compute-runtime.wasm');
+  let wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
   let customInputSet = false;
-  let input = join(process.cwd(), 'bin/index.js');
+  let input = join(process.cwd(), "bin/index.js");
   let customOutputSet = false;
-  let output = join(process.cwd(), 'bin/main.wasm');
+  let output = join(process.cwd(), "bin/main.wasm");
   let cliInput;
-  loop: while (cliInput = cliInputs.shift()) {
+  // eslint-disable-next-line no-cond-assign
+  loop: while ((cliInput = cliInputs.shift())) {
     switch (cliInput) {
-      case '--': {
+      case "--": {
         break loop;
       }
-      case '-V':
-      case '--version': {
-        return { version: true }
+      case "-V":
+      case "--version": {
+        return { version: true };
       }
-      case '-h':
-      case '--help': {
-        return { help: true }
+      case "-h":
+      case "--help": {
+        return { help: true };
       }
-      case '--engine-wasm': {
+      case "--engine-wasm": {
         if (customEngineSet) {
           tooManyEngines();
         }
@@ -41,13 +42,13 @@ export async function parseInputs(cliInputs) {
       }
       default: {
         // The reason this is not another `case` and is an `if` using `startsWith`
-        // is because previous versions of the CLI allowed an arbitrary amount of 
+        // is because previous versions of the CLI allowed an arbitrary amount of
         // = characters to be present. E.G. This is valid --engine-wasm====js.wasm
-        if (cliInput.startsWith('--engine-wasm=')) {
+        if (cliInput.startsWith("--engine-wasm=")) {
           if (customEngineSet) {
             tooManyEngines();
           }
-          const value = cliInput.replace(/--engine-wasm=+/, '');
+          const value = cliInput.replace(/--engine-wasm=+/, "");
           // This is used to detect if multiple --engine-wasm flags have been set
           // which is not supported.
           customEngineSet = true;
@@ -57,7 +58,7 @@ export async function parseInputs(cliInputs) {
             wasmEngine = join(process.cwd(), value);
           }
           break;
-        } else if (cliInput.startsWith('-')) {
+        } else if (cliInput.startsWith("-")) {
           unknownArgument();
         } else {
           if (!customInputSet) {
