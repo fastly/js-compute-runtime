@@ -73,7 +73,7 @@ initialized-js-compute-runtime.wasm: js-compute-runtime.wasm $(INIT_JS)
 	cat $(INIT_JS) | $(WIZER) --allow-wasi --dir=. -r _start=wizer.resume -o $@ $<
 
 install: js-compute-runtime.wasm
-	install -m 444 t $(DESTDIR)/dist js-compute-runtime.wasm
+	install -m 444 -Dt $(DESTDIR)/dist js-compute-runtime.wasm
 
 clean:
 	$(RM) compile_commands.json $(FSM_OBJ)
