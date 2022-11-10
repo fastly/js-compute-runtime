@@ -296,11 +296,12 @@ jobs:
     - run: |
         ci/rustfmt.sh
 
-  test-npm-package:
+  test-npm-package-types:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: npm cit
+    - run: SKIP_BUILD=1 npm ci
+    - run: npm run test:types
 
   e2e-async-select:
     runs-on: ubuntu-latest

@@ -27,6 +27,7 @@
   "scripts": {
     "install:ci": "npm ci",
     "test": "tsd",
+    "test:types": "tsd",
     "docs": "npm run docs:clean && npm run docs:typedoc",
     "docs:clean": "rm -rf reference-docs",
     "docs:typedoc": "typedoc --theme ./node_modules/typedoc-loopingz-theme/bin/default  --disableSources --includeVersion --out reference-docs --tsconfig tsconfig.json --readme none --exclude index.test-d.ts index.d.ts",
