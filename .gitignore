@@ -13,3 +13,5 @@ node_modules/
 /rusturl/
 # compiler_flags
 /js-compute-runtime.wasm
+tests/wpt-harness/wpt-test-runner.js
+wpt-runtime.wasm

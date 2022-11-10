@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 inputs=(
@@ -10,5 +9,5 @@ inputs=(
   "${script_dir}/post-harness.js"
 )
 
-cat "${inputs[@]}" | \
-  wizer --allow-wasi --dir=. -r _start=wizer.resume -o wpt-runtime.wasm js-compute-runtime.wasm
+cat "${inputs[@]}" > "${script_dir}/wpt-test-runner.js"
+node "${script_dir}/../../js-compute-runtime-cli.js" "${script_dir}/wpt-test-runner.js" wpt-runtime.wasm
