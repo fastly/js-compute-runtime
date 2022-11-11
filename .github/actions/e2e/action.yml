@@ -12,20 +12,22 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
     - name: Install Fastly CLI
       shell: bash
       run: |
         echo "Install Fastly CLI 3.1.1"
         wget https://github.com/fastly/cli/releases/download/v3.1.1/fastly_3.1.1_linux_amd64.deb
         sudo apt install ./fastly_3.1.1_linux_amd64.deb
-
     - name: Download Engine
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v3
       with:
         name: engine-release
-    - run: npm i
+    - run: yarn
       shell: bash
-    - run: cd ./integration-tests/js-compute && npm i
+    - run: cd ./integration-tests/js-compute && yarn
       shell: bash
     - run: cd ./integration-tests/js-compute && ./test.js ${{ inputs.fixture }}
       shell: bash
