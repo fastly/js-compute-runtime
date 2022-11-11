@@ -124,7 +124,7 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
       wizer,
       [
         "--allow-wasi",
-        `--dir=${process.cwd()}`,
+        `--dir=.`,
         "-r _start=wizer.resume",
         `-o=${output}`,
         wasmEngine,
