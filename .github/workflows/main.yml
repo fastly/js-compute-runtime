@@ -126,9 +126,12 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
 
     - name: Download Engine
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v3
       with:
         name: engine-${{ matrix.profile }}
 
@@ -138,12 +141,11 @@ jobs:
         path: "/home/runner/.cargo/bin/viceroy"
         key: crate-cache-viceroy-${{ env.viceroy_version }}
     
-    - run: npm i
+    - run: yarn
 
     - name: Build WPT runtime
       run: |
-        cd engine-${{ matrix.profile }}
-        bash ../tests/wpt-harness/build-wpt-runtime.sh
+        bash ./tests/wpt-harness/build-wpt-runtime.sh
 
     - name: Prepare WPT hosts
       run: |
@@ -153,9 +155,8 @@ jobs:
     - name: Run tests
       timeout-minutes: 20
       run: |
-        cd engine-${{ matrix.profile }}
         # Skip slow tests when testing the debug runtime.
-        node ../tests/wpt-harness/run-wpt.mjs -vv $(((${{ matrix.profile }} == "debug")) && echo "--skip-slow-tests")
+        node ./tests/wpt-harness/run-wpt.mjs -vv $(((${{ matrix.profile }} == "debug")) && echo "--skip-slow-tests")
 
   # Consumes all published artifacts from all the previous build steps, creates
   # a bunch of tarballs for all of them, and then publishes the tarballs
@@ -211,6 +212,9 @@ jobs:
     steps:
     - name: Checkout fastly/js-compute-runtime
       uses: actions/checkout@v2
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
 
     - name: Set up Fastly CLI
       uses: fastly/compute-actions/setup@v2
@@ -224,11 +228,11 @@ jobs:
         key: crate-cache-viceroy-${{ env.viceroy_version }}
 
     - name: Download Engine
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v3
       with:
         name: engine-release
     
-    - run: npm i
+    - run: yarn
 
     - name: js-compute Integration Tests Job
       timeout-minutes: 20
@@ -280,7 +284,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: npm i
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+    - run: yarn
       shell: bash
     - run: npm run test:types
 

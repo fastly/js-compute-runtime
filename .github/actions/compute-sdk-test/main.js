@@ -1,7 +1,5 @@
 // Node & 3P Modules
-import fs from 'fs';
 import fsPromises from 'fs/promises';
-import path from 'path';
 import childProcess from 'node:child_process';
 import fetch from 'node-fetch';
 import chalk from 'chalk';
