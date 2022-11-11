@@ -132,6 +132,7 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
       {
         stdio: [null, process.stdout, process.stderr],
         input: inputContents,
+        shell: true,
         encoding: "utf-8",
       }
     );
