@@ -67,7 +67,7 @@ routes.set("/fastly/getgeolocationforipaddress/interface", async function () {
 
 routes.set("/fastly/getgeolocationforipaddress/called-as-constructor", async () => {
   let error = assertThrows(() => {
-      new fastly.getGeolocationForIpAddress('1.2.3.4')
+    new fastly.getGeolocationForIpAddress('1.2.3.4')
   }, TypeError, `fastly.getGeolocationForIpAddress is not a constructor`)
   if (error) { return error }
   return pass()
@@ -76,21 +76,21 @@ routes.set("/fastly/getgeolocationforipaddress/called-as-constructor", async () 
 routes.set("/fastly/getgeolocationforipaddress/parameter-calls-7.1.17-ToString", async () => {
   let sentinel;
   const test = () => {
-      sentinel = Symbol();
-      const key = {
-          toString() {
-              throw sentinel;
-          }
+    sentinel = Symbol();
+    const key = {
+      toString() {
+        throw sentinel;
       }
-      fastly.getGeolocationForIpAddress(key)
+    }
+    fastly.getGeolocationForIpAddress(key)
   }
   let error = assertThrows(test)
   if (error) { return error }
   try {
-      test()
+    test()
   } catch (thrownError) {
-      let error = assert(thrownError, sentinel, 'thrownError === sentinel')
-      if (error) { return error }
+    let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+    if (error) { return error }
   }
   error = assertThrows(() => {
     fastly.getGeolocationForIpAddress(Symbol())
@@ -100,14 +100,14 @@ routes.set("/fastly/getgeolocationforipaddress/parameter-calls-7.1.17-ToString",
 });
 routes.set("/fastly/getgeolocationforipaddress/parameter-not-supplied", async () => {
   let error = assertThrows(() => {
-      fastly.getGeolocationForIpAddress()
+    fastly.getGeolocationForIpAddress()
   }, TypeError, `fastly.getGeolocationForIpAddress: At least 1 argument required, but only 0 passed`)
   if (error) { return error }
   return pass()
 });
 routes.set("/fastly/getgeolocationforipaddress/parameter-empty-string", async () => {
   let error = assertThrows(() => {
-      fastly.getGeolocationForIpAddress('')
+    fastly.getGeolocationForIpAddress('')
   }, Error, `Invalid address passed to fastly.getGeolocationForIpAddress`)
   if (error) { return error }
   return pass()
@@ -117,7 +117,7 @@ let ipv4Expected = {
   as_name: "sky uk limited",
   as_number: 5607,
   area_code: 0,
-  city: "haringey",
+  city: "tower hamlets",
   conn_speed: "broadband",
   conn_type: "wifi",
   continent: "EU",
@@ -125,13 +125,13 @@ let ipv4Expected = {
   country_code3: "GBR",
   country_name: "united kingdom",
   gmt_offset: 0,
-  latitude: 51.59,
-  longitude: -0.08,
+  latitude: 51.52,
+  longitude: -0.06,
   metro_code: 826044,
-  postal_code: "n15 4sj",
+  postal_code: "e1 5bt",
   proxy_description: "?",
   proxy_type: "?",
-  region: "HRY",
+  region: "TWH",
   utc_offset: 0
 };
 
@@ -153,7 +153,7 @@ let expected = {
   country_code: "US",
   country_code3: "USA",
   country_name: "united states",
-  gmt_offset: -500,
+  gmt_offset: -600,
   latitude: 32.94,
   longitude: -96.84,
   metro_code: 623,
@@ -161,11 +161,11 @@ let expected = {
   proxy_description: "?",
   proxy_type: "hosting",
   region: "TX",
-  utc_offset: -500
+  utc_offset: -600
 }
 routes.set("/fastly/getgeolocationforipaddress/parameter-compressed-ipv6-string", async () => {
   let geo = fastly.getGeolocationForIpAddress('2607:f0d0:1002:51::4')
-  console.log({geo})
+  console.log({ geo })
   let error = assert(geo, expected, `fastly.getGeolocationForIpAddress('2607:f0d0:1002:51::4') == expected`)
   if (error) { return error }
   return pass()
