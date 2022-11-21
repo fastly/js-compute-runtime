@@ -59,7 +59,7 @@ export async function parseInputs(cliInputs) {
           }
           break;
         } else if (cliInput.startsWith("-")) {
-          unknownArgument();
+          unknownArgument(cliInput);
         } else {
           if (!customInputSet) {
             customInputSet = true;
@@ -76,7 +76,7 @@ export async function parseInputs(cliInputs) {
               output = join(process.cwd(), cliInput);
             }
           } else {
-            unknownArgument();
+            unknownArgument(cliInput);
           }
         }
       }
