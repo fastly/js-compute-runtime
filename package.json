@@ -33,7 +33,10 @@
     "build": "make -C ./c-dependencies/js-compute-runtime && cp ./c-dependencies/js-compute-runtime/js-compute-runtime.wasm ."
   },
   "devDependencies": {
+    "@gmrchk/cli-testing-library": "^0.1.2",
+    "brittle": "^3.1.1",
     "eslint": "^8.27.0",
+    "get-bin-path": "^7.2.1",
     "tsd": "^0.24.1",
     "typedoc": "^0.21",
     "typedoc-loopingz-theme": "^1.1.3",
