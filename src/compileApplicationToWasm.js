@@ -5,6 +5,7 @@ import { isFile } from "./isFile.js";
 import { isFileOrDoesNotExist } from "./isFileOrDoesNotExist.js";
 import wizer from "@jakechampion/wizer";
 import { precompile } from "./precompile.js";
+import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
 
 export async function compileApplicationToWasm(input, output, wasmEngine) {
   try {
@@ -31,7 +32,7 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
     );
     process.exit(1);
   }
-  // TODO: Enhancement - Check that input is valid JavaScript syntax before Wizening
+
   try {
     if (!(await isFile(wasmEngine))) {
       console.error(
@@ -69,6 +70,10 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
       `Error: Failed to check whether the \`output\` (${output}) is a file path`,
       error.message
     );
+    process.exit(1);
+  }
+
+  if (containsSyntaxErrors(input)) {
     process.exit(1);
   }
 
