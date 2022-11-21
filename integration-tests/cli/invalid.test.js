@@ -9,8 +9,15 @@ test('should return non-zero exit code on syntax errors', async function (t) {
     t.teardown(async function () {
         await cleanup();
     });
-    await writeFile('./bin/index.js', '@')
-    const { code } = await execute('node', cli);
-    
+    await writeFile('./bin/index.js', '\n\n\n"hello";@')
+    const { code, stdout, stderr } = await execute('node', cli);
+    t.alike(stdout, []);
+    t.alike(stderr, [
+        '{{base}}/bin/index.js:4',
+        '"hello";@',
+        '^',
+        'SyntaxError: Invalid or unexpected token'
+    ]);
+
     t.is(code, 1);
 });
