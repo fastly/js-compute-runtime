@@ -26,6 +26,7 @@ const PREAMBLE = `;{
 const POSTAMBLE = "}";
 
 // TODO: This should also detect and update sourcemaps if they are present, otherwise the sourcemaps would be incorrect.
+//       We could use https://github.com/rich-harris/magic-string to create and/or update sourcemaps
 // 
 /// Emit a block of javascript that will pre-compile the regular expressions given. As spidermonkey
 /// will intern regular expressions, duplicating them at the top level and testing them with both
