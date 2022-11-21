@@ -31,14 +31,22 @@ const PREAMBLE = `;{
   const precompile = (r) => { r.exec('a'); r.exec('\\u1000'); };`;
 const POSTAMBLE = "}";
 
+// TODO: This should also detect and update sourcemaps if they are present, otherwise the sourcemaps would be incorrect.
+// 
 /// Emit a block of javascript that will pre-compile the regular expressions given. As spidermonkey
 /// will intern regular expressions, duplicating them at the top level and testing them with both
 /// an ascii and utf8 string should ensure that they won't be re-compiled when run in the fetch
 /// handler.
-function precompile(literals) {
+function precompile(inputApplication) {
+  let lits = findRegexLiterals(inputApplication);
+
+  if (lits.length === 0) {
+    return inputApplication;
+  }
+
   return (
     PREAMBLE +
-    literals
+    lits
       .map((regex) => {
         return `precompile(/${regex.pattern}/${regex.flags});`;
       })
@@ -113,11 +121,7 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
     process.exit(1);
   }
 
-  let lits = findRegexLiterals(inputContents);
-
-  if (lits.length != 0) {
-    inputContents += precompile(lits);
-  }
+  let application = precompile(inputContents);
 
   try {
     let wizerProcess = spawnSync(
@@ -131,7 +135,7 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
       ],
       {
         stdio: [null, process.stdout, process.stderr],
-        input: inputContents,
+        input: application,
         shell: true,
         encoding: "utf-8",
       }
