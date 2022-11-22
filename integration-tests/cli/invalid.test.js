@@ -10,7 +10,7 @@ test('should return non-zero exit code on syntax errors', async function (t) {
         await cleanup();
     });
     await writeFile('./bin/index.js', '\n\n\n"hello";@')
-    const { code, stdout, stderr } = await execute('node', cli);
+    const { code, stdout, stderr } = await execute(process.execPath, cli);
     t.alike(stdout, []);
     t.alike(stderr, [
         '{{base}}/bin/index.js:4',

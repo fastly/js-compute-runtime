@@ -11,7 +11,7 @@ test('should return non-zero exit code', async function (t) {
     });
     await makeDir('./bin/main.wasm')
     await writeFile('./bin/index.js', `addEventListener('fetch', function(){})`)
-    const { code, stdout, stderr } = await execute('node', cli);
+    const { code, stdout, stderr } = await execute(process.execPath, cli);
 
     t.alike(stdout, []);
     t.alike(stderr, ['Error: The `output` path does not point to a file: {{base}}/bin/main.wasm']);
