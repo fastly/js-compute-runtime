@@ -6,7 +6,9 @@ const cli = await getBinPath()
 
 test('--help should return help on stdout and zero exit code', async function (t) {
     const { execute, cleanup } = await prepareEnvironment();
-    const { code, stdout, stderr } = await execute('node',`${cli} --help`);
+    t.teardown(async function () {
+        await cleanup();
+    });
     
     t.is(code, 0);
     t.alike(stdout, [
@@ -23,8 +25,6 @@ test('--help should return help on stdout and zero exit code', async function (t
         '<output>    The file path to write the output Wasm module to [default: bin/main.wasm]'
     ])
     t.alike(stderr, [])
-
-    await cleanup();
 });
 
 test('-h should return help on stdout and zero exit code', async function (t) {
