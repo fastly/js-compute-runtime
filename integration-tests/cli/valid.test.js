@@ -1,6 +1,6 @@
 import test from 'brittle';
 import { getBinPath } from 'get-bin-path'
-import { prepareEnvironment } from '@gmrchk/cli-testing-library';
+import { prepareEnvironment } from '@jakechampion/cli-testing-library';
 
 const cli = await getBinPath()
 
