@@ -77,12 +77,12 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 CLASS_BOILERPLATE(ObjectStoreEntry)
 
-JSObject *create(JSContext *cx, BodyHandle body_handle) {
+JSObject *create(JSContext *cx, fastly_body_handle_t body_handle) {
   JS::RootedObject objectStoreEntry(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!objectStoreEntry)
     return nullptr;
 
-  JS::SetReservedSlot(objectStoreEntry, Slots::Body, JS::Int32Value((int)body_handle.handle));
+  JS::SetReservedSlot(objectStoreEntry, Slots::Body, JS::Int32Value(body_handle));
   JS::SetReservedSlot(objectStoreEntry, Slots::BodyStream, JS::NullValue());
   JS::SetReservedSlot(objectStoreEntry, Slots::HasBody, JS::TrueValue());
   JS::SetReservedSlot(objectStoreEntry, Slots::BodyUsed, JS::FalseValue());
@@ -99,9 +99,9 @@ enum { ObjectStore, Count };
 bool is_instance(JSObject *obj);
 bool is_instance(JS::Value val);
 
-ObjectStoreHandle object_store_handle(JSObject *obj) {
+fastly_object_store_handle_t object_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, Slots::ObjectStore);
-  return ObjectStoreHandle{static_cast<uint32_t>(val.toInt32())};
+  return val.toInt32();
 }
 
 const unsigned ctor_length = 1;
@@ -189,16 +189,16 @@ bool get(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!key_chars) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
-  BodyHandle body_handle = {INVALID_HANDLE};
-  auto status = fastly_object_store_get(object_store_handle(self), key_chars.value().c_str(),
-                                        key_chars.value().length(), &body_handle);
+  fastly_body_handle_t body_handle = INVALID_HANDLE;
+  auto status = xqd_object_store_get(object_store_handle(self), key_chars.value().c_str(),
+                                     key_chars.value().length(), &body_handle);
   if (!HANDLE_RESULT(cx, status)) {
     return false;
   }
 
   // If the handle is invalid it means no entry was found
   // When no entry is found, we are going to resolve the Promise with `null`.
-  if (body_handle.handle == INVALID_HANDLE) {
+  if (body_handle == INVALID_HANDLE) {
     JS::RootedValue result(cx);
     result.setNull();
     JS::ResolvePromise(cx, result_promise, result);
@@ -256,10 +256,10 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
       JS::RootedObject stream_source(cx,
                                      builtins::NativeStreamSource::get_stream_source(cx, body_obj));
       JS::RootedObject source_owner(cx, builtins::NativeStreamSource::owner(stream_source));
-      BodyHandle body = RequestOrResponse::body_handle(source_owner);
+      fastly_body_handle_t body = RequestOrResponse::body_handle(source_owner);
 
-      auto status = fastly_object_store_insert(object_store_handle(self), key_chars.value().c_str(),
-                                               key_chars.value().length(), body);
+      auto status = xqd_object_store_insert(object_store_handle(self), key_chars.value().c_str(),
+                                            key_chars.value().length(), body);
       if (!HANDLE_RESULT(cx, status)) {
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
@@ -313,12 +313,12 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
       buf = text.get();
     }
 
-    BodyHandle body_handle = {INVALID_HANDLE};
-    if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle))) {
+    fastly_body_handle_t body_handle = INVALID_HANDLE;
+    if (!HANDLE_RESULT(cx, xqd_fastly_http_body_new(&body_handle))) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    if (body_handle.handle == INVALID_HANDLE) {
+    if (body_handle == INVALID_HANDLE) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
@@ -334,8 +334,8 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    auto status = fastly_object_store_insert(object_store_handle(self), key_chars.value().c_str(),
-                                             key_chars.value().length(), body_handle);
+    auto status = xqd_object_store_insert(object_store_handle(self), key_chars.value().c_str(),
+                                          key_chars.value().length(), body_handle);
     // Ensure that we throw an exception for all unexpected host errors.
     if (!HANDLE_RESULT(cx, status)) {
       return RejectPromiseWithPendingError(cx, result_promise);
@@ -399,9 +399,9 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
   }
 
-  ObjectStoreHandle object_store_handle = {INVALID_HANDLE};
-  auto status = convert_to_fastly_status(
-      fastly_object_store_open(name_chars, name_len, &object_store_handle));
+  fastly_object_store_handle_t object_store_handle = INVALID_HANDLE;
+  auto status =
+      convert_to_fastly_status(xqd_object_store_open(name_chars, name_len, &object_store_handle));
   if (status == FastlyStatus::Inval) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_DOES_NOT_EXIST,
                               name_chars);
@@ -416,8 +416,7 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!object_store) {
     return false;
   }
-  JS::SetReservedSlot(object_store, Slots::ObjectStore,
-                      JS::Int32Value((int)object_store_handle.handle));
+  JS::SetReservedSlot(object_store, Slots::ObjectStore, JS::Int32Value(object_store_handle));
   args.rval().setObject(*object_store);
   return true;
 }

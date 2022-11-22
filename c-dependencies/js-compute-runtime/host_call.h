@@ -7,6 +7,7 @@
 #include "jsapi.h"
 #pragma clang diagnostic pop
 
+#include "xqd-world/xqd_world_adapter.h"
 #include "xqd.h"
 
 enum class FastlyStatus {
@@ -143,8 +144,10 @@ static inline bool handle_fastly_result(JSContext *cx, FastlyStatus result, int 
 }
 
 bool handle_fastly_result(JSContext *cx, int result, int line, const char *func);
+bool handle_fastly_result(JSContext *cx, fastly_error_t result, int line, const char *func);
 
 FastlyStatus convert_to_fastly_status(int result);
+FastlyStatus convert_to_fastly_status(fastly_error_t result);
 
 #define HANDLE_RESULT(cx, result) handle_fastly_result(cx, result, __LINE__, __func__)
 

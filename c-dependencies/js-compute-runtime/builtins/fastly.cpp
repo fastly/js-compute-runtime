@@ -16,7 +16,7 @@
 
 namespace builtins {
 
-bool Fastly::debug_logging_enabled = false;
+bool Fastly::debug_logging_enabled = true;
 
 JS::PersistentRooted<JSObject *> Fastly::env;
 

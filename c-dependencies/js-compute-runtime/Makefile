@@ -25,12 +25,17 @@ SM_OBJ += $(SM_SRC)lib/*.a
 FSM_SRC := $(ROOT_SRC)/js-compute-runtime/
 
 WASI_CXX ?= $(WASI_SDK)/bin/clang++
+WASI_CC ?= $(WASI_SDK)/bin/clang
+
+WIT_BINDGEN ?= ~/src/bytecodealliance/wit-bindgen/target/release/wit-bindgen
 
 CXX_FLAGS := -std=gnu++17 -Wall -Werror -Qunused-arguments
 CXX_FLAGS += -fno-sized-deallocation -fno-aligned-new -mthread-model single
 CXX_FLAGS += -fPIC -fno-rtti -fno-exceptions -fno-math-errno -pipe
 CXX_FLAGS += -fno-omit-frame-pointer -funwind-tables -I$(FSM_SRC)
 CXX_FLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
+
+CFLAGS := -Wall -Werror -Wno-unknown-attributes -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
 
 LD_FLAGS := -Wl,-z,noexecstack -Wl,-z,text -Wl,-z,relro -Wl,-z,nocopyreloc
 LD_FLAGS += -Wl,-z,stack-size=1048576 -Wl,--stack-first -lwasi-emulated-getpid
@@ -54,9 +59,10 @@ WASM_STRIP = wasm-opt --strip-debug -o $1 $1
 endif
 endif
 
+OBJ_DIR := obj/
 FSM_CPP := $(wildcard $(FSM_SRC)*.cpp) $(wildcard $(FSM_SRC)builtins/*.cpp)
-FSM_DEP := $(patsubst $(FSM_SRC)%.cpp,$(OBJDIR)%.d,$(FSM_CPP))
-FSM_OBJ := $(patsubst $(FSM_SRC)%.cpp,$(OBJDIR)%.o,$(FSM_CPP))
+FSM_DEP := $(patsubst $(FSM_SRC)%.cpp,$(OBJ_DIR)%.d,$(FSM_CPP)) 
+FSM_OBJ := $(patsubst $(FSM_SRC)%.cpp,$(OBJ_DIR)%.o,$(FSM_CPP))
 RUST_URL_SRC := $(FSM_SRC)rust-url
 RUST_URL_RS_FILES := $(shell find $(RUST_URL_SRC)/src -name '*.rs')
 RUST_URL_LIB := rusturl/wasm32-wasi/$(MODE)/librust_url.a
@@ -67,27 +73,43 @@ $(RUST_URL_LIB): $(RUST_URL_RS_FILES) $(RUST_URL_SRC)/Cargo.toml $(RUST_URL_SRC)
 	cd $(RUST_URL_SRC) && cbindgen --output rust-url.h
 	cargo build --manifest-path $(RUST_URL_SRC)/Cargo.toml --target-dir ./rusturl --target=wasm32-wasi $(CARGO_FLAG)
 
-%.o: $(FSM_SRC)%.cpp $(FSM_SRC)Makefile $(RUST_URL_LIB) compiler_flags
+obj:
+	$Q mkdir -p $(OBJ_DIR)builtins $(OBJ_DIR)xqd-world
+
+$(OBJ_DIR)%.o: $(FSM_SRC)%.cpp $(FSM_SRC)Makefile $(RUST_URL_LIB) compiler_flags | obj
 	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
 
-builtins:
-	$Q mkdir -p builtins
-
-builtins/%.o: $(FSM_SRC)builtins/%.cpp $(FSM_SRC)Makefile $(RUST_URL_LIB) compiler_flags | builtins
+$(OBJ_DIR)builtins/%.o: $(FSM_SRC)builtins/%.cpp $(FSM_SRC)Makefile $(RUST_URL_LIB) compiler_flags | obj
 	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
 
-js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
+$(OBJ_DIR)xqd-world/xqd_world.o: $(FSM_SRC)xqd-world/xqd_world.c $(FSM_SRC)Makefile compiler_flags
+	$(WASI_CC) $(CFLAGS) $(CXX_OPT) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
+
+$(OBJ_DIR)xqd-world/xqd_world_adapter.o: $(FSM_SRC)xqd-world/xqd_world_adapter.cc $(FSM_SRC)Makefile compiler_flags
+	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
+
+$(OBJ_DIR)xqd-world/xqd_world_adapter_component.o: $(FSM_SRC)xqd-world/xqd_world_adapter.cc $(FSM_SRC)Makefile compiler_flags
+	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) -DCOMPONENT -I $(SM_SRC)include -MMD -MP -c -o $@ $<
+
+js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(OBJ_DIR)xqd-world/xqd_world.o $(OBJ_DIR)xqd-world/xqd_world_adapter.o $(RUST_URL_LIB)
+	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) $(LD_FLAGS) -o $@ $^
+	$(call WASM_STRIP,$@)
+
+js-compute-runtime-component.wasm: $(FSM_OBJ) $(OBJ_DIR)xqd-world/xqd_world.o $(OBJ_DIR)xqd-world/xqd_world_adapter_component.o $(SM_OBJ) $(RUST_URL_LIB)
 	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) $(LD_FLAGS) -o $@ $^
 	$(call WASM_STRIP,$@)
 
 install: js-compute-runtime.wasm
 	install -m 444 -Dt $(DESTDIR)/dist js-compute-runtime.wasm
 
+regenerate-world:
+	$(WIT_BINDGEN) guest c xqd.wit --no-helpers --out-dir xqd-world
+
 clean:
-	$(RM) compile_commands.json $(FSM_OBJ)
+	$(RM) compile_commands.json $(FSM_OBJ) xqd-world/xqd_world_component_type.o
 
 distclean: clean
-	$(RM) $(FSM_DEP) compiler_flags
+	$(RM) $(FSM_DEP) $(FSM_DEP_COMPONENT) $(OBJ_DIR)xqd-world/*.o compiler_flags
 
 .PHONY: compile_commands.json
 compile_commands.json:
