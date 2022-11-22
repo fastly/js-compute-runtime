@@ -9,7 +9,7 @@ test('--version should return version number on stdout and zero exit code', asyn
     t.teardown(async function () {
         await cleanup();
     });
-    const { code, stdout, stderr } = await execute('node', `${cli} --version`);
+    const { code, stdout, stderr } = await execute(process.execPath, `${cli} --version`);
 
     t.is(code, 0);
     t.alike(stdout, ['js-compute-runtime 0.5.4'])
@@ -21,7 +21,7 @@ test('-V should return version number on stdout and zero exit code', async funct
     t.teardown(async function () {
         await cleanup();
     });
-    const { code, stdout, stderr } = await execute('node', `${cli} -V`);
+    const { code, stdout, stderr } = await execute(process.execPath, `${cli} -V`);
 
     t.is(code, 0);
     t.alike(stdout, ['js-compute-runtime 0.5.4'])

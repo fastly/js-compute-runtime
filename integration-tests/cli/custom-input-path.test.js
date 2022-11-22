@@ -14,7 +14,7 @@ test('should create wasm file and return zero exit code', async function (t) {
     
     t.is(await exists('./bin/main.wasm'), false)
 
-    const { code, stdout, stderr } = await execute('node', `${cli} ${path}/index.js`);
+    const { code, stdout, stderr } = await execute(process.execPath, `${cli} ${path}/index.js`);
 
     t.is(await exists('./bin/main.wasm'), true)
     t.alike(stdout, []);
