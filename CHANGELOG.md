@@ -1,3 +1,17 @@
+## [0.5.5](https://github.com/fastly/js-compute-runtime/compare/js-compute-v0.5.4...js-compute-v0.5.5) (2022-11-23)
+
+
+### Features
+
+* implement Request.prototype.setCacheKey ([457eabe](https://github.com/fastly/js-compute-runtime/commit/457eabe392f44eb296ce593bcabebffb68c57371))
+* implement support in Response.json/text/arrayBuffer methods for guest provided streams ([50cdc44](https://github.com/fastly/js-compute-runtime/commit/50cdc443d38e53f029fbcc1ad19ee56b5849dff0))
+
+
+### Bug Fixes
+
+* respond with 500 Internal Server Error when an unhandled error has occured and no response has already been sent to the client ([e5982d8](https://github.com/fastly/js-compute-runtime/commit/e5982d879223a8e5940717ab74c9f01a64b35ce2))
+
+
 ## 0.5.4 (2022-09-28)
 
 #### Dynamic Backend support
@@ -76,18 +90,6 @@ addEventListener("fetch", event => {
 * Add Dynamic Backends support ([#250](https://github.com/fastly/js-compute-runtime/issues/250))
 * Improved performance when constructing a ObjectStore instance ([#272](https://github.com/fastly/js-compute-runtime/pull/272)
 
-## [0.5.5](https://github.com/fastly/js-compute-runtime/compare/js-compute-v0.5.4...js-compute-v0.5.5) (2022-11-23)
-
-
-### Features
-
-* implement Request.prototype.setCacheKey ([457eabe](https://github.com/fastly/js-compute-runtime/commit/457eabe392f44eb296ce593bcabebffb68c57371))
-* implement support in Response.json/text/arrayBuffer methods for guest provided streams ([50cdc44](https://github.com/fastly/js-compute-runtime/commit/50cdc443d38e53f029fbcc1ad19ee56b5849dff0))
-
-
-### Bug Fixes
-
-* respond with 500 Internal Server Error when an unhandled error has occured and no response has already been sent to the client ([e5982d8](https://github.com/fastly/js-compute-runtime/commit/e5982d879223a8e5940717ab74c9f01a64b35ce2))
 
 ## 0.5.3 (2022-09-16)
 
