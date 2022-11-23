@@ -10,3 +10,18 @@ service_id = ""
 
 [scripts]
   build = "node ../../../../js-compute-runtime-cli.js"
+
+
+[local_server]
+  [local_server.object_store]
+  example = []
+
+  [local_server.dictionaries]
+    [local_server.dictionaries.example]
+      format = "inline-toml"
+    [local_server.dictionaries.example.contents]
+
+[setup]
+  [setup.dictionaries]
+    [setup.dictionaries.example]
+      [setup.dictionaries.example.items]
