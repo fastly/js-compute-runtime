@@ -1,6 +1,5 @@
 {
   "bootstrap-sha": "b1462ec24c007d3d539f1f127820bcba520749b9",
-  "skip-github-release": true,
   "packages": {
     ".": {
       "changelog-path": "CHANGELOG.md",
