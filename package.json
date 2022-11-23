@@ -1,7 +1,6 @@
 {
   "name": "@fastly/js-compute",
   "version": "0.5.4",
-  "js-compute-runtime-version": "0.5.3",
   "engines": {
     "node": "^16 || ^18"
   },
@@ -19,6 +18,8 @@
   "files": [
     "reference-docs",
     "js-compute-runtime-cli.js",
+    "js-compute-runtime.wasm",
+    "src",
     "index.d.ts",
     "package.json",
     "README.md",
