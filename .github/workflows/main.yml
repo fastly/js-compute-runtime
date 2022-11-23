@@ -4,10 +4,8 @@ concurrency:
   cancel-in-progress: true
 on:
   push:
-    branches: [main]
-    tags-ignore: [dev]
+    branches: [ main ]
   pull_request:
-    branches:
 defaults:
   run:
     shell: bash
@@ -157,51 +155,6 @@ jobs:
       run: |
         # Skip slow tests when testing the debug runtime.
         node ./tests/wpt-harness/run-wpt.mjs -vv $(((${{ matrix.profile }} == "debug")) && echo "--skip-slow-tests")
-
-  # Consumes all published artifacts from all the previous build steps, creates
-  # a bunch of tarballs for all of them, and then publishes the tarballs
-  # themselves as an artifact (for inspection) and then optionally creates
-  # github releases and/or tags for pushes.
-  publish:
-    name: Publish
-    needs:
-      - run_wpt
-      - sdktest
-      - e2e-async-select
-      - e2e-byte-repeater
-      - e2e-edge-dictionary
-      - e2e-error
-      - e2e-geoip
-      - e2e-hello-world
-      - e2e-object-store
-      - e2e-request-limits
-      - e2e-request-upstream
-      - e2e-response
-      - e2e-response-headers
-      - e2e-status
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Calculate tag name
-      run: |
-        name=dev
-        if [[ $GITHUB_REF == refs/tags/v* ]]; then
-          name=${GITHUB_REF:10}
-        fi
-        echo ::set-output name=val::$name
-        echo TAG=$name >> $GITHUB_ENV
-      id: tagname
-
-    # ... and if this was an actual push (tag or `main`) then we publish a
-    # new release. This'll automatically publish a tag release or update `dev`
-    # with this `sha`
-    - name: Publish Release
-      uses: ./.github/actions/github-release
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-      with:
-        name: ${{ steps.tagname.outputs.val }}
-        token: ${{ secrets.GITHUB_TOKEN }}
 
   # Consumes all published artifacts from all the previous build steps, and runs
   # the integration tests for the linux build.
