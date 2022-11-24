@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { parseInputs } from './src/parseInputs.js'
 import { printVersion } from "./src/printVersion.js";
 import { printHelp } from "./src/printHelp.js";
