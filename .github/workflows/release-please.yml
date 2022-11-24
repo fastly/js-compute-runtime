@@ -12,8 +12,8 @@ jobs:
         id: release
         with:
           release-type: node
-          package-name: '@fastly/js-compute'
-          changelog-path: 'CHANGELOG.md'
+          package-name: "@fastly/js-compute"
+          changelog-path: "CHANGELOG.md"
           bump-minor-pre-major: true
           bump-patch-for-minor-pre-major: true
           draft: false
@@ -26,9 +26,65 @@ jobs:
       - uses: actions/setup-node@v3
         if: ${{ steps.release.outputs.release_created }}
         with:
-          cache: 'npm'
+          cache: "npm"
           node-version: 18
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
+
+      - uses: ./.github/actions/cache-crates
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          lockfiles: "c-dependencies/js-compute-runtime/**/Cargo.lock"
+
+      - uses: ./.github/actions/install-rust
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          path: c-dependencies
+
+      - name: Cache SpiderMonkey object files
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/cache@v2
+        id: sm-cache
+        with:
+          path: |
+            c-dependencies/spidermonkey/${{ matrix.profile }}
+          key: cache-${{ hashFiles(
+            'c-dependencies/spidermonkey/build-engine.sh',
+            'c-dependencies/spidermonkey/gecko-revision',
+            'c-dependencies/spidermonkey/object-files.list',
+            'c-dependencies/rust-toolchain.toml'
+            ) }}-${{ matrix.profile }}
+
+      - name: "Build SpiderMonkey"
+        if: ${{ steps.release.outputs.release_created }} && steps.sm-cache.outputs.cache-hit != 'true'
+        run: |
+          cd c-dependencies/spidermonkey/
+          bash ./build-engine.sh ${{ matrix.profile }}
+
+      - name: "Install wasi-sdk (linux)"
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          set -x
+          curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz
+          tar xf wasi-sdk-12.0-linux.tar.gz
+          sudo mkdir -p /opt/wasi-sdk
+          sudo mv wasi-sdk-12.0/* /opt/wasi-sdk/
+
+      - name: "Install Binaryen (linux)"
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          set -x
+          export BINARYEN_VERSION=105
+          curl -sS -L "https://github.com/WebAssembly/binaryen/releases/download/version_${BINARYEN_VERSION}/binaryen-version_${BINARYEN_VERSION}-x86_64-linux.tar.gz" | tar xzf - &&
+          echo "$PWD/binaryen-version_${BINARYEN_VERSION}/bin" >> $GITHUB_PATH
+
+      - name: Cache built Rust dependencies
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/cache@v3
+        with:
+          path: c-dependencies/js-compute-runtime/rusturl
+          key: engine-cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('c-dependencies/rust-toolchain.toml', 'c-dependencies/js-compute-runtime/**/Cargo.lock') }}
+          # We trust cargo to only reuse valid parts of the cache when dependencies change.
+          restore-keys: engine-cargo-${{ runner.os }}-${{ runner.arch }}-
 
       - run: npm ci && npm run build
         if: ${{ steps.release.outputs.release_created }}
