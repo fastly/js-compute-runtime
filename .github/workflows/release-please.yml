@@ -55,7 +55,7 @@ jobs:
             ) }}-${{ matrix.profile }}
 
       - name: "Build SpiderMonkey"
-        if: ${{ steps.release.outputs.release_created }} && steps.sm-cache.outputs.cache-hit != 'true'
+        if: ${{ steps.release.outputs.release_created && steps.sm-cache.outputs.cache-hit != 'true' }}
         run: |
           cd c-dependencies/spidermonkey/
           bash ./build-engine.sh ${{ matrix.profile }}
