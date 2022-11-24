@@ -9,21 +9,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: google-github-actions/release-please-action@v3
+        id: release
         with:
-          command: manifest
+          release-type: node
+          package-name: '@fastly/js-compute'
+          changelog-path: 'CHANGELOG.md'
+          bump-minor-pre-major: true
+          bump-patch-for-minor-pre-major: true
+          draft: false
+          prerelease: false
           token: ${{ secrets.JS_COMPUTE_RUNTIME_GITHUB_TOKEN }}
-      - uses: actions/checkout@v2
-        if: ${{ steps.release.outputs.releases_created }}
-      - uses: actions/setup-node@v2
+
+      - uses: actions/checkout@v3
+        if: ${{ steps.release.outputs.release_created }}
+
+      - uses: actions/setup-node@v3
+        if: ${{ steps.release.outputs.release_created }}
         with:
           cache: 'npm'
           node-version: 18
           registry-url: 'https://registry.npmjs.org'
-        if: ${{ steps.release.outputs.releases_created }}
+
       - run: npm ci && npm run build
-        if: ${{ steps.release.outputs.releases_created }}
+        if: ${{ steps.release.outputs.release_created }}
+
       - run: npm publish
+        if: ${{ steps.release.outputs.release_created }}
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
           FASTLY_API_TOKEN: ${{secrets.FASTLY_API_TOKEN}}
-        if: ${{ steps.release.outputs.releases_created }}
