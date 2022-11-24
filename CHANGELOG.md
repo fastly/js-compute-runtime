@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.7](https://github.com/fastly/js-compute-runtime/compare/v0.5.6...v0.5.7) (2022-11-24)
+
+
+### Bug Fixes
+
+* add missing shebang and executable bit to the binary file ([3f0cd69](https://github.com/fastly/js-compute-runtime/commit/3f0cd69e3ec39633f747f0346ae3eda5eb3f3685))
+
 ## [0.5.6](https://github.com/fastly/js-compute-runtime/compare/v0.5.5...v0.5.6) (2022-11-24)
 
 
