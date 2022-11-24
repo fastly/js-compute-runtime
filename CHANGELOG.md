@@ -12,6 +12,13 @@
 * respond with 500 Internal Server Error when an unhandled error has occured and no response has already been sent to the client ([e5982d8](https://github.com/fastly/js-compute-runtime/commit/e5982d879223a8e5940717ab74c9f01a64b35ce2))
 
 
+## [0.5.6](https://github.com/fastly/js-compute-runtime/compare/v0.5.5...v0.5.6) (2022-11-24)
+
+
+### Features
+
+* implement setTimeout, setInterval, clearTimeout, and clearInterval ([128bca9](https://github.com/fastly/js-compute-runtime/commit/128bca901c9ad4b6d6c1084bf13c5c474ef63a41))
+
 ## 0.5.4 (2022-09-28)
 
 #### Dynamic Backend support
