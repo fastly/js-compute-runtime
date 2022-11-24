@@ -251,7 +251,6 @@ declare class ConfigStore {
  * Class for accessing [Fastly Edge Dictionaries](https://docs.fastly.com/en/guides/about-edge-dictionaries).
  *
  * **Note**: Can only be used when processing requests, not during build-time initialization.
- * @deprecated This class has been renamed `ConfigStore`. Replace `Dictionary` with `ConfigStore` in your code to avoid having to migrate in the future when `Dictionary` is removed.
  */
 declare class Dictionary {
   /**
