@@ -3,8 +3,6 @@ concurrency:
   group: ${{ github.head_ref }}-${{ github.workflow}}
   cancel-in-progress: true
 on:
-  push:
-    branches: [ main ]
   pull_request:
 defaults:
   run:
