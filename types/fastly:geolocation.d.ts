@@ -4,8 +4,8 @@ declare module "fastly:geolocation" {
    * information about an IP address
    *
    * Can be retrieved for the incoming request's client IP address using the
-   * {@linkcode ClientInfo#geo} accessor, and for arbitrary addresses using
-   * {@linkcode Fastly.getGeolocationForIpAddress}.
+   * {@linkcode "globals".ClientInfo#geo} accessor, and for arbitrary addresses using
+   * {@linkcode "globals".Fastly.getGeolocationForIpAddress}.
    */
   interface Geolocation {
     /**
