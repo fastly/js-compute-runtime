@@ -12,6 +12,7 @@ export async function bundle(input) {
           'fastly:config-store': `export const ConfigStore = globalThis.ConfigStore`,
           'fastly:dictionary': `export const Dictionary = globalThis.Dictionary`,
           'fastly:env': `export const env = globalThis.fastly.env.get`,
+          'fastly:logger': `export const Logger = globalThis.Logger`,
           'fastly:object-store': `export const ObjectStore = globalThis.ObjectStore`,
         })
       ]

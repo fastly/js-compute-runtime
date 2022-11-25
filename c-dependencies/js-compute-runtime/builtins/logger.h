@@ -5,7 +5,7 @@
 
 namespace builtins {
 
-class Logger : public BuiltinNoConstructor<Logger> {
+class Logger : public BuiltinImpl<Logger> {
 private:
   static bool log(JSContext *cx, unsigned argc, JS::Value *vp);
 
