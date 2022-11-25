@@ -1,5 +1,6 @@
 /* eslint-env serviceworker */
 /* global fastly */
+import { env } from 'fastly:env';
 addEventListener("fetch", event => {
   event.respondWith(app(event))
 })
@@ -11,7 +12,7 @@ async function app(event) {
   try {
     const path = (new URL(event.request.url)).pathname;
     console.log(`path: ${path}`)
-    console.log(`FASTLY_SERVICE_VERSION: ${fastly.env.get('FASTLY_SERVICE_VERSION')}`)
+    console.log(`FASTLY_SERVICE_VERSION: ${env('FASTLY_SERVICE_VERSION')}`)
     if (routes.has(path)) {
       const routeHandler = routes.get(path);
       return await routeHandler()

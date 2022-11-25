@@ -1,5 +1,6 @@
 /* eslint-env serviceworker */
-/* global fastly */
+import { env } from 'fastly:env';
+
 addEventListener("fetch", (event) => {
   // Get the request from the client
   let downstreamRequest = event.request;
@@ -9,7 +10,7 @@ addEventListener("fetch", (event) => {
   let status = 200;
 
   if (downstreamRequest.method == "GET" && downstreamUrl.pathname == "/") {
-    responseBody = fastly.env.get("FASTLY_HOSTNAME");
+    responseBody = env("FASTLY_HOSTNAME");
   } else {
     responseBody = "Bad Request";
     status = 400;

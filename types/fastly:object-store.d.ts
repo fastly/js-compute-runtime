@@ -6,7 +6,7 @@ declare module "fastly:object-store" {
    *
    * **Note**: Can only be used when processing requests, not during build-time initialization.
    */
-  class ObjectStore {
+  export class ObjectStore {
     /**
      * Creates a new JavaScript ObjectStore object which interacts with the Fastly Object-store named `name`.
      *

@@ -11,6 +11,7 @@ export async function bundle(input) {
           'fastly:cache-override': `export const CacheOverride = globalThis.CacheOverride`,
           'fastly:config-store': `export const ConfigStore = globalThis.ConfigStore`,
           'fastly:dictionary': `export const Dictionary = globalThis.Dictionary`,
+          'fastly:env': `export const env = globalThis.fastly.env.get`,
           'fastly:object-store': `export const ObjectStore = globalThis.ObjectStore`,
         })
       ]

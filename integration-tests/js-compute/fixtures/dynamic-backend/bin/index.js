@@ -1,6 +1,7 @@
 /* eslint-env serviceworker */
 /* global fastly */
 import { Backend } from 'fastly:backend';
+import { env } from 'fastly:env';
 import { CacheOverride } from 'fastly:cache-override';
 
 addEventListener("fetch", event => {
@@ -14,7 +15,7 @@ async function app(event) {
   try {
     const path = (new URL(event.request.url)).pathname;
     console.log(`path: ${path}`)
-    console.log(`FASTLY_SERVICE_VERSION: ${fastly.env.get('FASTLY_SERVICE_VERSION')}`)
+    console.log(`FASTLY_SERVICE_VERSION: ${env('FASTLY_SERVICE_VERSION')}`)
     if (routes.has(path)) {
       const routeHandler = routes.get(path);
       return await routeHandler()
