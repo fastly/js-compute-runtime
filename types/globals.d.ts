@@ -652,6 +652,7 @@ declare interface Fastly {
   get defaultBackend(): string;
   /**
    * Property to access the environment variables for the C@E service.
+   * @hidden
    */
   env: {
     /**
