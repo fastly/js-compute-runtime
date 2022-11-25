@@ -6,7 +6,7 @@
   },
   "license": "Apache-2.0",
   "main": "js-compute-runtime-cli.js",
-  "types": "index.d.ts",
+  "types": "types/index.d.ts",
   "type": "module",
   "repository": {
     "type": "git",
@@ -16,6 +16,7 @@
     "js-compute-runtime": "js-compute-runtime-cli.js"
   },
   "files": [
+    "types",
     "reference-docs",
     "js-compute-runtime-cli.js",
     "js-compute-runtime.wasm",
