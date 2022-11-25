@@ -1,3 +1,4 @@
+/* eslint-env serviceworker */
 class MyRequest extends Request {
   constructor(input, init) {
     super(input, init);

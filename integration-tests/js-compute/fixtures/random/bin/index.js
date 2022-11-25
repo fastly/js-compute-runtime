@@ -1,3 +1,4 @@
+/* eslint-env serviceworker */
 function random3Decimals() {
   return String(Math.random()).slice(0, 5);
 }

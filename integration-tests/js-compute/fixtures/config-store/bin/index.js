@@ -1,3 +1,6 @@
+/* eslint-env serviceworker */
+import { ConfigStore } from 'fastly:config-store'
+
 addEventListener("fetch", (event) => {
   let config = new ConfigStore("testconfig");
   let twitterValue = config.get("twitter");

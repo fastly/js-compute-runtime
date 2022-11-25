@@ -1,3 +1,5 @@
+/* eslint-env serviceworker */
+import {Dictionary} from 'fastly:dictionary'
 addEventListener("fetch", (event) => {
   let asDictionary = new Dictionary("edge_dictionary");
   let twitterValue = asDictionary.get("twitter");

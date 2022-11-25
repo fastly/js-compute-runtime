@@ -1,4 +1,5 @@
-/* global Request, RequestEntry, fastly */
+/* eslint-env serviceworker */
+/* global fastly */
 addEventListener("fetch", event => {
     event.respondWith(app(event))
 })
@@ -108,14 +109,6 @@ function fail(message = '') {
 function assert(actual, expected, code) {
     if (!deepEqual(actual, expected)) {
         return fail(`Expected \`${code}\` to equal \`${JSON.stringify(expected)}\` - Found \`${JSON.stringify(actual)}\``)
-    }
-}
-
-function assertResolves(func) {
-    try {
-        func()
-    } catch (error) {
-        return fail(`Expected \`${func.toString()}\` to resolve - Found it rejected: ${error.name}: ${error.message}`)
     }
 }
 

@@ -1,3 +1,6 @@
+/* eslint-env serviceworker */
+/* global ReadableStream, TransformStream, WritableStream */
+/// <reference path="../../../../../types/index.d.ts" />
 addEventListener("fetch", () => {
     console.log("Happy", "birthday", "Aki", "and", "Yuki!");
     let arg;
@@ -67,7 +70,7 @@ addEventListener("fetch", () => {
     console.log('WeakMap:', arg)
     arg = new WeakSet
     console.log('WeakSet:', arg)
-    arg = new Promise((resolve, reject) => { })
+    arg = new Promise(() => { })
     console.log('Promise:', arg)
     arg = Promise.resolve(9)
     console.log('resolved promise:', arg)

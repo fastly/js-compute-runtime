@@ -1,9 +1,12 @@
+/* eslint-env serviceworker */
+/* global ReadableStream */
 addEventListener("fetch", (event) =>
   event.respondWith(handleRequest(event.request))
 );
 
 async function handleRequest(req) {
   if (req.url.endsWith("/tee")) {
+    // eslint-disable-next-line no-unused-vars
     let [body1, _body2] = req.body.tee();
 
     // Regression test for making requests whose bodies are streams that result

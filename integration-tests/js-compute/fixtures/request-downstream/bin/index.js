@@ -1,3 +1,4 @@
+/* eslint-env serviceworker */
 addEventListener("fetch", (event) => {
   // Get the request from the client
   let downstreamRequest = event.request;

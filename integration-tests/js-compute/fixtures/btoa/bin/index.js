@@ -1,3 +1,6 @@
+/* eslint-env serviceworker */
+/// <reference path="../../../../../types/index.d.ts" />
+
 addEventListener("fetch", () => {
   try {
     let error;
@@ -330,6 +333,7 @@ addEventListener("fetch", () => {
       if (error) { return error }
       error = assert(btoa(""), "hA==", `btoa("")`)
       if (error) { return error }
+      // eslint-disable-next-line no-irregular-whitespace
       error = assert(btoa(""), "hQ==", `btoa("")`)
       if (error) { return error }
       error = assert(btoa(""), "hg==", `btoa("")`)
@@ -384,6 +388,7 @@ addEventListener("fetch", () => {
       if (error) { return error }
       error = assert(btoa(""), "nw==", `btoa("")`)
       if (error) { return error }
+      // eslint-disable-next-line no-irregular-whitespace
       error = assert(btoa(" "), "oA==", `btoa(" ")`)
       if (error) { return error }
       error = assert(btoa("¡"), "oQ==", `btoa("¡")`)
@@ -762,33 +767,6 @@ function fail(message = '') {
 function assert(actual, expected, code) {
   if (!deepEqual(actual, expected)) {
     return fail(`Expected \`${code}\` to equal \`${JSON.stringify(expected)}\` - Found \`${JSON.stringify(actual)}\``)
-  }
-}
-
-async function assertResolves(func) {
-  try {
-    await func()
-  } catch (error) {
-    return fail(`Expected \`${func.toString()}\` to resolve - Found it rejected: ${error.name}: ${error.message}`)
-  }
-}
-
-async function assertRejects(func, errorClass, errorMessage) {
-  try {
-    await func()
-    return fail(`Expected \`${func.toString()}\` to reject - Found it did not reject`)
-  } catch (error) {
-    if (errorClass) {
-      if ((error instanceof errorClass) === false) {
-        return fail(`Expected \`${func.toString()}\` to reject instance of \`${errorClass.name}\` - Found instance of \`${error.name}\``)
-      }
-    }
-
-    if (errorMessage) {
-      if (error.message !== errorMessage) {
-        return fail(`Expected \`${func.toString()}\` to reject error message of \`${errorMessage}\` - Found \`${error.message}\``)
-      }
-    }
   }
 }
 
