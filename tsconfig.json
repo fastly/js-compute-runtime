@@ -7,8 +7,10 @@
     "strict": true,
     "moduleResolution": "node",
     "skipLibCheck": false,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": []
   },
-  "include": ["index.d.ts"],
-  "exclude": ["index.test-d.ts"]
+  "include": [
+    "types/index.d.ts"
+  ]
 }
