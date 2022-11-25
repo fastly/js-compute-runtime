@@ -21,7 +21,7 @@ declare var onfetch: FetchEventListener;
 declare function addEventListener<K extends keyof EventMap>(type: K, listener: EventListenerMap[K]): void;
 
 /**
- * @deprecated This has moved to {@link "fastly:backend".BackendConfiguration}
+ * @deprecated This has moved to {@link "fastly:backend".BackendConfiguration} - This global variable will be removed in the next major version.
  */
 declare interface BackendConfiguration {
   /**
@@ -97,6 +97,7 @@ declare interface BackendConfiguration {
 * Class for creating new [Fastly Backends](https://developer.fastly.com/reference/api/services/backend/).
 *
 * **Note**: Can only be used when processing requests, not during build-time initialization.
+* @deprecated This has moved to {@link "fastly:backend".Backend} - This global variable will be removed in the next major version.
 */
 declare class Backend {
   /**
@@ -169,12 +170,15 @@ declare interface FetchEvent {
  * Override
  *   Override particular cache control settings using a {@linkcode CacheOverride} object.
  *
- * The origin response’s cache control headers will be used for ttl and stale_while_revalidate if None.
+ * The origin response’s cache control headers will be used for ttl and stale_while_revalidate if None. 
+ * 
+ * @deprecated This has moved to {@link "fastly:cache-override".CacheOverrideMode} - This global type will be removed in the next major version.
  */
 declare type CacheOverrideMode = "none" | "pass" | "override";
 
 /**
  * Base class for Cache Override, which is used to configure caching behavior.
+ * @deprecated This has moved to {@link "fastly:cache-override".CacheOverrideInit} - This global interface will be removed in the next major version.
  */
 declare interface CacheOverrideInit {
   /**
@@ -212,11 +216,16 @@ declare interface CacheOverrideInit {
  *
  * Normally, the HTTP Headers on a Response would control how the Response is cached,
  * but CacheOverride can be set on a {@linkcode Request}, to define custom caching behavior.
+ * 
+ * @deprecated This has moved to {@link "fastly:cache-override".CacheOverride} - This global interface will be removed in the next major version.
  */
 declare interface CacheOverride extends CacheOverrideInit {
   mode: CacheOverrideMode;
 }
 
+/**
+ * @deprecated This has moved to {@link "fastly:cache-override".CacheOverride} - This global variable will be removed in the next major version.
+ */
 declare var CacheOverride: {
   prototype: CacheOverride;
   new(mode: CacheOverrideMode, init?: CacheOverrideInit): CacheOverride;
@@ -234,10 +243,12 @@ declare interface ClientInfo {
 }
 
 /**
-* Class for accessing [Fastly Edge Dictionaries](https://docs.fastly.com/en/guides/about-edge-dictionaries).
-*
-* **Note**: Can only be used when processing requests, not during build-time initialization.
-*/
+ * Class for accessing [Fastly Edge Dictionaries](https://docs.fastly.com/en/guides/about-edge-dictionaries).
+ *
+ * **Note**: Can only be used when processing requests, not during build-time initialization.
+ *
+ * @deprecated This has moved to {@link "fastly:config-store".ConfigStore} - This global class will be removed in the next major version.
+ */
 declare class ConfigStore {
   /**
    * Creates a new ConfigStore object
@@ -254,6 +265,7 @@ declare class ConfigStore {
  * Class for accessing [Fastly Edge Dictionaries](https://docs.fastly.com/en/guides/about-edge-dictionaries).
  *
  * **Note**: Can only be used when processing requests, not during build-time initialization.
+ * @deprecated This has moved to {@link "fastly:dictionary".Dictionary} - This global class will be removed in the next major version.
  */
 declare class Dictionary {
   /**
@@ -273,6 +285,7 @@ declare class Dictionary {
  * Can be retrieved for the incoming request's client IP address using the
  * {@linkcode ClientInfo#geo} accessor, and for arbitrary addresses using
  * {@linkcode Fastly.getGeolocationForIpAddress}.
+ * @deprecated This has moved to {@link "fastly:geolocation".Geolocation} - This global interface will be removed in the next major version.
  */
 declare interface Geolocation {
   /**
@@ -401,6 +414,7 @@ declare interface Geolocation {
  * An object store is a persistent, globally consistent key-value store.
  * 
  * **Note**: Can only be used when processing requests, not during build-time initialization.
+ * @deprecated This has moved to {@link "fastly:object-store".ObjectStore} - This global class will be removed in the next major version.
  */
 declare class ObjectStore {
   /**
@@ -439,6 +453,8 @@ declare class ObjectStore {
 
 /**
  * Class for interacting with a [Fastly Object-store](https://developer.fastly.com/reference/api/object-store/) entry.
+ * 
+ * @deprecated This has moved to {@link "fastly:object-store".ObjectStoreEntry} - This global interface will be removed in the next major version.
  */
 declare interface ObjectStoreEntry {
   /**
@@ -605,6 +621,7 @@ declare class TextDecoder {
  * [third party logging providers](https://developer.fastly.com/learning/integrations/logging)
  *
  * Instances of Logger for specific endpoints can be created using {@linkcode Fastly.getLogger}.
+ * @deprecated This has moved to {@link "fastly:logger".Logger} - This global class will be removed in the next major version.
  */
 declare interface Logger {
   /**
@@ -641,6 +658,7 @@ declare interface Fastly {
    * [named log endpoint](https://developer.fastly.com/learning/integrations/logging).
    *
    * **Note**: Can only be used when processing requests, not during build-time initialization.
+   * @deprecated This function will be removed in the next major version. Use of this function can be replaced with the fastly logger class {@link "fastly:logger".Logger} 
    */
   getLogger(endpoint: string): Logger;
 
