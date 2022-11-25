@@ -20,6 +20,9 @@ declare var onfetch: FetchEventListener;
  */
 declare function addEventListener<K extends keyof EventMap>(type: K, listener: EventListenerMap[K]): void;
 
+/**
+ * @deprecated This has moved to {@link "fastly:backend".BackendConfiguration}
+ */
 declare interface BackendConfiguration {
   /**
    * The name of the backend.
