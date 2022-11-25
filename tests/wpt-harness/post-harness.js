@@ -1,3 +1,5 @@
+/* eslint-env serviceworker */
+
 fastly.enableDebugLogging(true);
 fastly.defaultBackend = "wpt";
 
@@ -45,7 +47,7 @@ async function handleRequest(event) {
 };
 
 function evalAllScripts(wpt_test_scripts) {
-  for (wpt_test_script of wpt_test_scripts) {
+  for (let wpt_test_script of wpt_test_scripts) {
     eval(wpt_test_script);
   }
 }
