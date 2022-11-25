@@ -22,6 +22,7 @@ declare function addEventListener<K extends keyof EventMap>(type: K, listener: E
 
 /**
  * @deprecated This has moved to {@link "fastly:backend".BackendConfiguration} - This global variable will be removed in the next major version.
+ * @hidden
  */
 declare interface BackendConfiguration {
   /**
@@ -98,6 +99,7 @@ declare interface BackendConfiguration {
 *
 * **Note**: Can only be used when processing requests, not during build-time initialization.
 * @deprecated This has moved to {@link "fastly:backend".Backend} - This global variable will be removed in the next major version.
+@hidden
 */
 declare class Backend {
   /**
@@ -173,12 +175,14 @@ declare interface FetchEvent {
  * The origin response’s cache control headers will be used for ttl and stale_while_revalidate if None. 
  * 
  * @deprecated This has moved to {@link "fastly:cache-override".CacheOverrideMode} - This global type will be removed in the next major version.
+ * @hidden
  */
 declare type CacheOverrideMode = "none" | "pass" | "override";
 
 /**
  * Base class for Cache Override, which is used to configure caching behavior.
  * @deprecated This has moved to {@link "fastly:cache-override".CacheOverrideInit} - This global interface will be removed in the next major version.
+ * @hidden
  */
 declare interface CacheOverrideInit {
   /**
@@ -218,6 +222,7 @@ declare interface CacheOverrideInit {
  * but CacheOverride can be set on a {@linkcode Request}, to define custom caching behavior.
  * 
  * @deprecated This has moved to {@link "fastly:cache-override".CacheOverride} - This global interface will be removed in the next major version.
+ * @hidden
  */
 declare interface CacheOverride extends CacheOverrideInit {
   mode: CacheOverrideMode;
@@ -225,6 +230,7 @@ declare interface CacheOverride extends CacheOverrideInit {
 
 /**
  * @deprecated This has moved to {@link "fastly:cache-override".CacheOverride} - This global variable will be removed in the next major version.
+ * @hidden
  */
 declare var CacheOverride: {
   prototype: CacheOverride;
@@ -239,7 +245,7 @@ declare interface ClientInfo {
    * A string representation of the IPv4 or IPv6 address of the downstream client.
    */
   readonly address: string;
-  readonly geo: Geolocation;
+  readonly geo: import('fastly:geolocation').Geolocation;
 }
 
 /**
@@ -248,6 +254,7 @@ declare interface ClientInfo {
  * **Note**: Can only be used when processing requests, not during build-time initialization.
  *
  * @deprecated This has moved to {@link "fastly:config-store".ConfigStore} - This global class will be removed in the next major version.
+ * @hidden
  */
 declare class ConfigStore {
   /**
@@ -266,6 +273,7 @@ declare class ConfigStore {
  *
  * **Note**: Can only be used when processing requests, not during build-time initialization.
  * @deprecated This has moved to {@link "fastly:dictionary".Dictionary} - This global class will be removed in the next major version.
+ * @hidden
  */
 declare class Dictionary {
   /**
@@ -286,6 +294,7 @@ declare class Dictionary {
  * {@linkcode ClientInfo#geo} accessor, and for arbitrary addresses using
  * {@linkcode Fastly.getGeolocationForIpAddress}.
  * @deprecated This has moved to {@link "fastly:geolocation".Geolocation} - This global interface will be removed in the next major version.
+ * @hidden
  */
 declare interface Geolocation {
   /**
@@ -415,6 +424,7 @@ declare interface Geolocation {
  * 
  * **Note**: Can only be used when processing requests, not during build-time initialization.
  * @deprecated This has moved to {@link "fastly:object-store".ObjectStore} - This global class will be removed in the next major version.
+ * @hidden
  */
 declare class ObjectStore {
   /**
@@ -455,6 +465,7 @@ declare class ObjectStore {
  * Class for interacting with a [Fastly Object-store](https://developer.fastly.com/reference/api/object-store/) entry.
  * 
  * @deprecated This has moved to {@link "fastly:object-store".ObjectStoreEntry} - This global interface will be removed in the next major version.
+ * @hidden
  */
 declare interface ObjectStoreEntry {
   /**
@@ -622,6 +633,7 @@ declare class TextDecoder {
  *
  * Instances of Logger for specific endpoints can be created using {@linkcode Fastly.getLogger}.
  * @deprecated This has moved to {@link "fastly:logger".Logger} - This global class will be removed in the next major version.
+ * @hidden
  */
 declare interface Logger {
   /**
@@ -650,6 +662,7 @@ declare interface Fastly {
      * @param name The name of the environment variable
      * @returns the value of the environemnt variable
      * @deprecated This has moved to {@link "fastly:env".env} - This function will be removed in the next major version.
+     * @hidden
      */
     get(name: string): string;
   };
@@ -660,6 +673,7 @@ declare interface Fastly {
    *
    * **Note**: Can only be used when processing requests, not during build-time initialization.
    * @deprecated This function will be removed in the next major version. Use of this function can be replaced with the fastly logger class {@link "fastly:logger".Logger} 
+   * @hidden
    */
   getLogger(endpoint: string): Logger;
 
@@ -680,7 +694,7 @@ declare interface Fastly {
    *
    * **Note**: Can only be used when processing requests, not during build-time initialization.
    */
-  getGeolocationForIpAddress(address: string): Geolocation;
+  getGeolocationForIpAddress(address: string): import('fastly:geolocation').Geolocation;
 
   /**
    * Embed a file as a Uint8Array.
@@ -817,7 +831,7 @@ declare interface RequestInit {
 
   /** The Fastly configured backend the request should be sent to. */
   backend?: string;
-  cacheOverride?: CacheOverride;
+  cacheOverride?: import('fastly:cache-override').CacheOverride;
   cacheKey?: string;
 }
 
@@ -859,7 +873,7 @@ interface Request extends Body {
 
   // Fastly extensions
   backend: string;
-  setCacheOverride(override: CacheOverride): void;
+  setCacheOverride(override: import('fastly:cache-override').CacheOverride): void;
   setCacheKey(key: string): void;
 }
 
