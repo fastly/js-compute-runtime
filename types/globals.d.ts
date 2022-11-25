@@ -649,6 +649,7 @@ declare interface Fastly {
      *
      * @param name The name of the environment variable
      * @returns the value of the environemnt variable
+     * @deprecated This has moved to {@link "fastly:env".env} - This function will be removed in the next major version.
      */
     get(name: string): string;
   };
