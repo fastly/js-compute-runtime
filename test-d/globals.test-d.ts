@@ -231,15 +231,6 @@ import { expectError, expectType } from 'tsd';
   expectType<(key:string) => string>(new Dictionary('example').get)
 }
 
-// Env
-{
-  expectError(Env())
-  expectError(Env('example'))
-  expectError(new Env('example'))
-  expectType<Env>(new Env())
-  expectType<(key:string) => string>(new Env().get)
-}
-
 // Geolocation
 {
   const geo = {} as Geolocation
@@ -400,7 +391,7 @@ import { expectError, expectType } from 'tsd';
   fastly.baseURL = undefined;
   expectType<string>(fastly.defaultBackend);
   fastly.defaultBackend = '.';
-  expectType<Env>(fastly.env);
+  expectType<(key:string) => string>(fastly.env.get)
   expectType<(endpoint: string)=> Logger>(fastly.getLogger);
   expectType<(enabled: boolean) => void>(fastly.enableDebugLogging);
   expectType<(address: string)=>Geolocation>(fastly.getGeolocationForIpAddress);
