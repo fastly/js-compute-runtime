@@ -86,7 +86,7 @@ declare module 'fastly:backend' {
      */
     constructor(configuration: BackendConfiguration);
     /**
-     * Returns the name of the Backend, which can be used on {@link RequestInit.backend}
+     * Returns the name of the Backend, which can be used on {@link "globals".RequestInit.backend}
      */
     toString(): string;
   }
