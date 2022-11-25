@@ -48,10 +48,10 @@ declare module "fastly:cache-override" {
     pci?: boolean;
   }
   /**
-   * Configures the caching behavior of a {@linkcode Response}.
+   * Configures the caching behavior of a {@linkcode "globals".Response}.
    *
    * Normally, the HTTP Headers on a Response would control how the Response is cached,
-   * but CacheOverride can be set on a {@linkcode Request}, to define custom caching behavior.
+   * but CacheOverride can be set on a {@linkcode "globals".Request}, to define custom caching behavior.
    */
   interface CacheOverride extends CacheOverrideInit {
     mode: CacheOverrideMode;
