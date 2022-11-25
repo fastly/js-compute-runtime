@@ -8,6 +8,7 @@ export async function bundle(input) {
       plugins: [
         virtual({
           'fastly:backend': `export const Backend = globalThis.Backend`,
+          'fastly:cache-override': `export const CacheOverride = globalThis.CacheOverride`,
           'fastly:config-store': `export const ConfigStore = globalThis.ConfigStore`,
           'fastly:dictionary': `export const Dictionary = globalThis.Dictionary`,
           'fastly:object-store': `export const ObjectStore = globalThis.ObjectStore`,
