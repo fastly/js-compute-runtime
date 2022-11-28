@@ -694,6 +694,8 @@ declare interface Fastly {
    * @param address - the IPv4 or IPv6 address to query
    *
    * **Note**: Can only be used when processing requests, not during build-time initialization.
+   * @deprecated This has moved to {@link "fastly:geolocation".getGeolocationForIpAddress} - This function will be removed in the next major version.
+   * @hidden
    */
   getGeolocationForIpAddress(address: string): import('fastly:geolocation').Geolocation;
 

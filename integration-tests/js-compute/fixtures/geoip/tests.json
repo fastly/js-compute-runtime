@@ -107,13 +107,25 @@
       "status": 200
     }
   },
-  "GET /fastly/getgeolocationforipaddress/called-unboun": {
+  "GET /fastly/getgeolocationforipaddress/called-unbound": {
     "environments": [
       "c@e"
     ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/fastly/getgeolocationforipaddress/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly:geolocation": {
+    "environments": [
+      "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly:geolocation"
     },
     "downstream_response": {
       "status": 200
