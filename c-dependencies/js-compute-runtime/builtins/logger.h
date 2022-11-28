@@ -11,6 +11,7 @@ private:
 
 public:
   static constexpr const char *class_name = "Logger";
+  static const int ctor_length = 1;
 
   enum Slots { Endpoint, Count };
 
@@ -18,6 +19,8 @@ public:
   static const JSPropertySpec properties[];
 
   static JSObject *create(JSContext *cx, const char *name);
+  static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool init_class(JSContext *cx, JS::HandleObject global);
 };
 
 } // namespace builtins
