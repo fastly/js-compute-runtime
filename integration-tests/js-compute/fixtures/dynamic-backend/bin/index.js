@@ -669,7 +669,7 @@ routes.set('/', () => {
         const types = [{}, [], Symbol(), 1, "2"];
         for (const type of types) {
           let error = assertDoesNotThrow(() => {
-            new Backend({ name: 'useSSL-property-valid-boolean' + type, target: 'a', useSSL: type })
+            new Backend({ name: 'useSSL-property-valid-boolean' + String(type), target: 'a', useSSL: type })
           })
           if (error) { return error }
         }
@@ -871,7 +871,7 @@ routes.set('/', () => {
         const types = [{}, [], Symbol(), 1, "2"];
         for (const type of types) {
           let error = assertDoesNotThrow(() => {
-            new Backend({ name: 'checkCertificate-property-valid-boolean' + type, target: 'a', checkCertificate: type })
+            new Backend({ name: 'checkCertificate-property-valid-boolean' + String(type), target: 'a', checkCertificate: type })
           })
           if (error) { return error }
         }
