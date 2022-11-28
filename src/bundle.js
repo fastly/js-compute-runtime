@@ -29,6 +29,7 @@ export async function bundle(input) {
     entryPoints: [input],
     bundle: true,
     write: false,
+    tsconfig: undefined,
     plugins: [fastlyPlugin],
   })
 }
