@@ -1,11 +1,19 @@
 declare module "fastly:geolocation" {
   /**
+   * Retrieve geolocation information about the given IP address.
+   *
+   * @param address The IPv4 or IPv6 address to query
+   *
+   * **Note**: Can only be used when processing requests, not during build-time initialization.
+   */
+  function getGeolocationForIpAddress(address: string): Geolocation;
+  /**
    * [Fastly Geolocation](https://developer.fastly.com/reference/vcl/variables/geolocation/)
    * information about an IP address
    *
    * Can be retrieved for the incoming request's client IP address using the
    * {@linkcode "globals".ClientInfo#geo} accessor, and for arbitrary addresses using
-   * {@linkcode "globals".Fastly.getGeolocationForIpAddress}.
+   * {@linkcode "fastly:geolocation".getGeolocationForIpAddress}.
    */
   interface Geolocation {
     /**

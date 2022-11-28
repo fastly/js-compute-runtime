@@ -1,6 +1,8 @@
 /* eslint-env serviceworker */
 /* global fastly */
 import { env } from 'fastly:env';
+import { getGeolocationForIpAddress } from 'fastly:geolocation';
+
 addEventListener("fetch", event => {
   event.respondWith(app(event))
 })
@@ -199,6 +201,12 @@ routes.set("/fastly/getgeolocationforipaddress/called-unbound", async () => {
   return pass()
 });
 
+routes.set('/fastly:geolocation', async () => {
+  let error = assert(getGeolocationForIpAddress, fastly.getGeolocationForIpAddress, 'getGeolocationForIpAddress === fastly.getGeolocationForIpAddress');
+  if (error) { return error }
+  return pass()
+});
+
 // Testing/Assertion functions //
 
 function pass(message = '') {
@@ -231,15 +239,6 @@ function assertThrows(func, errorClass, errorMessage) {
         return fail(`Expected \`${func.toString()}\` to throw error message of \`${errorMessage}\` - Found \`${error.message}\``)
       }
     }
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function assertDoesNotThrow(func) {
-  try {
-    func()
-  } catch (error) {
-    return fail(`Expected \`${func.toString()}\` to not throw - Found it did throw: ${error.name}: ${error.message}`)
   }
 }
 
