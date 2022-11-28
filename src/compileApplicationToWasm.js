@@ -79,7 +79,7 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
 
   let contents = await bundle(input);
 
-  let application = precompile(contents.output[0].code);
+  let application = precompile(contents.outputFiles[0].text);
 
   try {
     let wizerProcess = spawnSync(
