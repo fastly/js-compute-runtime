@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.8](https://github.com/fastly/js-compute-runtime/compare/v0.5.7...v0.5.8) (2022-11-28)
+
+
+### Bug Fixes
+
+* Allow process.execPath to contain whitespace ([caefe51](https://github.com/fastly/js-compute-runtime/commit/caefe512413675f10a7f1e6501249b3ebe7f5d21))
+
 ## [0.5.7](https://github.com/fastly/js-compute-runtime/compare/v0.5.6...v0.5.7) (2022-11-24)
 
 
