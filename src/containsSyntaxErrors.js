@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 // TODO: We should check that the syntax used is supported by our version of SpiderMonkey
 export function containsSyntaxErrors(input) {
     let nodeProcess = spawnSync(
-        process.execPath,
+        `"${process.execPath}"`,
         [
             "--check",
             input,
