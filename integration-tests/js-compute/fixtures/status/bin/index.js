@@ -1,3 +1,4 @@
+/* eslint-env serviceworker */
 addEventListener("fetch", (event) => {
   // Get the request from the client
   if (event.request.method == "POST" && new URL(event.request.url).pathname == "/hello") {

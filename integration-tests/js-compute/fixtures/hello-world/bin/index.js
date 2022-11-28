@@ -1,3 +1,4 @@
+/* eslint-env serviceworker */
 addEventListener("fetch", (event) => {
   // Build a response
   let response = new Response("Hello JS", {

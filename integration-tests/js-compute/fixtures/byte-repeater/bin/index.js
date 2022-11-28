@@ -1,3 +1,7 @@
+/* eslint-env serviceworker */
+/* global ReadableStream */
+import { CacheOverride } from 'fastly:cache-override';
+
 addEventListener("fetch", (event) => {
   let headers = new Headers();
   headers.set("AssemblyScriptHeader", "AssemblyScriptValue");
@@ -26,6 +30,7 @@ addEventListener("fetch", (event) => {
     let body = upstreamResponse.body;
     let streamReader = body.getReader();
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       let chunk = await streamReader.read();
 

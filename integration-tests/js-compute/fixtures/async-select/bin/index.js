@@ -1,3 +1,5 @@
+/* eslint-env serviceworker */
+
 addEventListener("fetch", (event) => {
   let requestsData = [
     {

@@ -1,4 +1,5 @@
-/* global setInterval, setIntervalEntry, fastly */
+/* eslint-env serviceworker */
+
 addEventListener("fetch", event => {
     event.respondWith(app(event))
 })
@@ -35,14 +36,14 @@ routes.set('/', () => {
         return pass()
     });
     routes.set("/setInterval/interface", async () => {
-        actual = Reflect.getOwnPropertyDescriptor(globalThis, 'setInterval')
-        expected = {
+        let actual = Reflect.getOwnPropertyDescriptor(globalThis, 'setInterval')
+        let expected = {
             writable: true,
             enumerable: true,
             configurable: true,
             value: globalThis.setInterval
         }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(globalThis, 'setInterval)`)
+        let error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(globalThis, 'setInterval)`)
         if (error) { return error }
 
         error = assert(typeof globalThis.setInterval, 'function', `typeof globalThis.setInterval`)
@@ -150,7 +151,7 @@ routes.set('/', () => {
     });
 
     routes.set("/setInterval/timeout-parameter-negative", async () => {
-        error = assertDoesNotThrow(() => setInterval(() => { }, -1))
+        let error = assertDoesNotThrow(() => setInterval(() => { }, -1))
         if (error) { return error }
         error = assertDoesNotThrow(() => setInterval(() => { }, -1.1))
         if (error) { return error }
@@ -163,7 +164,7 @@ routes.set('/', () => {
         return pass()
     });
     routes.set("/setInterval/timeout-parameter-positive", async () => {
-        error = assertDoesNotThrow(() => setInterval(() => { }, 1))
+        let error = assertDoesNotThrow(() => setInterval(() => { }, 1))
         if (error) { return error }
         error = assertDoesNotThrow(() => setInterval(() => { }, 1.1))
         if (error) { return error }
@@ -177,7 +178,7 @@ routes.set('/', () => {
     });
     routes.set("/setInterval/returns-integer", async () => {
         let id = setInterval(() => { }, 1)
-        error = assert(typeof id, "number", `typeof id === "number"`)
+        let error = assert(typeof id, "number", `typeof id === "number"`)
         if (error) { return error }
         return pass()
     });
@@ -198,14 +199,14 @@ routes.set('/', () => {
         return pass()
     });
     routes.set("/setTimeout/interface", async () => {
-        actual = Reflect.getOwnPropertyDescriptor(globalThis, 'setTimeout')
-        expected = {
+        let actual = Reflect.getOwnPropertyDescriptor(globalThis, 'setTimeout')
+        let expected = {
             writable: true,
             enumerable: true,
             configurable: true,
             value: globalThis.setTimeout
         }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(globalThis, 'setTimeout)`)
+        let error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(globalThis, 'setTimeout)`)
         if (error) { return error }
 
         error = assert(typeof globalThis.setTimeout, 'function', `typeof globalThis.setTimeout`)
@@ -313,7 +314,7 @@ routes.set('/', () => {
     });
 
     routes.set("/setTimeout/timeout-parameter-negative", async () => {
-        error = assertDoesNotThrow(() => setTimeout(() => { }, -1))
+        let error = assertDoesNotThrow(() => setTimeout(() => { }, -1))
         if (error) { return error }
         error = assertDoesNotThrow(() => setTimeout(() => { }, -1.1))
         if (error) { return error }
@@ -326,7 +327,7 @@ routes.set('/', () => {
         return pass()
     });
     routes.set("/setTimeout/timeout-parameter-positive", async () => {
-        error = assertDoesNotThrow(() => setTimeout(() => { }, 1))
+        let error = assertDoesNotThrow(() => setTimeout(() => { }, 1))
         if (error) { return error }
         error = assertDoesNotThrow(() => setTimeout(() => { }, 1.1))
         if (error) { return error }
@@ -340,7 +341,7 @@ routes.set('/', () => {
     });
     routes.set("/setTimeout/returns-integer", async () => {
         let id = setTimeout(() => { }, 1)
-        error = assert(typeof id, "number", `typeof id === "number"`)
+        let error = assert(typeof id, "number", `typeof id === "number"`)
         if (error) { return error }
         return pass()
     });
@@ -361,14 +362,14 @@ routes.set('/', () => {
         return pass()
     });
     routes.set("/clearInterval/interface", async () => {
-        actual = Reflect.getOwnPropertyDescriptor(globalThis, 'clearInterval')
-        expected = {
+        let actual = Reflect.getOwnPropertyDescriptor(globalThis, 'clearInterval')
+        let expected = {
             writable: true,
             enumerable: true,
             configurable: true,
             value: globalThis.clearInterval
         }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(globalThis, 'clearInterval)`)
+        let error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(globalThis, 'clearInterval)`)
         if (error) { return error }
 
         error = assert(typeof globalThis.clearInterval, 'function', `typeof globalThis.clearInterval`)
@@ -440,7 +441,7 @@ routes.set('/', () => {
     });
 
     routes.set("/clearInterval/id-parameter-negative", async () => {
-        error = assertDoesNotThrow(() => clearInterval(-1))
+        let error = assertDoesNotThrow(() => clearInterval(-1))
         if (error) { return error }
         error = assertDoesNotThrow(() => clearInterval(-1.1))
         if (error) { return error }
@@ -453,7 +454,7 @@ routes.set('/', () => {
         return pass()
     });
     routes.set("/clearInterval/id-parameter-positive", async () => {
-        error = assertDoesNotThrow(() => clearInterval(1))
+        let error = assertDoesNotThrow(() => clearInterval(1))
         if (error) { return error }
         error = assertDoesNotThrow(() => clearInterval(1.1))
         if (error) { return error }
@@ -467,7 +468,7 @@ routes.set('/', () => {
     });
     routes.set("/clearInterval/returns-undefined", async () => {
         let result = clearInterval(1)
-        error = assert(typeof result, "undefined", `typeof result === "undefined"`)
+        let error = assert(typeof result, "undefined", `typeof result === "undefined"`)
         if (error) { return error }
         return pass()
     });
@@ -488,14 +489,14 @@ routes.set('/', () => {
         return pass()
     });
     routes.set("/clearTimeout/interface", async () => {
-        actual = Reflect.getOwnPropertyDescriptor(globalThis, 'clearTimeout')
-        expected = {
+        let actual = Reflect.getOwnPropertyDescriptor(globalThis, 'clearTimeout')
+        let expected = {
             writable: true,
             enumerable: true,
             configurable: true,
             value: globalThis.clearTimeout
         }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(globalThis, 'clearTimeout)`)
+        let error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(globalThis, 'clearTimeout)`)
         if (error) { return error }
 
         error = assert(typeof globalThis.clearTimeout, 'function', `typeof globalThis.clearTimeout`)
@@ -567,7 +568,7 @@ routes.set('/', () => {
     });
 
     routes.set("/clearTimeout/id-parameter-negative", async () => {
-        error = assertDoesNotThrow(() => clearTimeout(-1))
+        let error = assertDoesNotThrow(() => clearTimeout(-1))
         if (error) { return error }
         error = assertDoesNotThrow(() => clearTimeout(-1.1))
         if (error) { return error }
@@ -580,7 +581,7 @@ routes.set('/', () => {
         return pass()
     });
     routes.set("/clearTimeout/id-parameter-positive", async () => {
-        error = assertDoesNotThrow(() => clearTimeout(1))
+        let error = assertDoesNotThrow(() => clearTimeout(1))
         if (error) { return error }
         error = assertDoesNotThrow(() => clearTimeout(1.1))
         if (error) { return error }
@@ -594,7 +595,7 @@ routes.set('/', () => {
     });
     routes.set("/clearTimeout/returns-undefined", async () => {
         let result = clearTimeout(1)
-        error = assert(typeof result, "undefined", `typeof result === "undefined"`)
+        let error = assert(typeof result, "undefined", `typeof result === "undefined"`)
         if (error) { return error }
         return pass()
     });
@@ -620,33 +621,6 @@ function fail(message = '') {
 function assert(actual, expected, code) {
     if (!deepEqual(actual, expected)) {
         return fail(`Expected \`${code}\` to equal \`${JSON.stringify(expected)}\` - Found \`${JSON.stringify(actual)}\``)
-    }
-}
-
-async function assertResolves(func) {
-    try {
-        await func()
-    } catch (error) {
-        return fail(`Expected \`${func.toString()}\` to resolve - Found it rejected: ${error.name}: ${error.message}`)
-    }
-}
-
-async function assertRejects(func, errorClass, errorMessage) {
-    try {
-        await func()
-        return fail(`Expected \`${func.toString()}\` to reject - Found it did not reject`)
-    } catch (error) {
-        if (errorClass) {
-            if ((error instanceof errorClass) === false) {
-                return fail(`Expected \`${func.toString()}\` to reject instance of \`${errorClass.name}\` - Found instance of \`${error.name}\``)
-            }
-        }
-
-        if (errorMessage) {
-            if (error.message !== errorMessage) {
-                return fail(`Expected \`${func.toString()}\` to reject error message of \`${errorMessage}\` - Found \`${error.message}\``)
-            }
-        }
     }
 }
 

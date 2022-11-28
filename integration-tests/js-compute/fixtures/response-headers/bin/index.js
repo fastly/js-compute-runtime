@@ -1,3 +1,4 @@
+/* eslint-env serviceworker */
 addEventListener("fetch", (event) => {
   // Build a response
   let headers = new Headers();

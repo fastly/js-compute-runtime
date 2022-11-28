@@ -1,3 +1,4 @@
+/* eslint-env serviceworker */
 // The useragent_parser package is MIT licensed at the time this function was
 // inlined into this test:
 // https://github.com/Financial-Times/useragent_parser/blob/fdc6bff8f05cfb8fb8c8cd752f8739b9b356001f/package.json#L13
@@ -380,7 +381,7 @@ function useragent_parser(ua) {
     return { family, major, minor, patch };
   } else if (
     (result =
-      /\/((?:Ant-|)Nutch|[A-z]+[Bb]ot|[A-z]+[Ss]pider|Axtaris|fetchurl|Isara|ShopSalad|Tailsweep)[ \-](\d+)(?:\.(\d+)|)(?:\.(\d+)|)/.exec(
+      /\/((?:Ant-|)Nutch|[A-z]+[Bb]ot|[A-z]+[Ss]pider|Axtaris|fetchurl|Isara|ShopSalad|Tailsweep)[ -](\d+)(?:\.(\d+)|)(?:\.(\d+)|)/.exec(
         ua
       ))
   ) {
@@ -482,7 +483,7 @@ function useragent_parser(ua) {
     return { family, major, minor, patch };
   } else if (
     (result =
-      /(?:\/[A-Za-z0-9\.]+|) {0,5}([A-Za-z0-9 \-_\!\[\]:]{0,50}(?:[Aa]rchiver|[Ii]ndexer|[Ss]craper|[Bb]ot|[Ss]pider|[Cc]rawl[a-z]{0,50}))[/ ](\d+)(?:\.(\d+)(?:\.(\d+)|)|)/.exec(
+      /(?:\/[A-Za-z0-9.]+|) {0,5}([A-Za-z0-9 \-_![\]:]{0,50}(?:[Aa]rchiver|[Ii]ndexer|[Ss]craper|[Bb]ot|[Ss]pider|[Cc]rawl[a-z]{0,50}))[/ ](\d+)(?:\.(\d+)(?:\.(\d+)|)|)/.exec(
         ua
       ))
   ) {
@@ -504,7 +505,7 @@ function useragent_parser(ua) {
     return { family, major, minor, patch };
   } else if (
     (result =
-      /((?:[A-z0-9]{1,50}|[A-z\-]{1,50} ?|)(?: the |)(?:[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss]crape|[Cc][Rr][Aa][Ww][Ll])[A-z0-9]{0,50})(?:(?:[ /]| v)(\d+)(?:\.(\d+)|)(?:\.(\d+)|)|)/.exec(
+      /((?:[A-z0-9]{1,50}|[A-z-]{1,50} ?|)(?: the |)(?:[Ss][Pp][Ii][Dd][Ee][Rr]|[Ss]crape|[Cc][Rr][Aa][Ww][Ll])[A-z0-9]{0,50})(?:(?:[ /]| v)(\d+)(?:\.(\d+)|)(?:\.(\d+)|)|)/.exec(
         ua
       ))
   ) {
@@ -920,7 +921,7 @@ function useragent_parser(ua) {
   } else if ((result = /(Nintendo 3DS)/.exec(ua))) {
     const family = "NetFront NX";
     return { family, major, minor, patch };
-  } else if ((result = /(Silk)\/(\d+)\.(\d+)(?:\.([0-9\-]+)|)/.exec(ua))) {
+  } else if ((result = /(Silk)\/(\d+)\.(\d+)(?:\.([0-9-]+)|)/.exec(ua))) {
     const family = "Amazon Silk";
     const major = result[2];
     const minor = result[3];
@@ -1068,6 +1069,7 @@ function useragent_parser(ua) {
     const minor = result[3];
     return { family, major, minor, patch };
   } else if (
+    // eslint-disable-next-line no-dupe-else-if
     (result = /(MQQBrowser\/Mini)(?:(\d+)(?:\.(\d+)|)(?:\.(\d+)|)|)/.exec(ua))
   ) {
     const family = "QQ Browser Mini";
@@ -1076,6 +1078,7 @@ function useragent_parser(ua) {
     const patch = result[4];
     return { family, major, minor, patch };
   } else if (
+    // eslint-disable-next-line no-dupe-else-if
     (result = /(MQQBrowser)(?:\/(\d+)(?:\.(\d+)|)(?:\.(\d+)|)|)/.exec(ua))
   ) {
     const family = "QQ Browser Mobile";
@@ -1084,6 +1087,7 @@ function useragent_parser(ua) {
     const patch = result[4];
     return { family, major, minor, patch };
   } else if (
+    // eslint-disable-next-line no-dupe-else-if
     (result = /(QQBrowser)(?:\/(\d+)(?:\.(\d+)\.(\d+)(?:\.(\d+)|)|)|)/.exec(ua))
   ) {
     const family = "QQ Browser";
@@ -1265,7 +1269,7 @@ function useragent_parser(ua) {
     const patch = result[4];
     return { family, major, minor, patch };
   } else if (
-    (result = /\b(Dolphin)(?: |HDCN\/|\/INT\-)(\d+)\.(\d+)(?:\.(\d+)|)/.exec(
+    (result = /\b(Dolphin)(?: |HDCN\/|\/INT-)(\d+)\.(\d+)(?:\.(\d+)|)/.exec(
       ua
     ))
   ) {
@@ -1450,7 +1454,7 @@ function useragent_parser(ua) {
     const major = result[2];
     const minor = result[3];
     return { family, major, minor, patch };
-  } else if ((result = /(Zune|BeyondPod) (\d+)(?:\.(\d+)|)[\);]/.exec(ua))) {
+  } else if ((result = /(Zune|BeyondPod) (\d+)(?:\.(\d+)|)[);]/.exec(ua))) {
     const family = result[1];
     const major = result[2];
     const minor = result[3];
@@ -1622,7 +1626,7 @@ function useragent_parser(ua) {
   } else if ((result = /(Obigo)InternetBrowser/.exec(ua))) {
     const family = result[1];
     return { family, major, minor, patch };
-  } else if ((result = /(Obigo)\-Browser/.exec(ua))) {
+  } else if ((result = /(Obigo)-Browser/.exec(ua))) {
     const family = result[1];
     return { family, major, minor, patch };
   } else if ((result = /(Obigo|OBIGO)[^\d]*(\d+)(?:.(\d+)|)/.exec(ua))) {
@@ -1911,7 +1915,7 @@ function useragent_parser(ua) {
     const major = "0";
     const minor = result[3];
     return { family, major, minor, patch };
-  } else if ((result = /(SEMC\-Browser)\/(\d+)\.(\d+)/.exec(ua))) {
+  } else if ((result = /(SEMC-Browser)\/(\d+)\.(\d+)/.exec(ua))) {
     const family = result[1];
     const major = result[2];
     const minor = result[3];
@@ -2000,6 +2004,7 @@ function useragent_parser(ua) {
     const patch = result[4];
     return { family, major, minor, patch };
   } else if (
+    // eslint-disable-next-line no-dupe-else-if
     (result = /(Python\/3\.\d{1,3} aiohttp)\/(\d+)\.(\d+)\.(\d+)/.exec(ua))
   ) {
     const family = result[1];

@@ -1,3 +1,5 @@
+/* eslint-env serviceworker */
+/* global fastly */
 addEventListener("fetch", (event) => {
   let logger = fastly.getLogger("ComputeLog");
   logger.log("Hello!");

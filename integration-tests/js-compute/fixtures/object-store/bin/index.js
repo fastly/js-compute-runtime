@@ -1,4 +1,5 @@
-/* global ObjectStore, ObjectStoreEntry, fastly */
+/* eslint-env serviceworker */
+/* global ReadableStream fastly ObjectStore ObjectStoreEntry */
 addEventListener("fetch", event => {
     event.respondWith(app(event))
 })
