@@ -41,4 +41,26 @@ JSObject *Logger::create(JSContext *cx, const char *name) {
   return logger;
 }
 
+bool Logger::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+  REQUEST_HANDLER_ONLY("The Logger builtin");
+  CTOR_HEADER("Logger", 1);
+
+  size_t name_len;
+  JS::UniqueChars name = encode(cx, args[0], &name_len);
+  JS::RootedObject logger(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  auto handle = LogEndpointHandle{INVALID_HANDLE};
+
+  if (!HANDLE_RESULT(cx, xqd_log_endpoint_get(name.get(), name_len, &handle))) {
+    return false;
+  }
+
+  JS::SetReservedSlot(logger, Slots::Endpoint, JS::Int32Value(handle.handle));
+  args.rval().setObject(*logger);
+  return true;
+}
+
+bool Logger::init_class(JSContext *cx, JS::HandleObject global) {
+  return BuiltinImpl<Logger>::init_class_impl(cx, global);
+}
+
 } // namespace builtins
