@@ -1,3 +1,5 @@
+/* eslint-env serviceworker */
+/* global fastly */
 addEventListener("fetch", (event) => {
   // Get the request from the client
   let downstreamRequest = event.request;

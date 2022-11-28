@@ -1,6 +1,7 @@
+/* eslint-env serviceworker */
 /* global fastly */
 
-addEventListener("fetch", ()=>{
+addEventListener("fetch", () => {
     console.log(1)
 })
 
@@ -36,3 +37,7 @@ routes.set('/', () => {
 routes.set("/error", async () => {
     throw new Error('uh oh')
 });
+
+function fail(message = '') {
+    return new Response(message, { status: 500 })
+}

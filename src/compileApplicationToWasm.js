@@ -5,6 +5,7 @@ import { isFile } from "./isFile.js";
 import { isFileOrDoesNotExist } from "./isFileOrDoesNotExist.js";
 import wizer from "@jakechampion/wizer";
 import { precompile } from "./precompile.js";
+import { bundle } from "./bundle.js";
 import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
 
 export async function compileApplicationToWasm(input, output, wasmEngine) {
@@ -22,9 +23,8 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
     process.exit(1);
   }
 
-  let inputContents;
   try {
-    inputContents = await readFile(input, { encoding: "utf-8" });
+    await readFile(input, { encoding: "utf-8" });
   } catch (error) {
     console.error(
       "Error: Failed to open the `input` (${input})",
@@ -77,7 +77,9 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
     process.exit(1);
   }
 
-  let application = precompile(inputContents);
+  let contents = await bundle(input);
+
+  let application = precompile(contents.output[0].code);
 
   try {
     let wizerProcess = spawnSync(

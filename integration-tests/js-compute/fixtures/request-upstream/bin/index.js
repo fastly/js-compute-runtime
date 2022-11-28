@@ -1,3 +1,4 @@
+/* eslint-env serviceworker */
 addEventListener("fetch", (event) => {
   // Make a Request upstream to our origin
   let headers = new Headers();

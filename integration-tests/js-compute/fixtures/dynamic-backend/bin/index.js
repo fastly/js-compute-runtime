@@ -1,4 +1,8 @@
+/* eslint-env serviceworker */
 /* global fastly */
+import { Backend } from 'fastly:backend';
+import { CacheOverride } from 'fastly:cache-override';
+
 addEventListener("fetch", event => {
   event.respondWith(app(event))
 })
@@ -666,6 +670,7 @@ routes.set('/', () => {
           let error = assertDoesNotThrow(() => {
             new Backend({ name: 'useSSL-property-valid-boolean' + type, target: 'a', useSSL: type })
           })
+          if (error) { return error }
         }
         let error = assertDoesNotThrow(() => {
           new Backend({ name: 'useSSL-property-valid-boolean-true', target: 'a', useSSL: true })
@@ -867,6 +872,7 @@ routes.set('/', () => {
           let error = assertDoesNotThrow(() => {
             new Backend({ name: 'checkCertificate-property-valid-boolean' + type, target: 'a', checkCertificate: type })
           })
+          if (error) { return error }
         }
         let error = assertDoesNotThrow(() => {
           new Backend({ name: 'checkCertificate-property-valid-boolean-true', target: 'a', checkCertificate: true })
