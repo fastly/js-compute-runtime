@@ -16,4 +16,4 @@ node_modules/
 tests/wpt-harness/wpt-test-runner.js
 wpt-runtime.wasm
 docs-app/bin/main.wasm
-docs-app/pkg/javascript-docs.tar.gz
+docs-app/pkg/*.tar.gz
