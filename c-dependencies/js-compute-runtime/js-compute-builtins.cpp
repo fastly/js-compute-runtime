@@ -1423,6 +1423,8 @@ bool set_cache_key(JSContext *cx, HandleObject self, HandleValue cache_key_val) 
   std::string_view key(keyString.get(), key_len);
   std::string hex_str;
   picosha2::hash256_hex_string(key, hex_str);
+  std::transform(hex_str.begin(), hex_str.end(), hex_str.begin(),
+                 [](unsigned char c) { return std::toupper(c); });
 
   JSObject *headers = RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, self);
   if (!headers) {
