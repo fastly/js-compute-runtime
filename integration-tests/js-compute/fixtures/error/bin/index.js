@@ -1,5 +1,6 @@
 /* eslint-env serviceworker */
 import { env } from 'fastly:env';
+import { fail } from "../../../assertions.js";
 
 addEventListener("fetch", () => {
     console.log(1)
@@ -37,7 +38,3 @@ routes.set('/', () => {
 routes.set("/error", async () => {
     throw new Error('uh oh')
 });
-
-function fail(message = '') {
-    return new Response(message, { status: 500 })
-}
