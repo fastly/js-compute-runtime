@@ -11,7 +11,7 @@
     "build:files": "c-at-e-file-server local --toml fastly.toml --name site -- ../reference-docs/",
     "deploy": "npm run deploy:app && npm run deploy:files",
     "deploy:app": "fastly compute deploy",
-    "deploy:files": "c-at-e-file-server upload --name 'js-docs-site' --token $FASTLY_TOKEN -- ../reference-docs/",
+    "deploy:files": "c-at-e-file-server upload --name 'js-docs-site' -- ../reference-docs/",
     "start": "fastly compute serve"
   },
   "dependencies": {
