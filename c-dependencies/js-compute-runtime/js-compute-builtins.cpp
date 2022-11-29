@@ -730,7 +730,7 @@ bool append_body(JSContext *cx, HandleObject self, HandleObject source) {
   MOZ_ASSERT(!body_used(source));
   fastly_body_handle_t source_body = body_handle(source);
   fastly_body_handle_t dest_body = body_handle(self);
-  return HANDLE_RESULT(cx, xqd_body_append(dest_body, source_body));
+  return HANDLE_RESULT(cx, xqd_fastly_http_body_append(dest_body, source_body));
 }
 
 typedef bool ParseBodyCB(JSContext *cx, HandleObject self, UniqueChars buf, size_t len);
@@ -1538,22 +1538,42 @@ bool apply_cache_override(JSContext *cx, HandleObject self) {
     return true;
   }
 
-  uint32_t tag = builtins::CacheOverride::abi_tag(override);
+  uint8_t tag = builtins::CacheOverride::abi_tag(override);
+
+  fastly_option_u32_t ttl_option;
   RootedValue val(cx, builtins::CacheOverride::ttl(override));
-  uint32_t ttl = val.isUndefined() ? 0 : val.toInt32();
-  val = builtins::CacheOverride::swr(override);
-  uint32_t swr = val.isUndefined() ? 0 : val.toInt32();
-  val = builtins::CacheOverride::surrogate_key(override);
-  UniqueChars sk_chars;
-  size_t sk_len = 0;
-  if (!val.isUndefined()) {
-    sk_chars = encode(cx, val, &sk_len);
-    if (!sk_chars)
-      return false;
+  if (val.isUndefined()) {
+    ttl_option.is_some = false;
+  } else {
+    ttl_option.is_some = true;
+    ttl_option.val = val.toInt32();
   }
 
-  return HANDLE_RESULT(cx, xqd_req_cache_override_v2_set(request_handle(self), tag, ttl, swr,
-                                                         sk_chars.get(), sk_len));
+  fastly_option_u32_t swr_option;
+  val = builtins::CacheOverride::swr(override);
+  if (val.isUndefined()) {
+    swr_option.is_some = false;
+  } else {
+    swr_option.is_some = true;
+    swr_option.val = val.toInt32();
+  }
+
+  xqd_world_string_t sk_str;
+  fastly_option_string_t sk_opt;
+  val = builtins::CacheOverride::surrogate_key(override);
+  if (val.isUndefined()) {
+    sk_opt.is_some = false;
+  } else {
+    UniqueChars sk_chars;
+    sk_opt.is_some = true;
+    sk_chars = encode(cx, val, &sk_str.len);
+    if (!sk_chars)
+      return false;
+    sk_str.ptr = sk_chars.release();
+  }
+
+  return HANDLE_RESULT(cx, xqd_fastly_http_req_cache_override_set(
+                               request_handle(self), tag, &ttl_option, &swr_option, &sk_opt));
 }
 
 const unsigned ctor_length = 1;
@@ -1704,7 +1724,7 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
   }
 
   fastly_body_handle_t body_handle = INVALID_HANDLE;
-  if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle))) {
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_body_new(&body_handle))) {
     return nullptr;
   }
 
@@ -2563,12 +2583,12 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   // creating the host-side representation when processing requests.
   // https://github.com/fastly/js-compute-runtime/issues/220
   fastly_response_handle_t response_handle = INVALID_HANDLE;
-  if (!HANDLE_RESULT(cx, xqd_resp_new(&response_handle))) {
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_resp_new(&response_handle))) {
     return false;
   }
 
   fastly_body_handle_t body_handle = INVALID_HANDLE;
-  if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle))) {
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_body_new(&body_handle))) {
     return false;
   }
 
@@ -3969,7 +3989,8 @@ bool respondWithError(JSContext *cx, HandleObject self) {
   set_state(self, State::responsedWithError);
   fastly_response_handle_t response = INVALID_HANDLE;
   fastly_body_handle_t body;
-  return HANDLE_RESULT(cx, xqd_resp_new(&response)) && HANDLE_RESULT(cx, xqd_body_new(&body)) &&
+  return HANDLE_RESULT(cx, xqd_fastly_http_resp_new(&response)) &&
+         HANDLE_RESULT(cx, xqd_fastly_http_body_new(&body)) &&
          HANDLE_RESULT(cx, xqd_resp_status_set(response, 500)) &&
          HANDLE_RESULT(cx, xqd_resp_send_downstream(response, body, false));
 }
