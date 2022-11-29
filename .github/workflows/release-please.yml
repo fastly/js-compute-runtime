@@ -105,4 +105,4 @@ jobs:
       - run: cd ./docs-app && npm run deploy
         if: ${{ steps.release.outputs.release_created }}
         env:
-          FASTLY_TOKEN: ${{secrets.FASTLY_API_TOKEN}}
+          FASTLY_API_TOKEN: ${{secrets.FASTLY_API_TOKEN}}
