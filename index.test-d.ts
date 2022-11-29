@@ -25,6 +25,62 @@ import {expectError, expectType} from 'tsd';
     expectType<string>(btoa(''));
 }
 
+// setTimeout
+{
+    expectError(setTimeout());
+    expectError(setTimeout(null));
+    expectError(setTimeout(1));
+    expectError(setTimeout({}));
+    expectError(setTimeout([]));
+    expectError(setTimeout(true));
+    expectError(setTimeout(Symbol()));
+    expectType<number>(setTimeout(() => {}));
+    expectType<number>(setTimeout(() => {}, 1000));
+    expectError(setTimeout(() => {}, 1000, 1));
+    expectType<number>(setTimeout((x) => {}, 1000, 1));
+    expectError(setTimeout((x) => {}, 1000, 1, 2));
+    expectType<number>(setTimeout((x, y) => {}, 1000, 1, 2));
+}
+
+// clearTimeout
+{
+    expectError(clearTimeout(null));
+    expectError(clearTimeout({}));
+    expectError(clearTimeout([]));
+    expectError(clearTimeout(true));
+    expectError(clearTimeout(Symbol()));
+    expectType<void>(clearTimeout());
+    expectType<void>(clearTimeout(1));
+}
+
+// setInterval
+{
+    expectError(setInterval());
+    expectError(setInterval(null));
+    expectError(setInterval(1));
+    expectError(setInterval({}));
+    expectError(setInterval([]));
+    expectError(setInterval(true));
+    expectError(setInterval(Symbol()));
+    expectType<number>(setInterval(() => {}));
+    expectType<number>(setInterval(() => {}, 1000));
+    expectError(setInterval(() => {}, 1000, 1));
+    expectType<number>(setInterval((x) => {}, 1000, 1));
+    expectError(setInterval((x) => {}, 1000, 1, 2));
+    expectType<number>(setInterval((x, y) => {}, 1000, 1, 2));
+}
+
+// clearInterval
+{
+    expectError(clearInterval(null));
+    expectError(clearInterval({}));
+    expectError(clearInterval([]));
+    expectError(clearInterval(true));
+    expectError(clearInterval(Symbol()));
+    expectType<void>(clearInterval());
+    expectType<void>(clearInterval(1));
+}
+
 // Backend
 {
     expectError(Backend())

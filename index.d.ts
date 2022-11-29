@@ -1187,6 +1187,47 @@ declare function atob(data: string): string;
 declare function btoa(data: string): string;
 
 /**
+ * The setTimeout() method sets a timer which calls a function once the timer expires.
+ *
+ * @param callback A function to be called after the timer expires.
+ * @param delay The time, in milliseconds, that the timer should wait before calling the specified function. Defaults to 0 if not specified.
+ * @param args Additional arguments which are passed through to the callback function.
+ * @returns A numeric, non-zero value which identifies the timer created; this value can be passed to clearTimeout() to cancel the timeout.
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/setTimeout | setTimeout on MDN}
+ */
+declare function setTimeout<TArgs extends any[]>(callback: (...args: TArgs) => void, delay?: number, ...args: TArgs): number;
+
+/**
+ * The clearTimeout() method cancels a timeout previously established by calling setTimeout(). If the parameter provided does not identify a previously established action, this method does nothing.
+ * @param timeoutID The identifier of the timeout you want to cancel. This ID was returned by the corresponding call to setTimeout().
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/clearTimeout | clearTimeout on MDN}
+ */
+declare function clearTimeout(timeoutID?: number): void;
+
+/**
+ * The setInterval() method repeatedly calls a function, with a fixed time delay between each call.
+ * This method returns an interval ID which uniquely identifies the interval, so you can remove it later by calling clearInterval().
+ *
+ * @param callback A function to be called every delay milliseconds. The first call happens after delay milliseconds.
+ * @param delay The time, in milliseconds, that the timer should delay in between calls of the specified function. Defaults to 0 if not specified.
+ * @param args Additional arguments which are passed through to the callback function.
+ * @returns A numeric, non-zero value which identifies the timer created; this value can be passed to clearInterval() to cancel the interval.
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/setInterval | setInterval on MDN}
+ */
+declare function setInterval<TArgs extends any[]>(callback: (...args: TArgs) => void, delay?: number, ...args: TArgs): number;
+
+/**
+ * The clearInterval() method cancels a timed, repeating action which was previously established by a call to setInterval(). If the parameter provided does not identify a previously established action, this method does nothing.
+ * @param intervalID The identifier of the repeated action you want to cancel. This ID was returned by the corresponding call to setInterval().
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/clearInterval | clearInterval on MDN}
+ */
+declare function clearInterval(intervalID?: number): void;
+
+/**
  * Fetch resources from backends.
  *
  * **Note**: Compute@Edge requires all outgoing requests to go to a predefined
@@ -1252,3 +1293,4 @@ declare var Crypto: {
 };
 
 declare var crypto: Crypto;
+
