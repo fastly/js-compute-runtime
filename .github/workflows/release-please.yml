@@ -99,10 +99,10 @@ jobs:
       - run: npm run docs
         if: ${{ steps.release.outputs.release_created }}
 
-      - run: npx @fastly/compute-js-static-publish@2 --public-dir=./reference-docs --name js-compute-reference-docs --service-id 1B3wrEgiLdTaCjsmK5Jq25 --description '@fastly/js-compute reference documentation'
+      - run: cd ./docs-app && npm i
         if: ${{ steps.release.outputs.release_created }}
       
-      - run: cd ./compute-js && fastly compute publish
+      - run: cd ./docs-app && npm run deploy
         if: ${{ steps.release.outputs.release_created }}
         env:
-          FASTLY_API_TOKEN: ${{secrets.FASTLY_API_TOKEN}}
+          FASTLY_TOKEN: ${{secrets.FASTLY_API_TOKEN}}
