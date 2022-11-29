@@ -171,6 +171,7 @@ jobs:
       uses: fastly/compute-actions/setup@v2
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        cli_version: '4.3.0'
 
     - name: Restore Viceroy from cache
       uses: actions/cache@v2.1.5
