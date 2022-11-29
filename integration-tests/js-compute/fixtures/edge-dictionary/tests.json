@@ -1,13 +1,162 @@
 {
-  "GET /": {
+  "GET /dictionary/exposed-as-global": {
     "environments": ["viceroy", "c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/"
+      "pathname": "/dictionary/exposed-as-global"
     },
     "downstream_response": {
-      "status": 200,
-      "body": "https://twitter.com/fastly"
+      "status": 200
+    }
+  },
+  "GET /dictionary/interface": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/constructor/called-as-regular-function": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/constructor/parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/constructor/parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/constructor/empty-parameter": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/constructor/empty-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/constructor/found": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/constructor/found"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/constructor/invalid-name": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/constructor/invalid-name"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/called-as-constructor": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/called-unbound": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-parameter-not-supplied": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-parameter-empty-string": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-parameter-255-character-string": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-parameter-255-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-parameter-256-character-string": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-parameter-256-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-does-not-exist-returns-null": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-does-not-exist-returns-null"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-exists": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-exists"
+    },
+    "downstream_response": {
+      "status": 200
     }
   }
 }

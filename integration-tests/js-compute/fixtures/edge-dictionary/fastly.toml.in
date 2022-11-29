@@ -13,13 +13,14 @@ service_id = ""
 
 [local_server]
   [local_server.dictionaries]
-    [local_server.dictionaries.edge_dictionary]
-      file = "./integration-tests/js-compute/fixtures/edge-dictionary/edge-dictionary.json"
-      format = "json"
+    [local_server.dictionaries."aZ1 __ 2"]
+      format = "inline-toml"
+    [local_server.dictionaries."aZ1 __ 2".contents]
+      "twitter" = "https://twitter.com/fastly"
 
 [setup]
   [setup.dictionaries]
-    [setup.dictionaries.edge_dictionary]
-      [setup.dictionaries.edge_dictionary.items]
-        [setup.dictionaries.edge_dictionary.items.twitter]
+    [setup.dictionaries."aZ1 __ 2"]
+      [setup.dictionaries."aZ1 __ 2".items]
+        [setup.dictionaries."aZ1 __ 2".items.twitter]
         value = "https://twitter.com/fastly"
