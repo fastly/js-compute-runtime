@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.5.9](https://github.com/fastly/js-compute-runtime/compare/v0.5.8...v0.5.9) (2022-11-29)
+
+
+### Features
+
+* add fastly:cache-override module ([f433464](https://github.com/fastly/js-compute-runtime/commit/f433464928e70a8f38ecb4dd293cb2ce40098c34))
+* add geo ip lookup function to fastly:geolocation ([24601e5](https://github.com/fastly/js-compute-runtime/commit/24601e5738816ce1597f80d054d312c1a95e4398))
+* Add Logger constructor to "fastly:logger" module ([b4818a2](https://github.com/fastly/js-compute-runtime/commit/b4818a2623caaab0fe568c35f7636d0d3d9e8bc7))
+* expose fastly loggers via fastly:logger module ([2d0bcfe](https://github.com/fastly/js-compute-runtime/commit/2d0bcfe4f4e0fd855f589205eee4316d829fd28c))
+* expose the fastly features via 'fastly:' namespaced modules ([c06cd16](https://github.com/fastly/js-compute-runtime/commit/c06cd1677cd96b383284ea6ab6dbcbbc4f6dfcf4))
+* move env function into fastly:env ([327b344](https://github.com/fastly/js-compute-runtime/commit/327b344dc943a53ca4a74aeb16207f02cd6d0b3c))
+
+
+### Bug Fixes
+
+* Add types for setTimeout, clearTimeout, setInterval, clearInterval ([c1ed00c](https://github.com/fastly/js-compute-runtime/commit/c1ed00c8933bc45c9ba8dc84e515d31167596aa6))
+
 ## [0.5.8](https://github.com/fastly/js-compute-runtime/compare/v0.5.7...v0.5.8) (2022-11-28)
 
 
