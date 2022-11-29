@@ -3,7 +3,6 @@
 /integration-tests/**/fixtures/**/fastly.toml
 /integration-tests/**/fixtures/**/*.wasm
 
-/reference-docs/
 /compute-js/
 node_modules/
 .DS_Store
