@@ -83,14 +83,14 @@ routes.set('/', () => {
     routes.set("/request/setCacheKey/key-valid", () => {
         const request = new Request('https://www.fastly.com')
         request.setCacheKey('meow')
-        let error = assert(request.headers.get('fastly-xqd-cache-key'), '404cdd7bc109c432f8cc2443b45bcfe95980f5107215c645236e577929ac3e52', `request.headers.get('fastly-xqd-cache-key'`)
+        let error = assert(request.headers.get('fastly-xqd-cache-key'), '404CDD7BC109C432F8CC2443B45BCFE95980F5107215C645236E577929AC3E52', `request.headers.get('fastly-xqd-cache-key'`)
         if (error) { return error }
         return pass()
     });
     routes.set("/request/constructor/cacheKey", () => {
         const request = new Request('https://www.fastly.com', {cacheKey: 'meow'})
         request.setCacheKey('meow')
-        let error = assert(request.headers.get('fastly-xqd-cache-key'), '404cdd7bc109c432f8cc2443b45bcfe95980f5107215c645236e577929ac3e52', `request.headers.get('fastly-xqd-cache-key'`)
+        let error = assert(request.headers.get('fastly-xqd-cache-key'), '404CDD7BC109C432F8CC2443B45BCFE95980F5107215C645236E577929AC3E52', `request.headers.get('fastly-xqd-cache-key'`)
         if (error) { return error }
         return pass()
     });
