@@ -1584,265 +1584,16 @@ fastly_error_t fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_str
   return result.is_err ? result.val.err : -1;
 }
 
-fastly_error_t fastly_geo_lookup(fastly_list_u8_t *addr_octets, fastly_geo_data_t *ret) {
+fastly_error_t fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string_t *ret) {
   __attribute__((aligned(4)))
-  uint8_t ret_area[208];
+  uint8_t ret_area[12];
   int32_t ptr = (int32_t) &ret_area;
   __wasm_import_fastly_geo_lookup((int32_t) (*addr_octets).ptr, (int32_t) (*addr_octets).len, ptr);
-  fastly_result_geo_data_error_t result;
+  fastly_result_string_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
-      fastly_option_string_t option;
-      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
-        case 0: {
-          option.is_some = false;
-          break;
-        }
-        case 1: {
-          option.is_some = true;
-          option.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 8))), (size_t)(*((int32_t*) (ptr + 12))) };
-          break;
-        }
-      }
-      fastly_option_u32_t option0;
-      switch ((int32_t) (*((uint8_t*) (ptr + 16)))) {
-        case 0: {
-          option0.is_some = false;
-          break;
-        }
-        case 1: {
-          option0.is_some = true;
-          option0.val = (uint32_t) (*((int32_t*) (ptr + 20)));
-          break;
-        }
-      }
-      fastly_option_u32_t option1;
-      switch ((int32_t) (*((uint8_t*) (ptr + 24)))) {
-        case 0: {
-          option1.is_some = false;
-          break;
-        }
-        case 1: {
-          option1.is_some = true;
-          option1.val = (uint32_t) (*((int32_t*) (ptr + 28)));
-          break;
-        }
-      }
-      fastly_option_string_t option2;
-      switch ((int32_t) (*((uint8_t*) (ptr + 32)))) {
-        case 0: {
-          option2.is_some = false;
-          break;
-        }
-        case 1: {
-          option2.is_some = true;
-          option2.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 36))), (size_t)(*((int32_t*) (ptr + 40))) };
-          break;
-        }
-      }
-      fastly_option_string_t option3;
-      switch ((int32_t) (*((uint8_t*) (ptr + 44)))) {
-        case 0: {
-          option3.is_some = false;
-          break;
-        }
-        case 1: {
-          option3.is_some = true;
-          option3.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 48))), (size_t)(*((int32_t*) (ptr + 52))) };
-          break;
-        }
-      }
-      fastly_option_string_t option4;
-      switch ((int32_t) (*((uint8_t*) (ptr + 56)))) {
-        case 0: {
-          option4.is_some = false;
-          break;
-        }
-        case 1: {
-          option4.is_some = true;
-          option4.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 60))), (size_t)(*((int32_t*) (ptr + 64))) };
-          break;
-        }
-      }
-      fastly_option_string_t option5;
-      switch ((int32_t) (*((uint8_t*) (ptr + 68)))) {
-        case 0: {
-          option5.is_some = false;
-          break;
-        }
-        case 1: {
-          option5.is_some = true;
-          option5.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 72))), (size_t)(*((int32_t*) (ptr + 76))) };
-          break;
-        }
-      }
-      fastly_option_string_t option6;
-      switch ((int32_t) (*((uint8_t*) (ptr + 80)))) {
-        case 0: {
-          option6.is_some = false;
-          break;
-        }
-        case 1: {
-          option6.is_some = true;
-          option6.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 84))), (size_t)(*((int32_t*) (ptr + 88))) };
-          break;
-        }
-      }
-      fastly_option_string_t option7;
-      switch ((int32_t) (*((uint8_t*) (ptr + 92)))) {
-        case 0: {
-          option7.is_some = false;
-          break;
-        }
-        case 1: {
-          option7.is_some = true;
-          option7.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 96))), (size_t)(*((int32_t*) (ptr + 100))) };
-          break;
-        }
-      }
-      fastly_option_string_t option8;
-      switch ((int32_t) (*((uint8_t*) (ptr + 104)))) {
-        case 0: {
-          option8.is_some = false;
-          break;
-        }
-        case 1: {
-          option8.is_some = true;
-          option8.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 108))), (size_t)(*((int32_t*) (ptr + 112))) };
-          break;
-        }
-      }
-      fastly_option_string_t option9;
-      switch ((int32_t) (*((uint8_t*) (ptr + 116)))) {
-        case 0: {
-          option9.is_some = false;
-          break;
-        }
-        case 1: {
-          option9.is_some = true;
-          option9.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 120))), (size_t)(*((int32_t*) (ptr + 124))) };
-          break;
-        }
-      }
-      fastly_option_float32_t option10;
-      switch ((int32_t) (*((uint8_t*) (ptr + 128)))) {
-        case 0: {
-          option10.is_some = false;
-          break;
-        }
-        case 1: {
-          option10.is_some = true;
-          option10.val = *((float*) (ptr + 132));
-          break;
-        }
-      }
-      fastly_option_float32_t option11;
-      switch ((int32_t) (*((uint8_t*) (ptr + 136)))) {
-        case 0: {
-          option11.is_some = false;
-          break;
-        }
-        case 1: {
-          option11.is_some = true;
-          option11.val = *((float*) (ptr + 140));
-          break;
-        }
-      }
-      fastly_option_u32_t option12;
-      switch ((int32_t) (*((uint8_t*) (ptr + 144)))) {
-        case 0: {
-          option12.is_some = false;
-          break;
-        }
-        case 1: {
-          option12.is_some = true;
-          option12.val = (uint32_t) (*((int32_t*) (ptr + 148)));
-          break;
-        }
-      }
-      fastly_option_string_t option13;
-      switch ((int32_t) (*((uint8_t*) (ptr + 152)))) {
-        case 0: {
-          option13.is_some = false;
-          break;
-        }
-        case 1: {
-          option13.is_some = true;
-          option13.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 156))), (size_t)(*((int32_t*) (ptr + 160))) };
-          break;
-        }
-      }
-      fastly_option_string_t option14;
-      switch ((int32_t) (*((uint8_t*) (ptr + 164)))) {
-        case 0: {
-          option14.is_some = false;
-          break;
-        }
-        case 1: {
-          option14.is_some = true;
-          option14.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 168))), (size_t)(*((int32_t*) (ptr + 172))) };
-          break;
-        }
-      }
-      fastly_option_string_t option15;
-      switch ((int32_t) (*((uint8_t*) (ptr + 176)))) {
-        case 0: {
-          option15.is_some = false;
-          break;
-        }
-        case 1: {
-          option15.is_some = true;
-          option15.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 180))), (size_t)(*((int32_t*) (ptr + 184))) };
-          break;
-        }
-      }
-      fastly_option_string_t option16;
-      switch ((int32_t) (*((uint8_t*) (ptr + 188)))) {
-        case 0: {
-          option16.is_some = false;
-          break;
-        }
-        case 1: {
-          option16.is_some = true;
-          option16.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 192))), (size_t)(*((int32_t*) (ptr + 196))) };
-          break;
-        }
-      }
-      fastly_option_u32_t option17;
-      switch ((int32_t) (*((uint8_t*) (ptr + 200)))) {
-        case 0: {
-          option17.is_some = false;
-          break;
-        }
-        case 1: {
-          option17.is_some = true;
-          option17.val = (uint32_t) (*((int32_t*) (ptr + 204)));
-          break;
-        }
-      }
-      
-      result.val.ok = (fastly_geo_data_t) {
-        option,
-        option0,
-        option1,
-        option2,
-        option3,
-        option4,
-        option5,
-        option6,
-        option7,
-        option8,
-        option9,
-        option10,
-        option11,
-        option12,
-        option13,
-        option14,
-        option15,
-        option16,
-        option17,
-      };
+      result.val.ok = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) };
       break;
     }
     case 1: {
@@ -2095,7 +1846,7 @@ fastly_error_t fastly_backend_is_healthy(xqd_world_string_t *backend, fastly_bac
   return result.is_err ? result.val.err : -1;
 }
 
-fastly_error_t fastly_async_io_select(fastly_list_async_item_handle_t *hs, uint32_t timeout_ms, uint32_t *ret) {
+fastly_error_t fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms, uint32_t *ret) {
   __attribute__((aligned(4)))
   uint8_t ret_area[8];
   int32_t ptr = (int32_t) &ret_area;
@@ -2117,7 +1868,7 @@ fastly_error_t fastly_async_io_select(fastly_list_async_item_handle_t *hs, uint3
   return result.is_err ? result.val.err : -1;
 }
 
-fastly_error_t fastly_async_io_is_ready(fastly_async_item_handle_t handle, bool *ret) {
+fastly_error_t fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret) {
   __attribute__((aligned(1)))
   uint8_t ret_area[2];
   int32_t ptr = (int32_t) &ret_area;

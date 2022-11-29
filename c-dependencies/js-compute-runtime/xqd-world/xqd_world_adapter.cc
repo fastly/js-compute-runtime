@@ -588,7 +588,7 @@ fastly_error_t xqd_fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world
                                          xqd_world_string_t *ret) {
   return fastly_dictionary_get(h, key, ret);
 }
-fastly_error_t xqd_fastly_geo_lookup(fastly_list_u8_t *addr_octets, fastly_geo_data_t *ret) {
+fastly_error_t xqd_fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string_t *ret) {
   return fastly_geo_lookup(addr_octets, ret);
 }
 fastly_error_t xqd_fastly_kv_open(xqd_world_string_t *name, fastly_kv_store_handle_t *ret) {
@@ -635,11 +635,10 @@ fastly_error_t xqd_fastly_backend_is_healthy(xqd_world_string_t *backend,
                                              fastly_backend_health_t *ret) {
   return fastly_backend_is_healthy(backend, ret);
 }
-fastly_error_t xqd_fastly_async_io_select(fastly_list_async_item_handle_t *hs, uint32_t timeout_ms,
-                                          uint32_t *ret) {
+fastly_error_t xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms, uint32_t *ret) {
   return fastly_async_io_select(hs, timeout_ms, ret);
 }
-fastly_error_t xqd_fastly_async_io_is_ready(fastly_async_item_handle_t handle, bool *ret) {
+fastly_error_t xqd_fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret) {
   return fastly_async_io_is_ready(handle, ret);
 }
 fastly_error_t xqd_fastly_purge_surrogate_key(xqd_world_string_t *surrogate_key, bool soft_purge,

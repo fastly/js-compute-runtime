@@ -5043,7 +5043,8 @@ bool process_pending_async_tasks(JSContext *cx) {
   }
 
   size_t count = pending_async_tasks->length();
-  auto handles = mozilla::MakeUnique<AsyncHandle[]>(sizeof(AsyncHandle) * count);
+  auto handles =
+      mozilla::MakeUnique<fastly_async_handle_t[]>(sizeof(fastly_async_handle_t) * count);
   if (!handles) {
     return false;
   }
@@ -5051,11 +5052,11 @@ bool process_pending_async_tasks(JSContext *cx) {
   for (size_t i = 0; i < count; i++) {
     HandleObject pending_obj = (*pending_async_tasks)[i];
     if (Request::is_instance(pending_obj)) {
-      handles[i] = AsyncHandle{Request::pending_handle(pending_obj)};
+      handles[i] = Request::pending_handle(pending_obj);
     } else {
       MOZ_ASSERT(builtins::NativeStreamSource::is_instance(pending_obj));
       RootedObject owner(cx, builtins::NativeStreamSource::owner(pending_obj));
-      handles[i] = AsyncHandle{RequestOrResponse::body_handle(owner)};
+      handles[i] = RequestOrResponse::body_handle(owner);
     }
   }
 

@@ -3,9 +3,9 @@
 
 namespace builtins {
 
-DictionaryHandle Dictionary::dictionary_handle(JSObject *obj) {
+fastly_dictionary_handle_t Dictionary::dictionary_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, Dictionary::Slots::Handle);
-  return DictionaryHandle{static_cast<uint32_t>(val.toInt32())};
+  return fastly_dictionary_handle_t{static_cast<uint32_t>(val.toInt32())};
 }
 
 bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -106,7 +106,7 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedObject dictionary(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  DictionaryHandle dict_handle = {INVALID_HANDLE};
+  fastly_dictionary_handle_t dict_handle = INVALID_HANDLE;
   auto status = convert_to_fastly_status(xqd_dictionary_open(name.data(), name_len, &dict_handle));
   if (status == FastlyStatus::BadF) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_DOES_NOT_EXIST,
@@ -117,8 +117,7 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  JS::SetReservedSlot(dictionary, Dictionary::Slots::Handle,
-                      JS::Int32Value((int)dict_handle.handle));
+  JS::SetReservedSlot(dictionary, Dictionary::Slots::Handle, JS::Int32Value(dict_handle));
   if (!dictionary) {
     return false;
   }

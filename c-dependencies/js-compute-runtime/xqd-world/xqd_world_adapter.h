@@ -1,8 +1,9 @@
 #ifndef xqd_world_adapter_h
 #define xqd_world_adapter_h
 
+#include "../host_call.h"
 #include "../xqd.h"
-#include "xqd_world.h"
+#include "js/JSON.h"
 
 // TODO: remove these once the warnings are fixed
 #pragma clang diagnostic push
@@ -161,9 +162,9 @@ fastly_error_t xqd_fastly_secret_store_plaintext(fastly_secret_handle_t secret,
                                                  xqd_world_string_t *ret);
 fastly_error_t xqd_fastly_backend_is_healthy(xqd_world_string_t *backend,
                                              fastly_backend_health_t *ret);
-fastly_error_t xqd_fastly_async_io_select(fastly_list_async_item_handle_t *hs, uint32_t timeout_ms,
+fastly_error_t xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
                                           uint32_t *ret);
-fastly_error_t xqd_fastly_async_io_is_ready(fastly_async_item_handle_t handle, bool *ret);
+fastly_error_t xqd_fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret);
 fastly_error_t xqd_fastly_purge_surrogate_key(xqd_world_string_t *surrogate_key, bool soft_purge,
                                               fastly_purge_result_t *ret);
 

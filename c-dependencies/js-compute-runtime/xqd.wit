@@ -1,5 +1,6 @@
 world xqd-world {
   import fastly: interface {
+    // TODO: split this up into function-specific error enums
     enum error {
       /// Unknown error value.
       /// It should be an internal error if this is returned.
@@ -415,7 +416,8 @@ world xqd-world {
       utc-offset: option<u32>,
     }
 
-    geo-lookup: func(addr-octets: list<u8>) -> result<geo-data, error>
+    /// JSON string for now
+    geo-lookup: func(addr-octets: list<u8>) -> result<string, error>
 
 
     /*
@@ -473,7 +475,18 @@ world xqd-world {
     /*
      * Fastly Async IO
      */
-    type async-item-handle = u32
+    /// A handle to an object supporting generic async operations.
+    /// Can be either a `BodyHandle` or a `PendingRequestHandle`.
+    ///
+    /// Each async item has an associated I/O action:
+    ///
+    /// * Pending requests: awaiting the response headers / `Response` object
+    /// * Normal bodies: reading bytes from the body
+    /// * Streaming bodies: writing bytes to the body
+    ///
+    /// For writing bytes, note that there is a large host-side buffer that bytes can eagerly be written
+    /// into, even before the origin itself consumes that data.
+    type async-handle = u32
 
     /// Blocks until one of the given objects is ready for I/O, or the optional timeout expires.
     ///
@@ -485,7 +498,7 @@ world xqd-world {
     ///
     /// Returns the _index_ (not handle!) of the first object that is ready, or u32::MAX if the
     /// timeout expires before any objects are ready for I/O.
-    async-io-select: func(hs: list<async-item-handle>, timeout-ms: u32) -> result<u32, error>
+    async-io-select: func(hs: list<async-handle>, timeout-ms: u32) -> result<u32, error>
 
     /// Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
     ///
@@ -494,7 +507,7 @@ world xqd-world {
     /// Valid object handles includes bodies and pending requests. See the `async_item_handle`
     /// definition for more details, including what I/O actions are associated with each handle
     /// type.
-    async-io-is-ready: func(handle: async-item-handle) -> result<bool, error>
+    async-io-is-ready: func(handle: async-handle) -> result<bool, error>
 
 
     /*

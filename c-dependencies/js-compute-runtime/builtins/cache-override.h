@@ -41,7 +41,7 @@ public:
 
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
-  static uint32_t abi_tag(JSObject *self);
+  static uint8_t abi_tag(JSObject *self);
   static JS::Value ttl(JSObject *self);
   static void set_ttl(JSObject *self, uint32_t ttl);
   static JS::Value swr(JSObject *self);

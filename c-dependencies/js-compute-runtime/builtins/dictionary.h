@@ -17,7 +17,7 @@ public:
 
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
 
-  static DictionaryHandle dictionary_handle(JSObject *obj);
+  static fastly_dictionary_handle_t dictionary_handle(JSObject *obj);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static bool init_class(JSContext *cx, JS::HandleObject global);

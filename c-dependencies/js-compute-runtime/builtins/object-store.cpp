@@ -101,7 +101,7 @@ bool is_instance(JS::Value val);
 
 fastly_object_store_handle_t object_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, Slots::ObjectStore);
-  return val.toInt32();
+  return fastly_object_store_handle_t{static_cast<uint32_t>(val.toInt32())};
 }
 
 const unsigned ctor_length = 1;

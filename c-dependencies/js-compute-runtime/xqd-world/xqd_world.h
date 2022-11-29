@@ -185,8 +185,19 @@ typedef uint8_t fastly_backend_health_t;
 #define FASTLY_BACKEND_HEALTH_HEALTHY 1
 #define FASTLY_BACKEND_HEALTH_UNHEALTHY 2
 #define FASTLY_RESULT_BACKEND_HEALTH_OK 255
+// A handle to an object supporting generic async operations.
+// Can be either a `BodyHandle` or a `PendingRequestHandle`.
+//
+// Each async item has an associated I/O action:
+//
+// * Pending requests: awaiting the response headers / `Response` object
+// * Normal bodies: reading bytes from the body
+// * Streaming bodies: writing bytes to the body
+//
+// For writing bytes, note that there is a large host-side buffer that bytes can eagerly be written
+// into, even before the origin itself consumes that data.
 
-typedef uint32_t fastly_async_item_handle_t;
+typedef uint32_t fastly_async_handle_t;
 
 typedef struct {
   xqd_world_string_t id;
@@ -381,14 +392,6 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
-    fastly_geo_data_t ok;
-    fastly_error_t err;
-  } val;
-} fastly_result_geo_data_error_t;
-
-typedef struct {
-  bool is_err;
-  union {
     fastly_kv_store_handle_t ok;
     fastly_error_t err;
   } val;
@@ -435,9 +438,9 @@ typedef struct {
 } fastly_result_backend_health_error_t;
 
 typedef struct {
-  fastly_async_item_handle_t *ptr;
+  fastly_async_handle_t *ptr;
   size_t len;
-} fastly_list_async_item_handle_t;
+} fastly_list_async_handle_t;
 
 typedef struct {
   bool is_err;
@@ -758,7 +761,7 @@ fastly_error_t fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_str
 
 __attribute__((import_module("fastly"), import_name("geo-lookup"))) void
     __wasm_import_fastly_geo_lookup(int32_t, int32_t, int32_t);
-fastly_error_t fastly_geo_lookup(fastly_list_u8_t *addr_octets, fastly_geo_data_t *ret);
+fastly_error_t fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string_t *ret);
 
 __attribute__((import_module("fastly"), import_name("kv-open"))) void
     __wasm_import_fastly_kv_open(int32_t, int32_t, int32_t);
@@ -816,12 +819,12 @@ fastly_error_t fastly_backend_is_healthy(xqd_world_string_t *backend, fastly_bac
 
 __attribute__((import_module("fastly"), import_name("async-io-select"))) void
     __wasm_import_fastly_async_io_select(int32_t, int32_t, int32_t, int32_t);
-fastly_error_t fastly_async_io_select(fastly_list_async_item_handle_t *hs, uint32_t timeout_ms,
+fastly_error_t fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
                                       uint32_t *ret);
 
 __attribute__((import_module("fastly"), import_name("async-io-is-ready"))) void
     __wasm_import_fastly_async_io_is_ready(int32_t, int32_t);
-fastly_error_t fastly_async_io_is_ready(fastly_async_item_handle_t handle, bool *ret);
+fastly_error_t fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret);
 
 __attribute__((import_module("fastly"), import_name("purge-surrogate-key"))) void
     __wasm_import_fastly_purge_surrogate_key(int32_t, int32_t, int32_t, int32_t);

@@ -3,9 +3,9 @@
 
 namespace builtins {
 
-ConfigStoreHandle ConfigStore::config_store_handle(JSObject *obj) {
+fastly_dictionary_handle_t ConfigStore::config_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, ConfigStore::Slots::Handle);
-  return ConfigStoreHandle{static_cast<uint32_t>(val.toInt32())};
+  return static_cast<fastly_dictionary_handle_t>(val.toInt32());
 }
 
 bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -28,9 +28,9 @@ bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   OwnedHostCallBuffer buffer;
   size_t nwritten = 0;
-  auto status = convert_to_fastly_status(
-      xqd_config_store_get(ConfigStore::config_store_handle(self), name.get(), name_len,
-                           buffer.get(), CONFIG_STORE_ENTRY_MAX_LEN, &nwritten));
+  auto status = convert_to_fastly_status(xqd_dictionary_get(ConfigStore::config_store_handle(self),
+                                                            name.get(), name_len, buffer.get(),
+                                                            CONFIG_STORE_ENTRY_MAX_LEN, &nwritten));
   // FastlyStatus::none indicates the key wasn't found, so we return null.
   if (status == FastlyStatus::None) {
     args.rval().setNull();
@@ -95,7 +95,7 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   JS::RootedObject config_store(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  ConfigStoreHandle dict_handle = {INVALID_HANDLE};
+  fastly_dictionary_handle_t dict_handle = INVALID_HANDLE;
   auto status =
       convert_to_fastly_status(xqd_config_store_open(name.data(), name_len, &dict_handle));
   if (status == FastlyStatus::BadF) {
@@ -103,9 +103,11 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
                               name.data());
     return false;
   }
+  if (!HANDLE_RESULT(cx, status)) {
+    return false;
+  }
 
-  JS::SetReservedSlot(config_store, ConfigStore::Slots::Handle,
-                      JS::Int32Value((int)dict_handle.handle));
+  JS::SetReservedSlot(config_store, ConfigStore::Slots::Handle, JS::Int32Value(dict_handle));
   if (!config_store)
     return false;
   args.rval().setObject(*config_store);

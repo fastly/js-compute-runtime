@@ -20,29 +20,6 @@ extern "C" {
 #define CONFIG_STORE_ENTRY_MAX_LEN 8000
 #define DICTIONARY_ENTRY_MAX_LEN CONFIG_STORE_ENTRY_MAX_LEN
 
-typedef struct {
-  uint32_t handle;
-} DictionaryHandle;
-
-typedef struct {
-  uint32_t handle;
-} ConfigStoreHandle;
-
-// A handle to an object supporting generic async operations.
-// Can be either a `BodyHandle` or a `PendingRequestHandle`.
-//
-// Each async item has an associated I/O action:
-//
-// * Pending requests: awaiting the response headers / `Response` object
-// * Normal bodies: reading bytes from the body
-// * Streaming bodies: writing bytes to the body
-//
-// For writing bytes, note that there is a large host-side buffer that bytes can eagerly be written
-// into, even before the origin itself consumes that data.
-typedef struct {
-  uint32_t handle;
-} AsyncHandle;
-
 // The values need to match https://docs.rs/fastly-sys/0.8.7/src/fastly_sys/lib.rs.html#86-108
 #define BACKEND_CONFIG_RESERVED (1u << 0)
 #define BACKEND_CONFIG_HOST_OVERRIDE (1u << 1)
@@ -300,18 +277,12 @@ int xqd_resp_status_set(fastly_response_handle_t resp_handle, uint16_t status);
 
 // Module fastly_dictionary
 WASM_IMPORT("fastly_dictionary", "open")
-int xqd_dictionary_open(const char *name, size_t name_len, DictionaryHandle *dict_handle_out);
+int xqd_dictionary_open(const char *name, size_t name_len,
+                        fastly_dictionary_handle_t *dict_handle_out);
 
 WASM_IMPORT("fastly_dictionary", "get")
-int xqd_dictionary_get(DictionaryHandle dict_handle, const char *key, size_t key_len, char *value,
-                       size_t value_max_len, size_t *nwritten);
-
-WASM_IMPORT("fastly_dictionary", "open")
-int xqd_config_store_open(const char *name, size_t name_len, ConfigStoreHandle *dict_handle_out);
-
-WASM_IMPORT("fastly_dictionary", "get")
-int xqd_config_store_get(ConfigStoreHandle dict_handle, const char *key, size_t key_len,
-                         char *value, size_t value_max_len, size_t *nwritten);
+int xqd_dictionary_get(fastly_dictionary_handle_t dict_handle, const char *key, size_t key_len,
+                       char *value, size_t value_max_len, size_t *nwritten);
 
 // Module fastly_object_store
 WASM_IMPORT("fastly_object_store", "open")
@@ -323,7 +294,6 @@ int xqd_object_store_get(fastly_object_store_handle_t object_store_handle, const
 WASM_IMPORT("fastly_object_store", "insert")
 int xqd_object_store_insert(fastly_object_store_handle_t object_store_handle, const char *key,
                             size_t key_len, fastly_body_handle_t body_handle);
-
 WASM_IMPORT("fastly_geo", "lookup")
 int xqd_geo_lookup(const char *addr_octets, size_t addr_len, char *buf, size_t buf_len,
                    size_t *nwritten);
@@ -342,7 +312,7 @@ int32_t random_get(int32_t arg0, int32_t arg1);
 // Returns the _index_ (not handle!) of the first object that is ready, or u32::MAX if the
 // timeout expires before any objects are ready for I/O.
 WASM_IMPORT("fastly_async_io", "select")
-int xqd_async_select(AsyncHandle handles[], size_t handles_len, uint32_t timeout_ms,
+int xqd_async_select(fastly_async_handle_t handles[], size_t handles_len, uint32_t timeout_ms,
                      uint32_t *ready_idx_out);
 
 // Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
@@ -353,7 +323,7 @@ int xqd_async_select(AsyncHandle handles[], size_t handles_len, uint32_t timeout
 // definition for more details, including what I/O actions are associated with each handle
 // type.
 WASM_IMPORT("fastly_async_io", "is_ready")
-int xqd_async_is_ready(AsyncHandle handle, uint32_t *is_ready_out);
+int xqd_async_is_ready(fastly_async_handle_t handle, uint32_t *is_ready_out);
 
 #ifdef __cplusplus
 }
