@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.12](https://github.com/fastly/js-compute-runtime/compare/v0.5.11...v0.5.12) (2022-11-30)
+
+
+### Features
+
+* add fastly:experimental module which contains all our experimental functions such as includeBytes and enableDebugLogging ([5c6a5d7](https://github.com/fastly/js-compute-runtime/commit/5c6a5d7cf13274f4752fa398d9bc92de658004b8))
+
 ## [0.5.11](https://github.com/fastly/js-compute-runtime/compare/v0.5.10...v0.5.11) (2022-11-30)
 
 
