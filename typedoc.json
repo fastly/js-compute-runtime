@@ -10,6 +10,7 @@
         "types/fastly:config-store.d.ts",
         "types/fastly:dictionary.d.ts",
         "types/fastly:env.d.ts",
+        "types/fastly:experimental.d.ts",
         "types/fastly:geolocation.d.ts",
         "types/fastly:logger.d.ts",
         "types/fastly:object-store.d.ts",
