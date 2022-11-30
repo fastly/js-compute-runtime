@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.11](https://github.com/fastly/js-compute-runtime/compare/v0.5.10...v0.5.11) (2022-11-30)
+
+
+### Bug Fixes
+
+* update nodejs supported versions to 16 - 19 and npm supported version to only 8 ([5ec70b9](https://github.com/fastly/js-compute-runtime/commit/5ec70b95b0d4d3677a522120c9ae5f9a2cea4db6))
+
 ## [0.5.10](https://github.com/fastly/js-compute-runtime/compare/v0.5.9...v0.5.10) (2022-11-30)
 
 
