@@ -48,19 +48,19 @@ jobs:
         id: sm-cache
         with:
           path: |
-            c-dependencies/spidermonkey/${{ matrix.profile }}
+            c-dependencies/spidermonkey/release
           key: cache-${{ hashFiles(
             'c-dependencies/spidermonkey/build-engine.sh',
             'c-dependencies/spidermonkey/gecko-revision',
             'c-dependencies/spidermonkey/object-files.list',
             'c-dependencies/rust-toolchain.toml'
-            ) }}-${{ matrix.profile }}
+            ) }}-release
 
       - name: "Build SpiderMonkey"
         if: ${{ steps.release.outputs.release_created && steps.sm-cache.outputs.cache-hit != 'true' }}
         run: |
           cd c-dependencies/spidermonkey/
-          bash ./build-engine.sh ${{ matrix.profile }}
+          bash ./build-engine.sh release
 
       - name: "Install wasi-sdk (linux)"
         if: ${{ steps.release.outputs.release_created }}
