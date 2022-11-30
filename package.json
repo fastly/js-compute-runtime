@@ -2,7 +2,8 @@
   "name": "@fastly/js-compute",
   "version": "0.5.10",
   "engines": {
-    "node": "^16 || ^18"
+    "node": "16 - 19",
+    "npm": "^8"
   },
   "license": "Apache-2.0",
   "main": "js-compute-runtime-cli.js",
