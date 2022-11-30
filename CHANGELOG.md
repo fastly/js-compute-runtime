@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.10](https://github.com/fastly/js-compute-runtime/compare/v0.5.9...v0.5.10) (2022-11-30)
+
+
+### Bug Fixes
+
+* ensure custom cache keys are uppercased ([f37920d](https://github.com/fastly/js-compute-runtime/commit/f37920d01f5fb9a172ae82a1d6191159be59f561)), closes [#318](https://github.com/fastly/js-compute-runtime/issues/318)
+
 ## [0.5.9](https://github.com/fastly/js-compute-runtime/compare/v0.5.8...v0.5.9) (2022-11-29)
 
 
