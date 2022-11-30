@@ -1,9 +1,11 @@
 /* eslint-env serviceworker */
+/* global add_completion_callback setup done */
+import { enableDebugLogging, setDefaultBackend, setBaseURL } from "fastly:experimental";
 
-fastly.enableDebugLogging(true);
-fastly.defaultBackend = "wpt";
+enableDebugLogging(true);
+setDefaultBackend("wpt");
 
-let completionPromise = new Promise((resolve, reject) => {
+let completionPromise = new Promise((resolve) => {
     add_completion_callback(function(tests, harness_status, asserts) {
       resolve({tests, harness_status, asserts});
     });
@@ -14,8 +16,9 @@ setup({ explicit_done: true });
 async function handleRequest(event) {
   let url = new URL(event.request.url);
   let input = `http://web-platform.test:8000${url.pathname}${url.search}`;
-  fastly.baseURL = new URL(input);
-  globalThis.location = fastly.baseURL;
+  let baseURL = new URL(input);
+  setBaseURL(baseURL);
+  globalThis.location = baseURL;
   try {
     let response = await fetch(input);
     let testSource = await response.text();
@@ -23,6 +26,7 @@ async function handleRequest(event) {
 
     let scripts = [];
 
+    // eslint-disable-next-line no-unused-vars
     for (let [_, path] of testSource.matchAll(/META: *script=(.+)/g)) {
       let metaSource = await loadMetaScript(path, input);
       scripts.push(metaSource);
@@ -32,7 +36,7 @@ async function handleRequest(event) {
     evalAllScripts(scripts);
     done();
 
-    let {tests, harness_status, asserts} = await completionPromise;
+    let {tests} = await completionPromise;
 
     return new Response(JSON.stringify(tests, null, 2), { headers: { "content-encoding" : "application/json" } });
   } catch (e) {
@@ -44,7 +48,7 @@ async function handleRequest(event) {
       }
     }`, { status: 500 });
   }
-};
+}
 
 function evalAllScripts(wpt_test_scripts) {
   for (let wpt_test_script of wpt_test_scripts) {
@@ -52,7 +56,7 @@ function evalAllScripts(wpt_test_scripts) {
   }
 }
 
-async function loadMetaScript(path, base) {
+async function loadMetaScript(path) {
   let response = await fetch(path);
   let metaSource = await response.text();
   // Somewhat annoyingly, the WPT harness includes META scripts as <script src=[path]> tags,
