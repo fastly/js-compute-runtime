@@ -408,20 +408,15 @@ private:
     for (auto &cipher : ciphers) {
       if (protocols.has_value() && protocols->find(cipher.getProtocol()) != protocols->end()) {
         result.push_back(cipher);
-      }
-      if (kx.has_value() && kx->find(cipher.getKx()) != kx->end()) {
+      } else if (kx.has_value() && kx->find(cipher.getKx()) != kx->end()) {
         result.push_back(cipher);
-      }
-      if (au.has_value() && au->find(cipher.getAu()) != au->end()) {
+      } else if (au.has_value() && au->find(cipher.getAu()) != au->end()) {
         result.push_back(cipher);
-      }
-      if (enc.has_value() && enc->find(cipher.getEnc()) != enc->end()) {
+      } else if (enc.has_value() && enc->find(cipher.getEnc()) != enc->end()) {
         result.push_back(cipher);
-      }
-      if (level.has_value() && level->find(cipher.getLevel()) != level->end()) {
+      } else if (level.has_value() && level->find(cipher.getLevel()) != level->end()) {
         result.push_back(cipher);
-      }
-      if (mac.has_value() && mac->find(cipher.getMac()) != mac->end()) {
+      } else if (mac.has_value() && mac->find(cipher.getMac()) != mac->end()) {
         result.push_back(cipher);
       }
     }
