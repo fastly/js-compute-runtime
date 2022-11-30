@@ -361,7 +361,7 @@ import { expectError, expectType } from 'tsd';
   const decoder = new TextDecoder
   expectType<TextDecoder>(decoder)
   expectType<(input?: ArrayBuffer | ArrayBufferView) => string>(decoder.decode)
-  expectType<string>(decoder.encoding)
+  expectType<"utf-8">(decoder.encoding)
   expectError(decoder.encoding = 'd')
 }
 
@@ -398,12 +398,6 @@ import { expectError, expectType } from 'tsd';
   expectType<(path: string)=>Uint8Array>(fastly.includeBytes);
 }
 
-// CompressionStreamFormat
-{
-  const format = {} as CompressionStreamFormat
-  expectType<"deflate" | "deflate-raw" | "gzip">(format)
-}
-
 // CompressionStream
 {
   expectError(CompressionStream())
@@ -415,12 +409,6 @@ import { expectError, expectType } from 'tsd';
   expectError(stream.readable = 'd')
   expectType<WritableStream<Uint8Array>>(stream.writable)
   expectError(stream.writable = 'd')
-}
-
-// DecompressionStreamFormat
-{
-  const format = {} as DecompressionStreamFormat
-  expectType<"deflate" | "deflate-raw" | "gzip">(format)
 }
 
 // DecompressionStream

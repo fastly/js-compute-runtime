@@ -644,9 +644,10 @@ declare class TextEncoder {
  * @group Encoding API
  */
 declare class TextDecoder {
-  constructor();
+  // TODO: We should throw a RangeError if supplied a `label` that we do not support
+  constructor(label?: "unicode-1-1-utf-8" | "utf-8" | "utf8");
   decode(input?: ArrayBuffer | ArrayBufferView): string;
-  get encoding(): string;
+  get encoding(): "utf-8";
 }
 
 /**
@@ -767,46 +768,117 @@ declare interface Fastly {
 declare var fastly: Fastly;
 
 /**
+ * An API for compressing a stream of data.
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/CompressionStream | CompressionStream on MDN}
+ * 
+ * @example
+ * In this example a request is made to httpbin.org/html and the response body is compressed using gzip compression.
+ * 
+ * View this example on [Fiddle](https://fiddle.fastly.dev/fiddle/c1326776).
+ * 
+ * ```js
+ * async function app(event) {
+ *  const req = event.request;
+ *  const backendResponse = await fetch("https://httpbin.org/html", { backend: "origin_0" });
+ *  if (!backendResponse.body) {
+ *    return backendResponse;
+ *  }
+ *  let resp = new Response(backendResponse.body.pipeThrough(new CompressionStream("gzip")), backendResponse);
+ *  resp.headers.set("Content-Encoding", "gzip");
+ *  return resp;
+ * }
+ * addEventListener("fetch", event => event.respondWith(app(event)));
+ * ```
+ *
  * @group Compression Streams APIs
  */
-type CompressionStreamFormat = "deflate" | "deflate-raw" | "gzip"
+declare class CompressionStream {
+  /**
+   * Creates a new `CompressionStream` object which compresses a stream of data.
+   * 
+   * @param format The compression format to use.
+   *
+   * @throws Throws a `TypeError` if the format passed to the constructor is not supported.
+   * @example
+   * ```js
+   * const gzip = new CompressionStream("gzip");
+   * ```
+   */
+  constructor(format: "deflate" | "deflate-raw" | "gzip");
 
-/**
- * @group Compression Streams APIs
- */
-interface CompressionStream {
+  /**
+   * @example 
+   * ```js
+   * let stream = new CompressionStream("gzip");
+   * console.log(stream.readable instanceof ReadableStream); // true
+   * ```
+   */
   readonly readable: ReadableStream<Uint8Array>;
+  /**
+   * @example 
+   * ```js
+   * let stream = new CompressionStream("gzip");
+   * console.log(stream.writable instanceof WritableStream); // true
+   * ```
+   */
   readonly writable: WritableStream<Uint8Array>;
 }
 
 /**
+ * An API for decompressing a stream of data.
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/DecompressionStream | DecompressionStream on MDN}
+ * 
+ * @example
+ * In this example a request is made to httpbin.org/gzip and the response body is decompressed using gzip decompression.
+ * 
+ * View this example on [Fiddle](https://fiddle.fastly.dev/fiddle/637add51).
+ * 
+ * ```js
+ * async function app(event) {
+ *  const backendResponse = await fetch("https://httpbin.org/gzip", { backend: "origin_0" });
+ *  let resp = new Response(backendResponse.body.pipeThrough(new DecompressionStream("gzip")), backendResponse);
+ *  resp.headers.delete('content-encoding');
+ *  return resp;
+ * }
+ * addEventListener("fetch", event => event.respondWith(app(event)));
+ * ```
+ *
  * @group Compression Streams APIs
  */
-declare var CompressionStream: {
-  prototype: CompressionStream;
-  new(format: CompressionStreamFormat): CompressionStream;
-};
+declare class DecompressionStream {
+  /**
+   * Creates a new `DecompressionStream` object which decompresses a stream of
+   * data.
+   *
+   * @param format The compression format to use.
+   *
+   * @throws Throws a `TypeError` if the format passed to the constructor is not supported.
+   * @example
+   * ```js
+   * const gzip = new DecompressionStream("gzip");
+   * ```
+   */
+  constructor(format: "deflate" | "deflate-raw" | "gzip");
 
-/**
- * @group Compression Streams APIs
- */
-type DecompressionStreamFormat = "deflate" | "deflate-raw" | "gzip"
-
-/**
- * @group Compression Streams APIs
- */
-interface DecompressionStream {
+  /**
+   * @example 
+   * ```js
+   * let stream = new DeompressionStream("gzip");
+   * console.log(stream.readable instanceof ReadableStream); // true
+   * ```
+   */
   readonly readable: ReadableStream<Uint8Array>;
+  /**
+   * @example 
+   * ```js
+   * let stream = new DeompressionStream("gzip");
+   * console.log(stream.writable instanceof WritableStream); // true
+   * ```
+   */
   readonly writable: WritableStream<Uint8Array>;
 }
-
-/**
- * @group Compression Streams APIs
- */
-declare var DecompressionStream: {
-  prototype: DecompressionStream;
-  new(format: DecompressionStreamFormat): DecompressionStream;
-};
 
 // Note: the contents below here are, partially modified, copies of content from TypeScript's
 // `lib.dom.d.ts` file.

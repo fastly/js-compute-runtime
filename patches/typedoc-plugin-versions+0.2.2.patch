@@ -1,0 +1,15 @@
+diff --git a/node_modules/typedoc-plugin-versions/src/etc/utils.js b/node_modules/typedoc-plugin-versions/src/etc/utils.js
+index db6b2cb..e92c4e8 100644
+--- a/node_modules/typedoc-plugin-versions/src/etc/utils.js
++++ b/node_modules/typedoc-plugin-versions/src/etc/utils.js
+@@ -235,9 +235,7 @@ function makeJsKeys(metadata) {
+     const alias = metadata.stable ? 'stable' : 'dev';
+     const keys = [
+         alias,
+-        ...metadata.versions // add the major.minor versions
+-            .map((v) => getMinorVersion(v))
+-            .filter((v, i, s) => s.indexOf(v) === i),
++        ...metadata.versions,
+     ];
+     if (alias !== 'dev' && metadata.dev) {
+         keys.push('dev');
