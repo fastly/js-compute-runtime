@@ -3969,7 +3969,7 @@ path = "../reference-docs/.nojekyll"
 
 [[local_server.object_store.site]]
 key = "/versions.js__metadata__"
-data = '{"ETag":"W/\"5C5KyyhQ7Ri6unq2rOT7Kv/mpF7QMIqNta3HVxM3aVM=\"","Last-Modified":"Wed, 30 Nov 2022 10:50:18 GMT","Content-Type":"application/javascript"}'
+data = '{"ETag":"W/\"1/5DRvzLBkH6VvPv4Pxpd0RPuN+Snb2xC4qPZwJLqAU=\"","Last-Modified":"Wed, 30 Nov 2022 10:51:02 GMT","Content-Type":"application/javascript"}'
 
 [[local_server.object_store.site]]
 key = "/versions.js"
