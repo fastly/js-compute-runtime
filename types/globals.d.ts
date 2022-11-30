@@ -1,22 +1,38 @@
+/**
+ * @group Web APIs
+ */
 declare var self: typeof globalThis;
+
+/**
+ * @group DOM Events
+ */
 interface EventMap {
   "fetch": FetchEvent;
 }
 
+/**
+ * @group DOM Events
+ */
 interface EventListenerMap {
   "fetch": FetchEventListener;
 }
 
+/**
+ * @group DOM Events
+ */
 interface FetchEventListener {
   (this: typeof globalThis, event: FetchEvent): any
 }
-
+/**
+ * @group DOM Events
+ */
 declare var onfetch: FetchEventListener;
 
 /**
  * This is a fetch specific implementation of [addEventListener](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener), and is very similar to [handling FetchEvent from a Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/FetchEvent/request).
  *
  * For Fastly C@E, this will be the entrypoint in handling your downstream request from your client.
+ * @group DOM Events
  */
 declare function addEventListener<K extends keyof EventMap>(type: K, listener: EventListenerMap[K]): void;
 
@@ -114,6 +130,7 @@ declare class Backend {
 
 /**
  * A Fastly C@E specific implementation of [FetchEvent](https://developer.mozilla.org/en-US/docs/Web/API/FetchEvent/FetchEvent).
+ * @group DOM Events
  */
 declare interface FetchEvent {
   /**
@@ -496,6 +513,7 @@ declare interface ObjectStoreEntry {
  * The URL class as [specified by WHATWG](https://url.spec.whatwg.org/#url-class)
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/URL | URL on MDN}
+ * @group Web APIs
  */
 declare class URL {
   constructor(url: string, base?: string | URL);
@@ -543,8 +561,8 @@ declare class URL {
  * The URLSearchParams class as [specified by WHATWG](https://url.spec.whatwg.org/#interface-urlsearchparams)
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams | URLSearchParams on MDN}
+ * @group Web APIs
  */
-
 declare class URLSearchParams {
   constructor(
     init?:
@@ -588,6 +606,7 @@ declare class URLSearchParams {
  * does not perform string substitution.
  *
  * **Note**: Messages are prefixed with the respective log level, starting with an upper-case letter, e.g. `"Log: "`.
+ * @group Console API
  */
 declare interface Console {
   log(...objects: any[]): void;
@@ -599,6 +618,7 @@ declare interface Console {
 
 /**
  * The global {@linkcode Console} instance
+ * @group Console API
  */
 declare var console: Console;
 
@@ -606,6 +626,7 @@ declare var console: Console;
  * TextEncoder takes a stream of code points as input and emits a stream of UTF-8 bytes
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder | TextEncoder on MDN}
+ * @group Encoding API
  */
 declare class TextEncoder {
   constructor();
@@ -620,6 +641,7 @@ declare class TextEncoder {
  *
  * **Note**: On Compute@Edge, TextDecoder only supports UTF-8 bytes as input, and always operates
  * in non-fatal mode.
+ * @group Encoding API
  */
 declare class TextDecoder {
   constructor();
@@ -644,11 +666,33 @@ declare interface Logger {
 
 /**
  * Fastly-specific APIs available to Compute@Edge JS services
+ * @deprecated
+ * @hidden
  */
 declare interface Fastly {
+  /**
+   * @deprecated This has moved to {@link "fastly:experimental".setBaseURL} - This will be removed in the next major version.
+   * @hidden
+   * @experimental
+   */
   set baseURL(base: URL | null | undefined);
+  /**
+   * @deprecated This will be removed in the next major version.
+   * @hidden
+   * @experimental
+   */
   get baseURL(): URL | null;
+  /**
+   * @deprecated This has moved to {@link "fastly:experimental".setDefaultBackend} - This will be removed in the next major version.
+   * @hidden
+   * @experimental
+   */
   set defaultBackend(backend: string);
+  /**
+   * @deprecated This will be removed in the next major version.
+   * @hidden
+   * @experimental
+   */
   get defaultBackend(): string;
   /**
    * Property to access the environment variables for the C@E service.
@@ -684,6 +728,8 @@ declare interface Fastly {
    * **Note**: This is mostly for internal debugging purposes and will generate highly unstable
    * output.
    *
+   * @deprecated This has moved to {@link "fastly:experimental".enableDebugLogging} - This function will be removed in the next major version.
+   * @hidden
    * @experimental
    */
   enableDebugLogging(enabled: boolean): void;
@@ -706,6 +752,8 @@ declare interface Fastly {
    *
    * **Note**: Can only be used during build-time initialization, not when processing requests.
    *
+   * @deprecated This has moved to {@link "fastly:experimental".includeBytes} - This function will be removed in the next major version.
+   * @hidden
    * @experimental
    */
   includeBytes(path: string): Uint8Array;
@@ -713,28 +761,48 @@ declare interface Fastly {
 
 /**
  * The global instance of the {@linkcode Fastly} builtin
+ * @deprecated
+ * @hidden
  */
 declare var fastly: Fastly;
 
+/**
+ * @group Compression Streams APIs
+ */
 type CompressionStreamFormat = "deflate" | "deflate-raw" | "gzip"
 
+/**
+ * @group Compression Streams APIs
+ */
 interface CompressionStream {
   readonly readable: ReadableStream<Uint8Array>;
   readonly writable: WritableStream<Uint8Array>;
 }
 
+/**
+ * @group Compression Streams APIs
+ */
 declare var CompressionStream: {
   prototype: CompressionStream;
   new(format: CompressionStreamFormat): CompressionStream;
 };
 
+/**
+ * @group Compression Streams APIs
+ */
 type DecompressionStreamFormat = "deflate" | "deflate-raw" | "gzip"
 
+/**
+ * @group Compression Streams APIs
+ */
 interface DecompressionStream {
   readonly readable: ReadableStream<Uint8Array>;
   readonly writable: WritableStream<Uint8Array>;
 }
 
+/**
+ * @group Compression Streams APIs
+ */
 declare var DecompressionStream: {
   prototype: DecompressionStream;
   new(format: DecompressionStreamFormat): DecompressionStream;
@@ -771,6 +839,7 @@ and limitations under the License.
  * [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request/Request) and
  * [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response) constructors.
  * ({@linkcode Request}, and {@linkcode Response})
+ * @group Fetch API
  */
 declare type BodyInit = ReadableStream | ArrayBufferView | ArrayBuffer | URLSearchParams | string;
 
@@ -778,6 +847,7 @@ declare type BodyInit = ReadableStream | ArrayBufferView | ArrayBuffer | URLSear
  * Body for Fetch HTTP Requests and Responses
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#Body | Body on MDN}
+ * @group Fetch API
  */
 declare interface Body {
   readonly body: ReadableStream<Uint8Array> | null;
@@ -794,6 +864,7 @@ declare interface Body {
  * [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request)
  *
  * Usually this a URL to the resource you are requesting.
+ * @group Fetch API
  */
 declare type RequestInfo = Request | string;
 
@@ -803,6 +874,7 @@ declare type RequestInfo = Request | string;
  *
  * This contains information to send along with the request (Headers, body, etc...), as well as
  * Fastly specific information.
+ * @group Fetch API
  */
 declare interface RequestInit {
   /** A BodyInit object or null to set request's body. */
@@ -844,6 +916,7 @@ declare interface RequestInit {
  * **Note**: Can only be used when processing requests, not during build-time initialization.
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Request | Request on MDN}
+ * @group Fetch API
  */
 interface Request extends Body {
   // /** Returns the cache mode associated with request, which is a string indicating how the request will interact with the browser's cache when fetching. */
@@ -880,6 +953,9 @@ interface Request extends Body {
   setCacheKey(key: string): void;
 }
 
+/**
+ * @group Fetch API
+ */
 declare var Request: {
   prototype: Request;
   new(input: RequestInfo | URL, init?: RequestInit): Request;
@@ -888,6 +964,7 @@ declare var Request: {
 /**
  * Constructor parameter for the [Fetch API Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
  * This contains information to send along with the response.
+ * @group Fetch API
  */
 declare interface ResponseInit {
   headers?: HeadersInit;
@@ -901,6 +978,7 @@ declare interface ResponseInit {
  * **Note**: Can only be used when processing requests, not during build-time initialization.
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Response | Response on MDN}
+ * @group Fetch API
  */
 interface Response extends Body {
   readonly headers: Headers;
@@ -913,6 +991,9 @@ interface Response extends Body {
   // clone(): Response;
 }
 
+/**
+ * @group Fetch API
+ */
 declare var Response: {
   prototype: Response;
   new(body?: BodyInit | null, init?: ResponseInit): Response;
@@ -920,39 +1001,69 @@ declare var Response: {
   // redirect(url: string | URL, status?: number): Response;
 };
 
+/**
+ * @group Streams API
+ */
 type ReadableStreamReader<T> = ReadableStreamDefaultReader<T>;
 // type ReadableStreamReader<T> = ReadableStreamDefaultReader<T> | ReadableStreamBYOBReader;
+/**
+ * @group Streams API
+ */
 type ReadableStreamController<T> = ReadableStreamDefaultController<T>;
 // type ReadableStreamController<T> = ReadableStreamDefaultController<T> | ReadableByteStreamController;
 
+/**
+ * @group Streams API
+ */
 interface UnderlyingSinkAbortCallback {
   (reason?: any): void | PromiseLike<void>;
 }
 
+/**
+ * @group Streams API
+ */
 interface UnderlyingSinkCloseCallback {
   (): void | PromiseLike<void>;
 }
 
+/**
+ * @group Streams API
+ */
 interface UnderlyingSinkStartCallback {
   (controller: WritableStreamDefaultController): any;
 }
 
+/**
+ * @group Streams API
+ */
 interface UnderlyingSinkWriteCallback<W> {
   (chunk: W, controller: WritableStreamDefaultController): void | PromiseLike<void>;
 }
 
+/**
+ * @group Streams API
+ */
 interface UnderlyingSourceCancelCallback {
   (reason?: any): void | PromiseLike<void>;
 }
 
+/**
+ * @group Streams API
+ */
 interface UnderlyingSourcePullCallback<R> {
   (controller: ReadableStreamController<R>): void | PromiseLike<void>;
 }
 
+/**
+ * @group Streams API
+ */
 interface UnderlyingSourceStartCallback<R> {
   (controller: ReadableStreamController<R>): any;
 }
 
+/**
+ * @group Streams API
+ */
 interface UnderlyingSink<W = any> {
   abort?: UnderlyingSinkAbortCallback;
   close?: UnderlyingSinkCloseCallback;
@@ -961,6 +1072,9 @@ interface UnderlyingSink<W = any> {
   write?: UnderlyingSinkWriteCallback<W>;
 }
 
+/**
+ * @group Streams API
+ */
 interface UnderlyingSource<R = any> {
   autoAllocateChunkSize?: number;
   cancel?: UnderlyingSourceCancelCallback;
@@ -969,8 +1083,14 @@ interface UnderlyingSource<R = any> {
   type?: ReadableStreamType;
 }
 
+/**
+ * @group Streams API
+ */
 type ReadableStreamType = "bytes";
 
+/**
+ * @group Streams API
+ */
 interface StreamPipeOptions {
   preventAbort?: boolean;
   preventCancel?: boolean;
@@ -995,15 +1115,24 @@ interface StreamPipeOptions {
   // signal?: AbortSignal;
 }
 
+/**
+ * @group Streams API
+ */
 interface QueuingStrategySize<T = any> {
   (chunk: T): number;
 }
 
+/**
+ * @group Streams API
+ */
 interface QueuingStrategy<T = any> {
   highWaterMark?: number;
   size?: QueuingStrategySize<T>;
 }
 
+/**
+ * @group Streams API
+ */
 interface QueuingStrategyInit {
   /**
    * Creates a new ByteLengthQueuingStrategy with the provided high water mark.
@@ -1013,18 +1142,30 @@ interface QueuingStrategyInit {
   highWaterMark: number;
 }
 
+/**
+ * @group Streams API
+ */
 interface ReadableStreamDefaultReadDoneResult {
   done: true;
   value?: undefined;
 }
 
+/**
+ * @group Streams API
+ */
 interface ReadableStreamDefaultReadValueResult<T> {
   done: false;
   value: T;
 }
 
+/**
+ * @group Streams API
+ */
 type ReadableStreamDefaultReadResult<T> = ReadableStreamDefaultReadValueResult<T> | ReadableStreamDefaultReadDoneResult;
 
+/**
+ * @group Streams API
+ */
 interface ReadableWritablePair<R = any, W = any> {
   readable: ReadableStream<R>;
   /**
@@ -1035,7 +1176,10 @@ interface ReadableWritablePair<R = any, W = any> {
   writable: WritableStream<W>;
 }
 
-/** This Streams API interface represents a readable stream of byte data. The Fetch API offers a concrete instance of a ReadableStream through the body property of a Response object. */
+/** 
+ * This Streams API interface represents a readable stream of byte data. The Fetch API offers a concrete instance of a ReadableStream through the body property of a Response object.
+ * @group Streams API
+ */
 interface ReadableStream<R = any> {
   readonly locked: boolean;
   cancel(reason?: any): Promise<void>;
@@ -1049,12 +1193,16 @@ interface ReadableStream<R = any> {
  * The ReadableStream class as [specified by WHATWG](https://streams.spec.whatwg.org/#rs-class)
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream | ReadableStream on MDN}
+ * @group Streams API
  */
 declare var ReadableStream: {
   prototype: ReadableStream;
   new <R = any>(underlyingSource?: UnderlyingSource<R>, strategy?: QueuingStrategy<R>): ReadableStream<R>;
 };
 
+/**
+ * @group Streams API
+ */
 interface ReadableStreamDefaultController<R = any> {
   readonly desiredSize: number | null;
   close(): void;
@@ -1062,27 +1210,42 @@ interface ReadableStreamDefaultController<R = any> {
   error(e?: any): void;
 }
 
+/**
+ * @group Streams API
+ */
 declare var ReadableStreamDefaultController: {
   prototype: ReadableStreamDefaultController;
   new(): ReadableStreamDefaultController;
 };
 
+/**
+ * @group Streams API
+ */
 interface ReadableStreamDefaultReader<R = any> extends ReadableStreamGenericReader {
   read(): Promise<ReadableStreamDefaultReadResult<R>>;
   releaseLock(): void;
 }
 
+/**
+ * @group Streams API
+ */
 declare var ReadableStreamDefaultReader: {
   prototype: ReadableStreamDefaultReader;
   new <R = any>(stream: ReadableStream<R>): ReadableStreamDefaultReader<R>;
 };
 
+/**
+ * @group Streams API
+ */
 interface ReadableStreamGenericReader {
   readonly closed: Promise<undefined>;
   cancel(reason?: any): Promise<void>;
 }
 
-/** This Streams API interface provides a standard abstraction for writing streaming data to a destination, known as a sink. This object comes with built-in backpressure and queuing. */
+/** 
+ * This Streams API interface provides a standard abstraction for writing streaming data to a destination, known as a sink. This object comes with built-in backpressure and queuing.
+ * @group Streams API
+ */
 interface WritableStream<W = any> {
   readonly locked: boolean;
   abort(reason?: any): Promise<void>;
@@ -1093,23 +1256,33 @@ interface WritableStream<W = any> {
  * The WritableStream class as [specified by WHATWG](https://streams.spec.whatwg.org/#ws-class)
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WritableStream | WritableStream on MDN}
+ * @group Streams API
  */
 declare var WritableStream: {
   prototype: WritableStream;
   new <W = any>(underlyingSink?: UnderlyingSink<W>, strategy?: QueuingStrategy<W>): WritableStream<W>;
 };
 
-/** This Streams API interface represents a controller allowing control of a WritableStream's state. When constructing a WritableStream, the underlying sink is given a corresponding WritableStreamDefaultController instance to manipulate. */
+/**
+ * This Streams API interface represents a controller allowing control of a WritableStream's state. When constructing a WritableStream, the underlying sink is given a corresponding WritableStreamDefaultController instance to manipulate.
+ * @group Streams API
+ */
 interface WritableStreamDefaultController {
   error(e?: any): void;
 }
 
+/**
+ * @group Streams API
+ */
 declare var WritableStreamDefaultController: {
   prototype: WritableStreamDefaultController;
   new(): WritableStreamDefaultController;
 };
 
-/** This Streams API interface is the object returned by WritableStream.getWriter() and once created locks the < writer to the WritableStream ensuring that no other streams can write to the underlying sink. */
+/** 
+ * This Streams API interface is the object returned by WritableStream.getWriter() and once created locks the < writer to the WritableStream ensuring that no other streams can write to the underlying sink.
+ * @group Streams API
+ */
 interface WritableStreamDefaultWriter<W = any> {
   readonly closed: Promise<undefined>;
   readonly desiredSize: number | null;
@@ -1120,11 +1293,17 @@ interface WritableStreamDefaultWriter<W = any> {
   write(chunk: W): Promise<void>;
 }
 
+/**
+ * @group Streams API
+ */
 declare var WritableStreamDefaultWriter: {
   prototype: WritableStreamDefaultWriter;
   new <W = any>(stream: WritableStream<W>): WritableStreamDefaultWriter<W>;
 };
 
+/**
+ * @group Streams API
+ */
 interface TransformStream<I = any, O = any> {
   readonly readable: ReadableStream<O>;
   readonly writable: WritableStream<I>;
@@ -1134,6 +1313,7 @@ interface TransformStream<I = any, O = any> {
  * The TransformStream class as [specified by WHATWG](https://streams.spec.whatwg.org/#ts-class)
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/TransformStream | TransformStream on MDN}
+ * @group Streams API
  */
 
 declare var TransformStream: {
@@ -1141,6 +1321,9 @@ declare var TransformStream: {
   new <I = any, O = any>(transformer?: Transformer<I, O>, writableStrategy?: QueuingStrategy<I>, readableStrategy?: QueuingStrategy<O>): TransformStream<I, O>;
 };
 
+/**
+ * @group Streams API
+ */
 interface TransformStreamDefaultController<O = any> {
   readonly desiredSize: number | null;
   enqueue(chunk?: O): void;
@@ -1148,11 +1331,17 @@ interface TransformStreamDefaultController<O = any> {
   terminate(): void;
 }
 
+/**
+ * @group Streams API
+ */
 declare var TransformStreamDefaultController: {
   prototype: TransformStreamDefaultController;
   new(): TransformStreamDefaultController;
 };
 
+/**
+ * @group Streams API
+ */
 interface Transformer<I = any, O = any> {
   flush?: TransformerFlushCallback<O>;
   readableType?: undefined;
@@ -1161,24 +1350,37 @@ interface Transformer<I = any, O = any> {
   writableType?: undefined;
 }
 
+/**
+ * @group Streams API
+ */
 interface TransformerFlushCallback<O> {
   (controller: TransformStreamDefaultController<O>): void | PromiseLike<void>;
 }
 
+/**
+ * @group Streams API
+ */
 interface TransformerStartCallback<O> {
   (controller: TransformStreamDefaultController<O>): void | PromiseLike<void>;
 }
 
+/**
+ * @group Streams API
+ */
 interface TransformerTransformCallback<I, O> {
   (chunk: I, controller: TransformStreamDefaultController<O>): void | PromiseLike<void>;
 }
 
+/**
+ * @group Fetch API
+ */
 type HeadersInit = Headers | string[][] | Record<string, string>;
 
 /**
  * The Headers class as [specified by WHATWG](https://fetch.spec.whatwg.org/#headers-class)
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Headers | Headers on MDN}
+ * @group Fetch API
  */
 interface Headers {
   append(name: string, value: string): void;
@@ -1194,6 +1396,9 @@ interface Headers {
   [Symbol.iterator](): Iterator<[string, string]>;
 }
 
+/**
+ * @group Fetch API
+ */
 declare var Headers: {
   prototype: Headers;
   new(init?: HeadersInit): Headers;
@@ -1206,6 +1411,7 @@ declare var Headers: {
  * @returns An ASCII string containing decoded data from `data`.
  * 
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/atob | atob on MDN}
+ * @group Encoding API
  */
 declare function atob(data: string): string;
 
@@ -1215,6 +1421,7 @@ declare function atob(data: string): string;
  * @returns  An ASCII string containing the Base64 representation of `data`. 
  * 
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/btoa | btoa on MDN}
+ * @group Encoding API
  */
 declare function btoa(data: string): string;
 
@@ -1227,6 +1434,7 @@ declare function btoa(data: string): string;
  * @returns A numeric, non-zero value which identifies the timer created; this value can be passed to clearTimeout() to cancel the timeout.
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/setTimeout | setTimeout on MDN}
+ * @group Timers
  */
 declare function setTimeout<TArgs extends any[]>(callback: (...args: TArgs) => void, delay?: number, ...args: TArgs): number;
 
@@ -1235,6 +1443,7 @@ declare function setTimeout<TArgs extends any[]>(callback: (...args: TArgs) => v
  * @param timeoutID The identifier of the timeout you want to cancel. This ID was returned by the corresponding call to setTimeout().
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/clearTimeout | clearTimeout on MDN}
+ * @group Timers
  */
 declare function clearTimeout(timeoutID?: number): void;
 
@@ -1248,6 +1457,7 @@ declare function clearTimeout(timeoutID?: number): void;
  * @returns A numeric, non-zero value which identifies the timer created; this value can be passed to clearInterval() to cancel the interval.
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/setInterval | setInterval on MDN}
+ * @group Timers
  */
 declare function setInterval<TArgs extends any[]>(callback: (...args: TArgs) => void, delay?: number, ...args: TArgs): number;
 
@@ -1256,6 +1466,7 @@ declare function setInterval<TArgs extends any[]>(callback: (...args: TArgs) => 
  * @param intervalID The identifier of the repeated action you want to cancel. This ID was returned by the corresponding call to setInterval().
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/clearInterval | clearInterval on MDN}
+ * @group Timers
  */
 declare function clearInterval(intervalID?: number): void;
 
@@ -1272,24 +1483,43 @@ declare function clearInterval(intervalID?: number): void;
  *
  * @param resource - The resource to fetch, either a URL string or a {@link Request} object
  * @param init - An object containing settings to apply to the request
+ * @group Fetch API
  */
 declare function fetch(input: RequestInfo, init?: RequestInit): Promise<Response>;
 
+/**
+ * @group Scheduling
+ */
 interface VoidFunction {
   (): void;
 }
 
+/**
+ * @group Scheduling
+ */
 declare function queueMicrotask(callback: VoidFunction): void;
 
+/**
+ * @group DOM APIs
+ */
 declare function structuredClone(value: any, options?: StructuredSerializeOptions): any;
 
+/**
+ * @group DOM APIs
+ */
 interface StructuredSerializeOptions {
   transfer?: Transferable[];
 }
 
+/**
+ * @group DOM APIs
+ */
 type Transferable = ArrayBuffer;
 // type Transferable = ArrayBuffer | MessagePort | ImageBitmap;
 
+/**
+ * @group Web APIs
+ */
 interface WorkerLocation {
   readonly hash: string;
   readonly host: string;
@@ -1303,26 +1533,44 @@ interface WorkerLocation {
   readonly search: string;
 }
 
+/**
+ * The WorkerLocation class as [specified by WHATWG](https://html.spec.whatwg.org/multipage/workers.html#worker-locations)
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WorkerLocation | WorkerLocation on MDN}
+ * @group Web APIs
+ */
 declare var WorkerLocation: {
   prototype: WorkerLocation;
   new(): WorkerLocation;
 };
 
+/**
+ * @group Web APIs
+ */
 declare var location: WorkerLocation;
 
-/** Basic cryptography features available in the current context. It allows access to a cryptographically strong random number generator and to cryptographic primitives. */
+/**
+ * The Crypto interface as [specified by WHATWG](https://w3c.github.io/webcrypto/#crypto-interface)
+ * Basic cryptography features available in the current context. It allows access to a cryptographically strong random number generator and to cryptographic primitives.
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Crypto | Crypto on MDN}
+ * @group Web Crypto APIs
+ */
 interface Crypto {
-  // /** Available only in secure contexts. */
   // readonly subtle: SubtleCrypto;
   getRandomValues<T extends ArrayBufferView | null>(array: T): T;
-  // /** Available only in secure contexts. */
   // randomUUID(): string;
 }
 
+/**
+ * @group Web Crypto APIs
+ */
 declare var Crypto: {
   prototype: Crypto;
   new(): Crypto;
 };
 
+/**
+ * @group Web Crypto APIs
+ */
 declare var crypto: Crypto;
 
