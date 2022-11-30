@@ -108,15 +108,16 @@ private:
   // The mapping is from OpenSSL cipher names as strings to a the cipher represented as a Cipher
   // object
   static constexpr std::array<std::pair<std::string_view, Cipher>, 11> CIPHER{
-      std::pair<std::string_view, Cipher>{"DES-CBC3-SHA", Cipher(std::string_view("DES-CBC3-SHA"), KeyExchange::RSA, Authentication::RSA,
-                              Encryption::TRIPLE_DES, MessageDigest::SHA1, Protocol::SSLv3,
-                              EncryptionLevel::MEDIUM, 112)},
-      {"AES128-SHA",
-       Cipher(std::string_view("AES128-SHA"), KeyExchange::RSA, Authentication::RSA, Encryption::AES128,
-              MessageDigest::SHA1, Protocol::SSLv3, EncryptionLevel::HIGH, 128)},
-      {"AES256-SHA",
-       Cipher(std::string_view("AES256-SHA"), KeyExchange::RSA, Authentication::RSA, Encryption::AES256,
-              MessageDigest::SHA1, Protocol::SSLv3, EncryptionLevel::HIGH, 256)},
+      std::pair<std::string_view, Cipher>{
+          "DES-CBC3-SHA", Cipher(std::string_view("DES-CBC3-SHA"), KeyExchange::RSA,
+                                 Authentication::RSA, Encryption::TRIPLE_DES, MessageDigest::SHA1,
+                                 Protocol::SSLv3, EncryptionLevel::MEDIUM, 112)},
+      {"AES128-SHA", Cipher(std::string_view("AES128-SHA"), KeyExchange::RSA, Authentication::RSA,
+                            Encryption::AES128, MessageDigest::SHA1, Protocol::SSLv3,
+                            EncryptionLevel::HIGH, 128)},
+      {"AES256-SHA", Cipher(std::string_view("AES256-SHA"), KeyExchange::RSA, Authentication::RSA,
+                            Encryption::AES256, MessageDigest::SHA1, Protocol::SSLv3,
+                            EncryptionLevel::HIGH, 256)},
       {"AES128-GCM-SHA256", Cipher(std::string_view("AES128-GCM-SHA256"), KeyExchange::RSA,
                                    Authentication::RSA, Encryption::AES128GCM, MessageDigest::AEAD,
                                    Protocol::TLSv1_2, EncryptionLevel::HIGH, 128)},
@@ -135,17 +136,17 @@ private:
               Encryption::AES256, MessageDigest::SHA384, Protocol::TLSv1_2, EncryptionLevel::HIGH,
               256)},
       {"ECDHE-RSA-AES128-GCM-SHA256",
-       Cipher(std::string_view("ECDHE-RSA-AES128-GCM-SHA256"), KeyExchange::EECDH, Authentication::RSA,
-              Encryption::AES128GCM, MessageDigest::AEAD, Protocol::TLSv1_2, EncryptionLevel::HIGH,
-              128)},
+       Cipher(std::string_view("ECDHE-RSA-AES128-GCM-SHA256"), KeyExchange::EECDH,
+              Authentication::RSA, Encryption::AES128GCM, MessageDigest::AEAD, Protocol::TLSv1_2,
+              EncryptionLevel::HIGH, 128)},
       {"ECDHE-RSA-AES256-GCM-SHA384",
-       Cipher(std::string_view("ECDHE-RSA-AES256-GCM-SHA384"), KeyExchange::EECDH, Authentication::RSA,
-              Encryption::AES256GCM, MessageDigest::AEAD, Protocol::TLSv1_2, EncryptionLevel::HIGH,
-              256)},
-      {"ECDHE-RSA-CHACHA20-POLY1305",
-       Cipher(std::string_view("ECDHE-RSA-CHACHA20-POLY1305"), KeyExchange::EECDH, Authentication::RSA,
-              Encryption::CHACHA20POLY1305, MessageDigest::AEAD, Protocol::TLSv1_2,
+       Cipher(std::string_view("ECDHE-RSA-AES256-GCM-SHA384"), KeyExchange::EECDH,
+              Authentication::RSA, Encryption::AES256GCM, MessageDigest::AEAD, Protocol::TLSv1_2,
               EncryptionLevel::HIGH, 256)},
+      {"ECDHE-RSA-CHACHA20-POLY1305",
+       Cipher(std::string_view("ECDHE-RSA-CHACHA20-POLY1305"), KeyExchange::EECDH,
+              Authentication::RSA, Encryption::CHACHA20POLY1305, MessageDigest::AEAD,
+              Protocol::TLSv1_2, EncryptionLevel::HIGH, 256)},
   };
 
   static constexpr auto SSL_PROTO_TLSv1_2 = "TLSv1.2";
@@ -266,8 +267,7 @@ private:
   static constexpr auto COMPLEMENTOFDEFAULT = "COMPLEMENTOFDEFAULT";
   static constexpr auto ALL = "ALL";
 
-  void moveToEnd(AliasMap *aliases,
-                 std::vector<Cipher> &ciphers, std::string cipher) {
+  void moveToEnd(AliasMap *aliases, std::vector<Cipher> &ciphers, std::string cipher) {
     moveToEnd(ciphers, aliases->at(cipher));
   }
 
@@ -285,14 +285,12 @@ private:
     });
   }
 
-  void add(AliasMap *aliases,
-           std::vector<Cipher> &ciphers, std::string alias) {
+  void add(AliasMap *aliases, std::vector<Cipher> &ciphers, std::string alias) {
     auto toAdd = aliases->at(alias);
     ciphers.insert(ciphers.end(), toAdd.begin(), toAdd.end());
   }
 
-  void remove(AliasMap *aliases,
-              std::vector<Cipher> &ciphers, std::string alias) {
+  void remove(AliasMap *aliases, std::vector<Cipher> &ciphers, std::string alias) {
     auto &toRemove = aliases->at(alias);
     ciphers.erase(std::remove_if(ciphers.begin(), ciphers.end(),
                                  [&](auto x) {
