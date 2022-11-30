@@ -33,7 +33,7 @@ ifndef WIT_BINDGEN
 	WIT_BINDGEN = $(error No wit-bindgen in PATH, consider doing cargo install --git https://github.com/bytecodealliance/wit-bindgen wit-bindgen-cli)
 endif
 
-CXX_FLAGS := -std=gnu++17 -Wall -Werror -Qunused-arguments
+CXX_FLAGS := -std=gnu++20 -Wall -Werror -Qunused-arguments
 CXX_FLAGS += -fno-sized-deallocation -fno-aligned-new -mthread-model single
 CXX_FLAGS += -fPIC -fno-rtti -fno-exceptions -fno-math-errno -pipe
 CXX_FLAGS += -fno-omit-frame-pointer -funwind-tables -I$(FSM_SRC)

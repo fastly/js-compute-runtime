@@ -15,7 +15,7 @@
             ],
             "compilerPath": "/opt/wasi-sdk/bin/clang",
             "cStandard": "c11",
-            "cppStandard": "c++17",
+            "cppStandard": "c++20",
             "intelliSenseMode": "clang-x86",
             "browse": {
                 "limitSymbolsToIncludedHeaders": true
