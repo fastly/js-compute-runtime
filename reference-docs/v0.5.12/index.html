@@ -1,0 +1,94 @@
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@fastly/js-compute</title><meta name="description" content="Documentation for @fastly/js-compute"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script async src="assets/search.js" id="search-script"></script></head><body><select id="plugin-versions-select" class="title" name="versions"></select><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container">
+<div class="table-cell" id="tsd-search" data-base=".">
+<div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
+<div class="field">
+<div id="tsd-toolbar-links"></div></div>
+<ul class="results">
+<li class="state loading">Preparing search index...</li>
+<li class="state failure">The search index is not available</li></ul><a href="index.html" class="title">@fastly/js-compute</a></div>
+<div class="table-cell" id="tsd-widgets"><a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="7" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="11" width="14" height="2" fill="var(--color-text)"></rect></svg></a></div></div></header>
+<div class="container container-main">
+<div class="col-8 col-content">
+<div class="tsd-page-title">
+<h2>@fastly/js-compute</h2></div>
+<div class="tsd-panel tsd-typography">
+<a href="#fastlyjs-compute" id="fastlyjs-compute" style="color: inherit; text-decoration: none;">
+  <h1>@fastly/js-compute</h1>
+</a>
+<p><img src="https://img.shields.io/npm/v/@fastly/js-compute" alt="npm version"> <img src="https://img.shields.io/npm/dm/@fastly/js-compute" alt="npm downloads per month"></p>
+<p>Javascript SDK and CLI for building JavaScript applications on Fastly&#39;s <a href="https://www.fastly.com/products/edge-compute/serverless">Compute@Edge</a>.</p>
+
+<a href="#getting-started" id="getting-started" style="color: inherit; text-decoration: none;">
+  <h2>Getting Started</h2>
+</a>
+<p>We recommend using the <a href="https://github.com/fastly/cli">Fastly CLI</a> to create, build, and deploy JavaScript Compute@Edge services, as <a href="https://developer.fastly.com/learning/compute/">described on the Fastly Developer Hub</a>.</p>
+<p><a href="https://developer.fastly.com/learning/compute/javascript/">Detailed documentation for JavaScript Compute@Edge services</a> is also available on Fastly Developer Hub.</p>
+
+<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+  <h2>Usage</h2>
+</a>
+
+<a href="#javascript-examples" id="javascript-examples" style="color: inherit; text-decoration: none;">
+  <h3>Javascript Examples</h3>
+</a>
+<p>The Fastly Developer Hub has a collection of <a href="https://developer.fastly.com/solutions/examples/javascript/">example JavaScript applications</a>.</p>
+<p>Here is a small example application:</p>
+<pre><code class="language-js"><span class="hl-0">/// </span><span class="hl-1">&lt;</span><span class="hl-2">reference</span><span class="hl-0"> </span><span class="hl-3">types</span><span class="hl-4">=</span><span class="hl-5">&quot;@fastly/js-compute&quot;</span><span class="hl-0"> </span><span class="hl-1">/&gt;</span><br/><br/><span class="hl-6">async</span><span class="hl-4"> </span><span class="hl-6">function</span><span class="hl-4"> </span><span class="hl-7">app</span><span class="hl-4">(</span><span class="hl-8">event</span><span class="hl-4">) {</span><br/><span class="hl-4">    </span><span class="hl-6">const</span><span class="hl-4"> </span><span class="hl-9">request</span><span class="hl-4"> = </span><span class="hl-8">event</span><span class="hl-4">.</span><span class="hl-8">request</span><span class="hl-4">;</span><br/><span class="hl-4">    </span><span class="hl-10">return</span><span class="hl-4"> </span><span class="hl-6">new</span><span class="hl-4"> </span><span class="hl-7">Response</span><span class="hl-4">(</span><span class="hl-5">`You made a request to </span><span class="hl-6">${</span><span class="hl-8">request</span><span class="hl-11">.</span><span class="hl-8">url</span><span class="hl-6">}</span><span class="hl-5">`</span><span class="hl-4">)</span><br/><span class="hl-4">}</span><br/><br/><span class="hl-7">addEventListener</span><span class="hl-4">(</span><span class="hl-5">&quot;fetch&quot;</span><span class="hl-4">, </span><span class="hl-8">event</span><span class="hl-4"> </span><span class="hl-6">=&gt;</span><span class="hl-4"> {</span><br/><span class="hl-4">  </span><span class="hl-8">event</span><span class="hl-4">.</span><span class="hl-7">respondWith</span><span class="hl-4">(</span><span class="hl-7">app</span><span class="hl-4">(</span><span class="hl-8">event</span><span class="hl-4">));</span><br/><span class="hl-4">});</span>
+</code></pre>
+
+<a href="#api-documentation" id="api-documentation" style="color: inherit; text-decoration: none;">
+  <h3>API documentation</h3>
+</a>
+<p>The API documentation for the Javascript SDK is located at <a href="https://js-compute-reference-docs.edgecompute.app">https://js-compute-reference-docs.edgecompute.app</a>.</p>
+
+<a href="#security" id="security" style="color: inherit; text-decoration: none;">
+  <h2>Security</h2>
+</a>
+<p>If you find any security issues, see the <a href="https://www.fastly.com/security/report-security-issue">Fastly Security Reporting Page</a> or send an email to: <code>security@fastly.com</code></p>
+<p>We plan to disclose any found security vulnerabilities per the <a href="https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing/about-coordinated-disclosure-of-security-vulnerabilities#best-practices-for-maintainers">GitHub security vulnerability guidance</a>. Note that communications related to security issues in Fastly-maintained OSS as described here are distinct from <a href="https://www.fastly.com/security-advisories">Fastly security advisories</a>.</p>
+
+<a href="#changelog" id="changelog" style="color: inherit; text-decoration: none;">
+  <h2>Changelog</h2>
+</a>
+<p>The changelog can be found <a href="https://github.com/fastly/js-compute-runtime/blob/main/CHANGELOG.md">here</a>.</p>
+
+<a href="#license" id="license" style="color: inherit; text-decoration: none;">
+  <h2>License</h2>
+</a>
+<p><a href="./LICENSE">Apache-2.0 WITH LLVM-exception</a></p>
+</div></div>
+<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+<div class="tsd-navigation settings">
+<details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg> Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility">
+<h4 class="uppercase">Member Visibility</h4><form>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-private" name="private"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Private</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></form></div>
+<div class="tsd-theme-toggle">
+<h4 class="uppercase">Theme</h4><select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<nav class="tsd-navigation primary">
+<details class="tsd-index-accordion" open><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg> Modules</h3></summary>
+<div class="tsd-accordion-details">
+<ul>
+<li class="current selected"><a href="modules.html">@fastly/js-<wbr/>compute</a>
+<ul>
+<li class="tsd-kind-module"><a href="modules/fastly_backend.html">fastly:backend</a></li>
+<li class="tsd-kind-module"><a href="modules/fastly_cache_override.html">fastly:cache-<wbr/>override</a></li>
+<li class="tsd-kind-module"><a href="modules/fastly_config_store.html">fastly:config-<wbr/>store</a></li>
+<li class="tsd-kind-module"><a href="modules/fastly_dictionary.html">fastly:dictionary</a></li>
+<li class="tsd-kind-module"><a href="modules/fastly_env.html">fastly:env</a></li>
+<li class="tsd-kind-module"><a href="modules/fastly_experimental.html">fastly:experimental</a></li>
+<li class="tsd-kind-module"><a href="modules/fastly_geolocation.html">fastly:geolocation</a></li>
+<li class="tsd-kind-module"><a href="modules/fastly_logger.html">fastly:logger</a></li>
+<li class="tsd-kind-module"><a href="modules/fastly_object_store.html">fastly:object-<wbr/>store</a></li>
+<li class="tsd-kind-module"><a href="modules/globals.html">globals</a></li></ul></li></ul></div></details></nav></div></div>
+<div class="container tsd-generator">
+<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div>
+<div class="overlay"></div><script src="assets/main.js"></script><script src="assets/versionsMenu.js" type="module"></script></body></html>
