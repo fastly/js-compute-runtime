@@ -3,18 +3,17 @@
     "plugin": ["typedoc-plugin-versions", "typedoc-plugin-mdn-links"],
     "theme": "default",
     "tsconfig": "tsconfig.json",
-    "exclude": ["index.test-d.ts"],
+    "exclude": ["types/index.d.ts"],
+    "entryPointStrategy": "expand",
     "entryPoints": [
-        "types/fastly:backend.d.ts",
-        "types/fastly:cache-override.d.ts",
-        "types/fastly:config-store.d.ts",
-        "types/fastly:dictionary.d.ts",
-        "types/fastly:env.d.ts",
-        "types/fastly:experimental.d.ts",
-        "types/fastly:geolocation.d.ts",
-        "types/fastly:logger.d.ts",
-        "types/fastly:object-store.d.ts",
-        "types/globals.d.ts"
+        "types"
     ],
+    "excludeExternals":true,
+    "excludeInternal": true,
+    "excludePrivate": true,
+    "categorizeByGroup": false,
+    "includeVersion": true,
+    "githubPages": false,
+    "cleanOutputDir": false,
     "out": "reference-docs"
 }
