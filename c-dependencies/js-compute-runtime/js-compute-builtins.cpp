@@ -4675,16 +4675,18 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
 
+  xqd_world_string_t backend_str = {backend_chars.get(), backend_len};
+
   {
     FastlyStatus result;
     if (streaming) {
-      result = convert_to_fastly_status(xqd_req_send_async_streaming(
-          Request::request_handle(request), RequestOrResponse::body_handle(request),
-          backend_chars.get(), backend_len, &request_handle));
+      result = convert_to_fastly_status(xqd_fastly_http_req_send_async_streaming(
+          Request::request_handle(request), RequestOrResponse::body_handle(request), &backend_str,
+          &request_handle));
     } else {
-      result = convert_to_fastly_status(xqd_req_send_async(
-          Request::request_handle(request), RequestOrResponse::body_handle(request),
-          backend_chars.get(), backend_len, &request_handle));
+      result = convert_to_fastly_status(xqd_fastly_http_req_send_async(
+          Request::request_handle(request), RequestOrResponse::body_handle(request), &backend_str,
+          &request_handle));
     }
 
     if (!HANDLE_RESULT(cx, result))
