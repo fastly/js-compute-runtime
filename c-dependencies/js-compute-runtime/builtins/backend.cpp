@@ -289,22 +289,10 @@ private:
   void strengthSort(std::vector<Cipher> &ciphers) {
     /*
      * This routine sorts the ciphers with descending strength. The sorting
-     * must keep the pre-sorted sequence, so we apply the normal sorting
-     * routine as '+' movement to the end of the list.
+     * must keep the pre-sorted sequence.
      */
-    std::vector<int> strength_bits;
-    strength_bits.reserve(ciphers.size());
-    for (auto cipher : ciphers) {
-      strength_bits.push_back(cipher.strength_bits);
-    }
-    // sort strength_bits in descending order.
-    // using reverse iterators with sort was the fastest implementation, tested here:
-    // https://quick-bench.com/q/bnRrrc1MvGpidLXcWF3u24hyfqA
-    std::sort(strength_bits.rbegin(), strength_bits.rend());
-    for (auto strength : strength_bits) {
-      auto ciphersToMoveToEnd = filterByStrengthBits(ciphers, strength);
-      moveToEnd(ciphers, ciphersToMoveToEnd);
-    }
+    std::stable_sort(ciphers.begin(), ciphers.end(),
+                     [](auto &l, auto &r) { return l.strength_bits > r.strength_bits; });
   }
 
   /*
