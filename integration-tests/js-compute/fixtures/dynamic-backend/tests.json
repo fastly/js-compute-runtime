@@ -209,6 +209,36 @@
       "status": 200
     }
   },
+  "GET /backend/constructor/parameter-ciphers-property-invalid-cipherlist-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-ciphers-property-invalid-cipherlist-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-supported-by-fastly": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-supported-by-fastly"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-but-not-supported-by-fastly": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-but-not-supported-by-fastly"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
   "GET /backend/constructor/parameter-ciphers-property-calls-7.1.17-ToString": {
     "environments": ["viceroy"],
     "downstream_request": {
