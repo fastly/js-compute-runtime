@@ -24,12 +24,12 @@ enum class Authentication : uint8_t {
   RSA,
 };
 
-enum class KeyExchange {
+enum class KeyExchange : uint8_t {
   EECDH,
   RSA,
 };
 
-enum class Encryption {
+enum class Encryption : uint8_t {
   AES128,
   AES128GCM,
   AES256,
@@ -38,25 +38,26 @@ enum class Encryption {
   TRIPLE_DES,
 };
 
-enum class EncryptionLevel {
+enum class EncryptionLevel : uint8_t {
   MEDIUM,
   HIGH,
 };
 
-enum class MessageDigest {
+enum class MessageDigest : uint8_t {
   SHA1,
   SHA256,
   SHA384,
   AEAD,
 };
 
-enum class Protocol {
+enum class Protocol : uint8_t {
   SSLv3,
   TLSv1,
   TLSv1_2,
 };
 
 class Cipher {
+public:
   std::string_view openSSLAlias;
   KeyExchange kx;
   Authentication au;
@@ -66,27 +67,12 @@ class Cipher {
   EncryptionLevel level;
   uint16_t strength_bits;
 
-public:
   constexpr Cipher(std::string_view openSSLAlias, KeyExchange kx, Authentication au, Encryption enc,
                    MessageDigest mac, Protocol protocol, EncryptionLevel level, int strength_bits)
       : openSSLAlias(openSSLAlias), kx(kx), au(au), enc(enc), mac(mac), protocol(protocol),
         level(level), strength_bits(strength_bits) {}
 
   const std::string_view &getOpenSSLAlias() { return openSSLAlias; }
-
-  KeyExchange getKx() { return kx; }
-
-  Authentication getAu() { return au; }
-
-  Encryption getEnc() { return enc; }
-
-  MessageDigest getMac() { return mac; }
-
-  Protocol getProtocol() { return protocol; }
-
-  EncryptionLevel getLevel() { return level; }
-
-  int getStrength_bits() { return strength_bits; }
 
   // Overload the == operator
   const bool operator==(const Cipher &obj) const {
@@ -267,8 +253,8 @@ private:
   static constexpr auto COMPLEMENTOFDEFAULT = "COMPLEMENTOFDEFAULT";
   static constexpr auto ALL = "ALL";
 
-  void moveToEnd(AliasMap *aliases, std::vector<Cipher> &ciphers, std::string cipher) {
-    moveToEnd(ciphers, aliases->at(cipher));
+  void moveToEnd(AliasMap &aliases, std::vector<Cipher> &ciphers, std::string cipher) {
+    moveToEnd(ciphers, aliases.at(cipher));
   }
 
   void moveToEnd(std::vector<Cipher> &ciphers, std::vector<Cipher> &ciphersToMoveToEnd) {
@@ -285,13 +271,13 @@ private:
     });
   }
 
-  void add(AliasMap *aliases, std::vector<Cipher> &ciphers, std::string alias) {
-    auto toAdd = aliases->at(alias);
+  void add(AliasMap &aliases, std::vector<Cipher> &ciphers, std::string alias) {
+    auto toAdd = aliases.at(alias);
     ciphers.insert(ciphers.end(), toAdd.begin(), toAdd.end());
   }
 
-  void remove(AliasMap *aliases, std::vector<Cipher> &ciphers, std::string alias) {
-    auto &toRemove = aliases->at(alias);
+  void remove(AliasMap &aliases, std::vector<Cipher> &ciphers, std::string alias) {
+    auto &toRemove = aliases.at(alias);
     ciphers.erase(std::remove_if(ciphers.begin(), ciphers.end(),
                                  [&](auto x) {
                                    return std::find(toRemove.begin(), toRemove.end(), x) !=
@@ -309,7 +295,7 @@ private:
     std::vector<int> strength_bits;
     strength_bits.reserve(ciphers.size());
     for (auto cipher : ciphers) {
-      strength_bits.push_back(cipher.getStrength_bits());
+      strength_bits.push_back(cipher.strength_bits);
     }
     // sort strength_bits in descending order.
     // using reverse iterators with sort was the fastest implementation, tested here:
@@ -359,7 +345,7 @@ private:
   std::vector<Cipher> filterByStrengthBits(std::vector<Cipher> &ciphers, int strength_bits) {
     std::vector<Cipher> result;
     for (auto cipher : ciphers) {
-      if (cipher.getStrength_bits() == strength_bits) {
+      if (cipher.strength_bits == strength_bits) {
         result.push_back(cipher);
       }
     }
@@ -400,23 +386,23 @@ private:
   }
 
   std::vector<Cipher>
-  filter(std::vector<Cipher> &ciphers, std::optional<std::set<Protocol>> protocols,
+  filter(const std::vector<Cipher> &ciphers, std::optional<std::set<Protocol>> protocols,
          std::optional<std::set<KeyExchange>> kx, std::optional<std::set<Authentication>> au,
          std::optional<std::set<Encryption>> enc, std::optional<std::set<EncryptionLevel>> level,
          std::optional<std::set<MessageDigest>> mac) {
     std::vector<Cipher> result;
     for (auto &cipher : ciphers) {
-      if (protocols.has_value() && protocols->find(cipher.getProtocol()) != protocols->end()) {
+      if (protocols.has_value() && protocols->find(cipher.protocol) != protocols->end()) {
         result.push_back(cipher);
-      } else if (kx.has_value() && kx->find(cipher.getKx()) != kx->end()) {
+      } else if (kx.has_value() && kx->find(cipher.kx) != kx->end()) {
         result.push_back(cipher);
-      } else if (au.has_value() && au->find(cipher.getAu()) != au->end()) {
+      } else if (au.has_value() && au->find(cipher.au) != au->end()) {
         result.push_back(cipher);
-      } else if (enc.has_value() && enc->find(cipher.getEnc()) != enc->end()) {
+      } else if (enc.has_value() && enc->find(cipher.enc) != enc->end()) {
         result.push_back(cipher);
-      } else if (level.has_value() && level->find(cipher.getLevel()) != level->end()) {
+      } else if (level.has_value() && level->find(cipher.level) != level->end()) {
         result.push_back(cipher);
-      } else if (mac.has_value() && mac->find(cipher.getMac()) != mac->end()) {
+      } else if (mac.has_value() && mac->find(cipher.mac) != mac->end()) {
         result.push_back(cipher);
       }
     }
@@ -574,7 +560,7 @@ public:
       if (element.rfind(DELETE, 0) == 0) {
         auto alias = element.substr(1);
         if (aliases.find(alias) != aliases.end()) {
-          remove(&aliases, ciphers, alias);
+          remove(aliases, ciphers, alias);
         }
       } else if (element.rfind(EXCLUDE, 0) == 0) {
         auto alias = element.substr(1);
@@ -585,13 +571,13 @@ public:
       } else if (element.rfind(TO_END, 0) == 0) {
         auto alias = element.substr(1);
         if (aliases.find(alias) != aliases.end()) {
-          moveToEnd(&aliases, ciphers, alias);
+          moveToEnd(aliases, ciphers, alias);
         }
       } else if ("@STRENGTH" == element) {
         strengthSort(ciphers);
         break;
       } else if (aliases.find(element) != aliases.end()) {
-        add(&aliases, ciphers, element);
+        add(aliases, ciphers, element);
       } else if (element.find(AND) != std::string::npos) {
         auto intersections = split(element, "+\\");
         if (intersections.size() > 0 && aliases.find(intersections[0]) != aliases.end()) {
