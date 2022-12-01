@@ -318,7 +318,7 @@ private:
 
     /* Everything else being equal, prefer ephemeral ECDH over other key exchange mechanisms */
     auto eecdh = filterByKeyExchange(ciphers, std::set{KeyExchange::EECDH});
-    ecdh.insert(ecdh.end(), eecdh.begin(), eecdh.end());
+    result.insert(result.end(), eecdh.begin(), eecdh.end());
 
     /* AES is our preferred symmetric cipher */
     auto aes = {Encryption::AES128, Encryption::AES128GCM, Encryption::AES256,
