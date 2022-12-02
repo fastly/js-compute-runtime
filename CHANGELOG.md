@@ -6,6 +6,7 @@
 ### Bug Fixes
 
 * implement validation for Dictionary names and keys ([c0b0822](https://github.com/fastly/js-compute-runtime/commit/c0b082245d9585d8c3cdbc83c6f8ebf1844e8741))
+* fix: When streaming a response to the host, do not close the response body if an error occurs ([8402ecf](https://github.com/fastly/js-compute-runtime/commit/8402ecf93c91bee66217c401a5cc5954e2e71de6))
 
 ## [0.5.12](https://github.com/fastly/js-compute-runtime/compare/v0.5.11...v0.5.12) (2022-11-30)
 
