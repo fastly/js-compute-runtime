@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.13](https://github.com/fastly/js-compute-runtime/compare/v0.5.12...v0.5.13) (2022-12-02)
+
+
+### Bug Fixes
+
+* implement validation for Dictionary names and keys ([c0b0822](https://github.com/fastly/js-compute-runtime/commit/c0b082245d9585d8c3cdbc83c6f8ebf1844e8741))
+
 ## [0.5.12](https://github.com/fastly/js-compute-runtime/compare/v0.5.11...v0.5.12) (2022-11-30)
 
 
