@@ -5063,9 +5063,11 @@ bool process_pending_async_tasks(JSContext *cx) {
     }
   }
 
+  fastly_list_async_handle_t handle_list = {handles.get(), count};
+
   uint32_t ready_index;
   auto xqd_result =
-      convert_to_fastly_status(xqd_async_select(handles.get(), count, timeout, &ready_index));
+      convert_to_fastly_status(xqd_fastly_async_io_select(&handle_list, timeout, &ready_index));
 
   if (xqd_result == FastlyStatus::None) {
     MOZ_ASSERT(!timers->empty());

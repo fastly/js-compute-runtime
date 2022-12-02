@@ -572,6 +572,11 @@ fastly_error_t xqd_fastly_object_store_insert(fastly_object_store_handle_t store
   return convert_result(xqd_object_store_insert(store, key->ptr, key->len, body_handle));
 }
 
+fastly_error_t xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
+                                          uint32_t *ret) {
+  return convert_result(xqd_async_select(hs->ptr, hs->len, timeout_ms, ret));
+}
+
 #else
 
 fastly_error_t xqd_fastly_abi_init(uint64_t abi_version) { return fastly_abi_init(abi_version); }

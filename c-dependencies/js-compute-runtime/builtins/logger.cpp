@@ -45,12 +45,13 @@ bool Logger::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The Logger builtin");
   CTOR_HEADER("Logger", 1);
 
-  size_t name_len;
-  JS::UniqueChars name = encode(cx, args[0], &name_len);
+  xqd_world_string_t name_str;
+  JS::UniqueChars name = encode(cx, args[0], &name_str.len);
+  name_str.ptr = name.get();
   JS::RootedObject logger(cx, JS_NewObjectForConstructor(cx, &class_, args));
   fastly_log_endpoint_handle_t handle = INVALID_HANDLE;
 
-  if (!HANDLE_RESULT(cx, xqd_log_endpoint_get(name.get(), name_len, &handle))) {
+  if (!HANDLE_RESULT(cx, xqd_fastly_log_endpoint_get(&name_str, &handle))) {
     return false;
   }
 
