@@ -3068,7 +3068,6 @@ std::vector<std::string_view> splitCookiesString(std::string_view cookiesString)
   std::vector<std::string_view> cookiesStrings;
   std::size_t currentPosition = 0; // Current position in the string
   std::size_t start;               // Start position of the current cookie
-  char currentChar;                // Current character in the string
   std::size_t lastComma;           // Position of the last comma found
   std::size_t nextStart;           // Position of the start of the next cookie
 
@@ -3079,7 +3078,6 @@ std::vector<std::string_view> splitCookiesString(std::string_view cookiesString)
     // Iterate until we find a comma that might be used as a separator.
     while ((currentPosition = cookiesString.find_first_of(",", currentPosition)) !=
            std::string_view::npos) {
-      currentChar = cookiesString.at(currentPosition);
       // ',' is a cookie separator only if we later have '=', before having ';' or ','
       lastComma = currentPosition;
       nextStart = ++currentPosition;
@@ -3474,7 +3472,7 @@ bool init_class(JSContext *cx, HandleObject global) {
     return false;
 
   JS::SymbolCode code = JS::SymbolCode::iterator;
-  JS::RootedId iteratorId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, code)));
+  JS::RootedId iteratorId(cx, JS::GetWellKnownSymbolKey(cx, code));
   return JS_DefinePropertyById(cx, proto_obj, iteratorId, entries, 0);
 }
 
@@ -4181,8 +4179,6 @@ JS::Result<std::string> ConvertJSValueToByteString(JSContext *cx, JS::Handle<JS:
     // Creating an exception can GC, so we first scan the string for bad chars
     // and report the error outside the AutoCheckCannotGC scope.
     bool foundBadChar = false;
-    size_t badCharIndex;
-    char16_t badChar;
     {
       JS::AutoCheckCannotGC nogc;
       const char16_t *chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, s, &length);
@@ -4193,8 +4189,6 @@ JS::Result<std::string> ConvertJSValueToByteString(JSContext *cx, JS::Handle<JS:
 
       for (size_t i = 0; i < length; i++) {
         if (chars[i] > 255) {
-          badCharIndex = i;
-          badChar = chars[i];
           foundBadChar = true;
           break;
         }

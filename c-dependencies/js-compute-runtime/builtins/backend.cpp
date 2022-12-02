@@ -32,10 +32,8 @@ std::vector<std::string_view> split(std::string_view string, char delimiter) {
 
 bool isValidIP(std::string_view ip) {
   int format = AF_INET;
-  size_t octets_len = 4;
   if (ip.find(':') != std::string::npos) {
     format = AF_INET6;
-    octets_len = 16;
   }
 
   char octets[sizeof(struct in6_addr)];
