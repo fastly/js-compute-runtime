@@ -1213,7 +1213,7 @@ bool body_reader_catch_handler(JSContext *cx, HandleObject body_owner, HandleVal
   if (Response::is_instance(body_owner)) {
     FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
   }
-  return HANDLE_RESULT(cx, xqd_body_close(RequestOrResponse::body_handle(body_owner)));
+  return true;
 }
 
 /**
