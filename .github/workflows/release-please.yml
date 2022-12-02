@@ -101,6 +101,12 @@ jobs:
 
       - run: cd ./docs-app && npm i
         if: ${{ steps.release.outputs.release_created }}
+
+      - name: Set up Fastly CLI
+        uses: fastly/compute-actions/setup@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          cli_version: '4.3.0'
       
       - run: cd ./docs-app && npm run deploy
         if: ${{ steps.release.outputs.release_created }}
