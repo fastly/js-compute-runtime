@@ -64,49 +64,21 @@ In addition you need to have the following tools installed to successfully build
    rustup override set 1.57.0
   ```
 
-Once that is done, the runtime and the CLI tool for applying it to JS source code can be built using cargo:
+Once that is done, the runtime and the CLI tool for applying it to JS source code can be built using npm:
 ```sh
-cargo build --release
-```
-
-#### Build a windows executable
-To build for windows on a linux system you need to install the following modules:
-
-```
-sudo apt-get install gcc-mingw-w64
-rustup target add x86_64-pc-windows-gnu
-```
-
-then you can run the following
-```sh
-cargo build --target x86_64-pc-windows-gnu --release
+npm run build
 ```
 
 ## Testing
 
-The JS Compute Runtime doesn't currently contain automated tests itself. Instead, Fastly runs an automated test suite for an internal repository for the JavaScript SDK using the runtime.
+The JS Compute Runtime has automated tests which run on all pull-requests. The test applications are located within <./integration-tests/js-compute>.
 
-Manual testing is well supported, however. To test your changes, you can follow these steps:
-1. Build the runtime's CLI tool, see above
-2. Create a C@E service from a JS source file by running the CLI tool
-3. Test the service using [Fastly's local testing server](https://developer.fastly.com/learning/compute/testing/#running-a-local-testing-server)
-
-As an example, to turn a file `test.js` with this source code:
-```js
-addEventListener('fetch', e => {
-  console.log("Hello World!");
-});
-```
-
-into a C@E service with your build of the CLI tool, run the following command:
-```sh
-cargo run --release -- test.js test.wasm
-```
-
-Then test your service in Viceroy:
-```sh
-viceroy test.wasm
-```
+To run an end-to-end test which builds and deploys an application to c-at-e:
+- Build the runtime and cli: `npm run build` in the root of the project
+- Change to the test directory for the runtime: `cd integration-tests/js-compute/`
+- Install the test depenendencies: `npm install`
+- Get a list of all the applications to test: `node test.js`
+- Test a single application via: `node test.js <name>` or test all via `node test.js --all`
 
 ## Testing a Dev Release
 :warning:	**You should not use this for production workloads!!!!!!!!**
