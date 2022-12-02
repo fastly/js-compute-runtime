@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <arpa/inet.h>
 #include <cctype>
 #include <charconv>
@@ -305,96 +306,58 @@ private:
     std::vector<Cipher> ecdh;
 
     /* Everything else being equal, prefer ephemeral ECDH over other key exchange mechanisms */
-    auto eecdh = filterByKeyExchange(ciphers, std::set{KeyExchange::EECDH});
-    result.insert(result.end(), eecdh.begin(), eecdh.end());
+    std::vector<Cipher> eecdh;
+    std::copy_if(ciphers.begin(), ciphers.end(), std::back_inserter(result),
+                 byKeyExchange(KeyExchange::EECDH));
 
     /* AES is our preferred symmetric cipher */
     auto aes = {Encryption::AES128, Encryption::AES128GCM, Encryption::AES256,
                 Encryption::AES256GCM};
 
     /* Now arrange all ciphers by preference: */
-    auto ecdhaes = filterByEncryption(ecdh, aes);
-    result.insert(result.end(), ecdhaes.begin(), ecdhaes.end());
-    auto ciphersaes = filterByEncryption(ciphers, aes);
-    result.insert(result.end(), ciphersaes.begin(), ciphersaes.end());
+    std::copy_if(ecdh.begin(), ecdh.end(), std::back_inserter(result), byEncryption(aes));
+    std::copy_if(ciphers.begin(), ciphers.end(), std::back_inserter(result), byEncryption(aes));
 
     /* Add everything else */
     result.insert(result.end(), ecdh.begin(), ecdh.end());
     result.insert(result.end(), ciphers.begin(), ciphers.end());
 
     /* Move ciphers without forward secrecy to the end */
-    auto ciphersWithoutForwardSecrecy = filterByKeyExchange(result, std::set{KeyExchange::RSA});
+    std::vector<Cipher> ciphersWithoutForwardSecrecy;
+    std::copy_if(result.begin(), result.end(), std::back_inserter(ciphersWithoutForwardSecrecy),
+                 byKeyExchange(KeyExchange::RSA));
     moveToEnd(result, ciphersWithoutForwardSecrecy);
 
     strengthSort(result);
     return result;
   }
 
-  std::vector<Cipher> filterByStrengthBits(std::vector<Cipher> &ciphers, int strength_bits) {
-    std::vector<Cipher> result;
-    for (auto cipher : ciphers) {
-      if (cipher.strength_bits == strength_bits) {
-        result.push_back(cipher);
-      }
-    }
-    return result;
+  auto byProtocol(Protocol val) -> std::function<bool(const Cipher &)> {
+    return [val](auto &c) { return c.protocol == val; };
   }
 
-  std::vector<Cipher> filterByProtocol(std::vector<Cipher> &ciphers, std::set<Protocol> protocol) {
-    return filter(ciphers, protocol, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
-                  std::nullopt);
+  auto byKeyExchange(KeyExchange val) -> std::function<bool(const Cipher &)> {
+    return [val](auto &c) { return c.kx == val; };
   }
 
-  std::vector<Cipher> filterByKeyExchange(std::vector<Cipher> &ciphers, std::set<KeyExchange> kx) {
-    return filter(ciphers, std::nullopt, kx, std::nullopt, std::nullopt, std::nullopt,
-                  std::nullopt);
+  auto byAuthentication(Authentication val) -> std::function<bool(const Cipher &)> {
+    return [val](auto &c) { return c.au == val; };
   }
 
-  std::vector<Cipher> filterByAuthentication(std::vector<Cipher> &ciphers,
-                                             std::set<Authentication> au) {
-    return filter(ciphers, std::nullopt, std::nullopt, au, std::nullopt, std::nullopt,
-                  std::nullopt);
+  auto byEncryption(std::set<Encryption> vals) -> std::function<bool(const Cipher &)> {
+    return [vals](auto &c) { return vals.find(c.enc) != vals.end(); };
   }
 
-  std::vector<Cipher> filterByEncryption(std::vector<Cipher> &ciphers, std::set<Encryption> enc) {
-    return filter(ciphers, std::nullopt, std::nullopt, std::nullopt, enc, std::nullopt,
-                  std::nullopt);
+  auto byEncryption(Encryption val) -> std::function<bool(const Cipher &)> {
+    return [val](auto &c) { return c.enc == val; };
   }
 
-  std::vector<Cipher> filterByEncryptionLevel(std::vector<Cipher> &ciphers,
-                                              std::set<EncryptionLevel> level) {
-    return filter(ciphers, std::nullopt, std::nullopt, std::nullopt, std::nullopt, level,
-                  std::nullopt);
+  auto byEncryptionLevel(EncryptionLevel val) -> std::function<bool(const Cipher &)> {
+    return [val](auto &c) { return c.level == val; };
   }
 
-  std::vector<Cipher> filterByMessageDigest(std::vector<Cipher> &ciphers,
-                                            std::set<MessageDigest> mac) {
-    return filter(ciphers, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
-                  mac);
-  }
-
-  std::vector<Cipher>
-  filter(const std::vector<Cipher> &ciphers, std::optional<std::set<Protocol>> protocols,
-         std::optional<std::set<KeyExchange>> kx, std::optional<std::set<Authentication>> au,
-         std::optional<std::set<Encryption>> enc, std::optional<std::set<EncryptionLevel>> level,
-         std::optional<std::set<MessageDigest>> mac) {
-    std::vector<Cipher> result;
-    for (auto &cipher : ciphers) {
-      if (protocols.has_value() && protocols->find(cipher.protocol) != protocols->end()) {
-        result.push_back(cipher);
-      } else if (kx.has_value() && kx->find(cipher.kx) != kx->end()) {
-        result.push_back(cipher);
-      } else if (au.has_value() && au->find(cipher.au) != au->end()) {
-        result.push_back(cipher);
-      } else if (enc.has_value() && enc->find(cipher.enc) != enc->end()) {
-        result.push_back(cipher);
-      } else if (level.has_value() && level->find(cipher.level) != level->end()) {
-        result.push_back(cipher);
-      } else if (mac.has_value() && mac->find(cipher.mac) != mac->end()) {
-        result.push_back(cipher);
-      }
-    }
-    return result;
+  auto byMessageDigest(MessageDigest val) -> std::function<bool(const Cipher &)> {
+    return [val](auto &c) { return c.mac == val; };
   }
 
   std::vector<std::string> split(std::string s, std::string_view delimiter) {
@@ -460,19 +423,30 @@ public:
     aliases.insert({ALL, all});
     // "High" encryption cipher suites. This currently means those with key lengths larger than 128
     // bits, and some cipher suites with 128-bit keys.
-    aliases.insert({HIGH, filterByEncryptionLevel(all, std::set{EncryptionLevel::HIGH})});
+    std::vector<Cipher> high;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(high),
+                 byEncryptionLevel(EncryptionLevel::HIGH));
+    aliases.insert({HIGH, high});
     // "Medium" encryption cipher suites, currently some of those using 128 bit encryption.
-    aliases.insert({MEDIUM, filterByEncryptionLevel(all, std::set{EncryptionLevel::MEDIUM})});
+    std::vector<Cipher> medium;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(medium),
+                 byEncryptionLevel(EncryptionLevel::MEDIUM));
+    aliases.insert({MEDIUM, medium});
 
     // Cipher suites using RSA key exchange or authentication. RSA is an alias for kRSA.
-    auto krsa = filterByKeyExchange(all, std::set{KeyExchange::RSA});
+    std::vector<Cipher> krsa;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(krsa), byKeyExchange(KeyExchange::RSA));
     aliases.insert({kRSA, krsa});
-    auto arsa = filterByAuthentication(all, std::set{Authentication::RSA});
+    std::vector<Cipher> arsa;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(arsa),
+                 byAuthentication(Authentication::RSA));
     aliases.insert({aRSA, arsa});
     aliases.insert({RSA, krsa});
 
     // Cipher suites using ephemeral ECDH key agreement, including anonymous cipher suites.
-    auto ecdh = filterByKeyExchange(all, std::set{KeyExchange::EECDH});
+    std::vector<Cipher> ecdh;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(ecdh),
+                 byKeyExchange(KeyExchange::EECDH));
     aliases.insert({kEECDH, ecdh});
     aliases.insert({kECDHE, ecdh});
     aliases.insert({ECDH, ecdh});
@@ -485,17 +459,26 @@ public:
     // minimum version, if, for example, TLSv1.0 is negotiated then both TLSv1.0 and SSLv3.0 cipher
     // suites are available. Note: these cipher strings do not change the negotiated version of SSL
     // or TLS, they only affect the list of available cipher suites.
-    aliases.insert({SSL_PROTO_TLSv1_2, filterByProtocol(all, std::set{Protocol::TLSv1_2})});
-    auto tlsv1 = filterByProtocol(all, std::set{Protocol::TLSv1});
+    std::vector<Cipher> tlsv2;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(tlsv2), byProtocol(Protocol::TLSv1_2));
+    aliases.insert({SSL_PROTO_TLSv1_2, tlsv2});
+    std::vector<Cipher> tlsv1;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(tlsv1), byProtocol(Protocol::TLSv1));
     aliases.insert({SSL_PROTO_TLSv1_0, tlsv1});
     aliases.insert({SSL_PROTO_TLSv1, tlsv1});
-    aliases.insert({SSL_PROTO_SSLv3, filterByProtocol(all, std::set{Protocol::SSLv3})});
+    std::vector<Cipher> sslv3;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(sslv3), byProtocol(Protocol::SSLv3));
+    aliases.insert({SSL_PROTO_SSLv3, sslv3});
 
     // cipher suites using 128 bit AES.
-    auto aes128 = filterByEncryption(all, std::set{Encryption::AES128, Encryption::AES128GCM});
+    std::vector<Cipher> aes128;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(aes128),
+                 byEncryption({Encryption::AES128, Encryption::AES128GCM}));
     aliases.insert({AES128, aes128});
     // cipher suites using 256 bit AES.
-    auto aes256 = filterByEncryption(all, std::set{Encryption::AES256, Encryption::AES256GCM});
+    std::vector<Cipher> aes256;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(aes256),
+                 byEncryption({Encryption::AES256, Encryption::AES256GCM}));
     aliases.insert({AES256, aes256});
     // cipher suites using either 128 or 256 bit AES.
     auto aes(aes128);
@@ -503,24 +486,39 @@ public:
     aliases.insert({AES, aes});
 
     // AES in Galois Counter Mode (GCM).
-    aliases.insert(
-        {AESGCM, filterByEncryption(all, std::set{Encryption::AES128GCM, Encryption::AES256GCM})});
+    std::vector<Cipher> aesgcm;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(aesgcm),
+                 byEncryption({Encryption::AES128GCM, Encryption::AES256GCM}));
+    aliases.insert({AESGCM, aesgcm});
 
     // Cipher suites using ChaCha20.
-    aliases.insert({CHACHA20, filterByEncryption(all, std::set{Encryption::CHACHA20POLY1305})});
+    std::vector<Cipher> chacha20;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(chacha20),
+                 byEncryption(Encryption::CHACHA20POLY1305));
+    aliases.insert({CHACHA20, chacha20});
 
     // Cipher suites using triple DES.
-    auto triple_des = filterByEncryption(all, std::set{Encryption::TRIPLE_DES});
+    std::vector<Cipher> triple_des;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(triple_des),
+                 byEncryption(Encryption::TRIPLE_DES));
     aliases.insert({TRIPLE_DES, triple_des});
 
     // Cipher suites using SHA1.
-    auto sha1 = filterByMessageDigest(all, std::set{MessageDigest::SHA1});
+    std::vector<Cipher> sha1;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(sha1),
+                 byMessageDigest(MessageDigest::SHA1));
     aliases.insert({SHA1, sha1});
     aliases.insert({SHA, sha1});
     // Cipher suites using SHA256.
-    aliases.insert({SHA256, filterByMessageDigest(all, std::set{MessageDigest::SHA256})});
+    std::vector<Cipher> sha256;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(sha256),
+                 byMessageDigest(MessageDigest::SHA256));
+    aliases.insert({SHA256, sha256});
     // Cipher suites using SHA384.
-    aliases.insert({SHA384, filterByMessageDigest(all, std::set{MessageDigest::SHA384})});
+    std::vector<Cipher> sha384;
+    std::copy_if(all.begin(), all.end(), std::back_inserter(sha384),
+                 byMessageDigest(MessageDigest::SHA384));
+    aliases.insert({SHA384, sha384});
 
     // COMPLEMENTOFDEFAULT:
     // The ciphers included in ALL, but not enabled by default. Currently this includes all RC4 and
