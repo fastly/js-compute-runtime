@@ -115,11 +115,11 @@ bool init_js() {
   if (!js::UseInternalJobQueues(cx) || !JS::InitSelfHostedCode(cx))
     return false;
 
-  JS::ContextOptionsRef(cx)
-      .setPrivateClassFields(true)
-      .setPrivateClassMethods(true)
-      .setClassStaticBlocks(true)
-      .setErgnomicBrandChecks(true);
+  // JS::ContextOptionsRef(cx)
+  //     .setPrivateClassFields(true)
+  //     .setPrivateClassMethods(true)
+  //     .setClassStaticBlocks(true)
+  //     .setErgnomicBrandChecks(true);
 
   // TODO: check if we should set a different creation zone.
   JS::RealmOptions options;

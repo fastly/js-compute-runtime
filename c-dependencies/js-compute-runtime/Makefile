@@ -9,7 +9,7 @@ DEBUG ?= false
 ifneq ($(DEBUG),false)
   MODE := debug
   CARGO_FLAG :=
-  CXX_OPT := $(CXX_OPT) -DDEBUG -DJS_DEBUG
+  CXX_OPT := $(CXX_OPT) -DDEBUG -DJS_DEBUG -g
   Q :=
 else
   MODE := release
@@ -29,6 +29,8 @@ WASI_CXX ?= /opt/wasi-sdk/bin/clang++
 CXX_FLAGS := -std=gnu++17 -Wall -Werror -Qunused-arguments -fno-sized-deallocation -fno-aligned-new -mthread-model single -fPIC -fno-rtti -fno-exceptions -fno-math-errno -pipe -fno-omit-frame-pointer -funwind-tables -I$(FSM_SRC)
 DEFINES ?=
 LD_FLAGS := -Wl,-z,noexecstack -Wl,-z,text -Wl,-z,relro -Wl,-z,nocopyreloc -Wl,-z,stack-size=1048576 -Wl,--stack-first
+
+DEFINES := $(DEFINES) -DMOZ_JS_STREAMS
 
 .PHONY: all install clean distclean
 
