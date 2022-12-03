@@ -76,7 +76,7 @@ The JS Compute Runtime has automated tests which run on all pull-requests. The t
 To run an end-to-end test which builds and deploys an application to c-at-e:
 - Build the runtime and cli: `npm run build` in the root of the project
 - Change to the test directory for the runtime: `cd integration-tests/js-compute/`
-- Install the test depenendencies: `npm install`
+- Install the test dependencies: `npm install`
 - Get a list of all the applications to test: `node test.js`
 - Test a single application via: `node test.js <name>` or test all via `node test.js --all`
 
