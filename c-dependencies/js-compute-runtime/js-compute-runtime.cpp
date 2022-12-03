@@ -558,3 +558,6 @@ int main(int argc, const char *argv[]) {
 
   return 0;
 }
+
+// TODO: why isn't this provided by wasi-libc?
+extern "C" pid_t getpid(void) { return 42; }
