@@ -63,7 +63,7 @@
 #define WIZER_INIT(init_func)                                                  \
     __WIZER_EXTERN_C void __wasm_call_ctors();                                 \
     __WIZER_EXTERN_C void __wasm_call_dtors();                                 \
-    __WIZER_EXTERN_C int __original_main();                                    \
+    __WIZER_EXTERN_C int __main_void();                                        \
     /* This function's export name `wizer.initialize` is specially          */ \
     /* recognized by Wizer. It is the direct entry point for pre-init.      */ \
     __attribute__((export_name("wizer.initialize"))) void                      \
@@ -80,14 +80,14 @@
     /* This function replaces `_start` (the WASI-specified entry point) in  */ \
     /* the pre-initialized Wasm module.                                     */ \
     __attribute__((export_name("wizer.resume"))) void __wizer_resume() {       \
-        /* `__original_main()` is defined by the WASI SDK toolchain due to  */ \
+        /* `__main_void()` is defined by the WASI SDK toolchain due to      */ \
         /* special semantics in C/C++ for the `main()` function, i.e., ito  */ \
         /* can either take argc/argv or not. It collects arguments using    */ \
         /* the appropriate WASI calls and then invokes the user program's   */ \
         /* `main()`. This may change in the future; when it does, we will   */ \
         /* coordinate with the WASI-SDK toolchain to implement this entry   */ \
         /* point in an alternate way. */                                       \
-        __original_main();                                                     \
+        __main_void();                                                         \
         /* Because we are replacing `_start()`, we need to manually invoke  */ \
         /* destructors as well.                                             */ \
         __wasm_call_dtors();                                                   \
