@@ -623,16 +623,55 @@ declare interface Console {
 declare var console: Console;
 
 /**
- * TextEncoder takes a stream of code points as input and emits a stream of UTF-8 bytes
- *
+ * An implementation of the [WHATWG Encoding Standard](https://encoding.spec.whatwg.org/) `TextEncoder` API. All
+ * instances of `TextEncoder` only support UTF-8 encoding.
+ * 
+ * TextEncoder takes a stream of code points as input and emits a stream of UTF-8 bytes.
+ * 
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder | TextEncoder on MDN}
+ * @example
+ * ```js
+ * const encoder = new TextEncoder();
+ * const uint8array = encoder.encode('a string to encode');
+ * ```
  * @group Encoding API
  */
 declare class TextEncoder {
+  /**
+   * Returns a newly constructed TextEncoder that will generate a byte stream with UTF-8 encoding.
+   */
   constructor();
+  /**
+   * The TextEncoder.encoding read-only property returns a string containing the name of the encoding algorithm used by the specific encoder.
+   * It is always set to the value "utf-8".
+   */
+  readonly encoding: "utf-8";
+  /**
+   * UTF-8 encodes the `input` string and returns a `Uint8Array` containing the encoded bytes.
+   * @param [input='an empty string'] The text to encode.
+   */
   encode(input?: string): Uint8Array;
-  get encoding(): string;
+  // /**
+  //  * UTF-8 encodes the `src` string to the `dest` Uint8Array and returns an object
+  //  * containing the read Unicode code units and written UTF-8 bytes.
+  //  *
+  //  * ```js
+  //  * const encoder = new TextEncoder();
+  //  * const src = 'this is some data';
+  //  * const dest = new Uint8Array(10);
+  //  * const { read, written } = encoder.encodeInto(src, dest);
+  //  * ```
+  //  * @param src The text to encode.
+  //  * @param dest The array to hold the encode result.
+  //  */
+  // encodeInto(src: string, dest: Uint8Array): TextEncoderEncodeIntoResult;
 }
+
+// https://encoding.spec.whatwg.org/#dictdef-textencoderencodeintoresult
+// declare interface TextEncoderEncodeIntoResult {
+//   read: number;
+//   written: number;
+// }
 
 /**
  * TextDecoder takes a stream UTF-8 bytes as input and emits a stream of code points
