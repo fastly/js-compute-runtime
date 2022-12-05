@@ -5,7 +5,7 @@ authors = [""]
 description = "A minimal boilerplate application to bootstrap JavaScript projects on Compute@Edge"
 language = "other"
 manifest_version = 2
-name = "compute-sdk-test-backend"
+name = "tee"
 service_id = ""
 
 [scripts]
@@ -17,3 +17,10 @@ service_id = ""
 
     [local_server.backends.TheOrigin]
       url = "JS_COMPUTE_TEST_BACKEND/"
+
+[setup]
+
+  [setup.backends]
+    [setup.backends.TheOrigin]
+      address = "compute-sdk-test-backend.edgecompute.app"
+      port = 443
