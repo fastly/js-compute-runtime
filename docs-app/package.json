@@ -10,7 +10,7 @@
     "build:app": "js-compute-runtime src/index.js",
     "build:files": "c-at-e-file-server local --toml fastly.toml --name site -- ../reference-docs/",
     "deploy": "npm run deploy:app && npm run deploy:files",
-    "deploy:app": "fastly compute deploy",
+    "deploy:app": "fastly compute publish",
     "deploy:files": "c-at-e-file-server upload --name 'js-docs-site' -- ../reference-docs/",
     "start": "fastly compute serve"
   },
