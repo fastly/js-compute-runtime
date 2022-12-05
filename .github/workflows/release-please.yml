@@ -20,30 +20,69 @@ jobs:
           prerelease: false
           token: ${{ secrets.JS_COMPUTE_RUNTIME_GITHUB_TOKEN }}
 
-      - uses: actions/checkout@v3
-        if: ${{ steps.release.outputs.release_created }}
+
+  update-lock-and-docs:
+    runs-on: ubuntu-latest
+    needs: release-please
+    if: ${{ needs.release-please.outputs.pr && !needs.release-please.outputs.releases_created }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          ref: release-please--branches--main--components--js-compute
+          fetch-depth: 2
+          token: ${{ secrets.JS_COMPUTE_RUNTIME_GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'yarn'
+
+      - name: Update yarn lock
+        run: yarn install --mode=update-lockfile
+
+      - name: Update Docs
+        run: yarn docs
+
+      - name: Update Docs App fastly.toml for local development
+        run: cd ./docs-app && yarn && yarn build:files
+
+      - name: Committing and push changes
+        run: |
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git add yarn.lock
+          git commit --amend --no-edit
+          git push --force
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: release-please
+    if: ${{ needs.release-please.outputs.releases_created }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
           submodules: true
 
-      - uses: actions/setup-node@v3
-        if: ${{ steps.release.outputs.release_created }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          cache: "npm"
           node-version: 18
-          registry-url: "https://registry.npmjs.org"
+          cache: 'yarn'
+          registry-url: 'https://registry.npmjs.org'
 
       - uses: ./.github/actions/cache-crates
-        if: ${{ steps.release.outputs.release_created }}
         with:
           lockfiles: "c-dependencies/js-compute-runtime/**/Cargo.lock"
 
       - uses: ./.github/actions/install-rust
-        if: ${{ steps.release.outputs.release_created }}
         with:
           path: c-dependencies
 
       - name: Cache SpiderMonkey object files
-        if: ${{ steps.release.outputs.release_created }}
         uses: actions/cache@v2
         id: sm-cache
         with:
@@ -63,7 +102,6 @@ jobs:
           bash ./build-engine.sh release
 
       - name: "Install wasi-sdk (linux)"
-        if: ${{ steps.release.outputs.release_created }}
         run: |
           set -x
           curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz
@@ -72,7 +110,6 @@ jobs:
           sudo mv wasi-sdk-12.0/* /opt/wasi-sdk/
 
       - name: "Install Binaryen (linux)"
-        if: ${{ steps.release.outputs.release_created }}
         run: |
           set -x
           export BINARYEN_VERSION=105
@@ -80,7 +117,6 @@ jobs:
           echo "$PWD/binaryen-version_${BINARYEN_VERSION}/bin" >> $GITHUB_PATH
 
       - name: Cache built Rust dependencies
-        if: ${{ steps.release.outputs.release_created }}
         uses: actions/cache@v3
         with:
           path: c-dependencies/js-compute-runtime/rusturl
@@ -88,19 +124,15 @@ jobs:
           # We trust cargo to only reuse valid parts of the cache when dependencies change.
           restore-keys: engine-cargo-${{ runner.os }}-${{ runner.arch }}-
 
-      - run: npm ci && npm run build
-        if: ${{ steps.release.outputs.release_created }}
+      - run: yarn install --immutable
+      
+      - run: yarn build
 
       - run: npm publish
-        if: ${{ steps.release.outputs.release_created }}
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-      
-      - run: npm run docs
-        if: ${{ steps.release.outputs.release_created }}
 
-      - run: cd ./docs-app && npm i
-        if: ${{ steps.release.outputs.release_created }}
+      - run: cd ./docs-app && yarn
 
       - name: Set up Fastly CLI
         uses: fastly/compute-actions/setup@v2
@@ -108,7 +140,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           cli_version: '4.3.0'
       
-      - run: cd ./docs-app && npm run deploy
-        if: ${{ steps.release.outputs.release_created }}
+      - run: cd ./docs-app && yarn deploy
         env:
           FASTLY_API_TOKEN: ${{secrets.FASTLY_API_TOKEN}}
