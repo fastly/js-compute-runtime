@@ -3062,6 +3062,54 @@ bool get_header_value_for_name(JSContext *cx, HandleObject self, HandleValue nam
   return true;
 }
 
+std::string_view special_chars = "=,;";
+
+std::vector<std::string_view> splitCookiesString(std::string_view cookiesString) {
+  std::vector<std::string_view> cookiesStrings;
+  std::size_t currentPosition = 0; // Current position in the string
+  std::size_t start;               // Start position of the current cookie
+  char currentChar;                // Current character in the string
+  std::size_t lastComma;           // Position of the last comma found
+  std::size_t nextStart;           // Position of the start of the next cookie
+
+  // Iterate over the string and split it into cookies.
+  while (currentPosition < cookiesString.length()) {
+    start = currentPosition;
+
+    // Iterate until we find a comma that might be used as a separator.
+    while ((currentPosition = cookiesString.find_first_of(",", currentPosition)) !=
+           std::string_view::npos) {
+      currentChar = cookiesString.at(currentPosition);
+      // ',' is a cookie separator only if we later have '=', before having ';' or ','
+      lastComma = currentPosition;
+      nextStart = ++currentPosition;
+
+      // Check if the next sequence of characters is a non-special character followed by an equals
+      // sign.
+      currentPosition = cookiesString.find_first_of(special_chars, currentPosition);
+
+      // If the current character is an equals sign, we have found a cookie separator.
+      if (currentPosition != std::string_view::npos && cookiesString.at(currentPosition) == '=') {
+        // currentPosition is inside the next cookie, so back up and return it.
+        currentPosition = nextStart;
+        cookiesStrings.push_back(cookiesString.substr(start, lastComma - start));
+        start = currentPosition;
+      } else {
+        // The cookie contains ';' or ',' as part of the value
+        // so we need to keep accumulating characters
+        currentPosition = lastComma + 1;
+      }
+    }
+
+    // If we reach the end of the string without finding a separator, add the last cookie to the
+    // vector.
+    if (currentPosition >= cookiesString.length()) {
+      cookiesStrings.push_back(cookiesString.substr(start, cookiesString.length() - start));
+    }
+  }
+  return cookiesStrings;
+}
+
 static bool ensure_all_header_values_from_handle(JSContext *cx, HandleObject self,
                                                  HandleObject backing_map) {
   if (!lazy_values(self))
@@ -3108,19 +3156,33 @@ bool append_header_value(JSContext *cx, HandleObject self, HandleValue name, Han
 
   // Ensure that any host-side values have been applied JS-side.
   RootedValue v(cx);
-  if (!ensure_value_for_header(cx, self, normalized_name, &v))
+  if (!ensure_value_for_header(cx, self, normalized_name, &v)) {
     return false;
+  }
 
   Mode mode = detail::mode(self);
   if (mode != Mode::Standalone) {
     AppendHeaderOperation *op;
-    if (mode == Mode::ProxyToRequest)
+    if (mode == Mode::ProxyToRequest) {
       op = (AppendHeaderOperation *)xqd_req_header_append;
-    else
+    } else {
       op = (AppendHeaderOperation *)xqd_resp_header_append;
-    if (!HANDLE_RESULT(
-            cx, op(handle(self), name_chars.get(), name_len, value_chars.get(), value_len))) {
-      return false;
+    }
+    std::string_view name(name_chars.get(), name_len);
+    if (name == "set-cookie") {
+      std::string_view value(value_chars.get(), value_len);
+      auto values = splitCookiesString(value);
+      for (auto value : values) {
+        auto result = op(handle(self), name_chars.get(), name_len, value.data(), value.length());
+        if (!HANDLE_RESULT(cx, result)) {
+          return false;
+        }
+      }
+    } else {
+      auto result = op(handle(self), name_chars.get(), name_len, value_chars.get(), value_len);
+      if (!HANDLE_RESULT(cx, result)) {
+        return false;
+      }
     }
   }
 
