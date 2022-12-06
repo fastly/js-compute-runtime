@@ -24,9 +24,9 @@ service_id = ""
 
   [setup.backends]
 
-    [setup.backends.TheOrigin]
-      address = "compute-sdk-test-backend.edgecompute.app"
+    [setup.backends.httpbin]
+      address = "httpbin.org"
       port = 443
-    [setup.backends.TheOrigin2]
-      address = "compute-sdk-test-backend.edgecompute.app"
-      port = 443
+    [setup.backends.localserver]
+      address = "localhost"
+      port = 8081

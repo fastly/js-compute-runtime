@@ -8,6 +8,9 @@ inputs:
   fastly-api-token:
     description: 'The Fastly API token to use for interacting with Fastly API'
     required: true
+  github-token:
+    description: 'The GitHub token to use for downloading the Fastly CLI'
+    required: true
 
 runs:
   using: "composite"
@@ -15,12 +18,11 @@ runs:
     - uses: actions/setup-node@v3
       with:
         node-version: 18
-    - name: Install Fastly CLI
-      shell: bash
-      run: |
-        echo "Install Fastly CLI 3.1.1"
-        wget https://github.com/fastly/cli/releases/download/v3.1.1/fastly_3.1.1_linux_amd64.deb
-        sudo apt install ./fastly_3.1.1_linux_amd64.deb
+    - name: Set up Fastly CLI
+      uses: fastly/compute-actions/setup@v2
+      with:
+        token: ${{ inputs.github-token }}
+        cli_version: '4.3.0'
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:

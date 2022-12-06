@@ -103,7 +103,7 @@ E.G. `["ComputeLog :: Hello!"]` will assert that the application emitted a log-l
       "method": "GET",
       "pathname": "/example",
       "headers": [
-        ["food", "carrot"]
+        "food", "carrot"
       ]
     },
     "downstream_response": {

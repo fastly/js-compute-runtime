@@ -5,7 +5,7 @@ authors = ["aturner+ecp@fastly.com"]
 description = ""
 language = "other"
 manifest_version = 2
-name = "byte_repeater"
+name = "byte-repeater"
 service_id = ""
 
 [scripts]
@@ -23,8 +23,5 @@ service_id = ""
   [setup.backends]
 
     [setup.backends.TheOrigin]
-      address = "compute-sdk-test-backend.edgecompute.app"
-      port = 443
-    [setup.backends.TheOrigin2]
       address = "compute-sdk-test-backend.edgecompute.app"
       port = 443

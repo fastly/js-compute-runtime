@@ -1,8 +1,11 @@
 name: "Compute SDK Test"
-description: "Test fixture Wasm modules with Fastly C@E (From a JS Github Action)"
+description: "Test fixture Wasm modules with Viceroy"
 inputs:
   config:
     description: 'Configuration JSON of the wasm module, and their expectations'
+    required: true
+  fixture:
+    description: 'The name of the fixture to test'
     required: true
 
 runs:

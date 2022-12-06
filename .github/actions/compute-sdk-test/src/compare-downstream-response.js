@@ -7,14 +7,13 @@ const compareDownstreamResponse = async (configResponse, actualResponse) => {
   console.info('Config Response:');
   console.log(configResponse);
   console.info('Actual Response:');
-  console.log(actualResponse.url);
-  console.log(actualResponse.status)
+  console.log(actualResponse.statusCode)
   console.log(actualResponse.headers);
   console.info('Comparing Responses...');
 
   // Status
-  if (configResponse.status != actualResponse.status) {
-    throw new Error(`[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.status}`);
+  if (configResponse.status != actualResponse.statusCode) {
+    throw new Error(`[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.statusCode}`);
   }
 
   // Headers
@@ -28,7 +27,7 @@ const compareDownstreamResponse = async (configResponse, actualResponse) => {
     // Check if we need to stream the response and check the chunks, or the whole body
     if (configResponse.body instanceof Array) {
       // Stream down the response
-      let downstreamBody = await actualResponse.body;
+      let downstreamBody = actualResponse.body;
       let chunkNumber = 0;
       const downstreamTimeout = setTimeout(() => {
         console.error(`[DownstreamResponse: Body Chunk Timeout]`);
@@ -55,7 +54,7 @@ const compareDownstreamResponse = async (configResponse, actualResponse) => {
       }
     } else {
       // Get the text, and check if it matches the test
-      let downstreamBodyText = await actualResponse.text();
+      let downstreamBodyText = await actualResponse.body.text();
 
       if (downstreamBodyText !== configResponse.body) {
         console.error(`[DownstreamResponse: Body mismatch] Expected: ${configResponse.body} - Got: ${downstreamBodyText}`);
