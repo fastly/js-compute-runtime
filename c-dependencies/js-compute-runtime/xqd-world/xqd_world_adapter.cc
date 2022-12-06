@@ -138,42 +138,95 @@ fastly_error_t xqd_fastly_http_req_new(fastly_request_handle_t *ret) {
 }
 
 fastly_error_t xqd_fastly_http_req_header_names_get(fastly_request_handle_t h,
-                                                    fastly_cursor_t cursor,
-                                                    fastly_tuple2_string_option_cursor_t *ret) {
-  ret->f0.ptr = static_cast<char *>(JS_malloc(context, HEADER_MAX_LEN));
-  int64_t next_cursor;
-  fastly_error_t result = convert_result(
-      xqd_req_header_names_get(h, ret->f0.ptr, HEADER_MAX_LEN, cursor, &next_cursor, &ret->f0.len));
-  ret->f0.ptr = static_cast<char *>(JS_realloc(context, ret->f0.ptr, HEADER_MAX_LEN, ret->f0.len));
-  if (next_cursor < 0) {
-    ret->f1.is_some = false;
-  } else {
-    ret->f1.is_some = true;
-    ret->f1.val = (uint32_t)next_cursor;
+                                                    fastly_list_string_t *ret) {
+  size_t str_max = 50;
+  xqd_world_string_t *strs = static_cast<xqd_world_string_t *>(JS_malloc(context, str_max));
+  size_t str_cnt = 0;
+  size_t nwritten;
+  char *buf = static_cast<char *>(JS_malloc(context, HEADER_MAX_LEN));
+  uint32_t cursor = 0;
+  int64_t next_cursor = 0;
+  while (true) {
+    fastly_error_t result = convert_result(
+        xqd_req_header_names_get(h, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten));
+    if (result != FASTLY_RESULT_ERROR_OK) {
+      JS_free(context, strs);
+      JS_free(context, buf);
+      return result;
+    }
+    if (nwritten == 0)
+      break;
+    uint32_t offset = 0;
+    for (size_t i = 0; i < nwritten; i++) {
+      if (buf[i] != '\0')
+        continue;
+      if (str_cnt++ == str_max) {
+        strs = static_cast<xqd_world_string_t *>(JS_realloc(context, strs, str_max, str_max + 50));
+        str_max += 50;
+      }
+      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(context, i - offset));
+      strs[str_cnt].len = i - offset;
+      memcpy(strs[str_cnt].ptr, buf + offset, i - offset);
+      offset = i + 1;
+    }
+    if (next_cursor < 0)
+      break;
+    cursor = (uint32_t)next_cursor;
   }
-  return result;
+  JS_free(context, buf);
+  strs = static_cast<xqd_world_string_t *>(JS_realloc(context, strs, str_max, str_cnt));
+  ret->ptr = strs;
+  ret->len = str_cnt;
+  return FASTLY_RESULT_ERROR_OK;
 }
 
 fastly_error_t xqd_fastly_http_req_header_values_get(fastly_request_handle_t h,
                                                      xqd_world_string_t *name,
-                                                     fastly_cursor_t cursor,
-                                                     fastly_tuple2_string_option_cursor_t *ret) {
-  ret->f0.ptr = static_cast<char *>(JS_malloc(context, HEADER_MAX_LEN));
-  int64_t next_cursor;
-  fastly_error_t result = convert_result(xqd_req_header_values_get(
-      h, name->ptr, name->len, ret->f0.ptr, HEADER_MAX_LEN, cursor, &next_cursor, &ret->f0.len));
-  if (result != FASTLY_RESULT_ERROR_OK) {
-    JS_free(context, ret->f0.ptr);
-    return result;
+                                                     fastly_option_list_string_t *ret) {
+  size_t str_max = 50;
+  xqd_world_string_t *strs = static_cast<xqd_world_string_t *>(JS_malloc(context, str_max));
+  size_t str_cnt = 0;
+  size_t nwritten;
+  char *buf = static_cast<char *>(JS_malloc(context, HEADER_MAX_LEN));
+  uint32_t cursor = 0;
+  int64_t next_cursor = 0;
+  while (true) {
+    fastly_error_t result = convert_result(xqd_req_header_values_get(
+        h, name->ptr, name->len, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten));
+    if (result != FASTLY_RESULT_ERROR_OK) {
+      JS_free(context, buf);
+      return result;
+    }
+    if (nwritten == 0)
+      break;
+    uint32_t offset = 0;
+    for (size_t i = 0; i < nwritten; i++) {
+      if (buf[i] != '\0')
+        continue;
+      if (str_cnt++ == str_max) {
+        strs = static_cast<xqd_world_string_t *>(JS_realloc(context, strs, str_max, str_max + 50));
+        str_max += 50;
+      }
+      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(context, i - offset));
+      strs[str_cnt].len = i - offset;
+      memcpy(strs[str_cnt].ptr, buf + offset, i - offset);
+      offset = i + 1;
+    }
+    if (next_cursor < 0)
+      break;
+    cursor = (uint32_t)next_cursor;
   }
-  if (next_cursor < 0) {
-    ret->f1.is_some = false;
+  JS_free(context, buf);
+  if (str_cnt > 0) {
+    ret->is_some = true;
+    ret->val.ptr = strs;
+    ret->val.len = str_cnt;
+    strs = static_cast<xqd_world_string_t *>(JS_realloc(context, strs, str_max, str_cnt));
   } else {
-    ret->f1.is_some = true;
-    ret->f1.val = (uint32_t)next_cursor;
+    ret->is_some = false;
+    JS_free(context, strs);
   }
-  ret->f0.ptr = static_cast<char *>(JS_realloc(context, ret->f0.ptr, HEADER_MAX_LEN, ret->f0.len));
-  return result;
+  return FASTLY_RESULT_ERROR_OK;
 }
 
 fastly_error_t xqd_fastly_http_req_header_insert(fastly_request_handle_t h,
@@ -297,58 +350,111 @@ fastly_error_t xqd_fastly_http_resp_new(fastly_response_handle_t *ret) {
   return convert_result(xqd_resp_new(ret));
 }
 
-fastly_error_t xqd_fastly_http_resp_header_names_get(fastly_request_handle_t h,
-                                                     fastly_cursor_t cursor,
-                                                     fastly_tuple2_string_option_cursor_t *ret) {
-  ret->f0.ptr = static_cast<char *>(JS_malloc(context, HEADER_MAX_LEN));
-  int64_t next_cursor;
-  fastly_error_t result = convert_result(xqd_resp_header_names_get(
-      h, ret->f0.ptr, HEADER_MAX_LEN, cursor, &next_cursor, &ret->f0.len));
-  if (result != FASTLY_RESULT_ERROR_OK) {
-    JS_free(context, ret->f0.ptr);
-    return result;
+fastly_error_t xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h,
+                                                     fastly_list_string_t *ret) {
+  xqd_world_string_t *strs = static_cast<xqd_world_string_t *>(JS_malloc(context, 50));
+  size_t str_max = 10;
+  size_t str_cnt = 0;
+  size_t nwritten;
+  char *buf = static_cast<char *>(JS_malloc(context, HEADER_MAX_LEN));
+  uint32_t cursor = 0;
+  int64_t next_cursor = 0;
+  while (true) {
+    fastly_error_t result = convert_result(
+        xqd_resp_header_names_get(h, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten));
+    if (result != FASTLY_RESULT_ERROR_OK) {
+      JS_free(context, buf);
+      return result;
+    }
+    if (nwritten == 0) {
+      break;
+    }
+    uint32_t offset = 0;
+    for (size_t i = 0; i < nwritten; i++) {
+      if (buf[i] != '\0')
+        continue;
+      if (str_cnt++ == str_max) {
+        strs = static_cast<xqd_world_string_t *>(JS_realloc(context, strs, str_max, str_max + 50));
+        str_max += 50;
+      }
+      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(context, i - offset));
+      strs[str_cnt].len = i - offset;
+      memcpy(strs[str_cnt].ptr, buf + offset, i - offset);
+      offset = i + 1;
+    }
+    if (next_cursor < 0)
+      break;
+    cursor = (uint32_t)next_cursor;
   }
-  ret->f0.ptr = static_cast<char *>(JS_realloc(context, ret->f0.ptr, HEADER_MAX_LEN, ret->f0.len));
-  if (next_cursor < 0) {
-    ret->f1.is_some = false;
-  } else {
-    ret->f1.is_some = true;
-    ret->f1.val = (uint32_t)next_cursor;
-  }
-  return result;
+  JS_free(context, buf);
+  strs = static_cast<xqd_world_string_t *>(JS_realloc(context, strs, str_max, str_cnt));
+  ret->ptr = strs;
+  ret->len = str_cnt;
+  return FASTLY_RESULT_ERROR_OK;
 }
 
-fastly_error_t xqd_fastly_http_resp_header_values_get(fastly_request_handle_t h,
+fastly_error_t xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h,
                                                       xqd_world_string_t *name,
-                                                      fastly_cursor_t cursor,
-                                                      fastly_tuple2_string_option_cursor_t *ret) {
-  ret->f0.ptr = static_cast<char *>(JS_malloc(context, HEADER_MAX_LEN));
-  int64_t next_cursor;
-  fastly_error_t result = convert_result(xqd_resp_header_values_get(
-      h, name->ptr, name->len, ret->f0.ptr, HEADER_MAX_LEN, cursor, &next_cursor, &ret->f0.len));
-  if (next_cursor < 0) {
-    ret->f1.is_some = false;
-  } else {
-    ret->f1.is_some = true;
-    ret->f1.val = (uint32_t)next_cursor;
+                                                      fastly_option_list_string_t *ret) {
+  size_t str_max = 50;
+  xqd_world_string_t *strs = static_cast<xqd_world_string_t *>(JS_malloc(context, str_max));
+  size_t str_cnt = 0;
+  size_t nwritten;
+  char *buf = static_cast<char *>(JS_malloc(context, HEADER_MAX_LEN));
+  uint32_t cursor = 0;
+  int64_t next_cursor = 0;
+  while (true) {
+    fastly_error_t result = convert_result(xqd_resp_header_values_get(
+        h, name->ptr, name->len, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten));
+    if (result != FASTLY_RESULT_ERROR_OK) {
+      JS_free(context, buf);
+      return result;
+    }
+    if (nwritten == 0)
+      break;
+    uint32_t offset = 0;
+    for (size_t i = 0; i < nwritten; i++) {
+      if (buf[i] != '\0')
+        continue;
+      if (str_cnt++ == str_max) {
+        strs = static_cast<xqd_world_string_t *>(JS_realloc(context, strs, str_max, str_max + 50));
+        str_max += 50;
+      }
+      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(context, i - offset));
+      strs[str_cnt].len = i - offset;
+      memcpy(strs[str_cnt].ptr, buf + offset, i - offset);
+      offset = i + 1;
+    }
+    if (next_cursor < 0)
+      break;
+    cursor = (uint32_t)next_cursor;
   }
-  ret->f0.ptr = static_cast<char *>(JS_realloc(context, ret->f0.ptr, HEADER_MAX_LEN, ret->f0.len));
-  return result;
+  JS_free(context, buf);
+  if (str_cnt > 0) {
+    ret->is_some = true;
+    ret->val.ptr = strs;
+    ret->val.len = str_cnt;
+    strs = static_cast<xqd_world_string_t *>(JS_realloc(context, strs, str_max, str_cnt));
+  } else {
+    ret->is_some = false;
+    JS_free(context, strs);
+  }
+  return FASTLY_RESULT_ERROR_OK;
 }
 
-fastly_error_t xqd_fastly_http_resp_header_insert(fastly_request_handle_t h,
+fastly_error_t xqd_fastly_http_resp_header_insert(fastly_response_handle_t h,
                                                   xqd_world_string_t *name,
                                                   xqd_world_string_t *value) {
   return convert_result(xqd_resp_header_insert(h, name->ptr, name->len, value->ptr, value->len));
 }
 
-fastly_error_t xqd_fastly_http_resp_header_append(fastly_request_handle_t h,
+fastly_error_t xqd_fastly_http_resp_header_append(fastly_response_handle_t h,
                                                   xqd_world_string_t *name,
                                                   xqd_world_string_t *value) {
   return convert_result(xqd_resp_header_append(h, name->ptr, name->len, value->ptr, value->len));
 }
 
-fastly_error_t xqd_fastly_http_resp_header_remove(fastly_request_handle_t h,
+fastly_error_t xqd_fastly_http_resp_header_remove(fastly_response_handle_t h,
                                                   xqd_world_string_t *name) {
   return convert_result(xqd_resp_header_remove(h, name->ptr, name->len));
 }
@@ -528,22 +634,20 @@ fastly_error_t xqd_fastly_http_req_new(fastly_request_handle_t *ret) {
 }
 
 fastly_error_t xqd_fastly_http_req_header_names_get(fastly_request_handle_t h,
-                                                    fastly_cursor_t cursor,
-                                                    fastly_tuple2_string_option_cursor_t *ret) {
-  return fastly_http_req_header_names_get(h, cursor, ret);
+                                                    fastly_list_string_t *ret) {
+  return fastly_http_req_header_names_get(h, ret);
 }
 
 fastly_error_t xqd_fastly_http_req_header_value_get(fastly_request_handle_t h,
                                                     xqd_world_string_t *name,
-                                                    xqd_world_string_t *ret) {
+                                                    fastly_option_string_t *ret) {
   return fastly_http_req_header_value_get(h, name, ret);
 }
 
 fastly_error_t xqd_fastly_http_req_header_values_get(fastly_request_handle_t h,
                                                      xqd_world_string_t *name,
-                                                     fastly_cursor_t cursor,
-                                                     fastly_tuple2_string_option_cursor_t *ret) {
-  return fastly_http_req_header_values_get(h, name, cursor, ret);
+                                                     fastly_option_list_string_t *ret) {
+  return fastly_http_req_header_values_get(h, name, ret);
 }
 
 fastly_error_t xqd_fastly_http_req_header_values_set(fastly_request_handle_t h,
@@ -670,20 +774,18 @@ fastly_error_t xqd_fastly_http_resp_new(fastly_response_handle_t *ret) {
   return fastly_http_resp_new(ret);
 }
 fastly_error_t xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h,
-                                                     fastly_cursor_t cursor,
-                                                     fastly_tuple2_string_option_cursor_t *ret) {
-  return fastly_http_resp_header_names_get(h, cursor, ret);
+                                                     fastly_list_string_t *ret) {
+  return fastly_http_resp_header_names_get(h, ret);
 }
 fastly_error_t xqd_fastly_http_resp_header_value_get(fastly_response_handle_t h,
                                                      xqd_world_string_t *name,
-                                                     xqd_world_string_t *ret) {
+                                                     fastly_option_string_t *ret) {
   return fastly_http_resp_header_value_get(h, name, ret);
 }
 fastly_error_t xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h,
                                                       xqd_world_string_t *name,
-                                                      fastly_cursor_t cursor,
-                                                      fastly_tuple2_string_option_cursor_t *ret) {
-  return fastly_http_resp_header_values_get(h, name, cursor, ret);
+                                                      fastly_option_list_string_t *ret) {
+  return fastly_http_resp_header_values_get(h, name, ret);
 }
 fastly_error_t xqd_fastly_http_resp_header_values_set(fastly_response_handle_t h,
                                                       xqd_world_string_t *name,

@@ -52,8 +52,6 @@ typedef uint32_t fastly_request_handle_t;
 
 typedef uint32_t fastly_pending_request_handle_t;
 
-typedef uint32_t fastly_cursor_t;
-
 typedef uint32_t fastly_response_handle_t;
 
 typedef struct {
@@ -280,27 +278,38 @@ typedef struct {
 } fastly_result_request_handle_error_t;
 
 typedef struct {
-  bool is_some;
-  fastly_cursor_t val;
-} fastly_option_cursor_t;
-
-typedef struct {
-  xqd_world_string_t f0;
-  fastly_option_cursor_t f1;
-} fastly_tuple2_string_option_cursor_t;
+  xqd_world_string_t *ptr;
+  size_t len;
+} fastly_list_string_t;
 
 typedef struct {
   bool is_err;
   union {
-    fastly_tuple2_string_option_cursor_t ok;
+    fastly_list_string_t ok;
     fastly_error_t err;
   } val;
-} fastly_result_tuple2_string_option_cursor_error_t;
+} fastly_result_list_string_error_t;
 
 typedef struct {
-  xqd_world_string_t *ptr;
-  size_t len;
-} fastly_list_string_t;
+  bool is_err;
+  union {
+    fastly_option_string_t ok;
+    fastly_error_t err;
+  } val;
+} fastly_result_option_string_error_t;
+
+typedef struct {
+  bool is_some;
+  fastly_list_string_t val;
+} fastly_option_list_string_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    fastly_option_list_string_t ok;
+    fastly_error_t err;
+  } val;
+} fastly_result_option_list_string_error_t;
 
 typedef struct {
   bool is_err;
@@ -544,20 +553,20 @@ __attribute__((import_module("fastly"),
 fastly_error_t fastly_http_req_new(fastly_request_handle_t *ret);
 
 __attribute__((import_module("fastly"), import_name("http-req-header-names-get"))) void
-    __wasm_import_fastly_http_req_header_names_get(int32_t, int32_t, int32_t);
-fastly_error_t fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_cursor_t cursor,
-                                                fastly_tuple2_string_option_cursor_t *ret);
+    __wasm_import_fastly_http_req_header_names_get(int32_t, int32_t);
+fastly_error_t fastly_http_req_header_names_get(fastly_request_handle_t h,
+                                                fastly_list_string_t *ret);
 
 __attribute__((import_module("fastly"), import_name("http-req-header-value-get"))) void
     __wasm_import_fastly_http_req_header_value_get(int32_t, int32_t, int32_t, int32_t);
 fastly_error_t fastly_http_req_header_value_get(fastly_request_handle_t h, xqd_world_string_t *name,
-                                                xqd_world_string_t *ret);
+                                                fastly_option_string_t *ret);
 
 __attribute__((import_module("fastly"), import_name("http-req-header-values-get"))) void
-    __wasm_import_fastly_http_req_header_values_get(int32_t, int32_t, int32_t, int32_t, int32_t);
+    __wasm_import_fastly_http_req_header_values_get(int32_t, int32_t, int32_t, int32_t);
 fastly_error_t fastly_http_req_header_values_get(fastly_request_handle_t h,
-                                                 xqd_world_string_t *name, fastly_cursor_t cursor,
-                                                 fastly_tuple2_string_option_cursor_t *ret);
+                                                 xqd_world_string_t *name,
+                                                 fastly_option_list_string_t *ret);
 
 __attribute__((import_module("fastly"), import_name("http-req-header-values-set"))) void
     __wasm_import_fastly_http_req_header_values_set(int32_t, int32_t, int32_t, int32_t, int32_t,
@@ -681,20 +690,21 @@ __attribute__((import_module("fastly"),
 fastly_error_t fastly_http_resp_new(fastly_response_handle_t *ret);
 
 __attribute__((import_module("fastly"), import_name("http-resp-header-names-get"))) void
-    __wasm_import_fastly_http_resp_header_names_get(int32_t, int32_t, int32_t);
-fastly_error_t fastly_http_resp_header_names_get(fastly_response_handle_t h, fastly_cursor_t cursor,
-                                                 fastly_tuple2_string_option_cursor_t *ret);
+    __wasm_import_fastly_http_resp_header_names_get(int32_t, int32_t);
+fastly_error_t fastly_http_resp_header_names_get(fastly_response_handle_t h,
+                                                 fastly_list_string_t *ret);
 
 __attribute__((import_module("fastly"), import_name("http-resp-header-value-get"))) void
     __wasm_import_fastly_http_resp_header_value_get(int32_t, int32_t, int32_t, int32_t);
 fastly_error_t fastly_http_resp_header_value_get(fastly_response_handle_t h,
-                                                 xqd_world_string_t *name, xqd_world_string_t *ret);
+                                                 xqd_world_string_t *name,
+                                                 fastly_option_string_t *ret);
 
 __attribute__((import_module("fastly"), import_name("http-resp-header-values-get"))) void
-    __wasm_import_fastly_http_resp_header_values_get(int32_t, int32_t, int32_t, int32_t, int32_t);
+    __wasm_import_fastly_http_resp_header_values_get(int32_t, int32_t, int32_t, int32_t);
 fastly_error_t fastly_http_resp_header_values_get(fastly_response_handle_t h,
-                                                  xqd_world_string_t *name, fastly_cursor_t cursor,
-                                                  fastly_tuple2_string_option_cursor_t *ret);
+                                                  xqd_world_string_t *name,
+                                                  fastly_option_list_string_t *ret);
 
 __attribute__((import_module("fastly"), import_name("http-resp-header-values-set"))) void
     __wasm_import_fastly_http_resp_header_values_set(int32_t, int32_t, int32_t, int32_t, int32_t,

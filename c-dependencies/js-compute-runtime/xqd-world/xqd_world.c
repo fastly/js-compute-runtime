@@ -479,54 +479,16 @@ fastly_error_t fastly_http_req_new(fastly_request_handle_t *ret) {
   return result.is_err ? result.val.err : -1;
 }
 
-fastly_error_t fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_cursor_t cursor, fastly_tuple2_string_option_cursor_t *ret) {
-  __attribute__((aligned(4)))
-  uint8_t ret_area[20];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_http_req_header_names_get((int32_t) (h), (int32_t) (cursor), ptr);
-  fastly_result_tuple2_string_option_cursor_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      fastly_option_cursor_t option;
-      switch ((int32_t) (*((uint8_t*) (ptr + 12)))) {
-        case 0: {
-          option.is_some = false;
-          break;
-        }
-        case 1: {
-          option.is_some = true;
-          option.val = (uint32_t) (*((int32_t*) (ptr + 16)));
-          break;
-        }
-      }
-      
-      result.val.ok = (fastly_tuple2_string_option_cursor_t) {
-        (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) },
-        option,
-      };
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
-      break;
-    }
-  }
-  *ret = result.val.ok;
-  return result.is_err ? result.val.err : -1;
-}
-
-fastly_error_t fastly_http_req_header_value_get(fastly_request_handle_t h, xqd_world_string_t *name, xqd_world_string_t *ret) {
+fastly_error_t fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_list_string_t *ret) {
   __attribute__((aligned(4)))
   uint8_t ret_area[12];
   int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_http_req_header_value_get((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
-  fastly_result_string_error_t result;
+  __wasm_import_fastly_http_req_header_names_get((int32_t) (h), ptr);
+  fastly_result_list_string_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
-      result.val.ok = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) };
+      result.val.ok = (fastly_list_string_t) { (xqd_world_string_t*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) };
       break;
     }
     case 1: {
@@ -539,32 +501,64 @@ fastly_error_t fastly_http_req_header_value_get(fastly_request_handle_t h, xqd_w
   return result.is_err ? result.val.err : -1;
 }
 
-fastly_error_t fastly_http_req_header_values_get(fastly_request_handle_t h, xqd_world_string_t *name, fastly_cursor_t cursor, fastly_tuple2_string_option_cursor_t *ret) {
+fastly_error_t fastly_http_req_header_value_get(fastly_request_handle_t h, xqd_world_string_t *name, fastly_option_string_t *ret) {
   __attribute__((aligned(4)))
-  uint8_t ret_area[20];
+  uint8_t ret_area[16];
   int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_http_req_header_values_get((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, (int32_t) (cursor), ptr);
-  fastly_result_tuple2_string_option_cursor_error_t result;
+  __wasm_import_fastly_http_req_header_value_get((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
+  fastly_result_option_string_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
-      fastly_option_cursor_t option;
-      switch ((int32_t) (*((uint8_t*) (ptr + 12)))) {
+      fastly_option_string_t option;
+      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
         case 0: {
           option.is_some = false;
           break;
         }
         case 1: {
           option.is_some = true;
-          option.val = (uint32_t) (*((int32_t*) (ptr + 16)));
+          option.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 8))), (size_t)(*((int32_t*) (ptr + 12))) };
           break;
         }
       }
       
-      result.val.ok = (fastly_tuple2_string_option_cursor_t) {
-        (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) },
-        option,
-      };
+      result.val.ok = option;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  *ret = result.val.ok;
+  return result.is_err ? result.val.err : -1;
+}
+
+fastly_error_t fastly_http_req_header_values_get(fastly_request_handle_t h, xqd_world_string_t *name, fastly_option_list_string_t *ret) {
+  __attribute__((aligned(4)))
+  uint8_t ret_area[16];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_http_req_header_values_get((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
+  fastly_result_option_list_string_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      fastly_option_list_string_t option;
+      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
+        case 0: {
+          option.is_some = false;
+          break;
+        }
+        case 1: {
+          option.is_some = true;
+          option.val = (fastly_list_string_t) { (xqd_world_string_t*)(*((int32_t*) (ptr + 8))), (size_t)(*((int32_t*) (ptr + 12))) };
+          break;
+        }
+      }
+      
+      result.val.ok = option;
       break;
     }
     case 1: {
@@ -1218,54 +1212,16 @@ fastly_error_t fastly_http_resp_new(fastly_response_handle_t *ret) {
   return result.is_err ? result.val.err : -1;
 }
 
-fastly_error_t fastly_http_resp_header_names_get(fastly_response_handle_t h, fastly_cursor_t cursor, fastly_tuple2_string_option_cursor_t *ret) {
-  __attribute__((aligned(4)))
-  uint8_t ret_area[20];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_http_resp_header_names_get((int32_t) (h), (int32_t) (cursor), ptr);
-  fastly_result_tuple2_string_option_cursor_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      fastly_option_cursor_t option;
-      switch ((int32_t) (*((uint8_t*) (ptr + 12)))) {
-        case 0: {
-          option.is_some = false;
-          break;
-        }
-        case 1: {
-          option.is_some = true;
-          option.val = (uint32_t) (*((int32_t*) (ptr + 16)));
-          break;
-        }
-      }
-      
-      result.val.ok = (fastly_tuple2_string_option_cursor_t) {
-        (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) },
-        option,
-      };
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
-      break;
-    }
-  }
-  *ret = result.val.ok;
-  return result.is_err ? result.val.err : -1;
-}
-
-fastly_error_t fastly_http_resp_header_value_get(fastly_response_handle_t h, xqd_world_string_t *name, xqd_world_string_t *ret) {
+fastly_error_t fastly_http_resp_header_names_get(fastly_response_handle_t h, fastly_list_string_t *ret) {
   __attribute__((aligned(4)))
   uint8_t ret_area[12];
   int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_http_resp_header_value_get((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
-  fastly_result_string_error_t result;
+  __wasm_import_fastly_http_resp_header_names_get((int32_t) (h), ptr);
+  fastly_result_list_string_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
-      result.val.ok = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) };
+      result.val.ok = (fastly_list_string_t) { (xqd_world_string_t*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) };
       break;
     }
     case 1: {
@@ -1278,32 +1234,64 @@ fastly_error_t fastly_http_resp_header_value_get(fastly_response_handle_t h, xqd
   return result.is_err ? result.val.err : -1;
 }
 
-fastly_error_t fastly_http_resp_header_values_get(fastly_response_handle_t h, xqd_world_string_t *name, fastly_cursor_t cursor, fastly_tuple2_string_option_cursor_t *ret) {
+fastly_error_t fastly_http_resp_header_value_get(fastly_response_handle_t h, xqd_world_string_t *name, fastly_option_string_t *ret) {
   __attribute__((aligned(4)))
-  uint8_t ret_area[20];
+  uint8_t ret_area[16];
   int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_http_resp_header_values_get((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, (int32_t) (cursor), ptr);
-  fastly_result_tuple2_string_option_cursor_error_t result;
+  __wasm_import_fastly_http_resp_header_value_get((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
+  fastly_result_option_string_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
-      fastly_option_cursor_t option;
-      switch ((int32_t) (*((uint8_t*) (ptr + 12)))) {
+      fastly_option_string_t option;
+      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
         case 0: {
           option.is_some = false;
           break;
         }
         case 1: {
           option.is_some = true;
-          option.val = (uint32_t) (*((int32_t*) (ptr + 16)));
+          option.val = (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 8))), (size_t)(*((int32_t*) (ptr + 12))) };
           break;
         }
       }
       
-      result.val.ok = (fastly_tuple2_string_option_cursor_t) {
-        (xqd_world_string_t) { (char*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) },
-        option,
-      };
+      result.val.ok = option;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  *ret = result.val.ok;
+  return result.is_err ? result.val.err : -1;
+}
+
+fastly_error_t fastly_http_resp_header_values_get(fastly_response_handle_t h, xqd_world_string_t *name, fastly_option_list_string_t *ret) {
+  __attribute__((aligned(4)))
+  uint8_t ret_area[16];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_http_resp_header_values_get((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
+  fastly_result_option_list_string_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      fastly_option_list_string_t option;
+      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
+        case 0: {
+          option.is_some = false;
+          break;
+        }
+        case 1: {
+          option.is_some = true;
+          option.val = (fastly_list_string_t) { (xqd_world_string_t*)(*((int32_t*) (ptr + 8))), (size_t)(*((int32_t*) (ptr + 12))) };
+          break;
+        }
+      }
+      
+      result.val.ok = option;
       break;
     }
     case 1: {

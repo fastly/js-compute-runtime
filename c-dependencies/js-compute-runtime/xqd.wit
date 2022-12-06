@@ -44,7 +44,6 @@ world xqd-world {
       http-invalid-status,
     }
 
-
     /*
      * Fastly ABI
      */
@@ -99,7 +98,6 @@ world xqd-world {
      */
     type request-handle = u32
     type pending-request-handle = u32
-    type cursor = u32
     type response-handle = u32
     type request = tuple<request-handle, body-handle>
     type response = tuple<response-handle, body-handle>
@@ -136,17 +134,11 @@ world xqd-world {
 
     http-req-new: func() -> result<request-handle, error>
 
-    http-req-header-names-get: func(h: request-handle, cursor: cursor) -> result<tuple<
-      string,
-      option<cursor>,
-    >, error>
+    http-req-header-names-get: func(h: request-handle) -> result<list<string>, error>
 
-    http-req-header-value-get: func(h: request-handle, name: string) -> result<string, error>
+    http-req-header-value-get: func(h: request-handle, name: string) -> result<option<string>, error>
 
-    http-req-header-values-get: func(h: request-handle, name: string, cursor: cursor) -> result<tuple<
-      string,
-      option<cursor>,
-    >, error>
+    http-req-header-values-get: func(h: request-handle, name: string) -> result<option<list<string>>, error>
 
     http-req-header-values-set: func(h: request-handle, name: string, values: list<string>) -> result<_, error>
 
@@ -246,17 +238,11 @@ world xqd-world {
 
     http-resp-new: func() -> result<response-handle, error>
 
-    http-resp-header-names-get: func(h: response-handle, cursor: cursor) -> result<tuple<
-      string,
-      option<cursor>,
-    >, error>
+    http-resp-header-names-get: func(h: response-handle) -> result<list<string>, error>
 
-    http-resp-header-value-get: func(h: response-handle, name: string) -> result<string, error>
+    http-resp-header-value-get: func(h: response-handle, name: string) -> result<option<string>, error>
 
-    http-resp-header-values-get: func(h: response-handle, name: string, cursor: cursor) -> result<tuple<
-      string,
-      option<cursor>,
-    >, error>
+    http-resp-header-values-get: func(h: response-handle, name: string) -> result<option<list<string>>, error>
 
     http-resp-header-values-set: func(h: response-handle, name: string, values: list<string>) -> result<_, error>
 
