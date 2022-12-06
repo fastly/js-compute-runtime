@@ -8,9 +8,9 @@
     "downstream_response": {
       "status": 200,
       "body": "Hello JS",
-      "headers": {
-        "JSHeader": "JSValue"
-      }
+      "headers": [
+        ["JSHeader", "JSValue"]
+      ]
     }
   }
 }

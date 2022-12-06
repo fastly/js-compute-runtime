@@ -86,7 +86,7 @@ If a string then the assertion is done on the entire response body.
 If an array then assertions are done on each individual chunk received from response as a stream.
 
 #### headers
-An object which contains string keys and values that would each be used as an assertion that the test application response has each header set.
+An array which contains arrays, where each array contains two strings, the first is the header name and the second is the header value.
 E.G. `{"a": "1", "b": "2" }` will assert that the response only has the headers named `a` with the value `1` and a header named `b` with the value `2`.
 
 ### logs
@@ -102,25 +102,25 @@ E.G. `["ComputeLog :: Hello!"]` will assert that the application emitted a log-l
     "downstream_request": {
       "method": "GET",
       "pathname": "/example",
-      "headers": {
-        "food": "carrot"
-      }
+      "headers": [
+        ["food", "carrot"]
+      ]
     },
     "downstream_response": {
       "status": 200,
-      "headers": {
-        "carrot": "yes",
-        "potato": "no",
-      },
+      "headers": [
+        ["carrot", "yes"],
+        ["potato", "no"]
+      ],
       "body": "response from /example"
     },
     "local_upstream_requests": [
       {
         "method": "POST",
         "pathname": "/upstream-after-downstream",
-        "headers": {
-          "test-header": "test-header-value"
-        },
+        "headers": [
+          ["test-header", "test-header-value"]
+        ],
         "body": "pow wow",
         "timing": "afterDownstreamrequest"
       },

@@ -1,9 +1,9 @@
 
 /**
  * 
- * @param {{
-        [string]: string
-      }} configHeaders
+ * @param {[
+        [string, string]
+      ]} configHeaders
  * @param {Headers | {
         [string]: string
       }} wasmModuleHeaders
@@ -15,10 +15,7 @@ const compareHeaders = (configHeaders, wasmModuleHeaders) => {
     return;
   }
 
-  const configHeaderKeys = Object.keys(configHeaders);
-  configHeaderKeys.forEach(configHeaderKey => {
-    const configHeaderValue = configHeaders[configHeaderKey];
-
+  configHeaders.forEach(([configHeaderKey, configHeaderValue]) => {
     let wasmModuleHeaderValue = null; 
     if (wasmModuleHeaders.get) {
       wasmModuleHeaderValue = wasmModuleHeaders.get(configHeaderKey);

@@ -16,9 +16,9 @@
       {
         "method": "POST",
         "pathname": "/example",
-        "headers": {
-          "Vowels-Removed": "2"
-        },
+        "headers": [
+          ["Vowels-Removed", "2"]
+        ],
         "timing": "afterDownstreamRequest" 
       }
     ]

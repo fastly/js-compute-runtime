@@ -8,10 +8,10 @@
     "downstream_response": {
       "status": 200,
       "body": "Hello from Origin",
-      "headers": {
-        "OriginHeader": "OriginValue",
-        "x-cat": "meow, nyan, mrrow, miau"
-      }
+      "headers": [
+        ["OriginHeader", "OriginValue"],
+        ["x-cat", "meow, nyan, mrrow, miau"]
+      ]
     }
   }
 }

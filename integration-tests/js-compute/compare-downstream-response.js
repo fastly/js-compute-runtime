@@ -5,9 +5,9 @@ import compareHeaders from './compare-headers.js';
  * With a JSON Response Object in our config
  * @param {{
       "status": number,
-      "headers": {
-        [string]: string
-      },
+      "headers": [
+        [string, string]
+      ],
       "body": string
     }} configResponse
  * @param {Response} actualResponse
