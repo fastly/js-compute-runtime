@@ -3041,48 +3041,32 @@ static bool retrieve_value_for_header_from_handle(JSContext *cx, HandleObject se
   MOZ_ASSERT(mode != Mode::Standalone);
   uint32_t handle = detail::handle(self);
 
-  size_t name_len;
+  xqd_world_string_t str;
   RootedString name_str(cx, name.toString());
-  UniqueChars name_chars = encode(cx, name_str, &name_len);
+  UniqueChars name_chars = encode(cx, name_str, &str.len);
+  str.ptr = name_chars.get();
+
+  fastly_option_list_string_t ret;
+
+  FastlyStatus result;
+  if (mode == Headers::Mode::ProxyToRequest) {
+    result = convert_to_fastly_status(xqd_fastly_http_req_header_values_get(handle, &str, &ret));
+  } else {
+    result = convert_to_fastly_status(xqd_fastly_http_resp_header_values_get(handle, &str, &ret));
+  }
+
+  if (!ret.is_some)
+    return true;
 
   RootedString val_str(cx);
-  OwnedHostCallBuffer buffer;
-
-  MULTI_VALUE_HOSTCALL(
-      {
-        FastlyStatus result;
-        if (mode == Headers::Mode::ProxyToRequest) {
-          fastly_request_handle_t request = {handle};
-          result = convert_to_fastly_status(
-              xqd_req_header_values_get(request, name_chars.get(), name_len, buffer.get(),
-                                        HEADER_MAX_LEN, cursor, &ending_cursor, &nwritten));
-        } else {
-          fastly_response_handle_t response = {handle};
-          result = convert_to_fastly_status(
-              xqd_resp_header_values_get(response, name_chars.get(), name_len, buffer.get(),
-                                         HEADER_MAX_LEN, cursor, &ending_cursor, &nwritten));
-        }
-
-        if (!HANDLE_RESULT(cx, result))
-          return false;
-      },
-      {
-        size_t offset = 0;
-        for (size_t i = 0; i < nwritten; i++) {
-          if (buffer.get()[i] == '\0') {
-            val_str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buffer.get() + offset, i - offset));
-            if (!val_str)
-              return false;
-
-            value.setString(val_str);
-
-            if (!append_header_value_to_map(cx, self, name, value))
-              return false;
-
-            offset = i + 1;
-          }
-        }
-      })
+  for (size_t i = 0; i < ret.val.len; i++) {
+    val_str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.val.ptr[i].ptr, ret.val.ptr[i].len));
+    if (!val_str)
+      return false;
+    value.setString(val_str);
+    if (!append_header_value_to_map(cx, self, name, value))
+      return false;
+  }
 
   return true;
 }

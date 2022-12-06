@@ -169,7 +169,7 @@ fastly_error_t xqd_fastly_http_req_header_names_get(fastly_request_handle_t h,
                        (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
         str_max += LIST_ALLOC_SIZE;
       }
-      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(context, i - offset));
+      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(context, i - offset + 1));
       strs[str_cnt].len = i - offset;
       memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
       offset = i + 1;
@@ -217,9 +217,9 @@ fastly_error_t xqd_fastly_http_req_header_values_get(fastly_request_handle_t h,
                        (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
         str_max += LIST_ALLOC_SIZE;
       }
-      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(context, i - offset));
+      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(context, i - offset + 1));
       strs[str_cnt].len = i - offset;
-      memcpy(strs[str_cnt].ptr, buf + offset, i - offset);
+      memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
       offset = i + 1;
       str_cnt++;
     }
@@ -392,9 +392,9 @@ fastly_error_t xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h,
                        (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
         str_max += LIST_ALLOC_SIZE;
       }
-      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(context, i - offset));
+      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(context, i - offset + 1));
       strs[str_cnt].len = i - offset;
-      memcpy(strs[str_cnt].ptr, buf + offset, i - offset);
+      memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
       offset = i + 1;
       str_cnt++;
     }
@@ -439,9 +439,9 @@ fastly_error_t xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h
                        (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
         str_max += LIST_ALLOC_SIZE;
       }
-      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(context, i - offset));
+      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(context, i - offset + 1));
       strs[str_cnt].len = i - offset;
-      memcpy(strs[str_cnt].ptr, buf + offset, i - offset);
+      memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
       offset = i + 1;
       str_cnt++;
     }
