@@ -3762,10 +3762,12 @@ static JSObject *prepare_downstream_request(JSContext *cx) {
 static bool init_downstream_request(JSContext *cx, HandleObject request) {
   MOZ_ASSERT(Request::request_handle(request) == INVALID_HANDLE);
 
-  fastly_request_handle_t request_handle = INVALID_HANDLE;
-  fastly_body_handle_t body_handle = INVALID_HANDLE;
-  if (!HANDLE_RESULT(cx, xqd_req_body_downstream_get(&request_handle, &body_handle)))
+  fastly_request_t req;
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_body_downstream_get(&req)))
     return false;
+
+  fastly_request_handle_t request_handle = req.f0;
+  fastly_body_handle_t body_handle = req.f1;
 
   JS::SetReservedSlot(request, Request::Slots::Request, JS::Int32Value(request_handle));
   JS::SetReservedSlot(request, Request::Slots::Body, JS::Int32Value(body_handle));
