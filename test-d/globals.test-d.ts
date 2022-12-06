@@ -372,7 +372,7 @@ import { expectError, expectType } from 'tsd';
   const encoder = new TextEncoder
   expectType<TextEncoder>(encoder)
   expectType<(input?: string) => Uint8Array>(encoder.encode)
-  expectType<string>(encoder.encoding)
+  expectType<"utf-8">(encoder.encoding)
   expectError(encoder.encoding = 'd')
 }
 
