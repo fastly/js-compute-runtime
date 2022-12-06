@@ -1,17 +1,14 @@
 #!/usr/bin/env node
 
 import { $ as zx, fetch } from 'zx'
-import { retry } from 'zx/experimental'
 
 const startTime = Date.now();
 
-async function $(...args) {
-    return await retry(10, () => zx(...args))
-}
+
 zx.verbose = false;
 if (process.env.FASTLY_API_TOKEN === undefined) {
     try {
-        process.env.FASTLY_API_TOKEN = String(await zx`fastly profile token`).trim()
+        process.env.FASTLY_API_TOKEN = String(await zx`fastly profile token --quiet`).trim()
     } catch {
         console.error('No environment variable named FASTLY_API_TOKEN has been set and no default fastly profile exists.');
         console.error('In order to run the tests, either create a fastly profile using `fastly profile create` or export a fastly token under the name FASTLY_API_TOKEN');

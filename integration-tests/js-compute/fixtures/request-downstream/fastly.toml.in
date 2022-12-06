@@ -10,24 +10,3 @@ service_id = ""
 
 [scripts]
   build = "node ../../../../js-compute-runtime-cli.js"
-
-[local_server]
-
-  [local_server.backends]
-
-    [local_server.backends.TheOrigin]
-      url = "JS_COMPUTE_TEST_BACKEND/"
-
-    [local_server.backends.TheOrigin2]
-      url = "JS_COMPUTE_TEST_BACKEND/"
-
-[setup]
-
-  [setup.backends]
-
-    [setup.backends.TheOrigin]
-      address = "compute-sdk-test-backend.edgecompute.app"
-      port = 443
-    [setup.backends.TheOrigin2]
-      address = "compute-sdk-test-backend.edgecompute.app"
-      port = 443

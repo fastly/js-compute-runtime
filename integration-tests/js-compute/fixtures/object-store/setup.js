@@ -11,7 +11,7 @@ async function $(...args) {
 zx.verbose = false;
 if (process.env.FASTLY_API_TOKEN === undefined) {
     try {
-        process.env.FASTLY_API_TOKEN = String(await zx`fastly profile token`).trim()
+        process.env.FASTLY_API_TOKEN = String(await zx`fastly profile token --quiet`).trim()
     } catch {
         console.error('No environment variable named FASTLY_API_TOKEN has been set and no default fastly profile exists.');
         console.error('In order to run the tests, either create a fastly profile using `fastly profile create` or export a fastly token under the name FASTLY_API_TOKEN');
@@ -52,10 +52,10 @@ if (!STORE_ID) {
     STORE_ID = (await STORE_ID.json()).id
 }
 
-let VERSION = String(await $`fastly service-version clone --version=latest`).trim()
+let VERSION = String(await $`fastly service-version clone --version=latest --token $FASTLY_API_TOKEN`).trim()
 VERSION = VERSION.match(/\d+$/)?.[0]
 
-let SERVICE_ID = await $`fastly service describe --json`
+let SERVICE_ID = await $`fastly service describe --json --quiet --token $FASTLY_API_TOKEN`
 SERVICE_ID = JSON.parse(SERVICE_ID).ID
 await fetch(`https://api.fastly.com/service/${SERVICE_ID}/version/${VERSION}/resource`, {
     method: 'POST',
@@ -66,6 +66,6 @@ await fetch(`https://api.fastly.com/service/${SERVICE_ID}/version/${VERSION}/res
     },
     body: `name=example-test-object-store&resource_id=${STORE_ID}`
 })
-await $`fastly service-version activate --version=${VERSION}`
+await $`fastly service-version activate --version=${VERSION} --quiet --token $FASTLY_API_TOKEN`
 
 console.log(`Set up has finished! Took ${(Date.now() - startTime) / 1000} seconds to complete`);

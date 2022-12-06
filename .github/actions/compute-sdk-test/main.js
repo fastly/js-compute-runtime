@@ -1,14 +1,33 @@
 // Node & 3P Modules
 import fsPromises from 'fs/promises';
 import childProcess from 'node:child_process';
-import fetch from 'node-fetch';
+import { request, setGlobalDispatcher, Agent, Pool } from 'undici'
 import chalk from 'chalk';
 import betterLogging from 'better-logging';
+import core from '@actions/core';
+
+const fixture = core.getInput('fixture') || process.argv[2];
+
+setGlobalDispatcher(new Agent({
+  factory: (origin) => new Pool(origin, {
+    connections: 128, 
+    connect: { timeout: 120_000 },
+    bodyTimeout: 0,
+    headersTimeout: 120_000,
+    keepAliveTimeout: 120_000,
+    keepAliveTimeoutThreshold: 120_000,
+  }),
+  connect: { timeout: 120_000 },
+  bodyTimeout: 0,
+  headersTimeout: 120_000,
+  keepAliveTimeout: 120_000,
+  keepAliveTimeoutThreshold: 120_000,
+}))
 
 betterLogging(console, {
   format: ctx => {
 
-    const tag = chalk.bold(`[compute-sdk-test]`); 
+    const tag = chalk.bold(`[compute-sdk-test]`);
 
     if (ctx.type.includes("debug")) {
       return chalk.blue(`${tag} ${chalk.bold(ctx.type)} ${ctx.msg}`);
@@ -51,7 +70,7 @@ function buildTest(config, testName, backendAddr) {
   try {
     childProcess.execSync(`${config.replaceHostScript} ${testName} http://${backendAddr}`);
     childProcess.execSync(`${config.buildScript} ${testName}`);
-  } catch(e) {
+  } catch (e) {
     console.error(`Failed to compile ${testName}`);
     console.info(e.stdout.toString("utf-8"));
     process.exit(1);
@@ -74,7 +93,7 @@ async function discoverTests(config) {
     let jsonText;
     try {
       jsonText = await fsPromises.readFile(config.testJsonPath(ent.name));
-    } catch(err) {
+    } catch (err) {
       continue;
     }
 
@@ -94,10 +113,14 @@ const mainAsyncTask = async () => {
   const backendAddr = '127.0.0.1:8082';
 
   const testCases = await discoverTests(config);
-  const testNames = Object.keys(testCases);
+  const test = testCases[fixture];
 
-  // build all the tests
-  testNames.forEach(testName => buildTest(config, testName, backendAddr));
+  if (!test) {
+    throw new Error(`No fixture named "${fixture}". The available fixtures are ${Object.keys(testCases)}`)
+  }
+
+  // build the test
+  buildTest(config, fixture, backendAddr);
   buildTest(config, 'backend', backendAddr);
 
   // Start up the local backend
@@ -114,7 +137,7 @@ const mainAsyncTask = async () => {
   let isDownstreamResponseHandled = false;
   let upstreamServer = new UpstreamServer();
   let upstreamServerTest;
-  upstreamServer.listen(8081, async (localUpstreamRequestNumber, req, res) => {
+  await upstreamServer.listen(8081, async (localUpstreamRequestNumber, req, res) => {
     // Let's do the verifications on the request
     const configRequest = upstreamServerTest.local_upstream_requests[localUpstreamRequestNumber];
 
@@ -128,141 +151,123 @@ const mainAsyncTask = async () => {
     }
   });
 
-  // Iterate through the module tests, and run the Viceroy tests
-  for (const testName of testNames) {
-    const tests = testCases[testName];
-    const moduleTestKeys = Object.keys(tests);
-    console.info(`Running tests for the module: ${testName} ...`);
+  // Spawn a new viceroy instance for the module
+  const viceroyAddr = '127.0.0.1:8080';
+  viceroy = await spawnViceroy(config, fixture, viceroyAddr);
+  await new Promise((resolve) => {
+    setTimeout(resolve, 5_000)
+  })
+  // Run the Viceroy tests
+  const moduleTestKeys = Object.keys(test);
+  console.info(`Running tests for the module: ${fixture} ...`);
 
-    // Spawn a new viceroy instance for the module
-    const viceroyAddr = '127.0.0.1:8080';
-    viceroy = await spawnViceroy(config, testName, viceroyAddr);
 
-    for (const testKey of moduleTestKeys) {
-      const test = tests[testKey];
+  for (const testKey of moduleTestKeys) {
+    const test = testCases[fixture][testKey];
 
-      // Check if this case should be tested in viceroy
-      if (!test.environments.includes("viceroy")) {
-        continue;
-      }
+    // Check if this case should be tested in viceroy
+    if (!test.environments.includes("viceroy")) {
+      continue;
+    }
 
-      console.info(`Running the test ${testKey} ...`);
+    console.info(`Running the test ${testKey} ...`);
 
-      // Prepare our upstream server for this specific test
-      isDownstreamResponseHandled = false;
-      if (test.local_upstream_requests) {
-        upstreamServerTest = test;
-        upstreamServer.setExpectedNumberOfRequests(test.local_upstream_requests.length);
-      } else {
-        upstreamServerTest = null;
-        upstreamServer.setExpectedNumberOfRequests(0);
-      }
+    // Prepare our upstream server for this specific test
+    isDownstreamResponseHandled = false;
+    if (test.local_upstream_requests) {
+      upstreamServerTest = test;
+      upstreamServer.setExpectedNumberOfRequests(test.local_upstream_requests.length);
+    } else {
+      upstreamServerTest = null;
+      upstreamServer.setExpectedNumberOfRequests(0);
+    }
 
-      // Make the downstream request to the server (Viceroy)
-      const downstreamRequest = test.downstream_request;
-      let downstreamResponse;
-      try {
-        downstreamResponse = await fetch(`http://${viceroyAddr}${downstreamRequest.pathname || ''}`, {
+    // Make the downstream request to the server (Viceroy)
+    const downstreamRequest = test.downstream_request;
+    let downstreamResponse;
+    let url = `http://${viceroyAddr}${downstreamRequest.pathname || ''}`
+    try {
+      downstreamResponse = await request(url,
+        {
           method: downstreamRequest.method || 'GET',
           headers: downstreamRequest.headers || undefined,
-          body: downstreamRequest.body || undefined
+          body: downstreamRequest.body || undefined,
         });
-      } catch(error) {
-        await upstreamServer.close();
-        await backend.kill();
-        await viceroy.kill();
-        console.error(error);
-        process.exit(1);
-      }
+    } catch (error) {
+      console.error(url);
+      await upstreamServer.close();
+      await backend.kill();
+      await viceroy.kill();
+      console.error(error);
+      console.error(error.stack);
+      process.exit(1);
+    }
 
-      // Now that we have gotten our downstream response, we can flip our boolean
-      // that our local_upstream_request will check
-      isDownstreamResponseHandled = true;
+    // Now that we have gotten our downstream response, we can flip our boolean
+    // that our local_upstream_request will check
+    isDownstreamResponseHandled = true;
 
-      // Check the Logs to see if they match expected logs in the config
-      if (test.logs) {
-        for (let i = 0; i < test.logs.length; i++) {
-          let log = test.logs[i];
+    // Check the Logs to see if they match expected logs in the config
+    if (test.logs) {
+      for (let i = 0; i < test.logs.length; i++) {
+        let log = test.logs[i];
 
-          if (!viceroy.logs.includes(log)) {
-            console.error(`[Logs: log not found] Expected: ${log}`);
-            await upstreamServer.close();
-            await backend.kill();
-            await viceroy.kill();
-            process.exit(1);
-          }
+        if (!viceroy.logs.includes(log)) {
+          console.error(`[Logs: log not found] Expected: ${log}`);
+          await upstreamServer.close();
+          await backend.kill();
+          await viceroy.kill();
+          process.exit(1);
         }
-      }
-
-      // Do our confirmations about the downstream response
-      const configResponse = test.downstream_response;
-      try {
-        await compareDownstreamResponse(configResponse, downstreamResponse);
-      } catch (err) {
-        console.error(err.message);
-        await upstreamServer.close();
-        await backend.kill();
-        await viceroy.kill();
-        process.exit(1);
-      }
-
-      console.log(`The test ${testKey} Passed!`);
-
-      // Done! Kill the process, and go to the next test
-      try {
-        await upstreamServer.waitForExpectedNumberOfRequests();
-        upstreamServerTest = null;
-        upstreamServer.setExpectedNumberOfRequests(0);
-      } catch(e) {
-        console.error('Could not cleanup the upstream server. Error Below:');
-        console.error(e);
-        process.exit(1);
       }
     }
 
-    // Kill Viceroy and continue onto the next module
+    // Do our confirmations about the downstream response
+    const configResponse = test.downstream_response;
     try {
+      await compareDownstreamResponse(configResponse, downstreamResponse);
+    } catch (err) {
+      console.error(err.message);
+      await upstreamServer.close();
+      await backend.kill();
       await viceroy.kill();
-    } catch(e) {
-      console.error('Could not kill test Viceroy instance. Error Below:');
+      process.exit(1);
+    }
+
+    console.log(`The test ${testKey} Passed!`);
+
+    // Done! Kill the process, and go to the next test
+    try {
+      await upstreamServer.waitForExpectedNumberOfRequests();
+      upstreamServerTest = null;
+      upstreamServer.setExpectedNumberOfRequests(0);
+    } catch (e) {
+      console.error('Could not cleanup the upstream server. Error Below:');
       console.error(e);
       process.exit(1);
     }
-  };
+  }
+
+  // Kill Viceroy and continue onto the next module
+  try {
+    await viceroy.kill();
+  } catch (e) {
+    console.error('Could not kill test Viceroy instance. Error Below:');
+    console.error(e);
+    process.exit(1);
+  }
 
   // Viceroy is done! Close our upstream server and things
   await upstreamServer.close();
   try {
     await backend.kill();
-  } catch(e) {
-      console.error('Could not kill backend Viceroy instance. Error Below:');
-      console.error(e);
-      process.exit(1);
+  } catch (e) {
+    console.error('Could not kill backend Viceroy instance. Error Below:');
+    console.error(e);
+    process.exit(1);
   }
 
-  // Check if we have C@E Environement tests
-  let shouldRunComputeTests = testNames.some(testName => {
-    const tests = testCases[testName];
-    const moduleTestKeys = Object.keys(tests);
-
-    return moduleTestKeys.some(testKey => {
-      const test = tests[testKey];
-
-      // Check if this module should be tested in viceroy
-      if (test.environments.includes("c@e")) {
-        return true;
-      }
-      return false;
-    });
-  });
-
-  if (!shouldRunComputeTests) {
-    console.info('Viceroy environment tests are done, and no C@E environment tests!');
-    console.info('We are finished, all tests passed! :)');
-    return;
-  }
-
-  console.warn('C@E tests are currently unsupported');
+  console.info('We are finished, all tests passed! :)');
 };
 mainAsyncTask().then(() => {
   process.exit(0);

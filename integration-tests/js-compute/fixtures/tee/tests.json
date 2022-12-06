@@ -4,9 +4,9 @@
     "downstream_request": {
       "method": "POST",
       "pathname": "/tee",
-      "headers": {
-          "Content-Type": "application/json"
-      },
+      "headers": [
+        "Content-Type", "application/json"
+      ],
       "body": "hello world!"
     },
     "downstream_response": {
@@ -20,9 +20,9 @@
     "downstream_request": {
       "method": "GET",
       "pathname": "/error",
-      "headers": {
-          "Content-Type": "application/json"
-      }
+      "headers": [
+          "Content-Type", "application/json"
+      ]
     },
     "downstream_response": {
       "status": 200,

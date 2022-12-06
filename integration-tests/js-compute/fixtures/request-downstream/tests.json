@@ -5,15 +5,13 @@
       "method": "POST",
       "pathname": "/hello",
       "headers": [
-        ["Host", "example.org"],
-        ["DownstreamName", "DownstreamValue"]
+        "DownstreamName", "DownstreamValue"
       ],
       "body": "downstream request!"
     },
     "downstream_response": {
       "status": 200,
       "headers": [
-        ["Host", "example.org"],
         ["DownstreamName", "DownstreamValue"]
       ],
       "body": "downstream request!"

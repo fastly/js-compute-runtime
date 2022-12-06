@@ -2,7 +2,8 @@
 
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { cd, $ as zx, fetch, within } from 'zx'
+import { cd, $ as zx, within } from 'zx'
+import { request } from 'undici'
 import { retry, expBackoff } from 'zx/experimental'
 import { compareDownstreamResponse } from "./compare-downstream-response.js";
 import { argv, exit } from "node:process";
@@ -60,10 +61,10 @@ async function $(...args) {
     return await retry(10, () => zx(...args))
 }
 
-zx.verbose = false;
 if (process.env.FASTLY_API_TOKEN === undefined) {
     try {
-        process.env.FASTLY_API_TOKEN = String(await zx`fastly profile token`).trim()
+        zx.verbose = false;
+        process.env.FASTLY_API_TOKEN = String(await zx`fastly profile token --quiet`).trim()
     } catch {
         console.error('No environment variable named FASTLY_API_TOKEN has been set and no default fastly profile exists.');
         console.error('In order to run the tests, either create a fastly profile using `fastly profile create` or export a fastly token under the name FASTLY_API_TOKEN');
@@ -73,23 +74,21 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
 const FASTLY_API_TOKEN = process.env.FASTLY_API_TOKEN;
 zx.verbose = true;
 
-await Promise.all(testFixtures.map(async fixture => {
-    return within(async () => {
+for (const fixture of testFixtures) {
+    await within(async () => {
         const fixturePath = join(__dirname, 'fixtures', fixture)
         try {
             const startTime = Date.now();
             await cd(fixturePath);
             await copyFile(join(fixturePath, 'fastly.toml.in'), join(fixturePath, 'fastly.toml'))
             try {
-                zx.verbose = false;
-                await zx`fastly service delete --force --service-name ${fixture}`
+                await zx`fastly service delete --quiet --force --service-name ${fixture} --token $FASTLY_API_TOKEN`
             } catch {}
-            zx.verbose = true;
             // build and deploy application to compute@edge
-            await zx`fastly compute publish -i`
+            await zx`fastly compute publish -i --quiet --token $FASTLY_API_TOKEN`
 
             // get the public domain of the deployed application
-            const domain = JSON.parse(await $`fastly domain list --version latest --json`)[0].Name
+            const domain = JSON.parse(await $`fastly domain list --quiet --version latest --json`)[0].Name
 
             const setupPath = join(fixturePath, 'setup.js')
             if (existsSync(setupPath)) {
@@ -97,8 +96,8 @@ await Promise.all(testFixtures.map(async fixture => {
             }
 
             await retry(10, expBackoff('60s', '30s'), async () => {
-                const response = await fetch(`https://${domain}`)
-                if (!response.ok) {
+                const response = await request(`https://${domain}`)
+                if (response.statusCode !== 200) {
                     throw new Error(`Application "${fixture}" :: Not yet available on domain: ${domain}`)
                 }
             })
@@ -111,10 +110,10 @@ await Promise.all(testFixtures.map(async fixture => {
                     return retry(10, expBackoff('60s', '10s'), async () => {
                         let path = test.downstream_request.pathname;
                         let url = `https://${domain}${path}`
-                        let response = await fetch(url, {
+                        let response = await request(url, {
                             method: test.downstream_request.method || 'GET',
                             headers: test.downstream_request.headers || undefined,
-                            body: test.downstream_request.body || undefined
+                            body: test.downstream_request.body || undefined,
                         });
 
                         await compareDownstreamResponse(test.downstream_response, response);
@@ -131,12 +130,14 @@ await Promise.all(testFixtures.map(async fixture => {
             if (existsSync(teardownPath)) {
                 await $`${teardownPath}`
             }
+
+
             // Delete the service now the tests have finished
-            await zx`fastly service delete --force`
+            await zx`fastly service delete --quiet --force --service-name ${fixture} --token $FASTLY_API_TOKEN`
         }
 
     })
-}))
+}
 
 if (process.exitCode == undefined || process.exitCode == 0) {
     console.log(`All tests passed! Took ${(Date.now() - startTime) / 1000} seconds to complete`);
