@@ -1,0 +1,36 @@
+{
+  "GET /multiple-set-cookie/response-init": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/multiple-set-cookie/response-init"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": [
+        ["Set-Cookie", "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure"],
+        ["Set-Cookie", "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"],
+        ["Set-Cookie", "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"],
+        ["Set-Cookie", "test2=2"],
+        ["Set-Cookie", "test3=3"]
+      ]
+    }
+  },
+  "GET /multiple-set-cookie/response-direct": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/multiple-set-cookie/response-direct"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": [
+        ["Set-Cookie", "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure"],
+        ["Set-Cookie", "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"],
+        ["Set-Cookie", "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"],
+        ["Set-Cookie", "test2=2"],
+        ["Set-Cookie", "test3=3"]
+      ]
+    }
+  }
+}
