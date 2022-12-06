@@ -3009,42 +3009,29 @@ bool get_header_names_from_handle(JSContext *cx, uint32_t handle, Mode mode,
                                   HandleObject backing_map) {
   RootedString name(cx);
   RootedValue name_val(cx);
-  OwnedHostCallBuffer buffer;
+  char *buf = static_cast<char *>(JS_malloc(cx, HOSTCALL_BUFFER_LEN));
 
-  MULTI_VALUE_HOSTCALL(
-      {
-        FastlyStatus result;
-        if (mode == Mode::ProxyToRequest) {
-          fastly_request_handle_t request = {handle};
-          result = convert_to_fastly_status(xqd_req_header_names_get(
-              request, buffer.get(), HEADER_MAX_LEN, cursor, &ending_cursor, &nwritten));
-        } else {
-          fastly_response_handle_t response = {handle};
-          result = convert_to_fastly_status(xqd_resp_header_names_get(
-              response, buffer.get(), HEADER_MAX_LEN, cursor, &ending_cursor, &nwritten));
-        }
+  FastlyStatus result;
+  fastly_list_string_t ret;
+  if (mode == Mode::ProxyToRequest) {
+    result = convert_to_fastly_status(xqd_fastly_http_req_header_names_get(handle, &ret));
+  } else {
+    result = convert_to_fastly_status(xqd_fastly_http_resp_header_names_get(handle, &ret));
+  }
 
-        if (!HANDLE_RESULT(cx, result))
-          return false;
-      },
-      {
-        uint32_t offset = 0;
-        for (size_t i = 0; i < nwritten; i++) {
-          if (buffer.get()[i] != '\0') {
-            continue;
-          }
+  if (!HANDLE_RESULT(cx, result))
+    return false;
 
-          name = JS_NewStringCopyN(cx, buffer.get() + offset, i - offset);
-          if (!name)
-            return false;
+  for (size_t i = 0; i < ret.len; i++) {
+    name = JS_NewStringCopyN(cx, ret.ptr[i].ptr, ret.ptr[i].len);
+    if (!name)
+      return false;
 
-          name_val.setString(name);
-          JS::MapSet(cx, backing_map, name_val, JS::NullHandleValue);
+    name_val.setString(name);
+    JS::MapSet(cx, backing_map, name_val, JS::NullHandleValue);
+  }
 
-          offset = i + 1;
-        }
-      })
-
+  JS_free(cx, buf);
   return true;
 }
 
