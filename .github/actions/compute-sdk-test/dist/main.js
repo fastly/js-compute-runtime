@@ -8150,12 +8150,8 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 
-// EXTERNAL MODULE: external "fs"
-var external_fs_ = __nccwpck_require__(7147);
 ;// CONCATENATED MODULE: external "fs/promises"
 const promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("fs/promises");
-// EXTERNAL MODULE: external "path"
-var external_path_ = __nccwpck_require__(1017);
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
 ;// CONCATENATED MODULE: external "node:http"
@@ -9170,6 +9166,25 @@ class Response extends Body {
 		const response = new Response(null, {status: 0, statusText: ''});
 		response[response_INTERNALS].type = 'error';
 		return response;
+	}
+
+	static json(data = undefined, init = {}) {
+		const body = JSON.stringify(data);
+
+		if (body === undefined) {
+			throw new TypeError('data is not JSON serializable');
+		}
+
+		const headers = new Headers(init && init.headers);
+
+		if (!headers.has('content-type')) {
+			headers.set('content-type', 'application/json');
+		}
+
+		return new Response(body, {
+			...init,
+			headers
+		});
 	}
 
 	get [Symbol.toStringTag]() {
@@ -11187,10 +11202,7 @@ const compareHeaders = (configHeaders, wasmModuleHeaders) => {
     return;
   }
 
-  const configHeaderKeys = Object.keys(configHeaders);
-  configHeaderKeys.forEach(configHeaderKey => {
-    const configHeaderValue = configHeaders[configHeaderKey];
-
+  configHeaders.forEach(([configHeaderKey, configHeaderValue]) => {
     let wasmModuleHeaderValue = null; 
     if (wasmModuleHeaders.get) {
       wasmModuleHeaderValue = wasmModuleHeaders.get(configHeaderKey);
@@ -11350,8 +11362,6 @@ class TestConfig {
 
 ;// CONCATENATED MODULE: ./main.js
 // Node & 3P Modules
-
-
 
 
 

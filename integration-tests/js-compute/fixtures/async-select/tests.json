@@ -7,10 +7,10 @@
     },
     "downstream_response": {
       "status": 200,
-      "headers": {
-        "FooName": "FooValue",
-        "BarName": "BarValue"
-      },
+      "headers": [
+        ["FooName", "FooValue"],
+        ["BarName", "BarValue"]
+      ],
       "body": "pong"
     }
   }
