@@ -148,7 +148,7 @@ fastly_error_t xqd_fastly_http_req_cache_override_set(fastly_request_handle_t h,
 fastly_error_t xqd_fastly_http_req_downstream_client_ip_addr(fastly_list_u8_t *ret) {
   ret->ptr = static_cast<uint8_t *>(JS_malloc(context, 16));
   return convert_result(
-      xqd_req_downstream_client_ip_addr_get(reinterpret_cast<char *>(&ret->ptr), &ret->len));
+      xqd_req_downstream_client_ip_addr_get(reinterpret_cast<char *>(ret->ptr), &ret->len));
 }
 
 fastly_error_t xqd_fastly_http_req_new(fastly_request_handle_t *ret) {

@@ -3587,23 +3587,24 @@ JSString *geo_info(JSObject *obj) {
 
 static JSString *retrieve_address(JSContext *cx, HandleObject self) {
   RootedString address(cx);
-  char octets[16];
 
-  size_t nwritten = 0;
-  if (!HANDLE_RESULT(cx, xqd_req_downstream_client_ip_addr_get(octets, &nwritten)))
+  fastly_list_u8_t octets;
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_downstream_client_ip_addr(&octets)))
     return nullptr;
 
-  switch (nwritten) {
+  switch (octets.len) {
   case 0: {
     // No address to be had, leave `address` as a nullptr.
+    JS_free(cx, octets.ptr);
     break;
   }
   case 4: {
     char address_chars[INET_ADDRSTRLEN];
     // TODO: do we need to do error handling here, or can we depend on the
     // host giving us a valid address?
-    inet_ntop(AF_INET, octets, address_chars, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, octets.ptr, address_chars, INET_ADDRSTRLEN);
     address = JS_NewStringCopyZ(cx, address_chars);
+    JS_free(cx, octets.ptr);
     if (!address)
       return nullptr;
 
@@ -3613,8 +3614,9 @@ static JSString *retrieve_address(JSContext *cx, HandleObject self) {
     char address_chars[INET6_ADDRSTRLEN];
     // TODO: do we need to do error handling here, or can we depend on the
     // host giving us a valid address?
-    inet_ntop(AF_INET6, octets, address_chars, INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, octets.ptr, address_chars, INET6_ADDRSTRLEN);
     address = JS_NewStringCopyZ(cx, address_chars);
+    JS_free(cx, octets.ptr);
     if (!address)
       return nullptr;
 
