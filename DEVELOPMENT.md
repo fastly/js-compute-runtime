@@ -47,21 +47,13 @@ In addition you need to have the following tools installed to successfully build
   ```sh
   cargo install cbindgen
   ```
-- [wasi-sdk, version 12](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-12),
+- [wasi-sdk, version 15](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-15),
   with alternate [install instructions](https://github.com/WebAssembly/wasi-sdk#install)
   ```sh
-  curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz
-  tar xf wasi-sdk-12.0-linux.tar.gz
+  curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-15/wasi-sdk-15.0-linux.tar.gz
+  tar xf wasi-sdk-15.0-linux.tar.gz
   sudo mkdir -p /opt/wasi-sdk
-  sudo mv wasi-sdk-12.0/* /opt/wasi-sdk/
-  ```
-
-- rust version - the rust version may need to be pinned due to the WASI spidermonkey version, the current version can be found at [main.yml](.github/workflows/main.yml) under "Install pinned Rust version and wasm32-wasi target"
-  ```
-   rustup update 1.57.0 --no-self-update
-
-   cd /location/of/js-compute-runtime
-   rustup override set 1.57.0
+  sudo mv wasi-sdk-15.0/* /opt/wasi-sdk/
   ```
 
 Once that is done, the runtime and the CLI tool for applying it to JS source code can be built using npm:
