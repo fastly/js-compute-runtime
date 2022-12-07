@@ -219,28 +219,28 @@
     "status": "PASS"
   },
   "Empty Error object": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Error object": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "EvalError object": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "RangeError object": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReferenceError object": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "SyntaxError object": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TypeError object": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URIError object": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Blob basic": {
     "status": "FAIL"
