@@ -48,6 +48,7 @@ jobs:
       if: steps.sm-cache.outputs.cache-hit != 'true'
       run: |
         cd c-dependencies/spidermonkey/
+        sudo apt-get update -y
         bash ./build-engine.sh ${{ matrix.profile }}
 
     - name: "Install wasi-sdk (linux)"
