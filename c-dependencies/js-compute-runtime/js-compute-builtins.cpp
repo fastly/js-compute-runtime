@@ -1839,10 +1839,15 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
 
   // Actually set the URL derived in steps 5 or 6 above.
   RequestOrResponse::set_url(request, StringValue(url_str));
-  size_t url_len;
-  UniqueChars url = encode(cx, url_str, &url_len);
-  if (!url || !HANDLE_RESULT(cx, xqd_req_uri_set(request_handle, url.get(), url_len))) {
+  xqd_world_string_t url_xqd_str;
+  UniqueChars url = encode(cx, url_str, &url_xqd_str.len);
+  if (!url) {
     return nullptr;
+  } else {
+    url_xqd_str.ptr = url.get();
+    if (!HANDLE_RESULT(cx, xqd_fastly_http_req_uri_set(request_handle, &url_xqd_str))) {
+      return nullptr;
+    }
   }
 
   // 7.  Let `origin` be this’s relevant settings object’s origin.
