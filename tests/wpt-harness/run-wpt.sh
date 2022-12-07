@@ -4,6 +4,7 @@
 # following executables in your path:
 #
 # * wizer
+# * npm
 # * node
 #
 # From any directory, run this script and it will do the following:
@@ -36,8 +37,8 @@ output="$(mktemp)"
 trap 'rm $output' EXIT
 
 echo "Building the runtime..."
-cd "$root/c-dependencies/js-compute-runtime"
-if ! make -j8 > "$output" 2>&1; then
+cd "$root"
+if ! npm run build > "$output" 2>&1; then
   cat "$output"
   exit 1
 fi

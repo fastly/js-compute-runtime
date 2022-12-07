@@ -33,7 +33,7 @@
     "test:types": "tsd",
     "docs": "patch-package && npm run docs:typedoc",
     "docs:typedoc": "typedoc",
-    "build": "make -C ./c-dependencies/js-compute-runtime && cp ./c-dependencies/js-compute-runtime/js-compute-runtime.wasm ."
+    "build": "make -j8 -C ./c-dependencies/js-compute-runtime && cp ./c-dependencies/js-compute-runtime/js-compute-runtime.wasm ."
   },
   "devDependencies": {
     "@jakechampion/cli-testing-library": "^1.0.0",
