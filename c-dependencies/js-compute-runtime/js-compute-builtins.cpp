@@ -453,8 +453,8 @@ JSObject *create(JSContext *cx, HandleObject headers, Mode mode, HandleObject ow
 const unsigned ctor_length = 1;
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
 bool get(JSContext *cx, unsigned argc, Value *vp);
-typedef FastlyStatus HeaderValuesSetOperation(int handle, const char *name, size_t name_len,
-                                              const char *values, size_t values_len);
+typedef FastlyStatus HeaderValuesSetOperation(fastly_request_handle_t handle,
+                                              xqd_world_string_t *name, xqd_world_string_t *value);
 bool set(JSContext *cx, unsigned argc, Value *vp);
 bool has(JSContext *cx, unsigned argc, Value *vp);
 bool append(JSContext *cx, unsigned argc, Value *vp);
@@ -3332,8 +3332,8 @@ bool get(JSContext *cx, unsigned argc, Value *vp) {
   return detail::get_header_value_for_name(cx, self, normalized_name, args.rval(), "Headers.get");
 }
 
-typedef FastlyStatus HeaderValuesSetOperation(int handle, const char *name, size_t name_len,
-                                              const char *values, size_t values_len);
+typedef FastlyStatus HeaderValuesSetOperation(fastly_request_handle_t handle,
+                                              xqd_world_string_t *name, xqd_world_string_t *value);
 
 bool set(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(2)
@@ -3345,11 +3345,12 @@ bool set(JSContext *cx, unsigned argc, Value *vp) {
   if (mode != Mode::Standalone) {
     HeaderValuesSetOperation *op;
     if (mode == Mode::ProxyToRequest)
-      op = (HeaderValuesSetOperation *)xqd_req_header_insert;
+      op = (HeaderValuesSetOperation *)xqd_fastly_http_req_header_insert;
     else
-      op = (HeaderValuesSetOperation *)xqd_resp_header_insert;
-    if (!HANDLE_RESULT(cx, op(detail::handle(self), name_chars.get(), name_len, value_chars.get(),
-                              value_len))) {
+      op = (HeaderValuesSetOperation *)xqd_fastly_http_resp_header_insert;
+    xqd_world_string_t name = {name_chars.get(), name_len};
+    xqd_world_string_t val = {value_chars.get(), value_len};
+    if (!HANDLE_RESULT(cx, op(detail::handle(self), &name, &val))) {
       return false;
     }
   }
