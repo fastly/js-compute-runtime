@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.14](https://github.com/fastly/js-compute-runtime/compare/v0.5.13...v0.5.14) (2022-12-07)
+
+
+### Bug Fixes
+
+* when appending headers, if the set-cookie header is set then make sure that each cookie value is sent as a separate set-cookie header to the host ([f6cf559](https://github.com/fastly/js-compute-runtime/commit/f6cf5597ec646717534b59a1002b6a6364a81065))
+
 ## [0.5.13](https://github.com/fastly/js-compute-runtime/compare/v0.5.12...v0.5.13) (2022-12-02)
 
 
