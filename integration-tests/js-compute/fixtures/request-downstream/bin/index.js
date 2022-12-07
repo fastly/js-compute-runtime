@@ -14,7 +14,7 @@ addEventListener("fetch", (event) => {
         downstreamRequest.method
     );
   }
-  let url = new URL("http://example.org/hello");
+  let url = new URL("http://127.0.0.1:8080/hello");
   if (downstreamRequest.url != url.href) {
     throw new Error(
       "downstreamRequest.url did not return " +
