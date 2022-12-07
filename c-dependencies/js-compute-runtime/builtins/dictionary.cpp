@@ -13,41 +13,41 @@ bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::HandleValue name_arg = args.get(0);
 
-  size_t name_len;
+  xqd_world_string_t name_str;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  JS::UniqueChars name_chars = encode(cx, name_arg, &name_len);
-  if (!name_chars) {
+  JS::UniqueChars name = encode(cx, name_arg, &name_str.len);
+  if (!name) {
     return false;
   }
+  name_str.ptr = name.get();
 
   // If the converted string has a length of 0 then we throw an Error
   // because Dictionary keys have to be at-least 1 character.
-  if (name_len == 0) {
+  if (name_str.len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_KEY_EMPTY);
     return false;
   }
   // key has to be less than 256
-  if (name_len > 255) {
+  if (name_str.len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_KEY_TOO_LONG);
     return false;
   }
 
-  OwnedHostCallBuffer buffer;
-  size_t nwritten = 0;
+  fastly_option_string_t ret;
   auto status = convert_to_fastly_status(
-      xqd_dictionary_get(Dictionary::dictionary_handle(self), name_chars.get(), name_len,
-                         buffer.get(), DICTIONARY_ENTRY_MAX_LEN, &nwritten));
-  // FastlyStatus::none indicates the key wasn't found, so we return null.
-  if (status == FastlyStatus::None) {
-    args.rval().setNull();
-    return true;
-  }
+      xqd_fastly_dictionary_get(Dictionary::dictionary_handle(self), &name_str, &ret));
 
   // Ensure that we throw an exception for all unexpected host errors.
   if (!HANDLE_RESULT(cx, status))
     return false;
 
-  JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buffer.get(), nwritten)));
+  if (!ret.is_some) {
+    args.rval().setNull();
+    return true;
+  }
+
+  JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.val.ptr, ret.val.len)));
+  JS_free(cx, ret.val.ptr);
   if (!text)
     return false;
 

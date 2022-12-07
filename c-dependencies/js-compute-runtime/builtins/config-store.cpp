@@ -40,6 +40,9 @@ bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
 =======
   xqd_world_string_t key_str;
   JS::UniqueChars key = encode(cx, args[0], &key_str.len);
+  if (!key) {
+    return false;
+  }
   key_str.ptr = key.get();
 
   fastly_option_string_t ret;
