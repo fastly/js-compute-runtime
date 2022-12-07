@@ -18,7 +18,7 @@ jobs:
         profile: [debug, release]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
 
@@ -119,7 +119,7 @@ jobs:
     needs: [build, ensure_cargo_installs]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
     - uses: actions/setup-node@v3
@@ -193,7 +193,7 @@ jobs:
           - timers
     steps:
     - name: Checkout fastly/js-compute-runtime
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - uses: actions/setup-node@v3
       with:
         node-version: 18
@@ -229,7 +229,7 @@ jobs:
       SHELLCHECK_VERSION: v0.8.0
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: actions/cache@v3.0.2
       id: cache-shellcheck
       with:
@@ -258,7 +258,7 @@ jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - run: |
         clang-format --version
         ci/clang-format.sh
@@ -269,7 +269,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
       with:
         node-version: 18
@@ -302,7 +302,7 @@ jobs:
           - 'status'
           - 'timers'
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: false
     - uses: ./.github/actions/e2e
