@@ -24,7 +24,7 @@ jobs:
   update-lock-and-docs:
     runs-on: ubuntu-latest
     needs: release-please
-    if: ${{ needs.release-please.outputs.pr && !needs.release-please.outputs.releases_created }}
+    if: ${{ needs.release-please.outputs.pr && !needs.release-please.outputs.release_created }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -53,14 +53,14 @@ jobs:
         run: |
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          git add yarn.lock
+          git add .
           git commit --amend --no-edit
           git push --force
 
   publish:
     runs-on: ubuntu-latest
     needs: release-please
-    if: ${{ needs.release-please.outputs.releases_created }}
+    if: ${{ needs.release-please.outputs.release_created }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
