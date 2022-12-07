@@ -101,7 +101,7 @@ jobs:
     steps:
     - name: Cache ${{ matrix.crate }} ${{ matrix.version }}
       id: cache-crate
-      uses: actions/cache@v2.1.5
+      uses: actions/cache@v3
       with:
         path: "/home/runner/.cargo/bin/${{ matrix.crate }}"
         key: crate-cache-${{ matrix.crate }}-${{ matrix.version }}
@@ -132,7 +132,7 @@ jobs:
         name: engine-${{ matrix.profile }}
 
     - name: Restore Viceroy from cache
-      uses: actions/cache@v2.1.5
+      uses: actions/cache@v3
       with:
         path: "/home/runner/.cargo/bin/viceroy"
         key: crate-cache-viceroy-${{ env.viceroy_version }}
@@ -205,7 +205,7 @@ jobs:
         cli_version: '4.3.0'
 
     - name: Restore Viceroy from cache
-      uses: actions/cache@v2.1.5
+      uses: actions/cache@v3
       with:
         path: "/home/runner/.cargo/bin/viceroy"
         key: crate-cache-viceroy-${{ env.viceroy_version }}
