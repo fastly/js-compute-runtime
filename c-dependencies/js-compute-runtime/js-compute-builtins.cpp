@@ -453,13 +453,12 @@ JSObject *create(JSContext *cx, HandleObject headers, Mode mode, HandleObject ow
 const unsigned ctor_length = 1;
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
 bool get(JSContext *cx, unsigned argc, Value *vp);
-typedef FastlyStatus HeaderValuesSetOperation(fastly_request_handle_t handle,
-                                              xqd_world_string_t *name, xqd_world_string_t *value);
 bool set(JSContext *cx, unsigned argc, Value *vp);
 bool has(JSContext *cx, unsigned argc, Value *vp);
 bool append(JSContext *cx, unsigned argc, Value *vp);
 bool maybe_add(JSContext *cx, HandleObject self, const char *name, const char *value);
-typedef FastlyStatus HeaderRemoveOperation(int handle, const char *name, size_t name_len);
+typedef FastlyStatus HeaderRemoveOperation(fastly_request_handle_t handle, const char *name,
+                                           size_t name_len);
 bool delete_(JSContext *cx, unsigned argc, Value *vp);
 bool forEach(JSContext *cx, unsigned argc, Value *vp);
 bool entries(JSContext *cx, unsigned argc, Value *vp);
@@ -2850,7 +2849,7 @@ bool lazy_values(JSObject *self) {
   return JS::GetReservedSlot(self, Slots::HasLazyValues).toBoolean();
 }
 
-uint32_t handle(JSObject *self) {
+fastly_request_handle_t handle(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return static_cast<uint32_t>(JS::GetReservedSlot(self, Slots::Handle).toInt32());
 }
@@ -3332,8 +3331,8 @@ bool get(JSContext *cx, unsigned argc, Value *vp) {
   return detail::get_header_value_for_name(cx, self, normalized_name, args.rval(), "Headers.get");
 }
 
-typedef FastlyStatus HeaderValuesSetOperation(fastly_request_handle_t handle,
-                                              xqd_world_string_t *name, xqd_world_string_t *value);
+typedef fastly_error_t HeaderInsertOperation(fastly_request_handle_t handle,
+                                             xqd_world_string_t *name, xqd_world_string_t *values);
 
 bool set(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(2)
@@ -3343,11 +3342,11 @@ bool set(JSContext *cx, unsigned argc, Value *vp) {
 
   Mode mode = detail::mode(self);
   if (mode != Mode::Standalone) {
-    HeaderValuesSetOperation *op;
+    HeaderInsertOperation *op;
     if (mode == Mode::ProxyToRequest)
-      op = (HeaderValuesSetOperation *)xqd_fastly_http_req_header_insert;
+      op = (HeaderInsertOperation *)xqd_fastly_http_req_header_insert;
     else
-      op = (HeaderValuesSetOperation *)xqd_fastly_http_resp_header_insert;
+      op = (HeaderInsertOperation *)xqd_fastly_http_resp_header_insert;
     xqd_world_string_t name = {name_chars.get(), name_len};
     xqd_world_string_t val = {value_chars.get(), value_len};
     if (!HANDLE_RESULT(cx, op(detail::handle(self), &name, &val))) {
@@ -3419,7 +3418,8 @@ bool maybe_add(JSContext *cx, HandleObject self, const char *name, const char *v
   return detail::append_header_value(cx, self, name_val, value_val, "internal_maybe_add");
 }
 
-typedef FastlyStatus HeaderRemoveOperation(int handle, const char *name, size_t name_len);
+typedef FastlyStatus HeaderRemoveOperation(fastly_request_handle_t handle, const char *name,
+                                           size_t name_len);
 
 bool delete_(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER_WITH_NAME(1, "delete")
