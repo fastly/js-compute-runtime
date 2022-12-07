@@ -457,8 +457,8 @@ bool set(JSContext *cx, unsigned argc, Value *vp);
 bool has(JSContext *cx, unsigned argc, Value *vp);
 bool append(JSContext *cx, unsigned argc, Value *vp);
 bool maybe_add(JSContext *cx, HandleObject self, const char *name, const char *value);
-typedef FastlyStatus HeaderRemoveOperation(fastly_request_handle_t handle, const char *name,
-                                           size_t name_len);
+typedef FastlyStatus HeaderRemoveOperation(fastly_request_handle_t handle,
+                                           xqd_world_string_t *name);
 bool delete_(JSContext *cx, unsigned argc, Value *vp);
 bool forEach(JSContext *cx, unsigned argc, Value *vp);
 bool entries(JSContext *cx, unsigned argc, Value *vp);
@@ -3418,9 +3418,6 @@ bool maybe_add(JSContext *cx, HandleObject self, const char *name, const char *v
   return detail::append_header_value(cx, self, name_val, value_val, "internal_maybe_add");
 }
 
-typedef FastlyStatus HeaderRemoveOperation(fastly_request_handle_t handle, const char *name,
-                                           size_t name_len);
-
 bool delete_(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER_WITH_NAME(1, "delete")
 
@@ -3441,10 +3438,11 @@ bool delete_(JSContext *cx, unsigned argc, Value *vp) {
   if (mode != Mode::Standalone) {
     HeaderRemoveOperation *op;
     if (mode == Mode::ProxyToRequest)
-      op = (HeaderRemoveOperation *)xqd_req_header_remove;
+      op = (HeaderRemoveOperation *)xqd_fastly_http_req_header_remove;
     else
-      op = (HeaderRemoveOperation *)xqd_resp_header_remove;
-    if (!HANDLE_RESULT(cx, op(detail::handle(self), name_chars.get(), name_len)))
+      op = (HeaderRemoveOperation *)xqd_fastly_http_resp_header_remove;
+    xqd_world_string_t name = {name_chars.get(), name_len};
+    if (!HANDLE_RESULT(cx, op(detail::handle(self), &name)))
       return false;
   }
 
