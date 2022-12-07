@@ -162,20 +162,35 @@ jobs:
     strategy:
       matrix:
         fixture: 
-          - 'async-select'
-          - 'byte-repeater'
-          - 'edge-dictionary'
-          - 'error'
-          - 'geoip'
-          - 'hello-world'
-          - 'multiple-set-cookie'
-          - 'object-store'
-          - 'request-limits'
-          - 'request-upstream'
-          - 'response'
-          - 'response-headers'
-          - 'status'
-          - 'timers'
+          - async-select
+          - btoa
+          - byte-repeater
+          - config-store
+          - console
+          - dynamic-backend
+          - edge-dictionary
+          - env
+          - error
+          - extend-from-builtins
+          - extend-from-request
+          - geoip
+          - hello-world
+          - includeBytes
+          - log
+          - multiple-set-cookie
+          - object-store
+          - random
+          - regex
+          - request-cache-key
+          - request-downstream
+          - request-limits
+          - request-upstream
+          - response
+          - response-headers
+          - status
+          - streaming-close
+          - tee
+          - timers
     steps:
     - name: Checkout fastly/js-compute-runtime
       uses: actions/checkout@v2
