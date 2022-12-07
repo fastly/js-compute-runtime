@@ -1600,8 +1600,8 @@ bool url_get(JSContext *cx, unsigned argc, Value *vp) {
 bool version_get(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(0)
 
-  uint32_t version = 0;
-  if (!HANDLE_RESULT(cx, xqd_req_version_get(request_handle(self), &version)))
+  fastly_http_version_t version = 0;
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_version_get(request_handle(self), &version)))
     return false;
 
   args.rval().setInt32(version);
@@ -2448,8 +2448,8 @@ bool url_get(JSContext *cx, unsigned argc, Value *vp) {
 bool version_get(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(0)
 
-  uint32_t version = 0;
-  if (!HANDLE_RESULT(cx, xqd_resp_version_get(response_handle(self), &version)))
+  fastly_http_version_t version = 0;
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_resp_version_get(response_handle(self), &version)))
     return false;
 
   args.rval().setInt32(version);

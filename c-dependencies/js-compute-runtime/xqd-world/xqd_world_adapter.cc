@@ -51,6 +51,22 @@ static fastly_error_t convert_result(int res) {
   }
 }
 
+fastly_http_version_t convert_http_version(uint32_t version) {
+  switch (version) {
+  case 0:
+    return FASTLY_HTTP_VERSION_HTTP09;
+  case 1:
+    return FASTLY_HTTP_VERSION_HTTP10;
+  case 2:
+    return FASTLY_HTTP_VERSION_HTTP11;
+  case 3:
+    return FASTLY_HTTP_VERSION_H2;
+  case 4:
+  default:
+    return FASTLY_HTTP_VERSION_H3;
+  }
+}
+
 fastly_error_t xqd_fastly_http_body_new(fastly_body_handle_t *ret) {
   return convert_result(xqd_body_new(ret));
 }
@@ -281,7 +297,12 @@ fastly_error_t xqd_fastly_http_req_uri_set(fastly_request_handle_t h, xqd_world_
 
 fastly_error_t xqd_fastly_http_req_version_get(fastly_request_handle_t h,
                                                fastly_http_version_t *ret) {
-  return convert_result(xqd_req_version_get(h, reinterpret_cast<uint32_t *>(ret)));
+  uint32_t xqd_http_version;
+  fastly_error_t result = convert_result(xqd_req_version_get(h, &xqd_http_version));
+  if (result != FASTLY_RESULT_ERROR_OK)
+    return result;
+  *ret = convert_http_version(xqd_http_version);
+  return result;
 }
 
 fastly_error_t xqd_fastly_http_req_send(fastly_request_handle_t h, fastly_body_handle_t b,
@@ -478,22 +499,6 @@ fastly_error_t xqd_fastly_http_resp_header_append(fastly_response_handle_t h,
 fastly_error_t xqd_fastly_http_resp_header_remove(fastly_response_handle_t h,
                                                   xqd_world_string_t *name) {
   return convert_result(xqd_resp_header_remove(h, name->ptr, name->len));
-}
-
-fastly_http_version_t convert_http_version(uint32_t version) {
-  switch (version) {
-  case 0:
-    return FASTLY_HTTP_VERSION_HTTP09;
-  case 1:
-    return FASTLY_HTTP_VERSION_HTTP10;
-  case 2:
-    return FASTLY_HTTP_VERSION_HTTP11;
-  case 3:
-    return FASTLY_HTTP_VERSION_H2;
-  case 4:
-  default:
-    return FASTLY_HTTP_VERSION_H3;
-  }
 }
 
 fastly_error_t xqd_fastly_http_resp_version_get(fastly_response_handle_t h,
