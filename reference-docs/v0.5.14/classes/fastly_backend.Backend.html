@@ -17,11 +17,25 @@
 <li><a href="fastly_backend.Backend.html">Backend</a></li></ul>
 <h1>Class Backend</h1></div>
 <section class="tsd-panel tsd-comment">
-<div class="tsd-comment tsd-typography"><p>Class for creating new <a href="https://developer.fastly.com/reference/api/services/backend/">Fastly Backends</a>.</p>
+<div class="tsd-comment tsd-typography"><p>Class for dynamically creating new <a href="https://developer.fastly.com/reference/api/services/backend/">Fastly Backends</a>.</p>
+
+<h3>Note</h3><p>This feature is in disabled by default for Fastly Services. Please contact <a href="https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711">Fastly Support</a> to request the feature be enabled on the Fastly Services which require Dynamic Backends.</p>
+<p>By default, Dynamic Backends are disabled within a JavaScript application as it can be a potential 
+avenue for third-party JavaScript code to send requests, potentially including sensitive/secret data, 
+off to destinations that the JavaScript project was not intending, which could be a security issue.</p>
+<p>To enable Dynamic Backends the application will need to explicitly allow Dynamic Backends via:</p>
+<pre><code class="language-js"><span class="hl-10">import</span><span class="hl-4"> { </span><span class="hl-8">allowDynamicBackends</span><span class="hl-4"> } </span><span class="hl-10">from</span><span class="hl-4"> </span><span class="hl-5">&quot;fastly:experimental&quot;</span><span class="hl-4">;</span><br/><span class="hl-7">allowDynamicBackends</span><span class="hl-4">(</span><span class="hl-6">true</span><span class="hl-4">);</span>
+</code></pre>
 <p><strong>Note</strong>: Can only be used when processing requests, not during build-time initialization.</p>
 
-<h3>Example</h3><p>Construct a new backend with all properties set to their default values:</p>
-<pre><code class="language-js"><span class="hl-6">const</span><span class="hl-4"> </span><span class="hl-9">myBackend</span><span class="hl-4"> = </span><span class="hl-6">new</span><span class="hl-4"> </span><span class="hl-7">Backend</span><span class="hl-4">({ </span><span class="hl-8">name:</span><span class="hl-4"> </span><span class="hl-5">&#39;fastly&#39;</span><span class="hl-4">, </span><span class="hl-8">target:</span><span class="hl-4"> </span><span class="hl-5">&#39;www.fastly.com&#39;</span><span class="hl-4">});</span>
+<h3>Example</h3><p>In this example an implicit Dynamic Backend is created when making the fetch request to <a href="https://www.fastly.com/">https://www.fastly.com/</a> and the response is then returned to the client.</p>
+<p>View this example on <a href="https://fiddle.fastly.dev/fiddle/e5b6fa0e">Fiddle</a>.</p>
+<pre><code class="language-js"><span class="hl-0">/// </span><span class="hl-1">&lt;</span><span class="hl-2">reference</span><span class="hl-0"> </span><span class="hl-3">types</span><span class="hl-4">=</span><span class="hl-5">&quot;@fastly/js-compute&quot;</span><span class="hl-0"> </span><span class="hl-1">/&gt;</span><br/><span class="hl-10">import</span><span class="hl-4"> { </span><span class="hl-8">allowDynamicBackends</span><span class="hl-4"> } </span><span class="hl-10">from</span><span class="hl-4"> </span><span class="hl-5">&quot;fastly:experimental&quot;</span><span class="hl-4">;</span><br/><span class="hl-7">allowDynamicBackends</span><span class="hl-4">(</span><span class="hl-6">true</span><span class="hl-4">);</span><br/><span class="hl-6">async</span><span class="hl-4"> </span><span class="hl-6">function</span><span class="hl-4"> </span><span class="hl-7">app</span><span class="hl-4">() {</span><br/><span class="hl-4">  </span><span class="hl-0">// For any request, return the fastly homepage -- without defining a backend!</span><br/><span class="hl-4">  </span><span class="hl-10">return</span><span class="hl-4"> </span><span class="hl-7">fetch</span><span class="hl-4">(</span><span class="hl-5">&#39;https://www.fastly.com/&#39;</span><span class="hl-4">);</span><br/><span class="hl-4">}</span><br/><span class="hl-7">addEventListener</span><span class="hl-4">(</span><span class="hl-5">&quot;fetch&quot;</span><span class="hl-4">, </span><span class="hl-8">event</span><span class="hl-4"> </span><span class="hl-6">=&gt;</span><span class="hl-4"> </span><span class="hl-8">event</span><span class="hl-4">.</span><span class="hl-7">respondWith</span><span class="hl-4">(</span><span class="hl-7">app</span><span class="hl-4">(</span><span class="hl-8">event</span><span class="hl-4">)));</span>
+</code></pre>
+
+<h3>Example</h3><p>In this example an explicit Dynamic Backend is created and supplied to the fetch request, the response is then returned to the client.</p>
+<p>View this example on <a href="https://fiddle.fastly.dev/fiddle/e0c26a33">Fiddle</a>.</p>
+<pre><code class="language-js"><span class="hl-0">/// </span><span class="hl-1">&lt;</span><span class="hl-2">reference</span><span class="hl-0"> </span><span class="hl-3">types</span><span class="hl-4">=</span><span class="hl-5">&quot;@fastly/js-compute&quot;</span><span class="hl-0"> </span><span class="hl-1">/&gt;</span><br/><span class="hl-10">import</span><span class="hl-4"> { </span><span class="hl-8">allowDynamicBackends</span><span class="hl-4"> } </span><span class="hl-10">from</span><span class="hl-4"> </span><span class="hl-5">&quot;fastly:experimental&quot;</span><span class="hl-4">;</span><br/><span class="hl-10">import</span><span class="hl-4"> { </span><span class="hl-8">Backend</span><span class="hl-4"> } </span><span class="hl-10">from</span><span class="hl-4"> </span><span class="hl-5">&quot;fastly:backend&quot;</span><span class="hl-4">;</span><br/><span class="hl-7">allowDynamicBackends</span><span class="hl-4">(</span><span class="hl-6">true</span><span class="hl-4">);</span><br/><span class="hl-6">async</span><span class="hl-4"> </span><span class="hl-6">function</span><span class="hl-4"> </span><span class="hl-7">app</span><span class="hl-4">() {</span><br/><span class="hl-4">  </span><span class="hl-0">// For any request, return the fastly homepage -- without defining a backend!</span><br/><span class="hl-4">  </span><span class="hl-6">const</span><span class="hl-4"> </span><span class="hl-9">backend</span><span class="hl-4"> = </span><span class="hl-6">new</span><span class="hl-4"> </span><span class="hl-7">Backend</span><span class="hl-4">({</span><br/><span class="hl-4">    </span><span class="hl-8">name:</span><span class="hl-4"> </span><span class="hl-5">&#39;fastly&#39;</span><span class="hl-4">,</span><br/><span class="hl-4">    </span><span class="hl-8">target:</span><span class="hl-4"> </span><span class="hl-5">&#39;fastly.com&#39;</span><span class="hl-4">,</span><br/><span class="hl-4">    </span><span class="hl-8">hostOverride:</span><span class="hl-4"> </span><span class="hl-5">&quot;www.fastly.com&quot;</span><span class="hl-4">,</span><br/><span class="hl-4">    </span><span class="hl-8">connectTimeout:</span><span class="hl-4"> </span><span class="hl-12">1000</span><span class="hl-4">,</span><br/><span class="hl-4">    </span><span class="hl-8">firstByteTimeout:</span><span class="hl-4"> </span><span class="hl-12">15000</span><span class="hl-4">,</span><br/><span class="hl-4">    </span><span class="hl-8">betweenBytesTimeout:</span><span class="hl-4"> </span><span class="hl-12">10000</span><span class="hl-4">,</span><br/><span class="hl-4">    </span><span class="hl-8">useSSL:</span><span class="hl-4"> </span><span class="hl-6">true</span><span class="hl-4">,</span><br/><span class="hl-4">    </span><span class="hl-8">sslMinVersion:</span><span class="hl-4"> </span><span class="hl-12">1.3</span><span class="hl-4">,</span><br/><span class="hl-4">    </span><span class="hl-8">sslMaxVersion:</span><span class="hl-4"> </span><span class="hl-12">1.3</span><span class="hl-4">,</span><br/><span class="hl-4">  });</span><br/><span class="hl-4">  </span><span class="hl-10">return</span><span class="hl-4"> </span><span class="hl-7">fetch</span><span class="hl-4">(</span><span class="hl-5">&#39;https://www.fastly.com/&#39;</span><span class="hl-4">, {</span><br/><span class="hl-4">    </span><span class="hl-8">backend</span><span class="hl-4"> </span><span class="hl-0">// Here we are configuring this request to use the backend from above.</span><br/><span class="hl-4">  });</span><br/><span class="hl-4">}</span><br/><span class="hl-7">addEventListener</span><span class="hl-4">(</span><span class="hl-5">&quot;fetch&quot;</span><span class="hl-4">, </span><span class="hl-8">event</span><span class="hl-4"> </span><span class="hl-6">=&gt;</span><span class="hl-4"> </span><span class="hl-8">event</span><span class="hl-4">.</span><span class="hl-7">respondWith</span><span class="hl-4">(</span><span class="hl-7">app</span><span class="hl-4">(</span><span class="hl-8">event</span><span class="hl-4">)));</span>
 </code></pre>
 </div></section>
 <section class="tsd-panel tsd-hierarchy">
@@ -29,7 +43,7 @@
 <ul class="tsd-hierarchy">
 <li><span class="target">Backend</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/fastly/js-compute-runtime/blob/97553d6/types/fastly:backend.d.ts#L83">fastly:backend.d.ts:83</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/fastly/js-compute-runtime/blob/9a9d98e/types/fastly:backend.d.ts#L168">fastly:backend.d.ts:168</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -50,7 +64,11 @@
 <ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
 <li class="tsd-signature tsd-anchor-link" id="constructor.new_Backend">new <wbr/>Backend<span class="tsd-signature-symbol">(</span>configuration<span class="tsd-signature-symbol">: </span><a href="../interfaces/fastly_backend.BackendConfiguration.html" class="tsd-signature-type" data-tsd-kind="Interface">BackendConfiguration</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="fastly_backend.Backend.html" class="tsd-signature-type" data-tsd-kind="Class">Backend</a><a href="#constructor.new_Backend" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
-<div class="tsd-comment tsd-typography"><p>Creates a new Backend object</p>
+<div class="tsd-comment tsd-typography"><p>Creates a new Backend instance</p>
+
+<h3>Example</h3><p>Construct a new backend with all properties set to their default values:</p>
+<pre><code class="language-js"><span class="hl-6">const</span><span class="hl-4"> </span><span class="hl-9">myBackend</span><span class="hl-4"> = </span><span class="hl-6">new</span><span class="hl-4"> </span><span class="hl-7">Backend</span><span class="hl-4">({ </span><span class="hl-8">name:</span><span class="hl-4"> </span><span class="hl-5">&#39;fastly&#39;</span><span class="hl-4">, </span><span class="hl-8">target:</span><span class="hl-4"> </span><span class="hl-5">&#39;www.fastly.com&#39;</span><span class="hl-4">});</span>
+</code></pre>
 </div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
@@ -59,7 +77,7 @@
 <h5>configuration: <a href="../interfaces/fastly_backend.BackendConfiguration.html" class="tsd-signature-type" data-tsd-kind="Interface">BackendConfiguration</a></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="fastly_backend.Backend.html" class="tsd-signature-type" data-tsd-kind="Class">Backend</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/fastly/js-compute-runtime/blob/97553d6/types/fastly:backend.d.ts#L87">fastly:backend.d.ts:87</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/fastly/js-compute-runtime/blob/9a9d98e/types/fastly:backend.d.ts#L178">fastly:backend.d.ts:178</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="toString" class="tsd-anchor"></a>
@@ -71,7 +89,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/fastly/js-compute-runtime/blob/97553d6/types/fastly:backend.d.ts#L91">fastly:backend.d.ts:91</a></li></ul></aside></li></ul></section></section></div>
+<li>Defined in <a href="https://github.com/fastly/js-compute-runtime/blob/9a9d98e/types/fastly:backend.d.ts#L182">fastly:backend.d.ts:182</a></li></ul></aside></li></ul></section></section></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
