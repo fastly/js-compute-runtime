@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 <application_name>"
+    echo "Application names available:"
+    ls ./integration-tests/js-compute/fixtures/
+    exit 1
+fi
+
+application_name="$1"
+application_path="$(dirname "${BASH_SOURCE[0]}")/integration-tests/js-compute/fixtures/$application_name"
+
+if [ ! -d $application_path ]; then
+    echo "Application named $application_name does not exist."
+    echo "Application names available:"
+    ls ./integration-tests/js-compute/fixtures/
+    exit 1
+fi
+
+
+yarn build
+(
+    cd $application_path
+    ../../replace-host.sh $application_name "https://compute-sdk-test-backend.edgecompute.app"
+    fastly compute serve --quiet
+)
