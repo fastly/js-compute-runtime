@@ -170,10 +170,10 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
-    fastly_kv_store_handle_t ok;
+    fastly_object_store_handle_t ok;
     fastly_error_t err;
   } val;
-} fastly_result_kv_store_handle_error_t;
+} fastly_result_object_store_handle_error_t;
 
 typedef struct {
   bool is_err;
@@ -182,14 +182,6 @@ typedef struct {
     fastly_error_t err;
   } val;
 } fastly_result_option_body_handle_error_t;
-
-typedef struct {
-  bool is_err;
-  union {
-    fastly_object_store_handle_t ok;
-    fastly_error_t err;
-  } val;
-} fastly_result_object_store_handle_error_t;
 
 typedef struct {
   bool is_err;
@@ -214,14 +206,6 @@ typedef struct {
     fastly_error_t err;
   } val;
 } fastly_result_option_secret_handle_error_t;
-
-typedef struct {
-  bool is_err;
-  union {
-    fastly_backend_health_t ok;
-    fastly_error_t err;
-  } val;
-} fastly_result_backend_health_error_t;
 
 typedef struct {
   bool is_err;
@@ -437,15 +421,6 @@ __attribute__((import_module("fastly"), import_name("dictionary-get"))) void
 __attribute__((import_module("fastly"), import_name("geo-lookup"))) void
     __wasm_import_fastly_geo_lookup(int32_t, int32_t, int32_t);
 
-__attribute__((import_module("fastly"), import_name("kv-open"))) void
-    __wasm_import_fastly_kv_open(int32_t, int32_t, int32_t);
-
-__attribute__((import_module("fastly"), import_name("kv-lookup"))) void
-    __wasm_import_fastly_kv_lookup(int32_t, int32_t, int32_t, int32_t);
-
-__attribute__((import_module("fastly"), import_name("kv-insert"))) void
-    __wasm_import_fastly_kv_insert(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
-
 __attribute__((import_module("fastly"), import_name("object-store-open"))) void
     __wasm_import_fastly_object_store_open(int32_t, int32_t, int32_t);
 
@@ -466,9 +441,6 @@ __attribute__((import_module("fastly"), import_name("secret-store-get"))) void
 
 __attribute__((import_module("fastly"), import_name("secret-store-plaintext"))) void
     __wasm_import_fastly_secret_store_plaintext(int32_t, int32_t);
-
-__attribute__((import_module("fastly"), import_name("backend-is-healthy"))) void
-    __wasm_import_fastly_backend_is_healthy(int32_t, int32_t, int32_t);
 
 __attribute__((import_module("fastly"), import_name("async-io-select"))) void
     __wasm_import_fastly_async_io_select(int32_t, int32_t, int32_t, int32_t);
@@ -1665,7 +1637,7 @@ fastly_error_t fastly_http_req_register_dynamic_backend(xqd_world_string_t *pref
   } else {
     *((int8_t *)(ptr + 96)) = 0;
   }
-  // Bug; https://github.com/bytecodealliance/wit-bindgen/pull/444
+  // Bug: https://github.com/bytecodealliance/wit-bindgen/pull/444
   {
     __attribute__((aligned(1))) uint8_t ret_area[2];
     int32_t ptr21 = (int32_t)&ret_area;
@@ -2115,85 +2087,6 @@ fastly_error_t fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string
   return result.is_err ? result.val.err : -1;
 }
 
-fastly_error_t fastly_kv_open(xqd_world_string_t *name, fastly_kv_store_handle_t *ret) {
-  __attribute__((aligned(4))) uint8_t ret_area[8];
-  int32_t ptr = (int32_t)&ret_area;
-  __wasm_import_fastly_kv_open((int32_t)(*name).ptr, (int32_t)(*name).len, ptr);
-  fastly_result_kv_store_handle_error_t result;
-  switch ((int32_t)(*((uint8_t *)(ptr + 0)))) {
-  case 0: {
-    result.is_err = false;
-    result.val.ok = (uint32_t)(*((int32_t *)(ptr + 4)));
-    break;
-  }
-  case 1: {
-    result.is_err = true;
-    result.val.err = (int32_t)(*((uint8_t *)(ptr + 4)));
-    break;
-  }
-  }
-  *ret = result.val.ok;
-  return result.is_err ? result.val.err : -1;
-}
-
-fastly_error_t fastly_kv_lookup(fastly_kv_store_handle_t store, fastly_list_u8_t *key,
-                                fastly_option_body_handle_t *ret) {
-  __attribute__((aligned(4))) uint8_t ret_area[12];
-  int32_t ptr = (int32_t)&ret_area;
-  __wasm_import_fastly_kv_lookup((int32_t)(store), (int32_t)(*key).ptr, (int32_t)(*key).len, ptr);
-  fastly_result_option_body_handle_error_t result;
-  switch ((int32_t)(*((uint8_t *)(ptr + 0)))) {
-  case 0: {
-    result.is_err = false;
-    fastly_option_body_handle_t option;
-    switch ((int32_t)(*((uint8_t *)(ptr + 4)))) {
-    case 0: {
-      option.is_some = false;
-      break;
-    }
-    case 1: {
-      option.is_some = true;
-      option.val = (uint32_t)(*((int32_t *)(ptr + 8)));
-      break;
-    }
-    }
-
-    result.val.ok = option;
-    break;
-  }
-  case 1: {
-    result.is_err = true;
-    result.val.err = (int32_t)(*((uint8_t *)(ptr + 4)));
-    break;
-  }
-  }
-  *ret = result.val.ok;
-  return result.is_err ? result.val.err : -1;
-}
-
-fastly_error_t fastly_kv_insert(fastly_kv_store_handle_t store, fastly_list_u8_t *key,
-                                fastly_body_handle_t body_handle, uint32_t max_age, bool *ret) {
-  __attribute__((aligned(1))) uint8_t ret_area[2];
-  int32_t ptr = (int32_t)&ret_area;
-  __wasm_import_fastly_kv_insert((int32_t)(store), (int32_t)(*key).ptr, (int32_t)(*key).len,
-                                 (int32_t)(body_handle), (int32_t)(max_age), ptr);
-  fastly_result_bool_error_t result;
-  switch ((int32_t)(*((uint8_t *)(ptr + 0)))) {
-  case 0: {
-    result.is_err = false;
-    result.val.ok = (int32_t)(*((uint8_t *)(ptr + 1)));
-    break;
-  }
-  case 1: {
-    result.is_err = true;
-    result.val.err = (int32_t)(*((uint8_t *)(ptr + 1)));
-    break;
-  }
-  }
-  *ret = result.val.ok;
-  return result.is_err ? result.val.err : -1;
-}
-
 fastly_error_t fastly_object_store_open(xqd_world_string_t *name,
                                         fastly_object_store_handle_t *ret) {
   __attribute__((aligned(4))) uint8_t ret_area[8];
@@ -2398,28 +2291,6 @@ fastly_error_t fastly_secret_store_plaintext(fastly_secret_handle_t secret,
   case 1: {
     result.is_err = true;
     result.val.err = (int32_t)(*((uint8_t *)(ptr + 4)));
-    break;
-  }
-  }
-  *ret = result.val.ok;
-  return result.is_err ? result.val.err : -1;
-}
-
-fastly_error_t fastly_backend_is_healthy(xqd_world_string_t *backend,
-                                         fastly_backend_health_t *ret) {
-  __attribute__((aligned(1))) uint8_t ret_area[2];
-  int32_t ptr = (int32_t)&ret_area;
-  __wasm_import_fastly_backend_is_healthy((int32_t)(*backend).ptr, (int32_t)(*backend).len, ptr);
-  fastly_result_backend_health_error_t result;
-  switch ((int32_t)(*((uint8_t *)(ptr + 0)))) {
-  case 0: {
-    result.is_err = false;
-    result.val.ok = (int32_t)(*((uint8_t *)(ptr + 1)));
-    break;
-  }
-  case 1: {
-    result.is_err = true;
-    result.val.err = (int32_t)(*((uint8_t *)(ptr + 1)));
     break;
   }
   }

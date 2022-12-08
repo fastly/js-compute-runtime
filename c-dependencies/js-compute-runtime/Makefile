@@ -27,7 +27,11 @@ FSM_SRC := $(ROOT_SRC)/js-compute-runtime/
 WASI_CXX ?= $(WASI_SDK)/bin/clang++
 WASI_CC ?= $(WASI_SDK)/bin/clang
 
-WIT_BINDGEN ?= ~/src/bytecodealliance/wit-bindgen/target/release/wit-bindgen
+WIT_BINDGEN := $(shell which wit-bindgen)
+
+ifndef WIT_BINDGEN
+	WIT_BINDGEN = $(error No wit-bindgen in PATH, consider doing cargo install --git https://github.com/bytecodealliance/wit-bindgen wit-bindgen-cli)
+endif
 
 CXX_FLAGS := -std=gnu++17 -Wall -Werror -Qunused-arguments
 CXX_FLAGS += -fno-sized-deallocation -fno-aligned-new -mthread-model single

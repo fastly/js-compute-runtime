@@ -137,11 +137,6 @@ fastly_error_t xqd_fastly_dictionary_open(xqd_world_string_t *name,
 fastly_error_t xqd_fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_string_t *key,
                                          fastly_option_string_t *ret);
 fastly_error_t xqd_fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string_t *ret);
-fastly_error_t xqd_fastly_kv_open(xqd_world_string_t *name, fastly_kv_store_handle_t *ret);
-fastly_error_t xqd_fastly_kv_lookup(fastly_kv_store_handle_t store, fastly_list_u8_t *key,
-                                    fastly_option_body_handle_t *ret);
-fastly_error_t xqd_fastly_kv_insert(fastly_kv_store_handle_t store, fastly_list_u8_t *key,
-                                    fastly_body_handle_t body_handle, uint32_t max_age, bool *ret);
 fastly_error_t xqd_fastly_object_store_open(xqd_world_string_t *name,
                                             fastly_object_store_handle_t *ret);
 fastly_error_t xqd_fastly_object_store_lookup(fastly_object_store_handle_t store,
@@ -160,8 +155,6 @@ fastly_error_t xqd_fastly_secret_store_get(fastly_secret_store_handle_t store,
                                            fastly_option_secret_handle_t *ret);
 fastly_error_t xqd_fastly_secret_store_plaintext(fastly_secret_handle_t secret,
                                                  fastly_option_string_t *ret);
-fastly_error_t xqd_fastly_backend_is_healthy(xqd_world_string_t *backend,
-                                             fastly_backend_health_t *ret);
 fastly_error_t xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
                                           uint32_t *ret);
 fastly_error_t xqd_fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret);

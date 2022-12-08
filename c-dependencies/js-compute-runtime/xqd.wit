@@ -43,6 +43,11 @@ world xqd-world {
       http-head-too-large,
       /// Invalid HTTP status.
       http-invalid-status,
+      /// Limit exceeded
+      ///
+      /// This is returned when an attempt to allocate a resource has exceeded the maximum number of 
+      /// resources permitted. For example, creating too many response handles.
+      limit-exceeded
     }
 
     /*
@@ -408,18 +413,6 @@ world xqd-world {
 
 
     /*
-     * Fastly KV
-     */
-    type kv-store-handle = u32
-
-    kv-open: func(name: string) -> result<kv-store-handle, error>
-
-    kv-lookup: func(store: kv-store-handle, key: list<u8>) -> result<option<body-handle>, error>
-
-    kv-insert: func(store: kv-store-handle, key: list<u8>, body-handle: body-handle, max-age: u32) -> result<bool, error>
-
-
-    /*
      * Fastly Object Store
      */
     type fd = u32
@@ -446,18 +439,6 @@ world xqd-world {
     secret-store-get: func(store: secret-store-handle, key: string) -> result<option<secret-handle>, error>
 
     secret-store-plaintext: func(secret: secret-handle) -> result<option<string>, error>
-
-
-    /*
-     * Fastly Backend
-     */
-    enum backend-health {
-      unknown,
-      healthy,
-      unhealthy,
-    }
-
-    backend-is-healthy: func(backend: string) -> result<backend-health, error>
 
 
     /*

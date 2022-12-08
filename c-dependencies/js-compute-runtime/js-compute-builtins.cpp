@@ -3055,6 +3055,9 @@ static bool retrieve_value_for_header_from_handle(JSContext *cx, HandleObject se
     result = convert_to_fastly_status(xqd_fastly_http_resp_header_values_get(handle, &str, &ret));
   }
 
+  if (!HANDLE_RESULT(cx, result))
+    return false;
+
   if (!ret.is_some)
     return true;
 

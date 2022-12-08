@@ -29,6 +29,7 @@ typedef uint8_t fastly_error_t;
 #define FASTLY_ERROR_OPTIONAL_NONE 10
 #define FASTLY_ERROR_HTTP_HEAD_TOO_LARGE 11
 #define FASTLY_ERROR_HTTP_INVALID_STATUS 12
+#define FASTLY_ERROR_LIMIT_EXCEEDED 13
 #define FASTLY_RESULT_ERROR_OK 255
 
 typedef struct {
@@ -167,8 +168,6 @@ typedef struct {
   fastly_option_u32_t utc_offset;
 } fastly_geo_data_t;
 
-typedef uint32_t fastly_kv_store_handle_t;
-
 typedef uint32_t fastly_fd_t;
 
 typedef uint32_t fastly_object_store_handle_t;
@@ -176,13 +175,6 @@ typedef uint32_t fastly_object_store_handle_t;
 typedef uint32_t fastly_secret_store_handle_t;
 
 typedef uint32_t fastly_secret_handle_t;
-
-typedef uint8_t fastly_backend_health_t;
-
-#define FASTLY_BACKEND_HEALTH_UNKNOWN 0
-#define FASTLY_BACKEND_HEALTH_HEALTHY 1
-#define FASTLY_BACKEND_HEALTH_UNHEALTHY 2
-#define FASTLY_RESULT_BACKEND_HEALTH_OK 255
 // A handle to an object supporting generic async operations.
 // Can be either a `BodyHandle` or a `PendingRequestHandle`.
 //
@@ -358,11 +350,6 @@ fastly_error_t fastly_dictionary_open(xqd_world_string_t *name, fastly_dictionar
 fastly_error_t fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_string_t *key,
                                      fastly_option_string_t *ret);
 fastly_error_t fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string_t *ret);
-fastly_error_t fastly_kv_open(xqd_world_string_t *name, fastly_kv_store_handle_t *ret);
-fastly_error_t fastly_kv_lookup(fastly_kv_store_handle_t store, fastly_list_u8_t *key,
-                                fastly_option_body_handle_t *ret);
-fastly_error_t fastly_kv_insert(fastly_kv_store_handle_t store, fastly_list_u8_t *key,
-                                fastly_body_handle_t body_handle, uint32_t max_age, bool *ret);
 fastly_error_t fastly_object_store_open(xqd_world_string_t *name,
                                         fastly_object_store_handle_t *ret);
 fastly_error_t fastly_object_store_lookup(fastly_object_store_handle_t store,
@@ -379,7 +366,6 @@ fastly_error_t fastly_secret_store_get(fastly_secret_store_handle_t store, xqd_w
                                        fastly_option_secret_handle_t *ret);
 fastly_error_t fastly_secret_store_plaintext(fastly_secret_handle_t secret,
                                              fastly_option_string_t *ret);
-fastly_error_t fastly_backend_is_healthy(xqd_world_string_t *backend, fastly_backend_health_t *ret);
 fastly_error_t fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
                                       uint32_t *ret);
 fastly_error_t fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret);

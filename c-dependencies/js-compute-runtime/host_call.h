@@ -51,6 +51,8 @@ enum class FastlyStatus {
   HttpHeadTooLarge = 11,
   // Invalid HTTP status.
   HttpInvalidStatus = 12,
+  // Limit Exceeded
+  LimitExceeded = 13,
   // Unknown status.
   Unknown = 100,
 };
@@ -134,6 +136,14 @@ static inline bool handle_fastly_result(JSContext *cx, FastlyStatus result, int 
                        "%s: HTTP invalid status error. This error will be "
                        "thrown when the HTTP message contains an invalid "
                        "status code. - Fastly error code %d\n",
+                       func, result);
+    return false;
+  case FastlyStatus::LimitExceeded:
+    JS_ReportErrorUTF8(cx,
+                       "%s: Limit exceeded error. This error will be thrown when an attempt"
+                       "to allocate a resource has exceeded the maximum number of resources"
+                       "permitted. For example, creating too many response handles."
+                       " - Fastly error code %d\n",
                        func, result);
     return false;
   default:

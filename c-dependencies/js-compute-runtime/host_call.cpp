@@ -39,6 +39,8 @@ FastlyStatus convert_to_fastly_status(int result) {
     return FastlyStatus::HttpHeadTooLarge;
   case 12:
     return FastlyStatus::HttpInvalidStatus;
+  case 13:
+    return FastlyStatus::LimitExceeded;
   default:
     MOZ_ASSERT_UNREACHABLE("coding error");
     return FastlyStatus::Unknown;
@@ -73,6 +75,8 @@ FastlyStatus convert_to_fastly_status(fastly_error_t result) {
     return FastlyStatus::HttpHeadTooLarge;
   case FASTLY_ERROR_HTTP_INVALID_STATUS:
     return FastlyStatus::HttpInvalidStatus;
+  case FASTLY_ERROR_LIMIT_EXCEEDED:
+    return FastlyStatus::LimitExceeded;
   default:
     MOZ_ASSERT_UNREACHABLE("coding error");
     return FastlyStatus::Unknown;
