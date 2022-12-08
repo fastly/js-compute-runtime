@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.15](https://github.com/fastly/js-compute-runtime/compare/v0.5.14...v0.5.15) (2022-12-08)
+
+
+### Features
+
+* add `allowDynamicBackends` function to `fastly:experimental` module ([83a003e](https://github.com/fastly/js-compute-runtime/commit/83a003e17307c01876751686620a6a1effbfaa99))
+
 ## [0.5.14](https://github.com/fastly/js-compute-runtime/compare/v0.5.13...v0.5.14) (2022-12-07)
 
 
