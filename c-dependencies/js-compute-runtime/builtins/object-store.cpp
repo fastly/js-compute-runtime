@@ -106,30 +106,22 @@ fastly_object_store_handle_t object_store_handle(JSObject *obj) {
 
 const unsigned ctor_length = 1;
 
-std::optional<std::string> parse_and_validate_key(JSContext *cx, JS::HandleValue val) {
-  size_t key_len;
-  // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  JS::UniqueChars keyString = encode(cx, val, &key_len);
-  if (!keyString) {
-    return std::nullopt;
-  }
-
+bool parse_and_validate_key(JSContext *cx, JS::UniqueChars *key, size_t len) {
   // If the converted string has a length of 0 then we throw an Error
   // because ObjectStore Keys have to be at-least 1 character.
-  if (key_len == 0) {
+  if (len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_EMPTY);
-    return std::nullopt;
+    return false;
   }
 
   // If the converted string has a length of more than 1024 then we throw an Error
   // because ObjectStore Keys have to be less than 1025 characters.
-  if (key_len > 1024) {
+  if (len > 1024) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_TOO_LONG);
-    return std::nullopt;
+    return false;
   }
 
-  std::string key(keyString.get(), key_len);
-  auto key_chars = key.c_str();
+  auto key_chars = key->get();
   auto res = find_invalid_character_for_object_store_key(key_chars);
   if (res.has_value()) {
     std::string character;
@@ -158,20 +150,20 @@ std::optional<std::string> parse_and_validate_key(JSContext *cx, JS::HandleValue
     }
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER,
                              character.c_str());
-    return std::nullopt;
+    return false;
   }
   auto acme_challenge = ".well-known/acme-challenge/";
   if (strncmp(key_chars, acme_challenge, strlen(acme_challenge)) == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_ACME);
-    return std::nullopt;
+    return false;
   }
 
   if (strcmp(key_chars, ".") == 0 || strcmp(key_chars, "..") == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_RELATIVE);
-    return std::nullopt;
+    return false;
   }
 
-  return key;
+  return true;
 }
 
 bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
@@ -185,25 +177,29 @@ bool get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   JS::RootedValue key(cx, args.get(0));
-  auto key_chars = parse_and_validate_key(cx, key);
-  if (!key_chars) {
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-  fastly_body_handle_t body_handle = INVALID_HANDLE;
-  auto status = xqd_object_store_get(object_store_handle(self), key_chars.value().c_str(),
-                                     key_chars.value().length(), &body_handle);
-  if (!HANDLE_RESULT(cx, status)) {
-    return false;
-  }
 
-  // If the handle is invalid it means no entry was found
+  // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
+  xqd_world_string_t key_str;
+  JS::UniqueChars key_chars = encode(cx, key, &key_str.len);
+  if (!key_chars)
+    return false;
+  key_str.ptr = key_chars.get();
+
+  if (!parse_and_validate_key(cx, &key_chars, key_str.len))
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+
+  fastly_option_body_handle_t ret;
+  auto status = xqd_fastly_object_store_lookup(object_store_handle(self), &key_str, &ret);
+  if (!HANDLE_RESULT(cx, status))
+    return false;
+
   // When no entry is found, we are going to resolve the Promise with `null`.
-  if (body_handle == INVALID_HANDLE) {
+  if (!ret.is_some) {
     JS::RootedValue result(cx);
     result.setNull();
     JS::ResolvePromise(cx, result_promise, result);
   } else {
-    JS::RootedObject entry(cx, ObjectStoreEntry::create(cx, body_handle));
+    JS::RootedObject entry(cx, ObjectStoreEntry::create(cx, ret.val));
     if (!entry) {
       return false;
     }
@@ -225,10 +221,17 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   JS::RootedValue key(cx, args.get(0));
-  auto key_chars = parse_and_validate_key(cx, key);
-  if (!key_chars) {
+
+  // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
+  xqd_world_string_t key_str;
+  JS::UniqueChars key_chars = encode(cx, key, &key_str.len);
+  if (!key_chars)
+    return false;
+  key_str.ptr = key_chars.get();
+
+  if (!parse_and_validate_key(cx, &key_chars, key_str.len))
     return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
+
   JS::HandleValue body_val = args.get(1);
 
   // We currently support five types of body inputs:
@@ -258,11 +261,9 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
       JS::RootedObject source_owner(cx, builtins::NativeStreamSource::owner(stream_source));
       fastly_body_handle_t body = RequestOrResponse::body_handle(source_owner);
 
-      auto status = xqd_object_store_insert(object_store_handle(self), key_chars.value().c_str(),
-                                            key_chars.value().length(), body);
-      if (!HANDLE_RESULT(cx, status)) {
+      auto status = xqd_fastly_object_store_insert(object_store_handle(self), &key_str, body);
+      if (!HANDLE_RESULT(cx, status))
         return ReturnPromiseRejectedWithPendingError(cx, args);
-      }
 
       // The insert was successful so we return a Promise which resolves to undefined
       JS::RootedValue rval(cx);
@@ -334,8 +335,7 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    auto status = xqd_object_store_insert(object_store_handle(self), key_chars.value().c_str(),
-                                          key_chars.value().length(), body_handle);
+    auto status = xqd_fastly_object_store_insert(object_store_handle(self), &key_str, body_handle);
     // Ensure that we throw an exception for all unexpected host errors.
     if (!HANDLE_RESULT(cx, status)) {
       return RejectPromiseWithPendingError(cx, result_promise);
@@ -367,31 +367,30 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::HandleValue name_arg = args.get(0);
 
-  size_t name_len;
+  xqd_world_string_t name_str;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  JS::UniqueChars name = encode(cx, name_arg, &name_len);
+  JS::UniqueChars name = encode(cx, name_arg, &name_str.len);
   if (!name) {
     return false;
   }
+  name_str.ptr = name.get();
 
   // If the converted string has a length of 0 then we throw an Error
   // because ObjectStore names have to be at-least 1 character.
-  if (name_len == 0) {
+  if (name_str.len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_NAME_EMPTY);
     return false;
   }
 
   // If the converted string has a length of more than 255 then we throw an Error
   // because ObjectStore names have to be less than 255 characters.
-  if (name_len > 255) {
+  if (name_str.len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_NAME_TOO_LONG);
     return false;
   }
 
-  auto name_chars = name.get();
-
-  for (int i = 0; i < name_len; i++) {
-    char character = name_chars[i];
+  for (int i = 0; i < name_str.len; i++) {
+    char character = name_str.ptr[i];
     if (std::iscntrl(static_cast<unsigned char>(character)) != 0) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_OBJECT_STORE_NAME_NO_CONTROL_CHARACTERS);
@@ -401,10 +400,10 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_object_store_handle_t object_store_handle = INVALID_HANDLE;
   auto status =
-      convert_to_fastly_status(xqd_object_store_open(name_chars, name_len, &object_store_handle));
+      convert_to_fastly_status(xqd_fastly_object_store_open(&name_str, &object_store_handle));
   if (status == FastlyStatus::Inval) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_DOES_NOT_EXIST,
-                              name_chars);
+                              name_str.ptr);
     return false;
   }
 
