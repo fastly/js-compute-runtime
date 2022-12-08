@@ -904,7 +904,7 @@ declare class DecompressionStream {
   /**
    * @example 
    * ```js
-   * let stream = new DeompressionStream("gzip");
+   * let stream = new DecompressionStream("gzip");
    * console.log(stream.readable instanceof ReadableStream); // true
    * ```
    */
@@ -912,7 +912,7 @@ declare class DecompressionStream {
   /**
    * @example 
    * ```js
-   * let stream = new DeompressionStream("gzip");
+   * let stream = new DecompressionStream("gzip");
    * console.log(stream.writable instanceof WritableStream); // true
    * ```
    */
