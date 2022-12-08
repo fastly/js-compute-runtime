@@ -3807,24 +3807,27 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
     JS::SetReservedSlot(request, Request::Slots::HasBody, JS::TrueValue());
   }
 
-  size_t bytes_read;
-  UniqueChars buf(read_from_handle_all<xqd_req_uri_get, fastly_request_handle_t>(
-      cx, request_handle, &bytes_read, false));
-  if (!buf)
+  xqd_world_string_t uri_str;
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_uri_get(request_handle, &uri_str)))
     return false;
 
-  RootedString url(cx, JS_NewStringCopyN(cx, buf.get(), bytes_read));
-  if (!url)
+  RootedString url(cx, JS_NewStringCopyN(cx, uri_str.ptr, uri_str.len));
+  if (!url) {
+    JS_free(cx, uri_str.ptr);
     return false;
+  }
   JS::SetReservedSlot(request, Request::Slots::URL, JS::StringValue(url));
 
   // Set the URL for `globalThis.location` to the client request's URL.
   RootedObject url_instance(cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
-  if (!url_instance)
+  if (!url_instance) {
+    JS_free(cx, uri_str.ptr);
     return false;
+  }
 
-  SpecString spec((uint8_t *)buf.release(), bytes_read, bytes_read);
+  SpecString spec(reinterpret_cast<uint8_t *>(uri_str.ptr), uri_str.len, uri_str.len);
   builtins::WorkerLocation::url = URL::create(cx, url_instance, spec);
+  JS_free(cx, uri_str.ptr);
   if (!builtins::WorkerLocation::url) {
     return false;
   }

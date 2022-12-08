@@ -294,14 +294,13 @@ fastly_error_t xqd_fastly_http_req_method_set(fastly_request_handle_t h,
 }
 
 fastly_error_t xqd_fastly_http_req_uri_get(fastly_request_handle_t h, xqd_world_string_t *ret) {
-  ret->ptr = static_cast<char *>(JS_malloc(context, URI_MAX_LEN + 1));
+  ret->ptr = static_cast<char *>(JS_malloc(context, URI_MAX_LEN));
   fastly_error_t result = convert_result(xqd_req_uri_get(h, ret->ptr, URI_MAX_LEN, &ret->len));
   if (result != FASTLY_RESULT_ERROR_OK) {
     JS_free(context, ret->ptr);
     return result;
   }
-  ret->ptr[ret->len] = '\0';
-  ret->ptr = static_cast<char *>(JS_realloc(context, ret->ptr, URI_MAX_LEN + 1, ret->len + 1));
+  ret->ptr = static_cast<char *>(JS_realloc(context, ret->ptr, URI_MAX_LEN, ret->len));
   return result;
 }
 
