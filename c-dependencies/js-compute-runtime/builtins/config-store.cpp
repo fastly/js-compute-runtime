@@ -11,6 +11,7 @@ fastly_dictionary_handle_t ConfigStore::config_store_handle(JSObject *obj) {
 bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
+<<<<<<< HEAD
   size_t name_len;
   JS::UniqueChars name = encode(cx, args[0], &name_len);
 
@@ -36,12 +37,27 @@ bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     args.rval().setNull();
     return true;
   }
+=======
+  xqd_world_string_t key_str;
+  JS::UniqueChars key = encode(cx, args[0], &key_str.len);
+  key_str.ptr = key.get();
+
+  fastly_option_string_t ret;
+  auto status = convert_to_fastly_status(
+      xqd_fastly_dictionary_get(ConfigStore::config_store_handle(self), &key_str, &ret));
+>>>>>>> config store
 
   // Ensure that we throw an exception for all unexpected host errors.
   if (!HANDLE_RESULT(cx, status))
     return false;
 
-  JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buffer.get(), nwritten)));
+  if (!ret.is_some) {
+    args.rval().setNull();
+    return true;
+  }
+
+  JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.val.ptr, ret.val.len)));
+  JS_free(cx, ret.val.ptr);
   if (!text)
     return false;
 
@@ -57,24 +73,25 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The ConfigStore builtin");
   CTOR_HEADER("ConfigStore", 1);
 
-  size_t name_len;
-  JS::UniqueChars name_chars = encode(cx, args[0], &name_len);
+  xqd_world_string_t name_str;
+  JS::UniqueChars name_chars = encode(cx, args[0], &name_str.len);
+  name_str.ptr = name_chars.get();
 
   // If the converted string has a length of 0 then we throw an Error
   // because Dictionary names have to be at-least 1 character.
-  if (name_len == 0) {
+  if (name_str.len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_NAME_EMPTY);
     return false;
   }
 
   // If the converted string has a length of more than 255 then we throw an Error
   // because Dictionary names have to be less than 255 characters.
-  if (name_len > 255) {
+  if (name_str.len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_NAME_TOO_LONG);
     return false;
   }
 
-  std::string_view name(name_chars.get(), name_len);
+  std::string_view name(name_str.ptr, name_str.len);
 
   // Name must start with ascii alphabetical and contain only ascii alphanumeric, underscore, and
   // whitespace
