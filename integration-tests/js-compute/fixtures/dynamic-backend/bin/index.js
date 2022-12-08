@@ -1,8 +1,9 @@
+/// <reference path="../../../../../types/index.d.ts" />
 /* eslint-env serviceworker */
-/* global fastly */
 import { Backend } from 'fastly:backend';
 import { env } from 'fastly:env';
 import { CacheOverride } from 'fastly:cache-override';
+import { allowDynamicBackends } from "fastly:experimental";
 import { pass, fail, assert, assertDoesNotThrow, assertThrows, assertRejects, assertResolves } from "../../../assertions.js";
 
 addEventListener("fetch", event => {
@@ -40,13 +41,13 @@ routes.set('/', () => {
 // implicit dynamic backend
 {
   routes.set("/implicit-dynamic-backend/dynamic-backends-disabled", async () => {
-    fastly.allowDynamicBackends = false;
+    allowDynamicBackends(false);
     let error = await assertRejects(() => fetch('https://httpbin.org/headers'));
     if (error) { return error }
     return pass()
   });
   routes.set("/implicit-dynamic-backend/dynamic-backends-enabled", async () => {
-    fastly.allowDynamicBackends = true;
+    allowDynamicBackends(true);
     let error = await assertResolves(() => fetch('https://httpbin.org/headers'));
     if (error) { return error }
     error = await assertResolves(() => fetch('https://www.fastly.com'));
@@ -54,7 +55,7 @@ routes.set('/', () => {
     return pass()
   });
   routes.set("/implicit-dynamic-backend/dynamic-backends-enabled-called-twice", async () => {
-    fastly.allowDynamicBackends = true;
+    allowDynamicBackends(true);
     let error = await assertResolves(() => fetch('https://httpbin.org/headers'));
     if (error) { return error }
     error = await assertResolves(() => fetch('https://httpbin.org/headers'));
@@ -66,7 +67,7 @@ routes.set('/', () => {
 // explicit dynamic backend
 {
   routes.set("/explicit-dynamic-backend/dynamic-backends-enabled-all-fields", async () => {
-    fastly.allowDynamicBackends = true;
+    allowDynamicBackends(true);
     let backend = createValidHttpBinBackend();
     let error = await assertResolves(() => fetch('https://httpbin.org/headers', {
       backend,
@@ -76,7 +77,7 @@ routes.set('/', () => {
     return pass()
   });
   routes.set("/explicit-dynamic-backend/dynamic-backends-enabled-minimal-fields", async () => {
-    fastly.allowDynamicBackends = true;
+    allowDynamicBackends(true);
     let backend = createValidFastlyBackend();
     let error = await assertResolves(() => fetch('https://www.fastly.com', {
       backend,
