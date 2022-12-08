@@ -6,6 +6,8 @@
 #include "js/JSON.h"
 #include "xqd_world.h"
 
+static JSContext *CONTEXT = nullptr;
+
 // TODO: remove these once the warnings are fixed
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
@@ -13,8 +15,6 @@
 #include "jsapi.h"
 
 #pragma clang diagnostic pop
-
-void set_js_context(JSContext *cx);
 
 fastly_error_t xqd_fastly_abi_init(uint64_t abi_version);
 fastly_error_t xqd_fastly_uap_parse(xqd_world_string_t *user_agent, fastly_user_agent_t *ret);

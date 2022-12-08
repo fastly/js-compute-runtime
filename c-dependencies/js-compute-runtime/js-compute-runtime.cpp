@@ -69,8 +69,6 @@ static bool dump_mem_stats(JSContext *cx) {
 /* The class of the global object. */
 static JSClass global_class = {"global", JSCLASS_GLOBAL_FLAGS, &JS::DefaultGlobalClassOps};
 
-static JSContext *CONTEXT = nullptr;
-
 JS::PersistentRootedObject GLOBAL;
 JS::PersistentRootedObject unhandledRejectedPromises;
 
@@ -140,7 +138,7 @@ bool init_js() {
 
   JS::SetPromiseRejectionTrackerCallback(cx, rejection_tracker);
 
-  set_js_context(CONTEXT = cx);
+  CONTEXT = cx;
   GLOBAL.init(cx, global);
   unhandledRejectedPromises.init(cx, JS::NewSetObject(cx));
   if (!unhandledRejectedPromises)
