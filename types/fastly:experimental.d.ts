@@ -28,4 +28,15 @@ declare module "fastly:experimental" {
    * @experimental
    */
   export function includeBytes(path: string): Uint8Array;
+
+  /**
+   * Whether or not to allow Dynamic Backends.
+   * 
+   * By default, Dynamic Backends are disabled within a JavaScript application as it can be a potential 
+   * avenue for third-party JavaScript code to send requests, potentially including sensitive/secret data, 
+   * off to destinations that the JavaScript project was not intending, which could be a security issue.
+   *
+   * @experimental
+   */
+  export function allowDynamicBackends(enabled: boolean): void;
 }
