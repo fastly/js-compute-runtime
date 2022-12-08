@@ -67,7 +67,7 @@ FastlyStatus convert_to_fastly_status(fastly_error_t result) {
     return FastlyStatus::HttpUser;
   case FASTLY_ERROR_HTTP_INCOMPLETE:
     return FastlyStatus::HttpIncomplete;
-  case FASTLY_ERROR_MISSING_OPTIONAL:
+  case FASTLY_ERROR_OPTIONAL_NONE:
     return FastlyStatus::None;
   case FASTLY_ERROR_HTTP_HEAD_TOO_LARGE:
     return FastlyStatus::HttpHeadTooLarge;
