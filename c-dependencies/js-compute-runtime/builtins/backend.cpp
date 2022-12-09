@@ -525,7 +525,7 @@ public:
     /**
      * All ciphers by their openssl alias name.
      */
-    auto elements = splitCipherSuiteString(std::string(expression));
+    auto elements = splitCipherSuiteString(expression);
     std::vector<Cipher> ciphers;
     std::vector<Cipher> removedCiphers;
     for (auto &element : elements) {
