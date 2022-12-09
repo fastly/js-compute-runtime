@@ -2,6 +2,7 @@ SHELL:=/bin/bash
 INIT_JS ?= test.js
 WIZER ?= wizer
 DESTDIR ?= .
+WASI_SDK ?= /opt/wasi-sdk
 
 CXX_OPT ?= -O2
 
@@ -23,15 +24,22 @@ SM_OBJ := $(SM_SRC)lib/*.o
 SM_OBJ += $(SM_SRC)lib/*.a
 FSM_SRC := $(ROOT_SRC)/js-compute-runtime/
 
-WASI_CXX ?= /opt/wasi-sdk/bin/clang++
+WASI_CXX ?= $(WASI_SDK)/bin/clang++
 
+CXX_FLAGS := -std=gnu++17 -Wall -Werror -Qunused-arguments
+CXX_FLAGS += -fno-sized-deallocation -fno-aligned-new -mthread-model single
+CXX_FLAGS += -fPIC -fno-rtti -fno-exceptions -fno-math-errno -pipe
+CXX_FLAGS += -fno-omit-frame-pointer -funwind-tables -I$(FSM_SRC)
+CXX_FLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
 
-CXX_FLAGS := -std=gnu++17 -Wall -Werror -Qunused-arguments -fno-sized-deallocation -fno-aligned-new -mthread-model single -fPIC -fno-rtti -fno-exceptions -fno-math-errno -pipe -fno-omit-frame-pointer -funwind-tables -I$(FSM_SRC)
-DEFINES ?=
 LD_FLAGS := -Wl,-z,noexecstack -Wl,-z,text -Wl,-z,relro -Wl,-z,nocopyreloc
 LD_FLAGS += -Wl,-z,stack-size=1048576 -Wl,--stack-first -lwasi-emulated-getpid
 
-DEFINES := $(DEFINES) -DMOZ_JS_STREAMS
+DEFINES ?=
+
+# This is required when using spidermonkey headers, as it allows us to enable
+# the streams library when setting up the js context.
+DEFINES += -DMOZ_JS_STREAMS
 
 .PHONY: all install clean distclean
 

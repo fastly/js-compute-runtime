@@ -120,10 +120,37 @@ declare module 'fastly:backend' {
    * **Note**: Can only be used when processing requests, not during build-time initialization.
    * 
    * @example
+   * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
    * In this example an implicit Dynamic Backend is created when making the fetch request to https://www.fastly.com/ and the response is then returned to the client.
    * 
-   * View this example on [Fiddle](https://fiddle.fastly.dev/fiddle/e5b6fa0e).
-   * 
+   * <script type="application/json+fiddle">
+   * {
+   *   "type": "javascript",
+   *   "title": "Implicit Dynamic Backend Example",
+   *   "origins": [
+   *     "https://http-me.glitch.me"
+   *   ],
+   *   "src": {
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { allowDynamicBackends } from \"fastly:experimental\";\nallowDynamicBackends(true);\nasync function app() {\n  // For any request, return the fastly homepage -- without defining a backend!\n  return fetch('https://www.fastly.com/');\n}\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
+   *   },
+   *   "requests": [
+   *     {
+   *       "enableCluster": true,
+   *       "enableShield": false,
+   *       "enableWAF": false,
+   *       "method": "GET",
+   *       "path": "/status=200",
+   *       "useFreshCache": false,
+   *       "followRedirects": false,
+   *       "tests": "",
+   *       "delay": 0
+   *     }
+   *   ],
+   *   "srcVersion": 26
+   * }
+   * </script>
+   * <noscript>
    * ```js
    * /// <reference types="@fastly/js-compute" />
    * import { allowDynamicBackends } from "fastly:experimental";
@@ -134,12 +161,39 @@ declare module 'fastly:backend' {
    * }
    * addEventListener("fetch", event => event.respondWith(app(event)));
    * ```
+   * </noscript>
    *
    * @example
    * In this example an explicit Dynamic Backend is created and supplied to the fetch request, the response is then returned to the client.
    * 
-   * View this example on [Fiddle](https://fiddle.fastly.dev/fiddle/e0c26a33).
-   * 
+   * <script type="application/json+fiddle">
+   * {
+   *   "type": "javascript",
+   *   "title": "Explicit Dynamic Backend Example",
+   *   "origins": [
+   *     "https://http-me.glitch.me"
+   *   ],
+   *   "src": {
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { allowDynamicBackends } from \"fastly:experimental\";\nimport { Backend } from \"fastly:backend\";\nallowDynamicBackends(true);\nasync function app() {\n  // For any request, return the fastly homepage -- without defining a backend!\n  const backend = new Backend({\n    name: 'fastly',\n    target: 'fastly.com',\n    hostOverride: \"www.fastly.com\",\n    connectTimeout: 1000,\n    firstByteTimeout: 15000,\n    betweenBytesTimeout: 10000,\n    useSSL: true,\n    sslMinVersion: 1.3,\n    sslMaxVersion: 1.3,\n  });\n  return fetch('https://www.fastly.com/', {\n    backend // Here we are configuring this request to use the backend from above.\n  });\n}\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
+   *   },
+   *   "requests": [
+   *     {
+   *       "enableCluster": true,
+   *       "enableShield": false,
+   *       "enableWAF": false,
+   *       "method": "GET",
+   *       "path": "/status=200",
+   *       "useFreshCache": false,
+   *       "followRedirects": false,
+   *       "tests": "",
+   *       "delay": 0
+   *     }
+   *   ],
+   *   "srcVersion": 26
+   * }
+   * </script>
+   * <noscript>
    * ```js
    * /// <reference types="@fastly/js-compute" />
    * import { allowDynamicBackends } from "fastly:experimental";
@@ -164,6 +218,7 @@ declare module 'fastly:backend' {
    * }
    * addEventListener("fetch", event => event.respondWith(app(event)));
    * ```
+   * </noscript>
    */
   class Backend {
     /**

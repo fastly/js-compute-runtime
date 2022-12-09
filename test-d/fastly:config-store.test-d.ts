@@ -8,5 +8,5 @@ import {expectError, expectType} from 'tsd';
     expectError(ConfigStore('example'))
     expectError(ConfigStore())
     expectType<ConfigStore>(new ConfigStore('example'))
-    expectType<(key:string) => string>(new ConfigStore('example').get)
+    expectType<(key:string) => string|null>(new ConfigStore('example').get)
 }

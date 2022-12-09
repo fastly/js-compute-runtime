@@ -8,5 +8,5 @@ import {expectError, expectType} from 'tsd';
   expectError(Dictionary('example'))
   expectError(Dictionary())
   expectType<Dictionary>(new Dictionary('example'))
-  expectType<(key:string) => string>(new Dictionary('example').get)
+  expectType<(key:string) => string|null>(new Dictionary('example').get)
 }

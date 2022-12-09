@@ -87,6 +87,7 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
       [
         "--allow-wasi",
         `--dir=.`,
+        `--wasm-bulk-memory=true`,
         "-r _start=wizer.resume",
         `-o=${output}`,
         wasmEngine,

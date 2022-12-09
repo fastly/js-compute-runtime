@@ -4,7 +4,7 @@
 
 "@fastly/js-compute@file:..":
   "resolved" "file:.."
-  "version" "0.5.14"
+  "version" "0.5.15"
   dependencies:
     "@jakechampion/wizer" "^1.5.3"
     "esbuild" "^0.15.16"
