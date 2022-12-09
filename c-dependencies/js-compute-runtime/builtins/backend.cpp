@@ -315,16 +315,6 @@ private:
     });
   }
 
-  std::function<bool(const Cipher &, const Cipher &)> compareKeyExchange(KeyExchange val) {
-    return [val](auto &left, auto &right) {
-      if (left.kx == val) {
-        return right.kx != val;
-      } else {
-        return right.kx == val;
-      }
-    };
-  }
-
   std::function<bool(const Cipher &)> byProtocol(Protocol val) {
     return [val](auto &c) { return c.protocol == val; };
   }
