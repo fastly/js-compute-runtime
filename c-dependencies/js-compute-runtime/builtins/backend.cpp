@@ -303,7 +303,6 @@ private:
   std::vector<Cipher> defaultSort(std::vector<Cipher> &ciphers) {
     std::vector<Cipher> result;
     result.reserve(ciphers.size());
-    std::vector<Cipher> ecdh;
 
     /* Everything else being equal, prefer ephemeral ECDH over other key exchange mechanisms */
     std::vector<Cipher> eecdh;
@@ -315,11 +314,9 @@ private:
                 Encryption::AES256GCM};
 
     /* Now arrange all ciphers by preference: */
-    std::copy_if(ecdh.begin(), ecdh.end(), std::back_inserter(result), byEncryption(aes));
     std::copy_if(ciphers.begin(), ciphers.end(), std::back_inserter(result), byEncryption(aes));
 
     /* Add everything else */
-    result.insert(result.end(), ecdh.begin(), ecdh.end());
     result.insert(result.end(), ciphers.begin(), ciphers.end());
 
     /* Move ciphers without forward secrecy to the end */
