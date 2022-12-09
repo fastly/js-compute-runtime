@@ -302,9 +302,8 @@ private:
    */
   void defaultSort(std::vector<Cipher> &ciphers) {
     auto byStrength = [](auto &l, auto &r) { return l.strength_bits > r.strength_bits; };
-  // order all ciphers by strength first
-  std:
-    sort(ciphers.begin(), ciphers.end(), byStrength);
+    // order all ciphers by strength first
+    std::sort(ciphers.begin(), ciphers.end(), byStrength);
 
     auto it =
         std::stable_partition(ciphers.begin(), ciphers.end(), byKeyExchange(KeyExchange::EECDH));
