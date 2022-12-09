@@ -4,6 +4,7 @@
 declare module "fastly:experimental" {
   /**
    * @experimental
+   * @hidden
    */
   export function setBaseURL(base: URL | null | undefined): void;
   /**
@@ -16,6 +17,7 @@ declare module "fastly:experimental" {
    * **Note**: This is mostly for internal debugging purposes and will generate highly unstable
    * output.
    * @experimental
+   * @hidden
    */
   export function enableDebugLogging(enabled: boolean): void;
 
@@ -36,6 +38,9 @@ declare module "fastly:experimental" {
    * avenue for third-party JavaScript code to send requests, potentially including sensitive/secret data, 
    * off to destinations that the JavaScript project was not intending, which could be a security issue.
    *
+   * @note 
+   * This feature is in disabled by default for Fastly Services. Please contact [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711) to request the feature be enabled on the Fastly Services which require Dynamic Backends.
+   * 
    * @experimental
    */
   export function allowDynamicBackends(enabled: boolean): void;
