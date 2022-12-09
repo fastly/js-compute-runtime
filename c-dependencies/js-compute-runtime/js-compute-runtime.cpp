@@ -123,7 +123,6 @@ bool init_js() {
       .setBYOBStreamReadersEnabled(true)
       .setReadableStreamPipeToEnabled(true)
       .setWritableStreamsEnabled(true)
-      .setIteratorHelpersEnabled(true)
       .setWeakRefsEnabled(JS::WeakRefSpecifier::EnabledWithoutCleanupSome);
 
   JS::DisableIncrementalGC(cx);
