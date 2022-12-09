@@ -640,7 +640,10 @@ bool xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout
   return is_error;
 }
 bool xqd_fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret, fastly_error_t *err) {
-  return convert_result(xqd_async_is_ready(handle, (uint32_t *)ret), err);
+  uint32_t ret_int;
+  bool is_error = convert_result(xqd_async_is_ready(handle, &ret_int), err);
+  *ret = (bool)ret_int;
+  return is_error;
 }
 
 #else
