@@ -12,7 +12,33 @@ declare module "fastly:env" {
    * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
    * In this example we log to stdout the environment variables `FASTLY_HOSTNAME` and `FASTLY_TRACE_ID`.
    * 
-   * <a href='https://fiddle.fastly.dev/fiddle/276f3cdd/embedded'>View this example on Fastly Fiddle</a>
+   * <script type="application/json+fiddle">
+   * {
+   *   "type": "javascript",
+   *   "title": "Environment Variable Example",
+   *   "origins": [
+   *     "https://http-me.glitch.me"
+   *   ],
+   *   "src": {
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { env } from \"fastly:env\";\n\nfunction app(event) {\n  console.log(\"FASTLY_HOSTNAME:\", env(\"FASTLY_HOSTNAME\"));\n  console.log(\"FASTLY_TRACE_ID:\", env(\"FASTLY_TRACE_ID\"));\n\n  return new Response(\"\", {\n    status: 200\n  });\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
+   *   },
+   *   "requests": [
+   *     {
+   *       "enableCluster": true,
+   *       "enableShield": false,
+   *       "enableWAF": false,
+   *       "method": "GET",
+   *       "path": "/status=200",
+   *       "useFreshCache": false,
+   *       "followRedirects": false,
+   *       "tests": "",
+   *       "delay": 0
+   *     }
+   *   ],
+   *   "srcVersion": 26
+   * }
+   * </script>
    * <noscript>
    * ```js
    * /// <reference types="@fastly/js-compute" />

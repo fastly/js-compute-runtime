@@ -9,7 +9,40 @@ declare module "fastly:dictionary" {
    * In this example we have an Edge Dictionary named 'animals' and we return the 'cat'
    * entry as the response body to the client.
    * 
-   * <a href='https://fiddle.fastly.dev/fiddle/8f5a5052/embedded'>View this example on Fastly Fiddle</a>
+   * <script type="application/json+fiddle">
+   * {
+   *   "title": "Dictionary Example",
+   *   "type": "javascript",
+   *   "origins": [
+   *     "https://http-me.glitch.me"
+   *   ],
+   *   "src": {
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { Dictionary } from \"fastly:dictionary\";\n\nasync function app (event) {\n  const animals = new Dictionary('animals');\n  return new Response(animals.get('cat'));\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
+   *   },
+   *   "srcVersion": 7,
+   *   "requests": [
+   *     {
+   *       "enableCluster": true,
+   *       "enableShield": false,
+   *       "enableWAF": false,
+   *       "data": {
+   *         "dictionaries": {
+   *           "animals": {
+   *             "cat": "meow"
+   *           }
+   *         }
+   *       },
+   *       "method": "GET",
+   *       "path": "/status=200",
+   *       "useFreshCache": false,
+   *       "followRedirects": false,
+   *       "tests": "",
+   *       "delay": 0
+   *      }
+   *   ]
+   * }
+   * </script>
    * <noscript>
    * ```js
    * /// <reference types="@fastly/js-compute" />

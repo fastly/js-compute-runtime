@@ -10,7 +10,40 @@ declare module "fastly:config-store" {
    * In this example we have an Edge Dictionary named 'animals' and we return the 'cat'
    * entry as the response body to the client.
    * 
-   * <a href='https://fiddle.fastly.dev/fiddle/045e1ffe/embedded'>View this example on Fastly Fiddle</a>
+   * <script type="application/json+fiddle">
+   * {
+   *   "type": "javascript",
+   *   "title": "ConfigStore Example",
+   *   "origins": [
+   *     "https://http-me.glitch.me"
+   *   ],
+   *   "src": {
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { ConfigStore } from \"fastly:config-store\";\n\nasync function app (event) {\n  const config = new ConfigStore('animals');\n  return new Response(config.get('cat'));\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
+   *   },
+   *   "requests": [
+   *     {
+   *       "enableCluster": true,
+   *       "enableShield": false,
+   *       "enableWAF": false,
+   *       "data": {
+   *         "dictionaries": {
+   *           "animals": {
+   *             "cat": "meow"
+   *           }
+   *         }
+   *       },
+   *       "method": "GET",
+   *       "path": "/status=200",
+   *       "useFreshCache": false,
+   *       "followRedirects": false,
+   *       "tests": "",
+   *       "delay": 0
+   *     }
+   *   ],
+   *   "srcVersion": 26
+   * }
+   * </script>
    * <noscript>
    * ```js
    * /// <reference types="@fastly/js-compute" />

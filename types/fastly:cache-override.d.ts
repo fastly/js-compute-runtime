@@ -11,7 +11,33 @@ declare module "fastly:cache-override" {
    * In this example we override the cache for all the requests prefixed /static/ to have a long TTL (Time To Live), 
    * and the home page to have a short TTL and a long SWR (Stale While Revalidate).
    * 
-   * <a href='https://fiddle.fastly.dev/fiddle/af5031f3/embedded'>View this example on Fastly Fiddle</a>
+   * <script type="application/json+fiddle">
+   * {
+   *   "type": "javascript",
+   *   "title": "CacheOverride Example",
+   *   "origins": [
+   *     "https://http-me.glitch.me"
+   *   ],
+   *   "src": {
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { CacheOverride } from \"fastly:cache-override\";\n\n// In this example we override the cache for all the requests prefixed /static/ \n// to have a long TTL (Time To Live), and the home page to have a short TTL and \n// a long SWR (Stale While Revalidate).\nasync function app (event) {\n  const path = (new URL(event.request.url)).pathname;\n  let cacheOverride;\n  if (path == '/') {\n    cacheOverride = new CacheOverride('override', {ttl: 10, swr: 86_400});\n  } else if (path.startsWith('/static/')) {\n    cacheOverride = new CacheOverride('override', {ttl: 86_400});\n  } else {\n    cacheOverride = new CacheOverride('none')\n  }\n  return fetch(event.request.url, {\n    cacheOverride,\n    backend: 'origin_0'\n  });\n}\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
+   *   },
+   *   "requests": [
+   *     {
+   *       "enableCluster": true,
+   *       "enableShield": false,
+   *       "enableWAF": false,
+   *       "method": "GET",
+   *       "path": "/status=200",
+   *       "useFreshCache": false,
+   *       "followRedirects": false,
+   *       "tests": "",
+   *       "delay": 0
+   *     }
+   *   ],
+   *   "srcVersion": 26
+   * }
+   * </script>
    * <noscript>
    * ```js
    * /// <reference types="@fastly/js-compute" />
