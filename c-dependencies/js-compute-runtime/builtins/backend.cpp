@@ -328,31 +328,31 @@ private:
     return result;
   }
 
-  auto byProtocol(Protocol val) -> std::function<bool(const Cipher &)> {
+  std::function<bool(const Cipher &)> byProtocol(Protocol val) {
     return [val](auto &c) { return c.protocol == val; };
   }
 
-  auto byKeyExchange(KeyExchange val) -> std::function<bool(const Cipher &)> {
+  std::function<bool(const Cipher &)> byKeyExchange(KeyExchange val) {
     return [val](auto &c) { return c.kx == val; };
   }
 
-  auto byAuthentication(Authentication val) -> std::function<bool(const Cipher &)> {
+  std::function<bool(const Cipher &)> byAuthentication(Authentication val) {
     return [val](auto &c) { return c.au == val; };
   }
 
-  auto byEncryption(std::set<Encryption> vals) -> std::function<bool(const Cipher &)> {
+  std::function<bool(const Cipher &)> byEncryption(std::set<Encryption> vals) {
     return [vals](auto &c) { return vals.find(c.enc) != vals.end(); };
   }
 
-  auto byEncryption(Encryption val) -> std::function<bool(const Cipher &)> {
+  std::function<bool(const Cipher &)> byEncryption(Encryption val) {
     return [val](auto &c) { return c.enc == val; };
   }
 
-  auto byEncryptionLevel(EncryptionLevel val) -> std::function<bool(const Cipher &)> {
+  std::function<bool(const Cipher &)> byEncryptionLevel(EncryptionLevel val) {
     return [val](auto &c) { return c.level == val; };
   }
 
-  auto byMessageDigest(MessageDigest val) -> std::function<bool(const Cipher &)> {
+  std::function<bool(const Cipher &)> byMessageDigest(MessageDigest val) {
     return [val](auto &c) { return c.mac == val; };
   }
 
