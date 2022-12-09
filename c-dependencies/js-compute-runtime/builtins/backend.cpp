@@ -359,7 +359,7 @@ private:
   }
 
   std::vector<std::string_view> splitCipherSuiteString(std::string_view string) {
-    std::vector<std::string> result;
+    std::vector<std::string_view> result;
     std::stringstream stringStream(string);
     std::string line;
     while (std::getline(stringStream, line, ':')) {
