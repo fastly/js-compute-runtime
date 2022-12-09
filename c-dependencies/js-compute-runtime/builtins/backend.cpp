@@ -265,12 +265,6 @@ private:
     });
   }
 
-  void moveToStart(std::vector<Cipher> &ciphers, std::vector<Cipher> &ciphersToMoveToStart) {
-    std::stable_partition(ciphers.begin(), ciphers.end(), [ciphersToMoveToStart](auto cipher) {
-      return std::find(ciphersToMoveToStart.begin(), ciphersToMoveToStart.end(), cipher) !=
-             ciphersToMoveToStart.end();
-    });
-  }
 
   void add(AliasMap &aliases, std::vector<Cipher> &ciphers, std::string alias) {
     auto toAdd = aliases.at(alias);
