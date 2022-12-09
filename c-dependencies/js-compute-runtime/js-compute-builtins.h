@@ -102,13 +102,14 @@ enum class BodyReadResult {
 bool body_used(JSObject *obj);
 bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self, bool create_if_undefined);
 bool body_unusable(JSContext *cx, JS::HandleObject body);
-BodyHandle body_handle(JSObject *obj);
+fastly_body_handle_t body_handle(JSObject *obj);
 template <BodyReadResult result_type>
 bool bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
 JS::Value url(JSObject *obj);
 } // namespace RequestOrResponse
 
-FastlyStatus write_to_body_all(BodyHandle handle, const char *buf, size_t len);
+bool write_to_body_all(fastly_body_handle_t handle, const char *buf, size_t len,
+                       fastly_error_t *err);
 
 bool RejectPromiseWithPendingError(JSContext *cx, JS::HandleObject promise);
 

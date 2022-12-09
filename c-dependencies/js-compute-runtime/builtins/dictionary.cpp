@@ -3,9 +3,9 @@
 
 namespace builtins {
 
-DictionaryHandle Dictionary::dictionary_handle(JSObject *obj) {
+fastly_dictionary_handle_t Dictionary::dictionary_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, Dictionary::Slots::Handle);
-  return DictionaryHandle{static_cast<uint32_t>(val.toInt32())};
+  return fastly_dictionary_handle_t{static_cast<uint32_t>(val.toInt32())};
 }
 
 bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -13,41 +13,42 @@ bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::HandleValue name_arg = args.get(0);
 
-  size_t name_len;
+  xqd_world_string_t name_str;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  JS::UniqueChars name_chars = encode(cx, name_arg, &name_len);
-  if (!name_chars) {
+  JS::UniqueChars name = encode(cx, name_arg, &name_str.len);
+  if (!name) {
     return false;
   }
+  name_str.ptr = name.get();
 
   // If the converted string has a length of 0 then we throw an Error
   // because Dictionary keys have to be at-least 1 character.
-  if (name_len == 0) {
+  if (name_str.len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_KEY_EMPTY);
     return false;
   }
   // key has to be less than 256
-  if (name_len > 255) {
+  if (name_str.len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_KEY_TOO_LONG);
     return false;
   }
 
-  OwnedHostCallBuffer buffer;
-  size_t nwritten = 0;
-  auto status = convert_to_fastly_status(
-      xqd_dictionary_get(Dictionary::dictionary_handle(self), name_chars.get(), name_len,
-                         buffer.get(), DICTIONARY_ENTRY_MAX_LEN, &nwritten));
-  // FastlyStatus::none indicates the key wasn't found, so we return null.
-  if (status == FastlyStatus::None) {
+  fastly_option_string_t ret;
+  fastly_error_t err;
+
+  // Ensure that we throw an exception for all unexpected host errors.
+  if (!HANDLE_RESULT(
+          cx, xqd_fastly_dictionary_get(Dictionary::dictionary_handle(self), &name_str, &ret, &err),
+          err))
+    return false;
+
+  if (!ret.is_some) {
     args.rval().setNull();
     return true;
   }
 
-  // Ensure that we throw an exception for all unexpected host errors.
-  if (!HANDLE_RESULT(cx, status))
-    return false;
-
-  JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buffer.get(), nwritten)));
+  JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.val.ptr, ret.val.len)));
+  JS_free(cx, ret.val.ptr);
   if (!text)
     return false;
 
@@ -65,60 +66,64 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::HandleValue name_arg = args.get(0);
 
-  size_t name_len;
+  xqd_world_string_t name_str;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  JS::UniqueChars name_chars = encode(cx, name_arg, &name_len);
-  if (!name_chars) {
+  JS::UniqueChars name = encode(cx, name_arg, &name_str.len);
+  if (!name) {
     return false;
   }
+  name_str.ptr = name.get();
 
   // If the converted string has a length of 0 then we throw an Error
   // because Dictionary names have to be at-least 1 character.
-  if (name_len == 0) {
+  if (name_str.len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_NAME_EMPTY);
     return false;
   }
 
   // If the converted string has a length of more than 255 then we throw an Error
   // because Dictionary names have to be less than 255 characters.
-  if (name_len > 255) {
+  if (name_str.len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_NAME_TOO_LONG);
     return false;
   }
 
-  std::string_view name(name_chars.get(), name_len);
-
   // Name must start with ascii alphabetical and contain only ascii alphanumeric, underscore, and
   // whitespace
-  if (!std::isalpha(name.front())) {
+  std::string_view name_view(name_str.ptr, name_str.len);
+
+  if (!std::isalpha(name_view.front())) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_DICTIONARY_NAME_START_WITH_ASCII_ALPHA);
     return false;
   }
 
-  auto is_valid_name = std::all_of(std::next(name.begin(), 1), name.end(), [&](auto character) {
-    return std::isalnum(character) || character == '_' || character == ' ';
-  });
+  auto is_valid_name =
+      std::all_of(std::next(name_view.begin(), 1), name_view.end(), [&](auto character) {
+        return std::isalnum(character) || character == '_' || character == ' ';
+      });
 
   if (!is_valid_name) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_DICTIONARY_NAME_CONTAINS_INVALID_CHARACTER);
     return false;
   }
+
   JS::RootedObject dictionary(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  DictionaryHandle dict_handle = {INVALID_HANDLE};
-  auto status = convert_to_fastly_status(xqd_dictionary_open(name.data(), name_len, &dict_handle));
-  if (status == FastlyStatus::BadF) {
+
+  fastly_dictionary_handle_t dict_handle = INVALID_HANDLE;
+  fastly_error_t err;
+  bool is_error = xqd_fastly_dictionary_open(&name_str, &dict_handle, &err);
+  if (is_error && err == FASTLY_ERROR_BAD_HANDLE) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_DOES_NOT_EXIST,
-                              name.data());
+                              name_str.ptr);
     return false;
   }
-  if (!HANDLE_RESULT(cx, status)) {
+  if (!HANDLE_RESULT(cx, is_error, err)) {
     return false;
   }
 
-  JS::SetReservedSlot(dictionary, Dictionary::Slots::Handle,
-                      JS::Int32Value((int)dict_handle.handle));
+  JS::SetReservedSlot(dictionary, Dictionary::Slots::Handle, JS::Int32Value(dict_handle));
   if (!dictionary) {
     return false;
   }

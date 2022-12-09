@@ -21,6 +21,7 @@
 
 #include "js-compute-builtins.h"
 #include "wizer.h"
+#include "xqd-world/xqd_world_adapter.h"
 #ifdef MEM_STATS
 #include "memory-reporting.h"
 #endif
@@ -67,8 +68,6 @@ static bool dump_mem_stats(JSContext *cx) {
 
 /* The class of the global object. */
 static JSClass global_class = {"global", JSCLASS_GLOBAL_FLAGS, &JS::DefaultGlobalClassOps};
-
-JSContext *CONTEXT = nullptr;
 
 JS::PersistentRootedObject GLOBAL;
 JS::PersistentRootedObject unhandledRejectedPromises;

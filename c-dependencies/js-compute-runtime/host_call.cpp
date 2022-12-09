@@ -1,39 +1,36 @@
 
 #include "host_call.h"
 
-bool handle_fastly_result(JSContext *cx, int result, int line, const char *func) {
-  FastlyStatus status = convert_to_fastly_status(result);
-  return handle_fastly_result(cx, status, line, func);
-}
-
-FastlyStatus convert_to_fastly_status(int result) {
-  switch (result) {
-  case 0:
+FastlyStatus convert_to_fastly_status(bool is_err, fastly_error_t error) {
+  if (!is_err)
     return FastlyStatus::Ok;
-  case 1:
+  switch (error) {
+  case FASTLY_ERROR_GENERIC_ERROR:
     return FastlyStatus::Error;
-  case 2:
+  case FASTLY_ERROR_INVALID_ARGUMENT:
     return FastlyStatus::Inval;
-  case 3:
+  case FASTLY_ERROR_BAD_HANDLE:
     return FastlyStatus::BadF;
-  case 4:
+  case FASTLY_ERROR_BUFFER_LEN:
     return FastlyStatus::BufLen;
-  case 5:
+  case FASTLY_ERROR_UNSUPPORTED:
     return FastlyStatus::Unsupported;
-  case 6:
+  case FASTLY_ERROR_BAD_ALIGN:
     return FastlyStatus::BadAlign;
-  case 7:
+  case FASTLY_ERROR_HTTP_INVALID:
     return FastlyStatus::HttpInvalid;
-  case 8:
+  case FASTLY_ERROR_HTTP_USER:
     return FastlyStatus::HttpUser;
-  case 9:
+  case FASTLY_ERROR_HTTP_INCOMPLETE:
     return FastlyStatus::HttpIncomplete;
-  case 10:
+  case FASTLY_ERROR_OPTIONAL_NONE:
     return FastlyStatus::None;
-  case 11:
+  case FASTLY_ERROR_HTTP_HEAD_TOO_LARGE:
     return FastlyStatus::HttpHeadTooLarge;
-  case 12:
+  case FASTLY_ERROR_HTTP_INVALID_STATUS:
     return FastlyStatus::HttpInvalidStatus;
+  case FASTLY_ERROR_LIMIT_EXCEEDED:
+    return FastlyStatus::LimitExceeded;
   default:
     MOZ_ASSERT_UNREACHABLE("coding error");
     return FastlyStatus::Unknown;

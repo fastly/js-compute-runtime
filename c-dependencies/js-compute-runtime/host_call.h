@@ -7,6 +7,7 @@
 #include "jsapi.h"
 #pragma clang diagnostic pop
 
+#include "xqd-world/xqd_world_adapter.h"
 #include "xqd.h"
 
 enum class FastlyStatus {
@@ -50,6 +51,8 @@ enum class FastlyStatus {
   HttpHeadTooLarge = 11,
   // Invalid HTTP status.
   HttpInvalidStatus = 12,
+  // Limit Exceeded
+  LimitExceeded = 13,
   // Unknown status.
   Unknown = 100,
 };
@@ -135,6 +138,14 @@ static inline bool handle_fastly_result(JSContext *cx, FastlyStatus result, int 
                        "status code. - Fastly error code %d\n",
                        func, result);
     return false;
+  case FastlyStatus::LimitExceeded:
+    JS_ReportErrorUTF8(cx,
+                       "%s: Limit exceeded error. This error will be thrown when an attempt"
+                       "to allocate a resource has exceeded the maximum number of resources"
+                       "permitted. For example, creating too many response handles."
+                       " - Fastly error code %d\n",
+                       func, result);
+    return false;
   default:
     fprintf(stdout, __FILE__ ":%d (%s) - Fastly error code %d\n", line, func, result);
     JS_ReportErrorUTF8(cx, "Fastly error code %d", result);
@@ -142,11 +153,10 @@ static inline bool handle_fastly_result(JSContext *cx, FastlyStatus result, int 
   }
 }
 
-bool handle_fastly_result(JSContext *cx, int result, int line, const char *func);
+FastlyStatus convert_to_fastly_status(bool is_err, fastly_error_t error);
 
-FastlyStatus convert_to_fastly_status(int result);
-
-#define HANDLE_RESULT(cx, result) handle_fastly_result(cx, result, __LINE__, __func__)
+#define HANDLE_RESULT(cx, result, err)                                                             \
+  handle_fastly_result(cx, convert_to_fastly_status(result, err), __LINE__, __func__)
 
 #define HOSTCALL_BUFFER_LEN HEADER_MAX_LEN
 

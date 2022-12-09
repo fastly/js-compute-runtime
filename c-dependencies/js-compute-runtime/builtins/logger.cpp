@@ -7,15 +7,16 @@ bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   auto endpoint =
-      LogEndpointHandle{(uint32_t)JS::GetReservedSlot(self, Logger::Slots::Endpoint).toInt32()};
+      (fastly_log_endpoint_handle_t)JS::GetReservedSlot(self, Logger::Slots::Endpoint).toInt32();
 
   size_t msg_len;
   JS::UniqueChars msg = encode(cx, args.get(0), &msg_len);
   if (!msg)
     return false;
 
-  size_t nwritten;
-  if (!HANDLE_RESULT(cx, xqd_log_write(endpoint, msg.get(), msg_len, &nwritten)))
+  fastly_error_t err;
+  xqd_world_string_t msg_str = {msg.get(), msg_len};
+  if (!HANDLE_RESULT(cx, xqd_fastly_log_write(endpoint, &msg_str, &err), err))
     return false;
 
   args.rval().setUndefined();
@@ -31,12 +32,13 @@ JSObject *Logger::create(JSContext *cx, const char *name) {
   if (!logger)
     return nullptr;
 
-  auto handle = LogEndpointHandle{INVALID_HANDLE};
-
-  if (!HANDLE_RESULT(cx, xqd_log_endpoint_get(name, strlen(name), &handle)))
+  fastly_log_endpoint_handle_t handle;
+  xqd_world_string_t name_str = {const_cast<char *>(name), strlen(name)};
+  fastly_error_t err;
+  if (!HANDLE_RESULT(cx, xqd_fastly_log_endpoint_get(&name_str, &handle, &err), err))
     return nullptr;
 
-  JS::SetReservedSlot(logger, Slots::Endpoint, JS::Int32Value(handle.handle));
+  JS::SetReservedSlot(logger, Slots::Endpoint, JS::Int32Value(handle));
 
   return logger;
 }
@@ -45,16 +47,18 @@ bool Logger::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The Logger builtin");
   CTOR_HEADER("Logger", 1);
 
-  size_t name_len;
-  JS::UniqueChars name = encode(cx, args[0], &name_len);
+  xqd_world_string_t name_str;
+  JS::UniqueChars name = encode(cx, args[0], &name_str.len);
+  name_str.ptr = name.get();
   JS::RootedObject logger(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  auto handle = LogEndpointHandle{INVALID_HANDLE};
+  fastly_log_endpoint_handle_t handle = INVALID_HANDLE;
+  fastly_error_t err;
 
-  if (!HANDLE_RESULT(cx, xqd_log_endpoint_get(name.get(), name_len, &handle))) {
+  if (!HANDLE_RESULT(cx, xqd_fastly_log_endpoint_get(&name_str, &handle, &err), err)) {
     return false;
   }
 
-  JS::SetReservedSlot(logger, Slots::Endpoint, JS::Int32Value(handle.handle));
+  JS::SetReservedSlot(logger, Slots::Endpoint, JS::Int32Value(handle));
   args.rval().setObject(*logger);
   return true;
 }

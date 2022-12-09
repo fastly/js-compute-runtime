@@ -24,7 +24,7 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
     }
   }
 
-  char octets[sizeof(struct in6_addr)];
+  uint8_t octets[sizeof(struct in6_addr)];
   if (inet_pton(format, caddress, octets) != 1) {
     // While get_geo_info can be invoked through FetchEvent#client.geo, too,
     // that path can't result in an invalid address here, so we can be more
@@ -34,12 +34,13 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
     return nullptr;
   }
 
-  OwnedHostCallBuffer buffer;
-  size_t nwritten = 0;
-  if (!HANDLE_RESULT(
-          cx, xqd_geo_lookup(octets, octets_len, buffer.get(), HOSTCALL_BUFFER_LEN, &nwritten))) {
+  fastly_list_u8_t octets_list = {const_cast<uint8_t *>(&octets[0]), octets_len};
+
+  xqd_world_string_t ret;
+  fastly_error_t err;
+  if (!HANDLE_RESULT(cx, xqd_fastly_geo_lookup(&octets_list, &ret, &err), err)) {
     return nullptr;
   }
 
-  return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buffer.get(), nwritten));
+  return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.ptr, ret.len));
 }

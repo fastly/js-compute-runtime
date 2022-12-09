@@ -17,7 +17,7 @@ public:
 
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
 
-  static ConfigStoreHandle config_store_handle(JSObject *obj);
+  static fastly_dictionary_handle_t config_store_handle(JSObject *obj);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static bool init_class(JSContext *cx, JS::HandleObject global);

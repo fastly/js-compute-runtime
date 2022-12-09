@@ -64,22 +64,22 @@ void CacheOverride::set_pci(JSObject *self, bool pci) {
   JS::SetReservedSlot(self, CacheOverride::Slots::PCI, JS::BooleanValue(pci));
 }
 
-uint32_t CacheOverride::abi_tag(JSObject *self) {
+uint8_t CacheOverride::abi_tag(JSObject *self) {
   switch (CacheOverride::mode(self)) {
   case CacheOverride::CacheOverrideMode::None:
-    return (uint32_t)CacheOverrideTag::None;
+    return (uint8_t)CacheOverrideTag::None;
   case CacheOverride::CacheOverrideMode::Pass:
-    return (uint32_t)CacheOverrideTag::Pass;
+    return (uint8_t)CacheOverrideTag::Pass;
   default:;
   }
 
-  uint32_t tag = 0;
+  uint8_t tag = 0;
   if (!ttl(self).isUndefined())
-    tag |= (uint32_t)CacheOverrideTag::TTL;
+    tag |= (uint8_t)CacheOverrideTag::TTL;
   if (!swr(self).isUndefined())
-    tag |= (uint32_t)CacheOverrideTag::SWR;
+    tag |= (uint8_t)CacheOverrideTag::SWR;
   if (!pci(self).isUndefined())
-    tag |= (uint32_t)CacheOverrideTag::PCI;
+    tag |= (uint8_t)CacheOverrideTag::PCI;
 
   return tag;
 }
