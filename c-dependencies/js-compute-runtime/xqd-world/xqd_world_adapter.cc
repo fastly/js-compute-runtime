@@ -25,32 +25,46 @@ static bool convert_result(int res, fastly_error_t *err) {
   switch (res) {
   case 1:
     *err = FASTLY_ERROR_GENERIC_ERROR;
+    break;
   case 2:
     *err = FASTLY_ERROR_INVALID_ARGUMENT;
+    break;
   case 3:
     *err = FASTLY_ERROR_BAD_HANDLE;
+    break;
   case 4:
     *err = FASTLY_ERROR_BUFFER_LEN;
+    break;
   case 5:
     *err = FASTLY_ERROR_UNSUPPORTED;
+    break;
   case 6:
     *err = FASTLY_ERROR_BAD_ALIGN;
+    break;
   case 7:
     *err = FASTLY_ERROR_HTTP_INVALID;
+    break;
   case 8:
     *err = FASTLY_ERROR_HTTP_USER;
+    break;
   case 9:
     *err = FASTLY_ERROR_HTTP_INCOMPLETE;
+    break;
   case 10:
     *err = FASTLY_ERROR_OPTIONAL_NONE;
+    break;
   case 11:
     *err = FASTLY_ERROR_HTTP_HEAD_TOO_LARGE;
+    break;
   case 12:
     *err = FASTLY_ERROR_HTTP_INVALID_STATUS;
+    break;
   case 13:
     *err = FASTLY_ERROR_LIMIT_EXCEEDED;
+    break;
   case 100:
     *err = FASTLY_ERROR_UNKNOWN_ERROR;
+    break;
   default:
     *err = FASTLY_ERROR_UNKNOWN_ERROR;
   }
@@ -615,9 +629,18 @@ bool xqd_fastly_object_store_insert(fastly_object_store_handle_t store, xqd_worl
   return convert_result(xqd_object_store_insert(store, key->ptr, key->len, body_handle), err);
 }
 
-bool xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms, uint32_t *ret,
-                                fastly_error_t *err) {
-  return convert_result(xqd_async_select(hs->ptr, hs->len, timeout_ms, ret), err);
+bool xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
+                                fastly_option_u32_t *ret, fastly_error_t *err) {
+  bool is_error = convert_result(xqd_async_select(hs->ptr, hs->len, timeout_ms, &ret->val), err);
+  if (is_error && *err == FASTLY_ERROR_OPTIONAL_NONE) {
+    ret->is_some = false;
+    return false;
+  }
+  ret->is_some = true;
+  return is_error;
+}
+bool xqd_fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret, fastly_error_t *err) {
+  return convert_result(xqd_async_is_ready(handle, (uint32_t *)ret), err);
 }
 
 #else
@@ -955,8 +978,8 @@ bool xqd_fastly_secret_store_plaintext(fastly_secret_handle_t secret, fastly_opt
                                        fastly_error_t *err) {
   return fastly_secret_store_plaintext(secret, ret, err);
 }
-bool xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms, uint32_t *ret,
-                                fastly_error_t *err) {
+bool xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
+                                fastly_option_u32_t *ret, fastly_error_t *err) {
   return fastly_async_io_select(hs, timeout_ms, ret, err);
 }
 bool xqd_fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret, fastly_error_t *err) {

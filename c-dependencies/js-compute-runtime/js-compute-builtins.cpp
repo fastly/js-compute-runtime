@@ -5104,18 +5104,20 @@ bool process_pending_async_tasks(JSContext *cx) {
 
   fastly_list_async_handle_t handle_list = {handles.get(), count};
 
-  uint32_t ready_index;
+  fastly_option_u32_t ret;
   fastly_error_t err;
-  bool is_error = xqd_fastly_async_io_select(&handle_list, timeout, &ready_index, &err);
-
-  if (!is_error) {
-    MOZ_ASSERT(!timers->empty());
-    return timers->run_first_timer(cx);
-  }
+  bool is_error = xqd_fastly_async_io_select(&handle_list, timeout, &ret, &err);
 
   if (!HANDLE_RESULT(cx, is_error, err)) {
     return false;
   }
+
+  if (!ret.is_some) {
+    MOZ_ASSERT(!timers->empty());
+    return timers->run_first_timer(cx);
+  }
+
+  uint32_t ready_index = ret.val;
 
   if (ready_index == UINT32_MAX) {
     // The index will be UINT32_MAX if the timeout expires before any objects are ready for I/O.
@@ -5123,8 +5125,8 @@ bool process_pending_async_tasks(JSContext *cx) {
   }
 
 #ifdef DEBUG
-  uint32_t is_ready = 0;
-  is_error = xqd_async_is_ready(handles[ready_index], &is_ready, &err);
+  bool is_ready = 0;
+  is_error = xqd_fastly_async_io_is_ready(handles[ready_index], &is_ready, &err);
   MOZ_ASSERT(!is_error);
   MOZ_ASSERT(is_ready);
 #endif

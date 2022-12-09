@@ -157,8 +157,8 @@ bool xqd_fastly_secret_store_get(fastly_secret_store_handle_t store, xqd_world_s
                                  fastly_option_secret_handle_t *ret, fastly_error_t *err);
 bool xqd_fastly_secret_store_plaintext(fastly_secret_handle_t secret, fastly_option_string_t *ret,
                                        fastly_error_t *err);
-bool xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms, uint32_t *ret,
-                                fastly_error_t *err);
+bool xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
+                                fastly_option_u32_t *ret, fastly_error_t *err);
 bool xqd_fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret, fastly_error_t *err);
 bool xqd_fastly_purge_surrogate_key(xqd_world_string_t *surrogate_key, bool soft_purge,
                                     fastly_purge_result_t *ret, fastly_error_t *err);

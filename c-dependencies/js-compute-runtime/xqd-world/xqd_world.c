@@ -210,6 +210,14 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
+    fastly_option_u32_t ok;
+    fastly_error_t err;
+  } val;
+} fastly_result_option_u32_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
     fastly_purge_result_t ok;
     fastly_error_t err;
   } val;
@@ -2381,17 +2389,30 @@ bool fastly_secret_store_plaintext(fastly_secret_handle_t secret, fastly_option_
   return result.is_err ? 1 : 0;
 }
 
-bool fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms, uint32_t *ret,
-                            fastly_error_t *err) {
-  __attribute__((aligned(4))) uint8_t ret_area[8];
+bool fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
+                            fastly_option_u32_t *ret, fastly_error_t *err) {
+  __attribute__((aligned(4))) uint8_t ret_area[12];
   int32_t ptr = (int32_t)&ret_area;
   __wasm_import_fastly_async_io_select((int32_t)(*hs).ptr, (int32_t)(*hs).len,
                                        (int32_t)(timeout_ms), ptr);
-  fastly_result_u32_error_t result;
+  fastly_result_option_u32_error_t result;
   switch ((int32_t)(*((uint8_t *)(ptr + 0)))) {
   case 0: {
     result.is_err = false;
-    result.val.ok = (uint32_t)(*((int32_t *)(ptr + 4)));
+    fastly_option_u32_t option;
+    switch ((int32_t)(*((uint8_t *)(ptr + 4)))) {
+    case 0: {
+      option.is_some = false;
+      break;
+    }
+    case 1: {
+      option.is_some = true;
+      option.val = (uint32_t)(*((int32_t *)(ptr + 8)));
+      break;
+    }
+    }
+
+    result.val.ok = option;
     break;
   }
   case 1: {
