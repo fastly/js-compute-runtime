@@ -300,32 +300,36 @@ private:
    * See
    * https://github.com/openssl/openssl/blob/709651c9022e7be7e69cf8a2f6edf2c8722a6a1e/ssl/ssl_ciph.c#L1455
    */
-  std::vector<Cipher> defaultSort(std::vector<Cipher> &ciphers) {
-    std::vector<Cipher> result;
-    result.reserve(ciphers.size());
+  void defaultSort(std::vector<Cipher> &ciphers) {
+    auto byStrength = [](auto &l, auto &r) { return l.strength_bits > r.strength_bits; };
+  // order all ciphers by strength first
+  std:
+    sort(ciphers.begin(), ciphers.end(), byStrength);
 
-    /* Everything else being equal, prefer ephemeral ECDH over other key exchange mechanisms */
-    std::copy_if(ciphers.begin(), ciphers.end(), std::back_inserter(result),
-                 byKeyExchange(KeyExchange::EECDH));
+    auto it =
+        std::stable_partition(ciphers.begin(), ciphers.end(), byKeyExchange(KeyExchange::EECDH));
 
     /* AES is our preferred symmetric cipher */
     auto aes = {Encryption::AES128, Encryption::AES128GCM, Encryption::AES256,
                 Encryption::AES256GCM};
 
     /* Now arrange all ciphers by preference: */
-    std::copy_if(ciphers.begin(), ciphers.end(), std::back_inserter(result), byEncryption(aes));
+    it = std::stable_partition(it, ciphers.end(), byEncryption(aes));
 
-    /* Add everything else */
-    result.insert(result.end(), ciphers.begin(), ciphers.end());
+    /* Move ciphers without forward secrecy to the end */;
+    std::stable_partition(it, ciphers.end(), [compare = byKeyExchange(KeyExchange::RSA)](auto &c) {
+      return !compare(c);
+    });
+  }
 
-    /* Move ciphers without forward secrecy to the end */
-    std::vector<Cipher> ciphersWithoutForwardSecrecy;
-    std::copy_if(result.begin(), result.end(), std::back_inserter(ciphersWithoutForwardSecrecy),
-                 byKeyExchange(KeyExchange::RSA));
-    moveToEnd(result, ciphersWithoutForwardSecrecy);
-
-    strengthSort(result);
-    return result;
+  std::function<bool(const Cipher &, const Cipher &)> compareKeyExchange(KeyExchange val) {
+    return [val](auto &left, auto &right) {
+      if (left.kx == val) {
+        return right.kx != val;
+      } else {
+        return right.kx == val;
+      }
+    };
   }
 
   std::function<bool(const Cipher &)> byProtocol(Protocol val) {
