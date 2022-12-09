@@ -89,10 +89,10 @@ $(OBJ_DIR)builtins/%.o: $(FSM_SRC)builtins/%.cpp $(FSM_SRC)Makefile $(RUST_URL_L
 $(OBJ_DIR)xqd-world/xqd_world.o: $(FSM_SRC)xqd-world/xqd_world.c $(FSM_SRC)Makefile compiler_flags
 	$(WASI_CC) $(CFLAGS) $(CXX_OPT) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
 
-$(OBJ_DIR)xqd-world/xqd_world_adapter.o: $(FSM_SRC)xqd-world/xqd_world_adapter.cc $(FSM_SRC)Makefile compiler_flags
+$(OBJ_DIR)xqd-world/xqd_world_adapter.o: $(FSM_SRC)xqd-world/xqd_world_adapter.cpp $(FSM_SRC)Makefile compiler_flags
 	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
 
-$(OBJ_DIR)xqd-world/xqd_world_adapter_component.o: $(FSM_SRC)xqd-world/xqd_world_adapter.cc $(FSM_SRC)Makefile compiler_flags
+$(OBJ_DIR)xqd-world/xqd_world_adapter_component.o: $(FSM_SRC)xqd-world/xqd_world_adapter.cpp $(FSM_SRC)Makefile compiler_flags
 	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) -DCOMPONENT -I $(SM_SRC)include -MMD -MP -c -o $@ $<
 
 js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(OBJ_DIR)xqd-world/xqd_world.o $(OBJ_DIR)xqd-world/xqd_world_adapter.o $(RUST_URL_LIB)
