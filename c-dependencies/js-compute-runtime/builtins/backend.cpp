@@ -401,7 +401,7 @@ public:
     this->all.reserve(CIPHER.size());
     for (const auto &any : CIPHER) {
       auto &cipher = any.second;
-      all.push_back(cipher);
+      this->all.push_back(cipher);
       auto cipherAlias = cipher.getOpenSSLAlias();
       auto alias = aliases.find(cipherAlias);
       if (alias != aliases.end()) {
@@ -419,33 +419,34 @@ public:
 
     // All cipher suites except the eNULL ciphers (which must be explicitly enabled if needed).
     // As of OpenSSL 1.0.0, the ALL cipher suites are sensibly ordered by default.
-    all = defaultSort(all);
-    aliases.insert({ALL, all});
+    this->defaultSort(this->all);
+    aliases.insert({ALL, this->all});
     // "High" encryption cipher suites. This currently means those with key lengths larger than 128
     // bits, and some cipher suites with 128-bit keys.
     std::vector<Cipher> high;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(high),
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(high),
                  byEncryptionLevel(EncryptionLevel::HIGH));
     aliases.insert({HIGH, high});
     // "Medium" encryption cipher suites, currently some of those using 128 bit encryption.
     std::vector<Cipher> medium;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(medium),
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(medium),
                  byEncryptionLevel(EncryptionLevel::MEDIUM));
     aliases.insert({MEDIUM, medium});
 
     // Cipher suites using RSA key exchange or authentication. RSA is an alias for kRSA.
     std::vector<Cipher> krsa;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(krsa), byKeyExchange(KeyExchange::RSA));
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(krsa),
+                 byKeyExchange(KeyExchange::RSA));
     aliases.insert({kRSA, krsa});
     std::vector<Cipher> arsa;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(arsa),
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(arsa),
                  byAuthentication(Authentication::RSA));
     aliases.insert({aRSA, arsa});
     aliases.insert({RSA, krsa});
 
     // Cipher suites using ephemeral ECDH key agreement, including anonymous cipher suites.
     std::vector<Cipher> ecdh;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(ecdh),
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(ecdh),
                  byKeyExchange(KeyExchange::EECDH));
     aliases.insert({kEECDH, ecdh});
     aliases.insert({kECDHE, ecdh});
@@ -460,24 +461,27 @@ public:
     // suites are available. Note: these cipher strings do not change the negotiated version of SSL
     // or TLS, they only affect the list of available cipher suites.
     std::vector<Cipher> tlsv2;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(tlsv2), byProtocol(Protocol::TLSv1_2));
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(tlsv2),
+                 byProtocol(Protocol::TLSv1_2));
     aliases.insert({SSL_PROTO_TLSv1_2, tlsv2});
     std::vector<Cipher> tlsv1;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(tlsv1), byProtocol(Protocol::TLSv1));
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(tlsv1),
+                 byProtocol(Protocol::TLSv1));
     aliases.insert({SSL_PROTO_TLSv1_0, tlsv1});
     aliases.insert({SSL_PROTO_TLSv1, tlsv1});
     std::vector<Cipher> sslv3;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(sslv3), byProtocol(Protocol::SSLv3));
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(sslv3),
+                 byProtocol(Protocol::SSLv3));
     aliases.insert({SSL_PROTO_SSLv3, sslv3});
 
     // cipher suites using 128 bit AES.
     std::vector<Cipher> aes128;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(aes128),
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(aes128),
                  byEncryption({Encryption::AES128, Encryption::AES128GCM}));
     aliases.insert({AES128, aes128});
     // cipher suites using 256 bit AES.
     std::vector<Cipher> aes256;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(aes256),
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(aes256),
                  byEncryption({Encryption::AES256, Encryption::AES256GCM}));
     aliases.insert({AES256, aes256});
     // cipher suites using either 128 or 256 bit AES.
@@ -487,36 +491,36 @@ public:
 
     // AES in Galois Counter Mode (GCM).
     std::vector<Cipher> aesgcm;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(aesgcm),
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(aesgcm),
                  byEncryption({Encryption::AES128GCM, Encryption::AES256GCM}));
     aliases.insert({AESGCM, aesgcm});
 
     // Cipher suites using ChaCha20.
     std::vector<Cipher> chacha20;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(chacha20),
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(chacha20),
                  byEncryption(Encryption::CHACHA20POLY1305));
     aliases.insert({CHACHA20, chacha20});
 
     // Cipher suites using triple DES.
     std::vector<Cipher> triple_des;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(triple_des),
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(triple_des),
                  byEncryption(Encryption::TRIPLE_DES));
     aliases.insert({TRIPLE_DES, triple_des});
 
     // Cipher suites using SHA1.
     std::vector<Cipher> sha1;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(sha1),
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(sha1),
                  byMessageDigest(MessageDigest::SHA1));
     aliases.insert({SHA1, sha1});
     aliases.insert({SHA, sha1});
     // Cipher suites using SHA256.
     std::vector<Cipher> sha256;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(sha256),
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(sha256),
                  byMessageDigest(MessageDigest::SHA256));
     aliases.insert({SHA256, sha256});
     // Cipher suites using SHA384.
     std::vector<Cipher> sha384;
-    std::copy_if(all.begin(), all.end(), std::back_inserter(sha384),
+    std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(sha384),
                  byMessageDigest(MessageDigest::SHA384));
     aliases.insert({SHA384, sha384});
 
