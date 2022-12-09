@@ -96,7 +96,6 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::RootedObject config_store(cx, JS_NewObjectForConstructor(cx, &class_, args));
   ConfigStoreHandle dict_handle = {INVALID_HANDLE};
-  // TODO: Throw JS Error if the requested store does not exist
   auto status =
       convert_to_fastly_status(xqd_config_store_open(name.data(), name_len, &dict_handle));
   if (status == FastlyStatus::BadF) {
