@@ -305,7 +305,6 @@ private:
     result.reserve(ciphers.size());
 
     /* Everything else being equal, prefer ephemeral ECDH over other key exchange mechanisms */
-    std::vector<Cipher> eecdh;
     std::copy_if(ciphers.begin(), ciphers.end(), std::back_inserter(result),
                  byKeyExchange(KeyExchange::EECDH));
 
