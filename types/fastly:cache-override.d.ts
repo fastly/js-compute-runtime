@@ -7,11 +7,12 @@ declare module "fastly:cache-override" {
    * but `CacheOverride` can be set on a {@linkcode "globals".Request}, to define custom caching behavior.
    * 
    * @example
+   * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
    * In this example we override the cache for all the requests prefixed /static/ to have a long TTL (Time To Live), 
    * and the home page to have a short TTL and a long SWR (Stale While Revalidate).
    * 
-   * View this example on [Fiddle](https://fiddle.fastly.dev/fiddle/aec84add).
-   * 
+   * <a href='https://fiddle.fastly.dev/fiddle/af5031f3/embedded'>View this example on Fastly Fiddle</a>
+   * <noscript>
    * ```js
    * /// <reference types="@fastly/js-compute" />
    * import { CacheOverride } from "fastly:cache-override";
@@ -29,7 +30,6 @@ declare module "fastly:cache-override" {
    *   } else {
    *     cacheOverride = new CacheOverride('none')
    *   }
-   *   // For any request, return the fastly homepage -- without defining a backend!
    *   return fetch(event.request.url, {
    *     cacheOverride,
    *     backend: 'origin_0'
@@ -37,6 +37,7 @@ declare module "fastly:cache-override" {
    * }
    * addEventListener("fetch", event => event.respondWith(app(event)));
    * ```
+   * </noscript>
    */
   class CacheOverride {
     /**
