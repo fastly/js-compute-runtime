@@ -220,9 +220,10 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
     backend_config.sni_hostname.val.len = sniHostname.length();
   }
 
+  fastly_error_t err;
   auto result =
-      xqd_fastly_http_req_register_dynamic_backend(&name_str, &target_str, &backend_config);
-  if (!HANDLE_RESULT(cx, result)) {
+      xqd_fastly_http_req_register_dynamic_backend(&name_str, &target_str, &backend_config, &err);
+  if (!HANDLE_RESULT(cx, result, err)) {
     return JS::Result<mozilla::Ok>(JS::Error());
   } else {
     return mozilla::Ok();

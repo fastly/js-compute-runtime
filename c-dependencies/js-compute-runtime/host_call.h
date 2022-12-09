@@ -153,13 +153,10 @@ static inline bool handle_fastly_result(JSContext *cx, FastlyStatus result, int 
   }
 }
 
-bool handle_fastly_result(JSContext *cx, int result, int line, const char *func);
-bool handle_fastly_result(JSContext *cx, fastly_error_t result, int line, const char *func);
+FastlyStatus convert_to_fastly_status(bool is_err, fastly_error_t error);
 
-FastlyStatus convert_to_fastly_status(int result);
-FastlyStatus convert_to_fastly_status(fastly_error_t result);
-
-#define HANDLE_RESULT(cx, result) handle_fastly_result(cx, result, __LINE__, __func__)
+#define HANDLE_RESULT(cx, result, err)                                                             \
+  handle_fastly_result(cx, convert_to_fastly_status(result, err), __LINE__, __func__)
 
 #define HOSTCALL_BUFFER_LEN HEADER_MAX_LEN
 

@@ -34,11 +34,12 @@ bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   fastly_option_string_t ret;
-  auto status = convert_to_fastly_status(
-      xqd_fastly_dictionary_get(Dictionary::dictionary_handle(self), &name_str, &ret));
+  fastly_error_t err;
 
   // Ensure that we throw an exception for all unexpected host errors.
-  if (!HANDLE_RESULT(cx, status))
+  if (!HANDLE_RESULT(
+          cx, xqd_fastly_dictionary_get(Dictionary::dictionary_handle(self), &name_str, &ret, &err),
+          err))
     return false;
 
   if (!ret.is_some) {
@@ -111,14 +112,14 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedObject dictionary(cx, JS_NewObjectForConstructor(cx, &class_, args));
 
   fastly_dictionary_handle_t dict_handle = INVALID_HANDLE;
-
-  auto status = convert_to_fastly_status(xqd_fastly_dictionary_open(&name_str, &dict_handle));
-  if (status == FastlyStatus::BadF) {
+  fastly_error_t err;
+  bool is_error = xqd_fastly_dictionary_open(&name_str, &dict_handle, &err);
+  if (is_error && err == FASTLY_ERROR_BAD_HANDLE) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_DOES_NOT_EXIST,
                               name_str.ptr);
     return false;
   }
-  if (!HANDLE_RESULT(cx, status)) {
+  if (!HANDLE_RESULT(cx, is_error, err)) {
     return false;
   }
 

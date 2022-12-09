@@ -19,41 +19,42 @@ cabi_realloc(void *ptr, size_t orig_size, size_t align, size_t new_size) {
 
 #define LIST_ALLOC_SIZE 50
 
-static fastly_error_t convert_result(int res) {
+static bool convert_result(int res, fastly_error_t *err) {
+  if (res == 0)
+    return false;
   switch (res) {
-  case 0:
-    return FASTLY_RESULT_ERROR_OK;
   case 1:
-    return FASTLY_ERROR_GENERIC_ERROR;
+    *err = FASTLY_ERROR_GENERIC_ERROR;
   case 2:
-    return FASTLY_ERROR_INVALID_ARGUMENT;
+    *err = FASTLY_ERROR_INVALID_ARGUMENT;
   case 3:
-    return FASTLY_ERROR_BAD_HANDLE;
+    *err = FASTLY_ERROR_BAD_HANDLE;
   case 4:
-    return FASTLY_ERROR_BUFFER_LEN;
+    *err = FASTLY_ERROR_BUFFER_LEN;
   case 5:
-    return FASTLY_ERROR_UNSUPPORTED;
+    *err = FASTLY_ERROR_UNSUPPORTED;
   case 6:
-    return FASTLY_ERROR_BAD_ALIGN;
+    *err = FASTLY_ERROR_BAD_ALIGN;
   case 7:
-    return FASTLY_ERROR_HTTP_INVALID;
+    *err = FASTLY_ERROR_HTTP_INVALID;
   case 8:
-    return FASTLY_ERROR_HTTP_USER;
+    *err = FASTLY_ERROR_HTTP_USER;
   case 9:
-    return FASTLY_ERROR_HTTP_INCOMPLETE;
+    *err = FASTLY_ERROR_HTTP_INCOMPLETE;
   case 10:
-    return FASTLY_ERROR_OPTIONAL_NONE;
+    *err = FASTLY_ERROR_OPTIONAL_NONE;
   case 11:
-    return FASTLY_ERROR_HTTP_HEAD_TOO_LARGE;
+    *err = FASTLY_ERROR_HTTP_HEAD_TOO_LARGE;
   case 12:
-    return FASTLY_ERROR_HTTP_INVALID_STATUS;
+    *err = FASTLY_ERROR_HTTP_INVALID_STATUS;
   case 13:
-    return FASTLY_ERROR_LIMIT_EXCEEDED;
+    *err = FASTLY_ERROR_LIMIT_EXCEEDED;
   case 100:
-    return FASTLY_ERROR_UNKNOWN_ERROR;
+    *err = FASTLY_ERROR_UNKNOWN_ERROR;
   default:
-    return FASTLY_ERROR_UNKNOWN_ERROR;
+    *err = FASTLY_ERROR_UNKNOWN_ERROR;
   }
+  return true;
 }
 
 fastly_http_version_t convert_http_version(uint32_t version) {
@@ -72,48 +73,52 @@ fastly_http_version_t convert_http_version(uint32_t version) {
   }
 }
 
-fastly_error_t xqd_fastly_http_body_new(fastly_body_handle_t *ret) {
-  return convert_result(xqd_body_new(ret));
+bool xqd_fastly_http_body_new(fastly_body_handle_t *ret, fastly_error_t *err) {
+  return convert_result(xqd_body_new(ret), err);
 }
 
-fastly_error_t xqd_fastly_http_body_append(fastly_body_handle_t src, fastly_body_handle_t dest) {
-  return convert_result(xqd_body_append(src, dest));
+bool xqd_fastly_http_body_append(fastly_body_handle_t src, fastly_body_handle_t dest,
+                                 fastly_error_t *err) {
+  return convert_result(xqd_body_append(src, dest), err);
 }
 
-fastly_error_t xqd_fastly_http_body_read(fastly_body_handle_t h, uint32_t chunk_size,
-                                         fastly_list_u8_t *ret) {
+bool xqd_fastly_http_body_read(fastly_body_handle_t h, uint32_t chunk_size, fastly_list_u8_t *ret,
+                               fastly_error_t *err) {
   ret->ptr = static_cast<uint8_t *>(JS_malloc(CONTEXT, chunk_size));
   return convert_result(xqd_body_read(h, reinterpret_cast<char *>(ret->ptr),
-                                      static_cast<size_t>(chunk_size), &ret->len));
+                                      static_cast<size_t>(chunk_size), &ret->len),
+                        err);
 }
 
-fastly_error_t xqd_fastly_http_body_write(fastly_body_handle_t h, fastly_list_u8_t *buf,
-                                          fastly_body_write_end_t end, uint32_t *ret) {
+bool xqd_fastly_http_body_write(fastly_body_handle_t h, fastly_list_u8_t *buf,
+                                fastly_body_write_end_t end, uint32_t *ret, fastly_error_t *err) {
   return convert_result(xqd_body_write(h, reinterpret_cast<char *>(buf->ptr), buf->len,
                                        end == FASTLY_BODY_WRITE_END_BACK
                                            ? BodyWriteEnd::BodyWriteEndBack
                                            : BodyWriteEnd::BodyWriteEndFront,
-                                       reinterpret_cast<size_t *>(ret)));
+                                       reinterpret_cast<size_t *>(ret)),
+                        err);
 }
 
-fastly_error_t xqd_fastly_http_body_close(fastly_body_handle_t h) {
-  return convert_result(xqd_body_close(h));
+bool xqd_fastly_http_body_close(fastly_body_handle_t h, fastly_error_t *err) {
+  return convert_result(xqd_body_close(h), err);
 }
 
-fastly_error_t xqd_fastly_log_endpoint_get(xqd_world_string_t *name,
-                                           fastly_log_endpoint_handle_t *ret) {
+bool xqd_fastly_log_endpoint_get(xqd_world_string_t *name, fastly_log_endpoint_handle_t *ret,
+                                 fastly_error_t *err) {
   return convert_result(
-      xqd_log_endpoint_get(reinterpret_cast<const char *>(name->ptr), name->len, ret));
+      xqd_log_endpoint_get(reinterpret_cast<const char *>(name->ptr), name->len, ret), err);
 }
 
-fastly_error_t xqd_fastly_log_write(fastly_log_endpoint_handle_t h, xqd_world_string_t *msg) {
+bool xqd_fastly_log_write(fastly_log_endpoint_handle_t h, xqd_world_string_t *msg,
+                          fastly_error_t *err) {
   size_t nwritten = 0;
   return convert_result(
-      xqd_log_write(h, reinterpret_cast<const char *>(msg->ptr), msg->len, &nwritten));
+      xqd_log_write(h, reinterpret_cast<const char *>(msg->ptr), msg->len, &nwritten), err);
 }
 
-fastly_error_t xqd_fastly_http_req_body_downstream_get(fastly_request_t *ret) {
-  return convert_result(xqd_req_body_downstream_get(&ret->f0, &ret->f1));
+bool xqd_fastly_http_req_body_downstream_get(fastly_request_t *ret, fastly_error_t *err) {
+  return convert_result(xqd_req_body_downstream_get(&ret->f0, &ret->f1), err);
 }
 
 int convert_tag(fastly_http_cache_override_tag_t tag) {
@@ -132,11 +137,11 @@ int convert_tag(fastly_http_cache_override_tag_t tag) {
   }
 }
 
-fastly_error_t xqd_fastly_http_req_cache_override_set(fastly_request_handle_t h,
-                                                      fastly_http_cache_override_tag_t tag,
-                                                      fastly_option_u32_t *ttl,
-                                                      fastly_option_u32_t *stale_while_revalidate,
-                                                      fastly_option_string_t *sk) {
+bool xqd_fastly_http_req_cache_override_set(fastly_request_handle_t h,
+                                            fastly_http_cache_override_tag_t tag,
+                                            fastly_option_u32_t *ttl,
+                                            fastly_option_u32_t *stale_while_revalidate,
+                                            fastly_option_string_t *sk, fastly_error_t *err) {
   xqd_world_string_t sk_str;
   if (sk->is_some) {
     sk_str = sk->val;
@@ -145,23 +150,24 @@ fastly_error_t xqd_fastly_http_req_cache_override_set(fastly_request_handle_t h,
     sk_str.ptr = const_cast<char *>("");
   }
   return convert_result(xqd_req_cache_override_v2_set(
-      h, convert_tag(tag), ttl->is_some ? ttl->val : 0,
-      stale_while_revalidate->is_some ? stale_while_revalidate->val : 0,
-      reinterpret_cast<char *>(sk_str.ptr), sk_str.len));
+                            h, convert_tag(tag), ttl->is_some ? ttl->val : 0,
+                            stale_while_revalidate->is_some ? stale_while_revalidate->val : 0,
+                            reinterpret_cast<char *>(sk_str.ptr), sk_str.len),
+                        err);
 }
 
-fastly_error_t xqd_fastly_http_req_downstream_client_ip_addr(fastly_list_u8_t *ret) {
+bool xqd_fastly_http_req_downstream_client_ip_addr(fastly_list_u8_t *ret, fastly_error_t *err) {
   ret->ptr = static_cast<uint8_t *>(JS_malloc(CONTEXT, 16));
   return convert_result(
-      xqd_req_downstream_client_ip_addr_get(reinterpret_cast<char *>(ret->ptr), &ret->len));
+      xqd_req_downstream_client_ip_addr_get(reinterpret_cast<char *>(ret->ptr), &ret->len), err);
 }
 
-fastly_error_t xqd_fastly_http_req_new(fastly_request_handle_t *ret) {
-  return convert_result(xqd_req_new(ret));
+bool xqd_fastly_http_req_new(fastly_request_handle_t *ret, fastly_error_t *err) {
+  return convert_result(xqd_req_new(ret), err);
 }
 
-fastly_error_t xqd_fastly_http_req_header_names_get(fastly_request_handle_t h,
-                                                    fastly_list_string_t *ret) {
+bool xqd_fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_list_string_t *ret,
+                                          fastly_error_t *err) {
   size_t str_max = LIST_ALLOC_SIZE;
   xqd_world_string_t *strs =
       static_cast<xqd_world_string_t *>(JS_malloc(CONTEXT, str_max * sizeof(xqd_world_string_t)));
@@ -171,12 +177,12 @@ fastly_error_t xqd_fastly_http_req_header_names_get(fastly_request_handle_t h,
   uint32_t cursor = 0;
   int64_t next_cursor = 0;
   while (true) {
-    fastly_error_t result = convert_result(
-        xqd_req_header_names_get(h, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten));
-    if (result != FASTLY_RESULT_ERROR_OK) {
+    bool is_error = convert_result(
+        xqd_req_header_names_get(h, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten), err);
+    if (is_error) {
       JS_free(CONTEXT, strs);
       JS_free(CONTEXT, buf);
-      return result;
+      return true;
     }
     if (nwritten == 0)
       break;
@@ -205,12 +211,11 @@ fastly_error_t xqd_fastly_http_req_header_names_get(fastly_request_handle_t h,
       CONTEXT, strs, str_max * sizeof(xqd_world_string_t), str_cnt * sizeof(xqd_world_string_t)));
   ret->ptr = strs;
   ret->len = str_cnt;
-  return FASTLY_RESULT_ERROR_OK;
+  return false;
 }
 
-fastly_error_t xqd_fastly_http_req_header_values_get(fastly_request_handle_t h,
-                                                     xqd_world_string_t *name,
-                                                     fastly_option_list_string_t *ret) {
+bool xqd_fastly_http_req_header_values_get(fastly_request_handle_t h, xqd_world_string_t *name,
+                                           fastly_option_list_string_t *ret, fastly_error_t *err) {
   size_t str_max = LIST_ALLOC_SIZE;
   xqd_world_string_t *strs =
       static_cast<xqd_world_string_t *>(JS_malloc(CONTEXT, str_max * sizeof(xqd_world_string_t)));
@@ -220,11 +225,13 @@ fastly_error_t xqd_fastly_http_req_header_values_get(fastly_request_handle_t h,
   uint32_t cursor = 0;
   int64_t next_cursor = 0;
   while (true) {
-    fastly_error_t result = convert_result(xqd_req_header_values_get(
-        h, name->ptr, name->len, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten));
-    if (result != FASTLY_RESULT_ERROR_OK) {
+    bool is_error =
+        convert_result(xqd_req_header_values_get(h, name->ptr, name->len, buf, HEADER_MAX_LEN,
+                                                 cursor, &next_cursor, &nwritten),
+                       err);
+    if (is_error) {
       JS_free(CONTEXT, buf);
-      return result;
+      return is_error;
     }
     if (nwritten == 0)
       break;
@@ -259,95 +266,101 @@ fastly_error_t xqd_fastly_http_req_header_values_get(fastly_request_handle_t h,
     ret->is_some = false;
     JS_free(CONTEXT, strs);
   }
-  return FASTLY_RESULT_ERROR_OK;
+  return false;
 }
 
-fastly_error_t xqd_fastly_http_req_header_insert(fastly_request_handle_t h,
-                                                 xqd_world_string_t *name,
-                                                 xqd_world_string_t *value) {
-  return convert_result(xqd_req_header_insert(h, name->ptr, name->len, value->ptr, value->len));
+bool xqd_fastly_http_req_header_insert(fastly_request_handle_t h, xqd_world_string_t *name,
+                                       xqd_world_string_t *value, fastly_error_t *err) {
+  return convert_result(xqd_req_header_insert(h, name->ptr, name->len, value->ptr, value->len),
+                        err);
 }
 
-fastly_error_t xqd_fastly_http_req_header_append(fastly_request_handle_t h,
-                                                 xqd_world_string_t *name,
-                                                 xqd_world_string_t *value) {
-  return convert_result(xqd_req_header_append(h, name->ptr, name->len, value->ptr, value->len));
+bool xqd_fastly_http_req_header_append(fastly_request_handle_t h, xqd_world_string_t *name,
+                                       xqd_world_string_t *value, fastly_error_t *err) {
+  return convert_result(xqd_req_header_append(h, name->ptr, name->len, value->ptr, value->len),
+                        err);
 }
 
-fastly_error_t xqd_fastly_http_req_header_remove(fastly_request_handle_t h,
-                                                 xqd_world_string_t *name) {
-  return convert_result(xqd_req_header_remove(h, name->ptr, name->len));
+bool xqd_fastly_http_req_header_remove(fastly_request_handle_t h, xqd_world_string_t *name,
+                                       fastly_error_t *err) {
+  return convert_result(xqd_req_header_remove(h, name->ptr, name->len), err);
 }
 
-fastly_error_t xqd_fastly_http_req_method_get(fastly_request_handle_t h, xqd_world_string_t *ret) {
+bool xqd_fastly_http_req_method_get(fastly_request_handle_t h, xqd_world_string_t *ret,
+                                    fastly_error_t *err) {
   ret->ptr = static_cast<char *>(JS_malloc(CONTEXT, METHOD_MAX_LEN));
   return convert_result(
-      xqd_req_method_get(h, reinterpret_cast<char *>(ret->ptr), METHOD_MAX_LEN, &ret->len));
+      xqd_req_method_get(h, reinterpret_cast<char *>(ret->ptr), METHOD_MAX_LEN, &ret->len), err);
 }
 
-fastly_error_t xqd_fastly_http_req_method_set(fastly_request_handle_t h,
-                                              xqd_world_string_t *method) {
+bool xqd_fastly_http_req_method_set(fastly_request_handle_t h, xqd_world_string_t *method,
+                                    fastly_error_t *err) {
   return convert_result(
-      xqd_req_method_set(h, reinterpret_cast<const char *>(method->ptr), method->len));
+      xqd_req_method_set(h, reinterpret_cast<const char *>(method->ptr), method->len), err);
 }
 
-fastly_error_t xqd_fastly_http_req_uri_get(fastly_request_handle_t h, xqd_world_string_t *ret) {
+bool xqd_fastly_http_req_uri_get(fastly_request_handle_t h, xqd_world_string_t *ret,
+                                 fastly_error_t *err) {
   ret->ptr = static_cast<char *>(JS_malloc(CONTEXT, URI_MAX_LEN));
-  fastly_error_t result = convert_result(xqd_req_uri_get(h, ret->ptr, URI_MAX_LEN, &ret->len));
-  if (result != FASTLY_RESULT_ERROR_OK) {
+  bool is_error = convert_result(xqd_req_uri_get(h, ret->ptr, URI_MAX_LEN, &ret->len), err);
+  if (is_error) {
     JS_free(CONTEXT, ret->ptr);
-    return result;
+    return is_error;
   }
   ret->ptr = static_cast<char *>(JS_realloc(CONTEXT, ret->ptr, URI_MAX_LEN, ret->len));
-  return result;
+  return is_error;
 }
 
-fastly_error_t xqd_fastly_http_req_uri_set(fastly_request_handle_t h, xqd_world_string_t *uri) {
-  return convert_result(xqd_req_uri_set(h, uri->ptr, uri->len));
+bool xqd_fastly_http_req_uri_set(fastly_request_handle_t h, xqd_world_string_t *uri,
+                                 fastly_error_t *err) {
+  return convert_result(xqd_req_uri_set(h, uri->ptr, uri->len), err);
 }
 
-fastly_error_t xqd_fastly_http_req_version_get(fastly_request_handle_t h,
-                                               fastly_http_version_t *ret) {
+bool xqd_fastly_http_req_version_get(fastly_request_handle_t h, fastly_http_version_t *ret,
+                                     fastly_error_t *err) {
   uint32_t xqd_http_version;
-  fastly_error_t result = convert_result(xqd_req_version_get(h, &xqd_http_version));
-  if (result != FASTLY_RESULT_ERROR_OK)
-    return result;
+  bool is_error = convert_result(xqd_req_version_get(h, &xqd_http_version), err);
+  if (is_error)
+    return is_error;
   *ret = convert_http_version(xqd_http_version);
-  return result;
+  return is_error;
 }
 
-fastly_error_t xqd_fastly_http_req_send(fastly_request_handle_t h, fastly_body_handle_t b,
-                                        xqd_world_string_t *backend, fastly_response_t *ret) {
-  return convert_result(xqd_req_send(h, b, backend->ptr, backend->len, &ret->f0, &ret->f1));
+bool xqd_fastly_http_req_send(fastly_request_handle_t h, fastly_body_handle_t b,
+                              xqd_world_string_t *backend, fastly_response_t *ret,
+                              fastly_error_t *err) {
+  return convert_result(xqd_req_send(h, b, backend->ptr, backend->len, &ret->f0, &ret->f1), err);
 }
 
-fastly_error_t xqd_fastly_http_req_send_async(fastly_request_handle_t h, fastly_body_handle_t b,
+bool xqd_fastly_http_req_send_async(fastly_request_handle_t h, fastly_body_handle_t b,
+                                    xqd_world_string_t *backend,
+                                    fastly_pending_request_handle_t *ret, fastly_error_t *err) {
+  return convert_result(xqd_req_send_async(h, b, backend->ptr, backend->len, ret), err);
+}
+
+bool xqd_fastly_http_req_send_async_streaming(fastly_request_handle_t h, fastly_body_handle_t b,
                                               xqd_world_string_t *backend,
-                                              fastly_pending_request_handle_t *ret) {
-  return convert_result(xqd_req_send_async(h, b, backend->ptr, backend->len, ret));
+                                              fastly_pending_request_handle_t *ret,
+                                              fastly_error_t *err) {
+  return convert_result(xqd_req_send_async_streaming(h, b, backend->ptr, backend->len, ret), err);
 }
 
-fastly_error_t xqd_fastly_http_req_send_async_streaming(fastly_request_handle_t h,
-                                                        fastly_body_handle_t b,
-                                                        xqd_world_string_t *backend,
-                                                        fastly_pending_request_handle_t *ret) {
-  return convert_result(xqd_req_send_async_streaming(h, b, backend->ptr, backend->len, ret));
-}
-
-fastly_error_t xqd_fastly_http_req_pending_req_select(fastly_list_pending_request_handle_t *h,
-                                                      fastly_tuple2_u32_response_t *ret) {
+bool xqd_fastly_http_req_pending_req_select(fastly_list_pending_request_handle_t *h,
+                                            fastly_tuple2_u32_response_t *ret,
+                                            fastly_error_t *err) {
   return convert_result(
-      xqd_req_pending_req_select(h->ptr, h->len, &ret->f0, &ret->f1.f0, &ret->f1.f1));
+      xqd_req_pending_req_select(h->ptr, h->len, &ret->f0, &ret->f1.f0, &ret->f1.f1), err);
 }
 
-fastly_error_t xqd_fastly_http_req_pending_req_wait(fastly_pending_request_handle_t h,
-                                                    fastly_response_t *ret) {
-  return convert_result(xqd_req_pending_req_wait(h, &ret->f0, &ret->f1));
+bool xqd_fastly_http_req_pending_req_wait(fastly_pending_request_handle_t h, fastly_response_t *ret,
+                                          fastly_error_t *err) {
+  return convert_result(xqd_req_pending_req_wait(h, &ret->f0, &ret->f1), err);
 }
 
-fastly_error_t
-xqd_fastly_http_req_register_dynamic_backend(xqd_world_string_t *prefix, xqd_world_string_t *target,
-                                             fastly_dynamic_backend_config_t *config) {
+bool xqd_fastly_http_req_register_dynamic_backend(xqd_world_string_t *prefix,
+                                                  xqd_world_string_t *target,
+                                                  fastly_dynamic_backend_config_t *config,
+                                                  fastly_error_t *err) {
   uint32_t backend_config_mask = 0;
 
   if (config->host_override.is_some)
@@ -387,15 +400,16 @@ xqd_fastly_http_req_register_dynamic_backend(xqd_world_string_t *prefix, xqd_wor
   };
   return convert_result(xqd_req_register_dynamic_backend(prefix->ptr, prefix->len, target->ptr,
                                                          target->len, backend_config_mask,
-                                                         &backend_configuration));
+                                                         &backend_configuration),
+                        err);
 }
 
-fastly_error_t xqd_fastly_http_resp_new(fastly_response_handle_t *ret) {
-  return convert_result(xqd_resp_new(ret));
+bool xqd_fastly_http_resp_new(fastly_response_handle_t *ret, fastly_error_t *err) {
+  return convert_result(xqd_resp_new(ret), err);
 }
 
-fastly_error_t xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h,
-                                                     fastly_list_string_t *ret) {
+bool xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h, fastly_list_string_t *ret,
+                                           fastly_error_t *err) {
   xqd_world_string_t *strs = static_cast<xqd_world_string_t *>(
       JS_malloc(CONTEXT, LIST_ALLOC_SIZE * sizeof(xqd_world_string_t)));
   size_t str_max = LIST_ALLOC_SIZE;
@@ -405,11 +419,11 @@ fastly_error_t xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h,
   uint32_t cursor = 0;
   int64_t next_cursor = 0;
   while (true) {
-    fastly_error_t result = convert_result(
-        xqd_resp_header_names_get(h, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten));
-    if (result != FASTLY_RESULT_ERROR_OK) {
+    bool is_error = convert_result(
+        xqd_resp_header_names_get(h, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten), err);
+    if (is_error) {
       JS_free(CONTEXT, buf);
-      return result;
+      return is_error;
     }
     if (nwritten == 0) {
       break;
@@ -439,12 +453,11 @@ fastly_error_t xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h,
       CONTEXT, strs, str_max * sizeof(xqd_world_string_t), str_cnt * sizeof(xqd_world_string_t)));
   ret->ptr = strs;
   ret->len = str_cnt;
-  return FASTLY_RESULT_ERROR_OK;
+  return false;
 }
 
-fastly_error_t xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h,
-                                                      xqd_world_string_t *name,
-                                                      fastly_option_list_string_t *ret) {
+bool xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h, xqd_world_string_t *name,
+                                            fastly_option_list_string_t *ret, fastly_error_t *err) {
   size_t str_max = LIST_ALLOC_SIZE;
   xqd_world_string_t *strs = static_cast<xqd_world_string_t *>(JS_malloc(CONTEXT, str_max));
   size_t str_cnt = 0;
@@ -453,11 +466,13 @@ fastly_error_t xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h
   uint32_t cursor = 0;
   int64_t next_cursor = 0;
   while (true) {
-    fastly_error_t result = convert_result(xqd_resp_header_values_get(
-        h, name->ptr, name->len, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten));
-    if (result != FASTLY_RESULT_ERROR_OK) {
+    bool is_error =
+        convert_result(xqd_resp_header_values_get(h, name->ptr, name->len, buf, HEADER_MAX_LEN,
+                                                  cursor, &next_cursor, &nwritten),
+                       err);
+    if (is_error) {
       JS_free(CONTEXT, buf);
-      return result;
+      return is_error;
     }
     if (nwritten == 0)
       break;
@@ -492,458 +507,464 @@ fastly_error_t xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h
     ret->is_some = false;
     JS_free(CONTEXT, strs);
   }
-  return FASTLY_RESULT_ERROR_OK;
+  return false;
 }
 
-fastly_error_t xqd_fastly_http_resp_header_insert(fastly_response_handle_t h,
-                                                  xqd_world_string_t *name,
-                                                  xqd_world_string_t *value) {
-  return convert_result(xqd_resp_header_insert(h, name->ptr, name->len, value->ptr, value->len));
+bool xqd_fastly_http_resp_header_insert(fastly_response_handle_t h, xqd_world_string_t *name,
+                                        xqd_world_string_t *value, fastly_error_t *err) {
+  return convert_result(xqd_resp_header_insert(h, name->ptr, name->len, value->ptr, value->len),
+                        err);
 }
 
-fastly_error_t xqd_fastly_http_resp_header_append(fastly_response_handle_t h,
-                                                  xqd_world_string_t *name,
-                                                  xqd_world_string_t *value) {
-  return convert_result(xqd_resp_header_append(h, name->ptr, name->len, value->ptr, value->len));
+bool xqd_fastly_http_resp_header_append(fastly_response_handle_t h, xqd_world_string_t *name,
+                                        xqd_world_string_t *value, fastly_error_t *err) {
+  return convert_result(xqd_resp_header_append(h, name->ptr, name->len, value->ptr, value->len),
+                        err);
 }
 
-fastly_error_t xqd_fastly_http_resp_header_remove(fastly_response_handle_t h,
-                                                  xqd_world_string_t *name) {
-  return convert_result(xqd_resp_header_remove(h, name->ptr, name->len));
+bool xqd_fastly_http_resp_header_remove(fastly_response_handle_t h, xqd_world_string_t *name,
+                                        fastly_error_t *err) {
+  return convert_result(xqd_resp_header_remove(h, name->ptr, name->len), err);
 }
 
-fastly_error_t xqd_fastly_http_resp_version_get(fastly_response_handle_t h,
-                                                fastly_http_version_t *ret) {
+bool xqd_fastly_http_resp_version_get(fastly_response_handle_t h, fastly_http_version_t *ret,
+                                      fastly_error_t *err) {
   uint32_t xqd_http_version;
-  fastly_error_t result = convert_result(xqd_resp_version_get(h, &xqd_http_version));
-  if (result != FASTLY_RESULT_ERROR_OK)
-    return result;
+  bool is_error = convert_result(xqd_resp_version_get(h, &xqd_http_version), err);
+  if (is_error)
+    return is_error;
   *ret = convert_http_version(xqd_http_version);
-  return result;
+  return is_error;
 }
 
-fastly_error_t xqd_fastly_http_resp_send_downstream(fastly_response_handle_t h,
-                                                    fastly_body_handle_t b, bool streaming) {
-  return convert_result(xqd_resp_send_downstream(h, b, streaming));
+bool xqd_fastly_http_resp_send_downstream(fastly_response_handle_t h, fastly_body_handle_t b,
+                                          bool streaming, fastly_error_t *err) {
+  return convert_result(xqd_resp_send_downstream(h, b, streaming), err);
 }
 
-fastly_error_t xqd_fastly_http_resp_status_get(fastly_response_handle_t h,
-                                               fastly_http_status_t *ret) {
-  return convert_result(xqd_resp_status_get(h, ret));
+bool xqd_fastly_http_resp_status_get(fastly_response_handle_t h, fastly_http_status_t *ret,
+                                     fastly_error_t *err) {
+  return convert_result(xqd_resp_status_get(h, ret), err);
 }
 
-fastly_error_t xqd_fastly_http_resp_status_set(fastly_response_handle_t h,
-                                               fastly_http_status_t status) {
-  return convert_result(xqd_resp_status_set(h, status));
+bool xqd_fastly_http_resp_status_set(fastly_response_handle_t h, fastly_http_status_t status,
+                                     fastly_error_t *err) {
+  return convert_result(xqd_resp_status_set(h, status), err);
 }
 
-fastly_error_t xqd_fastly_dictionary_open(xqd_world_string_t *name,
-                                          fastly_dictionary_handle_t *ret) {
-  return convert_result(xqd_dictionary_open(name->ptr, name->len, ret));
+bool xqd_fastly_dictionary_open(xqd_world_string_t *name, fastly_dictionary_handle_t *ret,
+                                fastly_error_t *err) {
+  return convert_result(xqd_dictionary_open(name->ptr, name->len, ret), err);
 }
 
-fastly_error_t xqd_fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_string_t *key,
-                                         fastly_option_string_t *ret) {
+bool xqd_fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_string_t *key,
+                               fastly_option_string_t *ret, fastly_error_t *err) {
   ret->val.ptr = static_cast<char *>(JS_malloc(CONTEXT, DICTIONARY_ENTRY_MAX_LEN));
-  fastly_error_t result = convert_result(xqd_dictionary_get(
-      h, key->ptr, key->len, ret->val.ptr, DICTIONARY_ENTRY_MAX_LEN, &ret->val.len));
-  if (result == FASTLY_ERROR_OPTIONAL_NONE) {
-    ret->is_some = false;
-    return FASTLY_RESULT_ERROR_OK;
-  }
-  if (result != FASTLY_RESULT_ERROR_OK) {
-    JS_free(CONTEXT, ret->val.ptr);
-    return result;
+  bool is_error = convert_result(xqd_dictionary_get(h, key->ptr, key->len, ret->val.ptr,
+                                                    DICTIONARY_ENTRY_MAX_LEN, &ret->val.len),
+                                 err);
+  if (is_error) {
+    if (*err == FASTLY_ERROR_OPTIONAL_NONE) {
+      ret->is_some = false;
+      return false;
+    } else {
+      JS_free(CONTEXT, ret->val.ptr);
+      return true;
+    }
   }
   ret->is_some = true;
   ret->val.ptr = static_cast<char *>(
       JS_realloc(CONTEXT, ret->val.ptr, DICTIONARY_ENTRY_MAX_LEN, ret->val.len));
-  return result;
+  return is_error;
 }
 
-fastly_error_t xqd_fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string_t *ret) {
+bool xqd_fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string_t *ret,
+                           fastly_error_t *err) {
   ret->ptr = static_cast<char *>(JS_malloc(CONTEXT, HOSTCALL_BUFFER_LEN));
-  fastly_error_t result =
+  bool is_error =
       convert_result(xqd_geo_lookup(reinterpret_cast<char *>(addr_octets->ptr), addr_octets->len,
-                                    ret->ptr, HOSTCALL_BUFFER_LEN, &ret->len));
-  if (result != FASTLY_RESULT_ERROR_OK) {
+                                    ret->ptr, HOSTCALL_BUFFER_LEN, &ret->len),
+                     err);
+  if (is_error) {
     JS_free(CONTEXT, ret->ptr);
-    return result;
+    return is_error;
   }
   ret->ptr = static_cast<char *>(JS_realloc(CONTEXT, ret->ptr, HOSTCALL_BUFFER_LEN, ret->len));
-  return result;
+  return is_error;
 }
 
-fastly_error_t xqd_fastly_object_store_open(xqd_world_string_t *name,
-                                            fastly_object_store_handle_t *ret) {
-  return convert_result(xqd_object_store_open(name->ptr, name->len, ret));
+bool xqd_fastly_object_store_open(xqd_world_string_t *name, fastly_object_store_handle_t *ret,
+                                  fastly_error_t *err) {
+  return convert_result(xqd_object_store_open(name->ptr, name->len, ret), err);
 }
 
-fastly_error_t xqd_fastly_object_store_lookup(fastly_object_store_handle_t store,
-                                              xqd_world_string_t *key,
-                                              fastly_option_body_handle_t *ret) {
+bool xqd_fastly_object_store_lookup(fastly_object_store_handle_t store, xqd_world_string_t *key,
+                                    fastly_option_body_handle_t *ret, fastly_error_t *err) {
   ret->val = INVALID_HANDLE;
-  fastly_error_t result =
-      convert_result(xqd_object_store_get(store, key->ptr, key->len, &ret->val));
-  if (result == FASTLY_ERROR_OPTIONAL_NONE || ret->val == INVALID_HANDLE) {
+  bool is_error = convert_result(xqd_object_store_get(store, key->ptr, key->len, &ret->val), err);
+  if ((is_error && *err == FASTLY_ERROR_OPTIONAL_NONE) || ret->val == INVALID_HANDLE) {
     ret->is_some = false;
-    return FASTLY_RESULT_ERROR_OK;
+    return false;
   }
   ret->is_some = true;
-  return result;
+  return is_error;
 }
 
-fastly_error_t xqd_fastly_object_store_insert(fastly_object_store_handle_t store,
-                                              xqd_world_string_t *key,
-                                              fastly_body_handle_t body_handle) {
-  return convert_result(xqd_object_store_insert(store, key->ptr, key->len, body_handle));
+bool xqd_fastly_object_store_insert(fastly_object_store_handle_t store, xqd_world_string_t *key,
+                                    fastly_body_handle_t body_handle, fastly_error_t *err) {
+  return convert_result(xqd_object_store_insert(store, key->ptr, key->len, body_handle), err);
 }
 
-fastly_error_t xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
-                                          uint32_t *ret) {
-  return convert_result(xqd_async_select(hs->ptr, hs->len, timeout_ms, ret));
+bool xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms, uint32_t *ret,
+                                fastly_error_t *err) {
+  return convert_result(xqd_async_select(hs->ptr, hs->len, timeout_ms, ret), err);
 }
 
 #else
 
-fastly_error_t xqd_fastly_abi_init(uint64_t abi_version) { return fastly_abi_init(abi_version); }
-
-fastly_error_t xqd_fastly_uap_parse(xqd_world_string_t *user_agent, fastly_user_agent_t *ret) {
-  return fastly_uap_parse(user_agent, ret);
+bool xqd_fastly_abi_init(uint64_t abi_version, fastly_error_t *err) {
+  return fastly_abi_init(abi_version, err);
 }
 
-fastly_error_t xqd_fastly_http_body_new(fastly_body_handle_t *ret) {
-  return fastly_http_body_new(ret);
+bool xqd_fastly_uap_parse(xqd_world_string_t *user_agent, fastly_user_agent_t *ret,
+                          fastly_error_t *err) {
+  return fastly_uap_parse(user_agent, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_body_append(fastly_body_handle_t dest, fastly_body_handle_t src) {
-  return fastly_http_body_append(dest, src);
+bool xqd_fastly_http_body_new(fastly_body_handle_t *ret, fastly_error_t *err) {
+  return fastly_http_body_new(ret, err);
 }
 
-fastly_error_t xqd_fastly_http_body_read(fastly_body_handle_t h, uint32_t chunk_size,
-                                         fastly_list_u8_t *ret) {
-  return fastly_http_body_read(h, chunk_size, ret);
+bool xqd_fastly_http_body_append(fastly_body_handle_t dest, fastly_body_handle_t src,
+                                 fastly_error_t *err) {
+  return fastly_http_body_append(dest, src, err);
 }
 
-fastly_error_t xqd_fastly_http_body_write(fastly_body_handle_t h, fastly_list_u8_t *buf,
-                                          fastly_body_write_end_t end, uint32_t *ret) {
-  return fastly_http_body_write(h, buf, end, ret);
+bool xqd_fastly_http_body_read(fastly_body_handle_t h, uint32_t chunk_size, fastly_list_u8_t *ret,
+                               fastly_error_t *err) {
+  return fastly_http_body_read(h, chunk_size, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_body_close(fastly_body_handle_t h) {
-  return fastly_http_body_close(h);
+bool xqd_fastly_http_body_write(fastly_body_handle_t h, fastly_list_u8_t *buf,
+                                fastly_body_write_end_t end, uint32_t *ret, fastly_error_t *err) {
+  return fastly_http_body_write(h, buf, end, ret, err);
 }
 
-fastly_error_t xqd_fastly_log_endpoint_get(xqd_world_string_t *name,
-                                           fastly_log_endpoint_handle_t *ret) {
-  return fastly_log_endpoint_get(name, ret);
+bool xqd_fastly_http_body_close(fastly_body_handle_t h, fastly_error_t *err) {
+  return fastly_http_body_close(h, err);
 }
 
-fastly_error_t xqd_fastly_log_write(fastly_log_endpoint_handle_t h, xqd_world_string_t *msg) {
-  return fastly_log_write(h, msg);
+bool xqd_fastly_log_endpoint_get(xqd_world_string_t *name, fastly_log_endpoint_handle_t *ret,
+                                 fastly_error_t *err) {
+  return fastly_log_endpoint_get(name, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_body_downstream_get(fastly_request_t *ret) {
-  return fastly_http_req_body_downstream_get(ret);
+bool xqd_fastly_log_write(fastly_log_endpoint_handle_t h, xqd_world_string_t *msg,
+                          fastly_error_t *err) {
+  return fastly_log_write(h, msg, err);
 }
 
-fastly_error_t xqd_fastly_http_req_cache_override_set(fastly_request_handle_t h,
-                                                      fastly_http_cache_override_tag_t tag,
-                                                      fastly_option_u32_t *ttl,
-                                                      fastly_option_u32_t *stale_while_revalidate,
-                                                      fastly_option_string_t *sk) {
-  return fastly_http_req_cache_override_set(h, tag, ttl, stale_while_revalidate, sk);
+bool xqd_fastly_http_req_body_downstream_get(fastly_request_t *ret, fastly_error_t *err) {
+  return fastly_http_req_body_downstream_get(ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_downstream_client_ip_addr(fastly_list_u8_t *ret) {
-  return fastly_http_req_downstream_client_ip_addr(ret);
+bool xqd_fastly_http_req_cache_override_set(fastly_request_handle_t h,
+                                            fastly_http_cache_override_tag_t tag,
+                                            fastly_option_u32_t *ttl,
+                                            fastly_option_u32_t *stale_while_revalidate,
+                                            fastly_option_string_t *sk, fastly_error_t *err) {
+  return fastly_http_req_cache_override_set(h, tag, ttl, stale_while_revalidate, sk, err);
 }
 
-fastly_error_t xqd_fastly_http_req_downstream_client_h2_fingerprint(fastly_list_u8_t *ret) {
-  return fastly_http_req_downstream_client_h2_fingerprint(ret);
+bool xqd_fastly_http_req_downstream_client_ip_addr(fastly_list_u8_t *ret, fastly_error_t *err) {
+  return fastly_http_req_downstream_client_ip_addr(ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_downstream_tls_cipher_openssl_name(xqd_world_string_t *ret) {
-  return fastly_http_req_downstream_tls_cipher_openssl_name(ret);
+bool xqd_fastly_http_req_downstream_client_h2_fingerprint(fastly_list_u8_t *ret,
+                                                          fastly_error_t *err) {
+  return fastly_http_req_downstream_client_h2_fingerprint(ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_downstream_tls_protocol(xqd_world_string_t *ret) {
-  return fastly_http_req_downstream_tls_protocol(ret);
+bool xqd_fastly_http_req_downstream_tls_cipher_openssl_name(xqd_world_string_t *ret,
+                                                            fastly_error_t *err) {
+  return fastly_http_req_downstream_tls_cipher_openssl_name(ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_downstream_tls_client_hello(fastly_list_u8_t *ret) {
-  return fastly_http_req_downstream_tls_client_hello(ret);
+bool xqd_fastly_http_req_downstream_tls_protocol(xqd_world_string_t *ret, fastly_error_t *err) {
+  return fastly_http_req_downstream_tls_protocol(ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_downstream_tls_client_certificate(fastly_list_u8_t *ret) {
-  return fastly_http_req_downstream_tls_client_certificate(ret);
+bool xqd_fastly_http_req_downstream_tls_client_hello(fastly_list_u8_t *ret, fastly_error_t *err) {
+  return fastly_http_req_downstream_tls_client_hello(ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_downstream_tls_client_cert_verify_result(void) {
-  return fastly_http_req_downstream_tls_client_cert_verify_result();
+bool xqd_fastly_http_req_downstream_tls_client_certificate(fastly_list_u8_t *ret,
+                                                           fastly_error_t *err) {
+  return fastly_http_req_downstream_tls_client_certificate(ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_downstream_tls_ja3_md5(fastly_list_u8_t *ret) {
-  return fastly_http_req_downstream_tls_ja3_md5(ret);
+bool xqd_fastly_http_req_downstream_tls_client_cert_verify_result(fastly_error_t *err) {
+  return fastly_http_req_downstream_tls_client_cert_verify_result(err);
 }
 
-fastly_error_t xqd_fastly_http_req_new(fastly_request_handle_t *ret) {
-  return fastly_http_req_new(ret);
+bool xqd_fastly_http_req_downstream_tls_ja3_md5(fastly_list_u8_t *ret, fastly_error_t *err) {
+  return fastly_http_req_downstream_tls_ja3_md5(ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_header_names_get(fastly_request_handle_t h,
-                                                    fastly_list_string_t *ret) {
-  return fastly_http_req_header_names_get(h, ret);
+bool xqd_fastly_http_req_new(fastly_request_handle_t *ret, fastly_error_t *err) {
+  return fastly_http_req_new(ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_header_value_get(fastly_request_handle_t h,
-                                                    xqd_world_string_t *name,
-                                                    fastly_option_string_t *ret) {
-  return fastly_http_req_header_value_get(h, name, ret);
+bool xqd_fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_list_string_t *ret,
+                                          fastly_error_t *err) {
+  return fastly_http_req_header_names_get(h, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_header_values_get(fastly_request_handle_t h,
-                                                     xqd_world_string_t *name,
-                                                     fastly_option_list_string_t *ret) {
-  return fastly_http_req_header_values_get(h, name, ret);
+bool xqd_fastly_http_req_header_value_get(fastly_request_handle_t h, xqd_world_string_t *name,
+                                          fastly_option_string_t *ret, fastly_error_t *err) {
+  return fastly_http_req_header_value_get(h, name, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_header_values_set(fastly_request_handle_t h,
-                                                     xqd_world_string_t *name,
-                                                     fastly_list_string_t *values) {
-  return fastly_http_req_header_values_set(h, name, values);
+bool xqd_fastly_http_req_header_values_get(fastly_request_handle_t h, xqd_world_string_t *name,
+                                           fastly_option_list_string_t *ret, fastly_error_t *err) {
+  return fastly_http_req_header_values_get(h, name, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_header_insert(fastly_request_handle_t h,
-                                                 xqd_world_string_t *name,
-                                                 xqd_world_string_t *value) {
-  return fastly_http_req_header_insert(h, name, value);
+bool xqd_fastly_http_req_header_values_set(fastly_request_handle_t h, xqd_world_string_t *name,
+                                           fastly_list_string_t *values, fastly_error_t *err) {
+  return fastly_http_req_header_values_set(h, name, values, err);
 }
 
-fastly_error_t xqd_fastly_http_req_header_append(fastly_request_handle_t h,
-                                                 xqd_world_string_t *name,
-                                                 xqd_world_string_t *value) {
-  return fastly_http_req_header_append(h, name, value);
+bool xqd_fastly_http_req_header_insert(fastly_request_handle_t h, xqd_world_string_t *name,
+                                       xqd_world_string_t *value, fastly_error_t *err) {
+  return fastly_http_req_header_insert(h, name, value, err);
 }
 
-fastly_error_t xqd_fastly_http_req_header_remove(fastly_request_handle_t h,
-                                                 xqd_world_string_t *name) {
-  return fastly_http_req_header_remove(h, name);
+bool xqd_fastly_http_req_header_append(fastly_request_handle_t h, xqd_world_string_t *name,
+                                       xqd_world_string_t *value, fastly_error_t *err) {
+  return fastly_http_req_header_append(h, name, value, err);
 }
 
-fastly_error_t xqd_fastly_http_req_method_get(fastly_request_handle_t h, xqd_world_string_t *ret) {
-  return fastly_http_req_method_get(h, ret);
+bool xqd_fastly_http_req_header_remove(fastly_request_handle_t h, xqd_world_string_t *name,
+                                       fastly_error_t *err) {
+  return fastly_http_req_header_remove(h, name, err);
 }
 
-fastly_error_t xqd_fastly_http_req_method_set(fastly_request_handle_t h,
-                                              xqd_world_string_t *method) {
-  return fastly_http_req_method_set(h, method);
+bool xqd_fastly_http_req_method_get(fastly_request_handle_t h, xqd_world_string_t *ret,
+                                    fastly_error_t *err) {
+  return fastly_http_req_method_get(h, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_uri_get(fastly_request_handle_t h, xqd_world_string_t *ret) {
-  return fastly_http_req_uri_get(h, ret);
+bool xqd_fastly_http_req_method_set(fastly_request_handle_t h, xqd_world_string_t *method,
+                                    fastly_error_t *err) {
+  return fastly_http_req_method_set(h, method, err);
 }
 
-fastly_error_t xqd_fastly_http_req_uri_set(fastly_request_handle_t h, xqd_world_string_t *uri) {
-  return fastly_http_req_uri_set(h, uri);
+bool xqd_fastly_http_req_uri_get(fastly_request_handle_t h, xqd_world_string_t *ret,
+                                 fastly_error_t *err) {
+  return fastly_http_req_uri_get(h, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_version_get(fastly_request_handle_t h,
-                                               fastly_http_version_t *ret) {
-  return fastly_http_req_version_get(h, ret);
+bool xqd_fastly_http_req_uri_set(fastly_request_handle_t h, xqd_world_string_t *uri,
+                                 fastly_error_t *err) {
+  return fastly_http_req_uri_set(h, uri, err);
 }
 
-fastly_error_t xqd_fastly_http_req_version_set(fastly_request_handle_t h,
-                                               fastly_http_version_t version) {
-  return fastly_http_req_version_set(h, version);
+bool xqd_fastly_http_req_version_get(fastly_request_handle_t h, fastly_http_version_t *ret,
+                                     fastly_error_t *err) {
+  return fastly_http_req_version_get(h, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_send(fastly_request_handle_t h, fastly_body_handle_t b,
-                                        xqd_world_string_t *backend, fastly_response_t *ret) {
-  return fastly_http_req_send(h, b, backend, ret);
+bool xqd_fastly_http_req_version_set(fastly_request_handle_t h, fastly_http_version_t version,
+                                     fastly_error_t *err) {
+  return fastly_http_req_version_set(h, version, err);
 }
 
-fastly_error_t xqd_fastly_http_req_send_async(fastly_request_handle_t h, fastly_body_handle_t b,
+bool xqd_fastly_http_req_send(fastly_request_handle_t h, fastly_body_handle_t b,
+                              xqd_world_string_t *backend, fastly_response_t *ret,
+                              fastly_error_t *err) {
+  return fastly_http_req_send(h, b, backend, ret, err);
+}
+
+bool xqd_fastly_http_req_send_async(fastly_request_handle_t h, fastly_body_handle_t b,
+                                    xqd_world_string_t *backend,
+                                    fastly_pending_request_handle_t *ret, fastly_error_t *err) {
+  return fastly_http_req_send_async(h, b, backend, ret, err);
+}
+
+bool xqd_fastly_http_req_send_async_streaming(fastly_request_handle_t h, fastly_body_handle_t b,
                                               xqd_world_string_t *backend,
-                                              fastly_pending_request_handle_t *ret) {
-  return fastly_http_req_send_async(h, b, backend, ret);
+                                              fastly_pending_request_handle_t *ret,
+                                              fastly_error_t *err) {
+  return fastly_http_req_send_async_streaming(h, b, backend, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_send_async_streaming(fastly_request_handle_t h,
-                                                        fastly_body_handle_t b,
-                                                        xqd_world_string_t *backend,
-                                                        fastly_pending_request_handle_t *ret) {
-  return fastly_http_req_send_async_streaming(h, b, backend, ret);
+bool xqd_fastly_http_req_pending_req_poll(fastly_pending_request_handle_t h,
+                                          fastly_option_response_t *ret, fastly_error_t *err) {
+  return fastly_http_req_pending_req_poll(h, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_pending_req_poll(fastly_pending_request_handle_t h,
-                                                    fastly_option_response_t *ret) {
-  return fastly_http_req_pending_req_poll(h, ret);
+bool xqd_fastly_http_req_pending_req_wait(fastly_pending_request_handle_t h, fastly_response_t *ret,
+                                          fastly_error_t *err) {
+  return fastly_http_req_pending_req_wait(h, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_pending_req_wait(fastly_pending_request_handle_t h,
-                                                    fastly_response_t *ret) {
-  return fastly_http_req_pending_req_wait(h, ret);
+bool xqd_fastly_http_req_pending_req_select(fastly_list_pending_request_handle_t *h,
+                                            fastly_tuple2_u32_response_t *ret,
+                                            fastly_error_t *err) {
+  return fastly_http_req_pending_req_select(h, ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_pending_req_select(fastly_list_pending_request_handle_t *h,
-                                                      fastly_tuple2_u32_response_t *ret) {
-  return fastly_http_req_pending_req_select(h, ret);
+bool xqd_fastly_http_req_key_is_valid(bool *ret, fastly_error_t *err) {
+  return fastly_http_req_key_is_valid(ret, err);
 }
 
-fastly_error_t xqd_fastly_http_req_key_is_valid(bool *ret) {
-  return fastly_http_req_key_is_valid(ret);
+bool xqd_fastly_http_req_close(fastly_request_handle_t h, fastly_error_t *err) {
+  return fastly_http_req_close(h, err);
 }
 
-fastly_error_t xqd_fastly_http_req_close(fastly_request_handle_t h) {
-  return fastly_http_req_close(h);
+bool xqd_fastly_http_req_auto_decompress_response_set(fastly_request_handle_t h,
+                                                      fastly_content_encodings_t encodings,
+                                                      fastly_error_t *err) {
+  return fastly_http_req_auto_decompress_response_set(h, encodings, err);
 }
 
-fastly_error_t
-xqd_fastly_http_req_auto_decompress_response_set(fastly_request_handle_t h,
-                                                 fastly_content_encodings_t encodings) {
-  return fastly_http_req_auto_decompress_response_set(h, encodings);
+bool xqd_fastly_http_req_upgrade_websocket(xqd_world_string_t *backend, fastly_error_t *err) {
+  return fastly_http_req_upgrade_websocket(backend, err);
 }
 
-fastly_error_t xqd_fastly_http_req_upgrade_websocket(xqd_world_string_t *backend) {
-  return fastly_http_req_upgrade_websocket(backend);
+bool xqd_fastly_http_req_redirect_to_websocket_proxy(xqd_world_string_t *backend,
+                                                     fastly_error_t *err) {
+  return fastly_http_req_redirect_to_websocket_proxy(backend, err);
 }
 
-fastly_error_t xqd_fastly_http_req_redirect_to_websocket_proxy(xqd_world_string_t *backend) {
-  return fastly_http_req_redirect_to_websocket_proxy(backend);
+bool xqd_fastly_http_req_redirect_to_grip_proxy(xqd_world_string_t *backend, fastly_error_t *err) {
+  return fastly_http_req_redirect_to_grip_proxy(backend, err);
 }
 
-fastly_error_t xqd_fastly_http_req_redirect_to_grip_proxy(xqd_world_string_t *backend) {
-  return fastly_http_req_redirect_to_grip_proxy(backend);
+bool xqd_fastly_http_req_framing_headers_mode_set(fastly_request_handle_t h,
+                                                  fastly_framing_headers_mode_t mode,
+                                                  fastly_error_t *err) {
+  return fastly_http_req_framing_headers_mode_set(h, mode, err);
 }
 
-fastly_error_t xqd_fastly_http_req_framing_headers_mode_set(fastly_request_handle_t h,
-                                                            fastly_framing_headers_mode_t mode) {
-  return fastly_http_req_framing_headers_mode_set(h, mode);
+bool xqd_fastly_http_req_register_dynamic_backend(xqd_world_string_t *prefix,
+                                                  xqd_world_string_t *target,
+                                                  fastly_dynamic_backend_config_t *config,
+                                                  fastly_error_t *err) {
+  return fastly_http_req_register_dynamic_backend(prefix, target, config, err);
 }
 
-fastly_error_t
-xqd_fastly_http_req_register_dynamic_backend(xqd_world_string_t *prefix, xqd_world_string_t *target,
-                                             fastly_dynamic_backend_config_t *config) {
-  return fastly_http_req_register_dynamic_backend(prefix, target, config);
+bool xqd_fastly_http_resp_new(fastly_response_handle_t *ret, fastly_error_t *err) {
+  return fastly_http_resp_new(ret, err);
 }
-
-fastly_error_t xqd_fastly_http_resp_new(fastly_response_handle_t *ret) {
-  return fastly_http_resp_new(ret);
+bool xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h, fastly_list_string_t *ret,
+                                           fastly_error_t *err) {
+  return fastly_http_resp_header_names_get(h, ret, err);
 }
-fastly_error_t xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h,
-                                                     fastly_list_string_t *ret) {
-  return fastly_http_resp_header_names_get(h, ret);
+bool xqd_fastly_http_resp_header_value_get(fastly_response_handle_t h, xqd_world_string_t *name,
+                                           fastly_option_string_t *ret, fastly_error_t *err) {
+  return fastly_http_resp_header_value_get(h, name, ret, err);
 }
-fastly_error_t xqd_fastly_http_resp_header_value_get(fastly_response_handle_t h,
-                                                     xqd_world_string_t *name,
-                                                     fastly_option_string_t *ret) {
-  return fastly_http_resp_header_value_get(h, name, ret);
+bool xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h, xqd_world_string_t *name,
+                                            fastly_option_list_string_t *ret, fastly_error_t *err) {
+  return fastly_http_resp_header_values_get(h, name, ret, err);
 }
-fastly_error_t xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h,
-                                                      xqd_world_string_t *name,
-                                                      fastly_option_list_string_t *ret) {
-  return fastly_http_resp_header_values_get(h, name, ret);
+bool xqd_fastly_http_resp_header_values_set(fastly_response_handle_t h, xqd_world_string_t *name,
+                                            fastly_list_string_t *values, fastly_error_t *err) {
+  return fastly_http_resp_header_values_set(h, name, values, err);
 }
-fastly_error_t xqd_fastly_http_resp_header_values_set(fastly_response_handle_t h,
-                                                      xqd_world_string_t *name,
-                                                      fastly_list_string_t *values) {
-  return fastly_http_resp_header_values_set(h, name, values);
+bool xqd_fastly_http_resp_header_insert(fastly_response_handle_t h, xqd_world_string_t *name,
+                                        xqd_world_string_t *value, fastly_error_t *err) {
+  return fastly_http_resp_header_insert(h, name, value, err);
 }
-fastly_error_t xqd_fastly_http_resp_header_insert(fastly_response_handle_t h,
-                                                  xqd_world_string_t *name,
-                                                  xqd_world_string_t *value) {
-  return fastly_http_resp_header_insert(h, name, value);
+bool xqd_fastly_http_resp_header_append(fastly_response_handle_t h, xqd_world_string_t *name,
+                                        xqd_world_string_t *value, fastly_error_t *err) {
+  return fastly_http_resp_header_append(h, name, value, err);
 }
-fastly_error_t xqd_fastly_http_resp_header_append(fastly_response_handle_t h,
-                                                  xqd_world_string_t *name,
-                                                  xqd_world_string_t *value) {
-  return fastly_http_resp_header_append(h, name, value);
+bool xqd_fastly_http_resp_header_remove(fastly_response_handle_t h, xqd_world_string_t *name,
+                                        fastly_error_t *err) {
+  return fastly_http_resp_header_remove(h, name, err);
 }
-fastly_error_t xqd_fastly_http_resp_header_remove(fastly_response_handle_t h,
-                                                  xqd_world_string_t *name) {
-  return fastly_http_resp_header_remove(h, name);
+bool xqd_fastly_http_resp_version_get(fastly_response_handle_t h, fastly_http_version_t *ret,
+                                      fastly_error_t *err) {
+  return fastly_http_resp_version_get(h, ret, err);
 }
-fastly_error_t xqd_fastly_http_resp_version_get(fastly_response_handle_t h,
-                                                fastly_http_version_t *ret) {
-  return fastly_http_resp_version_get(h, ret);
+bool xqd_fastly_http_resp_version_set(fastly_response_handle_t h, fastly_http_version_t version,
+                                      fastly_error_t *err) {
+  return fastly_http_resp_version_set(h, version, err);
 }
-fastly_error_t xqd_fastly_http_resp_version_set(fastly_response_handle_t h,
-                                                fastly_http_version_t version) {
-  return fastly_http_resp_version_set(h, version);
+bool xqd_fastly_http_resp_send_downstream(fastly_response_handle_t h, fastly_body_handle_t b,
+                                          bool streaming, fastly_error_t *err) {
+  return fastly_http_resp_send_downstream(h, b, streaming, err);
 }
-fastly_error_t xqd_fastly_http_resp_send_downstream(fastly_response_handle_t h,
-                                                    fastly_body_handle_t b, bool streaming) {
-  return fastly_http_resp_send_downstream(h, b, streaming);
+bool xqd_fastly_http_resp_status_get(fastly_response_handle_t h, fastly_http_status_t *ret,
+                                     fastly_error_t *err) {
+  return fastly_http_resp_status_get(h, ret, err);
 }
-fastly_error_t xqd_fastly_http_resp_status_get(fastly_response_handle_t h,
-                                               fastly_http_status_t *ret) {
-  return fastly_http_resp_status_get(h, ret);
+bool xqd_fastly_http_resp_status_set(fastly_response_handle_t h, fastly_http_status_t status,
+                                     fastly_error_t *err) {
+  return fastly_http_resp_status_set(h, status, err);
 }
-fastly_error_t xqd_fastly_http_resp_status_set(fastly_response_handle_t h,
-                                               fastly_http_status_t status) {
-  return fastly_http_resp_status_set(h, status);
+bool xqd_fastly_http_resp_close(fastly_response_handle_t h, fastly_error_t *err) {
+  return fastly_http_resp_close(h, err);
 }
-fastly_error_t xqd_fastly_http_resp_close(fastly_response_handle_t h) {
-  return fastly_http_resp_close(h);
+bool xqd_fastly_http_resp_framing_headers_mode_set(fastly_response_handle_t h,
+                                                   fastly_framing_headers_mode_t mode,
+                                                   fastly_error_t *err) {
+  return fastly_http_resp_framing_headers_mode_set(h, mode, err);
 }
-fastly_error_t xqd_fastly_http_resp_framing_headers_mode_set(fastly_response_handle_t h,
-                                                             fastly_framing_headers_mode_t mode) {
-  return fastly_http_resp_framing_headers_mode_set(h, mode);
+bool xqd_fastly_dictionary_open(xqd_world_string_t *name, fastly_dictionary_handle_t *ret,
+                                fastly_error_t *err) {
+  return fastly_dictionary_open(name, ret, err);
 }
-fastly_error_t xqd_fastly_dictionary_open(xqd_world_string_t *name,
-                                          fastly_dictionary_handle_t *ret) {
-  return fastly_dictionary_open(name, ret);
+bool xqd_fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_string_t *key,
+                               fastly_option_string_t *ret, fastly_error_t *err) {
+  return fastly_dictionary_get(h, key, ret, err);
 }
-fastly_error_t xqd_fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_string_t *key,
-                                         fastly_option_string_t *ret) {
-  return fastly_dictionary_get(h, key, ret);
+bool xqd_fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string_t *ret,
+                           fastly_error_t *err) {
+  return fastly_geo_lookup(addr_octets, ret, err);
 }
-fastly_error_t xqd_fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string_t *ret) {
-  return fastly_geo_lookup(addr_octets, ret);
+bool xqd_fastly_object_store_open(xqd_world_string_t *name, fastly_object_store_handle_t *ret,
+                                  fastly_error_t *err) {
+  return fastly_object_store_open(name, ret, err);
 }
-fastly_error_t xqd_fastly_object_store_open(xqd_world_string_t *name,
-                                            fastly_object_store_handle_t *ret) {
-  return fastly_object_store_open(name, ret);
+bool xqd_fastly_object_store_lookup(fastly_object_store_handle_t store, xqd_world_string_t *key,
+                                    fastly_option_body_handle_t *ret, fastly_error_t *err) {
+  return fastly_object_store_lookup(store, key, ret, err);
 }
-fastly_error_t xqd_fastly_object_store_lookup(fastly_object_store_handle_t store,
-                                              xqd_world_string_t *key,
-                                              fastly_option_body_handle_t *ret) {
-  return fastly_object_store_lookup(store, key, ret);
+bool xqd_fastly_object_store_lookup_as_fd(fastly_object_store_handle_t store,
+                                          xqd_world_string_t *key, fastly_option_fd_t *ret,
+                                          fastly_error_t *err) {
+  return fastly_object_store_lookup_as_fd(store, key, ret, err);
 }
-fastly_error_t xqd_fastly_object_store_lookup_as_fd(fastly_object_store_handle_t store,
-                                                    xqd_world_string_t *key,
-                                                    fastly_option_fd_t *ret) {
-  return fastly_object_store_lookup_as_fd(store, key, ret);
+bool xqd_fastly_object_store_insert(fastly_object_store_handle_t store, xqd_world_string_t *key,
+                                    fastly_body_handle_t body_handle, fastly_error_t *err) {
+  return fastly_object_store_insert(store, key, body_handle, err);
 }
-fastly_error_t xqd_fastly_object_store_insert(fastly_object_store_handle_t store,
-                                              xqd_world_string_t *key,
-                                              fastly_body_handle_t body_handle) {
-  return fastly_object_store_insert(store, key, body_handle);
+bool xqd_fastly_secret_store_open(xqd_world_string_t *name, fastly_secret_store_handle_t *ret,
+                                  fastly_error_t *err) {
+  return fastly_secret_store_open(name, ret, err);
 }
-fastly_error_t xqd_fastly_secret_store_open(xqd_world_string_t *name,
-                                            fastly_secret_store_handle_t *ret) {
-  return fastly_secret_store_open(name, ret);
+bool xqd_fastly_secret_store_get(fastly_secret_store_handle_t store, xqd_world_string_t *key,
+                                 fastly_option_secret_handle_t *ret, fastly_error_t *err) {
+  return fastly_secret_store_get(store, key, ret, err);
 }
-fastly_error_t xqd_fastly_secret_store_get(fastly_secret_store_handle_t store,
-                                           xqd_world_string_t *key,
-                                           fastly_option_secret_handle_t *ret) {
-  return fastly_secret_store_get(store, key, ret);
+bool xqd_fastly_secret_store_plaintext(fastly_secret_handle_t secret, fastly_option_string_t *ret,
+                                       fastly_error_t *err) {
+  return fastly_secret_store_plaintext(secret, ret, err);
 }
-fastly_error_t xqd_fastly_secret_store_plaintext(fastly_secret_handle_t secret,
-                                                 fastly_option_string_t *ret) {
-  return fastly_secret_store_plaintext(secret, ret);
+bool xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms, uint32_t *ret,
+                                fastly_error_t *err) {
+  return fastly_async_io_select(hs, timeout_ms, ret, err);
 }
-fastly_error_t xqd_fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
-                                          uint32_t *ret) {
-  return fastly_async_io_select(hs, timeout_ms, ret);
+bool xqd_fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret, fastly_error_t *err) {
+  return fastly_async_io_is_ready(handle, ret, err);
 }
-fastly_error_t xqd_fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret) {
-  return fastly_async_io_is_ready(handle, ret);
-}
-fastly_error_t xqd_fastly_purge_surrogate_key(xqd_world_string_t *surrogate_key, bool soft_purge,
-                                              fastly_purge_result_t *ret) {
-  return fastly_purge_surrogate_key(surrogate_key, soft_purge, ret);
+bool xqd_fastly_purge_surrogate_key(xqd_world_string_t *surrogate_key, bool soft_purge,
+                                    fastly_purge_result_t *ret, fastly_error_t *err) {
+  return fastly_purge_surrogate_key(surrogate_key, soft_purge, ret, err);
 }
 
 #endif

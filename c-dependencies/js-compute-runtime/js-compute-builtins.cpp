@@ -222,9 +222,10 @@ static char *read_from_handle_all(JSContext *cx, uint32_t handle, size_t *nwritt
   char *new_buf;
 
   size_t offset = 0;
+  fastly_error_t err;
   while (true) {
     fastly_list_u8_t out_list;
-    if (!HANDLE_RESULT(cx, op(handle, HANDLE_READ_CHUNK_SIZE, &out_list))) {
+    if (!HANDLE_RESULT(cx, op(handle, HANDLE_READ_CHUNK_SIZE, &out_list, &err), err)) {
       JS_free(cx, buf);
       return nullptr;
     }
@@ -288,9 +289,11 @@ static char *read_from_handle_all(JSContext *cx, HandleType handle, size_t *nwri
   char *new_buf;
 
   size_t offset = 0;
+  fastly_error_t err;
   while (true) {
     size_t num_written = 0;
-    if (!HANDLE_RESULT(cx, op(handle, buf + offset, HANDLE_READ_CHUNK_SIZE, &num_written))) {
+    if (!HANDLE_RESULT(cx, op(handle, buf + offset, HANDLE_READ_CHUNK_SIZE, &num_written, &err),
+                       err)) {
       JS_free(cx, buf);
       return nullptr;
     }
@@ -334,22 +337,23 @@ static char *read_from_handle_all(JSContext *cx, HandleType handle, size_t *nwri
  * The host doesn't necessarily write all bytes in any particular call to
  * xqd_body_write, so to ensure all bytes are written, we call it in a loop.
  */
-FastlyStatus write_to_body_all(fastly_body_handle_t handle, const char *buf, size_t len) {
+bool write_to_body_all(fastly_body_handle_t handle, const char *buf, size_t len,
+                       fastly_error_t *err) {
   size_t total_written = 0;
   while (total_written < len) {
     const uint8_t *chunk = reinterpret_cast<const uint8_t *>(buf) + total_written;
     size_t chunk_len = len - total_written;
     uint32_t nwritten = 0;
     fastly_list_u8_t write_list = {.ptr = const_cast<uint8_t *>(chunk), .len = chunk_len};
-    auto result = convert_to_fastly_status(
-        xqd_fastly_http_body_write(handle, &write_list, FASTLY_BODY_WRITE_END_BACK, &nwritten));
-    if (result != FastlyStatus::Ok) {
-      return result;
+    bool is_error =
+        xqd_fastly_http_body_write(handle, &write_list, FASTLY_BODY_WRITE_END_BACK, &nwritten, err);
+    if (is_error) {
+      return true;
     }
     total_written += nwritten;
   }
 
-  return FastlyStatus::Ok;
+  return false;
 }
 
 enum class BodyReadResult {
@@ -434,8 +438,8 @@ bool get_header_value_for_name(JSContext *cx, HandleObject self, HandleValue nam
                                MutableHandleValue rval, const char *fun_name);
 static bool ensure_all_header_values_from_handle(JSContext *cx, HandleObject self,
                                                  HandleObject backing_map);
-typedef fastly_error_t AppendHeaderOperation(fastly_request_handle_t handle,
-                                             xqd_world_string_t *name, xqd_world_string_t *value);
+typedef bool AppendHeaderOperation(fastly_request_handle_t handle, xqd_world_string_t *name,
+                                   xqd_world_string_t *value, fastly_error_t *err);
 bool append_header_value(JSContext *cx, HandleObject self, HandleValue name, HandleValue value,
                          const char *fun_name);
 } // namespace detail
@@ -450,8 +454,8 @@ bool set(JSContext *cx, unsigned argc, Value *vp);
 bool has(JSContext *cx, unsigned argc, Value *vp);
 bool append(JSContext *cx, unsigned argc, Value *vp);
 bool maybe_add(JSContext *cx, HandleObject self, const char *name, const char *value);
-typedef FastlyStatus HeaderRemoveOperation(fastly_request_handle_t handle,
-                                           xqd_world_string_t *name);
+typedef bool HeaderRemoveOperation(fastly_request_handle_t handle, xqd_world_string_t *name,
+                                   fastly_error_t *err);
 bool delete_(JSContext *cx, unsigned argc, Value *vp);
 bool forEach(JSContext *cx, unsigned argc, Value *vp);
 bool entries(JSContext *cx, unsigned argc, Value *vp);
@@ -666,7 +670,8 @@ bool extract_body(JSContext *cx, HandleObject self, HandleValue body_val) {
     }
 
     fastly_body_handle_t body_handle = RequestOrResponse::body_handle(self);
-    auto result = write_to_body_all(body_handle, buf, length);
+    fastly_error_t err;
+    bool is_error = write_to_body_all(body_handle, buf, length, &err);
 
     // Ensure that the NoGC is reset, so throwing an error in HANDLE_RESULT
     // succeeds.
@@ -674,7 +679,7 @@ bool extract_body(JSContext *cx, HandleObject self, HandleValue body_val) {
       maybeNoGC.reset();
     }
 
-    if (!HANDLE_RESULT(cx, result))
+    if (!HANDLE_RESULT(cx, is_error, err))
       return false;
   }
 
@@ -722,7 +727,8 @@ bool append_body(JSContext *cx, HandleObject self, HandleObject source) {
   MOZ_ASSERT(!body_used(source));
   fastly_body_handle_t source_body = body_handle(source);
   fastly_body_handle_t dest_body = body_handle(self);
-  return HANDLE_RESULT(cx, xqd_fastly_http_body_append(dest_body, source_body));
+  fastly_error_t err;
+  return HANDLE_RESULT(cx, xqd_fastly_http_body_append(dest_body, source_body, &err), err);
 }
 
 typedef bool ParseBodyCB(JSContext *cx, HandleObject self, UniqueChars buf, size_t len);
@@ -1191,7 +1197,8 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
       FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
     }
 
-    if (!HANDLE_RESULT(cx, xqd_fastly_http_body_close(body_handle))) {
+    fastly_error_t err;
+    if (!HANDLE_RESULT(cx, xqd_fastly_http_body_close(body_handle, &err), err)) {
       return false;
     }
 
@@ -1233,18 +1240,19 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
     return false;
   }
 
-  FastlyStatus result;
+  bool is_error;
+  fastly_error_t err;
   {
     JS::AutoCheckCannotGC nogc;
     JSObject *array = &val.toObject();
     bool is_shared;
     uint8_t *bytes = JS_GetUint8ArrayData(array, &is_shared, nogc);
     size_t length = JS_GetTypedArrayByteLength(array);
-    result = write_to_body_all(body_handle, (char *)bytes, length);
+    is_error = write_to_body_all(body_handle, (char *)bytes, length, &err);
   }
 
   // Needs to be outside the nogc block in case we need to create an exception.
-  if (!HANDLE_RESULT(cx, result)) {
+  if (!HANDLE_RESULT(cx, is_error, err)) {
     return false;
   }
 
@@ -1564,8 +1572,11 @@ bool apply_cache_override(JSContext *cx, HandleObject self) {
     sk_str.ptr = sk_chars.release();
   }
 
-  return HANDLE_RESULT(cx, xqd_fastly_http_req_cache_override_set(
-                               request_handle(self), tag, &ttl_option, &swr_option, &sk_opt));
+  fastly_error_t err;
+  return HANDLE_RESULT(cx,
+                       xqd_fastly_http_req_cache_override_set(
+                           request_handle(self), tag, &ttl_option, &swr_option, &sk_opt, &err),
+                       err);
 }
 
 const unsigned ctor_length = 1;
@@ -1593,8 +1604,10 @@ bool url_get(JSContext *cx, unsigned argc, Value *vp) {
 bool version_get(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(0)
 
+  fastly_error_t err;
   fastly_http_version_t version = 0;
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_version_get(request_handle(self), &version)))
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_version_get(request_handle(self), &version, &err),
+                     err))
     return false;
 
   args.rval().setInt32(version);
@@ -1710,13 +1723,14 @@ JSObject *create(JSContext *cx, HandleObject requestInstance,
  */
 JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
                  HandleValue init_val) {
+  fastly_error_t err;
   fastly_request_handle_t request_handle = INVALID_HANDLE;
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_new(&request_handle))) {
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_new(&request_handle, &err), err)) {
     return nullptr;
   }
 
   fastly_body_handle_t body_handle = INVALID_HANDLE;
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_body_new(&body_handle))) {
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_body_new(&body_handle, &err), err)) {
     return nullptr;
   }
 
@@ -1838,7 +1852,8 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
     return nullptr;
   } else {
     url_xqd_str.ptr = url.get();
-    if (!HANDLE_RESULT(cx, xqd_fastly_http_req_uri_set(request_handle, &url_xqd_str))) {
+    fastly_error_t err;
+    if (!HANDLE_RESULT(cx, xqd_fastly_http_req_uri_set(request_handle, &url_xqd_str, &err), err)) {
       return nullptr;
     }
   }
@@ -1980,7 +1995,9 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
 
     JS::SetReservedSlot(request, Slots::Method, JS::StringValue(method_str));
     xqd_world_string_t method_xqd_str = {method.get(), method_len};
-    if (!HANDLE_RESULT(cx, xqd_fastly_http_req_method_set(request_handle, &method_xqd_str))) {
+    fastly_error_t err;
+    if (!HANDLE_RESULT(cx, xqd_fastly_http_req_method_set(request_handle, &method_xqd_str, &err),
+                       err)) {
       return nullptr;
     }
   }
@@ -2448,7 +2465,9 @@ bool version_get(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(0)
 
   fastly_http_version_t version = 0;
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_resp_version_get(response_handle(self), &version)))
+  fastly_error_t err;
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_resp_version_get(response_handle(self), &version, &err),
+                     err))
     return false;
 
   args.rval().setInt32(version);
@@ -2581,12 +2600,13 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   // creating the host-side representation when processing requests.
   // https://github.com/fastly/js-compute-runtime/issues/220
   fastly_response_handle_t response_handle = INVALID_HANDLE;
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_resp_new(&response_handle))) {
+  fastly_error_t err;
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_resp_new(&response_handle, &err), err)) {
     return false;
   }
 
   fastly_body_handle_t body_handle = INVALID_HANDLE;
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_body_new(&body_handle))) {
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_body_new(&body_handle, &err), err)) {
     return false;
   }
 
@@ -2605,12 +2625,12 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   // (implicit)
 
   // 5.  Set `this`’s `response`’s `status` to `init`["status"].
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_resp_status_set(response_handle, status))) {
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_resp_status_set(response_handle, status, &err), err)) {
     return false;
   }
   // To ensure that we really have the same status value as the host,
   // we always read it back here.
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_resp_status_get(response_handle, &status))) {
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_resp_status_get(response_handle, &status, &err), err)) {
     return false;
   }
 
@@ -2684,7 +2704,8 @@ JSObject *create(JSContext *cx, HandleObject response, fastly_response_handle_t 
 
   if (is_upstream) {
     uint16_t status = 0;
-    if (!HANDLE_RESULT(cx, xqd_fastly_http_resp_status_get(response_handle, &status)))
+    fastly_error_t err;
+    if (!HANDLE_RESULT(cx, xqd_fastly_http_resp_status_get(response_handle, &status, &err), err))
       return nullptr;
 
     JS::SetReservedSlot(response, Slots::Status, JS::Int32Value(status));
@@ -3009,15 +3030,16 @@ bool get_header_names_from_handle(JSContext *cx, uint32_t handle, Mode mode,
   RootedValue name_val(cx);
   char *buf = static_cast<char *>(JS_malloc(cx, HOSTCALL_BUFFER_LEN));
 
-  FastlyStatus result;
+  bool is_error;
   fastly_list_string_t ret;
+  fastly_error_t err;
   if (mode == Mode::ProxyToRequest) {
-    result = convert_to_fastly_status(xqd_fastly_http_req_header_names_get(handle, &ret));
+    is_error = xqd_fastly_http_req_header_names_get(handle, &ret, &err);
   } else {
-    result = convert_to_fastly_status(xqd_fastly_http_resp_header_names_get(handle, &ret));
+    is_error = xqd_fastly_http_resp_header_names_get(handle, &ret, &err);
   }
 
-  if (!HANDLE_RESULT(cx, result))
+  if (!HANDLE_RESULT(cx, is_error, err))
     return false;
 
   for (size_t i = 0; i < ret.len; i++) {
@@ -3048,14 +3070,15 @@ static bool retrieve_value_for_header_from_handle(JSContext *cx, HandleObject se
 
   fastly_option_list_string_t ret;
 
-  FastlyStatus result;
+  bool is_error;
+  fastly_error_t err;
   if (mode == Headers::Mode::ProxyToRequest) {
-    result = convert_to_fastly_status(xqd_fastly_http_req_header_values_get(handle, &str, &ret));
+    is_error = xqd_fastly_http_req_header_values_get(handle, &str, &ret, &err);
   } else {
-    result = convert_to_fastly_status(xqd_fastly_http_resp_header_values_get(handle, &str, &ret));
+    is_error = xqd_fastly_http_resp_header_values_get(handle, &str, &ret, &err);
   }
 
-  if (!HANDLE_RESULT(cx, result))
+  if (!HANDLE_RESULT(cx, is_error, err))
     return false;
 
   if (!ret.is_some)
@@ -3235,14 +3258,16 @@ bool append_header_value(JSContext *cx, HandleObject self, HandleValue name, Han
       for (auto value : values) {
         xqd_world_string_t name = {name_chars.get(), name_len};
         xqd_world_string_t val = {const_cast<char *>(value.data()), value.length()};
-        if (!HANDLE_RESULT(cx, op(handle(self), &name, &val))) {
+        fastly_error_t err;
+        if (!HANDLE_RESULT(cx, op(handle(self), &name, &val, &err), err)) {
           return false;
         }
       }
     } else {
       xqd_world_string_t name = {name_chars.get(), name_len};
       xqd_world_string_t val = {value_chars.get(), value_len};
-      if (!HANDLE_RESULT(cx, op(handle(self), &name, &val))) {
+      fastly_error_t err;
+      if (!HANDLE_RESULT(cx, op(handle(self), &name, &val, &err), err)) {
         return false;
       }
     }
@@ -3337,8 +3362,8 @@ bool get(JSContext *cx, unsigned argc, Value *vp) {
   return detail::get_header_value_for_name(cx, self, normalized_name, args.rval(), "Headers.get");
 }
 
-typedef fastly_error_t HeaderInsertOperation(fastly_request_handle_t handle,
-                                             xqd_world_string_t *name, xqd_world_string_t *values);
+typedef bool HeaderInsertOperation(fastly_request_handle_t handle, xqd_world_string_t *name,
+                                   xqd_world_string_t *values, fastly_error_t *err);
 
 bool set(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(2)
@@ -3355,7 +3380,8 @@ bool set(JSContext *cx, unsigned argc, Value *vp) {
       op = (HeaderInsertOperation *)xqd_fastly_http_resp_header_insert;
     xqd_world_string_t name = {name_chars.get(), name_len};
     xqd_world_string_t val = {value_chars.get(), value_len};
-    if (!HANDLE_RESULT(cx, op(detail::handle(self), &name, &val))) {
+    fastly_error_t err;
+    if (!HANDLE_RESULT(cx, op(detail::handle(self), &name, &val, &err), err)) {
       return false;
     }
   }
@@ -3448,7 +3474,8 @@ bool delete_(JSContext *cx, unsigned argc, Value *vp) {
     else
       op = (HeaderRemoveOperation *)xqd_fastly_http_resp_header_remove;
     xqd_world_string_t name = {name_chars.get(), name_len};
-    if (!HANDLE_RESULT(cx, op(detail::handle(self), &name)))
+    fastly_error_t err;
+    if (!HANDLE_RESULT(cx, op(detail::handle(self), &name, &err), err))
       return false;
   }
 
@@ -3585,7 +3612,8 @@ static JSString *retrieve_address(JSContext *cx, HandleObject self) {
   RootedString address(cx);
 
   fastly_list_u8_t octets;
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_downstream_client_ip_addr(&octets)))
+  fastly_error_t err;
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_downstream_client_ip_addr(&octets, &err), err))
     return nullptr;
 
   switch (octets.len) {
@@ -3769,7 +3797,8 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
   MOZ_ASSERT(Request::request_handle(request) == INVALID_HANDLE);
 
   fastly_request_t req;
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_body_downstream_get(&req)))
+  fastly_error_t err;
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_body_downstream_get(&req, &err), err))
     return false;
 
   fastly_request_handle_t request_handle = req.f0;
@@ -3780,7 +3809,7 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
 
   // Set the method.
   xqd_world_string_t method_str;
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_method_get(request_handle, &method_str))) {
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_method_get(request_handle, &method_str, &err), err)) {
     return false;
   }
 
@@ -3804,7 +3833,7 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
   }
 
   xqd_world_string_t uri_str;
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_uri_get(request_handle, &uri_str)))
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_req_uri_get(request_handle, &uri_str, &err), err))
     return false;
 
   RootedString url(cx, JS_NewStringCopyN(cx, uri_str.ptr, uri_str.len));
@@ -3856,7 +3885,9 @@ bool start_response(JSContext *cx, HandleObject response_obj, bool streaming) {
   fastly_response_handle_t response = Response::response_handle(response_obj);
   fastly_body_handle_t body = RequestOrResponse::body_handle(response_obj);
 
-  return HANDLE_RESULT(cx, xqd_fastly_http_resp_send_downstream(response, body, streaming));
+  fastly_error_t err;
+  return HANDLE_RESULT(cx, xqd_fastly_http_resp_send_downstream(response, body, streaming, &err),
+                       err);
 }
 
 // Steps in this function refer to the spec at
@@ -3970,10 +4001,11 @@ bool respondWithError(JSContext *cx, HandleObject self) {
   set_state(self, State::responsedWithError);
   fastly_response_handle_t response = INVALID_HANDLE;
   fastly_body_handle_t body;
-  return HANDLE_RESULT(cx, xqd_fastly_http_resp_new(&response)) &&
-         HANDLE_RESULT(cx, xqd_fastly_http_body_new(&body)) &&
-         HANDLE_RESULT(cx, xqd_fastly_http_resp_status_set(response, 500)) &&
-         HANDLE_RESULT(cx, xqd_fastly_http_resp_send_downstream(response, body, false));
+  fastly_error_t err;
+  return HANDLE_RESULT(cx, xqd_fastly_http_resp_new(&response, &err), err) &&
+         HANDLE_RESULT(cx, xqd_fastly_http_body_new(&body, &err), err) &&
+         HANDLE_RESULT(cx, xqd_fastly_http_resp_status_set(response, 500, &err), err) &&
+         HANDLE_RESULT(cx, xqd_fastly_http_resp_send_downstream(response, body, false, &err), err);
 }
 
 // Step 5 of https://w3c.github.io/ServiceWorker/#wait-until-method
@@ -4644,7 +4676,8 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
         fastly_request_handle_t handle = Request::request_handle(request);
 
         xqd_world_string_t uri_str;
-        if (HANDLE_RESULT(cx, xqd_fastly_http_req_uri_get(handle, &uri_str))) {
+        fastly_error_t err;
+        if (HANDLE_RESULT(cx, xqd_fastly_http_req_uri_get(handle, &uri_str, &err), err)) {
           JS_ReportErrorUTF8(cx,
                              "No backend specified for request with url %s. "
                              "Must provide a `backend` property on the `init` object "
@@ -4679,18 +4712,19 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   xqd_world_string_t backend_str = {backend_chars.get(), backend_len};
 
   {
-    FastlyStatus result;
+    fastly_error_t err;
+    bool is_error;
     if (streaming) {
-      result = convert_to_fastly_status(xqd_fastly_http_req_send_async_streaming(
-          Request::request_handle(request), RequestOrResponse::body_handle(request), &backend_str,
-          &request_handle));
+      is_error = xqd_fastly_http_req_send_async_streaming(Request::request_handle(request),
+                                                          RequestOrResponse::body_handle(request),
+                                                          &backend_str, &request_handle, &err);
     } else {
-      result = convert_to_fastly_status(xqd_fastly_http_req_send_async(
-          Request::request_handle(request), RequestOrResponse::body_handle(request), &backend_str,
-          &request_handle));
+      is_error = xqd_fastly_http_req_send_async(Request::request_handle(request),
+                                                RequestOrResponse::body_handle(request),
+                                                &backend_str, &request_handle, &err);
     }
 
-    if (!HANDLE_RESULT(cx, result))
+    if (!HANDLE_RESULT(cx, is_error, err))
       return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
@@ -4947,13 +4981,15 @@ bool process_body_read(JSContext *cx, HandleObject streamSource);
 bool process_pending_request(JSContext *cx, HandleObject request) {
 
   fastly_response_t ret = {INVALID_HANDLE, INVALID_HANDLE};
-  int result = xqd_fastly_http_req_pending_req_wait(Request::pending_handle(request), &ret);
+  fastly_error_t err;
+  bool is_error =
+      xqd_fastly_http_req_pending_req_wait(Request::pending_handle(request), &ret, &err);
   fastly_response_handle_t response_handle = ret.f0;
   fastly_body_handle_t body = ret.f1;
 
   RootedObject response_promise(cx, Request::response_promise(request));
 
-  if (result != FASTLY_RESULT_ERROR_OK) {
+  if (is_error) {
     JS_ReportErrorUTF8(cx, "NetworkError when attempting to fetch resource.");
     return RejectPromiseWithPendingError(cx, response_promise);
   }
@@ -4992,7 +5028,9 @@ bool process_body_read(JSContext *cx, HandleObject streamSource) {
 
   fastly_body_handle_t body = RequestOrResponse::body_handle(owner);
   fastly_list_u8_t out_list;
-  if (!HANDLE_RESULT(cx, xqd_fastly_http_body_read(body, HANDLE_READ_CHUNK_SIZE, &out_list))) {
+  fastly_error_t err;
+  if (!HANDLE_RESULT(cx, xqd_fastly_http_body_read(body, HANDLE_READ_CHUNK_SIZE, &out_list, &err),
+                     err)) {
     JS_free(cx, out_list.ptr);
     return error_stream_controller_with_pending_exception(cx, controller);
   }
@@ -5067,15 +5105,15 @@ bool process_pending_async_tasks(JSContext *cx) {
   fastly_list_async_handle_t handle_list = {handles.get(), count};
 
   uint32_t ready_index;
-  auto xqd_result =
-      convert_to_fastly_status(xqd_fastly_async_io_select(&handle_list, timeout, &ready_index));
+  fastly_error_t err;
+  bool is_error = xqd_fastly_async_io_select(&handle_list, timeout, &ready_index, &err);
 
-  if (xqd_result == FastlyStatus::None) {
+  if (!is_error) {
     MOZ_ASSERT(!timers->empty());
     return timers->run_first_timer(cx);
   }
 
-  if (!HANDLE_RESULT(cx, xqd_result)) {
+  if (!HANDLE_RESULT(cx, is_error, err)) {
     return false;
   }
 
@@ -5086,8 +5124,8 @@ bool process_pending_async_tasks(JSContext *cx) {
 
 #ifdef DEBUG
   uint32_t is_ready = 0;
-  xqd_result = convert_to_fastly_status(xqd_async_is_ready(handles[ready_index], &is_ready));
-  MOZ_ASSERT(xqd_result == FastlyStatus::Ok);
+  is_error = xqd_async_is_ready(handles[ready_index], &is_ready, &err);
+  MOZ_ASSERT(!is_error);
   MOZ_ASSERT(is_ready);
 #endif
 

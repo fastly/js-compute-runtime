@@ -11,49 +11,32 @@ fastly_dictionary_handle_t ConfigStore::config_store_handle(JSObject *obj) {
 bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
-<<<<<<< HEAD
-  size_t name_len;
-  JS::UniqueChars name = encode(cx, args[0], &name_len);
-
-  // If the converted string has a length of 0 then we throw an Error
-  // because Dictionary keys have to be at-least 1 character.
-  if (name_len == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_KEY_EMPTY);
-    return false;
-  }
-  // key has to be less than 256
-  if (name_len > 255) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_KEY_TOO_LONG);
-    return false;
-  }
-
-  OwnedHostCallBuffer buffer;
-  size_t nwritten = 0;
-  auto status = convert_to_fastly_status(xqd_dictionary_get(ConfigStore::config_store_handle(self),
-                                                            name.get(), name_len, buffer.get(),
-                                                            CONFIG_STORE_ENTRY_MAX_LEN, &nwritten));
-  // FastlyStatus::none indicates the key wasn't found, so we return null.
-  if (status == FastlyStatus::None) {
-    args.rval().setNull();
-    return true;
-  }
-=======
   xqd_world_string_t key_str;
   JS::UniqueChars key = encode(cx, args[0], &key_str.len);
-  if (!key) {
+  // If the converted string has a length of 0 then we throw an Error
+  // because Dictionary keys have to be at-least 1 character.
+  if (!key || key_str.len == 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_KEY_EMPTY);
     return false;
   }
   key_str.ptr = key.get();
 
-  fastly_option_string_t ret;
-  auto status = convert_to_fastly_status(
-      xqd_fastly_dictionary_get(ConfigStore::config_store_handle(self), &key_str, &ret));
->>>>>>> config store
+  // key has to be less than 256
+  if (key_str.len > 255) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_KEY_TOO_LONG);
+    return false;
+  }
 
+  fastly_option_string_t ret;
+  fastly_error_t err;
   // Ensure that we throw an exception for all unexpected host errors.
-  if (!HANDLE_RESULT(cx, status))
+  if (!HANDLE_RESULT(
+          cx,
+          xqd_fastly_dictionary_get(ConfigStore::config_store_handle(self), &key_str, &ret, &err),
+          err))
     return false;
 
+  // FastlyStatus::none indicates the key wasn't found, so we return null.
   if (!ret.is_some) {
     args.rval().setNull();
     return true;
@@ -116,16 +99,15 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::RootedObject config_store(cx, JS_NewObjectForConstructor(cx, &class_, args));
   fastly_dictionary_handle_t dict_handle = INVALID_HANDLE;
-  auto status =
-      convert_to_fastly_status(xqd_config_store_open(name.data(), name_len, &dict_handle));
-  if (status == FastlyStatus::BadF) {
+  fastly_error_t err;
+  bool is_error = xqd_fastly_dictionary_open(&name_str, &dict_handle, &err);
+  if (is_error && err == FASTLY_ERROR_BAD_HANDLE) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_DOES_NOT_EXIST,
                               name.data());
     return false;
   }
-  if (!HANDLE_RESULT(cx, status)) {
+  if (!HANDLE_RESULT(cx, is_error, err))
     return false;
-  }
 
   JS::SetReservedSlot(config_store, ConfigStore::Slots::Handle, JS::Int32Value(dict_handle));
   if (!config_store)
