@@ -356,7 +356,7 @@ private:
     return [val](auto &c) { return c.mac == val; };
   }
 
-  std::vector<std::string> split(std::string s, std::string_view delimiter) {
+  std::vector<std::string_view> split(std::string_view s, std::string_view delimiter) {
     size_t pos_start = 0, pos_end, delim_len = delimiter.length();
     std::string token;
     std::vector<std::string> res;
@@ -563,7 +563,7 @@ public:
       } else if (element.find(AND) != std::string::npos) {
         auto intersections = split(element, "+\\");
         if (intersections.size() > 0 && aliases.find(intersections[0]) != aliases.end()) {
-          auto result = aliases[intersections[0]];
+          std::string result{aliases[intersections[0]]};
           for (int i = 1; i < intersections.size(); i++) {
             auto alias = aliases.find(intersections[i]);
             if (alias != aliases.end()) {
