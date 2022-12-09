@@ -396,7 +396,7 @@ public:
   OpenSSLCipherConfigurationParser() {
     this->all.reserve(CIPHER.size());
     for (const auto &any : CIPHER) {
-      auto cipher = any.second;
+      auto &cipher = any.second;
       all.push_back(cipher);
       auto cipherAlias = cipher.getOpenSSLAlias();
       auto alias = aliases.find(cipherAlias);
