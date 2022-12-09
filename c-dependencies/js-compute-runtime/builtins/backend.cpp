@@ -371,7 +371,7 @@ private:
     return res;
   }
 
-  std::vector<std::string> splitCipherSuiteString(std::string string) {
+  std::vector<std::string_view> splitCipherSuiteString(std::string_view string) {
     std::vector<std::string> result;
     std::stringstream stringStream(string);
     std::string line;
