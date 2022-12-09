@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.0](https://github.com/fastly/js-compute-runtime/compare/v0.5.15...v0.6.0) (2022-12-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* Disable JS iterator helpers as the feature is at Stage 3 and we should only enable by default Stage 4 features
+
+### Features
+
+* Disable JS iterator helpers as the feature is at Stage 3 and we should only enable by default Stage 4 features ([c90c145](https://github.com/fastly/js-compute-runtime/commit/c90c14570a0375692da62eb11811e01babe28de8))
+
+
+### Bug Fixes
+
+* Throw TypeErrors in config-store if supplied with invalid parameters or the config-store does not exist ([6b70180](https://github.com/fastly/js-compute-runtime/commit/6b70180560b0c28bbc009af49fa7b25bd890d4a2))
+
 ## [0.5.15](https://github.com/fastly/js-compute-runtime/compare/v0.5.14...v0.5.15) (2022-12-08)
 
 
