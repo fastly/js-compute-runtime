@@ -73,8 +73,6 @@ public:
       : openSSLAlias(openSSLAlias), kx(kx), au(au), enc(enc), mac(mac), protocol(protocol),
         level(level), strength_bits(strength_bits) {}
 
-  const std::string_view &getOpenSSLAlias() { return openSSLAlias; }
-
   // Overload the == operator
   const bool operator==(const Cipher &obj) const {
     return openSSLAlias == obj.openSSLAlias && kx == obj.kx && au == obj.au && enc == obj.enc &&
@@ -254,11 +252,11 @@ private:
   static constexpr auto COMPLEMENTOFDEFAULT = "COMPLEMENTOFDEFAULT";
   static constexpr auto ALL = "ALL";
 
-  void moveToEnd(AliasMap &aliases, std::vector<Cipher> &ciphers, std::string cipher) {
+  void moveToEnd(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view cipher) {
     moveToEnd(ciphers, aliases.at(cipher));
   }
 
-  void moveToEnd(std::vector<Cipher> &ciphers, std::vector<Cipher> &ciphersToMoveToEnd) {
+  void moveToEnd(std::vector<Cipher> &ciphers, const std::vector<Cipher> &ciphersToMoveToEnd) {
     std::stable_partition(ciphers.begin(), ciphers.end(), [ciphersToMoveToEnd](auto cipher) {
       return std::find(ciphersToMoveToEnd.begin(), ciphersToMoveToEnd.end(), cipher) ==
              ciphersToMoveToEnd.end();
@@ -266,12 +264,12 @@ private:
   }
 
 
-  void add(AliasMap &aliases, std::vector<Cipher> &ciphers, std::string alias) {
+  void add(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view alias) {
     auto toAdd = aliases.at(alias);
     ciphers.insert(ciphers.end(), toAdd.begin(), toAdd.end());
   }
 
-  void remove(AliasMap &aliases, std::vector<Cipher> &ciphers, std::string alias) {
+  void remove(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view alias) {
     auto &toRemove = aliases.at(alias);
     ciphers.erase(std::remove_if(ciphers.begin(), ciphers.end(),
                                  [&](auto x) {
@@ -385,7 +383,7 @@ public:
     for (const auto &any : CIPHER) {
       auto &cipher = any.second;
       this->all.push_back(cipher);
-      auto cipherAlias = cipher.getOpenSSLAlias();
+      auto cipherAlias = cipher.openSSLAlias;
       auto alias = aliases.find(cipherAlias);
       if (alias != aliases.end()) {
         alias->second.push_back(cipher);
@@ -394,7 +392,7 @@ public:
         list.push_back(cipher);
         aliases.insert({cipherAlias, list});
       }
-      aliases.insert({cipher.getOpenSSLAlias(), std::vector<Cipher>{cipher}});
+      aliases.insert({cipher.openSSLAlias, std::vector<Cipher>{cipher}});
     }
 
     // Note: the descriptions of the aliases within the comments are from
