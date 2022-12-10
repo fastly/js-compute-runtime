@@ -12,7 +12,7 @@
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
     "better-logging": "^5.0.0",
-    "chalk": "^5.1.2",
+    "chalk": "^5.2.0",
     "is-port-reachable": "^4.0.0",
     "undici": "^5.14.0"
   },
