@@ -18,7 +18,7 @@ declare module "fastly:config-store" {
    *     "https://http-me.glitch.me"
    *   ],
    *   "src": {
-   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
    *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { ConfigStore } from \"fastly:config-store\";\n\nasync function app (event) {\n  const config = new ConfigStore('animals');\n  return new Response(config.get('cat'));\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
    *   },
    *   "requests": [

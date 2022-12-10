@@ -131,7 +131,7 @@ declare module 'fastly:backend' {
    *     "https://http-me.glitch.me"
    *   ],
    *   "src": {
-   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
    *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { allowDynamicBackends } from \"fastly:experimental\";\nallowDynamicBackends(true);\nasync function app() {\n  // For any request, return the fastly homepage -- without defining a backend!\n  return fetch('https://www.fastly.com/');\n}\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
    *   },
    *   "requests": [
@@ -174,7 +174,7 @@ declare module 'fastly:backend' {
    *     "https://http-me.glitch.me"
    *   ],
    *   "src": {
-   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
    *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { allowDynamicBackends } from \"fastly:experimental\";\nimport { Backend } from \"fastly:backend\";\nallowDynamicBackends(true);\nasync function app() {\n  // For any request, return the fastly homepage -- without defining a backend!\n  const backend = new Backend({\n    name: 'fastly',\n    target: 'fastly.com',\n    hostOverride: \"www.fastly.com\",\n    connectTimeout: 1000,\n    firstByteTimeout: 15000,\n    betweenBytesTimeout: 10000,\n    useSSL: true,\n    sslMinVersion: 1.3,\n    sslMaxVersion: 1.3,\n  });\n  return fetch('https://www.fastly.com/', {\n    backend // Here we are configuring this request to use the backend from above.\n  });\n}\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
    *   },
    *   "requests": [

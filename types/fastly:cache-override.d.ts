@@ -19,7 +19,7 @@ declare module "fastly:cache-override" {
    *     "https://http-me.glitch.me"
    *   ],
    *   "src": {
-   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
    *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { CacheOverride } from \"fastly:cache-override\";\n\n// In this example we override the cache for all the requests prefixed /static/ \n// to have a long TTL (Time To Live), and the home page to have a short TTL and \n// a long SWR (Stale While Revalidate).\nasync function app (event) {\n  const path = (new URL(event.request.url)).pathname;\n  let cacheOverride;\n  if (path == '/') {\n    cacheOverride = new CacheOverride('override', {ttl: 10, swr: 86_400});\n  } else if (path.startsWith('/static/')) {\n    cacheOverride = new CacheOverride('override', {ttl: 86_400});\n  } else {\n    cacheOverride = new CacheOverride('none')\n  }\n  return fetch(event.request.url, {\n    cacheOverride,\n    backend: 'origin_0'\n  });\n}\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
    *   },
    *   "requests": [

@@ -20,7 +20,7 @@ declare module "fastly:env" {
    *     "https://http-me.glitch.me"
    *   ],
    *   "src": {
-   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
    *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { env } from \"fastly:env\";\n\nfunction app(event) {\n  console.log(\"FASTLY_HOSTNAME:\", env(\"FASTLY_HOSTNAME\"));\n  console.log(\"FASTLY_TRACE_ID:\", env(\"FASTLY_TRACE_ID\"));\n\n  return new Response(\"\", {\n    status: 200\n  });\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
    *   },
    *   "requests": [

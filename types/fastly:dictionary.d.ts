@@ -17,7 +17,7 @@ declare module "fastly:dictionary" {
    *     "https://http-me.glitch.me"
    *   ],
    *   "src": {
-   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
    *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { Dictionary } from \"fastly:dictionary\";\n\nasync function app (event) {\n  const animals = new Dictionary('animals');\n  return new Response(animals.get('cat'));\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
    *   },
    *   "srcVersion": 7,
