@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.7.0](https://github.com/fastly/js-compute-runtime/compare/v0.6.0...v0.7.0) (2022-12-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* compute runtime component build ([#326](https://github.com/fastly/js-compute-runtime/issues/326))
+
+### Features
+
+* compute runtime component build ([#326](https://github.com/fastly/js-compute-runtime/issues/326)) ([197504c](https://github.com/fastly/js-compute-runtime/commit/197504c4192e019264011d732a7009786a7a38d0))
+
+
+### Bug Fixes
+
+* Limit to node 16/17/18 as some dependencies do not work on node19 yet ([0d48f77](https://github.com/fastly/js-compute-runtime/commit/0d48f77467fc0c85c837c36b2e3991a2f6b35bcf))
+
 ## [0.6.0](https://github.com/fastly/js-compute-runtime/compare/v0.5.15...v0.6.0) (2022-12-09)
 
 
