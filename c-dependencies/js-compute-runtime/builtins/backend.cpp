@@ -263,7 +263,6 @@ private:
     });
   }
 
-
   void add(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view alias) {
     auto toAdd = aliases.at(alias);
     ciphers.insert(ciphers.end(), toAdd.begin(), toAdd.end());
@@ -356,21 +355,42 @@ private:
     return res;
   }
 
+  std::pair<std::string_view, std::string_view> split_on(std::string_view str, char c) {
+    auto ix = str.find(c);
+    if (ix == str.npos) {
+      return {str, ""};
+    }
+
+    auto left = str.substr(0, ix);
+    ix++;
+    if (ix >= str.size()) {
+      return {left, ""};
+    }
+
+    return {left, str.substr(ix)};
+  }
+
+  std::vector<std::string_view> parts(std::string_view string) {
+    std::vector<std::string_view> result;
+
+    while (!string.empty()) {
+      auto [line, rest] = split_on(string, ':');
+      string = rest;
+
+      while (!line.empty()) {
+        auto [part, rest] = split_on(line, ',');
+        line = rest;
+        result.push_back(part);
+      }
+    }
+
+    return result;
+  }
+
   std::vector<std::string_view> splitCipherSuiteString(std::string_view string) {
     std::vector<std::string_view> result;
-    std::stringstream stringStream(string);
-    std::string line;
-    while (std::getline(stringStream, line, ':')) {
-      std::size_t prev = 0, pos;
-      while ((pos = line.find_first_of(" ,", prev)) != std::string::npos) {
-        if (pos > prev) {
-          result.push_back(line.substr(prev, pos - prev));
-        }
-        prev = pos + 1;
-      }
-      if (prev < line.length()) {
-        result.push_back(line.substr(prev, std::string::npos));
-      }
+    for (auto part : parts(string)) {
+      result.push_back(part);
     }
     return result;
   }
