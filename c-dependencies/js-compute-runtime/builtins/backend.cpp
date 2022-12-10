@@ -554,7 +554,7 @@ public:
       } else if (element.find(AND) != std::string::npos) {
         auto intersections = split(element, "+\\");
         if (intersections.size() > 0 && aliases.find(intersections[0]) != aliases.end()) {
-          std::string result{aliases[intersections[0]]};
+          auto result{aliases[intersections[0]]};
           for (int i = 1; i < intersections.size(); i++) {
             auto alias = aliases.find(intersections[i]);
             if (alias != aliases.end()) {
