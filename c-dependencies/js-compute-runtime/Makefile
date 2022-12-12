@@ -41,8 +41,7 @@ CXX_FLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
 
 CFLAGS := -Wall -Werror -Wno-unknown-attributes -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
 
-LD_FLAGS := -Wl,-z,noexecstack -Wl,-z,text -Wl,-z,relro -Wl,-z,nocopyreloc
-LD_FLAGS += -Wl,-z,stack-size=1048576 -Wl,--stack-first -lwasi-emulated-getpid
+LD_FLAGS := -Wl,-z,stack-size=1048576 -Wl,--stack-first -lwasi-emulated-getpid
 
 DEFINES ?=
 
