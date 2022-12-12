@@ -51,13 +51,13 @@ jobs:
         sudo apt-get update -y
         bash ./build-engine.sh ${{ matrix.profile }}
 
-    - name: "Install wasi-sdk-16 (linux)"
+    - name: "Install wasi-sdk-17 (linux)"
       run: |
         set -x
-        curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-16/wasi-sdk-16.0-linux.tar.gz
-        tar xf wasi-sdk-16.0-linux.tar.gz
+        curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-17/wasi-sdk-17.0-linux.tar.gz
+        tar xf wasi-sdk-17.0-linux.tar.gz
         sudo mkdir -p /opt/wasi-sdk
-        sudo mv wasi-sdk-16.0/* /opt/wasi-sdk/
+        sudo mv wasi-sdk-17.0/* /opt/wasi-sdk/
 
     - name: "Install Binaryen (linux)"
       run: |
