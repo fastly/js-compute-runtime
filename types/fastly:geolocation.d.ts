@@ -5,6 +5,65 @@ declare module "fastly:geolocation" {
    * @param address The IPv4 or IPv6 address to query
    *
    * **Note**: Can only be used when processing requests, not during build-time initialization.
+   * 
+   * @example
+   * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
+   * In this example we return the geolocation details for the provided ip querystring parameter or for the incoming client request if the querystring parameter does not exist.
+   * 
+   * <script type="application/json+fiddle">
+   * {
+   *   "type": "javascript",
+   *   "title": "Geolocation Example",
+   *   "origins": [
+   *     "https://http-me.glitch.me"
+   *   ],
+   *   "src": {
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
+   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { getGeolocationForIpAddress } from \"fastly:geolocation\"\n\nasync function app(event) {\n  try {\n    let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address\n    let geo = getGeolocationForIpAddress(ip);\n\n    return new Response(JSON.stringify(geo), {\n      headers: {\n        \"Content-Type\": \"application/json\",\n      },\n    });\n  } catch (error) {\n    console.error(error);\n    return new Response(\"Internal Server Error\", {\n      stauts: 500\n    });\n  }\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
+   *   },
+   *   "requests": [
+   *     {
+   *       "enableCluster": true,
+   *       "enableShield": false,
+   *       "enableWAF": false,
+   *       "method": "GET",
+   *       "path": "/status=200",
+   *       "useFreshCache": false,
+   *       "followRedirects": false,
+   *       "tests": "",
+   *       "delay": 0
+   *     }
+   *   ],
+   *   "srcVersion": 26
+   * }
+   * </script>
+   * <noscript>
+   * ```js
+   * /// <reference types="@fastly/js-compute" />
+   * import { getGeolocationForIpAddress } from "fastly:geolocation"
+   * 
+   * async function app(event) {
+   *   try {
+   *     let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address
+   *     let geo = getGeolocationForIpAddress(ip);
+   * 
+   *     return new Response(JSON.stringify(geo), {
+   *       headers: {
+   *         "Content-Type": "application/json",
+   *       },
+   *     });
+   *   } catch (error) {
+   *     console.error(error);
+   *     return new Response("Internal Server Error", {
+   *       stauts: 500
+   *     });
+   *   }
+   * }
+   * 
+   * addEventListener("fetch", event => event.respondWith(app(event)));
+   * 
+   * ```
+   * </noscript>
    */
   function getGeolocationForIpAddress(address: string): Geolocation;
   /**
@@ -14,6 +73,65 @@ declare module "fastly:geolocation" {
    * Can be retrieved for the incoming request's client IP address using the
    * {@linkcode "globals".ClientInfo#geo} accessor, and for arbitrary addresses using
    * {@linkcode "fastly:geolocation".getGeolocationForIpAddress}.
+   * 
+   * @example
+   * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
+   * In this example we return the geolocation details for the provided ip querystring parameter or for the incoming client request if the querystring parameter does not exist.
+   * 
+   * <script type="application/json+fiddle">
+   * {
+   *   "type": "javascript",
+   *   "title": "Geolocation Example",
+   *   "origins": [
+   *     "https://http-me.glitch.me"
+   *   ],
+   *   "src": {
+   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
+   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { getGeolocationForIpAddress } from \"fastly:geolocation\"\n\nasync function app(event) {\n  try {\n    let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address\n    let geo = getGeolocationForIpAddress(ip);\n\n    return new Response(JSON.stringify(geo), {\n      headers: {\n        \"Content-Type\": \"application/json\",\n      },\n    });\n  } catch (error) {\n    console.error(error);\n    return new Response(\"Internal Server Error\", {\n      stauts: 500\n    });\n  }\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
+   *   },
+   *   "requests": [
+   *     {
+   *       "enableCluster": true,
+   *       "enableShield": false,
+   *       "enableWAF": false,
+   *       "method": "GET",
+   *       "path": "/status=200",
+   *       "useFreshCache": false,
+   *       "followRedirects": false,
+   *       "tests": "",
+   *       "delay": 0
+   *     }
+   *   ],
+   *   "srcVersion": 26
+   * }
+   * </script>
+   * <noscript>
+   * ```js
+   * /// <reference types="@fastly/js-compute" />
+   * import { getGeolocationForIpAddress } from "fastly:geolocation"
+   * 
+   * async function app(event) {
+   *   try {
+   *     let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address
+   *     let geo = getGeolocationForIpAddress(ip);
+   * 
+   *     return new Response(JSON.stringify(geo), {
+   *       headers: {
+   *         "Content-Type": "application/json",
+   *       },
+   *     });
+   *   } catch (error) {
+   *     console.error(error);
+   *     return new Response("Internal Server Error", {
+   *       stauts: 500
+   *     });
+   *   }
+   * }
+   * 
+   * addEventListener("fetch", event => event.respondWith(app(event)));
+   * 
+   * ```
+   * </noscript>
    */
   interface Geolocation {
     /**
