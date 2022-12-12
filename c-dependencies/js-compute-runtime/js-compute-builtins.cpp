@@ -1540,32 +1540,30 @@ bool apply_cache_override(JSContext *cx, HandleObject self) {
 
   uint8_t tag = builtins::CacheOverride::abi_tag(override);
 
-  fastly_option_u32_t ttl_option;
+  bool has_ttl = true;
+  uint32_t ttl;
   RootedValue val(cx, builtins::CacheOverride::ttl(override));
   if (val.isUndefined()) {
-    ttl_option.is_some = false;
+    has_ttl = false;
   } else {
-    ttl_option.is_some = true;
-    ttl_option.val = val.toInt32();
+    ttl = val.toInt32();
   }
 
-  fastly_option_u32_t swr_option;
+  bool has_swr = true;
+  uint32_t swr;
   val = builtins::CacheOverride::swr(override);
   if (val.isUndefined()) {
-    swr_option.is_some = false;
+    has_swr = false;
   } else {
-    swr_option.is_some = true;
-    swr_option.val = val.toInt32();
+    swr = val.toInt32();
   }
 
   xqd_world_string_t sk_str;
-  fastly_option_string_t sk_opt;
   val = builtins::CacheOverride::surrogate_key(override);
   if (val.isUndefined()) {
-    sk_opt.is_some = false;
+    sk_str.len = 0;
   } else {
     UniqueChars sk_chars;
-    sk_opt.is_some = true;
     sk_chars = encode(cx, val, &sk_str.len);
     if (!sk_chars)
       return false;
@@ -1575,7 +1573,8 @@ bool apply_cache_override(JSContext *cx, HandleObject self) {
   fastly_error_t err;
   return HANDLE_RESULT(cx,
                        xqd_fastly_http_req_cache_override_set(
-                           request_handle(self), tag, &ttl_option, &swr_option, &sk_opt, &err),
+                           request_handle(self), tag, has_ttl ? &ttl : NULL, has_swr ? &swr : NULL,
+                           sk_str.len ? &sk_str : NULL, &err),
                        err);
 }
 

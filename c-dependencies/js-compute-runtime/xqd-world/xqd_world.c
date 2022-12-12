@@ -486,10 +486,10 @@ bool fastly_abi_init(uint64_t abi_version, fastly_error_t *err) {
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -521,10 +521,10 @@ bool fastly_uap_parse(xqd_world_string_t *user_agent, fastly_user_agent_t *ret,
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -547,10 +547,10 @@ bool fastly_http_body_new(fastly_body_handle_t *ret, fastly_error_t *err) {
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -572,10 +572,10 @@ bool fastly_http_body_append(fastly_body_handle_t dest, fastly_body_handle_t src
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -600,10 +600,10 @@ bool fastly_http_body_read(fastly_body_handle_t h, uint32_t chunk_size, fastly_l
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -628,10 +628,10 @@ bool fastly_http_body_write(fastly_body_handle_t h, fastly_list_u8_t *buf,
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -652,10 +652,10 @@ bool fastly_http_body_close(fastly_body_handle_t h, fastly_error_t *err) {
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -679,10 +679,10 @@ bool fastly_log_endpoint_get(xqd_world_string_t *name, fastly_log_endpoint_handl
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -704,10 +704,10 @@ bool fastly_log_write(fastly_log_endpoint_handle_t h, xqd_world_string_t *msg,
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -733,22 +733,36 @@ bool fastly_http_req_body_downstream_get(fastly_request_t *ret, fastly_error_t *
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
 bool fastly_http_req_cache_override_set(fastly_request_handle_t h,
-                                        fastly_http_cache_override_tag_t tag,
-                                        fastly_option_u32_t *ttl,
-                                        fastly_option_u32_t *stale_while_revalidate,
-                                        fastly_option_string_t *sk, fastly_error_t *err) {
+                                        fastly_http_cache_override_tag_t tag, uint32_t *maybe_ttl,
+                                        uint32_t *maybe_stale_while_revalidate,
+                                        xqd_world_string_t *maybe_sk, fastly_error_t *err) {
+  fastly_option_u32_t ttl;
+  ttl.is_some = maybe_ttl != NULL;
+  if (maybe_ttl) {
+    ttl.val = *maybe_ttl;
+  }
+  fastly_option_u32_t stale_while_revalidate;
+  stale_while_revalidate.is_some = maybe_stale_while_revalidate != NULL;
+  if (maybe_stale_while_revalidate) {
+    stale_while_revalidate.val = *maybe_stale_while_revalidate;
+  }
+  fastly_option_string_t sk;
+  sk.is_some = maybe_sk != NULL;
+  if (maybe_sk) {
+    sk.val = *maybe_sk;
+  }
   int32_t option;
   int32_t option1;
-  if ((*ttl).is_some) {
-    const uint32_t *payload0 = &(*ttl).val;
+  if ((ttl).is_some) {
+    const uint32_t *payload0 = &(ttl).val;
     option = 1;
     option1 = (int32_t)(*payload0);
   } else {
@@ -757,8 +771,8 @@ bool fastly_http_req_cache_override_set(fastly_request_handle_t h,
   }
   int32_t option4;
   int32_t option5;
-  if ((*stale_while_revalidate).is_some) {
-    const uint32_t *payload3 = &(*stale_while_revalidate).val;
+  if ((stale_while_revalidate).is_some) {
+    const uint32_t *payload3 = &(stale_while_revalidate).val;
     option4 = 1;
     option5 = (int32_t)(*payload3);
   } else {
@@ -768,8 +782,8 @@ bool fastly_http_req_cache_override_set(fastly_request_handle_t h,
   int32_t option8;
   int32_t option9;
   int32_t option10;
-  if ((*sk).is_some) {
-    const xqd_world_string_t *payload7 = &(*sk).val;
+  if ((sk).is_some) {
+    const xqd_world_string_t *payload7 = &(sk).val;
     option8 = 1;
     option9 = (int32_t)(*payload7).ptr;
     option10 = (int32_t)(*payload7).len;
@@ -795,10 +809,10 @@ bool fastly_http_req_cache_override_set(fastly_request_handle_t h,
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -822,10 +836,10 @@ bool fastly_http_req_downstream_client_ip_addr(fastly_list_u8_t *ret, fastly_err
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -849,10 +863,10 @@ bool fastly_http_req_downstream_client_h2_fingerprint(fastly_list_u8_t *ret, fas
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -877,10 +891,10 @@ bool fastly_http_req_downstream_tls_cipher_openssl_name(xqd_world_string_t *ret,
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -904,10 +918,10 @@ bool fastly_http_req_downstream_tls_protocol(xqd_world_string_t *ret, fastly_err
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -931,10 +945,10 @@ bool fastly_http_req_downstream_tls_client_hello(fastly_list_u8_t *ret, fastly_e
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -958,10 +972,10 @@ bool fastly_http_req_downstream_tls_client_certificate(fastly_list_u8_t *ret, fa
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -982,10 +996,10 @@ bool fastly_http_req_downstream_tls_client_cert_verify_result(fastly_error_t *er
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1009,10 +1023,10 @@ bool fastly_http_req_downstream_tls_ja3_md5(fastly_list_u8_t *ret, fastly_error_
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1035,10 +1049,10 @@ bool fastly_http_req_new(fastly_request_handle_t *ret, fastly_error_t *err) {
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1063,10 +1077,10 @@ bool fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_list_str
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1105,10 +1119,10 @@ bool fastly_http_req_header_value_get(fastly_request_handle_t h, xqd_world_strin
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1147,10 +1161,10 @@ bool fastly_http_req_header_values_get(fastly_request_handle_t h, xqd_world_stri
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1174,10 +1188,10 @@ bool fastly_http_req_header_values_set(fastly_request_handle_t h, xqd_world_stri
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1201,10 +1215,10 @@ bool fastly_http_req_header_insert(fastly_request_handle_t h, xqd_world_string_t
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1228,10 +1242,10 @@ bool fastly_http_req_header_append(fastly_request_handle_t h, xqd_world_string_t
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1254,10 +1268,10 @@ bool fastly_http_req_header_remove(fastly_request_handle_t h, xqd_world_string_t
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1282,10 +1296,10 @@ bool fastly_http_req_method_get(fastly_request_handle_t h, xqd_world_string_t *r
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1308,10 +1322,10 @@ bool fastly_http_req_method_set(fastly_request_handle_t h, xqd_world_string_t *m
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1336,10 +1350,10 @@ bool fastly_http_req_uri_get(fastly_request_handle_t h, xqd_world_string_t *ret,
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1362,10 +1376,10 @@ bool fastly_http_req_uri_set(fastly_request_handle_t h, xqd_world_string_t *uri,
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1389,10 +1403,10 @@ bool fastly_http_req_version_get(fastly_request_handle_t h, fastly_http_version_
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1414,10 +1428,10 @@ bool fastly_http_req_version_set(fastly_request_handle_t h, fastly_http_version_
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1446,10 +1460,10 @@ bool fastly_http_req_send(fastly_request_handle_t h, fastly_body_handle_t b,
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1475,10 +1489,10 @@ bool fastly_http_req_send_async(fastly_request_handle_t h, fastly_body_handle_t 
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1505,10 +1519,10 @@ bool fastly_http_req_send_async_streaming(fastly_request_handle_t h, fastly_body
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1548,10 +1562,10 @@ bool fastly_http_req_pending_req_poll(fastly_pending_request_handle_t h,
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1578,10 +1592,10 @@ bool fastly_http_req_pending_req_wait(fastly_pending_request_handle_t h, fastly_
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1611,10 +1625,10 @@ bool fastly_http_req_pending_req_select(fastly_list_pending_request_handle_t *h,
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1637,10 +1651,10 @@ bool fastly_http_req_key_is_valid(bool *ret, fastly_error_t *err) {
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1661,10 +1675,10 @@ bool fastly_http_req_close(fastly_request_handle_t h, fastly_error_t *err) {
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1687,10 +1701,10 @@ bool fastly_http_req_auto_decompress_response_set(fastly_request_handle_t h,
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1712,10 +1726,10 @@ bool fastly_http_req_upgrade_websocket(xqd_world_string_t *backend, fastly_error
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1737,10 +1751,10 @@ bool fastly_http_req_redirect_to_websocket_proxy(xqd_world_string_t *backend, fa
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1762,10 +1776,10 @@ bool fastly_http_req_redirect_to_grip_proxy(xqd_world_string_t *backend, fastly_
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1788,10 +1802,10 @@ bool fastly_http_req_framing_headers_mode_set(fastly_request_handle_t h,
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1905,10 +1919,10 @@ bool fastly_http_req_register_dynamic_backend(xqd_world_string_t *prefix,
     }
     }
     if (!result.is_err) {
-      return 0;
+      return 1;
     } else {
       *err = result.val.err;
-      return 1;
+      return 0;
     }
   }
 }
@@ -1932,10 +1946,10 @@ bool fastly_http_resp_new(fastly_response_handle_t *ret, fastly_error_t *err) {
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -1960,10 +1974,10 @@ bool fastly_http_resp_header_names_get(fastly_response_handle_t h, fastly_list_s
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2002,10 +2016,10 @@ bool fastly_http_resp_header_value_get(fastly_response_handle_t h, xqd_world_str
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2044,10 +2058,10 @@ bool fastly_http_resp_header_values_get(fastly_response_handle_t h, xqd_world_st
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2071,10 +2085,10 @@ bool fastly_http_resp_header_values_set(fastly_response_handle_t h, xqd_world_st
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2098,10 +2112,10 @@ bool fastly_http_resp_header_insert(fastly_response_handle_t h, xqd_world_string
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2125,10 +2139,10 @@ bool fastly_http_resp_header_append(fastly_response_handle_t h, xqd_world_string
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2151,10 +2165,10 @@ bool fastly_http_resp_header_remove(fastly_response_handle_t h, xqd_world_string
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2178,10 +2192,10 @@ bool fastly_http_resp_version_get(fastly_response_handle_t h, fastly_http_versio
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2203,10 +2217,10 @@ bool fastly_http_resp_version_set(fastly_response_handle_t h, fastly_http_versio
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2228,10 +2242,10 @@ bool fastly_http_resp_send_downstream(fastly_response_handle_t h, fastly_body_ha
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2255,10 +2269,10 @@ bool fastly_http_resp_status_get(fastly_response_handle_t h, fastly_http_status_
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2280,10 +2294,10 @@ bool fastly_http_resp_status_set(fastly_response_handle_t h, fastly_http_status_
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2304,10 +2318,10 @@ bool fastly_http_resp_close(fastly_response_handle_t h, fastly_error_t *err) {
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2330,10 +2344,10 @@ bool fastly_http_resp_framing_headers_mode_set(fastly_response_handle_t h,
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2357,10 +2371,10 @@ bool fastly_dictionary_open(xqd_world_string_t *name, fastly_dictionary_handle_t
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2398,10 +2412,10 @@ bool fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_string_t *key
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2426,10 +2440,10 @@ bool fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string_t *ret,
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2453,10 +2467,10 @@ bool fastly_object_store_open(xqd_world_string_t *name, fastly_object_store_hand
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2494,10 +2508,10 @@ bool fastly_object_store_lookup(fastly_object_store_handle_t store, xqd_world_st
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2535,10 +2549,10 @@ bool fastly_object_store_lookup_as_fd(fastly_object_store_handle_t store, xqd_wo
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2561,10 +2575,10 @@ bool fastly_object_store_insert(fastly_object_store_handle_t store, xqd_world_st
   }
   }
   if (!result.is_err) {
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2588,10 +2602,10 @@ bool fastly_secret_store_open(xqd_world_string_t *name, fastly_secret_store_hand
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2629,10 +2643,10 @@ bool fastly_secret_store_get(fastly_secret_store_handle_t store, xqd_world_strin
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2670,10 +2684,10 @@ bool fastly_secret_store_plaintext(fastly_secret_handle_t secret, fastly_option_
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2711,10 +2725,10 @@ bool fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2737,10 +2751,10 @@ bool fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret, fastly_er
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 
@@ -2767,10 +2781,10 @@ bool fastly_purge_surrogate_key(xqd_world_string_t *surrogate_key, bool soft_pur
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 0;
+    return 1;
   } else {
     *err = result.val.err;
-    return 1;
+    return 0;
   }
 }
 

@@ -254,10 +254,9 @@ bool fastly_log_endpoint_get(xqd_world_string_t *name, fastly_log_endpoint_handl
 bool fastly_log_write(fastly_log_endpoint_handle_t h, xqd_world_string_t *msg, fastly_error_t *err);
 bool fastly_http_req_body_downstream_get(fastly_request_t *ret, fastly_error_t *err);
 bool fastly_http_req_cache_override_set(fastly_request_handle_t h,
-                                        fastly_http_cache_override_tag_t tag,
-                                        fastly_option_u32_t *ttl,
-                                        fastly_option_u32_t *stale_while_revalidate,
-                                        fastly_option_string_t *sk, fastly_error_t *err);
+                                        fastly_http_cache_override_tag_t tag, uint32_t *maybe_ttl,
+                                        uint32_t *maybe_stale_while_revalidate,
+                                        xqd_world_string_t *maybe_sk, fastly_error_t *err);
 bool fastly_http_req_downstream_client_ip_addr(fastly_list_u8_t *ret, fastly_error_t *err);
 bool fastly_http_req_downstream_client_h2_fingerprint(fastly_list_u8_t *ret, fastly_error_t *err);
 bool fastly_http_req_downstream_tls_cipher_openssl_name(xqd_world_string_t *ret,
