@@ -5,6 +5,29 @@ declare module "fastly:object-store" {
    * An object store is a persistent, globally consistent key-value store.
    *
    * **Note**: Can only be used when processing requests, not during build-time initialization.
+   * 
+   * @example
+   * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
+   * In this example we connect to an Object Store named `'files'` and save an entry to the store under the key `'hello'` and then read back the value and return it to the client.
+   * 
+   * ```js
+   * /// <reference types="@fastly/js-compute" />
+   * 
+   * import { ObjectStore } from "fastly:object-store";
+   * 
+   * async function app(event) {
+   *   const files = new ObjectStore('files')
+   * 
+   *   await files.put('hello', 'world')
+   * 
+   *   const entry = await files.get('hello')
+   * 
+   *   return new Response(await entry.text())
+   * }
+   * 
+   * addEventListener("fetch", (event) => event.respondWith(app(event)))
+   * 
+   * ```
    */
   export class ObjectStore {
     /**

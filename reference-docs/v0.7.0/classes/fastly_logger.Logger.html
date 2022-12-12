@@ -16,12 +16,69 @@
 <li><a href="../modules/fastly_logger.html">fastly:logger</a></li>
 <li><a href="fastly_logger.Logger.html">Logger</a></li></ul>
 <h1>Class Logger</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>Class for creating <a href="https://developer.fastly.com/learning/integrations/logging/">Fastly Named Loggers</a>.</p>
+<p><strong>Note</strong>: Can only be used when processing requests, not during build-time initialization.</p>
+
+<h3>Example</h3><script async defer src="https://fiddle.fastly.dev/embed.js"></script>
+<p>In this example we have a create a logger named &#39;splunk&#39; and logs the incoming request method and destination.</p>
+<script type="application/json+fiddle">
+{
+  "type": "javascript",
+  "title": "Logger Example",
+  "origins": [
+    "https://http-me.glitch.me"
+  ],
+  "src": {
+    "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
+    "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { Logger } from \"fastly:logger\";\n\nasync function app (event) {\n  let logger = new Logger(\"splunk\");\n  logger.log(JSON.stringify({\n    method: event.request.method,\n    url: event.request.url\n  }));\n\n  return new Response('OK');\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
+  },
+  "requests": [
+    {
+      "enableCluster": true,
+      "enableShield": false,
+      "enableWAF": false,
+      "data": {
+        "dictionaries": {
+          "animals": {
+            "cat": "meow"
+          }
+        }
+      },
+      "method": "GET",
+      "path": "/status=200",
+      "useFreshCache": false,
+      "followRedirects": false,
+      "tests": "",
+      "delay": 0
+    }
+  ],
+  "srcVersion": 26
+}
+</script>
+<noscript>
+```js
+/// <reference types="@fastly/js-compute" />
+import { Logger } from "fastly:logger";
+
+<p>async function app (event) {
+  let logger = new Logger(&quot;splunk&quot;);
+  logger.log(JSON.stringify({
+    method: event.request.method,
+    url: event.request.url
+  }));</p>
+<p>  return new Response(&#39;OK&#39;);
+}</p>
+<p>addEventListener(&quot;fetch&quot;, event =&gt; event.respondWith(app(event)));</p>
+<p>```
+</noscript></p>
+</div></section>
 <section class="tsd-panel tsd-hierarchy">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
 <li><span class="target">Logger</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/fastly/js-compute-runtime/blob/5e77507/types/fastly:logger.d.ts#L2">fastly:logger.d.ts:2</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/fastly/js-compute-runtime/blob/94d2c9d/types/fastly:logger.d.ts#L64">fastly:logger.d.ts:64</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -52,7 +109,7 @@
 <h5>name: <span class="tsd-signature-type">string</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="fastly_logger.Logger.html" class="tsd-signature-type" data-tsd-kind="Class">Logger</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/fastly/js-compute-runtime/blob/5e77507/types/fastly:logger.d.ts#L8">fastly:logger.d.ts:8</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/fastly/js-compute-runtime/blob/94d2c9d/types/fastly:logger.d.ts#L70">fastly:logger.d.ts:70</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="log" class="tsd-anchor"></a>
@@ -69,7 +126,7 @@
 <h5>message: <span class="tsd-signature-type">any</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/fastly/js-compute-runtime/blob/5e77507/types/fastly:logger.d.ts#L12">fastly:logger.d.ts:12</a></li></ul></aside></li></ul></section></section></div>
+<li>Defined in <a href="https://github.com/fastly/js-compute-runtime/blob/94d2c9d/types/fastly:logger.d.ts#L74">fastly:logger.d.ts:74</a></li></ul></aside></li></ul></section></section></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
