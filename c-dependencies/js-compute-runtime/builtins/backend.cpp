@@ -259,7 +259,7 @@ private:
 
   void moveToEnd(std::vector<Cipher> &ciphers,
                  const std::vector<Cipher> &ciphersToMoveToEnd) const {
-    std::stable_partition(ciphers.begin(), ciphers.end(), [ciphersToMoveToEnd](auto cipher) {
+    std::stable_partition(ciphers.begin(), ciphers.end(), [&ciphersToMoveToEnd](auto &cipher) {
       return std::find(ciphersToMoveToEnd.begin(), ciphersToMoveToEnd.end(), cipher) ==
              ciphersToMoveToEnd.end();
     });
