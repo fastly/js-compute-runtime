@@ -191,9 +191,10 @@ bool get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_option_body_handle_t ret;
   fastly_error_t err;
-  if (!HANDLE_RESULT(
-          cx, xqd_fastly_object_store_lookup(object_store_handle(self), &key_str, &ret, &err), err))
+  if (!xqd_fastly_object_store_lookup(object_store_handle(self), &key_str, &ret, &err)) {
+    HANDLE_ERROR(cx, err);
     return false;
+  }
 
   // When no entry is found, we are going to resolve the Promise with `null`.
   if (!ret.is_some) {
@@ -264,10 +265,10 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
       fastly_body_handle_t body = RequestOrResponse::body_handle(source_owner);
 
       fastly_error_t err;
-      if (!HANDLE_RESULT(
-              cx, xqd_fastly_object_store_insert(object_store_handle(self), &key_str, body, &err),
-              err))
+      if (!xqd_fastly_object_store_insert(object_store_handle(self), &key_str, body, &err)) {
+        HANDLE_ERROR(cx, err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
 
       // The insert was successful so we return a Promise which resolves to undefined
       JS::RootedValue rval(cx);
@@ -320,7 +321,8 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
     fastly_body_handle_t body_handle = INVALID_HANDLE;
     fastly_error_t err;
-    if (!HANDLE_RESULT(cx, xqd_fastly_http_body_new(&body_handle, &err), err)) {
+    if (!xqd_fastly_http_body_new(&body_handle, &err)) {
+      HANDLE_ERROR(cx, err);
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
@@ -328,22 +330,22 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    bool is_error = write_to_body_all(body_handle, buf, length, &err);
+    bool ok = write_to_body_all(body_handle, buf, length, &err);
 
-    // Ensure that the NoGC is reset, so throwing an error in HANDLE_RESULT
+    // Ensure that the NoGC is reset, so throwing an error in HANDLE_ERROR
     // succeeds.
     if (maybeNoGC.isSome()) {
       maybeNoGC.reset();
     }
 
-    if (!HANDLE_RESULT(cx, is_error, err)) {
+    if (!ok) {
+      HANDLE_ERROR(cx, err);
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    is_error =
-        xqd_fastly_object_store_insert(object_store_handle(self), &key_str, body_handle, &err);
-    // Ensure that we throw an exception for all unexpected host errors.
-    if (!HANDLE_RESULT(cx, is_error, err)) {
+    if (!xqd_fastly_object_store_insert(object_store_handle(self), &key_str, body_handle, &err)) {
+      // Ensure that we throw an exception for all unexpected host errors.
+      HANDLE_ERROR(cx, err);
       return RejectPromiseWithPendingError(cx, result_promise);
     }
 
@@ -406,15 +408,15 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_object_store_handle_t object_store_handle = INVALID_HANDLE;
   fastly_error_t err;
-  bool is_error = xqd_fastly_object_store_open(&name_str, &object_store_handle, &err);
-  if (is_error && err == FASTLY_ERROR_INVALID_ARGUMENT) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_DOES_NOT_EXIST,
-                              name_str.ptr);
-    return false;
-  }
-
-  if (!HANDLE_RESULT(cx, is_error, err)) {
-    return false;
+  if (!xqd_fastly_object_store_open(&name_str, &object_store_handle, &err)) {
+    if (err == FASTLY_ERROR_INVALID_ARGUMENT) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_DOES_NOT_EXIST,
+                                name_str.ptr);
+      return false;
+    } else {
+      HANDLE_ERROR(cx, err);
+      return false;
+    }
   }
 
   JS::RootedObject object_store(cx, JS_NewObjectForConstructor(cx, &class_, args));

@@ -37,10 +37,10 @@ bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   fastly_error_t err;
 
   // Ensure that we throw an exception for all unexpected host errors.
-  if (!HANDLE_RESULT(
-          cx, xqd_fastly_dictionary_get(Dictionary::dictionary_handle(self), &name_str, &ret, &err),
-          err))
+  if (!xqd_fastly_dictionary_get(Dictionary::dictionary_handle(self), &name_str, &ret, &err)) {
+    HANDLE_ERROR(cx, err);
     return false;
+  }
 
   if (!ret.is_some) {
     args.rval().setNull();
@@ -113,14 +113,15 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_dictionary_handle_t dict_handle = INVALID_HANDLE;
   fastly_error_t err;
-  bool is_error = xqd_fastly_dictionary_open(&name_str, &dict_handle, &err);
-  if (is_error && err == FASTLY_ERROR_BAD_HANDLE) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_DOES_NOT_EXIST,
-                              name_str.ptr);
-    return false;
-  }
-  if (!HANDLE_RESULT(cx, is_error, err)) {
-    return false;
+  if (!xqd_fastly_dictionary_open(&name_str, &dict_handle, &err)) {
+    if (err == FASTLY_ERROR_BAD_HANDLE) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_DOES_NOT_EXIST,
+                                name_str.ptr);
+      return false;
+    } else {
+      HANDLE_ERROR(cx, err);
+      return false;
+    }
   }
 
   JS::SetReservedSlot(dictionary, Dictionary::Slots::Handle, JS::Int32Value(dict_handle));

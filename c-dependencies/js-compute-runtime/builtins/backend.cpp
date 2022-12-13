@@ -811,13 +811,12 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   }
 
   fastly_error_t err;
-  auto result =
-      xqd_fastly_http_req_register_dynamic_backend(&name_str, &target_str, &backend_config, &err);
-  if (!HANDLE_RESULT(cx, result, err)) {
+  if (!xqd_fastly_http_req_register_dynamic_backend(&name_str, &target_str, &backend_config,
+                                                    &err)) {
+    HANDLE_ERROR(cx, err);
     return JS::Result<mozilla::Ok>(JS::Error());
-  } else {
-    return mozilla::Ok();
   }
+  return mozilla::Ok();
 }
 
 JSString *Backend::name(JSContext *cx, JSObject *self) {

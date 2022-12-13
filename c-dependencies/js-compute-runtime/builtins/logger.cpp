@@ -16,8 +16,10 @@ bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_error_t err;
   xqd_world_string_t msg_str = {msg.get(), msg_len};
-  if (!HANDLE_RESULT(cx, xqd_fastly_log_write(endpoint, &msg_str, &err), err))
+  if (!xqd_fastly_log_write(endpoint, &msg_str, &err)) {
+    HANDLE_ERROR(cx, err);
     return false;
+  }
 
   args.rval().setUndefined();
   return true;
@@ -35,8 +37,10 @@ JSObject *Logger::create(JSContext *cx, const char *name) {
   fastly_log_endpoint_handle_t handle;
   xqd_world_string_t name_str = {const_cast<char *>(name), strlen(name)};
   fastly_error_t err;
-  if (!HANDLE_RESULT(cx, xqd_fastly_log_endpoint_get(&name_str, &handle, &err), err))
+  if (!xqd_fastly_log_endpoint_get(&name_str, &handle, &err)) {
+    HANDLE_ERROR(cx, err);
     return nullptr;
+  }
 
   JS::SetReservedSlot(logger, Slots::Endpoint, JS::Int32Value(handle));
 
@@ -54,7 +58,8 @@ bool Logger::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   fastly_log_endpoint_handle_t handle = INVALID_HANDLE;
   fastly_error_t err;
 
-  if (!HANDLE_RESULT(cx, xqd_fastly_log_endpoint_get(&name_str, &handle, &err), err)) {
+  if (!xqd_fastly_log_endpoint_get(&name_str, &handle, &err)) {
+    HANDLE_ERROR(cx, err);
     return false;
   }
 

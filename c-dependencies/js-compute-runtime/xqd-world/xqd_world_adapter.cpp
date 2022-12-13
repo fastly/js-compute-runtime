@@ -242,7 +242,7 @@ bool xqd_fastly_http_req_header_values_get(fastly_request_handle_t h, xqd_world_
   while (true) {
     if (!convert_result(xqd_req_header_values_get(h, name->ptr, name->len, buf, HEADER_MAX_LEN,
                                                   cursor, &next_cursor, &nwritten),
-                        err);) {
+                        err)) {
       JS_free(CONTEXT, buf);
       return false;
     }
@@ -338,12 +338,6 @@ bool xqd_fastly_http_req_version_get(fastly_request_handle_t h, fastly_http_vers
   return true;
 }
 
-bool xqd_fastly_http_req_send(fastly_request_handle_t h, fastly_body_handle_t b,
-                              xqd_world_string_t *backend, fastly_response_t *ret,
-                              fastly_error_t *err) {
-  return convert_result(xqd_req_send(h, b, backend->ptr, backend->len, &ret->f0, &ret->f1), err);
-}
-
 bool xqd_fastly_http_req_send_async(fastly_request_handle_t h, fastly_body_handle_t b,
                                     xqd_world_string_t *backend,
                                     fastly_pending_request_handle_t *ret, fastly_error_t *err) {
@@ -355,13 +349,6 @@ bool xqd_fastly_http_req_send_async_streaming(fastly_request_handle_t h, fastly_
                                               fastly_pending_request_handle_t *ret,
                                               fastly_error_t *err) {
   return convert_result(xqd_req_send_async_streaming(h, b, backend->ptr, backend->len, ret), err);
-}
-
-bool xqd_fastly_http_req_pending_req_select(fastly_list_pending_request_handle_t *h,
-                                            fastly_tuple2_u32_response_t *ret,
-                                            fastly_error_t *err) {
-  return convert_result(
-      xqd_req_pending_req_select(h->ptr, h->len, &ret->f0, &ret->f1.f0, &ret->f1.f1), err);
 }
 
 bool xqd_fastly_http_req_pending_req_wait(fastly_pending_request_handle_t h, fastly_response_t *ret,
@@ -572,7 +559,7 @@ bool xqd_fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_string_t 
   ret->val.ptr = static_cast<char *>(JS_malloc(CONTEXT, DICTIONARY_ENTRY_MAX_LEN));
   if (!convert_result(xqd_dictionary_get(h, key->ptr, key->len, ret->val.ptr,
                                          DICTIONARY_ENTRY_MAX_LEN, &ret->val.len),
-                      err);) {
+                      err)) {
     if (*err == FASTLY_ERROR_OPTIONAL_NONE) {
       ret->is_some = false;
       return true;
