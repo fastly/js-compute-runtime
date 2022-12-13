@@ -273,7 +273,7 @@ private:
   void remove(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view alias) const {
     auto &toRemove = aliases.at(alias);
     ciphers.erase(std::remove_if(ciphers.begin(), ciphers.end(),
-                                 [&](auto x) {
+                                 [&](auto &x) {
                                    return std::find(toRemove.begin(), toRemove.end(), x) !=
                                           toRemove.end();
                                  }),
