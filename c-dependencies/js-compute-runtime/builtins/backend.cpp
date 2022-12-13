@@ -592,7 +592,7 @@ public:
     }
     // Remove all ciphers from `ciphers` which are contained in `removedCiphers`
     ciphers.erase(std::remove_if(ciphers.begin(), ciphers.end(),
-                                 [&removedCiphers](Cipher c) {
+                                 [&removedCiphers](auto &c) {
                                    return std::find(removedCiphers.begin(), removedCiphers.end(),
                                                     c) != removedCiphers.end();
                                  }),
