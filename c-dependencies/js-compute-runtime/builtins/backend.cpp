@@ -252,23 +252,25 @@ private:
   static constexpr auto COMPLEMENTOFDEFAULT = "COMPLEMENTOFDEFAULT";
   static constexpr auto ALL = "ALL";
 
-  void moveToEnd(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view cipher) {
+  void moveToEnd(const AliasMap &aliases, std::vector<Cipher> &ciphers,
+                 std::string_view cipher) const {
     this->moveToEnd(ciphers, aliases.at(cipher));
   }
 
-  void moveToEnd(std::vector<Cipher> &ciphers, const std::vector<Cipher> &ciphersToMoveToEnd) {
+  void moveToEnd(std::vector<Cipher> &ciphers,
+                 const std::vector<Cipher> &ciphersToMoveToEnd) const {
     std::stable_partition(ciphers.begin(), ciphers.end(), [ciphersToMoveToEnd](auto cipher) {
       return std::find(ciphersToMoveToEnd.begin(), ciphersToMoveToEnd.end(), cipher) ==
              ciphersToMoveToEnd.end();
     });
   }
 
-  void add(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view alias) {
+  void add(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view alias) const {
     auto toAdd = aliases.at(alias);
     ciphers.insert(ciphers.end(), toAdd.begin(), toAdd.end());
   }
 
-  void remove(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view alias) {
+  void remove(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view alias) const {
     auto &toRemove = aliases.at(alias);
     ciphers.erase(std::remove_if(ciphers.begin(), ciphers.end(),
                                  [&](auto x) {
@@ -278,7 +280,7 @@ private:
                   ciphers.end());
   }
 
-  void strengthSort(std::vector<Cipher> &ciphers) {
+  void strengthSort(std::vector<Cipher> &ciphers) const {
     /*
      * This routine sorts the ciphers with descending strength. The sorting
      * must keep the pre-sorted sequence.
@@ -291,13 +293,13 @@ private:
    * See
    * https://github.com/openssl/openssl/blob/709651c9022e7be7e69cf8a2f6edf2c8722a6a1e/ssl/ssl_ciph.c#L1455
    */
-  void defaultSort(std::vector<Cipher> &ciphers) {
+  void defaultSort(std::vector<Cipher> &ciphers) const {
     auto byStrength = [](auto &l, auto &r) { return l.strength_bits > r.strength_bits; };
     // order all ciphers by strength first
     std::sort(ciphers.begin(), ciphers.end(), byStrength);
 
-    auto it =
-        std::stable_partition(ciphers.begin(), ciphers.end(), this->byKeyExchange(KeyExchange::EECDH));
+    auto it = std::stable_partition(ciphers.begin(), ciphers.end(),
+                                    this->byKeyExchange(KeyExchange::EECDH));
 
     /* AES is our preferred symmetric cipher */
     auto aes = {Encryption::AES128, Encryption::AES128GCM, Encryption::AES256,
@@ -307,40 +309,40 @@ private:
     it = std::stable_partition(it, ciphers.end(), this->byEncryption(aes));
 
     /* Move ciphers without forward secrecy to the end */;
-    std::stable_partition(it, ciphers.end(), [compare = this->byKeyExchange(KeyExchange::RSA)](auto &c) {
-      return !compare(c);
-    });
+    std::stable_partition(
+        it, ciphers.end(),
+        [compare = this->byKeyExchange(KeyExchange::RSA)](auto &c) { return !compare(c); });
   }
 
-  std::function<bool(const Cipher &)> byProtocol(Protocol val) {
+  std::function<bool(const Cipher &)> byProtocol(Protocol val) const {
     return [val](auto &c) { return c.protocol == val; };
   }
 
-  std::function<bool(const Cipher &)> byKeyExchange(KeyExchange val) {
+  std::function<bool(const Cipher &)> byKeyExchange(KeyExchange val) const {
     return [val](auto &c) { return c.kx == val; };
   }
 
-  std::function<bool(const Cipher &)> byAuthentication(Authentication val) {
+  std::function<bool(const Cipher &)> byAuthentication(Authentication val) const {
     return [val](auto &c) { return c.au == val; };
   }
 
-  std::function<bool(const Cipher &)> byEncryption(std::set<Encryption> vals) {
+  std::function<bool(const Cipher &)> byEncryption(std::set<Encryption> vals) const {
     return [vals](auto &c) { return vals.find(c.enc) != vals.end(); };
   }
 
-  std::function<bool(const Cipher &)> byEncryption(Encryption val) {
+  std::function<bool(const Cipher &)> byEncryption(Encryption val) const {
     return [val](auto &c) { return c.enc == val; };
   }
 
-  std::function<bool(const Cipher &)> byEncryptionLevel(EncryptionLevel val) {
+  std::function<bool(const Cipher &)> byEncryptionLevel(EncryptionLevel val) const {
     return [val](auto &c) { return c.level == val; };
   }
 
-  std::function<bool(const Cipher &)> byMessageDigest(MessageDigest val) {
+  std::function<bool(const Cipher &)> byMessageDigest(MessageDigest val) const {
     return [val](auto &c) { return c.mac == val; };
   }
 
-  std::vector<std::string_view> split(std::string_view s, std::string_view delimiter) {
+  std::vector<std::string_view> split(std::string_view s, std::string_view delimiter) const {
     size_t pos_start = 0, pos_end, delim_len = delimiter.length();
     std::string token;
     std::vector<std::string_view> res;
@@ -355,7 +357,7 @@ private:
     return res;
   }
 
-  std::pair<std::string_view, std::string_view> split_on(std::string_view str, char c) {
+  std::pair<std::string_view, std::string_view> split_on(std::string_view str, char c) const {
     auto ix = str.find(c);
     if (ix == str.npos) {
       return {str, ""};
@@ -370,7 +372,7 @@ private:
     return {left, str.substr(ix)};
   }
 
-  std::vector<std::string_view> splitCipherSuiteString(std::string_view string) {
+  std::vector<std::string_view> splitCipherSuiteString(std::string_view string) const {
     std::vector<std::string_view> result;
 
     while (!string.empty()) {
@@ -531,7 +533,7 @@ public:
     aliases.insert({DEFAULT, this->parse("ALL:!COMPLEMENTOFDEFAULT:!eNULL")});
   }
 
-  std::vector<Cipher> parse(std::string_view expression) {
+  std::vector<Cipher> parse(std::string_view expression) const {
     /**
      * All ciphers by their openssl alias name.
      */
@@ -547,8 +549,10 @@ public:
         }
       } else if (element.rfind(EXCLUDE, 0) == 0) {
         auto alias = element.substr(1);
-        if (aliases.find(alias) != aliases.end()) {
-          auto toAdd = aliases[alias];
+        auto found = aliases.find(alias);
+        if (found != aliases.end()) {
+
+          auto toAdd = found.operator->()->second;
           removedCiphers.insert(removedCiphers.end(), toAdd.begin(), toAdd.end());
         }
       } else if (element.rfind(TO_END, 0) == 0) {
@@ -563,23 +567,26 @@ public:
         this->add(aliases, ciphers, element);
       } else if (element.find(AND) != std::string::npos) {
         auto intersections = this->split(element, "+\\");
-        if (intersections.size() > 0 && aliases.find(intersections[0]) != aliases.end()) {
-          auto result{aliases[intersections[0]]};
-          for (int i = 1; i < intersections.size(); i++) {
-            auto alias = aliases.find(intersections[i]);
-            if (alias != aliases.end()) {
-              // make `result` only contain the aliases from `alias`
-              result.erase(std::remove_if(result.begin(), result.end(),
-                                          [&](auto x) {
-                                            return std::find(alias->second.begin(),
-                                                             alias->second.end(),
-                                                             x) != alias->second.end();
-                                          }),
-                           result.end());
+        if (intersections.size() > 0) {
+          auto found = aliases.find(intersections[0]);
+          if (found != aliases.end()) {
+            auto result{found.operator->()->second};
+            for (int i = 1; i < intersections.size(); i++) {
+              auto alias = aliases.find(intersections[i]);
+              if (alias != aliases.end()) {
+                // make `result` only contain the aliases from `alias`
+                result.erase(std::remove_if(result.begin(), result.end(),
+                                            [&](auto x) {
+                                              return std::find(alias->second.begin(),
+                                                               alias->second.end(),
+                                                               x) != alias->second.end();
+                                            }),
+                             result.end());
+              }
             }
+            // Add all of `result` onto `ciphers`
+            ciphers.insert(ciphers.end(), result.begin(), result.end());
           }
-          // Add all of `result` onto `ciphers`
-          ciphers.insert(ciphers.end(), result.begin(), result.end());
         }
       }
     }
