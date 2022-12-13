@@ -253,7 +253,7 @@ private:
   static constexpr auto ALL = "ALL";
 
   void moveToEnd(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view cipher) {
-    moveToEnd(ciphers, aliases.at(cipher));
+    this->moveToEnd(ciphers, aliases.at(cipher));
   }
 
   void moveToEnd(std::vector<Cipher> &ciphers, const std::vector<Cipher> &ciphersToMoveToEnd) {
@@ -297,17 +297,17 @@ private:
     std::sort(ciphers.begin(), ciphers.end(), byStrength);
 
     auto it =
-        std::stable_partition(ciphers.begin(), ciphers.end(), byKeyExchange(KeyExchange::EECDH));
+        std::stable_partition(ciphers.begin(), ciphers.end(), this->byKeyExchange(KeyExchange::EECDH));
 
     /* AES is our preferred symmetric cipher */
     auto aes = {Encryption::AES128, Encryption::AES128GCM, Encryption::AES256,
                 Encryption::AES256GCM};
 
     /* Now arrange all ciphers by preference: */
-    it = std::stable_partition(it, ciphers.end(), byEncryption(aes));
+    it = std::stable_partition(it, ciphers.end(), this->byEncryption(aes));
 
     /* Move ciphers without forward secrecy to the end */;
-    std::stable_partition(it, ciphers.end(), [compare = byKeyExchange(KeyExchange::RSA)](auto &c) {
+    std::stable_partition(it, ciphers.end(), [compare = this->byKeyExchange(KeyExchange::RSA)](auto &c) {
       return !compare(c);
     });
   }
@@ -374,11 +374,11 @@ private:
     std::vector<std::string_view> result;
 
     while (!string.empty()) {
-      auto [line, rest] = split_on(string, ':');
+      auto [line, rest] = this->split_on(string, ':');
       string = rest;
 
       while (!line.empty()) {
-        auto [part, rest] = split_on(line, ',');
+        auto [part, rest] = this->split_on(line, ',');
         line = rest;
         result.push_back(part);
       }
@@ -418,29 +418,29 @@ public:
     // bits, and some cipher suites with 128-bit keys.
     std::vector<Cipher> high;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(high),
-                 byEncryptionLevel(EncryptionLevel::HIGH));
+                 this->byEncryptionLevel(EncryptionLevel::HIGH));
     aliases.insert({HIGH, high});
     // "Medium" encryption cipher suites, currently some of those using 128 bit encryption.
     std::vector<Cipher> medium;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(medium),
-                 byEncryptionLevel(EncryptionLevel::MEDIUM));
+                 this->byEncryptionLevel(EncryptionLevel::MEDIUM));
     aliases.insert({MEDIUM, medium});
 
     // Cipher suites using RSA key exchange or authentication. RSA is an alias for kRSA.
     std::vector<Cipher> krsa;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(krsa),
-                 byKeyExchange(KeyExchange::RSA));
+                 this->byKeyExchange(KeyExchange::RSA));
     aliases.insert({kRSA, krsa});
     std::vector<Cipher> arsa;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(arsa),
-                 byAuthentication(Authentication::RSA));
+                 this->byAuthentication(Authentication::RSA));
     aliases.insert({aRSA, arsa});
     aliases.insert({RSA, krsa});
 
     // Cipher suites using ephemeral ECDH key agreement, including anonymous cipher suites.
     std::vector<Cipher> ecdh;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(ecdh),
-                 byKeyExchange(KeyExchange::EECDH));
+                 this->byKeyExchange(KeyExchange::EECDH));
     aliases.insert({kEECDH, ecdh});
     aliases.insert({kECDHE, ecdh});
     aliases.insert({ECDH, ecdh});
@@ -455,27 +455,27 @@ public:
     // or TLS, they only affect the list of available cipher suites.
     std::vector<Cipher> tlsv2;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(tlsv2),
-                 byProtocol(Protocol::TLSv1_2));
+                 this->byProtocol(Protocol::TLSv1_2));
     aliases.insert({SSL_PROTO_TLSv1_2, tlsv2});
     std::vector<Cipher> tlsv1;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(tlsv1),
-                 byProtocol(Protocol::TLSv1));
+                 this->byProtocol(Protocol::TLSv1));
     aliases.insert({SSL_PROTO_TLSv1_0, tlsv1});
     aliases.insert({SSL_PROTO_TLSv1, tlsv1});
     std::vector<Cipher> sslv3;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(sslv3),
-                 byProtocol(Protocol::SSLv3));
+                 this->byProtocol(Protocol::SSLv3));
     aliases.insert({SSL_PROTO_SSLv3, sslv3});
 
     // cipher suites using 128 bit AES.
     std::vector<Cipher> aes128;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(aes128),
-                 byEncryption({Encryption::AES128, Encryption::AES128GCM}));
+                 this->byEncryption({Encryption::AES128, Encryption::AES128GCM}));
     aliases.insert({AES128, aes128});
     // cipher suites using 256 bit AES.
     std::vector<Cipher> aes256;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(aes256),
-                 byEncryption({Encryption::AES256, Encryption::AES256GCM}));
+                 this->byEncryption({Encryption::AES256, Encryption::AES256GCM}));
     aliases.insert({AES256, aes256});
     // cipher suites using either 128 or 256 bit AES.
     auto aes(aes128);
@@ -485,36 +485,36 @@ public:
     // AES in Galois Counter Mode (GCM).
     std::vector<Cipher> aesgcm;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(aesgcm),
-                 byEncryption({Encryption::AES128GCM, Encryption::AES256GCM}));
+                 this->byEncryption({Encryption::AES128GCM, Encryption::AES256GCM}));
     aliases.insert({AESGCM, aesgcm});
 
     // Cipher suites using ChaCha20.
     std::vector<Cipher> chacha20;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(chacha20),
-                 byEncryption(Encryption::CHACHA20POLY1305));
+                 this->byEncryption(Encryption::CHACHA20POLY1305));
     aliases.insert({CHACHA20, chacha20});
 
     // Cipher suites using triple DES.
     std::vector<Cipher> triple_des;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(triple_des),
-                 byEncryption(Encryption::TRIPLE_DES));
+                 this->byEncryption(Encryption::TRIPLE_DES));
     aliases.insert({TRIPLE_DES, triple_des});
 
     // Cipher suites using SHA1.
     std::vector<Cipher> sha1;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(sha1),
-                 byMessageDigest(MessageDigest::SHA1));
+                 this->byMessageDigest(MessageDigest::SHA1));
     aliases.insert({SHA1, sha1});
     aliases.insert({SHA, sha1});
     // Cipher suites using SHA256.
     std::vector<Cipher> sha256;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(sha256),
-                 byMessageDigest(MessageDigest::SHA256));
+                 this->byMessageDigest(MessageDigest::SHA256));
     aliases.insert({SHA256, sha256});
     // Cipher suites using SHA384.
     std::vector<Cipher> sha384;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(sha384),
-                 byMessageDigest(MessageDigest::SHA384));
+                 this->byMessageDigest(MessageDigest::SHA384));
     aliases.insert({SHA384, sha384});
 
     // COMPLEMENTOFDEFAULT:
@@ -528,14 +528,14 @@ public:
 
     // The content of the default list is determined at compile time and normally corresponds to
     // ALL:!COMPLEMENTOFDEFAULT:!eNULL.
-    aliases.insert({DEFAULT, parse("ALL:!COMPLEMENTOFDEFAULT:!eNULL")});
+    aliases.insert({DEFAULT, this->parse("ALL:!COMPLEMENTOFDEFAULT:!eNULL")});
   }
 
   std::vector<Cipher> parse(std::string_view expression) {
     /**
      * All ciphers by their openssl alias name.
      */
-    auto elements = splitCipherSuiteString(expression);
+    auto elements = this->splitCipherSuiteString(expression);
     std::vector<Cipher> ciphers;
     std::vector<Cipher> removedCiphers;
     for (auto &element : elements) {
@@ -543,7 +543,7 @@ public:
       if (element.rfind(DELETE, 0) == 0) {
         auto alias = element.substr(1);
         if (aliases.find(alias) != aliases.end()) {
-          remove(aliases, ciphers, alias);
+          this->remove(aliases, ciphers, alias);
         }
       } else if (element.rfind(EXCLUDE, 0) == 0) {
         auto alias = element.substr(1);
@@ -554,15 +554,15 @@ public:
       } else if (element.rfind(TO_END, 0) == 0) {
         auto alias = element.substr(1);
         if (aliases.find(alias) != aliases.end()) {
-          moveToEnd(aliases, ciphers, alias);
+          this->moveToEnd(aliases, ciphers, alias);
         }
       } else if ("@STRENGTH" == element) {
-        strengthSort(ciphers);
+        this->strengthSort(ciphers);
         break;
       } else if (aliases.find(element) != aliases.end()) {
-        add(aliases, ciphers, element);
+        this->add(aliases, ciphers, element);
       } else if (element.find(AND) != std::string::npos) {
-        auto intersections = split(element, "+\\");
+        auto intersections = this->split(element, "+\\");
         if (intersections.size() > 0 && aliases.find(intersections[0]) != aliases.end()) {
           auto result{aliases[intersections[0]]};
           for (int i = 1; i < intersections.size(); i++) {
