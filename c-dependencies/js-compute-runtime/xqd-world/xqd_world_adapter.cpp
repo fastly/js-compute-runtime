@@ -683,7 +683,8 @@ bool xqd_fastly_http_req_cache_override_set(fastly_request_handle_t h,
                                             uint32_t *maybe_ttl,
                                             uint32_t *maybe_stale_while_revalidate,
                                             xqd_world_string_t *maybe_sk, fastly_error_t *err) {
-  return fastly_http_req_cache_override_set(h, tag, ttl, stale_while_revalidate, sk, err);
+  return fastly_http_req_cache_override_set(h, tag, maybe_ttl, maybe_stale_while_revalidate,
+                                            maybe_sk, err);
 }
 
 bool xqd_fastly_http_req_downstream_client_ip_addr(fastly_list_u8_t *ret, fastly_error_t *err) {

@@ -51,7 +51,7 @@ DEFINES += -DMOZ_JS_STREAMS
 
 .PHONY: all install clean distclean
 
-all: js-compute-runtime.wasm
+all: js-compute-runtime.wasm js-compute-runtime-component.wasm
 
 compiler_flags:
 	echo '$(CXX_OPT) $(CXX_FLAGS)' | cmp -s - $@ || echo '$(CXX_OPT) $(CXX_FLAGS)' > $@
