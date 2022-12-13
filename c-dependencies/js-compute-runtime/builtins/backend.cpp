@@ -370,7 +370,7 @@ private:
     return {left, str.substr(ix)};
   }
 
-  std::vector<std::string_view> parts(std::string_view string) {
+  std::vector<std::string_view> splitCipherSuiteString(std::string_view string) {
     std::vector<std::string_view> result;
 
     while (!string.empty()) {
@@ -384,14 +384,6 @@ private:
       }
     }
 
-    return result;
-  }
-
-  std::vector<std::string_view> splitCipherSuiteString(std::string_view string) {
-    std::vector<std::string_view> result;
-    for (auto part : parts(string)) {
-      result.push_back(part);
-    }
     return result;
   }
 
