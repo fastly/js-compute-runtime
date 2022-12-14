@@ -94,12 +94,16 @@ $(OBJ_DIR)xqd-world/xqd_world_adapter.o: $(FSM_SRC)xqd-world/xqd_world_adapter.c
 $(OBJ_DIR)xqd-world/xqd_world_adapter_component.o: $(FSM_SRC)xqd-world/xqd_world_adapter.cpp $(FSM_SRC)Makefile compiler_flags
 	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) -DCOMPONENT -I $(SM_SRC)include -MMD -MP -c -o $@ $<
 
+# NOTE: we shadow wasm-opt by adding $(FSM_SRC)/scripts to the path, which
+# includes a script called wasm-opt that immediately exits successfully. See
+# that script for more information about why we do this.
+
 js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(OBJ_DIR)xqd-world/xqd_world.o $(OBJ_DIR)xqd-world/xqd_world_adapter.o $(RUST_URL_LIB)
-	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) $(LD_FLAGS) -o $@ $^
+	PATH="$(FSM_SRC)/scripts:$$PATH" $(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) $(LD_FLAGS) -o $@ $^
 	$(call WASM_STRIP,$@)
 
 js-compute-runtime-component.wasm: $(FSM_OBJ) $(OBJ_DIR)xqd-world/xqd_world.o $(OBJ_DIR)xqd-world/xqd_world_adapter_component.o $(SM_OBJ) $(RUST_URL_LIB)
-	$(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) $(LD_FLAGS) -o $@ $^
+	PATH="$(FSM_SRC)/scripts:$$PATH" $(WASI_CXX) $(CXX_FLAGS) $(CXX_OPT) $(DEFINES) $(LD_FLAGS) -o $@ $^
 	$(call WASM_STRIP,$@)
 
 install: js-compute-runtime.wasm
