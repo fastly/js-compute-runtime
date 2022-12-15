@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0](https://github.com/fastly/js-compute-runtime/compare/v0.7.0...v1.0.0) (2022-12-14)
+
+
+### Features
+
+* implement validation for backend cipher definitions ([157be64](https://github.com/fastly/js-compute-runtime/commit/157be64e84956d24259003331cb51a8c5acec040))
+
 ## [0.7.0](https://github.com/fastly/js-compute-runtime/compare/v0.6.0...v0.7.0) (2022-12-10)
 
 
