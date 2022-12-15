@@ -18,7 +18,6 @@
   },
   "files": [
     "types",
-    "reference-docs",
     "js-compute-runtime-cli.js",
     "js-compute-runtime.wasm",
     "src",
