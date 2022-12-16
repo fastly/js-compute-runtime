@@ -2,7 +2,7 @@
 
 ![npm version](https://img.shields.io/npm/v/@fastly/js-compute) ![npm downloads per month](https://img.shields.io/npm/dm/@fastly/js-compute)
 
-Javascript SDK and CLI for building JavaScript applications on Fastly's [Compute@Edge](https://www.fastly.com/products/edge-compute/serverless).
+JavaScript SDK and CLI for building JavaScript applications on Fastly's [Compute@Edge](https://www.fastly.com/products/edge-compute/serverless).
 
 ## Getting Started
 
@@ -12,7 +12,7 @@ We recommend using the [Fastly CLI](https://github.com/fastly/cli) to create, bu
 
 ## Usage
 
-### Javascript Examples
+### JavaScript Examples
 
 The Fastly Developer Hub has a collection of [example JavaScript applications](https://developer.fastly.com/solutions/examples/javascript/).
 
@@ -32,7 +32,7 @@ addEventListener("fetch", event => {
 
 ### API documentation
 
-The API documentation for the Javascript SDK is located at [https://js-compute-reference-docs.edgecompute.app](https://js-compute-reference-docs.edgecompute.app).
+The API documentation for the JavaScript SDK is located at [https://js-compute-reference-docs.edgecompute.app](https://js-compute-reference-docs.edgecompute.app).
 
 ## Security
 

@@ -4318,7 +4318,7 @@ JS::Result<std::string> ConvertJSValueToByteString(JSContext *cx, JS::Handle<JS:
     }
   }
 
-  // Conversion from Javascript string to ByteString is only valid if all
+  // Conversion from JavaScript string to ByteString is only valid if all
   // characters < 256. This is always the case for Latin1 strings.
   size_t length;
   if (!JS::StringHasLatin1Chars(s)) {
