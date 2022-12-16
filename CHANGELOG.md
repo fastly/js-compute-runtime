@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/fastly/js-compute-runtime/compare/v1.0.0...v1.0.1) (2022-12-16)
+
+
+### Bug Fixes
+
+* do not free the method_str.ptr as we still require the memory ([17c5049](https://github.com/fastly/js-compute-runtime/commit/17c50492d6247e746daeb65ab1b7fdeeaec0ae91)), closes [#352](https://github.com/fastly/js-compute-runtime/issues/352)
+
 ## [1.0.0](https://github.com/fastly/js-compute-runtime/compare/v0.7.0...v1.0.0) (2022-12-14)
 
 
