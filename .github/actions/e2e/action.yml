@@ -19,7 +19,7 @@ runs:
       with:
         node-version: 18
     - name: Set up Fastly CLI
-      uses: fastly/compute-actions/setup@v2
+      uses: fastly/compute-actions/setup@v4
       with:
         token: ${{ inputs.github-token }}
         cli_version: '4.3.0'
