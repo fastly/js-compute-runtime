@@ -7,7 +7,32 @@
     },
     "downstream_response": {
       "status": 200,
+      "headers": []
+    }
+  },
+  "GET /hello": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/hello"
+    },
+    "downstream_response": {
+      "status": 200,
       "body": "Hello from Origin",
+      "headers": [
+        ["OriginHeader", "OriginValue"],
+        ["x-cat", "meow, nyan, mrrow, miau"]
+      ]
+    }
+  },
+  "HEAD /hello": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "HEAD",
+      "pathname": "/hello"
+    },
+    "downstream_response": {
+      "status": 200,
       "headers": [
         ["OriginHeader", "OriginValue"],
         ["x-cat", "meow, nyan, mrrow, miau"]
