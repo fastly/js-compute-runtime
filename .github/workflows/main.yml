@@ -31,7 +31,7 @@ jobs:
         path: c-dependencies
 
     - name: Cache SpiderMonkey object files
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       id: sm-cache
       with:
         path: |
@@ -85,7 +85,7 @@ jobs:
       run: npm run build
       if: matrix.profile == 'release'
 
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v3
       with:
         name: engine-${{ matrix.profile }}
         path: js-compute-runtime.wasm
@@ -200,7 +200,7 @@ jobs:
         node-version: 18
 
     - name: Set up Fastly CLI
-      uses: fastly/compute-actions/setup@v2
+      uses: fastly/compute-actions/setup@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         cli_version: '4.3.0'
@@ -215,7 +215,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: engine-release
-    
+
     - run: yarn
 
     - name: js-compute Integration Tests Job
@@ -231,7 +231,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/cache@v3.0.2
+    - uses: actions/cache@v3
       id: cache-shellcheck
       with:
         path: ${{ runner.tool_cache }}/shellcheck
