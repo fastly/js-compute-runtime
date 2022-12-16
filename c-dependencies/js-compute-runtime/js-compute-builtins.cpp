@@ -3851,7 +3851,6 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
   bool is_get = strncmp(method_str.ptr, "GET", method_str.len) == 0;
   if (!is_get) {
     RootedString method(cx, JS_NewStringCopyN(cx, method_str.ptr, method_str.len));
-    JS_free(cx, method_str.ptr);
     if (!method) {
       return false;
     }
@@ -3859,11 +3858,13 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
     JS::SetReservedSlot(request, Request::Slots::Method, JS::StringValue(method));
   }
 
+  bool is_head = strncmp(method_str.ptr, "HEAD", method_str.len) == 0;
+
   // Set whether we have a body depending on the method.
   // TODO: verify if that's right. I.e. whether we should treat all requests
   // that are not GET or HEAD as having a body, which might just be 0-length.
   // It's not entirely clear what else we even could do here though.
-  if (!(is_get || strncmp(method_str.ptr, "HEAD", method_str.len) == 0)) {
+  if (!is_get && !is_head) {
     JS::SetReservedSlot(request, Request::Slots::HasBody, JS::TrueValue());
   }
 
