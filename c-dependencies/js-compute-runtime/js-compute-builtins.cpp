@@ -271,67 +271,6 @@ static char *read_from_handle_all(JSContext *cx, uint32_t handle, size_t *nwritt
   return buf;
 }
 
-template <auto op, class HandleType>
-static char *read_from_handle_all(JSContext *cx, HandleType handle, size_t *nwritten,
-                                  bool read_until_zero) {
-  // TODO(performance): investigate passing a size hint in situations where we might know
-  // the final size, e.g. via the `content-length` header.
-  // https://github.com/fastly/js-compute-runtime/issues/216
-  size_t buf_size = HANDLE_READ_CHUNK_SIZE;
-  // TODO(performance): make use of malloc slack.
-  // https://github.com/fastly/js-compute-runtime/issues/217
-  char *buf = static_cast<char *>(JS_malloc(cx, buf_size));
-  if (!buf) {
-    JS_ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
-  // For realloc below.
-  char *new_buf;
-
-  size_t offset = 0;
-  fastly_error_t err;
-  while (true) {
-    size_t num_written = 0;
-    if (!op(handle, buf + offset, HANDLE_READ_CHUNK_SIZE, &num_written, &err)) {
-      HANDLE_ERROR(cx, err);
-      JS_free(cx, buf);
-      return nullptr;
-    }
-
-    offset += num_written;
-    if (num_written == 0 || (!read_until_zero && num_written < HANDLE_READ_CHUNK_SIZE)) {
-      break;
-    }
-
-    // TODO(performance): make use of malloc slack, and use a smarter buffer growth strategy.
-    // https://github.com/fastly/js-compute-runtime/issues/217
-    size_t new_size = buf_size + HANDLE_READ_CHUNK_SIZE;
-    new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, new_size));
-    if (!new_buf) {
-      JS_free(cx, buf);
-      JS_ReportOutOfMemory(cx);
-      return nullptr;
-    }
-    buf = new_buf;
-
-    buf_size += HANDLE_READ_CHUNK_SIZE;
-  }
-
-  new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, offset + 1));
-  if (!buf) {
-    JS_free(cx, buf);
-    JS_ReportOutOfMemory(cx);
-    return nullptr;
-  }
-  buf = new_buf;
-
-  buf[offset] = '\0';
-  *nwritten = offset;
-
-  return buf;
-}
-
 /**
  * Writes the given number of bytes from the given buffer to the given handle.
  *
