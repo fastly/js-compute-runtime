@@ -4,6 +4,8 @@ concurrency:
   cancel-in-progress: true
 on:
   pull_request:
+  push: 
+    branches: [main]
 defaults:
   run:
     shell: bash
@@ -111,6 +113,7 @@ jobs:
       if: steps.cache-crate.outputs.cache-hit != 'true'
 
   run_wpt:
+    if: github.ref != 'refs/heads/main'
     name: Run Web Platform Tests
     strategy:
       matrix:
@@ -158,6 +161,7 @@ jobs:
   # Consumes all published artifacts from all the previous build steps, and runs
   # the integration tests for the linux build.
   sdktest:
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [build]
     strategy:
@@ -257,6 +261,7 @@ jobs:
       run: ci/shellcheck.sh
 
   format:
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -267,6 +272,7 @@ jobs:
         ci/rustfmt.sh
 
   test-npm-package:
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [build]
     steps:
@@ -283,6 +289,7 @@ jobs:
     - run: npm test
 
   e2e:
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [build]
     strategy:
