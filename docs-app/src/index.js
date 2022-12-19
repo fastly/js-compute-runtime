@@ -11,6 +11,8 @@ async function app(event) {
         console.log(`FASTLY_SERVICE_VERSION: ${env('FASTLY_SERVICE_VERSION')}`)
         const response = await get('site', event.request)
         if (response) {
+            // Enable Dynamic Compression -- https://developer.fastly.com/learning/concepts/compression/#dynamic-compression
+            response.headers.set("x-compress-hint", "on");
             return response
         } else {
             return new Response("Not Found", { status: 404 });
