@@ -13,7 +13,6 @@ node_modules/
 # compiler_flags
 /js-compute-runtime.wasm
 /js-compute-runtime-component.wasm
-/c-dependencies/js-compute-runtime/out
 /c-dependencies/js-compute-runtime/obj
 tests/wpt-harness/wpt-test-runner.js
 /xqd.wit
