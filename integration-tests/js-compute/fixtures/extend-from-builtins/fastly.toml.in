@@ -14,14 +14,20 @@ service_id = ""
 
 [local_server]
   [local_server.object_store]
-  example = []
+
+  [[local_server.object_store.example]]
+    key = "placeholder"
+    data = 'placholder'
 
   [local_server.dictionaries]
     [local_server.dictionaries.example]
       format = "inline-toml"
     [local_server.dictionaries.example.contents]
+      "twitter" = "https://twitter.com/fastly"
 
 [setup]
   [setup.dictionaries]
     [setup.dictionaries.example]
       [setup.dictionaries.example.items]
+        [setup.dictionaries.example.items.twitter]
+        value = "https://twitter.com/fastly"

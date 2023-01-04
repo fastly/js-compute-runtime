@@ -122,7 +122,7 @@ let ipv4Expected = {
   as_name: "sky uk limited",
   as_number: 5607,
   area_code: 0,
-  city: "tower hamlets",
+  city: "south kirkby",
   conn_speed: "broadband",
   conn_type: "wifi",
   continent: "EU",
@@ -130,13 +130,13 @@ let ipv4Expected = {
   country_code3: "GBR",
   country_name: "united kingdom",
   gmt_offset: 0,
-  latitude: 51.52,
-  longitude: -0.06,
-  metro_code: 826044,
-  postal_code: "e1 5bt",
+  latitude: 53.6,
+  longitude: -1.32,
+  metro_code: 826039,
+  postal_code: "wf9 3st",
   proxy_description: "?",
   proxy_type: "?",
-  region: "TWH",
+  region: "WKF",
   utc_offset: 0
 };
 
