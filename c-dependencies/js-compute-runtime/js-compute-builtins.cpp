@@ -4663,11 +4663,11 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
         xqd_world_string_t uri_str;
         fastly_error_t err;
         if (xqd_fastly_http_req_uri_get(handle, &uri_str, &err)) {
-          JS_ReportErrorUTF8(cx,
-                             "No backend specified for request with url %s. "
-                             "Must provide a `backend` property on the `init` object "
-                             "passed to either `new Request()` or `fetch`",
-                             uri_str.ptr);
+          JS_ReportErrorLatin1(cx,
+                               "No backend specified for request with url %s. "
+                               "Must provide a `backend` property on the `init` object "
+                               "passed to either `new Request()` or `fetch`",
+                               uri_str.ptr);
           JS_free(cx, uri_str.ptr);
         } else {
           HANDLE_ERROR(cx, err);
