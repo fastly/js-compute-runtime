@@ -4889,12 +4889,12 @@ template <bool repeat> bool setTimeout_or_interval(JSContext *cx, unsigned argc,
     return false;
   }
 
-  RootedObject handler(cx, &args[0].toObject());
   if (!(args[0].isObject() && JS::IsCallable(&args[0].toObject()))) {
     JS_ReportErrorASCII(cx, "First argument to %s must be a function",
                         repeat ? "setInterval" : "setTimeout");
     return false;
   }
+  RootedObject handler(cx, &args[0].toObject());
 
   int32_t delay = 0;
   if (args.length() > 1 && !JS::ToInt32(cx, args.get(1), &delay)) {
