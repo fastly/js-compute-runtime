@@ -52,11 +52,17 @@ bool bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
+  if (!JS::GetReservedSlot(self, Slots::HasBody).isBoolean()) {
+    JS::SetReservedSlot(self, Slots::HasBody, JS::BooleanValue(false));
+  }
   return RequestOrResponse::body_get(cx, args, self, true);
 }
 
 bool bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
+  if (!JS::GetReservedSlot(self, Slots::BodyUsed).isBoolean()) {
+    JS::SetReservedSlot(self, Slots::BodyUsed, JS::BooleanValue(false));
+  }
   args.rval().setBoolean(RequestOrResponse::body_used(self));
   return true;
 }
@@ -85,7 +91,7 @@ JSObject *create(JSContext *cx, fastly_body_handle_t body_handle) {
 
   JS::SetReservedSlot(objectStoreEntry, Slots::Body, JS::Int32Value(body_handle));
   JS::SetReservedSlot(objectStoreEntry, Slots::BodyStream, JS::NullValue());
-  JS::SetReservedSlot(objectStoreEntry, Slots::HasBody, JS::TrueValue());
+  JS::SetReservedSlot(objectStoreEntry, Slots::HasBody, JS::BooleanValue(true));
   JS::SetReservedSlot(objectStoreEntry, Slots::BodyUsed, JS::FalseValue());
 
   return objectStoreEntry;
