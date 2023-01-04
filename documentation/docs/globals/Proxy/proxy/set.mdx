@@ -1,0 +1,77 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# handler.set()
+
+The **`handler.set()`** method is a trap for setting a property
+value.
+
+## Syntax
+
+```js
+new Proxy(target, {
+  set(target, property, value, receiver) {
+  }
+});
+```
+
+### Parameters
+
+The following parameters are passed to the `set()` method. `this`
+is bound to the handler.
+
+- `target`
+  - : The target object.
+- `property`
+  - : The name or `Symbol` of the property to set.
+- `value`
+  - : The new value of the property to set.
+- `receiver`
+
+  - : The object to which the assignment was originally directed. This is usually the
+    proxy itself. But a `set()` handler can also be called indirectly, via
+    the prototype chain or various other ways.
+
+    For example, suppose a script does
+    `obj.name = "jen"`, and `obj` is not a
+    proxy, and has no own property `.name`, but it has a proxy on its
+    prototype chain. That proxy's `set()` handler will be called, and
+    `obj` will be passed as the receiver.
+
+### Return value
+
+The `set()` method should return a boolean value.
+
+- Return `true` to indicate that assignment succeeded.
+- If the `set()` method returns `false`, and the assignment
+  happened in strict-mode code, a [`TypeError`](../../../globals/TypeError/TypeError.md) will be thrown.
+
+## Description
+
+The **`handler.set()`** method is a trap for setting property
+value.
+
+### Interceptions
+
+This trap can intercept these operations:
+
+- Property assignment: `proxy[foo] = bar` and `proxy.foo = bar`
+- [`Reflect.set()`](../../../globals/Reflect/set.md)
+
+Or any other operation that invokes the `[[Set]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
+
+### Invariants
+
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+
+- Cannot change the value of a property to be different from the value of the
+  corresponding target object property if the corresponding target object property is a
+  non-writable, non-configurable data property.
+- Cannot set the value of a property if the corresponding target object property is a
+  non-configurable accessor property that has `undefined` as its
+  `[[Set]]` attribute.
+- In strict mode, a `false` return value from the `set()`
+  handler will throw a [`TypeError`](../../../globals/TypeError/TypeError.md) exception.

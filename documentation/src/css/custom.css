@@ -1,0 +1,175 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: rgba(46, 133, 85, 1.0);
+  --ifm-color-primary-dark: rgba(41, 120, 76, 1.0);
+  --ifm-color-primary-darker: rgba(39, 113, 72, 1.0);
+  --ifm-color-primary-darkest: rgba(32, 93, 59, 1.0);
+  --ifm-color-primary-light: rgba(51, 146, 93, 1.0);
+  --ifm-color-primary-lighter: rgba(53, 153, 98, 1.0);
+  --ifm-color-primary-lightest: rgba(60, 173, 110, 1.0);
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: rgb(38, 194, 160);
+  --ifm-color-primary-dark: hsl(167, 68%, 41%);
+  --ifm-color-primary-darker: hsl(167, 68%, 38%);
+  --ifm-color-primary-darkest: hsl(167, 68%, 32%);
+  --ifm-color-primary-light: hsl(167, 68%, 50%);
+  --ifm-color-primary-lighter: hsl(167, 68%, 52%);
+  --ifm-color-primary-lightest: hsl(167, 68%, 59%);
+  --docusaurus-highlighted-code-line-bg: hsla(0, 0%, 0%, 0.3);
+
+  --ifm-color-content: var(--ifm-color-emphasis-900);
+  --ifm-color-content-inverse: var(--ifm-color-white);
+  --ifm-color-content-secondary: #525860;
+
+  --ifm-background-color: transparent;
+  /* Body's background. */
+  --ifm-background-surface-color: var(--ifm-color-content-inverse);
+  --ifm-global-border-width: 1px;
+  --ifm-global-radius: 0.4rem;
+  --aa-muted-color-rgb: 38, 194, 160 !important;
+
+  --aa-icon-color-rgb: 38, 194, 160 !important;
+  --aa-text-color-rgb: 38, 194, 160 !important;
+  --aa-primary-color-rgb: 38, 194, 160 !important;
+  --aa-muted-color-rgb: 38, 194, 160 !important;
+  --aa-panel-border-color-rgb: 38, 194, 160 !important;
+  --aa-input-border-color-rgb: 38, 194, 160 !important;
+  --aa-background-color-rgb: 255, 255, 255;
+  --aa-input-background-color-rgb: 255, 255, 255;
+  --aa-selected-color-rgb: 179, 173, 214;
+  --aa-description-highlight-background-color-rgb: 245, 223, 77;
+  --aa-overlay-color-rgb: 115, 114, 129;
+  --aa-panel-shadow: 0 0 0 1px rgba(35, 38, 59, 0.1), 0 6px 16px -4px rgba(35, 38, 59, 0.15);
+  --aa-scrollbar-track-background-color-rgb: 234, 234, 234;
+  --aa-scrollbar-thumb-background-color-rgb: var(--aa-background-color-rgb);
+  --aa-scrollbar-thumb-background-color-alpha: 1;
+
+}
+
+.hero--primary {
+  --ifm-color-primary: hsl(199, 34%, 14%);
+}
+
+[data-theme='dark'] .navbar {
+  --ifm-navbar-background-color: hsl(218, 19%, 23%);
+  --ifm-navbar-link-hover-color: var(--ifm-color-primary);
+  --ifm-menu-color-background-active: rgba(255, 255, 255, 0.05);
+  --ifm-navbar-search-input-color: var(--ifm-color-white);
+}
+
+html[data-theme='dark'] {
+  --ifm-background-color: hsl(199, 34%, 14%);
+}
+
+.footer__copyright {
+  font-size: 0.8em;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+.fiddle {
+  min-height: 30px;
+
+  max-height: 400px;
+  position: relative;
+  background: #f0f0f0;
+  margin: 1em 0;
+
+  height: 30px;
+}
+
+.fiddle>* {
+  border: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.fiddle .fiddle-loader {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  padding-left: 20px
+}
+
+.fiddle .fiddle-fallback {
+  border-radius: 3px;
+  padding: 10px;
+  border: 1px solid #bbb;
+  background: white;
+  top: auto;
+  left: -3000px;
+  max-width: 2000px;
+}
+
+.fiddle .fiddle-fallback h3 {
+  font: bold 16px sans-serif;
+  margin: 0 0 4px 0;
+}
+
+.fiddle .fiddle-fallback pre {
+  margin: 0 0 12px 0;
+}
+
+.fiddle[data-state=loading] .fiddle-loader,
+.fiddle[data-state=loaded] .fiddle-frame,
+.fiddle[data-state=fallback] .fiddle-fallback {
+  opacity: 1;
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+.fiddle[data-state=fallback] .fiddle-fallback {
+  position: static;
+}
+
+.fiddle[data-state=fallback] {
+  height: auto !important;
+  max-height: none;
+  min-height: 0;
+}
+
+@media print {
+  html .fiddle {
+    height: auto !important;
+    max-height: none;
+    min-height: 0;
+  }
+
+  html .fiddle .fiddle-fallback {
+    opacity: 1;
+    position: static;
+  }
+
+  html .fiddle .fiddle-loader,
+  html .fiddle .fiddle-frame {
+    display: none
+  }
+}

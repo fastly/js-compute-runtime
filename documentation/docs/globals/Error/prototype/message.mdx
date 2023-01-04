@@ -1,0 +1,19 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Error.prototype.message
+
+The **`message`** data property of an [`Error`](../Error.md) instance is a human-readable description of the error.
+
+## Value
+
+A string corresponding to the value passed to the [`Error`](../Error.md) constructor as the first argument.
+
+## Description
+
+This property contains a brief description of the error if one is available or has been set. The `message` property combined with the [`name`](./name.md) property is used by the [`Error.prototype.toString()`](./toString.md) method to create a string representation of the Error.
+
+By default, the `message` property is an empty string, but this behavior can be overridden for an instance by specifying a message as the first argument to the [`Error`](../Error.md) constructor.

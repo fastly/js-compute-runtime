@@ -1,0 +1,32 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Math.log()
+
+The **`Math.log()`** function returns the natural logarithm (base [e](./E.mdx)) of a number.
+
+## Syntax
+
+```js
+Math.log(x)
+```
+
+### Parameters
+
+- `x`
+  - : A number greater than or equal to 0.
+
+### Return value
+
+The natural logarithm (base [e](./E.mdx)) of `x`. If `x` is ±0, returns [`-Infinity`](../Number/NEGATIVE_INFINITY.mdx). If `x < 0`, returns `NaN`.
+
+## Description
+
+Because `log()` is a static method of `Math`, you always use it as `Math.log()`, rather than as a method of a `Math` object you created (`Math` is not a constructor).
+
+If you need the natural log of 2 or 10, use the constants `Math.LN2` or `Math.LN10`. If you need a logarithm to base 2 or 10, use `Math.log2()` or `Math.log10()`. If you need a logarithm to other bases, use `Math.log(x) / Math.log(otherBase)` as in the example below; you might want to precalculate `1 / Math.log(otherBase)` since multiplication in `Math.log(x) * constant` is much faster.
+
+Beware that positive numbers very close to 1 can suffer from loss of precision and make its natural logarithm less accurate. In this case, you may want to use `Math.log1p` instead.

@@ -1,0 +1,28 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Reflect.isExtensible()
+
+The static **`Reflect.isExtensible()`** method determines if an object is extensible (whether it can have new properties added to it). It is similar to [`Object.isExtensible()`](../../globals/Object/isExtensible.md), but with [some differences](#difference_with_object.isextensible).
+
+## Syntax
+
+```js
+Reflect.isExtensible(target)
+```
+
+### Parameters
+
+- `target`
+  - : The target object which to check if it is extensible.
+
+### Return value
+
+A `Boolean` indicating whether or not the target is extensible.
+
+### Exceptions
+
+A [`TypeError`](../../globals/TypeError/TypeError.md), if `target` is not an `Object`.

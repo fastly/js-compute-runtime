@@ -1,0 +1,87 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+import {Fiddle} from '@site/src/components/fiddle';
+
+# `Dictionary()`
+
+The **`Dictionary` constructor** lets you access a specific [Fastly Edge Dictionary](https://docs.fastly.com/en/guides/about-edge-dictionaries).
+
+**Note**: Can only be used when processing requests, not during build-time initialization.
+
+## Syntax
+
+```js
+new Dictionary(name);
+```
+
+> **Note:** `Dictionary()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
+
+### Parameters
+
+- `name` _: string_
+  - The name of the [Fastly Edge Dictionary](https://docs.fastly.com/en/guides/about-edge-dictionaries) that this `Dictionary` instance should provide access to.
+
+### Return value
+
+A new `Dictionary` object.
+
+## Examples
+
+In this example we have an Edge Dictionary named "animals" and we return the "cat" entry as the response body to the client.
+
+<Fiddle config={{
+  "type": "javascript",
+  "title": "Dictionary Example",
+  "origins": [
+    "https://http-me.glitch.me"
+  ],
+  "src": {
+    "deps": "{\n  \"@fastly/js-compute\": \"^0.5.10\"\n}",
+    "main": `
+/// <reference types="@fastly/js-compute" />
+import { Dictionary } from "fastly:dictionary";
+async function app (event) {
+  const config = new Dictionary('animals');
+  return new Response(config.get('cat'));
+}
+addEventListener("fetch", event => event.respondWith(app(event)));
+`
+  },
+  "requests": [
+    {
+      "enableCluster": true,
+      "enableShield": false,
+      "enableWAF": false,
+      "data": {
+         "dictionaries": {
+           "animals": {
+             "cat": "meow"
+           }
+         }
+       },
+      "method": "GET",
+      "path": "/status=200",
+      "useFreshCache": false,
+      "followRedirects": false,
+      "tests": "",
+      "delay": 0
+    }
+  ],
+  "srcVersion": 1
+}}>
+
+```js
+/// <reference types="@fastly/js-compute" />
+import { Dictionary } from "fastly:dictionary";
+
+async function app (event) {
+  const config = new Dictionary('animals');
+  return new Response(config.get('cat'));
+}
+addEventListener("fetch", event => event.respondWith(app(event)));
+```
+</Fiddle>

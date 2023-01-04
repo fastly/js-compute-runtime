@@ -1,0 +1,28 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Symbol.prototype.toString()
+
+The **`toString()`** method returns a string representing the specified symbol value.
+
+## Syntax
+
+```js
+toString()
+```
+
+### Return value
+
+A string representing the specified symbol value.
+
+## Description
+
+The `Symbol` object overrides the `toString` method of `Object`; it does not inherit
+[`Object.prototype.toString()`](../../../globals/Object/prototype/toString.md). For `Symbol` values, the `toString` method returns a descriptive string in the form `"Symbol(description)"`, where `description` is the symbol's [`Symbol.prototype.description`](../../../globals/Symbol/prototype/description.md).
+
+The `toString()` method requires its `this` value to be a `Symbol` primitive or wrapper object. It throws a [`TypeError`](../../../globals/TypeError/TypeError.md) for other `this` values without attempting to coerce them to symbol values.
+
+Because `Symbol` has a [`[Symbol.toPrimitive]()`](../../../globals/Symbol/toPrimitive.md) method, that method always takes priority over `toString()` when a `Symbol` object is [coerced to a string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String#string_coercion). However, because `Symbol.prototype[Symbol.toPrimitive]()` returns a symbol primitive, and symbol primitives throw a [`TypeError`](../../../globals/TypeError/TypeError.md) when implicitly converted to a string, the `toString()` method is never implicitly called by the language. To stringify a symbol, you must explicitly call its `toString()` method or use the [`String()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String/String#using_string_to_stringify_a_symbol) function.

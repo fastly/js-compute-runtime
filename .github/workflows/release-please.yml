@@ -46,12 +46,6 @@ jobs:
       - name: Update yarn lock
         run: yarn install --mode=update-lockfile
 
-      - name: Update Docs
-        run: yarn docs
-
-      - name: Update Docs App fastly.toml for local development
-        run: cd ./docs-app && yarn && yarn build:files
-
       - name: Committing and push changes
         run: |
           git config user.name "${GITHUB_ACTOR}"

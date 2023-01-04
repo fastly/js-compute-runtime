@@ -1,0 +1,182 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+import {Fiddle} from '@site/src/components/fiddle';
+
+# getGeolocationForIpAddress
+
+The **`getGeolocationForIpAddress()`** function is used to retrieve geolocation information about the given IP address.
+
+>**Note**: Can only be used when processing requests, not during build-time initialization.
+
+## Syntax
+
+```js
+getGeolocationForIpAddress(address)
+```
+
+### Parameters
+
+- `address` _: string_
+  - The IPv4 or IPv6 address to query.
+
+### Return value
+
+Returns an `Object` which contains information about the given IP address with the following properties:
+
+- `as_name`  _: string | null_
+  - The name of the organization associated with `as_number`.
+  - For example, fastly is the value given for IP addresses under AS-54113.
+
+- `as_number` _: number | null_
+  - [Autonomous system](https://en.wikipedia.org/wiki/Autonomous_system_(Internet)) (AS) number.
+
+- `area_code` _: number | null_
+  - The telephone area code associated with an IP address.
+  - These are only available for IP addresses in the United States, its territories, and Canada.
+
+- `city` _: string | null_
+  - City or town name.
+
+- `conn_speed` _: string | null_
+  - Connection speed.
+
+- `conn_type` _: string | null_
+  - Connection type.
+
+- `continent` _: string | null_
+  - Continent.
+
+- `country_code` _: string | null_
+  - A two-character [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) country code for the country associated with an IP address.
+  - The US country code is returned for IP addresses associated with overseas United States military bases.
+  - These values include subdivisions that are assigned their own country codes in ISO 3166-1. For example, subdivisions NO-21 and NO-22 are presented with the country code SJ for Svalbard and the Jan Mayen Islands.
+
+- `country_code3` _: string | null_
+  - A three-character [ISO 3166-1 alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3) country code for the country associated with the IP address.
+  - The USA country code is returned for IP addresses associated with overseas United States military bases.
+
+- `country_name` _: string | null_
+  - Country name.
+  - This field is the [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) English short name for a country.
+
+- `gmt_offset` _: string | null_
+  - Time zone offset from Greenwich Mean Time (GMT) for `city`.
+
+- `latitude` _: number | null_
+  - Latitude, in units of degrees from the equator.
+  - Values range from -90.0 to +90.0 inclusive, and are based on the [WGS 84](https://en.wikipedia.org/wiki/World_Geodetic_System) coordinate reference system.
+
+- `longitude` _: number | null_
+  - Longitude, in units of degrees from the [IERS Reference Meridian](https://en.wikipedia.org/wiki/IERS_Reference_Meridian).
+  - Values range from -180.0 to +180.0 inclusive, and are based on the [WGS 84](https://en.wikipedia.org/wiki/World_Geodetic_System) coordinate reference system.
+
+- `metro_code` _: number | null_
+  - Metro code, representing designated market areas (DMAs) in the United States.
+
+- `postal_code` _: string | null_
+  - The postal code associated with the IP address.
+  - These are available for some IP addresses in Australia, Canada, France, Germany, Italy, Spain, Switzerland, the United Kingdom, and the United States.
+  - For Canadian postal codes, this is the first 3 characters. For the United Kingdom, this is the first 2-4 characters (outward code). For countries with alphanumeric postal codes, this field is a lowercase transliteration.
+
+- `proxy_description` _: string | null_
+  - Client proxy description.
+
+- `proxy_type` _: string | null_
+  - Client proxy type.
+
+- `region` _: string | null_
+  - [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2) country subdivision code.
+  - For countries with multiple levels of subdivision (for example, nations within the United Kingdom), this variable gives the more specific subdivision.
+  - This field can be None for countries that do not have ISO country subdivision codes. For example, None is given for IP addresses assigned to the Åland Islands (country code AX, illustrated below).
+
+- `utc_offset` _: number | null;_
+  - Time zone offset from coordinated universal time (UTC) for `city`.
+
+## Examples
+
+In this example we return the geolocation details for the provided ip querystring parameter or for the incoming client request if the querystring parameter does not exist.
+
+<Fiddle config={{
+  "type": "javascript",
+  "title": "getGeolocationForIpAddress Example",
+  "origins": [
+    "https://http-me.glitch.me"
+  ],
+  "src": {
+    "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",
+    "main": `
+/// <reference types="@fastly/js-compute" />
+import { getGeolocationForIpAddress } from "fastly:geolocation"
+async function app(event) {
+  try {
+    let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address
+    let geo = getGeolocationForIpAddress(ip);
+    return new Response(JSON.stringify(geo), {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return new Response("Internal Server Error", {
+      stauts: 500
+    });
+  }
+}
+addEventListener("fetch", event => event.respondWith(app(event)));
+`
+  },
+  "requests": [
+    {
+      "enableCluster": true,
+      "enableShield": false,
+      "enableWAF": false,
+      "data": {
+         "dictionaries": {
+           "animals": {
+             "cat": "meow"
+           }
+         }
+       },
+      "method": "GET",
+      "path": "/status=200",
+      "useFreshCache": false,
+      "followRedirects": false,
+      "tests": "",
+      "delay": 0
+    }
+  ],
+  "srcVersion": 1
+}}>
+
+```js
+/// <reference types="@fastly/js-compute" />
+import { getGeolocationForIpAddress } from "fastly:geolocation"
+
+async function app(event) {
+  try {
+    let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address
+    let geo = getGeolocationForIpAddress(ip);
+
+    return new Response(JSON.stringify(geo), {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return new Response("Internal Server Error", {
+      stauts: 500
+    });
+  }
+}
+
+addEventListener("fetch", event => event.respondWith(app(event)));
+
+```
+
+</Fiddle>

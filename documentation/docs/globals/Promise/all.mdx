@@ -1,0 +1,34 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Promise.all()
+
+The **`Promise.all()`** method takes an iterable of promises as input and returns a single `Promise`. This returned promise fulfills when all of the input's promises fulfill (including when an empty iterable is passed), with an array of the fulfillment values. It rejects when any of the input's promises rejects, with this first rejection reason.
+
+## Syntax
+
+```js
+Promise.all(iterable)
+```
+
+### Parameters
+
+- `iterable`
+  - : An [iterable](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol) (such as an `Array` of promises.
+
+### Return value
+
+A `Promise` that is:
+
+- **Already fulfilled**, if the `iterable` passed is empty.
+- **Asynchronously fulfilled**, when all the promises in the given `iterable` fulfill. The fulfillment value is an array of fulfillment values, in the order of the promises passed, regardless of completion order. If the `iterable` passed is non-empty but contains no pending promises, the returned promise is still asynchronously (instead of synchronously) fulfilled.
+- **Asynchronously rejected**, when any of the promises in the given `iterable` rejects. The rejection reason is the rejection reason of the first promise that was rejected.
+
+## Description
+
+The `Promise.all()` method is one of the [promise concurrency](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise#promise_concurrency) methods. It can be useful for aggregating the results of multiple promises. It is typically used when there are multiple related asynchronous tasks that the overall code relies on to work successfully — all of whom we want to fulfill before the code execution continues.
+
+`Promise.all()` will reject immediately upon **any** of the input promises rejecting. In comparison, the promise returned by [`Promise.allSettled()`](../../globals/Promise/allSettled.md) will wait for all input promises to complete, regardless of whether or not one rejects. Use `allSettled()` if you need the final result of every promise in the input iterable.

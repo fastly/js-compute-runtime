@@ -1,0 +1,24 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# String.prototype.at()
+
+The **`at()`** method takes an integer value and returns a `('String` consisting of the single UTF-16 code unit located at the specified offset. This method allows for positive and negative integers. Negative integers count back from the last string character.
+
+## Syntax
+
+```js
+at(index)
+```
+
+### Parameters
+
+- `index`
+  - : The index (position) of the string character to be returned. Supports relative indexing from the end of the string when passed a negative index; i.e. if a negative number is used, the character returned will be found by counting back from the end of the string.
+
+### Return value
+
+`('String` consisting of the single UTF-16 code unit located at the specified position. Returns [`undefined`](../../../globals/undefined.md) if the given index can not be found.

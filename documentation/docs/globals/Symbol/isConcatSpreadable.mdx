@@ -1,0 +1,20 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Symbol.isConcatSpreadable
+
+The **`Symbol.isConcatSpreadable`** well-known symbol is used to configure if an object should be flattened to its array elements when using the [`Array.prototype.concat()`](../../globals/Array/prototype/concat.md) method.
+
+## Value
+
+The well-known symbol `Symbol.isConcatSpreadable`.
+
+## Description
+
+The `Symbol.isConcatSpreadable` symbol (`Symbol.isConcatSpreadable`) can be defined as an own or inherited property and its value is a boolean. It can control behavior for arrays and array-like objects:
+
+- For array objects, the default behavior is to spread (flatten) elements. `Symbol.isConcatSpreadable` can avoid flattening in these cases.
+- For array-like objects, the default behavior is no spreading or flattening. `Symbol.isConcatSpreadable` can force flattening in these cases.

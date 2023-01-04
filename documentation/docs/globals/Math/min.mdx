@@ -1,0 +1,33 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Math.min()
+
+The **`Math.min()`** function returns the smallest of the numbers given as input parameters, or `Infinity` if there are no parameters.
+
+## Syntax
+
+```js
+Math.min()
+Math.min(value0)
+Math.min(value0, value1)
+Math.min(value0, value1, /* … ,*/ valueN)
+```
+
+### Parameters
+
+- `value1`, …, `valueN`
+  - : Zero or more numbers among which the lowest value will be selected and returned.
+
+### Return value
+
+The smallest of the given numbers. Returns `NaN` if any of the parameters is or is converted into `NaN`. Returns `Infinity` if no parameters are provided.
+
+## Description
+
+Because `min()` is a static method of `Math`, you always use it as `Math.min()`, rather than as a method of a `Math` object you created (`Math` is not a constructor).
+
+[`Math.min.length`](../Function/prototype/length.md) is 2, which weakly signals that it's designed to handle at least two parameters.

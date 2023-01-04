@@ -1,0 +1,51 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# encodeURI()
+
+The **`encodeURI()`** function encodes a URI by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character (will only be four escape sequences for characters composed of two surrogate characters). Compared to [`encodeURIComponent()`](./encodeURIComponent.md), this function encodes fewer characters, preserving those that are part of the URI syntax.
+
+## Syntax
+
+```js
+encodeURI(uri)
+```
+
+### Parameters
+
+- `uri`
+  - : A string to be encoded as a URI.
+
+### Return value
+
+A new string representing the provided string encoded as a URI.
+
+### Exceptions
+
+- [`URIError`](./URIError/URIError.md)
+  - : Thrown if `uri` contains a [lone surrogate](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String#utf-16_characters_unicode_codepoints_and_grapheme_clusters).
+
+## Description
+
+`encodeURI()` is a function property of the global object.
+
+The `encodeURI()` function escapes characters by UTF-8 code units, with each octet encoded in the format `%XX`, left-padded with 0 if necessary. Because lone surrogates in UTF-16 do not encode any valid Unicode character, they cause `encodeURI()` to throw a [`URIError`](./URIError/URIError.md).
+
+`encodeURI()` escapes all characters **except**:
+
+```
+A–Z a–z 0–9 - _ . ! ~ * ' ( )
+
+; / ? : @ & = + $ , #
+```
+
+The characters on the second line are characters that may be part of the URI syntax, and are only escaped by `encodeURIComponent()`. Both `encodeURI()` and `encodeURIComponent()` do not encode the characters `-.!~*'()`, known as "unreserved marks", which do not have a reserved purpose but are allowed in a URI "as is". (See [RFC2396](https://www.ietf.org/rfc/rfc2396.txt))
+
+The `encodeURI()` function does not encode characters that have special meaning (reserved characters) for a URI. The following example shows all the parts that a URI can possibly contain. Note how certain characters are used to signify special meaning:
+
+```
+http://username:password@www.example.com:80/path/to/file.php?foo=316&bar=this+has+spaces#anchor
+```
