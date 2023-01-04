@@ -5,6 +5,8 @@
 namespace ObjectStoreEntry {
 // Register the class.
 bool init_class(JSContext *cx, JS::HandleObject global);
+bool is_instance(JSObject *obj);
+bool is_instance(JS::Value val);
 } // namespace ObjectStoreEntry
 
 namespace ObjectStore {

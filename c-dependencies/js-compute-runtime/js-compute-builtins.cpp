@@ -427,7 +427,10 @@ bool is_instance(JSObject *obj);
 }
 
 namespace RequestOrResponse {
-bool is_instance(JSObject *obj) { return Request::is_instance(obj) || Response::is_instance(obj); }
+bool is_instance(JSObject *obj) {
+  return Request::is_instance(obj) || Response::is_instance(obj) ||
+         ObjectStoreEntry::is_instance(obj);
+}
 
 uint32_t handle(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
