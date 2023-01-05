@@ -2,6 +2,9 @@
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
+#include <string>
+#include <codecvt>
+#include <locale>
 #ifdef MEM_STATS
 #include <string>
 #endif
@@ -220,30 +223,30 @@ static void abort(JSContext *cx, const char *description) {
 }
 
 bool eval_stdin(JSContext *cx, MutableHandleValue result) {
-  char *code = NULL;
-  size_t len = 0;
-  if (getdelim(&code, &len, EOF, stdin) < 0) {
-    return false;
-  }
+  std::string filename;
+  std::cin >> filename;
 
-  JS::CompileOptions opts(cx);
+  JS::CompileOptions options(cx);
 
   // This ensures that we're eagerly loading the sript, and not lazily generating bytecode for
   // functions.
   // https://searchfox.org/mozilla-central/rev/5b2d2863bd315f232a3f769f76e0eb16cdca7cb0/js/public/CompileOptions.h#571-574
-  opts.setForceFullParse();
+  options.setForceFullParse();
 
-  // TODO: investigate passing a filename to Wizer and using that here to
-  // improve diagnostics.
-  // TODO: furthermore, investigate whether Wizer by now allows us to pass an
-  // actual path and open that, instead of having to redirect `stdin` for a
-  // subprocess of `js-compute-runtime`.
-  opts.setFileAndLine("<stdin>", 1);
-
-  JS::SourceText<mozilla::Utf8Unit> srcBuf;
-  if (!srcBuf.init(cx, code, strlen(code), JS::SourceOwnership::TakeOwnership)) {
+  FILE* file = fopen(filename.c_str(), "r");
+  if (!file) {
+    JS_ReportErrorUTF8(cx, "cannot open file '%s' for reading",
+                        filename.c_str());
     return false;
   }
+
+  options.setFileAndLine(filename.c_str(), 1);
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  std::u16string sourceMapURL = std::wstring_convert<
+    std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(filename + ".map");
+  #pragma clang diagnostic pop
+  options.setSourceMapURL(sourceMapURL.c_str());
 
   JS::RootedScript script(cx);
   {
@@ -252,10 +255,13 @@ bool eval_stdin(JSContext *cx, MutableHandleValue result) {
     // (Whereas disabling it during execution below meaningfully increases it,
     // which is why this is scoped to just compilation.)
     JS::AutoDisableGenerationalGC noGGC(cx);
-    script = JS::Compile(cx, opts, srcBuf);
-    if (!script)
-      return false;
+    script = JS::CompileUtf8File(cx, options, file);
   }
+  fclose(file);
+  if (!script) {
+    return false;
+  }
+
 
   // TODO(performance): verify that it's better to perform a shrinking GC here, as manual
   // testing indicates. Running a shrinking GC here causes *fewer* 4kb pages to

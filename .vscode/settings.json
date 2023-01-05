@@ -87,7 +87,24 @@
         "__functional_03": "cpp",
         "__functional_base_03": "cpp",
         "memory_resource": "cpp",
-        "numeric": "cpp"
+        "numeric": "cpp",
+        "__bits": "cpp",
+        "__verbose_abort": "cpp",
+        "any": "cpp",
+        "cfenv": "cpp",
+        "cinttypes": "cpp",
+        "codecvt": "cpp",
+        "complex": "cpp",
+        "condition_variable": "cpp",
+        "csignal": "cpp",
+        "forward_list": "cpp",
+        "future": "cpp",
+        "queue": "cpp",
+        "scoped_allocator": "cpp",
+        "shared_mutex": "cpp",
+        "typeindex": "cpp",
+        "valarray": "cpp",
+        "variant": "cpp"
     },
     "git.ignoreLimitWarning": true
 }

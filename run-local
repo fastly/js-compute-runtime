@@ -27,5 +27,5 @@ yarn build
 (
     cd $application_path
     ../../replace-host.sh $application_name "https://compute-sdk-test-backend.edgecompute.app"
-    fastly compute serve --quiet
+    fastly compute serve --verbose
 )

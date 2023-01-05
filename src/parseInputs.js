@@ -9,7 +9,7 @@ export async function parseInputs(cliInputs) {
   let customEngineSet = false;
   let wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
   let customInputSet = false;
-  let input = join(process.cwd(), "bin/index.js");
+  let input = join(process.cwd(), "src/index.js");
   let customOutputSet = false;
   let output = join(process.cwd(), "bin/main.wasm");
   let cliInput;

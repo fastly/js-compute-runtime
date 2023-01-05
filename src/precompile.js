@@ -40,12 +40,12 @@ export function precompile(inputApplication) {
   }
 
   return (
-    PREAMBLE +
+    inputApplication + PREAMBLE +
     lits
       .map((regex) => {
         return `precompile(/${regex.pattern}/${regex.flags});`;
       })
       .join("\n") +
-    POSTAMBLE + inputApplication
+    POSTAMBLE
   );
 }

@@ -1,6 +1,6 @@
-import { dirname } from "node:path";
+import { dirname, parse, join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { isFile } from "./isFile.js";
 import { isFileOrDoesNotExist } from "./isFileOrDoesNotExist.js";
 import wizer from "@jakechampion/wizer";
@@ -46,8 +46,10 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
     );
     process.exit(1);
   }
+
+  const outputDir = dirname(output);
   try {
-    await mkdir(dirname(output), {
+    await mkdir(dirname(outputDir), {
       recursive: true,
     });
   } catch (error) {
@@ -76,17 +78,43 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
   if (containsSyntaxErrors(input)) {
     process.exit(1);
   }
+  let inputFileName = parse(input).base;
+  let applicationPath = join(outputDir, inputFileName);
 
-  let contents = await bundle(input);
+  let contents = await bundle(input, applicationPath);
+  if (contents.errors.length) {
+    for (const error of contents.errors) {
+      console.error(error);
+    }
+    process.exit(1);
+  }
+  
+  let index = contents.outputFiles.findIndex(a => a.path.endsWith(inputFileName))
+  let app = contents.outputFiles[index];
 
-  let application = precompile(contents.outputFiles[0].text);
+  let application = precompile(app.text);
+  delete app.text;
+  app.text = application;
+  for (const file of contents.outputFiles) {
+    try {
+      await writeFile(file.path, file.text, {
+        encoding: 'utf-8'
+      });
+    } catch (error) {
+      console.error(
+        `Error: Failed to write to (${file.path})`,
+        error.message
+      );
+      process.exit(1);
+    }
+  }
 
   try {
     let wizerProcess = spawnSync(
       wizer,
       [
         "--allow-wasi",
-        `--dir=.`,
+        `--dir=${process.cwd()}`,
         `--wasm-bulk-memory=true`,
         "-r _start=wizer.resume",
         `-o=${output}`,
@@ -94,7 +122,7 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
       ],
       {
         stdio: [null, process.stdout, process.stderr],
-        input: application,
+        input: applicationPath,
         shell: true,
         encoding: "utf-8",
       }

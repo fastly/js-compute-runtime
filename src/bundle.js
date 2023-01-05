@@ -35,12 +35,14 @@ export const allowDynamicBackends = Object.getOwnPropertyDescriptor(globalThis.f
   },
 }
 
-export async function bundle(input) {
+export async function bundle(input, outfile) {
   return await build({
     entryPoints: [input],
     bundle: true,
     write: false,
     tsconfig: undefined,
+    sourcemap: 'external',
+    outfile,
     plugins: [fastlyPlugin],
   })
 }
