@@ -218,7 +218,7 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: engine-debug
+        name: ${{ matrix.fixture == 'regex' && 'engine-release' || 'engine-debug'  }}
     - run: yarn
 
     - name: js-compute Integration Tests Job
