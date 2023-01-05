@@ -4,7 +4,8 @@
 
 /rusturl
 /compiler_flags
-/*.wasm
+/js-compute-runtime*.wasm
+/obj
 
 *.o
 *.d
