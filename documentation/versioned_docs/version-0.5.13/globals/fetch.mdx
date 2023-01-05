@@ -1,0 +1,63 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# fetch()
+
+The global **`fetch()`** method starts the process of fetching a
+resource from the network, returning a promise which is fulfilled once the response is
+available.
+
+The promise resolves to the `Response` object
+representing the response to your request.
+
+A `fetch()` promise only rejects when a
+network error is encountered (which is usually when there's a permissions issue or
+similar). A `fetch()` promise _does
+not_ reject on HTTP errors (`404`, etc.). Instead, a
+`then()` handler must check the `Response.ok` and/or
+`Response.status` properties.
+
+> **Note:** The `fetch()` method's parameters are identical to
+> those of the `Request()` constructor.
+
+## Syntax
+
+```js
+fetch(resource)
+fetch(resource, options)
+```
+
+### Parameters
+
+- `resource`
+
+  - : This defines the resource that you wish to fetch. This can either be:
+
+    - A string or any other object with a "toString" method.
+    - A `Request` object.
+
+- `options` _**optional**_
+
+  - : An object containing any custom settings that you want to apply to the request. The
+    possible options are:
+
+    - `method`
+      - : The request method, e.g., `GET`, `POST`.
+    - `headers`
+      - : Any headers you want to add to your request, contained within a
+        `Headers` object or an object literal with `String`
+        values.
+    - `body`
+      - : Any body that you want to add to your request: this can be an `ArrayBuffer`, a `TypedArray`, a `DataView`, a `URLSearchParams`, string object or literal, or a `ReadableStream` object.
+    - `backend` _**Fastly-specific**_
+      - A string which is the name of the Fastly configured backend the request should be sent to.
+    - `cacheOverride` _**Fastly-specific**_
+      - A [`CacheOverride`](../fastly%3Acache-override/CacheOverride/CacheOverride.mdx) object, used to configure the caching behaviour of the returned [`Response`](./Response/Response.mdx).
+    - `cacheKey` _**Fastly-specific**_
+
+### Return value
+
+A `Promise` that resolves to a `Response` object.

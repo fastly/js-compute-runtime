@@ -1,0 +1,45 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Request()
+
+The **`Request()`** constructor creates a new
+`Request` object.
+
+## Syntax
+
+```js
+new Request(input)
+new Request(input, options)
+```
+
+### Parameters
+
+- `input`
+
+  - : Defines the resource that you wish to fetch. This can either be:
+
+    - A string containing the direct URL of the resource you want to
+      fetch.
+    - A `Request` object, effectively creating a copy.
+
+- `options` _**optional**_
+
+  - : An object containing any custom settings that you want to apply to the
+    request. The possible options are:
+
+    - `method`
+      - : The request method, e.g., `GET`, `POST`. The default is `GET`.
+    - `headers`
+      - : Any headers you want to add to your request, contained
+        within a `Headers` object or an object literal with `String` values.
+    - `body`
+      - : Any body that you want to add to your request: this can be an `ArrayBuffer`, a `TypedArray`, a `DataView`, a `URLSearchParams`, string object or literal, or a `ReadableStream` object.
+    - `backend` _**Fastly-specific**_
+      - A string which is the name of the Fastly configured backend the request should be sent to.
+    - `cacheOverride` _**Fastly-specific**_
+      - A [`CacheOverride`](../../fastly%3Acache-override/CacheOverride/CacheOverride.mdx) object, used to configure the caching behaviour of the returned [`Response`](../Response/Response.mdx).
+    - `cacheKey` _**Fastly-specific**_

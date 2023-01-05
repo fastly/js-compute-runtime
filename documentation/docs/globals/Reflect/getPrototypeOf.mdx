@@ -1,0 +1,39 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Reflect.getPrototypeOf()
+
+The static **`Reflect.getPrototypeOf()`** method is almost the
+same method as [`Object.getPrototypeOf()`](../../globals/Object/getPrototypeOf.md). It returns the prototype (i.e. the
+value of the internal `[[Prototype]]` property) of the specified object.
+
+
+
+## Syntax
+
+```js
+Reflect.getPrototypeOf(target)
+```
+
+### Parameters
+
+- `target`
+  - : The target object of which to get the prototype.
+
+### Return value
+
+The prototype of the given object. If there are no inherited properties,
+[`null`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/null) is returned.
+
+### Exceptions
+
+A [`TypeError`](../../globals/TypeError/TypeError.md), if `target` is not an
+`Object`.
+
+## Description
+
+The `Reflect.getPrototypeOf` method returns the prototype (i.e. the value of
+the internal `[[Prototype]]` property) of the specified object.

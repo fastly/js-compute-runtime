@@ -1,0 +1,43 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# get Promise[Symbol.species]
+
+The **`Promise[Symbol.species]`** accessor property returns the constructor used to construct return values from promise methods.
+
+> **Warning:** The existence of `Symbol.species` allows execution of arbitrary code and may create security vulnerabilities. It also makes certain optimizations much harder. Engine implementers are [investigating whether to remove this feature](https://github.com/tc39/proposal-rm-builtin-subclassing). Avoid relying on it if possible.
+
+## Syntax
+
+```js
+Promise[Symbol.species]
+```
+
+### Return value
+
+The value of the constructor (`this`) on which `get Symbol.species` was called. The return value is used to construct return values from promise chaining methods that create new promises.
+
+## Description
+
+The `Symbol.species` accessor property returns the default constructor for `Promise` objects. Subclass constructors may override it to change the constructor assignment. The default implementation is basically:
+
+```js
+// Hypothetical underlying implementation for illustration
+class Promise {
+  static get [Symbol.species]() {
+    return this;
+  }
+}
+```
+
+Because of this polymorphic implementation, `Symbol.species` of derived subclasses would also return the constructor itself by default.
+
+```js
+class SubPromise extends Promise {}
+SubPromise[Symbol.species] === Promise; // true
+```
+
+Promise chaining methods — [`then()`](../../globals/Promise/prototype/then.md), [`finally()`](../../globals/Promise/prototype/finally.md) — return new promise objects. They get the constructor to construct the new promise through `this.constructor[Symbol.species]`. If `this.constructor` is `undefined`, or if `this.constructor[Symbol.species]` is `undefined` or `null`, the default [`Promise()`](../../globals/Promise/Promise.md) constructor is used. Otherwise, the constructor returned by `this.constructor[Symbol.species]` is used to construct the new promise object.

@@ -1,0 +1,99 @@
+---
+sidebar_position: 1
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+import {Fiddle} from '@site/src/components/fiddle';
+
+# Getting started
+
+First, make sure to have [Fastly's CLI](https://developer.fastly.com/learning/tools/cli/) installed:
+
+The Fastly CLI is available for multiple operating systems.
+
+- **MacOS**: Install from Homebrew:
+
+    ```
+    brew install fastly/tap/fastly
+    ```
+
+- **Windows**: [Visit the GitHub repository](https://github.com/fastly/cli/releases/latest) to download the prebuilt binary for your architecture.
+- **Linux**: Packages are available for many distributions, along with prebuilt binaries. [Visit the GitHub repository](https://github.com/fastly/cli/releases/latest) to download the package for your distribution.
+
+## Initialise a new project
+
+Create a new Fastly Compute@Edge JavaScript project:
+
+```shell
+fastly compute init --language javascript --from https://github.com/fastly/compute-starter-kit-javascript-empty
+```
+
+Install the dependencies:
+
+```
+npm install
+```
+
+## Try it out locally
+
+
+```shell
+fastly compute serve --watch
+```
+
+Your application should now be running on [http://localhost:7676](http://localhost:7676)
+
+
+<Fiddle config={{
+  "type": "javascript",
+  "title": "Example",
+  "origins": [
+    "https://http-me.glitch.me"
+  ],
+  "src": {
+    "deps": "{\n  \"@fastly/js-compute\": \"^0.5.11\"\n}",
+    "main": `
+/// <reference types="@fastly/js-compute" />
+async function app(event) {
+    const request = event.request;
+    return new Response("You made a request to " + request.url)
+}
+addEventListener("fetch", event => {
+  event.respondWith(app(event));
+});
+`
+  },
+  "requests": [
+    {
+      "enableCluster": true,
+      "enableShield": false,
+      "enableWAF": false,
+      "method": "GET",
+      "path": "/status=200",
+      "useFreshCache": false,
+      "followRedirects": false,
+      "tests": "",
+      "delay": 0
+    }
+  ],
+  "srcVersion": 1
+}}>
+
+```js
+/// <reference types="@fastly/js-compute" />
+
+async function app(event) {
+    const request = event.request;
+    return new Response(`You made a request to ${request.url}`)
+}
+
+addEventListener("fetch", event => {
+  event.respondWith(app(event));
+});
+
+```
+
+</Fiddle>

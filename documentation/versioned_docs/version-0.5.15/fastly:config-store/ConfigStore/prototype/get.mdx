@@ -1,0 +1,98 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+import {Fiddle} from '@site/src/components/fiddle';
+
+# ConfigStore.prototype.get
+
+The **`get()`** method returns the value associated with the provided key in the config-store. If the provided key does not exist in the ConfigStore then this returns `null`.
+
+## Syntax
+
+```js
+get(key)
+```
+
+### Parameters
+
+- `key` _: string_
+  - The key to retrieve from the dictionary.
+
+### Return value
+
+A `string` representing the specified ConfigStore value or `null` if the key does not exist in the ConfigStore
+
+## Description
+
+Get a value for a key in the config-store. If the provided key does not exist in the ConfigStore then this returns `null`.
+
+The `get()` method requires its `this` value to be a [`ConfigStore`](../../../fastly%3Aconfig-store/ConfigStore/ConfigStore.mdx) object.
+
+If the `this` value does not inherit from `ConfigStore.prototype`, a [`TypeError`](../../../globals/TypeError/TypeError.mdx) is thrown.
+
+### Exceptions
+
+- `TypeError`
+  - Thrown if the provided key is longer than 255 in length
+  - Thrown if the provided key is an empty string
+
+## Examples
+
+In this example we have an Edge Dictionary named "animals" and we return the "cat" entry as the response body to the client.
+
+<Fiddle config={{
+  "type": "javascript",
+  "title": "ConfigStore Example",
+  "origins": [
+    "https://http-me.glitch.me"
+  ],
+  "src": {
+    "deps": "{\n  \"@fastly/js-compute\": \"^0.5.15\"\n}",
+    "main": `
+/// <reference types="@fastly/js-compute" />
+import { ConfigStore } from "fastly:config-store";
+async function app (event) {
+  const config = new ConfigStore('animals');
+  return new Response(config.get('cat'));
+}
+addEventListener("fetch", event => event.respondWith(app(event)));
+`
+  },
+  "requests": [
+    {
+      "enableCluster": true,
+      "enableShield": false,
+      "enableWAF": false,
+      "data": {
+         "dictionaries": {
+           "animals": {
+             "cat": "meow"
+           }
+         }
+       },
+      "method": "GET",
+      "path": "/status=200",
+      "useFreshCache": false,
+      "followRedirects": false,
+      "tests": "",
+      "delay": 0
+    }
+  ],
+  "srcVersion": 1
+}}>
+
+```js
+/// <reference types="@fastly/js-compute" />
+import { ConfigStore } from "fastly:config-store";
+
+async function app (event) {
+  const config = new ConfigStore('animals');
+  return new Response(config.get('cat'));
+}
+addEventListener("fetch", event => event.respondWith(app(event)));
+```
+
+</Fiddle>

@@ -1,0 +1,53 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# handler.apply()
+
+The **`handler.apply()`** method is a trap for a function call.
+
+## Syntax
+
+```js
+new Proxy(target, {
+  apply(target, thisArg, argumentsList) {
+  }
+});
+```
+
+### Parameters
+
+The following parameters are passed to the `apply()` method. `this` is bound to the handler.
+
+- `target`
+  - : The target callable object.
+- `thisArg`
+  - : The `this` argument for the call.
+- `argumentsList`
+  - : The list of arguments for the call.
+
+### Return value
+
+The `apply()` method can return any value.
+
+## Description
+
+The **`handler.apply()`** method is a trap for a function call.
+
+### Interceptions
+
+This trap can intercept these operations:
+
+- Function call: `proxy(...args)`
+- [`Function.prototype.apply()`](../../../globals/Function/prototype/apply.md) and [`Function.prototype.call()`](../../../globals/Function/prototype/call.md)
+- [`Reflect.apply()`](../../../globals/Reflect/apply.md)
+
+Or any other operation that invokes the `[[Call]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
+
+### Invariants
+
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+
+- The `target` must be a callable itself. That is, it must be a function object.

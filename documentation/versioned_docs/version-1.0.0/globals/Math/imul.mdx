@@ -1,0 +1,35 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Math.imul()
+
+The **`Math.imul()`** function returns the result of the C-like 32-bit multiplication of the two parameters.
+
+
+## Syntax
+
+```js
+Math.imul(a, b)
+```
+
+### Parameters
+
+- `a`
+  - : First number.
+- `b`
+  - : Second number.
+
+### Return value
+
+The result of the C-like 32-bit multiplication of the given arguments.
+
+## Description
+
+`Math.imul()` allows for 32-bit integer multiplication with C-like semantics. This feature is useful for projects like [Emscripten](https://en.wikipedia.org/wiki/Emscripten).
+
+Because `imul()` is a static method of `Math`, you always use it as `Math.imul()`, rather than as a method of a `Math` object you created (`Math` is not a constructor).
+
+If you use normal JavaScript floating point numbers in `imul()`, you will experience a degrade in performance. This is because of the costly conversion from a floating point to an integer for multiplication, and then converting the multiplied integer back into a floating point. 
