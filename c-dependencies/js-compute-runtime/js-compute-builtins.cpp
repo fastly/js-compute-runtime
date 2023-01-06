@@ -427,7 +427,10 @@ bool is_instance(JSObject *obj);
 }
 
 namespace RequestOrResponse {
-bool is_instance(JSObject *obj) { return Request::is_instance(obj) || Response::is_instance(obj); }
+bool is_instance(JSObject *obj) {
+  return Request::is_instance(obj) || Response::is_instance(obj) ||
+         ObjectStoreEntry::is_instance(obj);
+}
 
 uint32_t handle(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
@@ -4663,11 +4666,11 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
         xqd_world_string_t uri_str;
         fastly_error_t err;
         if (xqd_fastly_http_req_uri_get(handle, &uri_str, &err)) {
-          JS_ReportErrorUTF8(cx,
-                             "No backend specified for request with url %s. "
-                             "Must provide a `backend` property on the `init` object "
-                             "passed to either `new Request()` or `fetch`",
-                             uri_str.ptr);
+          JS_ReportErrorLatin1(cx,
+                               "No backend specified for request with url %s. "
+                               "Must provide a `backend` property on the `init` object "
+                               "passed to either `new Request()` or `fetch`",
+                               uri_str.ptr);
           JS_free(cx, uri_str.ptr);
         } else {
           HANDLE_ERROR(cx, err);
@@ -4889,12 +4892,12 @@ template <bool repeat> bool setTimeout_or_interval(JSContext *cx, unsigned argc,
     return false;
   }
 
-  RootedObject handler(cx, &args[0].toObject());
   if (!(args[0].isObject() && JS::IsCallable(&args[0].toObject()))) {
     JS_ReportErrorASCII(cx, "First argument to %s must be a function",
                         repeat ? "setInterval" : "setTimeout");
     return false;
   }
+  RootedObject handler(cx, &args[0].toObject());
 
   int32_t delay = 0;
   if (args.length() > 1 && !JS::ToInt32(cx, args.get(1), &delay)) {

@@ -217,11 +217,12 @@ jobs:
         path: "/home/runner/.cargo/bin/viceroy"
         key: crate-cache-viceroy-${{ env.viceroy_version }}
 
+    # https://github.com/fastly/js-compute-runtime/issues/361
+    # TODO: Use engine-debug on all apps once we upgrade to FF 109
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: engine-release
-
+        name: ${{ matrix.fixture == 'regex' && 'engine-release' || 'engine-debug'  }}
     - run: yarn
 
     - name: js-compute Integration Tests Job
