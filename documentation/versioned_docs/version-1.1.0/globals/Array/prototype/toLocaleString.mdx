@@ -1,0 +1,42 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Array.prototype.toLocaleString()
+
+The **`toLocaleString()`** method returns a string representing
+the elements of the array. The elements are converted to Strings using their
+`toLocaleString` methods and these Strings are separated by a locale-specific
+String (such as a comma ",").
+
+
+## Syntax
+
+```js
+toLocaleString()
+toLocaleString(locales)
+toLocaleString(locales, options)
+```
+
+### Parameters
+
+- `locales` _**optional**_
+  - : A string with a BCP 47 language tag, or an array of such strings. For the general form and interpretation of the `locales` argument, see [Locale identification and negotiation](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl#locale_identification_and_negotiation).
+- `options` _**optional**_
+  - : An object with configuration properties. For numbers, see [`Number.prototype.toLocaleString()`](../../../globals/Number/prototype/toLocaleString.md); for dates, see [`Date.prototype.toLocaleString()`](../../../globals/Date/prototype/toLocaleString.md).
+
+### Return value
+
+A string representing the elements of the array.
+
+## Description
+
+The `Array.prototype.toLocaleString` method traverses its content, calling the `toLocaleString` method of every element with the `locales` and `options` parameters provided, and concatenates them with a implementation-defined separator (such as a comma ","). Note that the method itself does not consume the two parameters — it only passes them to the `toLocaleString()` of each element. The choice of the separator string depends on the host's current locale, not the `locales` parameter.
+
+If an element is `undefined`, `null`, it is converted to an empty string instead of the string `"null"` or `"undefined"`.
+
+When used on sparse arrays, the `toLocaleString()` method iterates empty slots as if they have the value `undefined`.
+
+The `toLocaleString()` method is generic. It only expects the `this` value to have a `length` property and integer-keyed properties.

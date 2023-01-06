@@ -1,0 +1,26 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Number.parseFloat()
+
+The **`Number.parseFloat()`** method parses an argument and returns a floating point number. If a number cannot be parsed from the argument, it returns [`NaN`](../../globals/NaN.md).
+
+## Syntax
+
+```js
+Number.parseFloat(string)
+```
+
+### Parameters
+
+- `string`
+  - : The value to parse, [coerced to a string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String#string_coercion). Leading whitespace in this argument is ignored.
+
+### Return value
+
+A floating point number parsed from the given `string`.
+
+Or [`NaN`](../../globals/NaN.md) when the first non-whitespace character cannot be converted to a number.

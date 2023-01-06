@@ -1,0 +1,44 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Date.prototype.getTime()
+
+The **`getTime()`** method returns the number of milliseconds since the [epoch](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date#the_ecmascript_epoch_and_timestamps), which is defined as the midnight at the beginning of January 1, 1970, UTC.
+
+You can use this method to help assign a date and time to another `Date`
+object. This method is functionally equivalent to the [`Date.prototype.valueOf()`](./valueOf.md) method.
+
+## Syntax
+
+```js
+getTime()
+```
+
+### Return value
+
+A number representing the milliseconds elapsed between 1 January 1970 00:00:00 UTC and
+the given date.
+
+## Description
+
+To offer protection against timing attacks and fingerprinting, the precision of
+`new Date().getTime()` might get rounded depending on browser settings.
+
+```js
+// reduced time precision (2ms) in Firefox 60
+new Date().getTime();
+// 1519211809934
+// 1519211810362
+// 1519211811670
+// …
+
+// reduced time precision with `privacy.resistFingerprinting` enabled
+new Date().getTime();
+// 1519129853500
+// 1519129858900
+// 1519129864400
+// …
+```

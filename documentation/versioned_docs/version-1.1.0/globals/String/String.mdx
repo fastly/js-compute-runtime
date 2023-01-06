@@ -1,0 +1,34 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# String() constructor
+
+The **`String`** constructor is used to create a new
+`String` object. When called instead as a function, it performs type
+conversion to a "primitive string" which is usually more
+useful.
+
+## Syntax
+
+```js
+new String(thing)
+String(thing)
+```
+
+> **Note:** `String()` can be called with or without `new`, but with different effects. See [Return value](#return_value).
+
+### Parameters
+
+- `thing`
+  - : Anything to be converted to a string.
+
+### Return value
+
+When `String` is called as a constructor (with `new`), it creates a `String` object, which is **not** a primitive.
+
+When `String` is called as a function, it coerces the parameter to a string primitive. `Symbol` values would be converted to `"Symbol(description)"`, where `description` is the [description](../../globals/Symbol/prototype/description.md) of the Symbol, instead of throwing.
+
+> **Warning:** You should rarely find yourself using `String` as a constructor.

@@ -1,0 +1,34 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Set()
+
+The **`Set` constructor** lets you
+create `Set` objects that store unique values of any type, whether [primitive values](https://developer.mozilla.org/docs/Glossary/Primitive) or object
+references.
+
+## Syntax
+
+```js
+new Set()
+new Set(iterable)
+```
+
+> **Note:** `Set()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.md).
+
+### Parameters
+
+- `iterable` _**optional**_
+
+  - : If an [iterable object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/for...of) is passed, all of its elements will be added to the new
+    `Set`.
+
+    If you don't specify this parameter, or its value is `null`, the new
+    `Set` is empty.
+
+### Return value
+
+A new `Set` object.

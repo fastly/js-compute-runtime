@@ -1,0 +1,214 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Function.prototype.name
+
+The **`name`** property of a `Function` instance indicates the function's name as specified when it was created, or it may be either `anonymous` or `''` (an empty string) for functions created anonymously.
+
+## Value
+
+A string.
+
+> **Note:** In non-standard, pre-ES2015 implementations the `configurable` attribute was `false` as well.
+
+## Description
+
+The function's `name` property can be used to identify the function in debugging tools or error messages. It has no semantic significance to the language itself.
+
+The `name` property is read-only and cannot be changed by the assignment operator:
+
+```js
+function someFunction() {}
+
+someFunction.name = 'otherFunction';
+console.log(someFunction.name); // someFunction
+```
+
+To change it, use [`Object.defineProperty()`](../../../globals/Object/defineProperty.md).
+
+The `name` property is typically inferred from how the function is defined. In the following sections, we will describe the various ways in which it can be inferred.
+
+### Function declaration
+
+The `name` property returns the name of a function declaration.
+
+```js
+function doSomething() {}
+doSomething.name; // "doSomething"
+```
+
+### Default-exported function declaration
+
+An [`export default`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/export) declaration exports the function as a declaration instead of an expression. If the declaration is anonymous, the name is `"default"`.
+
+```js
+// -- someModule.js --
+export default function () {};
+
+// -- main.js --
+import someModule from "./someModule.js";
+
+someModule.name; // "default"
+```
+
+### Function constructor
+
+Functions created with the [`Function()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Function/Function) constructor have name "anonymous".
+
+```js
+new Function().name; // "anonymous"
+```
+
+### Function expression
+
+If the function expression is named, that name is used as the `name` property.
+
+```js
+const someFunction = function someFunctionName() {};
+someFunction.name; // "someFunctionName"
+```
+
+Anonymous function expressions created using the keyword `function` or arrow functions would have `""` (an empty string) as their name.
+
+```js
+(function () {}).name; // ""
+(() => {}).name; // ""
+```
+
+However, such cases are rare — usually, in order to refer to the expression elsewhere, the function expression is attached to an identifier when it's created (such as in a variable declaration). In such cases, the name can be inferred, as the following few subsections demonstrate.
+
+One practical case where the name cannot be inferred is a function returned from another function:
+
+```js
+function getFoo() {
+  return () => {};
+}
+getFoo().name; // ""
+```
+
+### Variable declaration and method
+
+Variables and methods can infer the name of an anonymous function from its syntactic position.
+
+```js
+const f = function () {};
+const object = {
+  someMethod: function () {}
+};
+
+console.log(f.name); // "f"
+console.log(object.someMethod.name); // "someMethod"
+```
+
+The same applies to assignment:
+
+```js
+let f;
+f = () => {};
+f.name; // "f"
+```
+
+### Initializer and default value
+
+Functions in initializers (default values) of [destructuring](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment#default_value), [default parameters](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Functions/Default_parameters), [class fields](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Classes/Public_class_fields), etc., will inherit the name of the bound identifier as their `name`.
+
+```js
+const [f = () => {}] = [];
+f.name; // "f"
+
+const { someMethod: m = () => {} } = {};
+m.name; // "m"
+
+function foo(f = () => {}) {
+  console.log(f.name);
+}
+foo(); // "f"
+
+class Foo {
+  static someMethod = () => {};
+}
+Foo.someMethod.name; // someMethod
+```
+
+### Shorthand method
+
+```js
+const o = {
+  foo() {},
+};
+o.foo.name; // "foo";
+```
+
+### Bound function
+
+[`Function.prototype.bind()`](../../../globals/Function/prototype/bind.md) produces a function whose name is "bound " plus the function name.
+
+```js
+function foo() {};
+foo.bind({}).name; // "bound foo"
+```
+
+### Getter and setter
+
+When using [`get`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Functions/get) and [`set`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Functions/set) accessor properties, "get" or "set" will appear in the function name.
+
+```js
+const o = {
+  get foo() {},
+  set foo(x) {},
+};
+
+const descriptor = Object.getOwnPropertyDescriptor(o, "foo");
+descriptor.get.name; // "get foo"
+descriptor.set.name; // "set foo";
+```
+
+### Class
+
+A class's name follows the same algorithm as function declarations and expressions.
+
+```js
+class Foo {}
+Foo.name; // "Foo"
+```
+
+> **Warning:** JavaScript will set the function's `name` property only if a function does not have an own property called `name`. However, classes' [static members](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Classes/static) will be set as own properties of the class constructor function, and thus prevent the built-in `name` from being applied. See [an example](#telling_the_constructor_name_of_an_object) below.
+
+### Symbol as function name
+
+If a `Symbol` is used a function name and the symbol has a description, the method's name is the description in square brackets.
+
+```js
+const sym1 = Symbol("foo");
+const sym2 = Symbol();
+
+const o = {
+  [sym1]() {},
+  [sym2]() {},
+};
+
+o[sym1].name; // "[foo]"
+o[sym2].name; // "[]"
+```
+
+### Private property
+
+Private fields and private methods have the hash (`#`) as part of their names.
+
+```js
+class Foo {
+  #field = () => {};
+  #method() {}
+  getNames() {
+    console.log(this.#field.name);
+    console.log(this.#method.name);
+  }
+}
+
+new Foo().getNames();
+// "#field"
+// "#method"
+```

@@ -1,0 +1,54 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Object.getOwnPropertyDescriptors()
+
+The **`Object.getOwnPropertyDescriptors()`** method returns all
+own property descriptors of a given object.
+
+## Syntax
+
+```js
+Object.getOwnPropertyDescriptors(obj)
+```
+
+### Parameters
+
+- `obj`
+  - : The object for which to get all own property descriptors.
+
+### Return value
+
+An object containing all own property descriptors of an object. Might be an empty
+object, if there are no properties.
+
+## Description
+
+This method permits examination of the precise description of all own properties of an
+object. A _property_ in JavaScript consists of either a string-valued name or a
+`Symbol` and a property descriptor. Further information about property
+descriptor types and their attributes can be found in
+[`Object.defineProperty()`](../../globals/Object/defineProperty.md).
+
+A _property descriptor_ is a record with some of the following attributes:
+
+- `value`
+  - : The value associated with the property (data descriptors only).
+- `writable`
+  - : `true` if and only if the value associated with the property may be
+    changed (data descriptors only).
+- `get`
+  - : A function which serves as a getter for the property, or [`undefined`](../../globals/undefined.md) if
+    there is no getter (accessor descriptors only).
+- `set`
+  - : A function which serves as a setter for the property, or [`undefined`](../../globals/undefined.md) if
+    there is no setter (accessor descriptors only).
+- `configurable`
+  - : `true` if and only if the type of this property descriptor may be changed
+    and if the property may be deleted from the corresponding object.
+- `enumerable`
+  - : `true` if and only if this property shows up during enumeration of the
+    properties on the corresponding object.

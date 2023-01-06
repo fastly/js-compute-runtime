@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0](https://github.com/fastly/js-compute-runtime/compare/v1.0.1...v1.1.0) (2023-01-06)
+
+
+### Features
+
+* add crypto.randomUUID function ([2c32b42](https://github.com/fastly/js-compute-runtime/commit/2c32b42d29a1cd2de961a0cef175b96eaab4ae7d))
+
+
+### Bug Fixes
+
+* check that setTimeout/setInterval handler is an object before casting to an object ([62476f5](https://github.com/fastly/js-compute-runtime/commit/62476f5324425c4f4a12ebf4f8ceddb093b753de))
+* ensure retrieving the property definitions of ObjectStoreEntry.prototype.body and ObjectStoreEntry.bodyUsed do not cause panics by ensuring we have a valid entry in their Slots ([311b84c](https://github.com/fastly/js-compute-runtime/commit/311b84c80cbc99cf534ed43f4499a291716068fd))
+* error message is latin1, we need to use JS_ReportErrorLatin1 to convert the message from latin1 to UTF8CharsZ, otherwise a panic occurs ([f1a22a4](https://github.com/fastly/js-compute-runtime/commit/f1a22a42c75aea99f47f5f6b44920275735c91e1))
+
 ## [1.0.1](https://github.com/fastly/js-compute-runtime/compare/v1.0.0...v1.0.1) (2022-12-16)
 
 

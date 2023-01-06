@@ -1,0 +1,66 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# handler.defineProperty()
+
+The **`handler.defineProperty()`** method is a trap for
+[`Object.defineProperty()`](../../../globals/Object/defineProperty.md).
+
+## Syntax
+
+```js
+new Proxy(target, {
+  defineProperty(target, property, descriptor) {
+  }
+});
+```
+
+### Parameters
+
+The following parameters are passed to the `defineProperty()` method.
+`this` is bound to the handler.
+
+- `target`
+  - : The target object.
+- `property`
+  - : The name or `Symbol` of the property whose description is to be
+    retrieved.
+- `descriptor`
+  - : The descriptor for the property being defined or modified.
+
+### Return value
+
+The `defineProperty()` method must return a `Boolean` indicating
+whether or not the property has been successfully defined.
+
+## Description
+
+The **`handler.defineProperty()`** method is a trap for
+[`Object.defineProperty()`](../../../globals/Object/defineProperty.md).
+
+### Interceptions
+
+This trap can intercept these operations:
+
+- [`Object.defineProperty()`](../../../globals/Object/defineProperty.md), [`Object.defineProperties()`](../../../globals/Object/defineProperties.md)
+- [`Reflect.defineProperty()`](../../../globals/Reflect/defineProperty.md)
+
+Or any other operation that invokes the `[[DefineOwnProperty]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
+
+### Invariants
+
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+
+- A property cannot be added, if the target object is not extensible.
+- A property cannot be added as or modified to be non-configurable, if it does not
+  exists as a non-configurable own property of the target object.
+- A property may not be non-configurable, if a corresponding configurable property of
+  the target object exists.
+- If a property has a corresponding target object property then
+  `Object.defineProperty(target, prop, descriptor)`
+  will not throw an exception.
+- In strict mode, a `false` return value from the
+  `defineProperty()` handler will throw a [`TypeError`](../../../globals/TypeError/TypeError.md) exception.

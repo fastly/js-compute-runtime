@@ -1,0 +1,37 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# isFinite
+
+The global **`isFinite()`** function determines whether the
+passed value is a finite number. If needed, the parameter is first converted to a
+number.
+
+## Syntax
+
+```js
+isFinite(testValue)
+```
+
+### Parameters
+
+- `testValue`
+  - : The value to be tested for finiteness.
+
+### Return value
+
+**`false`** if the argument is (or will be coerced to) positive
+or negative [`Infinity`](./Infinity.md) or [`NaN`](./NaN.md) or [`undefined`](./undefined.md);
+otherwise, **`true`**.
+
+## Description
+
+`isFinite` is a function property of the global object.
+
+You can use this function to determine whether a number is a finite number. The
+`isFinite` function examines the number in its argument. If the argument is
+`NaN`, positive infinity, or negative infinity, this method returns
+`false`; otherwise, it returns `true`.

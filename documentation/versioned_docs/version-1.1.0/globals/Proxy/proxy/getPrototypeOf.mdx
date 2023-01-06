@@ -1,0 +1,54 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# handler.getPrototypeOf()
+
+The **`handler.getPrototypeOf()`** method is a trap for the
+`[[GetPrototypeOf]]` internal method.
+
+## Syntax
+
+```js
+new Proxy(obj, {
+  getPrototypeOf(target) {
+    // …
+  }
+});
+```
+
+### Parameters
+
+The following parameter is passed to the `getPrototypeOf()` method.
+`this` is bound to the handler.
+
+- `target`
+  - : The target object.
+
+### Return value
+
+The `getPrototypeOf()` method must return an object or `null`.
+
+## Description
+
+### Interceptions
+
+This trap can intercept these operations:
+
+- [`Object.getPrototypeOf()`](../../../globals/Object/getPrototypeOf.md)
+- [`Reflect.getPrototypeOf()`](../../../globals/Reflect/getPrototypeOf.md)
+- [`Object.prototype.isPrototypeOf()`](../../../globals/Object/prototype/isPrototypeOf.md)
+- `instanceof`
+
+Or any other operation that invokes the `[[GetPrototypeOf]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
+
+### Invariants
+
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+
+- `getPrototypeOf()` method must return an object or `null`.
+- If `target` is not extensible,
+  `Object.getPrototypeOf(proxy)` method must return the same
+  value as `Object.getPrototypeOf(target)`.

@@ -1,0 +1,48 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Object.is()
+
+The **`Object.is()`** method determines whether two values are [the same value](https://developer.mozilla.org/docs/Web/JavaScript/Equality_comparisons_and_sameness#same-value_equality_using_object.is).
+
+## Syntax
+
+```js
+Object.is(value1, value2)
+```
+
+### Parameters
+
+- `value1`
+  - : The first value to compare.
+- `value2`
+  - : The second value to compare.
+
+### Return value
+
+A boolean indicating whether or not the two arguments are the same value.
+
+## Description
+
+`Object.is()` determines whether two values are [the same value](https://developer.mozilla.org/docs/Web/JavaScript/Equality_comparisons_and_sameness#same-value_equality_using_object.is). Two values are the same if one of the following holds:
+
+- both [`undefined`](../../globals/undefined.md)
+- both `null`
+- both `true` or both `false`
+- both strings of the same length with the same characters in the same order
+- both the same object (meaning both values reference the same object in memory)
+- both `BigInts` with the same numeric value
+- both `Symbols` that reference the same symbol value
+- both numbers and
+
+  - both `+0`
+  - both `-0`
+  - both [`NaN`](../../globals/NaN.md)
+  - or both non-zero, not [`NaN`](../../globals/NaN.md), and have the same value
+
+`Object.is()` is not equivalent to the [`==`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Equality) operator. The `==` operator applies various coercions to both sides (if they are not the same type) before testing for equality (resulting in such behavior as `"" == false` being `true`), but `Object.is()` doesn't coerce either value.
+
+`Object.is()` is also _not_ equivalent to the [`===`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Strict_equality) operator. The only difference between `Object.is()` and `===` is in their treatment of signed zeros and `NaN` values. The `===` operator (and the `==` operator) treats the number values `-0` and `+0` as equal, but treats [`NaN`](../../globals/NaN.md) as not equal to each other.

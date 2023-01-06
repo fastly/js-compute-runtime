@@ -1,0 +1,33 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Array.prototype[Symbol.unscopables]
+
+The **`@@unscopables`** data property of `Array.prototype` is shared by all `Array` instances. It contains property names that were not included in the ECMAScript standard prior to the ES2015 version and that are ignored for [`with`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/with) statement-binding purposes.
+
+## Value
+
+A [`null`-prototype object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object#null-prototype_objects) with property names given below and their values set to `true`.
+
+## Description
+
+The default `Array` properties that are ignored for `with` statement-binding purposes are:
+
+- [`at()`](./at.md)
+- [`copyWithin()`](./copyWithin.md)
+- [`entries()`](./entries.md)
+- [`fill()`](./fill.md)
+- [`find()`](./find.md)
+- [`findIndex()`](./findIndex.md)
+- [`flat()`](./flat.md)
+- [`flatMap()`](./flatMap.md)
+- [`includes()`](./includes.md)
+- [`keys()`](./keys.md)
+- [`values()`](./values.md)
+
+`Array.prototype[@@unscopables]` is an empty object only containing all the above property names with the value `true`. Its [prototype is `null`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object#null-prototype_objects), so `Object.prototype` properties like [`toString`](../../Object/prototype/toString.md) won't accidentally be made unscopable, and a `toString()` within the `with` statement will continue to be called on the array.
+
+See [`Symbol.unscopables`](../../Symbol/unscopables.md) for how to set unscopable properties for your own objects.
