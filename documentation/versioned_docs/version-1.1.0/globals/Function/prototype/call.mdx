@@ -1,0 +1,36 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Function.prototype.call()
+
+The **`call()`** method calls the function with a given `this` value and arguments provided individually.
+
+## Syntax
+
+```js
+call(thisArg)
+call(thisArg, arg1)
+call(thisArg, arg1, /* …, */ argN)
+```
+
+### Parameters
+
+- `thisArg`
+  - : The value to use as `this` when calling `func`. If the function is not in [strict mode](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Strict_mode), [`null`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/null) and [`undefined`](../../../globals/undefined.md) will be replaced with the global object, and primitive values will be converted to objects.
+- `arg1, …, argN` _**optional**_
+  - : Arguments for the function.
+
+### Return value
+
+The result of calling the function with the specified `this` value and arguments.
+
+## Description
+
+> **Note:** This function is almost identical to [`Function.prototype.apply()`](../../../globals/Function/prototype/apply.md), except that `call()` accepts an **argument list**, while `apply()` accepts a **single array of arguments** — for example, `func.apply(this, ['eat', 'bananas'])` vs. `func.call(this, 'eat', 'bananas')`.
+
+Normally, when calling a function, the value of [`this`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/this) inside the function is the object that the function was accessed on. With `call()`, you can assign an arbitrary value as `this` when calling an existing function, without first attaching the function to the object as a property. This allows you to use methods of one object as generic utility functions.
+
+> **Warning:** Do not use `call()` to chain constructors (for example, to implement inheritance). This invokes the constructor function as a plain function, which means [`new.target`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/new.target) is `undefined`, and classes throw an error because they can't be called without `new`. Use [`Reflect.construct()`](../../../globals/Reflect/construct.md) or [`extends`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Classes/extends) instead.

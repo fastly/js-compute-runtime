@@ -1,0 +1,32 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# ArrayBuffer()
+
+The **`ArrayBuffer()`** constructor is used to create "ArrayBuffer" objects.
+
+## Syntax
+
+```js
+new ArrayBuffer(length)
+```
+
+> **Note:** `ArrayBuffer()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.md).
+
+### Parameters
+
+- `length`
+  - : The size, in bytes, of the array buffer to create.
+
+### Return value
+
+A new `ArrayBuffer` object of the specified size. Its contents are
+initialized to 0.
+
+### Exceptions
+
+- [`RangeError`](../RangeError/RangeError.md)
+  - : Thrown if the `length` is larger than `Number_MAX_SAFE_INTEGER` (≥ 2<sup>53</sup>) or negative.

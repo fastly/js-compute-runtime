@@ -1,0 +1,54 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# handler.deleteProperty()
+
+The **`handler.deleteProperty()`** method is a trap for the `delete` operator.
+
+## Syntax
+
+```js
+new Proxy(target, {
+  deleteProperty(target, property) {
+  }
+});
+```
+
+### Parameters
+
+The following parameters are passed to the `deleteProperty()` method.
+`this` is bound to the handler.
+
+- `target`
+  - : The target object.
+- `property`
+  - : The name or `Symbol` of the property to delete.
+
+### Return value
+
+The `deleteProperty()` method must return a `Boolean` indicating
+whether or not the property has been successfully deleted.
+
+## Description
+
+The **`handler.deleteProperty()`** method is a trap for the `delete` operator.
+
+### Interceptions
+
+This trap can intercept these operations:
+
+- The [`delete`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/delete) operator: `delete proxy[foo]` and
+  `delete proxy.foo`
+- [`Reflect.deleteProperty()`](../../../globals/Reflect/deleteProperty.md)
+
+Or any other operation that invokes the `[[Delete]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
+
+### Invariants
+
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+
+- A property cannot be deleted, if it exists as a non-configurable own property of the
+  target object.

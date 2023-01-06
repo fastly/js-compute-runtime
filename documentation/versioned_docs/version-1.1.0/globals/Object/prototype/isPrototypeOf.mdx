@@ -1,0 +1,35 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Object.prototype.isPrototypeOf()
+
+The **`isPrototypeOf()`** method checks if an object exists in another object's prototype chain.
+
+> **Note:** `isPrototypeOf()` differs from the [`instanceof`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/instanceof) operator. In the expression `object instanceof AFunction`, `object`'s prototype chain is checked against `AFunction.prototype`, not against `AFunction` itself.
+
+## Syntax
+
+```js
+isPrototypeOf(object)
+```
+
+### Parameters
+
+- `object`
+  - : The object whose prototype chain will be searched.
+
+### Return value
+
+A boolean indicating whether the calling object (`this`) lies in the prototype chain of `object`. Directly returns `false` when `object` is not an object (i.e. a primitive).
+
+### Errors thrown
+
+- [`TypeError`](../../../globals/TypeError/TypeError.md)
+  - : Thrown if `this` is `null` or `undefined` (because it can't be [converted to an object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object#object_coercion)).
+
+## Description
+
+All objects that inherit from `Object.prototype` (that is, all except [`null`-prototype objects](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object#null-prototype_objects)) inherit the `isPrototypeOf()` method. This method allows you to check whether or not the object exists within another object's prototype chain. If the `object` passed as the parameter is not an object (i.e. a primitive), the method directly returns `false`. Otherwise, the `this` value is [converted to an object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object#object_coercion), and the prototype chain of `object` is searched for the `this` value, until the end of the chain is reached or the `this` value is found.
