@@ -6,6 +6,7 @@ import { tooManyEngines } from "./tooManyEngines.js";
 export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
+  let component = false;
   let customEngineSet = false;
   let wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
   let customInputSet = false;
@@ -26,6 +27,11 @@ export async function parseInputs(cliInputs) {
       case "-h":
       case "--help": {
         return { help: true };
+      }
+      case "--component": {
+        component = true;
+        wasmEngine = join(__dirname, "../js-compute-runtime-component.wasm");
+        break;
       }
       case "--engine-wasm": {
         if (customEngineSet) {
@@ -82,5 +88,5 @@ export async function parseInputs(cliInputs) {
       }
     }
   }
-  return { wasmEngine, input, output };
+  return { wasmEngine, component, input, output };
 }

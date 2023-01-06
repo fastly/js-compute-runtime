@@ -12,8 +12,11 @@ node_modules/
 /rusturl/
 # compiler_flags
 /js-compute-runtime.wasm
+/js-compute-runtime-component.wasm
 /c-dependencies/js-compute-runtime/obj
 tests/wpt-harness/wpt-test-runner.js
+/xqd.wit
+/wasi_snapshot_preview1.wasm
 wpt-runtime.wasm
 docs-app/bin/main.wasm
 docs-app/pkg/*.tar.gz

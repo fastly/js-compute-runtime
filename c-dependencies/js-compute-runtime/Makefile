@@ -51,7 +51,7 @@ DEFINES += -DMOZ_JS_STREAMS
 
 .PHONY: all install clean distclean
 
-all: js-compute-runtime.wasm js-compute-runtime-component.wasm
+all: js-compute-runtime.wasm js-compute-runtime-component.wasm | wasi_snapshot_preview1.wasm
 
 compiler_flags:
 	echo '$(CXX_OPT) $(CXX_FLAGS)' | cmp -s - $@ || echo '$(CXX_OPT) $(CXX_FLAGS)' > $@
@@ -108,6 +108,9 @@ js-compute-runtime-component.wasm: $(FSM_OBJ) $(OBJ_DIR)xqd-world/xqd_world.o $(
 
 install: js-compute-runtime.wasm
 	install -m 444 -Dt $(DESTDIR)/dist js-compute-runtime.wasm
+
+wasi_snapshot_preview1.wasm:
+	curl -L https://github.com/bytecodealliance/preview2-prototyping/releases/download/latest/wasi_snapshot_preview1.wasm -o $@
 
 regenerate-world:
 	$(WIT_BINDGEN) guest c xqd.wit --no-helpers --out-dir xqd-world
