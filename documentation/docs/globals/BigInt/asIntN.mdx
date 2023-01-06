@@ -27,7 +27,7 @@ The value of `bigint` modulo 2^`bits`, as a signed integer.
 
 ### Exceptions
 
-- [`RangeError`](../../globals/RangeError/RangeError.md)
+- [`RangeError`](../../globals/RangeError/RangeError.mdx)
   - : Thrown if `bits` is negative or greater than 2<sup>53</sup> - 1.
 
 ## Description
@@ -50,4 +50,4 @@ If the leading bit of the remaining number is `1`, the result is negative. For e
 
 > **Note:** `BigInt` values are always encoded as two's complement in binary.
 
-Unlike similar language APIs such as [`Number.prototype.toExponential()`](../Number/prototype/toExponential.md), `asIntN` is a static property of `BigInt`, so you always use it as `BigInt.asIntN()`, rather than as a method of a BigInt value. Exposing `asIntN()` as a "standard library function" allows [interop with asm.js](https://github.com/tc39/proposal-bigint/blob/master/ADVANCED.md#dont-break-asmjs).
+Unlike similar language APIs such as [`Number.prototype.toExponential()`](../Number/prototype/toExponential.mdx), `asIntN` is a static property of `BigInt`, so you always use it as `BigInt.asIntN()`, rather than as a method of a BigInt value. Exposing `asIntN()` as a "standard library function" allows [interop with asm.js](https://github.com/tc39/proposal-bigint/blob/master/ADVANCED.md#dont-break-asmjs).

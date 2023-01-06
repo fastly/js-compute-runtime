@@ -37,7 +37,7 @@ function* generatorFunction() {}
 
 Instead, generator functions' `prototype` property is used when they are called _without_ `new`. The `prototype` property will become the returned [`Generator`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Generator) object's prototype.
 
-In addition, some functions may have a `prototype` but throw unconditionally when called with `new`. For example, the [`Symbol()`](../../../globals/Symbol/Symbol.md) and [`BigInt`](../../../globals/BigInt/BigInt.md) functions throw when called with `new`, because `Symbol.prototype` and `BigInt.prototype` are only intended to provide methods for the primitive values, but the wrapper objects should not be directly constructed.
+In addition, some functions may have a `prototype` but throw unconditionally when called with `new`. For example, the [`Symbol()`](../../../globals/Symbol/Symbol.mdx) and [`BigInt`](../../../globals/BigInt/BigInt.mdx) functions throw when called with `new`, because `Symbol.prototype` and `BigInt.prototype` are only intended to provide methods for the primitive values, but the wrapper objects should not be directly constructed.
 
 The following functions do not have `prototype`, and are therefore ineligible as constructors, even if a `prototype` property is later manually assigned:
 
@@ -60,7 +60,7 @@ A [bound function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/G
 const boundFunction = function () {}.bind(null);
 ```
 
-A function's `prototype` property, by default, is a plain object with one property: (`constructor`)[../../../globals/Object/prototype/constructor.md), which is a reference to the function itself. The `constructor` property is writable, non-enumerable, and configurable.
+A function's `prototype` property, by default, is a plain object with one property: (`constructor`)[../../../globals/Object/prototype/constructor.mdx), which is a reference to the function itself. The `constructor` property is writable, non-enumerable, and configurable.
 
 If the `prototype` of a function is reassigned with something other than an `Object`, when the function is called with `new`, the returned object's prototype would be `Object.prototype` instead. (In other words, `new` ignores the `prototype` property and constructs a plain object.)
 

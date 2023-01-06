@@ -42,13 +42,13 @@ This trap can intercept these operations:
 
 - The [`delete`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/delete) operator: `delete proxy[foo]` and
   `delete proxy.foo`
-- [`Reflect.deleteProperty()`](../../../globals/Reflect/deleteProperty.md)
+- [`Reflect.deleteProperty()`](../../../globals/Reflect/deleteProperty.mdx)
 
 Or any other operation that invokes the `[[Delete]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
 
 ### Invariants
 
-If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.mdx) when invoked.
 
 - A property cannot be deleted, if it exists as a non-configurable own property of the
   target object.

@@ -18,7 +18,7 @@ The **`Logger` constructor** lets you connect your Compute@Edge application to a
 new Logger(name)
 ```
 
-> **Note:** `Logger()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.md).
+> **Note:** `Logger()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
 
 ### Parameters
 
@@ -44,17 +44,14 @@ In this example we have a create a logger named `"splunk"` and logs the incoming
     "main": `
 /// <reference types="@fastly/js-compute" />
 import { Logger } from "fastly:logger";
-
 async function app (event) {
   let logger = new Logger("splunk");
   logger.log(JSON.stringify({
     method: event.request.method,
     url: event.request.url
   }));
-
   return new Response('OK');
 }
-
 addEventListener("fetch", event => event.respondWith(app(event)));
 `
   },
@@ -77,7 +74,6 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 ```js
 /// <reference types="@fastly/js-compute" />
 import { Logger } from "fastly:logger";
-
 async function app (event) {
   let logger = new Logger("splunk");
   logger.log(JSON.stringify({
@@ -87,7 +83,7 @@ async function app (event) {
 
   return new Response('OK');
 }
-
 addEventListener("fetch", event => event.respondWith(app(event)));
 ```
+
 </Fiddle>

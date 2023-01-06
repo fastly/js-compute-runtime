@@ -25,8 +25,8 @@ A `Promise` that is rejected with the given reason.
 
 ## Description
 
-The static `Promise.reject` function returns a `Promise` that is rejected. For debugging purposes and selective error catching, it is useful to make `reason` an `instanceof` [`Error`](../../globals/Error/Error.md).
+The static `Promise.reject` function returns a `Promise` that is rejected. For debugging purposes and selective error catching, it is useful to make `reason` an `instanceof` [`Error`](../../globals/Error/Error.mdx).
 
-`Promise.reject()` is generic and supports subclassing, which means it can be called on subclasses of `Promise`, and the result will be a promise of the subclass type. To do so, the subclass's constructor must implement the same signature as the [`Promise()`](../../globals/Promise/Promise.md) constructor — accepting a single `executor` function that can be called with the `resolve` and `reject` callbacks as parameters. `Promise.reject()` is essentially a shorthand for `new Promise((resolve, reject) => reject(reason))`.
+`Promise.reject()` is generic and supports subclassing, which means it can be called on subclasses of `Promise`, and the result will be a promise of the subclass type. To do so, the subclass's constructor must implement the same signature as the [`Promise()`](../../globals/Promise/Promise.mdx) constructor — accepting a single `executor` function that can be called with the `resolve` and `reject` callbacks as parameters. `Promise.reject()` is essentially a shorthand for `new Promise((resolve, reject) => reject(reason))`.
 
-Unlike [`Promise.resolve()`](../../globals/Promise/resolve.md), `Promise.reject()` always wraps `reason` in a new `Promise` object, even when `reason` is already a `Promise`.
+Unlike [`Promise.resolve()`](../../globals/Promise/resolve.mdx), `Promise.reject()` always wraps `reason` in a new `Promise` object, even when `reason` is already a `Promise`.

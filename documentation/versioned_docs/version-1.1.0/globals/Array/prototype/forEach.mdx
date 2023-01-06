@@ -52,7 +52,7 @@ forEach(function (element, index, array) { /* … */ }, thisArg)
 
 ## Description
 
-The `forEach()` method is an iterative method. It calls a provided `callbackFn` function once for each element in an array in ascending-index order. Unlike [`Array.prototype.map()`](./map.md), `forEach()` always returns [`undefined`](../../../globals/undefined.md) and is not chainable. The typical use case is to execute side effects at the end of a chain.
+The `forEach()` method is an iterative method. It calls a provided `callbackFn` function once for each element in an array in ascending-index order. Unlike [`Array.prototype.map()`](./map.mdx), `forEach()` always returns [`undefined`](../../../globals/undefined.mdx) and is not chainable. The typical use case is to execute side effects at the end of a chain.
 
 `callbackFn` is invoked only for array indexes which have assigned values. It is not invoked for empty slots in sparse arrays.
 
@@ -66,5 +66,5 @@ The `forEach()` method is generic. It only expects the `this` value to have a `l
 
 There is no way to stop or break a `forEach()` loop other than by throwing an exception. If you need such behavior, the `forEach()` method is the wrong tool.
 
-Early termination may be accomplished with looping statements like [`for`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/for), [`for...of`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/for...of), and [`for...in`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/for...in). Array methods like [`Array.prototype.some()`](./some.md), [`Array.prototype.some()`](./some.md), [`Array.prototype.find()`](./find.md), and [`Array.prototype.findIndex()`](./findIndex.md) also stops iteration immediately when further iteration is not necessary.
+Early termination may be accomplished with looping statements like [`for`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/for), [`for...of`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/for...of), and [`for...in`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/for...in). Array methods like [`Array.prototype.some()`](./some.mdx), [`Array.prototype.some()`](./some.mdx), [`Array.prototype.find()`](./find.mdx), and [`Array.prototype.findIndex()`](./findIndex.mdx) also stops iteration immediately when further iteration is not necessary.
 

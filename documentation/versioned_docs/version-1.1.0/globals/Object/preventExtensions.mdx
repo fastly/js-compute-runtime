@@ -32,7 +32,7 @@ An object is extensible if new properties can be added to it.
 it will never have properties beyond the ones it had at the time it was marked as
 non-extensible. Note that the properties of a non-extensible object, in general, may
 still be _deleted_. Attempting to add new properties to a non-extensible object
-will fail, either silently or, in [strict mode](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Strict_mode), throwing a [`TypeError`](../../globals/TypeError/TypeError.md).
+will fail, either silently or, in [strict mode](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Strict_mode), throwing a [`TypeError`](../../globals/TypeError/TypeError.mdx).
 
 Unlike [`Object.seal()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/seal) and [`Object.freeze()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze), `Object.preventExtensions()` invokes an intrinsic JavaScript behavior and cannot be replaced with a composition of several other operations. It also has its `Reflect` counterpart (which only exists for intrinsic operations), [`Reflect.preventExtensions()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Reflect/preventExtensions).
 

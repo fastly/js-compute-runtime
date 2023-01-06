@@ -7,8 +7,8 @@ pagination_prev: null
 # Object.assign()
 
 The **`Object.assign()`** method
-copies all [enumerable](../../globals/Object/prototype/propertyIsEnumerable.md)
-[own properties](../../globals/Object/hasOwn.md) from one or more
+copies all [enumerable](../../globals/Object/prototype/propertyIsEnumerable.mdx)
+[own properties](../../globals/Object/hasOwn.mdx) from one or more
 _source objects_ to a _target object_. It returns the modified target
 object.
 
@@ -44,14 +44,14 @@ unsuitable for merging new properties into a prototype if the merge sources cont
 getters.
 
 For copying property definitions (including their enumerability) into prototypes, use
-[`Object.getOwnPropertyDescriptor()`](../../globals/Object/getOwnPropertyDescriptor.md) and
-[`Object.defineProperty()`](../../globals/Object/defineProperty.md) instead.
+[`Object.getOwnPropertyDescriptor()`](../../globals/Object/getOwnPropertyDescriptor.mdx) and
+[`Object.defineProperty()`](../../globals/Object/defineProperty.mdx) instead.
 
 Both `String` and `Symbol` properties are copied.
 
 In case of an error, for example if a property is non-writable, a
-[`TypeError`](../../globals/TypeError/TypeError.md) is raised, and the `target` object is
+[`TypeError`](../../globals/TypeError/TypeError.mdx) is raised, and the `target` object is
 changed if any properties are added before the error is raised.
 
 > **Note:** `Object.assign()` does not throw on
-> [`null`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/null) or [`undefined`](../../globals/undefined.md) sources.
+> [`null`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/null) or [`undefined`](../../globals/undefined.mdx) sources.

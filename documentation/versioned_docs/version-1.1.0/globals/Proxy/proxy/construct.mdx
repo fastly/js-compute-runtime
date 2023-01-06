@@ -41,12 +41,12 @@ The **`handler.construct()`** method is a trap for the `new` operator.
 This trap can intercept these operations:
 
 - The `new` operator: `new myFunction(...args)`
-- [`Reflect.construct()`](../../../globals/Reflect/construct.md)
+- [`Reflect.construct()`](../../../globals/Reflect/construct.mdx)
 
 Or any other operation that invokes the `[[Construct]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
 
 ### Invariants
 
-If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.mdx) when invoked.
 
 - The result must be an `Object`.

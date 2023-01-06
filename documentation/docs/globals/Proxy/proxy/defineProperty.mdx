@@ -7,7 +7,7 @@ pagination_prev: null
 # handler.defineProperty()
 
 The **`handler.defineProperty()`** method is a trap for
-[`Object.defineProperty()`](../../../globals/Object/defineProperty.md).
+[`Object.defineProperty()`](../../../globals/Object/defineProperty.mdx).
 
 ## Syntax
 
@@ -39,20 +39,20 @@ whether or not the property has been successfully defined.
 ## Description
 
 The **`handler.defineProperty()`** method is a trap for
-[`Object.defineProperty()`](../../../globals/Object/defineProperty.md).
+[`Object.defineProperty()`](../../../globals/Object/defineProperty.mdx).
 
 ### Interceptions
 
 This trap can intercept these operations:
 
-- [`Object.defineProperty()`](../../../globals/Object/defineProperty.md), [`Object.defineProperties()`](../../../globals/Object/defineProperties.md)
-- [`Reflect.defineProperty()`](../../../globals/Reflect/defineProperty.md)
+- [`Object.defineProperty()`](../../../globals/Object/defineProperty.mdx), [`Object.defineProperties()`](../../../globals/Object/defineProperties.mdx)
+- [`Reflect.defineProperty()`](../../../globals/Reflect/defineProperty.mdx)
 
 Or any other operation that invokes the `[[DefineOwnProperty]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
 
 ### Invariants
 
-If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.mdx) when invoked.
 
 - A property cannot be added, if the target object is not extensible.
 - A property cannot be added as or modified to be non-configurable, if it does not
@@ -63,4 +63,4 @@ If the following invariants are violated, the trap throws a [`TypeError`](../../
   `Object.defineProperty(target, prop, descriptor)`
   will not throw an exception.
 - In strict mode, a `false` return value from the
-  `defineProperty()` handler will throw a [`TypeError`](../../../globals/TypeError/TypeError.md) exception.
+  `defineProperty()` handler will throw a [`TypeError`](../../../globals/TypeError/TypeError.mdx) exception.

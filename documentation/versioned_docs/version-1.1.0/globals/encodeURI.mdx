@@ -6,7 +6,7 @@ pagination_prev: null
 ---
 # encodeURI()
 
-The **`encodeURI()`** function encodes a URI by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character (will only be four escape sequences for characters composed of two surrogate characters). Compared to [`encodeURIComponent()`](./encodeURIComponent.md), this function encodes fewer characters, preserving those that are part of the URI syntax.
+The **`encodeURI()`** function encodes a URI by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character (will only be four escape sequences for characters composed of two surrogate characters). Compared to [`encodeURIComponent()`](./encodeURIComponent.mdx), this function encodes fewer characters, preserving those that are part of the URI syntax.
 
 ## Syntax
 
@@ -25,14 +25,14 @@ A new string representing the provided string encoded as a URI.
 
 ### Exceptions
 
-- [`URIError`](./URIError/URIError.md)
+- [`URIError`](./URIError/URIError.mdx)
   - : Thrown if `uri` contains a [lone surrogate](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String#utf-16_characters_unicode_codepoints_and_grapheme_clusters).
 
 ## Description
 
 `encodeURI()` is a function property of the global object.
 
-The `encodeURI()` function escapes characters by UTF-8 code units, with each octet encoded in the format `%XX`, left-padded with 0 if necessary. Because lone surrogates in UTF-16 do not encode any valid Unicode character, they cause `encodeURI()` to throw a [`URIError`](./URIError/URIError.md).
+The `encodeURI()` function escapes characters by UTF-8 code units, with each octet encoded in the format `%XX`, left-padded with 0 if necessary. Because lone surrogates in UTF-16 do not encode any valid Unicode character, they cause `encodeURI()` to throw a [`URIError`](./URIError/URIError.mdx).
 
 `encodeURI()` escapes all characters **except**:
 

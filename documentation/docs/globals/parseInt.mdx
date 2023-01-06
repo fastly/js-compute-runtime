@@ -27,12 +27,12 @@ parseInt(string, radix)
 
 ### Return value
 
-An integer parsed from the given `string`, or [`NaN`](./NaN.md) when
+An integer parsed from the given `string`, or [`NaN`](./NaN.mdx) when
 
 - the `radix` as a 32-bit integer is smaller than `2` or bigger than `36`, or
 - the first non-whitespace character cannot be converted to a number.
 
-> **Note:** JavaScript does not have the distinction of "floating point numbers" and "integers" on the language level. `parseInt()` and [`parseFloat()`](./parseFloat.md) only differ in their parsing behavior, but not necessarily their return values. For example, `parseInt("42")` and `parseFloat("42")` would return the same value: a `Number` 42.
+> **Note:** JavaScript does not have the distinction of "floating point numbers" and "integers" on the language level. `parseInt()` and [`parseFloat()`](./parseFloat.mdx) only differ in their parsing behavior, but not necessarily their return values. For example, `parseInt("42")` and `parseFloat("42")` would return the same value: a `Number` 42.
 
 ## Description
 
@@ -55,14 +55,14 @@ For radices above `10`, letters of the English alphabet indicate numerals greate
 
 `parseInt` understands exactly two signs: `+` for positive, and `-` for negative. It is done as an initial step in the parsing after whitespace is removed. If no signs are found, the algorithm moves to the following step; otherwise, it removes the sign and runs the number-parsing on the rest of the string.
 
-If `parseInt` encounters a character that is not a numeral in the specified `radix`, it ignores it and all succeeding characters and returns the integer value parsed up to that point. For example, although `1e3` technically encodes an integer (and will be correctly parsed to the integer `1000` by [`parseFloat()`](./parseFloat.md), `parseInt("1e3", 10)` returns `1`, because `e` is not a valid numeral in base 10. Because `.` is not a numeral either, the return value will always be an integer.
+If `parseInt` encounters a character that is not a numeral in the specified `radix`, it ignores it and all succeeding characters and returns the integer value parsed up to that point. For example, although `1e3` technically encodes an integer (and will be correctly parsed to the integer `1000` by [`parseFloat()`](./parseFloat.mdx), `parseInt("1e3", 10)` returns `1`, because `e` is not a valid numeral in base 10. Because `.` is not a numeral either, the return value will always be an integer.
 
 If the first character cannot be converted to a number with the radix in use, `parseInt` returns `NaN`. Leading whitespace is allowed.
 
-For arithmetic purposes, the `NaN` value is not a number in any radix. You can call the [`Number.isNaN`](./Number/isNaN.md) function to determine if the result of `parseInt` is `NaN`. If `NaN` is passed on to arithmetic operations, the operation result will also be `NaN`.
+For arithmetic purposes, the `NaN` value is not a number in any radix. You can call the [`Number.isNaN`](./Number/isNaN.mdx) function to determine if the result of `parseInt` is `NaN`. If `NaN` is passed on to arithmetic operations, the operation result will also be `NaN`.
 
-Because large numbers use the `e` character in their string representation (e.g. `6.022e23` for 6.022 × 10<sup>23</sup>), using `parseInt` to truncate numbers will produce unexpected results when used on very large or very small numbers. `parseInt` should _not_ be used as a substitute for [`Math.trunc()`](./Math/trunc.md).
+Because large numbers use the `e` character in their string representation (e.g. `6.022e23` for 6.022 × 10<sup>23</sup>), using `parseInt` to truncate numbers will produce unexpected results when used on very large or very small numbers. `parseInt` should _not_ be used as a substitute for [`Math.trunc()`](./Math/trunc.mdx).
 
-To convert a number to its string literal in a particular radix, use [`thatNumber.toString(radix)`](./Number/prototype/toString.md).
+To convert a number to its string literal in a particular radix, use [`thatNumber.toString(radix)`](./Number/prototype/toString.mdx).
 
-Because `parseInt()` returns a number, it may suffer from loss of precision if the integer represented by the string is [outside the safe range](./Number/isSafeInteger.md). The [`BigInt`](./BigInt/BigInt.md) function supports parsing integers of arbitrary length accurately, by returning a `BigInt`.
+Because `parseInt()` returns a number, it may suffer from loss of precision if the integer represented by the string is [outside the safe range](./Number/isSafeInteger.mdx). The [`BigInt`](./BigInt/BigInt.mdx) function supports parsing integers of arbitrary length accurately, by returning a `BigInt`.

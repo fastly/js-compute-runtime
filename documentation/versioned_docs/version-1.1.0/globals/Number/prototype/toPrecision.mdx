@@ -25,17 +25,17 @@ toPrecision(precision)
 
 A string representing a `Number` object in fixed-point or exponential
 notation rounded to `precision` significant digits. See the discussion of
-rounding in the description of the [`Number.prototype.toFixed()`](../../../globals/Number/prototype/toFixed.md) method,
+rounding in the description of the [`Number.prototype.toFixed()`](../../../globals/Number/prototype/toFixed.mdx) method,
 which also applies to `toPrecision()`.
 
 If the `precision` argument is omitted, behaves as
-[`Number.prototype.toString()`](../../../globals/Number/prototype/toString.md). If the `precision` argument is a
+[`Number.prototype.toString()`](../../../globals/Number/prototype/toString.mdx). If the `precision` argument is a
 non-integer value, it is rounded to the nearest integer.
 
 ### Exceptions
 
 - `RangeError`
   - : If `precision` is not between `1` and `100`
-    (inclusive), a [`RangeError`](../../../globals/RangeError/RangeError.md) is thrown. Implementations are allowed to
+    (inclusive), a [`RangeError`](../../../globals/RangeError/RangeError.mdx) is thrown. Implementations are allowed to
     support larger and smaller values as well. ECMA-262 only requires a precision of up to
     21 significant digits.

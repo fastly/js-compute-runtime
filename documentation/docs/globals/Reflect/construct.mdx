@@ -38,7 +38,7 @@ given `argumentsList`.
 
 ### Exceptions
 
-A [`TypeError`](../../globals/TypeError/TypeError.md), if `target` or
+A [`TypeError`](../../globals/TypeError/TypeError.mdx), if `target` or
 `newTarget` are not constructors.
 
 ## Description
@@ -57,7 +57,7 @@ const obj = Reflect.construct(Foo, args);
 
 Prior to the introduction of `Reflect`, objects could be constructed using
 an arbitrary combination of constructor and prototype by using
-[`Object.create()`](../../globals/Object/create.md).
+[`Object.create()`](../../globals/Object/create.mdx).
 
 ```js
 function OneClass() {
@@ -99,7 +99,7 @@ const obj1 = Reflect.construct(func1, ["I", "Love", "my", "country"]);
 
 However, while the end result is the same, there is one important difference in the
 process. When using `Object.create()` and
-[`Function.prototype.apply()`](../../globals/Function/prototype/apply.md), the `new.target` operator will
+[`Function.prototype.apply()`](../../globals/Function/prototype/apply.mdx), the `new.target` operator will
 point to `undefined` within the function used as the constructor, since the
 `new` keyword is not being used to create the object.
 

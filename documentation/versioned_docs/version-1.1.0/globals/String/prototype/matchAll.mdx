@@ -18,11 +18,11 @@ matchAll(regexp)
 
 - `regexp`
 
-  - : A regular expression object, or any object that has a [`Symbol.matchAll`](../../../globals/Symbol/matchAll.md) method.
+  - : A regular expression object, or any object that has a [`Symbol.matchAll`](../../../globals/Symbol/matchAll.mdx) method.
 
     If `regexp` is not a `RegExp` object and does not have a `Symbol.matchAll` method, it is implicitly converted to a `RegExp` by using `new RegExp(regexp, 'g')`.
 
-    If `regexp` [is a regex](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp#special_handling_for_regexes), then it must have the global (`g`) flag set, or a [`TypeError`](../../../globals/TypeError/TypeError.md) is thrown.
+    If `regexp` [is a regex](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp#special_handling_for_regexes), then it must have the global (`g`) flag set, or a [`TypeError`](../../../globals/TypeError/TypeError.mdx) is thrown.
 
 ### Return value
 
@@ -30,7 +30,7 @@ An [iterable iterator](https://developer.mozilla.org/docs/Web/JavaScript/Guide/I
 
 ### Exceptions
 
-- [`TypeError`](../../../globals/TypeError/TypeError.md)
+- [`TypeError`](../../../globals/TypeError/TypeError.mdx)
   - : Thrown if the `regexp` [is a regex](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp#special_handling_for_regexes) that does not have the global (`g`) flag set (its [`flags`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags) property does not contain `"g"`).
 
 ## Description

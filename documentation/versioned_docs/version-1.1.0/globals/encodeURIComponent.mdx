@@ -6,7 +6,7 @@ pagination_prev: null
 ---
 # encodeURIComponent
 
-The **`encodeURIComponent()`** function encodes a URI by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character (will only be four escape sequences for characters composed of two surrogate characters). Compared to [`encodeURI()`](./encodeURI.md), this function encodes more characters, including those that are part of the URI syntax.
+The **`encodeURIComponent()`** function encodes a URI by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character (will only be four escape sequences for characters composed of two surrogate characters). Compared to [`encodeURI()`](./encodeURI.mdx), this function encodes more characters, including those that are part of the URI syntax.
 
 ## Syntax
 
@@ -25,19 +25,19 @@ A new string representing the provided `uriComponent` encoded as a URI component
 
 ### Exceptions
 
-- [`URIError`](./URIError/URIError.md)
+- [`URIError`](./URIError/URIError.mdx)
   - : Thrown if `uriComponent` contains a [lone surrogate](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String#utf-16_characters_unicode_codepoints_and_grapheme_clusters).
 
 ## Description
 
 `encodeURIComponent()` is a function property of the global object.
 
-`encodeURIComponent()` uses the same encoding algorithm as described in [`encodeURI()`](./encodeURI.md). It escapes all characters **except**:
+`encodeURIComponent()` uses the same encoding algorithm as described in [`encodeURI()`](./encodeURI.mdx). It escapes all characters **except**:
 
 ```text
 A–Z a–z 0–9 - _ . ! ~ * ' ( )
 ```
 
-Compared to [`encodeURI()`](./encodeURI.md), `encodeURIComponent()` escapes a larger set of characters. Use `encodeURIComponent()` on user-entered fields from forms `POST`'d to the server — this will encode `&` symbols that may inadvertently be generated during data entry for special HTML entities or other characters that require encoding/decoding. For example, if a user writes `Jack & Jill`, without `encodeURIComponent()`, the ampersand could be interpreted on the server as the start of a new field and jeopardize the integrity of the data.
+Compared to [`encodeURI()`](./encodeURI.mdx), `encodeURIComponent()` escapes a larger set of characters. Use `encodeURIComponent()` on user-entered fields from forms `POST`'d to the server — this will encode `&` symbols that may inadvertently be generated during data entry for special HTML entities or other characters that require encoding/decoding. For example, if a user writes `Jack & Jill`, without `encodeURIComponent()`, the ampersand could be interpreted on the server as the start of a new field and jeopardize the integrity of the data.
 
 For [`application/x-www-form-urlencoded`](https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#application/x-www-form-urlencoded-encoding-algorithm), spaces are to be replaced by `+`, so one may wish to follow a `encodeURIComponent()` replacement with an additional replacement of `%20` with `+`.

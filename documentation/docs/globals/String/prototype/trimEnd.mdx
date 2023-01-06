@@ -24,7 +24,7 @@ If the end of `str` has no whitespace, a new string is still returned (essential
 
 ### Aliasing
 
-After [`String.prototype.trim()`](../../../globals/String/prototype/trim.md) was standardized, engines also implemented the non-standard method `trimRight`. However, for consistency with [`String.prototype.pedEnd()`](../../../globals/String/prototype/trim.md ), when the method got standardized, its name was chosen as `trimEnd`. For web compatibility reasons, `trimRight` remains as an alias to `trimEnd`, and they refer to the exact same function object. In some engines this means:
+After [`String.prototype.trim()`](../../../globals/String/prototype/trim.mdx) was standardized, engines also implemented the non-standard method `trimRight`. However, for consistency with [`String.prototype.pedEnd()`](../../../globals/String/prototype/trim.mdx), when the method got standardized, its name was chosen as `trimEnd`. For web compatibility reasons, `trimRight` remains as an alias to `trimEnd`, and they refer to the exact same function object. In some engines this means:
 
 ```js
 String.prototype.trimRight.name === "trimEnd";

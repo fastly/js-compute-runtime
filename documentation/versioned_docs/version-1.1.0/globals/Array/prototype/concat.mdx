@@ -32,7 +32,7 @@ A new `Array` instance.
 
 ## Description
 
-The `concat` method creates a new array. The array will first be populated by the elements in the object on which it is called. Then, for each argument, its value will be concatenated into the array — for normal objects or primitives, the argument itself will become an element of the final array; for arrays or array-like objects with the property [`Symbol.isConcatSpreadable`](../../Symbol/isConcatSpreadable.md) set to a truthy value, each element of the argument will be independently added to the final array. The `concat` method does not recurse into nested array arguments.
+The `concat` method creates a new array. The array will first be populated by the elements in the object on which it is called. Then, for each argument, its value will be concatenated into the array — for normal objects or primitives, the argument itself will become an element of the final array; for arrays or array-like objects with the property [`Symbol.isConcatSpreadable`](../../Symbol/isConcatSpreadable.mdx) set to a truthy value, each element of the argument will be independently added to the final array. The `concat` method does not recurse into nested array arguments.
 
 The `concat()` method is a copying. It does not alter `this` or any of the arrays provided as arguments but instead returns a [shallow copy](https://developer.mozilla.org/docs/Glossary/Shallow_copy) that contains the same elements as the ones from the original arrays.
 

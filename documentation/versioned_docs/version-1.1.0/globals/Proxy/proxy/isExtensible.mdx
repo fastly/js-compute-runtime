@@ -7,7 +7,7 @@ pagination_prev: null
 # handler.isExtensible()
 
 The **`handler.isExtensible()`** method is a trap for
-[`Object.isExtensible()`](../../../globals/Object/isExtensible.md).
+[`Object.isExtensible()`](../../../globals/Object/isExtensible.mdx).
 
 ## Syntax
 
@@ -33,20 +33,20 @@ The `isExtensible()` method must return a boolean value.
 ## Description
 
 The **`handler.isExtensible()`** method is a trap for
-[`Object.isExtensible()`](../../../globals/Object/isExtensible.md).
+[`Object.isExtensible()`](../../../globals/Object/isExtensible.mdx).
 
 ### Interceptions
 
 This trap can intercept these operations:
 
-- [`Object.isExtensible()`](../../../globals/Object/isExtensible.md)
-- [`Reflect.isExtensible()`](../../../globals/Reflect/isExtensible.md)
+- [`Object.isExtensible()`](../../../globals/Object/isExtensible.mdx)
+- [`Reflect.isExtensible()`](../../../globals/Reflect/isExtensible.mdx)
 
 Or any other operation that invokes the `[[IsExtensible]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
 
 ### Invariants
 
-If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.mdx) when invoked.
 
 - `Object.isExtensible(proxy)` must return the same value as
   `Object.isExtensible(target)`.

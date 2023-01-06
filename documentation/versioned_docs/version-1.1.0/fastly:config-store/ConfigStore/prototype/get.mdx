@@ -29,9 +29,9 @@ A `string` representing the specified ConfigStore value or `null` if the key doe
 
 Get a value for a key in the config-store. If the provided key does not exist in the ConfigStore then this returns `null`.
 
-The `get()` method requires its `this` value to be a [`ConfigStore`](../../../fastly%3Aconfig-store/ConfigStore/ConfigStore.md) object.
+The `get()` method requires its `this` value to be a [`ConfigStore`](../../../fastly%3Aconfig-store/ConfigStore/ConfigStore.mdx) object.
 
-If the `this` value does not inherit from `ConfigStore.prototype`, a [`TypeError`](../../../globals/TypeError/TypeError.md) is thrown.
+If the `this` value does not inherit from `ConfigStore.prototype`, a [`TypeError`](../../../globals/TypeError/TypeError.mdx) is thrown.
 
 ### Exceptions
 
@@ -54,7 +54,6 @@ In this example we have an Edge Dictionary named "animals" and we return the "ca
     "main": `
 /// <reference types="@fastly/js-compute" />
 import { ConfigStore } from "fastly:config-store";
-
 async function app (event) {
   const config = new ConfigStore('animals');
   return new Response(config.get('cat'));
@@ -88,7 +87,6 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 ```js
 /// <reference types="@fastly/js-compute" />
 import { ConfigStore } from "fastly:config-store";
-
 async function app (event) {
   const config = new ConfigStore('animals');
   return new Response(config.get('cat'));

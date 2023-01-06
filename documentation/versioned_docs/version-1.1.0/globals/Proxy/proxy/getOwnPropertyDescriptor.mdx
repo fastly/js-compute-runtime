@@ -6,7 +6,7 @@ pagination_prev: null
 ---
 # handler.getOwnPropertyDescriptor()
 
-The **`handler.getOwnPropertyDescriptor()`** method is a trap for [`Object.getOwnPropertyDescriptor()`](../../../globals/Object/getOwnPropertyDescriptor.md).
+The **`handler.getOwnPropertyDescriptor()`** method is a trap for [`Object.getOwnPropertyDescriptor()`](../../../globals/Object/getOwnPropertyDescriptor.mdx).
 
 
 
@@ -34,20 +34,20 @@ The `getOwnPropertyDescriptor()` method must return an object or `undefined`.
 
 ## Description
 
-The **`handler.getOwnPropertyDescriptor()`** method is a trap for [`Object.getOwnPropertyDescriptor()`](../../../globals/Object/getOwnPropertyDescriptor.md).
+The **`handler.getOwnPropertyDescriptor()`** method is a trap for [`Object.getOwnPropertyDescriptor()`](../../../globals/Object/getOwnPropertyDescriptor.mdx).
 
 ### Interceptions
 
 This trap can intercept these operations:
 
-- [`Object.getOwnPropertyDescriptor()`](../../../globals/Object/getOwnPropertyDescriptor.md)
-- [`Reflect.getOwnPropertyDescriptor()`](../../../globals/Reflect/getOwnPropertyDescriptor.md)
+- [`Object.getOwnPropertyDescriptor()`](../../../globals/Object/getOwnPropertyDescriptor.mdx)
+- [`Reflect.getOwnPropertyDescriptor()`](../../../globals/Reflect/getOwnPropertyDescriptor.mdx)
 
 Or any other operation that invokes the `[[GetOwnProperty]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
 
 ### Invariants
 
-If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.mdx) when invoked.
 
 - `getOwnPropertyDescriptor()` must return an object or `undefined`.
 - A property cannot be reported as non-existent, if it exists as a non-configurable own property of the target object.

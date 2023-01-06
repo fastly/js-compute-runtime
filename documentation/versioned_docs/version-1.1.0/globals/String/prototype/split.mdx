@@ -19,7 +19,7 @@ split(separator, limit)
 ### Parameters
 
 - `separator` _**optional**_
-  - : The pattern describing where each split should occur. Can be a string or an object with a [`Symbol.split`](../../../globals/Symbol/split.md) method — the typical example being a regular expression. If undefined, the original target string is returned wrapped in an array.
+  - : The pattern describing where each split should occur. Can be a string or an object with a [`Symbol.split`](../../../globals/Symbol/split.mdx) method — the typical example being a regular expression. If undefined, the original target string is returned wrapped in an array.
 - `limit` _**optional**_
   - : A non-negative integer specifying a limit on the number of substrings to be included in the array. If provided, splits the string at each occurrence of the specified `separator`, but stops when `limit` entries have been placed in the array. Any leftover text is not included in the array at all.
     - The array may contain fewer entries than `limit` if the end of the string is reached before the limit is reached.
@@ -46,8 +46,8 @@ If `separator` is a regexp that matches empty strings, whether the match is spli
 "😄😄".split(/(?:)/u); // [ "😄", "😄" ]
 ```
 
-If `separator` is a regular expression with capturing groups, then each time `separator` matches, the captured groups (including any `undefined` results) are spliced into the output array. This behavior is specified by the regexp's [`Symbol.split`](../../../globals/Symbol/split.md) method.
+If `separator` is a regular expression with capturing groups, then each time `separator` matches, the captured groups (including any `undefined` results) are spliced into the output array. This behavior is specified by the regexp's [`Symbol.split`](../../../globals/Symbol/split.mdx) method.
 
-If `separator` is an object with a [`Symbol.split`](../../../globals/Symbol/split.md) method, that method is called with the target string and `limit` as arguments, and `this` set to the object. Its return value becomes the return value of `split`.
+If `separator` is an object with a [`Symbol.split`](../../../globals/Symbol/split.mdx) method, that method is called with the target string and `limit` as arguments, and `this` set to the object. Its return value becomes the return value of `split`.
 
 Any other value will be coerced to a string before being used as separator.

@@ -18,7 +18,7 @@ match(regexp)
 
 - `regexp`
 
-  - : A regular expression object, or any object that has a [`Symbol.match`](../../../globals/Symbol/match.md) method.
+  - : A regular expression object, or any object that has a [`Symbol.match`](../../../globals/Symbol/match.mdx) method.
 
     If `regexp` is not a `RegExp` object and does not have a `Symbol.match` method, it is implicitly converted to a `RegExp` by using `new RegExp(regexp)`.
 
@@ -37,6 +37,6 @@ The implementation of `String.prototype.match` itself is very simple — it simp
 
 - If you need to know if a string matches a regular expression `RegExp`, use `RegExp.prototype.test()`.
 - If you only want the first match found, you might want to use `RegExp.prototype.exec()` instead.
-- If you want to obtain capture groups and the global flag is set, you need to use `RegExp.prototype.exec()` or [`String.prototype.matchAll()`](../../../globals/String/prototype/matchAll.md) instead.
+- If you want to obtain capture groups and the global flag is set, you need to use `RegExp.prototype.exec()` or [`String.prototype.matchAll()`](../../../globals/String/prototype/matchAll.mdx) instead.
 
 For more information about the semantics of `match()` when a regex is passed, see [`RegExp.prototype[@@match]()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp/@@match).

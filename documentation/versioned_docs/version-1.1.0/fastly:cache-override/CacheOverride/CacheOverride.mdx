@@ -10,8 +10,8 @@ import {Fiddle} from '@site/src/components/fiddle';
 
 The **`CacheOverride` constructor** lets you configure the caching behavior of a `Response`.
 
-Normally, the HTTP Headers on a [`Response`](../../globals/Response/Response.md) would control how the [`Response`](../../globals/Response/Response.md) is cached,
-but `CacheOverride` can be set on a [`Request`](../../globals/Request/Request.md), to define custom caching behavior.
+Normally, the HTTP Headers on a [`Response`](../../globals/Response/Response.mdx) would control how the [`Response`](../../globals/Response/Response.mdx) is cached,
+but `CacheOverride` can be set on a [`Request`](../../globals/Request/Request.mdx), to define custom caching behavior.
 
 ## Syntax
 
@@ -20,7 +20,7 @@ new CacheOverride(mode)
 new CacheOverride(mode, init)
 ```
 
-> **Note:** `CacheOverride()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.md).
+> **Note:** `CacheOverride()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
 
 ### Parameters
 
@@ -68,7 +68,6 @@ In this example we override the cache for all the requests prefixed /static/ to 
     "main": `
 /// <reference types="@fastly/js-compute" />
 import { CacheOverride } from "fastly:cache-override";
-
 // In this example we override the cache for all the requests prefixed /static/ 
 // to have a long TTL (Time To Live), and the home page to have a short TTL and 
 // a long SWR (Stale While Revalidate).
@@ -105,10 +104,10 @@ addEventListener("fetch", event => event.respondWith(app(event)));
   ],
   "srcVersion": 1
 }}>
+
 ```js
 /// <reference types="@fastly/js-compute" />
 import { CacheOverride } from "fastly:cache-override";
-
 // In this example we override the cache for all the requests prefixed /static/ 
 // to have a long TTL (Time To Live), and the home page to have a short TTL and 
 // a long SWR (Stale While Revalidate).
@@ -129,4 +128,5 @@ async function app (event) {
 }
 addEventListener("fetch", event => event.respondWith(app(event)));
 ```
+
 </Fiddle>

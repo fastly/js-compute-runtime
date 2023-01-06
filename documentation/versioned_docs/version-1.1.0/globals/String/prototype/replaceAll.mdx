@@ -18,12 +18,12 @@ replaceAll(pattern, replacement)
 
 - `pattern`
 
-  - : Can be a string or an object with a [`Symbol.replace`](../../../globals/Symbol/replace.md) method — the typical example being a [regular expression](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp). Any value that doesn't have the `Symbol.replace` method will be coerced to a string.
+  - : Can be a string or an object with a [`Symbol.replace`](../../../globals/Symbol/replace.mdx) method — the typical example being a [regular expression](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp). Any value that doesn't have the `Symbol.replace` method will be coerced to a string.
 
-    If `pattern` is a regex, then it must have the global (`g`) flag set, or a [`TypeError`](../../../globals/TypeError/TypeError.md) is thrown.
+    If `pattern` is a regex, then it must have the global (`g`) flag set, or a [`TypeError`](../../../globals/TypeError/TypeError.mdx) is thrown.
 
 - `replacement`
-  - : Can be a string or a function. The replacement has the same semantics as that of [`String.prototype.replace()`](../../../globals/String/prototype/replace.md).
+  - : Can be a string or a function. The replacement has the same semantics as that of [`String.prototype.replace()`](../../../globals/String/prototype/replace.mdx).
 
 ### Return value
 
@@ -31,14 +31,14 @@ A new string, with all matches of a pattern replaced by a replacement.
 
 ### Exceptions
 
-- [`TypeError`](../../../globals/TypeError/TypeError.md)
+- [`TypeError`](../../../globals/TypeError/TypeError.mdx)
   - : Thrown if the `pattern` [is a regex](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp#special_handling_for_regexes) that does not have the global (`g`) flag set (its [`flags`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags) property does not contain `"g"`).
 
 ## Description
 
 This method does not mutate the string value it's called on. It returns a new string.
 
-Unlike [`String.prototype.replace()`](../../../globals/String/prototype/replace.md), this method would replace all occurrences of a string, not just the first one. This is especially useful if the string is not statically known, as calling the [`RegExp()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp/RegExp) constructor without escaping special characters may unintentionally change its semantics.
+Unlike [`String.prototype.replace()`](../../../globals/String/prototype/replace.mdx), this method would replace all occurrences of a string, not just the first one. This is especially useful if the string is not statically known, as calling the [`RegExp()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp/RegExp) constructor without escaping special characters may unintentionally change its semantics.
 
 ```js
 function unsafeRedactName(text, name) {
@@ -55,9 +55,9 @@ console.log(unsafeRedactName(report, "ha.*er")); // "A [REDACTED]s in their name
 console.log(safeRedactName(report, "ha.*er")); // "A hacker called [REDACTED] used special characters in their name to breach the system."
 ```
 
-If `pattern` is an object with a [`Symbol.replace`](../../../globals/Symbol/replace.md) method (including `RegExp` objects), that method is called with the target string and `replacement` as arguments. Its return value becomes the return value of `replaceAll()`. In this case the behavior of `replaceAll()` is entirely encoded by the `Symbol.replace` method, and therefore will have the same result as `replace()` (apart from the extra input validation that the regex is global).
+If `pattern` is an object with a [`Symbol.replace`](../../../globals/Symbol/replace.mdx) method (including `RegExp` objects), that method is called with the target string and `replacement` as arguments. Its return value becomes the return value of `replaceAll()`. In this case the behavior of `replaceAll()` is entirely encoded by the `Symbol.replace` method, and therefore will have the same result as `replace()` (apart from the extra input validation that the regex is global).
 
-If the `pattern` is an empty string, the replacement will be inserted in between every UTF-16 code unit, similar to [`String.prototype.split()`](../../../globals/String/prototype/split.md) behavior.
+If the `pattern` is an empty string, the replacement will be inserted in between every UTF-16 code unit, similar to [`String.prototype.split()`](../../../globals/String/prototype/split.mdx) behavior.
 
 ```js
 "xxx".replaceAll("", "_"); // "_x_x_x_"

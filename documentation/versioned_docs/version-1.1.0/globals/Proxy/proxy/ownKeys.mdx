@@ -7,7 +7,7 @@ pagination_prev: null
 # handler.ownKeys()
 
 The **`handler.ownKeys()`** method is a trap for
-[`Reflect.ownKeys()`](../../../globals/Reflect/ownKeys.md).
+[`Reflect.ownKeys()`](../../../globals/Reflect/ownKeys.mdx).
 
 ## Syntax
 
@@ -33,22 +33,22 @@ The `ownKeys()` method must return an enumerable object.
 ## Description
 
 The **`handler.ownKeys()`** method is a trap for
-[`Reflect.ownKeys()`](../../../globals/Reflect/ownKeys.md).
+[`Reflect.ownKeys()`](../../../globals/Reflect/ownKeys.mdx).
 
 ### Interceptions
 
 This trap can intercept these operations:
 
-- [`Object.getOwnPropertyNames()`](../../../globals/Object/getOwnPropertyNames.md)
-- [`Object.getOwnPropertySymbols()`](../../../globals/Object/getOwnPropertySymbols.md)
-- [`Object.keys()`](../../../globals/Object/keys.md)
-- [`Reflect.ownKeys()`](../../../globals/Reflect/ownKeys.md)
+- [`Object.getOwnPropertyNames()`](../../../globals/Object/getOwnPropertyNames.mdx)
+- [`Object.getOwnPropertySymbols()`](../../../globals/Object/getOwnPropertySymbols.mdx)
+- [`Object.keys()`](../../../globals/Object/keys.mdx)
+- [`Reflect.ownKeys()`](../../../globals/Reflect/ownKeys.mdx)
 
 Or any other operation that invokes the `[[OwnPropertyKeys]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
 
 ### Invariants
 
-If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.mdx) when invoked.
 
 - The result of `ownKeys()` must be an array.
 - The type of each array element is either a `String` or a `Symbol`.

@@ -24,7 +24,7 @@ If the beginning of `str` has no whitespace, a new string is still returned (ess
 
 ### Aliasing
 
-After [`String.prototype.trim()`](../../../globals/String/prototype/trim.md) was standardized, engines also implemented the non-standard method `trimLeft`. However, for consistency with [`String.prototype.padEnd()`](../../../globals/String/prototype/padEnd.md), when the method got standardized, its name was chosen as `trimStart`. For web compatibility reasons, `trimLeft` remains as an alias to `trimStart`, and they refer to the exact same function object. In some engines this means:
+After [`String.prototype.trim()`](../../../globals/String/prototype/trim.mdx) was standardized, engines also implemented the non-standard method `trimLeft`. However, for consistency with [`String.prototype.padEnd()`](../../../globals/String/prototype/padEnd.mdx), when the method got standardized, its name was chosen as `trimStart`. For web compatibility reasons, `trimLeft` remains as an alias to `trimStart`, and they refer to the exact same function object. In some engines this means:
 
 ```js
 String.prototype.trimLeft.name === "trimStart";

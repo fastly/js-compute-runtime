@@ -36,9 +36,9 @@ A string's `substr()` method extracts `length` characters from the string, count
 
 - If `start >= str.length`, an empty string is returned.
 - If `start < 0`, the index starts counting from the end of the string. More formally, in this case the substring starts at `max(start + str.length, 0)`.
-- If `start` is omitted or [`undefined`](../../../globals/undefined.md), it's treated as `0`.
-- If `length` is omitted or [`undefined`](../../../globals/undefined.md), or if `start + length >= str.length`, `substr()` extracts characters to the end of the string.
+- If `start` is omitted or [`undefined`](../../../globals/undefined.mdx), it's treated as `0`.
+- If `length` is omitted or [`undefined`](../../../globals/undefined.mdx), or if `start + length >= str.length`, `substr()` extracts characters to the end of the string.
 - If `length < 0`, an empty string is returned.
-- For both `start` and `length`, [`NaN`](../../../globals/NaN.md) is treated as `0`.
+- For both `start` and `length`, [`NaN`](../../../globals/NaN.mdx) is treated as `0`.
 
 Although you are encouraged to avoid using `substr()`, there is no trivial way to migrate `substr()` to either `slice()` or `substring()` in legacy code without essentially writing a polyfill for `substr()`. For example, `str.substr(a, l)`, `str.slice(a, a + l)`, and `str.substring(a, a + l)` all have different results when `str = "01234", a = 1, l = -2` — `substr()` returns an empty string, `slice()` returns `"123"`, while `substring()` returns `"0"`. The actual refactoring path depends on the knowledge of the range of `a` and `l`.

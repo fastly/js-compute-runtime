@@ -22,7 +22,7 @@ A string representing the source code of the function.
 
 The `Function` object overrides the `toString()` method
 inherited from `Object`; it does not inherit
-[`Object.prototype.toString()`](../../../globals/Object/prototype/toString.md). For user-defined `Function`
+[`Object.prototype.toString()`](../../../globals/Object/prototype/toString.mdx). For user-defined `Function`
 objects, the `toString` method returns a string containing the source text
 segment which was used to define the function.
 
@@ -30,7 +30,7 @@ JavaScript calls the `toString` method automatically when a
 `Function` is to be represented as a text value, e.g. when a function is
 concatenated with a string.
 
-The `toString()` method will throw a [`TypeError`](../../../globals/TypeError/TypeError.md) exception
+The `toString()` method will throw a [`TypeError`](../../../globals/TypeError/TypeError.mdx) exception
 ("Function.prototype.toString called on incompatible object"), if its
 `this` value object is not a `Function` object.
 
@@ -39,7 +39,7 @@ Function.prototype.toString.call('foo'); // throws TypeError
 ```
 
 If the `toString()` method is called on built-in function objects, a
-function created by [`Function.prototype.bind()`](../../../globals/Function/prototype/bind.md), or
+function created by [`Function.prototype.bind()`](../../../globals/Function/prototype/bind.mdx), or
 other non-JavaScript functions, then `toString()` returns a
 _native function string_ which looks like
 

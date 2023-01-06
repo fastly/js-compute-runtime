@@ -6,7 +6,7 @@ pagination_prev: null
 ---
 # Object.seal()
 
-The **`Object.seal()`** method _seals_ an object. Sealing an object [prevents extensions](../../globals/Object/preventExtensions.md) and makes existing properties non-configurable. A sealed object has a fixed set of properties: new properties cannot be added, existing properties cannot be removed, their enumerability and configurability cannot be changed, and its prototype cannot be re-assigned. Values of existing properties can still be changed as long as they are writable. `seal()` returns the same object that was passed in.
+The **`Object.seal()`** method _seals_ an object. Sealing an object [prevents extensions](../../globals/Object/preventExtensions.mdx) and makes existing properties non-configurable. A sealed object has a fixed set of properties: new properties cannot be added, existing properties cannot be removed, their enumerability and configurability cannot be changed, and its prototype cannot be re-assigned. Values of existing properties can still be changed as long as they are writable. `seal()` returns the same object that was passed in.
 
 ## Syntax
 
@@ -25,14 +25,14 @@ The object being sealed.
 
 ## Description
 
-Sealing an object is equivalent to [preventing extensions](../../globals/Object/preventExtensions.md) and then changing all existing properties' descriptors to `configurable: false`. This has the effect of making the set of properties on the object fixed. Making all properties non-configurable
+Sealing an object is equivalent to [preventing extensions](../../globals/Object/preventExtensions.mdx) and then changing all existing properties' descriptors to `configurable: false`. This has the effect of making the set of properties on the object fixed. Making all properties non-configurable
 also prevents them from being converted from data properties to accessor properties and
 vice versa, but it does not prevent the values of data properties from being changed.
 Attempting to delete or add properties to a sealed object, or to convert a data property
 to accessor or vice versa, will fail, either silently or by throwing a
-[`TypeError`](../../globals/TypeError/TypeError.md) (most commonly, although not exclusively, when in "strict mode" code).
+[`TypeError`](../../globals/TypeError/TypeError.mdx) (most commonly, although not exclusively, when in "strict mode" code).
 
-The prototype chain remains untouched. However, due to the effect of [preventing extensions](../../globals/Object/preventExtensions.md), the `[[Prototype]]` cannot be reassigned.
+The prototype chain remains untouched. However, due to the effect of [preventing extensions](../../globals/Object/preventExtensions.mdx), the `[[Prototype]]` cannot be reassigned.
 
-Unlike [`Object.freeze()`](../../globals/Object/freeze.md), objects sealed with `Object.seal()` may have their existing
+Unlike [`Object.freeze()`](../../globals/Object/freeze.mdx), objects sealed with `Object.seal()` may have their existing
 properties changed, as long as they are writable.

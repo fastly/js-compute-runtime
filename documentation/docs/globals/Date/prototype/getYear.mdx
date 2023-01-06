@@ -9,7 +9,7 @@ pagination_prev: null
 The **`getYear()`** method returns the year in the specified
 date according to local time. Because `getYear()` does not return full years
 ("year 2000 problem"), it is no longer used and has been replaced by the
-[`Date.prototype.getFullYear()`](./getFullYear.md) method.
+[`Date.prototype.getFullYear()`](./getFullYear.mdx) method.
 
 ## Syntax
 
@@ -32,5 +32,5 @@ A number representing the year of the given date, according to local time, minus
 - For years less than 1900, the value returned by `getYear()` is less than 0. For example, if the year is 1800, `getYear()` returns -100.
 
 To take into account years before and after 2000, you should use
-[`Date.prototype.getFullYear()`](./getFullYear.md) instead of
+[`Date.prototype.getFullYear()`](./getFullYear.mdx) instead of
 `getYear()` so that the year is specified in full.

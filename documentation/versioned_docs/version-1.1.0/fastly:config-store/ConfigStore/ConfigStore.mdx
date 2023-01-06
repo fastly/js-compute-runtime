@@ -18,7 +18,7 @@ The **`ConfigStore` constructor** lets you access a specific [Fastly Edge Dictio
 new ConfigStore(name);
 ```
 
-> **Note:** `ConfigStore()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.md).
+> **Note:** `ConfigStore()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
 
 ### Parameters
 
@@ -53,7 +53,6 @@ In this example we have an Edge Dictionary named "animals" and we return the "ca
     "main": `
 /// <reference types="@fastly/js-compute" />
 import { ConfigStore } from "fastly:config-store";
-
 async function app (event) {
   const config = new ConfigStore('animals');
   return new Response(config.get('cat'));
@@ -87,7 +86,6 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 ```js
 /// <reference types="@fastly/js-compute" />
 import { ConfigStore } from "fastly:config-store";
-
 async function app (event) {
   const config = new ConfigStore('animals');
   return new Response(config.get('cat'));

@@ -26,9 +26,9 @@ log(message)
 
 Send the given message, converted to a string, to this Logger instance's endpoint.
 
-The `log()` method requires its `this` value to be a [`Logger`](../Logger.md) object.
+The `log()` method requires its `this` value to be a [`Logger`](../Logger.mdx) object.
 
-If the `this` value does not inherit from `Logger.prototype`, a [`TypeError`](../../../globals/TypeError/TypeError.md) is thrown.
+If the `this` value does not inherit from `Logger.prototype`, a [`TypeError`](../../../globals/TypeError/TypeError.mdx) is thrown.
 
 ## Examples
 
@@ -45,17 +45,14 @@ In this example we have a create a logger named `"splunk"` and logs the incoming
     "main": `
 /// <reference types="@fastly/js-compute" />
 import { Logger } from "fastly:logger";
-
 async function app (event) {
   let logger = new Logger("splunk");
   logger.log(JSON.stringify({
     method: event.request.method,
     url: event.request.url
   }));
-
   return new Response('OK');
 }
-
 addEventListener("fetch", event => event.respondWith(app(event)));
 `
   },
@@ -78,17 +75,15 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 ```js
 /// <reference types="@fastly/js-compute" />
 import { Logger } from "fastly:logger";
-
 async function app (event) {
   let logger = new Logger("splunk");
   logger.log(JSON.stringify({
     method: event.request.method,
     url: event.request.url
   }));
-
   return new Response('OK');
 }
-
 addEventListener("fetch", event => event.respondWith(app(event)));
 ```
+
 </Fiddle>

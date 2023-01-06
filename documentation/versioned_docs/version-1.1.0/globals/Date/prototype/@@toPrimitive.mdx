@@ -26,10 +26,10 @@ The `[Symbol.toPrimitive]()` method of the `Date` object returns a
 primitive value, that is either of type number or of type string.
 
 If `hint` is `string` or `default`,
-`[Symbol.toPrimitive]()` tries to call the [`toString`](../../Object/prototype/toString.md) method. If the `toString` property does not exist, it tries to
-call the [`valueOf`](../../Object/prototype/valueOf.md) method and if the
+`[Symbol.toPrimitive]()` tries to call the [`toString`](../../Object/prototype/toString.mdx) method. If the `toString` property does not exist, it tries to
+call the [`valueOf`](../../Object/prototype/valueOf.mdx) method and if the
 `valueOf` does not exist either, `[Symbol.toPrimitive]()` throws a
-[`TypeError`](../../../globals/TypeError/TypeError.md).
+[`TypeError`](../../../globals/TypeError/TypeError.mdx).
 
 If `hint` is `number`, `[Symbol.toPrimitive]()` first tries
 to call `valueOf`, and if that fails, it calls `toString`.

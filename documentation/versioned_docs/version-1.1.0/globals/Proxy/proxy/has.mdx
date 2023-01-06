@@ -41,13 +41,13 @@ This trap can intercept these operations:
 
 - The [`in`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/in) operator: `foo in proxy`
 - [`with`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/with) check: `with(proxy) { (foo); }`
-- [`Reflect.has()`](../../../globals/Reflect/has.md)
+- [`Reflect.has()`](../../../globals/Reflect/has.mdx)
 
 Or any other operation that invokes the `[[HasProperty]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
 
 ### Invariants
 
-If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.mdx) when invoked.
 
 - A property cannot be reported as non-existent, if it exists as a non-configurable
   own property of the target object.

@@ -41,13 +41,13 @@ The **`handler.apply()`** method is a trap for a function call.
 This trap can intercept these operations:
 
 - Function call: `proxy(...args)`
-- [`Function.prototype.apply()`](../../../globals/Function/prototype/apply.md) and [`Function.prototype.call()`](../../../globals/Function/prototype/call.md)
-- [`Reflect.apply()`](../../../globals/Reflect/apply.md)
+- [`Function.prototype.apply()`](../../../globals/Function/prototype/apply.mdx) and [`Function.prototype.call()`](../../../globals/Function/prototype/call.mdx)
+- [`Reflect.apply()`](../../../globals/Reflect/apply.mdx)
 
 Or any other operation that invokes the `[[Call]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
 
 ### Invariants
 
-If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.mdx) when invoked.
 
 - The `target` must be a callable itself. That is, it must be a function object.

@@ -7,7 +7,7 @@ pagination_prev: null
 # Array.prototype.splice()
 
 The **`splice()`** method changes the contents of an array by
-removing or replacing existing elements and/or adding new elements [in place](https://en.wikipedia.org/wiki/In-place_algorithm). To access part of an array without modifying it, see [`Array.prototype.slice()`](./slice.md).
+removing or replacing existing elements and/or adding new elements [in place](https://en.wikipedia.org/wiki/In-place_algorithm). To access part of an array without modifying it, see [`Array.prototype.slice()`](./slice.mdx).
 
 ## Syntax
 
@@ -52,7 +52,7 @@ If no elements are removed, an empty array is returned.
 
 ## Description
 
-The `splice()` method is a mutating method. It may change the content of `this`. If the specified number of elements to insert differs from the number of elements being removed, the array's `length` will be changed as well. At the same time, it uses [`@@species`](../@@species.md) to create a new array instance to be returned.
+The `splice()` method is a mutating method. It may change the content of `this`. If the specified number of elements to insert differs from the number of elements being removed, the array's `length` will be changed as well. At the same time, it uses [`@@species`](../@@species.mdx) to create a new array instance to be returned.
 
 If the deleted portion is sparse, the array returned by `splice()` is sparse as well, with those corresponding indices being empty slots.
 

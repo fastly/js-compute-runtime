@@ -47,7 +47,7 @@ The `set()` method should return a boolean value.
 
 - Return `true` to indicate that assignment succeeded.
 - If the `set()` method returns `false`, and the assignment
-  happened in strict-mode code, a [`TypeError`](../../../globals/TypeError/TypeError.md) will be thrown.
+  happened in strict-mode code, a [`TypeError`](../../../globals/TypeError/TypeError.mdx) will be thrown.
 
 ## Description
 
@@ -59,13 +59,13 @@ value.
 This trap can intercept these operations:
 
 - Property assignment: `proxy[foo] = bar` and `proxy.foo = bar`
-- [`Reflect.set()`](../../../globals/Reflect/set.md)
+- [`Reflect.set()`](../../../globals/Reflect/set.mdx)
 
 Or any other operation that invokes the `[[Set]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
 
 ### Invariants
 
-If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.mdx) when invoked.
 
 - Cannot change the value of a property to be different from the value of the
   corresponding target object property if the corresponding target object property is a
@@ -74,4 +74,4 @@ If the following invariants are violated, the trap throws a [`TypeError`](../../
   non-configurable accessor property that has `undefined` as its
   `[[Set]]` attribute.
 - In strict mode, a `false` return value from the `set()`
-  handler will throw a [`TypeError`](../../../globals/TypeError/TypeError.md) exception.
+  handler will throw a [`TypeError`](../../../globals/TypeError/TypeError.mdx) exception.

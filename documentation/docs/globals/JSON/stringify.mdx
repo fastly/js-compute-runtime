@@ -38,7 +38,7 @@ A JSON string representing the given value, or undefined.
 
 ### Exceptions
 
-- [`TypeError`](../../globals/TypeError/TypeError.md)
+- [`TypeError`](../../globals/TypeError/TypeError.mdx)
   - : Thrown if one of the following is true:
     - `value` contains a circular reference.
     - A `BigInt` value is encountered.
@@ -49,8 +49,8 @@ A JSON string representing the given value, or undefined.
 
 - `Boolean`, `Number`, `String`, and `BigInt` (obtainable via [`Object()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/Object)) objects are converted to the corresponding primitive values during stringification, in accordance with the traditional conversion semantics. `Symbol` objects (obtainable via [`Object()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/Object)) are treated as plain objects.
 - Attempting to serialize `BigInt` values will throw. However, if the BigInt has a `toJSON()` method (through monkeypatching: `BigInt.prototype.toJSON = ...`), that method can provide the serialization result. This constraint ensures that a proper serialization (and, very likely, its accompanying deserialization) behavior is always explicitly provided by the user.
-- [`undefined`](../../globals/undefined.md), `Function`, and `Symbol` values are not valid JSON values. If any such values are encountered during conversion, they are either omitted (when found in an object) or changed to [`null`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/null) (when found in an array). `JSON.stringify()` can return `undefined` when passing in "pure" values like `JSON.stringify(() => {})` or `JSON.stringify(undefined)`.
-- The numbers [`Infinity`](../../globals/Infinity.md) and [`NaN`](../../globals/NaN.md), as well as the value [`null`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/null), are all considered `null`. (But unlike the values in the previous point, they would never be omitted.)
+- [`undefined`](../../globals/undefined.mdx), `Function`, and `Symbol` values are not valid JSON values. If any such values are encountered during conversion, they are either omitted (when found in an object) or changed to [`null`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/null) (when found in an array). `JSON.stringify()` can return `undefined` when passing in "pure" values like `JSON.stringify(() => {})` or `JSON.stringify(undefined)`.
+- The numbers [`Infinity`](../../globals/Infinity.mdx) and [`NaN`](../../globals/NaN.mdx), as well as the value [`null`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/null), are all considered `null`. (But unlike the values in the previous point, they would never be omitted.)
 - Arrays are serialized as arrays (enclosed by square brackets). Only array indices between 0 and `length - 1` (inclusive) are serialized; other properties are ignored.
 - For other objects:
 
@@ -64,7 +64,7 @@ A JSON string representing the given value, or undefined.
 
     `Date` objects implement the [`toJSON()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date/toJSON) method which returns a string (the same as [`date.toISOString()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)). Thus, they will be stringified as strings.
 
-  - Only [enumerable own properties](https://developer.mozilla.org/docs/Web/JavaScript/Enumerability_and_ownership_of_properties) are visited. This means [Map](../../globals/Map/Map.md), [Set](../../globals/Set/Set.md), etc. will become `"{}"`. You can use the [`replacer`](#the_replacer_parameter) parameter to serialize them to something more useful.
+  - Only [enumerable own properties](https://developer.mozilla.org/docs/Web/JavaScript/Enumerability_and_ownership_of_properties) are visited. This means [Map](../../globals/Map/Map.mdx), [Set](../../globals/Set/Set.mdx), etc. will become `"{}"`. You can use the [`replacer`](#the_replacer_parameter) parameter to serialize them to something more useful.
 
     Properties are visited using the same algorithm as [`Object.keys()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/keys), which has a well-defined order and is stable across implementations. For example, `JSON.stringify` on the same object will always produce the same string, and `JSON.parse(JSON.stringify(obj))` would produce an object with the same key ordering as the original (assuming the object is completely JSON-serializable).
 
@@ -79,7 +79,7 @@ As a function, it takes two parameters: the `key` and the `value` being stringif
 The `replacer` function is called for the initial object being stringified as well, in which case the `key` is an empty string (`""`). It is then called for each property on the object or array being stringified. Array indices will be provided in its string form as `key`. The current property value will be replaced with the `replacer`'s return value for stringification. This means:
 
 - If you return a number, string, boolean, or `null`, that value is directly serialized and used as the property's value. (Returning a BigInt will throw as well.)
-- If you return a `Function`, `Symbol`, or [`undefined`](../../globals/undefined.md), the property is not included in the output.
+- If you return a `Function`, `Symbol`, or [`undefined`](../../globals/undefined.mdx), the property is not included in the output.
 - If you return any other object, the object is recursively stringified, calling the `replacer` function on each property.
 
 > **Note:** When parsing JSON generated with `replacer` functions, you would likely want to use the [`reviver`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#using_the_reviver_parameter) parameter to perform the reverse operation.

@@ -24,7 +24,7 @@ Object.defineProperties(obj, props)
   - : An object whose keys represent the names of properties to be defined or modified and
     whose values are objects describing those properties. Each value in `props`
     must be either a data descriptor or an accessor descriptor; it cannot be both (see
-    [`Object.defineProperty()`](../../globals/Object/defineProperty.md) for more details).
+    [`Object.defineProperty()`](../../globals/Object/defineProperty.mdx) for more details).
 
     Data descriptors and accessor descriptors may optionally contain the following keys:
 
@@ -42,7 +42,7 @@ Object.defineProperties(obj, props)
     - `value`
       - : The value associated with the property. Can be any valid JavaScript value
         (number, object, function, etc.).
-        **Defaults to [`undefined`](../../globals/undefined.md).**
+        **Defaults to [`undefined`](../../globals/undefined.mdx).**
     - `writable`
       - : `true` if and only if the value associated with the property may be
         changed with an assignment operator.
@@ -51,15 +51,15 @@ Object.defineProperties(obj, props)
     An accessor descriptor also has the following optional keys:
 
     - `get`
-      - : A function which serves as a getter for the property, or [`undefined`](../../globals/undefined.md)
+      - : A function which serves as a getter for the property, or [`undefined`](../../globals/undefined.mdx)
         if there is no getter. The function's return value will be used as the value of
         the property.
-        **Defaults to [`undefined`](../../globals/undefined.md).**
+        **Defaults to [`undefined`](../../globals/undefined.mdx).**
     - `set`
-      - : A function which serves as a setter for the property, or [`undefined`](../../globals/undefined.md)
+      - : A function which serves as a setter for the property, or [`undefined`](../../globals/undefined.mdx)
         if there is no setter. The function will receive as its only argument the new
         value being assigned to the property.
-        **Defaults to [`undefined`](../../globals/undefined.md).**
+        **Defaults to [`undefined`](../../globals/undefined.mdx).**
 
     If a descriptor has neither of `value`, `writable`,
     `get` and `set` keys, it is treated as a data descriptor. If a

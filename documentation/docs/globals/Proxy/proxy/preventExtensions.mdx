@@ -6,7 +6,7 @@ pagination_prev: null
 ---
 # handler.preventExtensions()
 
-The **`handler.preventExtensions()`** method is a trap for [`Object.preventExtensions()`](../../../globals/Object/preventExtensions.md).
+The **`handler.preventExtensions()`** method is a trap for [`Object.preventExtensions()`](../../../globals/Object/preventExtensions.mdx).
 
 ## Syntax
 
@@ -30,21 +30,21 @@ The `preventExtensions()` method must return a boolean value.
 
 ## Description
 
-The **`handler.preventExtensions()`** method is a trap for [`Object.preventExtensions()`](../../../globals/Object/preventExtensions.md).
+The **`handler.preventExtensions()`** method is a trap for [`Object.preventExtensions()`](../../../globals/Object/preventExtensions.mdx).
 
 ### Interceptions
 
 This trap can intercept these operations:
 
-- [`Object.preventExtensions()`](../../../globals/Object/preventExtensions.md)
-- [`Reflect.preventExtensions()`](../../../globals/Reflect/preventExtensions.md)
-- [`Object.seal()`](../../../globals/Object/seal.md)
-- [`Object.freeze()`](../../../globals/Object/freeze.md)
+- [`Object.preventExtensions()`](../../../globals/Object/preventExtensions.mdx)
+- [`Reflect.preventExtensions()`](../../../globals/Reflect/preventExtensions.mdx)
+- [`Object.seal()`](../../../globals/Object/seal.mdx)
+- [`Object.freeze()`](../../../globals/Object/freeze.mdx)
 
 Or any other operation that invokes the `[[PreventExtensions]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
 
 ### Invariants
 
-If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.md) when invoked.
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.mdx) when invoked.
 
 - `Object.preventExtensions(proxy)` only returns `true` if `Object.isExtensible(proxy)` is `false`.

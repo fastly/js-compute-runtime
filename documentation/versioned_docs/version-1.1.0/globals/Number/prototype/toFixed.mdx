@@ -26,18 +26,18 @@ A string representing the given number using fixed-point notation.
 
 ### Exceptions
 
-- [`RangeError`](../../../globals/RangeError/RangeError.md)
+- [`RangeError`](../../../globals/RangeError/RangeError.mdx)
   - : If `digits` is smaller than `0`, larger than `100`, or is `NaN`.
-- [`TypeError`](../../../globals/TypeError/TypeError.md)
+- [`TypeError`](../../../globals/TypeError/TypeError.mdx)
   - : If this method is invoked on an object that is not a `Number`.
 
 ## Description
 
 The `toFixed()` method returns a string representation of `numObj` that does not use exponential notation and has exactly `digits` digits after the decimal place. The number is rounded if necessary, and the fractional part is padded with zeros if necessary so that it has the specified length.
 
-If the absolute value of `numObj` is greater or equal to 10<sup>21</sup>, this method uses the same algorithm as [`Number.prototype.toString()`](../../../globals/Number/prototype/toString.md) and returns a string in exponential notation. `toFixed()` returns `"Infinity"`, `"NaN"`, or `"-Infinity"` if the value of `numObj` is non-finite.
+If the absolute value of `numObj` is greater or equal to 10<sup>21</sup>, this method uses the same algorithm as [`Number.prototype.toString()`](../../../globals/Number/prototype/toString.mdx) and returns a string in exponential notation. `toFixed()` returns `"Infinity"`, `"NaN"`, or `"-Infinity"` if the value of `numObj` is non-finite.
 
-The output of `toFixed()` may be more precise than [`toString()`](../../../globals/Number/prototype/toString.md) for some values, because `toString()` only prints enough significant digits to distinguish the number from adjacent number values. For example:
+The output of `toFixed()` may be more precise than [`toString()`](../../../globals/Number/prototype/toString.mdx) for some values, because `toString()` only prints enough significant digits to distinguish the number from adjacent number values. For example:
 
 ```js
 (1000000000000000128).toString(); // '1000000000000000100'

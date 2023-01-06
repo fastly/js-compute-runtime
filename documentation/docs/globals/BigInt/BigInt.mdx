@@ -14,7 +14,7 @@ The **`BigInt()`** function returns a value of type **bigint**.
 BigInt(value)
 ```
 
-> **Note:** `BigInt()` can only be called without `new`. Attempting to construct it with `new` throws a [`TypeError`](../../globals/TypeError/TypeError.md).
+> **Note:** `BigInt()` can only be called without `new`. Attempting to construct it with `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
 
 ### Parameters
 
@@ -27,11 +27,11 @@ A `BigInt` value. Number values must be integers and are converted to BigInts. T
 
 ### Exceptions
 
-- [`RangeError`](../../globals/RangeError/RangeError.md)
+- [`RangeError`](../../globals/RangeError/RangeError.mdx)
   - : Thrown if the parameter is a non-integral number.
-- [`TypeError`](../../globals/TypeError/TypeError.md)
+- [`TypeError`](../../globals/TypeError/TypeError.mdx)
   - : Thrown if at least one of these conditions is met:
     - The parameter cannot be converted to a primitive.
-    - After conversion to a primitive, the result is [`undefined`](../undefined.md), `null`, `Symbol`.
-- [`SyntaxError`](../SyntaxError/SyntaxError.md)
+    - After conversion to a primitive, the result is [`undefined`](../undefined.mdx), `null`, `Symbol`.
+- [`SyntaxError`](../SyntaxError/SyntaxError.mdx)
   - : Thrown if the parameter is a string that cannot be parsed as a `BigInt`.

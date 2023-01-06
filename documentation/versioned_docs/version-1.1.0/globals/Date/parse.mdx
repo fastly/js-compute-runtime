@@ -29,7 +29,7 @@ Date.parse(dateString)
 
 A number representing the milliseconds elapsed since January 1, 1970, 00:00:00 UTC and
 the date obtained by parsing the given string representation of a date. If the argument
-doesn't represent a valid date, [`NaN`](../NaN.md) is returned.
+doesn't represent a valid date, [`NaN`](../NaN.mdx) is returned.
 
 ## Description
 
@@ -38,7 +38,7 @@ The `parse()` method takes a date string (such as
 1, 1970, 00:00:00 UTC.
 
 This function is useful for setting date values based on string values, for example in
-conjunction with the [`setTime()`](./prototype/setTime.md) method and the
+conjunction with the [`setTime()`](./prototype/setTime.mdx) method and the
 `Date` object.
 
 ### Date Time String Format
@@ -71,10 +71,10 @@ The ECMAScript specification states: If the String does not conform to the stand
 format the function may fall back to any implementation–specific heuristics or
 implementation–specific parsing algorithm. Unrecognizable strings or dates containing
 illegal element values in ISO formatted strings shall cause `Date.parse()` to
-return [`NaN`](../NaN.md).
+return [`NaN`](../NaN.mdx).
 
 However, invalid values in date strings not recognized as simplified ISO format as
-defined by ECMA-262 may or may not result in [`NaN`](../NaN.md), depending on the browser
+defined by ECMA-262 may or may not result in [`NaN`](../NaN.mdx), depending on the browser
 and values provided, e.g.:
 
 ```js
@@ -86,7 +86,7 @@ will be treated as a local date of 25 November, 2015 in Firefox 30 and an invali
 in Safari 7.
 
 However, if the string is recognized as an ISO format string and it contains invalid
-values, it will return [`NaN`](../NaN.md):
+values, it will return [`NaN`](../NaN.mdx):
 
 ```js
 // ISO string with invalid values

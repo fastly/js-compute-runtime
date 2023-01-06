@@ -111,12 +111,10 @@ In this example we return the geolocation details for the provided ip querystrin
     "main": `
 /// <reference types="@fastly/js-compute" />
 import { getGeolocationForIpAddress } from "fastly:geolocation"
-
 async function app(event) {
   try {
     let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address
     let geo = getGeolocationForIpAddress(ip);
-
     return new Response(JSON.stringify(geo), {
       headers: {
         "Content-Type": "application/json",
@@ -129,7 +127,6 @@ async function app(event) {
     });
   }
 }
-
 addEventListener("fetch", event => event.respondWith(app(event)));
 `
   },
@@ -159,12 +156,10 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 ```js
 /// <reference types="@fastly/js-compute" />
 import { getGeolocationForIpAddress } from "fastly:geolocation"
-
 async function app(event) {
   try {
     let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address
     let geo = getGeolocationForIpAddress(ip);
-
     return new Response(JSON.stringify(geo), {
       headers: {
         "Content-Type": "application/json",
@@ -177,9 +172,7 @@ async function app(event) {
     });
   }
 }
-
 addEventListener("fetch", event => event.respondWith(app(event)));
-
 ```
 
 </Fiddle>
