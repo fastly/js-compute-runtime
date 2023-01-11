@@ -1,4 +1,4 @@
 [toolchain]
-channel = "stable"
+channel = "1.65.0"
 targets = [ "wasm32-wasi" ]
 profile = "minimal"
