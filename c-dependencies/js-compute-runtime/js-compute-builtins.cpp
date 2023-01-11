@@ -1614,6 +1614,127 @@ bool setCacheKey(JSContext *cx, unsigned argc, Value *vp) {
   args.rval().setUndefined();
   return true;
 }
+JSString *GET_atom;
+JSObject *create_instance(JSContext *cx);
+JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
+                 HandleValue init_val);
+
+bool clone(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(0)
+
+  if (RequestOrResponse::body_used(self)) {
+    JS_ReportErrorLatin1(cx, "Request.prototype.clone: the request's body isn't usable.");
+    return false;
+  }
+
+  // Here we get the current requests body stream and call ReadableStream.prototype.tee to return
+  // two versions of the stream. Once we get the two streams, we create a new request handle and
+  // attach one of the streams to the new handle and the other stream is attached to the request
+  // handle that `clone()` was called upon.
+  RootedObject body_stream(cx, ::RequestOrResponse::body_stream(self));
+  if (!body_stream) {
+    body_stream = ::RequestOrResponse::create_body_stream(cx, self);
+    if (!body_stream) {
+      return false;
+    }
+  }
+  RootedValue tee_val(cx);
+  if (!JS_GetProperty(cx, body_stream, "tee", &tee_val)) {
+    return false;
+  }
+  JS::Rooted<JSFunction *> tee(cx, JS_GetObjectFunction(&tee_val.toObject()));
+  if (!tee) {
+    return false;
+  }
+  JS::RootedVector<JS::Value> argv(cx);
+  RootedValue rval(cx);
+  if (!JS::Call(cx, body_stream, tee, argv, &rval)) {
+    return false;
+  }
+  RootedObject rval_array(cx, &rval.toObject());
+  RootedValue body1_val(cx);
+  if (!JS_GetProperty(cx, rval_array, "0", &body1_val)) {
+    return false;
+  }
+  RootedValue body2_val(cx);
+  if (!JS_GetProperty(cx, rval_array, "1", &body2_val)) {
+    return false;
+  }
+
+  fastly_error_t err;
+  fastly_request_handle_t request_handle = INVALID_HANDLE;
+  if (!xqd_fastly_http_req_new(&request_handle, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+
+  fastly_body_handle_t body_handle = INVALID_HANDLE;
+  if (!xqd_fastly_http_body_new(&body_handle, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+
+  if (!JS::IsReadableStream(&body1_val.toObject())) {
+    return false;
+  }
+  body_stream.set(&body1_val.toObject());
+  if (RequestOrResponse::body_unusable(cx, body_stream)) {
+    JS_ReportErrorLatin1(cx, "Can't use a ReadableStream that's locked or has ever been "
+                             "read from or canceled as a Request body.");
+    return false;
+  }
+
+  RootedObject requestInstance(cx, create_instance(cx));
+  JS::SetReservedSlot(requestInstance, Slots::Request, JS::Int32Value(request_handle));
+  JS::SetReservedSlot(requestInstance, Slots::Body, JS::Int32Value(body_handle));
+  JS::SetReservedSlot(requestInstance, Slots::BodyStream, body1_val);
+  JS::SetReservedSlot(requestInstance, Slots::BodyUsed, JS::FalseValue());
+  JS::SetReservedSlot(requestInstance, Slots::HasBody, JS::BooleanValue(true));
+  JS::SetReservedSlot(requestInstance, Slots::URL, JS::GetReservedSlot(self, Slots::URL));
+  JS::SetReservedSlot(requestInstance, Slots::IsDownstream,
+                      JS::GetReservedSlot(self, Slots::IsDownstream));
+
+  JS::SetReservedSlot(self, Slots::BodyStream, body2_val);
+  JS::SetReservedSlot(self, Slots::BodyUsed, JS::FalseValue());
+  JS::SetReservedSlot(self, Slots::HasBody, JS::BooleanValue(true));
+
+  RootedObject headers(cx);
+  RootedObject headers_obj(cx, RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, self));
+  if (!headers_obj) {
+    return false;
+  }
+  RootedObject headersInstance(
+      cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
+  if (!headersInstance)
+    return false;
+
+  headers = Headers::create(cx, headersInstance, Headers::Mode::ProxyToRequest, requestInstance,
+                            headers_obj);
+
+  if (!headers) {
+    return false;
+  }
+
+  JS::SetReservedSlot(requestInstance, Slots::Headers, JS::ObjectValue(*headers));
+
+  JSString *method = Request::method(cx, self);
+  if (!method) {
+    return false;
+  }
+
+  JS::SetReservedSlot(requestInstance, Slots::Method, JS::StringValue(method));
+  RootedValue cache_override(cx, JS::GetReservedSlot(self, Slots::CacheOverride));
+  if (!cache_override.isNullOrUndefined()) {
+    if (!set_cache_override(cx, requestInstance, cache_override)) {
+      return false;
+    }
+  } else {
+    JS::SetReservedSlot(requestInstance, Slots::CacheOverride, cache_override);
+  }
+
+  args.rval().setObject(*requestInstance);
+  return true;
+}
 
 const JSFunctionSpec methods[] = {
     JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
@@ -1621,7 +1742,8 @@ const JSFunctionSpec methods[] = {
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setCacheOverride", setCacheOverride, 3, JSPROP_ENUMERATE),
-    JS_FN("setCacheKey", setCacheKey, 3, JSPROP_ENUMERATE),
+    JS_FN("setCacheKey", setCacheKey, 0, JSPROP_ENUMERATE),
+    JS_FN("clone", clone, 0, JSPROP_ENUMERATE),
     JS_FS_END};
 
 const JSPropertySpec properties[] = {JS_PSG("method", method_get, JSPROP_ENUMERATE),
@@ -1636,8 +1758,6 @@ const JSPropertySpec properties[] = {JS_PSG("method", method_get, JSPROP_ENUMERA
 bool constructor(JSContext *cx, unsigned argc, Value *vp);
 
 CLASS_BOILERPLATE_CUSTOM_INIT(Request)
-
-JSString *GET_atom;
 
 bool init_class(JSContext *cx, HandleObject global) {
   if (!init_class_impl(cx, global)) {
@@ -2130,6 +2250,12 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
   }
 
   return request;
+}
+
+JSObject *create_instance(JSContext *cx) {
+  RootedObject requestInstance(
+      cx, JS_NewObjectWithGivenProto(cx, &Request::class_, Request::proto_obj));
+  return requestInstance;
 }
 
 bool constructor(JSContext *cx, unsigned argc, Value *vp) {
