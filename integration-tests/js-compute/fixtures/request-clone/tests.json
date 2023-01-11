@@ -1,0 +1,42 @@
+{
+  "GET /request/clone/called-as-constructor": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/clone/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/clone/called-unbound": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/clone/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/clone/valid": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/clone/valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/clone/invalid": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/clone/invalid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  }
+}

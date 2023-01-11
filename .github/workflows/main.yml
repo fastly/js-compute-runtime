@@ -189,6 +189,7 @@ jobs:
           - random
           - regex
           - request-cache-key
+          - request-clone
           - request-downstream
           - request-limits
           - request-upstream
@@ -310,6 +311,7 @@ jobs:
           - 'hello-world'
           - 'multiple-set-cookie'
           - 'object-store'
+          - 'request-clone'
           - 'request-limits'
           - 'request-upstream'
           - 'response'
