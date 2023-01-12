@@ -1,98 +1,167 @@
-SHELL:=/bin/bash
-INIT_JS ?= test.js
-WIZER ?= wizer
+
+# Build constants ##############################################################
+
+# The path to the directory containing this Makefile, the
+# //c-dependencies/js-compute-runtime directory.
+FSM_SRC := $(shell dirname "$(realpath $(firstword $(MAKEFILE_LIST)))")
+
+# The path to the //c-dependencies directory.
+ROOT_SRC := $(shell dirname "$(FSM_SRC)")
+
+# Environmentally derived config ###############################################
+
+# Build verbosity, useful when debugging build failures. Setting it to anything
+# will cause the quiet output to be disabled.
+V ?=
+
+# The destination directory when installing the resulting wasm binaries.
 DESTDIR ?= .
+
+# The path to the wasi-sdk installation.
 WASI_SDK ?= /opt/wasi-sdk
+
+# The version of OpenSSL to build with.
 OPENSSL_VERSION = 3.0.7
 
+# Whether or not this will be a debug build. When set to anything other than
+# `false` the build will be treated as a debug build.
+DEBUG ?= false
+
+# The path to the wit-bindgen executable
+WIT_BINDGEN ?= $(shell which wit-bindgen)
+
+# Default optimization flgs for clang/clang++.
 OPT_FLAGS ?= -O2
 
-DEBUG ?= false
+# Command helpers for making nice build output.
+include commands.mk
+
+# Derived configuration ########################################################
+
+# The wasi-sdk provided c++ compiler wrapper.
+WASI_CXX ?= $(WASI_SDK)/bin/clang++
+
+# The wasi-sdk provided c compiler wrapper.
+WASI_CC ?= $(WASI_SDK)/bin/clang
+
 ifneq ($(DEBUG),false)
   MODE := debug
   CARGO_FLAG :=
   OPT_FLAGS += -DDEBUG -DJS_DEBUG -g
-  Q :=
-  quiet_flag =
+
+  # Define an empty WASM_STRIP macro when making a debug build
+  WASM_STRIP =
 else
   MODE := release
   CARGO_FLAG := --release
-  Q := @
-  quiet_flag = $1
+
+  # Strip binaries when making a non-debug build.
+  WASM_STRIP = wasm-opt --strip-debug -o $1 $1
 endif
 
-ROOT_SRC ?= $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))/..
-SM_SRC := $(ROOT_SRC)/spidermonkey/$(MODE)/
-SM_OBJ := $(SM_SRC)lib/*.o
-SM_OBJ += $(SM_SRC)lib/*.a
-FSM_SRC := $(ROOT_SRC)/js-compute-runtime/
+# The base build directory, where all our build artifacts go.
+BUILD := $(FSM_SRC)/build
 
-WASI_CXX ?= $(WASI_SDK)/bin/clang++
-WASI_CC ?= $(WASI_SDK)/bin/clang
+# The output directory for the current build mode (relase/debug).
+OBJ_DIR := $(BUILD)/$(MODE)
 
-WIT_BINDGEN := $(shell which wit-bindgen)
+# The path to the //c-dependencies/spidermonkey/$(MODE) directory.
+SM_SRC := $(ROOT_SRC)/spidermonkey/$(MODE)
 
-ifndef WIT_BINDGEN
-	WIT_BINDGEN = $(error No wit-bindgen in PATH, consider doing cargo install --git https://github.com/bytecodealliance/wit-bindgen wit-bindgen-cli)
-endif
+# The objects we link in from spidermonkey
+SM_OBJ := $(wildcard $(SM_SRC)/lib/*.o)
+SM_OBJ += $(wildcard $(SM_SRC)/lib/*.a)
 
+# This is required when using spidermonkey headers, as it allows us to enable
+# the streams library when setting up the js context.
+DEFINES := -DMOZ_JS_STREAMS
+
+# Flags for c++ compilation
 CXX_FLAGS := -std=gnu++20 -Wall -Werror -Qunused-arguments
 CXX_FLAGS += -fno-sized-deallocation -fno-aligned-new -mthread-model single
 CXX_FLAGS += -fPIC -fno-rtti -fno-exceptions -fno-math-errno -pipe
-CXX_FLAGS += -fno-omit-frame-pointer -funwind-tables -I$(FSM_SRC)
+CXX_FLAGS += -fno-omit-frame-pointer -funwind-tables
 CXX_FLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
 
+# Flags for C compilation
 CFLAGS := -Wall -Werror -Wno-unknown-attributes -Wno-pointer-to-int-cast
-CFLAGS += -Wno-int-to-pointer-cast --sysroot=$(WASI_SDK)/share/wasi-sysroot
+CFLAGS += -Wno-int-to-pointer-cast
+CFLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
 
+# Includes for compiling c++
+INCLUDES := -I$(FSM_SRC)
+INCLUDES += -I$(FSM_SRC)/xqd-world
+INCLUDES += -I$(SM_SRC)/include
+INCLUDES += -I$(BUILD)/openssl/include
+
+# Linker flags.
 LD_FLAGS := -Wl,-z,stack-size=1048576 -Wl,--stack-first
 LD_FLAGS += -lwasi-emulated-signal
 LD_FLAGS += -lwasi-emulated-process-clocks
 LD_FLAGS += -lwasi-emulated-getpid
+LD_FLAGS += -L$(BUILD)/openssl/libx32 -lcrypto
 
-DEFINES ?=
 
-# This is required when using spidermonkey headers, as it allows us to enable
-# the streams library when setting up the js context.
-DEFINES += -DMOZ_JS_STREAMS
+# Default targets ##############################################################
 
-.PHONY: all install clean distclean
+.PHONY: all
+all: $(FSM_SRC)/js-compute-runtime.wasm
+all: $(FSM_SRC)/js-compute-runtime-component.wasm
+all: wasi_snapshot_preview1.wasm
 
-all: js-compute-runtime.wasm js-compute-runtime-component.wasm | wasi_snapshot_preview1.wasm
+# Remove just the build artifacts for the current runtime build.
+.PHONY: clean
+clean:
+	$(call cmd,rm,$(FSM_SRC)/js-compute-runtime.wasm)
+	$(call cmd,rm,$(FSM_SRC)/js-compute-runtime-component.wasm)
+	$(call cmd,rmdir,$(BUILD)/release)
+	$(call cmd,rmdir,$(BUILD)/debug)
 
-compiler_flags:
-	echo '$(OPT_FLAGS) $(CXX_FLAGS)' | cmp -s - $@ || echo '$(OPT_FLAGS) $(CXX_FLAGS)' > $@
+# Remove all build artifacts.
+.PHONY: distclean
+distclean: clean
+	$(call cmd,rmdir,$(BUILD))
 
-ifeq (,$(findstring g,$(OPT_FLAGS)))
-ifneq (,$(shell which wasm-opt))
-WASM_STRIP = wasm-opt --strip-debug -o $1 $1
-endif
-endif
+# Run clang-format over the codebase.
+.PHONY: format
+format: $(FSM_CPP)
+	$(ROOT_SRC)/../ci/clang-format.sh --fix
 
-OBJ_DIR := obj
-FSM_CPP := $(wildcard $(FSM_SRC)*.cpp) $(wildcard $(FSM_SRC)builtins/*.cpp)
-FSM_DEP := $(patsubst $(FSM_SRC)%.cpp,$(OBJ_DIR)/%.d,$(FSM_CPP)) 
-FSM_OBJ := $(patsubst $(FSM_SRC)%.cpp,$(OBJ_DIR)/%.o,$(FSM_CPP))
-RUST_URL_SRC := $(FSM_SRC)rust-url
-RUST_URL_RS_FILES := $(shell find $(RUST_URL_SRC)/src -name '*.rs')
-RUST_URL_LIB := rusturl/wasm32-wasi/$(MODE)/librust_url.a
 
--include $(FSM_DEP)
+# Build directories ############################################################
 
-$(RUST_URL_LIB): $(RUST_URL_RS_FILES) $(RUST_URL_SRC)/Cargo.toml $(RUST_URL_SRC)/cbindgen.toml $(FSM_SRC)Makefile compiler_flags
-	cd $(RUST_URL_SRC) && cbindgen --output rust-url.h
-	cargo build --manifest-path $(RUST_URL_SRC)/Cargo.toml --target-dir ./rusturl --target=wasm32-wasi $(CARGO_FLAG)
+$(BUILD):
+	$(call cmd,mkdir,$@)
 
 $(OBJ_DIR):
-	$Q mkdir -p $(OBJ_DIR)/builtins $(OBJ_DIR)/xqd-world
+	$(call cmd,mkdir,$@)
 
-$(OBJ_DIR)/openssl-$(OPENSSL_VERSION).tar.gz: | $(OBJ_DIR)
-	$Q wget https://www.openssl.org/source/openssl-$(OPENSSL_VERSION).tar.gz \
-		$(call quiet_flag,--quiet) -O $@
+$(OBJ_DIR)/xqd-world:
+	$(call cmd,mkdir,$@)
 
-$(OBJ_DIR)/openssl-$(OPENSSL_VERSION)/token: $(OBJ_DIR)/openssl-$(OPENSSL_VERSION).tar.gz $(FSM_SRC)/getuid.patch
-	$Q tar -C $(OBJ_DIR) -xf $<
-	$Q patch -d $(OBJ_DIR)/openssl-$(OPENSSL_VERSION) -p1 < $(FSM_SRC)/getuid.patch
+$(OBJ_DIR)/builtins:
+	$(call cmd,mkdir,$@)
+
+# Downloaded dependencies ######################################################
+
+$(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz: URL=https://www.openssl.org/source/openssl-$(OPENSSL_VERSION).tar.gz
+$(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz: | $(BUILD)
+	$(call cmd,wget,$@)
+
+wasi_snapshot_preview1.wasm: URL=https://github.com/bytecodealliance/preview2-prototyping/releases/download/latest/wasi_snapshot_preview1.wasm
+wasi_snapshot_preview1.wasm:
+	$(call cmd,wget,$@)
+
+# OpenSSL build ################################################################
+
+# Convenience target for building openssl.
+.PHONY: openssl
+openssl: $(BUILD)/openssl/token
+
+# Extract and prepare the openssl build directory.
+$(BUILD)/openssl-$(OPENSSL_VERSION)/token: $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz $(FSM_SRC)/getuid.patch
+	$Q tar -C $(BUILD) -xf $<
+	$Q patch -d $(BUILD)/openssl-$(OPENSSL_VERSION) -p1 < $(FSM_SRC)/getuid.patch
 	$Q touch $@
 
 OPENSSL_OPTS := -static -no-sock -no-asm -no-ui-console -no-egd
@@ -105,7 +174,7 @@ OPENSSL_OPTS += -DNO_SYSLOG
 OPENSSL_OPTS += -DNO_CHMOD
 OPENSSL_OPTS += -DOPENSSL_NO_SECURE_MEMORY
 OPENSSL_OPTS += --with-rand-seed=getrandom
-OPENSSL_OPTS += --prefix=$(FSM_SRC)/$(OBJ_DIR)/openssl
+OPENSSL_OPTS += --prefix=$(BUILD)/openssl
 OPENSSL_OPTS += --cross-compile-prefix=$(WASI_SDK)/bin/
 OPENSSL_OPTS += linux-x32
 
@@ -113,68 +182,120 @@ OPENSSL_DISABLED_WARNINGS := -Wno-unused-command-line-argument
 OPENSSL_DISABLED_WARNINGS += -Wno-constant-conversion
 OPENSSL_DISABLED_WARNINGS += -Wno-shift-count-overflow
 
-$(OBJ_DIR)/openssl/token: $(OBJ_DIR)/openssl-$(OPENSSL_VERSION)/token
-	export WASI_SDK_PATH=$(WASI_SDK) && \
-		cd $(OBJ_DIR)/openssl-$(OPENSSL_VERSION) && \
+# Configure and build openssl.
+$(BUILD)/openssl/token: $(BUILD)/openssl-$(OPENSSL_VERSION)/token
+	$Q export WASI_SDK_PATH=$(WASI_SDK) && \
+		cd $(BUILD)/openssl-$(OPENSSL_VERSION) && \
 		CC=clang \
 		CFLAGS="--sysroot=$(WASI_SDK)/share/wasi-sysroot" \
 		./Configure $(OPENSSL_OPTS) && \
 		$(MAKE) -j8 && \
 		$(MAKE) install_sw
-	touch $@
+	$Q touch $@
 
-OPENSSL_CFLAGS := -I$(OBJ_DIR)/openssl/include
-OPENSSL_LIBS := -L$(OBJ_DIR)/openssl/libx32 -lcrypto
 
-$(OBJ_DIR)/%.o: $(FSM_SRC)%.cpp $(OBJ_DIR)/openssl/token $(FSM_SRC)Makefile $(RUST_URL_LIB) compiler_flags | $(OBJ_DIR)
-	$(WASI_CXX) $(CXX_FLAGS) $(OPENSSL_CFLAGS) $(OPT_FLAGS) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
+# rusturl build ################################################################
 
-$(OBJ_DIR)/%.o: $(FSM_SRC)%.c $(FSM_SRC)Makefile $(RUST_URL_LIB) compiler_flags | $(OBJ_DIR)
-	$(WASI_CC) $(CFLAGS) $(OPT_FLAGS) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
+RUST_URL_SRC := $(FSM_SRC)/rust-url
 
-$(OBJ_DIR)/xqd-world/xqd_world.o: $(FSM_SRC)xqd-world/xqd_world.c $(FSM_SRC)Makefile compiler_flags | $(OBJ_DIR)
-	$(WASI_CC) $(CFLAGS) $(OPT_FLAGS) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
+RUST_URL_RS_FILES := $(shell find $(RUST_URL_SRC)/src -name '*.rs')
 
-$(OBJ_DIR)/xqd-world/xqd_world_adapter.o: $(FSM_SRC)xqd-world/xqd_world_adapter.cpp $(FSM_SRC)Makefile compiler_flags | $(OBJ_DIR)
-	$(WASI_CXX) $(CXX_FLAGS) $(OPT_FLAGS) $(DEFINES) -I $(SM_SRC)include -MMD -MP -c -o $@ $<
+RUST_URL_LIB := $(BUILD)/rusturl/wasm32-wasi/$(MODE)/librust_url.a
 
-$(OBJ_DIR)/xqd-world/xqd_world_adapter_component.o: $(FSM_SRC)xqd-world/xqd_world_adapter.cpp $(FSM_SRC)Makefile compiler_flags | $(OBJ_DIR)
-	$(WASI_CXX) $(CXX_FLAGS) $(OPT_FLAGS) $(DEFINES) -DCOMPONENT -I $(SM_SRC)include -MMD -MP -c -o $@ $<
+rusturl: $(RUST_URL_LIB)
+
+$(RUST_URL_LIB): $(RUST_URL_RS_FILES)
+$(RUST_URL_LIB): $(RUST_URL_SRC)/Cargo.toml
+$(RUST_URL_LIB): $(RUST_URL_SRC)/cbindgen.toml
+$(RUST_URL_LIB): | $(BUILD)
+	$(call cmd_format,CARGO,$@) \
+	cd $(RUST_URL_SRC) && cbindgen --output rust-url.h && \
+	cargo build $(call quiet_flag,--quiet) \
+		--manifest-path $(RUST_URL_SRC)/Cargo.toml \
+		--target-dir $(BUILD)/rusturl \
+		--target=wasm32-wasi $(CARGO_FLAG)
+
+
+# wit-bindgen integration ######################################################
+
+.PHONY: regenerate-world
+ifeq ($(WIT_BINDGEN),)
+regenerate-world:
+	@echo ""
+	@echo "No wit-bindgen found in PATH, consider running"
+	@echo ""
+	@echo "  cargo install --git https://github.com/bytecodealliance/wit-bindgen wit-bindgen-cli"
+	@echo ""
+	@exit 1
+else
+regenerate-world:
+	$(WIT_BINDGEN) guest c xqd.wit --no-helpers --out-dir xqd-world
+endif
+
+
+# Compute runtime build ########################################################
+
+FSM_CPP := $(wildcard $(FSM_SRC)/*.cpp)
+FSM_CPP += $(wildcard $(FSM_SRC)/builtins/*.cpp)
+FSM_OBJ := $(patsubst $(FSM_SRC)/%.cpp,$(OBJ_DIR)/%.o,$(FSM_CPP))
+
+# Build all the above object files
+$(foreach source,$(FSM_CPP),$(eval $(call compile_cxx,$(source))))
+$(eval $(call compile_cxx,$(FSM_SRC)/xqd-world/xqd_world_adapter.cpp))
+$(eval $(call compile_c,$(FSM_SRC)/xqd-world/xqd_world.c))
+
+# Special build of xqd_world_adapter.cpp for the component model.
+$(OBJ_DIR)/xqd-world/xqd_world_adapter_component.o: $(FSM_SRC)/xqd-world/xqd_world_adapter.cpp
+$(OBJ_DIR)/xqd-world/xqd_world_adapter_component.o: DEFINES += -DCOMPONENT
+$(OBJ_DIR)/xqd-world/xqd_world_adapter_component.o: | $(OBJ_DIR)/xqd-world
+	$(call cmd,wasi_cxx,$@)
 
 # NOTE: we shadow wasm-opt by adding $(FSM_SRC)/scripts to the path, which
 # includes a script called wasm-opt that immediately exits successfully. See
 # that script for more information about why we do this.
 
-js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
-js-compute-runtime.wasm: $(OBJ_DIR)/xqd-world/xqd_world.o
-js-compute-runtime.wasm: $(OBJ_DIR)/xqd-world/xqd_world_adapter.o
-	PATH="$(FSM_SRC)/scripts:$$PATH" $(WASI_CXX) $(CXX_FLAGS) $(OPT_FLAGS) \
-	     $(DEFINES) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
-	$(call WASM_STRIP,$@)
+$(OBJ_DIR)/js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
+$(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/xqd-world/xqd_world.o
+$(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/xqd-world/xqd_world_adapter.o
+	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
+	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
+	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
 
-js-compute-runtime-component.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
-js-compute-runtime-component.wasm: $(OBJ_DIR)/xqd-world/xqd_world.o
-js-compute-runtime-component.wasm: $(OBJ_DIR)/xqd-world/xqd_world_adapter_component.o
-	PATH="$(FSM_SRC)/scripts:$$PATH" $(WASI_CXX) $(CXX_FLAGS) $(OPT_FLAGS) \
-	     $(DEFINES) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
-	$(call WASM_STRIP,$@)
+$(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
+$(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/xqd-world/xqd_world.o
+$(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/xqd-world/xqd_world_adapter_component.o
+	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
+	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
+	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
 
-install: js-compute-runtime.wasm
-	install -m 444 -Dt $(DESTDIR)/dist js-compute-runtime.wasm
+# These two rules copy the built artifacts into the $(FSM_SRC) directory, and
+# are both marked phony as we need to do the right thing when running the
+# following sequence:
+#
+# make; DEBUG=1 make; make
+#
+# Without marking them phony, the wasm won't be copied in the last invocation of
+# make, as it will look up-to-date.
 
-wasi_snapshot_preview1.wasm:
-	curl -L https://github.com/bytecodealliance/preview2-prototyping/releases/download/latest/wasi_snapshot_preview1.wasm -o $@
+.PHONY: $(FSM_SRC)/js-compute-runtime.wasm
+$(FSM_SRC)/js-compute-runtime.wasm: $(OBJ_DIR)/js-compute-runtime.wasm
+	$(call cmd,cp,$@)
 
-regenerate-world:
-	$(WIT_BINDGEN) guest c xqd.wit --no-helpers --out-dir xqd-world
+.PHONY: $(FSM_SRC)/js-compute-runtime-component.wasm
+$(FSM_SRC)/js-compute-runtime-component.wasm: $(OBJ_DIR)/js-compute-runtime-component.wasm
+	$(call cmd,cp,$@)
 
-clean:
-	$(RM) compile_commands.json $(FSM_OBJ) xqd-world/xqd_world_component_type.o
 
-distclean: clean
-	$(RM) -r $(OBJ_DIR)
-	$(RM) compiler_flags
+# Debugging rules ##############################################################
 
+# Useful for debugging, try `make print-FSM_CPP`
+print-%:
+	$Q echo "$* = '$($*)'"
+
+
+# Development rules ############################################################
+
+# Generate a compile_commands.json for powering clangd.
 .PHONY: compile_commands.json
 compile_commands.json:
 	$Q ( \
@@ -183,16 +304,10 @@ compile_commands.json:
 			echo "$$sep"; \
 			sep=","; \
 			echo "{ \"directory\": \"$(FSM_SRC)\","; \
-			echo "  \"command\": \"$(WASI_CXX) $(CXX_FLAGS) $(OPENSSL_CFLAGS) $(DEFINES) -I $(SM_SRC)include\","; \
+			echo "  \"command\": \"$(WASI_CXX) $(CXX_FLAGS) $(INCLUDES) $(DEFINES)\","; \
 			echo -n "  \"file\": \"$${file#$(FSM_SRC)}\"}"; \
 		done; \
 		echo; \
 		echo ']' \
 	) > "$@"
 
-format: $(FSM_CPP)
-	$(ROOT_SRC)/../ci/clang-format.sh --fix
-
-# Useful for debugging, try `make print-FSM_CPP`
-print-%:
-	$Q echo "$($*)"
