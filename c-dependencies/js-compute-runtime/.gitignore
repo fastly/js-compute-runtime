@@ -2,10 +2,5 @@
 /compile_commands.json
 /.cache
 
-/rusturl
-/compiler_flags
 /js-compute-runtime*.wasm
-/obj
-
-*.o
-*.d
+/build

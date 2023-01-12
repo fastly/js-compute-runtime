@@ -80,7 +80,7 @@ jobs:
       if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
     - name: "Build JS runtime (debug)"
-      run: DEBUG=1 CXX_OPT="-O1" npm run build
+      run: DEBUG=1 OPT_FLAGS="-O1" npm run build
       if: matrix.profile == 'debug'
 
     - name: "Build JS runtime (release)"
