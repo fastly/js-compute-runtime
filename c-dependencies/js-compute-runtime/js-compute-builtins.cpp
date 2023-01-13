@@ -55,6 +55,7 @@
 #include "builtins/native-stream-sink.h"
 #include "builtins/native-stream-source.h"
 #include "builtins/object-store.h"
+#include "builtins/subtle-crypto.h"
 #include "builtins/transform-stream-default-controller.h"
 #include "builtins/transform-stream.h"
 #include "builtins/url.h"
@@ -5250,7 +5251,9 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!builtins::Console::create(cx, global))
     return false;
-  if (!builtins::Crypto::create(cx, global))
+  if (!builtins::SubtleCrypto::init_class(cx, global))
+    return false;
+  if (!builtins::Crypto::init_class(cx, global))
     return false;
 
   if (!builtins::NativeStreamSource::init_class(cx, global))

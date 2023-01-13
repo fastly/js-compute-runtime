@@ -6,6 +6,7 @@
 #pragma clang diagnostic pop
 
 #include "crypto.h"
+#include "subtle-crypto.h"
 #include "xqd.h"
 
 bool is_int_typed_array(JSObject *obj) {
@@ -157,19 +158,41 @@ bool Crypto::random_uuid(JSContext *cx, unsigned argc, JS::Value *vp) {
   args.rval().setString(str);
   return true;
 }
+JS::PersistentRooted<JSObject *> Crypto::subtle;
+
+bool Crypto::subtle_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setObject(*subtle);
+  return true;
+}
 
 const JSFunctionSpec Crypto::methods[] = {
     JS_FN("getRandomValues", get_random_values, 1, JSPROP_ENUMERATE),
     JS_FN("randomUUID", random_uuid, 0, JSPROP_ENUMERATE), JS_FS_END};
 
-const JSPropertySpec Crypto::properties[] = {JS_PS_END};
+const JSPropertySpec Crypto::properties[] = {
+    JS_PSG("subtle", subtle_get, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "Crypto", JSPROP_READONLY), JS_PS_END};
 
-bool Crypto::create(JSContext *cx, JS::HandleObject global) {
-  JS::RootedObject crypto(cx, JS_NewPlainObject(cx));
-  if (!crypto)
+bool Crypto::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS_ReportErrorLatin1(cx, "Illegal constructor Crypto");
+  return false;
+}
+
+bool Crypto::init_class(JSContext *cx, JS::HandleObject global) {
+  if (!init_class_impl(cx, global)) {
     return false;
-  if (!JS_DefineProperty(cx, global, "crypto", crypto, JSPROP_ENUMERATE))
+  }
+
+  JS::RootedObject crypto(cx, JS_NewObjectWithGivenProto(cx, &Crypto::class_, Crypto::proto_obj));
+  if (!crypto) {
     return false;
-  return JS_DefineFunctions(cx, crypto, Crypto::methods);
+  }
+
+  JS::RootedObject subtleCrypto(
+      cx, JS_NewObjectWithGivenProto(cx, &SubtleCrypto::class_, SubtleCrypto::proto_obj));
+  subtle.init(cx, subtleCrypto);
+
+  return JS_DefineProperty(cx, global, "crypto", crypto, JSPROP_ENUMERATE);
 }
 } // namespace builtins

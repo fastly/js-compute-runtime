@@ -1,0 +1,104 @@
+{
+  "idl_test setup": {
+    "status": "PASS"
+  },
+  "idl_test validation": {
+    "status": "PASS"
+  },
+  "Partial interface mixin WindowOrWorkerGlobalScope: original interface mixin defined": {
+    "status": "PASS"
+  },
+  "Partial interface mixin WindowOrWorkerGlobalScope: member names are unique": {
+    "status": "PASS"
+  },
+  "Partial interface Window: member names are unique": {
+    "status": "PASS"
+  },
+  "Window includes GlobalEventHandlers: member names are unique": {
+    "status": "PASS"
+  },
+  "Window includes WindowEventHandlers: member names are unique": {
+    "status": "PASS"
+  },
+  "Window includes WindowOrWorkerGlobalScope: member names are unique": {
+    "status": "PASS"
+  },
+  "WorkerGlobalScope includes WindowOrWorkerGlobalScope: member names are unique": {
+    "status": "PASS"
+  },
+  "Window includes AnimationFrameProvider: member names are unique": {
+    "status": "PASS"
+  },
+  "Window includes WindowSessionStorage: member names are unique": {
+    "status": "PASS"
+  },
+  "Window includes WindowLocalStorage: member names are unique": {
+    "status": "PASS"
+  },
+  "Crypto interface: existence and properties of interface object": {
+    "status": "FAIL"
+  },
+  "Crypto must be primary interface of crypto": {
+    "status": "PASS"
+  },
+  "Stringification of crypto": {
+    "status": "PASS"
+  },
+  "Crypto interface: crypto must not have property \"subtle\"": {
+    "status": "FAIL"
+  },
+  "Crypto interface: crypto must not have property \"getRandomValues\"": {
+    "status": "FAIL"
+  },
+  "Crypto interface: crypto must not have property \"randomUUID\"": {
+    "status": "FAIL"
+  },
+  "CryptoKey interface: existence and properties of interface object": {
+    "status": "PASS"
+  },
+  "SubtleCrypto interface: existence and properties of interface object": {
+    "status": "FAIL"
+  },
+  "SubtleCrypto must be primary interface of crypto.subtle": {
+    "status": "PASS"
+  },
+  "Stringification of crypto.subtle": {
+    "status": "PASS"
+  },
+  "SubtleCrypto interface: crypto.subtle must not have property \"encrypt\"": {
+    "status": "PASS"
+  },
+  "SubtleCrypto interface: crypto.subtle must not have property \"decrypt\"": {
+    "status": "PASS"
+  },
+  "SubtleCrypto interface: crypto.subtle must not have property \"sign\"": {
+    "status": "PASS"
+  },
+  "SubtleCrypto interface: crypto.subtle must not have property \"verify\"": {
+    "status": "PASS"
+  },
+  "SubtleCrypto interface: crypto.subtle must not have property \"digest\"": {
+    "status": "FAIL"
+  },
+  "SubtleCrypto interface: crypto.subtle must not have property \"generateKey\"": {
+    "status": "PASS"
+  },
+  "SubtleCrypto interface: crypto.subtle must not have property \"deriveKey\"": {
+    "status": "PASS"
+  },
+  "SubtleCrypto interface: crypto.subtle must not have property \"deriveBits\"": {
+    "status": "PASS"
+  },
+  "SubtleCrypto interface: crypto.subtle must not have property \"importKey\"": {
+    "status": "PASS"
+  },
+  "SubtleCrypto interface: crypto.subtle must not have property \"exportKey\"": {
+    "status": "PASS"
+  },
+  "SubtleCrypto interface: crypto.subtle must not have property \"wrapKey\"": {
+    "status": "PASS"
+  },
+  "SubtleCrypto interface: crypto.subtle must not have property \"unwrapKey\"": {
+    "status": "PASS"
+  }
+}
