@@ -9,14 +9,6 @@ static_assert(DICTIONARY_ENTRY_MAX_LEN < HOSTCALL_BUFFER_LEN);
 static_assert(METHOD_MAX_LEN < HOSTCALL_BUFFER_LEN);
 static_assert(URI_MAX_LEN < HOSTCALL_BUFFER_LEN);
 
-extern "C" {
-
-__attribute__((weak, export_name("cabi_realloc"))) void *
-cabi_realloc(void *ptr, size_t orig_size, size_t align, size_t new_size) {
-  return JS_realloc(CONTEXT, ptr, orig_size, new_size);
-}
-}
-
 #define LIST_ALLOC_SIZE 50
 
 static bool convert_result(int res, fastly_error_t *err) {
@@ -98,7 +90,7 @@ bool xqd_fastly_http_body_append(fastly_body_handle_t src, fastly_body_handle_t 
 
 bool xqd_fastly_http_body_read(fastly_body_handle_t h, uint32_t chunk_size, fastly_list_u8_t *ret,
                                fastly_error_t *err) {
-  ret->ptr = static_cast<uint8_t *>(JS_malloc(CONTEXT, chunk_size));
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(chunk_size, 1));
   return convert_result(xqd_body_read(h, reinterpret_cast<char *>(ret->ptr),
                                       static_cast<size_t>(chunk_size), &ret->len),
                         err);
@@ -172,7 +164,7 @@ bool xqd_fastly_http_req_cache_override_set(fastly_request_handle_t h,
 }
 
 bool xqd_fastly_http_req_downstream_client_ip_addr(fastly_list_u8_t *ret, fastly_error_t *err) {
-  ret->ptr = static_cast<uint8_t *>(JS_malloc(CONTEXT, 16));
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(16, 1));
   return convert_result(
       xqd_req_downstream_client_ip_addr_get(reinterpret_cast<char *>(ret->ptr), &ret->len), err);
 }
@@ -184,19 +176,20 @@ bool xqd_fastly_http_req_new(fastly_request_handle_t *ret, fastly_error_t *err) 
 bool xqd_fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_list_string_t *ret,
                                           fastly_error_t *err) {
   size_t str_max = LIST_ALLOC_SIZE;
+
   xqd_world_string_t *strs =
-      static_cast<xqd_world_string_t *>(JS_malloc(CONTEXT, str_max * sizeof(xqd_world_string_t)));
+      static_cast<xqd_world_string_t *>(cabi_malloc(str_max * sizeof(xqd_world_string_t), 1));
   size_t str_cnt = 0;
   size_t nwritten;
-  char *buf = static_cast<char *>(JS_malloc(CONTEXT, HOSTCALL_BUFFER_LEN));
+  char *buf = static_cast<char *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
   uint32_t cursor = 0;
   int64_t next_cursor = 0;
   while (true) {
     if (!convert_result(
             xqd_req_header_names_get(h, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten),
             err)) {
-      JS_free(CONTEXT, strs);
-      JS_free(CONTEXT, buf);
+      cabi_free(strs);
+      cabi_free(buf);
       return false;
     }
     if (nwritten == 0)
@@ -207,11 +200,11 @@ bool xqd_fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_list
         continue;
       if (str_cnt == str_max) {
         strs = static_cast<xqd_world_string_t *>(
-            JS_realloc(CONTEXT, strs, str_max * sizeof(xqd_world_string_t),
-                       (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
+            cabi_realloc(strs, str_max * sizeof(xqd_world_string_t), 1,
+                         (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
         str_max += LIST_ALLOC_SIZE;
       }
-      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(CONTEXT, i - offset + 1));
+      strs[str_cnt].ptr = static_cast<char *>(cabi_malloc(i - offset + 1, 1));
       strs[str_cnt].len = i - offset;
       memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
       offset = i + 1;
@@ -221,9 +214,9 @@ bool xqd_fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_list
       break;
     cursor = (uint32_t)next_cursor;
   }
-  JS_free(CONTEXT, buf);
-  strs = static_cast<xqd_world_string_t *>(JS_realloc(
-      CONTEXT, strs, str_max * sizeof(xqd_world_string_t), str_cnt * sizeof(xqd_world_string_t)));
+  cabi_free(buf);
+  strs = static_cast<xqd_world_string_t *>(cabi_realloc(strs, str_max * sizeof(xqd_world_string_t),
+                                                        1, str_cnt * sizeof(xqd_world_string_t)));
   ret->ptr = strs;
   ret->len = str_cnt;
   return true;
@@ -233,17 +226,17 @@ bool xqd_fastly_http_req_header_values_get(fastly_request_handle_t h, xqd_world_
                                            fastly_option_list_string_t *ret, fastly_error_t *err) {
   size_t str_max = LIST_ALLOC_SIZE;
   xqd_world_string_t *strs =
-      static_cast<xqd_world_string_t *>(JS_malloc(CONTEXT, str_max * sizeof(xqd_world_string_t)));
+      static_cast<xqd_world_string_t *>(cabi_malloc(str_max * sizeof(xqd_world_string_t), 1));
   size_t str_cnt = 0;
   size_t nwritten;
-  char *buf = static_cast<char *>(JS_malloc(CONTEXT, HOSTCALL_BUFFER_LEN));
+  char *buf = static_cast<char *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
   uint32_t cursor = 0;
   int64_t next_cursor = 0;
   while (true) {
     if (!convert_result(xqd_req_header_values_get(h, name->ptr, name->len, buf, HEADER_MAX_LEN,
                                                   cursor, &next_cursor, &nwritten),
                         err)) {
-      JS_free(CONTEXT, buf);
+      cabi_free(buf);
       return false;
     }
     if (nwritten == 0)
@@ -254,11 +247,11 @@ bool xqd_fastly_http_req_header_values_get(fastly_request_handle_t h, xqd_world_
         continue;
       if (str_cnt == str_max) {
         strs = static_cast<xqd_world_string_t *>(
-            JS_realloc(CONTEXT, strs, str_max * sizeof(xqd_world_string_t),
-                       (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
+            cabi_realloc(strs, str_max * sizeof(xqd_world_string_t), 1,
+                         (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
         str_max += LIST_ALLOC_SIZE;
       }
-      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(CONTEXT, i - offset + 1));
+      strs[str_cnt].ptr = static_cast<char *>(cabi_malloc(i - offset + 1, 1));
       strs[str_cnt].len = i - offset;
       memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
       offset = i + 1;
@@ -268,16 +261,16 @@ bool xqd_fastly_http_req_header_values_get(fastly_request_handle_t h, xqd_world_
       break;
     cursor = (uint32_t)next_cursor;
   }
-  JS_free(CONTEXT, buf);
+  cabi_free(buf);
   if (str_cnt > 0) {
     ret->is_some = true;
     ret->val.ptr = strs;
     ret->val.len = str_cnt;
-    strs = static_cast<xqd_world_string_t *>(JS_realloc(
-        CONTEXT, strs, str_max * sizeof(xqd_world_string_t), str_cnt * sizeof(xqd_world_string_t)));
+    strs = static_cast<xqd_world_string_t *>(cabi_realloc(
+        strs, str_max * sizeof(xqd_world_string_t), 1, str_cnt * sizeof(xqd_world_string_t)));
   } else {
     ret->is_some = false;
-    JS_free(CONTEXT, strs);
+    cabi_free(strs);
   }
   return true;
 }
@@ -301,7 +294,7 @@ bool xqd_fastly_http_req_header_remove(fastly_request_handle_t h, xqd_world_stri
 
 bool xqd_fastly_http_req_method_get(fastly_request_handle_t h, xqd_world_string_t *ret,
                                     fastly_error_t *err) {
-  ret->ptr = static_cast<char *>(JS_malloc(CONTEXT, METHOD_MAX_LEN));
+  ret->ptr = static_cast<char *>(cabi_malloc(METHOD_MAX_LEN, 1));
   return convert_result(
       xqd_req_method_get(h, reinterpret_cast<char *>(ret->ptr), METHOD_MAX_LEN, &ret->len), err);
 }
@@ -314,12 +307,12 @@ bool xqd_fastly_http_req_method_set(fastly_request_handle_t h, xqd_world_string_
 
 bool xqd_fastly_http_req_uri_get(fastly_request_handle_t h, xqd_world_string_t *ret,
                                  fastly_error_t *err) {
-  ret->ptr = static_cast<char *>(JS_malloc(CONTEXT, URI_MAX_LEN));
+  ret->ptr = static_cast<char *>(cabi_malloc(URI_MAX_LEN, 1));
   if (!convert_result(xqd_req_uri_get(h, ret->ptr, URI_MAX_LEN, &ret->len), err)) {
-    JS_free(CONTEXT, ret->ptr);
+    cabi_free(ret->ptr);
     return false;
   }
-  ret->ptr = static_cast<char *>(JS_realloc(CONTEXT, ret->ptr, URI_MAX_LEN, ret->len));
+  ret->ptr = static_cast<char *>(cabi_realloc(ret->ptr, URI_MAX_LEN, 1, ret->len));
   return true;
 }
 
@@ -410,18 +403,18 @@ bool xqd_fastly_http_resp_new(fastly_response_handle_t *ret, fastly_error_t *err
 bool xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h, fastly_list_string_t *ret,
                                            fastly_error_t *err) {
   xqd_world_string_t *strs = static_cast<xqd_world_string_t *>(
-      JS_malloc(CONTEXT, LIST_ALLOC_SIZE * sizeof(xqd_world_string_t)));
+      cabi_malloc(LIST_ALLOC_SIZE * sizeof(xqd_world_string_t), 1));
   size_t str_max = LIST_ALLOC_SIZE;
   size_t str_cnt = 0;
   size_t nwritten;
-  char *buf = static_cast<char *>(JS_malloc(CONTEXT, HOSTCALL_BUFFER_LEN));
+  char *buf = static_cast<char *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
   uint32_t cursor = 0;
   int64_t next_cursor = 0;
   while (true) {
     if (!convert_result(
             xqd_resp_header_names_get(h, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten),
             err)) {
-      JS_free(CONTEXT, buf);
+      cabi_free(buf);
       return false;
     }
     if (nwritten == 0) {
@@ -433,11 +426,11 @@ bool xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h, fastly_li
         continue;
       if (str_cnt == str_max) {
         strs = static_cast<xqd_world_string_t *>(
-            JS_realloc(CONTEXT, strs, str_max * sizeof(xqd_world_string_t),
-                       (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
+            cabi_realloc(strs, str_max * sizeof(xqd_world_string_t), 1,
+                         (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
         str_max += LIST_ALLOC_SIZE;
       }
-      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(CONTEXT, i - offset + 1));
+      strs[str_cnt].ptr = static_cast<char *>(cabi_malloc(i - offset + 1, 1));
       strs[str_cnt].len = i - offset;
       memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
       offset = i + 1;
@@ -447,9 +440,9 @@ bool xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h, fastly_li
       break;
     cursor = (uint32_t)next_cursor;
   }
-  JS_free(CONTEXT, buf);
-  strs = static_cast<xqd_world_string_t *>(JS_realloc(
-      CONTEXT, strs, str_max * sizeof(xqd_world_string_t), str_cnt * sizeof(xqd_world_string_t)));
+  cabi_free(buf);
+  strs = static_cast<xqd_world_string_t *>(cabi_realloc(strs, str_max * sizeof(xqd_world_string_t),
+                                                        1, str_cnt * sizeof(xqd_world_string_t)));
   ret->ptr = strs;
   ret->len = str_cnt;
   return true;
@@ -458,17 +451,17 @@ bool xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h, fastly_li
 bool xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h, xqd_world_string_t *name,
                                             fastly_option_list_string_t *ret, fastly_error_t *err) {
   size_t str_max = LIST_ALLOC_SIZE;
-  xqd_world_string_t *strs = static_cast<xqd_world_string_t *>(JS_malloc(CONTEXT, str_max));
+  xqd_world_string_t *strs = static_cast<xqd_world_string_t *>(cabi_malloc(str_max, 1));
   size_t str_cnt = 0;
   size_t nwritten;
-  char *buf = static_cast<char *>(JS_malloc(CONTEXT, HOSTCALL_BUFFER_LEN));
+  char *buf = static_cast<char *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
   uint32_t cursor = 0;
   int64_t next_cursor = 0;
   while (true) {
     if (!convert_result(xqd_resp_header_values_get(h, name->ptr, name->len, buf, HEADER_MAX_LEN,
                                                    cursor, &next_cursor, &nwritten),
                         err)) {
-      JS_free(CONTEXT, buf);
+      cabi_free(buf);
       return false;
     }
     if (nwritten == 0)
@@ -479,11 +472,11 @@ bool xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h, xqd_worl
         continue;
       if (str_cnt == str_max) {
         strs = static_cast<xqd_world_string_t *>(
-            JS_realloc(CONTEXT, strs, str_max * sizeof(xqd_world_string_t),
-                       (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
+            cabi_realloc(strs, str_max * sizeof(xqd_world_string_t), 1,
+                         (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
         str_max += LIST_ALLOC_SIZE;
       }
-      strs[str_cnt].ptr = static_cast<char *>(JS_malloc(CONTEXT, i - offset + 1));
+      strs[str_cnt].ptr = static_cast<char *>(cabi_malloc(i - offset + 1, 1));
       strs[str_cnt].len = i - offset;
       memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
       offset = i + 1;
@@ -493,16 +486,16 @@ bool xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h, xqd_worl
       break;
     cursor = (uint32_t)next_cursor;
   }
-  JS_free(CONTEXT, buf);
+  cabi_free(buf);
   if (str_cnt > 0) {
     ret->is_some = true;
     ret->val.ptr = strs;
     ret->val.len = str_cnt;
-    strs = static_cast<xqd_world_string_t *>(JS_realloc(
-        CONTEXT, strs, str_max * sizeof(xqd_world_string_t), str_cnt * sizeof(xqd_world_string_t)));
+    strs = static_cast<xqd_world_string_t *>(cabi_realloc(
+        strs, str_max * sizeof(xqd_world_string_t), 1, str_cnt * sizeof(xqd_world_string_t)));
   } else {
     ret->is_some = false;
-    JS_free(CONTEXT, strs);
+    cabi_free(strs);
   }
   return true;
 }
@@ -556,7 +549,7 @@ bool xqd_fastly_dictionary_open(xqd_world_string_t *name, fastly_dictionary_hand
 
 bool xqd_fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_string_t *key,
                                fastly_option_string_t *ret, fastly_error_t *err) {
-  ret->val.ptr = static_cast<char *>(JS_malloc(CONTEXT, DICTIONARY_ENTRY_MAX_LEN));
+  ret->val.ptr = static_cast<char *>(cabi_malloc(DICTIONARY_ENTRY_MAX_LEN, 1));
   if (!convert_result(xqd_dictionary_get(h, key->ptr, key->len, ret->val.ptr,
                                          DICTIONARY_ENTRY_MAX_LEN, &ret->val.len),
                       err)) {
@@ -564,26 +557,26 @@ bool xqd_fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_string_t 
       ret->is_some = false;
       return true;
     } else {
-      JS_free(CONTEXT, ret->val.ptr);
+      cabi_free(ret->val.ptr);
       return false;
     }
   }
   ret->is_some = true;
-  ret->val.ptr = static_cast<char *>(
-      JS_realloc(CONTEXT, ret->val.ptr, DICTIONARY_ENTRY_MAX_LEN, ret->val.len));
+  ret->val.ptr =
+      static_cast<char *>(cabi_realloc(ret->val.ptr, DICTIONARY_ENTRY_MAX_LEN, 1, ret->val.len));
   return true;
 }
 
 bool xqd_fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string_t *ret,
                            fastly_error_t *err) {
-  ret->ptr = static_cast<char *>(JS_malloc(CONTEXT, HOSTCALL_BUFFER_LEN));
+  ret->ptr = static_cast<char *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
   if (!convert_result(xqd_geo_lookup(reinterpret_cast<char *>(addr_octets->ptr), addr_octets->len,
                                      ret->ptr, HOSTCALL_BUFFER_LEN, &ret->len),
                       err)) {
-    JS_free(CONTEXT, ret->ptr);
+    cabi_free(ret->ptr);
     return false;
   }
-  ret->ptr = static_cast<char *>(JS_realloc(CONTEXT, ret->ptr, HOSTCALL_BUFFER_LEN, ret->len));
+  ret->ptr = static_cast<char *>(cabi_realloc(ret->ptr, HOSTCALL_BUFFER_LEN, 1, ret->len));
   return true;
 }
 
