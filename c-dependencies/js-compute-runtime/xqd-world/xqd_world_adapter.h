@@ -1,12 +1,11 @@
 #ifndef xqd_world_adapter_h
 #define xqd_world_adapter_h
 
-#include "../host_call.h"
-#include "../xqd.h"
+#include "allocator.h"
+#include "host_call.h"
 #include "js/JSON.h"
+#include "xqd.h"
 #include "xqd_world.h"
-
-static JSContext *CONTEXT = nullptr;
 
 // TODO: remove these once the warnings are fixed
 #pragma clang diagnostic push
