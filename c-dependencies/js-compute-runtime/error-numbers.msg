@@ -41,6 +41,8 @@
 // clang-format off
 MSG_DEF(JSMSG_NOT_AN_ERROR,                                    0, JSEXN_ERR, "<Error #0 is reserved>")
 MSG_DEF(JSMSG_BUILTIN_CTOR_NO_NEW,                             1, JSEXN_TYPEERR, "calling a builtin {0} constructor without new is forbidden")
+MSG_DEF(JSMSG_ILLEGAL_CTOR,                                    0, JSEXN_TYPEERR, "Illegal constructor")
+MSG_DEF(JSMSG_INVALID_INTERFACE,                               2, JSEXN_TYPEERR, "'{0}' called on an object that does not implement interface {1}")
 MSG_DEF(JSMSG_INCOMPATIBLE_INSTANCE,                           2, JSEXN_TYPEERR, "Method {0} called on receiver that's not an instance of {1}")
 MSG_DEF(JSMSG_INVALID_BUFFER_ARG,                              2, JSEXN_TYPEERR, "{0} must be of type ArrayBuffer or ArrayBufferView but got \"{1}\"")
 MSG_DEF(JSMSG_INVALID_COMPRESSION_FORMAT,                      1, JSEXN_TYPEERR, "'format' has to be \"deflate\", \"deflate-raw\", or \"gzip\", but got \"{0}\"")
