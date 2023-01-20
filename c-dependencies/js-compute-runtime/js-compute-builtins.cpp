@@ -200,75 +200,64 @@ JSObject *PromiseRejectedWithPendingError(JSContext *cx) {
   return promise;
 }
 
-#define HANDLE_READ_CHUNK_SIZE 8192
+constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
 
-template <auto op>
-static char *read_from_handle_all(JSContext *cx, uint32_t handle, size_t *nwritten,
-                                  bool read_until_zero) {
-  // TODO(performance): investigate passing a size hint in situations where we might know
-  // the final size, e.g. via the `content-length` header.
-  // https://github.com/fastly/js-compute-runtime/issues/216
-  size_t buf_size = HANDLE_READ_CHUNK_SIZE;
+struct ReadChunk {
+  using UniquePtr = std::unique_ptr<char[], void (*)(void *)>;
 
-  // TODO(performance): make use of malloc slack.
-  // https://github.com/fastly/js-compute-runtime/issues/217
-  char *buf = static_cast<char *>(JS_malloc(cx, buf_size));
-  if (!buf) {
-    JS_ReportOutOfMemory(cx);
-    return nullptr;
-  }
+  UniquePtr ptr;
+  size_t len;
 
-  // For realloc below.
-  char *new_buf;
+  explicit ReadChunk(fastly_list_u8_t chunk)
+      : ptr(reinterpret_cast<char *>(chunk.ptr), cabi_free), len{chunk.len} {}
+};
 
-  size_t offset = 0;
-  fastly_error_t err;
+struct ReadResult {
+  UniqueChars buffer;
+  size_t length;
+};
+
+// Returns a UniqueChars and the length of that string. The UniqueChars value is not
+// null-terminated.
+ReadResult read_from_handle_all(JSContext *cx, uint32_t handle) {
+  std::vector<ReadChunk> chunks;
+  size_t bytes_read = 0;
   while (true) {
-    fastly_list_u8_t out_list;
-    if (!op(handle, HANDLE_READ_CHUNK_SIZE, &out_list, &err)) {
+    fastly_list_u8_t chunk;
+    fastly_error_t err;
+    if (!xqd_fastly_http_body_read(handle, HANDLE_READ_CHUNK_SIZE, &chunk, &err)) {
       HANDLE_ERROR(cx, err);
-      JS_free(cx, buf);
-      return nullptr;
+      return {nullptr, 0};
     }
 
-    // copy the allocated discontiguous buffer into our contiguous buffer
-    // TODO(performance): a cabi_realloc hack should be possible in the
-    // component API to ensure continguous allocation into the contiguous
-    // buffer in the first place
-    memcpy(buf + offset, out_list.ptr, out_list.len);
-    JS_free(cx, out_list.ptr);
-
-    offset += out_list.len;
-    if (out_list.len == 0 || (!read_until_zero && out_list.len < HANDLE_READ_CHUNK_SIZE)) {
+    if (chunk.len == 0) {
       break;
     }
 
-    // TODO(performance): make use of malloc slack, and use a smarter buffer growth strategy.
-    // https://github.com/fastly/js-compute-runtime/issues/217
-    size_t new_size = buf_size + HANDLE_READ_CHUNK_SIZE;
-    new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, new_size));
-    if (!new_buf) {
-      JS_free(cx, buf);
+    bytes_read += chunk.len;
+    chunks.emplace_back(ReadChunk{chunk});
+  }
+
+  UniqueChars buf;
+  if (chunks.size() == 1) {
+    // If there was only one chunk read, reuse that allocation if possible.
+    auto &chunk = chunks.back();
+    buf = UniqueChars(chunk.ptr.release());
+  } else {
+    // If there wasn't exactly one chunk read, we'll need to allocate a buffer to store the results.
+    buf.reset(static_cast<char *>(JS_string_malloc(cx, bytes_read)));
+    if (!buf) {
       JS_ReportOutOfMemory(cx);
-      return nullptr;
+      return {nullptr, 0};
     }
-    buf = new_buf;
 
-    buf_size += HANDLE_READ_CHUNK_SIZE;
+    char *end = buf.get();
+    for (auto &chunk : chunks) {
+      end = std::copy(chunk.ptr.get(), chunk.ptr.get() + chunk.len, end);
+    }
   }
 
-  new_buf = static_cast<char *>(JS_realloc(cx, buf, buf_size, offset + 1));
-  if (!buf) {
-    JS_free(cx, buf);
-    JS_ReportOutOfMemory(cx);
-    return nullptr;
-  }
-  buf = new_buf;
-
-  buf[offset] = '\0';
-  *nwritten = offset;
-
-  return buf;
+  return {std::move(buf), bytes_read};
 }
 
 /**
@@ -999,9 +988,8 @@ bool consume_content_stream_for_bodyAll(JSContext *cx, HandleObject self, Handle
 bool consume_body_handle_for_bodyAll(JSContext *cx, HandleObject self, HandleValue body_parser,
                                      CallArgs args) {
   fastly_body_handle_t body = body_handle(self);
-  auto parse_body = (ParseBodyCB *)body_parser.toPrivate();
-  size_t bytes_read;
-  UniqueChars buf(read_from_handle_all<xqd_fastly_http_body_read>(cx, body, &bytes_read, true));
+  auto *parse_body = reinterpret_cast<ParseBodyCB *>(body_parser.toPrivate());
+  auto [buf, bytes_read] = read_from_handle_all(cx, body);
   if (!buf) {
     RootedObject result_promise(cx);
     result_promise = &JS::GetReservedSlot(self, Slots::BodyAllPromise).toObject();
