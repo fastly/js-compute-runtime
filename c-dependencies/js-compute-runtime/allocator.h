@@ -5,6 +5,9 @@
 
 struct JSContext;
 
+/// We need a handle to the JSContext in order to use JS_realloc in the implementation of
+/// cabi_realloc. Unfortunately way that we can do this now is to keep the context pointer in a
+/// global that can be used there. This global is initialized in js-compute-runtime.cpp.
 extern JSContext *CONTEXT;
 
 extern "C" {
