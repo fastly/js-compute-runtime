@@ -36,6 +36,7 @@
 #include "zlib.h"
 
 #include "geo_ip.h"
+#include "host_api.h"
 #include "host_call.h"
 #include "sequence.hpp"
 
@@ -202,16 +203,6 @@ JSObject *PromiseRejectedWithPendingError(JSContext *cx) {
 
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
 
-struct ReadChunk {
-  using UniquePtr = std::unique_ptr<char[], void (*)(void *)>;
-
-  UniquePtr ptr;
-  size_t len;
-
-  explicit ReadChunk(fastly_list_u8_t chunk)
-      : ptr(reinterpret_cast<char *>(chunk.ptr), cabi_free), len{chunk.len} {}
-};
-
 struct ReadResult {
   UniqueChars buffer;
   size_t length;
@@ -220,29 +211,30 @@ struct ReadResult {
 // Returns a UniqueChars and the length of that string. The UniqueChars value is not
 // null-terminated.
 ReadResult read_from_handle_all(JSContext *cx, uint32_t handle) {
-  std::vector<ReadChunk> chunks;
+  std::vector<HttpBodyChunk> chunks;
   size_t bytes_read = 0;
+  HttpBody body{handle};
   while (true) {
-    fastly_list_u8_t chunk;
-    fastly_error_t err;
-    if (!xqd_fastly_http_body_read(handle, HANDLE_READ_CHUNK_SIZE, &chunk, &err)) {
-      HANDLE_ERROR(cx, err);
+    auto res = body.read(HANDLE_READ_CHUNK_SIZE);
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
       return {nullptr, 0};
     }
 
+    auto &chunk = res.unwrap();
     if (chunk.len == 0) {
       break;
     }
 
     bytes_read += chunk.len;
-    chunks.emplace_back(ReadChunk{chunk});
+    chunks.emplace_back(std::move(chunk));
   }
 
   UniqueChars buf;
   if (chunks.size() == 1) {
-    // If there was only one chunk read, reuse that allocation if possible.
+    // If there was only one chunk read, reuse that allocation.
     auto &chunk = chunks.back();
-    buf = UniqueChars(chunk.ptr.release());
+    buf = std::move(chunk.ptr);
   } else {
     // If there wasn't exactly one chunk read, we'll need to allocate a buffer to store the results.
     buf.reset(static_cast<char *>(JS_string_malloc(cx, bytes_read)));
@@ -258,30 +250,6 @@ ReadResult read_from_handle_all(JSContext *cx, uint32_t handle) {
   }
 
   return {std::move(buf), bytes_read};
-}
-
-/**
- * Writes the given number of bytes from the given buffer to the given handle.
- *
- * The host doesn't necessarily write all bytes in any particular call to
- * xqd_body_write, so to ensure all bytes are written, we call it in a loop.
- */
-bool write_to_body_all(fastly_body_handle_t handle, const char *buf, size_t len,
-                       fastly_error_t *err) {
-  size_t total_written = 0;
-  while (total_written < len) {
-    const uint8_t *chunk = reinterpret_cast<const uint8_t *>(buf) + total_written;
-    size_t chunk_len = len - total_written;
-    uint32_t nwritten = 0;
-    fastly_list_u8_t write_list = {.ptr = const_cast<uint8_t *>(chunk), .len = chunk_len};
-    if (!xqd_fastly_http_body_write(handle, &write_list, FASTLY_BODY_WRITE_END_BACK, &nwritten,
-                                    err)) {
-      return false;
-    }
-    total_written += nwritten;
-  }
-
-  return true;
 }
 
 enum class BodyReadResult {
@@ -600,9 +568,8 @@ bool extract_body(JSContext *cx, HandleObject self, HandleValue body_val) {
       content_type = "text/plain;charset=UTF-8";
     }
 
-    fastly_body_handle_t body_handle = RequestOrResponse::body_handle(self);
-    fastly_error_t err;
-    bool ok = write_to_body_all(body_handle, buf, length, &err);
+    HttpBody body{RequestOrResponse::body_handle(self)};
+    auto write_res = body.write_all(reinterpret_cast<uint8_t *>(buf), length);
 
     // Ensure that the NoGC is reset, so throwing an error in HANDLE_ERROR
     // succeeds.
@@ -610,8 +577,8 @@ bool extract_body(JSContext *cx, HandleObject self, HandleValue body_val) {
       maybeNoGC.reset();
     }
 
-    if (!ok) {
-      HANDLE_ERROR(cx, err);
+    if (auto *err = write_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
       return false;
     }
   }
@@ -658,11 +625,11 @@ template <auto mode> JSObject *headers(JSContext *cx, HandleObject obj) {
 
 bool append_body(JSContext *cx, HandleObject self, HandleObject source) {
   MOZ_ASSERT(!body_used(source));
-  fastly_body_handle_t source_body = body_handle(source);
-  fastly_body_handle_t dest_body = body_handle(self);
-  fastly_error_t err;
-  if (!xqd_fastly_http_body_append(dest_body, source_body, &err)) {
-    HANDLE_ERROR(cx, err);
+  HttpBody source_body{body_handle(source)};
+  HttpBody dest_body{body_handle(self)};
+  auto res = dest_body.append(source_body);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
   return true;
@@ -1114,7 +1081,7 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
   // So we get that first, then the reader.
   RootedObject catch_handler(cx, &extra.toObject());
   RootedObject reader(cx, &js::GetFunctionNativeReserved(catch_handler, 1).toObject());
-  fastly_body_handle_t body_handle = RequestOrResponse::body_handle(body_owner);
+  HttpBody body{RequestOrResponse::body_handle(body_owner)};
 
   // We're guaranteed to work with a native ReadableStreamDefaultReader here,
   // which in turn is guaranteed to vend {done: bool, value: any} objects to
@@ -1133,9 +1100,9 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
       FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
     }
 
-    fastly_error_t err;
-    if (!xqd_fastly_http_body_close(body_handle, &err)) {
-      HANDLE_ERROR(cx, err);
+    auto res = body.close();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
       return false;
     }
 
@@ -1177,20 +1144,19 @@ bool body_reader_then_handler(JSContext *cx, HandleObject body_owner, HandleValu
     return false;
   }
 
-  bool ok;
-  fastly_error_t err;
+  Result<Void> res;
   {
     JS::AutoCheckCannotGC nogc;
     JSObject *array = &val.toObject();
     bool is_shared;
     uint8_t *bytes = JS_GetUint8ArrayData(array, &is_shared, nogc);
     size_t length = JS_GetTypedArrayByteLength(array);
-    ok = write_to_body_all(body_handle, (char *)bytes, length, &err);
+    res = body.write_all(bytes, length);
   }
 
   // Needs to be outside the nogc block in case we need to create an exception.
-  if (!ok) {
-    HANDLE_ERROR(cx, err);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
@@ -1656,12 +1622,13 @@ bool clone(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
 
-  fastly_body_handle_t body_handle = INVALID_HANDLE;
-  if (!xqd_fastly_http_body_new(&body_handle, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto res = HttpBody::make();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
+  auto body_handle = res.unwrap();
   if (!JS::IsReadableStream(&body1_val.toObject())) {
     return false;
   }
@@ -1674,7 +1641,7 @@ bool clone(JSContext *cx, unsigned argc, Value *vp) {
 
   RootedObject requestInstance(cx, create_instance(cx));
   JS::SetReservedSlot(requestInstance, Slots::Request, JS::Int32Value(request_handle));
-  JS::SetReservedSlot(requestInstance, Slots::Body, JS::Int32Value(body_handle));
+  JS::SetReservedSlot(requestInstance, Slots::Body, JS::Int32Value(body_handle.handle));
   JS::SetReservedSlot(requestInstance, Slots::BodyStream, body1_val);
   JS::SetReservedSlot(requestInstance, Slots::BodyUsed, JS::FalseValue());
   JS::SetReservedSlot(requestInstance, Slots::HasBody, JS::BooleanValue(true));
@@ -1790,13 +1757,14 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
     return nullptr;
   }
 
-  fastly_body_handle_t body_handle = INVALID_HANDLE;
-  if (!xqd_fastly_http_body_new(&body_handle, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto make_res = HttpBody::make();
+  if (auto *err = make_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return nullptr;
   }
 
-  RootedObject request(cx, create(cx, requestInstance, request_handle, body_handle, false));
+  auto body = make_res.unwrap();
+  RootedObject request(cx, create(cx, requestInstance, request_handle, body.handle, false));
   if (!request) {
     return nullptr;
   }
@@ -2676,14 +2644,15 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
 
-  fastly_body_handle_t body_handle = INVALID_HANDLE;
-  if (!xqd_fastly_http_body_new(&body_handle, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto make_res = HttpBody::make();
+  if (auto *err = make_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
+  auto body = make_res.unwrap();
   RootedObject responseInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  RootedObject response(cx, create(cx, responseInstance, response_handle, body_handle, false));
+  RootedObject response(cx, create(cx, responseInstance, response_handle, body.handle, false));
   if (!response) {
     return false;
   }
@@ -4098,12 +4067,22 @@ bool respondWithError(JSContext *cx, HandleObject self) {
   MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
   set_state(self, State::responsedWithError);
   fastly_response_handle_t response = INVALID_HANDLE;
-  fastly_body_handle_t body;
   fastly_error_t err;
 
-  if (!xqd_fastly_http_resp_new(&response, &err) || !xqd_fastly_http_body_new(&body, &err) ||
-      !xqd_fastly_http_resp_status_set(response, 500, &err) ||
-      !xqd_fastly_http_resp_send_downstream(response, body, false, &err)) {
+  if (!xqd_fastly_http_resp_new(&response, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+
+  auto make_res = HttpBody::make();
+  if (auto *err = make_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  auto body = make_res.unwrap();
+  if (!xqd_fastly_http_resp_status_set(response, 500, &err) ||
+      !xqd_fastly_http_resp_send_downstream(response, body.handle, false, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -5131,37 +5110,34 @@ bool process_body_read(JSContext *cx, HandleObject streamSource) {
   RootedObject owner(cx, builtins::NativeStreamSource::owner(streamSource));
   RootedObject controller(cx, builtins::NativeStreamSource::controller(streamSource));
 
-  fastly_body_handle_t body = RequestOrResponse::body_handle(owner);
-  fastly_list_u8_t out_list;
-  fastly_error_t err;
-  if (!xqd_fastly_http_body_read(body, HANDLE_READ_CHUNK_SIZE, &out_list, &err)) {
-    HANDLE_ERROR(cx, err);
-    JS_free(cx, out_list.ptr);
+  HttpBody body{RequestOrResponse::body_handle(owner)};
+  auto read_res = body.read(HANDLE_READ_CHUNK_SIZE);
+  if (auto *err = read_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return error_stream_controller_with_pending_exception(cx, controller);
   }
 
-  if (out_list.len == 0) {
+  auto &chunk = read_res.unwrap();
+  if (chunk.len == 0) {
     RootedValue r(cx);
     return JS::Call(cx, controller, "close", HandleValueArray::empty(), &r);
   }
 
-  uint8_t *new_bytes =
-      static_cast<uint8_t *>(JS_realloc(cx, out_list.ptr, HANDLE_READ_CHUNK_SIZE, out_list.len));
-  if (!new_bytes) {
-    JS_free(cx, out_list.ptr);
-    return error_stream_controller_with_pending_exception(cx, controller);
-  }
-  out_list.ptr = new_bytes;
-
-  RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, out_list.len, out_list.ptr));
+  // We don't release control of chunk's data until after we've checked that the array buffer
+  // allocation has been successful, as that ensures that the return path frees chunk automatically
+  // when necessary.
+  RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, chunk.len, chunk.ptr.get()));
   if (!buffer) {
-    JS_free(cx, out_list.ptr);
     return error_stream_controller_with_pending_exception(cx, controller);
   }
 
-  RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, out_list.len));
-  if (!byte_array)
+  // At this point `buffer` has taken full ownership of the chunk's data.
+  std::ignore = chunk.ptr.release();
+
+  RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, chunk.len));
+  if (!byte_array) {
     return false;
+  }
 
   JS::RootedValueArray<1> enqueue_args(cx);
   enqueue_args[0].setObject(*byte_array);

@@ -108,9 +108,6 @@ bool bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
 JS::Value url(JSObject *obj);
 } // namespace RequestOrResponse
 
-bool write_to_body_all(fastly_body_handle_t handle, const char *buf, size_t len,
-                       fastly_error_t *err);
-
 bool RejectPromiseWithPendingError(JSContext *cx, JS::HandleObject promise);
 
 namespace URL {

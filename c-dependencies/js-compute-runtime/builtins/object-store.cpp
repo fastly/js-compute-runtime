@@ -17,6 +17,7 @@
 #include "builtin.h"
 #include "builtins/native-stream-source.h"
 #include "builtins/url.h"
+#include "host_api.h"
 #include "host_call.h"
 #include "js-compute-builtins.h"
 
@@ -325,18 +326,18 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
       buf = text.get();
     }
 
-    fastly_body_handle_t body_handle = INVALID_HANDLE;
-    fastly_error_t err;
-    if (!xqd_fastly_http_body_new(&body_handle, &err)) {
-      HANDLE_ERROR(cx, err);
+    auto make_res = HttpBody::make();
+    if (auto *err = make_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    if (body_handle == INVALID_HANDLE) {
+    auto body = make_res.unwrap();
+    if (!body.valid()) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    bool ok = write_to_body_all(body_handle, buf, length, &err);
+    auto write_res = body.write_all(reinterpret_cast<uint8_t *>(buf), length);
 
     // Ensure that the NoGC is reset, so throwing an error in HANDLE_ERROR
     // succeeds.
@@ -344,12 +345,13 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
       maybeNoGC.reset();
     }
 
-    if (!ok) {
-      HANDLE_ERROR(cx, err);
+    if (auto *err = write_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    if (!xqd_fastly_object_store_insert(object_store_handle(self), &key_str, body_handle, &err)) {
+    fastly_error_t err;
+    if (!xqd_fastly_object_store_insert(object_store_handle(self), &key_str, body.handle, &err)) {
       // Ensure that we throw an exception for all unexpected host errors.
       HANDLE_ERROR(cx, err);
       return RejectPromiseWithPendingError(cx, result_promise);
