@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cctype>
 #include <iostream>
 #include <iterator>
 #include <set>
@@ -22,62 +23,68 @@
 #include "subtle-crypto.h"
 #include "xqd.h"
 
-namespace builtins {
-
-static std::vector<CryptoAlgorithmIdentifier> supportedEncryptAlgorithms{
-    CryptoAlgorithmIdentifier::RSAES_PKCS1_v1_5, CryptoAlgorithmIdentifier::RSA_OAEP,
-    CryptoAlgorithmIdentifier::AES_CBC,          CryptoAlgorithmIdentifier::AES_CFB,
-    CryptoAlgorithmIdentifier::AES_CTR,          CryptoAlgorithmIdentifier::AES_GCM};
-static std::vector<CryptoAlgorithmIdentifier> supportedDecryptAlgorithms =
+namespace {
+std::vector<builtins::CryptoAlgorithmIdentifier> supportedEncryptAlgorithms{
+    builtins::CryptoAlgorithmIdentifier::RSAES_PKCS1_v1_5,
+    builtins::CryptoAlgorithmIdentifier::RSA_OAEP,
+    builtins::CryptoAlgorithmIdentifier::AES_CBC,
+    builtins::CryptoAlgorithmIdentifier::AES_CFB,
+    builtins::CryptoAlgorithmIdentifier::AES_CTR,
+    builtins::CryptoAlgorithmIdentifier::AES_GCM};
+std::vector<builtins::CryptoAlgorithmIdentifier> supportedDecryptAlgorithms =
     supportedEncryptAlgorithms;
-static std::vector<CryptoAlgorithmIdentifier> supportedSignAlgorithms{
-    CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5, CryptoAlgorithmIdentifier::HMAC,
-    CryptoAlgorithmIdentifier::ECDSA, CryptoAlgorithmIdentifier::RSA_PSS};
-static std::vector<CryptoAlgorithmIdentifier> supportedVerifyAlgorithms = supportedSignAlgorithms;
-static std::vector<CryptoAlgorithmIdentifier> supportedDigestAlgorithms{
-    CryptoAlgorithmIdentifier::SHA_1, CryptoAlgorithmIdentifier::SHA_224,
-    CryptoAlgorithmIdentifier::SHA_256, CryptoAlgorithmIdentifier::SHA_384,
-    CryptoAlgorithmIdentifier::SHA_512};
-static std::vector<CryptoAlgorithmIdentifier> supportedGenerateKeyAlgorithms{
-    CryptoAlgorithmIdentifier::RSAES_PKCS1_v1_5,
-    CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5,
-    CryptoAlgorithmIdentifier::RSA_PSS,
-    CryptoAlgorithmIdentifier::RSA_OAEP,
-    CryptoAlgorithmIdentifier::AES_CTR,
-    CryptoAlgorithmIdentifier::AES_CBC,
-    CryptoAlgorithmIdentifier::AES_GCM,
-    CryptoAlgorithmIdentifier::AES_CFB,
-    CryptoAlgorithmIdentifier::AES_KW,
-    CryptoAlgorithmIdentifier::HMAC,
-    CryptoAlgorithmIdentifier::ECDSA,
-    CryptoAlgorithmIdentifier::ECDH};
-static std::vector<CryptoAlgorithmIdentifier> supportedDeriveBitsAlgorithms{
-    CryptoAlgorithmIdentifier::ECDH, CryptoAlgorithmIdentifier::HKDF,
-    CryptoAlgorithmIdentifier::PBKDF2};
-static std::vector<CryptoAlgorithmIdentifier> supportedImportKeyAlgorithms{
-    CryptoAlgorithmIdentifier::RSAES_PKCS1_v1_5,
-    CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5,
-    CryptoAlgorithmIdentifier::RSA_PSS,
-    CryptoAlgorithmIdentifier::RSA_OAEP,
-    CryptoAlgorithmIdentifier::AES_CTR,
-    CryptoAlgorithmIdentifier::AES_CBC,
-    CryptoAlgorithmIdentifier::AES_GCM,
-    CryptoAlgorithmIdentifier::AES_CFB,
-    CryptoAlgorithmIdentifier::AES_KW,
-    CryptoAlgorithmIdentifier::HMAC,
-    CryptoAlgorithmIdentifier::ECDSA,
-    CryptoAlgorithmIdentifier::ECDH,
-    CryptoAlgorithmIdentifier::HKDF,
-    CryptoAlgorithmIdentifier::PBKDF2};
-static std::vector<CryptoAlgorithmIdentifier> supportedWrapKeyAlgorithms{
-    CryptoAlgorithmIdentifier::AES_KW};
-static std::vector<CryptoAlgorithmIdentifier> supportedUnwrapKeyAlgorithms =
+std::vector<builtins::CryptoAlgorithmIdentifier> supportedSignAlgorithms{
+    builtins::CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5,
+    builtins::CryptoAlgorithmIdentifier::HMAC, builtins::CryptoAlgorithmIdentifier::ECDSA,
+    builtins::CryptoAlgorithmIdentifier::RSA_PSS};
+std::vector<builtins::CryptoAlgorithmIdentifier> supportedVerifyAlgorithms =
+    supportedSignAlgorithms;
+std::vector<builtins::CryptoAlgorithmIdentifier> supportedDigestAlgorithms{
+    builtins::CryptoAlgorithmIdentifier::SHA_1, builtins::CryptoAlgorithmIdentifier::SHA_224,
+    builtins::CryptoAlgorithmIdentifier::SHA_256, builtins::CryptoAlgorithmIdentifier::SHA_384,
+    builtins::CryptoAlgorithmIdentifier::SHA_512};
+std::vector<builtins::CryptoAlgorithmIdentifier> supportedGenerateKeyAlgorithms{
+    builtins::CryptoAlgorithmIdentifier::RSAES_PKCS1_v1_5,
+    builtins::CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5,
+    builtins::CryptoAlgorithmIdentifier::RSA_PSS,
+    builtins::CryptoAlgorithmIdentifier::RSA_OAEP,
+    builtins::CryptoAlgorithmIdentifier::AES_CTR,
+    builtins::CryptoAlgorithmIdentifier::AES_CBC,
+    builtins::CryptoAlgorithmIdentifier::AES_GCM,
+    builtins::CryptoAlgorithmIdentifier::AES_CFB,
+    builtins::CryptoAlgorithmIdentifier::AES_KW,
+    builtins::CryptoAlgorithmIdentifier::HMAC,
+    builtins::CryptoAlgorithmIdentifier::ECDSA,
+    builtins::CryptoAlgorithmIdentifier::ECDH};
+std::vector<builtins::CryptoAlgorithmIdentifier> supportedDeriveBitsAlgorithms{
+    builtins::CryptoAlgorithmIdentifier::ECDH, builtins::CryptoAlgorithmIdentifier::HKDF,
+    builtins::CryptoAlgorithmIdentifier::PBKDF2};
+std::vector<builtins::CryptoAlgorithmIdentifier> supportedImportKeyAlgorithms{
+    builtins::CryptoAlgorithmIdentifier::RSAES_PKCS1_v1_5,
+    builtins::CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5,
+    builtins::CryptoAlgorithmIdentifier::RSA_PSS,
+    builtins::CryptoAlgorithmIdentifier::RSA_OAEP,
+    builtins::CryptoAlgorithmIdentifier::AES_CTR,
+    builtins::CryptoAlgorithmIdentifier::AES_CBC,
+    builtins::CryptoAlgorithmIdentifier::AES_GCM,
+    builtins::CryptoAlgorithmIdentifier::AES_CFB,
+    builtins::CryptoAlgorithmIdentifier::AES_KW,
+    builtins::CryptoAlgorithmIdentifier::HMAC,
+    builtins::CryptoAlgorithmIdentifier::ECDSA,
+    builtins::CryptoAlgorithmIdentifier::ECDH,
+    builtins::CryptoAlgorithmIdentifier::HKDF,
+    builtins::CryptoAlgorithmIdentifier::PBKDF2};
+std::vector<builtins::CryptoAlgorithmIdentifier> supportedWrapKeyAlgorithms{
+    builtins::CryptoAlgorithmIdentifier::AES_KW};
+std::vector<builtins::CryptoAlgorithmIdentifier> supportedUnwrapKeyAlgorithms =
     supportedWrapKeyAlgorithms;
-static std::vector<CryptoAlgorithmIdentifier> supportedGetKeyLengthAlgorithms{
-    CryptoAlgorithmIdentifier::AES_CTR, CryptoAlgorithmIdentifier::AES_CBC,
-    CryptoAlgorithmIdentifier::AES_GCM, CryptoAlgorithmIdentifier::AES_CFB,
-    CryptoAlgorithmIdentifier::AES_KW,  CryptoAlgorithmIdentifier::HMAC,
-    CryptoAlgorithmIdentifier::HKDF,    CryptoAlgorithmIdentifier::PBKDF2};
+std::vector<builtins::CryptoAlgorithmIdentifier> supportedGetKeyLengthAlgorithms{
+    builtins::CryptoAlgorithmIdentifier::AES_CTR, builtins::CryptoAlgorithmIdentifier::AES_CBC,
+    builtins::CryptoAlgorithmIdentifier::AES_GCM, builtins::CryptoAlgorithmIdentifier::AES_CFB,
+    builtins::CryptoAlgorithmIdentifier::AES_KW,  builtins::CryptoAlgorithmIdentifier::HMAC,
+    builtins::CryptoAlgorithmIdentifier::HKDF,    builtins::CryptoAlgorithmIdentifier::PBKDF2};
+} // namespace
+namespace builtins {
 
 bool renameExceptionNameToNotSupportedError(JSContext *cx, JS::HandleObject promise) {
   // We need to change the name of the error from Error to NotSupportedError
@@ -134,7 +141,8 @@ SubtleCrypto::normalizeAlgorithm(JSContext *cx, JS::HandleValue algorithmIdentif
   }
 
   std::string algorithm(algorithmChars.get(), algorithmLen);
-  std::transform(algorithm.begin(), algorithm.end(), algorithm.begin(), ::toupper);
+  std::transform(algorithm.begin(), algorithm.end(), algorithm.begin(),
+                 [](unsigned char c) { return std::toupper(c); });
 
   using enum CryptoAlgorithmIdentifier;
 
@@ -255,7 +263,7 @@ SubtleCrypto::normalizeAlgorithm(JSContext *cx, CryptoAlgorithmIdentifier algori
     break;
   }
   default: {
-    MOZ_ASSERT_UNREACHABLE("coding error");
+    MOZ_ASSERT_UNREACHABLE("Unknown `Operations` value");
   }
   }
 
@@ -295,8 +303,6 @@ bool SubtleCrypto::digest(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!data) {
     return false;
   }
-
-  std::vector<uint8_t> inputData(data, data + length);
 
   // 5. Let promise be a new Promise.
   JS::RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
@@ -364,19 +370,17 @@ bool SubtleCrypto::digest(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   std::vector<uint8_t> output;
   output.reserve(digest_length);
-  unsigned int size = 0;
-  if (!EVP_Digest(inputData.data(), inputData.size(), static_cast<unsigned char *>(output.data()),
-                  &size, alg, NULL)) {
-    JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: failed to create digest");
-    return RejectPromiseWithPendingError(cx, promise);
-  }
-  JS::RootedObject array_buffer(cx);
-  auto buf = static_cast<char *>(JS_malloc(cx, size));
+  unsigned int size;
+  auto buf = static_cast<unsigned char *>(JS_malloc(cx, digest_length));
   if (!buf) {
     JS_ReportOutOfMemory(cx);
     return false;
   }
-  memcpy(buf, output.data(), size);
+  if (!EVP_Digest(data, length, buf, &size, alg, NULL)) {
+    JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: failed to create digest");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  JS::RootedObject array_buffer(cx);
   array_buffer.set(JS::NewArrayBufferWithContents(cx, size, buf));
   if (!array_buffer) {
     return RejectPromiseWithPendingError(cx, promise);
