@@ -16,11 +16,11 @@ service_id = ""
   format = "inline-toml"
   
   [local_server.geolocation.addresses]
-		[local_server.geolocation.addresses."2.216.196.179"]
-			as_name = "sky uk limited"
+    [local_server.geolocation.addresses."2.216.196.179"]
+      as_name = "sky uk limited"
       as_number = 5607
       area_code = 0
-      city = "tower hamlets"
+      city = "lewisham"
       conn_speed = "broadband"
       conn_type = "wifi"
       continent = "EU"
@@ -28,16 +28,16 @@ service_id = ""
       country_code3 = "GBR"
       country_name = "united kingdom"
       gmt_offset = 0
-      latitude = 51.52
-      longitude = -0.06
+      latitude = 51.45
+      longitude = -0.02
       metro_code = 826044
-      postal_code = "e1 5bt"
+      postal_code = "se6 4bf"
       proxy_description = "?"
       proxy_type = "?"
-      region = "TWH"
+      region = "LEW"
       utc_offset = 0
-		[local_server.geolocation.addresses."2607:f0d0:1002:51::4"]
-			as_name = "softlayer technologies inc."
+    [local_server.geolocation.addresses."2607:f0d0:1002:51::4"]
+      as_name = "softlayer technologies inc."
       as_number = 36351
       area_code = 214
       city = "dallas"
