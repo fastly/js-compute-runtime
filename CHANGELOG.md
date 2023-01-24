@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/fastly/js-compute-runtime/compare/v1.2.0...v1.3.0) (2023-01-24)
+
+
+### Features
+
+* implement SubtleCrypto.prototype.digest method ([#372](https://github.com/fastly/js-compute-runtime/issues/372)) ([bbe1754](https://github.com/fastly/js-compute-runtime/commit/bbe1754f0a8018f2124b9a5859a35fde5c4cbb97))
+
 ## [1.2.0](https://github.com/fastly/js-compute-runtime/compare/v1.1.0...v1.2.0) (2023-01-17)
 
 
