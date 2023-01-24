@@ -43,8 +43,17 @@ jobs:
           node-version: 18
           cache: 'yarn'
 
-      - name: Update yarn lock
-        run: yarn install --mode=update-lockfile
+      - run: yarn install --mode=update-lockfile
+        working-directory: ./documentation
+      - run: npm run docusaurus docs:version ${{ steps.release.outputs.js-compute--tag_name }}
+        working-directory: ./documentation
+      - run: DOCUSAURUS_SSR_CONCURRENCY=1 node --max-old-space-size=20480 ./node_modules/.bin/docusaurus build
+        working-directory: ./documentation
+      
+      - run: yarn install --mode=update-lockfile
+        working-directory: ./documentation/app
+      - run: npm run build:files
+        working-directory: ./documentation/app
 
       - name: Committing and push changes
         run: |
@@ -129,14 +138,16 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
-      - run: cd ./docs-app && yarn
+      - run: yarn
+        working-directory: ./documentation/app
 
       - name: Set up Fastly CLI
         uses: fastly/compute-actions/setup@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          cli_version: '4.3.0'
+          cli_version: '5.0.0'
       
-      - run: cd ./docs-app && yarn deploy
+      - run: yarn deploy
         env:
           FASTLY_API_TOKEN: ${{secrets.FASTLY_API_TOKEN}}
+        working-directory: ./documentation/app

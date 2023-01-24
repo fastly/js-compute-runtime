@@ -6,16 +6,6 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  // webpack: {
-  //   jsLoader: (isServer) => ({
-  //     loader: require.resolve('esbuild-loader'),
-  //     options: {
-  //       loader: 'tsx',
-  //       format: isServer ? 'cjs' : undefined,
-  //       target: isServer ? 'node12' : 'es2017',
-  //     },
-  //   }),
-  // },
   webpack: {
     jsLoader: (isServer) => ({
       loader: require.resolve('swc-loader'),
@@ -48,16 +38,10 @@ const config = {
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
-  // favicon: 'img/favicon.ico',
+  favicon: './fastly-favicon-default.svg',
 
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'fastly', // Usually your GitHub org/user name.
-  projectName: 'js-compute-runtime', // Usually your repo name.
-
-  // Even if you don't use internalization, you can use this field to set useful
-  // metadata like html lang. For example, if your site is Chinese, you may want
-  // to replace "en" with "zh-Hans".
+  organizationName: 'fastly',
+  projectName: 'js-compute-runtime',
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -111,7 +95,7 @@ const config = {
       },
       footer: {
         style: 'dark',
-        copyright: `Copyright © ${new Date().getFullYear()} Fastly Inc. All rights reserved. Portions of this content are ©1998–2022 by individual mozilla.org contributors. Content available under a <a href="https://creativecommons.org/licenses/by-sa/2.5/">CC-BY-SA 2.5</a> license.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Fastly Inc. All rights reserved. Portions of this content are ©1998–2023 by individual mozilla.org contributors. Content available under a <a href="https://creativecommons.org/licenses/by-sa/2.5/">CC-BY-SA 2.5</a> license.`,
       },
       prism: {
         theme: lightCodeTheme,

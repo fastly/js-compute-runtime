@@ -83,8 +83,3 @@ async function loadMetaScript(path) {
 }
 
 addEventListener("fetch", event => event.respondWith(handleRequest(event)));
-
-self.GLOBAL = {
-  isWindow: () => false,
-  isWorker: () => true,
-};

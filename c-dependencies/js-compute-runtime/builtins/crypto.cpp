@@ -6,6 +6,7 @@
 #pragma clang diagnostic pop
 
 #include "crypto.h"
+#include "subtle-crypto.h"
 #include "xqd.h"
 
 bool is_int_typed_array(JSObject *obj) {
@@ -24,9 +25,7 @@ namespace builtins {
  * of the buffer, but it's far from ideal.
  */
 bool Crypto::get_random_values(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS::CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "crypto.getRandomValues", 1))
-    return false;
+  METHOD_HEADER(1)
 
   if (!args[0].isObject() || !is_int_typed_array(&args[0].toObject())) {
     JS_ReportErrorUTF8(cx, "crypto.getRandomValues: input must be an integer-typed TypedArray");
@@ -128,7 +127,7 @@ struct UUID {
   Set all the other bits to randomly (or pseudo-randomly) chosen values.
 */
 bool Crypto::random_uuid(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  METHOD_HEADER(0)
   UUID id;
   random_get(reinterpret_cast<int32_t>(&id), sizeof(id));
 
@@ -157,19 +156,50 @@ bool Crypto::random_uuid(JSContext *cx, unsigned argc, JS::Value *vp) {
   args.rval().setString(str);
   return true;
 }
+JS::PersistentRooted<JSObject *> Crypto::subtle;
+JS::PersistentRooted<JSObject *> crypto;
+
+bool Crypto::subtle_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  if (self != crypto.get()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE, "subtle get",
+                              "Crypto");
+    return false;
+  }
+
+  args.rval().setObject(*subtle);
+  return true;
+}
 
 const JSFunctionSpec Crypto::methods[] = {
     JS_FN("getRandomValues", get_random_values, 1, JSPROP_ENUMERATE),
     JS_FN("randomUUID", random_uuid, 0, JSPROP_ENUMERATE), JS_FS_END};
 
-const JSPropertySpec Crypto::properties[] = {JS_PS_END};
+const JSPropertySpec Crypto::properties[] = {
+    JS_PSG("subtle", subtle_get, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "Crypto", JSPROP_READONLY), JS_PS_END};
 
-bool Crypto::create(JSContext *cx, JS::HandleObject global) {
-  JS::RootedObject crypto(cx, JS_NewPlainObject(cx));
-  if (!crypto)
+bool Crypto::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ILLEGAL_CTOR);
+  return false;
+}
+
+bool Crypto::init_class(JSContext *cx, JS::HandleObject global) {
+  if (!init_class_impl(cx, global)) {
     return false;
-  if (!JS_DefineProperty(cx, global, "crypto", crypto, JSPROP_ENUMERATE))
+  }
+
+  JS::RootedObject cryptoInstance(
+      cx, JS_NewObjectWithGivenProto(cx, &Crypto::class_, Crypto::proto_obj));
+  if (!cryptoInstance) {
     return false;
-  return JS_DefineFunctions(cx, crypto, Crypto::methods);
+  }
+  crypto.init(cx, cryptoInstance);
+
+  JS::RootedObject subtleCrypto(
+      cx, JS_NewObjectWithGivenProto(cx, &SubtleCrypto::class_, SubtleCrypto::proto_obj));
+  subtle.init(cx, subtleCrypto);
+
+  return JS_DefineProperty(cx, global, "crypto", crypto, JSPROP_ENUMERATE);
 }
 } // namespace builtins
