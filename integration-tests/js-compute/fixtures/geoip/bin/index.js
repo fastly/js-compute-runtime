@@ -122,7 +122,7 @@ let ipv4Expected = {
   as_name: "sky uk limited",
   as_number: 5607,
   area_code: 0,
-  city: "south kirkby",
+  city: "lewisham",
   conn_speed: "broadband",
   conn_type: "wifi",
   continent: "EU",
@@ -130,15 +130,15 @@ let ipv4Expected = {
   country_code3: "GBR",
   country_name: "united kingdom",
   gmt_offset: 0,
-  latitude: 53.6,
-  longitude: -1.32,
-  metro_code: 826039,
-  postal_code: "wf9 3st",
+  latitude: 51.45,
+  longitude: -0.02,
+  metro_code: 826044,
+  postal_code: "se6 4bf",
   proxy_description: "?",
   proxy_type: "?",
-  region: "WKF",
+  region: "LEW",
   utc_offset: 0
-};
+}
 
 routes.set("/fastly/getgeolocationforipaddress/parameter-ipv4-string", async () => {
   let geo = fastly.getGeolocationForIpAddress('2.216.196.179')
