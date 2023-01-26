@@ -111,8 +111,6 @@ world xqd-world {
     http-req-body-downstream-get: func() -> result<request, error>
 
     flags http-cache-override-tag {
-        /// Do not override the behavior specified in the origin response's cache control headers.
-        none,
         /// Do not cache the response to this request, regardless of the origin response's headers.
         pass,
         ttl,

@@ -65,11 +65,10 @@ typedef struct {
 
 typedef uint8_t fastly_http_cache_override_tag_t;
 
-#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_NONE (1 << 0)
-#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS (1 << 1)
-#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL (1 << 2)
-#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE (1 << 3)
-#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI (1 << 4)
+#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS (1 << 0)
+#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL (1 << 1)
+#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE (1 << 2)
+#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI (1 << 3)
 
 typedef uint8_t fastly_http_version_t;
 

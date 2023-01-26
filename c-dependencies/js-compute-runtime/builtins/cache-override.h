@@ -39,6 +39,11 @@ public:
     PCI = 1 << 3,
   };
 
+  static_assert((int)CacheOverrideTag::Pass == FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS);
+  static_assert((int)CacheOverrideTag::TTL == FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL);
+  static_assert((int)CacheOverrideTag::SWR == FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE);
+  static_assert((int)CacheOverrideTag::PCI == FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI);
+
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
   static uint8_t abi_tag(JSObject *self);
