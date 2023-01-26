@@ -127,22 +127,6 @@ bool xqd_fastly_http_req_body_downstream_get(fastly_request_t *ret, fastly_error
   return convert_result(xqd_req_body_downstream_get(&ret->f0, &ret->f1), err);
 }
 
-int convert_tag(fastly_http_cache_override_tag_t tag) {
-  switch (tag) {
-  case FASTLY_HTTP_CACHE_OVERRIDE_TAG_NONE:
-    return CACHE_OVERRIDE_NONE;
-  case FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS:
-    return CACHE_OVERRIDE_PASS;
-  case FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL:
-    return CACHE_OVERRIDE_TTL;
-  case FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE:
-    return CACHE_OVERRIDE_STALE_WHILE_REVALIDATE;
-  case FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI:
-  default:
-    return CACHE_OVERRIDE_PCI;
-  }
-}
-
 bool xqd_fastly_http_req_cache_override_set(fastly_request_handle_t h,
                                             fastly_http_cache_override_tag_t tag,
                                             uint32_t *maybe_ttl,
@@ -157,7 +141,7 @@ bool xqd_fastly_http_req_cache_override_set(fastly_request_handle_t h,
   }
   return convert_result(
       xqd_req_cache_override_v2_set(
-          h, convert_tag(tag), maybe_ttl == NULL ? 0 : *maybe_ttl,
+          h, static_cast<int>(tag), maybe_ttl == NULL ? 0 : *maybe_ttl,
           maybe_stale_while_revalidate == NULL ? 0 : *maybe_stale_while_revalidate,
           reinterpret_cast<char *>(sk_str.ptr), sk_str.len),
       err);
