@@ -129,13 +129,13 @@ bool xqd_fastly_http_req_body_downstream_get(fastly_request_t *ret, fastly_error
 
 int convert_tag(fastly_http_cache_override_tag_t tag) {
   int out_tag = 0;
-  if (tag & FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS > 0)
+  if ((tag & FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS) > 0)
     out_tag |= CACHE_OVERRIDE_PASS;
-  if (tag & FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL > 0)
+  if ((tag & FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL) > 0)
     out_tag |= CACHE_OVERRIDE_TTL;
-  if (tag & FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE > 0)
+  if ((tag & FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE) > 0)
     out_tag |= CACHE_OVERRIDE_STALE_WHILE_REVALIDATE;
-  if (tag & FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI > 0)
+  if ((tag & FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI) > 0)
     out_tag |= CACHE_OVERRIDE_PCI;
   return out_tag;
 }

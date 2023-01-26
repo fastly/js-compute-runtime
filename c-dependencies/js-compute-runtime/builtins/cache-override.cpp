@@ -78,9 +78,9 @@ fastly_http_cache_override_tag_t CacheOverride::abi_tag(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   switch (CacheOverride::mode(self)) {
   case CacheOverride::CacheOverrideMode::None:
-    return (uint8_t)CacheOverrideTag::None;
+    return 0;
   case CacheOverride::CacheOverrideMode::Pass:
-    return (uint8_t)CacheOverrideTag::Pass;
+    return FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS;
   default:;
   }
 
