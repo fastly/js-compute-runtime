@@ -153,10 +153,8 @@ bool CacheOverride::mode_set(JSContext *cx, JS::HandleObject self, JS::HandleVal
   } else if (!strcmp(mode_chars.get(), "override")) {
     mode = CacheOverride::CacheOverrideMode::Override;
   } else {
-    JS_ReportErrorUTF8(cx,
-                       "'mode' has to be \"none\", \"pass\", or \"override\", "
-                       "but got %s",
-                       mode_chars.get());
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CACHE_OVERRIDE_MODE_INVALID,
+                              mode_chars.get());
     return false;
   }
 
