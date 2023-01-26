@@ -141,7 +141,7 @@ bool xqd_fastly_http_req_cache_override_set(fastly_request_handle_t h,
   }
   return convert_result(
       xqd_req_cache_override_v2_set(
-          h, (int)(tag), maybe_ttl == NULL ? 0 : *maybe_ttl,
+          h, static_cast<int>(tag), maybe_ttl == NULL ? 0 : *maybe_ttl,
           maybe_stale_while_revalidate == NULL ? 0 : *maybe_stale_while_revalidate,
           reinterpret_cast<char *>(sk_str.ptr), sk_str.len),
       err);
