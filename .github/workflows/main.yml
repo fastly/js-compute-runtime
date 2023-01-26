@@ -291,7 +291,7 @@ jobs:
     - name: Locate component resources
       run: |
         cp c-dependencies/js-compute-runtime/xqd.wit .
-        curl -L https://github.com/bytecodealliance/preview2-prototyping/releases/download/latest/wasi_snapshot_preview1.wasm -o wasi_snapshot_preview1.wasm
+        cp c-dependencies/js-compute-runtime/wasi_snapshot_preview1.wasm .
     - run: yarn
       shell: bash
     - run: npm test
