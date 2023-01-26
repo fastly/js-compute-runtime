@@ -305,6 +305,7 @@ jobs:
         fixture: 
           - 'async-select'
           - 'byte-repeater'
+          - 'cache-override'
           - 'edge-dictionary'
           - 'error'
           - 'geoip'
