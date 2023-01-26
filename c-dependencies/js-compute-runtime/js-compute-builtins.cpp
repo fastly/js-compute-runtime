@@ -1443,7 +1443,7 @@ bool apply_cache_override(JSContext *cx, HandleObject self) {
     return true;
   }
 
-  uint8_t tag = builtins::CacheOverride::abi_tag(override);
+  fastly_http_cache_override_tag_t tag = builtins::CacheOverride::abi_tag(override);
 
   bool has_ttl = true;
   uint32_t ttl;

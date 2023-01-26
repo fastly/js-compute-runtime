@@ -29,22 +29,6 @@ public:
 
   enum class CacheOverrideMode { None, Pass, Override };
 
-  // These values are defined by the Fastly ABI:
-  // https://docs.rs/fastly-shared/0.6.1/src/fastly_shared/lib.rs.html#407-412
-  enum class CacheOverrideTag {
-    None = 0,
-    Pass = 1 << 0,
-    TTL = 1 << 1,
-    SWR = 1 << 2,
-    PCI = 1 << 3,
-  };
-
-  static_assert((int)CacheOverrideTag::Pass == FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS);
-  static_assert((int)CacheOverrideTag::TTL == FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL);
-  static_assert((int)CacheOverrideTag::SWR ==
-                FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE);
-  static_assert((int)CacheOverrideTag::PCI == FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI);
-
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
   static uint8_t abi_tag(JSObject *self);
