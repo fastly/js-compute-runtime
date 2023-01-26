@@ -18,54 +18,64 @@ CacheOverride::CacheOverrideMode CacheOverride::mode(JSObject *self) {
 }
 
 void CacheOverride::set_mode(JSObject *self, CacheOverride::CacheOverrideMode mode) {
+  MOZ_ASSERT(is_instance(self));
   JS::SetReservedSlot(self, CacheOverride::Slots::Mode, JS::Int32Value((int32_t)mode));
 }
 
 JS::Value CacheOverride::ttl(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
   if (CacheOverride::mode(self) != CacheOverride::CacheOverrideMode::Override)
     return JS::UndefinedValue();
   return JS::GetReservedSlot(self, Slots::TTL);
 }
 
 void CacheOverride::set_ttl(JSObject *self, uint32_t ttl) {
+  MOZ_ASSERT(is_instance(self));
   MOZ_RELEASE_ASSERT(mode(self) == CacheOverride::CacheOverrideMode::Override);
   JS::SetReservedSlot(self, CacheOverride::Slots::TTL, JS::Int32Value((int32_t)ttl));
 }
 
 JS::Value CacheOverride::swr(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
   if (CacheOverride::mode(self) != CacheOverride::CacheOverrideMode::Override)
     return JS::UndefinedValue();
   return JS::GetReservedSlot(self, Slots::SWR);
 }
 
 void CacheOverride::set_swr(JSObject *self, uint32_t swr) {
+  MOZ_ASSERT(is_instance(self));
   MOZ_RELEASE_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
   JS::SetReservedSlot(self, CacheOverride::Slots::SWR, JS::Int32Value((int32_t)swr));
 }
 
 JS::Value CacheOverride::surrogate_key(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
   if (CacheOverride::mode(self) != CacheOverride::CacheOverrideMode::Override)
     return JS::UndefinedValue();
   return JS::GetReservedSlot(self, Slots::SurrogateKey);
 }
 
 void CacheOverride::set_surrogate_key(JSObject *self, JSString *key) {
+  MOZ_ASSERT(is_instance(self));
   MOZ_RELEASE_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
   JS::SetReservedSlot(self, CacheOverride::Slots::SurrogateKey, JS::StringValue(key));
 }
 
 JS::Value CacheOverride::pci(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
   if (CacheOverride::mode(self) != CacheOverride::CacheOverrideMode::Override)
     return JS::UndefinedValue();
   return JS::GetReservedSlot(self, Slots::PCI);
 }
 
 void CacheOverride::set_pci(JSObject *self, bool pci) {
+  MOZ_ASSERT(is_instance(self));
   MOZ_RELEASE_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
   JS::SetReservedSlot(self, CacheOverride::Slots::PCI, JS::BooleanValue(pci));
 }
 
 uint8_t CacheOverride::abi_tag(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
   switch (CacheOverride::mode(self)) {
   case CacheOverride::CacheOverrideMode::None:
     return (uint8_t)CacheOverrideTag::None;
@@ -86,6 +96,11 @@ uint8_t CacheOverride::abi_tag(JSObject *self) {
 }
 
 bool CacheOverride::mode_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE, "mode get",
+                              "CacheOverride");
+    return false;
+  }
   const char *mode_chars;
   switch (CacheOverride::mode(self)) {
   case CacheOverride::CacheOverrideMode::None:
@@ -120,6 +135,11 @@ bool CacheOverride::ensure_override(JSContext *cx, JS::HandleObject self, const 
 
 bool CacheOverride::mode_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                              JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE, "mode set",
+                              "CacheOverride");
+    return false;
+  }
   size_t mode_len;
   JS::UniqueChars mode_chars = encode(cx, val, &mode_len);
   if (!mode_chars)
@@ -145,12 +165,22 @@ bool CacheOverride::mode_set(JSContext *cx, JS::HandleObject self, JS::HandleVal
 }
 
 bool CacheOverride::ttl_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE, "ttl get",
+                              "CacheOverride");
+    return false;
+  }
   rval.set(CacheOverride::ttl(self));
   return true;
 }
 
 bool CacheOverride::ttl_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                             JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE, "ttl set",
+                              "CacheOverride");
+    return false;
+  }
   if (!CacheOverride::ensure_override(cx, self, "a TTL"))
     return false;
 
@@ -168,12 +198,22 @@ bool CacheOverride::ttl_set(JSContext *cx, JS::HandleObject self, JS::HandleValu
 }
 
 bool CacheOverride::swr_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE, "swr get",
+                              "CacheOverride");
+    return false;
+  }
   rval.set(CacheOverride::swr(self));
   return true;
 }
 
 bool CacheOverride::swr_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                             JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE, "swr set",
+                              "CacheOverride");
+    return false;
+  }
   if (!CacheOverride::ensure_override(cx, self, "SWR"))
     return false;
 
@@ -192,12 +232,22 @@ bool CacheOverride::swr_set(JSContext *cx, JS::HandleObject self, JS::HandleValu
 
 bool CacheOverride::surrogate_key_get(JSContext *cx, JS::HandleObject self,
                                       JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE,
+                              "surrogate_key get", "CacheOverride");
+    return false;
+  }
   rval.set(CacheOverride::surrogate_key(self));
   return true;
 }
 
 bool CacheOverride::surrogate_key_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                                       JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE,
+                              "surrogate_key set", "CacheOverride");
+    return false;
+  }
   if (!CacheOverride::ensure_override(cx, self, "a surrogate key"))
     return false;
 
@@ -215,12 +265,22 @@ bool CacheOverride::surrogate_key_set(JSContext *cx, JS::HandleObject self, JS::
 }
 
 bool CacheOverride::pci_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE, "pci get",
+                              "CacheOverride");
+    return false;
+  }
   rval.set(CacheOverride::pci(self));
   return true;
 }
 
 bool CacheOverride::pci_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                             JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE, "pci set",
+                              "CacheOverride");
+    return false;
+  }
   if (!CacheOverride::ensure_override(cx, self, "PCI"))
     return false;
 
