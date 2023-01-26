@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/fastly/js-compute-runtime/compare/v1.3.0...v1.3.1) (2023-01-26)
+
+
+### Bug Fixes
+
+* ensure CacheOverride bitflags are the same value as defined in xqd ([#386](https://github.com/fastly/js-compute-runtime/issues/386)) ([8a1c215](https://github.com/fastly/js-compute-runtime/commit/8a1c2158505e8ed1ebb424fc97866da155601d1f))
+
 ## [1.3.0](https://github.com/fastly/js-compute-runtime/compare/v1.2.0...v1.3.0) (2023-01-24)
 
 
