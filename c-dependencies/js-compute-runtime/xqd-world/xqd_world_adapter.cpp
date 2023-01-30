@@ -452,7 +452,8 @@ bool xqd_fastly_http_resp_header_names_get(fastly_response_handle_t h, fastly_li
 bool xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h, xqd_world_string_t *name,
                                             fastly_option_list_string_t *ret, fastly_error_t *err) {
   size_t str_max = LIST_ALLOC_SIZE;
-  xqd_world_string_t *strs = static_cast<xqd_world_string_t *>(cabi_malloc(str_max, 1));
+  xqd_world_string_t *strs =
+      static_cast<xqd_world_string_t *>(cabi_malloc(str_max * sizeof(xqd_world_string_t), 1));
   size_t str_cnt = 0;
   size_t nwritten;
   char *buf = static_cast<char *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
@@ -485,7 +486,7 @@ bool xqd_fastly_http_resp_header_values_get(fastly_response_handle_t h, xqd_worl
     }
     if (next_cursor < 0)
       break;
-    cursor = (uint32_t)next_cursor;
+    cursor = static_cast<uint32_t>(next_cursor);
   }
   cabi_free(buf);
   if (str_cnt > 0) {

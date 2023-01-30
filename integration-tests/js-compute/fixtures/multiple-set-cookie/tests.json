@@ -56,7 +56,7 @@
       "pathname": "/multiple-set-cookie/downstream"
     },
     "downstream_response": {
-      "status": 200,
+      "status": 302,
       "headers": [
         ["Set-Cookie", "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure"],
         ["Set-Cookie", "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"],
