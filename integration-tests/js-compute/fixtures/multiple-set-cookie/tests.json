@@ -48,5 +48,30 @@
         ["Set-Cookie", "test11=11"]
       ]
     }
+  },
+  "GET /multiple-set-cookie/downstream": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/multiple-set-cookie/downstream"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": [
+        ["Set-Cookie", "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure"],
+        ["Set-Cookie", "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"],
+        ["Set-Cookie", "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"],
+        ["Set-Cookie", "test2=2"],
+        ["Set-Cookie", "test3=3"],
+        ["Set-Cookie", "test4=4"],
+        ["Set-Cookie", "test5=5"],
+        ["Set-Cookie", "test6=6"],
+        ["Set-Cookie", "test7=7"],
+        ["Set-Cookie", "test8=8"],
+        ["Set-Cookie", "test9=9"],
+        ["Set-Cookie", "test10=10"],
+        ["Set-Cookie", "test11=11"]
+      ]
+    }
   }
 }

@@ -10,3 +10,14 @@ service_id = ""
 
 [scripts]
   build = "node ../../../../js-compute-runtime-cli.js"
+
+[local_server]
+  [local_server.backends]
+    [local_server.backends.httpbin]
+      url = "https://httpbin.org/"
+
+[setup]
+  [setup.backends]
+    [setup.backends.httpbin]
+      address = "httpbin.org"
+      port = 443

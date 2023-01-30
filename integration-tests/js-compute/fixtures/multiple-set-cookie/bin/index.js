@@ -45,7 +45,6 @@ routes.set('/', () => {
     h.append("Set-Cookie", "test9=9");
     h.append("Set-Cookie", "test10=10");
     h.append("Set-Cookie", "test11=11");
-    
     let r =  new Response("Hello", {
       headers: h
     });
@@ -66,5 +65,12 @@ routes.set('/', () => {
     r.headers.append("Set-Cookie", "test10=10");
     r.headers.append("Set-Cookie", "test11=11");
     return r;
+  });
+  routes.set("/multiple-set-cookie/downstream", async () => {
+    let response = await fetch('https://httpbin.org/cookies/set?1=1&2=2&3=3&4=4&5=5&6=6&7=7&8=8&9=9&10=10&11=11', {
+      backend: 'httpbin'
+    });
+
+    return new Response('', response);
   });
 }
