@@ -86,12 +86,12 @@
 
 "@jakechampion/wizer-darwin-arm64@1.6.0":
   version "1.6.0"
-  resolved "https://registry.npmjs.org/@jakechampion/wizer-darwin-arm64/-/wizer-darwin-arm64-1.6.0.tgz"
+  resolved "https://registry.yarnpkg.com/@jakechampion/wizer-darwin-arm64/-/wizer-darwin-arm64-1.6.0.tgz#c026c29f804992d1e8ae5223b73aa74e9f563fd2"
   integrity sha512-bQdIPdR+Ye0GiNdirVhx0kx14oY2uzwXfh/2dDgteBdcb7mDubzKbdt3ROMyV1UFRVhOtqbthZNk7qLBB6Occg==
 
 "@jakechampion/wizer-darwin-x64@1.6.0":
   version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@jakechampion/wizer-darwin-x64/-/wizer-darwin-x64-1.6.0.tgz#7d6720433cad0113b07d32c7fc63e71f571541bb"
+  resolved "https://registry.npmjs.org/@jakechampion/wizer-darwin-x64/-/wizer-darwin-x64-1.6.0.tgz"
   integrity sha512-b+hdpZbhilsroSJU4Z2t+qj9lz3lr3M0TTyM8vlHODP0j8ZabZwPM8314wuSdSrHM5fZ9qIAO2Q94AUBBOeuRA==
 
 "@jakechampion/wizer-linux-x64@1.6.0":
@@ -618,12 +618,12 @@ esbuild-android-arm64@0.15.16:
 
 esbuild-darwin-64@0.15.16:
   version "0.15.16"
-  resolved "https://registry.yarnpkg.com/esbuild-darwin-64/-/esbuild-darwin-64-0.15.16.tgz#de3e91809dcd1ffb64409e2f990bb86e33e4ffd8"
+  resolved "https://registry.npmjs.org/esbuild-darwin-64/-/esbuild-darwin-64-0.15.16.tgz"
   integrity sha512-wo2VWk/n/9V2TmqUZ/KpzRjCEcr00n7yahEdmtzlrfQ3lfMCf3Wa+0sqHAbjk3C6CKkR3WKK/whkMq5Gj4Da9g==
 
 esbuild-darwin-arm64@0.15.16:
   version "0.15.16"
-  resolved "https://registry.npmjs.org/esbuild-darwin-arm64/-/esbuild-darwin-arm64-0.15.16.tgz"
+  resolved "https://registry.yarnpkg.com/esbuild-darwin-arm64/-/esbuild-darwin-arm64-0.15.16.tgz#bc9cc8d51109d8e9db4ffe2c064dd53d1eb5a2a6"
   integrity sha512-fMXaUr5ou0M4WnewBKsspMtX++C1yIa3nJ5R2LSbLCfJT3uFdcRoU/NZjoM4kOMKyOD9Sa/2vlgN8G07K3SJnw==
 
 esbuild-freebsd-64@0.15.16:
@@ -1419,10 +1419,10 @@ istanbul-reports@^3.1.4:
     html-escaper "^2.0.0"
     istanbul-lib-report "^3.0.0"
 
-js-component-tools@0.2.2:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/js-component-tools/-/js-component-tools-0.2.2.tgz#4b8d676126772ca9a96332788e054435b25d02d8"
-  integrity sha512-+DorgW2JyOf3Qja35wtw0VQYkcdo4tkInapJ4xlPJXXW49RhEdNMzX/PoHKC5nS7AhV1VBweA1gmYOIYUOXDLw==
+js-component-tools@0.3.0-beta.1:
+  version "0.3.0-beta.1"
+  resolved "https://registry.npmjs.org/js-component-tools/-/js-component-tools-0.3.0-beta.1.tgz"
+  integrity sha512-zL96m1n2Fnn8EtvvNAccrJw/8ebj2a58QoQdr3VRlJuc/aU/orUdMLzIM2GcJjSyokTrjYB96WSLy4V7dWZJtA==
 
 js-sdsl@^4.1.4:
   version "4.2.0"

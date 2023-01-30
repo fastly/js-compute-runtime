@@ -14,23 +14,6 @@ typedef struct {
   size_t len;
 } xqd_world_string_t;
 
-typedef uint8_t fastly_error_t;
-
-#define FASTLY_ERROR_UNKNOWN_ERROR 0
-#define FASTLY_ERROR_GENERIC_ERROR 1
-#define FASTLY_ERROR_INVALID_ARGUMENT 2
-#define FASTLY_ERROR_BAD_HANDLE 3
-#define FASTLY_ERROR_BUFFER_LEN 4
-#define FASTLY_ERROR_UNSUPPORTED 5
-#define FASTLY_ERROR_BAD_ALIGN 6
-#define FASTLY_ERROR_HTTP_INVALID 7
-#define FASTLY_ERROR_HTTP_USER 8
-#define FASTLY_ERROR_HTTP_INCOMPLETE 9
-#define FASTLY_ERROR_OPTIONAL_NONE 10
-#define FASTLY_ERROR_HTTP_HEAD_TOO_LARGE 11
-#define FASTLY_ERROR_HTTP_INVALID_STATUS 12
-#define FASTLY_ERROR_LIMIT_EXCEEDED 13
-
 typedef struct {
   xqd_world_string_t family;
   xqd_world_string_t major;
@@ -38,37 +21,30 @@ typedef struct {
   xqd_world_string_t patch;
 } fastly_user_agent_t;
 
-typedef uint32_t fastly_body_handle_t;
+typedef uint8_t fastly_tls_version_t;
 
-typedef uint8_t fastly_body_write_end_t;
+#define FASTLY_TLS_VERSION_TLS1 0
+#define FASTLY_TLS_VERSION_TLS11 1
+#define FASTLY_TLS_VERSION_TLS12 2
+#define FASTLY_TLS_VERSION_TLS13 3
 
-#define FASTLY_BODY_WRITE_END_BACK 0
-#define FASTLY_BODY_WRITE_END_FRONT 1
+typedef uint32_t fastly_secret_store_handle_t;
 
-typedef uint32_t fastly_log_endpoint_handle_t;
-
-typedef uint32_t fastly_request_handle_t;
-
-typedef uint32_t fastly_pending_request_handle_t;
+typedef uint32_t fastly_secret_handle_t;
 
 typedef uint32_t fastly_response_handle_t;
 
-typedef struct {
-  fastly_request_handle_t f0;
-  fastly_body_handle_t f1;
-} fastly_request_t;
+typedef uint32_t fastly_request_handle_t;
 
 typedef struct {
-  fastly_response_handle_t f0;
-  fastly_body_handle_t f1;
-} fastly_response_t;
+  xqd_world_string_t id;
+} fastly_purge_result_t;
 
-typedef uint8_t fastly_http_cache_override_tag_t;
+typedef uint32_t fastly_pending_request_handle_t;
 
-#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS (1 << 0)
-#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL (1 << 1)
-#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE (1 << 2)
-#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI (1 << 3)
+typedef uint32_t fastly_object_store_handle_t;
+
+typedef uint32_t fastly_log_endpoint_handle_t;
 
 typedef uint8_t fastly_http_version_t;
 
@@ -78,22 +54,14 @@ typedef uint8_t fastly_http_version_t;
 #define FASTLY_HTTP_VERSION_H2 3
 #define FASTLY_HTTP_VERSION_H3 4
 
-typedef uint8_t fastly_content_encodings_t;
+typedef uint16_t fastly_http_status_t;
 
-#define FASTLY_CONTENT_ENCODINGS_GZIP 0
-// Adjust how this requests's framing headers are determined.
+typedef uint8_t fastly_http_cache_override_tag_t;
 
-typedef uint8_t fastly_framing_headers_mode_t;
-
-#define FASTLY_FRAMING_HEADERS_MODE_AUTOMATIC 0
-#define FASTLY_FRAMING_HEADERS_MODE_MANUALLY_FROM_HEADERS 1
-
-typedef uint8_t fastly_tls_version_t;
-
-#define FASTLY_TLS_VERSION_TLS1 0
-#define FASTLY_TLS_VERSION_TLS11 1
-#define FASTLY_TLS_VERSION_TLS12 2
-#define FASTLY_TLS_VERSION_TLS13 3
+#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS (1 << 0)
+#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL (1 << 1)
+#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE (1 << 2)
+#define FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI (1 << 3)
 
 typedef struct {
   bool is_some;
@@ -104,35 +72,6 @@ typedef struct {
   bool is_some;
   uint32_t val;
 } fastly_option_u32_t;
-
-typedef struct {
-  bool is_some;
-  bool val;
-} fastly_option_bool_t;
-
-typedef struct {
-  bool is_some;
-  fastly_tls_version_t val;
-} fastly_option_tls_version_t;
-// Create a backend for later use
-
-typedef struct {
-  fastly_option_string_t host_override;
-  fastly_option_u32_t connect_timeout;
-  fastly_option_u32_t first_byte_timeout;
-  fastly_option_u32_t between_bytes_timeout;
-  fastly_option_bool_t use_ssl;
-  fastly_option_tls_version_t ssl_min_version;
-  fastly_option_tls_version_t ssl_max_version;
-  fastly_option_string_t cert_hostname;
-  fastly_option_string_t ca_cert;
-  fastly_option_string_t ciphers;
-  fastly_option_string_t sni_hostname;
-} fastly_dynamic_backend_config_t;
-
-typedef uint16_t fastly_http_status_t;
-
-typedef uint32_t fastly_dictionary_handle_t;
 
 typedef struct {
   bool is_some;
@@ -161,13 +100,79 @@ typedef struct {
   fastly_option_u32_t utc_offset;
 } fastly_geo_data_t;
 
+// Adjust how this requests's framing headers are determined.
+typedef uint8_t fastly_framing_headers_mode_t;
+
+#define FASTLY_FRAMING_HEADERS_MODE_AUTOMATIC 0
+#define FASTLY_FRAMING_HEADERS_MODE_MANUALLY_FROM_HEADERS 1
+
 typedef uint32_t fastly_fd_t;
 
-typedef uint32_t fastly_object_store_handle_t;
+typedef uint8_t fastly_error_t;
 
-typedef uint32_t fastly_secret_store_handle_t;
+#define FASTLY_ERROR_UNKNOWN_ERROR 0
+#define FASTLY_ERROR_GENERIC_ERROR 1
+#define FASTLY_ERROR_INVALID_ARGUMENT 2
+#define FASTLY_ERROR_BAD_HANDLE 3
+#define FASTLY_ERROR_BUFFER_LEN 4
+#define FASTLY_ERROR_UNSUPPORTED 5
+#define FASTLY_ERROR_BAD_ALIGN 6
+#define FASTLY_ERROR_HTTP_INVALID 7
+#define FASTLY_ERROR_HTTP_USER 8
+#define FASTLY_ERROR_HTTP_INCOMPLETE 9
+#define FASTLY_ERROR_OPTIONAL_NONE 10
+#define FASTLY_ERROR_HTTP_HEAD_TOO_LARGE 11
+#define FASTLY_ERROR_HTTP_INVALID_STATUS 12
+#define FASTLY_ERROR_LIMIT_EXCEEDED 13
 
-typedef uint32_t fastly_secret_handle_t;
+typedef struct {
+  bool is_some;
+  bool val;
+} fastly_option_bool_t;
+
+typedef struct {
+  bool is_some;
+  fastly_tls_version_t val;
+} fastly_option_tls_version_t;
+
+// Create a backend for later use
+typedef struct {
+  fastly_option_string_t host_override;
+  fastly_option_u32_t connect_timeout;
+  fastly_option_u32_t first_byte_timeout;
+  fastly_option_u32_t between_bytes_timeout;
+  fastly_option_bool_t use_ssl;
+  fastly_option_tls_version_t ssl_min_version;
+  fastly_option_tls_version_t ssl_max_version;
+  fastly_option_string_t cert_hostname;
+  fastly_option_string_t ca_cert;
+  fastly_option_string_t ciphers;
+  fastly_option_string_t sni_hostname;
+} fastly_dynamic_backend_config_t;
+
+typedef uint32_t fastly_dictionary_handle_t;
+
+typedef uint8_t fastly_content_encodings_t;
+
+#define FASTLY_CONTENT_ENCODINGS_GZIP 0
+
+typedef uint8_t fastly_body_write_end_t;
+
+#define FASTLY_BODY_WRITE_END_BACK 0
+#define FASTLY_BODY_WRITE_END_FRONT 1
+
+typedef uint32_t fastly_body_handle_t;
+
+typedef struct {
+  fastly_response_handle_t f0;
+  fastly_body_handle_t f1;
+} fastly_response_t;
+
+typedef struct {
+  fastly_request_handle_t f0;
+  fastly_body_handle_t f1;
+} fastly_request_t;
+
 // A handle to an object supporting generic async operations.
 // Can be either a `BodyHandle` or a `PendingRequestHandle`.
 //
@@ -179,12 +184,7 @@ typedef uint32_t fastly_secret_handle_t;
 //
 // For writing bytes, note that there is a large host-side buffer that bytes can eagerly be written
 // into, even before the origin itself consumes that data.
-
 typedef uint32_t fastly_async_handle_t;
-
-typedef struct {
-  xqd_world_string_t id;
-} fastly_purge_result_t;
 
 typedef struct {
   uint8_t *ptr;
