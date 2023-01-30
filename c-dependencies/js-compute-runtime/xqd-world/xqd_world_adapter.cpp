@@ -183,20 +183,20 @@ bool xqd_fastly_http_req_new(fastly_request_handle_t *ret, fastly_error_t *err) 
   return convert_result(xqd_req_new(ret), err);
 }
 
+struct Chunk {
+  JS::UniqueChars buffer;
+  size_t length;
+
+  static Chunk make(std::string_view data) {
+    Chunk res{JS::UniqueChars{static_cast<char *>(cabi_malloc(data.size(), 1))}, data.size()};
+    std::copy(data.begin(), data.end(), res.buffer.get());
+    return res;
+  }
+};
+
 bool xqd_fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_list_string_t *ret,
                                           fastly_error_t *err) {
-  struct Chunk {
-    JS::UniqueChars buffer;
-    size_t length;
-
-    static Chunk make(std::string_view data) {
-      Chunk res{JS::UniqueChars{static_cast<char *>(cabi_malloc(data.size(), 1))}, data.size()};
-      std::copy(data.begin(), data.end(), res.buffer.get());
-      return res;
-    }
-  };
-
-  std::vector<Chunk> chunks;
+  std::vector<Chunk> header_names;
   {
     JS::UniqueChars buf{static_cast<char *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1))};
     uint32_t cursor = 0;
@@ -216,7 +216,7 @@ bool xqd_fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_list
       std::string_view result{buf.get(), length};
       while (!result.empty()) {
         auto end = result.find('\0');
-        chunks.emplace_back(Chunk::make(result.substr(0, end)));
+        header_names.emplace_back(Chunk::make(result.substr(0, end)));
         if (end == result.npos) {
           break;
         }
@@ -232,11 +232,11 @@ bool xqd_fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_list
     }
   }
 
-  ret->len = chunks.size();
-  ret->ptr =
-      static_cast<xqd_world_string_t *>(cabi_malloc(chunks.size() * sizeof(xqd_world_string_t), 1));
+  ret->len = header_names.size();
+  ret->ptr = static_cast<xqd_world_string_t *>(
+      cabi_malloc(header_names.size() * sizeof(xqd_world_string_t), alignof(xqd_world_string_t)));
   auto *next = ret->ptr;
-  for (auto &chunk : chunks) {
+  for (auto &chunk : header_names) {
     next->len = chunk.length;
     next->ptr = chunk.buffer.release();
     ++next;
@@ -247,54 +247,57 @@ bool xqd_fastly_http_req_header_names_get(fastly_request_handle_t h, fastly_list
 
 bool xqd_fastly_http_req_header_values_get(fastly_request_handle_t h, xqd_world_string_t *name,
                                            fastly_option_list_string_t *ret, fastly_error_t *err) {
-  size_t str_max = LIST_ALLOC_SIZE;
-  xqd_world_string_t *strs =
-      static_cast<xqd_world_string_t *>(cabi_malloc(str_max * sizeof(xqd_world_string_t), 1));
-  size_t str_cnt = 0;
-  size_t nwritten;
-  char *buf = static_cast<char *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
-  uint32_t cursor = 0;
-  int64_t next_cursor = 0;
-  while (true) {
-    if (!convert_result(xqd_req_header_values_get(h, name->ptr, name->len, buf, HEADER_MAX_LEN,
-                                                  cursor, &next_cursor, &nwritten),
-                        err)) {
-      cabi_free(buf);
-      return false;
-    }
-    if (nwritten == 0)
-      break;
-    uint32_t offset = 0;
-    for (size_t i = 0; i < nwritten; i++) {
-      if (buf[i] != '\0')
-        continue;
-      if (str_cnt == str_max) {
-        strs = static_cast<xqd_world_string_t *>(
-            cabi_realloc(strs, str_max * sizeof(xqd_world_string_t), 1,
-                         (str_max + LIST_ALLOC_SIZE) * sizeof(xqd_world_string_t)));
-        str_max += LIST_ALLOC_SIZE;
+
+  std::vector<Chunk> header_values;
+
+  {
+    JS::UniqueChars buffer(static_cast<char *>(cabi_malloc(HEADER_MAX_LEN, 1)));
+    uint32_t cursor = 0;
+    while (true) {
+      int64_t ending_cursor = 0;
+      size_t length = 0;
+      auto res = xqd_req_header_values_get(h, name->ptr, name->len, buffer.get(), HEADER_MAX_LEN,
+                                           cursor, &ending_cursor, &length);
+      if (!convert_result(res, err)) {
+        return false;
       }
-      strs[str_cnt].ptr = static_cast<char *>(cabi_malloc(i - offset + 1, 1));
-      strs[str_cnt].len = i - offset;
-      memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
-      offset = i + 1;
-      str_cnt++;
+
+      if (length == 0) {
+        break;
+      }
+
+      std::string_view result{buffer.get(), length};
+      while (!result.empty()) {
+        auto end = result.find('\0');
+        header_values.emplace_back(Chunk::make(result.substr(0, end)));
+        if (end == result.npos) {
+          break;
+        }
+
+        result = result.substr(end + 1);
+      }
+
+      if (ending_cursor < 0) {
+        break;
+      }
     }
-    if (next_cursor < 0)
-      break;
-    cursor = (uint32_t)next_cursor;
   }
-  cabi_free(buf);
-  if (str_cnt > 0) {
-    ret->is_some = true;
-    ret->val.ptr = strs;
-    ret->val.len = str_cnt;
-    strs = static_cast<xqd_world_string_t *>(cabi_realloc(
-        strs, str_max * sizeof(xqd_world_string_t), 1, str_cnt * sizeof(xqd_world_string_t)));
-  } else {
+
+  if (header_values.empty()) {
     ret->is_some = false;
-    cabi_free(strs);
+  } else {
+    ret->is_some = true;
+    ret->val.len = header_values.size();
+    ret->val.ptr = static_cast<xqd_world_string_t *>(cabi_malloc(
+        header_values.size() * sizeof(xqd_world_string_t), alignof(xqd_world_string_t)));
+    auto *next = ret->val.ptr;
+    for (auto &chunk : header_values) {
+      next->len = chunk.length;
+      next->ptr = chunk.buffer.release();
+      ++next;
+    }
   }
+
   return true;
 }
 
