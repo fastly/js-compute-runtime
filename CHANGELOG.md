@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/fastly/js-compute-runtime/compare/v1.3.1...v1.3.2) (2023-01-30)
+
+
+### Bug Fixes
+
+* allow a downstream response to contain lots of headers with the same name without crashing ([ba1f0e6](https://github.com/fastly/js-compute-runtime/commit/ba1f0e6699bd0f218fa581b9aad0fdda89a674fc))
+
 ## [1.3.1](https://github.com/fastly/js-compute-runtime/compare/v1.3.0...v1.3.1) (2023-01-26)
 
 
