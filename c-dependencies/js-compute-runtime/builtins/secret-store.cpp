@@ -86,10 +86,10 @@ bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  std::string_view keyView(key.get(), length);
+  std::string_view key_view(key.get(), length);
 
   // key must contain only letters, numbers, dashes (-), underscores (_), and periods (.).
-  auto is_valid_key = std::all_of(keyView.begin(), keyView.end(), [&](auto character) {
+  auto is_valid_key = std::all_of(key_view.begin(), key_view.end(), [&](auto character) {
     return std::isalnum(character) || character == '_' || character == '-' || character == '.';
   });
 
