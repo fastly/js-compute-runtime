@@ -1,4 +1,4 @@
-import { componentEmbed, componentNew } from '../../js-component-tools/dist/api.mjs';
+import { componentEmbed, componentNew } from 'js-component-tools';
 import { readFile, writeFile } from 'node:fs/promises';
 
 export async function compileComponent (path) {
