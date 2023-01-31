@@ -192,6 +192,7 @@ jobs:
           - request-cache-key
           - request-clone
           - request-downstream
+          - request-headers
           - request-limits
           - request-upstream
           - response
@@ -315,6 +316,7 @@ jobs:
           - 'multiple-set-cookie'
           - 'object-store'
           - 'request-clone'
+          - 'request-headers'
           - 'request-limits'
           - 'request-upstream'
           - 'response'
