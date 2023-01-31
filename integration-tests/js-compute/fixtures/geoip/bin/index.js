@@ -122,7 +122,7 @@ let ipv4Expected = {
   as_name: "sky uk limited",
   as_number: 5607,
   area_code: 0,
-  city: "lewisham",
+  city: "bircotes",
   conn_speed: "broadband",
   conn_type: "wifi",
   continent: "EU",
@@ -130,13 +130,13 @@ let ipv4Expected = {
   country_code3: "GBR",
   country_name: "united kingdom",
   gmt_offset: 0,
-  latitude: 51.45,
-  longitude: -0.02,
-  metro_code: 826044,
-  postal_code: "se6 4bf",
+  latitude: 53.42,
+  longitude: -1.05,
+  metro_code: 826039,
+  postal_code: "dn11 8af",
   proxy_description: "?",
   proxy_type: "?",
-  region: "LEW",
+  region: "NTT",
   utc_offset: 0
 }
 
