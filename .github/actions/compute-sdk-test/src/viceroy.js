@@ -16,7 +16,10 @@ async function timeout(millis, message) {
 async function viceroyReady(viceroyHostname, viceroyPort) {
   let isViceroyReady = false;
   while (!isViceroyReady) {
-    isViceroyReady = await isPortReachable(viceroyPort, {host: viceroyHostname});
+    isViceroyReady = await isPortReachable(viceroyPort, {
+      host: viceroyHostname,
+      timeout: 200,
+    });
   }
 }
 
@@ -67,12 +70,15 @@ class Viceroy {
       this.logs = `${this.logs}\n${data}`;
     });
 
-    // Wait for 10 seconds before deciding that viceroy has failed to start
-    const VICEROY_READY_TIMEOUT = 20000;
+    // Wait for a timeout before deciding that viceroy has failed to start
+    const VICEROY_READY_TIMEOUT = 60000;
     try {
       await Promise.race([
         viceroyReady(viceroyHostname, viceroyPort),
-        timeout(VICEROY_READY_TIMEOUT, "Viceroy failed to start"),
+        timeout(
+          VICEROY_READY_TIMEOUT,
+          `Viceroy failed to start in ${VICEROY_READY_TIMEOUT}ms on ${viceroyHostname}:${viceroyPort}`
+        ),
       ]);
     } catch (err) {
       console.error(err);
