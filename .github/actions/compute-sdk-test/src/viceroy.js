@@ -67,8 +67,8 @@ class Viceroy {
       this.logs = `${this.logs}\n${data}`;
     });
 
-    // Wait for 10 seconds before deciding that viceroy has failed to start
-    const VICEROY_READY_TIMEOUT = 20000;
+    // Wait for 30 seconds before deciding that viceroy has failed to start
+    const VICEROY_READY_TIMEOUT = 30000;
     try {
       await Promise.race([
         viceroyReady(viceroyHostname, viceroyPort),
