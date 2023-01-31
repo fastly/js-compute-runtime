@@ -6880,6 +6880,21 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 8)) {
   module.exports.getGlobalOrigin = getGlobalOrigin
 }
 
+if (nodeMajor >= 16) {
+  const { deleteCookie, getCookies, getSetCookies, setCookie } = __nccwpck_require__(1724)
+
+  module.exports.deleteCookie = deleteCookie
+  module.exports.getCookies = getCookies
+  module.exports.getSetCookies = getSetCookies
+  module.exports.setCookie = setCookie
+}
+
+if (nodeMajor >= 18) {
+  const { WebSocket } = __nccwpck_require__(4284)
+
+  module.exports.WebSocket = WebSocket
+}
+
 module.exports.request = makeDispatcher(api.request)
 module.exports.stream = makeDispatcher(api.stream)
 module.exports.pipeline = makeDispatcher(api.pipeline)
@@ -9799,7 +9814,7 @@ function _resume (client, sync) {
 }
 
 function write (client, request) {
-  const { body, method, path, host, upgrade, headers, blocking } = request
+  const { body, method, path, host, upgrade, headers, blocking, reset } = request
 
   // https://tools.ietf.org/html/rfc7231#section-4.3.1
   // https://tools.ietf.org/html/rfc7231#section-4.3.2
@@ -9867,7 +9882,6 @@ function write (client, request) {
 
   if (method === 'HEAD') {
     // https://github.com/mcollina/undici/issues/258
-
     // Close after a HEAD request to interop with misbehaving servers
     // that may send a body in the response.
 
@@ -9878,6 +9892,10 @@ function write (client, request) {
     // On CONNECT or upgrade, block pipeline from dispatching further
     // requests on this connection.
 
+    socket[kReset] = true
+  }
+
+  if (reset) {
     socket[kReset] = true
   }
 
@@ -9899,7 +9917,7 @@ function write (client, request) {
 
   if (upgrade) {
     header += `connection: upgrade\r\nupgrade: ${upgrade}\r\n`
-  } else if (client[kPipelining]) {
+  } else if (client[kPipelining] && !socket[kReset]) {
     header += 'connection: keep-alive\r\n'
   } else {
     header += 'connection: close\r\n'
@@ -10297,6 +10315,837 @@ module.exports = function () {
 
 /***/ }),
 
+/***/ 663:
+/***/ ((module) => {
+
+
+
+// https://wicg.github.io/cookie-store/#cookie-maximum-attribute-value-size
+const maxAttributeValueSize = 1024
+
+// https://wicg.github.io/cookie-store/#cookie-maximum-name-value-pair-size
+const maxNameValuePairSize = 4096
+
+module.exports = {
+  maxAttributeValueSize,
+  maxNameValuePairSize
+}
+
+
+/***/ }),
+
+/***/ 1724:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+
+const { parseSetCookie } = __nccwpck_require__(4408)
+const { stringify, getHeadersList } = __nccwpck_require__(3121)
+const { webidl } = __nccwpck_require__(1744)
+const { Headers } = __nccwpck_require__(554)
+
+/**
+ * @typedef {Object} Cookie
+ * @property {string} name
+ * @property {string} value
+ * @property {Date|number|undefined} expires
+ * @property {number|undefined} maxAge
+ * @property {string|undefined} domain
+ * @property {string|undefined} path
+ * @property {boolean|undefined} secure
+ * @property {boolean|undefined} httpOnly
+ * @property {'Strict'|'Lax'|'None'} sameSite
+ * @property {string[]} unparsed
+ */
+
+/**
+ * @param {Headers} headers
+ * @returns {Record<string, string>}
+ */
+function getCookies (headers) {
+  webidl.argumentLengthCheck(arguments, 1, { header: 'getCookies' })
+
+  webidl.brandCheck(headers, Headers, { strict: false })
+
+  const cookie = headers.get('cookie')
+  const out = {}
+
+  if (!cookie) {
+    return out
+  }
+
+  for (const piece of cookie.split(';')) {
+    const [name, ...value] = piece.split('=')
+
+    out[name.trim()] = value.join('=')
+  }
+
+  return out
+}
+
+/**
+ * @param {Headers} headers
+ * @param {string} name
+ * @param {{ path?: string, domain?: string }|undefined} attributes
+ * @returns {void}
+ */
+function deleteCookie (headers, name, attributes) {
+  webidl.argumentLengthCheck(arguments, 2, { header: 'deleteCookie' })
+
+  webidl.brandCheck(headers, Headers, { strict: false })
+
+  name = webidl.converters.DOMString(name)
+  attributes = webidl.converters.DeleteCookieAttributes(attributes)
+
+  // Matches behavior of
+  // https://github.com/denoland/deno_std/blob/63827b16330b82489a04614027c33b7904e08be5/http/cookie.ts#L278
+  setCookie(headers, {
+    name,
+    value: '',
+    expires: new Date(0),
+    ...attributes
+  })
+}
+
+/**
+ * @param {Headers} headers
+ * @returns {Cookie[]}
+ */
+function getSetCookies (headers) {
+  webidl.argumentLengthCheck(arguments, 1, { header: 'getSetCookies' })
+
+  webidl.brandCheck(headers, Headers, { strict: false })
+
+  const cookies = getHeadersList(headers).cookies
+
+  if (!cookies) {
+    return []
+  }
+
+  return cookies.map((pair) => parseSetCookie(pair[1]))
+}
+
+/**
+ * @param {Headers} headers
+ * @param {Cookie} cookie
+ * @returns {void}
+ */
+function setCookie (headers, cookie) {
+  webidl.argumentLengthCheck(arguments, 2, { header: 'setCookie' })
+
+  webidl.brandCheck(headers, Headers, { strict: false })
+
+  cookie = webidl.converters.Cookie(cookie)
+
+  const str = stringify(cookie)
+
+  if (str) {
+    headers.append('Set-Cookie', stringify(cookie))
+  }
+}
+
+webidl.converters.DeleteCookieAttributes = webidl.dictionaryConverter([
+  {
+    converter: webidl.nullableConverter(webidl.converters.DOMString),
+    key: 'path',
+    defaultValue: null
+  },
+  {
+    converter: webidl.nullableConverter(webidl.converters.DOMString),
+    key: 'domain',
+    defaultValue: null
+  }
+])
+
+webidl.converters.Cookie = webidl.dictionaryConverter([
+  {
+    converter: webidl.converters.DOMString,
+    key: 'name'
+  },
+  {
+    converter: webidl.converters.DOMString,
+    key: 'value'
+  },
+  {
+    converter: webidl.nullableConverter((value) => {
+      if (typeof value === 'number') {
+        return webidl.converters['unsigned long long'](value)
+      }
+
+      return new Date(value)
+    }),
+    key: 'expires',
+    defaultValue: null
+  },
+  {
+    converter: webidl.nullableConverter(webidl.converters['long long']),
+    key: 'maxAge',
+    defaultValue: null
+  },
+  {
+    converter: webidl.nullableConverter(webidl.converters.DOMString),
+    key: 'domain',
+    defaultValue: null
+  },
+  {
+    converter: webidl.nullableConverter(webidl.converters.DOMString),
+    key: 'path',
+    defaultValue: null
+  },
+  {
+    converter: webidl.nullableConverter(webidl.converters.boolean),
+    key: 'secure',
+    defaultValue: null
+  },
+  {
+    converter: webidl.nullableConverter(webidl.converters.boolean),
+    key: 'httpOnly',
+    defaultValue: null
+  },
+  {
+    converter: webidl.converters.USVString,
+    key: 'sameSite',
+    allowedValues: ['Strict', 'Lax', 'None']
+  },
+  {
+    converter: webidl.sequenceConverter(webidl.converters.DOMString),
+    key: 'unparsed',
+    defaultValue: []
+  }
+])
+
+module.exports = {
+  getCookies,
+  deleteCookie,
+  getSetCookies,
+  setCookie
+}
+
+
+/***/ }),
+
+/***/ 4408:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+
+const { maxNameValuePairSize, maxAttributeValueSize } = __nccwpck_require__(663)
+const { isCTLExcludingHtab } = __nccwpck_require__(3121)
+const { collectASequenceOfCodePoints } = __nccwpck_require__(685)
+const assert = __nccwpck_require__(9491)
+
+/**
+ * @description Parses the field-value attributes of a set-cookie header string.
+ * @see https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#section-5.4
+ * @param {string} header
+ * @returns if the header is invalid, null will be returned
+ */
+function parseSetCookie (header) {
+  // 1. If the set-cookie-string contains a %x00-08 / %x0A-1F / %x7F
+  //    character (CTL characters excluding HTAB): Abort these steps and
+  //    ignore the set-cookie-string entirely.
+  if (isCTLExcludingHtab(header)) {
+    return null
+  }
+
+  let nameValuePair = ''
+  let unparsedAttributes = ''
+  let name = ''
+  let value = ''
+
+  // 2. If the set-cookie-string contains a %x3B (";") character:
+  if (header.includes(';')) {
+    // 1. The name-value-pair string consists of the characters up to,
+    //    but not including, the first %x3B (";"), and the unparsed-
+    //    attributes consist of the remainder of the set-cookie-string
+    //    (including the %x3B (";") in question).
+    const position = { position: 0 }
+
+    nameValuePair = collectASequenceOfCodePoints((char) => char !== ';', header, position)
+    unparsedAttributes = header.slice(position.position)
+  } else {
+    // Otherwise:
+
+    // 1. The name-value-pair string consists of all the characters
+    //    contained in the set-cookie-string, and the unparsed-
+    //    attributes is the empty string.
+    nameValuePair = header
+  }
+
+  // 3. If the name-value-pair string lacks a %x3D ("=") character, then
+  //    the name string is empty, and the value string is the value of
+  //    name-value-pair.
+  if (!nameValuePair.includes('=')) {
+    value = nameValuePair
+  } else {
+    //    Otherwise, the name string consists of the characters up to, but
+    //    not including, the first %x3D ("=") character, and the (possibly
+    //    empty) value string consists of the characters after the first
+    //    %x3D ("=") character.
+    const position = { position: 0 }
+    name = collectASequenceOfCodePoints(
+      (char) => char !== '=',
+      nameValuePair,
+      position
+    )
+    value = nameValuePair.slice(position.position + 1)
+  }
+
+  // 4. Remove any leading or trailing WSP characters from the name
+  //    string and the value string.
+  name = name.trim()
+  value = value.trim()
+
+  // 5. If the sum of the lengths of the name string and the value string
+  //    is more than 4096 octets, abort these steps and ignore the set-
+  //    cookie-string entirely.
+  if (name.length + value.length > maxNameValuePairSize) {
+    return null
+  }
+
+  // 6. The cookie-name is the name string, and the cookie-value is the
+  //    value string.
+  return {
+    name, value, ...parseUnparsedAttributes(unparsedAttributes)
+  }
+}
+
+/**
+ * Parses the remaining attributes of a set-cookie header
+ * @see https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#section-5.4
+ * @param {string} unparsedAttributes
+ * @param {[Object.<string, unknown>]={}} cookieAttributeList
+ */
+function parseUnparsedAttributes (unparsedAttributes, cookieAttributeList = {}) {
+  // 1. If the unparsed-attributes string is empty, skip the rest of
+  //    these steps.
+  if (unparsedAttributes.length === 0) {
+    return cookieAttributeList
+  }
+
+  // 2. Discard the first character of the unparsed-attributes (which
+  //    will be a %x3B (";") character).
+  assert(unparsedAttributes[0] === ';')
+  unparsedAttributes = unparsedAttributes.slice(1)
+
+  let cookieAv = ''
+
+  // 3. If the remaining unparsed-attributes contains a %x3B (";")
+  //    character:
+  if (unparsedAttributes.includes(';')) {
+    // 1. Consume the characters of the unparsed-attributes up to, but
+    //    not including, the first %x3B (";") character.
+    cookieAv = collectASequenceOfCodePoints(
+      (char) => char !== ';',
+      unparsedAttributes,
+      { position: 0 }
+    )
+    unparsedAttributes = unparsedAttributes.slice(cookieAv.length)
+  } else {
+    // Otherwise:
+
+    // 1. Consume the remainder of the unparsed-attributes.
+    cookieAv = unparsedAttributes
+    unparsedAttributes = ''
+  }
+
+  // Let the cookie-av string be the characters consumed in this step.
+
+  let attributeName = ''
+  let attributeValue = ''
+
+  // 4. If the cookie-av string contains a %x3D ("=") character:
+  if (cookieAv.includes('=')) {
+    // 1. The (possibly empty) attribute-name string consists of the
+    //    characters up to, but not including, the first %x3D ("=")
+    //    character, and the (possibly empty) attribute-value string
+    //    consists of the characters after the first %x3D ("=")
+    //    character.
+    const position = { position: 0 }
+
+    attributeName = collectASequenceOfCodePoints(
+      (char) => char !== '=',
+      cookieAv,
+      position
+    )
+    attributeValue = cookieAv.slice(position.position + 1)
+  } else {
+    // Otherwise:
+
+    // 1. The attribute-name string consists of the entire cookie-av
+    //    string, and the attribute-value string is empty.
+    attributeName = cookieAv
+  }
+
+  // 5. Remove any leading or trailing WSP characters from the attribute-
+  //    name string and the attribute-value string.
+  attributeName = attributeName.trim()
+  attributeValue = attributeValue.trim()
+
+  // 6. If the attribute-value is longer than 1024 octets, ignore the
+  //    cookie-av string and return to Step 1 of this algorithm.
+  if (attributeValue.length > maxAttributeValueSize) {
+    return parseUnparsedAttributes(unparsedAttributes, cookieAttributeList)
+  }
+
+  // 7. Process the attribute-name and attribute-value according to the
+  //    requirements in the following subsections.  (Notice that
+  //    attributes with unrecognized attribute-names are ignored.)
+  const attributeNameLowercase = attributeName.toLowerCase()
+
+  // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#section-5.4.1
+  // If the attribute-name case-insensitively matches the string
+  // "Expires", the user agent MUST process the cookie-av as follows.
+  if (attributeNameLowercase === 'expires') {
+    // 1. Let the expiry-time be the result of parsing the attribute-value
+    //    as cookie-date (see Section 5.1.1).
+    const expiryTime = new Date(attributeValue)
+
+    // 2. If the attribute-value failed to parse as a cookie date, ignore
+    //    the cookie-av.
+
+    cookieAttributeList.expires = expiryTime
+  } else if (attributeNameLowercase === 'max-age') {
+    // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#section-5.4.2
+    // If the attribute-name case-insensitively matches the string "Max-
+    // Age", the user agent MUST process the cookie-av as follows.
+
+    // 1. If the first character of the attribute-value is not a DIGIT or a
+    //    "-" character, ignore the cookie-av.
+    const charCode = attributeValue.charCodeAt(0)
+
+    if ((charCode < 48 || charCode > 57) && attributeValue[0] !== '-') {
+      return parseUnparsedAttributes(unparsedAttributes, cookieAttributeList)
+    }
+
+    // 2. If the remainder of attribute-value contains a non-DIGIT
+    //    character, ignore the cookie-av.
+    if (!/^\d+$/.test(attributeValue)) {
+      return parseUnparsedAttributes(unparsedAttributes, cookieAttributeList)
+    }
+
+    // 3. Let delta-seconds be the attribute-value converted to an integer.
+    const deltaSeconds = Number(attributeValue)
+
+    // 4. Let cookie-age-limit be the maximum age of the cookie (which
+    //    SHOULD be 400 days or less, see Section 4.1.2.2).
+
+    // 5. Set delta-seconds to the smaller of its present value and cookie-
+    //    age-limit.
+    // deltaSeconds = Math.min(deltaSeconds * 1000, maxExpiresMs)
+
+    // 6. If delta-seconds is less than or equal to zero (0), let expiry-
+    //    time be the earliest representable date and time.  Otherwise, let
+    //    the expiry-time be the current date and time plus delta-seconds
+    //    seconds.
+    // const expiryTime = deltaSeconds <= 0 ? Date.now() : Date.now() + deltaSeconds
+
+    // 7. Append an attribute to the cookie-attribute-list with an
+    //    attribute-name of Max-Age and an attribute-value of expiry-time.
+    cookieAttributeList.maxAge = deltaSeconds
+  } else if (attributeNameLowercase === 'domain') {
+    // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#section-5.4.3
+    // If the attribute-name case-insensitively matches the string "Domain",
+    // the user agent MUST process the cookie-av as follows.
+
+    // 1. Let cookie-domain be the attribute-value.
+    let cookieDomain = attributeValue
+
+    // 2. If cookie-domain starts with %x2E ("."), let cookie-domain be
+    //    cookie-domain without its leading %x2E (".").
+    if (cookieDomain[0] === '.') {
+      cookieDomain = cookieDomain.slice(1)
+    }
+
+    // 3. Convert the cookie-domain to lower case.
+    cookieDomain = cookieDomain.toLowerCase()
+
+    // 4. Append an attribute to the cookie-attribute-list with an
+    //    attribute-name of Domain and an attribute-value of cookie-domain.
+    cookieAttributeList.domain = cookieDomain
+  } else if (attributeNameLowercase === 'path') {
+    // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#section-5.4.4
+    // If the attribute-name case-insensitively matches the string "Path",
+    // the user agent MUST process the cookie-av as follows.
+
+    // 1. If the attribute-value is empty or if the first character of the
+    //    attribute-value is not %x2F ("/"):
+    let cookiePath = ''
+    if (attributeValue.length === 0 || attributeValue[0] !== '/') {
+      // 1. Let cookie-path be the default-path.
+      cookiePath = '/'
+    } else {
+      // Otherwise:
+
+      // 1. Let cookie-path be the attribute-value.
+      cookiePath = attributeValue
+    }
+
+    // 2. Append an attribute to the cookie-attribute-list with an
+    //    attribute-name of Path and an attribute-value of cookie-path.
+    cookieAttributeList.path = cookiePath
+  } else if (attributeNameLowercase === 'secure') {
+    // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#section-5.4.5
+    // If the attribute-name case-insensitively matches the string "Secure",
+    // the user agent MUST append an attribute to the cookie-attribute-list
+    // with an attribute-name of Secure and an empty attribute-value.
+
+    cookieAttributeList.secure = true
+  } else if (attributeNameLowercase === 'httponly') {
+    // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#section-5.4.6
+    // If the attribute-name case-insensitively matches the string
+    // "HttpOnly", the user agent MUST append an attribute to the cookie-
+    // attribute-list with an attribute-name of HttpOnly and an empty
+    // attribute-value.
+
+    cookieAttributeList.httpOnly = true
+  } else if (attributeNameLowercase === 'samesite') {
+    // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#section-5.4.7
+    // If the attribute-name case-insensitively matches the string
+    // "SameSite", the user agent MUST process the cookie-av as follows:
+
+    // 1. Let enforcement be "Default".
+    let enforcement = 'Default'
+
+    const attributeValueLowercase = attributeValue.toLowerCase()
+    // 2. If cookie-av's attribute-value is a case-insensitive match for
+    //    "None", set enforcement to "None".
+    if (attributeValueLowercase.includes('none')) {
+      enforcement = 'None'
+    }
+
+    // 3. If cookie-av's attribute-value is a case-insensitive match for
+    //    "Strict", set enforcement to "Strict".
+    if (attributeValueLowercase.includes('strict')) {
+      enforcement = 'Strict'
+    }
+
+    // 4. If cookie-av's attribute-value is a case-insensitive match for
+    //    "Lax", set enforcement to "Lax".
+    if (attributeValueLowercase.includes('lax')) {
+      enforcement = 'Lax'
+    }
+
+    // 5. Append an attribute to the cookie-attribute-list with an
+    //    attribute-name of "SameSite" and an attribute-value of
+    //    enforcement.
+    cookieAttributeList.sameSite = enforcement
+  } else {
+    cookieAttributeList.unparsed ??= []
+
+    cookieAttributeList.unparsed.push(`${attributeName}=${attributeValue}`)
+  }
+
+  // 8. Return to Step 1 of this algorithm.
+  return parseUnparsedAttributes(unparsedAttributes, cookieAttributeList)
+}
+
+module.exports = {
+  parseSetCookie,
+  parseUnparsedAttributes
+}
+
+
+/***/ }),
+
+/***/ 3121:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+
+const assert = __nccwpck_require__(9491)
+const { kHeadersList } = __nccwpck_require__(2785)
+
+function isCTLExcludingHtab (value) {
+  if (value.length === 0) {
+    return false
+  }
+
+  for (const char of value) {
+    const code = char.charCodeAt(0)
+
+    if (
+      (code >= 0x00 || code <= 0x08) ||
+      (code >= 0x0A || code <= 0x1F) ||
+      code === 0x7F
+    ) {
+      return false
+    }
+  }
+}
+
+/**
+ CHAR           = <any US-ASCII character (octets 0 - 127)>
+ token          = 1*<any CHAR except CTLs or separators>
+ separators     = "(" | ")" | "<" | ">" | "@"
+                | "," | ";" | ":" | "\" | <">
+                | "/" | "[" | "]" | "?" | "="
+                | "{" | "}" | SP | HT
+ * @param {string} name
+ */
+function validateCookieName (name) {
+  for (const char of name) {
+    const code = char.charCodeAt(0)
+
+    if (
+      (code <= 0x20 || code > 0x7F) ||
+      char === '(' ||
+      char === ')' ||
+      char === '>' ||
+      char === '<' ||
+      char === '@' ||
+      char === ',' ||
+      char === ';' ||
+      char === ':' ||
+      char === '\\' ||
+      char === '"' ||
+      char === '/' ||
+      char === '[' ||
+      char === ']' ||
+      char === '?' ||
+      char === '=' ||
+      char === '{' ||
+      char === '}'
+    ) {
+      throw new Error('Invalid cookie name')
+    }
+  }
+}
+
+/**
+ cookie-value      = *cookie-octet / ( DQUOTE *cookie-octet DQUOTE )
+ cookie-octet      = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
+                       ; US-ASCII characters excluding CTLs,
+                       ; whitespace DQUOTE, comma, semicolon,
+                       ; and backslash
+ * @param {string} value
+ */
+function validateCookieValue (value) {
+  for (const char of value) {
+    const code = char.charCodeAt(0)
+
+    if (
+      code < 0x21 || // exclude CTLs (0-31)
+      code === 0x22 ||
+      code === 0x2C ||
+      code === 0x3B ||
+      code === 0x5C ||
+      code > 0x7E // non-ascii
+    ) {
+      throw new Error('Invalid header value')
+    }
+  }
+}
+
+/**
+ * path-value        = <any CHAR except CTLs or ";">
+ * @param {string} path
+ */
+function validateCookiePath (path) {
+  for (const char of path) {
+    const code = char.charCodeAt(0)
+
+    if (code < 0x21 || char === ';') {
+      throw new Error('Invalid cookie path')
+    }
+  }
+}
+
+/**
+ * I have no idea why these values aren't allowed to be honest,
+ * but Deno tests these. - Khafra
+ * @param {string} domain
+ */
+function validateCookieDomain (domain) {
+  if (
+    domain.startsWith('-') ||
+    domain.endsWith('.') ||
+    domain.endsWith('-')
+  ) {
+    throw new Error('Invalid cookie domain')
+  }
+}
+
+/**
+ * @see https://www.rfc-editor.org/rfc/rfc7231#section-7.1.1.1
+ * @param {number|Date} date
+  IMF-fixdate  = day-name "," SP date1 SP time-of-day SP GMT
+  ; fixed length/zone/capitalization subset of the format
+  ; see Section 3.3 of [RFC5322]
+
+  day-name     = %x4D.6F.6E ; "Mon", case-sensitive
+              / %x54.75.65 ; "Tue", case-sensitive
+              / %x57.65.64 ; "Wed", case-sensitive
+              / %x54.68.75 ; "Thu", case-sensitive
+              / %x46.72.69 ; "Fri", case-sensitive
+              / %x53.61.74 ; "Sat", case-sensitive
+              / %x53.75.6E ; "Sun", case-sensitive
+  date1        = day SP month SP year
+                  ; e.g., 02 Jun 1982
+
+  day          = 2DIGIT
+  month        = %x4A.61.6E ; "Jan", case-sensitive
+              / %x46.65.62 ; "Feb", case-sensitive
+              / %x4D.61.72 ; "Mar", case-sensitive
+              / %x41.70.72 ; "Apr", case-sensitive
+              / %x4D.61.79 ; "May", case-sensitive
+              / %x4A.75.6E ; "Jun", case-sensitive
+              / %x4A.75.6C ; "Jul", case-sensitive
+              / %x41.75.67 ; "Aug", case-sensitive
+              / %x53.65.70 ; "Sep", case-sensitive
+              / %x4F.63.74 ; "Oct", case-sensitive
+              / %x4E.6F.76 ; "Nov", case-sensitive
+              / %x44.65.63 ; "Dec", case-sensitive
+  year         = 4DIGIT
+
+  GMT          = %x47.4D.54 ; "GMT", case-sensitive
+
+  time-of-day  = hour ":" minute ":" second
+              ; 00:00:00 - 23:59:60 (leap second)
+
+  hour         = 2DIGIT
+  minute       = 2DIGIT
+  second       = 2DIGIT
+ */
+function toIMFDate (date) {
+  if (typeof date === 'number') {
+    date = new Date(date)
+  }
+
+  const days = [
+    'Sun', 'Mon', 'Tue', 'Wed',
+    'Thu', 'Fri', 'Sat'
+  ]
+
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ]
+
+  const dayName = days[date.getUTCDay()]
+  const day = date.getUTCDate().toString().padStart(2, '0')
+  const month = months[date.getUTCMonth()]
+  const year = date.getUTCFullYear()
+  const hour = date.getUTCHours().toString().padStart(2, '0')
+  const minute = date.getUTCMinutes().toString().padStart(2, '0')
+  const second = date.getUTCSeconds().toString().padStart(2, '0')
+
+  return `${dayName}, ${day} ${month} ${year} ${hour}:${minute}:${second} GMT`
+}
+
+/**
+ max-age-av        = "Max-Age=" non-zero-digit *DIGIT
+                       ; In practice, both expires-av and max-age-av
+                       ; are limited to dates representable by the
+                       ; user agent.
+ * @param {number} maxAge
+ */
+function validateCookieMaxAge (maxAge) {
+  if (maxAge < 0) {
+    throw new Error('Invalid cookie max-age')
+  }
+}
+
+/**
+ * @see https://www.rfc-editor.org/rfc/rfc6265#section-4.1.1
+ * @param {import('./index').Cookie} cookie
+ */
+function stringify (cookie) {
+  if (cookie.name.length === 0) {
+    return null
+  }
+
+  validateCookieName(cookie.name)
+  validateCookieValue(cookie.value)
+
+  const out = [`${cookie.name}=${cookie.value}`]
+
+  // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-cookie-prefixes-00#section-3.1
+  // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-cookie-prefixes-00#section-3.2
+  if (cookie.name.startsWith('__Secure-')) {
+    cookie.secure = true
+  }
+
+  if (cookie.name.startsWith('__Host-')) {
+    cookie.secure = true
+    cookie.domain = null
+    cookie.path = '/'
+  }
+
+  if (cookie.secure) {
+    out.push('Secure')
+  }
+
+  if (cookie.httpOnly) {
+    out.push('HttpOnly')
+  }
+
+  if (typeof cookie.maxAge === 'number') {
+    validateCookieMaxAge(cookie.maxAge)
+    out.push(`Max-Age=${cookie.maxAge}`)
+  }
+
+  if (cookie.domain) {
+    validateCookieDomain(cookie.domain)
+    out.push(`Domain=${cookie.domain}`)
+  }
+
+  if (cookie.path) {
+    validateCookiePath(cookie.path)
+    out.push(`Path=${cookie.path}`)
+  }
+
+  if (cookie.expires && cookie.expires.toString() !== 'Invalid Date') {
+    out.push(`Expires=${toIMFDate(cookie.expires)}`)
+  }
+
+  if (cookie.sameSite) {
+    out.push(`SameSite=${cookie.sameSite}`)
+  }
+
+  for (const part of cookie.unparsed) {
+    if (!part.includes('=')) {
+      throw new Error('Invalid unparsed')
+    }
+
+    const [key, ...value] = part.split('=')
+
+    out.push(`${key.trim()}=${value.join('=')}`)
+  }
+
+  return out.join('; ')
+}
+
+let kHeadersListNode
+
+function getHeadersList (headers) {
+  if (headers[kHeadersList]) {
+    return headers[kHeadersList]
+  }
+
+  if (!kHeadersListNode) {
+    kHeadersListNode = Object.getOwnPropertySymbols(headers).find(
+      (symbol) => symbol.description === 'headers list'
+    )
+
+    assert(kHeadersListNode, 'Headers cannot be parsed')
+  }
+
+  const headersList = headers[kHeadersListNode]
+  assert(headersList)
+
+  return headersList
+}
+
+module.exports = {
+  isCTLExcludingHtab,
+  stringify,
+  getHeadersList
+}
+
+
+/***/ }),
+
 /***/ 2067:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -10306,6 +11155,7 @@ const net = __nccwpck_require__(1808)
 const assert = __nccwpck_require__(9491)
 const util = __nccwpck_require__(3983)
 const { InvalidArgumentError, ConnectTimeoutError } = __nccwpck_require__(8045)
+
 let tls // include tls conditionally since it is not always available
 
 // TODO: session re-use does not wait for the first
@@ -10313,15 +11163,73 @@ let tls // include tls conditionally since it is not always available
 // resolve the same servername multiple times even when
 // re-use is enabled.
 
+let SessionCache
+if (global.FinalizationRegistry) {
+  SessionCache = class WeakSessionCache {
+    constructor (maxCachedSessions) {
+      this._maxCachedSessions = maxCachedSessions
+      this._sessionCache = new Map()
+      this._sessionRegistry = new global.FinalizationRegistry((key) => {
+        if (this._sessionCache.size < this._maxCachedSessions) {
+          return
+        }
+
+        const ref = this._sessionCache.get(key)
+        if (ref !== undefined && ref.deref() === undefined) {
+          this._sessionCache.delete(key)
+        }
+      })
+    }
+
+    get (sessionKey) {
+      const ref = this._sessionCache.get(sessionKey)
+      return ref ? ref.deref() : null
+    }
+
+    set (sessionKey, session) {
+      if (this._maxCachedSessions === 0) {
+        return
+      }
+
+      this._sessionCache.set(sessionKey, new WeakRef(session))
+      this._sessionRegistry.register(session, sessionKey)
+    }
+  }
+} else {
+  SessionCache = class SimpleSessionCache {
+    constructor (maxCachedSessions) {
+      this._maxCachedSessions = maxCachedSessions
+      this._sessionCache = new Map()
+    }
+
+    get (sessionKey) {
+      return this._sessionCache.get(sessionKey)
+    }
+
+    set (sessionKey, session) {
+      if (this._maxCachedSessions === 0) {
+        return
+      }
+
+      if (this._sessionCache.size >= this._maxCachedSessions) {
+        // remove the oldest session
+        const { value: oldestKey } = this._sessionCache.keys().next()
+        this._sessionCache.delete(oldestKey)
+      }
+
+      this._sessionCache.set(sessionKey, session)
+    }
+  }
+}
+
 function buildConnector ({ maxCachedSessions, socketPath, timeout, ...opts }) {
   if (maxCachedSessions != null && (!Number.isInteger(maxCachedSessions) || maxCachedSessions < 0)) {
     throw new InvalidArgumentError('maxCachedSessions must be a positive integer or zero')
   }
 
   const options = { path: socketPath, ...opts }
-  const sessionCache = new Map()
+  const sessionCache = new SessionCache(maxCachedSessions == null ? 100 : maxCachedSessions)
   timeout = timeout == null ? 10e3 : timeout
-  maxCachedSessions = maxCachedSessions == null ? 100 : maxCachedSessions
 
   return function connect ({ hostname, host, protocol, port, servername, localAddress, httpSocket }, callback) {
     let socket
@@ -10349,24 +11257,8 @@ function buildConnector ({ maxCachedSessions, socketPath, timeout, ...opts }) {
 
       socket
         .on('session', function (session) {
-          // cache is disabled
-          if (maxCachedSessions === 0) {
-            return
-          }
-
-          if (sessionCache.size >= maxCachedSessions) {
-            // remove the oldest session
-            const { value: oldestKey } = sessionCache.keys().next()
-            sessionCache.delete(oldestKey)
-          }
-
+          // TODO (fix): Can a session become invalid once established? Don't think so?
           sessionCache.set(sessionKey, session)
-        })
-        .on('error', function (err) {
-          if (sessionKey && err.code !== 'UND_ERR_INFO') {
-            // TODO (fix): Only delete for session related errors.
-            sessionCache.delete(sessionKey)
-          }
         })
     } else {
       assert(!httpSocket, 'httpSocket can only be sent on TLS update')
@@ -10733,6 +11625,7 @@ class Request {
     upgrade,
     headersTimeout,
     bodyTimeout,
+    reset,
     throwOnError
   }, handler) {
     if (typeof path !== 'string') {
@@ -10763,6 +11656,10 @@ class Request {
 
     if (bodyTimeout != null && (!Number.isFinite(bodyTimeout) || bodyTimeout < 0)) {
       throw new InvalidArgumentError('invalid bodyTimeout')
+    }
+
+    if (reset != null && typeof reset !== 'boolean') {
+      throw new InvalidArgumentError('invalid reset')
     }
 
     this.headersTimeout = headersTimeout
@@ -10806,6 +11703,8 @@ class Request {
       : idempotent
 
     this.blocking = blocking == null ? false : blocking
+
+    this.reset = reset == null ? false : reset
 
     this.host = null
 
@@ -10939,8 +11838,17 @@ class Request {
   }
 }
 
+function processHeaderValue (key, val) {
+  if (val && (typeof val === 'object' && !Array.isArray(val))) {
+    throw new InvalidArgumentError(`invalid ${key} header`)
+  } else if (headerCharRegex.exec(val) !== null) {
+    throw new InvalidArgumentError(`invalid ${key} header`)
+  }
+  return `${key}: ${val}\r\n`
+}
+
 function processHeader (request, key, val) {
-  if (val && typeof val === 'object') {
+  if (val && (typeof val === 'object' && !Array.isArray(val))) {
     throw new InvalidArgumentError(`invalid ${key} header`)
   } else if (val === undefined) {
     return
@@ -10979,7 +11887,12 @@ function processHeader (request, key, val) {
     key.length === 10 &&
     key.toLowerCase() === 'connection'
   ) {
-    throw new InvalidArgumentError('invalid connection header')
+    const value = val.toLowerCase()
+    if (value !== 'close' && value !== 'keep-alive') {
+      throw new InvalidArgumentError('invalid connection header')
+    } else if (value === 'close') {
+      request.reset = true
+    }
   } else if (
     key.length === 10 &&
     key.toLowerCase() === 'keep-alive'
@@ -10997,10 +11910,14 @@ function processHeader (request, key, val) {
     throw new NotSupportedError('expect header not supported')
   } else if (tokenRegExp.exec(key) === null) {
     throw new InvalidArgumentError('invalid header key')
-  } else if (headerCharRegex.exec(val) !== null) {
-    throw new InvalidArgumentError(`invalid ${key} header`)
   } else {
-    request.headers += `${key}: ${val}\r\n`
+    if (Array.isArray(val)) {
+      for (let i = 0; i < val.length; i++) {
+        request.headers += processHeaderValue(key, val[i])
+      }
+    } else {
+      request.headers += processHeaderValue(key, val)
+    }
   }
 }
 
@@ -11046,7 +11963,7 @@ module.exports = {
   kClosed: Symbol('closed'),
   kNeedDrain: Symbol('need drain'),
   kReset: Symbol('reset'),
-  kDestroyed: Symbol('destroyed'),
+  kDestroyed: Symbol.for('nodejs.stream.destroyed'),
   kMaxHeadersSize: Symbol('max headers size'),
   kRunningIdx: Symbol('running index'),
   kPendingIdx: Symbol('pending index'),
@@ -11701,22 +12618,30 @@ module.exports = Dispatcher
 
 const Busboy = __nccwpck_require__(6472)
 const util = __nccwpck_require__(3983)
-const { ReadableStreamFrom, isBlobLike, isReadableStreamLike, readableStreamClose } = __nccwpck_require__(2538)
+const {
+  ReadableStreamFrom,
+  isBlobLike,
+  isReadableStreamLike,
+  readableStreamClose,
+  createDeferredPromise,
+  fullyReadBody
+} = __nccwpck_require__(2538)
 const { FormData } = __nccwpck_require__(2015)
 const { kState } = __nccwpck_require__(5861)
 const { webidl } = __nccwpck_require__(1744)
 const { DOMException, structuredClone } = __nccwpck_require__(1037)
-const { Blob } = __nccwpck_require__(4300)
+const { Blob, File: NativeFile } = __nccwpck_require__(4300)
 const { kBodyUsed } = __nccwpck_require__(2785)
 const assert = __nccwpck_require__(9491)
 const { isErrored } = __nccwpck_require__(3983)
 const { isUint8Array, isArrayBuffer } = __nccwpck_require__(9830)
-const { File } = __nccwpck_require__(8511)
-const { StringDecoder } = __nccwpck_require__(1576)
+const { File: UndiciFile } = __nccwpck_require__(8511)
 const { parseMIMEType, serializeAMimeType } = __nccwpck_require__(685)
 
-/** @type {globalThis['ReadableStream']} */
-let ReadableStream
+let ReadableStream = globalThis.ReadableStream
+
+/** @type {globalThis['File']} */
+const File = NativeFile ?? UndiciFile
 
 // https://fetch.spec.whatwg.org/#concept-bodyinit-extract
 function extractBody (object, keepalive = false) {
@@ -11796,7 +12721,7 @@ function extractBody (object, keepalive = false) {
     // Set source to a copy of the bytes held by object.
     source = new Uint8Array(object.buffer.slice(object.byteOffset, object.byteOffset + object.byteLength))
   } else if (util.isFormDataLike(object)) {
-    const boundary = '----formdata-undici-' + Math.random()
+    const boundary = `----formdata-undici-${Math.random()}`.replace('.', '').slice(0, 32)
     const prefix = `--${boundary}\r\nContent-Disposition: form-data`
 
     /*! formdata-polyfill. MIT License. Jimmy Wärting <https://jimmy.warting.se/opensource> */
@@ -11806,42 +12731,49 @@ function extractBody (object, keepalive = false) {
 
     // Set action to this step: run the multipart/form-data
     // encoding algorithm, with object’s entry list and UTF-8.
-    action = async function * (object) {
-      const enc = new TextEncoder()
+    // - This ensures that the body is immutable and can't be changed afterwords
+    // - That the content-length is calculated in advance.
+    // - And that all parts are pre-encoded and ready to be sent.
 
-      for (const [name, value] of object) {
-        if (typeof value === 'string') {
-          yield enc.encode(
-            prefix +
-              `; name="${escape(normalizeLinefeeds(name))}"` +
-              `\r\n\r\n${normalizeLinefeeds(value)}\r\n`
-          )
-        } else {
-          yield enc.encode(
-            prefix +
-              `; name="${escape(normalizeLinefeeds(name))}"` +
-              (value.name ? `; filename="${escape(value.name)}"` : '') +
-              '\r\n' +
-              `Content-Type: ${
-                value.type || 'application/octet-stream'
-              }\r\n\r\n`
-          )
+    const enc = new TextEncoder()
+    const blobParts = []
+    const rn = new Uint8Array([13, 10]) // '\r\n'
+    length = 0
 
-          yield * value.stream()
-
-          // '\r\n' encoded
-          yield new Uint8Array([13, 10])
-        }
+    for (const [name, value] of object) {
+      if (typeof value === 'string') {
+        const chunk = enc.encode(prefix +
+          `; name="${escape(normalizeLinefeeds(name))}"` +
+          `\r\n\r\n${normalizeLinefeeds(value)}\r\n`)
+        blobParts.push(chunk)
+        length += chunk.byteLength
+      } else {
+        const chunk = enc.encode(`${prefix}; name="${escape(normalizeLinefeeds(name))}"` +
+          (value.name ? `; filename="${escape(value.name)}"` : '') + '\r\n' +
+          `Content-Type: ${
+            value.type || 'application/octet-stream'
+          }\r\n\r\n`)
+        blobParts.push(chunk, value, rn)
+        length += chunk.byteLength + value.size + rn.byteLength
       }
-
-      yield enc.encode(`--${boundary}--`)
     }
+
+    const chunk = enc.encode(`--${boundary}--`)
+    blobParts.push(chunk)
+    length += chunk.byteLength
 
     // Set source to object.
     source = object
 
-    // Set length to unclear, see html/6424 for improving this.
-    // TODO
+    action = async function * () {
+      for (const part of blobParts) {
+        if (part.stream) {
+          yield * part.stream()
+        } else {
+          yield part
+        }
+      }
+    }
 
     // Set type to `multipart/form-data; boundary=`,
     // followed by the multipart/form-data boundary string generated
@@ -11861,11 +12793,6 @@ function extractBody (object, keepalive = false) {
     if (object.type) {
       type = object.type
     }
-  } else if (object instanceof Uint8Array) {
-    // byte sequence
-
-    // Set source to object.
-    source = object
   } else if (typeof object[Symbol.asyncIterator] === 'function') {
     // If keepalive is true, then throw a TypeError.
     if (keepalive) {
@@ -12008,26 +12935,45 @@ function bodyMixinMethods (instance) {
   const methods = {
     blob () {
       // The blob() method steps are to return the result of
-      // running consume body with this and Blob.
-      return specConsumeBody(this, 'Blob', instance)
+      // running consume body with this and the following step
+      // given a byte sequence bytes: return a Blob whose
+      // contents are bytes and whose type attribute is this’s
+      // MIME type.
+      return specConsumeBody(this, (bytes) => {
+        let mimeType = bodyMimeType(this)
+
+        if (mimeType === 'failure') {
+          mimeType = ''
+        } else if (mimeType) {
+          mimeType = serializeAMimeType(mimeType)
+        }
+
+        // Return a Blob whose contents are bytes and type attribute
+        // is mimeType.
+        return new Blob([bytes], { type: mimeType })
+      }, instance)
     },
 
     arrayBuffer () {
-      // The arrayBuffer() method steps are to return the
-      // result of running consume body with this and ArrayBuffer.
-      return specConsumeBody(this, 'ArrayBuffer', instance)
+      // The arrayBuffer() method steps are to return the result
+      // of running consume body with this and the following step
+      // given a byte sequence bytes: return a new ArrayBuffer
+      // whose contents are bytes.
+      return specConsumeBody(this, (bytes) => {
+        return new Uint8Array(bytes).buffer
+      }, instance)
     },
 
     text () {
-      // The text() method steps are to return the result of
-      // running consume body with this and text.
-      return specConsumeBody(this, 'text', instance)
+      // The text() method steps are to return the result of running
+      // consume body with this and UTF-8 decode.
+      return specConsumeBody(this, utf8DecodeBytes, instance)
     },
 
     json () {
-      // The json() method steps are to return the result of
-      // running consume body with this and JSON.
-      return specConsumeBody(this, 'JSON', instance)
+      // The json() method steps are to return the result of running
+      // consume body with this and parse JSON from bytes.
+      return specConsumeBody(this, parseJSONFromBytes, instance)
     },
 
     async formData () {
@@ -12047,10 +12993,12 @@ function bodyMixinMethods (instance) {
         let busboy
 
         try {
-          busboy = Busboy({ headers })
+          busboy = Busboy({
+            headers,
+            defParamCharset: 'utf8'
+          })
         } catch (err) {
-          // Error due to headers:
-          throw Object.assign(new TypeError(), { cause: err })
+          throw new DOMException(`${err}`, 'AbortError')
         }
 
         busboy.on('field', (name, value) => {
@@ -12060,7 +13008,7 @@ function bodyMixinMethods (instance) {
           const { filename, encoding, mimeType } = info
           const chunks = []
 
-          if (encoding.toLowerCase() === 'base64') {
+          if (encoding === 'base64' || encoding.toLowerCase() === 'base64') {
             let base64chunk = ''
 
             value.on('data', (chunk) => {
@@ -12148,8 +13096,13 @@ function mixinBody (prototype) {
   Object.assign(prototype.prototype, bodyMixinMethods(prototype))
 }
 
-// https://fetch.spec.whatwg.org/#concept-body-consume-body
-async function specConsumeBody (object, type, instance) {
+/**
+ * @see https://fetch.spec.whatwg.org/#concept-body-consume-body
+ * @param {Response|Request} object
+ * @param {(value: unknown) => unknown} convertBytesToJSValue
+ * @param {Response|Request} instance
+ */
+async function specConsumeBody (object, convertBytesToJSValue, instance) {
   webidl.brandCheck(object, instance)
 
   throwIfAborted(object[kState])
@@ -12160,71 +13113,37 @@ async function specConsumeBody (object, type, instance) {
     throw new TypeError('Body is unusable')
   }
 
-  // 2. Let promise be a promise resolved with an empty byte
-  //    sequence.
-  let promise
+  // 2. Let promise be a new promise.
+  const promise = createDeferredPromise()
 
-  // 3. If object’s body is non-null, then set promise to the
-  //    result of fully reading body as promise given object’s
-  //    body.
-  if (object[kState].body != null) {
-    promise = await fullyReadBodyAsPromise(object[kState].body)
-  } else {
-    // step #2
-    promise = { size: 0, bytes: [new Uint8Array()] }
-  }
+  // 3. Let errorSteps given error be to reject promise with error.
+  const errorSteps = (error) => promise.reject(error)
 
-  // 4. Let steps be to return the result of package data with
-  //    the first argument given, type, and object’s MIME type.
-  const mimeType = type === 'Blob' || type === 'FormData'
-    ? bodyMimeType(object)
-    : undefined
-
-  // 5. Return the result of upon fulfillment of promise given
-  //    steps.
-  return packageData(promise, type, mimeType)
-}
-
-/**
- * @see https://fetch.spec.whatwg.org/#concept-body-package-data
- * @param {{ size: number, bytes: Uint8Array[] }} bytes
- * @param {string} type
- * @param {ReturnType<typeof parseMIMEType>|undefined} mimeType
- */
-function packageData ({ bytes, size }, type, mimeType) {
-  switch (type) {
-    case 'ArrayBuffer': {
-      // Return a new ArrayBuffer whose contents are bytes.
-      const uint8 = new Uint8Array(size)
-      let offset = 0
-
-      for (const chunk of bytes) {
-        uint8.set(chunk, offset)
-        offset += chunk.byteLength
-      }
-
-      return uint8.buffer
-    }
-    case 'Blob': {
-      if (mimeType === 'failure') {
-        mimeType = ''
-      } else if (mimeType) {
-        mimeType = serializeAMimeType(mimeType)
-      }
-
-      // Return a Blob whose contents are bytes and type attribute
-      // is mimeType.
-      return new Blob(bytes, { type: mimeType })
-    }
-    case 'JSON': {
-      // Return the result of running parse JSON from bytes on bytes.
-      return JSON.parse(utf8DecodeBytes(bytes))
-    }
-    case 'text': {
-      // 1. Return the result of running UTF-8 decode on bytes.
-      return utf8DecodeBytes(bytes)
+  // 4. Let successSteps given a byte sequence data be to resolve
+  //    promise with the result of running convertBytesToJSValue
+  //    with data. If that threw an exception, then run errorSteps
+  //    with that exception.
+  const successSteps = (data) => {
+    try {
+      promise.resolve(convertBytesToJSValue(data))
+    } catch (e) {
+      errorSteps(e)
     }
   }
+
+  // 5. If object’s body is null, then run successSteps with an
+  //    empty byte sequence.
+  if (object[kState].body == null) {
+    successSteps(new Uint8Array())
+    return promise.promise
+  }
+
+  // 6. Otherwise, fully read object’s body given successSteps,
+  //    errorSteps, and object’s relevant global object.
+  fullyReadBody(object[kState].body, successSteps, errorSteps)
+
+  // 7. Return promise.
+  return promise.promise
 }
 
 // https://fetch.spec.whatwg.org/#body-unusable
@@ -12235,71 +13154,38 @@ function bodyUnusable (body) {
   return body != null && (body.stream.locked || util.isDisturbed(body.stream))
 }
 
-// https://fetch.spec.whatwg.org/#fully-reading-body-as-promise
-async function fullyReadBodyAsPromise (body) {
-  // 1. Let reader be the result of getting a reader for body’s
-  //    stream. If that threw an exception, then return a promise
-  //    rejected with that exception.
-  const reader = body.stream.getReader()
-
-  // 2. Return the result of reading all bytes from reader.
-  /** @type {Uint8Array[]} */
-  const bytes = []
-  let size = 0
-
-  while (true) {
-    const { done, value } = await reader.read()
-
-    if (done) {
-      break
-    }
-
-    // https://streams.spec.whatwg.org/#read-loop
-    // If chunk is not a Uint8Array object, reject promise with
-    // a TypeError and abort these steps.
-    if (!isUint8Array(value)) {
-      throw new TypeError('Value is not a Uint8Array.')
-    }
-
-    bytes.push(value)
-    size += value.byteLength
-  }
-
-  return { size, bytes }
-}
-
 /**
  * @see https://encoding.spec.whatwg.org/#utf-8-decode
- * @param {Uint8Array[]} ioQueue
+ * @param {Buffer} buffer
  */
-function utf8DecodeBytes (ioQueue) {
-  if (ioQueue.length === 0) {
+function utf8DecodeBytes (buffer) {
+  if (buffer.length === 0) {
     return ''
   }
 
-  // 1. Let buffer be the result of peeking three bytes
-  //    from ioQueue, converted to a byte sequence.
-  const buffer = ioQueue[0]
+  // 1. Let buffer be the result of peeking three bytes from
+  //    ioQueue, converted to a byte sequence.
 
   // 2. If buffer is 0xEF 0xBB 0xBF, then read three
   //    bytes from ioQueue. (Do nothing with those bytes.)
   if (buffer[0] === 0xEF && buffer[1] === 0xBB && buffer[2] === 0xBF) {
-    ioQueue[0] = ioQueue[0].subarray(3)
+    buffer = buffer.subarray(3)
   }
 
   // 3. Process a queue with an instance of UTF-8’s
   //    decoder, ioQueue, output, and "replacement".
-  const decoder = new StringDecoder('utf-8')
-  let output = ''
-
-  for (const chunk of ioQueue) {
-    output += decoder.write(chunk)
-  }
-
-  output += decoder.end()
+  const output = new TextDecoder().decode(buffer)
 
   // 4. Return output.
   return output
+}
+
+/**
+ * @see https://infra.spec.whatwg.org/#parse-json-bytes-to-a-javascript-value
+ * @param {Uint8Array} bytes
+ */
+function parseJSONFromBytes (bytes) {
+  return JSON.parse(utf8DecodeBytes(bytes))
 }
 
 /**
@@ -13017,7 +13903,7 @@ module.exports = {
 
 
 
-const { Blob } = __nccwpck_require__(4300)
+const { Blob, File: NativeFile } = __nccwpck_require__(4300)
 const { types } = __nccwpck_require__(3837)
 const { kState } = __nccwpck_require__(5861)
 const { isBlobLike } = __nccwpck_require__(2538)
@@ -13346,11 +14232,14 @@ function convertLineEndingsNative (s) {
 // rollup) will warn about circular dependencies. See:
 // https://github.com/nodejs/undici/issues/1629
 function isFileLike (object) {
-  return object instanceof File || (
-    object &&
-    (typeof object.stream === 'function' ||
-     typeof object.arrayBuffer === 'function') &&
-     object[Symbol.toStringTag] === 'File'
+  return (
+    (NativeFile && object instanceof NativeFile) ||
+    object instanceof File || (
+      object &&
+      (typeof object.stream === 'function' ||
+      typeof object.arrayBuffer === 'function') &&
+      object[Symbol.toStringTag] === 'File'
+    )
   )
 }
 
@@ -13366,9 +14255,12 @@ module.exports = { File, FileLike, isFileLike }
 
 const { isBlobLike, toUSVString, makeIterator } = __nccwpck_require__(2538)
 const { kState } = __nccwpck_require__(5861)
-const { File, FileLike, isFileLike } = __nccwpck_require__(8511)
+const { File: UndiciFile, FileLike, isFileLike } = __nccwpck_require__(8511)
 const { webidl } = __nccwpck_require__(1744)
-const { Blob } = __nccwpck_require__(4300)
+const { Blob, File: NativeFile } = __nccwpck_require__(4300)
+
+/** @type {globalThis['File']} */
+const File = NativeFile ?? UndiciFile
 
 // https://xhr.spec.whatwg.org/#formdata
 class FormData {
@@ -13698,7 +14590,7 @@ module.exports = {
 
 
 const { kHeadersList } = __nccwpck_require__(2785)
-const { kGuard } = __nccwpck_require__(5861)
+const { kGuard, kHeadersCaseInsensitive } = __nccwpck_require__(5861)
 const { kEnumerableProperty } = __nccwpck_require__(3983)
 const {
   makeIterator,
@@ -13760,6 +14652,9 @@ function fill (headers, object) {
 }
 
 class HeadersList {
+  /** @type {[string, string][]|null} */
+  cookies = null
+
   constructor (init) {
     if (init instanceof HeadersList) {
       this[kHeadersMap] = new Map(init[kHeadersMap])
@@ -13791,27 +14686,36 @@ class HeadersList {
 
     // 1. If list contains name, then set name to the first such
     //    header’s name.
-    name = name.toLowerCase()
-    const exists = this[kHeadersMap].get(name)
+    const lowercaseName = name.toLowerCase()
+    const exists = this[kHeadersMap].get(lowercaseName)
 
     // 2. Append (name, value) to list.
     if (exists) {
-      this[kHeadersMap].set(name, `${exists}, ${value}`)
+      this[kHeadersMap].set(lowercaseName, { name: exists.name, value: `${exists.value}, ${value}` })
     } else {
-      this[kHeadersMap].set(name, `${value}`)
+      this[kHeadersMap].set(lowercaseName, { name, value })
+    }
+
+    if (lowercaseName === 'set-cookie') {
+      this.cookies ??= []
+      this.cookies.push([name, value])
     }
   }
 
   // https://fetch.spec.whatwg.org/#concept-header-list-set
   set (name, value) {
     this[kHeadersSortedMap] = null
-    name = name.toLowerCase()
+    const lowercaseName = name.toLowerCase()
+
+    if (lowercaseName === 'set-cookie') {
+      this.cookies = [[name, value]]
+    }
 
     // 1. If list contains name, then set the value of
     //    the first such header to value and remove the
     //    others.
     // 2. Otherwise, append header (name, value) to list.
-    return this[kHeadersMap].set(name, value)
+    return this[kHeadersMap].set(lowercaseName, { name, value })
   }
 
   // https://fetch.spec.whatwg.org/#concept-header-list-delete
@@ -13819,6 +14723,11 @@ class HeadersList {
     this[kHeadersSortedMap] = null
 
     name = name.toLowerCase()
+
+    if (name === 'set-cookie') {
+      this.cookies = null
+    }
+
     return this[kHeadersMap].delete(name)
   }
 
@@ -13832,13 +14741,25 @@ class HeadersList {
     // 2. Return the values of all headers in list whose name
     //    is a byte-case-insensitive match for name,
     //    separated from each other by 0x2C 0x20, in order.
-    return this[kHeadersMap].get(name.toLowerCase()) ?? null
+    return this[kHeadersMap].get(name.toLowerCase())?.value ?? null
   }
 
   * [Symbol.iterator] () {
-    for (const pair of this[kHeadersMap]) {
-      yield pair
+    // use the lowercased name
+    for (const [name, { value }] of this[kHeadersMap]) {
+      yield [name, value]
     }
+  }
+
+  get [kHeadersCaseInsensitive] () {
+    /** @type {string[]} */
+    const flatList = []
+
+    for (const { name, value } of this[kHeadersMap].values()) {
+      flatList.push(name, value)
+    }
+
+    return flatList
   }
 }
 
@@ -14197,7 +15118,7 @@ const {
   readableStreamClose,
   isomorphicEncode
 } = __nccwpck_require__(2538)
-const { kState, kHeaders, kGuard, kRealm } = __nccwpck_require__(5861)
+const { kState, kHeaders, kGuard, kRealm, kHeadersCaseInsensitive } = __nccwpck_require__(5861)
 const assert = __nccwpck_require__(9491)
 const { safelyExtractBody } = __nccwpck_require__(1472)
 const {
@@ -14216,11 +15137,11 @@ const { dataURLProcessor, serializeAMimeType } = __nccwpck_require__(685)
 const { TransformStream } = __nccwpck_require__(5356)
 const { getGlobalDispatcher } = __nccwpck_require__(1773)
 const { webidl } = __nccwpck_require__(1744)
+const { STATUS_CODES } = __nccwpck_require__(3685)
 
 /** @type {import('buffer').resolveObjectURL} */
 let resolveObjectURL
-/** @type {globalThis['ReadableStream']} */
-let ReadableStream
+let ReadableStream = globalThis.ReadableStream
 
 const nodeVersion = process.versions.node.split('.')
 const nodeMajor = Number(nodeVersion[0])
@@ -14939,8 +15860,11 @@ async function mainFetch (fetchParams, recursive = false) {
 // https://fetch.spec.whatwg.org/#concept-scheme-fetch
 // given a fetch params fetchParams
 async function schemeFetch (fetchParams) {
+  // Note: since the connection is destroyed on redirect, which sets fetchParams to a
+  // cancelled state, we do not want this condition to trigger *unless* there have been
+  // no redirects. See https://github.com/nodejs/undici/issues/1776
   // 1. If fetchParams is canceled, then return the appropriate network error for fetchParams.
-  if (isCancelled(fetchParams)) {
+  if (isCancelled(fetchParams) && fetchParams.request.redirectCount === 0) {
     return makeAppropriateNetworkError(fetchParams)
   }
 
@@ -14998,8 +15922,8 @@ async function schemeFetch (fetchParams) {
       const response = makeResponse({
         statusText: 'OK',
         headersList: [
-          ['content-length', length],
-          ['content-type', type]
+          ['content-length', { name: 'Content-Length', value: length }],
+          ['content-type', { name: 'Content-Type', value: type }]
         ]
       })
 
@@ -15028,7 +15952,7 @@ async function schemeFetch (fetchParams) {
       return makeResponse({
         statusText: 'OK',
         headersList: [
-          ['content-type', mimeType]
+          ['content-type', { name: 'Content-Type', value: mimeType }]
         ],
         body: safelyExtractBody(dataURLStruct.body)[0]
       })
@@ -15293,12 +16217,12 @@ async function httpRedirectFetch (fetchParams, response) {
     return makeNetworkError('URL scheme must be a HTTP(S) scheme')
   }
 
-  // 7. If request’s redirect count is twenty, return a network error.
+  // 7. If request’s redirect count is 20, then return a network error.
   if (request.redirectCount === 20) {
     return makeNetworkError('redirect count exceeded')
   }
 
-  // 8. Increase request’s redirect count by one.
+  // 8. Increase request’s redirect count by 1.
   request.redirectCount += 1
 
   // 9. If request’s mode is "cors", locationURL includes credentials, and
@@ -15353,36 +16277,44 @@ async function httpRedirectFetch (fetchParams, response) {
     }
   }
 
-  // 13. If request’s body is non-null, then set request’s body to the first return
+  // 13. If request’s current URL’s origin is not same origin with locationURL’s
+  //     origin, then for each headerName of CORS non-wildcard request-header name,
+  //     delete headerName from request’s header list.
+  if (!sameOrigin(requestCurrentURL(request), locationURL)) {
+    // https://fetch.spec.whatwg.org/#cors-non-wildcard-request-header-name
+    request.headersList.delete('authorization')
+  }
+
+  // 14. If request’s body is non-null, then set request’s body to the first return
   // value of safely extracting request’s body’s source.
   if (request.body != null) {
     assert(request.body.source)
     request.body = safelyExtractBody(request.body.source)[0]
   }
 
-  // 14. Let timingInfo be fetchParams’s timing info.
+  // 15. Let timingInfo be fetchParams’s timing info.
   const timingInfo = fetchParams.timingInfo
 
-  // 15. Set timingInfo’s redirect end time and post-redirect start time to the
+  // 16. Set timingInfo’s redirect end time and post-redirect start time to the
   // coarsened shared current time given fetchParams’s cross-origin isolated
   // capability.
   timingInfo.redirectEndTime = timingInfo.postRedirectStartTime =
     coarsenedSharedCurrentTime(fetchParams.crossOriginIsolatedCapability)
 
-  // 16. If timingInfo’s redirect start time is 0, then set timingInfo’s
+  // 17. If timingInfo’s redirect start time is 0, then set timingInfo’s
   //  redirect start time to timingInfo’s start time.
   if (timingInfo.redirectStartTime === 0) {
     timingInfo.redirectStartTime = timingInfo.startTime
   }
 
-  // 17. Append locationURL to request’s URL list.
+  // 18. Append locationURL to request’s URL list.
   request.urlList.push(locationURL)
 
-  // 18. Invoke set request’s referrer policy on redirect on request and
+  // 19. Invoke set request’s referrer policy on redirect on request and
   // actualResponse.
   setRequestReferrerPolicyOnRedirect(request, actualResponse)
 
-  // 19. Return the result of running main fetch given fetchParams and true.
+  // 20. Return the result of running main fetch given fetchParams and true.
   return mainFetch(fetchParams, true)
 }
 
@@ -15893,12 +16825,17 @@ async function httpNetworkFetch (
   }
 
   try {
-    const { body, status, statusText, headersList } = await dispatch({ body: requestBody })
+    // socket is only provided for websockets
+    const { body, status, statusText, headersList, socket } = await dispatch({ body: requestBody })
 
-    const iterator = body[Symbol.asyncIterator]()
-    fetchParams.controller.next = () => iterator.next()
+    if (socket) {
+      response = makeResponse({ status, statusText, headersList, socket })
+    } else {
+      const iterator = body[Symbol.asyncIterator]()
+      fetchParams.controller.next = () => iterator.next()
 
-    response = makeResponse({ status, statusText, headersList })
+      response = makeResponse({ status, statusText, headersList })
+    }
   } catch (err) {
     // 10. If aborted, then:
     if (err.name === 'AbortError') {
@@ -16082,16 +17019,20 @@ async function httpNetworkFetch (
 
   async function dispatch ({ body }) {
     const url = requestCurrentURL(request)
-    return new Promise((resolve, reject) => fetchParams.controller.dispatcher.dispatch(
+    /** @type {import('../..').Agent} */
+    const agent = fetchParams.controller.dispatcher
+
+    return new Promise((resolve, reject) => agent.dispatch(
       {
         path: url.pathname + url.search,
         origin: url.origin,
         method: request.method,
         body: fetchParams.controller.dispatcher.isMockActive ? request.body && request.body.source : body,
-        headers: [...request.headersList].flat(),
+        headers: request.headersList[kHeadersCaseInsensitive],
         maxRedirections: 0,
         bodyTimeout: 300_000,
-        headersTimeout: 300_000
+        headersTimeout: 300_000,
+        upgrade: request.mode === 'websocket' ? 'websocket' : undefined
       },
       {
         body: null,
@@ -16210,6 +17151,30 @@ async function httpNetworkFetch (
           fetchParams.controller.terminate(error)
 
           reject(error)
+        },
+
+        onUpgrade (status, headersList, socket) {
+          if (status !== 101) {
+            return
+          }
+
+          const headers = new Headers()
+
+          for (let n = 0; n < headersList.length; n += 2) {
+            const key = headersList[n + 0].toString('latin1')
+            const val = headersList[n + 1].toString('latin1')
+
+            headers.append(key, val)
+          }
+
+          resolve({
+            status,
+            statusText: STATUS_CODES[status],
+            headersList: headers[kHeadersList],
+            socket
+          })
+
+          return true
         }
       }
     ))
@@ -16260,7 +17225,7 @@ const { URLSerializer } = __nccwpck_require__(685)
 const { kHeadersList } = __nccwpck_require__(2785)
 const assert = __nccwpck_require__(9491)
 
-let TransformStream
+let TransformStream = globalThis.TransformStream
 
 const kInit = Symbol('init')
 
@@ -16579,7 +17544,10 @@ class Request {
       if (signal.aborted) {
         ac.abort(signal.reason)
       } else {
-        const abort = () => ac.abort(signal.reason)
+        const acRef = new WeakRef(ac)
+        const abort = function () {
+          acRef.deref()?.abort(this.reason)
+        }
         signal.addEventListener('abort', abort, { once: true })
         requestFinalizer.register(this, { signal, abort })
       }
@@ -17581,7 +18549,7 @@ function makeAppropriateNetworkError (fetchParams) {
   // otherwise return a network error.
   return isAborted(fetchParams)
     ? makeNetworkError(new DOMException('The operation was aborted.', 'AbortError'))
-    : makeNetworkError(fetchParams.controller.terminated.reason)
+    : makeNetworkError('Request was cancelled.')
 }
 
 // https://whatpr.org/fetch/1392.html#initialize-a-response
@@ -17733,7 +18701,8 @@ module.exports = {
   kSignal: Symbol('signal'),
   kState: Symbol('state'),
   kGuard: Symbol('guard'),
-  kRealm: Symbol('realm')
+  kRealm: Symbol('realm'),
+  kHeadersCaseInsensitive: Symbol('headers case insensitive')
 }
 
 
@@ -18549,48 +19518,32 @@ function iteratorResult (pair, kind) {
 /**
  * @see https://fetch.spec.whatwg.org/#body-fully-read
  */
-async function fullyReadBody (body, processBody, processBodyError) {
+function fullyReadBody (body, processBody, processBodyError) {
   // 1. If taskDestination is null, then set taskDestination to
   //    the result of starting a new parallel queue.
 
-  // 2. Let promise be the result of fully reading body as promise
-  //    given body.
+  // 2. Let successSteps given a byte sequence bytes be to queue a
+  //    fetch task to run processBody given bytes, with taskDestination.
+  const successSteps = (bytes) => queueMicrotask(() => processBody(bytes))
+
+  // 3. Let errorSteps be to queue a fetch task to run processBodyError,
+  //    with taskDestination.
+  const errorSteps = (error) => queueMicrotask(() => processBodyError(error))
+
+  // 4. Let reader be the result of getting a reader for body’s stream.
+  //    If that threw an exception, then run errorSteps with that
+  //    exception and return.
+  let reader
+
   try {
-    /** @type {Uint8Array[]} */
-    const chunks = []
-    let length = 0
-
-    const reader = body.stream.getReader()
-
-    while (true) {
-      const { done, value } = await reader.read()
-
-      if (done === true) {
-        break
-      }
-
-      // read-loop chunk steps
-      assert(isUint8Array(value))
-
-      chunks.push(value)
-      length += value.byteLength
-    }
-
-    // 3. Let fulfilledSteps given a byte sequence bytes be to queue
-    //    a fetch task to run processBody given bytes, with
-    //    taskDestination.
-    const fulfilledSteps = (bytes) => queueMicrotask(() => {
-      processBody(bytes)
-    })
-
-    fulfilledSteps(Buffer.concat(chunks, length))
-  } catch (err) {
-    // 4. Let rejectedSteps be to queue a fetch task to run
-    //    processBodyError, with taskDestination.
-    queueMicrotask(() => processBodyError(err))
+    reader = body.stream.getReader()
+  } catch (e) {
+    errorSteps(e)
+    return
   }
 
-  // 5. React to promise with fulfilledSteps and rejectedSteps.
+  // 5. Read all bytes from reader, given successSteps and errorSteps.
+  readAllBytes(reader, successSteps, errorSteps)
 }
 
 /** @type {ReadableStream} */
@@ -18607,6 +19560,8 @@ function isReadableStreamLike (stream) {
   )
 }
 
+const MAXIMUM_ARGUMENT_LENGTH = 65535
+
 /**
  * @see https://infra.spec.whatwg.org/#isomorphic-decode
  * @param {number[]|Uint8Array} input
@@ -18615,13 +19570,12 @@ function isomorphicDecode (input) {
   // 1. To isomorphic decode a byte sequence input, return a string whose code point
   //    length is equal to input’s length and whose code points have the same values
   //    as the values of input’s bytes, in the same order.
-  let output = ''
 
-  for (let i = 0; i < input.length; i++) {
-    output += String.fromCharCode(input[i])
+  if (input.length < MAXIMUM_ARGUMENT_LENGTH) {
+    return String.fromCharCode(...input)
   }
 
-  return output
+  return input.reduce((previous, current) => previous + String.fromCharCode(current), '')
 }
 
 /**
@@ -18652,6 +19606,50 @@ function isomorphicEncode (input) {
   //    point length and whose bytes have the same values as the
   //    values of input’s code points, in the same order
   return input
+}
+
+/**
+ * @see https://streams.spec.whatwg.org/#readablestreamdefaultreader-read-all-bytes
+ * @see https://streams.spec.whatwg.org/#read-loop
+ * @param {ReadableStreamDefaultReader} reader
+ * @param {(bytes: Uint8Array) => void} successSteps
+ * @param {(error: Error) => void} failureSteps
+ */
+async function readAllBytes (reader, successSteps, failureSteps) {
+  const bytes = []
+  let byteLength = 0
+
+  while (true) {
+    let done
+    let chunk
+
+    try {
+      ({ done, value: chunk } = await reader.read())
+    } catch (e) {
+      // 1. Call failureSteps with e.
+      failureSteps(e)
+      return
+    }
+
+    if (done) {
+      // 1. Call successSteps with bytes.
+      successSteps(Buffer.concat(bytes, byteLength))
+      return
+    }
+
+    // 1. If chunk is not a Uint8Array object, call failureSteps
+    //    with a TypeError and abort these steps.
+    if (!isUint8Array(chunk)) {
+      failureSteps(new TypeError('Received non-Uint8Array chunk'))
+      return
+    }
+
+    // 2. Append the bytes represented by chunk to bytes.
+    bytes.push(chunk)
+    byteLength += chunk.length
+
+    // 3. Read-loop given reader, bytes, successSteps, and failureSteps.
+  }
 }
 
 /**
@@ -18742,9 +19740,11 @@ webidl.errors.invalidArgument = function (context) {
 }
 
 // https://webidl.spec.whatwg.org/#implements
-webidl.brandCheck = function (V, I) {
-  if (!(V instanceof I)) {
+webidl.brandCheck = function (V, I, opts = undefined) {
+  if (opts?.strict !== false && !(V instanceof I)) {
     throw new TypeError('Illegal invocation')
+  } else {
+    return V?.[Symbol.toStringTag] === I.prototype[Symbol.toStringTag]
   }
 }
 
@@ -19181,10 +20181,20 @@ webidl.converters['unsigned long long'] = function (V) {
   return x
 }
 
+// https://webidl.spec.whatwg.org/#es-unsigned-long
+webidl.converters['unsigned long'] = function (V) {
+  // 1. Let x be ? ConvertToInt(V, 32, "unsigned").
+  const x = webidl.util.ConvertToInt(V, 32, 'unsigned')
+
+  // 2. Return the IDL unsigned long value that
+  //    represents the same numeric value as x.
+  return x
+}
+
 // https://webidl.spec.whatwg.org/#es-unsigned-short
-webidl.converters['unsigned short'] = function (V) {
+webidl.converters['unsigned short'] = function (V, opts) {
   // 1. Let x be ? ConvertToInt(V, 16, "unsigned").
-  const x = webidl.util.ConvertToInt(V, 16, 'unsigned')
+  const x = webidl.util.ConvertToInt(V, 16, 'unsigned', opts)
 
   // 2. Return the IDL unsigned short value that represents
   //    the same numeric value as x.
@@ -19820,8 +20830,13 @@ class FileReader extends EventTarget {
   set onloadend (fn) {
     webidl.brandCheck(this, FileReader)
 
+    if (this[kEvents].loadend) {
+      this.removeEventListener('loadend', this[kEvents].loadend)
+    }
+
     if (typeof fn === 'function') {
       this[kEvents].loadend = fn
+      this.addEventListener('loadend', fn)
     } else {
       this[kEvents].loadend = null
     }
@@ -19836,8 +20851,13 @@ class FileReader extends EventTarget {
   set onerror (fn) {
     webidl.brandCheck(this, FileReader)
 
+    if (this[kEvents].error) {
+      this.removeEventListener('error', this[kEvents].error)
+    }
+
     if (typeof fn === 'function') {
       this[kEvents].error = fn
+      this.addEventListener('error', fn)
     } else {
       this[kEvents].error = null
     }
@@ -19852,8 +20872,13 @@ class FileReader extends EventTarget {
   set onloadstart (fn) {
     webidl.brandCheck(this, FileReader)
 
+    if (this[kEvents].loadstart) {
+      this.removeEventListener('loadstart', this[kEvents].loadstart)
+    }
+
     if (typeof fn === 'function') {
       this[kEvents].loadstart = fn
+      this.addEventListener('loadstart', fn)
     } else {
       this[kEvents].loadstart = null
     }
@@ -19868,8 +20893,13 @@ class FileReader extends EventTarget {
   set onprogress (fn) {
     webidl.brandCheck(this, FileReader)
 
+    if (this[kEvents].progress) {
+      this.removeEventListener('progress', this[kEvents].progress)
+    }
+
     if (typeof fn === 'function') {
       this[kEvents].progress = fn
+      this.addEventListener('progress', fn)
     } else {
       this[kEvents].progress = null
     }
@@ -19884,8 +20914,13 @@ class FileReader extends EventTarget {
   set onload (fn) {
     webidl.brandCheck(this, FileReader)
 
+    if (this[kEvents].load) {
+      this.removeEventListener('load', this[kEvents].load)
+    }
+
     if (typeof fn === 'function') {
       this[kEvents].load = fn
+      this.addEventListener('load', fn)
     } else {
       this[kEvents].load = null
     }
@@ -19900,8 +20935,13 @@ class FileReader extends EventTarget {
   set onabort (fn) {
     webidl.brandCheck(this, FileReader)
 
+    if (this[kEvents].abort) {
+      this.removeEventListener('abort', this[kEvents].abort)
+    }
+
     if (typeof fn === 'function') {
       this[kEvents].abort = fn
+      this.addEventListener('abort', fn)
     } else {
       this[kEvents].abort = null
     }
@@ -20252,25 +21292,19 @@ function readOperation (fr, blob, type, encodingName) {
 
 /**
  * @see https://w3c.github.io/FileAPI/#fire-a-progress-event
+ * @see https://dom.spec.whatwg.org/#concept-event-fire
  * @param {string} e The name of the event
  * @param {import('./filereader').FileReader} reader
  */
 function fireAProgressEvent (e, reader) {
+  // The progress event e does not bubble. e.bubbles must be false
+  // The progress event e is NOT cancelable. e.cancelable must be false
   const event = new ProgressEvent(e, {
     bubbles: false,
     cancelable: false
   })
 
   reader.dispatchEvent(event)
-  try {
-    // eslint-disable-next-line no-useless-call
-    reader[`on${e}`]?.call(reader, event)
-  } catch (err) {
-    // Prevent the error from being swallowed
-    queueMicrotask(() => {
-      throw err
-    })
-  }
 }
 
 /**
@@ -22774,6 +23808,1924 @@ module.exports = ProxyAgent
 
 /***/ }),
 
+/***/ 5354:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+
+// TODO: crypto isn't available in all environments
+const { randomBytes, createHash } = __nccwpck_require__(6113)
+const diagnosticsChannel = __nccwpck_require__(7643)
+const { uid, states } = __nccwpck_require__(9188)
+const {
+  kReadyState,
+  kResponse,
+  kExtensions,
+  kProtocol,
+  kSentClose,
+  kByteParser,
+  kReceivedClose
+} = __nccwpck_require__(7578)
+const { fireEvent, failWebsocketConnection } = __nccwpck_require__(5515)
+const { CloseEvent } = __nccwpck_require__(2611)
+const { ByteParser } = __nccwpck_require__(1688)
+const { makeRequest } = __nccwpck_require__(8359)
+const { fetching } = __nccwpck_require__(4881)
+const { getGlobalDispatcher } = __nccwpck_require__(1773)
+
+const channels = {}
+channels.open = diagnosticsChannel.channel('undici:websocket:open')
+channels.close = diagnosticsChannel.channel('undici:websocket:close')
+channels.socketError = diagnosticsChannel.channel('undici:websocket:socket_error')
+
+/**
+ * @see https://websockets.spec.whatwg.org/#concept-websocket-establish
+ * @param {URL} url
+ * @param {string|string[]} protocols
+ * @param {import('./websocket').WebSocket} ws
+ */
+function establishWebSocketConnection (url, protocols, ws) {
+  // 1. Let requestURL be a copy of url, with its scheme set to "http", if url’s
+  //    scheme is "ws", and to "https" otherwise.
+  const requestURL = url
+
+  requestURL.protocol = url.protocol === 'ws:' ? 'http:' : 'https:'
+
+  // 2. Let request be a new request, whose URL is requestURL, client is client,
+  //    service-workers mode is "none", referrer is "no-referrer", mode is
+  //    "websocket", credentials mode is "include", cache mode is "no-store" ,
+  //    and redirect mode is "error".
+  const request = makeRequest({
+    urlList: [requestURL],
+    serviceWorkers: 'none',
+    referrer: 'no-referrer',
+    mode: 'websocket',
+    credentials: 'include',
+    cache: 'no-store',
+    redirect: 'error'
+  })
+
+  // 3. Append (`Upgrade`, `websocket`) to request’s header list.
+  // 4. Append (`Connection`, `Upgrade`) to request’s header list.
+  // Note: both of these are handled by undici currently.
+  // https://github.com/nodejs/undici/blob/68c269c4144c446f3f1220951338daef4a6b5ec4/lib/client.js#L1397
+
+  // 5. Let keyValue be a nonce consisting of a randomly selected
+  //    16-byte value that has been forgiving-base64-encoded and
+  //    isomorphic encoded.
+  const keyValue = randomBytes(16).toString('base64')
+
+  // 6. Append (`Sec-WebSocket-Key`, keyValue) to request’s
+  //    header list.
+  request.headersList.append('sec-websocket-key', keyValue)
+
+  // 7. Append (`Sec-WebSocket-Version`, `13`) to request’s
+  //    header list.
+  request.headersList.append('sec-websocket-version', '13')
+
+  // 8. For each protocol in protocols, combine
+  //    (`Sec-WebSocket-Protocol`, protocol) in request’s header
+  //    list.
+  for (const protocol of protocols) {
+    request.headersList.append('sec-websocket-protocol', protocol)
+  }
+
+  // 9. Let permessageDeflate be a user-agent defined
+  //    "permessage-deflate" extension header value.
+  // https://github.com/mozilla/gecko-dev/blob/ce78234f5e653a5d3916813ff990f053510227bc/netwerk/protocol/websocket/WebSocketChannel.cpp#L2673
+  // TODO: enable once permessage-deflate is supported
+  const permessageDeflate = '' // 'permessage-deflate; 15'
+
+  // 10. Append (`Sec-WebSocket-Extensions`, permessageDeflate) to
+  //     request’s header list.
+  // request.headersList.append('sec-websocket-extensions', permessageDeflate)
+
+  // 11. Fetch request with useParallelQueue set to true, and
+  //     processResponse given response being these steps:
+  const controller = fetching({
+    request,
+    useParallelQueue: true,
+    dispatcher: getGlobalDispatcher(),
+    processResponse (response) {
+      // 1. If response is a network error or its status is not 101,
+      //    fail the WebSocket connection.
+      if (response.type === 'error' || response.status !== 101) {
+        failWebsocketConnection(ws, 'Received network error or non-101 status code.')
+        return
+      }
+
+      // 2. If protocols is not the empty list and extracting header
+      //    list values given `Sec-WebSocket-Protocol` and response’s
+      //    header list results in null, failure, or the empty byte
+      //    sequence, then fail the WebSocket connection.
+      if (protocols.length !== 0 && !response.headersList.get('Sec-WebSocket-Protocol')) {
+        failWebsocketConnection(ws, 'Server did not respond with sent protocols.')
+        return
+      }
+
+      // 3. Follow the requirements stated step 2 to step 6, inclusive,
+      //    of the last set of steps in section 4.1 of The WebSocket
+      //    Protocol to validate response. This either results in fail
+      //    the WebSocket connection or the WebSocket connection is
+      //    established.
+
+      // 2. If the response lacks an |Upgrade| header field or the |Upgrade|
+      //    header field contains a value that is not an ASCII case-
+      //    insensitive match for the value "websocket", the client MUST
+      //    _Fail the WebSocket Connection_.
+      if (response.headersList.get('Upgrade')?.toLowerCase() !== 'websocket') {
+        failWebsocketConnection(ws, 'Server did not set Upgrade header to "websocket".')
+        return
+      }
+
+      // 3. If the response lacks a |Connection| header field or the
+      //    |Connection| header field doesn't contain a token that is an
+      //    ASCII case-insensitive match for the value "Upgrade", the client
+      //    MUST _Fail the WebSocket Connection_.
+      if (response.headersList.get('Connection')?.toLowerCase() !== 'upgrade') {
+        failWebsocketConnection(ws, 'Server did not set Connection header to "upgrade".')
+        return
+      }
+
+      // 4. If the response lacks a |Sec-WebSocket-Accept| header field or
+      //    the |Sec-WebSocket-Accept| contains a value other than the
+      //    base64-encoded SHA-1 of the concatenation of the |Sec-WebSocket-
+      //    Key| (as a string, not base64-decoded) with the string "258EAFA5-
+      //    E914-47DA-95CA-C5AB0DC85B11" but ignoring any leading and
+      //    trailing whitespace, the client MUST _Fail the WebSocket
+      //    Connection_.
+      const secWSAccept = response.headersList.get('Sec-WebSocket-Accept')
+      const digest = createHash('sha1').update(keyValue + uid).digest('base64')
+      if (secWSAccept !== digest) {
+        failWebsocketConnection(ws, 'Incorrect hash received in Sec-WebSocket-Accept header.')
+        return
+      }
+
+      // 5. If the response includes a |Sec-WebSocket-Extensions| header
+      //    field and this header field indicates the use of an extension
+      //    that was not present in the client's handshake (the server has
+      //    indicated an extension not requested by the client), the client
+      //    MUST _Fail the WebSocket Connection_.  (The parsing of this
+      //    header field to determine which extensions are requested is
+      //    discussed in Section 9.1.)
+      const secExtension = response.headersList.get('Sec-WebSocket-Extensions')
+
+      if (secExtension !== null && secExtension !== permessageDeflate) {
+        failWebsocketConnection(ws, 'Received different permessage-deflate than the one set.')
+        return
+      }
+
+      // 6. If the response includes a |Sec-WebSocket-Protocol| header field
+      //    and this header field indicates the use of a subprotocol that was
+      //    not present in the client's handshake (the server has indicated a
+      //    subprotocol not requested by the client), the client MUST _Fail
+      //    the WebSocket Connection_.
+      const secProtocol = response.headersList.get('Sec-WebSocket-Protocol')
+
+      if (secProtocol !== null && secProtocol !== request.headersList.get('Sec-WebSocket-Protocol')) {
+        failWebsocketConnection(ws, 'Protocol was not set in the opening handshake.')
+        return
+      }
+
+      // processResponse is called when the "response’s header list has been received and initialized."
+      // once this happens, the connection is open
+      ws[kResponse] = response
+
+      const parser = new ByteParser(ws)
+      response.socket.ws = ws // TODO: use symbol
+      ws[kByteParser] = parser
+
+      whenConnectionEstablished(ws)
+
+      response.socket.on('data', onSocketData)
+      response.socket.on('close', onSocketClose)
+      response.socket.on('error', onSocketError)
+
+      parser.on('drain', onParserDrain)
+    }
+  })
+
+  return controller
+}
+
+/**
+ * @see https://websockets.spec.whatwg.org/#feedback-from-the-protocol
+ * @param {import('./websocket').WebSocket} ws
+ */
+function whenConnectionEstablished (ws) {
+  const { [kResponse]: response } = ws
+
+  // 1. Change the ready state to OPEN (1).
+  ws[kReadyState] = states.OPEN
+
+  // 2. Change the extensions attribute’s value to the extensions in use, if
+  //    it is not the null value.
+  // https://datatracker.ietf.org/doc/html/rfc6455#section-9.1
+  const extensions = response.headersList.get('sec-websocket-extensions')
+
+  if (extensions !== null) {
+    ws[kExtensions] = extensions
+  }
+
+  // 3. Change the protocol attribute’s value to the subprotocol in use, if
+  //    it is not the null value.
+  // https://datatracker.ietf.org/doc/html/rfc6455#section-1.9
+  const protocol = response.headersList.get('sec-websocket-protocol')
+
+  if (protocol !== null) {
+    ws[kProtocol] = protocol
+  }
+
+  // 4. Fire an event named open at the WebSocket object.
+  fireEvent('open', ws)
+
+  if (channels.open.hasSubscribers) {
+    channels.open.publish({
+      address: response.socket.address(),
+      protocol,
+      extensions
+    })
+  }
+}
+
+/**
+ * @param {Buffer} chunk
+ */
+function onSocketData (chunk) {
+  if (!this.ws[kByteParser].write(chunk)) {
+    this.pause()
+  }
+}
+
+function onParserDrain () {
+  this.ws[kResponse].socket.resume()
+}
+
+/**
+ * @see https://websockets.spec.whatwg.org/#feedback-from-the-protocol
+ * @see https://datatracker.ietf.org/doc/html/rfc6455#section-7.1.4
+ */
+function onSocketClose () {
+  const { ws } = this
+
+  // If the TCP connection was closed after the
+  // WebSocket closing handshake was completed, the WebSocket connection
+  // is said to have been closed _cleanly_.
+  const wasClean = ws[kSentClose] && ws[kReceivedClose]
+
+  let code = 1005
+  let reason = ''
+
+  const result = ws[kByteParser].closingInfo
+
+  if (result) {
+    code = result.code ?? 1005
+    reason = result.reason
+  } else if (!ws[kSentClose]) {
+    // If _The WebSocket
+    // Connection is Closed_ and no Close control frame was received by the
+    // endpoint (such as could occur if the underlying transport connection
+    // is lost), _The WebSocket Connection Close Code_ is considered to be
+    // 1006.
+    code = 1006
+  }
+
+  // 1. Change the ready state to CLOSED (3).
+  ws[kReadyState] = states.CLOSED
+
+  // 2. If the user agent was required to fail the WebSocket
+  //    connection, or if the WebSocket connection was closed
+  //    after being flagged as full, fire an event named error
+  //    at the WebSocket object.
+  // TODO
+
+  // 3. Fire an event named close at the WebSocket object,
+  //    using CloseEvent, with the wasClean attribute
+  //    initialized to true if the connection closed cleanly
+  //    and false otherwise, the code attribute initialized to
+  //    the WebSocket connection close code, and the reason
+  //    attribute initialized to the result of applying UTF-8
+  //    decode without BOM to the WebSocket connection close
+  //    reason.
+  fireEvent('close', ws, CloseEvent, {
+    wasClean, code, reason
+  })
+
+  if (channels.close.hasSubscribers) {
+    channels.close.publish({
+      websocket: ws,
+      code,
+      reason
+    })
+  }
+}
+
+function onSocketError (error) {
+  const { ws } = this
+
+  ws[kReadyState] = states.CLOSING
+
+  if (channels.socketError.hasSubscribers) {
+    channels.socketError.publish(error)
+  }
+
+  this.destroy()
+}
+
+module.exports = {
+  establishWebSocketConnection
+}
+
+
+/***/ }),
+
+/***/ 9188:
+/***/ ((module) => {
+
+
+
+// This is a Globally Unique Identifier unique used
+// to validate that the endpoint accepts websocket
+// connections.
+// See https://www.rfc-editor.org/rfc/rfc6455.html#section-1.3
+const uid = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+
+/** @type {PropertyDescriptor} */
+const staticPropertyDescriptors = {
+  enumerable: true,
+  writable: false,
+  configurable: false
+}
+
+const states = {
+  CONNECTING: 0,
+  OPEN: 1,
+  CLOSING: 2,
+  CLOSED: 3
+}
+
+const opcodes = {
+  CONTINUATION: 0x0,
+  TEXT: 0x1,
+  BINARY: 0x2,
+  CLOSE: 0x8,
+  PING: 0x9,
+  PONG: 0xA
+}
+
+const maxUnsigned16Bit = 2 ** 16 - 1 // 65535
+
+const parserStates = {
+  INFO: 0,
+  PAYLOADLENGTH_16: 2,
+  PAYLOADLENGTH_64: 3,
+  READ_DATA: 4
+}
+
+const emptyBuffer = Buffer.allocUnsafe(0)
+
+module.exports = {
+  uid,
+  staticPropertyDescriptors,
+  states,
+  opcodes,
+  maxUnsigned16Bit,
+  parserStates,
+  emptyBuffer
+}
+
+
+/***/ }),
+
+/***/ 2611:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+
+const { webidl } = __nccwpck_require__(1744)
+const { kEnumerableProperty } = __nccwpck_require__(3983)
+const { MessagePort } = __nccwpck_require__(1267)
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/comms.html#messageevent
+ */
+class MessageEvent extends Event {
+  #eventInit
+
+  constructor (type, eventInitDict = {}) {
+    webidl.argumentLengthCheck(arguments, 1, { header: 'MessageEvent constructor' })
+
+    type = webidl.converters.DOMString(type)
+    eventInitDict = webidl.converters.MessageEventInit(eventInitDict)
+
+    super(type, eventInitDict)
+
+    this.#eventInit = eventInitDict
+  }
+
+  get data () {
+    webidl.brandCheck(this, MessageEvent)
+
+    return this.#eventInit.data
+  }
+
+  get origin () {
+    webidl.brandCheck(this, MessageEvent)
+
+    return this.#eventInit.origin
+  }
+
+  get lastEventId () {
+    webidl.brandCheck(this, MessageEvent)
+
+    return this.#eventInit.lastEventId
+  }
+
+  get source () {
+    webidl.brandCheck(this, MessageEvent)
+
+    return this.#eventInit.source
+  }
+
+  get ports () {
+    webidl.brandCheck(this, MessageEvent)
+
+    if (!Object.isFrozen(this.#eventInit.ports)) {
+      Object.freeze(this.#eventInit.ports)
+    }
+
+    return this.#eventInit.ports
+  }
+
+  initMessageEvent (
+    type,
+    bubbles = false,
+    cancelable = false,
+    data = null,
+    origin = '',
+    lastEventId = '',
+    source = null,
+    ports = []
+  ) {
+    webidl.brandCheck(this, MessageEvent)
+
+    webidl.argumentLengthCheck(arguments, 1, { header: 'MessageEvent.initMessageEvent' })
+
+    return new MessageEvent(type, {
+      bubbles, cancelable, data, origin, lastEventId, source, ports
+    })
+  }
+}
+
+/**
+ * @see https://websockets.spec.whatwg.org/#the-closeevent-interface
+ */
+class CloseEvent extends Event {
+  #eventInit
+
+  constructor (type, eventInitDict = {}) {
+    webidl.argumentLengthCheck(arguments, 1, { header: 'CloseEvent constructor' })
+
+    type = webidl.converters.DOMString(type)
+    eventInitDict = webidl.converters.CloseEventInit(eventInitDict)
+
+    super(type, eventInitDict)
+
+    this.#eventInit = eventInitDict
+  }
+
+  get wasClean () {
+    webidl.brandCheck(this, CloseEvent)
+
+    return this.#eventInit.wasClean
+  }
+
+  get code () {
+    webidl.brandCheck(this, CloseEvent)
+
+    return this.#eventInit.code
+  }
+
+  get reason () {
+    webidl.brandCheck(this, CloseEvent)
+
+    return this.#eventInit.reason
+  }
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#the-errorevent-interface
+class ErrorEvent extends Event {
+  #eventInit
+
+  constructor (type, eventInitDict) {
+    webidl.argumentLengthCheck(arguments, 1, { header: 'ErrorEvent constructor' })
+
+    super(type, eventInitDict)
+
+    type = webidl.converters.DOMString(type)
+    eventInitDict = webidl.converters.ErrorEventInit(eventInitDict ?? {})
+
+    this.#eventInit = eventInitDict
+  }
+
+  get message () {
+    webidl.brandCheck(this, ErrorEvent)
+
+    return this.#eventInit.message
+  }
+
+  get filename () {
+    webidl.brandCheck(this, ErrorEvent)
+
+    return this.#eventInit.filename
+  }
+
+  get lineno () {
+    webidl.brandCheck(this, ErrorEvent)
+
+    return this.#eventInit.lineno
+  }
+
+  get colno () {
+    webidl.brandCheck(this, ErrorEvent)
+
+    return this.#eventInit.colno
+  }
+
+  get error () {
+    webidl.brandCheck(this, ErrorEvent)
+
+    return this.#eventInit.error
+  }
+}
+
+Object.defineProperties(MessageEvent.prototype, {
+  [Symbol.toStringTag]: {
+    value: 'MessageEvent',
+    configurable: true
+  },
+  data: kEnumerableProperty,
+  origin: kEnumerableProperty,
+  lastEventId: kEnumerableProperty,
+  source: kEnumerableProperty,
+  ports: kEnumerableProperty,
+  initMessageEvent: kEnumerableProperty
+})
+
+Object.defineProperties(CloseEvent.prototype, {
+  [Symbol.toStringTag]: {
+    value: 'CloseEvent',
+    configurable: true
+  },
+  reason: kEnumerableProperty,
+  code: kEnumerableProperty,
+  wasClean: kEnumerableProperty
+})
+
+Object.defineProperties(ErrorEvent.prototype, {
+  [Symbol.toStringTag]: {
+    value: 'ErrorEvent',
+    configurable: true
+  },
+  message: kEnumerableProperty,
+  filename: kEnumerableProperty,
+  lineno: kEnumerableProperty,
+  colno: kEnumerableProperty,
+  error: kEnumerableProperty
+})
+
+webidl.converters.MessagePort = webidl.interfaceConverter(MessagePort)
+
+webidl.converters['sequence<MessagePort>'] = webidl.sequenceConverter(
+  webidl.converters.MessagePort
+)
+
+const eventInit = [
+  {
+    key: 'bubbles',
+    converter: webidl.converters.boolean,
+    defaultValue: false
+  },
+  {
+    key: 'cancelable',
+    converter: webidl.converters.boolean,
+    defaultValue: false
+  },
+  {
+    key: 'composed',
+    converter: webidl.converters.boolean,
+    defaultValue: false
+  }
+]
+
+webidl.converters.MessageEventInit = webidl.dictionaryConverter([
+  ...eventInit,
+  {
+    key: 'data',
+    converter: webidl.converters.any,
+    defaultValue: null
+  },
+  {
+    key: 'origin',
+    converter: webidl.converters.USVString,
+    defaultValue: ''
+  },
+  {
+    key: 'lastEventId',
+    converter: webidl.converters.DOMString,
+    defaultValue: ''
+  },
+  {
+    key: 'source',
+    // Node doesn't implement WindowProxy or ServiceWorker, so the only
+    // valid value for source is a MessagePort.
+    converter: webidl.nullableConverter(webidl.converters.MessagePort),
+    defaultValue: null
+  },
+  {
+    key: 'ports',
+    converter: webidl.converters['sequence<MessagePort>'],
+    get defaultValue () {
+      return []
+    }
+  }
+])
+
+webidl.converters.CloseEventInit = webidl.dictionaryConverter([
+  ...eventInit,
+  {
+    key: 'wasClean',
+    converter: webidl.converters.boolean,
+    defaultValue: false
+  },
+  {
+    key: 'code',
+    converter: webidl.converters['unsigned short'],
+    defaultValue: 0
+  },
+  {
+    key: 'reason',
+    converter: webidl.converters.USVString,
+    defaultValue: ''
+  }
+])
+
+webidl.converters.ErrorEventInit = webidl.dictionaryConverter([
+  ...eventInit,
+  {
+    key: 'message',
+    converter: webidl.converters.DOMString,
+    defaultValue: ''
+  },
+  {
+    key: 'filename',
+    converter: webidl.converters.USVString,
+    defaultValue: ''
+  },
+  {
+    key: 'lineno',
+    converter: webidl.converters['unsigned long'],
+    defaultValue: 0
+  },
+  {
+    key: 'colno',
+    converter: webidl.converters['unsigned long'],
+    defaultValue: 0
+  },
+  {
+    key: 'error',
+    converter: webidl.converters.any
+  }
+])
+
+module.exports = {
+  MessageEvent,
+  CloseEvent,
+  ErrorEvent
+}
+
+
+/***/ }),
+
+/***/ 5444:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+
+const { randomBytes } = __nccwpck_require__(6113)
+const { maxUnsigned16Bit } = __nccwpck_require__(9188)
+
+class WebsocketFrameSend {
+  /**
+   * @param {Buffer|undefined} data
+   */
+  constructor (data) {
+    this.frameData = data
+    this.maskKey = randomBytes(4)
+  }
+
+  createFrame (opcode) {
+    const bodyLength = this.frameData?.byteLength ?? 0
+
+    /** @type {number} */
+    let payloadLength = bodyLength // 0-125
+    let offset = 6
+
+    if (bodyLength > maxUnsigned16Bit) {
+      offset += 8 // payload length is next 8 bytes
+      payloadLength = 127
+    } else if (bodyLength > 125) {
+      offset += 2 // payload length is next 2 bytes
+      payloadLength = 126
+    }
+
+    const buffer = Buffer.allocUnsafe(bodyLength + offset)
+
+    // Clear first 2 bytes, everything else is overwritten
+    buffer[0] = buffer[1] = 0
+    buffer[0] |= 0x80 // FIN
+    buffer[0] = (buffer[0] & 0xF0) + opcode // opcode
+
+    /*! ws. MIT License. Einar Otto Stangvik <einaros@gmail.com> */
+    buffer[offset - 4] = this.maskKey[0]
+    buffer[offset - 3] = this.maskKey[1]
+    buffer[offset - 2] = this.maskKey[2]
+    buffer[offset - 1] = this.maskKey[3]
+
+    buffer[1] = payloadLength
+
+    if (payloadLength === 126) {
+      new DataView(buffer.buffer).setUint16(2, bodyLength)
+    } else if (payloadLength === 127) {
+      // Clear extended payload length
+      buffer[2] = buffer[3] = 0
+      buffer.writeUIntBE(bodyLength, 4, 6)
+    }
+
+    buffer[1] |= 0x80 // MASK
+
+    // mask body
+    for (let i = 0; i < bodyLength; i++) {
+      buffer[offset + i] = this.frameData[i] ^ this.maskKey[i % 4]
+    }
+
+    return buffer
+  }
+}
+
+module.exports = {
+  WebsocketFrameSend
+}
+
+
+/***/ }),
+
+/***/ 1688:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+
+const { Writable } = __nccwpck_require__(2781)
+const diagnosticsChannel = __nccwpck_require__(7643)
+const { parserStates, opcodes, states, emptyBuffer } = __nccwpck_require__(9188)
+const { kReadyState, kSentClose, kResponse, kReceivedClose } = __nccwpck_require__(7578)
+const { isValidStatusCode, failWebsocketConnection, websocketMessageReceived } = __nccwpck_require__(5515)
+const { WebsocketFrameSend } = __nccwpck_require__(5444)
+
+// This code was influenced by ws released under the MIT license.
+// Copyright (c) 2011 Einar Otto Stangvik <einaros@gmail.com>
+// Copyright (c) 2013 Arnout Kazemier and contributors
+// Copyright (c) 2016 Luigi Pinca and contributors
+
+const channels = {}
+channels.ping = diagnosticsChannel.channel('undici:websocket:ping')
+channels.pong = diagnosticsChannel.channel('undici:websocket:pong')
+
+class ByteParser extends Writable {
+  #buffers = []
+  #byteOffset = 0
+
+  #state = parserStates.INFO
+
+  #info = {}
+  #fragments = []
+
+  constructor (ws) {
+    super()
+
+    this.ws = ws
+  }
+
+  /**
+   * @param {Buffer} chunk
+   * @param {() => void} callback
+   */
+  _write (chunk, _, callback) {
+    this.#buffers.push(chunk)
+    this.#byteOffset += chunk.length
+
+    this.run(callback)
+  }
+
+  /**
+   * Runs whenever a new chunk is received.
+   * Callback is called whenever there are no more chunks buffering,
+   * or not enough bytes are buffered to parse.
+   */
+  run (callback) {
+    while (true) {
+      if (this.#state === parserStates.INFO) {
+        // If there aren't enough bytes to parse the payload length, etc.
+        if (this.#byteOffset < 2) {
+          return callback()
+        }
+
+        const buffer = this.consume(2)
+
+        this.#info.fin = (buffer[0] & 0x80) !== 0
+        this.#info.opcode = buffer[0] & 0x0F
+
+        // If we receive a fragmented message, we use the type of the first
+        // frame to parse the full message as binary/text, when it's terminated
+        this.#info.originalOpcode ??= this.#info.opcode
+
+        this.#info.fragmented = !this.#info.fin && this.#info.opcode !== opcodes.CONTINUATION
+
+        if (this.#info.fragmented && this.#info.opcode !== opcodes.BINARY && this.#info.opcode !== opcodes.TEXT) {
+          // Only text and binary frames can be fragmented
+          failWebsocketConnection(this.ws, 'Invalid frame type was fragmented.')
+          return
+        }
+
+        const payloadLength = buffer[1] & 0x7F
+
+        if (payloadLength <= 125) {
+          this.#info.payloadLength = payloadLength
+          this.#state = parserStates.READ_DATA
+        } else if (payloadLength === 126) {
+          this.#state = parserStates.PAYLOADLENGTH_16
+        } else if (payloadLength === 127) {
+          this.#state = parserStates.PAYLOADLENGTH_64
+        }
+
+        if (this.#info.fragmented && payloadLength > 125) {
+          // A fragmented frame can't be fragmented itself
+          failWebsocketConnection(this.ws, 'Fragmented frame exceeded 125 bytes.')
+          return
+        } else if (
+          (this.#info.opcode === opcodes.PING ||
+            this.#info.opcode === opcodes.PONG ||
+            this.#info.opcode === opcodes.CLOSE) &&
+          payloadLength > 125
+        ) {
+          // Control frames can have a payload length of 125 bytes MAX
+          failWebsocketConnection(this.ws, 'Payload length for control frame exceeded 125 bytes.')
+          return
+        } else if (this.#info.opcode === opcodes.CLOSE) {
+          if (payloadLength === 1) {
+            failWebsocketConnection(this.ws, 'Received close frame with a 1-byte body.')
+            return
+          }
+
+          const body = this.consume(payloadLength)
+
+          this.#info.closeInfo = this.parseCloseBody(false, body)
+
+          if (!this.ws[kSentClose]) {
+            // If an endpoint receives a Close frame and did not previously send a
+            // Close frame, the endpoint MUST send a Close frame in response.  (When
+            // sending a Close frame in response, the endpoint typically echos the
+            // status code it received.)
+            const body = Buffer.allocUnsafe(2)
+            body.writeUInt16BE(this.#info.closeInfo.code, 0)
+            const closeFrame = new WebsocketFrameSend(body)
+
+            this.ws[kResponse].socket.write(
+              closeFrame.createFrame(opcodes.CLOSE),
+              (err) => {
+                if (!err) {
+                  this.ws[kSentClose] = true
+                }
+              }
+            )
+          }
+
+          // Upon either sending or receiving a Close control frame, it is said
+          // that _The WebSocket Closing Handshake is Started_ and that the
+          // WebSocket connection is in the CLOSING state.
+          this.ws[kReadyState] = states.CLOSING
+          this.ws[kReceivedClose] = true
+
+          this.end()
+
+          return
+        } else if (this.#info.opcode === opcodes.PING) {
+          // Upon receipt of a Ping frame, an endpoint MUST send a Pong frame in
+          // response, unless it already received a Close frame.
+          // A Pong frame sent in response to a Ping frame must have identical
+          // "Application data"
+
+          const body = this.consume(payloadLength)
+
+          if (!this.ws[kReceivedClose]) {
+            const frame = new WebsocketFrameSend(body)
+
+            this.ws[kResponse].socket.write(frame.createFrame(opcodes.PONG))
+
+            if (channels.ping.hasSubscribers) {
+              channels.ping.publish({
+                payload: body
+              })
+            }
+          }
+
+          this.#state = parserStates.INFO
+
+          if (this.#byteOffset > 0) {
+            continue
+          } else {
+            callback()
+            return
+          }
+        } else if (this.#info.opcode === opcodes.PONG) {
+          // A Pong frame MAY be sent unsolicited.  This serves as a
+          // unidirectional heartbeat.  A response to an unsolicited Pong frame is
+          // not expected.
+
+          const body = this.consume(payloadLength)
+
+          if (channels.pong.hasSubscribers) {
+            channels.pong.publish({
+              payload: body
+            })
+          }
+
+          if (this.#byteOffset > 0) {
+            continue
+          } else {
+            callback()
+            return
+          }
+        }
+      } else if (this.#state === parserStates.PAYLOADLENGTH_16) {
+        if (this.#byteOffset < 2) {
+          return callback()
+        }
+
+        const buffer = this.consume(2)
+
+        this.#info.payloadLength = buffer.readUInt16BE(0)
+        this.#state = parserStates.READ_DATA
+      } else if (this.#state === parserStates.PAYLOADLENGTH_64) {
+        if (this.#byteOffset < 8) {
+          return callback()
+        }
+
+        const buffer = this.consume(8)
+        const upper = buffer.readUInt32BE(0)
+
+        // 2^31 is the maxinimum bytes an arraybuffer can contain
+        // on 32-bit systems. Although, on 64-bit systems, this is
+        // 2^53-1 bytes.
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Invalid_array_length
+        // https://source.chromium.org/chromium/chromium/src/+/main:v8/src/common/globals.h;drc=1946212ac0100668f14eb9e2843bdd846e510a1e;bpv=1;bpt=1;l=1275
+        // https://source.chromium.org/chromium/chromium/src/+/main:v8/src/objects/js-array-buffer.h;l=34;drc=1946212ac0100668f14eb9e2843bdd846e510a1e
+        if (upper > 2 ** 31 - 1) {
+          failWebsocketConnection(this.ws, 'Received payload length > 2^31 bytes.')
+          return
+        }
+
+        const lower = buffer.readUInt32BE(4)
+
+        this.#info.payloadLength = (upper << 8) + lower
+        this.#state = parserStates.READ_DATA
+      } else if (this.#state === parserStates.READ_DATA) {
+        if (this.#byteOffset < this.#info.payloadLength) {
+          // If there is still more data in this chunk that needs to be read
+          return callback()
+        } else if (this.#byteOffset >= this.#info.payloadLength) {
+          // If the server sent multiple frames in a single chunk
+
+          const body = this.consume(this.#info.payloadLength)
+
+          this.#fragments.push(body)
+
+          // If the frame is unfragmented, or a fragmented frame was terminated,
+          // a message was received
+          if (!this.#info.fragmented || (this.#info.fin && this.#info.opcode === opcodes.CONTINUATION)) {
+            const fullMessage = Buffer.concat(this.#fragments)
+
+            websocketMessageReceived(this.ws, this.#info.originalOpcode, fullMessage)
+
+            this.#info = {}
+            this.#fragments.length = 0
+          }
+
+          this.#state = parserStates.INFO
+        }
+      }
+
+      if (this.#byteOffset > 0) {
+        continue
+      } else {
+        callback()
+        break
+      }
+    }
+  }
+
+  /**
+   * Take n bytes from the buffered Buffers
+   * @param {number} n
+   * @returns {Buffer|null}
+   */
+  consume (n) {
+    if (n > this.#byteOffset) {
+      return null
+    } else if (n === 0) {
+      return emptyBuffer
+    }
+
+    if (this.#buffers[0].length === n) {
+      this.#byteOffset -= this.#buffers[0].length
+      return this.#buffers.shift()
+    }
+
+    const buffer = Buffer.allocUnsafe(n)
+    let offset = 0
+
+    while (offset !== n) {
+      const next = this.#buffers[0]
+      const { length } = next
+
+      if (length + offset === n) {
+        buffer.set(this.#buffers.shift(), offset)
+        break
+      } else if (length + offset > n) {
+        buffer.set(next.subarray(0, n - offset), offset)
+        this.#buffers[0] = next.subarray(n - offset)
+        break
+      } else {
+        buffer.set(this.#buffers.shift(), offset)
+        offset += next.length
+      }
+    }
+
+    this.#byteOffset -= n
+
+    return buffer
+  }
+
+  parseCloseBody (onlyCode, data) {
+    // https://datatracker.ietf.org/doc/html/rfc6455#section-7.1.5
+    /** @type {number|undefined} */
+    let code
+
+    if (data.length >= 2) {
+      // _The WebSocket Connection Close Code_ is
+      // defined as the status code (Section 7.4) contained in the first Close
+      // control frame received by the application
+      code = data.readUInt16BE(0)
+    }
+
+    if (onlyCode) {
+      if (!isValidStatusCode(code)) {
+        return null
+      }
+
+      return { code }
+    }
+
+    // https://datatracker.ietf.org/doc/html/rfc6455#section-7.1.6
+    /** @type {Buffer} */
+    let reason = data.subarray(2)
+
+    // Remove BOM
+    if (reason[0] === 0xEF && reason[1] === 0xBB && reason[2] === 0xBF) {
+      reason = reason.subarray(3)
+    }
+
+    if (code !== undefined && !isValidStatusCode(code)) {
+      return null
+    }
+
+    try {
+      // TODO: optimize this
+      reason = new TextDecoder('utf-8', { fatal: true }).decode(reason)
+    } catch {
+      return null
+    }
+
+    return { code, reason }
+  }
+
+  get closingInfo () {
+    return this.#info.closeInfo
+  }
+}
+
+module.exports = {
+  ByteParser
+}
+
+
+/***/ }),
+
+/***/ 7578:
+/***/ ((module) => {
+
+
+
+module.exports = {
+  kWebSocketURL: Symbol('url'),
+  kReadyState: Symbol('ready state'),
+  kController: Symbol('controller'),
+  kResponse: Symbol('response'),
+  kExtensions: Symbol('extensions'),
+  kProtocol: Symbol('protocol'),
+  kBinaryType: Symbol('binary type'),
+  kClosingFrame: Symbol('closing frame'),
+  kSentClose: Symbol('sent close'),
+  kReceivedClose: Symbol('received close'),
+  kByteParser: Symbol('byte parser')
+}
+
+
+/***/ }),
+
+/***/ 5515:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+
+const { kReadyState, kController, kResponse, kBinaryType, kWebSocketURL } = __nccwpck_require__(7578)
+const { states, opcodes } = __nccwpck_require__(9188)
+const { MessageEvent, ErrorEvent } = __nccwpck_require__(2611)
+
+/* globals Blob */
+
+/**
+ * @param {import('./websocket').WebSocket} ws
+ */
+function isEstablished (ws) {
+  // If the server's response is validated as provided for above, it is
+  // said that _The WebSocket Connection is Established_ and that the
+  // WebSocket Connection is in the OPEN state.
+  return ws[kReadyState] === states.OPEN
+}
+
+/**
+ * @param {import('./websocket').WebSocket} ws
+ */
+function isClosing (ws) {
+  // Upon either sending or receiving a Close control frame, it is said
+  // that _The WebSocket Closing Handshake is Started_ and that the
+  // WebSocket connection is in the CLOSING state.
+  return ws[kReadyState] === states.CLOSING
+}
+
+/**
+ * @param {import('./websocket').WebSocket} ws
+ */
+function isClosed (ws) {
+  return ws[kReadyState] === states.CLOSED
+}
+
+/**
+ * @see https://dom.spec.whatwg.org/#concept-event-fire
+ * @param {string} e
+ * @param {EventTarget} target
+ * @param {EventInit | undefined} eventInitDict
+ */
+function fireEvent (e, target, eventConstructor = Event, eventInitDict) {
+  // 1. If eventConstructor is not given, then let eventConstructor be Event.
+
+  // 2. Let event be the result of creating an event given eventConstructor,
+  //    in the relevant realm of target.
+  // 3. Initialize event’s type attribute to e.
+  const event = new eventConstructor(e, eventInitDict) // eslint-disable-line new-cap
+
+  // 4. Initialize any other IDL attributes of event as described in the
+  //    invocation of this algorithm.
+
+  // 5. Return the result of dispatching event at target, with legacy target
+  //    override flag set if set.
+  target.dispatchEvent(event)
+}
+
+/**
+ * @see https://websockets.spec.whatwg.org/#feedback-from-the-protocol
+ * @param {import('./websocket').WebSocket} ws
+ * @param {number} type Opcode
+ * @param {Buffer} data application data
+ */
+function websocketMessageReceived (ws, type, data) {
+  // 1. If ready state is not OPEN (1), then return.
+  if (ws[kReadyState] !== states.OPEN) {
+    return
+  }
+
+  // 2. Let dataForEvent be determined by switching on type and binary type:
+  let dataForEvent
+
+  if (type === opcodes.TEXT) {
+    // -> type indicates that the data is Text
+    //      a new DOMString containing data
+    try {
+      dataForEvent = new TextDecoder('utf-8', { fatal: true }).decode(data)
+    } catch {
+      failWebsocketConnection(ws, 'Received invalid UTF-8 in text frame.')
+      return
+    }
+  } else if (type === opcodes.BINARY) {
+    if (ws[kBinaryType] === 'blob') {
+      // -> type indicates that the data is Binary and binary type is "blob"
+      //      a new Blob object, created in the relevant Realm of the WebSocket
+      //      object, that represents data as its raw data
+      dataForEvent = new Blob([data])
+    } else {
+      // -> type indicates that the data is Binary and binary type is "arraybuffer"
+      //      a new ArrayBuffer object, created in the relevant Realm of the
+      //      WebSocket object, whose contents are data
+      dataForEvent = new Uint8Array(data).buffer
+    }
+  }
+
+  // 3. Fire an event named message at the WebSocket object, using MessageEvent,
+  //    with the origin attribute initialized to the serialization of the WebSocket
+  //    object’s url's origin, and the data attribute initialized to dataForEvent.
+  fireEvent('message', ws, MessageEvent, {
+    origin: ws[kWebSocketURL].origin,
+    data: dataForEvent
+  })
+}
+
+/**
+ * @see https://datatracker.ietf.org/doc/html/rfc6455
+ * @see https://datatracker.ietf.org/doc/html/rfc2616
+ * @see https://bugs.chromium.org/p/chromium/issues/detail?id=398407
+ * @param {string} protocol
+ */
+function isValidSubprotocol (protocol) {
+  // If present, this value indicates one
+  // or more comma-separated subprotocol the client wishes to speak,
+  // ordered by preference.  The elements that comprise this value
+  // MUST be non-empty strings with characters in the range U+0021 to
+  // U+007E not including separator characters as defined in
+  // [RFC2616] and MUST all be unique strings.
+  if (protocol.length === 0) {
+    return false
+  }
+
+  for (const char of protocol) {
+    const code = char.charCodeAt(0)
+
+    if (
+      code < 0x21 ||
+      code > 0x7E ||
+      char === '(' ||
+      char === ')' ||
+      char === '<' ||
+      char === '>' ||
+      char === '@' ||
+      char === ',' ||
+      char === ';' ||
+      char === ':' ||
+      char === '\\' ||
+      char === '"' ||
+      char === '/' ||
+      char === '[' ||
+      char === ']' ||
+      char === '?' ||
+      char === '=' ||
+      char === '{' ||
+      char === '}' ||
+      code === 32 || // SP
+      code === 9 // HT
+    ) {
+      return false
+    }
+  }
+
+  return true
+}
+
+/**
+ * @see https://datatracker.ietf.org/doc/html/rfc6455#section-7-4
+ * @param {number} code
+ */
+function isValidStatusCode (code) {
+  if (code >= 1000 && code < 1015) {
+    return (
+      code !== 1004 && // reserved
+      code !== 1005 && // "MUST NOT be set as a status code"
+      code !== 1006 // "MUST NOT be set as a status code"
+    )
+  }
+
+  return code >= 3000 && code <= 4999
+}
+
+/**
+ * @param {import('./websocket').WebSocket} ws
+ * @param {string|undefined} reason
+ */
+function failWebsocketConnection (ws, reason) {
+  const { [kController]: controller, [kResponse]: response } = ws
+
+  controller.abort()
+
+  if (response?.socket && !response.socket.destroyed) {
+    response.socket.destroy()
+  }
+
+  if (reason) {
+    fireEvent('error', ws, ErrorEvent, {
+      error: new Error(reason)
+    })
+  }
+}
+
+module.exports = {
+  isEstablished,
+  isClosing,
+  isClosed,
+  fireEvent,
+  isValidSubprotocol,
+  isValidStatusCode,
+  failWebsocketConnection,
+  websocketMessageReceived
+}
+
+
+/***/ }),
+
+/***/ 4284:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+
+
+const { webidl } = __nccwpck_require__(1744)
+const { DOMException } = __nccwpck_require__(1037)
+const { URLSerializer } = __nccwpck_require__(685)
+const { staticPropertyDescriptors, states, opcodes, emptyBuffer } = __nccwpck_require__(9188)
+const {
+  kWebSocketURL,
+  kReadyState,
+  kController,
+  kExtensions,
+  kProtocol,
+  kBinaryType,
+  kResponse,
+  kSentClose
+} = __nccwpck_require__(7578)
+const { isEstablished, isClosing, isValidSubprotocol, failWebsocketConnection } = __nccwpck_require__(5515)
+const { establishWebSocketConnection } = __nccwpck_require__(5354)
+const { WebsocketFrameSend } = __nccwpck_require__(5444)
+const { kEnumerableProperty, isBlobLike } = __nccwpck_require__(3983)
+const { types } = __nccwpck_require__(3837)
+
+let experimentalWarned = false
+
+// https://websockets.spec.whatwg.org/#interface-definition
+class WebSocket extends EventTarget {
+  #events = {
+    open: null,
+    error: null,
+    close: null,
+    message: null
+  }
+
+  #bufferedAmount = 0
+
+  /**
+   * @param {string} url
+   * @param {string|string[]} protocols
+   */
+  constructor (url, protocols = []) {
+    super()
+
+    webidl.argumentLengthCheck(arguments, 1, { header: 'WebSocket constructor' })
+
+    if (!experimentalWarned) {
+      experimentalWarned = true
+      process.emitWarning('WebSockets are experimental, expect them to change at any time.', {
+        code: 'UNDICI-WS'
+      })
+    }
+
+    url = webidl.converters.USVString(url)
+    protocols = webidl.converters['DOMString or sequence<DOMString>'](protocols)
+
+    // 1. Let urlRecord be the result of applying the URL parser to url.
+    let urlRecord
+
+    try {
+      urlRecord = new URL(url)
+    } catch (e) {
+      // 2. If urlRecord is failure, then throw a "SyntaxError" DOMException.
+      throw new DOMException(e, 'SyntaxError')
+    }
+
+    // 3. If urlRecord’s scheme is not "ws" or "wss", then throw a
+    //    "SyntaxError" DOMException.
+    if (urlRecord.protocol !== 'ws:' && urlRecord.protocol !== 'wss:') {
+      throw new DOMException(
+        `Expected a ws: or wss: protocol, got ${urlRecord.protocol}`,
+        'SyntaxError'
+      )
+    }
+
+    // 4. If urlRecord’s fragment is non-null, then throw a "SyntaxError"
+    //    DOMException.
+    if (urlRecord.hash) {
+      throw new DOMException('Got fragment', 'SyntaxError')
+    }
+
+    // 5. If protocols is a string, set protocols to a sequence consisting
+    //    of just that string.
+    if (typeof protocols === 'string') {
+      protocols = [protocols]
+    }
+
+    // 6. If any of the values in protocols occur more than once or otherwise
+    //    fail to match the requirements for elements that comprise the value
+    //    of `Sec-WebSocket-Protocol` fields as defined by The WebSocket
+    //    protocol, then throw a "SyntaxError" DOMException.
+    if (protocols.length !== new Set(protocols.map(p => p.toLowerCase())).size) {
+      throw new DOMException('Invalid Sec-WebSocket-Protocol value', 'SyntaxError')
+    }
+
+    if (protocols.length > 0 && !protocols.every(p => isValidSubprotocol(p))) {
+      throw new DOMException('Invalid Sec-WebSocket-Protocol value', 'SyntaxError')
+    }
+
+    // 7. Set this's url to urlRecord.
+    this[kWebSocketURL] = urlRecord
+
+    // 8. Let client be this's relevant settings object.
+
+    // 9. Run this step in parallel:
+
+    //    1. Establish a WebSocket connection given urlRecord, protocols,
+    //       and client.
+    this[kController] = establishWebSocketConnection(urlRecord, protocols, this)
+
+    // Each WebSocket object has an associated ready state, which is a
+    // number representing the state of the connection. Initially it must
+    // be CONNECTING (0).
+    this[kReadyState] = WebSocket.CONNECTING
+
+    // The extensions attribute must initially return the empty string.
+    this[kExtensions] = ''
+
+    // The protocol attribute must initially return the empty string.
+    this[kProtocol] = ''
+
+    // Each WebSocket object has an associated binary type, which is a
+    // BinaryType. Initially it must be "blob".
+    this[kBinaryType] = 'blob'
+  }
+
+  /**
+   * @see https://websockets.spec.whatwg.org/#dom-websocket-close
+   * @param {number|undefined} code
+   * @param {string|undefined} reason
+   */
+  close (code = undefined, reason = undefined) {
+    webidl.brandCheck(this, WebSocket)
+
+    if (code !== undefined) {
+      code = webidl.converters['unsigned short'](code, { clamp: true })
+    }
+
+    if (reason !== undefined) {
+      reason = webidl.converters.USVString(reason)
+    }
+
+    // 1. If code is present, but is neither an integer equal to 1000 nor an
+    //    integer in the range 3000 to 4999, inclusive, throw an
+    //    "InvalidAccessError" DOMException.
+    if (code !== undefined) {
+      if (code !== 1000 && (code < 3000 || code > 4999)) {
+        throw new DOMException('invalid code', 'InvalidAccessError')
+      }
+    }
+
+    let reasonByteLength = 0
+
+    // 2. If reason is present, then run these substeps:
+    if (reason !== undefined) {
+      // 1. Let reasonBytes be the result of encoding reason.
+      // 2. If reasonBytes is longer than 123 bytes, then throw a
+      //    "SyntaxError" DOMException.
+      reasonByteLength = Buffer.byteLength(reason)
+
+      if (reasonByteLength > 123) {
+        throw new DOMException(
+          `Reason must be less than 123 bytes; received ${reasonByteLength}`,
+          'SyntaxError'
+        )
+      }
+    }
+
+    // 3. Run the first matching steps from the following list:
+    if (this[kReadyState] === WebSocket.CLOSING || this[kReadyState] === WebSocket.CLOSED) {
+      // If this's ready state is CLOSING (2) or CLOSED (3)
+      // Do nothing.
+    } else if (!isEstablished(this)) {
+      // If the WebSocket connection is not yet established
+      // Fail the WebSocket connection and set this's ready state
+      // to CLOSING (2).
+      failWebsocketConnection(this, 'Connection was closed before it was established.')
+      this[kReadyState] = WebSocket.CLOSING
+    } else if (!isClosing(this)) {
+      // If the WebSocket closing handshake has not yet been started
+      // Start the WebSocket closing handshake and set this's ready
+      // state to CLOSING (2).
+      // - If neither code nor reason is present, the WebSocket Close
+      //   message must not have a body.
+      // - If code is present, then the status code to use in the
+      //   WebSocket Close message must be the integer given by code.
+      // - If reason is also present, then reasonBytes must be
+      //   provided in the Close message after the status code.
+
+      const frame = new WebsocketFrameSend()
+
+      // If neither code nor reason is present, the WebSocket Close
+      // message must not have a body.
+
+      // If code is present, then the status code to use in the
+      // WebSocket Close message must be the integer given by code.
+      if (code !== undefined && reason === undefined) {
+        frame.frameData = Buffer.allocUnsafe(2)
+        frame.frameData.writeUInt16BE(code, 0)
+      } else if (code !== undefined && reason !== undefined) {
+        // If reason is also present, then reasonBytes must be
+        // provided in the Close message after the status code.
+        frame.frameData = Buffer.allocUnsafe(2 + reasonByteLength)
+        frame.frameData.writeUInt16BE(code, 0)
+        // the body MAY contain UTF-8-encoded data with value /reason/
+        frame.frameData.write(reason, 2, 'utf-8')
+      } else {
+        frame.frameData = emptyBuffer
+      }
+
+      /** @type {import('stream').Duplex} */
+      const socket = this[kResponse].socket
+
+      socket.write(frame.createFrame(opcodes.CLOSE), (err) => {
+        if (!err) {
+          this[kSentClose] = true
+        }
+      })
+
+      // Upon either sending or receiving a Close control frame, it is said
+      // that _The WebSocket Closing Handshake is Started_ and that the
+      // WebSocket connection is in the CLOSING state.
+      this[kReadyState] = states.CLOSING
+    } else {
+      // Otherwise
+      // Set this's ready state to CLOSING (2).
+      this[kReadyState] = WebSocket.CLOSING
+    }
+  }
+
+  /**
+   * @see https://websockets.spec.whatwg.org/#dom-websocket-send
+   * @param {NodeJS.TypedArray|ArrayBuffer|Blob|string} data
+   */
+  send (data) {
+    webidl.brandCheck(this, WebSocket)
+
+    webidl.argumentLengthCheck(arguments, 1, { header: 'WebSocket.send' })
+
+    data = webidl.converters.WebSocketSendData(data)
+
+    // 1. If this's ready state is CONNECTING, then throw an
+    //    "InvalidStateError" DOMException.
+    if (this[kReadyState] === WebSocket.CONNECTING) {
+      throw new DOMException('Sent before connected.', 'InvalidStateError')
+    }
+
+    // 2. Run the appropriate set of steps from the following list:
+    // https://datatracker.ietf.org/doc/html/rfc6455#section-6.1
+    // https://datatracker.ietf.org/doc/html/rfc6455#section-5.2
+
+    if (!isEstablished(this) || isClosing(this)) {
+      return
+    }
+
+    /** @type {import('stream').Duplex} */
+    const socket = this[kResponse].socket
+
+    // If data is a string
+    if (typeof data === 'string') {
+      // If the WebSocket connection is established and the WebSocket
+      // closing handshake has not yet started, then the user agent
+      // must send a WebSocket Message comprised of the data argument
+      // using a text frame opcode; if the data cannot be sent, e.g.
+      // because it would need to be buffered but the buffer is full,
+      // the user agent must flag the WebSocket as full and then close
+      // the WebSocket connection. Any invocation of this method with a
+      // string argument that does not throw an exception must increase
+      // the bufferedAmount attribute by the number of bytes needed to
+      // express the argument as UTF-8.
+
+      const value = Buffer.from(data)
+      const frame = new WebsocketFrameSend(value)
+      const buffer = frame.createFrame(opcodes.TEXT)
+
+      this.#bufferedAmount += value.byteLength
+      socket.write(buffer, () => {
+        this.#bufferedAmount -= value.byteLength
+      })
+    } else if (types.isArrayBuffer(data)) {
+      // If the WebSocket connection is established, and the WebSocket
+      // closing handshake has not yet started, then the user agent must
+      // send a WebSocket Message comprised of data using a binary frame
+      // opcode; if the data cannot be sent, e.g. because it would need
+      // to be buffered but the buffer is full, the user agent must flag
+      // the WebSocket as full and then close the WebSocket connection.
+      // The data to be sent is the data stored in the buffer described
+      // by the ArrayBuffer object. Any invocation of this method with an
+      // ArrayBuffer argument that does not throw an exception must
+      // increase the bufferedAmount attribute by the length of the
+      // ArrayBuffer in bytes.
+
+      const value = Buffer.from(data)
+      const frame = new WebsocketFrameSend(value)
+      const buffer = frame.createFrame(opcodes.BINARY)
+
+      this.#bufferedAmount += value.byteLength
+      socket.write(buffer, () => {
+        this.#bufferedAmount -= value.byteLength
+      })
+    } else if (ArrayBuffer.isView(data)) {
+      // If the WebSocket connection is established, and the WebSocket
+      // closing handshake has not yet started, then the user agent must
+      // send a WebSocket Message comprised of data using a binary frame
+      // opcode; if the data cannot be sent, e.g. because it would need to
+      // be buffered but the buffer is full, the user agent must flag the
+      // WebSocket as full and then close the WebSocket connection. The
+      // data to be sent is the data stored in the section of the buffer
+      // described by the ArrayBuffer object that data references. Any
+      // invocation of this method with this kind of argument that does
+      // not throw an exception must increase the bufferedAmount attribute
+      // by the length of data’s buffer in bytes.
+
+      const ab = new ArrayBuffer(data.byteLength)
+
+      if (Buffer.isBuffer(data)) {
+        // new Buffer signature is deprecated
+        Buffer.from(ab).set(data)
+      } else {
+        new data.constructor(ab).set(data)
+      }
+
+      const value = Buffer.from(ab)
+
+      const frame = new WebsocketFrameSend(value)
+      const buffer = frame.createFrame(opcodes.BINARY)
+
+      this.#bufferedAmount += value.byteLength
+      socket.write(buffer, () => {
+        this.#bufferedAmount -= value.byteLength
+      })
+    } else if (isBlobLike(data)) {
+      // If the WebSocket connection is established, and the WebSocket
+      // closing handshake has not yet started, then the user agent must
+      // send a WebSocket Message comprised of data using a binary frame
+      // opcode; if the data cannot be sent, e.g. because it would need to
+      // be buffered but the buffer is full, the user agent must flag the
+      // WebSocket as full and then close the WebSocket connection. The data
+      // to be sent is the raw data represented by the Blob object. Any
+      // invocation of this method with a Blob argument that does not throw
+      // an exception must increase the bufferedAmount attribute by the size
+      // of the Blob object’s raw data, in bytes.
+
+      const frame = new WebsocketFrameSend()
+
+      data.arrayBuffer().then((ab) => {
+        const value = Buffer.from(ab)
+        frame.frameData = value
+        const buffer = frame.createFrame(opcodes.BINARY)
+
+        this.#bufferedAmount += value.byteLength
+        socket.write(buffer, () => {
+          this.#bufferedAmount -= value.byteLength
+        })
+      })
+    }
+  }
+
+  get readyState () {
+    webidl.brandCheck(this, WebSocket)
+
+    // The readyState getter steps are to return this's ready state.
+    return this[kReadyState]
+  }
+
+  get bufferedAmount () {
+    webidl.brandCheck(this, WebSocket)
+
+    return this.#bufferedAmount
+  }
+
+  get url () {
+    webidl.brandCheck(this, WebSocket)
+
+    // The url getter steps are to return this's url, serialized.
+    return URLSerializer(this[kWebSocketURL])
+  }
+
+  get extensions () {
+    webidl.brandCheck(this, WebSocket)
+
+    return this[kExtensions]
+  }
+
+  get protocol () {
+    webidl.brandCheck(this, WebSocket)
+
+    return this[kProtocol]
+  }
+
+  get onopen () {
+    webidl.brandCheck(this, WebSocket)
+
+    return this.#events.open
+  }
+
+  set onopen (fn) {
+    webidl.brandCheck(this, WebSocket)
+
+    if (this.#events.open) {
+      this.removeEventListener('open', this.#events.open)
+    }
+
+    if (typeof fn === 'function') {
+      this.#events.open = fn
+      this.addEventListener('open', fn)
+    } else {
+      this.#events.open = null
+    }
+  }
+
+  get onerror () {
+    webidl.brandCheck(this, WebSocket)
+
+    return this.#events.error
+  }
+
+  set onerror (fn) {
+    webidl.brandCheck(this, WebSocket)
+
+    if (this.#events.error) {
+      this.removeEventListener('error', this.#events.error)
+    }
+
+    if (typeof fn === 'function') {
+      this.#events.error = fn
+      this.addEventListener('error', fn)
+    } else {
+      this.#events.error = null
+    }
+  }
+
+  get onclose () {
+    webidl.brandCheck(this, WebSocket)
+
+    return this.#events.close
+  }
+
+  set onclose (fn) {
+    webidl.brandCheck(this, WebSocket)
+
+    if (this.#events.close) {
+      this.removeEventListener('close', this.#events.close)
+    }
+
+    if (typeof fn === 'function') {
+      this.#events.close = fn
+      this.addEventListener('close', fn)
+    } else {
+      this.#events.close = null
+    }
+  }
+
+  get onmessage () {
+    webidl.brandCheck(this, WebSocket)
+
+    return this.#events.message
+  }
+
+  set onmessage (fn) {
+    webidl.brandCheck(this, WebSocket)
+
+    if (this.#events.message) {
+      this.removeEventListener('message', this.#events.message)
+    }
+
+    if (typeof fn === 'function') {
+      this.#events.message = fn
+      this.addEventListener('message', fn)
+    } else {
+      this.#events.message = null
+    }
+  }
+
+  get binaryType () {
+    webidl.brandCheck(this, WebSocket)
+
+    return this[kBinaryType]
+  }
+
+  set binaryType (type) {
+    webidl.brandCheck(this, WebSocket)
+
+    if (type !== 'blob' && type !== 'arraybuffer') {
+      this[kBinaryType] = 'blob'
+    } else {
+      this[kBinaryType] = type
+    }
+  }
+}
+
+// https://websockets.spec.whatwg.org/#dom-websocket-connecting
+WebSocket.CONNECTING = WebSocket.prototype.CONNECTING = states.CONNECTING
+// https://websockets.spec.whatwg.org/#dom-websocket-open
+WebSocket.OPEN = WebSocket.prototype.OPEN = states.OPEN
+// https://websockets.spec.whatwg.org/#dom-websocket-closing
+WebSocket.CLOSING = WebSocket.prototype.CLOSING = states.CLOSING
+// https://websockets.spec.whatwg.org/#dom-websocket-closed
+WebSocket.CLOSED = WebSocket.prototype.CLOSED = states.CLOSED
+
+Object.defineProperties(WebSocket.prototype, {
+  CONNECTING: staticPropertyDescriptors,
+  OPEN: staticPropertyDescriptors,
+  CLOSING: staticPropertyDescriptors,
+  CLOSED: staticPropertyDescriptors,
+  url: kEnumerableProperty,
+  readyState: kEnumerableProperty,
+  bufferedAmount: kEnumerableProperty,
+  onopen: kEnumerableProperty,
+  onerror: kEnumerableProperty,
+  onclose: kEnumerableProperty,
+  close: kEnumerableProperty,
+  onmessage: kEnumerableProperty,
+  binaryType: kEnumerableProperty,
+  send: kEnumerableProperty,
+  extensions: kEnumerableProperty,
+  protocol: kEnumerableProperty,
+  [Symbol.toStringTag]: {
+    value: 'WebSocket',
+    writable: false,
+    enumerable: false,
+    configurable: true
+  }
+})
+
+Object.defineProperties(WebSocket, {
+  CONNECTING: staticPropertyDescriptors,
+  OPEN: staticPropertyDescriptors,
+  CLOSING: staticPropertyDescriptors,
+  CLOSED: staticPropertyDescriptors
+})
+
+webidl.converters['sequence<DOMString>'] = webidl.sequenceConverter(
+  webidl.converters.DOMString
+)
+
+webidl.converters['DOMString or sequence<DOMString>'] = function (V) {
+  if (webidl.util.Type(V) === 'Object' && Symbol.iterator in V) {
+    return webidl.converters['sequence<DOMString>'](V)
+  }
+
+  return webidl.converters.DOMString(V)
+}
+
+webidl.converters.WebSocketSendData = function (V) {
+  if (webidl.util.Type(V) === 'Object') {
+    if (isBlobLike(V)) {
+      return webidl.converters.Blob(V, { strict: false })
+    }
+
+    if (ArrayBuffer.isView(V) || types.isAnyArrayBuffer(V)) {
+      return webidl.converters.BufferSource(V)
+    }
+  }
+
+  return webidl.converters.USVString(V)
+}
+
+module.exports = {
+  WebSocket
+}
+
+
+/***/ }),
+
 /***/ 5840:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -24234,7 +27186,7 @@ const external_node_tty_namespaceObject = __WEBPACK_EXTERNAL_createRequire(impor
 
 
 // From: https://github.com/sindresorhus/has-flag/blob/main/index.js
-function hasFlag(flag, argv = external_node_process_namespaceObject.argv) {
+function hasFlag(flag, argv = globalThis.Deno ? globalThis.Deno.args : external_node_process_namespaceObject.argv) {
 	const prefix = flag.startsWith('-') ? '' : (flag.length === 1 ? '-' : '--');
 	const position = argv.indexOf(prefix + flag);
 	const terminatorPosition = argv.indexOf('--');
@@ -24311,6 +27263,12 @@ function _supportsColor(haveStream, {streamIsTTY, sniffFlags = true} = {}) {
 		}
 	}
 
+	// Check for Azure DevOps pipelines.
+	// Has to be above the `!streamIsTTY` check.
+	if ('TF_BUILD' in env && 'AGENT_NAME' in env) {
+		return 1;
+	}
+
 	if (haveStream && !streamIsTTY && forceColor === undefined) {
 		return 0;
 	}
@@ -24336,7 +27294,11 @@ function _supportsColor(haveStream, {streamIsTTY, sniffFlags = true} = {}) {
 	}
 
 	if ('CI' in env) {
-		if (['TRAVIS', 'CIRCLECI', 'APPVEYOR', 'GITLAB_CI', 'GITHUB_ACTIONS', 'BUILDKITE', 'DRONE'].some(sign => sign in env) || env.CI_NAME === 'codeship') {
+		if ('GITHUB_ACTIONS' in env) {
+			return 3;
+		}
+
+		if (['TRAVIS', 'CIRCLECI', 'APPVEYOR', 'GITLAB_CI', 'BUILDKITE', 'DRONE'].some(sign => sign in env) || env.CI_NAME === 'codeship') {
 			return 1;
 		}
 
@@ -24347,12 +27309,11 @@ function _supportsColor(haveStream, {streamIsTTY, sniffFlags = true} = {}) {
 		return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
 	}
 
-	// Check for Azure DevOps pipelines
-	if ('TF_BUILD' in env && 'AGENT_NAME' in env) {
-		return 1;
+	if (env.COLORTERM === 'truecolor') {
+		return 3;
 	}
 
-	if (env.COLORTERM === 'truecolor') {
+	if (env.TERM === 'xterm-kitty') {
 		return 3;
 	}
 
@@ -24360,10 +27321,13 @@ function _supportsColor(haveStream, {streamIsTTY, sniffFlags = true} = {}) {
 		const version = Number.parseInt((env.TERM_PROGRAM_VERSION || '').split('.')[0], 10);
 
 		switch (env.TERM_PROGRAM) {
-			case 'iTerm.app':
+			case 'iTerm.app': {
 				return version >= 3 ? 3 : 2;
-			case 'Apple_Terminal':
+			}
+
+			case 'Apple_Terminal': {
 				return 2;
+			}
 			// No default
 		}
 	}
@@ -24719,7 +27683,10 @@ async function timeout(millis, message) {
 async function viceroyReady(viceroyHostname, viceroyPort) {
   let isViceroyReady = false;
   while (!isViceroyReady) {
-    isViceroyReady = await isPortReachable(viceroyPort, {host: viceroyHostname});
+    isViceroyReady = await isPortReachable(viceroyPort, {
+      host: viceroyHostname,
+      timeout: 200,
+    });
   }
 }
 
@@ -24770,12 +27737,15 @@ class Viceroy {
       this.logs = `${this.logs}\n${data}`;
     });
 
-    // Wait for 10 seconds before deciding that viceroy has failed to start
-    const VICEROY_READY_TIMEOUT = 20000;
+    // Wait for a timeout before deciding that viceroy has failed to start
+    const VICEROY_READY_TIMEOUT = 60000;
     try {
       await Promise.race([
         viceroyReady(viceroyHostname, viceroyPort),
-        timeout(VICEROY_READY_TIMEOUT, "Viceroy failed to start"),
+        timeout(
+          VICEROY_READY_TIMEOUT,
+          `Viceroy failed to start in ${VICEROY_READY_TIMEOUT}ms on ${viceroyHostname}:${viceroyPort}`
+        ),
       ]);
     } catch (err) {
       console.error(err);
