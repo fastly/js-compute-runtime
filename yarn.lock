@@ -1433,10 +1433,10 @@ istanbul-reports@^3.1.4:
     html-escaper "^2.0.0"
     istanbul-lib-report "^3.0.0"
 
-js-component-tools@0.3.0-beta.1:
-  version "0.3.0-beta.1"
-  resolved "https://registry.yarnpkg.com/js-component-tools/-/js-component-tools-0.3.0-beta.1.tgz#a1d9c3d522ef0651ead23290ade4b2a983798f35"
-  integrity sha512-zL96m1n2Fnn8EtvvNAccrJw/8ebj2a58QoQdr3VRlJuc/aU/orUdMLzIM2GcJjSyokTrjYB96WSLy4V7dWZJtA==
+js-component-tools@0.3.0-beta.2:
+  version "0.3.0-beta.2"
+  resolved "https://registry.yarnpkg.com/js-component-tools/-/js-component-tools-0.3.0-beta.2.tgz#103e32d280f5c0b388acb162f1fc5bf4f63fc6aa"
+  integrity sha512-42YqxLmgjHUYza/VOrZKpJ3iM/NjCRdLnRAvDyQpbQmf6IwIVUDZCSc7oEr0pXkBxUrK1RKMNuwQN7rNMrtxSA==
 
 js-sdsl@^4.1.4:
   version "4.3.0"
@@ -2306,9 +2306,9 @@ type-fest@^0.8.1:
   integrity sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
 
 typescript@^4.9:
-  version "4.9.4"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.4.tgz#a2a3d2756c079abda241d75f149df9d561091e78"
-  integrity sha512-Uz+dTXYzxXXbsFpM86Wh3dKCxrQqUcVMxwU54orwlJjOpO3ao8L7j5lH+dWfTwgCwIuM9GQ2kvVotzYJMXTBZg==
+  version "4.9.5"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.5.tgz#095979f9bcc0d09da324d58d03ce8f8374cbe65a"
+  integrity sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==
 
 uri-js@^4.2.2:
   version "4.4.1"
