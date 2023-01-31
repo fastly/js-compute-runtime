@@ -744,6 +744,7 @@ bool fastly_http_req_cache_override_set(fastly_request_handle_t h,
                                         fastly_http_cache_override_tag_t tag, uint32_t *maybe_ttl,
                                         uint32_t *maybe_stale_while_revalidate,
                                         xqd_world_string_t *maybe_sk, fastly_error_t *err) {
+  __attribute__((aligned(1))) uint8_t ret_area[2];
   fastly_option_u32_t ttl;
   ttl.is_some = maybe_ttl != NULL;
   if (maybe_ttl) {
@@ -792,7 +793,6 @@ bool fastly_http_req_cache_override_set(fastly_request_handle_t h,
     option9 = 0;
     option10 = 0;
   }
-  __attribute__((aligned(1))) uint8_t ret_area[2];
   int32_t ptr = (int32_t)&ret_area;
   __wasm_import_fastly_http_req_cache_override_set((int32_t)(h), tag, option, option1, option4,
                                                    option5, option8, option9, option10, ptr);
@@ -1901,29 +1901,25 @@ bool fastly_http_req_register_dynamic_backend(xqd_world_string_t *prefix,
   } else {
     *((int8_t *)(ptr + 96)) = 0;
   }
-  // Bug: https://github.com/bytecodealliance/wit-bindgen/pull/444
-  {
-    __attribute__((aligned(1))) uint8_t ret_area[2];
-    int32_t ptr21 = (int32_t)&ret_area;
-    __wasm_import_fastly_http_req_register_dynamic_backend(ptr, ptr21);
-    fastly_result_void_error_t result;
-    switch ((int32_t)(*((uint8_t *)(ptr21 + 0)))) {
-    case 0: {
-      result.is_err = false;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t)(*((uint8_t *)(ptr21 + 1)));
-      break;
-    }
-    }
-    if (!result.is_err) {
-      return 1;
-    } else {
-      *err = result.val.err;
-      return 0;
-    }
+  int32_t ptr21 = (int32_t)&ret_area;
+  __wasm_import_fastly_http_req_register_dynamic_backend(ptr, ptr21);
+  fastly_result_void_error_t result;
+  switch ((int32_t)(*((uint8_t *)(ptr21 + 0)))) {
+  case 0: {
+    result.is_err = false;
+    break;
+  }
+  case 1: {
+    result.is_err = true;
+    result.val.err = (int32_t)(*((uint8_t *)(ptr21 + 1)));
+    break;
+  }
+  }
+  if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
   }
 }
 
