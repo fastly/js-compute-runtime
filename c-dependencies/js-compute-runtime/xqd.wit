@@ -486,4 +486,8 @@ default world xqd-world {
 
     purge-surrogate-key: func(surrogate-key: string, soft-purge: bool) -> result<purge-result, error>
   }
+
+  export fastly-runtime: interface {
+    serve-sync: func() -> ()
+  }
 }

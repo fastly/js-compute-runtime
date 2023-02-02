@@ -376,6 +376,9 @@ bool fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret, fastly_er
 bool fastly_purge_surrogate_key(xqd_world_string_t *surrogate_key, bool soft_purge,
                                 fastly_purge_result_t *ret, fastly_error_t *err);
 
+// Exported Functions from `fastly-runtime`
+void fastly_runtime_serve_sync(void);
+
 #ifdef __cplusplus
 }
 #endif

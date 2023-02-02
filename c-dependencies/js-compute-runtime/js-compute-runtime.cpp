@@ -464,13 +464,11 @@ static void wait_for_backends(JSContext *cx, double *total_compute) {
     printf("Done, waited for %fms\n", diff / 1000);
 }
 
-int main(int argc, const char *argv[]) {
-  if (isWizening()) {
-    init();
-    assert(hasWizeningFinished());
-    // fprintf(stderr, "js.wasm must be initialized with a JS source file using
-    // Wizer\n"); exit(-1);
-  }
+void fastly_runtime_serve_sync(void) {
+  assert(hasWizeningFinished());
+  // fprintf(stderr, "js.wasm must be initialized with a JS source file using
+  // Wizer\n");
+  // return;
 
   double total_compute = 0;
   auto start = system_clock::now();
@@ -541,12 +539,23 @@ int main(int argc, const char *argv[]) {
     printf("Done. Total request processing time: %fms. Total compute time: %fms\n", diff / 1000,
            total_compute / 1000);
   }
+}
+
+#ifdef COMPONENT
+
+int main() {}
+
+#else
+
+int main(int argc, const char *argv[]) {
+  fastly_runtime_serve_sync();
 
   // Note: we deliberately skip shutdown, because it takes quite a while,
   // and serves no purpose for us.
   // TODO: investigate also skipping the destructors deliberately run in
   // wizer.h. GLOBAL = nullptr; CONTEXT = nullptr; JS_DestroyContext(cx);
   // JS_ShutDown();
-
   return 0;
 }
+
+#endif

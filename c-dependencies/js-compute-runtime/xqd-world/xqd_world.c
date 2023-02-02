@@ -2784,6 +2784,11 @@ bool fastly_purge_surrogate_key(xqd_world_string_t *surrogate_key, bool soft_pur
   }
 }
 
+__attribute__((export_name("fastly-runtime#serve-sync"))) void
+__wasm_export_fastly_runtime_serve_sync(void) {
+  fastly_runtime_serve_sync();
+}
+
 extern void __component_type_object_force_link_xqd_world(void);
 void __component_type_object_force_link_xqd_world_public_use_in_this_compilation_unit(void) {
   __component_type_object_force_link_xqd_world();
