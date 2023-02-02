@@ -2,6 +2,7 @@
 #define BUILTINS_FETCH_EVENT_H
 
 #include "builtin.h"
+#include "host_interface/c-at-e.h"
 
 namespace builtins {
 
@@ -48,10 +49,11 @@ public:
   /**
    * Fully initialize the Request object based on the incoming request.
    */
-  static bool init_downstream_request(JSContext *cx, JS::HandleObject request);
+  static bool init_downstream_request(JSContext *cx, JS::HandleObject request,
+                                      fastly_request_t *req);
 
   static bool respondWithError(JSContext *cx, JS::HandleObject self);
-  static bool init_request(JSContext *cx, JS::HandleObject self);
+  static bool init_request(JSContext *cx, JS::HandleObject self, fastly_request_t *req);
   static bool is_active(JSObject *self);
   static bool is_dispatching(JSObject *self);
   static void start_dispatching(JSObject *self);
