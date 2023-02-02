@@ -193,7 +193,7 @@ default world xqd-world {
 
     http-req-close: func(h: request-handle) -> result<_, error>
 
-    enum content-encodings {
+    flags content-encodings {
       gzip
     }
     http-req-auto-decompress-response-set: func(h: request-handle, encodings: content-encodings) -> result<_, error>
