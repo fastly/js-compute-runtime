@@ -229,7 +229,7 @@ regenerate-world:
 	@exit 1
 else
 regenerate-world:
-	$(WIT_BINDGEN) guest c xqd.wit --no-helpers --out-dir xqd-world
+	$(WIT_BINDGEN) c xqd.wit --no-helpers --out-dir xqd-world
 endif
 
 

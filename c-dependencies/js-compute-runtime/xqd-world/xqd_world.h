@@ -154,7 +154,7 @@ typedef uint32_t fastly_dictionary_handle_t;
 
 typedef uint8_t fastly_content_encodings_t;
 
-#define FASTLY_CONTENT_ENCODINGS_GZIP 0
+#define FASTLY_CONTENT_ENCODINGS_GZIP (1 << 0)
 
 typedef uint8_t fastly_body_write_end_t;
 
