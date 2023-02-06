@@ -36,10 +36,10 @@ In this example we connect to an Secret Store named `'secrets'` and retrieve a s
 ```js
 /// <reference types="@fastly/js-compute" />
 
-import { SecretStoreEntry } from "fastly:secret-store";
+import { SecretStore } from "fastly:secret-store";
 
 async function app(event) {
-  const secrets = new SecretStoreEntry('secrets')
+  const secrets = new SecretStore('secrets')
 
   const catApiKey = await secrets.get('cat-api-key')
 
