@@ -185,6 +185,7 @@ jobs:
           - hello-world
           - includeBytes
           - log
+          - missing-backend
           - multiple-set-cookie
           - object-store
           - random
@@ -313,6 +314,7 @@ jobs:
           - 'error'
           - 'geoip'
           - 'hello-world'
+          - missing-backend
           - 'multiple-set-cookie'
           - 'object-store'
           - 'request-clone'

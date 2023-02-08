@@ -96,4 +96,5 @@ MSG_DEF(JSMSG_BACKEND_PORT_INVALID,                            0, JSEXN_RANGEERR
 MSG_DEF(JSMSG_CACHE_OVERRIDE_MODE_INVALID,                     1, JSEXN_TYPEERR, "CacheOverride constructor: 'mode' has to be \"none\", \"pass\", or \"override\", but got \"{0}\"")
 MSG_DEF(JSMSG_RESPONSE_VALUE_NOT_UINT8ARRAY,                   0, JSEXN_TYPEERR, "Can't convert value to Uint8Array while consuming Body")
 MSG_DEF(JSMSG_RESPONSE_BODY_DISTURBED_OR_LOCKED,               0, JSEXN_TYPEERR, "Response body object should not be disturbed or locked")
+MSG_DEF(JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST,                  1, JSEXN_TYPEERR, "Requested backend named '{0}' does not exist")
 //clang-format on

@@ -1,0 +1,12 @@
+{
+  "GET /test": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/test"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  }
+}

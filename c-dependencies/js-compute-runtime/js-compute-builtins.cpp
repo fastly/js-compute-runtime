@@ -4811,7 +4811,12 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     }
 
     if (!ok) {
-      HANDLE_ERROR(cx, err);
+      if (err == FASTLY_ERROR_GENERIC_ERROR) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST, backend_chars.get());
+      } else {
+        HANDLE_ERROR(cx, err);
+      }
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
   }
