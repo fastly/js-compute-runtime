@@ -291,9 +291,8 @@ bool SubtleCrypto::digest(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // 2 . Let data be the result of getting a copy of the bytes held by the data parameter
   // passed to the digest() method.
-  size_t length;
-  uint8_t *data = value_to_buffer(cx, args.get(1), "SubtleCrypto#digest: data", &length);
-  if (!data) {
+  auto data = value_to_buffer(cx, args.get(1), "SubtleCrypto#digest: data");
+  if (!data.has_value()) {
     return false;
   }
 
@@ -367,7 +366,7 @@ bool SubtleCrypto::digest(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS_ReportOutOfMemory(cx);
     return false;
   }
-  if (!EVP_Digest(data, length, buf, &size, alg, NULL)) {
+  if (!EVP_Digest(data->data(), data->size(), buf, &size, alg, NULL)) {
     JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: failed to create digest");
     return RejectPromiseWithPendingError(cx, promise);
   }

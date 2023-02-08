@@ -1,6 +1,9 @@
 #ifndef fastly_sys_h
 #define fastly_sys_h
 
+#include <optional>
+#include <span>
+
 // TODO: remove these once the warnings are fixed
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
@@ -46,7 +49,8 @@ inline bool ReturnPromiseRejectedWithPendingError(JSContext *cx, const JS::CallA
   return true;
 }
 
-uint8_t *value_to_buffer(JSContext *cx, JS::HandleValue val, const char *val_desc, size_t *len);
+std::optional<std::span<uint8_t>> value_to_buffer(JSContext *cx, JS::HandleValue val,
+                                                  const char *val_desc);
 
 typedef bool InternalMethod(JSContext *cx, JS::HandleObject receiver, JS::HandleValue extra,
                             JS::CallArgs args);
