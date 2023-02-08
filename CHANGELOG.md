@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3](https://github.com/fastly/js-compute-runtime/compare/v1.3.2...v1.3.3) (2023-02-08)
+
+
+### Bug Fixes
+
+* Remove error codes from external error messaging as these codes are not documented anywhere and subject to change ([8f8f0ef](https://github.com/fastly/js-compute-runtime/commit/8f8f0eff871597b8453fac08b6b114ee5c188ef6))
+
 ## [1.3.2](https://github.com/fastly/js-compute-runtime/compare/v1.3.1...v1.3.2) (2023-01-30)
 
 
