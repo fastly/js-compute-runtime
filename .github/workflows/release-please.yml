@@ -45,9 +45,7 @@ jobs:
 
       - run: yarn install --mode=update-lockfile
         working-directory: ./documentation
-      - run: npm run docusaurus docs:version ${{ steps.release.outputs.js-compute--tag_name }}
-        working-directory: ./documentation
-      - run: DOCUSAURUS_SSR_CONCURRENCY=1 node --max-old-space-size=20480 ./node_modules/.bin/docusaurus build
+      - run: npm run docusaurus docs:version "$(npm pkg get version --json --prefix=../ | jq -r)"
         working-directory: ./documentation
       
       - run: yarn install --mode=update-lockfile
@@ -60,7 +58,7 @@ jobs:
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git add .
-          git commit --amend --no-edit
+          git commit "chore: add docs for $(npm pkg get version --json | jq -r)"
           git push --force
 
   publish:

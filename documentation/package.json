@@ -2,7 +2,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "DOCUSAURUS_SSR_CONCURRENCY=1 docusaurus build",
+    "build": "DOCUSAURUS_SSR_CONCURRENCY=1 node --max-old-space-size=20480 ./node_modules/.bin/docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "yarn build && cd app && yarn deploy",
     "clear": "docusaurus clear",
