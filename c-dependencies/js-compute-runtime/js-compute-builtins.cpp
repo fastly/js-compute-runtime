@@ -164,25 +164,27 @@ SpecString encode(JSContext *cx, HandleValue val) {
   return slice;
 }
 
-uint8_t *value_to_buffer(JSContext *cx, HandleValue val, const char *val_desc, size_t *len) {
+std::optional<std::span<uint8_t>> value_to_buffer(JSContext *cx, HandleValue val,
+                                                  const char *val_desc) {
   if (!val.isObject() ||
       !(JS_IsArrayBufferViewObject(&val.toObject()) || JS::IsArrayBufferObject(&val.toObject()))) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_BUFFER_ARG, val_desc,
                              val.type());
-    return nullptr;
+    return std::nullopt;
   }
 
   RootedObject input(cx, &val.toObject());
   uint8_t *data;
   bool is_shared;
+  size_t len = 0;
 
   if (JS_IsArrayBufferViewObject(input)) {
-    js::GetArrayBufferViewLengthAndData(input, len, &is_shared, &data);
+    js::GetArrayBufferViewLengthAndData(input, &len, &is_shared, &data);
   } else {
-    JS::GetArrayBufferLengthAndData(input, len, &is_shared, &data);
+    JS::GetArrayBufferLengthAndData(input, &len, &is_shared, &data);
   }
 
-  return data;
+  return std::span(data, len);
 }
 
 bool RejectPromiseWithPendingError(JSContext *cx, HandleObject promise) {
@@ -2855,13 +2857,13 @@ bool decode(JSContext *cx, unsigned argc, Value *vp) {
     return true;
   }
 
-  size_t length;
-  uint8_t *data = value_to_buffer(cx, args[0], "TextDecoder#decode: input", &length);
-  if (!data) {
+  auto data = value_to_buffer(cx, args[0], "TextDecoder#decode: input");
+  if (!data.has_value()) {
     return false;
   }
 
-  RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char *)data, length)));
+  RootedString str(cx,
+                   JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char *)data->data(), data->size())));
   if (!str)
     return false;
 

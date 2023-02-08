@@ -69,25 +69,24 @@ bool inflate_chunk(JSContext *cx, JS::HandleObject self, JS::HandleValue chunk, 
   if (!finished) {
     // 1.  If _chunk_ is not a `BufferSource` type, then throw a `TypeError`.
     // Step 2 of transform:
-    size_t length;
-    uint8_t *data = value_to_buffer(cx, chunk, "DecompressionStream transform: chunks", &length);
-    if (!data) {
+    auto data = value_to_buffer(cx, chunk, "DecompressionStream transform: chunks");
+    if (!data.has_value()) {
       return false;
     }
 
-    if (length == 0) {
+    if (data->size() == 0) {
       return true;
     }
 
     // 2.  Let _buffer_ be the result of decompressing _chunk_ with _ds_'s format
     // and context. This just sets up step 2. The actual decompression happen in
     // the `do` loop below.
-    zstream->avail_in = length;
+    zstream->avail_in = data->size();
 
     // `data` is a live view into `chunk`. That's ok here because it'll be fully
     // used in the `do` loop below before any content can execute again and
     // could potentially invalidate the pointer to `data`.
-    zstream->next_in = data;
+    zstream->next_in = data->data();
   } else {
     // Step 1 of flush:
     // 1.  Let _buffer_ be the result of decompressing an empty input with _ds_'s
