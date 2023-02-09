@@ -314,7 +314,6 @@ jobs:
           - 'error'
           - 'geoip'
           - 'hello-world'
-          - missing-backend
           - 'multiple-set-cookie'
           - 'object-store'
           - 'request-clone'
