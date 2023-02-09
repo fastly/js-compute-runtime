@@ -4811,7 +4811,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     }
 
     if (!ok) {
-      if (err == FASTLY_ERROR_GENERIC_ERROR) {
+      if (err == FASTLY_ERROR_GENERIC_ERROR || err == FASTLY_ERROR_INVALID_ARGUMENT) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST, backend_chars.get());
       } else {
