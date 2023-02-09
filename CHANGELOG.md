@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.4](https://github.com/fastly/js-compute-runtime/compare/v1.3.3...v1.3.4) (2023-02-09)
+
+
+### Bug Fixes
+
+* add custom error message when making a request to a backend which does not exist ([#412](https://github.com/fastly/js-compute-runtime/issues/412)) ([486aed1](https://github.com/fastly/js-compute-runtime/commit/486aed1415151a2bba40b736c14555c692bd095a))
+
 ## [1.3.3](https://github.com/fastly/js-compute-runtime/compare/v1.3.2...v1.3.3) (2023-02-08)
 
 
