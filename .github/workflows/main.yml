@@ -185,6 +185,7 @@ jobs:
           - hello-world
           - includeBytes
           - log
+          - missing-backend
           - multiple-set-cookie
           - object-store
           - random
