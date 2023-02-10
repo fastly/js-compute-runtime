@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "dependencies": {
+    "fast-check": "^3.6.2"
+  }
+}

@@ -594,6 +594,43 @@ bool xqd_fastly_dictionary_get(fastly_dictionary_handle_t h, xqd_world_string_t 
   return true;
 }
 
+bool xqd_fastly_secret_store_open(xqd_world_string_t *name, fastly_secret_store_handle_t *ret,
+                                  fastly_error_t *err) {
+  return convert_result(xqd_secret_store_open(name->ptr, name->len, ret), err);
+}
+
+bool xqd_fastly_secret_store_get(fastly_secret_store_handle_t store, xqd_world_string_t *key,
+                                 fastly_option_secret_handle_t *ret, fastly_error_t *err) {
+  ret->val = INVALID_HANDLE;
+  bool ok = convert_result(xqd_secret_store_get(store, key->ptr, key->len, &ret->val), err);
+  if ((!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) || ret->val == INVALID_HANDLE) {
+    ret->is_some = false;
+    return true;
+  }
+  ret->is_some = true;
+  return ok;
+}
+
+bool xqd_fastly_secret_store_plaintext(fastly_dictionary_handle_t h, fastly_option_string_t *ret,
+                                       fastly_error_t *err) {
+  ret->val.ptr = static_cast<char *>(JS_malloc(CONTEXT, DICTIONARY_ENTRY_MAX_LEN));
+  if (!convert_result(
+          xqd_secret_store_plaintext(h, ret->val.ptr, DICTIONARY_ENTRY_MAX_LEN, &ret->val.len),
+          err)) {
+    if (*err == FASTLY_ERROR_OPTIONAL_NONE) {
+      ret->is_some = false;
+      return true;
+    } else {
+      JS_free(CONTEXT, ret->val.ptr);
+      return false;
+    }
+  }
+  ret->is_some = true;
+  ret->val.ptr = static_cast<char *>(
+      JS_realloc(CONTEXT, ret->val.ptr, DICTIONARY_ENTRY_MAX_LEN, ret->val.len));
+  return true;
+}
+
 bool xqd_fastly_geo_lookup(fastly_list_u8_t *addr_octets, xqd_world_string_t *ret,
                            fastly_error_t *err) {
   ret->ptr = static_cast<char *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));

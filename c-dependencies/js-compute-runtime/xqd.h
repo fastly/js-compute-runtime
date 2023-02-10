@@ -314,6 +314,19 @@ WASM_IMPORT("fastly_dictionary", "get")
 int xqd_dictionary_get(fastly_dictionary_handle_t dict_handle, const char *key, size_t key_len,
                        char *value, size_t value_max_len, size_t *nwritten);
 
+// Module fastly_secret_store
+WASM_IMPORT("fastly_secret_store", "open")
+int xqd_secret_store_open(const char *name, size_t name_len,
+                          fastly_secret_store_handle_t *dict_handle_out);
+
+WASM_IMPORT("fastly_secret_store", "get")
+int xqd_secret_store_get(fastly_secret_store_handle_t dict_handle, const char *key, size_t key_len,
+                         fastly_secret_handle_t *opt_secret_handle_out);
+
+WASM_IMPORT("fastly_secret_store", "plaintext")
+int xqd_secret_store_plaintext(fastly_secret_handle_t secret_handle, char *buf, size_t buf_len,
+                               size_t *nwritten);
+
 // Module fastly_object_store
 WASM_IMPORT("fastly_object_store", "open")
 int xqd_object_store_open(const char *name, size_t name_len,

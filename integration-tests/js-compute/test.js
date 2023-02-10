@@ -85,6 +85,7 @@ for (const fixture of testFixtures) {
                 await zx`fastly service delete --quiet --force --service-name ${fixture} --token $FASTLY_API_TOKEN`
             } catch {}
             // build and deploy application to compute@edge
+            await zx`npm i`
             await zx`fastly compute publish -i --quiet --token $FASTLY_API_TOKEN`
 
             // get the public domain of the deployed application
