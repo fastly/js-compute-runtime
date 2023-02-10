@@ -55,6 +55,7 @@
 #include "builtins/native-stream-source.h"
 #include "builtins/object-store.h"
 #include "builtins/shared/console.h"
+#include "builtins/secret-store.h"
 #include "builtins/subtle-crypto.h"
 #include "builtins/transform-stream-default-controller.h"
 #include "builtins/transform-stream.h"
@@ -5313,6 +5314,10 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
   if (!ObjectStore::init_class(cx, global))
     return false;
   if (!ObjectStoreEntry::init_class(cx, global))
+    return false;
+  if (!builtins::SecretStore::init_class(cx, global))
+    return false;
+  if (!builtins::SecretStoreEntry::init_class(cx, global))
     return false;
 
   pending_async_tasks = new JS::PersistentRootedObjectVector(cx);

@@ -1,0 +1,21 @@
+# This file describes a Fastly Compute@Edge package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
+authors = ["jchampion@fastly.com"]
+description = ""
+language = "other"
+manifest_version = 2
+name = "secret-store"
+service_id = ""
+
+[scripts]
+  build = "node ../../../../js-compute-runtime-cli.js"
+
+[local_server]
+  [local_server.secret_store]
+    [[local_server.secret_store.example-test-secret-store]]
+      key = "first"
+      data = "This is also some secret data"
+    [[local_server.secret_store.example-test-secret-store]]
+      key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      data = "This is some secret data"

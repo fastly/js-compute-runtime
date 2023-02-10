@@ -14,5 +14,6 @@ test="$1"
 # instead of the location of the js source.
 (
   cd "$(dirname "${BASH_SOURCE[0]}")/fixtures/$test"
+  npm i
   fastly compute build -i
 )

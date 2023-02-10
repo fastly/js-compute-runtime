@@ -1,0 +1,69 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# SecretStore.prototype.get
+
+▸ **get**(): `string`
+
+Gets the value associated with the key `key` in the Secret store.
+
+## Syntax
+
+```js
+get(key)
+```
+
+### Parameters
+
+- `key` _: string_
+  - The key to retrieve from within the Secret Store.
+
+### Return value
+
+If the key does not exist in the Secret Store, this returns a `Promise` which resolves with `null`.
+
+If the key does exist in the Secret Store, this returns a `Promise` which resolves with an `SecretStoreEntry`.
+
+## Description
+
+Send the given message, converted to a string, to this SecretStore instance's endpoint.
+
+The `get()` method requires its `this` value to be a [`SecretStore`](../SecretStore.mdx) object.
+
+If the `this` value does not inherit from `SecretStore.prototype`, a [`TypeError`](../../../globals/TypeError/TypeError.mdx) is thrown.
+
+### Exceptions
+
+- `TypeError`
+  - If the provided `key`:
+    - Is an empty string
+    - Is longer than 255 characters
+    - Contains characters other than letters, numbers, dashes (-), underscores (_), and periods (.)
+
+## Examples
+
+In this example we connect to an Secret Store named `'secrets'` and retrieve a secret named `'cat-api-key'` use the value in a Request header.
+
+```js
+/// <reference types="@fastly/js-compute" />
+
+import { SecretStoreEntry } from "fastly:secret-store";
+
+async function app(event) {
+  const secrets = new SecretStoreEntry('secrets')
+
+  const catApiKey = await secrets.get('cat-api-key')
+
+  return fetch('/api/cat', {
+    headers: {
+      'cat-api-key': catApiKey.plaintext()
+    }
+  })
+}
+
+addEventListener("fetch", (event) => event.respondWith(app(event)))
+
+```
