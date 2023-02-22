@@ -1,4 +1,4 @@
-import { componentEmbed, componentNew } from 'js-component-tools';
+import { componentEmbed, componentNew } from '@bytecodealliance/jco';
 import { readFile, writeFile } from 'node:fs/promises';
 
 export async function compileComponent (path) {

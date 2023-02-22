@@ -59,7 +59,7 @@ else
   CARGO_FLAG := --release
 
   # Strip binaries when making a non-debug build.
-  WASM_STRIP = wasm-opt --strip-debug -o $1 $1
+  WASM_STRIP = wasm-opt-manual --strip-debug -o $1 $1
 endif
 
 # The base build directory, where all our build artifacts go.
