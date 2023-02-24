@@ -22,26 +22,42 @@ public:
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 
+class URLSearchParams : public BuiltinNoConstructor<URLSearchParams> {
+  static bool append(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool has(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool getAll(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool sort(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool forEach(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool delete_(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool toString(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool entries(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool keys(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool values(JSContext *cx, unsigned argc, JS::Value *vp);
+
+public:
+  static constexpr const char *class_name = "URLSearchParams";
+
+  enum Slots { Url, Params, Count };
+
+  static const JSFunctionSpec methods[];
+  static const JSPropertySpec properties[];
+
+  static const unsigned ctor_length = 1;
+
+  static jsurl::SpecSlice serialize(JSContext *cx, JS::HandleObject self);
+  static jsurl::JSUrlSearchParams *get_params(JSObject *self);
+
+  static JSObject *create(JSContext *cx, JS::HandleObject self, jsurl::JSUrl *url);
+  static JSObject *create(JSContext *cx, JS::HandleObject self,
+                          JS::HandleValue params_val = JS::UndefinedHandleValue);
+
+  static bool init_class(JSContext *cx, JS::HandleObject global);
+  static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
+};
+
 } // namespace builtins
-
-namespace URLSearchParams {
-// TODO: these shouldn't be exposed
-extern const JSClass class_;
-extern JS::PersistentRooted<JSObject *> proto_obj;
-
-bool is_instance(JSObject *obj);
-bool is_instance(JS::Value val);
-
-jsurl::SpecSlice serialize(JSContext *cx, JS::HandleObject self);
-jsurl::JSUrlSearchParams *get_params(JSObject *self);
-
-bool init_class(JSContext *cx, JS::HandleObject global);
-
-JSObject *create(JSContext *cx, JS::HandleObject self, jsurl::JSUrl *url);
-JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue params_val);
-JSObject *create(JSContext *cx, JS::HandleObject self,
-                 JS::HandleValue params_val = JS::UndefinedHandleValue);
-} // namespace URLSearchParams
 
 namespace URL {
 // TODO: these shouldn't be exposed

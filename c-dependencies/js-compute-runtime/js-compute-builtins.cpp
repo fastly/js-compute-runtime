@@ -558,8 +558,8 @@ bool extract_body(JSContext *cx, HandleObject self, HandleValue body_val) {
     } else if (body_obj && JS::IsArrayBufferObject(body_obj)) {
       bool is_shared;
       JS::GetArrayBufferLengthAndData(body_obj, &length, &is_shared, (uint8_t **)&buf);
-    } else if (body_obj && URLSearchParams::is_instance(body_obj)) {
-      SpecSlice slice = URLSearchParams::serialize(cx, body_obj);
+    } else if (body_obj && builtins::URLSearchParams::is_instance(body_obj)) {
+      SpecSlice slice = builtins::URLSearchParams::serialize(cx, body_obj);
       buf = (char *)slice.data;
       length = slice.len;
       content_type = "application/x-www-form-urlencoded;charset=UTF-8";
@@ -4907,8 +4907,9 @@ JSObject *ReadStructuredClone(JSContext *cx, JSStructuredCloneReader *r,
   MOZ_ASSERT(tag == SCTAG_DOM_URLSEARCHPARAMS);
 
   RootedObject urlSearchParamsInstance(
-      cx, JS_NewObjectWithGivenProto(cx, &URLSearchParams::class_, URLSearchParams::proto_obj));
-  RootedObject params_obj(cx, URLSearchParams::create(cx, urlSearchParamsInstance));
+      cx, JS_NewObjectWithGivenProto(cx, &builtins::URLSearchParams::class_,
+                                     builtins::URLSearchParams::proto_obj));
+  RootedObject params_obj(cx, builtins::URLSearchParams::create(cx, urlSearchParamsInstance));
   if (!params_obj) {
     return nullptr;
   }
@@ -4924,7 +4925,7 @@ JSObject *ReadStructuredClone(JSContext *cx, JSStructuredCloneReader *r,
   }
 
   SpecString init((uint8_t *)bytes, len, len);
-  jsurl::params_init(URLSearchParams::get_params(params_obj), &init);
+  jsurl::params_init(builtins::URLSearchParams::get_params(params_obj), &init);
 
   return params_obj;
 }
@@ -4937,12 +4938,12 @@ JSObject *ReadStructuredClone(JSContext *cx, JSStructuredCloneReader *r,
  */
 bool WriteStructuredClone(JSContext *cx, JSStructuredCloneWriter *w, JS::HandleObject obj,
                           bool *sameProcessScopeRequired, void *closure) {
-  if (!URLSearchParams::is_instance(obj)) {
+  if (!builtins::URLSearchParams::is_instance(obj)) {
     JS_ReportErrorLatin1(cx, "The object could not be cloned");
     return false;
   }
 
-  auto slice = URLSearchParams::serialize(cx, obj);
+  auto slice = builtins::URLSearchParams::serialize(cx, obj);
   if (!JS_WriteUint32Pair(w, SCTAG_DOM_URLSEARCHPARAMS, slice.len) ||
       !JS_WriteBytes(w, (void *)slice.data, slice.len)) {
     return false;
@@ -5299,7 +5300,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!URL::init_class(cx, global))
     return false;
-  if (!URLSearchParams::init_class(cx, global))
+  if (!builtins::URLSearchParams::init_class(cx, global))
     return false;
   if (!builtins::URLSearchParamsIterator::init_class(cx, global))
     return false;
