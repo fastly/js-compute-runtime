@@ -9,22 +9,9 @@ constexpr int ITERTYPE_ENTRIES = 0;
 constexpr int ITERTYPE_KEYS = 1;
 constexpr int ITERTYPE_VALUES = 2;
 
-namespace URLSearchParamsIterator {
-namespace Slots {
-enum { Params, Type, Index, Count };
-};
+namespace builtins {
 
-const unsigned ctor_length = 0;
-// This constructor will be deleted from the class prototype right after class
-// initialization.
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  MOZ_RELEASE_ASSERT(false, "Should be deleted");
-  return false;
-}
-
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
-
-bool next(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URLSearchParamsIterator::next(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   JS::RootedObject params_obj(cx, &JS::GetReservedSlot(self, Slots::Params).toObject());
   const auto params = URLSearchParams::get_params(params_obj);
@@ -98,13 +85,23 @@ bool next(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-const JSFunctionSpec methods[] = {JS_FN("next", next, 0, JSPROP_ENUMERATE), JS_FS_END};
+const JSFunctionSpec URLSearchParamsIterator::methods[] = {
+    JS_FN("next", URLSearchParamsIterator::next, 0, JSPROP_ENUMERATE),
+    JS_FS_END,
+};
 
-const JSPropertySpec properties[] = {JS_PS_END};
+const JSPropertySpec URLSearchParamsIterator::properties[] = {
+    JS_PS_END,
+};
 
-CLASS_BOILERPLATE_CUSTOM_INIT(URLSearchParamsIterator)
+// This constructor will be deleted from the class prototype right after class
+// initialization.
+bool URLSearchParamsIterator::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+  MOZ_RELEASE_ASSERT(false, "Should be deleted");
+  return false;
+}
 
-bool init_class(JSContext *cx, JS::HandleObject global) {
+bool URLSearchParamsIterator::init_class(JSContext *cx, JS::HandleObject global) {
   JS::RootedObject iterator_proto(cx, JS::GetRealmIteratorPrototype(cx));
   if (!iterator_proto)
     return false;
@@ -119,7 +116,7 @@ bool init_class(JSContext *cx, JS::HandleObject global) {
          JS_DeleteProperty(cx, proto_obj, "constructor");
 }
 
-JSObject *create(JSContext *cx, JS::HandleObject params, uint8_t type) {
+JSObject *URLSearchParamsIterator::create(JSContext *cx, JS::HandleObject params, uint8_t type) {
   MOZ_RELEASE_ASSERT(type <= ITERTYPE_VALUES);
 
   JS::RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
@@ -132,7 +129,7 @@ JSObject *create(JSContext *cx, JS::HandleObject params, uint8_t type) {
 
   return self;
 }
-} // namespace URLSearchParamsIterator
+} // namespace builtins
 
 namespace URLSearchParams {
 
@@ -401,7 +398,7 @@ bool forEach(JSContext *cx, unsigned argc, JS::Value *vp) {
 template <auto type> bool get_iter(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  JS::RootedObject iter(cx, URLSearchParamsIterator::create(cx, self, type));
+  JS::RootedObject iter(cx, builtins::URLSearchParamsIterator::create(cx, self, type));
   if (!iter)
     return false;
   args.rval().setObject(*iter);

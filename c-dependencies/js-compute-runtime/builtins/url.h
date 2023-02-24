@@ -2,18 +2,27 @@
 #include "builtin.h"
 #include "rust-url/rust-url.h"
 
-namespace URLSearchParamsIterator {
-// TODO: these shouldn't be exposed
-extern const JSClass class_;
-extern JS::PersistentRooted<JSObject *> proto_obj;
+namespace builtins {
 
-bool is_instance(JSObject *obj);
-bool is_instance(JS::Value val);
+class URLSearchParamsIterator : public BuiltinNoConstructor<URLSearchParamsIterator> {
+public:
+  static constexpr const char *class_name = "URLSearchParamsIterator";
 
-bool init_class(JSContext *cx, JS::HandleObject global);
+  enum Slots { Params, Type, Index, Count };
 
-JSObject *create(JSContext *cx, JS::HandleObject params, uint8_t type);
-} // namespace URLSearchParamsIterator
+  static bool next(JSContext *cx, unsigned argc, JS::Value *vp);
+
+  static const JSFunctionSpec methods[];
+  static const JSPropertySpec properties[];
+
+  static const unsigned ctor_length = 0;
+
+  static JSObject *create(JSContext *cx, JS::HandleObject params, uint8_t type);
+  static bool init_class(JSContext *cx, JS::HandleObject global);
+  static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
+};
+
+} // namespace builtins
 
 namespace URLSearchParams {
 // TODO: these shouldn't be exposed

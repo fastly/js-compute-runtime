@@ -5301,7 +5301,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!URLSearchParams::init_class(cx, global))
     return false;
-  if (!URLSearchParamsIterator::init_class(cx, global))
+  if (!builtins::URLSearchParamsIterator::init_class(cx, global))
     return false;
   if (!builtins::WorkerLocation::init_class(cx, global))
     return false;
