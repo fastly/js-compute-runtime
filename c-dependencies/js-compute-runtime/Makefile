@@ -44,6 +44,9 @@ WASI_CXX ?= $(WASI_SDK)/bin/clang++
 # The wasi-sdk provided c compiler wrapper.
 WASI_CC ?= $(WASI_SDK)/bin/clang
 
+# The wasi-sdk provided ar wrapper.
+WASI_AR ?= $(WASI_SDK)/bin/ar
+
 ifneq ($(DEBUG),false)
   MODE := debug
   CARGO_FLAG :=
@@ -142,6 +145,9 @@ $(OBJ_DIR)/xqd-world:
 $(OBJ_DIR)/builtins:
 	$(call cmd,mkdir,$@)
 
+$(OBJ_DIR)/builtins/shared:
+	$(call cmd,mkdir,$@)
+
 # Downloaded dependencies ######################################################
 
 $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz: URL=https://www.openssl.org/source/openssl-$(OPENSSL_VERSION).tar.gz
@@ -237,6 +243,7 @@ endif
 
 FSM_CPP := $(wildcard $(FSM_SRC)/*.cpp)
 FSM_CPP += $(wildcard $(FSM_SRC)/builtins/*.cpp)
+FSM_CPP += $(wildcard $(FSM_SRC)/builtins/shared/*.cpp)
 FSM_OBJ := $(patsubst $(FSM_SRC)/%.cpp,$(OBJ_DIR)/%.o,$(FSM_CPP))
 
 # Build all the above object files
@@ -267,6 +274,13 @@ $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/xqd-world/xqd_world_ada
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
 	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
+
+# The subset of javascript builtins that are reusable across other runtimes.
+shared-builtins.a: $(OBJ_DIR)/shared-builtins.a
+	$(call cmd,cp,$@)
+
+$(OBJ_DIR)/shared-builtins.a: $(OBJ_DIR)/builtins/shared/console.o
+	$(call cmd,wasi_ar,$@)
 
 # These two rules copy the built artifacts into the $(FSM_SRC) directory, and
 # are both marked phony as we need to do the right thing when running the

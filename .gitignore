@@ -21,3 +21,5 @@ wpt-runtime.wasm
 docs-app/bin/main.wasm
 docs-app/pkg/*.tar.gz
 c-dependencies/js-compute-runtime/xqd-world/xqd_world_component_type.o
+
+*.a
