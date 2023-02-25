@@ -28,6 +28,11 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@bytecodealliance/jco@^0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/jco/-/jco-0.4.1.tgz#71553e641e118e7090f8cf57b909b29f7a0dbc4c"
+  integrity sha512-fb7QID6CtJhBO2jj71/VqBVphPcxWi72uIZnwCHDobgiq+8TM4XFuJEYFD7OOd8u19HlXGrtTujgFPXErx4JwA==
+
 "@esbuild/android-arm@0.15.18":
   version "0.15.18"
   resolved "https://registry.yarnpkg.com/@esbuild/android-arm/-/android-arm-0.15.18.tgz#266d40b8fdcf87962df8af05b76219bc786b4f80"
@@ -1432,11 +1437,6 @@ istanbul-reports@^3.1.4:
   dependencies:
     html-escaper "^2.0.0"
     istanbul-lib-report "^3.0.0"
-
-js-component-tools@0.3.0-beta.2:
-  version "0.3.0-beta.2"
-  resolved "https://registry.yarnpkg.com/js-component-tools/-/js-component-tools-0.3.0-beta.2.tgz#103e32d280f5c0b388acb162f1fc5bf4f63fc6aa"
-  integrity sha512-42YqxLmgjHUYza/VOrZKpJ3iM/NjCRdLnRAvDyQpbQmf6IwIVUDZCSc7oEr0pXkBxUrK1RKMNuwQN7rNMrtxSA==
 
 js-sdsl@^4.1.4:
   version "4.3.0"

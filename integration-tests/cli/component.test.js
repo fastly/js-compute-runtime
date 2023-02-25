@@ -1,7 +1,7 @@
 import test from 'brittle';
 import { getBinPath } from 'get-bin-path'
 import { prepareEnvironment } from '@jakechampion/cli-testing-library';
-import { print } from 'js-component-tools';
+import { print } from '@bytecodealliance/jco';
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 
