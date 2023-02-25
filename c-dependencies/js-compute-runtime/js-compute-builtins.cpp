@@ -1851,11 +1851,13 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
   // 5.  If `input` is a string, then:
   else {
     // 1.  Let `parsedURL` be the result of parsing `input` with `baseURL`.
-    RootedObject url_instance(cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
+    RootedObject url_instance(
+        cx, JS_NewObjectWithGivenProto(cx, &builtins::URL::class_, builtins::URL::proto_obj));
     if (!url_instance)
       return nullptr;
 
-    RootedObject parsedURL(cx, URL::create(cx, url_instance, input, builtins::Fastly::baseURL));
+    RootedObject parsedURL(
+        cx, builtins::URL::create(cx, url_instance, input, builtins::Fastly::baseURL));
 
     // 2.  If `parsedURL` is failure, then throw a `TypeError`.
     if (!parsedURL) {
@@ -3911,14 +3913,15 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
   JS::SetReservedSlot(request, Request::Slots::URL, JS::StringValue(url));
 
   // Set the URL for `globalThis.location` to the client request's URL.
-  RootedObject url_instance(cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
+  RootedObject url_instance(
+      cx, JS_NewObjectWithGivenProto(cx, &builtins::URL::class_, builtins::URL::proto_obj));
   if (!url_instance) {
     JS_free(cx, uri_str.ptr);
     return false;
   }
 
   SpecString spec(reinterpret_cast<uint8_t *>(uri_str.ptr), uri_str.len, uri_str.len);
-  builtins::WorkerLocation::url = URL::create(cx, url_instance, spec);
+  builtins::WorkerLocation::url = builtins::URL::create(cx, url_instance, spec);
   JS_free(cx, uri_str.ptr);
   if (!builtins::WorkerLocation::url) {
     return false;
@@ -3928,12 +3931,13 @@ static bool init_downstream_request(JSContext *cx, HandleObject request) {
   // Note that this only happens if baseURL hasn't already been set to another
   // value explicitly.
   if (!builtins::Fastly::baseURL.get()) {
-    RootedObject url_instance(cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
+    RootedObject url_instance(
+        cx, JS_NewObjectWithGivenProto(cx, &builtins::URL::class_, builtins::URL::proto_obj));
     if (!url_instance)
       return false;
 
-    builtins::Fastly::baseURL =
-        URL::create(cx, url_instance, URL::origin(cx, builtins::WorkerLocation::url));
+    builtins::Fastly::baseURL = builtins::URL::create(
+        cx, url_instance, builtins::URL::origin(cx, builtins::WorkerLocation::url));
     if (!builtins::Fastly::baseURL)
       return false;
   }
@@ -5298,7 +5302,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!builtins::Logger::init_class(cx, global))
     return false;
-  if (!URL::init_class(cx, global))
+  if (!builtins::URL::init_class(cx, global))
     return false;
   if (!builtins::URLSearchParams::init_class(cx, global))
     return false;

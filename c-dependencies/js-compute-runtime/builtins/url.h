@@ -57,41 +57,70 @@ public:
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 
+class URL : public BuiltinImpl<URL> {
+  static bool hash_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool host_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool hostname_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool href_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool password_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool pathname_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool port_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool protocol_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool search_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool username_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool hash_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool host_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool hostname_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool href_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool password_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool pathname_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool port_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool protocol_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool search_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool username_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool origin_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool searchParams_get(JSContext *cx, unsigned argc, JS::Value *vp);
+
+  static bool toString(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool toJSON(JSContext *cx, unsigned argc, JS::Value *vp);
+
+public:
+  static constexpr const char *class_name = "URL";
+
+  enum Slots { Url, Params, Count };
+
+  static const JSFunctionSpec methods[];
+  static const JSPropertySpec properties[];
+
+  static const unsigned ctor_length = 1;
+
+  static jsurl::SpecString origin(JSContext *cx, JS::HandleObject self);
+  static bool origin(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool hash(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool host(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool hostname(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool href(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool password(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool pathname(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool port(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool protocol(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool search(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool username(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+
+  static JSObject *create(JSContext *cx, JS::HandleObject self, jsurl::SpecString url_str,
+                          const jsurl::JSUrl *base = nullptr);
+
+  static JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
+                          const jsurl::JSUrl *base = nullptr);
+
+  static JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
+                          JS::HandleObject base_obj);
+
+  static JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
+                          JS::HandleValue base_val);
+
+  static bool init_class(JSContext *cx, JS::HandleObject global);
+  static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
+};
+
 } // namespace builtins
-
-namespace URL {
-// TODO: these shouldn't be exposed
-extern const JSClass class_;
-extern JS::PersistentRooted<JSObject *> proto_obj;
-
-bool is_instance(JSObject *obj);
-bool is_instance(JS::Value val);
-
-bool hash(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
-bool host(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
-bool hostname(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
-bool href(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
-bool password(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
-bool pathname(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
-bool port(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
-bool protocol(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
-bool search(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
-bool username(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
-
-jsurl::SpecString origin(JSContext *cx, JS::HandleObject self);
-bool origin(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
-
-JSObject *create(JSContext *cx, JS::HandleObject self, jsurl::SpecString url_str,
-                 const jsurl::JSUrl *base = nullptr);
-
-JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
-                 const jsurl::JSUrl *base = nullptr);
-
-JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
-                 JS::HandleObject base_obj);
-
-JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
-                 JS::HandleValue base_val);
-
-bool init_class(JSContext *cx, JS::HandleObject global);
-} // namespace URL
