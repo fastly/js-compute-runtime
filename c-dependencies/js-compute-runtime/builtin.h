@@ -54,8 +54,8 @@
                                                                                                    \
   bool init_class_impl(JSContext *cx, JS::HandleObject global,                                     \
                        JS::HandleObject parent_proto = nullptr) {                                  \
-    proto_obj.init(cx, JS_InitClass(cx, global, parent_proto, &class_, constructor, ctor_length,   \
-                                    properties, methods, nullptr, nullptr));                       \
+    proto_obj.init(cx, JS_InitClass(cx, global, &class_, parent_proto, #cls, constructor,          \
+                                    ctor_length, properties, methods, nullptr, nullptr));          \
     return proto_obj;                                                                              \
   };
 
@@ -182,9 +182,9 @@ public:
 
   static bool init_class_impl(JSContext *cx, JS::HandleObject global,
                               JS::HandleObject parent_proto = nullptr) {
-    proto_obj.init(cx, JS_InitClass(cx, global, parent_proto, &class_, Impl::constructor,
-                                    Impl::ctor_length, Impl::properties, Impl::methods, nullptr,
-                                    nullptr));
+    proto_obj.init(cx, JS_InitClass(cx, global, &class_, parent_proto, Impl::class_name,
+                                    Impl::constructor, Impl::ctor_length, Impl::properties,
+                                    Impl::methods, nullptr, nullptr));
 
     return proto_obj != nullptr;
   }
