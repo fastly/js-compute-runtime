@@ -7,7 +7,7 @@
     "prettier": "^2.8.4"
   },
   "dependencies": {
-    "undici": "^5.18.0",
+    "undici": "^5.20.0",
     "zx": "^7.0.7"
   },
   "type": "module"
