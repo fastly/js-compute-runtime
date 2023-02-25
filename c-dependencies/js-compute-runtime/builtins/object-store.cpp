@@ -308,8 +308,8 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
     } else if (body_obj && JS::IsArrayBufferObject(body_obj)) {
       bool is_shared;
       JS::GetArrayBufferLengthAndData(body_obj, &length, &is_shared, (uint8_t **)&buf);
-    } else if (body_obj && URLSearchParams::is_instance(body_obj)) {
-      jsurl::SpecSlice slice = URLSearchParams::serialize(cx, body_obj);
+    } else if (body_obj && builtins::URLSearchParams::is_instance(body_obj)) {
+      jsurl::SpecSlice slice = builtins::URLSearchParams::serialize(cx, body_obj);
       buf = (char *)slice.data;
       length = slice.len;
     } else {

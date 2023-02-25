@@ -10,7 +10,7 @@ defaults:
   run:
     shell: bash
 env:
-  viceroy_version: 0.3.2
+  viceroy_version: 0.3.5
 
 jobs:
   build:
@@ -100,7 +100,7 @@ jobs:
       matrix:
         include:
           - crate: viceroy
-            version: 0.3.2 # Note: workflow-level env vars can't be used in matrix definitions
+            version: 0.3.5 # Note: workflow-level env vars can't be used in matrix definitions
             options: ""
     runs-on: ubuntu-latest
     steps:
