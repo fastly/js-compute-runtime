@@ -9,22 +9,9 @@ constexpr int ITERTYPE_ENTRIES = 0;
 constexpr int ITERTYPE_KEYS = 1;
 constexpr int ITERTYPE_VALUES = 2;
 
-namespace URLSearchParamsIterator {
-namespace Slots {
-enum { Params, Type, Index, Count };
-};
+namespace builtins {
 
-const unsigned ctor_length = 0;
-// This constructor will be deleted from the class prototype right after class
-// initialization.
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  MOZ_RELEASE_ASSERT(false, "Should be deleted");
-  return false;
-}
-
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
-
-bool next(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URLSearchParamsIterator::next(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   JS::RootedObject params_obj(cx, &JS::GetReservedSlot(self, Slots::Params).toObject());
   const auto params = URLSearchParams::get_params(params_obj);
@@ -98,13 +85,23 @@ bool next(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-const JSFunctionSpec methods[] = {JS_FN("next", next, 0, JSPROP_ENUMERATE), JS_FS_END};
+const JSFunctionSpec URLSearchParamsIterator::methods[] = {
+    JS_FN("next", URLSearchParamsIterator::next, 0, JSPROP_ENUMERATE),
+    JS_FS_END,
+};
 
-const JSPropertySpec properties[] = {JS_PS_END};
+const JSPropertySpec URLSearchParamsIterator::properties[] = {
+    JS_PS_END,
+};
 
-CLASS_BOILERPLATE_CUSTOM_INIT(URLSearchParamsIterator)
+// This constructor will be deleted from the class prototype right after class
+// initialization.
+bool URLSearchParamsIterator::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+  MOZ_RELEASE_ASSERT(false, "Should be deleted");
+  return false;
+}
 
-bool init_class(JSContext *cx, JS::HandleObject global) {
+bool URLSearchParamsIterator::init_class(JSContext *cx, JS::HandleObject global) {
   JS::RootedObject iterator_proto(cx, JS::GetRealmIteratorPrototype(cx));
   if (!iterator_proto)
     return false;
@@ -119,7 +116,7 @@ bool init_class(JSContext *cx, JS::HandleObject global) {
          JS_DeleteProperty(cx, proto_obj, "constructor");
 }
 
-JSObject *create(JSContext *cx, JS::HandleObject params, uint8_t type) {
+JSObject *URLSearchParamsIterator::create(JSContext *cx, JS::HandleObject params, uint8_t type) {
   MOZ_RELEASE_ASSERT(type <= ITERTYPE_VALUES);
 
   JS::RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
@@ -132,71 +129,37 @@ JSObject *create(JSContext *cx, JS::HandleObject params, uint8_t type) {
 
   return self;
 }
-} // namespace URLSearchParamsIterator
 
-namespace URLSearchParams {
-
-namespace Slots {
-enum { Url, Params, Count };
+const JSFunctionSpec URLSearchParams::methods[] = {
+    JS_FN("append", URLSearchParams::append, 2, JSPROP_ENUMERATE),
+    JS_FN("delete", URLSearchParams::delete_, 1, JSPROP_ENUMERATE),
+    JS_FN("has", URLSearchParams::has, 1, JSPROP_ENUMERATE),
+    JS_FN("get", URLSearchParams::get, 1, JSPROP_ENUMERATE),
+    JS_FN("getAll", URLSearchParams::getAll, 1, JSPROP_ENUMERATE),
+    JS_FN("set", URLSearchParams::set, 2, JSPROP_ENUMERATE),
+    JS_FN("sort", URLSearchParams::sort, 0, JSPROP_ENUMERATE),
+    JS_FN("toString", URLSearchParams::toString, 0, JSPROP_ENUMERATE),
+    JS_FN("forEach", URLSearchParams::forEach, 0, JSPROP_ENUMERATE),
+    JS_FN("entries", URLSearchParams::entries, 0, 0),
+    JS_FN("keys", URLSearchParams::keys, 0, 0),
+    JS_FN("values", URLSearchParams::values, 0, 0),
+    // [Symbol.iterator] added in init_class.
+    JS_FS_END,
 };
 
-jsurl::JSUrlSearchParams *get_params(JSObject *self);
+const JSPropertySpec URLSearchParams::properties[] = {
+    JS_PS_END,
+};
 
-namespace detail {
-bool append(JSContext *cx, JS::HandleObject self, JS::HandleValue key, JS::HandleValue val,
-            const char *_);
-} // namespace detail
-
-jsurl::SpecSlice serialize(JSContext *cx, JS::HandleObject self);
-
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
-
-const unsigned ctor_length = 1;
-
-bool append(JSContext *cx, unsigned argc, JS::Value *vp);
-
-bool delete_(JSContext *cx, unsigned argc, JS::Value *vp);
-
-bool has(JSContext *cx, unsigned argc, JS::Value *vp);
-
-bool get(JSContext *cx, unsigned argc, JS::Value *vp);
-
-bool getAll(JSContext *cx, unsigned argc, JS::Value *vp);
-
-bool set(JSContext *cx, unsigned argc, JS::Value *vp);
-
-bool sort(JSContext *cx, unsigned argc, JS::Value *vp);
-
-bool toString(JSContext *cx, unsigned argc, JS::Value *vp);
-
-bool forEach(JSContext *cx, unsigned argc, JS::Value *vp);
-
-template <auto type> bool get_iter(JSContext *cx, unsigned argc, JS::Value *vp);
-
-const JSFunctionSpec methods[] = {
-    JS_FN("append", append, 2, JSPROP_ENUMERATE), JS_FN("delete", delete_, 1, JSPROP_ENUMERATE),
-    JS_FN("has", has, 1, JSPROP_ENUMERATE), JS_FN("get", get, 1, JSPROP_ENUMERATE),
-    JS_FN("getAll", getAll, 1, JSPROP_ENUMERATE), JS_FN("set", set, 2, JSPROP_ENUMERATE),
-    JS_FN("sort", sort, 0, JSPROP_ENUMERATE), JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
-    JS_FN("forEach", forEach, 0, JSPROP_ENUMERATE),
-    JS_FN("entries", get_iter<ITERTYPE_ENTRIES>, 0, 0),
-    JS_FN("keys", get_iter<ITERTYPE_KEYS>, 0, 0), JS_FN("values", get_iter<ITERTYPE_VALUES>, 0, 0),
-    // [Symbol.iterator] added in init_class.
-    JS_FS_END};
-
-const JSPropertySpec properties[] = {JS_PS_END};
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-CLASS_BOILERPLATE_CUSTOM_INIT(URLSearchParams)
-
-jsurl::JSUrlSearchParams *get_params(JSObject *self) {
+jsurl::JSUrlSearchParams *URLSearchParams::get_params(JSObject *self) {
   return static_cast<jsurl::JSUrlSearchParams *>(
       JS::GetReservedSlot(self, Slots::Params).toPrivate());
 }
 
-namespace detail {
-bool append(JSContext *cx, JS::HandleObject self, JS::HandleValue key, JS::HandleValue val,
-            const char *_) {
-  const auto params = get_params(self);
+namespace {
+bool append_impl(JSContext *cx, JS::HandleObject self, JS::HandleValue key, JS::HandleValue val,
+                 const char *_) {
+  const auto params = URLSearchParams::get_params(self);
 
   auto name = encode(cx, key);
   if (!name.data)
@@ -209,24 +172,22 @@ bool append(JSContext *cx, JS::HandleObject self, JS::HandleValue key, JS::Handl
   jsurl::params_append(params, name, value);
   return true;
 }
-} // namespace detail
+} // namespace
 
-jsurl::SpecSlice serialize(JSContext *cx, JS::HandleObject self) {
+jsurl::SpecSlice URLSearchParams::serialize(JSContext *cx, JS::HandleObject self) {
   return jsurl::params_to_string(get_params(self));
 }
 
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
-
-bool append(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URLSearchParams::append(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(2)
-  if (!detail::append(cx, self, args[0], args[1], "append"))
+  if (!append_impl(cx, self, args[0], args[1], "append"))
     return false;
 
   args.rval().setUndefined();
   return true;
 }
 
-bool delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URLSearchParams::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(1, "delete");
 
   auto *params =
@@ -241,7 +202,7 @@ bool delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool has(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URLSearchParams::has(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
   auto *params =
       static_cast<jsurl::JSUrlSearchParams *>(JS::GetReservedSlot(self, Slots::Params).toPrivate());
@@ -254,7 +215,7 @@ bool has(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URLSearchParams::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1);
   auto *params = static_cast<const jsurl::JSUrlSearchParams *>(
       JS::GetReservedSlot(self, Slots::Params).toPrivate());
@@ -276,7 +237,7 @@ bool get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool getAll(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URLSearchParams::getAll(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1);
 
   auto *params = static_cast<const jsurl::JSUrlSearchParams *>(
@@ -309,7 +270,7 @@ bool getAll(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool set(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URLSearchParams::set(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(2);
 
   auto *params =
@@ -330,7 +291,7 @@ bool set(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool sort(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URLSearchParams::sort(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   auto *params =
       static_cast<jsurl::JSUrlSearchParams *>(JS::GetReservedSlot(self, Slots::Params).toPrivate());
@@ -339,7 +300,7 @@ bool sort(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool toString(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URLSearchParams::toString(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   jsurl::SpecSlice slice = serialize(cx, self);
   JS::RootedString str(
@@ -352,7 +313,7 @@ bool toString(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool forEach(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URLSearchParams::forEach(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
   const auto params = get_params(self);
 
@@ -398,17 +359,24 @@ bool forEach(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-template <auto type> bool get_iter(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(0)
+#define ITERATOR_METHOD(name, type)                                                                \
+  bool URLSearchParams::name(JSContext *cx, unsigned argc, JS::Value *vp) {                        \
+    METHOD_HEADER(0)                                                                               \
+                                                                                                   \
+    JS::RootedObject iter(cx, builtins::URLSearchParamsIterator::create(cx, self, type));          \
+    if (!iter)                                                                                     \
+      return false;                                                                                \
+    args.rval().setObject(*iter);                                                                  \
+    return true;                                                                                   \
+  }
 
-  JS::RootedObject iter(cx, URLSearchParamsIterator::create(cx, self, type));
-  if (!iter)
-    return false;
-  args.rval().setObject(*iter);
-  return true;
-}
+ITERATOR_METHOD(entries, ITERTYPE_ENTRIES);
+ITERATOR_METHOD(keys, ITERTYPE_KEYS);
+ITERATOR_METHOD(values, ITERTYPE_VALUES);
 
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+#undef ITERTYPE_VALUES
+
+bool URLSearchParams::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   CTOR_HEADER("URLSearchParams", 0);
 
   JS::RootedObject urlSearchParamsInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
@@ -420,7 +388,7 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool init_class(JSContext *cx, JS::HandleObject global) {
+bool URLSearchParams::init_class(JSContext *cx, JS::HandleObject global) {
   if (!init_class_impl(cx, global))
     return false;
 
@@ -433,14 +401,15 @@ bool init_class(JSContext *cx, JS::HandleObject global) {
   return JS_DefinePropertyById(cx, proto_obj, iteratorId, entries, 0);
 }
 
-JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue params_val) {
+JSObject *URLSearchParams::create(JSContext *cx, JS::HandleObject self,
+                                  JS::HandleValue params_val) {
   auto params = jsurl::new_params();
   JS::SetReservedSlot(self, Slots::Params, JS::PrivateValue(params));
 
   bool consumed = false;
   const char *alt_text = ", or a value that can be stringified";
-  if (!maybe_consume_sequence_or_record<detail::append>(cx, params_val, self, &consumed,
-                                                        "URLSearchParams", alt_text)) {
+  if (!maybe_consume_sequence_or_record<append_impl>(cx, params_val, self, &consumed,
+                                                     "URLSearchParams", alt_text)) {
     return nullptr;
   }
 
@@ -455,7 +424,7 @@ JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue params_va
   return self;
 }
 
-JSObject *create(JSContext *cx, JS::HandleObject self, jsurl::JSUrl *url) {
+JSObject *URLSearchParams::create(JSContext *cx, JS::HandleObject self, jsurl::JSUrl *url) {
 
   jsurl::JSUrlSearchParams *params = jsurl::url_search_params(url);
   if (!params)
@@ -466,44 +435,38 @@ JSObject *create(JSContext *cx, JS::HandleObject self, jsurl::JSUrl *url) {
 
   return self;
 }
-} // namespace URLSearchParams
-
-namespace URL {
-namespace Slots {
-enum { Url, Params, Count };
-};
-
-const unsigned ctor_length = 1;
-
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
 
 #define ACCESSOR_GET(field)                                                                        \
-  bool field(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {                  \
+  bool URL::field(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {             \
     const jsurl::JSUrl *url =                                                                      \
-        static_cast<jsurl::JSUrl *>(JS::GetReservedSlot(self, Slots::Url).toPrivate());            \
+        static_cast<jsurl::JSUrl *>(JS::GetReservedSlot(self, URL::Slots::Url).toPrivate());       \
     const jsurl::SpecSlice slice = jsurl::field(url);                                              \
     JS::RootedString str(cx,                                                                       \
                          JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char *)slice.data, slice.len))); \
-    if (!str)                                                                                      \
+    if (!str) {                                                                                    \
       return false;                                                                                \
+    }                                                                                              \
+                                                                                                   \
     rval.setString(str);                                                                           \
     return true;                                                                                   \
   }                                                                                                \
                                                                                                    \
-  bool field##_get(JSContext *cx, unsigned argc, JS::Value *vp) {                                  \
+  bool URL::field##_get(JSContext *cx, unsigned argc, JS::Value *vp) {                             \
     METHOD_HEADER(0)                                                                               \
     return field(cx, self, args.rval());                                                           \
   }
 
 #define ACCESSOR_SET(field)                                                                        \
-  bool field##_set(JSContext *cx, unsigned argc, JS::Value *vp) {                                  \
+  bool URL::field##_set(JSContext *cx, unsigned argc, JS::Value *vp) {                             \
     METHOD_HEADER(1)                                                                               \
     jsurl::JSUrl *url =                                                                            \
-        static_cast<jsurl::JSUrl *>(JS::GetReservedSlot(self, Slots::Url).toPrivate());            \
+        static_cast<jsurl::JSUrl *>(JS::GetReservedSlot(self, URL::Slots::Url).toPrivate());       \
                                                                                                    \
     jsurl::SpecString str = encode(cx, args.get(0));                                               \
-    if (!str.data)                                                                                 \
+    if (!str.data) {                                                                               \
       return false;                                                                                \
+    }                                                                                              \
+                                                                                                   \
     jsurl::set_##field(url, &str);                                                                 \
                                                                                                    \
     args.rval().set(args.get(0));                                                                  \
@@ -529,46 +492,34 @@ ACCESSOR(username)
 #undef ACCESSOR_SET
 #undef ACCESSOR
 
-jsurl::SpecString origin(JSContext *cx, JS::HandleObject self);
+const JSFunctionSpec URL::methods[] = {
+    JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
+    JS_FN("toJSON", toJSON, 0, JSPROP_ENUMERATE),
+    JS_FS_END,
+};
 
-bool origin(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+const JSPropertySpec URL::properties[] = {
+    JS_PSGS("hash", URL::hash_get, URL::hash_set, JSPROP_ENUMERATE),
+    JS_PSGS("host", URL::host_get, URL::host_set, JSPROP_ENUMERATE),
+    JS_PSGS("hostname", URL::hostname_get, URL::hostname_set, JSPROP_ENUMERATE),
+    JS_PSGS("href", URL::href_get, URL::href_set, JSPROP_ENUMERATE),
+    JS_PSG("origin", URL::origin_get, JSPROP_ENUMERATE),
+    JS_PSGS("password", URL::password_get, URL::password_set, JSPROP_ENUMERATE),
+    JS_PSGS("pathname", URL::pathname_get, URL::pathname_set, JSPROP_ENUMERATE),
+    JS_PSGS("port", URL::port_get, URL::port_set, JSPROP_ENUMERATE),
+    JS_PSGS("protocol", URL::protocol_get, URL::protocol_set, JSPROP_ENUMERATE),
+    JS_PSGS("search", URL::search_get, URL::search_set, JSPROP_ENUMERATE),
+    JS_PSG("searchParams", URL::searchParams_get, JSPROP_ENUMERATE),
+    JS_PSGS("username", URL::username_get, URL::username_set, JSPROP_ENUMERATE),
+    JS_PS_END,
+};
 
-bool origin_get(JSContext *cx, unsigned argc, JS::Value *vp);
-
-bool searchParams_get(JSContext *cx, unsigned argc, JS::Value *vp);
-
-bool toString(JSContext *cx, unsigned argc, JS::Value *vp);
-
-bool toJSON(JSContext *cx, unsigned argc, JS::Value *vp);
-
-const JSFunctionSpec methods[] = {JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
-                                  JS_FN("toJSON", toJSON, 0, JSPROP_ENUMERATE), JS_FS_END};
-
-const JSPropertySpec properties[] = {
-    JS_PSGS("hash", hash_get, hash_set, JSPROP_ENUMERATE),
-    JS_PSGS("host", host_get, host_set, JSPROP_ENUMERATE),
-    JS_PSGS("hostname", hostname_get, hostname_set, JSPROP_ENUMERATE),
-    JS_PSGS("href", href_get, href_set, JSPROP_ENUMERATE),
-    JS_PSG("origin", origin_get, JSPROP_ENUMERATE),
-    JS_PSGS("password", password_get, password_set, JSPROP_ENUMERATE),
-    JS_PSGS("pathname", pathname_get, pathname_set, JSPROP_ENUMERATE),
-    JS_PSGS("port", port_get, port_set, JSPROP_ENUMERATE),
-    JS_PSGS("protocol", protocol_get, protocol_set, JSPROP_ENUMERATE),
-    JS_PSGS("search", search_get, search_set, JSPROP_ENUMERATE),
-    JS_PSG("searchParams", searchParams_get, JSPROP_ENUMERATE),
-    JS_PSGS("username", username_get, username_set, JSPROP_ENUMERATE),
-    JS_PS_END};
-
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-
-CLASS_BOILERPLATE(URL)
-
-jsurl::SpecString origin(JSContext *cx, JS::HandleObject self) {
+jsurl::SpecString URL::origin(JSContext *cx, JS::HandleObject self) {
   auto *url = static_cast<const jsurl::JSUrl *>(JS::GetReservedSlot(self, Slots::Url).toPrivate());
   return jsurl::origin(url);
 }
 
-bool origin(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
+bool URL::origin(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
   jsurl::SpecString slice = origin(cx, self);
   JS::RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars((char *)slice.data, slice.len)));
   if (!str)
@@ -577,22 +528,23 @@ bool origin(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
   return true;
 }
 
-bool origin_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URL::origin_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   return origin(cx, self, args.rval());
 }
 
-bool searchParams_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URL::searchParams_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   JS::Value params_val = JS::GetReservedSlot(self, Slots::Params);
   JS::RootedObject params(cx);
   if (params_val.isNullOrUndefined()) {
     auto *url = static_cast<jsurl::JSUrl *>(JS::GetReservedSlot(self, Slots::Url).toPrivate());
     JS::RootedObject url_search_params_instance(
-        cx, JS_NewObjectWithGivenProto(cx, &URLSearchParams::class_, URLSearchParams::proto_obj));
+        cx, JS_NewObjectWithGivenProto(cx, &builtins::URLSearchParams::class_,
+                                       builtins::URLSearchParams::proto_obj));
     if (!url_search_params_instance)
       return false;
-    params = URLSearchParams::create(cx, url_search_params_instance, url);
+    params = builtins::URLSearchParams::create(cx, url_search_params_instance, url);
     if (!params)
       return false;
     JS::SetReservedSlot(self, Slots::Params, JS::ObjectValue(*params));
@@ -604,19 +556,17 @@ bool searchParams_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool toString(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URL::toString(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   return href_get(cx, argc, vp);
 }
 
-bool toJSON(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URL::toJSON(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   return href_get(cx, argc, vp);
 }
-JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
-                 JS::HandleValue base_val);
 
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool URL::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   CTOR_HEADER("URL", 1);
 
   JS::RootedObject urlInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
@@ -630,8 +580,8 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-JSObject *create(JSContext *cx, JS::HandleObject self, jsurl::SpecString url_str,
-                 const jsurl::JSUrl *base) {
+JSObject *URL::create(JSContext *cx, JS::HandleObject self, jsurl::SpecString url_str,
+                      const jsurl::JSUrl *base) {
   jsurl::JSUrl *url;
   if (base) {
     url = jsurl::new_jsurl_with_base(&url_str, base);
@@ -649,8 +599,8 @@ JSObject *create(JSContext *cx, JS::HandleObject self, jsurl::SpecString url_str
   return self;
 }
 
-JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
-                 const jsurl::JSUrl *base) {
+JSObject *URL::create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
+                      const jsurl::JSUrl *base) {
   auto str = encode(cx, url_val);
   if (!str.data)
     return nullptr;
@@ -658,8 +608,8 @@ JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
   return create(cx, self, str, base);
 }
 
-JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
-                 JS::HandleObject base_obj) {
+JSObject *URL::create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
+                      JS::HandleObject base_obj) {
   MOZ_RELEASE_ASSERT(is_instance(base_obj));
   const auto *base =
       static_cast<jsurl::JSUrl *>(JS::GetReservedSlot(base_obj, Slots::Url).toPrivate());
@@ -667,8 +617,8 @@ JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
   return create(cx, self, url_val, base);
 }
 
-JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
-                 JS::HandleValue base_val) {
+JSObject *URL::create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
+                      JS::HandleValue base_val) {
   if (is_instance(base_val)) {
     JS::RootedObject base_obj(cx, &base_val.toObject());
     return create(cx, self, url_val, base_obj);
@@ -691,4 +641,8 @@ JSObject *create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
   return create(cx, self, url_val, base);
 }
 
-} // namespace URL
+bool URL::init_class(JSContext *cx, JS::HandleObject global) {
+  return URL::init_class_impl(cx, global);
+}
+
+} // namespace builtins
