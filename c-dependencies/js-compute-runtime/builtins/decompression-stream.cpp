@@ -8,20 +8,15 @@
 #include "zlib.h"
 
 #include "builtin.h"
+#include "builtins/decompression-stream.h"
 #include "builtins/transform-stream-default-controller.h"
 #include "builtins/transform-stream.h"
 #include "host_call.h"
 #include "js-compute-builtins.h"
-/**
- * Implementation of the WICG DecompressionStream builtin.
- *
- * All algorithm names and steps refer to spec algorithms defined at
- * https://wicg.github.io/compression/#decompression-stream
- */
-namespace DecompressionStream {
-namespace Slots {
-enum { Transform, Format, State, Buffer, Count };
-};
+
+namespace builtins {
+
+namespace {
 
 enum class Format {
   GZIP,
@@ -33,34 +28,27 @@ enum class Format {
 // https://chromium.googlesource.com/chromium/src/+/457f48d3d8635c8bca077232471228d75290cc29/third_party/blink/renderer/modules/compression/deflate_transformer.cc#29
 constexpr size_t BUFFER_SIZE = 16384;
 
-bool is_instance(JSObject *obj);
-
 JSObject *transform(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  return &JS::GetReservedSlot(self, Slots::Transform).toObject();
-}
-
-Format format(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  return (Format)JS::GetReservedSlot(self, Slots::Format).toInt32();
+  MOZ_ASSERT(DecompressionStream::is_instance(self));
+  return &JS::GetReservedSlot(self, DecompressionStream::Slots::Transform).toObject();
 }
 
 z_stream *state(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  void *ptr = JS::GetReservedSlot(self, Slots::State).toPrivate();
+  MOZ_ASSERT(DecompressionStream::is_instance(self));
+  void *ptr = JS::GetReservedSlot(self, DecompressionStream::Slots::State).toPrivate();
   MOZ_ASSERT(ptr);
   return (z_stream *)ptr;
 }
 
 uint8_t *output_buffer(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  void *ptr = JS::GetReservedSlot(self, Slots::Buffer).toPrivate();
+  MOZ_ASSERT(DecompressionStream::is_instance(self));
+  void *ptr = JS::GetReservedSlot(self, DecompressionStream::Slots::Buffer).toPrivate();
   MOZ_ASSERT(ptr);
   return (uint8_t *)ptr;
 }
 
-const unsigned ctor_length = 1;
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
+JS::PersistentRooted<JSObject *> transformAlgo;
+JS::PersistentRooted<JSObject *> flushAlgo;
 
 // Steps 1-5 of the transform algorithm, and 1-5 of the flush algorithm.
 bool inflate_chunk(JSContext *cx, JS::HandleObject self, JS::HandleValue chunk, bool finished) {
@@ -160,9 +148,11 @@ bool inflate_chunk(JSContext *cx, JS::HandleObject self, JS::HandleValue chunk, 
   return true;
 }
 
+} // namespace
+
 // https://wicg.github.io/compression/#decompress-and-enqueue-a-chunk
 // All steps inlined into `inflate_chunk`.
-bool transformAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool DecompressionStream::transformAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(1, "Decompression stream transform algorithm")
 
   if (!inflate_chunk(cx, self, args[0], false)) {
@@ -175,7 +165,7 @@ bool transformAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 // https://wicg.github.io/compression/#decompress-flush-and-enqueue
 // All steps inlined into `inflate_chunk`.
-bool flushAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool DecompressionStream::flushAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "Decompression stream flush algorithm")
 
   if (!inflate_chunk(cx, self, JS::UndefinedHandleValue, true)) {
@@ -188,46 +178,45 @@ bool flushAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
 // These fields shouldn't ever be accessed again, but we should be able to
 // assert that.
 #ifdef DEBUG
-  JS::SetReservedSlot(self, Slots::State, JS::PrivateValue(nullptr));
-  JS::SetReservedSlot(self, Slots::Buffer, JS::PrivateValue(nullptr));
+  JS::SetReservedSlot(self, DecompressionStream::Slots::State, JS::PrivateValue(nullptr));
+  JS::SetReservedSlot(self, DecompressionStream::Slots::Buffer, JS::PrivateValue(nullptr));
 #endif
 
   args.rval().setUndefined();
   return true;
 }
 
-bool readable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool DecompressionStream::readable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "get readable")
   args.rval().setObject(*builtins::TransformStream::readable(transform(self)));
   return true;
 }
 
-bool writable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool DecompressionStream::writable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "get writable")
   args.rval().setObject(*builtins::TransformStream::writable(transform(self)));
   return true;
 }
 
-const JSFunctionSpec methods[] = {JS_FS_END};
+const JSFunctionSpec DecompressionStream::methods[] = {
+    JS_FS_END,
+};
 
-const JSPropertySpec properties[] = {
-    JS_PSG("readable", readable_get, JSPROP_ENUMERATE),
-    JS_PSG("writable", writable_get, JSPROP_ENUMERATE),
-    JS_STRING_SYM_PS(toStringTag, "DecompressionStream", JSPROP_READONLY), JS_PS_END};
+const JSPropertySpec DecompressionStream::properties[] = {
+    JS_PSG("readable", DecompressionStream::readable_get, JSPROP_ENUMERATE),
+    JS_PSG("writable", DecompressionStream::writable_get, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "DecompressionStream", JSPROP_READONLY),
+    JS_PS_END,
+};
 
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-
-CLASS_BOILERPLATE_CUSTOM_INIT(DecompressionStream)
-
-static JS::PersistentRooted<JSObject *> transformAlgo;
-static JS::PersistentRooted<JSObject *> flushAlgo;
+namespace {
 
 // Steps 2-6 of `new DecompressionStream()`.
 JSObject *create(JSContext *cx, JS::HandleObject stream, Format format) {
   JS::RootedValue stream_val(cx, JS::ObjectValue(*stream));
 
   // 2.  Set this's format to _format_.
-  JS::SetReservedSlot(stream, Slots::Format, JS::Int32Value((int32_t)format));
+  JS::SetReservedSlot(stream, DecompressionStream::Slots::Format, JS::Int32Value((int32_t)format));
 
   // 3.  Let _transformAlgorithm_ be an algorithm which takes a _chunk_ argument
   // and runs the
@@ -249,7 +238,7 @@ JSObject *create(JSContext *cx, JS::HandleObject stream, Format format) {
   }
 
   builtins::TransformStream::set_used_as_mixin(transform);
-  JS::SetReservedSlot(stream, Slots::Transform, JS::ObjectValue(*transform));
+  JS::SetReservedSlot(stream, DecompressionStream::Slots::Transform, JS::ObjectValue(*transform));
 
   // The remainder of the function deals with setting up the inflate state used
   // for decompressing chunks.
@@ -261,7 +250,7 @@ JSObject *create(JSContext *cx, JS::HandleObject stream, Format format) {
   }
 
   memset(zstream, 0, sizeof(z_stream));
-  JS::SetReservedSlot(stream, Slots::State, JS::PrivateValue(zstream));
+  JS::SetReservedSlot(stream, DecompressionStream::Slots::State, JS::PrivateValue(zstream));
 
   uint8_t *buffer = (uint8_t *)JS_malloc(cx, BUFFER_SIZE);
   if (!buffer) {
@@ -269,7 +258,7 @@ JSObject *create(JSContext *cx, JS::HandleObject stream, Format format) {
     return nullptr;
   }
 
-  JS::SetReservedSlot(stream, Slots::Buffer, JS::PrivateValue(buffer));
+  JS::SetReservedSlot(stream, DecompressionStream::Slots::Buffer, JS::PrivateValue(buffer));
 
   // Using the same window bits as Chromium's Compression stream, see
   // https://chromium.googlesource.com/chromium/src/+/457f48d3d8635c8bca077232471228d75290cc29/third_party/blink/renderer/modules/compression/inflate_transformer.cc#31
@@ -289,10 +278,12 @@ JSObject *create(JSContext *cx, JS::HandleObject stream, Format format) {
   return stream;
 }
 
+} // namespace
+
 /**
  * https://wicg.github.io/compression/#dom-compressionstream-compressionstream
  */
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool DecompressionStream::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   // 1.  If _format_ is unsupported in `CompressionStream`, then throw a
   // `TypeError`.
   CTOR_HEADER("DecompressionStream", 1);
@@ -303,7 +294,7 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  Format format;
+  enum Format format;
   if (!strcmp(format_chars.get(), "deflate-raw")) {
     format = Format::DeflateRaw;
   } else if (!strcmp(format_chars.get(), "deflate")) {
@@ -327,7 +318,7 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool init_class(JSContext *cx, JS::HandleObject global) {
+bool DecompressionStream::init_class(JSContext *cx, JS::HandleObject global) {
   if (!init_class_impl(cx, global)) {
     return false;
   }
@@ -345,4 +336,4 @@ bool init_class(JSContext *cx, JS::HandleObject global) {
   return true;
 }
 
-} // namespace DecompressionStream
+} // namespace builtins

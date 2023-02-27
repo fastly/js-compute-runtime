@@ -5277,9 +5277,9 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!builtins::TransformStream::init_class(cx, global))
     return false;
-  if (!CompressionStream::init_class(cx, global))
+  if (!builtins::CompressionStream::init_class(cx, global))
     return false;
-  if (!DecompressionStream::init_class(cx, global))
+  if (!builtins::DecompressionStream::init_class(cx, global))
     return false;
   if (!Request::init_class(cx, global))
     return false;

@@ -8,21 +8,15 @@
 #include "zlib.h"
 
 #include "builtin.h"
+#include "builtins/compression-stream.h"
 #include "builtins/transform-stream-default-controller.h"
 #include "builtins/transform-stream.h"
 #include "host_call.h"
 #include "js-compute-builtins.h"
 
-/**
- * Implementation of the WICG CompressionStream builtin.
- *
- * All algorithm names and steps refer to spec algorithms defined at
- * https://streams.spec.whatwg.org/#ts-class
- */
-namespace CompressionStream {
-namespace Slots {
-enum { Transform, Format, State, Buffer, Count };
-};
+namespace builtins {
+
+namespace {
 
 enum class Format {
   GZIP,
@@ -32,40 +26,35 @@ enum class Format {
 
 // Using compression level 2, as per the reasoning here:
 // https://searchfox.org/mozilla-central/rev/ecd91b104714a8b2584a4c03175be50ccb3a7c67/dom/fetch/FetchUtil.cpp#603-609
-const int COMPRESSION_LEVEL = 2;
+constexpr int COMPRESSION_LEVEL = 2;
 
 // Using the same fixed encoding buffer size as Chromium, see
 // https://chromium.googlesource.com/chromium/src/+/457f48d3d8635c8bca077232471228d75290cc29/third_party/blink/renderer/modules/compression/deflate_transformer.cc#29
-const size_t BUFFER_SIZE = 16384;
-
-bool is_instance(JSObject *obj);
+constexpr size_t BUFFER_SIZE = 16384;
 
 JSObject *transform(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  return &JS::GetReservedSlot(self, Slots::Transform).toObject();
-}
-
-Format format(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  return (Format)JS::GetReservedSlot(self, Slots::Format).toInt32();
+  MOZ_ASSERT(CompressionStream::is_instance(self));
+  return &JS::GetReservedSlot(self, CompressionStream::Slots::Transform).toObject();
 }
 
 z_stream *state(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  void *ptr = JS::GetReservedSlot(self, Slots::State).toPrivate();
+  MOZ_ASSERT(CompressionStream::is_instance(self));
+  void *ptr = JS::GetReservedSlot(self, CompressionStream::Slots::State).toPrivate();
   MOZ_ASSERT(ptr);
   return (z_stream *)ptr;
 }
 
 uint8_t *output_buffer(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  void *ptr = JS::GetReservedSlot(self, Slots::Buffer).toPrivate();
+  MOZ_ASSERT(CompressionStream::is_instance(self));
+  void *ptr = JS::GetReservedSlot(self, CompressionStream::Slots::Buffer).toPrivate();
   MOZ_ASSERT(ptr);
   return (uint8_t *)ptr;
 }
 
-const unsigned ctor_length = 1;
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
+JS::PersistentRooted<JSObject *> transformAlgo;
+JS::PersistentRooted<JSObject *> flushAlgo;
+
+} // namespace
 
 // Steps 1-5 of the transform algorithm, and 1-4 of the flush algorithm.
 bool deflate_chunk(JSContext *cx, JS::HandleObject self, JS::HandleValue chunk, bool finished) {
@@ -159,7 +148,7 @@ bool deflate_chunk(JSContext *cx, JS::HandleObject self, JS::HandleValue chunk, 
 
 // https://wicg.github.io/compression/#compress-and-enqueue-a-chunk
 // All steps inlined into `deflate_chunk`.
-bool transformAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool CompressionStream::transformAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(1, "Compression stream transform algorithm")
 
   if (!deflate_chunk(cx, self, args[0], false)) {
@@ -172,7 +161,7 @@ bool transformAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 // https://wicg.github.io/compression/#compress-flush-and-enqueue
 // All steps inlined into `deflate_chunk`.
-bool flushAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool CompressionStream::flushAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "Compression stream flush algorithm")
 
   if (!deflate_chunk(cx, self, JS::UndefinedHandleValue, true)) {
@@ -193,38 +182,37 @@ bool flushAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool readable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool CompressionStream::readable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "get readable")
   args.rval().setObject(*builtins::TransformStream::readable(transform(self)));
   return true;
 }
 
-bool writable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool CompressionStream::writable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(0, "get writable")
   args.rval().setObject(*builtins::TransformStream::writable(transform(self)));
   return true;
 }
 
-const JSFunctionSpec methods[] = {JS_FS_END};
+const JSFunctionSpec CompressionStream::methods[] = {
+    JS_FS_END,
+};
 
-const JSPropertySpec properties[] = {
-    JS_PSG("readable", readable_get, JSPROP_ENUMERATE),
-    JS_PSG("writable", writable_get, JSPROP_ENUMERATE),
-    JS_STRING_SYM_PS(toStringTag, "CompressionStream", JSPROP_READONLY), JS_PS_END};
+const JSPropertySpec CompressionStream::properties[] = {
+    JS_PSG("readable", CompressionStream::readable_get, JSPROP_ENUMERATE),
+    JS_PSG("writable", CompressionStream::writable_get, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "CompressionStream", JSPROP_READONLY),
+    JS_PS_END,
+};
 
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-
-CLASS_BOILERPLATE_CUSTOM_INIT(CompressionStream)
-
-static JS::PersistentRooted<JSObject *> transformAlgo;
-static JS::PersistentRooted<JSObject *> flushAlgo;
+namespace {
 
 // Steps 2-6 of `new CompressionStream()`.
 JSObject *create(JSContext *cx, JS::HandleObject stream, Format format) {
   JS::RootedValue stream_val(cx, JS::ObjectValue(*stream));
 
   // 2.  Set this's format to _format_.
-  JS::SetReservedSlot(stream, Slots::Format, JS::Int32Value((int32_t)format));
+  JS::SetReservedSlot(stream, CompressionStream::Slots::Format, JS::Int32Value((int32_t)format));
 
   // 3.  Let _transformAlgorithm_ be an algorithm which takes a _chunk_ argument
   // and runs the
@@ -246,7 +234,7 @@ JSObject *create(JSContext *cx, JS::HandleObject stream, Format format) {
   }
 
   builtins::TransformStream::set_used_as_mixin(transform);
-  JS::SetReservedSlot(stream, Slots::Transform, JS::ObjectValue(*transform));
+  JS::SetReservedSlot(stream, CompressionStream::Slots::Transform, JS::ObjectValue(*transform));
 
   // The remainder of the function deals with setting up the deflate state used
   // for compressing chunks.
@@ -257,7 +245,7 @@ JSObject *create(JSContext *cx, JS::HandleObject stream, Format format) {
   }
 
   memset(zstream, 0, sizeof(z_stream));
-  JS::SetReservedSlot(stream, Slots::State, JS::PrivateValue(zstream));
+  JS::SetReservedSlot(stream, CompressionStream::Slots::State, JS::PrivateValue(zstream));
 
   uint8_t *buffer = (uint8_t *)JS_malloc(cx, BUFFER_SIZE);
   if (!buffer) {
@@ -265,7 +253,7 @@ JSObject *create(JSContext *cx, JS::HandleObject stream, Format format) {
     return nullptr;
   }
 
-  JS::SetReservedSlot(stream, Slots::Buffer, JS::PrivateValue(buffer));
+  JS::SetReservedSlot(stream, CompressionStream::Slots::Buffer, JS::PrivateValue(buffer));
 
   // Using the same window bits as Chromium's Compression stream, see
   // https://chromium.googlesource.com/chromium/src/+/457f48d3d8635c8bca077232471228d75290cc29/third_party/blink/renderer/modules/compression/deflate_transformer.cc#31
@@ -286,10 +274,12 @@ JSObject *create(JSContext *cx, JS::HandleObject stream, Format format) {
   return stream;
 }
 
+} // namespace
+
 /**
  * https://wicg.github.io/compression/#dom-compressionstream-compressionstream
  */
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool CompressionStream::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   // 1.  If _format_ is unsupported in `CompressionStream`, then throw a
   // `TypeError`.
   CTOR_HEADER("CompressionStream", 1);
@@ -299,7 +289,7 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!format_chars)
     return false;
 
-  Format format;
+  enum Format format;
   if (!strcmp(format_chars.get(), "deflate-raw")) {
     format = Format::DeflateRaw;
   } else if (!strcmp(format_chars.get(), "deflate")) {
@@ -325,7 +315,7 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool init_class(JSContext *cx, JS::HandleObject global) {
+bool CompressionStream::init_class(JSContext *cx, JS::HandleObject global) {
   if (!init_class_impl(cx, global)) {
     return false;
   }
@@ -343,4 +333,4 @@ bool init_class(JSContext *cx, JS::HandleObject global) {
   return true;
 }
 
-} // namespace CompressionStream
+} // namespace builtins
