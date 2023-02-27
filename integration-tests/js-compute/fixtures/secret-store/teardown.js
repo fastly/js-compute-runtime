@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { $ as zx, fetch } from 'zx'
+import { $ as zx } from 'zx'
 
 const startTime = Date.now();
 

@@ -1,13 +1,9 @@
 #!/usr/bin/env node
 
 import { $ as zx } from 'zx'
-import { retry } from 'zx/experimental'
 
 const startTime = Date.now();
 
-async function $(...args) {
-    return await retry(10, () => zx(...args))
-}
 zx.verbose = false;
 if (process.env.FASTLY_API_TOKEN === undefined) {
     try {
