@@ -15,25 +15,23 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
         process.exit(1)
     }
 }
-const FASTLY_API_TOKEN = process.env.FASTLY_API_TOKEN;
 zx.verbose = true;
-let stores = await fetch("https://api.fastly.com/resources/stores/secret", {
-    method: 'GET',
-    headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "Fastly-Key": FASTLY_API_TOKEN
+let stores = await (async function() {
+    try {
+        return JSON.parse(await zx`fastly secret-store list --json --token $FASTLY_API_TOKEN`)
+    } catch {
+        return {data:[]}
     }
-})
+}())
 
-let STORE_ID = (await stores.json()).data.find(({ name }) => name === 'example-test-secret-store')?.id
-if (STORE_ID) {
-    await fetch(`https://api.fastly.com/resources/stores/secret/${STORE_ID}`, {
-        method: 'DELETE',
-        headers: {
-            "Fastly-Key": FASTLY_API_TOKEN
-        }
-    })
+process.env.STORE_ID = stores.data.find(({ name }) => name === 'example-test-secret-store')?.id
+if (process.env.STORE_ID) {
+    try {
+        await zx`fastly resource-link delete --version latest --autoclone --id=$STORE_ID  --token $FASTLY_API_TOKEN`
+    } catch {}
+    try {
+        await zx`fastly secret-store delete --store-id=$STORE_ID  --token $FASTLY_API_TOKEN`
+    } catch {}
 }
 
 console.log(`Tear down has finished! Took ${(Date.now() - startTime) / 1000} seconds to complete`);

@@ -12,18 +12,24 @@ addEventListener("fetch", event => {
  * @returns {Response}
  */
 async function app(event) {
+  let response;
+  const version = env('FASTLY_SERVICE_VERSION') || 'local'
   try {
     const path = (new URL(event.request.url)).pathname;
-    console.log(`path: ${path}`)
-    console.log(`FASTLY_SERVICE_VERSION: ${env('FASTLY_SERVICE_VERSION')}`)
+    console.log(`path: ${path}`);
+    console.log(`FASTLY_SERVICE_VERSION: ${version}`);
     if (routes.has(path)) {
       const routeHandler = routes.get(path);
-      return await routeHandler()
+      response = await routeHandler();
+    } else {
+      response = fail(`${path} endpoint does not exist`);
     }
-    return fail(`${path} endpoint does not exist`)
   } catch (error) {
-    return fail(`The routeHandler threw an error: ${error.message}` + '\n' + error.stack)
+    response = fail(`The routeHandler threw an error: ${error.message}` + '\n' + error.stack);
   }
+
+  response.headers.set('FASTLY_SERVICE_VERSION', version);
+  return response;
 }
 
 const routes = new Map();

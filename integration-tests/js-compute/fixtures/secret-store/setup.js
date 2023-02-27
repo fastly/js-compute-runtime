@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { $ as zx, fetch } from 'zx'
+import { $ as zx } from 'zx'
 import { retry } from 'zx/experimental'
 
 const startTime = Date.now();
@@ -18,79 +18,30 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
         process.exit(1)
     }
 }
-const FASTLY_API_TOKEN = process.env.FASTLY_API_TOKEN;
 
 zx.verbose = true;
 
 let stores = await (async function() {
     try {
-        let response = await fetch("https://api.fastly.com/resources/stores/secret", {
-            method: 'GET',
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                "Fastly-Key": FASTLY_API_TOKEN
-            }
-        });
-        return await response.json();
+        return JSON.parse(await zx`fastly secret-store list --json --token $FASTLY_API_TOKEN`)
     } catch {
         return {data:[]}
     }
 }())
 
-let STORE_ID = stores.data.find(({ name }) => name === 'example-test-secret-store')?.id
-if (!STORE_ID) {
-    STORE_ID = await fetch("https://api.fastly.com/resources/stores/secret", {
-        method: 'POST',
-        headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "Fastly-Key": FASTLY_API_TOKEN
-        },
-        body: '{"name":"example-test-secret-store"}'
-    })
-    STORE_ID = (await STORE_ID.json()).id
+process.env.STORE_ID = stores.data.find(({ name }) => name === 'example-test-secret-store')?.id
+if (!process.env.STORE_ID) {
+    process.env.STORE_ID = JSON.parse(await zx`fastly secret-store create --name=example-test-secret-store --json --token $FASTLY_API_TOKEN`).id
 }
 
-await fetch(`https://api.fastly.com/resources/stores/secret/${STORE_ID}/secrets`, {
-    method: 'POST',
-    headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "Fastly-Key": FASTLY_API_TOKEN
-    },
-    body: JSON.stringify({
-        name: "first",
-        secret: 'This is also some secret data'
-    })
-})
-await fetch(`https://api.fastly.com/resources/stores/secret/${STORE_ID}/secrets`, {
-    method: 'POST',
-    headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "Fastly-Key": FASTLY_API_TOKEN
-    },
-    body: JSON.stringify({
-        name: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        secret: 'This is some secret data'
-    })
-})
+try {
+    await zx`echo -n 'This is also some secret data' | fastly secret-store-entry create --name first --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`
+} catch {}
+try {
+let key = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    await zx`echo -n 'This is some secret data' | fastly secret-store-entry create --name ${key} --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`
+} catch {}
 
-let VERSION = String(await $`fastly service-version clone --version=latest --token $FASTLY_API_TOKEN`).trim()
-VERSION = VERSION.match(/\d+$/)?.[0]
-
-let SERVICE_ID = await $`fastly service describe --json --quiet --token $FASTLY_API_TOKEN`
-SERVICE_ID = JSON.parse(SERVICE_ID).ID
-await fetch(`https://api.fastly.com/service/${SERVICE_ID}/version/${VERSION}/resource`, {
-    method: 'POST',
-    headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Accept: "application/json",
-        "Fastly-Key": FASTLY_API_TOKEN
-    },
-    body: `name=example-test-secret-store&resource_id=${STORE_ID}`
-})
-await $`fastly service-version activate --version=${VERSION} --quiet --token $FASTLY_API_TOKEN`
+await zx`fastly resource-link create --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`
 
 console.log(`Set up has finished! Took ${(Date.now() - startTime) / 1000} seconds to complete`);
