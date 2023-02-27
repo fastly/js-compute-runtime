@@ -1,0 +1,55 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# SecretStoreEntry.prototype.plaintext
+
+▸ **plaintext**(): `string`
+
+Returns the plaintext contents of the SecretStoreEntry instance as String.
+
+## Syntax
+
+```js
+plaintext()
+```
+
+### Parameters
+
+None.
+
+### Return value
+
+A String
+
+### Exceptions
+
+The `plaintext()` method requires its `this` value to be a [`SecretStoreEntry`](../SecretStoreEntry.mdx) object.
+If the `this` value does not inherit from `SecretStoreEntry.prototype`, a [`TypeError`](../../../globals/TypeError/TypeError.mdx) is thrown.
+
+## Examples
+
+In this example we connect to an Secret Store named `'secrets'` and retrieve a secret named `'cat-api-key'` use the value in a Request header.
+
+```js
+/// <reference types="@fastly/js-compute" />
+
+import { SecretStore } from "fastly:secret-store";
+
+async function app(event) {
+  const secrets = new SecretStore('secrets')
+
+  const catApiKey = await secrets.get('cat-api-key')
+
+  return fetch('/api/cat', {
+    headers: {
+      'cat-api-key': catApiKey.plaintext()
+    }
+  })
+}
+
+addEventListener("fetch", (event) => event.respondWith(app(event)))
+
+```
