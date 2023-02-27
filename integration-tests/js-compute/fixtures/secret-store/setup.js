@@ -29,9 +29,11 @@ let stores = await (async function() {
     }
 }())
 
-process.env.STORE_ID = stores.data.find(({ name }) => name === 'example-test-secret-store')?.id
-if (!process.env.STORE_ID) {
+const STORE_ID = stores.data.find(({ name }) => name === 'example-test-secret-store')?.id
+if (!STORE_ID) {
     process.env.STORE_ID = JSON.parse(await zx`fastly secret-store create --name=example-test-secret-store --json --token $FASTLY_API_TOKEN`).id
+} else {
+    process.env.STORE_ID = STORE_ID;
 }
 
 try {
@@ -43,5 +45,6 @@ let key = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 } catch {}
 
 await zx`fastly resource-link create --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`
+await zx`fastly service-version activate --version latest --token $FASTLY_API_TOKEN`
 
 console.log(`Set up has finished! Took ${(Date.now() - startTime) / 1000} seconds to complete`);
