@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/fastly/js-compute-runtime/compare/v1.3.4...v1.4.0) (2023-02-27)
+
+
+### Features
+
+* implement fastly:secret-store package ([cde22e3](https://github.com/fastly/js-compute-runtime/commit/cde22e3fa232b50e96222301ba40dda5b424bb60))
+
+
+### Bug Fixes
+
+* Bump to spidermonkey 110, and viceroy 0.3.5 ([#420](https://github.com/fastly/js-compute-runtime/issues/420)) ([e17cdfd](https://github.com/fastly/js-compute-runtime/commit/e17cdfda1878fe23a7f331fb20d33c52d580003b))
+
 ## [1.3.4](https://github.com/fastly/js-compute-runtime/compare/v1.3.3...v1.3.4) (2023-02-09)
 
 
