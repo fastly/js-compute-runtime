@@ -23,12 +23,25 @@ let stores = await (async function() {
         return {data:[]}
     }
 }())
-
-process.env.STORE_ID = stores.data.find(({ name }) => name === 'example-test-secret-store')?.id
-if (process.env.STORE_ID) {
+let links = await (async function() {
     try {
-        await zx`fastly resource-link delete --version latest --autoclone --id=$STORE_ID  --token $FASTLY_API_TOKEN`
-    } catch {}
+        return JSON.parse(await zx`fastly resource-link list --json --version latest --token $FASTLY_API_TOKEN`)
+    } catch {
+        return []
+    }
+}())
+
+const STORE_ID = stores.data.find(({ name }) => name === 'example-test-secret-store')?.id
+if (STORE_ID) {
+    process.env.STORE_ID = STORE_ID;
+    let LINK_ID = links.find(({resource_id}) => resource_id == STORE_ID)?.id;
+    if (LINK_ID) {
+        process.env.LINK_ID = LINK_ID;
+        try {
+            await zx`fastly resource-link delete --version latest --autoclone --id=$LINK_ID  --token $FASTLY_API_TOKEN`
+            await zx`fastly service-version activate --version latest --token $FASTLY_API_TOKEN`
+        } catch {}
+    }
     try {
         await zx`fastly secret-store delete --store-id=$STORE_ID  --token $FASTLY_API_TOKEN`
     } catch {}
