@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.4.0](https://github.com/fastly/js-compute-runtime/compare/v1.3.4...v1.4.0) (2023-02-27)
+## 1.4.0 (2023-02-27)
 
 
 ### Features
@@ -12,49 +12,49 @@
 
 * Bump to spidermonkey 110, and viceroy 0.3.5 ([#420](https://github.com/fastly/js-compute-runtime/issues/420)) ([e17cdfd](https://github.com/fastly/js-compute-runtime/commit/e17cdfda1878fe23a7f331fb20d33c52d580003b))
 
-## [1.3.4](https://github.com/fastly/js-compute-runtime/compare/v1.3.3...v1.3.4) (2023-02-09)
+## 1.3.4 (2023-02-09)
 
 
 ### Bug Fixes
 
 * add custom error message when making a request to a backend which does not exist ([#412](https://github.com/fastly/js-compute-runtime/issues/412)) ([486aed1](https://github.com/fastly/js-compute-runtime/commit/486aed1415151a2bba40b736c14555c692bd095a))
 
-## [1.3.3](https://github.com/fastly/js-compute-runtime/compare/v1.3.2...v1.3.3) (2023-02-08)
+## 1.3.3 (2023-02-08)
 
 
 ### Bug Fixes
 
 * Remove error codes from external error messaging as these codes are not documented anywhere and subject to change ([8f8f0ef](https://github.com/fastly/js-compute-runtime/commit/8f8f0eff871597b8453fac08b6b114ee5c188ef6))
 
-## [1.3.2](https://github.com/fastly/js-compute-runtime/compare/v1.3.1...v1.3.2) (2023-01-30)
+## 1.3.2 (2023-01-30)
 
 
 ### Bug Fixes
 
 * allow a downstream response to contain lots of headers with the same name without crashing ([ba1f0e6](https://github.com/fastly/js-compute-runtime/commit/ba1f0e6699bd0f218fa581b9aad0fdda89a674fc))
 
-## [1.3.1](https://github.com/fastly/js-compute-runtime/compare/v1.3.0...v1.3.1) (2023-01-26)
+## 1.3.1 (2023-01-26)
 
 
 ### Bug Fixes
 
 * ensure CacheOverride bitflags are the same value as defined in xqd ([#386](https://github.com/fastly/js-compute-runtime/issues/386)) ([8a1c215](https://github.com/fastly/js-compute-runtime/commit/8a1c2158505e8ed1ebb424fc97866da155601d1f))
 
-## [1.3.0](https://github.com/fastly/js-compute-runtime/compare/v1.2.0...v1.3.0) (2023-01-24)
+## 1.3.0 (2023-01-24)
 
 
 ### Features
 
 * implement SubtleCrypto.prototype.digest method ([#372](https://github.com/fastly/js-compute-runtime/issues/372)) ([bbe1754](https://github.com/fastly/js-compute-runtime/commit/bbe1754f0a8018f2124b9a5859a35fde5c4cbb97))
 
-## [1.2.0](https://github.com/fastly/js-compute-runtime/compare/v1.1.0...v1.2.0) (2023-01-17)
+## 1.2.0 (2023-01-17)
 
 
 ### Features
 
 * implement Request.prototype.clone ([3f3a671](https://github.com/fastly/js-compute-runtime/commit/3f3a67199c27ea4500fa861a993163e5d376aafd))
 
-## [1.1.0](https://github.com/fastly/js-compute-runtime/compare/v1.0.1...v1.1.0) (2023-01-06)
+## 1.1.0 (2023-01-06)
 
 
 ### Features
@@ -68,21 +68,21 @@
 * ensure retrieving the property definitions of ObjectStoreEntry.prototype.body and ObjectStoreEntry.bodyUsed do not cause panics by ensuring we have a valid entry in their Slots ([311b84c](https://github.com/fastly/js-compute-runtime/commit/311b84c80cbc99cf534ed43f4499a291716068fd))
 * error message is latin1, we need to use JS_ReportErrorLatin1 to convert the message from latin1 to UTF8CharsZ, otherwise a panic occurs ([f1a22a4](https://github.com/fastly/js-compute-runtime/commit/f1a22a42c75aea99f47f5f6b44920275735c91e1))
 
-## [1.0.1](https://github.com/fastly/js-compute-runtime/compare/v1.0.0...v1.0.1) (2022-12-16)
+## 1.0.1 (2022-12-16)
 
 
 ### Bug Fixes
 
 * do not free the method_str.ptr as we still require the memory ([17c5049](https://github.com/fastly/js-compute-runtime/commit/17c50492d6247e746daeb65ab1b7fdeeaec0ae91)), closes [#352](https://github.com/fastly/js-compute-runtime/issues/352)
 
-## [1.0.0](https://github.com/fastly/js-compute-runtime/compare/v0.7.0...v1.0.0) (2022-12-14)
+## 1.0.0 (2022-12-14)
 
 
 ### Features
 
 * implement validation for backend cipher definitions ([157be64](https://github.com/fastly/js-compute-runtime/commit/157be64e84956d24259003331cb51a8c5acec040))
 
-## [0.7.0](https://github.com/fastly/js-compute-runtime/compare/v0.6.0...v0.7.0) (2022-12-10)
+## 0.7.0 (2022-12-10)
 
 
 ### ⚠ BREAKING CHANGES
@@ -98,7 +98,7 @@
 
 * Limit to node 16/17/18 as some dependencies do not work on node19 yet ([0d48f77](https://github.com/fastly/js-compute-runtime/commit/0d48f77467fc0c85c837c36b2e3991a2f6b35bcf))
 
-## [0.6.0](https://github.com/fastly/js-compute-runtime/compare/v0.5.15...v0.6.0) (2022-12-09)
+## 0.6.0 (2022-12-09)
 
 
 ### ⚠ BREAKING CHANGES
@@ -114,7 +114,7 @@
 
 * Throw TypeErrors in config-store if supplied with invalid parameters or the config-store does not exist ([6b70180](https://github.com/fastly/js-compute-runtime/commit/6b70180560b0c28bbc009af49fa7b25bd890d4a2))
 
-## [0.5.15](https://github.com/fastly/js-compute-runtime/compare/v0.5.14...v0.5.15) (2022-12-08)
+## 0.5.15 (2022-12-08)
 
 
 ### Features
@@ -122,14 +122,14 @@
 * add `allowDynamicBackends` function to `fastly:experimental` module ([83a003e](https://github.com/fastly/js-compute-runtime/commit/83a003e17307c01876751686620a6a1effbfaa99))
 * upgrade from SpiderMonkey 96 to SpiderMonkey 107 ([#330](https://github.com/fastly/js-compute-runtime/pull/330))
 
-## [0.5.14](https://github.com/fastly/js-compute-runtime/compare/v0.5.13...v0.5.14) (2022-12-07)
+## 0.5.14 (2022-12-07)
 
 
 ### Bug Fixes
 
 * when appending headers, if the set-cookie header is set then make sure that each cookie value is sent as a separate set-cookie header to the host ([f6cf559](https://github.com/fastly/js-compute-runtime/commit/f6cf5597ec646717534b59a1002b6a6364a81065))
 
-## [0.5.13](https://github.com/fastly/js-compute-runtime/compare/v0.5.12...v0.5.13) (2022-12-02)
+## 0.5.13 (2022-12-02)
 
 
 ### Bug Fixes
@@ -137,28 +137,28 @@
 * implement validation for Dictionary names and keys ([c0b0822](https://github.com/fastly/js-compute-runtime/commit/c0b082245d9585d8c3cdbc83c6f8ebf1844e8741))
 * fix: When streaming a response to the host, do not close the response body if an error occurs ([8402ecf](https://github.com/fastly/js-compute-runtime/commit/8402ecf93c91bee66217c401a5cc5954e2e71de6))
 
-## [0.5.12](https://github.com/fastly/js-compute-runtime/compare/v0.5.11...v0.5.12) (2022-11-30)
+## 0.5.12 (2022-11-30)
 
 
 ### Features
 
 * add fastly:experimental module which contains all our experimental functions such as includeBytes and enableDebugLogging ([5c6a5d7](https://github.com/fastly/js-compute-runtime/commit/5c6a5d7cf13274f4752fa398d9bc92de658004b8))
 
-## [0.5.11](https://github.com/fastly/js-compute-runtime/compare/v0.5.10...v0.5.11) (2022-11-30)
+## 0.5.11 (2022-11-30)
 
 
 ### Bug Fixes
 
 * update nodejs supported versions to 16 - 19 and npm supported version to only 8 ([5ec70b9](https://github.com/fastly/js-compute-runtime/commit/5ec70b95b0d4d3677a522120c9ae5f9a2cea4db6))
 
-## [0.5.10](https://github.com/fastly/js-compute-runtime/compare/v0.5.9...v0.5.10) (2022-11-30)
+## 0.5.10 (2022-11-30)
 
 
 ### Bug Fixes
 
 * ensure custom cache keys are uppercased ([f37920d](https://github.com/fastly/js-compute-runtime/commit/f37920d01f5fb9a172ae82a1d6191159be59f561)), closes [#318](https://github.com/fastly/js-compute-runtime/issues/318)
 
-## [0.5.9](https://github.com/fastly/js-compute-runtime/compare/v0.5.8...v0.5.9) (2022-11-29)
+## 0.5.9 (2022-11-29)
 
 
 ### Features
@@ -175,28 +175,28 @@
 
 * Add types for setTimeout, clearTimeout, setInterval, clearInterval ([c1ed00c](https://github.com/fastly/js-compute-runtime/commit/c1ed00c8933bc45c9ba8dc84e515d31167596aa6))
 
-## [0.5.8](https://github.com/fastly/js-compute-runtime/compare/v0.5.7...v0.5.8) (2022-11-28)
+## 0.5.8 (2022-11-28)
 
 
 ### Bug Fixes
 
 * Allow process.execPath to contain whitespace ([caefe51](https://github.com/fastly/js-compute-runtime/commit/caefe512413675f10a7f1e6501249b3ebe7f5d21))
 
-## [0.5.7](https://github.com/fastly/js-compute-runtime/compare/v0.5.6...v0.5.7) (2022-11-24)
+## 0.5.7 (2022-11-24)
 
 
 ### Bug Fixes
 
 * add missing shebang and executable bit to the binary file ([3f0cd69](https://github.com/fastly/js-compute-runtime/commit/3f0cd69e3ec39633f747f0346ae3eda5eb3f3685))
 
-## [0.5.6](https://github.com/fastly/js-compute-runtime/compare/v0.5.5...v0.5.6) (2022-11-24)
+## 0.5.6 (2022-11-24)
 
 
 ### Features
 
 * implement setTimeout, setInterval, clearTimeout, and clearInterval ([128bca9](https://github.com/fastly/js-compute-runtime/commit/128bca901c9ad4b6d6c1084bf13c5c474ef63a41))
 
-## [0.5.5](https://github.com/fastly/js-compute-runtime/compare/js-compute-v0.5.4...js-compute-v0.5.5) (2022-11-23)
+## 0.5.5-v0.5.5) (2022-11-23)
 
 
 ### Features
