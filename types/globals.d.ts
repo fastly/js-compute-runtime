@@ -1056,7 +1056,9 @@ interface Request extends Body {
   // readonly signal: AbortSignal;
   /** Returns the URL of request as a string. */
   readonly url: string;
-  // clone(): Request;
+
+  // /** Creates a copy of the current Request object. */
+  clone(): Request;
 
   // Fastly extensions
   backend: string;
