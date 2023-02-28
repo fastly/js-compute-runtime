@@ -1,6 +1,7 @@
 #pragma once
 
 #include "builtin.h"
+#include "js-compute-builtins.h"
 
 namespace builtins {
 enum class CryptoAlgorithmIdentifier {

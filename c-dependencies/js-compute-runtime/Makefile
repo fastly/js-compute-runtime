@@ -279,7 +279,7 @@ $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/xqd-world/xqd_world_ada
 shared-builtins.a: $(OBJ_DIR)/shared-builtins.a
 	$(call cmd,cp,$@)
 
-$(OBJ_DIR)/shared-builtins.a: $(OBJ_DIR)/builtins/shared/console.o
+$(OBJ_DIR)/shared-builtins.a: $(OBJ_DIR)/builtins/shared/console.o $(OBJ_DIR)/builtin.o
 	$(call cmd,wasi_ar,$@)
 
 # These two rules copy the built artifacts into the $(FSM_SRC) directory, and
