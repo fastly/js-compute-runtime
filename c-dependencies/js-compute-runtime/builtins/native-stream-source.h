@@ -2,6 +2,7 @@
 #define JS_COMPUTE_RUNTIME_NATIVE_STREAM_SOURCE_H
 
 #include "builtin.h"
+#include "js-compute-builtins.h"
 
 namespace builtins {
 class NativeStreamSource : public BuiltinNoConstructor<NativeStreamSource> {

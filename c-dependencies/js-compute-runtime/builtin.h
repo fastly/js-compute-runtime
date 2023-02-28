@@ -3,7 +3,43 @@
 
 #include <tuple>
 
-#include "js-compute-builtins.h"
+// TODO: remove these once the warnings are fixed
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winvalid-offsetof"
+#pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+#include "js/Conversions.h"
+#include "js/ForOfIterator.h"
+#include "js/Object.h"
+#include "js/Promise.h"
+#include "jsapi.h"
+#include "jsfriendapi.h"
+#include "rust-url/rust-url.h"
+
+#pragma clang diagnostic pop
+
+// TODO(performance): introduce a version that writes into an existing buffer, and use that
+// with the hostcall buffer where possible.
+// https://github.com/fastly/js-compute-runtime/issues/215
+JS::UniqueChars encode(JSContext *cx, JS::HandleString str, size_t *encoded_len);
+
+JS::UniqueChars encode(JSContext *cx, JS::HandleValue val, size_t *encoded_len);
+
+jsurl::SpecString encode(JSContext *cx, JS::HandleValue val);
+
+enum JSBuiltinErrNum {
+#define MSG_DEF(name, count, exception, format) name,
+#include "./builtin-error-numbers.msg"
+#undef MSG_DEF
+  JSBuiltinErrNum_Limit
+};
+
+const JSErrorFormatString js_ErrorFormatStringBuiltin[JSBuiltinErrNum_Limit] = {
+#define MSG_DEF(name, count, exception, format) {#name, format, count, exception},
+#include "./builtin-error-numbers.msg"
+#undef MSG_DEF
+};
+
+const JSErrorFormatString *GetErrorMessageBuiltin(void *userRef, unsigned errorNumber);
 
 #define DBG(...)                                                                                   \
   printf("%s#%d: ", __func__, __LINE__);                                                           \
@@ -45,7 +81,7 @@
                                                                                                    \
   bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name) {          \
     if (!is_instance(receiver)) {                                                                  \
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_INSTANCE,         \
+      JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_INCOMPATIBLE_INSTANCE,  \
                                 method_name, class_.name);                                         \
       return false;                                                                                \
     }                                                                                              \
@@ -131,7 +167,8 @@ inline bool ThrowIfNotConstructing(JSContext *cx, const JS::CallArgs &args,
     return true;
   }
 
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BUILTIN_CTOR_NO_NEW, builtinName);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_BUILTIN_CTOR_NO_NEW,
+                            builtinName);
   return false;
 }
 namespace builtins {
@@ -172,7 +209,7 @@ public:
 
   static bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name) {
     if (!Impl::is_instance(receiver)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_INSTANCE,
+      JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_INCOMPATIBLE_INSTANCE,
                                 method_name, Impl::class_.name);
       return false;
     }

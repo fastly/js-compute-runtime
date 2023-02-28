@@ -19,6 +19,7 @@
 
 #include "backend.h"
 #include "host_call.h"
+#include "js-compute-builtins.h"
 #include "js/Conversions.h"
 
 enum class Authentication : uint8_t {

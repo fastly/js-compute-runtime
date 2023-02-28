@@ -1,6 +1,8 @@
 #ifndef JS_COMPUTE_RUNTIME_NATIVE_STREAM_SINK_H
 #define JS_COMPUTE_RUNTIME_NATIVE_STREAM_SINK_H
+
 #include "builtin.h"
+#include "js-compute-builtins.h"
 
 namespace builtins {
 

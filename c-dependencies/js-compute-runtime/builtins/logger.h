@@ -2,6 +2,7 @@
 #define JS_COMPUTE_RUNTIME_LOGGER_H
 
 #include "builtin.h"
+#include "js-compute-builtins.h"
 
 namespace builtins {
 

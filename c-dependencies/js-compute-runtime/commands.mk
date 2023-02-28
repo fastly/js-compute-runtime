@@ -39,7 +39,7 @@ cmd_wget_name := WGET
 cmd_wget = wget $(URL) $(call quiet_flag,--quiet) -O $1
 
 cmd_wasi_ar_name := WASI_AR
-cmd_wasi_ar = $(WASI_AR) rcs $@ $<
+cmd_wasi_ar = $(WASI_AR) rcs $@ $^
 
 cmd_wasi_cxx_name := WASI_CXX
 cmd_wasi_cxx = $(WASI_CXX) $(CXX_FLAGS) $(OPT_FLAGS) $(INCLUDES) $(DEFINES) -MMD -MP -c -o $1 $<

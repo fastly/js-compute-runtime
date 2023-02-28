@@ -2,6 +2,7 @@
 #define JS_COMPUTE_RUNTIME_DICTIONARY_H
 
 #include "builtin.h"
+#include "js-compute-builtins.h"
 
 namespace builtins {
 

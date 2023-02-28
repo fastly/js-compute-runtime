@@ -133,38 +133,6 @@ using jsurl::SpecSlice, jsurl::SpecString, jsurl::JSUrl, jsurl::JSUrlSearchParam
 
 static JS::PersistentRootedObjectVector *pending_async_tasks;
 
-// TODO(performance): introduce a version that writes into an existing buffer, and use that
-// with the hostcall buffer where possible.
-// https://github.com/fastly/js-compute-runtime/issues/215
-UniqueChars encode(JSContext *cx, HandleString str, size_t *encoded_len) {
-  UniqueChars text = JS_EncodeStringToUTF8(cx, str);
-  if (!text)
-    return nullptr;
-
-  // This shouldn't fail, since the encode operation ensured `str` is linear.
-  JSLinearString *linear = JS_EnsureLinearString(cx, str);
-  *encoded_len = JS::GetDeflatedUTF8StringLength(linear);
-  return text;
-}
-
-UniqueChars encode(JSContext *cx, HandleValue val, size_t *encoded_len) {
-  RootedString str(cx, JS::ToString(cx, val));
-  if (!str)
-    return nullptr;
-
-  return encode(cx, str, encoded_len);
-}
-
-SpecString encode(JSContext *cx, HandleValue val) {
-  SpecString slice(nullptr, 0, 0);
-  auto chars = encode(cx, val, &slice.len);
-  if (!chars)
-    return slice;
-  slice.data = (uint8_t *)chars.release();
-  slice.cap = slice.len;
-  return slice;
-}
-
 std::optional<std::span<uint8_t>> value_to_buffer(JSContext *cx, HandleValue val,
                                                   const char *val_desc) {
   if (!val.isObject() ||

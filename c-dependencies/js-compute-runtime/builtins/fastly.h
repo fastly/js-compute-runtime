@@ -2,6 +2,7 @@
 #define JS_COMPUTE_RUNTIME_BUILTIN_FASTLY_H
 
 #include "builtin.h"
+#include "js-compute-builtins.h"
 
 namespace builtins {
 
