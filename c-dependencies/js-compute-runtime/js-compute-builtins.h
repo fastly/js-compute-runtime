@@ -23,6 +23,8 @@
 
 struct JSErrorFormatString;
 
+extern JS::PersistentRootedObjectVector *pending_async_tasks;
+
 enum JSErrNum {
 #define MSG_DEF(name, count, exception, format) name,
 #include "./error-numbers.msg"
@@ -52,7 +54,7 @@ inline bool ReturnPromiseRejectedWithPendingError(JSContext *cx, const JS::CallA
 std::optional<std::span<uint8_t>> value_to_buffer(JSContext *cx, JS::HandleValue val,
                                                   const char *val_desc);
 
-typedef bool InternalMethod(JSContext *cx, JS::HandleObject receiver, JS::HandleValue extra,
+using InternalMethod = bool(JSContext *cx, JS::HandleObject receiver, JS::HandleValue extra,
                             JS::CallArgs args);
 
 template <InternalMethod fun> bool internal_method(JSContext *cx, unsigned argc, JS::Value *vp) {

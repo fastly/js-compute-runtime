@@ -5,7 +5,7 @@
 
 namespace builtins {
 
-class Headers : public BuiltinImpl<Headers> {
+class Headers final : public BuiltinImpl<Headers> {
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool has(JSContext *cx, unsigned argc, JS::Value *vp);
