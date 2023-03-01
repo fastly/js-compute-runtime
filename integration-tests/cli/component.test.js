@@ -28,6 +28,8 @@ test('should create component wasm file and return zero exit code', async functi
     // (necessary because readFile gives a string)
     const wasmBuffer = await readFile(resolve(path, './bin/main.wasm'));
 
+    console.log('COMPONENT SIZE: ' + wasmBuffer.byteLength);
+
     const wat = print(wasmBuffer);
 
     t.is(wat.slice(0, 10), '(component');
