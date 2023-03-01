@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.4.1](https://github.com/fastly/js-compute-runtime/compare/v1.4.0...v1.4.1) (2023-03-01)
+## 1.4.1 (2023-03-01)
 
 
 ### Changed
