@@ -50,6 +50,7 @@
 #include "builtins/dictionary.h"
 #include "builtins/env.h"
 #include "builtins/fastly.h"
+#include "builtins/headers.h"
 #include "builtins/logger.h"
 #include "builtins/native-stream-sink.h"
 #include "builtins/native-stream-source.h"
@@ -231,123 +232,6 @@ enum class BodyReadResult {
   JSON,
   Text,
 };
-
-namespace Headers {
-enum class Mode : int32_t { Standalone, ProxyToRequest, ProxyToResponse };
-namespace Slots {
-enum { BackingMap, Handle, Mode, HasLazyValues, Count };
-};
-
-bool is_instance(JSObject *obj);
-bool is_instance(Value val);
-
-namespace detail {
-#define HEADERS_ITERATION_METHOD(argc)                                                             \
-  METHOD_HEADER(argc)                                                                              \
-  RootedObject backing_map(cx, detail::backing_map(self));                                         \
-  if (!detail::ensure_all_header_values_from_handle(cx, self, backing_map))                        \
-    return false;
-
-static const char VALID_NAME_CHARS[128] = {
-    0, 0, 0, 0, 0, 0, 0, 0, //   0
-    0, 0, 0, 0, 0, 0, 0, 0, //   8
-    0, 0, 0, 0, 0, 0, 0, 0, //  16
-    0, 0, 0, 0, 0, 0, 0, 0, //  24
-
-    0, 1, 0, 1, 1, 1, 1, 1, //  32
-    0, 0, 1, 1, 0, 1, 1, 0, //  40
-    1, 1, 1, 1, 1, 1, 1, 1, //  48
-    1, 1, 0, 0, 0, 0, 0, 0, //  56
-
-    0, 1, 1, 1, 1, 1, 1, 1, //  64
-    1, 1, 1, 1, 1, 1, 1, 1, //  72
-    1, 1, 1, 1, 1, 1, 1, 1, //  80
-    1, 1, 1, 0, 0, 0, 1, 1, //  88
-
-    1, 1, 1, 1, 1, 1, 1, 1, //  96
-    1, 1, 1, 1, 1, 1, 1, 1, // 104
-    1, 1, 1, 1, 1, 1, 1, 1, // 112
-    1, 1, 1, 0, 1, 0, 1, 0  // 120
-};
-
-#define NORMALIZE_NAME(name, fun_name)                                                             \
-  RootedValue normalized_name(cx, name);                                                           \
-  size_t name_len;                                                                                 \
-  UniqueChars name_chars =                                                                         \
-      detail::normalize_header_name(cx, &normalized_name, &name_len, fun_name);                    \
-  if (!name_chars)                                                                                 \
-    return false;
-
-#define NORMALIZE_VALUE(value, fun_name)                                                           \
-  RootedValue normalized_value(cx, value);                                                         \
-  size_t value_len;                                                                                \
-  UniqueChars value_chars =                                                                        \
-      detail::normalize_header_value(cx, &normalized_value, &value_len, fun_name);                 \
-  if (!value_chars)                                                                                \
-    return false;
-
-JSObject *backing_map(JSObject *self);
-Mode mode(JSObject *self);
-bool lazy_values(JSObject *self);
-uint32_t handle(JSObject *self);
-UniqueChars normalize_header_name(JSContext *cx, MutableHandleValue name_val, size_t *name_len,
-                                  const char *fun_name);
-UniqueChars normalize_header_value(JSContext *cx, MutableHandleValue value_val, size_t *value_len,
-                                   const char *fun_name);
-
-static PersistentRooted<JSString *> comma;
-bool append_header_value_to_map(JSContext *cx, HandleObject self, HandleValue normalized_name,
-                                MutableHandleValue normalized_value);
-bool get_header_names_from_handle(JSContext *cx, uint32_t handle, Mode mode,
-                                  HandleObject backing_map);
-static bool retrieve_value_for_header_from_handle(JSContext *cx, HandleObject self,
-                                                  HandleValue name, MutableHandleValue value);
-static bool ensure_value_for_header(JSContext *cx, HandleObject self, HandleValue normalized_name,
-                                    MutableHandleValue values);
-bool get_header_value_for_name(JSContext *cx, HandleObject self, HandleValue name,
-                               MutableHandleValue rval, const char *fun_name);
-static bool ensure_all_header_values_from_handle(JSContext *cx, HandleObject self,
-                                                 HandleObject backing_map);
-typedef bool AppendHeaderOperation(fastly_request_handle_t handle, xqd_world_string_t *name,
-                                   xqd_world_string_t *value, fastly_error_t *err);
-bool append_header_value(JSContext *cx, HandleObject self, HandleValue name, HandleValue value,
-                         const char *fun_name);
-} // namespace detail
-
-bool delazify(JSContext *cx, HandleObject headers);
-JSObject *create(JSContext *cx, HandleObject headers, Mode mode, HandleObject owner,
-                 HandleValue initv);
-const unsigned ctor_length = 1;
-bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
-bool get(JSContext *cx, unsigned argc, Value *vp);
-bool set(JSContext *cx, unsigned argc, Value *vp);
-bool has(JSContext *cx, unsigned argc, Value *vp);
-bool append(JSContext *cx, unsigned argc, Value *vp);
-bool maybe_add(JSContext *cx, HandleObject self, const char *name, const char *value);
-typedef bool HeaderRemoveOperation(fastly_request_handle_t handle, xqd_world_string_t *name,
-                                   fastly_error_t *err);
-bool delete_(JSContext *cx, unsigned argc, Value *vp);
-bool forEach(JSContext *cx, unsigned argc, Value *vp);
-bool entries(JSContext *cx, unsigned argc, Value *vp);
-bool keys(JSContext *cx, unsigned argc, Value *vp);
-bool values(JSContext *cx, unsigned argc, Value *vp);
-const JSFunctionSpec methods[] = {
-    JS_FN("get", get, 1, JSPROP_ENUMERATE), JS_FN("has", has, 1, JSPROP_ENUMERATE),
-    JS_FN("set", set, 2, JSPROP_ENUMERATE), JS_FN("append", append, 2, JSPROP_ENUMERATE),
-    JS_FN("delete", delete_, 1, JSPROP_ENUMERATE), JS_FN("forEach", forEach, 1, JSPROP_ENUMERATE),
-    JS_FN("entries", entries, 0, JSPROP_ENUMERATE), JS_FN("keys", keys, 0, JSPROP_ENUMERATE),
-    JS_FN("values", values, 0, JSPROP_ENUMERATE),
-    // [Symbol.iterator] added in init_class.
-    JS_FS_END};
-const JSPropertySpec properties[] = {JS_PS_END};
-bool constructor(JSContext *cx, unsigned argc, Value *vp);
-CLASS_BOILERPLATE_CUSTOM_INIT(Headers)
-JSObject *create(JSContext *cx, HandleObject headers, Mode mode, HandleObject owner,
-                 HandleObject init_headers);
-JSObject *create(JSContext *cx, HandleObject headers, Mode mode, HandleObject owner,
-                 HandleValue initv);
-JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner);
-} // namespace Headers
 
 namespace Request {
 bool is_instance(JSObject *obj);
@@ -560,7 +444,7 @@ bool extract_body(JSContext *cx, HandleObject self, HandleValue body_val) {
   // Step 36.3 of Request constructor / 8.4 of Response constructor.
   if (content_type) {
     RootedObject headers(cx, &JS::GetReservedSlot(self, Slots::Headers).toObject());
-    if (!Headers::maybe_add(cx, headers, "content-type", content_type)) {
+    if (!builtins::Headers::maybe_add(cx, headers, "content-type", content_type)) {
       return false;
     }
   }
@@ -584,11 +468,11 @@ JSObject *maybe_headers(JSObject *obj) {
 template <auto mode> JSObject *headers(JSContext *cx, HandleObject obj) {
   JSObject *headers = maybe_headers(obj);
   if (!headers) {
-    RootedObject headersInstance(
-        cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
+    RootedObject headersInstance(cx, JS_NewObjectWithGivenProto(cx, &builtins::Headers::class_,
+                                                                builtins::Headers::proto_obj));
     if (!headersInstance)
       return nullptr;
-    headers = Headers::create(cx, headersInstance, mode, obj);
+    headers = builtins::Headers::create(cx, headersInstance, mode, obj);
     if (!headers)
       return nullptr;
     JS_SetReservedSlot(obj, Slots::Headers, ObjectValue(*headers));
@@ -1372,7 +1256,7 @@ bool set_cache_key(JSContext *cx, HandleObject self, HandleValue cache_key_val) 
   std::transform(hex_str.begin(), hex_str.end(), hex_str.begin(),
                  [](unsigned char c) { return std::toupper(c); });
 
-  JSObject *headers = RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, self);
+  JSObject *headers = RequestOrResponse::headers<builtins::Headers::Mode::ProxyToRequest>(cx, self);
   if (!headers) {
     return false;
   }
@@ -1380,8 +1264,8 @@ bool set_cache_key(JSContext *cx, HandleObject self, HandleValue cache_key_val) 
   RootedValue name_val(cx, JS::StringValue(JS_NewStringCopyN(cx, "fastly-xqd-cache-key", 20)));
   RootedValue value_val(cx,
                         JS::StringValue(JS_NewStringCopyN(cx, hex_str.c_str(), hex_str.length())));
-  if (!Headers::detail::append_header_value(cx, headers_val, name_val, value_val,
-                                            "Request.prototype.setCacheKey")) {
+  if (!builtins::Headers::append_header_value(cx, headers_val, name_val, value_val,
+                                              "Request.prototype.setCacheKey")) {
     return false;
   }
 
@@ -1497,7 +1381,7 @@ bool version_get(JSContext *cx, unsigned argc, Value *vp) {
 bool headers_get(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(0)
 
-  JSObject *headers = RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, self);
+  JSObject *headers = RequestOrResponse::headers<builtins::Headers::Mode::ProxyToRequest>(cx, self);
   if (!headers)
     return false;
 
@@ -1628,17 +1512,18 @@ bool clone(JSContext *cx, unsigned argc, Value *vp) {
   JS::SetReservedSlot(self, Slots::HasBody, JS::BooleanValue(true));
 
   RootedObject headers(cx);
-  RootedObject headers_obj(cx, RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, self));
+  RootedObject headers_obj(
+      cx, RequestOrResponse::headers<builtins::Headers::Mode::ProxyToRequest>(cx, self));
   if (!headers_obj) {
     return false;
   }
   RootedObject headersInstance(
-      cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
+      cx, JS_NewObjectWithGivenProto(cx, &builtins::Headers::class_, builtins::Headers::proto_obj));
   if (!headersInstance)
     return false;
 
-  headers = Headers::create(cx, headersInstance, Headers::Mode::ProxyToRequest, requestInstance,
-                            headers_obj);
+  headers = builtins::Headers::create(cx, headersInstance, builtins::Headers::Mode::ProxyToRequest,
+                                      requestInstance, headers_obj);
 
   if (!headers) {
     return false;
@@ -1797,7 +1682,8 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
 
     // header list: A copy of `request`’s header list.
     // Note: copying the headers is postponed, see step 32 below.
-    input_headers = RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, input_request);
+    input_headers =
+        RequestOrResponse::headers<builtins::Headers::Mode::ProxyToRequest>(cx, input_request);
     if (!input_headers) {
       return nullptr;
     }
@@ -2048,21 +1934,21 @@ JSObject *create(JSContext *cx, HandleObject requestInstance, HandleValue input,
   // empty one.
   RootedObject headers(cx);
   if (!headers_val.isUndefined()) {
-    RootedObject headersInstance(
-        cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
+    RootedObject headersInstance(cx, JS_NewObjectWithGivenProto(cx, &builtins::Headers::class_,
+                                                                builtins::Headers::proto_obj));
     if (!headersInstance)
       return nullptr;
 
-    headers =
-        Headers::create(cx, headersInstance, Headers::Mode::ProxyToRequest, request, headers_val);
+    headers = builtins::Headers::create(
+        cx, headersInstance, builtins::Headers::Mode::ProxyToRequest, request, headers_val);
   } else {
-    RootedObject headersInstance(
-        cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
+    RootedObject headersInstance(cx, JS_NewObjectWithGivenProto(cx, &builtins::Headers::class_,
+                                                                builtins::Headers::proto_obj));
     if (!headersInstance)
       return nullptr;
 
-    headers =
-        Headers::create(cx, headersInstance, Headers::Mode::ProxyToRequest, request, input_headers);
+    headers = builtins::Headers::create(
+        cx, headersInstance, builtins::Headers::Mode::ProxyToRequest, request, input_headers);
   }
 
   if (!headers) {
@@ -2501,7 +2387,8 @@ bool type_get(JSContext *cx, unsigned argc, Value *vp) {
 bool headers_get(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(0)
 
-  JSObject *headers = RequestOrResponse::headers<Headers::Mode::ProxyToResponse>(cx, self);
+  JSObject *headers =
+      RequestOrResponse::headers<builtins::Headers::Mode::ProxyToResponse>(cx, self);
   if (!headers)
     return false;
 
@@ -2662,12 +2549,12 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   // `init`["headers"].
   RootedObject headers(cx);
   RootedObject headersInstance(
-      cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
+      cx, JS_NewObjectWithGivenProto(cx, &builtins::Headers::class_, builtins::Headers::proto_obj));
   if (!headersInstance)
     return false;
 
-  headers =
-      Headers::create(cx, headersInstance, Headers::Mode::ProxyToResponse, response, headers_val);
+  headers = builtins::Headers::create(cx, headersInstance, builtins::Headers::Mode::ProxyToResponse,
+                                      response, headers_val);
   if (!headers) {
     return false;
   }
@@ -2872,757 +2759,6 @@ bool constructor(JSContext *cx, unsigned argc, Value *vp) {
   return true;
 }
 } // namespace TextDecoder
-
-namespace Headers {
-namespace detail {
-JSObject *backing_map(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  return &JS::GetReservedSlot(self, Slots::BackingMap).toObject();
-}
-
-Mode mode(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  return static_cast<Mode>(JS::GetReservedSlot(self, Slots::Mode).toInt32());
-}
-
-bool lazy_values(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  return JS::GetReservedSlot(self, Slots::HasLazyValues).toBoolean();
-}
-
-fastly_request_handle_t handle(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  return static_cast<uint32_t>(JS::GetReservedSlot(self, Slots::Handle).toInt32());
-}
-
-/**
- * Validates and normalizes the given header name, by
- * - checking for invalid characters
- * - converting to lower-case
- *
- * See
- * https://searchfox.org/mozilla-central/rev/9f76a47f4aa935b49754c5608a1c8e72ee358c46/netwerk/protocol/http/nsHttp.cpp#172-215
- * For details on validation.
- *
- * Mutates `name_val` in place, and returns the name as UniqueChars.
- * This is done because most uses of header names require handling of both the
- * JSString and the char* version, so they'd otherwise have to recreate one of
- * the two.
- */
-UniqueChars normalize_header_name(JSContext *cx, MutableHandleValue name_val, size_t *name_len,
-                                  const char *fun_name) {
-  RootedString name_str(cx, JS::ToString(cx, name_val));
-  if (!name_str)
-    return nullptr;
-
-  size_t len;
-  UniqueChars name = encode(cx, name_str, &len);
-  if (!name)
-    return nullptr;
-
-  if (len == 0) {
-    JS_ReportErrorASCII(cx, "%s: Header name can't be empty", fun_name);
-    return nullptr;
-  }
-
-  bool changed = false;
-
-  char *name_chars = name.get();
-  for (size_t i = 0; i < len; i++) {
-    unsigned char ch = name_chars[i];
-    if (ch > 127 || !VALID_NAME_CHARS[ch]) {
-      JS_ReportErrorUTF8(cx, "%s: Invalid header name '%s'", fun_name, name_chars);
-      return nullptr;
-    }
-
-    if (ch >= 'A' && ch <= 'Z') {
-      name_chars[i] = ch - 'A' + 'a';
-      changed = true;
-    }
-  }
-
-  if (changed) {
-    name_str = JS_NewStringCopyN(cx, name_chars, len);
-    if (!name_str)
-      return nullptr;
-  }
-
-  name_val.setString(name_str);
-  *name_len = len;
-  return name;
-}
-
-UniqueChars normalize_header_value(JSContext *cx, MutableHandleValue value_val, size_t *value_len,
-                                   const char *fun_name) {
-  RootedString value_str(cx, JS::ToString(cx, value_val));
-  if (!value_str)
-    return nullptr;
-
-  size_t len;
-  UniqueChars value = encode(cx, value_str, &len);
-  if (!value)
-    return nullptr;
-
-  char *value_chars = value.get();
-  size_t start = 0;
-  size_t end = len;
-
-  // We follow Gecko's interpretation of what's a valid header value. After
-  // stripping leading and trailing whitespace, all interior line breaks and
-  // `\0` are considered invalid. See
-  // https://searchfox.org/mozilla-central/rev/9f76a47f4aa935b49754c5608a1c8e72ee358c46/netwerk/protocol/http/nsHttp.cpp#247-260
-  // for details.
-  while (start < end) {
-    unsigned char ch = value_chars[start];
-    if (ch == '\t' || ch == ' ' || ch == '\r' || ch == '\n') {
-      start++;
-    } else {
-      break;
-    }
-  }
-
-  while (end > start) {
-    unsigned char ch = value_chars[end - 1];
-    if (ch == '\t' || ch == ' ' || ch == '\r' || ch == '\n') {
-      end--;
-    } else {
-      break;
-    }
-  }
-
-  for (size_t i = start; i < end; i++) {
-    unsigned char ch = value_chars[i];
-    if (ch == '\r' || ch == '\n' || ch == '\0') {
-      JS_ReportErrorUTF8(cx, "%s: Invalid header value '%s'", fun_name, value_chars);
-      return nullptr;
-    }
-  }
-
-  if (start != 0 || end != len) {
-    value_str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(value_chars + start, end - start));
-    if (!value_str)
-      return nullptr;
-  }
-
-  value_val.setString(value_str);
-  *value_len = len;
-  return value;
-}
-
-// Append an already normalized value for an already normalized header name
-// to the JS side map, but not the host.
-//
-// Returns the resulting combined value in `normalized_value`.
-bool append_header_value_to_map(JSContext *cx, HandleObject self, HandleValue normalized_name,
-                                MutableHandleValue normalized_value) {
-  RootedValue existing(cx);
-  RootedObject map(cx, backing_map(self));
-  if (!JS::MapGet(cx, map, normalized_name, &existing))
-    return false;
-
-  // Existing value must only be null if we're in the process if applying
-  // header values from a handle.
-  if (!existing.isNullOrUndefined()) {
-    if (!comma.get()) {
-      comma.init(cx, JS_NewStringCopyN(cx, ", ", 2));
-      if (!comma)
-        return false;
-    }
-
-    RootedString str(cx, existing.toString());
-    str = JS_ConcatStrings(cx, str, comma);
-    if (!str)
-      return false;
-
-    RootedString val_str(cx, normalized_value.toString());
-    str = JS_ConcatStrings(cx, str, val_str);
-    if (!str)
-      return false;
-
-    normalized_value.setString(str);
-  }
-
-  return JS::MapSet(cx, map, normalized_name, normalized_value);
-}
-
-bool get_header_names_from_handle(JSContext *cx, uint32_t handle, Mode mode,
-                                  HandleObject backing_map) {
-  RootedString name(cx);
-  RootedValue name_val(cx);
-  char *buf = static_cast<char *>(JS_malloc(cx, HOSTCALL_BUFFER_LEN));
-
-  bool ok;
-  fastly_list_string_t ret;
-  fastly_error_t err;
-  if (mode == Mode::ProxyToRequest) {
-    ok = xqd_fastly_http_req_header_names_get(handle, &ret, &err);
-  } else {
-    ok = xqd_fastly_http_resp_header_names_get(handle, &ret, &err);
-  }
-
-  if (!ok) {
-    HANDLE_ERROR(cx, err);
-    JS_free(cx, buf);
-    return false;
-  }
-
-  for (size_t i = 0; i < ret.len; i++) {
-    name = JS_NewStringCopyN(cx, ret.ptr[i].ptr, ret.ptr[i].len);
-    JS_free(cx, ret.ptr[i].ptr);
-    if (!name)
-      return false;
-
-    name_val.setString(name);
-    JS::MapSet(cx, backing_map, name_val, JS::NullHandleValue);
-  }
-
-  JS_free(cx, buf);
-  JS_free(cx, ret.ptr);
-  return true;
-}
-
-static bool retrieve_value_for_header_from_handle(JSContext *cx, HandleObject self,
-                                                  HandleValue name, MutableHandleValue value) {
-  Mode mode = detail::mode(self);
-  MOZ_ASSERT(mode != Mode::Standalone);
-  uint32_t handle = detail::handle(self);
-
-  xqd_world_string_t str;
-  RootedString name_str(cx, name.toString());
-  UniqueChars name_chars = encode(cx, name_str, &str.len);
-  str.ptr = name_chars.get();
-
-  fastly_option_list_string_t ret;
-
-  bool ok;
-  fastly_error_t err;
-  if (mode == Headers::Mode::ProxyToRequest) {
-    ok = xqd_fastly_http_req_header_values_get(handle, &str, &ret, &err);
-  } else {
-    ok = xqd_fastly_http_resp_header_values_get(handle, &str, &ret, &err);
-  }
-
-  if (!ok) {
-    HANDLE_ERROR(cx, err);
-    return false;
-  }
-
-  if (!ret.is_some)
-    return true;
-
-  RootedString val_str(cx);
-  for (size_t i = 0; i < ret.val.len; i++) {
-    val_str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.val.ptr[i].ptr, ret.val.ptr[i].len));
-    JS_free(cx, ret.val.ptr[i].ptr);
-    if (!val_str)
-      return false;
-    value.setString(val_str);
-    if (!append_header_value_to_map(cx, self, name, value))
-      return false;
-  }
-
-  JS_free(cx, ret.val.ptr);
-  return true;
-}
-
-/**
- * Ensures that a value for the given header is available to client code.
- *
- * The calling code must ensure that a header with the given name exists, but
- * might not yet have been retrieved from the host, i.e., it might be a "lazy"
- * value.
- *
- * The value is returned via the `values` outparam, but *only* if the Headers
- * object has lazy values at all. This is to avoid the map lookup in those cases
- * where none is necessary in this function, and the consumer wouldn't use the
- * value anyway.
- */
-static bool ensure_value_for_header(JSContext *cx, HandleObject self, HandleValue normalized_name,
-                                    MutableHandleValue values) {
-  if (!detail::lazy_values(self))
-    return true;
-
-  RootedObject map(cx, detail::backing_map(self));
-  if (!JS::MapGet(cx, map, normalized_name, values))
-    return false;
-
-  // Value isn't lazy, just return it.
-  if (!values.isNull())
-    return true;
-
-  return detail::retrieve_value_for_header_from_handle(cx, self, normalized_name, values);
-}
-
-bool get_header_value_for_name(JSContext *cx, HandleObject self, HandleValue name,
-                               MutableHandleValue rval, const char *fun_name) {
-  NORMALIZE_NAME(name, fun_name)
-
-  if (!ensure_value_for_header(cx, self, normalized_name, rval))
-    return false;
-
-  if (rval.isString())
-    return true;
-
-  RootedObject map(cx, detail::backing_map(self));
-  if (!JS::MapGet(cx, map, normalized_name, rval)) {
-    return false;
-  }
-
-  // Return `null` for non-existent headers.
-  if (rval.isUndefined()) {
-    rval.setNull();
-  }
-
-  return true;
-}
-
-std::string_view special_chars = "=,;";
-
-std::vector<std::string_view> splitCookiesString(std::string_view cookiesString) {
-  std::vector<std::string_view> cookiesStrings;
-  std::size_t currentPosition = 0; // Current position in the string
-  std::size_t start;               // Start position of the current cookie
-  std::size_t lastComma;           // Position of the last comma found
-  std::size_t nextStart;           // Position of the start of the next cookie
-
-  // Iterate over the string and split it into cookies.
-  while (currentPosition < cookiesString.length()) {
-    start = currentPosition;
-
-    // Iterate until we find a comma that might be used as a separator.
-    while ((currentPosition = cookiesString.find_first_of(",", currentPosition)) !=
-           std::string_view::npos) {
-      // ',' is a cookie separator only if we later have '=', before having ';' or ','
-      lastComma = currentPosition;
-      nextStart = ++currentPosition;
-
-      // Check if the next sequence of characters is a non-special character followed by an equals
-      // sign.
-      currentPosition = cookiesString.find_first_of(special_chars, currentPosition);
-
-      // If the current character is an equals sign, we have found a cookie separator.
-      if (currentPosition != std::string_view::npos && cookiesString.at(currentPosition) == '=') {
-        // currentPosition is inside the next cookie, so back up and return it.
-        currentPosition = nextStart;
-        cookiesStrings.push_back(cookiesString.substr(start, lastComma - start));
-        start = currentPosition;
-      } else {
-        // The cookie contains ';' or ',' as part of the value
-        // so we need to keep accumulating characters
-        currentPosition = lastComma + 1;
-      }
-    }
-
-    // If we reach the end of the string without finding a separator, add the last cookie to the
-    // vector.
-    if (currentPosition >= cookiesString.length()) {
-      cookiesStrings.push_back(cookiesString.substr(start, cookiesString.length() - start));
-    }
-  }
-  return cookiesStrings;
-}
-
-static bool ensure_all_header_values_from_handle(JSContext *cx, HandleObject self,
-                                                 HandleObject backing_map) {
-  if (!lazy_values(self))
-    return true;
-
-  RootedValue iterable(cx);
-  if (!JS::MapKeys(cx, backing_map, &iterable))
-    return false;
-
-  JS::ForOfIterator it(cx);
-  if (!it.init(iterable))
-    return false;
-
-  RootedValue name(cx);
-  RootedValue v(cx);
-  while (true) {
-    bool done;
-    if (!it.next(&name, &done))
-      return false;
-
-    if (done)
-      break;
-
-    if (!ensure_value_for_header(cx, self, name, &v))
-      return false;
-  }
-
-  JS::SetReservedSlot(self, Slots::HasLazyValues, JS::BooleanValue(false));
-
-  return true;
-}
-
-// Appends a non-normalized value for a non-normalized header name to both
-// the JS side Map and, in non-standalone mode, the host.
-//
-// Verifies and normalizes the name and value.
-bool append_header_value(JSContext *cx, HandleObject self, HandleValue name, HandleValue value,
-                         const char *fun_name) {
-  NORMALIZE_NAME(name, fun_name)
-  NORMALIZE_VALUE(value, fun_name)
-
-  // Ensure that any host-side values have been applied JS-side.
-  RootedValue v(cx);
-  if (!ensure_value_for_header(cx, self, normalized_name, &v)) {
-    return false;
-  }
-
-  Mode mode = detail::mode(self);
-  if (mode != Mode::Standalone) {
-    AppendHeaderOperation *op;
-    if (mode == Mode::ProxyToRequest) {
-      op = (AppendHeaderOperation *)xqd_fastly_http_req_header_append;
-    } else {
-      op = (AppendHeaderOperation *)xqd_fastly_http_resp_header_append;
-    }
-    std::string_view name(name_chars.get(), name_len);
-    if (name == "set-cookie") {
-      std::string_view value(value_chars.get(), value_len);
-      auto values = splitCookiesString(value);
-      for (auto value : values) {
-        xqd_world_string_t name = {name_chars.get(), name_len};
-        xqd_world_string_t val = {const_cast<char *>(value.data()), value.length()};
-        fastly_error_t err;
-        if (!op(handle(self), &name, &val, &err)) {
-          HANDLE_ERROR(cx, err);
-          return false;
-        }
-      }
-    } else {
-      xqd_world_string_t name = {name_chars.get(), name_len};
-      xqd_world_string_t val = {value_chars.get(), value_len};
-      fastly_error_t err;
-      if (!op(handle(self), &name, &val, &err)) {
-        HANDLE_ERROR(cx, err);
-        return false;
-      }
-    }
-  }
-
-  return append_header_value_to_map(cx, self, normalized_name, &normalized_value);
-}
-} // namespace detail
-
-bool delazify(JSContext *cx, HandleObject headers) {
-  RootedObject backing_map(cx, detail::backing_map(headers));
-  return detail::ensure_all_header_values_from_handle(cx, headers, backing_map);
-}
-
-JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner,
-                 HandleObject init_headers) {
-  RootedObject headers(cx, create(cx, self, mode, owner));
-  if (!headers) {
-    return nullptr;
-  }
-
-  if (!init_headers) {
-    return headers;
-  }
-
-  if (!delazify(cx, init_headers)) {
-    return nullptr;
-  }
-
-  RootedObject headers_map(cx, detail::backing_map(headers));
-  RootedObject init_map(cx, detail::backing_map(init_headers));
-
-  RootedValue iterable(cx);
-  if (!JS::MapEntries(cx, init_map, &iterable))
-    return nullptr;
-
-  JS::ForOfIterator it(cx);
-  if (!it.init(iterable))
-    return nullptr;
-
-  RootedObject entry(cx);
-  RootedValue entry_val(cx);
-  RootedValue name_val(cx);
-  RootedValue value_val(cx);
-  while (true) {
-    bool done;
-    if (!it.next(&entry_val, &done))
-      return nullptr;
-
-    if (done)
-      break;
-
-    entry = &entry_val.toObject();
-    JS_GetElement(cx, entry, 0, &name_val);
-    JS_GetElement(cx, entry, 1, &value_val);
-
-    if (!detail::append_header_value(cx, headers, name_val, value_val, "Headers constructor")) {
-      return nullptr;
-    }
-  }
-
-  return headers;
-}
-
-JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner,
-                 HandleValue initv) {
-  RootedObject headers(cx, create(cx, self, mode, owner));
-  if (!headers)
-    return nullptr;
-
-  bool consumed = false;
-  if (!maybe_consume_sequence_or_record<detail::append_header_value>(cx, initv, headers, &consumed,
-                                                                     "Headers")) {
-    return nullptr;
-  }
-
-  if (!consumed) {
-    report_sequence_or_record_arg_error(cx, "Headers", "");
-    return nullptr;
-  }
-
-  return headers;
-}
-
-bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
-
-bool get(JSContext *cx, unsigned argc, Value *vp) {
-  METHOD_HEADER(1)
-
-  NORMALIZE_NAME(args[0], "Headers.get")
-
-  return detail::get_header_value_for_name(cx, self, normalized_name, args.rval(), "Headers.get");
-}
-
-typedef bool HeaderInsertOperation(fastly_request_handle_t handle, xqd_world_string_t *name,
-                                   xqd_world_string_t *values, fastly_error_t *err);
-
-bool set(JSContext *cx, unsigned argc, Value *vp) {
-  METHOD_HEADER(2)
-
-  NORMALIZE_NAME(args[0], "Headers.set")
-  NORMALIZE_VALUE(args[1], "Headers.set")
-
-  Mode mode = detail::mode(self);
-  if (mode != Mode::Standalone) {
-    HeaderInsertOperation *op;
-    if (mode == Mode::ProxyToRequest)
-      op = (HeaderInsertOperation *)xqd_fastly_http_req_header_insert;
-    else
-      op = (HeaderInsertOperation *)xqd_fastly_http_resp_header_insert;
-    xqd_world_string_t name = {name_chars.get(), name_len};
-    xqd_world_string_t val = {value_chars.get(), value_len};
-    fastly_error_t err;
-    if (!op(detail::handle(self), &name, &val, &err)) {
-      HANDLE_ERROR(cx, err);
-      return false;
-    }
-  }
-
-  RootedObject map(cx, detail::backing_map(self));
-  if (!JS::MapSet(cx, map, normalized_name, normalized_value))
-    return false;
-
-  args.rval().setUndefined();
-  return true;
-}
-
-bool has(JSContext *cx, unsigned argc, Value *vp) {
-  METHOD_HEADER(1)
-
-  NORMALIZE_NAME(args[0], "Headers.has")
-  bool has;
-  RootedObject map(cx, detail::backing_map(self));
-  if (!JS::MapHas(cx, map, normalized_name, &has))
-    return false;
-  args.rval().setBoolean(has);
-  return true;
-}
-
-bool append(JSContext *cx, unsigned argc, Value *vp) {
-  METHOD_HEADER(2)
-
-  if (!detail::append_header_value(cx, self, args[0], args[1], "Headers.append"))
-    return false;
-
-  args.rval().setUndefined();
-  return true;
-}
-
-/**
- * Adds the given header name/value to `self`'s list of headers iff `self`
- * doesn't already contain a header with that name.
- *
- * Assumes that both the name and value are valid and normalized.
- * TODO(performance): fully skip normalization.
- * https://github.com/fastly/js-compute-runtime/issues/221
- */
-bool maybe_add(JSContext *cx, HandleObject self, const char *name, const char *value) {
-  MOZ_ASSERT(is_instance(self));
-  RootedString name_str(cx, JS_NewStringCopyN(cx, name, strlen(name)));
-  if (!name_str) {
-    return false;
-  }
-  RootedValue name_val(cx, JS::StringValue(name_str));
-
-  RootedObject map(cx, detail::backing_map(self));
-  bool has;
-  if (!JS::MapHas(cx, map, name_val, &has)) {
-    return false;
-  }
-  if (has) {
-    return true;
-  }
-
-  RootedString value_str(cx, JS_NewStringCopyN(cx, value, strlen(value)));
-  if (!value_str) {
-    return false;
-  }
-  RootedValue value_val(cx, JS::StringValue(value_str));
-
-  return detail::append_header_value(cx, self, name_val, value_val, "internal_maybe_add");
-}
-
-bool delete_(JSContext *cx, unsigned argc, Value *vp) {
-  METHOD_HEADER_WITH_NAME(1, "delete")
-
-  NORMALIZE_NAME(args[0], "Headers.delete")
-
-  bool has;
-  RootedObject map(cx, detail::backing_map(self));
-  if (!JS::MapDelete(cx, map, normalized_name, &has))
-    return false;
-
-  // If no header with the given name exists, `delete` is a no-op.
-  if (!has) {
-    args.rval().setUndefined();
-    return true;
-  }
-
-  Mode mode = detail::mode(self);
-  if (mode != Mode::Standalone) {
-    HeaderRemoveOperation *op;
-    if (mode == Mode::ProxyToRequest)
-      op = (HeaderRemoveOperation *)xqd_fastly_http_req_header_remove;
-    else
-      op = (HeaderRemoveOperation *)xqd_fastly_http_resp_header_remove;
-    xqd_world_string_t name = {name_chars.get(), name_len};
-    fastly_error_t err;
-    if (!op(detail::handle(self), &name, &err)) {
-      HANDLE_ERROR(cx, err);
-      return false;
-    }
-  }
-
-  args.rval().setUndefined();
-  return true;
-}
-
-bool forEach(JSContext *cx, unsigned argc, Value *vp) {
-  HEADERS_ITERATION_METHOD(1)
-
-  if (!args[0].isObject() || !JS::IsCallable(&args[0].toObject())) {
-    JS_ReportErrorASCII(cx, "Failed to execute 'forEach' on 'Headers': "
-                            "parameter 1 is not of type 'Function'");
-    return false;
-  }
-
-  JS::RootedValueArray<3> newArgs(cx);
-  newArgs[2].setObject(*self);
-
-  RootedValue rval(cx);
-
-  RootedValue iterable(cx);
-  if (!JS::MapEntries(cx, backing_map, &iterable))
-    return false;
-
-  JS::ForOfIterator it(cx);
-  if (!it.init(iterable))
-    return false;
-
-  RootedValue entry_val(cx);
-  RootedObject entry(cx);
-  while (true) {
-    bool done;
-    if (!it.next(&entry_val, &done))
-      return false;
-
-    if (done)
-      break;
-
-    entry = &entry_val.toObject();
-    JS_GetElement(cx, entry, 1, newArgs[0]);
-    JS_GetElement(cx, entry, 0, newArgs[1]);
-
-    if (!JS::Call(cx, args.thisv(), args[0], newArgs, &rval))
-      return false;
-  }
-
-  args.rval().setUndefined();
-  return true;
-}
-
-bool entries(JSContext *cx, unsigned argc, Value *vp) {
-  HEADERS_ITERATION_METHOD(0)
-  return JS::MapEntries(cx, backing_map, args.rval());
-}
-
-bool keys(JSContext *cx, unsigned argc, Value *vp) {
-  HEADERS_ITERATION_METHOD(0)
-  return JS::MapKeys(cx, backing_map, args.rval());
-}
-
-bool values(JSContext *cx, unsigned argc, Value *vp) {
-  HEADERS_ITERATION_METHOD(0)
-  return JS::MapValues(cx, backing_map, args.rval());
-}
-
-bool constructor(JSContext *cx, unsigned argc, Value *vp) {
-  CTOR_HEADER("Headers", 0);
-  RootedObject headersInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  RootedObject headers(cx, create(cx, headersInstance, Mode::Standalone, nullptr, args.get(0)));
-  if (!headers)
-    return false;
-
-  args.rval().setObject(*headers);
-  return true;
-}
-
-bool init_class(JSContext *cx, HandleObject global) {
-  bool ok = init_class_impl(cx, global);
-  if (!ok)
-    return false;
-
-  RootedValue entries(cx);
-  if (!JS_GetProperty(cx, proto_obj, "entries", &entries))
-    return false;
-
-  JS::SymbolCode code = JS::SymbolCode::iterator;
-  JS::RootedId iteratorId(cx, JS::GetWellKnownSymbolKey(cx, code));
-  return JS_DefinePropertyById(cx, proto_obj, iteratorId, entries, 0);
-}
-
-JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner) {
-  JS_SetReservedSlot(self, Slots::Mode, JS::Int32Value(static_cast<int32_t>(mode)));
-  uint32_t handle = UINT32_MAX - 1;
-  if (mode != Mode::Standalone)
-    handle = RequestOrResponse::handle(owner);
-  JS_SetReservedSlot(self, Slots::Handle, JS::Int32Value(static_cast<int32_t>(handle)));
-
-  RootedObject backing_map(cx, JS::NewMapObject(cx));
-  if (!backing_map)
-    return nullptr;
-  JS::SetReservedSlot(self, Slots::BackingMap, JS::ObjectValue(*backing_map));
-
-  bool lazy = false;
-  if ((mode == Mode::ProxyToRequest && Request::is_downstream(owner)) ||
-      (mode == Mode::ProxyToResponse && Response::is_upstream(owner))) {
-    lazy = true;
-    if (!detail::get_header_names_from_handle(cx, handle, mode, backing_map))
-      return nullptr;
-  }
-
-  JS_SetReservedSlot(self, Slots::HasLazyValues, JS::BooleanValue(lazy));
-
-  return self;
-}
-} // namespace Headers
 
 namespace ClientInfo {
 namespace Slots {
@@ -3964,8 +3100,9 @@ bool response_promise_then_handler(JSContext *cx, HandleObject event, HandleValu
   // after sending the response off.
   if (Response::is_upstream(response_obj)) {
     RootedObject headers(cx);
-    headers = RequestOrResponse::headers<Headers::Mode::ProxyToResponse>(cx, response_obj);
-    if (!Headers::delazify(cx, headers))
+    headers =
+        RequestOrResponse::headers<builtins::Headers::Mode::ProxyToResponse>(cx, response_obj);
+    if (!builtins::Headers::delazify(cx, headers))
       return false;
   }
 
@@ -5259,7 +4396,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!builtins::Dictionary::init_class(cx, global))
     return false;
-  if (!Headers::init_class(cx, global))
+  if (!builtins::Headers::init_class(cx, global))
     return false;
   if (!ClientInfo::init_class(cx, global))
     return false;

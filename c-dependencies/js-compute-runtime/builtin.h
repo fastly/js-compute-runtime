@@ -181,7 +181,7 @@ private:
 public:
   static constexpr JSClass class_{
       Impl::class_name,
-      JSCLASS_HAS_RESERVED_SLOTS(Impl::Slots::Count) | class_flags,
+      JSCLASS_HAS_RESERVED_SLOTS(static_cast<uint32_t>(Impl::Slots::Count)) | class_flags,
       &class_ops,
   };
 

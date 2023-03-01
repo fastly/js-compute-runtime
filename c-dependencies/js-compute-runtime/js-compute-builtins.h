@@ -103,6 +103,7 @@ enum class BodyReadResult {
   Text,
 };
 
+uint32_t handle(JSObject *obj);
 bool body_used(JSObject *obj);
 bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self, bool create_if_undefined);
 bool body_unusable(JSContext *cx, JS::HandleObject body);
@@ -111,6 +112,14 @@ template <BodyReadResult result_type>
 bool bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
 JS::Value url(JSObject *obj);
 } // namespace RequestOrResponse
+
+namespace Response {
+bool is_upstream(JSObject *obj);
+}
+
+namespace Request {
+bool is_downstream(JSObject *obj);
+}
 
 bool RejectPromiseWithPendingError(JSContext *cx, JS::HandleObject promise);
 
