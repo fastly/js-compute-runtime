@@ -33,35 +33,35 @@
   resolved "https://registry.npmjs.org/@bytecodealliance/jco/-/jco-0.4.1.tgz"
   integrity sha512-fb7QID6CtJhBO2jj71/VqBVphPcxWi72uIZnwCHDobgiq+8TM4XFuJEYFD7OOd8u19HlXGrtTujgFPXErx4JwA==
 
-"@bytecodealliance/wizer-darwin-arm64@1.6.1-beta.3":
-  version "1.6.1-beta.3"
-  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-darwin-arm64/-/wizer-darwin-arm64-1.6.1-beta.3.tgz#e35ce1b4a9594d79fcdd823ee9059f7b75b3eaf3"
-  integrity sha512-cGRE2uGAjvpYn52yi9bHjcDqiQmAN7a1/j1vIS/Biqf2g8HL5tWrI9fG0G+DTpuaO81fOhRnic3MjfubAoDOHQ==
+"@bytecodealliance/wizer-darwin-arm64@1.6.1-beta.4":
+  version "1.6.1-beta.4"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-darwin-arm64/-/wizer-darwin-arm64-1.6.1-beta.4.tgz#0d4a4ee3587afb3b88fb5d62b52d2b7dacc4aca6"
+  integrity sha512-NyleEH0GKBqS0DCuKceY3a2ZxF/aNzYa68swbKKljSFh6uo/3Cqr/U5/SuTxval6/VwtZ1eEzRPaLbLlUE5r4w==
 
-"@bytecodealliance/wizer-darwin-x64@1.6.1-beta.3":
-  version "1.6.1-beta.3"
-  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-darwin-x64/-/wizer-darwin-x64-1.6.1-beta.3.tgz#6b4196f2dae7e053208a834ac0af35ca4e3598d7"
-  integrity sha512-WXVbBiuzQfUJ/7XXiYSGj9d4nTzU+jiW6j39xEKJcOdLJv9mzf6wFsgNXakDgO4tOnA9WHHgGLb765Y401DCgQ==
+"@bytecodealliance/wizer-darwin-x64@1.6.1-beta.4":
+  version "1.6.1-beta.4"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-darwin-x64/-/wizer-darwin-x64-1.6.1-beta.4.tgz#88f7ec0c2b2ea11640ab119e2b95d7034c539094"
+  integrity sha512-2s8HPLrttAyYUJNHQlLVi3rDGlnk9IzEJTbw0DApfpVnCZZ1aTLt6MXTIBeOYo9si5Q4cqyDHT5bAoNZvJTk9A==
 
-"@bytecodealliance/wizer-linux-x64@1.6.1-beta.3":
-  version "1.6.1-beta.3"
-  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-linux-x64/-/wizer-linux-x64-1.6.1-beta.3.tgz#b7eb9739db839a337f15216940560d4d3352cdcf"
-  integrity sha512-QFlBE4gEHI4779zXxaCLiIrSw2LaJMGC5ej/ybO/Lvr5Xi8lg+1chKjYhbG1KFzkwQdTuE/bRmQHKHiKvaLWsg==
+"@bytecodealliance/wizer-linux-x64@1.6.1-beta.4":
+  version "1.6.1-beta.4"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-linux-x64/-/wizer-linux-x64-1.6.1-beta.4.tgz#fec633bbeb9f01579ab3988e0babc917abc4e0bb"
+  integrity sha512-S+oYRGGveuPLtiI6V7SQpZHhw43asLArC+fGrJRQ3OsHs8aj/IVusRLVYgWfKw1HtZm9iIWrjH9WYO6BWak4eQ==
 
-"@bytecodealliance/wizer-win32-x64@1.6.1-beta.3":
-  version "1.6.1-beta.3"
-  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-win32-x64/-/wizer-win32-x64-1.6.1-beta.3.tgz#2177bff2e224fa4108d4f1ce2bb96eecc362aa3c"
-  integrity sha512-nson2Bs978z7XroMixY1CHbfO+FnQhmHZUJiEEwdteWHZBOPOX1t3rvCHci3QWf16HGBYyxaYeXPpthXwZFkhQ==
+"@bytecodealliance/wizer-win32-x64@1.6.1-beta.4":
+  version "1.6.1-beta.4"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-win32-x64/-/wizer-win32-x64-1.6.1-beta.4.tgz#71b6af911cb3620522df6e592a73b05d7cc50b17"
+  integrity sha512-NxqrLqFnaMyldkN7lBVS+Em23f84/RKrHjBXt9WnZK2RtJjvwoCXr+so6+qfj4f1K9BhIZ8UaBfYwqPvtLOcZQ==
 
-"@bytecodealliance/wizer@^1.6.1-beta.3":
-  version "1.6.1-beta.3"
-  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer/-/wizer-1.6.1-beta.3.tgz#af373a26f11fdc17979eea381a4c7e39fdb06481"
-  integrity sha512-P5ZzZsbKtvMu0Ds3QLKAOI3A8P3AW0IWgGHOZUEna//4ny7Em29oXKqNxtpasCN4wT2sWIywKsOUhLvl9T3QeQ==
+"@bytecodealliance/wizer@^1.6.1-beta.4":
+  version "1.6.1-beta.4"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer/-/wizer-1.6.1-beta.4.tgz#14b5e052f957c05c71f405213e738e6b3253de8f"
+  integrity sha512-afgV4lyYVMBN/9/yNDgYGTn92D7VrqS0yTZ3WZgDyDTiOWjmSuQimEiX+VzCiYjF9GXsKwzCY1FEOu1pY2Evgw==
   optionalDependencies:
-    "@bytecodealliance/wizer-darwin-arm64" "1.6.1-beta.3"
-    "@bytecodealliance/wizer-darwin-x64" "1.6.1-beta.3"
-    "@bytecodealliance/wizer-linux-x64" "1.6.1-beta.3"
-    "@bytecodealliance/wizer-win32-x64" "1.6.1-beta.3"
+    "@bytecodealliance/wizer-darwin-arm64" "1.6.1-beta.4"
+    "@bytecodealliance/wizer-darwin-x64" "1.6.1-beta.4"
+    "@bytecodealliance/wizer-linux-x64" "1.6.1-beta.4"
+    "@bytecodealliance/wizer-win32-x64" "1.6.1-beta.4"
 
 "@esbuild/android-arm@0.15.18":
   version "0.15.18"
