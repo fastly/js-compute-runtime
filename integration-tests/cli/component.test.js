@@ -8,7 +8,7 @@ import { readFile } from 'node:fs/promises';
 const cli = await getBinPath()
 
 test('should create component wasm file and return zero exit code', async function (t) {
-    const { execute, cleanup, path, writeFile, exists } = await prepareEnvironment();
+    const { execute, cleanup, path, writeFile, exists, stat } = await prepareEnvironment();
     t.teardown(async function () {
         await cleanup();
     });
@@ -27,6 +27,8 @@ test('should create component wasm file and return zero exit code', async functi
 
     // (necessary because readFile gives a string)
     const wasmBuffer = await readFile(resolve(path, './bin/main.wasm'));
+
+    console.log('COMPONENT SIZE: ' + wasmBuffer.byteLength);
 
     const wat = print(wasmBuffer);
 
