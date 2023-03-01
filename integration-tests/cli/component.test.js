@@ -8,7 +8,7 @@ import { readFile } from 'node:fs/promises';
 const cli = await getBinPath()
 
 test('should create component wasm file and return zero exit code', async function (t) {
-    const { execute, cleanup, path, writeFile, exists, stat } = await prepareEnvironment();
+    const { execute, cleanup, path, writeFile, exists } = await prepareEnvironment();
     t.teardown(async function () {
         await cleanup();
     });
