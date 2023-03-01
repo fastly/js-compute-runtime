@@ -150,6 +150,7 @@ JS::Result<mozilla::Ok> SetToSource(JSContext *cx, std::string &sourceOut, JS::H
  */
 JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS::HandleObject obj,
                                        JS::MutableHandleObjectVector visitedObjects) {
+  sourceOut += "{";
   JS::RootedIdVector ids(cx);
   if (!js::GetPropertyKeys(cx, obj, 0, &ids)) {
     return JS::Result<mozilla::Ok>(JS::Error());
@@ -157,12 +158,6 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
 
   JS::RootedValue value(cx);
   size_t length = ids.length();
-  if (length == 0) {
-    sourceOut = "{}";
-    return mozilla::Ok();
-  } else {
-    sourceOut += "{ ";
-  }
   bool firstValue = true;
   for (size_t i = 0; i < length; ++i) {
     const auto &id = ids[i];
@@ -170,32 +165,31 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
       return JS::Result<mozilla::Ok>(JS::Error());
     }
 
-    // commented out as functions on objects are part of the logging...
-    // if (!value.isObject() || !JS_ObjectIsFunction(&value.toObject())) {
-    if (firstValue) {
-      firstValue = false;
-    } else {
-      sourceOut += ", ";
-    }
-    if (id.isSymbol()) {
-      JS::RootedValue v(cx, SymbolValue(id.toSymbol()));
+    if (!value.isObject() || !JS_ObjectIsFunction(&value.toObject())) {
+      if (firstValue) {
+        firstValue = false;
+      } else {
+        sourceOut += ", ";
+      }
+      if (id.isSymbol()) {
+        JS::RootedValue v(cx, SymbolValue(id.toSymbol()));
+        std::string source;
+        MOZ_TRY(ToSource(cx, source, v, visitedObjects));
+        sourceOut += source;
+      } else {
+        JS::RootedValue idValue(cx, js::IdToValue(id));
+        std::string source;
+        MOZ_TRY(ToSource(cx, source, idValue, visitedObjects));
+        sourceOut += source;
+      }
+      sourceOut += ": ";
       std::string source;
-      MOZ_TRY(ToSource(cx, source, v, visitedObjects));
-      sourceOut += source;
-    } else {
-      JS::RootedValue idValue(cx, js::IdToValue(id));
-      std::string source;
-      MOZ_TRY(ToSource(cx, source, idValue, visitedObjects));
+      MOZ_TRY(ToSource(cx, source, value, visitedObjects));
       sourceOut += source;
     }
-    sourceOut += ": ";
-    std::string source;
-    MOZ_TRY(ToSource(cx, source, value, visitedObjects));
-    sourceOut += source;
-    // }
   }
 
-  sourceOut += " }";
+  sourceOut += "}";
   return mozilla::Ok();
 }
 
