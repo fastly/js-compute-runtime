@@ -3,7 +3,7 @@
 ## [1.4.1](https://github.com/fastly/js-compute-runtime/compare/v1.4.0...v1.4.1) (2023-03-01)
 
 
-### Bug Fixes
+### Changed
 
 * modular builtin separation ([#426](https://github.com/fastly/js-compute-runtime/issues/426)) ([c5933ea](https://github.com/fastly/js-compute-runtime/commit/c5933ea2599c0f0952d7314ecbbe93faa8ec9acb))
 
