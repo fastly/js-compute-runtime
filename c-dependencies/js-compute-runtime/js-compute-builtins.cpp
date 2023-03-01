@@ -68,6 +68,8 @@ using std::chrono::ceil;
 using std::chrono::milliseconds;
 using std::chrono::system_clock;
 
+using builtins::Console;
+
 using JS::CallArgs;
 using JS::CallArgsFromVp;
 using JS::UniqueChars;
@@ -5317,6 +5319,29 @@ UniqueChars stringify_value(JSContext *cx, JS::HandleValue value) {
 }
 
 bool debug_logging_enabled() { return builtins::Fastly::debug_logging_enabled; }
+
+void builtin_impl_console_log(Console::LogType log_ty, const char *msg) {
+  const char *prefix = "";
+  switch (log_ty) {
+  case Console::LogType::Log:
+    prefix = "Log";
+    break;
+  case Console::LogType::Debug:
+    prefix = "Debug";
+    break;
+  case Console::LogType::Info:
+    prefix = "Info";
+    break;
+  case Console::LogType::Warn:
+    prefix = "Warn";
+    break;
+  case Console::LogType::Error:
+    prefix = "Error";
+    break;
+  }
+  fprintf(stdout, "%s: %s\n", prefix, msg);
+  fflush(stdout);
+}
 
 bool dump_value(JSContext *cx, JS::Value val, FILE *fp) {
   RootedValue value(cx, val);

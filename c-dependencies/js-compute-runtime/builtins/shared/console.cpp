@@ -150,7 +150,6 @@ JS::Result<mozilla::Ok> SetToSource(JSContext *cx, std::string &sourceOut, JS::H
  */
 JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS::HandleObject obj,
                                        JS::MutableHandleObjectVector visitedObjects) {
-  sourceOut += "{";
   JS::RootedIdVector ids(cx);
   if (!js::GetPropertyKeys(cx, obj, 0, &ids)) {
     return JS::Result<mozilla::Ok>(JS::Error());
@@ -158,6 +157,12 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
 
   JS::RootedValue value(cx);
   size_t length = ids.length();
+  if (length == 0) {
+    sourceOut = "{}";
+    return mozilla::Ok();
+  } else {
+    sourceOut += "{ ";
+  }
   bool firstValue = true;
   for (size_t i = 0; i < length; ++i) {
     const auto &id = ids[i];
@@ -165,31 +170,32 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
       return JS::Result<mozilla::Ok>(JS::Error());
     }
 
-    if (!value.isObject() || !JS_ObjectIsFunction(&value.toObject())) {
-      if (firstValue) {
-        firstValue = false;
-      } else {
-        sourceOut += ", ";
-      }
-      if (id.isSymbol()) {
-        JS::RootedValue v(cx, SymbolValue(id.toSymbol()));
-        std::string source;
-        MOZ_TRY(ToSource(cx, source, v, visitedObjects));
-        sourceOut += source;
-      } else {
-        JS::RootedValue idValue(cx, js::IdToValue(id));
-        std::string source;
-        MOZ_TRY(ToSource(cx, source, idValue, visitedObjects));
-        sourceOut += source;
-      }
-      sourceOut += ": ";
+    // commented out as functions on objects are part of the logging...
+    // if (!value.isObject() || !JS_ObjectIsFunction(&value.toObject())) {
+    if (firstValue) {
+      firstValue = false;
+    } else {
+      sourceOut += ", ";
+    }
+    if (id.isSymbol()) {
+      JS::RootedValue v(cx, SymbolValue(id.toSymbol()));
       std::string source;
-      MOZ_TRY(ToSource(cx, source, value, visitedObjects));
+      MOZ_TRY(ToSource(cx, source, v, visitedObjects));
+      sourceOut += source;
+    } else {
+      JS::RootedValue idValue(cx, js::IdToValue(id));
+      std::string source;
+      MOZ_TRY(ToSource(cx, source, idValue, visitedObjects));
       sourceOut += source;
     }
+    sourceOut += ": ";
+    std::string source;
+    MOZ_TRY(ToSource(cx, source, value, visitedObjects));
+    sourceOut += source;
+    // }
   }
 
-  sourceOut += "}";
+  sourceOut += " }";
   return mozilla::Ok();
 }
 
@@ -303,7 +309,7 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
 
 namespace builtins {
 
-template <const char *prefix, uint8_t prefix_len>
+template <Console::LogType log_ty>
 static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   std::string fullLogLine = "";
@@ -325,25 +331,18 @@ static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
   }
 
-  printf("%s: %s\n", prefix, fullLogLine.c_str());
-  fflush(stdout);
+  builtin_impl_console_log(log_ty, fullLogLine.c_str());
 
   args.rval().setUndefined();
   return true;
 }
 
-static constexpr char PREFIX_LOG[] = "Log";
-static constexpr char PREFIX_DEBUG[] = "Debug";
-static constexpr char PREFIX_INFO[] = "Info";
-static constexpr char PREFIX_WARN[] = "Warn";
-static constexpr char PREFIX_ERROR[] = "Error";
-
 const JSFunctionSpec Console::methods[] = {
-    JS_FN("log", (console_out<PREFIX_LOG, 3>), 1, JSPROP_ENUMERATE),
-    JS_FN("debug", (console_out<PREFIX_DEBUG, 5>), 1, JSPROP_ENUMERATE),
-    JS_FN("info", (console_out<PREFIX_INFO, 4>), 1, JSPROP_ENUMERATE),
-    JS_FN("warn", (console_out<PREFIX_WARN, 4>), 1, JSPROP_ENUMERATE),
-    JS_FN("error", (console_out<PREFIX_ERROR, 5>), 1, JSPROP_ENUMERATE),
+    JS_FN("log", (console_out<Console::LogType::Log>), 1, JSPROP_ENUMERATE),
+    JS_FN("debug", (console_out<Console::LogType::Debug>), 1, JSPROP_ENUMERATE),
+    JS_FN("info", (console_out<Console::LogType::Info>), 1, JSPROP_ENUMERATE),
+    JS_FN("warn", (console_out<Console::LogType::Warn>), 1, JSPROP_ENUMERATE),
+    JS_FN("error", (console_out<Console::LogType::Error>), 1, JSPROP_ENUMERATE),
     JS_FS_END};
 
 const JSPropertySpec Console::properties[] = {JS_PS_END};

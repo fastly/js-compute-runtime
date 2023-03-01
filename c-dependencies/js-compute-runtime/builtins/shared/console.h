@@ -9,6 +9,13 @@ class Console : public BuiltinNoConstructor<Console> {
 private:
 public:
   static constexpr const char *class_name = "Console";
+  enum LogType {
+    Log,
+    Info,
+    Debug,
+    Warn,
+    Error,
+  };
   enum Slots { Count };
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
@@ -17,5 +24,7 @@ public:
 };
 
 } // namespace builtins
+
+void builtin_impl_console_log(builtins::Console::LogType log_ty, const char *msg);
 
 #endif
