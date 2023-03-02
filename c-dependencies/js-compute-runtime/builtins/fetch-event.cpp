@@ -14,7 +14,7 @@ namespace {
 JS::PersistentRooted<JSObject *> INSTANCE;
 
 void inc_pending_promise_count(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
+  MOZ_ASSERT(FetchEvent::is_instance(self));
   auto count =
       JS::GetReservedSlot(self, static_cast<uint32_t>(FetchEvent::Slots::PendingPromiseCount))
           .toInt32();
@@ -25,7 +25,7 @@ void inc_pending_promise_count(JSObject *self) {
 }
 
 void dec_pending_promise_count(JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
+  MOZ_ASSERT(FetchEvent::is_instance(self));
   auto count =
       JS::GetReservedSlot(self, static_cast<uint32_t>(FetchEvent::Slots::PendingPromiseCount))
           .toInt32();
@@ -36,7 +36,7 @@ void dec_pending_promise_count(JSObject *self) {
 }
 
 bool add_pending_promise(JSContext *cx, JS::HandleObject self, JS::HandleObject promise) {
-  MOZ_ASSERT(is_instance(self));
+  MOZ_ASSERT(FetchEvent::is_instance(self));
   MOZ_ASSERT(JS::IsPromiseObject(promise));
 
   JS::RootedObject handler(cx);
