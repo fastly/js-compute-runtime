@@ -157,7 +157,7 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
                                        JS::MutableHandleObjectVector visitedObjects) {
   JS::RootedIdVector ids(cx);
 
-  if (!js::GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_SYMBOLS, &ids)) {
+  if (!js::GetPropertyKeys(cx, obj, 0, &ids)) {
     return JS::Result<mozilla::Ok>(JS::Error());
   }
 
@@ -172,8 +172,8 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
     JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> desc(cx);
     JS_GetOwnPropertyDescriptorById(cx, obj, id, &desc);
 
-    // we only iterate own keys in the first place
-    if (desc.isNothing()) {
+    // Skip logging non-own function keys
+    if (desc.isNothing() && JS_ObjectIsFunction(obj)) {
       return JS::Result<mozilla::Ok>(JS::Error());
     }
 
@@ -201,7 +201,7 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
     sourceOut += ": ";
 
     // Getters and Setters
-    if (desc->hasGetter() || desc->hasSetter()) {
+    if (!desc.isNothing() && (desc->hasGetter() || desc->hasSetter())) {
       sourceOut += "[Getter]";
       continue;
     }
@@ -214,8 +214,9 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
   }
 
   if (!firstValue) {
-    sourceOut += " }";
+    sourceOut += " ";
   }
+  sourceOut += "}";
 
   return mozilla::Ok();
 }
@@ -283,8 +284,7 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
       if (!msg) {
         return JS::Result<mozilla::Ok>(JS::Error());
       }
-      std::string sourceString(msg.get(), message_len);
-      sourceOut += sourceString;
+      sourceOut += std::string(msg.get(), message_len);
       return mozilla::Ok();
     }
     case js::ESClass::Array: {
