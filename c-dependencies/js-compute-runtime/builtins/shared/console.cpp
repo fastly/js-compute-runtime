@@ -23,18 +23,14 @@ JS::Result<mozilla::Ok> PromiseToSource(JSContext *cx, std::string &sourceOut, J
   }
   case JS::PromiseState::Fulfilled: {
     JS::RootedValue value(cx, JS::GetPromiseResult(obj));
-    std::string source;
-    MOZ_TRY(ToSource(cx, source, value, visitedObjects));
-    sourceOut += source;
+    MOZ_TRY(ToSource(cx, sourceOut, value, visitedObjects));
     sourceOut += " }";
     break;
   }
   case JS::PromiseState::Rejected: {
     sourceOut += "<rejected> ";
     JS::RootedValue value(cx, JS::GetPromiseResult(obj));
-    std::string source;
-    MOZ_TRY(ToSource(cx, source, value, visitedObjects));
-    sourceOut += source;
+    MOZ_TRY(ToSource(cx, sourceOut, value, visitedObjects));
     sourceOut += " }";
     break;
   }
@@ -84,13 +80,9 @@ JS::Result<mozilla::Ok> MapToSource(JSContext *cx, std::string &sourceOut, JS::H
     entry = &entry_val.toObject();
     JS_GetElement(cx, entry, 0, &name_val);
     JS_GetElement(cx, entry, 1, &value_val);
-    std::string name;
-    MOZ_TRY(ToSource(cx, name, name_val, visitedObjects));
-    sourceOut += name;
+    MOZ_TRY(ToSource(cx, sourceOut, name_val, visitedObjects));
     sourceOut += " => ";
-    std::string value;
-    MOZ_TRY(ToSource(cx, value, value_val, visitedObjects));
-    sourceOut += value;
+    MOZ_TRY(ToSource(cx, sourceOut, value_val, visitedObjects));
   }
   sourceOut += " }";
   return mozilla::Ok();
@@ -126,14 +118,12 @@ JS::Result<mozilla::Ok> SetToSource(JSContext *cx, std::string &sourceOut, JS::H
     if (done) {
       break;
     }
-    std::string entry;
-    MOZ_TRY(ToSource(cx, entry, entry_val, visitedObjects));
     if (firstValue) {
       firstValue = false;
     } else {
       sourceOut += ", ";
     }
-    sourceOut += entry;
+    MOZ_TRY(ToSource(cx, sourceOut, entry_val, visitedObjects));
   }
   sourceOut += " }";
   return mozilla::Ok();
@@ -150,27 +140,15 @@ JS::Result<mozilla::Ok> ArrayToSource(JSContext *cx, std::string &sourceOut, JS:
   for (int i = 0; i < len; i++) {
     JS::RootedValue entry_val(cx);
     JS_GetElement(cx, obj, i, &entry_val);
-    std::string entry;
-    MOZ_TRY(ToSource(cx, entry, entry_val, visitedObjects));
     if (i > 0) {
       sourceOut += ", ";
     }
-    sourceOut += entry;
+    MOZ_TRY(ToSource(cx, sourceOut, entry_val, visitedObjects));
   }
   sourceOut += "]";
   return mozilla::Ok();
 }
 
-/**
- * Turn a handle of an Object into a string which represents the object.
- * This function will go through every property on the object (including non-enumerable properties)
- * Each property name and property value within the object will be converted into it's ToSource
- * representation. Note: functions and methods within the object are not included in the output
- *
- * e.g:
- *  The object `{ a: 1, b: 2, c: 3, d(){}, get f(){}, g: function bar() {} }`
- *  would be represented as "{a: 1, b: {c: 2}, c: 3, f: undefined}"
- */
 JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS::HandleObject obj,
                                        JS::MutableHandleObjectVector visitedObjects) {
   JS::RootedIdVector ids(cx);
@@ -317,45 +295,34 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
       return mozilla::Ok();
     }
     case js::ESClass::Array: {
-      std::string sourceString;
-      MOZ_TRY(ArrayToSource(cx, sourceString, obj, visitedObjects));
-      sourceOut += sourceString;
+      MOZ_TRY(ArrayToSource(cx, sourceOut, obj, visitedObjects));
       return mozilla::Ok();
     }
     case js::ESClass::Set: {
-      std::string sourceString;
-      MOZ_TRY(SetToSource(cx, sourceString, obj, visitedObjects));
-      sourceOut += sourceString;
+      MOZ_TRY(SetToSource(cx, sourceOut, obj, visitedObjects));
       return mozilla::Ok();
     }
     case js::ESClass::Map: {
-      std::string sourceString;
-      MOZ_TRY(MapToSource(cx, sourceString, obj, visitedObjects));
-      sourceOut += sourceString;
+      MOZ_TRY(MapToSource(cx, sourceOut, obj, visitedObjects));
       return mozilla::Ok();
     }
     case js::ESClass::Promise: {
-      std::string sourceString;
-      MOZ_TRY(PromiseToSource(cx, sourceString, obj, visitedObjects));
-      sourceOut += sourceString;
+      MOZ_TRY(PromiseToSource(cx, sourceOut, obj, visitedObjects));
       return mozilla::Ok();
     }
     default: {
       std::string sourceString;
       if (JS::IsWeakMapObject(obj)) {
-        std::string sourceString = "WeakMap { <items unknown> }";
-        sourceOut += sourceString;
+        sourceOut += "WeakMap { <items unknown> }";
         return mozilla::Ok();
       }
       auto cls = JS::GetClass(obj);
       std::string className(cls->name);
       if (className == "WeakSet") {
-        std::string sourceString = "WeakSet { <items unknown> }";
-        sourceOut += sourceString;
+        sourceOut += "WeakSet { <items unknown> }";
         return mozilla::Ok();
       }
-      MOZ_TRY(ObjectToSource(cx, sourceString, obj, visitedObjects));
-      sourceOut += sourceString;
+      MOZ_TRY(ObjectToSource(cx, sourceOut, obj, visitedObjects));
       return mozilla::Ok();
     }
     }
@@ -367,8 +334,7 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
       return JS::Result<mozilla::Ok>(JS::Error());
     }
     sourceOut += '"';
-    std::string sourceString(msg.get(), message_len);
-    sourceOut += sourceString;
+    sourceOut += std::string(msg.get(), message_len);
     sourceOut += '"';
     return mozilla::Ok();
   }
@@ -379,8 +345,7 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
     if (!msg) {
       return JS::Result<mozilla::Ok>(JS::Error());
     }
-    std::string sourceString(msg.get(), message_len);
-    sourceOut += sourceString;
+    sourceOut += std::string(msg.get(), message_len);
     return mozilla::Ok();
   }
   }
