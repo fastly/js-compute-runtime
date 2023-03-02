@@ -1,5 +1,6 @@
 #include "console.h"
 #include <js/Array.h>
+#include <js/PropertyAndElement.h>
 
 JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::HandleValue val,
                                  JS::MutableHandleObjectVector visitedObjects);
@@ -150,8 +151,8 @@ JS::Result<mozilla::Ok> ArrayToSource(JSContext *cx, std::string &sourceOut, JS:
 }
 
 /*
- * Logs all enumerable own properties
- * With handling for getters and setters
+ * Logs all enumerable properties, except non-own function and symbol properties
+ * Includes handling for getters and setters
  */
 JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS::HandleObject obj,
                                        JS::MutableHandleObjectVector visitedObjects) {
@@ -173,8 +174,14 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
     JS_GetOwnPropertyDescriptorById(cx, obj, id, &desc);
 
     // Skip logging non-own function keys
-    if (desc.isNothing() && JS_ObjectIsFunction(obj)) {
-      return JS::Result<mozilla::Ok>(JS::Error());
+    if (desc.isNothing()) {
+      bool found;
+      if (!JS_HasOwnPropertyById(cx, obj, id, &found)) {
+        return JS::Result<mozilla::Ok>(JS::Error());
+      }
+      if (found) {
+        continue;
+      }
     }
 
     if (firstValue) {
