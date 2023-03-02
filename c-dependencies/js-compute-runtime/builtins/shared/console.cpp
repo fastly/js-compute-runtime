@@ -173,8 +173,8 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
     JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> desc(cx);
     JS_GetOwnPropertyDescriptorById(cx, obj, id, &desc);
 
-    // Skip logging non-own function keys
-    if (desc.isNothing()) {
+    // Skip logging non-own function or getter and setter keys
+    if (desc.isNothing() || desc->hasGetter() || desc->hasSetter()) {
       bool found;
       if (!JS_HasOwnPropertyById(cx, obj, id, &found)) {
         return JS::Result<mozilla::Ok>(JS::Error());
