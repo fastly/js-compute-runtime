@@ -1479,9 +1479,9 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
     return false;
   if (!builtins::WorkerLocation::init_class(cx, global))
     return false;
-  if (!ObjectStore::init_class(cx, global))
+  if (!builtins::ObjectStore::init_class(cx, global))
     return false;
-  if (!ObjectStoreEntry::init_class(cx, global))
+  if (!builtins::ObjectStoreEntry::init_class(cx, global))
     return false;
   if (!builtins::SecretStore::init_class(cx, global))
     return false;

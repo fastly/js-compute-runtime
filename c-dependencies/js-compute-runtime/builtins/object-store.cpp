@@ -16,10 +16,15 @@
 
 #include "builtin.h"
 #include "builtins/native-stream-source.h"
+#include "builtins/object-store.h"
 #include "builtins/url.h"
 #include "host_api.h"
 #include "host_call.h"
 #include "js-compute-builtins.h"
+
+namespace builtins {
+
+namespace {
 
 std::string_view bad_chars{"#?*[]\n\r"};
 
@@ -38,81 +43,71 @@ std::optional<char> find_invalid_character_for_object_store_key(const char *str)
   return res;
 }
 
-namespace ObjectStoreEntry {
-namespace Slots = RequestOrResponse::Slots;
-
-const unsigned ctor_length = 0;
-
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
+} // namespace
 
 template <RequestOrResponse::BodyReadResult result_type>
-bool bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool ObjectStoreEntry::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   return RequestOrResponse::bodyAll<result_type>(cx, args, self);
 }
 
-bool body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool ObjectStoreEntry::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  if (!JS::GetReservedSlot(self, Slots::HasBody).isBoolean()) {
-    JS::SetReservedSlot(self, Slots::HasBody, JS::BooleanValue(false));
+  if (!JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody)).isBoolean()) {
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(false));
   }
   return RequestOrResponse::body_get(cx, args, self, true);
 }
 
-bool bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool ObjectStoreEntry::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  if (!JS::GetReservedSlot(self, Slots::BodyUsed).isBoolean()) {
-    JS::SetReservedSlot(self, Slots::BodyUsed, JS::BooleanValue(false));
+  if (!JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BodyUsed)).isBoolean()) {
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyUsed), JS::BooleanValue(false));
   }
   args.rval().setBoolean(RequestOrResponse::body_used(self));
   return true;
 }
 
-const JSFunctionSpec methods[] = {
+const JSFunctionSpec ObjectStoreEntry::methods[] = {
     JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
-    JS_FS_END};
+    JS_FS_END,
+};
 
-const JSPropertySpec properties[] = {JS_PSG("body", body_get, JSPROP_ENUMERATE),
-                                     JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE), JS_PS_END};
+const JSPropertySpec ObjectStoreEntry::properties[] = {
+    JS_PSG("body", body_get, JSPROP_ENUMERATE),
+    JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
+    JS_PS_END,
+};
 
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool ObjectStoreEntry::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS_ReportErrorUTF8(cx, "ObjectStoreEntry can't be instantiated directly");
   return false;
 }
 
-CLASS_BOILERPLATE(ObjectStoreEntry)
-
-JSObject *create(JSContext *cx, fastly_body_handle_t body_handle) {
+JSObject *ObjectStoreEntry::create(JSContext *cx, fastly_body_handle_t body_handle) {
   JS::RootedObject objectStoreEntry(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!objectStoreEntry)
     return nullptr;
 
-  JS::SetReservedSlot(objectStoreEntry, Slots::Body, JS::Int32Value(body_handle));
-  JS::SetReservedSlot(objectStoreEntry, Slots::BodyStream, JS::NullValue());
-  JS::SetReservedSlot(objectStoreEntry, Slots::HasBody, JS::BooleanValue(true));
-  JS::SetReservedSlot(objectStoreEntry, Slots::BodyUsed, JS::FalseValue());
+  JS::SetReservedSlot(objectStoreEntry, static_cast<uint32_t>(Slots::Body),
+                      JS::Int32Value(body_handle));
+  JS::SetReservedSlot(objectStoreEntry, static_cast<uint32_t>(Slots::BodyStream), JS::NullValue());
+  JS::SetReservedSlot(objectStoreEntry, static_cast<uint32_t>(Slots::HasBody),
+                      JS::BooleanValue(true));
+  JS::SetReservedSlot(objectStoreEntry, static_cast<uint32_t>(Slots::BodyUsed), JS::FalseValue());
 
   return objectStoreEntry;
 }
-} // namespace ObjectStoreEntry
 
-namespace ObjectStore {
-namespace Slots {
-enum { ObjectStore, Count };
-};
-
-bool is_instance(JSObject *obj);
-bool is_instance(JS::Value val);
+namespace {
 
 fastly_object_store_handle_t object_store_handle(JSObject *obj) {
-  JS::Value val = JS::GetReservedSlot(obj, Slots::ObjectStore);
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ObjectStore::Slots::ObjectStore));
   return fastly_object_store_handle_t{static_cast<uint32_t>(val.toInt32())};
 }
-
-const unsigned ctor_length = 1;
 
 bool parse_and_validate_key(JSContext *cx, JS::UniqueChars *key, size_t len) {
   // If the converted string has a length of 0 then we throw an Error
@@ -174,9 +169,9 @@ bool parse_and_validate_key(JSContext *cx, JS::UniqueChars *key, size_t len) {
   return true;
 }
 
-bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name);
+} // namespace
 
-bool get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool ObjectStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   JS::RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
@@ -222,7 +217,7 @@ bool get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(2)
 
   JS::RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
@@ -369,15 +364,17 @@ bool put(JSContext *cx, unsigned argc, JS::Value *vp) {
   return false;
 }
 
-const JSFunctionSpec methods[] = {JS_FN("get", get, 1, JSPROP_ENUMERATE),
-                                  JS_FN("put", put, 1, JSPROP_ENUMERATE), JS_FS_END};
+const JSFunctionSpec ObjectStore::methods[] = {
+    JS_FN("get", get, 1, JSPROP_ENUMERATE),
+    JS_FN("put", put, 1, JSPROP_ENUMERATE),
+    JS_FS_END,
+};
 
-const JSPropertySpec properties[] = {JS_PS_END};
+const JSPropertySpec ObjectStore::properties[] = {
+    JS_PS_END,
+};
 
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-CLASS_BOILERPLATE(ObjectStore)
-
-bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool ObjectStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The ObjectStore builtin");
   CTOR_HEADER("ObjectStore", 1);
 
@@ -431,8 +428,9 @@ bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!object_store) {
     return false;
   }
-  JS::SetReservedSlot(object_store, Slots::ObjectStore, JS::Int32Value(object_store_handle));
+  JS::SetReservedSlot(object_store, static_cast<uint32_t>(Slots::ObjectStore), JS::Int32Value(object_store_handle));
   args.rval().setObject(*object_store);
   return true;
 }
-} // namespace ObjectStore
+
+} // namespace builtins
