@@ -322,6 +322,26 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
         sourceOut += "WeakSet { <items unknown> }";
         return mozilla::Ok();
       }
+
+      // Lookup the class name if a custom class
+      JS::RootedValue constructorVal(cx);
+      if (JS_GetProperty(cx, obj, "constructor", &constructorVal) && constructorVal.isObject()) {
+        JS::RootedValue name(cx);
+        JS::RootedObject constructorObj(cx, &constructorVal.toObject());
+        if (JS_GetProperty(cx, constructorObj, "name", &name) && name.isString()) {
+          size_t message_len;
+          auto msg = encode(cx, name, &message_len);
+          if (!msg) {
+            return JS::Result<mozilla::Ok>(JS::Error());
+          }
+          std::string name_str(msg.get(), message_len);
+          if (name_str != "Object") {
+            sourceOut += name_str;
+            sourceOut += " ";
+          }
+        }
+      }
+
       MOZ_TRY(ObjectToSource(cx, sourceOut, obj, visitedObjects));
       return mozilla::Ok();
     }
