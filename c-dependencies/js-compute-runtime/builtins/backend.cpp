@@ -17,7 +17,8 @@
 #include "js/experimental/TypedData.h"
 #pragma clang diagnostic pop
 
-#include "backend.h"
+#include "builtins/backend.h"
+#include "builtins/request-response.h"
 #include "host_call.h"
 #include "js-compute-builtins.h"
 #include "js/Conversions.h"

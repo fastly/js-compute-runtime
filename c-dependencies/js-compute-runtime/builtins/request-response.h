@@ -139,6 +139,10 @@ public:
   static bool set_cache_override(JSContext *cx, JS::HandleObject self,
                                  JS::HandleValue cache_override_val);
 
+  static fastly_request_handle_t request_handle(JSObject *obj);
+  static fastly_pending_request_handle_t pending_handle(JSObject *obj);
+  static bool is_downstream(JSObject *obj);
+
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
@@ -157,6 +161,19 @@ public:
 };
 
 class Response final : public BuiltinImpl<Response> {
+  static bool waitUntil(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool ok_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool status_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool statusText_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool url_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool version_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool type_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool headers_get(JSContext *cx, unsigned argc, JS::Value *vp);
+
+  template <RequestOrResponse::BodyReadResult result_type>
+  static bool bodyAll(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool body_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
   static constexpr const char *class_name = "Response";
@@ -181,6 +198,16 @@ public:
 
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
+
+  static JSObject *create(JSContext *cx, JS::HandleObject response,
+                          fastly_response_handle_t response_handle,
+                          fastly_body_handle_t body_handle, bool is_upstream);
+
+  static fastly_response_handle_t response_handle(JSObject *obj);
+  static bool is_upstream(JSObject *obj);
+  static uint16_t status(JSObject *obj);
+  static JSString *status_message(JSObject *obj);
+  static void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code);
 };
 
 } // namespace builtins

@@ -1,7 +1,9 @@
 #include "builtins/request-response.h"
 
 #include "builtins/cache-override.h"
+#include "builtins/client-info.h"
 #include "builtins/fastly.h"
+#include "builtins/fetch-event.h"
 #include "builtins/native-stream-source.h"
 #include "builtins/object-store.h"
 #include "builtins/transform-stream.h"
@@ -1046,7 +1048,7 @@ bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObj
     return true;
   }
 
-  JS::RootedObject body_stream(cx, ::RequestOrResponse::body_stream(self));
+  JS::RootedObject body_stream(cx, RequestOrResponse::body_stream(self));
   if (!body_stream && create_if_undefined) {
     body_stream = create_body_stream(cx, self);
     if (!body_stream)
@@ -1057,13 +1059,11 @@ bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObj
   return true;
 }
 
-namespace {
-
-fastly_request_handle_t request_handle(JSObject *obj) {
+fastly_request_handle_t Request::request_handle(JSObject *obj) {
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::Request)).toInt32();
 }
 
-fastly_pending_request_handle_t pending_handle(JSObject *obj) {
+fastly_pending_request_handle_t Request::pending_handle(JSObject *obj) {
   JS::Value handle_val =
       JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::PendingRequest));
   if (handle_val.isInt32()) {
@@ -1073,18 +1073,14 @@ fastly_pending_request_handle_t pending_handle(JSObject *obj) {
   return INVALID_HANDLE;
 }
 
-bool is_pending(JSObject *obj) { return pending_handle(obj) != INVALID_HANDLE; }
-
-bool is_downstream(JSObject *obj) {
+bool Request::is_downstream(JSObject *obj) {
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::IsDownstream)).toBoolean();
 }
 
-JSObject *response_promise(JSObject *obj) {
+JSObject *Request::response_promise(JSObject *obj) {
   return &JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::ResponsePromise))
               .toObject();
 }
-
-} // namespace
 
 JSString *Request::method(JSContext *cx, JS::HandleObject obj) {
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Method)).toString();
@@ -1185,9 +1181,9 @@ bool apply_cache_override(JSContext *cx, JS::HandleObject self) {
   }
 
   fastly_error_t err;
-  if (!xqd_fastly_http_req_cache_override_set(request_handle(self), tag, has_ttl ? &ttl : NULL,
-                                              has_swr ? &swr : NULL, sk_str.len ? &sk_str : NULL,
-                                              &err)) {
+  if (!xqd_fastly_http_req_cache_override_set(Request::request_handle(self), tag,
+                                              has_ttl ? &ttl : NULL, has_swr ? &swr : NULL,
+                                              sk_str.len ? &sk_str : NULL, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -1946,6 +1942,527 @@ bool Request::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   args.rval().setObject(*request);
   return true;
+}
+
+// Needed for uniform access to Request and Response slots.
+static_assert((int)Response::Slots::Body == (int)Request::Slots::Body);
+static_assert((int)Response::Slots::BodyStream == (int)Request::Slots::BodyStream);
+static_assert((int)Response::Slots::HasBody == (int)Request::Slots::HasBody);
+static_assert((int)Response::Slots::BodyUsed == (int)Request::Slots::BodyUsed);
+static_assert((int)Response::Slots::Headers == (int)Request::Slots::Headers);
+static_assert((int)Response::Slots::Response == (int)Request::Slots::Request);
+
+fastly_response_handle_t Response::response_handle(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  return fastly_response_handle_t{
+      (uint32_t)(JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Response)).toInt32())};
+}
+
+bool Response::is_upstream(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::IsUpstream)).toBoolean();
+}
+
+uint16_t Response::status(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  return (uint16_t)JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Status)).toInt32();
+}
+
+JSString *Response::status_message(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::StatusMessage)).toString();
+}
+
+// TODO(jake): Remove this when the reason phrase host-call is implemented
+void Response::set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code) {
+  auto phrase = "";
+
+  switch (code) {
+  case 100: // 100 Continue - https://tools.ietf.org/html/rfc7231#section-6.2.1
+    phrase = "Continue";
+    break;
+  case 101: // 101 Switching Protocols - https://tools.ietf.org/html/rfc7231#section-6.2.2
+    phrase = "Switching Protocols";
+    break;
+  case 102: // 102 Processing - https://tools.ietf.org/html/rfc2518
+    phrase = "Processing";
+    break;
+  case 200: // 200 OK - https://tools.ietf.org/html/rfc7231#section-6.3.1
+    phrase = "OK";
+    break;
+  case 201: // 201 Created - https://tools.ietf.org/html/rfc7231#section-6.3.2
+    phrase = "Created";
+    break;
+  case 202: // 202 Accepted - https://tools.ietf.org/html/rfc7231#section-6.3.3
+    phrase = "Accepted";
+    break;
+  case 203: // 203 Non-Authoritative Information - https://tools.ietf.org/html/rfc7231#section-6.3.4
+    phrase = "Non Authoritative Information";
+    break;
+  case 204: // 204 No Content - https://tools.ietf.org/html/rfc7231#section-6.3.5
+    phrase = "No Content";
+    break;
+  case 205: // 205 Reset Content - https://tools.ietf.org/html/rfc7231#section-6.3.6
+    phrase = "Reset Content";
+    break;
+  case 206: // 206 Partial Content - https://tools.ietf.org/html/rfc7233#section-4.1
+    phrase = "Partial Content";
+    break;
+  case 207: // 207 Multi-Status - https://tools.ietf.org/html/rfc4918
+    phrase = "Multi-Status";
+    break;
+  case 208: // 208 Already Reported - https://tools.ietf.org/html/rfc5842
+    phrase = "Already Reported";
+    break;
+  case 226: // 226 IM Used - https://tools.ietf.org/html/rfc3229
+    phrase = "IM Used";
+    break;
+  case 300: // 300 Multiple Choices - https://tools.ietf.org/html/rfc7231#section-6.4.1
+    phrase = "Multiple Choices";
+    break;
+  case 301: // 301 Moved Permanently - https://tools.ietf.org/html/rfc7231#section-6.4.2
+    phrase = "Moved Permanently";
+    break;
+  case 302: // 302 Found - https://tools.ietf.org/html/rfc7231#section-6.4.3
+    phrase = "Found";
+    break;
+  case 303: // 303 See Other - https://tools.ietf.org/html/rfc7231#section-6.4.4
+    phrase = "See Other";
+    break;
+  case 304: // 304 Not Modified - https://tools.ietf.org/html/rfc7232#section-4.1
+    phrase = "Not Modified";
+    break;
+  case 305: // 305 Use Proxy - https://tools.ietf.org/html/rfc7231#section-6.4.5
+    phrase = "Use Proxy";
+    break;
+  case 307: // 307 Temporary Redirect - https://tools.ietf.org/html/rfc7231#section-6.4.7
+    phrase = "Temporary Redirect";
+    break;
+  case 308: // 308 Permanent Redirect - https://tools.ietf.org/html/rfc7238
+    phrase = "Permanent Redirect";
+    break;
+  case 400: // 400 Bad Request - https://tools.ietf.org/html/rfc7231#section-6.5.1
+    phrase = "Bad Request";
+    break;
+  case 401: // 401 Unauthorized - https://tools.ietf.org/html/rfc7235#section-3.1
+    phrase = "Unauthorized";
+    break;
+  case 402: // 402 Payment Required - https://tools.ietf.org/html/rfc7231#section-6.5.2
+    phrase = "Payment Required";
+    break;
+  case 403: // 403 Forbidden - https://tools.ietf.org/html/rfc7231#section-6.5.3
+    phrase = "Forbidden";
+    break;
+  case 404: // 404 Not Found - https://tools.ietf.org/html/rfc7231#section-6.5.4
+    phrase = "Not Found";
+    break;
+  case 405: // 405 Method Not Allowed - https://tools.ietf.org/html/rfc7231#section-6.5.5
+    phrase = "Method Not Allowed";
+    break;
+  case 406: // 406 Not Acceptable - https://tools.ietf.org/html/rfc7231#section-6.5.6
+    phrase = "Not Acceptable";
+    break;
+  case 407: // 407 Proxy Authentication Required - https://tools.ietf.org/html/rfc7235#section-3.2
+    phrase = "Proxy Authentication Required";
+    break;
+  case 408: // 408 Request Timeout - https://tools.ietf.org/html/rfc7231#section-6.5.7
+    phrase = "Request Timeout";
+    break;
+  case 409: // 409 Conflict - https://tools.ietf.org/html/rfc7231#section-6.5.8
+    phrase = "Conflict";
+    break;
+  case 410: // 410 Gone - https://tools.ietf.org/html/rfc7231#section-6.5.9
+    phrase = "Gone";
+    break;
+  case 411: // 411 Length Required - https://tools.ietf.org/html/rfc7231#section-6.5.10
+    phrase = "Length Required";
+    break;
+  case 412: // 412 Precondition Failed - https://tools.ietf.org/html/rfc7232#section-4.2
+    phrase = "Precondition Failed";
+    break;
+  case 413: // 413 Payload Too Large - https://tools.ietf.org/html/rfc7231#section-6.5.11
+    phrase = "Payload Too Large";
+    break;
+  case 414: // 414 URI Too Long - https://tools.ietf.org/html/rfc7231#section-6.5.12
+    phrase = "URI Too Long";
+    break;
+  case 415: // 415 Unsupported Media Type - https://tools.ietf.org/html/rfc7231#section-6.5.13
+    phrase = "Unsupported Media Type";
+    break;
+  case 416: // 416 Range Not Satisfiable - https://tools.ietf.org/html/rfc7233#section-4.4
+    phrase = "Range Not Satisfiable";
+    break;
+  case 417: // 417 Expectation Failed - https://tools.ietf.org/html/rfc7231#section-6.5.14
+    phrase = "Expectation Failed";
+    break;
+  case 418: // 418 I'm a teapot - https://tools.ietf.org/html/rfc2324
+    phrase = "I'm a teapot";
+    break;
+  case 421: // 421 Misdirected Request - http://tools.ietf.org/html/rfc7540#section-9.1.2
+    phrase = "Misdirected Request";
+    break;
+  case 422: // 422 Unprocessable Entity - https://tools.ietf.org/html/rfc4918
+    phrase = "Unprocessable Entity";
+    break;
+  case 423: // 423 Locked - https://tools.ietf.org/html/rfc4918
+    phrase = "Locked";
+    break;
+  case 424: // 424 Failed Dependency - https://tools.ietf.org/html/rfc4918
+    phrase = "Failed Dependency";
+    break;
+  case 426: // 426 Upgrade Required - https://tools.ietf.org/html/rfc7231#section-6.5.15
+    phrase = "Upgrade Required";
+    break;
+  case 428: // 428 Precondition Required - https://tools.ietf.org/html/rfc6585
+    phrase = "Precondition Required";
+    break;
+  case 429: // 429 Too Many Requests - https://tools.ietf.org/html/rfc6585
+    phrase = "Too Many Requests";
+    break;
+  case 431: // 431 Request Header Fields Too Large - https://tools.ietf.org/html/rfc6585
+    phrase = "Request Header Fields Too Large";
+    break;
+  case 451: // 451 Unavailable For Legal Reasons - http://tools.ietf.org/html/rfc7725
+    phrase = "Unavailable For Legal Reasons";
+    break;
+  case 500: // 500 Internal Server Error - https://tools.ietf.org/html/rfc7231#section-6.6.1
+    phrase = "Internal Server Error";
+    break;
+  case 501: // 501 Not Implemented - https://tools.ietf.org/html/rfc7231#section-6.6.2
+    phrase = "Not Implemented";
+    break;
+  case 502: // 502 Bad Gateway - https://tools.ietf.org/html/rfc7231#section-6.6.3
+    phrase = "Bad Gateway";
+    break;
+  case 503: // 503 Service Unavailable - https://tools.ietf.org/html/rfc7231#section-6.6.4
+    phrase = "Service Unavailable";
+    break;
+  case 504: // 504 Gateway Timeout - https://tools.ietf.org/html/rfc7231#section-6.6.5
+    phrase = "Gateway Timeout";
+    break;
+  case 505: // 505 HTTP Version Not Supported - https://tools.ietf.org/html/rfc7231#section-6.6.6
+    phrase = "HTTP Version Not Supported";
+    break;
+  case 506: // 506 Variant Also Negotiates - https://tools.ietf.org/html/rfc2295
+    phrase = "Variant Also Negotiates";
+    break;
+  case 507: // 507 Insufficient Storage - https://tools.ietf.org/html/rfc4918
+    phrase = "Insufficient Storage";
+    break;
+  case 508: // 508 Loop Detected - https://tools.ietf.org/html/rfc5842
+    phrase = "Loop Detected";
+    break;
+  case 510: // 510 Not Extended - https://tools.ietf.org/html/rfc2774
+    phrase = "Not Extended";
+    break;
+  case 511: // 511 Network Authentication Required - https://tools.ietf.org/html/rfc6585
+    phrase = "Network Authentication Required";
+    break;
+  default:
+    phrase = "";
+    break;
+  }
+  JS::SetReservedSlot(obj, static_cast<uint32_t>(Slots::StatusMessage),
+                      JS::StringValue(JS_NewStringCopyN(cx, phrase, strlen(phrase))));
+}
+
+bool Response::ok_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  uint16_t status = Response::status(self);
+  args.rval().setBoolean(status >= 200 && status < 300);
+  return true;
+}
+
+bool Response::status_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  args.rval().setInt32(status(self));
+  return true;
+}
+
+bool Response::statusText_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  args.rval().setString(status_message(self));
+  return true;
+}
+
+bool Response::url_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  args.rval().set(RequestOrResponse::url(self));
+  return true;
+}
+
+// TODO: store version client-side.
+bool Response::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  fastly_http_version_t version = 0;
+  fastly_error_t err;
+  if (!xqd_fastly_http_resp_version_get(response_handle(self), &version, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+
+  args.rval().setInt32(version);
+  return true;
+}
+
+namespace {
+JSString *type_default_atom;
+JSString *type_error_atom;
+} // namespace
+
+bool Response::type_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  args.rval().setString(status(self) == 0 ? type_error_atom : type_default_atom);
+  return true;
+}
+
+bool Response::headers_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  JSObject *headers =
+      RequestOrResponse::headers<builtins::Headers::Mode::ProxyToResponse>(cx, self);
+  if (!headers)
+    return false;
+
+  args.rval().setObject(*headers);
+  return true;
+}
+
+template <RequestOrResponse::BodyReadResult result_type>
+bool Response::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+  return RequestOrResponse::bodyAll<result_type>(cx, args, self);
+}
+
+bool Response::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+  return RequestOrResponse::body_get(cx, args, self, true);
+}
+
+bool Response::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+  args.rval().setBoolean(RequestOrResponse::body_used(self));
+  return true;
+}
+
+const JSFunctionSpec Response::methods[] = {
+    JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
+          JSPROP_ENUMERATE),
+    JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
+    JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
+    JS_FS_END,
+};
+
+const JSPropertySpec Response::properties[] = {
+    JS_PSG("type", type_get, JSPROP_ENUMERATE),
+    JS_PSG("url", url_get, JSPROP_ENUMERATE),
+    JS_PSG("status", status_get, JSPROP_ENUMERATE),
+    JS_PSG("ok", ok_get, JSPROP_ENUMERATE),
+    JS_PSG("statusText", statusText_get, JSPROP_ENUMERATE),
+    JS_PSG("version", version_get, JSPROP_ENUMERATE),
+    JS_PSG("headers", headers_get, JSPROP_ENUMERATE),
+    JS_PSG("body", body_get, JSPROP_ENUMERATE),
+    JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "Response", JSPROP_READONLY),
+    JS_PS_END,
+};
+
+/**
+ * The `Response` constructor https://fetch.spec.whatwg.org/#dom-response
+ */
+bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+  REQUEST_HANDLER_ONLY("The Response builtin");
+
+  CTOR_HEADER("Response", 0);
+
+  JS::RootedValue body_val(cx, args.get(0));
+  JS::RootedValue init_val(cx, args.get(1));
+
+  JS::RootedValue status_val(cx);
+  uint16_t status = 200;
+
+  JS::RootedValue statusText_val(cx);
+  JS::RootedString statusText(cx, JS_GetEmptyString(cx));
+  JS::RootedValue headers_val(cx);
+
+  if (init_val.isObject()) {
+    JS::RootedObject init(cx, init_val.toObjectOrNull());
+    if (!JS_GetProperty(cx, init, "status", &status_val) ||
+        !JS_GetProperty(cx, init, "statusText", &statusText_val) ||
+        !JS_GetProperty(cx, init, "headers", &headers_val)) {
+      return false;
+    }
+
+    if (!status_val.isUndefined() && !JS::ToUint16(cx, status_val, &status)) {
+      return false;
+    }
+
+    if (!statusText_val.isUndefined() && !(statusText = JS::ToString(cx, statusText_val))) {
+      return false;
+    }
+
+  } else if (!init_val.isNullOrUndefined()) {
+    JS_ReportErrorLatin1(cx, "Response constructor: |init| parameter can't be converted to "
+                             "a dictionary");
+    return false;
+  }
+
+  // 1.  If `init`["status"] is not in the range 200 to 599, inclusive, then
+  // `throw` a ``RangeError``.
+  if (status < 200 || status > 599) {
+    JS_ReportErrorLatin1(cx, "Response constructor: invalid status %u", status);
+    return false;
+  }
+
+  // 2.  If `init`["statusText"] does not match the `reason-phrase` token
+  // production, then `throw` a ``TypeError``. Skipped: the statusText can only
+  // be consumed by the content creating it, so we're lenient about its format.
+
+  // 3.  Set `this`’s `response` to a new `response`.
+  // TODO(performance): consider not creating a host-side representation for responses
+  // eagerly. Some applications create Response objects purely for internal use,
+  // e.g. to represent cache entries. While that's perhaps not ideal to begin
+  // with, it exists, so we should handle it in a good way, and not be
+  // superfluously slow.
+  // https://github.com/fastly/js-compute-runtime/issues/219
+  // TODO(performance): enable creating Response objects during the init phase, and only
+  // creating the host-side representation when processing requests.
+  // https://github.com/fastly/js-compute-runtime/issues/220
+  fastly_response_handle_t response_handle = INVALID_HANDLE;
+  fastly_error_t err;
+  if (!xqd_fastly_http_resp_new(&response_handle, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+
+  auto make_res = HttpBody::make();
+  if (auto *err = make_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  auto body = make_res.unwrap();
+  JS::RootedObject responseInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  JS::RootedObject response(cx, create(cx, responseInstance, response_handle, body.handle, false));
+  if (!response) {
+    return false;
+  }
+
+  RequestOrResponse::set_url(response, JS_GetEmptyStringValue(cx));
+
+  // 4.  Set `this`’s `headers` to a `new` ``Headers`` object with `this`’s
+  // `relevant Realm`,
+  //     whose `header list` is `this`’s `response`’s `header list` and `guard`
+  //     is "`response`".
+  // (implicit)
+
+  // 5.  Set `this`’s `response`’s `status` to `init`["status"].
+  if (!xqd_fastly_http_resp_status_set(response_handle, status, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+  // To ensure that we really have the same status value as the host,
+  // we always read it back here.
+  if (!xqd_fastly_http_resp_status_get(response_handle, &status, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Status), JS::Int32Value(status));
+
+  // 6.  Set `this`’s `response`’s `status message` to `init`["statusText"].
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::StatusMessage),
+                      JS::StringValue(statusText));
+
+  // 7.  If `init`["headers"] `exists`, then `fill` `this`’s `headers` with
+  // `init`["headers"].
+  JS::RootedObject headers(cx);
+  JS::RootedObject headersInstance(
+      cx, JS_NewObjectWithGivenProto(cx, &builtins::Headers::class_, builtins::Headers::proto_obj));
+  if (!headersInstance)
+    return false;
+
+  headers = builtins::Headers::create(cx, headersInstance, builtins::Headers::Mode::ProxyToResponse,
+                                      response, headers_val);
+  if (!headers) {
+    return false;
+  }
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::ObjectValue(*headers));
+  // 8.  If `body` is non-null, then:
+  if ((!body_val.isNullOrUndefined())) {
+    //     1.  If `init`["status"] is a `null body status`, then `throw` a
+    //     ``TypeError``.
+    if (status == 204 || status == 205 || status == 304) {
+      JS_ReportErrorLatin1(cx, "Response constructor: Response body is given "
+                               "with a null body status.");
+      return false;
+    }
+
+    //     2.  Let `Content-Type` be null.
+    //     3.  Set `this`’s `response`’s `body` and `Content-Type` to the result
+    //     of `extracting`
+    //         `body`.
+    //     4.  If `Content-Type` is non-null and `this`’s `response`’s `header
+    //     list` `does not
+    //         contain` ``Content-Type``, then `append` (``Content-Type``,
+    //         `Content-Type`) to `this`’s `response`’s `header list`.
+    // Note: these steps are all inlined into RequestOrResponse::extract_body.
+    if (!RequestOrResponse::extract_body(cx, response, body_val)) {
+      return false;
+    }
+  }
+
+  args.rval().setObject(*response);
+  return true;
+}
+
+bool Response::init_class(JSContext *cx, JS::HandleObject global) {
+  if (!init_class_impl(cx, global)) {
+    return false;
+  }
+
+  // Initialize a pinned (i.e., never-moved, living forever) atom for the
+  // response type values.
+  return (type_default_atom = JS_AtomizeAndPinString(cx, "default")) &&
+         (type_error_atom = JS_AtomizeAndPinString(cx, "error"));
+}
+
+JSObject *Response::create(JSContext *cx, JS::HandleObject response,
+                           fastly_response_handle_t response_handle,
+                           fastly_body_handle_t body_handle, bool is_upstream) {
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Response),
+                      JS::Int32Value(response_handle));
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::NullValue());
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Body), JS::Int32Value(body_handle));
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::BodyStream), JS::NullValue());
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::HasBody), JS::FalseValue());
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::BodyUsed), JS::FalseValue());
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::IsUpstream),
+                      JS::BooleanValue(is_upstream));
+
+  if (is_upstream) {
+    uint16_t status = 0;
+    fastly_error_t err;
+    if (!xqd_fastly_http_resp_status_get(response_handle, &status, &err)) {
+      HANDLE_ERROR(cx, err);
+      return nullptr;
+    }
+
+    JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Status), JS::Int32Value(status));
+    set_status_message_from_code(cx, response, status);
+
+    if (!(status == 204 || status == 205 || status == 304)) {
+      JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::HasBody), JS::TrueValue());
+    }
+  }
+
+  return response;
 }
 
 } // namespace builtins

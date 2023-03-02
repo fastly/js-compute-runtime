@@ -1,4 +1,5 @@
 #include "builtins/headers.h"
+#include "builtins/request-response.h"
 #include "js-compute-builtins.h"
 #include "sequence.hpp"
 #include "xqd-world/xqd_world.h"

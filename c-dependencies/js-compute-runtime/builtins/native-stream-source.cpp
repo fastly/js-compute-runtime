@@ -10,6 +10,7 @@
 #include "builtin.h"
 #include "builtins/native-stream-sink.h"
 #include "builtins/native-stream-source.h"
+#include "builtins/request-response.h"
 #include "js-compute-builtins.h"
 
 // A JS class to use as the underlying source for native readable streams, used
