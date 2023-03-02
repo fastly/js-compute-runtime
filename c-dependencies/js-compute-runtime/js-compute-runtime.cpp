@@ -19,8 +19,8 @@
 
 #pragma clang diagnostic pop
 
-#include "js-compute-builtins.h"
 #include "builtins/fetch-event.h"
+#include "js-compute-builtins.h"
 #include "wizer.h"
 #include "xqd-world/xqd_world_adapter.h"
 #ifdef MEM_STATS
@@ -213,7 +213,7 @@ static void abort(JSContext *cx, const char *description) {
   // Respond with status `500` if no response was ever sent.
   HandleObject fetch_event = builtins::FetchEvent::instance();
   if (hasWizeningFinished() && !builtins::FetchEvent::response_started(fetch_event)) {
-      builtins::FetchEvent::respondWithError(cx, fetch_event);
+    builtins::FetchEvent::respondWithError(cx, fetch_event);
   }
 
   fflush(stderr);
@@ -524,7 +524,7 @@ int main(int argc, const char *argv[]) {
     // Respond with status `500` if any promise rejections were left unhandled
     // and no response was ever sent.
     if (!builtins::FetchEvent::response_started(fetch_event)) {
-        builtins::FetchEvent::respondWithError(cx, fetch_event);
+      builtins::FetchEvent::respondWithError(cx, fetch_event);
     }
   }
 
@@ -532,7 +532,7 @@ int main(int argc, const char *argv[]) {
   // and no response was ever sent.
   if (JS_IsExceptionPending(cx)) {
     if (!builtins::FetchEvent::response_started(fetch_event)) {
-        builtins::FetchEvent::respondWithError(cx, fetch_event);
+      builtins::FetchEvent::respondWithError(cx, fetch_event);
     }
   }
 

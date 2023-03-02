@@ -1078,8 +1078,8 @@ bool Request::is_downstream(JSObject *obj) {
 }
 
 JSString *Request::backend(JSObject *obj) {
-    auto val = JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Backend));
-    return val.isString() ? val.toString() : nullptr;
+  auto val = JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Backend));
+  return val.isString() ? val.toString() : nullptr;
 }
 
 JSObject *Request::response_promise(JSObject *obj) {
