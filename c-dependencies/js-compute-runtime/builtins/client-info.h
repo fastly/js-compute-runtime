@@ -21,7 +21,6 @@ public:
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
-  static bool init_class(JSContext *cx, JS::HandleObject global);
   static JSObject *create(JSContext *cx);
 };
 

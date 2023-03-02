@@ -138,10 +138,12 @@ public:
   static bool set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValue cache_key_val);
   static bool set_cache_override(JSContext *cx, JS::HandleObject self,
                                  JS::HandleValue cache_override_val);
+  static bool apply_cache_override(JSContext *cx, JS::HandleObject self);
 
   static fastly_request_handle_t request_handle(JSObject *obj);
   static fastly_pending_request_handle_t pending_handle(JSObject *obj);
   static bool is_downstream(JSObject *obj);
+  static JSString *backend(JSObject *obj);
 
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];

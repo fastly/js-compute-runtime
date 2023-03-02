@@ -226,28 +226,6 @@ ReadResult read_from_handle_all(JSContext *cx, uint32_t handle) {
   return {std::move(buf), bytes_read};
 }
 
-// https://fetch.spec.whatwg.org/#concept-method-normalize
-// Returns `true` if the method name was normalized, `false` otherwise.
-static bool normalize_http_method(char *method) {
-  static const char *names[6] = {"DELETE", "GET", "HEAD", "OPTIONS", "POST", "PUT"};
-
-  for (size_t i = 0; i < 6; i++) {
-    auto name = names[i];
-    if (strcasecmp(method, name) == 0) {
-      if (strcmp(method, name) == 0) {
-        return false;
-      }
-
-      // Note: Safe because `strcasecmp` returning 0 above guarantees
-      // same-length strings.
-      strcpy(method, name);
-      return true;
-    }
-  }
-
-  return false;
-}
-
 namespace TextEncoder {
 namespace Slots {
 enum { Count };
@@ -910,16 +888,16 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
 
   RootedObject requestInstance(
-      cx, JS_NewObjectWithGivenProto(cx, &Request::class_, Request::proto_obj));
+      cx, JS_NewObjectWithGivenProto(cx, &builtins::Request::class_, builtins::Request::proto_obj));
   if (!requestInstance)
     return false;
 
-  RootedObject request(cx, Request::create(cx, requestInstance, args[0], args.get(1)));
+  RootedObject request(cx, builtins::Request::create(cx, requestInstance, args[0], args.get(1)));
   if (!request) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  RootedString backend(cx, Request::backend(request));
+  RootedString backend(cx, builtins::Request::backend(request));
   if (!backend) {
     if (builtins::Fastly::allowDynamicBackends) {
       JS::RootedObject dynamicBackend(cx, builtins::Backend::create(cx, request));
@@ -930,7 +908,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     } else {
       backend = builtins::Fastly::defaultBackend;
       if (!backend) {
-        fastly_request_handle_t handle = Request::request_handle(request);
+        fastly_request_handle_t handle = builtins::Request::request_handle(request);
 
         xqd_world_string_t uri_str;
         fastly_error_t err;
@@ -959,12 +937,12 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   if (!response_promise)
     return ReturnPromiseRejectedWithPendingError(cx, args);
 
-  if (!Request::apply_cache_override(cx, request)) {
+  if (!builtins::Request::apply_cache_override(cx, request)) {
     return false;
   }
 
   bool streaming = false;
-  if (!RequestOrResponse::maybe_stream_body(cx, request, &streaming)) {
+  if (!builtins::RequestOrResponse::maybe_stream_body(cx, request, &streaming)) {
     return false;
   }
 
@@ -974,13 +952,13 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     fastly_error_t err;
     bool ok;
     if (streaming) {
-      ok = xqd_fastly_http_req_send_async_streaming(Request::request_handle(request),
-                                                    RequestOrResponse::body_handle(request),
-                                                    &backend_str, &request_handle, &err);
+      ok = xqd_fastly_http_req_send_async_streaming(
+          builtins::Request::request_handle(request),
+          builtins::RequestOrResponse::body_handle(request), &backend_str, &request_handle, &err);
     } else {
-      ok = xqd_fastly_http_req_send_async(Request::request_handle(request),
-                                          RequestOrResponse::body_handle(request), &backend_str,
-                                          &request_handle, &err);
+      ok = xqd_fastly_http_req_send_async(builtins::Request::request_handle(request),
+                                          builtins::RequestOrResponse::body_handle(request),
+                                          &backend_str, &request_handle, &err);
     }
 
     if (!ok) {
@@ -1001,8 +979,10 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  JS::SetReservedSlot(request, Request::Slots::PendingRequest, JS::Int32Value(request_handle));
-  JS::SetReservedSlot(request, Request::Slots::ResponsePromise, JS::ObjectValue(*response_promise));
+  JS::SetReservedSlot(request, static_cast<uint32_t>(builtins::Request::Slots::PendingRequest),
+                      JS::Int32Value(request_handle));
+  JS::SetReservedSlot(request, static_cast<uint32_t>(builtins::Request::Slots::ResponsePromise),
+                      JS::ObjectValue(*response_promise));
 
   args.rval().setObject(*response_promise);
   return true;
@@ -1249,29 +1229,31 @@ bool process_pending_request(JSContext *cx, HandleObject request) {
 
   fastly_response_t ret = {INVALID_HANDLE, INVALID_HANDLE};
   fastly_error_t err;
-  bool ok = xqd_fastly_http_req_pending_req_wait(Request::pending_handle(request), &ret, &err);
+  bool ok =
+      xqd_fastly_http_req_pending_req_wait(builtins::Request::pending_handle(request), &ret, &err);
   fastly_response_handle_t response_handle = ret.f0;
   fastly_body_handle_t body = ret.f1;
 
-  RootedObject response_promise(cx, Request::response_promise(request));
+  RootedObject response_promise(cx, builtins::Request::response_promise(request));
 
   if (!ok) {
     JS_ReportErrorUTF8(cx, "NetworkError when attempting to fetch resource.");
     return RejectPromiseWithPendingError(cx, response_promise);
   }
 
-  RootedObject response_instance(
-      cx, JS_NewObjectWithGivenProto(cx, &Response::class_, Response::proto_obj));
+  RootedObject response_instance(cx, JS_NewObjectWithGivenProto(cx, &builtins::Response::class_,
+                                                                builtins::Response::proto_obj));
   if (!response_instance) {
     return false;
   }
 
-  RootedObject response(cx, Response::create(cx, response_instance, response_handle, body, true));
+  RootedObject response(
+      cx, builtins::Response::create(cx, response_instance, response_handle, body, true));
   if (!response) {
     return false;
   }
 
-  RequestOrResponse::set_url(response, RequestOrResponse::url(request));
+  builtins::RequestOrResponse::set_url(response, builtins::RequestOrResponse::url(request));
   RootedValue response_val(cx, JS::ObjectValue(*response));
   return JS::ResolvePromise(cx, response_promise, response_val);
 }
@@ -1292,7 +1274,7 @@ bool process_body_read(JSContext *cx, HandleObject streamSource) {
   RootedObject owner(cx, builtins::NativeStreamSource::owner(streamSource));
   RootedObject controller(cx, builtins::NativeStreamSource::controller(streamSource));
 
-  HttpBody body{RequestOrResponse::body_handle(owner)};
+  HttpBody body{builtins::RequestOrResponse::body_handle(owner)};
   auto read_res = body.read(HANDLE_READ_CHUNK_SIZE);
   if (auto *err = read_res.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -1356,12 +1338,12 @@ bool process_pending_async_tasks(JSContext *cx) {
 
   for (size_t i = 0; i < count; i++) {
     HandleObject pending_obj = (*pending_async_tasks)[i];
-    if (Request::is_instance(pending_obj)) {
-      handles[i] = Request::pending_handle(pending_obj);
+    if (builtins::Request::is_instance(pending_obj)) {
+      handles[i] = builtins::Request::pending_handle(pending_obj);
     } else {
       MOZ_ASSERT(builtins::NativeStreamSource::is_instance(pending_obj));
       RootedObject owner(cx, builtins::NativeStreamSource::owner(pending_obj));
-      handles[i] = RequestOrResponse::body_handle(owner);
+      handles[i] = builtins::RequestOrResponse::body_handle(owner);
     }
   }
 
@@ -1395,7 +1377,7 @@ bool process_pending_async_tasks(JSContext *cx) {
   HandleObject ready_obj = (*pending_async_tasks)[ready_index];
 
   bool ok;
-  if (Request::is_instance(ready_obj)) {
+  if (builtins::Request::is_instance(ready_obj)) {
     ok = process_pending_request(cx, ready_obj);
   } else {
     MOZ_ASSERT(builtins::NativeStreamSource::is_instance(ready_obj));
@@ -1506,7 +1488,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
   return true;
 }
 
-JSObject *create_fetch_event(JSContext *cx) { return FetchEvent::create(cx); }
+JSObject *create_fetch_event(JSContext *cx) { return builtins::FetchEvent::create(cx); }
 
 UniqueChars stringify_value(JSContext *cx, JS::HandleValue value) {
   JS::RootedString str(cx, JS_ValueToSource(cx, value));

@@ -102,6 +102,10 @@ JSObject *ObjectStoreEntry::create(JSContext *cx, fastly_body_handle_t body_hand
   return objectStoreEntry;
 }
 
+bool ObjectStoreEntry::init_class(JSContext *cx, JS::HandleObject global) {
+  return init_class_impl(cx, global);
+}
+
 namespace {
 
 fastly_object_store_handle_t object_store_handle(JSObject *obj) {
@@ -428,9 +432,14 @@ bool ObjectStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!object_store) {
     return false;
   }
-  JS::SetReservedSlot(object_store, static_cast<uint32_t>(Slots::ObjectStore), JS::Int32Value(object_store_handle));
+  JS::SetReservedSlot(object_store, static_cast<uint32_t>(Slots::ObjectStore),
+                      JS::Int32Value(object_store_handle));
   args.rval().setObject(*object_store);
   return true;
+}
+
+bool ObjectStore::init_class(JSContext *cx, JS::HandleObject global) {
+  return init_class_impl(cx, global);
 }
 
 } // namespace builtins

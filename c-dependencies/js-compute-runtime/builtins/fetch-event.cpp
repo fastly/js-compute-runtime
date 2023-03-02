@@ -404,7 +404,7 @@ JSObject *FetchEvent::create(JSContext *cx) {
   return self;
 }
 
-JS::HandleObject instance() { return INSTANCE; }
+JS::HandleObject FetchEvent::instance() { return INSTANCE; }
 
 bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self) {
   JS::RootedObject request(

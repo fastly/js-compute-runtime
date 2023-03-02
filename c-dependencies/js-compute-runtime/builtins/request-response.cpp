@@ -1074,7 +1074,12 @@ fastly_pending_request_handle_t Request::pending_handle(JSObject *obj) {
 }
 
 bool Request::is_downstream(JSObject *obj) {
-  return JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::IsDownstream)).toBoolean();
+  return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::IsDownstream)).toBoolean();
+}
+
+JSString *Request::backend(JSObject *obj) {
+    auto val = JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Backend));
+    return val.isString() ? val.toString() : nullptr;
 }
 
 JSObject *Request::response_promise(JSObject *obj) {
@@ -1139,7 +1144,7 @@ bool Request::set_cache_override(JSContext *cx, JS::HandleObject self,
 /**
  * Apply the CacheOverride to a host-side request handle.
  */
-bool apply_cache_override(JSContext *cx, JS::HandleObject self) {
+bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
   MOZ_ASSERT(is_instance(self));
   JS::RootedObject override(
       cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Request::Slots::CacheOverride))
