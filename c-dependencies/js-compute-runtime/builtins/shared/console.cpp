@@ -149,6 +149,10 @@ JS::Result<mozilla::Ok> ArrayToSource(JSContext *cx, std::string &sourceOut, JS:
   return mozilla::Ok();
 }
 
+/*
+ * Logs all enumerable own properties
+ * With handling for getters and setters
+ */
 JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS::HandleObject obj,
                                        JS::MutableHandleObjectVector visitedObjects) {
   JS::RootedIdVector ids(cx);
@@ -181,10 +185,9 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
     }
 
     // Key
-    std::string key;
     if (id.isSymbol()) {
       JS::RootedValue v(cx, SymbolValue(id.toSymbol()));
-      MOZ_TRY(ToSource(cx, key, v, visitedObjects));
+      MOZ_TRY(ToSource(cx, sourceOut, v, visitedObjects));
     } else {
       size_t message_len;
       JS::RootedValue v(cx, js::IdToValue(id));
@@ -192,9 +195,8 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
       if (!msg) {
         return JS::Result<mozilla::Ok>(JS::Error());
       }
-      key = std::string(msg.get(), message_len);
+      sourceOut += std::string(msg.get(), message_len);
     }
-    sourceOut += key;
 
     sourceOut += ": ";
 
@@ -208,29 +210,7 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
       return JS::Result<mozilla::Ok>(JS::Error());
     }
 
-    // Function
-    if (value.isObject() && JS_ObjectIsFunction(&value.toObject())) {
-      sourceOut += "[Function";
-      std::string source;
-      auto id = JS_GetFunctionId(JS_ValueToFunction(cx, value));
-      if (id) {
-        sourceOut += " ";
-        JS::RootedString name(cx, id);
-        size_t name_len;
-        auto msg = encode(cx, name, &name_len);
-        if (!msg) {
-          return JS::Result<mozilla::Ok>(JS::Error());
-        }
-        std::string sourceString(msg.get(), name_len);
-        sourceOut += sourceString;
-      }
-      sourceOut += "]";
-      continue;
-    }
-    // Normal Value
-    std::string source;
-    MOZ_TRY(ToSource(cx, source, value, visitedObjects));
-    sourceOut += source;
+    MOZ_TRY(ToSource(cx, sourceOut, value, visitedObjects));
   }
 
   if (!firstValue) {
@@ -260,7 +240,20 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
     JS::RootedObject obj(cx, &val.toObject());
 
     if (JS_ObjectIsFunction(obj)) {
-      sourceOut += JS::InformalValueTypeName(val);
+      sourceOut += "[Function";
+      std::string source;
+      auto id = JS_GetFunctionId(JS_ValueToFunction(cx, val));
+      if (id) {
+        sourceOut += " ";
+        JS::RootedString name(cx, id);
+        size_t name_len;
+        auto msg = encode(cx, name, &name_len);
+        if (!msg) {
+          return JS::Result<mozilla::Ok>(JS::Error());
+        }
+        sourceOut += std::string(msg.get(), name_len);
+      }
+      sourceOut += "]";
       return mozilla::Ok();
     }
 
