@@ -49,7 +49,7 @@
       "stdout :: Log: Request: Request { method: \"POST\", url: \"https://www.fastly.com/\", version: 2, headers: Headers {}, body: null, bodyUsed: false }",
       "stdout :: Log: ReadableStream: ReadableStream { locked: false }",
       "stdout :: Log: TransformStream: TransformStream { readable: ReadableStream { locked: false }, writable: WritableStream {} }",
-      "stdout :: Log: WritableStream: WriteableStream {}",
+      "stdout :: Log: WritableStream: WritableStream {}",
       "stdout :: Log: URL: URL { hash: \"\", host: \"www.test.com:123\", hostname: \"www.test.com\", href: \"https://www.test.com:123/asdf?some&params=val\", origin: \"https://www.test.com:123\", password: \"\", pathname: \"/asdf\", port: \"123\", protocol: \"https:\", search: \"?some&params=val\", searchParams: URLSearchParams {}, username: \"\" }"
     ]
   }
