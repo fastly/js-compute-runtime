@@ -364,7 +364,7 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
 
       // Lookup the class name if a custom class
       mozilla::Maybe<std::string> name_str = get_class_name(cx, obj);
-      if (!name_str.isNothing()) {
+      if (!name_str.isNothing() && *name_str != "Object") {
         sourceOut += *name_str;
         sourceOut += " ";
       }
