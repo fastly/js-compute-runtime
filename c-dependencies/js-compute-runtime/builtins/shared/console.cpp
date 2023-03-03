@@ -1,6 +1,11 @@
 #include "console.h"
 #include <js/Array.h>
 #include <js/PropertyAndElement.h>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winvalid-offsetof"
+#pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+#include <js/experimental/TypedData.h>
+#pragma clang diagnostic pop
 
 JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::HandleValue val,
                                  JS::MutableHandleObjectVector visitedObjects);
@@ -173,13 +178,22 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
     JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> desc(cx);
     JS_GetOwnPropertyDescriptorById(cx, obj, id, &desc);
 
-    // Skip logging non-own function or getter and setter keys
-    if (desc.isNothing() || desc->hasGetter() || desc->hasSetter()) {
-      bool found;
-      if (!JS_HasOwnPropertyById(cx, obj, id, &found)) {
+    bool getter_setter = desc.isNothing() && (desc->hasGetter() || desc->hasSetter());
+
+    // retrive the value if not a getter or setter
+    if (!getter_setter) {
+      if (!JS_GetPropertyById(cx, obj, id, &value)) {
         return JS::Result<mozilla::Ok>(JS::Error());
       }
-      if (found) {
+    }
+
+    // Skip logging non-own function or getter and setter keys
+    if (getter_setter || (value.isObject() && JS_ObjectIsFunction(&value.toObject()))) {
+      bool own_prop;
+      if (!JS_HasOwnPropertyById(cx, obj, id, &own_prop)) {
+        return JS::Result<mozilla::Ok>(JS::Error());
+      }
+      if (!own_prop) {
         continue;
       }
     }
@@ -208,16 +222,11 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
     sourceOut += ": ";
 
     // Getters and Setters
-    if (!desc.isNothing() && (desc->hasGetter() || desc->hasSetter())) {
+    if (getter_setter) {
       sourceOut += "[Getter]";
-      continue;
+    } else {
+      MOZ_TRY(ToSource(cx, sourceOut, value, visitedObjects));
     }
-
-    if (!JS_GetPropertyById(cx, obj, id, &value)) {
-      return JS::Result<mozilla::Ok>(JS::Error());
-    }
-
-    MOZ_TRY(ToSource(cx, sourceOut, value, visitedObjects));
   }
 
   if (!firstValue) {
@@ -226,6 +235,25 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
   sourceOut += "}";
 
   return mozilla::Ok();
+}
+
+mozilla::Maybe<std::string> get_class_name(JSContext *cx, JS::HandleObject obj) {
+  mozilla::Maybe<std::string> result = {};
+  JS::RootedValue constructorVal(cx);
+  if (JS_GetProperty(cx, obj, "constructor", &constructorVal) && constructorVal.isObject()) {
+    JS::RootedValue name(cx);
+    JS::RootedObject constructorObj(cx, &constructorVal.toObject());
+    if (JS_GetProperty(cx, constructorObj, "name", &name) && name.isString()) {
+      size_t message_len;
+      auto msg = encode(cx, name, &message_len);
+      if (!msg) {
+        return result;
+      }
+      std::string name_str(msg.get(), message_len);
+      result.emplace(name_str);
+    }
+  }
+  return result;
 }
 
 /**
@@ -262,6 +290,17 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
         sourceOut += std::string(msg.get(), name_len);
       }
       sourceOut += "]";
+      return mozilla::Ok();
+    }
+
+    if (JS_IsTypedArrayObject(obj)) {
+      // Show the typed array type
+      mozilla::Maybe<std::string> name_str = get_class_name(cx, obj);
+      if (!name_str.isNothing()) {
+        sourceOut += *name_str;
+        sourceOut += " ";
+      }
+      MOZ_TRY(ArrayToSource(cx, sourceOut, obj, visitedObjects));
       return mozilla::Ok();
     }
 
@@ -324,22 +363,10 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
       }
 
       // Lookup the class name if a custom class
-      JS::RootedValue constructorVal(cx);
-      if (JS_GetProperty(cx, obj, "constructor", &constructorVal) && constructorVal.isObject()) {
-        JS::RootedValue name(cx);
-        JS::RootedObject constructorObj(cx, &constructorVal.toObject());
-        if (JS_GetProperty(cx, constructorObj, "name", &name) && name.isString()) {
-          size_t message_len;
-          auto msg = encode(cx, name, &message_len);
-          if (!msg) {
-            return JS::Result<mozilla::Ok>(JS::Error());
-          }
-          std::string name_str(msg.get(), message_len);
-          if (name_str != "Object") {
-            sourceOut += name_str;
-            sourceOut += " ";
-          }
-        }
+      mozilla::Maybe<std::string> name_str = get_class_name(cx, obj);
+      if (!name_str.isNothing()) {
+        sourceOut += *name_str;
+        sourceOut += " ";
       }
 
       MOZ_TRY(ObjectToSource(cx, sourceOut, obj, visitedObjects));
