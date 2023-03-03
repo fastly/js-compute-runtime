@@ -129,7 +129,7 @@ jobs:
           restore-keys: engine-cargo-${{ runner.os }}-${{ runner.arch }}-
 
       - run: yarn install --immutable
-      
+
       - run: yarn build
 
       - run: npm publish
@@ -143,8 +143,8 @@ jobs:
         uses: fastly/compute-actions/setup@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          cli_version: '7.0.0'
-      
+          cli_version: '7.0.1'
+
       - run: yarn deploy
         env:
           FASTLY_API_TOKEN: ${{secrets.FASTLY_API_TOKEN}}

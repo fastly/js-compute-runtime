@@ -87,4 +87,6 @@ addEventListener("fetch", () => {
     console.log('TransformStream:', arg)
     arg = new WritableStream
     console.log('WritableStream:', arg)
+    arg = new URL('https://www.test.com:123/asdf?some&params=val')
+    console.log('URL:', arg)
 });
