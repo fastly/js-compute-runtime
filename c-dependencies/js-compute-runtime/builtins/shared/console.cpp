@@ -178,7 +178,7 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
     JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> desc(cx);
     JS_GetOwnPropertyDescriptorById(cx, obj, id, &desc);
 
-    bool getter_setter = desc.isNothing() && (desc->hasGetter() || desc->hasSetter());
+    bool getter_setter = !desc.isNothing() && (desc->hasGetter() || desc->hasSetter());
 
     // retrive the value if not a getter or setter
     if (!getter_setter) {
