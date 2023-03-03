@@ -52,7 +52,7 @@ if (!STORE_ID) {
     STORE_ID = (await STORE_ID.json()).id
 }
 
-let VERSION = String(await $`fastly service-version clone --version=latest --token $FASTLY_API_TOKEN`).trim()
+let VERSION = String(await $`fastly service-version clone --quiet --version=latest --token $FASTLY_API_TOKEN`).trim()
 VERSION = VERSION.match(/\d+$/)?.[0]
 
 let SERVICE_ID = await $`fastly service describe --json --quiet --token $FASTLY_API_TOKEN`
