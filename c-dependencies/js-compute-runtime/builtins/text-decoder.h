@@ -10,7 +10,7 @@ class TextDecoder final : public BuiltinImpl<TextDecoder> {
   static bool encoding_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
-  static constexpr const char *class_name = "TextEncoder";
+  static constexpr const char *class_name = "TextDecoder";
 
   enum class Slots { Count };
 
