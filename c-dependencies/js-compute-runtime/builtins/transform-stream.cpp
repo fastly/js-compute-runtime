@@ -10,6 +10,7 @@
 
 #include "builtins/native-stream-sink.h"
 #include "builtins/native-stream-source.h"
+#include "builtins/request-response.h"
 #include "builtins/transform-stream-default-controller.h"
 #include "builtins/transform-stream.h"
 
