@@ -7,15 +7,21 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
 #pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+#include "js/ArrayBuffer.h"
 #include "js/Conversions.h"
 #include "js/ForOfIterator.h"
 #include "js/Object.h"
 #include "js/Promise.h"
+#include "js/experimental/TypedData.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "rust-url/rust-url.h"
+#include <span>
 
 #pragma clang diagnostic pop
+
+std::optional<std::span<uint8_t>> value_to_buffer(JSContext *cx, JS::HandleValue val,
+                                                  const char *val_desc);
 
 // TODO(performance): introduce a version that writes into an existing buffer, and use that
 // with the hostcall buffer where possible.

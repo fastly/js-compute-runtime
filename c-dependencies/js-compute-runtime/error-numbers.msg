@@ -40,7 +40,6 @@
 
 // clang-format off
 MSG_DEF(JSMSG_NOT_AN_ERROR,                                    0, JSEXN_ERR, "<Error #0 is reserved>")
-MSG_DEF(JSMSG_INVALID_BUFFER_ARG,                              2, JSEXN_TYPEERR, "{0} must be of type ArrayBuffer or ArrayBufferView but got \"{1}\"")
 MSG_DEF(JSMSG_INVALID_COMPRESSION_FORMAT,                      1, JSEXN_TYPEERR, "'format' has to be \"deflate\", \"deflate-raw\", or \"gzip\", but got \"{0}\"")
 MSG_DEF(JSMSG_DECOMPRESSING_ERROR,                             0, JSEXN_TYPEERR, "DecompressionStream transform: error decompressing chunk")
 MSG_DEF(JSMSG_CONFIG_STORE_DOES_NOT_EXIST,                     1, JSEXN_TYPEERR, "ConfigStore constructor: No ConfigStore named '{0}' exists")

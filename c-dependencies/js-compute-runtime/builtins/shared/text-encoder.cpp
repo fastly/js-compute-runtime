@@ -1,4 +1,4 @@
-#include "builtins/text-encoder.h"
+#include "builtins/shared/text-encoder.h"
 
 #include "js/ArrayBuffer.h"
 

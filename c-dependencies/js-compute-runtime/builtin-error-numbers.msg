@@ -44,4 +44,5 @@ MSG_DEF(JSMSG_BUILTIN_CTOR_NO_NEW,                             1, JSEXN_TYPEERR,
 MSG_DEF(JSMSG_ILLEGAL_CTOR,                                    0, JSEXN_TYPEERR, "Illegal constructor")
 MSG_DEF(JSMSG_INVALID_INTERFACE,                               2, JSEXN_TYPEERR, "'{0}' called on an object that does not implement interface {1}")
 MSG_DEF(JSMSG_INCOMPATIBLE_INSTANCE,                           2, JSEXN_TYPEERR, "Method {0} called on receiver that's not an instance of {1}")
+MSG_DEF(JSMSG_INVALID_BUFFER_ARG,                              2, JSEXN_TYPEERR, "{0} must be of type ArrayBuffer or ArrayBufferView but got \"{1}\"")
 //clang-format on

@@ -1,6 +1,5 @@
 
 #include "builtin.h"
-#include "js-compute-builtins.h"
 #include "rust-url/rust-url.h"
 
 namespace builtins {

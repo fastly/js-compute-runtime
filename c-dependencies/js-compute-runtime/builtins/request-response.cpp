@@ -6,8 +6,8 @@
 #include "builtins/fetch-event.h"
 #include "builtins/native-stream-source.h"
 #include "builtins/object-store.h"
+#include "builtins/shared/url.h"
 #include "builtins/transform-stream.h"
-#include "builtins/url.h"
 #include "host_interface/host_api.h"
 #include "third_party/picosha2.h"
 
