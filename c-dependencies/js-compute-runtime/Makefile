@@ -154,6 +154,9 @@ $(OBJ_DIR)/core:
 $(OBJ_DIR)/host_interface:
 	$(call cmd,mkdir,$@)
 
+shared:
+	$(call cmd,mkdir,$@)
+
 # Downloaded dependencies ######################################################
 
 $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz: URL=https://www.openssl.org/source/openssl-$(OPENSSL_VERSION).tar.gz
@@ -283,12 +286,15 @@ $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/xqd-world/xqd_world_ada
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
 	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
 
-# The subset of javascript builtins that are reusable across other runtimes.
-shared-builtins.a: $(OBJ_DIR)/shared-builtins.a
-	$(call cmd,cp,$@)
+# Shared builtins build
 
-$(OBJ_DIR)/shared-builtins.a: $(OBJ_DIR)/builtins/shared/console.o $(OBJ_DIR)/builtin.o
-	$(call cmd,wasi_ar,$@)
+shared-builtins: shared/builtins.a shared/librust_url.a
+
+shared/builtins.a: $(OBJ_DIR)/builtins/shared/*.o $(OBJ_DIR)/builtin.o | shared
+	$(call cmd,wasi_ar,$^)
+
+shared/librust_url.a: $(RUST_URL_LIB) | shared
+	$(call cmd,cp,$@)
 
 # These two rules copy the built artifacts into the $(FSM_SRC) directory, and
 # are both marked phony as we need to do the right thing when running the

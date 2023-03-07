@@ -1,5 +1,5 @@
-#include "builtins/text-decoder.h"
-#include "js-compute-builtins.h"
+#include "builtins/shared/text-decoder.h"
+#include "builtin.h"
 
 namespace builtins {
 

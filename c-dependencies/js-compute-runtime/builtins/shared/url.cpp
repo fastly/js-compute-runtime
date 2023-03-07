@@ -1,7 +1,7 @@
 #include "js/Array.h"
 
 #include "builtin.h"
-#include "builtins/url.h"
+#include "builtins/shared/url.h"
 #include "core/sequence.hpp"
 #include "rust-url/rust-url.h"
 

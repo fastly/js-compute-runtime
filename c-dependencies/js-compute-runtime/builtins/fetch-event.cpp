@@ -2,7 +2,7 @@
 #include "builtins/client-info.h"
 #include "builtins/fastly.h"
 #include "builtins/request-response.h"
-#include "builtins/url.h"
+#include "builtins/shared/url.h"
 #include "builtins/worker-location.h"
 #include "host_interface/host_api.h"
 #include "xqd-world/xqd_world_adapter.h"

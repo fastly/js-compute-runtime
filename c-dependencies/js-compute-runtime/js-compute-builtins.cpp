@@ -57,12 +57,12 @@
 #include "builtins/request-response.h"
 #include "builtins/secret-store.h"
 #include "builtins/shared/console.h"
+#include "builtins/shared/text-decoder.h"
+#include "builtins/shared/text-encoder.h"
+#include "builtins/shared/url.h"
 #include "builtins/subtle-crypto.h"
-#include "builtins/text-decoder.h"
-#include "builtins/text-encoder.h"
 #include "builtins/transform-stream-default-controller.h"
 #include "builtins/transform-stream.h"
-#include "builtins/url.h"
 #include "builtins/worker-location.h"
 
 using namespace std::literals;
@@ -133,29 +133,6 @@ bool enqueue_internal_method(JSContext *cx, HandleObject receiver,
 
 using jsurl::SpecSlice, jsurl::SpecString, jsurl::JSUrl, jsurl::JSUrlSearchParams,
     jsurl::JSSearchParam;
-
-std::optional<std::span<uint8_t>> value_to_buffer(JSContext *cx, HandleValue val,
-                                                  const char *val_desc) {
-  if (!val.isObject() ||
-      !(JS_IsArrayBufferViewObject(&val.toObject()) || JS::IsArrayBufferObject(&val.toObject()))) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_BUFFER_ARG, val_desc,
-                             val.type());
-    return std::nullopt;
-  }
-
-  RootedObject input(cx, &val.toObject());
-  uint8_t *data;
-  bool is_shared;
-  size_t len = 0;
-
-  if (JS_IsArrayBufferViewObject(input)) {
-    js::GetArrayBufferViewLengthAndData(input, &len, &is_shared, &data);
-  } else {
-    JS::GetArrayBufferLengthAndData(input, &len, &is_shared, &data);
-  }
-
-  return std::span(data, len);
-}
 
 bool RejectPromiseWithPendingError(JSContext *cx, HandleObject promise) {
   RootedValue exn(cx);
