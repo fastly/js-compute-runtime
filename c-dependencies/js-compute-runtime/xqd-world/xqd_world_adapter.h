@@ -1,7 +1,7 @@
 #ifndef xqd_world_adapter_h
 #define xqd_world_adapter_h
 
-#include "allocator.h"
+#include "core/allocator.h"
 #include "host_call.h"
 #include "js/JSON.h"
 #include "xqd.h"

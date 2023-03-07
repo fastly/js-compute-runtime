@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "js-compute-builtins.h"
-#include "picosha2.h"
 #include "rust-url/rust-url.h"
 #include "xqd-world/xqd_world_adapter.h"
 
