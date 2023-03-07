@@ -1,5 +1,5 @@
 #include "builtins/client-info.h"
-#include "geo_ip.h"
+#include "core/geo_ip.h"
 #include "xqd-world/xqd_world_adapter.h"
 
 #include "js/JSON.h"

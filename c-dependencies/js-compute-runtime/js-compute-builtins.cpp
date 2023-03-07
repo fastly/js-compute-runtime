@@ -35,7 +35,6 @@
 #include "js/shadow/Object.h"
 #include "zlib.h"
 
-#include "geo_ip.h"
 #include "host_api.h"
 #include "host_call.h"
 #include "sequence.hpp"

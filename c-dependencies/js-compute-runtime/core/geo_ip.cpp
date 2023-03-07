@@ -1,6 +1,6 @@
 #include <arpa/inet.h>
 
-#include "geo_ip.h"
+#include "core/geo_ip.h"
 #include "host_call.h"
 #include "js-compute-builtins.h" // for encode
 #include "xqd.h"

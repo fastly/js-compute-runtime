@@ -148,6 +148,9 @@ $(OBJ_DIR)/builtins:
 $(OBJ_DIR)/builtins/shared:
 	$(call cmd,mkdir,$@)
 
+$(OBJ_DIR)/core:
+	$(call cmd,mkdir,$@)
+
 # Downloaded dependencies ######################################################
 
 $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz: URL=https://www.openssl.org/source/openssl-$(OPENSSL_VERSION).tar.gz
@@ -244,6 +247,7 @@ endif
 FSM_CPP := $(wildcard $(FSM_SRC)/*.cpp)
 FSM_CPP += $(wildcard $(FSM_SRC)/builtins/*.cpp)
 FSM_CPP += $(wildcard $(FSM_SRC)/builtins/shared/*.cpp)
+FSM_CPP += $(wildcard $(FSM_SRC)/core/*.cpp)
 FSM_OBJ := $(patsubst $(FSM_SRC)/%.cpp,$(OBJ_DIR)/%.o,$(FSM_CPP))
 
 # Build all the above object files
