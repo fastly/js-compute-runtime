@@ -34,7 +34,7 @@ WIT_BINDGEN ?= $(shell which wit-bindgen)
 OPT_FLAGS ?= -O2
 
 # Command helpers for making nice build output.
-include commands.mk
+include mk/commands.mk
 
 # Derived configuration ########################################################
 
@@ -148,6 +148,12 @@ $(OBJ_DIR)/builtins:
 $(OBJ_DIR)/builtins/shared:
 	$(call cmd,mkdir,$@)
 
+$(OBJ_DIR)/core:
+	$(call cmd,mkdir,$@)
+
+$(OBJ_DIR)/host_interface:
+	$(call cmd,mkdir,$@)
+
 # Downloaded dependencies ######################################################
 
 $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz: URL=https://www.openssl.org/source/openssl-$(OPENSSL_VERSION).tar.gz
@@ -165,9 +171,9 @@ wasi_snapshot_preview1.wasm:
 openssl: $(BUILD)/openssl/token
 
 # Extract and prepare the openssl build directory.
-$(BUILD)/openssl-$(OPENSSL_VERSION)/token: $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz $(FSM_SRC)/getuid.patch
+$(BUILD)/openssl-$(OPENSSL_VERSION)/token: $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz $(FSM_SRC)/third_party/getuid.patch
 	$Q tar -C $(BUILD) -xf $<
-	$Q patch -d $(BUILD)/openssl-$(OPENSSL_VERSION) -p1 < $(FSM_SRC)/getuid.patch
+	$Q patch -d $(BUILD)/openssl-$(OPENSSL_VERSION) -p1 < $(FSM_SRC)/third_party/getuid.patch
 	$Q touch $@
 
 OPENSSL_OPTS := -static -no-sock -no-asm -no-ui-console -no-egd
@@ -244,6 +250,8 @@ endif
 FSM_CPP := $(wildcard $(FSM_SRC)/*.cpp)
 FSM_CPP += $(wildcard $(FSM_SRC)/builtins/*.cpp)
 FSM_CPP += $(wildcard $(FSM_SRC)/builtins/shared/*.cpp)
+FSM_CPP += $(wildcard $(FSM_SRC)/core/*.cpp)
+FSM_CPP += $(wildcard $(FSM_SRC)/host_interface/*.cpp)
 FSM_OBJ := $(patsubst $(FSM_SRC)/%.cpp,$(OBJ_DIR)/%.o,$(FSM_CPP))
 
 # Build all the above object files

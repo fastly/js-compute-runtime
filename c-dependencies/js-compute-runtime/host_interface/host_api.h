@@ -4,7 +4,7 @@
 #include <memory>
 #include <variant>
 
-#include "allocator.h"
+#include "core/allocator.h"
 #include "xqd-world/xqd_world.h"
 
 #pragma clang diagnostic push

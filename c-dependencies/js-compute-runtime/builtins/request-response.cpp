@@ -8,8 +8,8 @@
 #include "builtins/object-store.h"
 #include "builtins/transform-stream.h"
 #include "builtins/url.h"
-#include "host_api.h"
-#include "picosha2.h"
+#include "host_interface/host_api.h"
+#include "third_party/picosha2.h"
 
 #include "js/Array.h"
 #include "js/ArrayBuffer.h"

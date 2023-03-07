@@ -1,5 +1,5 @@
 
-#include "host_call.h"
+#include "host_interface/host_call.h"
 
 bool OwnedHostCallBuffer::initialize(JSContext *cx) {
   // Ensure the buffer is all zeros so it doesn't add too much to the

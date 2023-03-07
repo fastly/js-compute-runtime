@@ -2,8 +2,8 @@
 
 #include "builtin.h"
 #include "builtins/url.h"
+#include "core/sequence.hpp"
 #include "rust-url/rust-url.h"
-#include "sequence.hpp"
 
 constexpr int ITERTYPE_ENTRIES = 0;
 constexpr int ITERTYPE_KEYS = 1;

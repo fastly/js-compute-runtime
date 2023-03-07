@@ -21,7 +21,7 @@
 
 #include "builtins/fetch-event.h"
 #include "js-compute-builtins.h"
-#include "wizer.h"
+#include "third_party/wizer.h"
 #include "xqd-world/xqd_world_adapter.h"
 #ifdef MEM_STATS
 #include "memory-reporting.h"

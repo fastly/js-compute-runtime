@@ -18,8 +18,8 @@
 #include "builtins/native-stream-source.h"
 #include "builtins/object-store.h"
 #include "builtins/url.h"
-#include "host_api.h"
-#include "host_call.h"
+#include "host_interface/host_api.h"
+#include "host_interface/host_call.h"
 #include "js-compute-builtins.h"
 
 namespace builtins {

@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "js-compute-builtins.h"
-#include "picosha2.h"
 #include "rust-url/rust-url.h"
 #include "xqd-world/xqd_world_adapter.h"
 
@@ -35,10 +34,8 @@
 #include "js/shadow/Object.h"
 #include "zlib.h"
 
-#include "geo_ip.h"
-#include "host_api.h"
-#include "host_call.h"
-#include "sequence.hpp"
+#include "host_interface/host_api.h"
+#include "host_interface/host_call.h"
 
 #include "builtin.h"
 #include "builtins/backend.h"
