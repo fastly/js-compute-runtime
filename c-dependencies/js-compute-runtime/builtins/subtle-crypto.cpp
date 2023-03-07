@@ -19,9 +19,9 @@
 #pragma clang diagnostic pop
 #include <mozilla/Unused.h>
 
+#include "host_interface/xqd.h"
 #include "js-compute-builtins.h" // for encode
 #include "subtle-crypto.h"
-#include "host_interface/xqd.h"
 
 namespace builtins {
 namespace {

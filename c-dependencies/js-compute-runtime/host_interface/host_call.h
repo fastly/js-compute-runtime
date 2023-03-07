@@ -8,8 +8,8 @@
 #include "jsapi.h"
 #pragma clang diagnostic pop
 
-#include "xqd-world/xqd_world_adapter.h"
 #include "host_interface/xqd.h"
+#include "xqd-world/xqd_world_adapter.h"
 
 /* Returns false if an exception is set on `cx` and the caller should
    immediately return to propagate the exception. */
