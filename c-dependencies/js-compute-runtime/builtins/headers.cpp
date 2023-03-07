@@ -1,7 +1,7 @@
 #include "builtins/headers.h"
 #include "builtins/request-response.h"
+#include "core/sequence.hpp"
 #include "js-compute-builtins.h"
-#include "sequence.hpp"
 #include "xqd-world/xqd_world.h"
 
 #include "js/Conversions.h"

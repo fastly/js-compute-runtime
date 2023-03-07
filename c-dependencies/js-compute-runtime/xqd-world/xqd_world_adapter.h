@@ -2,9 +2,9 @@
 #define xqd_world_adapter_h
 
 #include "core/allocator.h"
-#include "host_call.h"
+#include "host_interface/host_call.h"
+#include "host_interface/xqd.h"
 #include "js/JSON.h"
-#include "xqd.h"
 #include "xqd_world.h"
 
 // TODO: remove these once the warnings are fixed

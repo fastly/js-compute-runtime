@@ -34,9 +34,8 @@
 #include "js/shadow/Object.h"
 #include "zlib.h"
 
-#include "host_api.h"
-#include "host_call.h"
-#include "sequence.hpp"
+#include "host_interface/host_api.h"
+#include "host_interface/host_call.h"
 
 #include "builtin.h"
 #include "builtins/backend.h"

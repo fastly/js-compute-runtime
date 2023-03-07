@@ -19,7 +19,7 @@
 
 #include "builtins/backend.h"
 #include "builtins/request-response.h"
-#include "host_call.h"
+#include "host_interface/host_call.h"
 #include "js-compute-builtins.h"
 #include "js/Conversions.h"
 

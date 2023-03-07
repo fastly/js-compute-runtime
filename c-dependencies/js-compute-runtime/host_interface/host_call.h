@@ -9,7 +9,7 @@
 #pragma clang diagnostic pop
 
 #include "xqd-world/xqd_world_adapter.h"
-#include "xqd.h"
+#include "host_interface/xqd.h"
 
 /* Returns false if an exception is set on `cx` and the caller should
    immediately return to propagate the exception. */

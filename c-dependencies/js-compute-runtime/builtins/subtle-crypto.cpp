@@ -21,7 +21,7 @@
 
 #include "js-compute-builtins.h" // for encode
 #include "subtle-crypto.h"
-#include "xqd.h"
+#include "host_interface/xqd.h"
 
 namespace builtins {
 namespace {

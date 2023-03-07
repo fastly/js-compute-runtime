@@ -4,7 +4,7 @@
 #include "builtins/request-response.h"
 #include "builtins/url.h"
 #include "builtins/worker-location.h"
-#include "host_api.h"
+#include "host_interface/host_api.h"
 #include "xqd-world/xqd_world_adapter.h"
 
 namespace builtins {
