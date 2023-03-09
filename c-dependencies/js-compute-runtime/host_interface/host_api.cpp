@@ -1,6 +1,7 @@
 #include <algorithm>
 
-#include "c_at_e_world.h"
+#include "c-at-e-world/c_at_e_world.h"
+#include "core/allocator.h"
 #include "host_interface/host_api.h"
 
 Result<HttpBody> HttpBody::make() {
@@ -87,4 +88,130 @@ Result<Void> HttpBody::close() {
   }
 
   return res;
+}
+
+namespace {
+
+template <auto header_names_get>
+Result<std::vector<HostString>> generic_get_header_names(auto handle) {
+  Result<std::vector<HostString>> res;
+
+  fastly_list_string_t ret;
+  fastly_error_t err;
+  if (!header_names_get(handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    std::vector<HostString> names;
+
+    for (int i = 0; i < ret.len; i++) {
+      names.emplace_back(HostString{ret.ptr[i]});
+    }
+
+    // Free the vector of string pointers, but leave the individual strings alone.
+    cabi_free(ret.ptr);
+
+    res.emplace(std::move(names));
+  }
+
+  return res;
+}
+
+template <auto header_values_get>
+Result<std::optional<std::vector<HostString>>> generic_get_header_values(auto handle,
+                                                                         std::string_view name) {
+  Result<std::optional<std::vector<HostString>>> res;
+
+  c_at_e_world_string_t hdr{const_cast<char *>(name.data()), name.size()};
+  fastly_option_list_string_t ret;
+  fastly_error_t err;
+  if (!header_values_get(handle, &hdr, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+
+    if (ret.is_some) {
+      std::vector<HostString> names;
+
+      for (int i = 0; i < ret.val.len; i++) {
+        names.emplace_back(HostString{ret.val.ptr[i]});
+      }
+
+      // Free the vector of string pointers, but leave the individual strings alone.
+      cabi_free(ret.val.ptr);
+
+      res.emplace(std::move(names));
+    } else {
+      res.emplace(std::nullopt);
+    }
+  }
+
+  return res;
+}
+
+template <auto header_op>
+Result<Void> generic_header_op(auto handle, std::string_view name, std::string_view value) {
+  Result<Void> res;
+
+  c_at_e_world_string_t hdr{const_cast<char *>(name.data()), name.size()};
+  c_at_e_world_string_t val{const_cast<char *>(value.data()), value.size()};
+  fastly_error_t err;
+  if (!header_op(handle, &hdr, &val, &err)) {
+    res.emplace_err(err);
+  }
+
+  return res;
+}
+
+template <auto remove_header>
+Result<Void> generic_header_remove(auto handle, std::string_view name) {
+  Result<Void> res;
+
+  c_at_e_world_string_t hdr{const_cast<char *>(name.data()), name.size()};
+  fastly_error_t err;
+  if (!remove_header(handle, &hdr, &err)) {
+    res.emplace_err(err);
+  }
+
+  return res;
+}
+
+} // namespace
+
+Result<std::vector<HostString>> HttpReq::get_header_names() {
+  return generic_get_header_names<fastly_http_req_header_names_get>(this->handle);
+}
+
+Result<std::optional<std::vector<HostString>>> HttpReq::get_header_values(std::string_view name) {
+  return generic_get_header_values<fastly_http_req_header_values_get>(this->handle, name);
+}
+
+Result<Void> HttpReq::insert_header(std::string_view name, std::string_view value) {
+  return generic_header_op<fastly_http_req_header_insert>(this->handle, name, value);
+}
+
+Result<Void> HttpReq::append_header(std::string_view name, std::string_view value) {
+  return generic_header_op<fastly_http_req_header_append>(this->handle, name, value);
+}
+
+Result<Void> HttpReq::remove_header(std::string_view name) {
+  return generic_header_remove<fastly_http_req_header_remove>(this->handle, name);
+}
+
+Result<std::vector<HostString>> HttpResp::get_header_names() {
+  return generic_get_header_names<fastly_http_resp_header_names_get>(this->handle);
+}
+
+Result<std::optional<std::vector<HostString>>> HttpResp::get_header_values(std::string_view name) {
+  return generic_get_header_values<fastly_http_resp_header_values_get>(this->handle, name);
+}
+
+Result<Void> HttpResp::insert_header(std::string_view name, std::string_view value) {
+  return generic_header_op<fastly_http_resp_header_insert>(this->handle, name, value);
+}
+
+Result<Void> HttpResp::append_header(std::string_view name, std::string_view value) {
+  return generic_header_op<fastly_http_resp_header_append>(this->handle, name, value);
+}
+
+Result<Void> HttpResp::remove_header(std::string_view name) {
+  return generic_header_remove<fastly_http_resp_header_remove>(this->handle, name);
 }

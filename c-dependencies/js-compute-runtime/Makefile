@@ -93,7 +93,6 @@ CFLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
 
 # Includes for compiling c++
 INCLUDES := -I$(FSM_SRC)
-INCLUDES += -I$(FSM_SRC)/c-at-e-world
 INCLUDES += -I$(SM_SRC)/include
 INCLUDES += -I$(BUILD)/openssl/include
 
