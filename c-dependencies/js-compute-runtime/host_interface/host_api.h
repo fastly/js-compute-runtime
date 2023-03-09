@@ -2,7 +2,10 @@
 #define JS_COMPUTE_RUNTIME_HOST_API_H
 
 #include <memory>
+#include <optional>
+#include <string_view>
 #include <variant>
+#include <vector>
 
 #include "c-at-e-world/c_at_e_world.h"
 #include "core/allocator.h"
@@ -65,7 +68,7 @@ public:
 };
 
 /// A single chunk read from an HttpBody.
-struct HttpBodyChunk {
+struct HttpBodyChunk final {
   JS::UniqueChars ptr;
   size_t len;
 
@@ -108,6 +111,72 @@ public:
 
   /// Close this handle, and reset internal state to invalid.
   Result<Void> close();
+};
+
+struct HostString final {
+  JS::UniqueChars ptr;
+  size_t len;
+
+  HostString() = default;
+  explicit HostString(c_at_e_world_string_t str) : ptr{str.ptr}, len{str.len} {}
+  HostString(JS::UniqueChars ptr, size_t len) : ptr{std::move(ptr)}, len{len} {}
+
+  using iterator = char *;
+
+  size_t size() const { return this->len; }
+
+  char *begin() { return this->ptr.get(); }
+  char *end() { return this->begin() + this->len; }
+
+  const char *begin() const { return this->ptr.get(); }
+  const char *end() const { return this->begin() + this->len; }
+
+  /// Conversion to a `std::string_view`.
+  operator std::string_view() { return std::string_view(this->ptr.get(), this->len); }
+};
+
+class HttpBase {
+public:
+  virtual ~HttpBase() = default;
+
+  virtual Result<std::vector<HostString>> get_header_names() = 0;
+  virtual Result<std::optional<std::vector<HostString>>>
+  get_header_values(std::string_view name) = 0;
+  virtual Result<Void> insert_header(std::string_view name, std::string_view value) = 0;
+  virtual Result<Void> append_header(std::string_view name, std::string_view value) = 0;
+  virtual Result<Void> remove_header(std::string_view name) = 0;
+};
+
+class HttpReq final : public HttpBase {
+public:
+  static constexpr fastly_request_handle_t invalid = UINT32_MAX - 1;
+
+  fastly_request_handle_t handle = invalid;
+
+  HttpReq() = default;
+  explicit HttpReq(fastly_request_handle_t handle) : handle{handle} {}
+
+  Result<std::vector<HostString>> get_header_names() override;
+  Result<std::optional<std::vector<HostString>>> get_header_values(std::string_view name) override;
+  Result<Void> insert_header(std::string_view name, std::string_view value) override;
+  Result<Void> append_header(std::string_view name, std::string_view value) override;
+  Result<Void> remove_header(std::string_view name) override;
+};
+
+class HttpResp final : public HttpBase {
+public:
+  static constexpr fastly_response_handle_t invalid = UINT32_MAX - 1;
+
+  fastly_response_handle_t handle = invalid;
+
+  HttpResp() = default;
+  explicit HttpResp(fastly_response_handle_t handle) : handle{handle} {}
+
+  Result<std::vector<HostString>> get_header_names() override;
+  Result<std::optional<std::vector<HostString>>> get_header_values(std::string_view name) override;
+  Result<Void> insert_header(std::string_view name, std::string_view value) override;
+  Result<Void> append_header(std::string_view name, std::string_view value) override;
+  Result<Void> remove_header(std::string_view name) override;
 };
 
 #endif

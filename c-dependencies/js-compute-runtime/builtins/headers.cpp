@@ -1,7 +1,7 @@
 #include "builtins/headers.h"
 #include "builtins/request-response.h"
-#include "c-at-e-world/c_at_e_world.h"
 #include "core/sequence.hpp"
+#include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
 
 #include "js/Conversions.h"
@@ -243,28 +243,19 @@ bool append_header_value_to_map(JSContext *cx, JS::HandleObject self,
 
 bool get_header_names_from_handle(JSContext *cx, uint32_t handle, Headers::Mode mode,
                                   JS::HandleObject backing_map) {
-  JS::RootedString name(cx);
-  JS::RootedValue name_val(cx);
-  char *buf = static_cast<char *>(JS_malloc(cx, HOSTCALL_BUFFER_LEN));
 
-  bool ok;
-  fastly_list_string_t ret;
-  fastly_error_t err;
-  if (mode == Headers::Mode::ProxyToRequest) {
-    ok = fastly_http_req_header_names_get(handle, &ret, &err);
-  } else {
-    ok = fastly_http_resp_header_names_get(handle, &ret, &err);
-  }
-
-  if (!ok) {
-    HANDLE_ERROR(cx, err);
-    JS_free(cx, buf);
+  auto names = mode == Headers::Mode::ProxyToRequest ? HttpReq{handle}.get_header_names()
+                                                     : HttpResp{handle}.get_header_names();
+  if (auto *err = names.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  for (size_t i = 0; i < ret.len; i++) {
-    name = JS_NewStringCopyN(cx, ret.ptr[i].ptr, ret.ptr[i].len);
-    JS_free(cx, ret.ptr[i].ptr);
+  JS::RootedString name(cx);
+  JS::RootedValue name_val(cx);
+  for (auto &str : names.unwrap()) {
+    // TODO: can `name` take ownership of the buffer here instead?
+    name = JS_NewStringCopyN(cx, str.ptr.get(), str.len);
     if (!name) {
       return false;
     }
@@ -273,8 +264,6 @@ bool get_header_names_from_handle(JSContext *cx, uint32_t handle, Headers::Mode 
     JS::MapSet(cx, backing_map, name_val, JS::NullHandleValue);
   }
 
-  JS_free(cx, buf);
-  JS_free(cx, ret.ptr);
   return true;
 }
 
@@ -284,41 +273,37 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
   MOZ_ASSERT(mode != Headers::Mode::Standalone);
   uint32_t handle = get_handle(self);
 
-  c_at_e_world_string_t str;
   JS::RootedString name_str(cx, name.toString());
-  JS::UniqueChars name_chars = encode(cx, name_str, &str.len);
-  str.ptr = name_chars.get();
+  size_t len;
+  JS::UniqueChars name_chars = ::encode(cx, name_str, &len);
+  std::string_view hdr{name_chars.get(), len};
 
-  fastly_option_list_string_t ret;
+  auto ret = mode == Headers::Mode::ProxyToRequest ? HttpReq{handle}.get_header_values(hdr)
+                                                   : HttpResp{handle}.get_header_values(hdr);
 
-  bool ok;
-  fastly_error_t err;
-  if (mode == Headers::Mode::ProxyToRequest) {
-    ok = fastly_http_req_header_values_get(handle, &str, &ret, &err);
-  } else {
-    ok = fastly_http_resp_header_values_get(handle, &str, &ret, &err);
-  }
-
-  if (!ok) {
-    HANDLE_ERROR(cx, err);
+  if (auto *err = ret.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  if (!ret.is_some)
+  auto &values = ret.unwrap();
+  if (!values.has_value()) {
     return true;
-
-  JS::RootedString val_str(cx);
-  for (size_t i = 0; i < ret.val.len; i++) {
-    val_str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.val.ptr[i].ptr, ret.val.ptr[i].len));
-    JS_free(cx, ret.val.ptr[i].ptr);
-    if (!val_str)
-      return false;
-    value.setString(val_str);
-    if (!append_header_value_to_map(cx, self, name, value))
-      return false;
   }
 
-  JS_free(cx, ret.val.ptr);
+  JS::RootedString val_str(cx);
+  for (auto &str : values.value()) {
+    val_str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(str.ptr.get(), str.len));
+    if (!val_str) {
+      return false;
+    }
+
+    value.setString(val_str);
+    if (!append_header_value_to_map(cx, self, name, value)) {
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -467,27 +452,25 @@ bool Headers::append_header_value(JSContext *cx, JS::HandleObject self, JS::Hand
 
   auto mode = get_mode(self);
   if (mode != Headers::Mode::Standalone) {
-    auto *op = mode == Headers::Mode::ProxyToRequest ? fastly_http_req_header_append
-                                                     : fastly_http_resp_header_append;
-    std::string_view name(name_chars.get(), name_len);
+    auto handle = get_handle(self);
+    std::string_view name{name_chars.get(), name_len};
+    std::string_view value(value_chars.get(), value_len);
     if (name == "set-cookie") {
-      std::string_view value(value_chars.get(), value_len);
-      auto values = splitCookiesString(value);
-      for (auto value : values) {
-        c_at_e_world_string_t name = {name_chars.get(), name_len};
-        c_at_e_world_string_t val = {const_cast<char *>(value.data()), value.length()};
-        fastly_error_t err;
-        if (!op(get_handle(self), &name, &val, &err)) {
-          HANDLE_ERROR(cx, err);
+      for (auto value : splitCookiesString(value)) {
+        auto res = mode == Headers::Mode::ProxyToRequest
+                       ? HttpReq{handle}.append_header(name, value)
+                       : HttpResp{handle}.append_header(name, value);
+        if (auto *err = res.to_err()) {
+          HANDLE_ERROR(cx, *err);
           return false;
         }
       }
     } else {
-      c_at_e_world_string_t name = {name_chars.get(), name_len};
-      c_at_e_world_string_t val = {value_chars.get(), value_len};
-      fastly_error_t err;
-      if (!op(get_handle(self), &name, &val, &err)) {
-        HANDLE_ERROR(cx, err);
+      auto res = mode == Headers::Mode::ProxyToRequest
+                     ? HttpReq{handle}.append_header(name, value)
+                     : HttpResp{handle}.append_header(name, value);
+      if (auto *err = res.to_err()) {
+        HANDLE_ERROR(cx, *err);
         return false;
       }
     }
@@ -591,13 +574,13 @@ bool Headers::set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto mode = get_mode(self);
   if (mode != Mode::Standalone) {
-    auto *op = mode == Mode::ProxyToRequest ? fastly_http_req_header_insert
-                                            : fastly_http_resp_header_insert;
-    c_at_e_world_string_t name = {name_chars.get(), name_len};
-    c_at_e_world_string_t val = {value_chars.get(), value_len};
-    fastly_error_t err;
-    if (!op(get_handle(self), &name, &val, &err)) {
-      HANDLE_ERROR(cx, err);
+    auto handle = get_handle(self);
+    std::string_view name{name_chars.get(), name_len};
+    std::string_view val{value_chars.get(), value_len};
+    auto res = mode == Mode::ProxyToRequest ? HttpReq{handle}.insert_header(name, val)
+                                            : HttpResp{handle}.insert_header(name, val);
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
       return false;
     }
   }
@@ -681,12 +664,12 @@ bool Headers::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto mode = get_mode(self);
   if (mode != Headers::Mode::Standalone) {
-    auto *op = mode == Mode::ProxyToRequest ? fastly_http_req_header_remove
-                                            : fastly_http_resp_header_remove;
-    c_at_e_world_string_t name = {name_chars.get(), name_len};
-    fastly_error_t err;
-    if (!op(get_handle(self), &name, &err)) {
-      HANDLE_ERROR(cx, err);
+    auto handle = get_handle(self);
+    std::string_view name{name_chars.get(), name_len};
+    auto res = mode == Mode::ProxyToRequest ? HttpReq{handle}.remove_header(name)
+                                            : HttpResp{handle}.remove_header(name);
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
       return false;
     }
   }
