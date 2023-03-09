@@ -2111,10 +2111,18 @@ function long_regex_input() {
   regex.test("example.com/test/".padEnd(520, "x"));
 }
 
+function unicode_regex() {
+  const regex1 = /^\p{Emoji_Presentation}+$/u;
+  const regex2 = /^\p{L}+$/u;
+  if (!regex1.test('🐱') || !regex2.test('woah'))
+    throw new Error('bad');
+}
+
 addEventListener("fetch", (req) => {
   const useragent = duration(() =>
     useragent_parser("should-not-match-any-case")
   );
   const long_regex = duration(long_regex_input);
-  req.respondWith(new Response(JSON.stringify({ useragent, long_regex })));
+  const unicode = duration(unicode_regex);
+  req.respondWith(new Response(JSON.stringify({ useragent, long_regex, unicode })));
 });
