@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/fastly/js-compute-runtime/compare/v1.4.1...v1.4.2) (2023-03-09)
+
+
+### Bug Fixes
+
+* console logging support improvements ([#434](https://github.com/fastly/js-compute-runtime/issues/434)) ([7a74d76](https://github.com/fastly/js-compute-runtime/commit/7a74d76ed1d03c1c588caf664f471eab226c10a6))
+
 ## 1.4.1 (2023-03-01)
 
 
