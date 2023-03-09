@@ -1,8 +1,8 @@
 #include "builtins/headers.h"
 #include "builtins/request-response.h"
+#include "c-at-e-world/c_at_e_world.h"
 #include "core/sequence.hpp"
 #include "js-compute-builtins.h"
-#include "xqd-world/xqd_world.h"
 
 #include "js/Conversions.h"
 
@@ -251,9 +251,9 @@ bool get_header_names_from_handle(JSContext *cx, uint32_t handle, Headers::Mode 
   fastly_list_string_t ret;
   fastly_error_t err;
   if (mode == Headers::Mode::ProxyToRequest) {
-    ok = xqd_fastly_http_req_header_names_get(handle, &ret, &err);
+    ok = c_at_e_fastly_http_req_header_names_get(handle, &ret, &err);
   } else {
-    ok = xqd_fastly_http_resp_header_names_get(handle, &ret, &err);
+    ok = c_at_e_fastly_http_resp_header_names_get(handle, &ret, &err);
   }
 
   if (!ok) {
@@ -284,7 +284,7 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
   MOZ_ASSERT(mode != Headers::Mode::Standalone);
   uint32_t handle = get_handle(self);
 
-  xqd_world_string_t str;
+  c_at_e_world_string_t str;
   JS::RootedString name_str(cx, name.toString());
   JS::UniqueChars name_chars = encode(cx, name_str, &str.len);
   str.ptr = name_chars.get();
@@ -294,9 +294,9 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
   bool ok;
   fastly_error_t err;
   if (mode == Headers::Mode::ProxyToRequest) {
-    ok = xqd_fastly_http_req_header_values_get(handle, &str, &ret, &err);
+    ok = c_at_e_fastly_http_req_header_values_get(handle, &str, &ret, &err);
   } else {
-    ok = xqd_fastly_http_resp_header_values_get(handle, &str, &ret, &err);
+    ok = c_at_e_fastly_http_resp_header_values_get(handle, &str, &ret, &err);
   }
 
   if (!ok) {
@@ -467,15 +467,15 @@ bool Headers::append_header_value(JSContext *cx, JS::HandleObject self, JS::Hand
 
   auto mode = get_mode(self);
   if (mode != Headers::Mode::Standalone) {
-    auto *op = mode == Headers::Mode::ProxyToRequest ? xqd_fastly_http_req_header_append
-                                                     : xqd_fastly_http_resp_header_append;
+    auto *op = mode == Headers::Mode::ProxyToRequest ? c_at_e_fastly_http_req_header_append
+                                                     : c_at_e_fastly_http_resp_header_append;
     std::string_view name(name_chars.get(), name_len);
     if (name == "set-cookie") {
       std::string_view value(value_chars.get(), value_len);
       auto values = splitCookiesString(value);
       for (auto value : values) {
-        xqd_world_string_t name = {name_chars.get(), name_len};
-        xqd_world_string_t val = {const_cast<char *>(value.data()), value.length()};
+        c_at_e_world_string_t name = {name_chars.get(), name_len};
+        c_at_e_world_string_t val = {const_cast<char *>(value.data()), value.length()};
         fastly_error_t err;
         if (!op(get_handle(self), &name, &val, &err)) {
           HANDLE_ERROR(cx, err);
@@ -483,8 +483,8 @@ bool Headers::append_header_value(JSContext *cx, JS::HandleObject self, JS::Hand
         }
       }
     } else {
-      xqd_world_string_t name = {name_chars.get(), name_len};
-      xqd_world_string_t val = {value_chars.get(), value_len};
+      c_at_e_world_string_t name = {name_chars.get(), name_len};
+      c_at_e_world_string_t val = {value_chars.get(), value_len};
       fastly_error_t err;
       if (!op(get_handle(self), &name, &val, &err)) {
         HANDLE_ERROR(cx, err);
@@ -591,10 +591,10 @@ bool Headers::set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto mode = get_mode(self);
   if (mode != Mode::Standalone) {
-    auto *op = mode == Mode::ProxyToRequest ? xqd_fastly_http_req_header_insert
-                                            : xqd_fastly_http_resp_header_insert;
-    xqd_world_string_t name = {name_chars.get(), name_len};
-    xqd_world_string_t val = {value_chars.get(), value_len};
+    auto *op = mode == Mode::ProxyToRequest ? c_at_e_fastly_http_req_header_insert
+                                            : c_at_e_fastly_http_resp_header_insert;
+    c_at_e_world_string_t name = {name_chars.get(), name_len};
+    c_at_e_world_string_t val = {value_chars.get(), value_len};
     fastly_error_t err;
     if (!op(get_handle(self), &name, &val, &err)) {
       HANDLE_ERROR(cx, err);
@@ -681,9 +681,9 @@ bool Headers::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto mode = get_mode(self);
   if (mode != Headers::Mode::Standalone) {
-    auto *op = mode == Mode::ProxyToRequest ? xqd_fastly_http_req_header_remove
-                                            : xqd_fastly_http_resp_header_remove;
-    xqd_world_string_t name = {name_chars.get(), name_len};
+    auto *op = mode == Mode::ProxyToRequest ? c_at_e_fastly_http_req_header_remove
+                                            : c_at_e_fastly_http_resp_header_remove;
+    c_at_e_world_string_t name = {name_chars.get(), name_len};
     fastly_error_t err;
     if (!op(get_handle(self), &name, &err)) {
       HANDLE_ERROR(cx, err);

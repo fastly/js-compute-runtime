@@ -186,7 +186,7 @@ bool ObjectStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue key(cx, args.get(0));
 
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  xqd_world_string_t key_str;
+  c_at_e_world_string_t key_str;
   JS::UniqueChars key_chars = encode(cx, key, &key_str.len);
   if (!key_chars)
     return false;
@@ -197,7 +197,7 @@ bool ObjectStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_option_body_handle_t ret;
   fastly_error_t err;
-  if (!xqd_fastly_object_store_lookup(object_store_handle(self), &key_str, &ret, &err)) {
+  if (!c_at_e_fastly_object_store_lookup(object_store_handle(self), &key_str, &ret, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -232,7 +232,7 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue key(cx, args.get(0));
 
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  xqd_world_string_t key_str;
+  c_at_e_world_string_t key_str;
   JS::UniqueChars key_chars = encode(cx, key, &key_str.len);
   if (!key_chars)
     return false;
@@ -271,7 +271,7 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       fastly_body_handle_t body = RequestOrResponse::body_handle(source_owner);
 
       fastly_error_t err;
-      if (!xqd_fastly_object_store_insert(object_store_handle(self), &key_str, body, &err)) {
+      if (!c_at_e_fastly_object_store_insert(object_store_handle(self), &key_str, body, &err)) {
         HANDLE_ERROR(cx, err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
@@ -350,7 +350,8 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     fastly_error_t err;
-    if (!xqd_fastly_object_store_insert(object_store_handle(self), &key_str, body.handle, &err)) {
+    if (!c_at_e_fastly_object_store_insert(object_store_handle(self), &key_str, body.handle,
+                                           &err)) {
       // Ensure that we throw an exception for all unexpected host errors.
       HANDLE_ERROR(cx, err);
       return RejectPromiseWithPendingError(cx, result_promise);
@@ -384,7 +385,7 @@ bool ObjectStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::HandleValue name_arg = args.get(0);
 
-  xqd_world_string_t name_str;
+  c_at_e_world_string_t name_str;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
   JS::UniqueChars name = encode(cx, name_arg, &name_str.len);
   if (!name) {
@@ -417,7 +418,7 @@ bool ObjectStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_object_store_handle_t object_store_handle = INVALID_HANDLE;
   fastly_error_t err;
-  if (!xqd_fastly_object_store_open(&name_str, &object_store_handle, &err)) {
+  if (!c_at_e_fastly_object_store_open(&name_str, &object_store_handle, &err)) {
     if (err == FASTLY_ERROR_INVALID_ARGUMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_DOES_NOT_EXIST,
                                 name_str.ptr);

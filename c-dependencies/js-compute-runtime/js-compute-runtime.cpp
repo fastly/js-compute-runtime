@@ -20,9 +20,9 @@
 #pragma clang diagnostic pop
 
 #include "builtins/fetch-event.h"
+#include "c-at-e-world/c_at_e_world_adapter.h"
 #include "js-compute-builtins.h"
 #include "third_party/wizer.h"
-#include "xqd-world/xqd_world_adapter.h"
 #ifdef MEM_STATS
 #include "memory-reporting.h"
 #endif

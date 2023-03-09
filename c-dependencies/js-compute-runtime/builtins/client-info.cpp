@@ -1,6 +1,6 @@
 #include "builtins/client-info.h"
+#include "c-at-e-world/c_at_e_world_adapter.h"
 #include "core/geo_ip.h"
-#include "xqd-world/xqd_world_adapter.h"
 
 #include "js/JSON.h"
 #include <arpa/inet.h>
@@ -24,7 +24,7 @@ static JSString *retrieve_address(JSContext *cx, JS::HandleObject self) {
 
   fastly_list_u8_t octets;
   fastly_error_t err;
-  if (!xqd_fastly_http_req_downstream_client_ip_addr(&octets, &err)) {
+  if (!c_at_e_fastly_http_req_downstream_client_ip_addr(&octets, &err)) {
     HANDLE_ERROR(cx, err);
     return nullptr;
   }

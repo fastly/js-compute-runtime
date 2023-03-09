@@ -6,7 +6,7 @@
 #pragma clang diagnostic pop
 
 #include "crypto.h"
-#include "host_interface/xqd.h"
+#include "host_interface/c-at-e.h"
 #include "subtle-crypto.h"
 
 bool is_int_typed_array(JSObject *obj) {

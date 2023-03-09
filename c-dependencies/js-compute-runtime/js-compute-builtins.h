@@ -17,8 +17,8 @@
 
 #pragma clang diagnostic pop
 
+#include "host_interface/c-at-e.h"
 #include "host_interface/host_call.h"
-#include "host_interface/xqd.h"
 #include "rust-url/rust-url.h"
 
 struct JSErrorFormatString;

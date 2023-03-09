@@ -13,7 +13,7 @@ bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::HandleValue name_arg = args.get(0);
 
-  xqd_world_string_t name_str;
+  c_at_e_world_string_t name_str;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
   JS::UniqueChars name = encode(cx, name_arg, &name_str.len);
   if (!name) {
@@ -37,7 +37,7 @@ bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   fastly_error_t err;
 
   // Ensure that we throw an exception for all unexpected host errors.
-  if (!xqd_fastly_dictionary_get(Dictionary::dictionary_handle(self), &name_str, &ret, &err)) {
+  if (!c_at_e_fastly_dictionary_get(Dictionary::dictionary_handle(self), &name_str, &ret, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -66,7 +66,7 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::HandleValue name_arg = args.get(0);
 
-  xqd_world_string_t name_str;
+  c_at_e_world_string_t name_str;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
   JS::UniqueChars name = encode(cx, name_arg, &name_str.len);
   if (!name) {
@@ -113,7 +113,7 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_dictionary_handle_t dict_handle = INVALID_HANDLE;
   fastly_error_t err;
-  if (!xqd_fastly_dictionary_open(&name_str, &dict_handle, &err)) {
+  if (!c_at_e_fastly_dictionary_open(&name_str, &dict_handle, &err)) {
     if (err == FASTLY_ERROR_BAD_HANDLE) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_DOES_NOT_EXIST,
                                 name_str.ptr);

@@ -1,8 +1,8 @@
 #include <arpa/inet.h>
 
 #include "core/geo_ip.h"
+#include "host_interface/c-at-e.h"
 #include "host_interface/host_call.h"
-#include "host_interface/xqd.h"
 #include "js-compute-builtins.h" // for encode
 
 JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
@@ -36,9 +36,9 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
 
   fastly_list_u8_t octets_list = {const_cast<uint8_t *>(&octets[0]), octets_len};
 
-  xqd_world_string_t ret;
+  c_at_e_world_string_t ret;
   fastly_error_t err;
-  if (!xqd_fastly_geo_lookup(&octets_list, &ret, &err)) {
+  if (!c_at_e_fastly_geo_lookup(&octets_list, &ret, &err)) {
     HANDLE_ERROR(cx, err);
     return nullptr;
   }

@@ -93,7 +93,7 @@ CFLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
 
 # Includes for compiling c++
 INCLUDES := -I$(FSM_SRC)
-INCLUDES += -I$(FSM_SRC)/xqd-world
+INCLUDES += -I$(FSM_SRC)/c-at-e-world
 INCLUDES += -I$(SM_SRC)/include
 INCLUDES += -I$(BUILD)/openssl/include
 
@@ -139,7 +139,7 @@ $(BUILD):
 $(OBJ_DIR):
 	$(call cmd,mkdir,$@)
 
-$(OBJ_DIR)/xqd-world:
+$(OBJ_DIR)/c-at-e-world:
 	$(call cmd,mkdir,$@)
 
 $(OBJ_DIR)/builtins:
@@ -244,7 +244,7 @@ regenerate-world:
 	@exit 1
 else
 regenerate-world:
-	$(WIT_BINDGEN) c xqd.wit --no-helpers --out-dir xqd-world
+	$(WIT_BINDGEN) c c-at-e.wit --no-helpers --out-dir c-at-e-world
 endif
 
 
@@ -259,13 +259,13 @@ FSM_OBJ := $(patsubst $(FSM_SRC)/%.cpp,$(OBJ_DIR)/%.o,$(FSM_CPP))
 
 # Build all the above object files
 $(foreach source,$(FSM_CPP),$(eval $(call compile_cxx,$(source))))
-$(eval $(call compile_cxx,$(FSM_SRC)/xqd-world/xqd_world_adapter.cpp))
-$(eval $(call compile_c,$(FSM_SRC)/xqd-world/xqd_world.c))
+$(eval $(call compile_cxx,$(FSM_SRC)/c-at-e-world/c_at_e_world_adapter.cpp))
+$(eval $(call compile_c,$(FSM_SRC)/c-at-e-world/c_at_e_world.c))
 
-# Special build of xqd_world_adapter.cpp for the component model.
-$(OBJ_DIR)/xqd-world/xqd_world_adapter_component.o: $(FSM_SRC)/xqd-world/xqd_world_adapter.cpp
-$(OBJ_DIR)/xqd-world/xqd_world_adapter_component.o: DEFINES += -DCOMPONENT
-$(OBJ_DIR)/xqd-world/xqd_world_adapter_component.o: | $(OBJ_DIR)/xqd-world
+# Special build of c_at_e_world_adapter.cpp for the component model.
+$(OBJ_DIR)/c-at-e-world/c_at_e_world_adapter_component.o: $(FSM_SRC)/c-at-e-world/c_at_e_world_adapter.cpp
+$(OBJ_DIR)/c-at-e-world/c_at_e_world_adapter_component.o: DEFINES += -DCOMPONENT
+$(OBJ_DIR)/c-at-e-world/c_at_e_world_adapter_component.o: | $(OBJ_DIR)/c-at-e-world
 	$(call cmd,wasi_cxx,$@)
 
 # NOTE: we shadow wasm-opt by adding $(FSM_SRC)/scripts to the path, which
@@ -273,15 +273,15 @@ $(OBJ_DIR)/xqd-world/xqd_world_adapter_component.o: | $(OBJ_DIR)/xqd-world
 # that script for more information about why we do this.
 
 $(OBJ_DIR)/js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
-$(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/xqd-world/xqd_world.o
-$(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/xqd-world/xqd_world_adapter.o
+$(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/c-at-e-world/c_at_e_world.o
+$(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/c-at-e-world/c_at_e_world_adapter.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
 	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
 
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
-$(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/xqd-world/xqd_world.o
-$(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/xqd-world/xqd_world_adapter_component.o
+$(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/c-at-e-world/c_at_e_world.o
+$(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/c-at-e-world/c_at_e_world_adapter_component.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
 	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
