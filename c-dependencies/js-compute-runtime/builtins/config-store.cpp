@@ -11,7 +11,7 @@ fastly_dictionary_handle_t ConfigStore::config_store_handle(JSObject *obj) {
 bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
-  xqd_world_string_t key_str;
+  c_at_e_world_string_t key_str;
   JS::UniqueChars key = encode(cx, args[0], &key_str.len);
   // If the converted string has a length of 0 then we throw an Error
   // because Dictionary keys have to be at-least 1 character.
@@ -30,7 +30,7 @@ bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   fastly_option_string_t ret;
   fastly_error_t err;
   // Ensure that we throw an exception for all unexpected host errors.
-  if (!xqd_fastly_dictionary_get(ConfigStore::config_store_handle(self), &key_str, &ret, &err)) {
+  if (!c_at_e_fastly_dictionary_get(ConfigStore::config_store_handle(self), &key_str, &ret, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -58,7 +58,7 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The ConfigStore builtin");
   CTOR_HEADER("ConfigStore", 1);
 
-  xqd_world_string_t name_str;
+  c_at_e_world_string_t name_str;
   JS::UniqueChars name_chars = encode(cx, args[0], &name_str.len);
   name_str.ptr = name_chars.get();
 
@@ -99,7 +99,7 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedObject config_store(cx, JS_NewObjectForConstructor(cx, &class_, args));
   fastly_dictionary_handle_t dict_handle = INVALID_HANDLE;
   fastly_error_t err;
-  if (!xqd_fastly_dictionary_open(&name_str, &dict_handle, &err)) {
+  if (!c_at_e_fastly_dictionary_open(&name_str, &dict_handle, &err)) {
     if (err == FASTLY_ERROR_BAD_HANDLE) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_DOES_NOT_EXIST,
                                 name.data());

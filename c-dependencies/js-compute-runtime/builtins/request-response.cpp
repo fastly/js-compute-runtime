@@ -1173,7 +1173,7 @@ bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
     swr = val.toInt32();
   }
 
-  xqd_world_string_t sk_str;
+  c_at_e_world_string_t sk_str;
   val = builtins::CacheOverride::surrogate_key(override);
   if (val.isUndefined()) {
     sk_str.len = 0;
@@ -1186,9 +1186,9 @@ bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
   }
 
   fastly_error_t err;
-  if (!xqd_fastly_http_req_cache_override_set(Request::request_handle(self), tag,
-                                              has_ttl ? &ttl : NULL, has_swr ? &swr : NULL,
-                                              sk_str.len ? &sk_str : NULL, &err)) {
+  if (!c_at_e_fastly_http_req_cache_override_set(Request::request_handle(self), tag,
+                                                 has_ttl ? &ttl : NULL, has_swr ? &swr : NULL,
+                                                 sk_str.len ? &sk_str : NULL, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -1218,7 +1218,7 @@ bool Request::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_error_t err;
   fastly_http_version_t version = 0;
-  if (!xqd_fastly_http_req_version_get(request_handle(self), &version, &err)) {
+  if (!c_at_e_fastly_http_req_version_get(request_handle(self), &version, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -1322,7 +1322,7 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_error_t err;
   fastly_request_handle_t request_handle = INVALID_HANDLE;
-  if (!xqd_fastly_http_req_new(&request_handle, &err)) {
+  if (!c_at_e_fastly_http_req_new(&request_handle, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -1470,7 +1470,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
                           JS::HandleValue init_val) {
   fastly_error_t err;
   fastly_request_handle_t request_handle = INVALID_HANDLE;
-  if (!xqd_fastly_http_req_new(&request_handle, &err)) {
+  if (!c_at_e_fastly_http_req_new(&request_handle, &err)) {
     HANDLE_ERROR(cx, err);
     return nullptr;
   }
@@ -1597,14 +1597,14 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
 
   // Actually set the URL derived in steps 5 or 6 above.
   RequestOrResponse::set_url(request, StringValue(url_str));
-  xqd_world_string_t url_xqd_str;
-  JS::UniqueChars url = encode(cx, url_str, &url_xqd_str.len);
+  c_at_e_world_string_t url_c_at_e_str;
+  JS::UniqueChars url = encode(cx, url_str, &url_c_at_e_str.len);
   if (!url) {
     return nullptr;
   } else {
-    url_xqd_str.ptr = url.get();
+    url_c_at_e_str.ptr = url.get();
     fastly_error_t err;
-    if (!xqd_fastly_http_req_uri_set(request_handle, &url_xqd_str, &err)) {
+    if (!c_at_e_fastly_http_req_uri_set(request_handle, &url_c_at_e_str, &err)) {
       HANDLE_ERROR(cx, err);
       return nullptr;
     }
@@ -1746,9 +1746,9 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     is_get_or_head = strcmp(method.get(), "GET") == 0 || strcmp(method.get(), "HEAD") == 0;
 
     JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::Method), JS::StringValue(method_str));
-    xqd_world_string_t method_xqd_str = {method.get(), method_len};
+    c_at_e_world_string_t method_c_at_e_str = {method.get(), method_len};
     fastly_error_t err;
-    if (!xqd_fastly_http_req_method_set(request_handle, &method_xqd_str, &err)) {
+    if (!c_at_e_fastly_http_req_method_set(request_handle, &method_c_at_e_str, &err)) {
       HANDLE_ERROR(cx, err);
       return nullptr;
     }
@@ -2206,7 +2206,7 @@ bool Response::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_http_version_t version = 0;
   fastly_error_t err;
-  if (!xqd_fastly_http_resp_version_get(response_handle(self), &version, &err)) {
+  if (!c_at_e_fastly_http_resp_version_get(response_handle(self), &version, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -2341,7 +2341,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   // https://github.com/fastly/js-compute-runtime/issues/220
   fastly_response_handle_t response_handle = INVALID_HANDLE;
   fastly_error_t err;
-  if (!xqd_fastly_http_resp_new(&response_handle, &err)) {
+  if (!c_at_e_fastly_http_resp_new(&response_handle, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -2368,13 +2368,13 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   // (implicit)
 
   // 5.  Set `this`’s `response`’s `status` to `init`["status"].
-  if (!xqd_fastly_http_resp_status_set(response_handle, status, &err)) {
+  if (!c_at_e_fastly_http_resp_status_set(response_handle, status, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
   // To ensure that we really have the same status value as the host,
   // we always read it back here.
-  if (!xqd_fastly_http_resp_status_get(response_handle, &status, &err)) {
+  if (!c_at_e_fastly_http_resp_status_get(response_handle, &status, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -2454,7 +2454,7 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
   if (is_upstream) {
     uint16_t status = 0;
     fastly_error_t err;
-    if (!xqd_fastly_http_resp_status_get(response_handle, &status, &err)) {
+    if (!c_at_e_fastly_http_resp_status_get(response_handle, &status, &err)) {
       HANDLE_ERROR(cx, err);
       return nullptr;
     }

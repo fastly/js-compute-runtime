@@ -1,9 +1,10 @@
 {
     "files.associations": {
+        "*.mdx": "mdx",
         "cstddef": "c",
         "limits": "c",
         "type_traits": "c",
-        "xqd.h": "c",
+        "c-at-e.h": "c",
         "algorithm": "cpp",
         "memory": "cpp",
         "__functional_base": "cpp",
@@ -87,7 +88,8 @@
         "__functional_03": "cpp",
         "__functional_base_03": "cpp",
         "memory_resource": "cpp",
-        "numeric": "cpp"
+        "numeric": "cpp",
+        "c_at_e_world.h": "c"
     },
     "git.ignoreLimitWarning": true
 }

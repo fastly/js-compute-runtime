@@ -19,7 +19,7 @@
 #pragma clang diagnostic pop
 #include <mozilla/Unused.h>
 
-#include "host_interface/xqd.h"
+#include "host_interface/c-at-e.h"
 #include "js-compute-builtins.h" // for encode
 #include "subtle-crypto.h"
 

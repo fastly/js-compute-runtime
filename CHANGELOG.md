@@ -52,7 +52,7 @@
 
 ### Changed
 
-* ensure CacheOverride bitflags are the same value as defined in xqd ([#386](https://github.com/fastly/js-compute-runtime/issues/386)) ([8a1c215](https://github.com/fastly/js-compute-runtime/commit/8a1c2158505e8ed1ebb424fc97866da155601d1f))
+* ensure CacheOverride bitflags are the same value as defined in c-at-e ([#386](https://github.com/fastly/js-compute-runtime/issues/386)) ([8a1c215](https://github.com/fastly/js-compute-runtime/commit/8a1c2158505e8ed1ebb424fc97866da155601d1f))
 
 ## 1.3.0 (2023-01-24)
 
