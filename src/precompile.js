@@ -16,7 +16,14 @@ function findRegexLiterals(source) {
     const pattern = m.captures[0].node.text;
     const flags = m.captures[1]?.node.text || "";
     // transpile unicode property escapes
-    const patternTranspiled = regexpuc(pattern, flags, { unicodePropertyEscapes: 'transform' });
+    let patternTranspiled;
+    try {
+      patternTranspiled = regexpuc(pattern, flags, { unicodePropertyEscapes: 'transform' });
+    } catch {
+      // swallow regex parse errors here to instead throw them at the engine level
+      // this then also avoids regex parser bugs being thrown unnecessarily
+      patternTranspiled = pattern;
+    }
     regexLiterals.push({
       patternStart: m.captures[0].node.startIndex,
       patternEnd: m.captures[0].node.endIndex,
