@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/fastly/js-compute-runtime/compare/v1.5.0...v1.5.1) (2023-03-10)
+
+
+### Bug Fixes
+
+* handle fallthrough of regex parser bugs ([#447](https://github.com/fastly/js-compute-runtime/issues/447)) ([8f38980](https://github.com/fastly/js-compute-runtime/commit/8f389805d6a88e476f0281df974cb971d7e78896))
+
 ## [1.5.0](https://github.com/fastly/js-compute-runtime/compare/v1.4.2...v1.5.0) (2023-03-10)
 
 
