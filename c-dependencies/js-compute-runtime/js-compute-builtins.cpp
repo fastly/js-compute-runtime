@@ -10,7 +10,7 @@
 #include <strings.h>
 #include <vector>
 
-#include "c-at-e-world/c_at_e_world_adapter.h"
+#include "c-at-e-world/c_at_e_world.h"
 #include "js-compute-builtins.h"
 #include "rust-url/rust-url.h"
 
@@ -756,7 +756,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
         c_at_e_world_string_t uri_str;
         fastly_error_t err;
-        if (c_at_e_fastly_http_req_uri_get(handle, &uri_str, &err)) {
+        if (fastly_http_req_uri_get(handle, &uri_str, &err)) {
           JS_ReportErrorLatin1(cx,
                                "No backend specified for request with url %s. "
                                "Must provide a `backend` property on the `init` object "
@@ -796,13 +796,13 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     fastly_error_t err;
     bool ok;
     if (streaming) {
-      ok = c_at_e_fastly_http_req_send_async_streaming(
-          builtins::Request::request_handle(request),
-          builtins::RequestOrResponse::body_handle(request), &backend_str, &request_handle, &err);
+      ok = fastly_http_req_send_async_streaming(builtins::Request::request_handle(request),
+                                                builtins::RequestOrResponse::body_handle(request),
+                                                &backend_str, &request_handle, &err);
     } else {
-      ok = c_at_e_fastly_http_req_send_async(builtins::Request::request_handle(request),
-                                             builtins::RequestOrResponse::body_handle(request),
-                                             &backend_str, &request_handle, &err);
+      ok = fastly_http_req_send_async(builtins::Request::request_handle(request),
+                                      builtins::RequestOrResponse::body_handle(request),
+                                      &backend_str, &request_handle, &err);
     }
 
     if (!ok) {
@@ -1073,8 +1073,8 @@ bool process_pending_request(JSContext *cx, HandleObject request) {
 
   fastly_response_t ret = {INVALID_HANDLE, INVALID_HANDLE};
   fastly_error_t err;
-  bool ok = c_at_e_fastly_http_req_pending_req_wait(builtins::Request::pending_handle(request),
-                                                    &ret, &err);
+  bool ok =
+      fastly_http_req_pending_req_wait(builtins::Request::pending_handle(request), &ret, &err);
   fastly_response_handle_t response_handle = ret.f0;
   fastly_body_handle_t body = ret.f1;
 
@@ -1195,7 +1195,7 @@ bool process_pending_async_tasks(JSContext *cx) {
 
   fastly_option_u32_t ret;
   fastly_error_t err;
-  if (!c_at_e_fastly_async_io_select(&handle_list, timeout, &ret, &err)) {
+  if (!fastly_async_io_select(&handle_list, timeout, &ret, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -1214,7 +1214,7 @@ bool process_pending_async_tasks(JSContext *cx) {
 
 #ifdef DEBUG
   bool is_ready = 0;
-  MOZ_ASSERT(c_at_e_fastly_async_io_is_ready(handles[ready_index], &is_ready, &err));
+  MOZ_ASSERT(fastly_async_io_is_ready(handles[ready_index], &is_ready, &err));
   MOZ_ASSERT(is_ready);
 #endif
 

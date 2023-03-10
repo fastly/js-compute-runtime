@@ -813,8 +813,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   }
 
   fastly_error_t err;
-  if (!c_at_e_fastly_http_req_register_dynamic_backend(&name_str, &target_str, &backend_config,
-                                                       &err)) {
+  if (!fastly_http_req_register_dynamic_backend(&name_str, &target_str, &backend_config, &err)) {
     HANDLE_ERROR(cx, err);
     return JS::Result<mozilla::Ok>(JS::Error());
   }

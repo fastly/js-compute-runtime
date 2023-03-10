@@ -4,7 +4,6 @@
 #include "builtins/request-response.h"
 #include "builtins/shared/url.h"
 #include "builtins/worker-location.h"
-#include "c-at-e-world/c_at_e_world_adapter.h"
 #include "host_interface/host_api.h"
 
 namespace builtins {
@@ -83,7 +82,7 @@ bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request
 
   fastly_request_t req;
   fastly_error_t err;
-  if (!c_at_e_fastly_http_req_body_downstream_get(&req, &err)) {
+  if (!fastly_http_req_body_downstream_get(&req, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -98,7 +97,7 @@ bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request
 
   // Set the method.
   c_at_e_world_string_t method_str;
-  if (!c_at_e_fastly_http_req_method_get(request_handle, &method_str, &err)) {
+  if (!fastly_http_req_method_get(request_handle, &method_str, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -126,7 +125,7 @@ bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request
   }
 
   c_at_e_world_string_t uri_str;
-  if (!c_at_e_fastly_http_req_uri_get(request_handle, &uri_str, &err)) {
+  if (!fastly_http_req_uri_get(request_handle, &uri_str, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -185,7 +184,7 @@ bool start_response(JSContext *cx, JS::HandleObject response_obj, bool streaming
   fastly_body_handle_t body = RequestOrResponse::body_handle(response_obj);
 
   fastly_error_t err;
-  if (!c_at_e_fastly_http_resp_send_downstream(response, body, streaming, &err)) {
+  if (!fastly_http_resp_send_downstream(response, body, streaming, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -308,7 +307,7 @@ bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
   fastly_response_handle_t response = INVALID_HANDLE;
   fastly_error_t err;
 
-  if (!c_at_e_fastly_http_resp_new(&response, &err)) {
+  if (!fastly_http_resp_new(&response, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -320,8 +319,8 @@ bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
   }
 
   auto body = make_res.unwrap();
-  if (!c_at_e_fastly_http_resp_status_set(response, 500, &err) ||
-      !c_at_e_fastly_http_resp_send_downstream(response, body.handle, false, &err)) {
+  if (!fastly_http_resp_status_set(response, 500, &err) ||
+      !fastly_http_resp_send_downstream(response, body.handle, false, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }

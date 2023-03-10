@@ -197,7 +197,7 @@ bool ObjectStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_option_body_handle_t ret;
   fastly_error_t err;
-  if (!c_at_e_fastly_object_store_lookup(object_store_handle(self), &key_str, &ret, &err)) {
+  if (!fastly_object_store_lookup(object_store_handle(self), &key_str, &ret, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -271,7 +271,7 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       fastly_body_handle_t body = RequestOrResponse::body_handle(source_owner);
 
       fastly_error_t err;
-      if (!c_at_e_fastly_object_store_insert(object_store_handle(self), &key_str, body, &err)) {
+      if (!fastly_object_store_insert(object_store_handle(self), &key_str, body, &err)) {
         HANDLE_ERROR(cx, err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
@@ -350,8 +350,7 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     fastly_error_t err;
-    if (!c_at_e_fastly_object_store_insert(object_store_handle(self), &key_str, body.handle,
-                                           &err)) {
+    if (!fastly_object_store_insert(object_store_handle(self), &key_str, body.handle, &err)) {
       // Ensure that we throw an exception for all unexpected host errors.
       HANDLE_ERROR(cx, err);
       return RejectPromiseWithPendingError(cx, result_promise);
@@ -418,7 +417,7 @@ bool ObjectStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_object_store_handle_t object_store_handle = INVALID_HANDLE;
   fastly_error_t err;
-  if (!c_at_e_fastly_object_store_open(&name_str, &object_store_handle, &err)) {
+  if (!fastly_object_store_open(&name_str, &object_store_handle, &err)) {
     if (err == FASTLY_ERROR_INVALID_ARGUMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_DOES_NOT_EXIST,
                                 name_str.ptr);

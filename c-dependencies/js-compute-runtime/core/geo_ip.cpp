@@ -38,7 +38,7 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
 
   c_at_e_world_string_t ret;
   fastly_error_t err;
-  if (!c_at_e_fastly_geo_lookup(&octets_list, &ret, &err)) {
+  if (!fastly_geo_lookup(&octets_list, &ret, &err)) {
     HANDLE_ERROR(cx, err);
     return nullptr;
   }

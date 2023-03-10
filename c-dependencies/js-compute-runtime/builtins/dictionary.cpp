@@ -37,7 +37,7 @@ bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   fastly_error_t err;
 
   // Ensure that we throw an exception for all unexpected host errors.
-  if (!c_at_e_fastly_dictionary_get(Dictionary::dictionary_handle(self), &name_str, &ret, &err)) {
+  if (!fastly_dictionary_get(Dictionary::dictionary_handle(self), &name_str, &ret, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -113,7 +113,7 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_dictionary_handle_t dict_handle = INVALID_HANDLE;
   fastly_error_t err;
-  if (!c_at_e_fastly_dictionary_open(&name_str, &dict_handle, &err)) {
+  if (!fastly_dictionary_open(&name_str, &dict_handle, &err)) {
     if (err == FASTLY_ERROR_BAD_HANDLE) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_DOES_NOT_EXIST,
                                 name_str.ptr);

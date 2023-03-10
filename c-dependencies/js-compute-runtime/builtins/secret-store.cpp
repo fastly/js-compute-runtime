@@ -14,7 +14,7 @@ bool SecretStoreEntry::plaintext(JSContext *cx, unsigned argc, JS::Value *vp) {
   fastly_option_string_t ret;
   fastly_error_t err;
   // Ensure that we throw an exception for all unexpected host errors.
-  if (!c_at_e_fastly_secret_store_plaintext(SecretStoreEntry::secret_handle(self), &ret, &err)) {
+  if (!fastly_secret_store_plaintext(SecretStoreEntry::secret_handle(self), &ret, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -105,8 +105,7 @@ bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   fastly_option_secret_handle_t secret;
   fastly_error_t err;
   // Ensure that we throw an exception for all unexpected host errors.
-  if (!c_at_e_fastly_secret_store_get(SecretStore::secret_store_handle(self), &key_str, &secret,
-                                      &err)) {
+  if (!fastly_secret_store_get(SecretStore::secret_store_handle(self), &key_str, &secret, &err)) {
     HANDLE_ERROR(cx, err);
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
@@ -181,7 +180,7 @@ bool SecretStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   name_str.len = length;
   fastly_secret_store_handle_t handle = INVALID_HANDLE;
   fastly_error_t err;
-  if (!c_at_e_fastly_secret_store_open(&name_str, &handle, &err)) {
+  if (!fastly_secret_store_open(&name_str, &handle, &err)) {
     if (err == FASTLY_ERROR_OPTIONAL_NONE) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SECRET_STORE_DOES_NOT_EXIST,
                                 name.data());
