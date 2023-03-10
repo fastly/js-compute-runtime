@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/fastly/js-compute-runtime/compare/v1.4.2...v1.5.0) (2023-03-10)
+
+
+### Features
+
+* support unicode patterns via precompilation ([87a0dce](https://github.com/fastly/js-compute-runtime/commit/87a0dce62115cfd6d665f1d2aa617cf53a8b6b01))
+
 ## [1.4.2](https://github.com/fastly/js-compute-runtime/compare/v1.4.1...v1.4.2) (2023-03-09)
 
 
