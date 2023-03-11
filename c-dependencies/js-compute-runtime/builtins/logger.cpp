@@ -16,7 +16,7 @@ bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_error_t err;
   c_at_e_world_string_t msg_str = {msg.get(), msg_len};
-  if (!c_at_e_fastly_log_write(endpoint, &msg_str, &err)) {
+  if (!fastly_log_write(endpoint, &msg_str, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -37,7 +37,7 @@ JSObject *Logger::create(JSContext *cx, const char *name) {
   fastly_log_endpoint_handle_t handle;
   c_at_e_world_string_t name_str = {const_cast<char *>(name), strlen(name)};
   fastly_error_t err;
-  if (!c_at_e_fastly_log_endpoint_get(&name_str, &handle, &err)) {
+  if (!fastly_log_endpoint_get(&name_str, &handle, &err)) {
     HANDLE_ERROR(cx, err);
     return nullptr;
   }
@@ -58,7 +58,7 @@ bool Logger::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   fastly_log_endpoint_handle_t handle = INVALID_HANDLE;
   fastly_error_t err;
 
-  if (!c_at_e_fastly_log_endpoint_get(&name_str, &handle, &err)) {
+  if (!fastly_log_endpoint_get(&name_str, &handle, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }

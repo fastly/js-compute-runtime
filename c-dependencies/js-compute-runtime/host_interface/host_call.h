@@ -8,7 +8,6 @@
 #include "jsapi.h"
 #pragma clang diagnostic pop
 
-#include "c-at-e-world/c_at_e_world_adapter.h"
 #include "host_interface/c-at-e.h"
 
 /* Returns false if an exception is set on `cx` and the caller should

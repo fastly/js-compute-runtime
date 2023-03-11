@@ -1,13 +1,14 @@
-#include "host_api.h"
+#include <algorithm>
+
 #include "c_at_e_world.h"
-#include "c_at_e_world_adapter.h"
+#include "host_interface/host_api.h"
 
 Result<HttpBody> HttpBody::make() {
   Result<HttpBody> res;
 
   fastly_body_handle_t handle;
   fastly_error_t err;
-  if (!c_at_e_fastly_http_body_new(&handle, &err)) {
+  if (!fastly_http_body_new(&handle, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(handle);
@@ -21,7 +22,7 @@ Result<HttpBodyChunk> HttpBody::read(uint32_t chunk_size) const {
 
   fastly_list_u8_t ret;
   fastly_error_t err;
-  if (!c_at_e_fastly_http_body_read(this->handle, chunk_size, &ret, &err)) {
+  if (!fastly_http_body_read(this->handle, chunk_size, &ret, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(JS::UniqueChars(reinterpret_cast<char *>(ret.ptr)), ret.len);
@@ -38,8 +39,7 @@ Result<uint32_t> HttpBody::write(const uint8_t *ptr, size_t len) const {
 
   fastly_error_t err;
   uint32_t written;
-  if (!c_at_e_fastly_http_body_write(this->handle, &chunk, FASTLY_BODY_WRITE_END_BACK, &written,
-                                     &err)) {
+  if (!fastly_http_body_write(this->handle, &chunk, FASTLY_BODY_WRITE_END_BACK, &written, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(written);
@@ -67,7 +67,7 @@ Result<Void> HttpBody::append(HttpBody other) const {
   Result<Void> res;
 
   fastly_error_t err;
-  if (!c_at_e_fastly_http_body_append(this->handle, other.handle, &err)) {
+  if (!fastly_http_body_append(this->handle, other.handle, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace();
@@ -80,7 +80,7 @@ Result<Void> HttpBody::close() {
   Result<Void> res;
 
   fastly_error_t err;
-  if (!c_at_e_fastly_http_body_close(this->handle, &err)) {
+  if (!fastly_http_body_close(this->handle, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace();
