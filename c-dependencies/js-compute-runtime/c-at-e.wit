@@ -497,8 +497,8 @@ default world c-at-e-world {
     /// no need to return the response, due to the run to completion semantics.
     /// 
     /// serve-specific error codes, outside of HTTP semantics, could be a useful future
-    /// addition to this interface, with an empty error placeholder for now (currently unused
-    /// by the runtime)
+    /// addition to this interface, with an empty error placeholder for now (currently always
+    /// returns success in the runtime)
     serve: func(req: request) -> result
   }
 }
