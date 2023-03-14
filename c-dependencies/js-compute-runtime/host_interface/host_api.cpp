@@ -18,8 +18,8 @@ Result<HttpBody> HttpBody::make() {
   return res;
 }
 
-Result<HttpBodyChunk> HttpBody::read(uint32_t chunk_size) const {
-  Result<HttpBodyChunk> res;
+Result<HostString> HttpBody::read(uint32_t chunk_size) const {
+  Result<HostString> res;
 
   fastly_list_u8_t ret;
   fastly_error_t err;
