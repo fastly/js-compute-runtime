@@ -161,7 +161,7 @@ struct ReadResult {
 // Returns a UniqueChars and the length of that string. The UniqueChars value is not
 // null-terminated.
 ReadResult read_from_handle_all(JSContext *cx, uint32_t handle) {
-  std::vector<HttpBodyChunk> chunks;
+  std::vector<HostString> chunks;
   size_t bytes_read = 0;
   HttpBody body{handle};
   while (true) {
