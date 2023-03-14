@@ -4,6 +4,7 @@ set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 root="$(pwd)"
+mode=${MODE:-release}
 
 if [ "$#" -lt 1 ]; then
     echo "Usage: $0 <application_name>"
@@ -22,10 +23,27 @@ if [ ! -d $application_path ]; then
     exit 1
 fi
 
+case "$mode" in
+  release)
+    yarn build
+    (
+        cd $application_path
+        ../../replace-host.sh $application_name "https://compute-sdk-test-backend.edgecompute.app"
+        fastly compute serve --quiet
+    )
+    ;;
 
-yarn build
-(
-    cd $application_path
-    ../../replace-host.sh $application_name "https://compute-sdk-test-backend.edgecompute.app"
-    fastly compute serve --quiet
-)
+  debug)
+    yarn build:debug
+    (
+        cd $application_path
+        ../../replace-host.sh $application_name "https://compute-sdk-test-backend.edgecompute.app"
+        fastly compute serve --verbose
+    )
+    ;;
+
+  *)
+    echo "Unknown build type: $mode"
+    exit 1
+    ;;
+esac
