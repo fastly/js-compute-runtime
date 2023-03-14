@@ -31,7 +31,8 @@
     "test": "npm run test:types && npm run test:cli",
     "test:cli": "brittle --bail integration-tests/cli/**.test.js",
     "test:types": "tsd",
-    "build": "make -j8 -C c-dependencies/js-compute-runtime && cp c-dependencies/js-compute-runtime/*.wasm c-dependencies/js-compute-runtime/fastly.wit ."
+    "build": "make -j8 -C c-dependencies/js-compute-runtime && cp c-dependencies/js-compute-runtime/*.wasm c-dependencies/js-compute-runtime/fastly.wit .",
+    "build:debug": "DEBUG=true make -j8 -C c-dependencies/js-compute-runtime && cp c-dependencies/js-compute-runtime/*.wasm c-dependencies/js-compute-runtime/fastly.wit ."
   },
   "devDependencies": {
     "@jakechampion/cli-testing-library": "^1.0.0",

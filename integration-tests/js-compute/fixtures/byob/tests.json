@@ -1,0 +1,17 @@
+{
+  "GET /": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "heyheyhey"
+    },
+    "logs": [
+      "stdout :: Log: Passed 1",
+      "stdout :: Log: Passed 2"
+    ]
+  }
+}
