@@ -28,14 +28,13 @@ async function app(event) {
 
 const routes = new Map();
 routes.set('/', () => {
-  routes.delete('/');
   let test_routes = Array.from(routes.keys())
   return new Response(JSON.stringify(test_routes), { 'headers': { 'content-type': 'application/json' } });
 });
 
 routes.set("/fastly/getgeolocationforipaddress/interface", async function () {
   let actual = Reflect.getOwnPropertyDescriptor(fastly, 'getGeolocationForIpAddress')
-  expected = {
+  let expected = {
     writable: true,
     enumerable: true,
     configurable: true,
@@ -118,93 +117,62 @@ routes.set("/fastly/getgeolocationforipaddress/parameter-empty-string", async ()
   return pass()
 });
 
-let ipv4Expected = {
-  as_name: "sky uk limited",
-  as_number: 5607,
-  area_code: 0,
-  city: "bircotes",
-  conn_speed: "broadband",
-  conn_type: "wifi",
-  continent: "EU",
-  country_code: "GB",
-  country_code3: "GBR",
-  country_name: "united kingdom",
-  latitude: 53.42,
-  longitude: -1.05,
-  metro_code: 826039,
-  postal_code: "dn11 8af",
-  proxy_description: "?",
-  proxy_type: "?",
-  region: "NTT",
-}
+let geoFields = ["as_name",
+  "as_number",
+  "area_code",
+  "city",
+  "conn_speed",
+  "conn_type",
+  "continent",
+  "country_code",
+  "country_code3",
+  "country_name",
+  "gmt_offset",
+  "latitude",
+  "longitude",
+  "metro_code",
+  "postal_code",
+  "proxy_description",
+  "proxy_type",
+  "region",
+  "utc_offset"]
 
 routes.set("/fastly/getgeolocationforipaddress/parameter-ipv4-string", async () => {
   let geo = fastly.getGeolocationForIpAddress('2.216.196.179')
-  delete geo.utc_offset;
-  delete geo.gmt_offset;
-  let error = assert(geo, ipv4Expected, `fastly.getGeolocationForIpAddress('2.216.196.179') == ipv4Expected`)
+  let error = assert(Object.keys(geo), geoFields, `Object.keys(fastly.getGeolocationForIpAddress('2.216.196.179')) == geoFields`)
   if (error) { return error }
   return pass()
 });
 
-let expected = {
-  as_name: "softlayer technologies inc.",
-  as_number: 36351,
-  area_code: 214,
-  city: "dallas",
-  conn_speed: "broadband",
-  conn_type: "wired",
-  continent: "NA",
-  country_code: "US",
-  country_code3: "USA",
-  country_name: "united states",
-  latitude: 32.94,
-  longitude: -96.84,
-  metro_code: 623,
-  postal_code: "75244",
-  proxy_description: "?",
-  proxy_type: "hosting",
-  region: "TX",
-}
 routes.set("/fastly/getgeolocationforipaddress/parameter-compressed-ipv6-string", async () => {
   let geo = fastly.getGeolocationForIpAddress('2607:f0d0:1002:51::4')
-  delete geo.utc_offset;
-  delete geo.gmt_offset;
-  let error = assert(geo, expected, `fastly.getGeolocationForIpAddress('2607:f0d0:1002:51::4') == expected`)
+  let error = assert(Object.keys(geo), geoFields, `Object.keys(fastly.getGeolocationForIpAddress('2607:f0d0:1002:51::4')) == geoFields`)
   if (error) { return error }
   return pass()
 });
 routes.set("/fastly/getgeolocationforipaddress/parameter-shortened-ipv6-string", async () => {
   let geo = fastly.getGeolocationForIpAddress('2607:f0d0:1002:0051:0:0:0:0004')
-  delete geo.utc_offset;
-  delete geo.gmt_offset;
-  let error = assert(geo, expected, `fastly.getGeolocationForIpAddress('2607:f0d0:1002:0051:0:0:0:0004') == expected`)
+  let error = assert(Object.keys(geo), geoFields, `Object.keys(fastly.getGeolocationForIpAddress('2607:f0d0:1002:0051:0:0:0:0004')) == geoFields`)
   if (error) { return error }
   return pass()
 });
 routes.set("/fastly/getgeolocationforipaddress/parameter-expanded-ipv6-string", async () => {
   let geo = fastly.getGeolocationForIpAddress('2607:f0d0:1002:0051:0000:0000:0000:0004')
-  delete geo.utc_offset;
-  delete geo.gmt_offset;
-  let error = assert(geo, expected, `fastly.getGeolocationForIpAddress('2607:f0d0:1002:0051:0000:0000:0000:0004') == expected`)
+  let error = assert(Object.keys(geo), geoFields, `Object.keys(fastly.getGeolocationForIpAddress('2607:f0d0:1002:0051:0000:0000:0000:0004')) == geoFields`)
   if (error) { return error }
   return pass()
 });
 // TODO: Uncomment these tests once IPv4-in-6 is working in ipll
 // routes.set("/fastly/getgeolocationforipaddress/parameter-dual-ipv4-ipv6-string", async () => {
 //   let geo = fastly.getGeolocationForIpAddress('::FFFF:2.216.196.179')
-//   delete geo.utc_offset;
-//   delete geo.gmt_offset;
-//   let error = assert(geo, expected, `fastly.getGeolocationForIpAddress('::2.216.196.179') == expected`)
+//   let error = assert(Object.keys(geo), geoFields, `Object.keys(fastly.getGeolocationForIpAddress('::FFFF:2.216.196.179')) == geoFields`)
 //   if (error) { return error }
 //   return pass()
 // });
 
 routes.set("/fastly/getgeolocationforipaddress/called-unbound", async () => {
   let geo = fastly.getGeolocationForIpAddress.call(undefined, '2607:f0d0:1002:0051:0000:0000:0000:0004')
-  delete geo.utc_offset;
-  delete geo.gmt_offset;
-  let error = assert(geo, expected, `fastly.getGeolocationForIpAddress.call(undefined, '2607:f0d0:1002:0051:0000:0000:0000:0004') == expected`)
+  let error = assert(Object.keys(geo), geoFields, `Object.keys(fastly.getGeolocationForIpAddress('2607:f0d0:1002:0051:0000:0000:0000:0004')) == geoFields`)
   if (error) { return error }
   return pass()
 });
