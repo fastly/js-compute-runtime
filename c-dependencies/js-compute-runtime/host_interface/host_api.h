@@ -67,13 +67,27 @@ public:
   T &unwrap() { return std::get<T>(this->result); }
 };
 
-/// A single chunk read from an HttpBody.
-struct HttpBodyChunk final {
+/// A string allocated by the host interface. Holds ownership of the data.
+struct HostString final {
   JS::UniqueChars ptr;
   size_t len;
 
-  HttpBodyChunk() = default;
-  HttpBodyChunk(JS::UniqueChars ptr, size_t len) : ptr{std::move(ptr)}, len{len} {}
+  HostString() = default;
+  explicit HostString(c_at_e_world_string_t str) : ptr{str.ptr}, len{str.len} {}
+  HostString(JS::UniqueChars ptr, size_t len) : ptr{std::move(ptr)}, len{len} {}
+
+  using iterator = char *;
+
+  size_t size() const { return this->len; }
+
+  char *begin() { return this->ptr.get(); }
+  char *end() { return this->begin() + this->len; }
+
+  const char *begin() const { return this->ptr.get(); }
+  const char *end() const { return this->begin() + this->len; }
+
+  /// Conversion to a `std::string_view`.
+  operator std::string_view() { return std::string_view(this->ptr.get(), this->len); }
 };
 
 /// A convenience wrapper for the host calls involving http bodies.
@@ -95,7 +109,7 @@ public:
   static Result<HttpBody> make();
 
   /// Read a chunk from this handle.
-  Result<HttpBodyChunk> read(uint32_t chunk_size) const;
+  Result<HostString> read(uint32_t chunk_size) const;
 
   /// Write a chunk to this handle.
   Result<uint32_t> write(const uint8_t *bytes, size_t len) const;
@@ -111,28 +125,6 @@ public:
 
   /// Close this handle, and reset internal state to invalid.
   Result<Void> close();
-};
-
-struct HostString final {
-  JS::UniqueChars ptr;
-  size_t len;
-
-  HostString() = default;
-  explicit HostString(c_at_e_world_string_t str) : ptr{str.ptr}, len{str.len} {}
-  HostString(JS::UniqueChars ptr, size_t len) : ptr{std::move(ptr)}, len{len} {}
-
-  using iterator = char *;
-
-  size_t size() const { return this->len; }
-
-  char *begin() { return this->ptr.get(); }
-  char *end() { return this->begin() + this->len; }
-
-  const char *begin() const { return this->ptr.get(); }
-  const char *end() const { return this->begin() + this->len; }
-
-  /// Conversion to a `std::string_view`.
-  operator std::string_view() { return std::string_view(this->ptr.get(), this->len); }
 };
 
 class HttpBase {
