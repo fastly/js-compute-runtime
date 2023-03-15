@@ -77,18 +77,14 @@ JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {
   return Request::create(cx, requestInstance, INVALID_HANDLE, INVALID_HANDLE, true);
 }
 
-bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request) {
+bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request,
+                                         fastly_request_t *req) {
   MOZ_ASSERT(Request::request_handle(request) == INVALID_HANDLE);
 
-  fastly_request_t req;
   fastly_error_t err;
-  if (!fastly_http_req_body_downstream_get(&req, &err)) {
-    HANDLE_ERROR(cx, err);
-    return false;
-  }
 
-  fastly_request_handle_t request_handle = req.f0;
-  fastly_body_handle_t body_handle = req.f1;
+  fastly_request_handle_t request_handle = req->f0;
+  fastly_body_handle_t body_handle = req->f1;
 
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Request),
                       JS::Int32Value(request_handle));
@@ -405,10 +401,10 @@ JSObject *FetchEvent::create(JSContext *cx) {
 
 JS::HandleObject FetchEvent::instance() { return INSTANCE; }
 
-bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self) {
+bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, fastly_request_t *req) {
   JS::RootedObject request(
       cx, &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)).toObject());
-  return init_downstream_request(cx, request);
+  return init_downstream_request(cx, request, req);
 }
 
 bool FetchEvent::is_active(JSObject *self) {

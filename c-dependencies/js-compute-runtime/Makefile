@@ -109,7 +109,7 @@ LD_FLAGS += -L$(BUILD)/openssl/libx32 -lcrypto
 .PHONY: all
 all: $(FSM_SRC)/js-compute-runtime.wasm
 all: $(FSM_SRC)/js-compute-runtime-component.wasm
-all: wasi_snapshot_preview1.wasm
+all: wasi_snapshot_preview1.reactor.wasm
 
 # Remove just the build artifacts for the current runtime build.
 .PHONY: clean
@@ -141,6 +141,9 @@ $(OBJ_DIR):
 $(OBJ_DIR)/c-at-e-world:
 	$(call cmd,mkdir,$@)
 
+$(OBJ_DIR)/impl:
+	$(call cmd,mkdir,$@)
+
 $(OBJ_DIR)/builtins:
 	$(call cmd,mkdir,$@)
 
@@ -162,8 +165,8 @@ $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz: URL=https://www.openssl.org/source/o
 $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz: | $(BUILD)
 	$(call cmd,wget,$@)
 
-wasi_snapshot_preview1.wasm: URL=https://github.com/bytecodealliance/preview2-prototyping/releases/download/latest/wasi_snapshot_preview1.wasm
-wasi_snapshot_preview1.wasm:
+wasi_snapshot_preview1.reactor.wasm: URL=https://github.com/bytecodealliance/preview2-prototyping/releases/download/latest/wasi_snapshot_preview1.reactor.wasm
+wasi_snapshot_preview1.reactor.wasm:
 	$(call cmd,wget,$@)
 
 # OpenSSL build ################################################################
@@ -238,7 +241,7 @@ regenerate-world:
 	@echo ""
 	@echo "No wit-bindgen found in PATH, consider running"
 	@echo ""
-	@echo "  cargo install --git https://github.com/bytecodealliance/wit-bindgen wit-bindgen-cli"
+	@echo "  cargo install --git https://github.com/bytecodealliance/wit-bindgen wit-bindgen-cli --no-default-features --features c"
 	@echo ""
 	@exit 1
 else
@@ -271,11 +274,13 @@ $(eval $(call compile_cxx,$(FSM_SRC)/c-at-e-world/c_at_e_world_adapter.cpp))
 # includes a script called wasm-opt that immediately exits successfully. See
 # that script for more information about why we do this.
 $(OBJ_DIR)/js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
+$(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/impl/main.o
 $(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/c-at-e-world/c_at_e_world_adapter.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
 	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
 
+$(eval $(call compile_cxx,$(FSM_SRC)/impl/main.cpp))
 
 # Compute runtime component build ##############################################
 
@@ -288,11 +293,13 @@ $(eval $(call compile_c,$(FSM_SRC)/c-at-e-world/c_at_e_world.c))
 # includes a script called wasm-opt that immediately exits successfully. See
 # that script for more information about why we do this.
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
+$(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/impl/main_component.o
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/c-at-e-world/c_at_e_world.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
 	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
 
+$(eval $(call compile_cxx,$(FSM_SRC)/impl/main_component.cpp))
 
 # Shared builtins build ########################################################
 

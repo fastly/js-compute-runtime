@@ -108,8 +108,6 @@ default world c-at-e-world {
     type request = tuple<request-handle, body-handle>
     type response = tuple<response-handle, body-handle>
 
-    http-req-body-downstream-get: func() -> result<request, error>
-
     flags http-cache-override-tag {
         /// Do not cache the response to this request, regardless of the origin response's headers.
         pass,
@@ -485,5 +483,17 @@ default world c-at-e-world {
     }
 
     purge-surrogate-key: func(surrogate-key: string, soft-purge: bool) -> result<purge-result, error>
+  }
+
+  export js-compute-runtime: interface {
+    type request-handle = u32
+    type body-handle = u32
+    type request = tuple<request-handle, body-handle>
+
+    /// Serve the given request
+    ///
+    /// response handle not currently returned, because in the case of a streamed response
+    /// send downstream must be fully streamed due to the run to completion semantics.
+    serve: func(req: request) -> result
   }
 }
