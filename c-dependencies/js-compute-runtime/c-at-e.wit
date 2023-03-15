@@ -493,12 +493,7 @@ default world c-at-e-world {
     /// Serve the given request
     ///
     /// response handle not currently returned, because in the case of a streamed response
-    /// send-downstream would still need to be eagerly called, and therefore there would be
-    /// no need to return the response, due to the run to completion semantics.
-    /// 
-    /// serve-specific error codes, outside of HTTP semantics, could be a useful future
-    /// addition to this interface, with an empty error placeholder for now (currently always
-    /// returns success in the runtime)
+    /// send downstream must be fully streamed due to the run to completion semantics.
     serve: func(req: request) -> result
   }
 }
