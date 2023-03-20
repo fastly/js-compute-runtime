@@ -4,7 +4,7 @@
     "lint": "npx prettier --write ./fixtures/**/*.js"
   },
   "devDependencies": {
-    "prettier": "^2.8.4"
+    "prettier": "^2.8.5"
   },
   "dependencies": {
     "undici": "^5.20.0",
