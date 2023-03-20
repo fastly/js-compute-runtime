@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/c-dependencies/spidermonkey/debug/include",
                 "/opt/wasi-sdk/share/wasi-sysroot/include/",
-                "${workspaceFolder}/c-dependencies/js-compute-runtime"
+                "${workspaceFolder}/c-dependencies/js-compute-runtime",
+                "${workspaceFolder}/c-dependencies/js-compute-runtime/build/openssl-3.0.7/include"
             ],
             "defines": [
                 "__wasi__"

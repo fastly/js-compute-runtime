@@ -1,0 +1,1070 @@
+{
+  "GET /crypto": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/length": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/length"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/called-as-constructor": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/called-with-wrong-this": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/called-with-wrong-this"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/called-with-no-arguments": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/called-with-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/first-parameter-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/first-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/first-parameter-non-existant-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/first-parameter-non-existant-format"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-missing-e-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-missing-e-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-e-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-e-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-invalid-e-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-invalid-e-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-missing-kty-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-missing-kty-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-invalid-kty-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-invalid-kty-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-missing-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-missing-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-non-sequence-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-non-sequence-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-empty-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-empty-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-duplicated-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-duplicated-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-invalid-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-invalid-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-key_ops-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-key_ops-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-missing-n-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-missing-n-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-n-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-n-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-invalid-n-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-invalid-n-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/third-parameter-undefined": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/third-parameter-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/third-parameter-name-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/third-parameter-name-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/third-parameter-invalid-name-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/third-parameter-invalid-name-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/third-parameter-hash-name-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/third-parameter-hash-name-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/third-parameter-hash-algorithm-does-not-match-json-web-key-hash-algorithm": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/third-parameter-hash-algorithm-does-not-match-json-web-key-hash-algorithm"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/fifth-parameter-undefined": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/fifth-parameter-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/fifth-parameter-invalid": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/fifth-parameter-invalid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/fifth-parameter-duplicate-operations": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/fifth-parameter-duplicate-operations"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/fifth-parameter-operations-do-not-match-json-web-key-operations": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/fifth-parameter-operations-do-not-match-json-web-key-operations"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.importKey/fifth-parameter-operation-fields-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/fifth-parameter-operation-fields-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.exportKey": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.exportKey"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.exportKey/length": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.exportKey/length"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.exportKey/called-as-constructor": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.exportKey/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.exportKey/called-with-wrong-this": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.exportKey/called-with-wrong-this"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.exportKey/called-with-no-arguments": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.exportKey/called-with-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.exportKey/first-parameter-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.exportKey/first-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.exportKey/first-parameter-non-existant-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.exportKey/first-parameter-non-existant-format"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.exportKey/second-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.exportKey/second-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.exportKey/second-parameter-wrong-CryptoKey-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.exportKey/second-parameter-wrong-CryptoKey-format"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.exportKey/exported-key-matches-imported-key": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.exportKey/exported-key-matches-imported-key"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.sign": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.sign/length": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/length"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.sign/called-as-constructor": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.sign/called-with-wrong-this": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/called-with-wrong-this"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.sign/called-with-no-arguments": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/called-with-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.sign/first-parameter-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/first-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.sign/first-parameter-non-existant-algorithm": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/first-parameter-non-existant-algorithm"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.sign/second-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/second-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.sign/second-parameter-invalid-usages": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/second-parameter-invalid-usages"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.sign/third-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/third-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.sign/happy-path": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/happy-path"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.verify": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.verify/length": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/length"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.verify/called-as-constructor": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.verify/called-with-wrong-this": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/called-with-wrong-this"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.verify/called-with-no-arguments": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/called-with-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.verify/first-parameter-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/first-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.verify/first-parameter-non-existant-algorithm": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/first-parameter-non-existant-algorithm"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.verify/second-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/second-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.verify/second-parameter-invalid-usages": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/second-parameter-invalid-usages"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.verify/third-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/third-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.verify/fourth-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/fourth-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.verify/incorrect-signature": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/incorrect-signature"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.digest": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.digest/length": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/length"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.digest/called-as-constructor": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.digest/called-with-wrong-this": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/called-with-wrong-this"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.digest/called-with-no-arguments": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/called-with-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.digest/first-parameter-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/first-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.digest/first-parameter-non-existant-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/first-parameter-non-existant-format"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.digest/second-parameter-undefined": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/second-parameter-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.digest/sha-1": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/sha-1"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.digest/sha-256": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/sha-256"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.digest/sha-384": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/sha-384"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.digest/sha-512": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/sha-512"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.generateKey": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.generateKey"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.generateKey/length": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.generateKey/length"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.generateKey/called-as-constructor": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.generateKey/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.generateKey/called-with-wrong-this": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.generateKey/called-with-wrong-this"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.generateKey/called-with-no-arguments": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.generateKey/called-with-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.generateKey/first-parameter-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.generateKey/first-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.generateKey/first-parameter-non-existant-algorithm": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.generateKey/first-parameter-non-existant-algorithm"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.generateKey/third-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.generateKey/third-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.generateKey/third-parameter-invalid-usages": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.generateKey/third-parameter-invalid-usages"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /crypto.subtle.generateKey/happy-path": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.generateKey/happy-path"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  }
+}

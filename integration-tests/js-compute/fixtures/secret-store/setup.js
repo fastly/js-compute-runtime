@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-env node */
 
 import { $ as zx } from 'zx'
 
@@ -34,11 +35,11 @@ if (!STORE_ID) {
 
 try {
     await zx`echo -n 'This is also some secret data' | fastly secret-store-entry create --name first --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`
-} catch {}
+} catch { /* empty */ }
 try {
 let key = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
     await zx`echo -n 'This is some secret data' | fastly secret-store-entry create --name ${key} --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`
-} catch {}
+} catch { /* empty */ }
 
 await zx`fastly resource-link create --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`
 await zx`fastly service-version activate --version latest --token $FASTLY_API_TOKEN`

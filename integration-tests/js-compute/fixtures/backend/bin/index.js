@@ -1,5 +1,3 @@
-/* eslint-env serviceworker */
-/* global ReadableStream */
 import { CacheOverride } from 'fastly:cache-override';
 
 async function handleRequest(event) {

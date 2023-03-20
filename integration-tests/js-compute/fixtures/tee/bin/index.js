@@ -1,5 +1,3 @@
-/* eslint-env serviceworker */
-/* global ReadableStream */
 addEventListener("fetch", (event) =>
   event.respondWith(handleRequest(event.request))
 );

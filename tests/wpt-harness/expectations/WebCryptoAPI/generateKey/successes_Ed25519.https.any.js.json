@@ -1,0 +1,56 @@
+{
+  "Success: generateKey({name: ED25519}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ED25519}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ED25519}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ED25519}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ED25519}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ED25519}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ed25519}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ed25519}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ed25519}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ed25519}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ed25519}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ed25519}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ed25519}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ed25519}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ed25519}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ed25519}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ed25519}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ed25519}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  }
+}

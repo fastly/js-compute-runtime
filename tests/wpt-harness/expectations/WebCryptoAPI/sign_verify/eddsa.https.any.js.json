@@ -1,0 +1,77 @@
+{
+  "setup": {
+    "status": "PASS"
+  },
+  "importVectorKeys step: EdDSA Ed25519 verification": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed448 verification": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed25519 verification with altered signature after call": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed448 verification with altered signature after call": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed25519 with altered data after call": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed448 with altered data after call": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed25519 using privateKey to verify": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed448 using privateKey to verify": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed25519 using publicKey to sign": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed448 using publicKey to sign": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed25519 no verify usage": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed448 no verify usage": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed25519 round trip": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed448 round trip": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed25519 verification failure due to altered signature": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed448 verification failure due to altered signature": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed25519 verification failure due to shortened signature": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed448 verification failure due to shortened signature": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed25519 verification failure due to altered data": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed448 verification failure due to altered data": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed25519 signing with wrong algorithm name": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed448 signing with wrong algorithm name": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed25519 verifying with wrong algorithm name": {
+    "status": "FAIL"
+  },
+  "importVectorKeys step: EdDSA Ed448 verifying with wrong algorithm name": {
+    "status": "FAIL"
+  }
+}

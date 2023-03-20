@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-env node */
 
 import { $ as zx } from 'zx'
 
@@ -40,11 +41,11 @@ if (STORE_ID) {
         try {
             await zx`fastly resource-link delete --version latest --autoclone --id=$LINK_ID  --token $FASTLY_API_TOKEN`
             await zx`fastly service-version activate --version latest --token $FASTLY_API_TOKEN`
-        } catch {}
+        } catch { /* empty */ }
     }
     try {
         await zx`fastly secret-store delete --store-id=$STORE_ID  --token $FASTLY_API_TOKEN`
-    } catch {}
+    } catch { /* empty */ }
 }
 
 console.log(`Tear down has finished! Took ${(Date.now() - startTime) / 1000} seconds to complete`);

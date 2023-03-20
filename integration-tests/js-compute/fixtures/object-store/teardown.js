@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+/* eslint-env node */
 import { $ as zx, fetch } from 'zx'
 
 const startTime = Date.now();

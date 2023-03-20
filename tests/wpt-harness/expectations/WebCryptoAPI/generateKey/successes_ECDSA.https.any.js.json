@@ -1,0 +1,164 @@
+{
+  "Success: generateKey({name: ECDSA, namedCurve: P-256}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-256}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-256}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-256}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-256}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-256}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-384}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-384}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-384}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-384}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-384}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-384}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-521}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-521}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-521}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-521}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-521}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ECDSA, namedCurve: P-521}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-256}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-256}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-256}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-256}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-256}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-256}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-384}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-384}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-384}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-384}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-384}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-384}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-521}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-521}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-521}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-521}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-521}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ecdsa, namedCurve: P-521}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-256}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-256}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-256}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-256}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-256}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-256}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-384}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-384}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-384}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-384}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-384}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-384}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-521}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-521}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-521}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-521}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-521}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ecdsa, namedCurve: P-521}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  }
+}

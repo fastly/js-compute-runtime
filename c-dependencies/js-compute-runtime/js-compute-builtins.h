@@ -149,6 +149,73 @@ bool response_started(JSObject *self);
 bool respondWithError(JSContext *cx, JS::HandleObject self);
 } // namespace FetchEvent
 
+
+namespace GlobalProperties {
+  // Maps an encoded character to a value in the Base64 alphabet, per
+// RFC 4648, Table 1. Invalid input characters map to UINT8_MAX.
+// https://datatracker.ietf.org/doc/html/rfc4648#section-4
+
+constexpr uint8_t nonAlphabet = 255;
+
+static const uint8_t base64DecodeTable[] = {
+    // clang-format off
+  /* 0 */  nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 8 */  nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 16 */ nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 24 */ nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 32 */ nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 40 */ nonAlphabet, nonAlphabet, nonAlphabet,
+  62 /* + */,
+  nonAlphabet, nonAlphabet, nonAlphabet,
+  63 /* / */,
+
+  /* 48 */ /* 0 - 9 */ 52, 53, 54, 55, 56, 57, 58, 59,
+  /* 56 */ 60, 61, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+
+  /* 64 */ nonAlphabet, /* A - Z */ 0, 1, 2, 3, 4, 5, 6,
+  /* 72 */ 7, 8, 9, 10, 11, 12, 13, 14,
+  /* 80 */ 15, 16, 17, 18, 19, 20, 21, 22,
+  /* 88 */ 23, 24, 25, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 96 */ nonAlphabet, /* a - z */ 26, 27, 28, 29, 30, 31, 32,
+  /* 104 */ 33, 34, 35, 36, 37, 38, 39, 40,
+  /* 112 */ 41, 42, 43, 44, 45, 46, 47, 48,
+  /* 120 */ 49, 50, 51, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+};
+
+// clang-format off
+static const uint8_t base64URLDecodeTable[] = { 
+  /* 0 */    nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, 
+  /* 8 */    nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, 
+  /* 16 */   nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, 
+  /* 24 */   nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, 
+  /* 32 */   nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 40 */   nonAlphabet, nonAlphabet, nonAlphabet,          62, nonAlphabet,          62, nonAlphabet,          63,
+  /* 48 */            52,          53,          54,          55,          56,          57,          58,          59,
+  /* 56 */            60,          61, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 64 */   nonAlphabet,           0,           1,           2,           3,           4,           5,           6,
+  /* 72 */             7,           8,           9,          10,          11,          12,          13,          14,
+  /* 80 */            15,          16,          17,          18,          19,          20,          21,          22,
+  /* 88 */            23,          24,          25, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,          63,
+  /* 96 */   nonAlphabet,          26,          27,          28,          29,          30,          31,          32,
+  /* 104 */           33,          34,          35,          36,          37,          38,          39,          40,
+  /* 112 */           41,          42,          43,          44,          45,          46,          47,          48,
+  /* 120 */           49,          50,          51, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet
+};
+
+static const char base64EncodeTable[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                      "abcdefghijklmnopqrstuvwxyz"
+                      "0123456789+/";
+
+static const char base64URLEncodeTable[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                      "abcdefghijklmnopqrstuvwxyz"
+                      "0123456789-_";
+
+// clang-format on
+
+std::string forgivingBase64Encode(std::string_view data, const char* encodeTable);
+JS::Result<std::string> forgivingBase64Decode(std::string_view data, const uint8_t* decodeTable);
+}
+
 bool has_pending_async_tasks();
 bool process_pending_async_tasks(JSContext *cx);
 
@@ -162,5 +229,9 @@ void dump_promise_rejection(JSContext *cx, JS::HandleValue reason, JS::HandleObj
                             FILE *fp);
 bool print_stack(JSContext *cx, FILE *fp);
 bool print_stack(JSContext *cx, JS::HandleObject stack, FILE *fp);
+
+JS::Result<std::string> forgivingBase64Decode(std::string_view data);
+JS::Result<std::string> ConvertJSValueToByteString(JSContext *cx, JS::Handle<JS::Value> v);
+JS::Result<std::string> ConvertJSValueToByteString(JSContext *cx, std::string v);
 
 #endif // fastly_sys_h

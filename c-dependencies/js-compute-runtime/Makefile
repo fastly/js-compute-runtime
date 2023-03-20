@@ -168,6 +168,7 @@ openssl: $(BUILD)/openssl/token
 $(BUILD)/openssl-$(OPENSSL_VERSION)/token: $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz $(FSM_SRC)/getuid.patch
 	$Q tar -C $(BUILD) -xf $<
 	$Q patch -d $(BUILD)/openssl-$(OPENSSL_VERSION) -p1 < $(FSM_SRC)/getuid.patch
+	$Q patch -d $(BUILD)/openssl-$(OPENSSL_VERSION) -p1 < $(FSM_SRC)/rand.patch
 	$Q touch $@
 
 OPENSSL_OPTS := -static -no-sock -no-asm -no-ui-console -no-egd

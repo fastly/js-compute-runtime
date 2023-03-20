@@ -1,0 +1,2216 @@
+{
+  "Bad algorithm: generateKey(AES, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, RED, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, 7, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, false, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, true, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, RED, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, 7, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, false, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, true, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, RED, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, 7, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, false, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, true, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, RED, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, 7, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, RED, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, 7, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, false, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, true, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, RED, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, 7, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, RED, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, 7, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, RED, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, 7, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, false, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, true, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, RED, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey(AES, 7, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, RED, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, 7, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, false, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, true, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, RED, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, 7, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, false, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, true, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, RED, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, 7, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, false, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, true, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, RED, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, 7, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, RED, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, 7, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, false, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, true, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, RED, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, 7, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, RED, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, 7, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, RED, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, 7, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, false, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, true, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, RED, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: AES}, 7, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, RED, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, 7, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, false, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, true, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, RED, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, 7, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, false, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, true, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, RED, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, 7, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, false, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, true, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, RED, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, 7, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, RED, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, 7, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, false, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, true, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, RED, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, 7, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, RED, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, 7, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, RED, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, 7, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, false, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, true, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, RED, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES}, 7, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, RED, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, 7, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, false, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, true, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, RED, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, 7, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, false, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, true, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, RED, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, 7, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, false, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, true, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, RED, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, 7, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, RED, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, 7, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, false, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, true, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, RED, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, 7, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, RED, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, 7, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, RED, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, 7, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, false, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, true, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, RED, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CMAC}, 7, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, RED, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, 7, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, false, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, true, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, RED, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, 7, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, false, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, true, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, RED, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, 7, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, false, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, true, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, RED, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, 7, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, RED, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, 7, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, false, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, true, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, RED, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, 7, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, RED, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, 7, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, RED, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, 7, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, false, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, true, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, RED, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({length: 128, name: AES-CFB}, 7, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, RED, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, 7, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, false, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, true, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, RED, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, 7, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, false, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, true, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, RED, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, 7, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, false, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, true, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, RED, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, 7, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, RED, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, 7, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, false, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, true, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, RED, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, 7, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, RED, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, 7, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, RED, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, 7, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, false, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, true, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, RED, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: MD5, name: HMAC}, 7, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, RED, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({hash: SHA, modulusLength: 2048, name: RSA-PSS, publicExponent: {0: 1, 1: 0, 2: 1}}, 7, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, RED, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, 7, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, false, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, true, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, RED, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, 7, [sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, false, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, true, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, RED, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, 7, [deriveBits, sign, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, false, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, true, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, RED, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, 7, [deriveBits, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, RED, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, 7, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, false, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, true, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, RED, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, 7, [deriveBits, sign])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, RED, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, 7, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, RED, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, 7, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, false, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, true, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, RED, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm: generateKey({name: EC, namedCurve: P521}, 7, [decrypt, sign, deriveBits, decrypt, sign, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [decrypt, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, decrypt, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [decrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, decrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, decrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [decrypt, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, decrypt, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [decrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, decrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, decrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [decrypt, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, decrypt, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [decrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, decrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, decrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [decrypt, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, decrypt, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [decrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, decrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, decrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [wrapKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, wrapKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [unwrapKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 128, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [decrypt, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, decrypt, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [decrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, decrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, decrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [decrypt, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, decrypt, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [decrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, decrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, decrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [decrypt, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, decrypt, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [decrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, decrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, decrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [decrypt, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, decrypt, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [decrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, decrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, decrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [wrapKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, wrapKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [unwrapKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 192, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [decrypt, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, decrypt, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, encrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [decrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, decrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, decrypt, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey, sign])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [decrypt, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, decrypt, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, encrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [decrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, decrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, decrypt, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey, verify])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [decrypt, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, decrypt, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, encrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [decrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, decrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, decrypt, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [decrypt, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, decrypt, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, encrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [decrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, decrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, decrypt, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [wrapKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, wrapKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [unwrapKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad usages: generateKey({length: 256, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, false, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 64, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, false, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 127, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, false, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 129, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, false, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 255, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, false, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 257, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, false, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Bad algorithm property: generateKey({length: 512, name: AES-CTR}, true, [encrypt, decrypt, wrapKey, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Empty usages: generateKey({length: 128, name: AES-CTR}, false, [])": {
+    "status": "FAIL"
+  },
+  "Empty usages: generateKey({length: 128, name: AES-CTR}, true, [])": {
+    "status": "FAIL"
+  },
+  "Empty usages: generateKey({length: 192, name: AES-CTR}, false, [])": {
+    "status": "FAIL"
+  },
+  "Empty usages: generateKey({length: 192, name: AES-CTR}, true, [])": {
+    "status": "FAIL"
+  },
+  "Empty usages: generateKey({length: 256, name: AES-CTR}, false, [])": {
+    "status": "FAIL"
+  },
+  "Empty usages: generateKey({length: 256, name: AES-CTR}, true, [])": {
+    "status": "FAIL"
+  }
+}

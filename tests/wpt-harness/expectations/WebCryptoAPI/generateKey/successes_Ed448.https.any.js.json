@@ -1,0 +1,56 @@
+{
+  "Success: generateKey({name: ED448}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ED448}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ED448}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ED448}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ED448}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ED448}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ed448}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ed448}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ed448}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ed448}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ed448}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: ed448}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ed448}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ed448}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ed448}, false, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ed448}, true, [verify, sign])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ed448}, false, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: Ed448}, true, [sign, verify, sign, sign, verify])": {
+    "status": "FAIL"
+  }
+}

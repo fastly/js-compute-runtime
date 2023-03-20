@@ -1,0 +1,470 @@
+{
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [encrypt, decrypt, wrapKey, unwrapKey, decrypt, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [encrypt, decrypt, wrapKey, unwrapKey, decrypt, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [encrypt, decrypt, wrapKey, unwrapKey, decrypt, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: RSA-OAEP, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [encrypt, decrypt, wrapKey, unwrapKey, decrypt, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [encrypt, decrypt, wrapKey, unwrapKey, decrypt, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [encrypt, decrypt, wrapKey, unwrapKey, decrypt, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [encrypt, decrypt, wrapKey, unwrapKey, decrypt, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [encrypt, decrypt, wrapKey, unwrapKey, decrypt, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [encrypt, decrypt, wrapKey, unwrapKey, decrypt, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-1, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [encrypt, decrypt, wrapKey, unwrapKey, decrypt, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, decrypt, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, encrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, decrypt])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey, wrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, false, [encrypt, decrypt, wrapKey, unwrapKey, decrypt, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({hash: SHA-256, modulusLength: 2048, name: Rsa-oaep, publicExponent: {0: 1, 1: 0, 2: 1}}, true, [encrypt, decrypt, wrapKey, unwrapKey, decrypt, unwrapKey, encrypt, decrypt, wrapKey, unwrapKey])": {
+    "status": "FAIL"
+  }
+}

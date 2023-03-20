@@ -1,5 +1,3 @@
-/* eslint-env serviceworker */
-/* global ReadableStream ObjectStore ObjectStoreEntry */
 import { env } from 'fastly:env';
 import { pass, fail, assert, assertThrows, assertRejects, assertResolves } from "../../../assertions.js";
 

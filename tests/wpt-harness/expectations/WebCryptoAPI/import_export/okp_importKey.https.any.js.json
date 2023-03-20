@@ -1,0 +1,146 @@
+{
+  "Good parameters: Ed25519 bits (spki, buffer(44), {name: Ed25519}, true, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed25519 bits (jwk, object(kty, crv, x), {name: Ed25519}, true, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed25519 bits (pkcs8, buffer(48), {name: Ed25519}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed25519 bits (jwk, object(crv, d, x, kty), {name: Ed25519}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed25519 bits (spki, buffer(44), {name: Ed25519}, false, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed25519 bits (jwk, object(kty, crv, x), {name: Ed25519}, false, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed25519 bits (pkcs8, buffer(48), {name: Ed25519}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed25519 bits (jwk, object(crv, d, x, kty), {name: Ed25519}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed448 bits (spki, buffer(69), {name: Ed448}, true, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed448 bits (jwk, object(kty, crv, x), {name: Ed448}, true, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed448 bits (pkcs8, buffer(73), {name: Ed448}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed448 bits (jwk, object(crv, d, x, kty), {name: Ed448}, true, [sign])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed448 bits (spki, buffer(69), {name: Ed448}, false, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed448 bits (jwk, object(kty, crv, x), {name: Ed448}, false, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed448 bits (pkcs8, buffer(73), {name: Ed448}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Good parameters: Ed448 bits (jwk, object(crv, d, x, kty), {name: Ed448}, false, [sign])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (spki, buffer(44), {name: X25519}, true, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (jwk, object(kty, crv, x), {name: X25519}, true, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (pkcs8, buffer(48), {name: X25519}, true, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (jwk, object(crv, d, x, kty), {name: X25519}, true, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (pkcs8, buffer(48), {name: X25519}, true, [deriveBits, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (jwk, object(crv, d, x, kty), {name: X25519}, true, [deriveBits, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (pkcs8, buffer(48), {name: X25519}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (jwk, object(crv, d, x, kty), {name: X25519}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (spki, buffer(44), {name: X25519}, false, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (jwk, object(kty, crv, x), {name: X25519}, false, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (pkcs8, buffer(48), {name: X25519}, false, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (jwk, object(crv, d, x, kty), {name: X25519}, false, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (pkcs8, buffer(48), {name: X25519}, false, [deriveBits, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (jwk, object(crv, d, x, kty), {name: X25519}, false, [deriveBits, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (pkcs8, buffer(48), {name: X25519}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X25519 bits (jwk, object(crv, d, x, kty), {name: X25519}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (spki, buffer(68), {name: X448}, true, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (jwk, object(kty, crv, x), {name: X448}, true, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (pkcs8, buffer(72), {name: X448}, true, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (jwk, object(crv, d, x, kty), {name: X448}, true, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (pkcs8, buffer(72), {name: X448}, true, [deriveBits, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (jwk, object(crv, d, x, kty), {name: X448}, true, [deriveBits, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (pkcs8, buffer(72), {name: X448}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (jwk, object(crv, d, x, kty), {name: X448}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (spki, buffer(68), {name: X448}, false, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (jwk, object(kty, crv, x), {name: X448}, false, [])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (pkcs8, buffer(72), {name: X448}, false, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (jwk, object(crv, d, x, kty), {name: X448}, false, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (pkcs8, buffer(72), {name: X448}, false, [deriveBits, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (jwk, object(crv, d, x, kty), {name: X448}, false, [deriveBits, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (pkcs8, buffer(72), {name: X448}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Good parameters: X448 bits (jwk, object(crv, d, x, kty), {name: X448}, false, [deriveBits])": {
+    "status": "FAIL"
+  }
+}

@@ -9,8 +9,6 @@
 #include <vector>
 
 #include "js/ArrayBuffer.h"
-#include "openssl/evp.h"
-#include "openssl/sha.h"
 // TODO: remove these once the warnings are fixed
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
@@ -19,6 +17,7 @@
 #pragma clang diagnostic pop
 #include <mozilla/Unused.h>
 
+#include "crypto-key.h"          // for encode
 #include "js-compute-builtins.h" // for encode
 #include "subtle-crypto.h"
 #include "xqd.h"
@@ -79,223 +78,372 @@ std::vector<CryptoAlgorithmIdentifier> supportedGetKeyLengthAlgorithms{
     CryptoAlgorithmIdentifier::HKDF,    CryptoAlgorithmIdentifier::PBKDF2};
 } // namespace
 
-bool renameExceptionNameToNotSupportedError(JSContext *cx, JS::HandleObject promise) {
-  // We need to change the name of the error from Error to NotSupportedError
-  if (JS_IsExceptionPending(cx)) {
-    JS::ExceptionStack exception(cx);
-    if (JS::GetPendingExceptionStack(cx, &exception)) {
-      JS::HandleValue exp = exception.exception();
-      JS::Rooted<JSObject *> object(cx, &exp.toObject());
-      JS::Rooted<JS::Value> name_val(cx);
-      if (!JS_GetProperty(cx, object, "name", &name_val)) {
-        return RejectPromiseWithPendingError(cx, promise);
-      }
-      JS::Rooted<JSString *> str(cx, JS::ToString(cx, name_val));
-      if (!str) {
-        return RejectPromiseWithPendingError(cx, promise);
-      }
-      name_val.set(JS::StringValue(JS_NewStringCopyN(cx, "NotSupportedError", 17)));
-      if (!JS_SetProperty(cx, object, "name", name_val)) {
-        return RejectPromiseWithPendingError(cx, promise);
-      }
+bool SubtleCrypto::exportKey(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  // 4. Let promise be a new Promise.
+  JS::RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  // 5. Return promise and perform the remaining steps in parallel.
+  args.rval().setObject(*promise);
+  if (!args.requireAtLeast(cx, "SubtleCrypto.exportKey", 2)) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  if (!check_receiver(cx, args.thisv(), "SubtleCrypto.exportKey")) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  CryptoKeyFormat format;
+  {
+    auto format_arg = args.get(0);
+    size_t format_length;
+    // Convert into a String following https://tc39.es/ecma262/#sec-tostring
+    JS::UniqueChars format_chars = encode(cx, format_arg, &format_length);
+    if (!format_chars || format_length == 0) {
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    std::string_view format_string(format_chars.get(), format_length);
+    if (format_string == "spki") {
+      format = CryptoKeyFormat::Spki;
+    } else if (format_string == "pkcs8") {
+      format = CryptoKeyFormat::Pkcs8;
+    } else if (format_string == "jwk"){
+      format = CryptoKeyFormat::Jwk;
+    } else if (format_string == "raw"){
+      format = CryptoKeyFormat::Raw;
+    } else {
+      // TODO: Change to an OperationError instance
+      JS_ReportErrorLatin1(cx, "Provided format parameter is not supported. Supported formats are: 'spki', 'pkcs8', 'jwk', and 'raw'");
+      return RejectPromiseWithPendingError(cx, promise);
     }
   }
+  auto key_data = args.get(1);
+
+  if (!key_data.isObject()) {
+    // TODO: Change to TypeError
+    JS_ReportErrorLatin1(cx, "parameter 2 is not of type 'CryptoKey'");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  JS::RootedObject key(cx, &key_data.toObject());
+
+  JSObject* result = CryptoAlgorithmRSASSA_PKCS1_v1_5::exportKey(cx, format, key);
+  if (!result) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  // 9. If the [[type]] internal slot of result is "secret" or "private" and
+  // usages is empty, then throw a SyntaxError.
+
+  // 10. Set the [[extractable]] internal slot of result to extractable.
+
+  // 11. Set the [[usages]] internal slot of result to the normalized value of
+  // usages.
+
+  // TODO: finish the above.
+
+  // 12. Resolve promise with result.
+  JS::RootedValue result_val(cx);
+  result_val.setObject(*result);
+  JS::ResolvePromise(cx, promise, result_val);
+
   return true;
 }
-// https://w3c.github.io/webcrypto/#algorithm-normalization-normalize-an-algorithm
-JS::Result<CryptoAlgorithmIdentifier>
-SubtleCrypto::normalizeAlgorithm(JSContext *cx, JS::HandleValue algorithmIdentifier,
-                                 Operations operation) {
-  JS::Rooted<JSString *> algorithmIdentifierString(cx);
 
-  // The algorithmIdentifier can either be a JS String or a JS Object with a 'name' property
-  if (algorithmIdentifier.isString()) {
-    algorithmIdentifierString.set(algorithmIdentifier.toString());
-  } else if (algorithmIdentifier.isObject()) {
-    JS::Rooted<JSObject *> object(cx, &algorithmIdentifier.toObject());
-    JS::Rooted<JS::Value> name_val(cx);
-    if (!JS_GetProperty(cx, object, "name", &name_val)) {
-      return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
+// Promise<any> generateKey(AlgorithmIdentifier algorithm,
+//                         boolean extractable,
+//                         sequence<KeyUsage> keyUsages );
+// https://w3c.github.io/webcrypto/#SubtleCrypto-method-generateKey
+bool SubtleCrypto::generateKey(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  // 4. Let promise be a new Promise.
+  JS::RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  // 5. Return promise and perform the remaining steps in parallel.
+  args.rval().setObject(*promise);
+  if (!check_receiver(cx, args.thisv(), "SubtleCrypto.generateKey")) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  if (!args.requireAtLeast(cx, "SubtleCrypto.generateKey", 3)) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  // 1. Let algorithm, extractable and usages be the algorithm, extractable and keyUsages parameters
+  // passed to the generateKey() method, respectively.
+  auto algorithm = args.get(0);
+  auto extractable = args.get(1).toBoolean();
+  auto keyUsages = args.get(2);
+
+  std::string_view error_message("SubtleCrypto.generateKey: Operation is not supported");
+  auto keyUsageMaskResult = builtins::CryptoKey::toKeyUsageBitmap(cx, keyUsages, error_message);
+  if (keyUsageMaskResult.isErr()) {
+    // TODO Rename error to NotSupportedError
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  auto keyUsageMask = keyUsageMaskResult.unwrap();
+
+  // 2. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm
+  // and op set to "generateKey".
+  // 3. If an error occurred, return a Promise rejected with normalizedAlgorithm.
+  auto normalizedAlgorithm = CryptoAlgorithmGenerateKey::normalize(cx, algorithm);
+  if (!normalizedAlgorithm) {
+    // TODO Rename error to NotSupportedError
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 6. If the following steps or referenced procedures say to throw an error, reject promise with
+  // the returned error and then terminate the algorithm
+  // 7. Let result be the result of performing the generate key operation specified by
+  // normalizedAlgorithm using algorithm, extractable and usages.
+
+
+  JS::RootedValue result(cx);
+  JSObject *cryptoKey = normalizedAlgorithm->generateKey(cx, extractable, keyUsageMask);
+  if (!cryptoKey) {
+    if (!JS_IsExceptionPending(cx)) {
+      JS_ReportErrorUTF8(cx, "SubtleCrypto.generateKey: Operation failed");
     }
-    JS::Rooted<JSString *> str(cx, JS::ToString(cx, name_val));
-    if (!str) {
-      JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: failed to normalize algorithm");
-      return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
+    // TODO Rename error to NotSupportedError
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  result.setObject(*cryptoKey);
+  
+  // 8. If result is a CryptoKey object:
+  //      If the [[type]] internal slot of result is "secret" or "private" and usages is empty, then
+  //      throw a SyntaxError.
+  if (CryptoKey::is_instance(cryptoKey)) {
+    CryptoKeyType type = CryptoKey::type(cryptoKey);
+    if (type == CryptoKeyType::Private || type == CryptoKeyType::Secret) {
+      if (keyUsageMask == 0) {
+        JS_ReportErrorUTF8(cx, "SubtleCrypto.generateKey: Operation is not supported");
+        // TODO Rename error to NotSupportedError
+        return RejectPromiseWithPendingError(cx, promise);
+      }
     }
-    algorithmIdentifierString.set(str);
-  } else {
-    JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: Operation is not supported");
-    return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
   }
-  size_t algorithmLen;
-  JS::UniqueChars algorithmChars = encode(cx, algorithmIdentifierString, &algorithmLen);
-  if (!algorithmChars) {
-    return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
-  }
+  //    If result is a CryptoKeyPair object:
+  //      If the [[usages]] internal slot of the privateKey attribute of result is the empty
+  //      sequence, then throw a SyntaxError.
+  // TODO: the above.
 
-  std::string algorithm(algorithmChars.get(), algorithmLen);
-  std::transform(algorithm.begin(), algorithm.end(), algorithm.begin(),
-                 [](unsigned char c) { return std::toupper(c); });
+  // 9. Resolve promise with result.
+  JS::ResolvePromise(cx, promise, result);
 
-  using enum CryptoAlgorithmIdentifier;
-
-  // 1. Return the result of running the normalize an algorithm algorithm, with the alg set to a
-  // new Algorithm dictionary whose name attribute is alg, and with the op set to op.
-  if (algorithm == "RSAES-PKCS1-v1_5") {
-    return normalizeAlgorithm(cx, RSAES_PKCS1_v1_5, operation);
-  }
-  if (algorithm == "RSASSA-PKCS1-v1_5") {
-    return normalizeAlgorithm(cx, RSASSA_PKCS1_v1_5, operation);
-  }
-  if (algorithm == "RSA-PSS") {
-    return normalizeAlgorithm(cx, RSA_PSS, operation);
-  }
-  if (algorithm == "RSA-OAEP") {
-    return normalizeAlgorithm(cx, RSA_OAEP, operation);
-  }
-  if (algorithm == "ECDSA") {
-    return normalizeAlgorithm(cx, ECDSA, operation);
-  }
-  if (algorithm == "ECDH") {
-    return normalizeAlgorithm(cx, ECDH, operation);
-  }
-  if (algorithm == "AES-CTR") {
-    return normalizeAlgorithm(cx, AES_CTR, operation);
-  }
-  if (algorithm == "AES-CBC") {
-    return normalizeAlgorithm(cx, AES_CBC, operation);
-  }
-  if (algorithm == "AES-GCM") {
-    return normalizeAlgorithm(cx, AES_GCM, operation);
-  }
-  if (algorithm == "AES-CFB") {
-    return normalizeAlgorithm(cx, AES_CFB, operation);
-  }
-  if (algorithm == "AES-KW") {
-    return normalizeAlgorithm(cx, AES_KW, operation);
-  }
-  if (algorithm == "HMAC") {
-    return normalizeAlgorithm(cx, HMAC, operation);
-  }
-  if (algorithm == "SHA-1") {
-    return normalizeAlgorithm(cx, SHA_1, operation);
-  }
-  if (algorithm == "SHA-224") {
-    return normalizeAlgorithm(cx, SHA_224, operation);
-  }
-  if (algorithm == "SHA-256") {
-    return normalizeAlgorithm(cx, SHA_256, operation);
-  }
-  if (algorithm == "SHA-384") {
-    return normalizeAlgorithm(cx, SHA_384, operation);
-  }
-  if (algorithm == "SHA-512") {
-    return normalizeAlgorithm(cx, SHA_512, operation);
-  }
-  if (algorithm == "HKDF") {
-    return normalizeAlgorithm(cx, HKDF, operation);
-  }
-  if (algorithm == "PBKDF2") {
-    return normalizeAlgorithm(cx, PBKDF2, operation);
-  }
-
-  JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: Operation is not supported");
-  return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
+  return true;
 }
 
-JS::Result<CryptoAlgorithmIdentifier>
-SubtleCrypto::normalizeAlgorithm(JSContext *cx, CryptoAlgorithmIdentifier algorithmIdentifier,
-                                 Operations operation) {
-  // 1. Let registeredAlgorithms be the associative container stored at the op key of
-  // supportedAlgorithms.
-  std::vector<CryptoAlgorithmIdentifier> registeredAlgorithms;
-  switch (operation) {
-    using enum Operations;
-  case Encrypt: {
-    registeredAlgorithms = supportedEncryptAlgorithms;
-    break;
-  }
-  case Decrypt: {
-    registeredAlgorithms = supportedDecryptAlgorithms;
-    break;
-  }
-  case Sign: {
-    registeredAlgorithms = supportedSignAlgorithms;
-    break;
-  }
-  case Verify: {
-    registeredAlgorithms = supportedVerifyAlgorithms;
-    break;
-  }
-  case Digest: {
-    registeredAlgorithms = supportedDigestAlgorithms;
-    break;
-  }
-  case GenerateKey: {
-    registeredAlgorithms = supportedGenerateKeyAlgorithms;
-    break;
-  }
-  case DeriveBits: {
-    registeredAlgorithms = supportedDeriveBitsAlgorithms;
-    break;
-  }
-  case ImportKey: {
-    registeredAlgorithms = supportedImportKeyAlgorithms;
-    break;
-  }
-  case WrapKey: {
-    registeredAlgorithms = supportedWrapKeyAlgorithms;
-    break;
-  }
-  case UnwrapKey: {
-    registeredAlgorithms = supportedUnwrapKeyAlgorithms;
-    break;
-  }
-  case GetKeyLength: {
-    registeredAlgorithms = supportedGetKeyLengthAlgorithms;
-    break;
-  }
-  default: {
-    MOZ_ASSERT_UNREACHABLE("Unknown `Operations` value");
-  }
+//  Promise<CryptoKey> importKey(KeyFormat format,
+//                         (BufferSource or JsonWebKey) keyData,
+//                         AlgorithmIdentifier algorithm,
+//                         boolean extractable,
+//                         sequence<KeyUsage> keyUsages );
+// https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-importKey
+bool SubtleCrypto::importKey(JSContext *cx, unsigned argc, JS::Value *vp) {
+  MOZ_ASSERT(cx);
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  // 5. Let promise be a new Promise.
+  JS::RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!promise) {
+    JS_ReportErrorASCII(cx, "InternalError");
+    return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  // 2. Let initialAlg be the result of converting the ECMAScript object represented by alg to the
-  // IDL dictionary type Algorithm, as defined by [WebIDL].
-  auto initialAlg = algorithmIdentifier;
-  // 3. If an error occurred, return the error and terminate this algorithm.
-  // 4. Let algName be the value of the name attribute of initialAlg.
-  // auto algName = algorithmName(initialAlg);
-  // 5. If registeredAlgorithms contains a key that is a case-insensitive string match for algName:
-  // 1. Set algName to the value of the matching key.
-  // 2. Let desiredType be the IDL dictionary type stored at algName in registeredAlgorithms.
-  // Otherwise:
-  // Return a new NotSupportedError and terminate this algorithm.
-  auto result = std::find(registeredAlgorithms.begin(), registeredAlgorithms.end(), initialAlg);
-  if (result == registeredAlgorithms.end()) {
-    JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: Operation is not supported");
-    return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
+  // 6. Return promise and perform the remaining steps in parallel.
+  args.rval().setObject(*promise);
+
+  if (!args.requireAtLeast(cx, "SubtleCrypto.importKey", 5)) {
+    return RejectPromiseWithPendingError(cx, promise);
   }
-  return initialAlg;
+  if (!check_receiver(cx, args.thisv(), "SubtleCrypto.importKey")) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 1. Let format, algorithm, extractable and usages, be the format, algorithm,
+  // extractable and keyUsages parameters passed to the importKey() method, respectively.
+  CryptoKeyFormat format;
+  {
+    auto format_arg = args.get(0);
+    size_t format_length;
+    // Convert into a String following https://tc39.es/ecma262/#sec-tostring
+    JS::UniqueChars format_chars = encode(cx, format_arg, &format_length);
+    if (!format_chars || format_length == 0) {
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    std::string_view format_string(format_chars.get(), format_length);
+    if (format_string == "spki") {
+      format = CryptoKeyFormat::Spki;
+    } else if (format_string == "pkcs8") {
+      format = CryptoKeyFormat::Pkcs8;
+    } else if (format_string == "jwk"){
+      format = CryptoKeyFormat::Jwk;
+    } else if (format_string == "raw"){
+      format = CryptoKeyFormat::Raw;
+    } else {
+      // TODO: Change to a SyntaxError instance
+      JS_ReportErrorLatin1(cx, "Provided format parameter is not supported. Supported formats are: 'spki', 'pkcs8', 'jwk', and 'raw'");
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+  }
+  auto key_data = args.get(1);
+  auto algorithm = args.get(2);
+  bool extractable = JS::ToBoolean(args.get(3));
+  CryptoKeyUsageBitmap usages;
+  {
+    auto usages_arg = args.get(4);
+
+    std::string_view error_message("SubtleCrypto.importKey: Invalid keyUsages argument");
+    auto keyUsageMaskResult = builtins::CryptoKey::toKeyUsageBitmap(cx, usages_arg, error_message);
+    if (keyUsageMaskResult.isErr()) {
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    usages = keyUsageMaskResult.unwrap();
+  }
+
+
+  // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm
+  // and op set to "importKey".
+  // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
+  auto normalizedAlgorithm = CryptoAlgorithmImportKey::normalize(cx, algorithm);
+  if (!normalizedAlgorithm) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 7. If the following steps or referenced procedures say to throw an error,
+  // reject promise with the returned error and then terminate the algorithm.
+  // 8. Let result be the CryptoKey object that results from performing the
+  // import key operation specified by normalizedAlgorithm using keyData,
+  // algorithm, format, extractable and usages.
+  JS::RootedObject result(cx);
+  JSObject* key = normalizedAlgorithm->importKey(cx, format, key_data, extractable, usages);
+  if (!key) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  // 9. If the [[type]] internal slot of result is "secret" or "private" and
+  // usages is empty, then throw a SyntaxError.
+
+  // 10. Set the [[extractable]] internal slot of result to extractable.
+
+  // 11. Set the [[usages]] internal slot of result to the normalized value of
+  // usages.
+
+  // TODO: finish the above.
+
+  // 12. Resolve promise with result.
+  JS::RootedValue result_val(cx);
+  result_val.setObject(*key);
+  JS::ResolvePromise(cx, promise, result_val);
+
+  return true;
+}
+
+// Promise<any> verify(AlgorithmIdentifier algorithm,
+//                     CryptoKey key,
+//                     BufferSource signature,
+//                     BufferSource data);
+// https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-verify
+bool SubtleCrypto::verify(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  // 6. Let promise be a new Promise.
+  JS::RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // 7. Return promise and perform the remaining steps in parallel.
+  args.rval().setObject(*promise);
+
+  if (!check_receiver(cx, args.thisv(), "SubtleCrypto.verify")) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  if (!args.requireAtLeast(cx, "SubtleCrypto.verify", 4)) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // 1. Let algorithm and key be the algorithm and key parameters passed to the verify() method,
+  // respectively.
+  auto algorithm = args.get(0);
+  auto key_arg = args.get(1);
+  if (!key_arg.isObject()) {
+    JS_ReportErrorLatin1(cx, "parameter 2 is not of type 'CryptoKey'");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  JS::RootedObject key(cx, &key_arg.toObject());
+  if (!key) {
+    // todo: error message
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  if (!CryptoKey::is_instance(key)) {
+    JS_ReportErrorASCII(
+        cx, "SubtleCrypto.verify: key (argument 2)  does not implement interface CryptoKey");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 2. Let signature be the result of getting a copy of the bytes held by the signature
+  // parameter passed to the verify() method.
+  std::optional<std::span<uint8_t>> signature = value_to_buffer(
+      cx, args.get(2), "SubtleCrypto.verify: signature (argument 3)");
+  if (!signature) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 3. Let data be the result of getting a copy of the bytes held by the data parameter passed
+  // to the verify() method.
+  std::optional<std::span<uint8_t>> data =
+      value_to_buffer(cx, args.get(3), "SubtleCrypto.verify: data (argument 4)");
+  if (!data) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 4. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to
+  // algorithm and op set to "verify".
+  // 5. If an error occurred, return a Promise rejected with normalizedAlgorithm.
+  auto normalizedAlgorithm = CryptoAlgorithmSignVerify::normalize(cx, algorithm);
+  if (!normalizedAlgorithm) {
+    // TODO Rename error to NotSupportedError
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 8. If the following steps or referenced procedures say to throw an error, reject promise
+  // with the returned error and then terminate the algorithm.
+  // 9. If the name member of normalizedAlgorithm is not equal to the name attribute of the
+  // [[algorithm]] internal slot of key then throw an InvalidAccessError.
+  auto identifier = normalizedAlgorithm->identifier();
+  auto match_result = CryptoKey::is_algorithm(cx, key, identifier);
+  if (match_result.isErr() || match_result.unwrap() == false) {
+    // TODO: Change to an InvalidAccessError instance
+    JS_ReportErrorUTF8(cx, "CryptoKey doesn't match AlgorithmIdentifier");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  // 10. If the [[usages]] internal slot of key does not contain an entry that is "verify", then
+  // throw an InvalidAccessError.
+  if (!CryptoKey::hasKeyUsage(key, static_cast<uint8_t>(builtins::CryptoKeyUsageVerify))) {
+    // TODO: Change to an InvalidAccessError instance
+    JS_ReportErrorUTF8(cx, "CryptoKey doesn't support verification");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  // 11. Let result be the result of performing the verify operation specified by
+  // normalizedAlgorithm using key, algorithm and signature and with data as message.
+
+  auto matchResult = normalizedAlgorithm->verify(cx, key, signature.value(), data.value()); 
+
+  if (matchResult.isErr()) {
+    JS_ReportErrorUTF8(cx, "Crypto verification failed");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  // 12. Resolve promise with result.
+  JS::RootedValue result(cx);
+  result.setBoolean(matchResult.unwrap());
+  JS::ResolvePromise(cx, promise, result);
+
+  return true;
 }
 
 // digest(algorithm, data)
 // https://w3c.github.io/webcrypto/#SubtleCrypto-method-digest
 bool SubtleCrypto::digest(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "SubtleCrypto.digest", 2)) {
-    return false;
-  }
-  // 1. Let algorithm be the algorithm parameter passed to the digest() method.
-  auto algorithm = args.get(0);
-
-  // 2 . Let data be the result of getting a copy of the bytes held by the data parameter
-  // passed to the digest() method.
-  auto data = value_to_buffer(cx, args.get(1), "SubtleCrypto#digest: data");
-  if (!data.has_value()) {
-    return false;
-  }
-
   // 5. Let promise be a new Promise.
   JS::RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
   if (!promise) {
@@ -304,78 +452,42 @@ bool SubtleCrypto::digest(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // 6. Return promise and perform the remaining steps in parallel.
   args.rval().setObject(*promise);
+  if (!check_receiver(cx, args.thisv(), "SubtleCrypto.digest")) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  if (!args.requireAtLeast(cx, "SubtleCrypto.digest", 2)) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  // 1. Let algorithm be the algorithm parameter passed to the digest() method.
+  auto algorithm = args.get(0);
+
+  // 2 . Let data be the result of getting a copy of the bytes held by the data parameter
+  // passed to the digest() method.
+  auto data = value_to_buffer(cx, args.get(1), "SubtleCrypto.digest: data");
+  if (!data.has_value()) {
+    // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
+    return RejectPromiseWithPendingError(cx, promise);
+  }
 
   // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to
   // algorithm and op set to "digest".
   // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
-  auto normalizedAlgorithmResult = normalizeAlgorithm(cx, algorithm, Operations::Digest);
-  if (normalizedAlgorithmResult.isErr()) {
-    if (!renameExceptionNameToNotSupportedError(cx, promise)) {
-      return RejectPromiseWithPendingError(cx, promise);
-    }
+  auto normalizedAlgorithm = CryptoAlgorithmDigest::normalize(cx, algorithm);
+  if (!normalizedAlgorithm) {
+    // TODO Rename error to NotSupportedError
     return RejectPromiseWithPendingError(cx, promise);
   }
-  auto normalizedAlgorithm = normalizedAlgorithmResult.unwrap();
 
   // 7. If the following steps or referenced procedures say to throw an error, reject promise with
   // the returned error and then terminate the algorithm.
   // 8. Let result be the result of performing the digest operation specified by normalizedAlgorithm
   // using algorithm, with data as message.
 
-  size_t digest_length = 0;
-  const EVP_MD *alg;
-  switch (normalizedAlgorithm) {
-    using enum CryptoAlgorithmIdentifier;
-  case SHA_1: {
-    alg = EVP_sha1();
-    digest_length = SHA_DIGEST_LENGTH;
-    break;
-  }
-  case SHA_224: {
-    alg = EVP_sha224();
-    digest_length = SHA224_DIGEST_LENGTH;
-    break;
-  }
-  case SHA_256: {
-    alg = EVP_sha256();
-    digest_length = SHA256_DIGEST_LENGTH;
-    break;
-  }
-  case SHA_384: {
-    alg = EVP_sha384();
-    digest_length = SHA384_DIGEST_LENGTH;
-    break;
-  }
-  case SHA_512: {
-    alg = EVP_sha512();
-    digest_length = SHA512_DIGEST_LENGTH;
-    break;
-  }
-  default: {
-    JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: Operation is not supported");
-    if (!renameExceptionNameToNotSupportedError(cx, promise)) {
-      return RejectPromiseWithPendingError(cx, promise);
-    }
-    return RejectPromiseWithPendingError(cx, promise);
-  }
-  }
-
-  unsigned int size;
-  auto buf = static_cast<unsigned char *>(JS_malloc(cx, digest_length));
-  if (!buf) {
-    JS_ReportOutOfMemory(cx);
-    return false;
-  }
-  if (!EVP_Digest(data->data(), data->size(), buf, &size, alg, NULL)) {
-    JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: failed to create digest");
-    return RejectPromiseWithPendingError(cx, promise);
-  }
-  JS::RootedObject array_buffer(cx);
-  array_buffer.set(JS::NewArrayBufferWithContents(cx, size, buf));
+  auto array_buffer = normalizedAlgorithm->digest(cx, data.value());
   if (!array_buffer) {
     return RejectPromiseWithPendingError(cx, promise);
   }
-
+  
   // 9. Resolve promise with result.
   JS::RootedValue result(cx);
   result.setObject(*array_buffer);
@@ -384,14 +496,134 @@ bool SubtleCrypto::digest(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-const JSFunctionSpec SubtleCrypto::methods[] = {JS_FN("digest", digest, 2, JSPROP_ENUMERATE),
-                                                JS_FS_END};
+// https://w3c.github.io/webcrypto/#SubtleCrypto-method-sign
+bool SubtleCrypto::sign(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  // 5. Let promise be a new Promise.
+  JS::RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  // 6. Return promise and perform the remaining steps in parallel.
+  args.rval().setObject(*promise);
+
+  if (!check_receiver(cx, args.thisv(), "SubtleCrypto.sign")) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  if (!args.requireAtLeast(cx, "SubtleCrypto.sign", 3)) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 1. Let algorithm and key be the algorithm and key parameters passed to the sign() method,
+  // respectively.
+  auto algorithm = args.get(0);
+  auto key_arg = args.get(1);
+  if (!key_arg.isObject()) {
+    JS_ReportErrorLatin1(cx, "parameter 2 is not of type 'CryptoKey'");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  JS::RootedObject key(cx, &key_arg.toObject());
+  if (!key) {
+    // todo: error message
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  if (!CryptoKey::is_instance(key)) {
+    JS_ReportErrorLatin1(cx, "parameter 2 is not of type 'CryptoKey'");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to
+  // the sign() method.
+  std::optional<std::span<uint8_t>> data = value_to_buffer(cx, args.get(2), "SubtleCrypto.sign: data");
+  if (!data.has_value()) {
+    // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm
+  // and op set to "sign".
+  auto normalizedAlgorithm = CryptoAlgorithmSignVerify::normalize(cx, algorithm);
+  // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
+  if (!normalizedAlgorithm) {
+    // TODO Rename error to NotSupportedError
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 7. If the following steps or referenced procedures say to throw an error, reject promise with
+  // the returned error and then terminate the algorithm.
+  // 8. If the name member of normalizedAlgorithm is not equal to the name attribute of the
+  // [[algorithm]] internal slot of key then throw an InvalidAccessError.
+  auto identifier = normalizedAlgorithm->identifier();
+  auto match_result = CryptoKey::is_algorithm(cx, key, identifier);
+  if (match_result.isErr()) {
+    JS_ReportErrorUTF8(cx, "CryptoKey doesn't match AlgorithmIdentifier");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  if (match_result.unwrap() == false) {
+    // TODO: Change to an InvalidAccessError instance
+    JS_ReportErrorUTF8(cx, "CryptoKey doesn't match AlgorithmIdentifier");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 9. If the [[usages]] internal slot of key does not contain an entry that is "sign", then throw
+  // an InvalidAccessError.
+  if (!CryptoKey::hasKeyUsage(key, static_cast<uint8_t>(builtins::CryptoKeyUsageSign))) {
+    // TODO: Change to an InvalidAccessError instance
+    JS_ReportErrorLatin1(cx, "CryptoKey doesn't support signing");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  JS::RootedValue result(cx);
+  // 10. Let result be the result of performing the sign operation specified by normalizedAlgorithm
+  // using key and algorithm and with data as message.
+
+  {
+    // 1. If the [[type]] internal slot of key is not "private", then throw an InvalidAccessError.
+    if (CryptoKey::type(key) != CryptoKeyType::Private) {
+      // TODO: Change to an InvalidAccessError instance
+      JS_ReportErrorLatin1(cx, "InvalidAccessError");
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+
+    // 2. Perform the signature generation operation defined in Section 8.2 of [RFC3447] with the
+    // key represented by the [[handle]] internal slot of key as the signer's private key and the
+    // contents of message as M and using the hash function specified in the hash attribute of the
+    // [[algorithm]] internal slot of key as the Hash option for the EMSA-PKCS1-v1_5 encoding
+    // method.
+    auto signature = normalizedAlgorithm->sign(cx, key, data.value());
+
+    // 3. If performing the operation results in an error, then throw an OperationError.
+    if (!signature) {
+      // TODO: Change to an OperationError instance
+      JS_ReportErrorLatin1(cx, "OperationError");
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    // 4. Let signature be the value S that results from performing the operation.
+
+    // 5. Return a new ArrayBuffer associated with the relevant global object of this [HTML], and
+    // containing the bytes of signature.
+    result.set(JS::ObjectValue(*signature));
+  }
+
+  // 11. Resolve promise with result.
+  JS::ResolvePromise(cx, promise, result);
+  return true;
+}
+const JSFunctionSpec SubtleCrypto::methods[] = {
+    JS_FN("digest", digest, 2, JSPROP_ENUMERATE),
+    JS_FN("exportKey", exportKey, 2, JSPROP_ENUMERATE),
+    JS_FN("generateKey", generateKey, 3, JSPROP_ENUMERATE),
+    JS_FN("importKey", importKey, 5, JSPROP_ENUMERATE),
+    JS_FN("sign", sign, 3, JSPROP_ENUMERATE),
+    JS_FN("verify", verify, 4, JSPROP_ENUMERATE),
+    JS_FS_END};
 
 const JSPropertySpec SubtleCrypto::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "SubtleCrypto", JSPROP_READONLY), JS_PS_END};
 
 bool SubtleCrypto::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorLatin1(cx, "Illegal constructor SubtleCrypto");
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ILLEGAL_CTOR);
   return false;
 }
 

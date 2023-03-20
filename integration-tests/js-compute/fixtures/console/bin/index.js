@@ -1,5 +1,3 @@
-/* eslint-env serviceworker */
-/* global ReadableStream, TransformStream, WritableStream */
 /// <reference path="../../../../../types/index.d.ts" />
 addEventListener("fetch", () => {
     console.log("Happy", "birthday", "Aki", "and", "Yuki!");
@@ -12,6 +10,7 @@ addEventListener("fetch", () => {
     console.log('Set:',arg)
     arg = [1, 2, 3, [], 5]
     console.log('Array:',arg)
+    // eslint-disable-next-line getter-return
     arg = { a: 1, b: 2, c: 3, d(){}, get f(){}, g: function bar() {} }
     console.log('Object:',arg)
     arg = function () { }

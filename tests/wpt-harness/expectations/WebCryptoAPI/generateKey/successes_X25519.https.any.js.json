@@ -1,0 +1,50 @@
+{
+  "Success: generateKey({name: X25519}, false, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: X25519}, true, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: X25519}, false, [deriveBits, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: X25519}, true, [deriveBits, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: X25519}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: X25519}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: X25519}, false, [deriveKey, deriveBits, deriveKey, deriveBits, deriveKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: X25519}, true, [deriveKey, deriveBits, deriveKey, deriveBits, deriveKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: x25519}, false, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: x25519}, true, [deriveKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: x25519}, false, [deriveBits, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: x25519}, true, [deriveBits, deriveKey])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: x25519}, false, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: x25519}, true, [deriveBits])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: x25519}, false, [deriveKey, deriveBits, deriveKey, deriveBits, deriveKey, deriveBits])": {
+    "status": "FAIL"
+  },
+  "Success: generateKey({name: x25519}, true, [deriveKey, deriveBits, deriveKey, deriveBits, deriveKey, deriveBits])": {
+    "status": "FAIL"
+  }
+}

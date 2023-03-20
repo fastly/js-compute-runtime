@@ -1,5 +1,3 @@
-/* eslint-env serviceworker */
-/* global ReadableStream */
 import { env } from 'fastly:env';
 import { pass, fail, assert } from "../../../assertions.js";
 

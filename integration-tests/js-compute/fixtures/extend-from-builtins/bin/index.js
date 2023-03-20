@@ -1,5 +1,3 @@
-/* eslint-env serviceworker */
-/* global TransformStream CompressionStream */
 import {Dictionary} from 'fastly:dictionary';
 import {CacheOverride} from 'fastly:cache-override';
 import {ObjectStore} from 'fastly:object-store';

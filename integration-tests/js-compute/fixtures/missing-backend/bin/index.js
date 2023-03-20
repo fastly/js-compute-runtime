@@ -1,7 +1,5 @@
-/* eslint-env serviceworker */
-/* global ReadableStream ObjectStore ObjectStoreEntry */
 import { env } from 'fastly:env';
-import { pass, fail, assert, assertThrows, assertRejects, assertResolves } from "../../../assertions.js";
+import { pass, fail, assertRejects } from "../../../assertions.js";
 
 addEventListener("fetch", event => {
     event.respondWith(app(event))
@@ -33,7 +31,7 @@ routes.set('/', () => {
 });
 
 routes.set("/test", async () => {
-  let error = await assertRejects(async () => fetch('https://example.com', {backend: 'missing'}), TypeError, `Requested backend named 'missing' does not exist`)
-if (error) { return error }
-return pass()
+    let error = await assertRejects(async () => fetch('https://example.com', {backend: 'missing'}), TypeError, `Requested backend named 'missing' does not exist`)
+    if (error) { return error }
+    return pass()
 });

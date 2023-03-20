@@ -1,0 +1,41 @@
+{
+  "Context is discarded in generateKey": {
+    "status": "FAIL"
+  },
+  "Context is discarded in importKey": {
+    "status": "FAIL"
+  },
+  "Context is discarded in encrypt": {
+    "status": "FAIL"
+  },
+  "Context is discarded in decrypt": {
+    "status": "FAIL"
+  },
+  "Context is discarded in digest": {
+    "status": "FAIL"
+  },
+  "Context is discarded in sign": {
+    "status": "FAIL"
+  },
+  "Context is discarded in verify": {
+    "status": "FAIL"
+  },
+  "Context is discarded in deriveBits": {
+    "status": "FAIL"
+  },
+  "Context is discarded in deriveKey": {
+    "status": "FAIL"
+  },
+  "Context is discarded in deriveKey (2)": {
+    "status": "FAIL"
+  },
+  "Context is discarded in wrapKey": {
+    "status": "FAIL"
+  },
+  "Context is discarded in unwrapKey": {
+    "status": "FAIL"
+  },
+  "Context is discarded in unwrapKey (2)": {
+    "status": "FAIL"
+  }
+}
