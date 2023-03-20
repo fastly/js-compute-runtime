@@ -7,15 +7,21 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
 #pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+#include "js/ArrayBuffer.h"
 #include "js/Conversions.h"
 #include "js/ForOfIterator.h"
 #include "js/Object.h"
 #include "js/Promise.h"
+#include "js/experimental/TypedData.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "rust-url/rust-url.h"
+#include <span>
 
 #pragma clang diagnostic pop
+
+std::optional<std::span<uint8_t>> value_to_buffer(JSContext *cx, JS::HandleValue val,
+                                                  const char *val_desc);
 
 // TODO(performance): introduce a version that writes into an existing buffer, and use that
 // with the hostcall buffer where possible.
@@ -65,53 +71,6 @@ const JSErrorFormatString *GetErrorMessageBuiltin(void *userRef, unsigned errorN
     }                                                                                              \
                                                                                                    \
     cursor = (uint32_t)ending_cursor;                                                              \
-  }
-
-#define CLASS_BOILERPLATE_CUSTOM_INIT(cls)                                                         \
-  constexpr const JSClassOps class_ops = {};                                                       \
-  const uint32_t class_flags = 0;                                                                  \
-                                                                                                   \
-  const JSClass class_ = {#cls, JSCLASS_HAS_RESERVED_SLOTS(Slots::Count) | class_flags,            \
-                          &class_ops};                                                             \
-  JS::PersistentRooted<JSObject *> proto_obj;                                                      \
-                                                                                                   \
-  bool is_instance(JSObject *obj) { return !!obj && JS::GetClass(obj) == &class_; }                \
-                                                                                                   \
-  bool is_instance(JS::Value val) { return val.isObject() && is_instance(&val.toObject()); }       \
-                                                                                                   \
-  bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name) {          \
-    if (!is_instance(receiver)) {                                                                  \
-      JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_INCOMPATIBLE_INSTANCE,  \
-                                method_name, class_.name);                                         \
-      return false;                                                                                \
-    }                                                                                              \
-    return true;                                                                                   \
-  };                                                                                               \
-                                                                                                   \
-  bool init_class_impl(JSContext *cx, JS::HandleObject global,                                     \
-                       JS::HandleObject parent_proto = nullptr) {                                  \
-    proto_obj.init(cx, JS_InitClass(cx, global, &class_, parent_proto, #cls, constructor,          \
-                                    ctor_length, properties, methods, nullptr, nullptr));          \
-    return proto_obj;                                                                              \
-  };
-
-#define CLASS_BOILERPLATE(cls)                                                                     \
-  CLASS_BOILERPLATE_CUSTOM_INIT(cls)                                                               \
-                                                                                                   \
-  bool init_class(JSContext *cx, JS::HandleObject global) { return init_class_impl(cx, global); }
-
-#define CLASS_BOILERPLATE_NO_CTOR(cls)                                                             \
-  bool constructor(JSContext *cx, unsigned argc, JS::Value *vp) {                                  \
-    JS_ReportErrorUTF8(cx, #cls " can't be instantiated directly");                                \
-    return false;                                                                                  \
-  }                                                                                                \
-                                                                                                   \
-  CLASS_BOILERPLATE_CUSTOM_INIT(cls)                                                               \
-                                                                                                   \
-  bool init_class(JSContext *cx, JS::HandleObject global) {                                        \
-    /* Right now, deleting the ctor from the global object after class                             \
-       initialization seems to be the best we can do. Not ideal, but works. */                     \
-    return init_class_impl(cx, global) && JS_DeleteProperty(cx, global, class_.name);              \
   }
 
 // Define this to make most methods print their name to stderr when invoked.
@@ -181,7 +140,7 @@ private:
 public:
   static constexpr JSClass class_{
       Impl::class_name,
-      JSCLASS_HAS_RESERVED_SLOTS(Impl::Slots::Count) | class_flags,
+      JSCLASS_HAS_RESERVED_SLOTS(static_cast<uint32_t>(Impl::Slots::Count)) | class_flags,
       &class_ops,
   };
 

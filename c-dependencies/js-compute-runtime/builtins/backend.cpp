@@ -17,8 +17,9 @@
 #include "js/experimental/TypedData.h"
 #pragma clang diagnostic pop
 
-#include "backend.h"
-#include "host_call.h"
+#include "builtins/backend.h"
+#include "builtins/request-response.h"
+#include "host_interface/host_call.h"
 #include "js-compute-builtins.h"
 #include "js/Conversions.h"
 
@@ -711,12 +712,12 @@ bool Backend::isCipherSuiteSupportedByFastly(std::string_view cipherSpec) {
 JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::HandleObject backend) {
   MOZ_ASSERT(is_instance(backend));
 
-  xqd_world_string_t name_str;
+  c_at_e_world_string_t name_str;
   JS::RootedString name(cx, JS::GetReservedSlot(backend, Backend::Slots::Name).toString());
   JS::UniqueChars nameChars = encode(cx, name, &name_str.len);
   name_str.ptr = nameChars.get();
 
-  xqd_world_string_t target_str;
+  c_at_e_world_string_t target_str;
   JS::RootedString target(cx, JS::GetReservedSlot(backend, Backend::Slots::Target).toString());
   JS::UniqueChars targetChars = encode(cx, target, &target_str.len);
   target_str.ptr = targetChars.get();
@@ -812,8 +813,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   }
 
   fastly_error_t err;
-  if (!xqd_fastly_http_req_register_dynamic_backend(&name_str, &target_str, &backend_config,
-                                                    &err)) {
+  if (!fastly_http_req_register_dynamic_backend(&name_str, &target_str, &backend_config, &err)) {
     HANDLE_ERROR(cx, err);
     return JS::Result<mozilla::Ok>(JS::Error());
   }

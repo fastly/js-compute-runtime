@@ -17,10 +17,10 @@
 #pragma clang diagnostic pop
 #include <mozilla/Unused.h>
 
-#include "crypto-key.h"          // for encode
+#include "crypto-key.h"
+#include "host_interface/c-at-e.h"
 #include "js-compute-builtins.h" // for encode
 #include "subtle-crypto.h"
-#include "xqd.h"
 
 namespace builtins {
 namespace {

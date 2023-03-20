@@ -12,9 +12,9 @@
 #include "builtins/env.h"
 #include "builtins/fastly.h"
 #include "builtins/logger.h"
-#include "builtins/url.h"
-#include "geo_ip.h"
-#include "host_call.h"
+#include "builtins/shared/url.h"
+#include "core/geo_ip.h"
+#include "host_interface/host_call.h"
 
 namespace builtins {
 

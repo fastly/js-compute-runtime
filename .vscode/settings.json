@@ -4,7 +4,7 @@
         "cstddef": "c",
         "limits": "c",
         "type_traits": "c",
-        "xqd.h": "c",
+        "c-at-e.h": "c",
         "algorithm": "cpp",
         "memory": "cpp",
         "__functional_base": "cpp",
@@ -116,7 +116,8 @@
         "span": "cpp",
         "self_test.h": "c",
         "unistd.h": "c",
-        "valuearray.h": "c"
+        "valuearray.h": "c",
+        "c_at_e_world.h": "c"
     },
     "git.ignoreLimitWarning": true
 }

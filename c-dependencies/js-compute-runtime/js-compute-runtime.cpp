@@ -19,9 +19,10 @@
 
 #pragma clang diagnostic pop
 
+#include "builtins/fetch-event.h"
+#include "core/allocator.h"
 #include "js-compute-builtins.h"
-#include "wizer.h"
-#include "xqd-world/xqd_world_adapter.h"
+#include "third_party/wizer.h"
 #ifdef MEM_STATS
 #include "memory-reporting.h"
 #endif
@@ -210,9 +211,9 @@ static void abort(JSContext *cx, const char *description) {
   }
 
   // Respond with status `500` if no response was ever sent.
-  HandleObject fetch_event = FetchEvent::instance();
-  if (hasWizeningFinished() && !FetchEvent::response_started(fetch_event)) {
-    FetchEvent::respondWithError(cx, fetch_event);
+  HandleObject fetch_event = builtins::FetchEvent::instance();
+  if (hasWizeningFinished() && !builtins::FetchEvent::response_started(fetch_event)) {
+    builtins::FetchEvent::respondWithError(cx, fetch_event);
   }
 
   fflush(stderr);
@@ -365,7 +366,7 @@ void init() {
   if (!eval_stdin(cx, &result))
     abort(cx, "evaluating JS");
 
-  if (!FetchEvent::create(cx))
+  if (!builtins::FetchEvent::create(cx))
     exit(1);
 
   if (FETCH_HANDLERS->length() == 0) {
@@ -399,7 +400,7 @@ WIZER_INIT(init);
 static void dispatch_fetch_event(JSContext *cx, HandleObject event, double *total_compute) {
   auto pre_handler = system_clock::now();
 
-  FetchEvent::start_dispatching(event);
+  builtins::FetchEvent::start_dispatching(event);
 
   RootedValue result(cx);
   RootedValue event_val(cx, JS::ObjectValue(*event));
@@ -413,12 +414,12 @@ static void dispatch_fetch_event(JSContext *cx, HandleObject event, double *tota
       DumpPendingException(cx, "dispatching FetchEvent\n");
       break;
     }
-    if (FetchEvent::state(event) != FetchEvent::State::unhandled) {
+    if (builtins::FetchEvent::state(event) != builtins::FetchEvent::State::unhandled) {
       break;
     }
   }
 
-  FetchEvent::stop_dispatching(event);
+  builtins::FetchEvent::stop_dispatching(event);
 
   double diff = duration_cast<microseconds>(system_clock::now() - pre_handler).count();
   *total_compute += diff;
@@ -464,13 +465,11 @@ static void wait_for_backends(JSContext *cx, double *total_compute) {
     printf("Done, waited for %fms\n", diff / 1000);
 }
 
-int main(int argc, const char *argv[]) {
-  if (isWizening()) {
-    init();
-    assert(hasWizeningFinished());
-    // fprintf(stderr, "js.wasm must be initialized with a JS source file using
-    // Wizer\n"); exit(-1);
-  }
+bool js_compute_runtime_serve(js_compute_runtime_request_t *req) {
+  assert(hasWizeningFinished());
+  // fprintf(stderr, "js.wasm must be initialized with a JS source file using
+  // Wizer\n");
+  // return;
 
   double total_compute = 0;
   auto start = system_clock::now();
@@ -487,8 +486,9 @@ int main(int argc, const char *argv[]) {
   JSAutoRealm ar(cx, GLOBAL);
   js::ResetMathRandomSeed(cx);
 
-  HandleObject fetch_event = FetchEvent::instance();
-  FetchEvent::init_request(cx, fetch_event);
+  HandleObject fetch_event = builtins::FetchEvent::instance();
+  builtins::FetchEvent::init_request(cx, fetch_event,
+                                     static_cast<fastly_request_t *>(static_cast<void *>(req)));
 
   dispatch_fetch_event(cx, fetch_event, &total_compute);
 
@@ -504,7 +504,7 @@ int main(int argc, const char *argv[]) {
 
     // Then, check if the fetch event is still active, i.e. had pending promises
     // added to it using `respondWith` or `waitUntil`.
-    if (!FetchEvent::is_active(fetch_event))
+    if (!builtins::FetchEvent::is_active(fetch_event))
       break;
 
     // Process async tasks.
@@ -522,16 +522,16 @@ int main(int argc, const char *argv[]) {
 
     // Respond with status `500` if any promise rejections were left unhandled
     // and no response was ever sent.
-    if (!FetchEvent::response_started(fetch_event)) {
-      FetchEvent::respondWithError(cx, fetch_event);
+    if (!builtins::FetchEvent::response_started(fetch_event)) {
+      builtins::FetchEvent::respondWithError(cx, fetch_event);
     }
   }
 
   // Respond with status `500` if an exception is pending
   // and no response was ever sent.
   if (JS_IsExceptionPending(cx)) {
-    if (!FetchEvent::response_started(fetch_event)) {
-      FetchEvent::respondWithError(cx, fetch_event);
+    if (!builtins::FetchEvent::response_started(fetch_event)) {
+      builtins::FetchEvent::respondWithError(cx, fetch_event);
     }
   }
 
@@ -541,12 +541,5 @@ int main(int argc, const char *argv[]) {
     printf("Done. Total request processing time: %fms. Total compute time: %fms\n", diff / 1000,
            total_compute / 1000);
   }
-
-  // Note: we deliberately skip shutdown, because it takes quite a while,
-  // and serves no purpose for us.
-  // TODO: investigate also skipping the destructors deliberately run in
-  // wizer.h. GLOBAL = nullptr; CONTEXT = nullptr; JS_DestroyContext(cx);
-  // JS_ShutDown();
-
-  return 0;
+  return true;
 }

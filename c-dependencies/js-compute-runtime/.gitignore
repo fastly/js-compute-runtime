@@ -4,3 +4,4 @@
 
 /js-compute-runtime*.wasm
 /build
+/shared

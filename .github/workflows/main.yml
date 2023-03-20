@@ -295,8 +295,8 @@ jobs:
         name: engine-release
     - name: Locate component resources
       run: |
-        cp c-dependencies/js-compute-runtime/xqd.wit .
-        cp c-dependencies/js-compute-runtime/wasi_snapshot_preview1.wasm .
+        cp c-dependencies/js-compute-runtime/c-at-e.wit .
+        cp c-dependencies/js-compute-runtime/wasi_snapshot_preview1.reactor.wasm .
     - run: yarn
       shell: bash
     - run: npm test

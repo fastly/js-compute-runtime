@@ -1,9 +1,9 @@
 {
   "name": "@fastly/js-compute",
-  "version": "1.4.1",
+  "version": "1.5.1",
   "engines": {
     "node": "16 - 19",
-    "npm": "^8"
+    "npm": "^8 || ^9"
   },
   "license": "Apache-2.0",
   "main": "js-compute-runtime-cli.js",
@@ -20,7 +20,7 @@
     "types",
     "js-compute-runtime-cli.js",
     "*.wasm",
-    "xqd.wit",
+    "c-at-e.wit",
     "src",
     "index.d.ts",
     "package.json",
@@ -31,7 +31,7 @@
     "test": "npm run test:types && npm run test:cli",
     "test:cli": "brittle --bail integration-tests/cli/**.test.js",
     "test:types": "tsd",
-    "build": "make -j8 -C c-dependencies/js-compute-runtime && cp c-dependencies/js-compute-runtime/*.wasm c-dependencies/js-compute-runtime/xqd.wit ."
+    "build": "make -j8 -C c-dependencies/js-compute-runtime && cp c-dependencies/js-compute-runtime/*.wasm c-dependencies/js-compute-runtime/c-at-e.wit ."
   },
   "devDependencies": {
     "@jakechampion/cli-testing-library": "^1.0.0",
@@ -45,6 +45,7 @@
     "@bytecodealliance/jco": "^0.4.1",
     "@bytecodealliance/wizer": "^1.6.1-beta.4",
     "esbuild": "^0.15.16",
+    "regexpu-core": "^5.3.1",
     "tree-sitter": "^0.20.1",
     "tree-sitter-javascript": "^0.19.0"
   }

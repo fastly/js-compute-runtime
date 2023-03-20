@@ -17,11 +17,13 @@
 
 #pragma clang diagnostic pop
 
-#include "host_call.h"
+#include "host_interface/c-at-e.h"
+#include "host_interface/host_call.h"
 #include "rust-url/rust-url.h"
-#include "xqd.h"
 
 struct JSErrorFormatString;
+
+extern JS::PersistentRootedObjectVector *pending_async_tasks;
 
 enum JSErrNum {
 #define MSG_DEF(name, count, exception, format) name,
@@ -52,7 +54,7 @@ inline bool ReturnPromiseRejectedWithPendingError(JSContext *cx, const JS::CallA
 std::optional<std::span<uint8_t>> value_to_buffer(JSContext *cx, JS::HandleValue val,
                                                   const char *val_desc);
 
-typedef bool InternalMethod(JSContext *cx, JS::HandleObject receiver, JS::HandleValue extra,
+using InternalMethod = bool(JSContext *cx, JS::HandleObject receiver, JS::HandleValue extra,
                             JS::CallArgs args);
 
 template <InternalMethod fun> bool internal_method(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -80,37 +82,6 @@ bool isWizening();
 void markWizeningAsFinished();
 
 bool define_fastly_sys(JSContext *cx, JS::HandleObject global);
-
-namespace RequestOrResponse {
-namespace Slots {
-enum {
-  RequestOrResponse,
-  Body,
-  BodyStream,
-  BodyAllPromise,
-  HasBody,
-  BodyUsed,
-  Headers,
-  URL,
-  Count
-};
-};
-bool is_instance(JSObject *obj);
-JSObject *body_stream(JSObject *obj);
-enum class BodyReadResult {
-  ArrayBuffer,
-  JSON,
-  Text,
-};
-
-bool body_used(JSObject *obj);
-bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self, bool create_if_undefined);
-bool body_unusable(JSContext *cx, JS::HandleObject body);
-fastly_body_handle_t body_handle(JSObject *obj);
-template <BodyReadResult result_type>
-bool bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
-JS::Value url(JSObject *obj);
-} // namespace RequestOrResponse
 
 bool RejectPromiseWithPendingError(JSContext *cx, JS::HandleObject promise);
 

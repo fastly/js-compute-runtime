@@ -19,14 +19,14 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
 zx.verbose = true;
 let stores = await (async function() {
     try {
-        return JSON.parse(await zx`fastly secret-store list --json --token $FASTLY_API_TOKEN`)
+        return JSON.parse(await zx`fastly secret-store list --quiet --json --token $FASTLY_API_TOKEN`)
     } catch {
         return {data:[]}
     }
 }())
 let links = await (async function() {
     try {
-        return JSON.parse(await zx`fastly resource-link list --json --version latest --token $FASTLY_API_TOKEN`)
+        return JSON.parse(await zx`fastly resource-link list --quiet --json --version latest --token $FASTLY_API_TOKEN`)
     } catch {
         return []
     }

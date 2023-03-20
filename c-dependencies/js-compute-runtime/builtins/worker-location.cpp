@@ -1,7 +1,7 @@
 #include "builtins/worker-location.h"
 #include "builtin.h"
-#include "builtins/url.h"
-#include "host_call.h"
+#include "builtins/shared/url.h"
+#include "host_interface/host_call.h"
 #include "js-compute-builtins.h"
 
 /**

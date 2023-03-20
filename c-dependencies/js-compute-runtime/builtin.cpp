@@ -8,6 +8,29 @@ const JSErrorFormatString *GetErrorMessageBuiltin(void *userRef, unsigned errorN
   return nullptr;
 }
 
+std::optional<std::span<uint8_t>> value_to_buffer(JSContext *cx, JS::HandleValue val,
+                                                  const char *val_desc) {
+  if (!val.isObject() ||
+      !(JS_IsArrayBufferViewObject(&val.toObject()) || JS::IsArrayBufferObject(&val.toObject()))) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessageBuiltin, nullptr, JSMSG_INVALID_BUFFER_ARG,
+                             val_desc, val.type());
+    return std::nullopt;
+  }
+
+  JS::RootedObject input(cx, &val.toObject());
+  uint8_t *data;
+  bool is_shared;
+  size_t len = 0;
+
+  if (JS_IsArrayBufferViewObject(input)) {
+    js::GetArrayBufferViewLengthAndData(input, &len, &is_shared, &data);
+  } else {
+    JS::GetArrayBufferLengthAndData(input, &len, &is_shared, &data);
+  }
+
+  return std::span(data, len);
+}
+
 JS::UniqueChars encode(JSContext *cx, JS::HandleString str, size_t *encoded_len) {
   JS::UniqueChars text = JS_EncodeStringToUTF8(cx, str);
   if (!text)

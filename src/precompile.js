@@ -1,5 +1,6 @@
 import Parser, { Query } from "tree-sitter";
 import JavaScript from "tree-sitter-javascript";
+import regexpuc from 'regexpu-core';
 
 function findRegexLiterals(source) {
   const parser = new Parser();
@@ -12,9 +13,25 @@ function findRegexLiterals(source) {
   );
   const regexLiterals = [];
   for (const m of query.matches(tree.rootNode)) {
+    const pattern = m.captures[0].node.text;
+    const flags = m.captures[1]?.node.text || "";
+    // transpile unicode property escapes
+    let patternTranspiled;
+    try {
+      patternTranspiled = regexpuc(pattern, flags, { unicodePropertyEscapes: 'transform' });
+    } catch {
+      // swallow regex parse errors here to instead throw them at the engine level
+      // this then also avoids regex parser bugs being thrown unnecessarily
+      patternTranspiled = pattern;
+    }
     regexLiterals.push({
-      pattern: m.captures[0].node.text,
-      flags: m.captures[1]?.node.text || "",
+      patternStart: m.captures[0].node.startIndex,
+      patternEnd: m.captures[0].node.endIndex,
+      pattern,
+      patternTranspiled,
+      flags,
+      flagsStart: m.captures[1]?.node.startIndex,
+      flagsEnd: m.captures[1]?.node.endIndex,
     });
   }
   return regexLiterals;
@@ -39,11 +56,19 @@ export function precompile(inputApplication) {
     return inputApplication;
   }
 
+  let offset = 0;
+  for (const lit of lits) {
+    if (lit.pattern === lit.patternTranspiled)
+      continue;
+    inputApplication = inputApplication.slice(0, lit.patternStart + offset) + lit.patternTranspiled + inputApplication.slice(lit.patternEnd + offset);
+    offset += lit.patternTranspiled.length - lit.pattern.length;
+  }
+
   return (
     PREAMBLE +
     lits
       .map((regex) => {
-        return `precompile(/${regex.pattern}/${regex.flags});`;
+        return `precompile(/${regex.patternTranspiled}/${regex.flags});`;
       })
       .join("\n") +
     POSTAMBLE + inputApplication

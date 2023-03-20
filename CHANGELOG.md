@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.5.1](https://github.com/fastly/js-compute-runtime/compare/v1.5.0...v1.5.1) (2023-03-10)
+
+
+### Bug Fixes
+
+* handle fallthrough of regex parser bugs ([#447](https://github.com/fastly/js-compute-runtime/issues/447)) ([8f38980](https://github.com/fastly/js-compute-runtime/commit/8f389805d6a88e476f0281df974cb971d7e78896))
+
+## [1.5.0](https://github.com/fastly/js-compute-runtime/compare/v1.4.2...v1.5.0) (2023-03-10)
+
+
+### Features
+
+* support unicode patterns via precompilation ([87a0dce](https://github.com/fastly/js-compute-runtime/commit/87a0dce62115cfd6d665f1d2aa617cf53a8b6b01))
+
+## [1.4.2](https://github.com/fastly/js-compute-runtime/compare/v1.4.1...v1.4.2) (2023-03-09)
+
+
+### Bug Fixes
+
+* console logging support improvements ([#434](https://github.com/fastly/js-compute-runtime/issues/434)) ([7a74d76](https://github.com/fastly/js-compute-runtime/commit/7a74d76ed1d03c1c588caf664f471eab226c10a6))
+
 ## 1.4.1 (2023-03-01)
 
 
@@ -45,7 +66,7 @@
 
 ### Changed
 
-* ensure CacheOverride bitflags are the same value as defined in xqd ([#386](https://github.com/fastly/js-compute-runtime/issues/386)) ([8a1c215](https://github.com/fastly/js-compute-runtime/commit/8a1c2158505e8ed1ebb424fc97866da155601d1f))
+* ensure CacheOverride bitflags are the same value as defined in c-at-e ([#386](https://github.com/fastly/js-compute-runtime/issues/386)) ([8a1c215](https://github.com/fastly/js-compute-runtime/commit/8a1c2158505e8ed1ebb424fc97866da155601d1f))
 
 ## 1.3.0 (2023-01-24)
 

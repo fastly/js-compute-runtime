@@ -15,11 +15,11 @@ node_modules/
 /js-compute-runtime-component.wasm
 /c-dependencies/js-compute-runtime/obj
 tests/wpt-harness/wpt-test-runner.js
-/xqd.wit
-/wasi_snapshot_preview1.wasm
+/c-at-e.wit
+/wasi_snapshot_preview1.reactor.wasm
 wpt-runtime.wasm
 docs-app/bin/main.wasm
 docs-app/pkg/*.tar.gz
-c-dependencies/js-compute-runtime/xqd-world/xqd_world_component_type.o
+c-dependencies/js-compute-runtime/c-at-e-world/c_at_e_world_component_type.o
 
 *.a

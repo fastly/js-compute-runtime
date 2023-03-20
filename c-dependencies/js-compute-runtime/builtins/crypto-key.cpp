@@ -1,4 +1,5 @@
 #include <iostream>
+#include <span>
 #include <openssl/bn.h>
 #include <openssl/err.h>
 #include "openssl/evp.h"
@@ -20,7 +21,6 @@
 #include "js-compute-builtins.h"
 
 #include "js/Array.h"
-#include "xqd.h"
 
 BIGNUM *convertToBigNumber(std::string bytes) {
   return BN_bin2bn(reinterpret_cast<const unsigned char *>(bytes.data()), bytes.length(), nullptr);
