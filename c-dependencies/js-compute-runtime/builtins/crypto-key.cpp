@@ -1,11 +1,11 @@
+#include "openssl/evp.h"
+#include "openssl/sha.h"
 #include <iostream>
-#include <span>
 #include <openssl/bn.h>
 #include <openssl/err.h>
-#include "openssl/evp.h"
-#include <openssl/rsa.h>
 #include <openssl/rand.h>
-#include "openssl/sha.h"
+#include <openssl/rsa.h>
+#include <span>
 
 #include "js/ArrayBuffer.h"
 // TODO: remove these once the warnings are fixed
@@ -29,17 +29,15 @@ BIGNUM *convertToBigNumber(std::span<uint8_t> bytes) {
   return BN_bin2bn(reinterpret_cast<const unsigned char *>(bytes.data()), bytes.size(), nullptr);
 }
 
-std::string convertToBytes(const BIGNUM* bignum) {
+std::string convertToBytes(const BIGNUM *bignum) {
   size_t length = BN_num_bytes(bignum);
-  auto data = reinterpret_cast<char*>(calloc(length, sizeof(char)));
-  BN_bn2bin(bignum, reinterpret_cast<uint8_t*>(data));
+  auto data = reinterpret_cast<char *>(calloc(length, sizeof(char)));
+  BN_bn2bin(bignum, reinterpret_cast<uint8_t *>(data));
   std::string bytes(data, length);
   return bytes;
 }
 
-int getBigNumberLength(BIGNUM *a) {
-  return BN_num_bytes(a) * 8;
-}
+int getBigNumberLength(BIGNUM *a) { return BN_num_bytes(a) * 8; }
 
 namespace builtins {
 
@@ -82,7 +80,8 @@ JS::Result<CryptoKeyUsageBitmap> CryptoKey::toKeyUsageBitmap(JSContext *cx,
   }
 
   if (!key_usages_is_array) {
-    // TODO: This should check if the JS::HandleValue is iterable and if so, should convert it into a JS Array
+    // TODO: This should check if the JS::HandleValue is iterable and if so, should convert it into
+    // a JS Array
     JS_ReportErrorASCII(cx, "The provided value cannot be converted to a sequence");
     return JS::Result<CryptoKeyUsageBitmap>(JS::Error());
   }
@@ -227,9 +226,10 @@ const char *algorithmName(CryptoAlgorithmIdentifier algorithm) {
   return result;
 }
 
-JS::Result<bool> CryptoKey::is_algorithm(JSContext *cx, JS::HandleObject self, CryptoAlgorithmIdentifier algorithm) {
+JS::Result<bool> CryptoKey::is_algorithm(JSContext *cx, JS::HandleObject self,
+                                         CryptoAlgorithmIdentifier algorithm) {
   MOZ_ASSERT(is_instance(self));
-  JS::RootedObject self_algorithm (cx, JS::GetReservedSlot(self, Slots::Algorithm).toObjectOrNull());
+  JS::RootedObject self_algorithm(cx, JS::GetReservedSlot(self, Slots::Algorithm).toObjectOrNull());
   MOZ_ASSERT(self_algorithm != nullptr);
   JS::Rooted<JS::Value> name_val(cx);
   if (!JS_GetProperty(cx, self_algorithm, "name", &name_val)) {
@@ -292,9 +292,9 @@ bool CryptoKey::extractable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-EVP_PKEY* CryptoKey::key(JSObject* self) {
+EVP_PKEY *CryptoKey::key(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
-  return static_cast<EVP_PKEY*>(JS::GetReservedSlot(self, Slots::Key).toPrivate());
+  return static_cast<EVP_PKEY *>(JS::GetReservedSlot(self, Slots::Key).toPrivate());
 }
 
 CryptoKeyType CryptoKey::type(JSObject *self) {
@@ -431,7 +431,7 @@ const JSPropertySpec CryptoKey::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "CryptoKey", JSPROP_READONLY),
     JS_PS_END};
 
-JSObject *CryptoKey::create(JSContext *cx, CryptoAlgorithm* algorithm, CryptoKeyType type,
+JSObject *CryptoKey::create(JSContext *cx, CryptoAlgorithm *algorithm, CryptoKeyType type,
                             bool extractable, CryptoKeyUsageBitmap usage, void *key) {
 
   JS::RootedObject instance(
@@ -454,14 +454,14 @@ JSObject *CryptoKey::create(JSContext *cx, CryptoAlgorithm* algorithm, CryptoKey
   return instance;
 }
 
-JSObject *CryptoKey::create(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImport* algorithm, CryptoKeyType type,
-                            bool extractable, CryptoKeyUsageBitmap usage, EVP_PKEY *key) {
+JSObject *CryptoKey::create(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImport *algorithm,
+                            CryptoKeyType type, bool extractable, CryptoKeyUsageBitmap usage,
+                            EVP_PKEY *key) {
   JS::RootedObject instance(
       cx, JS_NewObjectWithGivenProto(cx, &CryptoKey::class_, CryptoKey::proto_obj));
   if (!instance) {
     return nullptr;
   }
-
 
   JS::RootedObject alg(cx, algorithm->toObject(cx));
   if (!alg) {
@@ -487,8 +487,8 @@ bool CryptoKey::init_class(JSContext *cx, JS::HandleObject global) {
 }
 
 JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImport *algorithm,
-                                      CryptoKeyRSAComponents keyData, bool extractable,
-                                      CryptoKeyUsageBitmap usages) {
+                               CryptoKeyRSAComponents keyData, bool extractable,
+                               CryptoKeyUsageBitmap usages) {
   CryptoKeyType keyType;
   switch (keyData.type()) {
   case CryptoKeyRSAComponents::Type::Public:
@@ -520,14 +520,14 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImport 
   if (keyType == CryptoKeyType::Private) {
     if (keyData.privateExponent().empty() || keyData.firstPrimeInfo()->primeFactor.empty() ||
         keyData.secondPrimeInfo()->primeFactor.empty()) {
-          return nullptr;
+      return nullptr;
     }
   }
 
-  #pragma clang diagnostic push
-  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   auto rsa = RSA_new();
-  #pragma clang diagnostic pop
+#pragma clang diagnostic pop
   if (!rsa)
     return nullptr;
 
@@ -536,33 +536,43 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImport 
   if (!n || !e)
     return nullptr;
 
-  // Calling with d null is fine as long as n and e are not null
-  // Ownership of n and e transferred to OpenSSL
-  #pragma clang diagnostic push
-  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  if (!RSA_set0_key(rsa, n, e, nullptr)){return nullptr;}
-  #pragma clang diagnostic pop
+// Calling with d null is fine as long as n and e are not null
+// Ownership of n and e transferred to OpenSSL
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  if (!RSA_set0_key(rsa, n, e, nullptr)) {
+    return nullptr;
+  }
+#pragma clang diagnostic pop
 
   if (keyType == CryptoKeyType::Private) {
     auto d = convertToBigNumber(keyData.privateExponent());
-    if (!d) {return nullptr;}
+    if (!d) {
+      return nullptr;
+    }
 
-    // Calling with n and e null is fine as long as they were set prior
-    // Ownership of d transferred to OpenSSL
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    if (!RSA_set0_key(rsa, nullptr, nullptr, d)) {return nullptr;}
-    #pragma clang diagnostic pop
+// Calling with n and e null is fine as long as they were set prior
+// Ownership of d transferred to OpenSSL
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    if (!RSA_set0_key(rsa, nullptr, nullptr, d)) {
+      return nullptr;
+    }
+#pragma clang diagnostic pop
 
     auto p = convertToBigNumber(keyData.firstPrimeInfo()->primeFactor);
     auto q = convertToBigNumber(keyData.secondPrimeInfo()->primeFactor);
-    if (!p || !q) {return nullptr;}
+    if (!p || !q) {
+      return nullptr;
+    }
 
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     // Ownership of p and q transferred to OpenSSL
-    if (!RSA_set0_factors(rsa, p, q)) {return nullptr;}
-    #pragma clang diagnostic pop
+    if (!RSA_set0_factors(rsa, p, q)) {
+      return nullptr;
+    }
+#pragma clang diagnostic pop
 
     // We set dmp1, dmpq1, and iqmp member of the RSA struct if the keyData has corresponding data.
 
@@ -579,11 +589,11 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImport 
                     ? convertToBigNumber(keyData.secondPrimeInfo()->factorCRTCoefficient)
                     : nullptr;
 
-    // Ownership of dmp1, dmq1 and iqmp transferred to OpenSSL
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+// Ownership of dmp1, dmq1 and iqmp transferred to OpenSSL
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     if (!RSA_set0_crt_params(rsa, dmp1, dmq1, iqmp)) {
-    #pragma clang diagnostic pop
+#pragma clang diagnostic pop
       return nullptr;
     }
   }
@@ -593,10 +603,10 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImport 
     return nullptr;
   }
 
-  #pragma clang diagnostic push
-  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   if (EVP_PKEY_set1_RSA(pkey, rsa) != 1) {
-  #pragma clang diagnostic pop
+#pragma clang diagnostic pop
     return nullptr;
   }
 
@@ -615,14 +625,15 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImport 
     return nullptr;
   }
 
-  uint8_t* p = reinterpret_cast<uint8_t*>(calloc(keyData.exponent().size(), sizeof(uint8_t)));
+  uint8_t *p = reinterpret_cast<uint8_t *>(calloc(keyData.exponent().size(), sizeof(uint8_t)));
   auto exp = keyData.exponent();
   std::copy(exp.begin(), exp.end(), p);
 
   JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, keyData.exponent().size(), p));
   if (!buffer) {
-    // We can be here if the array buffer was too large -- if that was the case then a JSMSG_BAD_ARRAY_LENGTH will have been created.
-    // No other failure scenarios in this path will create a JS exception and so we need to create one.
+    // We can be here if the array buffer was too large -- if that was the case then a
+    // JSMSG_BAD_ARRAY_LENGTH will have been created. No other failure scenarios in this path will
+    // create a JS exception and so we need to create one.
     if (!JS_IsExceptionPending(cx)) {
       // TODO Rename error to InternalError
       JS_ReportErrorLatin1(cx, "InternalError");
@@ -631,7 +642,8 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImport 
     return nullptr;
   }
 
-  JS::RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, keyData.exponent().size()));
+  JS::RootedObject byte_array(cx,
+                              JS_NewUint8ArrayWithBuffer(cx, buffer, 0, keyData.exponent().size()));
   JS::RootedValue publicExponent(cx, JS::ObjectValue(*byte_array));
   if (!JS_SetProperty(cx, alg, "publicExponent", publicExponent)) {
     return nullptr;
@@ -646,8 +658,8 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImport 
 }
 
 JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_Import *algorithm,
-                                      CryptoKeyRSAComponents keyData, bool extractable,
-                                      CryptoKeyUsageBitmap usages) {
+                               CryptoKeyRSAComponents keyData, bool extractable,
+                               CryptoKeyUsageBitmap usages) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(algorithm);
   CryptoKeyType keyType;
@@ -689,10 +701,10 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
     }
   }
 
-  #pragma clang diagnostic push
-  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   auto rsa = RSA_new();
-  #pragma clang diagnostic pop
+#pragma clang diagnostic pop
   if (!rsa) {
     return nullptr;
   }
@@ -703,14 +715,14 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
     return nullptr;
   }
 
-  // Calling with d null is fine as long as n and e are not null
-  // Ownership of n and e transferred to OpenSSL
-  #pragma clang diagnostic push
-  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+// Calling with d null is fine as long as n and e are not null
+// Ownership of n and e transferred to OpenSSL
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   if (!RSA_set0_key(rsa, n, e, nullptr)) {
     return nullptr;
   }
-  #pragma clang diagnostic pop
+#pragma clang diagnostic pop
 
   if (keyType == CryptoKeyType::Private) {
     auto d = convertToBigNumber(keyData.privateExponent());
@@ -718,14 +730,14 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
       return nullptr;
     }
 
-    // Calling with n and e null is fine as long as they were set prior
-    // Ownership of d transferred to OpenSSL
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+// Calling with n and e null is fine as long as they were set prior
+// Ownership of d transferred to OpenSSL
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     if (!RSA_set0_key(rsa, nullptr, nullptr, d)) {
       return nullptr;
     }
-    #pragma clang diagnostic pop
+#pragma clang diagnostic pop
 
     auto p = convertToBigNumber(keyData.firstPrimeInfo()->primeFactor);
     auto q = convertToBigNumber(keyData.secondPrimeInfo()->primeFactor);
@@ -733,13 +745,13 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
       return nullptr;
     }
 
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     // Ownership of p and q transferred to OpenSSL
     if (!RSA_set0_factors(rsa, p, q)) {
       return nullptr;
     }
-    #pragma clang diagnostic pop
+#pragma clang diagnostic pop
 
     // We set dmp1, dmpq1, and iqmp member of the RSA struct if the keyData has corresponding data.
 
@@ -756,11 +768,11 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
                     ? convertToBigNumber(keyData.secondPrimeInfo()->factorCRTCoefficient)
                     : nullptr;
 
-    // Ownership of dmp1, dmq1 and iqmp transferred to OpenSSL
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+// Ownership of dmp1, dmq1 and iqmp transferred to OpenSSL
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     if (!RSA_set0_crt_params(rsa, dmp1, dmq1, iqmp)) {
-    #pragma clang diagnostic pop
+#pragma clang diagnostic pop
       return nullptr;
     }
   }
@@ -770,10 +782,10 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
     return nullptr;
   }
 
-  #pragma clang diagnostic push
-  #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   if (EVP_PKEY_set1_RSA(pkey, rsa) != 1) {
-  #pragma clang diagnostic pop
+#pragma clang diagnostic pop
     return nullptr;
   }
 
@@ -792,14 +804,15 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
     return nullptr;
   }
 
-  uint8_t* p = reinterpret_cast<uint8_t*>(calloc(keyData.exponent().size(), sizeof(uint8_t)));
+  uint8_t *p = reinterpret_cast<uint8_t *>(calloc(keyData.exponent().size(), sizeof(uint8_t)));
   auto exp = keyData.exponent();
   std::copy(exp.begin(), exp.end(), p);
 
   JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, keyData.exponent().size(), p));
   if (!buffer) {
-    // We can be here if the array buffer was too large -- if that was the case then a JSMSG_BAD_ARRAY_LENGTH will have been created.
-    // No other failure scenarios in this path will create a JS exception and so we need to create one.
+    // We can be here if the array buffer was too large -- if that was the case then a
+    // JSMSG_BAD_ARRAY_LENGTH will have been created. No other failure scenarios in this path will
+    // create a JS exception and so we need to create one.
     if (!JS_IsExceptionPending(cx)) {
       // TODO Rename error to InternalError
       JS_ReportErrorLatin1(cx, "InternalError");
@@ -808,7 +821,8 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
     return nullptr;
   }
 
-  JS::RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, keyData.exponent().size()));
+  JS::RootedObject byte_array(cx,
+                              JS_NewUint8ArrayWithBuffer(cx, buffer, 0, keyData.exponent().size()));
   JS::RootedValue publicExponent(cx, JS::ObjectValue(*byte_array));
   if (!JS_SetProperty(cx, alg, "publicExponent", publicExponent)) {
     return nullptr;
@@ -822,9 +836,9 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
   return instance;
 }
 
-JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImport* algorithm,
-                                         JsonWebKey* keyData, bool extractable,
-                                         CryptoKeyUsageBitmap usages) {
+JSObject *CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImport *algorithm,
+                                  JsonWebKey *keyData, bool extractable,
+                                  CryptoKeyUsageBitmap usages) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(algorithm);
   MOZ_ASSERT(keyData);
@@ -834,7 +848,9 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImpo
   if (keyData->key_ops.size() > 0) {
     auto ops = CryptoKey::toKeyUsageBitmap(keyData->key_ops);
     if (!(ops & usages)) {
-      JS_ReportErrorASCII(cx, "The JWK 'key_ops' member was inconsistent with that specified by the Web Crypto call. The JWK usage must be a superset of those requested");
+      JS_ReportErrorASCII(cx,
+                          "The JWK 'key_ops' member was inconsistent with that specified by the "
+                          "Web Crypto call. The JWK usage must be a superset of those requested");
       return nullptr;
     }
   }
@@ -917,9 +933,9 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImpo
   }
   auto secondFactorCRTCoefficient = secondFactorCRTCoefficientResult.unwrap();
 
-  PrimeInfo firstPrimeInfo { firstPrimeFactor, firstFactorCRTExponent};
+  PrimeInfo firstPrimeInfo{firstPrimeFactor, firstFactorCRTExponent};
 
-  PrimeInfo secondPrimeInfo { secondPrimeFactor, secondFactorCRTExponent, secondFactorCRTCoefficient};
+  PrimeInfo secondPrimeInfo{secondPrimeFactor, secondFactorCRTExponent, secondFactorCRTCoefficient};
 
   if (!keyData->oth.size()) {
     auto privateKeyComponents = CryptoKeyRSAComponents::createPrivateWithAdditionalData(
@@ -930,26 +946,26 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImpo
 
   std::vector<PrimeInfo> otherPrimeInfos;
   for (const auto &value : keyData->oth) {
-    auto primeFactorResult = GlobalProperties::forgivingBase64Decode(
-        value.r, GlobalProperties::base64URLDecodeTable);
+    auto primeFactorResult =
+        GlobalProperties::forgivingBase64Decode(value.r, GlobalProperties::base64URLDecodeTable);
     if (primeFactorResult.isErr()) {
       return nullptr;
     }
     auto primeFactor = primeFactorResult.unwrap();
-    auto factorCRTExponentResult = GlobalProperties::forgivingBase64Decode(
-        value.d, GlobalProperties::base64URLDecodeTable);
+    auto factorCRTExponentResult =
+        GlobalProperties::forgivingBase64Decode(value.d, GlobalProperties::base64URLDecodeTable);
     if (factorCRTExponentResult.isErr()) {
       return nullptr;
     }
     auto factorCRTExponent = factorCRTExponentResult.unwrap();
-    auto factorCRTCoefficientResult = GlobalProperties::forgivingBase64Decode(
-        value.t, GlobalProperties::base64URLDecodeTable);
+    auto factorCRTCoefficientResult =
+        GlobalProperties::forgivingBase64Decode(value.t, GlobalProperties::base64URLDecodeTable);
     if (factorCRTCoefficientResult.isErr()) {
       return nullptr;
     }
     auto factorCRTCoefficient = factorCRTCoefficientResult.unwrap();
 
-    otherPrimeInfos.push_back(PrimeInfo(primeFactor,factorCRTExponent,factorCRTCoefficient));
+    otherPrimeInfos.push_back(PrimeInfo(primeFactor, factorCRTExponent, factorCRTCoefficient));
   }
 
   auto privateKeyComponents = CryptoKeyRSAComponents::createPrivateWithAdditionalData(
@@ -957,9 +973,9 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSA_OAEP_KeyImpo
   return CryptoKey::createRSA(cx, algorithm, privateKeyComponents, extractable, usages);
 }
 
-JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_Import* algorithm,
-                                         JsonWebKey* keyData, bool extractable,
-                                         CryptoKeyUsageBitmap usages) {
+JSObject *CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_Import *algorithm,
+                                  JsonWebKey *keyData, bool extractable,
+                                  CryptoKeyUsageBitmap usages) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(algorithm);
   MOZ_ASSERT(keyData);
@@ -969,7 +985,9 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_
   if (keyData->key_ops.size() > 0) {
     auto ops = CryptoKey::toKeyUsageBitmap(keyData->key_ops);
     if (!(ops & usages)) {
-      JS_ReportErrorASCII(cx, "The JWK 'key_ops' member was inconsistent with that specified by the Web Crypto call. The JWK usage must be a superset of those requested");
+      JS_ReportErrorASCII(cx,
+                          "The JWK 'key_ops' member was inconsistent with that specified by the "
+                          "Web Crypto call. The JWK usage must be a superset of those requested");
       return nullptr;
     }
   }
@@ -980,15 +998,16 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_
   }
 
   if (!keyData->n.has_value() || !keyData->e.has_value()) {
-// TODO: Change to a DataError instance
+    // TODO: Change to a DataError instance
     JS_ReportErrorLatin1(cx, "Data provided to an operation does not meet requirements");
-        return nullptr;
+    return nullptr;
   }
   auto modulusResult = GlobalProperties::forgivingBase64Decode(
       keyData->n.value(), GlobalProperties::base64URLDecodeTable);
   if (modulusResult.isErr()) {
     // TODO: Change to a DataError instance
-    JS_ReportErrorLatin1(cx, "The JWK member 'n' could not be base64url decoded or contained padding");
+    JS_ReportErrorLatin1(cx,
+                         "The JWK member 'n' could not be base64url decoded or contained padding");
     return nullptr;
   }
   auto modulus = modulusResult.unwrap();
@@ -1003,11 +1022,12 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_
     return nullptr;
   }
   auto data = dataResult.unwrap();
-  auto exponentResult = GlobalProperties::forgivingBase64Decode(
-      data, GlobalProperties::base64URLDecodeTable);
+  auto exponentResult =
+      GlobalProperties::forgivingBase64Decode(data, GlobalProperties::base64URLDecodeTable);
   if (exponentResult.isErr()) {
     // TODO: Change to a DataError instance
-    JS_ReportErrorLatin1(cx, "The JWK member 'e' could not be base64url decoded or contained padding");
+    JS_ReportErrorLatin1(cx,
+                         "The JWK member 'e' could not be base64url decoded or contained padding");
     return nullptr;
   }
   auto exponent = exponentResult.unwrap();
@@ -1022,7 +1042,8 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_
       keyData->d.value(), GlobalProperties::base64URLDecodeTable);
   if (privateExponentResult.isErr()) {
     // TODO: Change to a DataError instance
-    JS_ReportErrorLatin1(cx, "The JWK member 'd' could not be base64url decoded or contained padding");
+    JS_ReportErrorLatin1(cx,
+                         "The JWK member 'd' could not be base64url decoded or contained padding");
     return nullptr;
   }
   auto privateExponent = privateExponentResult.unwrap();
@@ -1044,7 +1065,8 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_
       keyData->p.value(), GlobalProperties::base64URLDecodeTable);
   if (firstPrimeFactorResult.isErr()) {
     // TODO: Change to a DataError instance
-    JS_ReportErrorLatin1(cx, "The JWK member 'p' could not be base64url decoded or contained padding");
+    JS_ReportErrorLatin1(cx,
+                         "The JWK member 'p' could not be base64url decoded or contained padding");
     return nullptr;
   }
   auto firstPrimeFactor = firstPrimeFactorResult.unwrap();
@@ -1052,7 +1074,8 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_
       keyData->dp.value(), GlobalProperties::base64URLDecodeTable);
   if (firstFactorCRTExponentResult.isErr()) {
     // TODO: Change to a DataError instance
-    JS_ReportErrorLatin1(cx, "The JWK member 'dp' could not be base64url decoded or contained padding");
+    JS_ReportErrorLatin1(cx,
+                         "The JWK member 'dp' could not be base64url decoded or contained padding");
     return nullptr;
   }
   auto firstFactorCRTExponent = firstFactorCRTExponentResult.unwrap();
@@ -1060,7 +1083,8 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_
       keyData->q.value(), GlobalProperties::base64URLDecodeTable);
   if (secondPrimeFactorResult.isErr()) {
     // TODO: Change to a DataError instance
-    JS_ReportErrorLatin1(cx, "The JWK member 'q' could not be base64url decoded or contained padding");
+    JS_ReportErrorLatin1(cx,
+                         "The JWK member 'q' could not be base64url decoded or contained padding");
     return nullptr;
   }
   auto secondPrimeFactor = secondPrimeFactorResult.unwrap();
@@ -1068,7 +1092,8 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_
       keyData->dq.value(), GlobalProperties::base64URLDecodeTable);
   if (secondFactorCRTExponentResult.isErr()) {
     // TODO: Change to a DataError instance
-    JS_ReportErrorLatin1(cx, "The JWK member 'dq' could not be base64url decoded or contained padding");
+    JS_ReportErrorLatin1(cx,
+                         "The JWK member 'dq' could not be base64url decoded or contained padding");
     return nullptr;
   }
   auto secondFactorCRTExponent = secondFactorCRTExponentResult.unwrap();
@@ -1076,14 +1101,15 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_
       keyData->qi.value(), GlobalProperties::base64URLDecodeTable);
   if (secondFactorCRTCoefficientResult.isErr()) {
     // TODO: Change to a DataError instance
-    JS_ReportErrorLatin1(cx, "The JWK member 'qi' could not be base64url decoded or contained padding");
+    JS_ReportErrorLatin1(cx,
+                         "The JWK member 'qi' could not be base64url decoded or contained padding");
     return nullptr;
   }
   auto secondFactorCRTCoefficient = secondFactorCRTCoefficientResult.unwrap();
 
-  PrimeInfo firstPrimeInfo {firstPrimeFactor, firstFactorCRTExponent};
+  PrimeInfo firstPrimeInfo{firstPrimeFactor, firstFactorCRTExponent};
 
-  PrimeInfo secondPrimeInfo {secondPrimeFactor, secondFactorCRTExponent, secondFactorCRTCoefficient};
+  PrimeInfo secondPrimeInfo{secondPrimeFactor, secondFactorCRTExponent, secondFactorCRTCoefficient};
 
   if (!keyData->oth.size()) {
     auto privateKeyComponents = CryptoKeyRSAComponents::createPrivateWithAdditionalData(
@@ -1093,20 +1119,20 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_
 
   std::vector<PrimeInfo> otherPrimeInfos;
   for (const auto &value : keyData->oth) {
-    auto primeFactorResult = GlobalProperties::forgivingBase64Decode(
-        value.r, GlobalProperties::base64URLDecodeTable);
+    auto primeFactorResult =
+        GlobalProperties::forgivingBase64Decode(value.r, GlobalProperties::base64URLDecodeTable);
     if (primeFactorResult.isErr()) {
       return nullptr;
     }
     auto primeFactor = primeFactorResult.unwrap();
-    auto factorCRTExponentResult = GlobalProperties::forgivingBase64Decode(
-        value.d, GlobalProperties::base64URLDecodeTable);
+    auto factorCRTExponentResult =
+        GlobalProperties::forgivingBase64Decode(value.d, GlobalProperties::base64URLDecodeTable);
     if (factorCRTExponentResult.isErr()) {
       return nullptr;
     }
     auto factorCRTExponent = factorCRTExponentResult.unwrap();
-    auto factorCRTCoefficientResult = GlobalProperties::forgivingBase64Decode(
-        value.t, GlobalProperties::base64URLDecodeTable);
+    auto factorCRTCoefficientResult =
+        GlobalProperties::forgivingBase64Decode(value.t, GlobalProperties::base64URLDecodeTable);
     if (factorCRTCoefficientResult.isErr()) {
       return nullptr;
     }
@@ -1121,14 +1147,14 @@ JSObject* CryptoKey::importJwkRsa(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_
 }
 
 namespace {
-  JS::Result<builtins::CryptoAlgorithmIdentifier> toHashIdentifier(JSContext *cx, JS::HandleValue value) {
-    auto normalizedHashAlgorithm = CryptoAlgorithmDigest::normalize(cx, value);
-    if (!normalizedHashAlgorithm) {
-      return JS::Result<builtins::CryptoAlgorithmIdentifier>(JS::Error());
-    }
-    return normalizedHashAlgorithm->identifier();
+JS::Result<builtins::CryptoAlgorithmIdentifier> toHashIdentifier(JSContext *cx,
+                                                                 JS::HandleValue value) {
+  auto normalizedHashAlgorithm = CryptoAlgorithmDigest::normalize(cx, value);
+  if (!normalizedHashAlgorithm) {
+    return JS::Result<builtins::CryptoAlgorithmIdentifier>(JS::Error());
   }
-
+  return normalizedHashAlgorithm->identifier();
+}
 
 JS::Result<CryptoAlgorithmIdentifier> normalizeIdentifier(JSContext *cx, JS::HandleValue value) {
   JS::Rooted<JSString *> algorithmIdentifierString(cx);
@@ -1145,21 +1171,25 @@ JS::Result<CryptoAlgorithmIdentifier> normalizeIdentifier(JSContext *cx, JS::Han
     params.set(&value.toObject());
     JS::Rooted<JS::Value> name_val(cx);
     if (!JS_GetProperty(cx, params, "name", &name_val)) {
-      return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());;
+      return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
+      ;
     }
     JS::RootedString str(cx, JS::ToString(cx, name_val));
     if (!str) {
-      return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());;
+      return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
+      ;
     }
     algorithmIdentifierString.set(str);
   } else {
     JS_ReportErrorUTF8(cx, "Algorithm: Unrecognized name");
-    return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());;
+    return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
+    ;
   }
   size_t algorithmLen;
   JS::UniqueChars algorithmChars = encode(cx, algorithmIdentifierString, &algorithmLen);
   if (!algorithmChars) {
-    return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());;
+    return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
+    ;
   }
 
   std::string algorithm(algorithmChars.get(), algorithmLen);
@@ -1207,12 +1237,13 @@ JS::Result<CryptoAlgorithmIdentifier> normalizeIdentifier(JSContext *cx, JS::Han
   } else {
     JS_ReportErrorUTF8(cx, "Algorithm: Unrecognized name");
     return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
-  } 
   }
 }
+} // namespace
 
-std::unique_ptr<CryptoAlgorithmEncDec> CryptoAlgorithmEncDec::normalize(JSContext *cx, JS::HandleValue value){
-  auto identifierResult =  normalizeIdentifier(cx, value);
+std::unique_ptr<CryptoAlgorithmEncDec> CryptoAlgorithmEncDec::normalize(JSContext *cx,
+                                                                        JS::HandleValue value) {
+  auto identifierResult = normalizeIdentifier(cx, value);
   if (identifierResult.isErr()) {
     return nullptr;
   }
@@ -1229,121 +1260,130 @@ std::unique_ptr<CryptoAlgorithmEncDec> CryptoAlgorithmEncDec::normalize(JSContex
   }
 
   switch (identifier) {
-    case CryptoAlgorithmIdentifier::RSAES_PKCS1_v1_5: {
-      return std::make_unique<CryptoAlgorithmRSAES_PKCS1_v1_5>(std::nullopt, std::nullopt);
-      break;
-    }
-    case CryptoAlgorithmIdentifier::RSA_OAEP: {
-      bool found;
-      if (!JS_HasProperty(cx, params, "label", &found)) {
-        return nullptr;
-      }
-      if (!found) {
-        return std::make_unique<CryptoAlgorithmRSA_OAEP_EncDec>(std::nullopt);
-      } else {
-        JS::Rooted<JS::Value> label_val(cx);
-        if (!JS_GetProperty(cx, params, "label", &label_val)) {
-          return nullptr;
-        }
-        std::optional<std::span<uint8_t>> label = value_to_buffer(cx, label_val, "normaliseAlgorithm 1");
-        if (!label.has_value()) {
-          // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
-          return nullptr;
-        }
-        return std::make_unique<CryptoAlgorithmRSA_OAEP_EncDec>(label);
-      }
-      break;
-    }
-    case CryptoAlgorithmIdentifier::AES_CBC:
-    case CryptoAlgorithmIdentifier::AES_CFB: {
-      JS::Rooted<JS::Value> iv_val(cx);
-      if (!JS_GetProperty(cx, params, "iv", &iv_val)) {
-        return nullptr;
-      }
-      std::optional<std::span<uint8_t>>iv = value_to_buffer(cx, iv_val, "normaliseAlgorithm 2");
-      if (!iv.has_value()) {
-        // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
-        return nullptr;
-      }
-      if (identifier == CryptoAlgorithmIdentifier::AES_CBC) {
-        return std::make_unique<CryptoAlgorithmAES_CBC_EncDec>(iv.value());
-      } else {
-        return std::make_unique<CryptoAlgorithmAES_CFB_EncDec>(iv.value());
-      }
-      break;
-    }
-    case CryptoAlgorithmIdentifier::AES_CTR: {
-      JS::Rooted<JS::Value> counter_val(cx);
-      if (!JS_GetProperty(cx, params, "counter", &counter_val)) {
-        return nullptr;
-      }
-      size_t length;
-      std::optional<std::span<uint8_t>> counter = value_to_buffer(cx, counter_val, "normaliseAlgorithm 3");
-      if (!counter.has_value()) {
-        // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
-        return nullptr;
-      }
-      JS::Rooted<JS::Value> length_val(cx);
-      if (!JS_GetProperty(cx, params, "length", &length_val)) {
-        return nullptr;
-      }
-      if (!length_val.isNumber()) {
-        return nullptr;
-      }
-      length = length_val.toNumber();
-      return std::make_unique<CryptoAlgorithmAES_CTR_EncDec>(counter.value(), length);
-      break;
-    }
-    case CryptoAlgorithmIdentifier::AES_GCM: {
-      JS::Rooted<JS::Value> iv_val(cx);
-      if (!JS_GetProperty(cx, params, "iv", &iv_val)) {
-        return nullptr;
-      }
-      std::optional<std::span<uint8_t>>iv = value_to_buffer(cx, iv_val, "normaliseAlgorithm 4");
-      if (!iv.has_value()) {
-        // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
-        return nullptr;
-      }
-      bool found;
-      std::optional<std::span<uint8_t>> additionalData = std::nullopt;
-      if (!JS_HasProperty(cx, params, "additionalData", &found)) {
-        return nullptr;
-      }
-      if (found) {
-        JS::Rooted<JS::Value> additionalData_val(cx);
-        if (!JS_GetProperty(cx, params, "additionalData", &additionalData_val)) {
-          return nullptr;
-        }
-        std::optional<std::span<uint8_t>> additionalDataBuffer = value_to_buffer(cx, additionalData_val, "normaliseAlgorithm 5");
-        if (!additionalDataBuffer.has_value()) {
-          // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
-          return nullptr;
-        }
-        additionalData = additionalDataBuffer;
-      }
-      std::optional<uint8_t> tagLength = std::nullopt;
-      if (!JS_HasProperty(cx, params, "tagLength", &found)) {
-        return nullptr;
-      }
-      if (found) {
-        JS::Rooted<JS::Value> tagLength_val(cx);
-        if (!JS_GetProperty(cx, params, "tagLength", &tagLength_val)) {
-          return nullptr;
-        }
-        if (!tagLength_val.isNumber()) {
-          return nullptr;
-        }
-        tagLength = tagLength_val.toNumber();
-      }
-      return std::make_unique<CryptoAlgorithmAES_GCM_EncDec>(iv.value(), additionalData, tagLength);
-      break;
-    }
-    default:
+  case CryptoAlgorithmIdentifier::RSAES_PKCS1_v1_5: {
+    return std::make_unique<CryptoAlgorithmRSAES_PKCS1_v1_5>(std::nullopt, std::nullopt);
+    break;
+  }
+  case CryptoAlgorithmIdentifier::RSA_OAEP: {
+    bool found;
+    if (!JS_HasProperty(cx, params, "label", &found)) {
       return nullptr;
+    }
+    if (!found) {
+      return std::make_unique<CryptoAlgorithmRSA_OAEP_EncDec>(std::nullopt);
+    } else {
+      JS::Rooted<JS::Value> label_val(cx);
+      if (!JS_GetProperty(cx, params, "label", &label_val)) {
+        return nullptr;
+      }
+      std::optional<std::span<uint8_t>> label =
+          value_to_buffer(cx, label_val, "normaliseAlgorithm 1");
+      if (!label.has_value()) {
+        // value_to_buffer would have already created a JS exception so we don't need to create one
+        // ourselves.
+        return nullptr;
+      }
+      return std::make_unique<CryptoAlgorithmRSA_OAEP_EncDec>(label);
+    }
+    break;
+  }
+  case CryptoAlgorithmIdentifier::AES_CBC:
+  case CryptoAlgorithmIdentifier::AES_CFB: {
+    JS::Rooted<JS::Value> iv_val(cx);
+    if (!JS_GetProperty(cx, params, "iv", &iv_val)) {
+      return nullptr;
+    }
+    std::optional<std::span<uint8_t>> iv = value_to_buffer(cx, iv_val, "normaliseAlgorithm 2");
+    if (!iv.has_value()) {
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
+      return nullptr;
+    }
+    if (identifier == CryptoAlgorithmIdentifier::AES_CBC) {
+      return std::make_unique<CryptoAlgorithmAES_CBC_EncDec>(iv.value());
+    } else {
+      return std::make_unique<CryptoAlgorithmAES_CFB_EncDec>(iv.value());
+    }
+    break;
+  }
+  case CryptoAlgorithmIdentifier::AES_CTR: {
+    JS::Rooted<JS::Value> counter_val(cx);
+    if (!JS_GetProperty(cx, params, "counter", &counter_val)) {
+      return nullptr;
+    }
+    size_t length;
+    std::optional<std::span<uint8_t>> counter =
+        value_to_buffer(cx, counter_val, "normaliseAlgorithm 3");
+    if (!counter.has_value()) {
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
+      return nullptr;
+    }
+    JS::Rooted<JS::Value> length_val(cx);
+    if (!JS_GetProperty(cx, params, "length", &length_val)) {
+      return nullptr;
+    }
+    if (!length_val.isNumber()) {
+      return nullptr;
+    }
+    length = length_val.toNumber();
+    return std::make_unique<CryptoAlgorithmAES_CTR_EncDec>(counter.value(), length);
+    break;
+  }
+  case CryptoAlgorithmIdentifier::AES_GCM: {
+    JS::Rooted<JS::Value> iv_val(cx);
+    if (!JS_GetProperty(cx, params, "iv", &iv_val)) {
+      return nullptr;
+    }
+    std::optional<std::span<uint8_t>> iv = value_to_buffer(cx, iv_val, "normaliseAlgorithm 4");
+    if (!iv.has_value()) {
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
+      return nullptr;
+    }
+    bool found;
+    std::optional<std::span<uint8_t>> additionalData = std::nullopt;
+    if (!JS_HasProperty(cx, params, "additionalData", &found)) {
+      return nullptr;
+    }
+    if (found) {
+      JS::Rooted<JS::Value> additionalData_val(cx);
+      if (!JS_GetProperty(cx, params, "additionalData", &additionalData_val)) {
+        return nullptr;
+      }
+      std::optional<std::span<uint8_t>> additionalDataBuffer =
+          value_to_buffer(cx, additionalData_val, "normaliseAlgorithm 5");
+      if (!additionalDataBuffer.has_value()) {
+        // value_to_buffer would have already created a JS exception so we don't need to create one
+        // ourselves.
+        return nullptr;
+      }
+      additionalData = additionalDataBuffer;
+    }
+    std::optional<uint8_t> tagLength = std::nullopt;
+    if (!JS_HasProperty(cx, params, "tagLength", &found)) {
+      return nullptr;
+    }
+    if (found) {
+      JS::Rooted<JS::Value> tagLength_val(cx);
+      if (!JS_GetProperty(cx, params, "tagLength", &tagLength_val)) {
+        return nullptr;
+      }
+      if (!tagLength_val.isNumber()) {
+        return nullptr;
+      }
+      tagLength = tagLength_val.toNumber();
+    }
+    return std::make_unique<CryptoAlgorithmAES_GCM_EncDec>(iv.value(), additionalData, tagLength);
+    break;
+  }
+  default:
+    return nullptr;
   }
 };
-std::unique_ptr<CryptoAlgorithmSignVerify> CryptoAlgorithmSignVerify::normalize(JSContext* cx, JS::HandleValue value){
-  auto identifierResult =  normalizeIdentifier(cx, value);
+std::unique_ptr<CryptoAlgorithmSignVerify>
+CryptoAlgorithmSignVerify::normalize(JSContext *cx, JS::HandleValue value) {
+  auto identifierResult = normalizeIdentifier(cx, value);
   if (identifierResult.isErr()) {
     return nullptr;
   }
@@ -1362,240 +1402,249 @@ std::unique_ptr<CryptoAlgorithmSignVerify> CryptoAlgorithmSignVerify::normalize(
   }
 
   switch (identifier) {
-    case CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5: {
-      return std::make_unique<CryptoAlgorithmRSASSA_PKCS1_v1_5>();
-      break;
+  case CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5: {
+    return std::make_unique<CryptoAlgorithmRSASSA_PKCS1_v1_5>();
+    break;
+  }
+  case CryptoAlgorithmIdentifier::HMAC: {
+    JS::Rooted<JS::Value> hash_val(cx);
+    if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
+      return nullptr;
     }
-    case CryptoAlgorithmIdentifier::HMAC: {
-      JS::Rooted<JS::Value> hash_val(cx);
-      if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
+    auto hashIdentifier = toHashIdentifier(cx, hash_val);
+    if (hashIdentifier.isErr()) {
+      return nullptr;
+    }
+    return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap());
+    break;
+  }
+  case CryptoAlgorithmIdentifier::ECDSA: {
+    JS::Rooted<JS::Value> hash_val(cx);
+    if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
+      return nullptr;
+    }
+    auto hashIdentifier = toHashIdentifier(cx, hash_val);
+    if (hashIdentifier.isErr()) {
+      return nullptr;
+    }
+    return std::make_unique<CryptoAlgorithmECDSASignVerify>(hashIdentifier.unwrap());
+    break;
+  }
+  case CryptoAlgorithmIdentifier::RSA_PSS: {
+    size_t saltLength;
+    JS::Rooted<JS::Value> saltLength_val(cx);
+    if (!JS_GetProperty(cx, params, "saltLength", &saltLength_val)) {
+      return nullptr;
+    }
+    if (!saltLength_val.isNumber()) {
+      return nullptr;
+    }
+    saltLength = saltLength_val.toNumber();
+    return std::make_unique<CryptoAlgorithmRSA_PSS_SignVerify>(saltLength);
+    break;
+  }
+  default: {
+    return nullptr;
+  }
+  }
+};
+std::unique_ptr<CryptoAlgorithmDigest> CryptoAlgorithmDigest::normalize(JSContext *cx,
+                                                                        JS::HandleValue value) {
+  auto identifierResult = normalizeIdentifier(cx, value);
+  if (identifierResult.isErr()) {
+    return nullptr;
+  }
+  auto identifier = identifierResult.unwrap();
+
+  switch (identifier) {
+  case CryptoAlgorithmIdentifier::SHA_1:
+    return std::make_unique<CryptoAlgorithmSHA1>();
+  case CryptoAlgorithmIdentifier::SHA_224:
+    return std::make_unique<CryptoAlgorithmSHA224>();
+  case CryptoAlgorithmIdentifier::SHA_256:
+    return std::make_unique<CryptoAlgorithmSHA256>();
+  case CryptoAlgorithmIdentifier::SHA_384:
+    return std::make_unique<CryptoAlgorithmSHA384>();
+  case CryptoAlgorithmIdentifier::SHA_512:
+    return std::make_unique<CryptoAlgorithmSHA512>();
+  default:
+    return nullptr;
+  }
+};
+std::unique_ptr<CryptoAlgorithmGenerateKey>
+CryptoAlgorithmGenerateKey::normalize(JSContext *cx, JS::HandleValue value) {
+  auto identifierResult = normalizeIdentifier(cx, value);
+  if (identifierResult.isErr()) {
+    return nullptr;
+  }
+  auto identifier = identifierResult.unwrap();
+  JS::Rooted<JSObject *> params(cx);
+
+  // The value can either be a JS String or a JS Object with a 'name' property
+  if (value.isString()) {
+    auto obj = JS_NewPlainObject(cx);
+    params.set(obj);
+    if (!JS_SetProperty(cx, params, "name", value)) {
+      return nullptr;
+    }
+  } else if (value.isObject()) {
+    params.set(&value.toObject());
+  }
+
+  switch (identifier) {
+  case CryptoAlgorithmIdentifier::RSAES_PKCS1_v1_5: {
+    JS::Rooted<JS::Value> publicExponent_val(cx);
+    if (!JS_GetProperty(cx, params, "publicExponent", &publicExponent_val)) {
+      return nullptr;
+    }
+    std::optional<std::span<uint8_t>> publicExponent =
+        value_to_buffer(cx, publicExponent_val, "normaliseAlgorithm 6");
+    if (!publicExponent.has_value()) {
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
+      return nullptr;
+    }
+    size_t modulusLength;
+    JS::Rooted<JS::Value> modulusLength_val(cx);
+    if (!JS_GetProperty(cx, params, "modulusLength", &modulusLength_val)) {
+      return nullptr;
+    }
+    if (!modulusLength_val.isNumber()) {
+      return nullptr;
+    }
+    modulusLength = modulusLength_val.toNumber();
+
+    return std::make_unique<CryptoAlgorithmRSAES_PKCS1_v1_5>(modulusLength, publicExponent);
+    break;
+  }
+  case CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5:
+  case CryptoAlgorithmIdentifier::RSA_PSS:
+  case CryptoAlgorithmIdentifier::RSA_OAEP: {
+    JS::Rooted<JS::Value> hash_val(cx);
+    if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
+      return nullptr;
+    }
+    auto hashIdentifier = toHashIdentifier(cx, hash_val);
+    if (hashIdentifier.isErr()) {
+      return nullptr;
+    }
+    JS::Rooted<JS::Value> publicExponent_val(cx);
+    if (!JS_GetProperty(cx, params, "publicExponent", &publicExponent_val)) {
+      return nullptr;
+    }
+    std::optional<std::span<uint8_t>> publicExponent =
+        value_to_buffer(cx, publicExponent_val, "normaliseAlgorithm 7");
+    if (!publicExponent.has_value()) {
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
+      return nullptr;
+    }
+    size_t modulusLength;
+    JS::Rooted<JS::Value> modulusLength_val(cx);
+    if (!JS_GetProperty(cx, params, "modulusLength", &modulusLength_val)) {
+      return nullptr;
+    }
+    if (!modulusLength_val.isNumber()) {
+      return nullptr;
+    }
+    modulusLength = modulusLength_val.toNumber();
+    if (identifier == CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5) {
+      return std::make_unique<CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen>(
+          modulusLength, publicExponent.value(), hashIdentifier.unwrap());
+    } else if (identifier == CryptoAlgorithmIdentifier::RSA_PSS) {
+      return std::make_unique<CryptoAlgorithmRSA_PSS_Key>(modulusLength, publicExponent.value(),
+                                                          hashIdentifier.unwrap());
+    } else {
+      return std::make_unique<CryptoAlgorithmRSA_OAEP_Key>(modulusLength, publicExponent.value(),
+                                                           hashIdentifier.unwrap());
+    }
+    break;
+  }
+  case CryptoAlgorithmIdentifier::AES_CTR:
+  case CryptoAlgorithmIdentifier::AES_CBC:
+  case CryptoAlgorithmIdentifier::AES_GCM:
+  case CryptoAlgorithmIdentifier::AES_CFB:
+  case CryptoAlgorithmIdentifier::AES_KW: {
+    unsigned short length;
+    JS::Rooted<JS::Value> length_val(cx);
+    if (!JS_GetProperty(cx, params, "length", &length_val)) {
+      return nullptr;
+    }
+    if (!length_val.isNumber()) {
+      return nullptr;
+    }
+    length = length_val.toNumber();
+    if (identifier == CryptoAlgorithmIdentifier::AES_CTR) {
+      return std::make_unique<CryptoAlgorithmAES_CTR_Key>(length);
+    } else if (identifier == CryptoAlgorithmIdentifier::AES_CBC) {
+      return std::make_unique<CryptoAlgorithmAES_CBC_Key>(length);
+    } else if (identifier == CryptoAlgorithmIdentifier::AES_GCM) {
+      return std::make_unique<CryptoAlgorithmAES_GCM_Key>(length);
+    } else if (identifier == CryptoAlgorithmIdentifier::AES_CFB) {
+      return std::make_unique<CryptoAlgorithmAES_CFB_Key>(length);
+    } else if (identifier == CryptoAlgorithmIdentifier::AES_KW) {
+      return std::make_unique<CryptoAlgorithmAES_KW>(length);
+    }
+    break;
+  }
+  case CryptoAlgorithmIdentifier::HMAC: {
+    JS::Rooted<JS::Value> hash_val(cx);
+    if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
+      return nullptr;
+    }
+    auto hashIdentifier = toHashIdentifier(cx, hash_val);
+    if (hashIdentifier.isErr()) {
+      return nullptr;
+    }
+    bool found;
+    size_t length;
+    if (!JS_HasProperty(cx, params, "length", &found)) {
+      return nullptr;
+    }
+    if (found) {
+      JS::Rooted<JS::Value> length_val(cx);
+      if (!JS_GetProperty(cx, params, "length", &length_val)) {
         return nullptr;
       }
-      auto hashIdentifier = toHashIdentifier(cx, hash_val);
-      if (hashIdentifier.isErr()) {
+      if (!length_val.isNumber()) {
         return nullptr;
       }
+      length = length_val.toNumber();
+      return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap(), length);
+    } else {
       return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap());
-      break;
     }
-    case CryptoAlgorithmIdentifier::ECDSA: {
-      JS::Rooted<JS::Value> hash_val(cx);
-      if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
-        return nullptr;
-      }
-      auto hashIdentifier = toHashIdentifier(cx, hash_val);
-      if (hashIdentifier.isErr()) {
-        return nullptr;
-      }
-      return std::make_unique<CryptoAlgorithmECDSASignVerify>(hashIdentifier.unwrap());
-      break;
-    }
-    case CryptoAlgorithmIdentifier::RSA_PSS: {
-      size_t saltLength;
-      JS::Rooted<JS::Value> saltLength_val(cx);
-      if (!JS_GetProperty(cx, params, "saltLength", &saltLength_val)) {
-        return nullptr;
-      }
-      if (!saltLength_val.isNumber()) {
-        return nullptr;
-      }
-      saltLength = saltLength_val.toNumber();
-      return std::make_unique<CryptoAlgorithmRSA_PSS_SignVerify>(saltLength);
-      break;
-    }
-    default: {
+    break;
+  }
+  case CryptoAlgorithmIdentifier::ECDSA:
+  case CryptoAlgorithmIdentifier::ECDH: {
+    JS::Rooted<JS::Value> namedCurve_val(cx);
+    if (!JS_GetProperty(cx, params, "namedCurve", &namedCurve_val)) {
       return nullptr;
     }
-  }
+    size_t length;
+    auto namedCurveChars = encode(cx, namedCurve_val, &length);
 
-};
-std::unique_ptr<CryptoAlgorithmDigest> CryptoAlgorithmDigest::normalize(JSContext* cx, JS::HandleValue value){
-  auto identifierResult =  normalizeIdentifier(cx, value);
-  if (identifierResult.isErr()) {
+    if (!namedCurveChars) {
+      return nullptr;
+    }
+
+    if (identifier == CryptoAlgorithmIdentifier::ECDSA) {
+      return std::make_unique<CryptoAlgorithmECDSAGenKey>(namedCurveChars.get());
+    } else {
+      return std::make_unique<CryptoAlgorithmECDHGenKey>(namedCurveChars.get());
+    }
+    break;
+  }
+  default:
     return nullptr;
-  }
-  auto identifier = identifierResult.unwrap();
-
-  switch (identifier) {
-    case CryptoAlgorithmIdentifier::SHA_1:
-      return std::make_unique<CryptoAlgorithmSHA1>();
-    case CryptoAlgorithmIdentifier::SHA_224:
-      return std::make_unique<CryptoAlgorithmSHA224>();
-    case CryptoAlgorithmIdentifier::SHA_256:
-      return std::make_unique<CryptoAlgorithmSHA256>();
-    case CryptoAlgorithmIdentifier::SHA_384:
-      return std::make_unique<CryptoAlgorithmSHA384>();
-    case CryptoAlgorithmIdentifier::SHA_512: 
-      return std::make_unique<CryptoAlgorithmSHA512>();
-    default:
-      return nullptr;
-  }
-};
-std::unique_ptr<CryptoAlgorithmGenerateKey> CryptoAlgorithmGenerateKey::normalize(JSContext* cx, JS::HandleValue value){
-  auto identifierResult =  normalizeIdentifier(cx, value);
-  if (identifierResult.isErr()) {
-    return nullptr;
-  }
-  auto identifier = identifierResult.unwrap();
-  JS::Rooted<JSObject *> params(cx);
-
-  // The value can either be a JS String or a JS Object with a 'name' property
-  if (value.isString()) {
-    auto obj = JS_NewPlainObject(cx);
-    params.set(obj);
-    if (!JS_SetProperty(cx, params, "name", value)) {
-      return nullptr;
-    }
-  } else if (value.isObject()) {
-    params.set(&value.toObject());
-  }
-
-  switch (identifier) {
-    case CryptoAlgorithmIdentifier::RSAES_PKCS1_v1_5: {
-      JS::Rooted<JS::Value> publicExponent_val(cx);
-      if (!JS_GetProperty(cx, params, "publicExponent", &publicExponent_val)) {
-        return nullptr;
-      }
-      std::optional<std::span<uint8_t>> publicExponent = value_to_buffer(cx, publicExponent_val, "normaliseAlgorithm 6");
-      if (!publicExponent.has_value()) {
-        // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
-        return nullptr;
-      }
-      size_t modulusLength;
-      JS::Rooted<JS::Value> modulusLength_val(cx);
-      if (!JS_GetProperty(cx, params, "modulusLength", &modulusLength_val)) {
-        return nullptr;
-      }
-      if (!modulusLength_val.isNumber()) {
-        return nullptr;
-      }
-      modulusLength = modulusLength_val.toNumber();
-
-      return std::make_unique<CryptoAlgorithmRSAES_PKCS1_v1_5>(modulusLength, publicExponent);
-      break;
-    }
-    case CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5:
-    case CryptoAlgorithmIdentifier::RSA_PSS:
-    case CryptoAlgorithmIdentifier::RSA_OAEP: {
-      JS::Rooted<JS::Value> hash_val(cx);
-      if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
-        return nullptr;
-      }
-      auto hashIdentifier = toHashIdentifier(cx, hash_val);
-      if (hashIdentifier.isErr()) {
-        return nullptr;
-      }
-      JS::Rooted<JS::Value> publicExponent_val(cx);
-      if (!JS_GetProperty(cx, params, "publicExponent", &publicExponent_val)) {
-        return nullptr;
-      }
-      std::optional<std::span<uint8_t>>publicExponent = value_to_buffer(cx, publicExponent_val, "normaliseAlgorithm 7");
-      if (!publicExponent.has_value()) {
-        // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
-        return nullptr;
-      }
-      size_t modulusLength;
-      JS::Rooted<JS::Value> modulusLength_val(cx);
-      if (!JS_GetProperty(cx, params, "modulusLength", &modulusLength_val)) {
-        return nullptr;
-      }
-      if (!modulusLength_val.isNumber()) {
-        return nullptr;
-      }
-      modulusLength = modulusLength_val.toNumber();
-      if (identifier == CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5) {
-        return std::make_unique<CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen>(modulusLength, publicExponent.value(), hashIdentifier.unwrap());
-      } else if (identifier == CryptoAlgorithmIdentifier::RSA_PSS) {
-        return std::make_unique<CryptoAlgorithmRSA_PSS_Key>(modulusLength, publicExponent.value(), hashIdentifier.unwrap());
-      } else {
-        return std::make_unique<CryptoAlgorithmRSA_OAEP_Key>(modulusLength, publicExponent.value(), hashIdentifier.unwrap());
-      }
-      break;
-    }
-    case CryptoAlgorithmIdentifier::AES_CTR:
-    case CryptoAlgorithmIdentifier::AES_CBC:
-    case CryptoAlgorithmIdentifier::AES_GCM:
-    case CryptoAlgorithmIdentifier::AES_CFB:
-    case CryptoAlgorithmIdentifier::AES_KW: {
-      unsigned short length;
-      JS::Rooted<JS::Value> length_val(cx);
-      if (!JS_GetProperty(cx, params, "length", &length_val)) {
-        return nullptr;
-      }
-      if (!length_val.isNumber()) {
-        return nullptr;
-      }
-      length = length_val.toNumber();
-      if (identifier == CryptoAlgorithmIdentifier::AES_CTR){
-        return std::make_unique<CryptoAlgorithmAES_CTR_Key>(length);
-      } else if (identifier == CryptoAlgorithmIdentifier::AES_CBC){
-        return std::make_unique<CryptoAlgorithmAES_CBC_Key>(length);
-      } else if (identifier == CryptoAlgorithmIdentifier::AES_GCM){
-        return std::make_unique<CryptoAlgorithmAES_GCM_Key>(length);
-      } else if (identifier == CryptoAlgorithmIdentifier::AES_CFB){
-        return std::make_unique<CryptoAlgorithmAES_CFB_Key>(length);
-      } else if (identifier == CryptoAlgorithmIdentifier::AES_KW){
-        return std::make_unique<CryptoAlgorithmAES_KW>(length);
-      }
-      break;
-    }
-    case CryptoAlgorithmIdentifier::HMAC: {
-      JS::Rooted<JS::Value> hash_val(cx);
-      if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
-        return nullptr;
-      }
-      auto hashIdentifier = toHashIdentifier(cx, hash_val);
-      if (hashIdentifier.isErr()) {
-        return nullptr;
-      }
-      bool found;
-      size_t length;
-      if (!JS_HasProperty(cx, params, "length", &found)) {
-        return nullptr;
-      }
-      if (found) {
-        JS::Rooted<JS::Value> length_val(cx);
-        if (!JS_GetProperty(cx, params, "length", &length_val)) {
-          return nullptr;
-        }
-        if (!length_val.isNumber()) {
-          return nullptr;
-        }
-        length = length_val.toNumber();
-        return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap(), length);
-      } else {
-        return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap());
-      }
-      break;
-    }
-    case CryptoAlgorithmIdentifier::ECDSA:
-    case CryptoAlgorithmIdentifier::ECDH: {
-      JS::Rooted<JS::Value> namedCurve_val(cx);
-      if (!JS_GetProperty(cx, params, "namedCurve", &namedCurve_val)) {
-        return nullptr;
-      }
-      size_t length;
-      auto namedCurveChars = encode(cx, namedCurve_val, &length);
-      
-      if (!namedCurveChars) {
-        return nullptr;
-      } 
-
-      if (identifier == CryptoAlgorithmIdentifier::ECDSA) {
-        return std::make_unique<CryptoAlgorithmECDSAGenKey>(namedCurveChars.get());
-      } else {
-        return std::make_unique<CryptoAlgorithmECDHGenKey>(namedCurveChars.get());
-      }
-      break;
-    }
-    default:
-      return nullptr;
   }
   MOZ_ASSERT_UNREACHABLE("CryptoAlgorithmGenerateKey::normalize unreachable reached.");
   return nullptr;
 };
-std::unique_ptr<CryptoAlgorithmDeriveBits> CryptoAlgorithmDeriveBits::normalize(JSContext* cx, JS::HandleValue value){
-  auto identifierResult =  normalizeIdentifier(cx, value);
+std::unique_ptr<CryptoAlgorithmDeriveBits>
+CryptoAlgorithmDeriveBits::normalize(JSContext *cx, JS::HandleValue value) {
+  auto identifierResult = normalizeIdentifier(cx, value);
   if (identifierResult.isErr()) {
     return nullptr;
   }
@@ -1612,76 +1661,81 @@ std::unique_ptr<CryptoAlgorithmDeriveBits> CryptoAlgorithmDeriveBits::normalize(
   }
 
   switch (identifier) {
-    case CryptoAlgorithmIdentifier::ECDH: {
-      // TODO: finish this
-      // return CryptoAlgorithmEcdhKeyDeriveParams(..);
-      // break;
-    }
-    case CryptoAlgorithmIdentifier::HKDF: {
-      JS::Rooted<JS::Value> hash_val(cx);
-      if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
-        return nullptr;
-      }
-      auto hashIdentifier = toHashIdentifier(cx, hash_val);
-      if (hashIdentifier.isErr()) {
-        return nullptr;
-      }
-      JS::Rooted<JS::Value> salt_val(cx);
-      if (!JS_GetProperty(cx, params, "salt", &salt_val)) {
-        return nullptr;
-      }
-      std::optional<std::span<uint8_t>>salt = value_to_buffer(cx, salt_val, "normaliseAlgorithm 8");
-      if (!salt.has_value()) {
-        // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
-        return nullptr;
-      }
-      JS::Rooted<JS::Value> info_val(cx);
-      if (!JS_GetProperty(cx, params, "info", &info_val)) {
-        return nullptr;
-      }
-      std::optional<std::span<uint8_t>>info = value_to_buffer(cx, info_val, "normaliseAlgorithm 9");
-      if (!info.has_value()) {
-        // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
-        return nullptr;
-      }
-      return std::make_unique<CryptoAlgorithmHKDFDerive>(hashIdentifier.unwrap(), salt.value(), info.value());
-      break;
-    }
-    case CryptoAlgorithmIdentifier::PBKDF2: {
-      JS::Rooted<JS::Value> hash_val(cx);
-      if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
-        return nullptr;
-      }
-      auto hashIdentifier = toHashIdentifier(cx, hash_val);
-      if (hashIdentifier.isErr()) {
-        return nullptr;
-      }
-      JS::Rooted<JS::Value> salt_val(cx);
-      if (!JS_GetProperty(cx, params, "salt", &salt_val)) {
-        return nullptr;
-      }
-      std::optional<std::span<uint8_t>>salt = value_to_buffer(cx, salt_val, "normaliseAlgorithm 10");
-      if (!salt.has_value()) {
-        // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
-        return nullptr;
-      }
-      JS::Rooted<JS::Value> iterations_val(cx);
-      if (!JS_GetProperty(cx, params, "iterations", &iterations_val)) {
-        return nullptr;
-      }
-      if (!iterations_val.isNumber()) {
-        return nullptr;
-      }
-      return std::make_unique<CryptoAlgorithmPBKDF2Key>(hashIdentifier.unwrap(), salt.value(), iterations_val.toNumber());
-      break;
-    }
-    default:
+  case CryptoAlgorithmIdentifier::ECDH: {
+    // TODO: finish this
+    // return CryptoAlgorithmEcdhKeyDeriveParams(..);
+    // break;
+  }
+  case CryptoAlgorithmIdentifier::HKDF: {
+    JS::Rooted<JS::Value> hash_val(cx);
+    if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
       return nullptr;
+    }
+    auto hashIdentifier = toHashIdentifier(cx, hash_val);
+    if (hashIdentifier.isErr()) {
+      return nullptr;
+    }
+    JS::Rooted<JS::Value> salt_val(cx);
+    if (!JS_GetProperty(cx, params, "salt", &salt_val)) {
+      return nullptr;
+    }
+    std::optional<std::span<uint8_t>> salt = value_to_buffer(cx, salt_val, "normaliseAlgorithm 8");
+    if (!salt.has_value()) {
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
+      return nullptr;
+    }
+    JS::Rooted<JS::Value> info_val(cx);
+    if (!JS_GetProperty(cx, params, "info", &info_val)) {
+      return nullptr;
+    }
+    std::optional<std::span<uint8_t>> info = value_to_buffer(cx, info_val, "normaliseAlgorithm 9");
+    if (!info.has_value()) {
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
+      return nullptr;
+    }
+    return std::make_unique<CryptoAlgorithmHKDFDerive>(hashIdentifier.unwrap(), salt.value(),
+                                                       info.value());
+    break;
   }
-
+  case CryptoAlgorithmIdentifier::PBKDF2: {
+    JS::Rooted<JS::Value> hash_val(cx);
+    if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
+      return nullptr;
+    }
+    auto hashIdentifier = toHashIdentifier(cx, hash_val);
+    if (hashIdentifier.isErr()) {
+      return nullptr;
+    }
+    JS::Rooted<JS::Value> salt_val(cx);
+    if (!JS_GetProperty(cx, params, "salt", &salt_val)) {
+      return nullptr;
+    }
+    std::optional<std::span<uint8_t>> salt = value_to_buffer(cx, salt_val, "normaliseAlgorithm 10");
+    if (!salt.has_value()) {
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
+      return nullptr;
+    }
+    JS::Rooted<JS::Value> iterations_val(cx);
+    if (!JS_GetProperty(cx, params, "iterations", &iterations_val)) {
+      return nullptr;
+    }
+    if (!iterations_val.isNumber()) {
+      return nullptr;
+    }
+    return std::make_unique<CryptoAlgorithmPBKDF2Key>(hashIdentifier.unwrap(), salt.value(),
+                                                      iterations_val.toNumber());
+    break;
+  }
+  default:
+    return nullptr;
+  }
 };
-std::unique_ptr<CryptoAlgorithmImportKey> CryptoAlgorithmImportKey::normalize(JSContext* cx, JS::HandleValue value){
-  auto identifierResult =  normalizeIdentifier(cx, value);
+std::unique_ptr<CryptoAlgorithmImportKey>
+CryptoAlgorithmImportKey::normalize(JSContext *cx, JS::HandleValue value) {
+  auto identifierResult = normalizeIdentifier(cx, value);
   if (identifierResult.isErr()) {
     return nullptr;
   }
@@ -1698,160 +1752,56 @@ std::unique_ptr<CryptoAlgorithmImportKey> CryptoAlgorithmImportKey::normalize(JS
   }
 
   switch (identifier) {
-    case CryptoAlgorithmIdentifier::RSAES_PKCS1_v1_5:{
-      return std::make_unique<CryptoAlgorithmRSAES_PKCS1_v1_5>(std::nullopt, std::nullopt);
-      break;
-    }
-    case CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5:
-    case CryptoAlgorithmIdentifier::RSA_PSS:
-    case CryptoAlgorithmIdentifier::RSA_OAEP: {
-      JS::Rooted<JS::Value> hash_val(cx);
-      if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
-        return nullptr;
-      }
-      auto hashIdentifier = toHashIdentifier(cx, hash_val);
-      if (hashIdentifier.isErr()) {
-        return nullptr;
-      }  
-
-      if (identifier == CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5) {
-        return std::make_unique<CryptoAlgorithmRSASSA_PKCS1_v1_5_Import>(hashIdentifier.unwrap());
-      } else if (identifier == CryptoAlgorithmIdentifier::RSA_PSS) {
-        return std::make_unique<CryptoAlgorithmRSA_PSS_KeyImport>(hashIdentifier.unwrap());
-      } else if (identifier == CryptoAlgorithmIdentifier::RSA_OAEP) {
-        return std::make_unique<CryptoAlgorithmRSA_OAEP_KeyImport>(hashIdentifier.unwrap());
-      }
-      break;
-    }
-    case CryptoAlgorithmIdentifier::AES_CTR:
-      return std::make_unique<CryptoAlgorithmAES_CTR_KeyImport>();
-    case CryptoAlgorithmIdentifier::AES_CBC:
-      return std::make_unique<CryptoAlgorithmAES_CBC_KeyImport>();
-    case CryptoAlgorithmIdentifier::AES_GCM:
-      return std::make_unique<CryptoAlgorithmAES_GCM_KeyImport>();
-    case CryptoAlgorithmIdentifier::AES_CFB:
-      return std::make_unique<CryptoAlgorithmAES_CFB_KeyImport>();
-    case CryptoAlgorithmIdentifier::AES_KW:
-      return std::make_unique<CryptoAlgorithmAES_KWImport>();
-    case CryptoAlgorithmIdentifier::HMAC: {
-      JS::Rooted<JS::Value> hash_val(cx);
-      if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
-        return nullptr;
-      }
-      auto hashIdentifier = toHashIdentifier(cx, hash_val);
-      if (hashIdentifier.isErr()) {
-        return nullptr;
-      }
-      bool found;
-      unsigned long length;
-      if (!JS_HasProperty(cx, params, "length", &found)) {
-        return nullptr;
-      }
-      if (found) {
-        JS::Rooted<JS::Value> length_val(cx);
-        if (!JS_GetProperty(cx, params, "length", &length_val)) {
-          return nullptr;
-        }
-        if (!length_val.isNumber()) {
-          return nullptr;
-        }
-        length = length_val.toNumber();
-        return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap(), length);
-      } else {
-        return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap());
-      }
-    }
-    case CryptoAlgorithmIdentifier::ECDSA:
-    case CryptoAlgorithmIdentifier::ECDH: {
-      JS::Rooted<JS::Value> namedCurve_val(cx);
-      if (!JS_GetProperty(cx, params, "namedCurve", &namedCurve_val)) {
-        return nullptr;
-      }
-      size_t length;
-      auto namedCurveChars = encode(cx, namedCurve_val, &length);
-      
-      if (!namedCurveChars) {
-        return nullptr;
-      } 
-
-      // TODO finish -- maybe need to split CryptoAlgorithmECDSAKey and CryptoAlgorithmECDHKey
-      if (identifier == CryptoAlgorithmIdentifier::ECDSA) {
-        //  TODO: need to parse keydata etc
-        // return std::make_unique<CryptoAlgorithmECDSAKey>(namedCurveChars.get());
-      } else {
-        //  TODO: need to parse keydata etc
-        // return std::make_unique<CryptoAlgorithmECDHKey>(namedCurveChars.get());
-      }
-
-      break;
-    }
-    case CryptoAlgorithmIdentifier::HKDF: {
-      JS::Rooted<JS::Value> salt_val(cx);
-      if (!JS_GetProperty(cx, params, "salt", &salt_val)) {
-        return nullptr;
-      }
-      std::optional<std::span<uint8_t>>salt = value_to_buffer(cx, salt_val, "normaliseAlgorithm 11");
-      if (!salt.has_value()) {
-        // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
-        return nullptr;
-      }
-      return std::make_unique<CryptoAlgorithmHKDFImport>(salt.value());
-    }
-    case CryptoAlgorithmIdentifier::PBKDF2: {
-      JS::Rooted<JS::Value> hash_val(cx);
-      if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
-        return nullptr;
-      }
-      auto hashIdentifier = toHashIdentifier(cx, hash_val);
-      if (hashIdentifier.isErr()) {
-        return nullptr;
-      }
-      JS::Rooted<JS::Value> salt_val(cx);
-      if (!JS_GetProperty(cx, params, "salt", &salt_val)) {
-        return nullptr;
-      }
-      std::optional<std::span<uint8_t>>salt = value_to_buffer(cx, salt_val, "normaliseAlgorithm 12");
-      if (!salt.has_value()) {
-        // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
-        return nullptr;
-      }
-      JS::Rooted<JS::Value> iterations_val(cx);
-      if (!JS_GetProperty(cx, params, "iterations", &iterations_val)) {
-        return nullptr;
-      }
-      if (!iterations_val.isNumber()) {
-        return nullptr;
-      }
-      return std::make_unique<CryptoAlgorithmPBKDF2Key>(hashIdentifier.unwrap(), salt.value(), iterations_val.toNumber());
-    }
-    default: {
-      MOZ_ASSERT_UNREACHABLE("CryptoAlgorithmImportKey::normalize unreachable reached.");
-    }
+  case CryptoAlgorithmIdentifier::RSAES_PKCS1_v1_5: {
+    return std::make_unique<CryptoAlgorithmRSAES_PKCS1_v1_5>(std::nullopt, std::nullopt);
+    break;
   }
-  return nullptr;
+  case CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5:
+  case CryptoAlgorithmIdentifier::RSA_PSS:
+  case CryptoAlgorithmIdentifier::RSA_OAEP: {
+    JS::Rooted<JS::Value> hash_val(cx);
+    if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
+      return nullptr;
+    }
+    auto hashIdentifier = toHashIdentifier(cx, hash_val);
+    if (hashIdentifier.isErr()) {
+      return nullptr;
+    }
 
-
-};
-std::unique_ptr<CryptoAlgorithmWrapUnwrapkey> CryptoAlgorithmWrapUnwrapkey::normalize(JSContext* cx, JS::HandleValue value){
-  auto identifierResult =  normalizeIdentifier(cx, value);
-  if (identifierResult.isErr()) {
-    return nullptr;
+    if (identifier == CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5) {
+      return std::make_unique<CryptoAlgorithmRSASSA_PKCS1_v1_5_Import>(hashIdentifier.unwrap());
+    } else if (identifier == CryptoAlgorithmIdentifier::RSA_PSS) {
+      return std::make_unique<CryptoAlgorithmRSA_PSS_KeyImport>(hashIdentifier.unwrap());
+    } else if (identifier == CryptoAlgorithmIdentifier::RSA_OAEP) {
+      return std::make_unique<CryptoAlgorithmRSA_OAEP_KeyImport>(hashIdentifier.unwrap());
+    }
+    break;
   }
-  auto identifier = identifierResult.unwrap();
-  JS::Rooted<JSObject *> params(cx);
-
-  // The value can either be a JS String or a JS Object with a 'name' property
-  if (value.isString()) {
-    auto obj = JS_NewPlainObject(cx);
-    params.set(obj);
-    JS_SetProperty(cx, params, "name", value);
-  } else if (value.isObject()) {
-    params.set(&value.toObject());
-  }
-
-  switch (identifier) {
-    case CryptoAlgorithmIdentifier::AES_KW: {
-      unsigned short length;
+  case CryptoAlgorithmIdentifier::AES_CTR:
+    return std::make_unique<CryptoAlgorithmAES_CTR_KeyImport>();
+  case CryptoAlgorithmIdentifier::AES_CBC:
+    return std::make_unique<CryptoAlgorithmAES_CBC_KeyImport>();
+  case CryptoAlgorithmIdentifier::AES_GCM:
+    return std::make_unique<CryptoAlgorithmAES_GCM_KeyImport>();
+  case CryptoAlgorithmIdentifier::AES_CFB:
+    return std::make_unique<CryptoAlgorithmAES_CFB_KeyImport>();
+  case CryptoAlgorithmIdentifier::AES_KW:
+    return std::make_unique<CryptoAlgorithmAES_KWImport>();
+  case CryptoAlgorithmIdentifier::HMAC: {
+    JS::Rooted<JS::Value> hash_val(cx);
+    if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
+      return nullptr;
+    }
+    auto hashIdentifier = toHashIdentifier(cx, hash_val);
+    if (hashIdentifier.isErr()) {
+      return nullptr;
+    }
+    bool found;
+    unsigned long length;
+    if (!JS_HasProperty(cx, params, "length", &found)) {
+      return nullptr;
+    }
+    if (found) {
       JS::Rooted<JS::Value> length_val(cx);
       if (!JS_GetProperty(cx, params, "length", &length_val)) {
         return nullptr;
@@ -1860,37 +1810,179 @@ std::unique_ptr<CryptoAlgorithmWrapUnwrapkey> CryptoAlgorithmWrapUnwrapkey::norm
         return nullptr;
       }
       length = length_val.toNumber();
+      return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap(), length);
+    } else {
+      return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap());
+    }
+  }
+  case CryptoAlgorithmIdentifier::ECDSA:
+  case CryptoAlgorithmIdentifier::ECDH: {
+    JS::Rooted<JS::Value> namedCurve_val(cx);
+    if (!JS_GetProperty(cx, params, "namedCurve", &namedCurve_val)) {
+      return nullptr;
+    }
+    size_t length;
+    auto namedCurveChars = encode(cx, namedCurve_val, &length);
+
+    if (!namedCurveChars) {
+      return nullptr;
+    }
+
+    // TODO finish -- maybe need to split CryptoAlgorithmECDSAKey and CryptoAlgorithmECDHKey
+    if (identifier == CryptoAlgorithmIdentifier::ECDSA) {
+      //  TODO: need to parse keydata etc
+      // return std::make_unique<CryptoAlgorithmECDSAKey>(namedCurveChars.get());
+    } else {
+      //  TODO: need to parse keydata etc
+      // return std::make_unique<CryptoAlgorithmECDHKey>(namedCurveChars.get());
+    }
+
+    break;
+  }
+  case CryptoAlgorithmIdentifier::HKDF: {
+    JS::Rooted<JS::Value> salt_val(cx);
+    if (!JS_GetProperty(cx, params, "salt", &salt_val)) {
+      return nullptr;
+    }
+    std::optional<std::span<uint8_t>> salt = value_to_buffer(cx, salt_val, "normaliseAlgorithm 11");
+    if (!salt.has_value()) {
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
+      return nullptr;
+    }
+    return std::make_unique<CryptoAlgorithmHKDFImport>(salt.value());
+  }
+  case CryptoAlgorithmIdentifier::PBKDF2: {
+    JS::Rooted<JS::Value> hash_val(cx);
+    if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
+      return nullptr;
+    }
+    auto hashIdentifier = toHashIdentifier(cx, hash_val);
+    if (hashIdentifier.isErr()) {
+      return nullptr;
+    }
+    JS::Rooted<JS::Value> salt_val(cx);
+    if (!JS_GetProperty(cx, params, "salt", &salt_val)) {
+      return nullptr;
+    }
+    std::optional<std::span<uint8_t>> salt = value_to_buffer(cx, salt_val, "normaliseAlgorithm 12");
+    if (!salt.has_value()) {
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
+      return nullptr;
+    }
+    JS::Rooted<JS::Value> iterations_val(cx);
+    if (!JS_GetProperty(cx, params, "iterations", &iterations_val)) {
+      return nullptr;
+    }
+    if (!iterations_val.isNumber()) {
+      return nullptr;
+    }
+    return std::make_unique<CryptoAlgorithmPBKDF2Key>(hashIdentifier.unwrap(), salt.value(),
+                                                      iterations_val.toNumber());
+  }
+  default: {
+    MOZ_ASSERT_UNREACHABLE("CryptoAlgorithmImportKey::normalize unreachable reached.");
+  }
+  }
+  return nullptr;
+};
+std::unique_ptr<CryptoAlgorithmWrapUnwrapkey>
+CryptoAlgorithmWrapUnwrapkey::normalize(JSContext *cx, JS::HandleValue value) {
+  auto identifierResult = normalizeIdentifier(cx, value);
+  if (identifierResult.isErr()) {
+    return nullptr;
+  }
+  auto identifier = identifierResult.unwrap();
+  JS::Rooted<JSObject *> params(cx);
+
+  // The value can either be a JS String or a JS Object with a 'name' property
+  if (value.isString()) {
+    auto obj = JS_NewPlainObject(cx);
+    params.set(obj);
+    JS_SetProperty(cx, params, "name", value);
+  } else if (value.isObject()) {
+    params.set(&value.toObject());
+  }
+
+  switch (identifier) {
+  case CryptoAlgorithmIdentifier::AES_KW: {
+    unsigned short length;
+    JS::Rooted<JS::Value> length_val(cx);
+    if (!JS_GetProperty(cx, params, "length", &length_val)) {
+      return nullptr;
+    }
+    if (!length_val.isNumber()) {
+      return nullptr;
+    }
+    length = length_val.toNumber();
+    return std::make_unique<CryptoAlgorithmAES_KW>(length);
+  }
+  default:
+    return nullptr;
+  }
+};
+std::unique_ptr<CryptoAlgorithmGetKeyLength>
+CryptoAlgorithmGetKeyLength::normalize(JSContext *cx, JS::HandleValue value) {
+  auto identifierResult = normalizeIdentifier(cx, value);
+  if (identifierResult.isErr()) {
+    return nullptr;
+  }
+  auto identifier = identifierResult.unwrap();
+  JS::Rooted<JSObject *> params(cx);
+
+  // The value can either be a JS String or a JS Object with a 'name' property
+  if (value.isString()) {
+    auto obj = JS_NewPlainObject(cx);
+    params.set(obj);
+    JS_SetProperty(cx, params, "name", value);
+  } else if (value.isObject()) {
+    params.set(&value.toObject());
+  }
+
+  switch (identifier) {
+  case CryptoAlgorithmIdentifier::AES_CTR:
+  case CryptoAlgorithmIdentifier::AES_CBC:
+  case CryptoAlgorithmIdentifier::AES_GCM:
+  case CryptoAlgorithmIdentifier::AES_CFB:
+  case CryptoAlgorithmIdentifier::AES_KW: {
+    std::string name;
+    unsigned short length;
+    JS::Rooted<JS::Value> length_val(cx);
+    if (!JS_GetProperty(cx, params, "length", &length_val)) {
+      return nullptr;
+    }
+    if (!length_val.isNumber()) {
+      return nullptr;
+    }
+    length = length_val.toNumber();
+    if (identifier == CryptoAlgorithmIdentifier::AES_CTR) {
+      return std::make_unique<CryptoAlgorithmAES_CTR_Key>(length);
+    } else if (identifier == CryptoAlgorithmIdentifier::AES_CBC) {
+      return std::make_unique<CryptoAlgorithmAES_CBC_Key>(length);
+    } else if (identifier == CryptoAlgorithmIdentifier::AES_GCM) {
+      return std::make_unique<CryptoAlgorithmAES_GCM_Key>(length);
+    } else if (identifier == CryptoAlgorithmIdentifier::AES_CFB) {
+      return std::make_unique<CryptoAlgorithmAES_CFB_Key>(length);
+    } else if (identifier == CryptoAlgorithmIdentifier::AES_KW) {
       return std::make_unique<CryptoAlgorithmAES_KW>(length);
     }
-    default:
+    break;
+  }
+  case CryptoAlgorithmIdentifier::HMAC: {
+    JS::Rooted<JS::Value> hash_val(cx);
+    if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
       return nullptr;
-  }
-};
-std::unique_ptr<CryptoAlgorithmGetKeyLength> CryptoAlgorithmGetKeyLength::normalize(JSContext* cx, JS::HandleValue value){
-  auto identifierResult =  normalizeIdentifier(cx, value);
-  if (identifierResult.isErr()) {
-    return nullptr;
-  }
-  auto identifier = identifierResult.unwrap();
-  JS::Rooted<JSObject *> params(cx);
-
-  // The value can either be a JS String or a JS Object with a 'name' property
-  if (value.isString()) {
-    auto obj = JS_NewPlainObject(cx);
-    params.set(obj);
-    JS_SetProperty(cx, params, "name", value);
-  } else if (value.isObject()) {
-    params.set(&value.toObject());
-  }
-
-  switch (identifier) {
-    case CryptoAlgorithmIdentifier::AES_CTR:
-    case CryptoAlgorithmIdentifier::AES_CBC:
-    case CryptoAlgorithmIdentifier::AES_GCM:
-    case CryptoAlgorithmIdentifier::AES_CFB:
-    case CryptoAlgorithmIdentifier::AES_KW: {
-      std::string name;
-      unsigned short length;
+    }
+    auto hashIdentifier = toHashIdentifier(cx, hash_val);
+    if (hashIdentifier.isErr()) {
+      return nullptr;
+    }
+    bool found;
+    if (!JS_HasProperty(cx, params, "length", &found)) {
+      return nullptr;
+    }
+    if (found) {
       JS::Rooted<JS::Value> length_val(cx);
       if (!JS_GetProperty(cx, params, "length", &length_val)) {
         return nullptr;
@@ -1898,80 +1990,46 @@ std::unique_ptr<CryptoAlgorithmGetKeyLength> CryptoAlgorithmGetKeyLength::normal
       if (!length_val.isNumber()) {
         return nullptr;
       }
-      length = length_val.toNumber();
-      if (identifier == CryptoAlgorithmIdentifier::AES_CTR){
-        return std::make_unique<CryptoAlgorithmAES_CTR_Key>(length);
-      } else if (identifier == CryptoAlgorithmIdentifier::AES_CBC){
-        return std::make_unique<CryptoAlgorithmAES_CBC_Key>(length);
-      } else if (identifier == CryptoAlgorithmIdentifier::AES_GCM){
-        return std::make_unique<CryptoAlgorithmAES_GCM_Key>(length);
-      } else if (identifier == CryptoAlgorithmIdentifier::AES_CFB){
-        return std::make_unique<CryptoAlgorithmAES_CFB_Key>(length);
-      } else if (identifier == CryptoAlgorithmIdentifier::AES_KW) {
-        return std::make_unique<CryptoAlgorithmAES_KW>(length);
-      }
-      break;
+      size_t length = length_val.toNumber();
+      return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap(), length);
     }
-    case CryptoAlgorithmIdentifier::HMAC: {
-      JS::Rooted<JS::Value> hash_val(cx);
-      if (!JS_GetProperty(cx, params, "hash", &hash_val)) {
-        return nullptr;
-      }
-      auto hashIdentifier = toHashIdentifier(cx, hash_val);
-      if (hashIdentifier.isErr()) {
-        return nullptr;
-      }
-      bool found;
-      if (!JS_HasProperty(cx, params, "length", &found)) {
-        return nullptr;
-      }
-      if (found) {
-        JS::Rooted<JS::Value> length_val(cx);
-        if (!JS_GetProperty(cx, params, "length", &length_val)) {
-          return nullptr;
-        }
-        if (!length_val.isNumber()) {
-          return nullptr;
-        }
-        size_t length = length_val.toNumber();
-        return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap(), length);
-      }
-      return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap());
-      break;
-    }
-    case CryptoAlgorithmIdentifier::HKDF:
-      return std::make_unique<CryptoAlgorithmHKDF>();
-    case CryptoAlgorithmIdentifier::PBKDF2:
-      return std::make_unique<CryptoAlgorithmPBKDF2>();
-    default:
-      MOZ_ASSERT_UNREACHABLE("CryptoAlgorithmGetKeyLength::normalize unreachable reached.");
+    return std::make_unique<CryptoAlgorithmHMAC>(hashIdentifier.unwrap());
+    break;
+  }
+  case CryptoAlgorithmIdentifier::HKDF:
+    return std::make_unique<CryptoAlgorithmHKDF>();
+  case CryptoAlgorithmIdentifier::PBKDF2:
+    return std::make_unique<CryptoAlgorithmPBKDF2>();
+  default:
+    MOZ_ASSERT_UNREACHABLE("CryptoAlgorithmGetKeyLength::normalize unreachable reached.");
   }
   return nullptr;
-
 };
 
-
-JSObject* CryptoAlgorithmRSAES_PKCS1_v1_5::generateKey(JSContext* cx, bool extractable, CryptoKeyUsageBitmap usage) {
+JSObject *CryptoAlgorithmRSAES_PKCS1_v1_5::generateKey(JSContext *cx, bool extractable,
+                                                       CryptoKeyUsageBitmap usage) {
   JSObject *key_pair = nullptr;
   // TODO: Return a Object { privateKey: CryptoKey, publicKey: CryptoKey }
   return key_pair;
 };
 
-JSObject* CryptoAlgorithmRSA_PSS_Key::generateKey(JSContext* cx, bool extractable, CryptoKeyUsageBitmap usage) {
+JSObject *CryptoAlgorithmRSA_PSS_Key::generateKey(JSContext *cx, bool extractable,
+                                                  CryptoKeyUsageBitmap usage) {
   JSObject *key_pair = nullptr;
   // TODO: Return a Object { privateKey: CryptoKey, publicKey: CryptoKey }
   return key_pair;
 }
 
-JSObject* CryptoAlgorithmRSA_OAEP_Key::generateKey(JSContext* cx, bool extractable, CryptoKeyUsageBitmap usage) {
+JSObject *CryptoAlgorithmRSA_OAEP_Key::generateKey(JSContext *cx, bool extractable,
+                                                   CryptoKeyUsageBitmap usage) {
   JSObject *key_pair = nullptr;
   // TODO: Return a Object { privateKey: CryptoKey, publicKey: CryptoKey }
   return key_pair;
 }
 
-JSObject* CryptoAlgorithmRSA_OAEP_Key::toObject(JSContext *cx) {
-  JS::RootedObject object (cx, JS_NewPlainObject(cx));
-  
+JSObject *CryptoAlgorithmRSA_OAEP_Key::toObject(JSContext *cx) {
+  JS::RootedObject object(cx, JS_NewPlainObject(cx));
+
   auto alg_name = JS_NewStringCopyZ(cx, this->name());
   if (!alg_name) {
     return nullptr;
@@ -2001,59 +2059,69 @@ JSObject* CryptoAlgorithmRSA_OAEP_Key::toObject(JSContext *cx) {
   return object;
 }
 
-JSObject* CryptoAlgorithmECDSAGenKey::generateKey(JSContext* cx, bool extractable, CryptoKeyUsageBitmap usage) {
+JSObject *CryptoAlgorithmECDSAGenKey::generateKey(JSContext *cx, bool extractable,
+                                                  CryptoKeyUsageBitmap usage) {
   JSObject *key_pair = nullptr;
   // TODO: Return a Object { privateKey: CryptoKey, publicKey: CryptoKey }
   return key_pair;
 }
-JSObject* CryptoAlgorithmECDHGenKey::generateKey(JSContext* cx, bool extractable, CryptoKeyUsageBitmap usage) {
+JSObject *CryptoAlgorithmECDHGenKey::generateKey(JSContext *cx, bool extractable,
+                                                 CryptoKeyUsageBitmap usage) {
   JSObject *key_pair = nullptr;
   // TODO: Return a Object { privateKey: CryptoKey, publicKey: CryptoKey }
   return key_pair;
 }
 
-JSObject* CryptoAlgorithmHMAC::generateKey(JSContext* cx, bool extractable, CryptoKeyUsageBitmap usage) {
-  if (usage & (CryptoKeyUsageEncrypt | CryptoKeyUsageDecrypt | CryptoKeyUsageDeriveKey | CryptoKeyUsageDeriveBits | CryptoKeyUsageWrapKey | CryptoKeyUsageUnwrapKey)) {
-    JS_ReportErrorLatin1(cx, "Cannot create a HMAC key using the specified key usages - HMAC keys can only have 'sign' and 'verify' as usages");
+JSObject *CryptoAlgorithmHMAC::generateKey(JSContext *cx, bool extractable,
+                                           CryptoKeyUsageBitmap usage) {
+  if (usage & (CryptoKeyUsageEncrypt | CryptoKeyUsageDecrypt | CryptoKeyUsageDeriveKey |
+               CryptoKeyUsageDeriveBits | CryptoKeyUsageWrapKey | CryptoKeyUsageUnwrapKey)) {
+    JS_ReportErrorLatin1(cx, "Cannot create a HMAC key using the specified key usages - HMAC keys "
+                             "can only have 'sign' and 'verify' as usages");
     return nullptr;
   }
 
   // Returns a CryptoKey
   auto length = this->length / 8;
-  uint8_t* data = reinterpret_cast<uint8_t*>(calloc(length, sizeof(uint8_t)));
+  uint8_t *data = reinterpret_cast<uint8_t *>(calloc(length, sizeof(uint8_t)));
   if (RAND_bytes(data, length) != 1) {
     return nullptr;
   }
-  return CryptoKey::create(cx, static_cast<CryptoAlgorithmGenerateKey*>(this), CryptoKeyType::Secret, extractable, usage, data);
+  return CryptoKey::create(cx, static_cast<CryptoAlgorithmGenerateKey *>(this),
+                           CryptoKeyType::Secret, extractable, usage, data);
 }
-JSObject* CryptoAlgorithmAES_CBC_Key::generateKey(JSContext* cx, bool extractable, CryptoKeyUsageBitmap usage) {
-  JSObject* key = nullptr;
+JSObject *CryptoAlgorithmAES_CBC_Key::generateKey(JSContext *cx, bool extractable,
+                                                  CryptoKeyUsageBitmap usage) {
+  JSObject *key = nullptr;
   // Returns a CryptoKey
   return key;
 }
-JSObject* CryptoAlgorithmAES_CTR_Key::generateKey(JSContext* cx, bool extractable, CryptoKeyUsageBitmap usage) {
-  JSObject* key = nullptr;
+JSObject *CryptoAlgorithmAES_CTR_Key::generateKey(JSContext *cx, bool extractable,
+                                                  CryptoKeyUsageBitmap usage) {
+  JSObject *key = nullptr;
   // Returns a CryptoKey
   return key;
 }
-JSObject* CryptoAlgorithmAES_GCM_Key::generateKey(JSContext* cx, bool extractable, CryptoKeyUsageBitmap usage) {
-  JSObject* key = nullptr;
+JSObject *CryptoAlgorithmAES_GCM_Key::generateKey(JSContext *cx, bool extractable,
+                                                  CryptoKeyUsageBitmap usage) {
+  JSObject *key = nullptr;
   // Returns a CryptoKey
   return key;
 }
-JSObject* CryptoAlgorithmAES_KW::generateKey(JSContext* cx, bool extractable, CryptoKeyUsageBitmap usage) {
-  JSObject* key = nullptr;
+JSObject *CryptoAlgorithmAES_KW::generateKey(JSContext *cx, bool extractable,
+                                             CryptoKeyUsageBitmap usage) {
+  JSObject *key = nullptr;
   // Returns a CryptoKey
   return key;
 }
 
 namespace {
 
-std::vector<std::string> usages(JSObject*key) {
+std::vector<std::string> usages(JSObject *key) {
   MOZ_ASSERT(CryptoKey::is_instance(key));
   auto usage = JS::GetReservedSlot(key, CryptoKey::Slots::Usage).toInt32();
   // The result is ordered alphabetically.
-  std::vector<std::string> usages {};
+  std::vector<std::string> usages{};
   if (usage & CryptoKeyUsageDecrypt) {
     usages.push_back("decrypt");
   }
@@ -2085,88 +2153,90 @@ std::vector<std::string> usages(JSObject*key) {
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wformat-security"
 #pragma clang diagnostic ignored "-Wunused-value"
-JS::Result<CryptoKeyRSAComponents> exportData(JSObject*key) {
+JS::Result<CryptoKeyRSAComponents> exportData(JSObject *key) {
   MOZ_ASSERT(CryptoKey::is_instance(key));
   auto rsa = EVP_PKEY_get0_RSA(CryptoKey::key(key));
   if (!rsa) {
     return JS::Result<CryptoKeyRSAComponents>(JS::Error());
   }
 
-  const BIGNUM* n;
-  const BIGNUM* e;
-  const BIGNUM* d;
+  const BIGNUM *n;
+  const BIGNUM *e;
+  const BIGNUM *d;
   RSA_get0_key(rsa, &n, &e, &d);
   switch (CryptoKey::type(key)) {
-    case CryptoKeyType::Public:
-        // We need the public modulus and exponent for the public key.
-        if (!n || !e) {
-          return JS::Result<CryptoKeyRSAComponents>(JS::Error());
-        }
-        return CryptoKeyRSAComponents::createPublic(convertToBytes(n), convertToBytes(e));
-    case CryptoKeyType::Private: {
-        // We need the public modulus, exponent, and private exponent, as well as p and q prime information.
-        const BIGNUM* p;
-        const BIGNUM* q;
-        RSA_get0_factors(rsa, &p, &q);
-
-        if (!n || !e || !d || !p || !q) {
-          return JS::Result<CryptoKeyRSAComponents>(JS::Error());
-        }
-
-        PrimeInfo firstPrimeInfo {convertToBytes(p)};
-
-        PrimeInfo secondPrimeInfo {convertToBytes(q)};
-
-        auto context = BN_CTX_new();
-
-        const BIGNUM* dmp1;
-        const BIGNUM* dmq1;
-        const BIGNUM* iqmp;
-        RSA_get0_crt_params(rsa, &dmp1, &dmq1, &iqmp);
-
-        // dmp1 -- d mod (p - 1)
-        if (dmp1) {
-          firstPrimeInfo.factorCRTExponent = convertToBytes(dmp1);
-        } else {
-            auto dmp1New = BN_new();
-            auto pm1 = BN_dup(p);
-            if (BN_sub_word(pm1, 1) == 1 && BN_mod(dmp1New, d, pm1, context) == 1)
-                firstPrimeInfo.factorCRTExponent = convertToBytes(dmp1New);
-        }
-
-        // dmq1 -- d mod (q - 1)
-        if (dmq1) {
-          secondPrimeInfo.factorCRTExponent = convertToBytes(dmq1);
-        }else {
-            auto dmq1New = BN_new();
-            auto qm1 = BN_dup(q);
-            if (BN_sub_word(qm1, 1) == 1 && BN_mod(dmq1New, d, qm1, context) == 1)
-                secondPrimeInfo.factorCRTExponent = convertToBytes(dmq1New);
-        }
-
-        // iqmp -- q^(-1) mod p
-        if (iqmp) {
-          secondPrimeInfo.factorCRTCoefficient = convertToBytes(iqmp);
-        } else {
-            auto iqmpNew = BN_mod_inverse(nullptr, q, p, context);
-            if (iqmpNew)
-                secondPrimeInfo.factorCRTCoefficient = convertToBytes(iqmpNew);
-        }
-
-        return CryptoKeyRSAComponents::createPrivateWithAdditionalData(
-            convertToBytes(n), convertToBytes(e), convertToBytes(d),
-            firstPrimeInfo, secondPrimeInfo, std::vector<PrimeInfo> {});
-    }
-    default: {
-      MOZ_ASSERT_UNREACHABLE("error");
+  case CryptoKeyType::Public:
+    // We need the public modulus and exponent for the public key.
+    if (!n || !e) {
       return JS::Result<CryptoKeyRSAComponents>(JS::Error());
     }
+    return CryptoKeyRSAComponents::createPublic(convertToBytes(n), convertToBytes(e));
+  case CryptoKeyType::Private: {
+    // We need the public modulus, exponent, and private exponent, as well as p and q prime
+    // information.
+    const BIGNUM *p;
+    const BIGNUM *q;
+    RSA_get0_factors(rsa, &p, &q);
+
+    if (!n || !e || !d || !p || !q) {
+      return JS::Result<CryptoKeyRSAComponents>(JS::Error());
+    }
+
+    PrimeInfo firstPrimeInfo{convertToBytes(p)};
+
+    PrimeInfo secondPrimeInfo{convertToBytes(q)};
+
+    auto context = BN_CTX_new();
+
+    const BIGNUM *dmp1;
+    const BIGNUM *dmq1;
+    const BIGNUM *iqmp;
+    RSA_get0_crt_params(rsa, &dmp1, &dmq1, &iqmp);
+
+    // dmp1 -- d mod (p - 1)
+    if (dmp1) {
+      firstPrimeInfo.factorCRTExponent = convertToBytes(dmp1);
+    } else {
+      auto dmp1New = BN_new();
+      auto pm1 = BN_dup(p);
+      if (BN_sub_word(pm1, 1) == 1 && BN_mod(dmp1New, d, pm1, context) == 1)
+        firstPrimeInfo.factorCRTExponent = convertToBytes(dmp1New);
+    }
+
+    // dmq1 -- d mod (q - 1)
+    if (dmq1) {
+      secondPrimeInfo.factorCRTExponent = convertToBytes(dmq1);
+    } else {
+      auto dmq1New = BN_new();
+      auto qm1 = BN_dup(q);
+      if (BN_sub_word(qm1, 1) == 1 && BN_mod(dmq1New, d, qm1, context) == 1)
+        secondPrimeInfo.factorCRTExponent = convertToBytes(dmq1New);
+    }
+
+    // iqmp -- q^(-1) mod p
+    if (iqmp) {
+      secondPrimeInfo.factorCRTCoefficient = convertToBytes(iqmp);
+    } else {
+      auto iqmpNew = BN_mod_inverse(nullptr, q, p, context);
+      if (iqmpNew)
+        secondPrimeInfo.factorCRTCoefficient = convertToBytes(iqmpNew);
+    }
+
+    return CryptoKeyRSAComponents::createPrivateWithAdditionalData(
+        convertToBytes(n), convertToBytes(e), convertToBytes(d), firstPrimeInfo, secondPrimeInfo,
+        std::vector<PrimeInfo>{});
+  }
+  default: {
+    MOZ_ASSERT_UNREACHABLE("error");
+    return JS::Result<CryptoKeyRSAComponents>(JS::Error());
+  }
   }
 }
 #pragma clang diagnostic pop
 
 std::string base64url_encode(std::string_view data) {
-  auto result = GlobalProperties::forgivingBase64Encode(data, GlobalProperties::base64URLEncodeTable);
+  auto result =
+      GlobalProperties::forgivingBase64Encode(data, GlobalProperties::base64URLEncodeTable);
   if (result.ends_with("==")) {
     result.erase(result.length() - 2);
   } else if (result.ends_with("=")) {
@@ -2175,7 +2245,7 @@ std::string base64url_encode(std::string_view data) {
   return result;
 }
 
-std::unique_ptr<JsonWebKey> exportJWK(JSContext* cx, JS::HandleObject key) {
+std::unique_ptr<JsonWebKey> exportJWK(JSContext *cx, JS::HandleObject key) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(CryptoKey::is_instance(key));
   std::string kty = "RSA";
@@ -2254,7 +2324,8 @@ std::unique_ptr<JsonWebKey> exportJWK(JSContext* cx, JS::HandleObject key) {
 //   DOMString t;
 // }
 
-std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::string_view required_kty_value) {
+std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value,
+                                     std::string_view required_kty_value) {
   if (!value.isObject()) {
     JS_ReportErrorLatin1(cx, "The provided value is not of type JsonWebKey");
     return nullptr;
@@ -2284,8 +2355,9 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
       return nullptr;
     }
     if (kty_chars.get() != required_kty_value) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SUBTLE_CRYPTO_INVALID_JWK_KTY_VALUE,
-                              required_kty_value.data());
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_SUBTLE_CRYPTO_INVALID_JWK_KTY_VALUE,
+                                required_kty_value.data());
     }
     kty = std::string(kty_chars.get(), kty_length);
   }
@@ -2487,7 +2559,7 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
       p = std::string(p_chars.get(), p_length);
     }
   }
-  
+
   //   DOMString q;
   std::optional<std::string> q = std::nullopt;
   {
@@ -2509,7 +2581,7 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
       q = std::string(q_chars.get(), q_length);
     }
   }
-  
+
   //   DOMString dp;
   std::optional<std::string> dp = std::nullopt;
   {
@@ -2575,7 +2647,7 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
       qi = std::string(qi_chars.get(), qi_length);
     }
   }
-  
+
   //   DOMString k;
   std::optional<std::string> k = std::nullopt;
   {
@@ -2630,8 +2702,10 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
         return nullptr;
       }
       if (!key_ops_is_array) {
-        // TODO: Check if key_ops_val is iterable via Symbol.iterator and if so, convert to a JS Array
-        JS_ReportErrorASCII(cx, "Failed to read the 'key_ops' property from 'JsonWebKey': The provided value cannot be converted to a sequence");
+        // TODO: Check if key_ops_val is iterable via Symbol.iterator and if so, convert to a JS
+        // Array
+        JS_ReportErrorASCII(cx, "Failed to read the 'key_ops' property from 'JsonWebKey': The "
+                                "provided value cannot be converted to a sequence");
         return nullptr;
       }
       uint32_t length;
@@ -2645,9 +2719,11 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
         key_ops.reserve(length);
         JS::RootedValue op_val(cx);
         for (uint32_t i = 0; i < length; ++i) {
-          // We should check for and handle interrupts so we can allow GC to happen whilst we are iterating.
-          // TODO: Go through entire codebase and add JS_CheckForInterrupt into code-paths which iterate or are recursive such as the structuredClone function
-          // if (!JS_CheckForInterrupt(cx)) {
+          // We should check for and handle interrupts so we can allow GC to happen whilst we are
+          // iterating.
+          // TODO: Go through entire codebase and add JS_CheckForInterrupt into code-paths which
+          // iterate or are recursive such as the structuredClone function if
+          // (!JS_CheckForInterrupt(cx)) {
           //   return nullptr;
           // }
 
@@ -2663,14 +2739,17 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
 
           std::string op(op_chars.get(), op_length);
 
-          if (op != "encrypt" && op != "decrypt" && op != "sign" && op != "verify" && op != "deriveKey" && op != "deriveBits" && op != "wrapKey" && op != "unwrapKey") {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SUBTLE_CRYPTO_INVALID_KEY_USAGES_VALUE);
+          if (op != "encrypt" && op != "decrypt" && op != "sign" && op != "verify" &&
+              op != "deriveKey" && op != "deriveBits" && op != "wrapKey" && op != "unwrapKey") {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                      JSMSG_SUBTLE_CRYPTO_INVALID_KEY_USAGES_VALUE);
             return nullptr;
           }
 
           // No duplicates allowed
           if (std::find(key_ops.begin(), key_ops.end(), op) != key_ops.end()) {
-            JS_ReportErrorASCII(cx, "The 'key_ops' member of the JWK dictionary contains duplicate usages");
+            JS_ReportErrorASCII(
+                cx, "The 'key_ops' member of the JWK dictionary contains duplicate usages");
             return nullptr;
           }
 
@@ -2699,7 +2778,8 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
       }
       if (!oth_is_array) {
         // TODO: Check if oth_val is iterable via Symbol.iterator and if so, convert to a JS Array
-        JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The provided value cannot be converted to a sequence");
+        JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The provided "
+                                "value cannot be converted to a sequence");
         return nullptr;
       }
       uint32_t length;
@@ -2713,9 +2793,11 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
         oth.reserve(length);
         JS::RootedValue info_val(cx);
         for (uint32_t i = 0; i < length; ++i) {
-          // We should check for and handle interrupts so we can allow GC to happen whilst we are iterating.
-          // TODO: Go through entire codebase and add JS_CheckForInterrupt into code-paths which iterate or are recursive such as the structuredClone function
-          // if (!JS_CheckForInterrupt(cx)) {
+          // We should check for and handle interrupts so we can allow GC to happen whilst we are
+          // iterating.
+          // TODO: Go through entire codebase and add JS_CheckForInterrupt into code-paths which
+          // iterate or are recursive such as the structuredClone function if
+          // (!JS_CheckForInterrupt(cx)) {
           //   return nullptr;
           // }
 
@@ -2724,11 +2806,12 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
           }
 
           if (!info_val.isObject()) {
-            JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The provided value is not of type 'RsaOtherPrimesInfo'");
+            JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The "
+                                    "provided value is not of type 'RsaOtherPrimesInfo'");
             return nullptr;
           }
           JS::RootedObject info_obj(cx, &info_val.toObject());
-          
+
           JS::RootedValue r_val(cx);
           if (!JS_GetProperty(cx, info_obj, "r", &r_val)) {
             return nullptr;
@@ -2736,7 +2819,8 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
           size_t r_length;
           auto r_chars = encode(cx, info_val, &r_length);
           if (!r_chars) {
-            JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The provided value is not of type 'RsaOtherPrimesInfo'");
+            JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The "
+                                    "provided value is not of type 'RsaOtherPrimesInfo'");
             return nullptr;
           }
           std::string r(r_chars.get(), r_length);
@@ -2747,7 +2831,8 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
           size_t d_length;
           auto d_chars = encode(cx, info_val, &d_length);
           if (!d_chars) {
-            JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The provided value is not of type 'RsaOtherPrimesInfo'");
+            JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The "
+                                    "provided value is not of type 'RsaOtherPrimesInfo'");
             return nullptr;
           }
           std::string d(d_chars.get(), d_length);
@@ -2759,43 +2844,27 @@ std::unique_ptr<JsonWebKey> parseJWK(JSContext *cx, JS::HandleValue value, std::
           size_t t_length;
           auto t_chars = encode(cx, info_val, &t_length);
           if (!t_chars) {
-            JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The provided value is not of type 'RsaOtherPrimesInfo'");
+            JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The "
+                                    "provided value is not of type 'RsaOtherPrimesInfo'");
             return nullptr;
           }
           std::string t(t_chars.get(), t_length);
 
-          oth.push_back(RsaOtherPrimesInfo(r,d,t));
+          oth.push_back(RsaOtherPrimesInfo(r, d, t));
         }
       }
     }
   }
   return std::make_unique<JsonWebKey>(
-    // The following fields are defined in Section 3.1 of JSON Web Key
-    kty,
-    use,
-    key_ops,
-    alg,
-    ext,
-    // The following fields are defined in Section 6 of JSON Web Algorithms
-    crv,
-    x,
-    y,
-    n,
-    e,
-    d,
-    p,
-    q,
-    dp,
-    dq,
-    qi,
-    oth,
-    k
-  );
+      // The following fields are defined in Section 3.1 of JSON Web Key
+      kty, use, key_ops, alg, ext,
+      // The following fields are defined in Section 6 of JSON Web Algorithms
+      crv, x, y, n, e, d, p, q, dp, dq, qi, oth, k);
 }
-}
+} // namespace
 
-const EVP_MD* createDigestAlgorithm(JSContext* cx, JS::HandleObject key) {
-  
+const EVP_MD *createDigestAlgorithm(JSContext *cx, JS::HandleObject key) {
+
   JS::RootedObject alg(cx, CryptoKey::get_algorithm(key));
 
   JS::RootedValue hash_val(cx);
@@ -2824,40 +2893,41 @@ const EVP_MD* createDigestAlgorithm(JSContext* cx, JS::HandleObject key) {
   }
 }
 
-std::optional<std::span<uint8_t>> createDigest(const EVP_MD* algorithm, std::span<uint8_t> data) {
+std::optional<std::span<uint8_t>> createDigest(const EVP_MD *algorithm, std::span<uint8_t> data) {
   size_t digestLength = EVP_MD_size(algorithm);
   if (digestLength <= 0) {
     return std::nullopt;
   }
-  uint8_t* digestData = reinterpret_cast<uint8_t*>(calloc(digestLength, sizeof(uint8_t)));
+  uint8_t *digestData = reinterpret_cast<uint8_t *>(calloc(digestLength, sizeof(uint8_t)));
   std::span<uint8_t> digest{digestData, digestLength};
 
-    auto ctx = EVP_MD_CTX_create();
-    if (!ctx) {
-      return std::nullopt;
-    }
+  auto ctx = EVP_MD_CTX_create();
+  if (!ctx) {
+    return std::nullopt;
+  }
 
-    if (EVP_DigestInit_ex(ctx, algorithm, nullptr) != 1) {
-      return std::nullopt;
-    }
+  if (EVP_DigestInit_ex(ctx, algorithm, nullptr) != 1) {
+    return std::nullopt;
+  }
 
-    if (EVP_DigestUpdate(ctx, data.data(), data.size()) != 1) {
-      return std::nullopt;
-    }
+  if (EVP_DigestUpdate(ctx, data.data(), data.size()) != 1) {
+    return std::nullopt;
+  }
 
-    if (EVP_DigestFinal_ex(ctx, digest.data(), nullptr) != 1) {
-      return std::nullopt;
-    }
+  if (EVP_DigestFinal_ex(ctx, digest.data(), nullptr) != 1) {
+    return std::nullopt;
+  }
 
   return digest;
 }
 
-JSObject* CryptoAlgorithmRSA_OAEP_KeyImport::importKey(JSContext *cx, CryptoKeyFormat format, KeyData data, bool extractable,
-                                  CryptoKeyUsageBitmap usages) {
-  JSObject* result = nullptr;
+JSObject *CryptoAlgorithmRSA_OAEP_KeyImport::importKey(JSContext *cx, CryptoKeyFormat format,
+                                                       KeyData data, bool extractable,
+                                                       CryptoKeyUsageBitmap usages) {
+  JSObject *result = nullptr;
   switch (format) {
   case CryptoKeyFormat::Jwk: {
-    auto key = std::get<JsonWebKey*>(data);
+    auto key = std::get<JsonWebKey *>(data);
 
     bool isUsagesAllowed = false;
     if (key->d.has_value()) {
@@ -2874,7 +2944,9 @@ JSObject* CryptoAlgorithmRSA_OAEP_KeyImport::importKey(JSContext *cx, CryptoKeyF
     isUsagesAllowed = isUsagesAllowed || !usages;
     if (!isUsagesAllowed) {
       // TODO Rename error to SyntaxError
-      JS_ReportErrorLatin1(cx, "The JWK 'key_ops' member was inconsistent with that specified by the Web Crypto call. The JWK usage must be a superset of those requested");
+      JS_ReportErrorLatin1(cx,
+                           "The JWK 'key_ops' member was inconsistent with that specified by the "
+                           "Web Crypto call. The JWK usage must be a superset of those requested");
       return nullptr;
     }
 
@@ -2886,7 +2958,7 @@ JSObject* CryptoAlgorithmRSA_OAEP_KeyImport::importKey(JSContext *cx, CryptoKeyF
 
     bool isMatched = false;
     switch (this->hashIdentifier) {
-    case CryptoAlgorithmIdentifier::SHA_1:{
+    case CryptoAlgorithmIdentifier::SHA_1: {
       isMatched = !key->alg.has_value() || key->alg == "RSA-OAEP";
       break;
     }
@@ -2916,7 +2988,7 @@ JSObject* CryptoAlgorithmRSA_OAEP_KeyImport::importKey(JSContext *cx, CryptoKeyF
     }
 
     result = CryptoKey::importJwkRsa(cx, this, key, extractable, usages);
-    
+
     break;
   }
   case CryptoKeyFormat::Spki:
@@ -2939,7 +3011,9 @@ JSObject* CryptoAlgorithmRSA_OAEP_KeyImport::importKey(JSContext *cx, CryptoKeyF
   return result;
 }
 
-JSObject* CryptoAlgorithmRSA_OAEP_KeyImport::importKey(JSContext* cx, CryptoKeyFormat key_format, JS::HandleValue key_data, bool extractable, CryptoKeyUsageBitmap usage) {
+JSObject *CryptoAlgorithmRSA_OAEP_KeyImport::importKey(JSContext *cx, CryptoKeyFormat key_format,
+                                                       JS::HandleValue key_data, bool extractable,
+                                                       CryptoKeyUsageBitmap usage) {
   if (key_format == CryptoKeyFormat::Raw) {
     // TODO Rename error to OperationError
     JS_ReportErrorLatin1(cx, "Operation not supported");
@@ -2958,7 +3032,8 @@ JSObject* CryptoAlgorithmRSA_OAEP_KeyImport::importKey(JSContext* cx, CryptoKeyF
   } else {
     std::optional<std::span<uint8_t>> buffer = value_to_buffer(cx, key_data, "");
     if (!buffer.has_value()) {
-      // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
       return nullptr;
     }
     data = buffer.value();
@@ -2966,25 +3041,29 @@ JSObject* CryptoAlgorithmRSA_OAEP_KeyImport::importKey(JSContext* cx, CryptoKeyF
   return this->importKey(cx, key_format, data, extractable, usage);
 }
 
-JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext* cx, CryptoKeyFormat format, KeyData data, bool extractable, CryptoKeyUsageBitmap usages) {
+JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, CryptoKeyFormat format,
+                                                             KeyData data, bool extractable,
+                                                             CryptoKeyUsageBitmap usages) {
   MOZ_ASSERT(cx);
-  JSObject* result = nullptr;
+  JSObject *result = nullptr;
   switch (format) {
   case CryptoKeyFormat::Jwk: {
-    auto key = std::get<JsonWebKey*>(data);
+    auto key = std::get<JsonWebKey *>(data);
 
     bool isUsagesAllowed = false;
     // public key
     if (key->d.has_value()) {
       isUsagesAllowed = isUsagesAllowed || !(usages ^ CryptoKeyUsageSign);
     } else {
-      //private key
+      // private key
       isUsagesAllowed = isUsagesAllowed || !(usages ^ CryptoKeyUsageVerify);
     }
     isUsagesAllowed = isUsagesAllowed || !usages;
     if (!isUsagesAllowed) {
       // TODO Rename error to SyntaxError
-      JS_ReportErrorLatin1(cx, "The JWK 'key_ops' member was inconsistent with that specified by the Web Crypto call. The JWK usage must be a superset of those requested");
+      JS_ReportErrorLatin1(cx,
+                           "The JWK 'key_ops' member was inconsistent with that specified by the "
+                           "Web Crypto call. The JWK usage must be a superset of those requested");
       return nullptr;
     }
 
@@ -2996,7 +3075,7 @@ JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext* cx, Cryp
 
     bool isMatched = false;
     switch (this->hashIdentifier) {
-    case CryptoAlgorithmIdentifier::SHA_1:{
+    case CryptoAlgorithmIdentifier::SHA_1: {
       isMatched = !key->alg.has_value() || key->alg == "RS1";
       break;
     }
@@ -3021,7 +3100,8 @@ JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext* cx, Cryp
     }
     }
     if (!isMatched) {
-      JS_ReportErrorLatin1(cx, "The JWK 'alg' member was inconsistent with that specified by the Web Crypto call");
+      JS_ReportErrorLatin1(
+          cx, "The JWK 'alg' member was inconsistent with that specified by the Web Crypto call");
       return nullptr;
     }
     result = CryptoKey::importJwkRsa(cx, this, key, extractable, usages);
@@ -3050,7 +3130,11 @@ JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext* cx, Cryp
   return result;
 }
 
-JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext* cx, CryptoKeyFormat key_format, JS::HandleValue key_data, bool extractable, CryptoKeyUsageBitmap usage) {
+JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx,
+                                                             CryptoKeyFormat key_format,
+                                                             JS::HandleValue key_data,
+                                                             bool extractable,
+                                                             CryptoKeyUsageBitmap usage) {
   MOZ_ASSERT(cx);
   if (key_format == CryptoKeyFormat::Raw) {
     MOZ_ASSERT_UNREACHABLE("coding error");
@@ -3067,7 +3151,8 @@ JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext* cx, Cryp
   } else {
     std::optional<std::span<uint8_t>> buffer = value_to_buffer(cx, key_data, "");
     if (!buffer.has_value()) {
-      // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
       return nullptr;
     }
     data = buffer.value();
@@ -3075,7 +3160,8 @@ JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext* cx, Cryp
   return this->importKey(cx, key_format, data, extractable, usage);
 }
 
-JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5::sign(JSContext* cx, JS::HandleObject key, std::span<uint8_t> data) {
+JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5::sign(JSContext *cx, JS::HandleObject key,
+                                                 std::span<uint8_t> data) {
   MOZ_ASSERT(CryptoKey::is_instance(key));
   if (CryptoKey::type(key) != CryptoKeyType::Private) {
     // TODO Rename error to InvalidAccessError
@@ -3083,7 +3169,7 @@ JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5::sign(JSContext* cx, JS::HandleObject
     return nullptr;
   }
 
-  const EVP_MD* algorithm = createDigestAlgorithm(cx, key);
+  const EVP_MD *algorithm = createDigestAlgorithm(cx, key);
   if (!algorithm) {
     // TODO Rename error to OperationError
     JS_ReportErrorLatin1(cx, "OperationError");
@@ -3132,19 +3218,20 @@ JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5::sign(JSContext* cx, JS::HandleObject
       return nullptr;
     }
 
-    uint8_t* signature = reinterpret_cast<uint8_t*>(calloc(signature_length, sizeof(uint8_t)));
+    uint8_t *signature = reinterpret_cast<uint8_t *>(calloc(signature_length, sizeof(uint8_t)));
     if (EVP_PKEY_sign(ctx, signature, &signature_length, digest.data(), digest.size()) <= 0) {
       // TODO Rename error to OperationError
       JS_ReportErrorLatin1(cx, "OperationError");
       return nullptr;
     }
-    
+
     std::span data{signature, signature_length};
 
     JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, signature_length, signature));
     if (!buffer) {
-      // We can be here is the array buffer was too large -- if that was the case then a JSMSG_BAD_ARRAY_LENGTH will have been created.
-      // No other failure scenarios in this path will create a JS exception and so we need to create one.
+      // We can be here is the array buffer was too large -- if that was the case then a
+      // JSMSG_BAD_ARRAY_LENGTH will have been created. No other failure scenarios in this path will
+      // create a JS exception and so we need to create one.
       if (!JS_IsExceptionPending(cx)) {
         // TODO Rename error to InternalError
         JS_ReportErrorLatin1(cx, "InternalError");
@@ -3156,7 +3243,9 @@ JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5::sign(JSContext* cx, JS::HandleObject
   }
 }
 
-JS::Result<bool> CryptoAlgorithmRSASSA_PKCS1_v1_5::verify(JSContext* cx, JS::HandleObject key, std::span<uint8_t> signature, std::span<uint8_t> data) {
+JS::Result<bool> CryptoAlgorithmRSASSA_PKCS1_v1_5::verify(JSContext *cx, JS::HandleObject key,
+                                                          std::span<uint8_t> signature,
+                                                          std::span<uint8_t> data) {
   MOZ_ASSERT(CryptoKey::is_instance(key));
 
   if (CryptoKey::type(key) != CryptoKeyType::Public) {
@@ -3164,7 +3253,7 @@ JS::Result<bool> CryptoAlgorithmRSASSA_PKCS1_v1_5::verify(JSContext* cx, JS::Han
     JS_ReportErrorLatin1(cx, "InvalidAccessError");
     return JS::Result<bool>(JS::Error());
   }
-  const EVP_MD* algorithm = createDigestAlgorithm(cx, key);
+  const EVP_MD *algorithm = createDigestAlgorithm(cx, key);
 
   auto digestOption = createDigest(algorithm, data);
   if (!digestOption.has_value()) {
@@ -3194,16 +3283,17 @@ JS::Result<bool> CryptoAlgorithmRSASSA_PKCS1_v1_5::verify(JSContext* cx, JS::Han
     return JS::Result<bool>(JS::Error());
   }
 
-    if (EVP_PKEY_CTX_set_signature_md(ctx, algorithm) != 1) {
+  if (EVP_PKEY_CTX_set_signature_md(ctx, algorithm) != 1) {
     // TODO Rename error to OperationError
     JS_ReportErrorLatin1(cx, "OperationError");
     return JS::Result<bool>(JS::Error());
   }
 
-  return EVP_PKEY_verify(ctx, signature.data(), signature.size(), digest.data(), digest.size()) == 1;
+  return EVP_PKEY_verify(ctx, signature.data(), signature.size(), digest.data(), digest.size()) ==
+         1;
 }
 
-CryptoAlgorithmIdentifier getHashForKey(JSContext* cx, JS::HandleObject key) {
+CryptoAlgorithmIdentifier getHashForKey(JSContext *cx, JS::HandleObject key) {
   MOZ_ASSERT(CryptoKey::is_instance(key));
   JS::RootedObject alg(cx, CryptoKey::get_algorithm(key));
   JS::RootedValue hash_val(cx);
@@ -3233,194 +3323,256 @@ CryptoAlgorithmIdentifier getHashForKey(JSContext* cx, JS::HandleObject key) {
   }
 }
 
-JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){
+JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                      JS::HandleObject key) {
   MOZ_ASSERT(CryptoKey::is_instance(key));
 
   switch (format) {
-    case CryptoKeyFormat::Jwk: {
-      auto jwk = exportJWK(cx, key);
-      if (!jwk) {
-        return nullptr;
-      }
-      auto hashIdentifier = getHashForKey(cx, key);
-      switch (hashIdentifier) {
-        case CryptoAlgorithmIdentifier::SHA_1:
-          jwk->alg = "RS1";
-          break;
-        case CryptoAlgorithmIdentifier::SHA_224:
-          jwk->alg = "RS224";
-          break;
-        case CryptoAlgorithmIdentifier::SHA_256:
-          jwk->alg = "RS256";
-          break;
-        case CryptoAlgorithmIdentifier::SHA_384:
-          jwk->alg = "RS384";
-          break;
-        case CryptoAlgorithmIdentifier::SHA_512:
-          jwk->alg = "RS512";
-          break;
-        default:{
-          MOZ_ASSERT_UNREACHABLE("coding error");
-        }
-      }
-      
-      JS::RootedObject result(cx, JS_NewPlainObject(cx));
-      // JsonWebKey to plain JS object
-      {
-        JS::RootedValue value(cx);
-        // The following fields are defined in Section 3.1 of JSON Web Key
-        value.setString(JS_NewStringCopyN(cx, jwk->kty.c_str(), jwk->kty.length()));
-        if (!JS_SetProperty(cx, result, "kty", value)) { return nullptr;}
-        if (jwk->alg.has_value()) {
-          auto alg = jwk->alg.value();
-          value.setString(JS_NewStringCopyN(cx, alg.c_str(), alg.length()));
-          if (!JS_SetProperty(cx, result, "alg", value)) { return nullptr;}
-        }
-
-        if (jwk->crv.has_value()) {
-          auto crv = jwk->crv.value();
-          value.setString(JS_NewStringCopyN(cx, crv.c_str(), crv.length()));
-          if (!JS_SetProperty(cx, result, "crv", value)) { return nullptr;}
-        }
-        
-        if (jwk->d.has_value()) {
-          auto d = jwk->d.value();
-          value.setString(JS_NewStringCopyN(cx, d.c_str(), d.length()));
-          if (!JS_SetProperty(cx, result, "d", value)) { return nullptr;}
-        }
-
-        if (jwk->dp.has_value()) {
-          auto dp = jwk->dp.value();
-          value.setString(JS_NewStringCopyN(cx, dp.c_str(), dp.length()));
-          if (!JS_SetProperty(cx, result, "dp", value)) { return nullptr;}
-        }
-
-        if (jwk->dq.has_value()) {
-          auto dq = jwk->dq.value();
-          value.setString(JS_NewStringCopyN(cx, dq.c_str(), dq.length()));
-          if (!JS_SetProperty(cx, result, "dq", value)) { return nullptr;}
-        }
-
-        if (jwk->e.has_value()) {
-          auto e = jwk->e.value();
-          value.setString(JS_NewStringCopyN(cx, e.c_str(), e.length()));
-          if (!JS_SetProperty(cx, result, "e", value)) { return nullptr;}
-        }
-
-        if (jwk->ext.has_value()) {
-          auto ext = jwk->ext.value();
-          value.setBoolean(ext);
-          if (!JS_SetProperty(cx, result, "ext", value)) { return nullptr;}
-        }
-
-        if (jwk->k.has_value()) {
-          auto k = jwk->k.value();
-          value.setString(JS_NewStringCopyN(cx, k.c_str(), k.length()));
-          if (!JS_SetProperty(cx, result, "k", value)) { return nullptr;}
-        }
-
-        if (jwk->key_ops.size() > 0) {
-          JS::RootedValueVector ops(cx);
-          JS::RootedString str(cx);
-          for (auto op: jwk->key_ops) {
-            if (!(str = JS_NewStringCopyN(cx, op.c_str(), op.length()))) {
-              return nullptr;
-            }
-            if (!ops.append(JS::StringValue(str))) {
-              js::ReportOutOfMemory(cx);
-              return nullptr;
-            }
-          }
-
-          auto array = JS::NewArrayObject(cx, ops);
-          value.setObject(*array);
-          if (!JS_SetProperty(cx, result, "key_ops", value)) { return nullptr;}
-        }
-
-        if (jwk->n.has_value()) {
-          auto n = jwk->n.value();
-          value.setString(JS_NewStringCopyN(cx, n.c_str(), n.length()));
-          if (!JS_SetProperty(cx, result, "n", value)) { return nullptr;}
-        }
-        
-        // TODO: Add to the exported key this field: std::optional<std::vector<RsaOtherPrimesInfo>> oth;
-        
-        if (jwk->p.has_value()) {
-          auto p = jwk->p.value();
-          value.setString(JS_NewStringCopyN(cx, p.c_str(), p.length()));
-          if (!JS_SetProperty(cx, result, "p", value)) { return nullptr;}
-        }
-
-        if (jwk->q.has_value()) {
-          auto q = jwk->q.value();
-          value.setString(JS_NewStringCopyN(cx, q.c_str(), q.length()));
-          if (!JS_SetProperty(cx, result, "q", value)) { return nullptr;}
-        }
-        
-        if (jwk->qi.has_value()) {
-          auto qi = jwk->qi.value();
-          value.setString(JS_NewStringCopyN(cx, qi.c_str(), qi.length()));
-          if (!JS_SetProperty(cx, result, "qi", value)) { return nullptr;}
-        }
-
-        if (jwk->use.has_value()) {
-          auto use = jwk->use.value();
-          value.setString(JS_NewStringCopyN(cx, use.c_str(), use.length()));
-          if (!JS_SetProperty(cx, result, "use", value)) { return nullptr;}
-        }
-
-        if (jwk->x.has_value()) {
-          auto x = jwk->x.value();
-          value.setString(JS_NewStringCopyN(cx, x.c_str(), x.length()));
-          if (!JS_SetProperty(cx, result, "x", value)) { return nullptr;}
-        }
-
-        if (jwk->y.has_value()) {
-          auto y = jwk->y.value();
-          value.setString(JS_NewStringCopyN(cx, y.c_str(), y.length()));
-          if (!JS_SetProperty(cx, result, "y", value)) { return nullptr;}
-        }
-      }
-
-      return result;
-      break;
-    }
-    case CryptoKeyFormat::Spki: {
-      JS_ReportErrorLatin1(cx, "Exporting in SubjectPublicKeyInfo format is not yet supported.");
-    }
-    case CryptoKeyFormat::Pkcs8: {
-      JS_ReportErrorLatin1(cx, "Exporting in PKCS #8 format is not yet supported.");
-      break;
-    }
-    case CryptoKeyFormat::Raw: {
-      JS_ReportErrorLatin1(cx, "Exporting in Raw format is not yet supported.");
-      break;
-    }
-    default:{
-      MOZ_ASSERT_UNREACHABLE("coding error");
+  case CryptoKeyFormat::Jwk: {
+    auto jwk = exportJWK(cx, key);
+    if (!jwk) {
       return nullptr;
     }
+    auto hashIdentifier = getHashForKey(cx, key);
+    switch (hashIdentifier) {
+    case CryptoAlgorithmIdentifier::SHA_1:
+      jwk->alg = "RS1";
+      break;
+    case CryptoAlgorithmIdentifier::SHA_224:
+      jwk->alg = "RS224";
+      break;
+    case CryptoAlgorithmIdentifier::SHA_256:
+      jwk->alg = "RS256";
+      break;
+    case CryptoAlgorithmIdentifier::SHA_384:
+      jwk->alg = "RS384";
+      break;
+    case CryptoAlgorithmIdentifier::SHA_512:
+      jwk->alg = "RS512";
+      break;
+    default: {
+      MOZ_ASSERT_UNREACHABLE("coding error");
+    }
+    }
+
+    JS::RootedObject result(cx, JS_NewPlainObject(cx));
+    // JsonWebKey to plain JS object
+    {
+      JS::RootedValue value(cx);
+      // The following fields are defined in Section 3.1 of JSON Web Key
+      value.setString(JS_NewStringCopyN(cx, jwk->kty.c_str(), jwk->kty.length()));
+      if (!JS_SetProperty(cx, result, "kty", value)) {
+        return nullptr;
+      }
+      if (jwk->alg.has_value()) {
+        auto alg = jwk->alg.value();
+        value.setString(JS_NewStringCopyN(cx, alg.c_str(), alg.length()));
+        if (!JS_SetProperty(cx, result, "alg", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->crv.has_value()) {
+        auto crv = jwk->crv.value();
+        value.setString(JS_NewStringCopyN(cx, crv.c_str(), crv.length()));
+        if (!JS_SetProperty(cx, result, "crv", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->d.has_value()) {
+        auto d = jwk->d.value();
+        value.setString(JS_NewStringCopyN(cx, d.c_str(), d.length()));
+        if (!JS_SetProperty(cx, result, "d", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->dp.has_value()) {
+        auto dp = jwk->dp.value();
+        value.setString(JS_NewStringCopyN(cx, dp.c_str(), dp.length()));
+        if (!JS_SetProperty(cx, result, "dp", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->dq.has_value()) {
+        auto dq = jwk->dq.value();
+        value.setString(JS_NewStringCopyN(cx, dq.c_str(), dq.length()));
+        if (!JS_SetProperty(cx, result, "dq", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->e.has_value()) {
+        auto e = jwk->e.value();
+        value.setString(JS_NewStringCopyN(cx, e.c_str(), e.length()));
+        if (!JS_SetProperty(cx, result, "e", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->ext.has_value()) {
+        auto ext = jwk->ext.value();
+        value.setBoolean(ext);
+        if (!JS_SetProperty(cx, result, "ext", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->k.has_value()) {
+        auto k = jwk->k.value();
+        value.setString(JS_NewStringCopyN(cx, k.c_str(), k.length()));
+        if (!JS_SetProperty(cx, result, "k", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->key_ops.size() > 0) {
+        JS::RootedValueVector ops(cx);
+        JS::RootedString str(cx);
+        for (auto op : jwk->key_ops) {
+          if (!(str = JS_NewStringCopyN(cx, op.c_str(), op.length()))) {
+            return nullptr;
+          }
+          if (!ops.append(JS::StringValue(str))) {
+            js::ReportOutOfMemory(cx);
+            return nullptr;
+          }
+        }
+
+        auto array = JS::NewArrayObject(cx, ops);
+        value.setObject(*array);
+        if (!JS_SetProperty(cx, result, "key_ops", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->n.has_value()) {
+        auto n = jwk->n.value();
+        value.setString(JS_NewStringCopyN(cx, n.c_str(), n.length()));
+        if (!JS_SetProperty(cx, result, "n", value)) {
+          return nullptr;
+        }
+      }
+
+      // TODO: Add to the exported key this field: std::optional<std::vector<RsaOtherPrimesInfo>>
+      // oth;
+
+      if (jwk->p.has_value()) {
+        auto p = jwk->p.value();
+        value.setString(JS_NewStringCopyN(cx, p.c_str(), p.length()));
+        if (!JS_SetProperty(cx, result, "p", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->q.has_value()) {
+        auto q = jwk->q.value();
+        value.setString(JS_NewStringCopyN(cx, q.c_str(), q.length()));
+        if (!JS_SetProperty(cx, result, "q", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->qi.has_value()) {
+        auto qi = jwk->qi.value();
+        value.setString(JS_NewStringCopyN(cx, qi.c_str(), qi.length()));
+        if (!JS_SetProperty(cx, result, "qi", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->use.has_value()) {
+        auto use = jwk->use.value();
+        value.setString(JS_NewStringCopyN(cx, use.c_str(), use.length()));
+        if (!JS_SetProperty(cx, result, "use", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->x.has_value()) {
+        auto x = jwk->x.value();
+        value.setString(JS_NewStringCopyN(cx, x.c_str(), x.length()));
+        if (!JS_SetProperty(cx, result, "x", value)) {
+          return nullptr;
+        }
+      }
+
+      if (jwk->y.has_value()) {
+        auto y = jwk->y.value();
+        value.setString(JS_NewStringCopyN(cx, y.c_str(), y.length()));
+        if (!JS_SetProperty(cx, result, "y", value)) {
+          return nullptr;
+        }
+      }
+    }
+
+    return result;
+    break;
+  }
+  case CryptoKeyFormat::Spki: {
+    JS_ReportErrorLatin1(cx, "Exporting in SubjectPublicKeyInfo format is not yet supported.");
+  }
+  case CryptoKeyFormat::Pkcs8: {
+    JS_ReportErrorLatin1(cx, "Exporting in PKCS #8 format is not yet supported.");
+    break;
+  }
+  case CryptoKeyFormat::Raw: {
+    JS_ReportErrorLatin1(cx, "Exporting in Raw format is not yet supported.");
+    break;
+  }
+  default: {
+    MOZ_ASSERT_UNREACHABLE("coding error");
+    return nullptr;
+  }
   }
   return nullptr;
 }
 
+JSObject *CryptoAlgorithmHMAC::sign(JSContext *cx, JS::HandleObject key, std::span<uint8_t> data) {
+  return nullptr;
+}
+JS::Result<bool> CryptoAlgorithmHMAC::verify(JSContext *cx, JS::HandleObject key,
+                                             std::span<uint8_t> signature,
+                                             std::span<uint8_t> data) {
+  return JS::Result<bool>(JS::Error());
+}
+JSObject *CryptoAlgorithmHMAC::importKey(JSContext *cx, CryptoKeyFormat, JS::HandleValue,
+                                         bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmHMAC::importKey(JSContext *cx, CryptoKeyFormat, KeyData, bool extractable,
+                                         CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmHMAC::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                         JS::HandleObject key) {
+  return nullptr;
+}
+size_t CryptoAlgorithmHMAC::getKeyLength(JSContext *cx) { return this->length; }
 
-JSObject* CryptoAlgorithmHMAC::sign(JSContext* cx, JS::HandleObject key, std::span<uint8_t> data){return nullptr;}
-JS::Result<bool> CryptoAlgorithmHMAC::verify(JSContext* cx, JS::HandleObject key, std::span<uint8_t> signature, std::span<uint8_t> data){return JS::Result<bool>(JS::Error());}
-JSObject* CryptoAlgorithmHMAC::importKey(JSContext* cx, CryptoKeyFormat, JS::HandleValue, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmHMAC::importKey(JSContext* cx, CryptoKeyFormat, KeyData, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmHMAC::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-size_t CryptoAlgorithmHMAC::getKeyLength(JSContext* cx) {
-  return this->length;
+JSObject *CryptoAlgorithmECDSASignVerify::sign(JSContext *cx, JS::HandleObject key,
+                                               std::span<uint8_t> data) {
+  return nullptr;
+}
+JS::Result<bool> CryptoAlgorithmECDSASignVerify::verify(JSContext *cx, JS::HandleObject key,
+                                                        std::span<uint8_t> signature,
+                                                        std::span<uint8_t> data) {
+  return JS::Result<bool>(JS::Error());
 }
 
-JSObject* CryptoAlgorithmECDSASignVerify::sign(JSContext* cx, JS::HandleObject key, std::span<uint8_t> data){return nullptr;}
-JS::Result<bool> CryptoAlgorithmECDSASignVerify::verify(JSContext* cx, JS::HandleObject key, std::span<uint8_t> signature, std::span<uint8_t> data){return JS::Result<bool>(JS::Error());}
+JSObject *CryptoAlgorithmRSA_PSS_SignVerify::sign(JSContext *cx, JS::HandleObject key,
+                                                  std::span<uint8_t> data) {
+  return nullptr;
+};
+JS::Result<bool> CryptoAlgorithmRSA_PSS_SignVerify::verify(JSContext *cx, JS::HandleObject key,
+                                                           std::span<uint8_t> signature,
+                                                           std::span<uint8_t> data) {
+  return JS::Result<bool>(JS::Error());
+}
 
-JSObject* CryptoAlgorithmRSA_PSS_SignVerify::sign(JSContext* cx, JS::HandleObject key, std::span<uint8_t> data) {return nullptr;};
-JS::Result<bool> CryptoAlgorithmRSA_PSS_SignVerify::verify(JSContext* cx, JS::HandleObject key, std::span<uint8_t> signature, std::span<uint8_t> data) {return JS::Result<bool>(JS::Error());}
-
-JSObject* CryptoAlgorithmSHA1::digest(JSContext *cx, std::span<uint8_t> data) {
+JSObject *CryptoAlgorithmSHA1::digest(JSContext *cx, std::span<uint8_t> data) {
   auto alg = EVP_sha1();
   unsigned int size;
   auto buf = static_cast<unsigned char *>(JS_malloc(cx, SHA_DIGEST_LENGTH));
@@ -3440,7 +3592,7 @@ JSObject* CryptoAlgorithmSHA1::digest(JSContext *cx, std::span<uint8_t> data) {
   }
   return array_buffer;
 }
-JSObject* CryptoAlgorithmSHA224::digest(JSContext *cx, std::span<uint8_t> data) {
+JSObject *CryptoAlgorithmSHA224::digest(JSContext *cx, std::span<uint8_t> data) {
   auto alg = EVP_sha224();
   unsigned int size;
   auto buf = static_cast<unsigned char *>(JS_malloc(cx, SHA224_DIGEST_LENGTH));
@@ -3460,7 +3612,7 @@ JSObject* CryptoAlgorithmSHA224::digest(JSContext *cx, std::span<uint8_t> data) 
   }
   return array_buffer;
 }
-JSObject* CryptoAlgorithmSHA256::digest(JSContext *cx, std::span<uint8_t> data) {
+JSObject *CryptoAlgorithmSHA256::digest(JSContext *cx, std::span<uint8_t> data) {
   auto alg = EVP_sha256();
   unsigned int size;
   auto buf = static_cast<unsigned char *>(JS_malloc(cx, SHA256_DIGEST_LENGTH));
@@ -3480,7 +3632,7 @@ JSObject* CryptoAlgorithmSHA256::digest(JSContext *cx, std::span<uint8_t> data) 
   }
   return array_buffer;
 }
-JSObject* CryptoAlgorithmSHA384::digest(JSContext *cx, std::span<uint8_t> data) {
+JSObject *CryptoAlgorithmSHA384::digest(JSContext *cx, std::span<uint8_t> data) {
   auto alg = EVP_sha384();
   unsigned int size;
   auto buf = static_cast<unsigned char *>(JS_malloc(cx, SHA384_DIGEST_LENGTH));
@@ -3500,7 +3652,7 @@ JSObject* CryptoAlgorithmSHA384::digest(JSContext *cx, std::span<uint8_t> data) 
   }
   return array_buffer;
 }
-JSObject* CryptoAlgorithmSHA512::digest(JSContext *cx, std::span<uint8_t> data) {
+JSObject *CryptoAlgorithmSHA512::digest(JSContext *cx, std::span<uint8_t> data) {
   auto alg = EVP_sha512();
   unsigned int size;
   auto buf = static_cast<unsigned char *>(JS_malloc(cx, SHA512_DIGEST_LENGTH));
@@ -3521,33 +3673,48 @@ JSObject* CryptoAlgorithmSHA512::digest(JSContext *cx, std::span<uint8_t> data) 
   return array_buffer;
 }
 
-JSObject* CryptoAlgorithmRSAES_PKCS1_v1_5::encrypt(JSContext* cx, CryptoKey, std::vector<uint8_t>) {return nullptr;}
-JSObject* CryptoAlgorithmRSAES_PKCS1_v1_5::decrypt(JSContext* cx, CryptoKey, std::vector<uint8_t>) {return nullptr;}
-JSObject* CryptoAlgorithmRSAES_PKCS1_v1_5::importKey(JSContext* cx, CryptoKeyFormat, JS::HandleValue, bool extractable, CryptoKeyUsageBitmap) {return nullptr;}
-JSObject* CryptoAlgorithmRSAES_PKCS1_v1_5::importKey(JSContext* cx, CryptoKeyFormat, KeyData, bool extractable, CryptoKeyUsageBitmap) {return nullptr;}
-JSObject* CryptoAlgorithmRSAES_PKCS1_v1_5::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key) {return nullptr;}
+JSObject *CryptoAlgorithmRSAES_PKCS1_v1_5::encrypt(JSContext *cx, CryptoKey, std::vector<uint8_t>) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmRSAES_PKCS1_v1_5::decrypt(JSContext *cx, CryptoKey, std::vector<uint8_t>) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmRSAES_PKCS1_v1_5::importKey(JSContext *cx, CryptoKeyFormat,
+                                                     JS::HandleValue, bool extractable,
+                                                     CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmRSAES_PKCS1_v1_5::importKey(JSContext *cx, CryptoKeyFormat, KeyData,
+                                                     bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmRSAES_PKCS1_v1_5::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                     JS::HandleObject key) {
+  return nullptr;
+}
 
 // Convert the exponent vector to a 32-bit value, if possible.
-std::optional<uint32_t> exponentVectorToUInt32(const std::span<uint8_t>& exponent)
-{
-    if (exponent.size() > 4) {
-        if (std::any_of(exponent.begin(), exponent.end() - 4, [](uint8_t element) { return !!element; }))
-            return std::nullopt;
-    }
+std::optional<uint32_t> exponentVectorToUInt32(const std::span<uint8_t> &exponent) {
+  if (exponent.size() > 4) {
+    if (std::any_of(exponent.begin(), exponent.end() - 4,
+                    [](uint8_t element) { return !!element; }))
+      return std::nullopt;
+  }
 
-    uint32_t result = 0;
-    for (size_t size = exponent.size(), i = std::min<size_t>(4, size); i > 0; --i) {
-        result <<= 8;
-        result += exponent[size - i];
-    }
+  uint32_t result = 0;
+  for (size_t size = exponent.size(), i = std::min<size_t>(4, size); i > 0; --i) {
+    result <<= 8;
+    result += exponent[size - i];
+  }
 
-    return result;
+  return result;
 }
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wformat-security"
 #pragma clang diagnostic ignored "-Wunused-value"
-JSObject* generatePair(JSContext* cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen* algorithm, bool extractable, CryptoKeyUsageBitmap usages) {
+JSObject *generatePair(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen *algorithm,
+                       bool extractable, CryptoKeyUsageBitmap usages) {
   // OpenSSL doesn't report an error if the exponent is smaller than three or even.
   auto e = exponentVectorToUInt32(algorithm->publicExponent);
   if (!e || *e < 3 || !(*e & 0x1)) {
@@ -3609,7 +3776,7 @@ JSObject* generatePair(JSContext* cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen* a
     JS::RootedObject alg(cx, algorithm->toObject(cx));
     if (!alg) {
       // TODO Rename error to OperationError
-    JS_ReportErrorLatin1(cx, "OperationError");
+      JS_ReportErrorLatin1(cx, "OperationError");
       return nullptr;
     }
     JS::RootedValue modulusLength(cx, JS::NumberValue(algorithm->modulusLength));
@@ -3617,14 +3784,17 @@ JSObject* generatePair(JSContext* cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen* a
       return nullptr;
     }
 
-    uint8_t* p = reinterpret_cast<uint8_t*>(calloc(algorithm->publicExponent.size(), sizeof(uint8_t)));
+    uint8_t *p =
+        reinterpret_cast<uint8_t *>(calloc(algorithm->publicExponent.size(), sizeof(uint8_t)));
     auto exp = algorithm->publicExponent;
     std::copy(exp.begin(), exp.end(), p);
 
-    JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, algorithm->publicExponent.size(), p));
+    JS::RootedObject buffer(
+        cx, JS::NewArrayBufferWithContents(cx, algorithm->publicExponent.size(), p));
     if (!buffer) {
-      // We can be here is the array buffer was too large -- if that was the case then a JSMSG_BAD_ARRAY_LENGTH will have been created.
-      // No other failure scenarios in this path will create a JS exception and so we need to create one.
+      // We can be here is the array buffer was too large -- if that was the case then a
+      // JSMSG_BAD_ARRAY_LENGTH will have been created. No other failure scenarios in this path will
+      // create a JS exception and so we need to create one.
       if (!JS_IsExceptionPending(cx)) {
         // TODO Rename error to InternalError
         JS_ReportErrorLatin1(cx, "InternalError");
@@ -3633,14 +3803,16 @@ JSObject* generatePair(JSContext* cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen* a
       return nullptr;
     }
 
-    JS::RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, algorithm->publicExponent.size()));
+    JS::RootedObject byte_array(
+        cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, algorithm->publicExponent.size()));
     JS::RootedValue publicExponent(cx, JS::ObjectValue(*byte_array));
     if (!JS_SetProperty(cx, alg, "publicExponent", publicExponent)) {
       return nullptr;
     }
 
     JS::SetReservedSlot(publicKey, CryptoKey::Slots::Algorithm, JS::ObjectValue(*alg));
-    JS::SetReservedSlot(publicKey, CryptoKey::Slots::Type, JS::Int32Value(static_cast<uint8_t>(CryptoKeyType::Public)));
+    JS::SetReservedSlot(publicKey, CryptoKey::Slots::Type,
+                        JS::Int32Value(static_cast<uint8_t>(CryptoKeyType::Public)));
     JS::SetReservedSlot(publicKey, CryptoKey::Slots::Extractable, JS::BooleanValue(true));
     JS::SetReservedSlot(publicKey, CryptoKey::Slots::Usage, JS::Int32Value(usages));
     JS::SetReservedSlot(publicKey, CryptoKey::Slots::Key, JS::PrivateValue(publicPKey));
@@ -3662,14 +3834,17 @@ JSObject* generatePair(JSContext* cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen* a
       return nullptr;
     }
 
-    uint8_t* p = reinterpret_cast<uint8_t*>(calloc(algorithm->publicExponent.size(), sizeof(uint8_t)));
+    uint8_t *p =
+        reinterpret_cast<uint8_t *>(calloc(algorithm->publicExponent.size(), sizeof(uint8_t)));
     auto exp = algorithm->publicExponent;
     std::copy(exp.begin(), exp.end(), p);
 
-    JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, algorithm->publicExponent.size(), p));
+    JS::RootedObject buffer(
+        cx, JS::NewArrayBufferWithContents(cx, algorithm->publicExponent.size(), p));
     if (!buffer) {
-      // We can be here is the array buffer was too large -- if that was the case then a JSMSG_BAD_ARRAY_LENGTH will have been created.
-      // No other failure scenarios in this path will create a JS exception and so we need to create one.
+      // We can be here is the array buffer was too large -- if that was the case then a
+      // JSMSG_BAD_ARRAY_LENGTH will have been created. No other failure scenarios in this path will
+      // create a JS exception and so we need to create one.
       if (!JS_IsExceptionPending(cx)) {
         // TODO Rename error to InternalError
         JS_ReportErrorLatin1(cx, "InternalError");
@@ -3678,24 +3853,26 @@ JSObject* generatePair(JSContext* cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen* a
       return nullptr;
     }
 
-    JS::RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, algorithm->publicExponent.size()));
+    JS::RootedObject byte_array(
+        cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, algorithm->publicExponent.size()));
     JS::RootedValue publicExponent(cx, JS::ObjectValue(*byte_array));
     if (!JS_SetProperty(cx, alg, "publicExponent", publicExponent)) {
       return nullptr;
     }
 
     JS::SetReservedSlot(privateKey, CryptoKey::Slots::Algorithm, JS::ObjectValue(*alg));
-    JS::SetReservedSlot(privateKey, CryptoKey::Slots::Type, JS::Int32Value(static_cast<uint8_t>(CryptoKeyType::Private)));
+    JS::SetReservedSlot(privateKey, CryptoKey::Slots::Type,
+                        JS::Int32Value(static_cast<uint8_t>(CryptoKeyType::Private)));
     JS::SetReservedSlot(privateKey, CryptoKey::Slots::Extractable, JS::BooleanValue(true));
     JS::SetReservedSlot(privateKey, CryptoKey::Slots::Usage, JS::Int32Value(usages));
     JS::SetReservedSlot(privateKey, CryptoKey::Slots::Key, JS::PrivateValue(privatePKey));
   }
   JS::RootedObject cryptoKeyPair(cx, JS_NewPlainObject(cx));
-  JS::RootedValue pubKey (cx, JS::ObjectValue(*publicKey));
+  JS::RootedValue pubKey(cx, JS::ObjectValue(*publicKey));
   if (!JS_SetProperty(cx, cryptoKeyPair, "publicKey", pubKey)) {
     return nullptr;
   }
-  JS::RootedValue privKey (cx, JS::ObjectValue(*privateKey));
+  JS::RootedValue privKey(cx, JS::ObjectValue(*privateKey));
   if (!JS_SetProperty(cx, cryptoKeyPair, "privateKey", privKey)) {
     return nullptr;
   }
@@ -3703,108 +3880,199 @@ JSObject* generatePair(JSContext* cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen* a
 }
 #pragma clang diagnostic pop
 
-JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen::generateKey(JSContext* cx, bool extractable, CryptoKeyUsageBitmap usages){
+JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen::generateKey(JSContext *cx, bool extractable,
+                                                               CryptoKeyUsageBitmap usages) {
 
-  JSObject* result = nullptr;
-    
-  if (usages & (CryptoKeyUsageDecrypt | CryptoKeyUsageEncrypt | CryptoKeyUsageDeriveKey | CryptoKeyUsageDeriveBits | CryptoKeyUsageWrapKey | CryptoKeyUsageUnwrapKey)) {
+  JSObject *result = nullptr;
+
+  if (usages & (CryptoKeyUsageDecrypt | CryptoKeyUsageEncrypt | CryptoKeyUsageDeriveKey |
+                CryptoKeyUsageDeriveBits | CryptoKeyUsageWrapKey | CryptoKeyUsageUnwrapKey)) {
     // TODO Rename error to SyntaxError
     JS_ReportErrorLatin1(cx, "SyntaxError");
     return nullptr;
   }
   result = generatePair(cx, this, extractable, usages);
   return result;
-
 }
-JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-
-
-JSObject* CryptoAlgorithmAES_CFB_Key::generateKey(JSContext* cx, bool extractable, CryptoKeyUsageBitmap) {
+JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                             JS::HandleObject key) {
   return nullptr;
 }
-JSObject* CryptoAlgorithmAES_CFB_Key::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-size_t CryptoAlgorithmAES_CFB_Key::getKeyLength(JSContext* cx) {
-  return this->length;
+
+JSObject *CryptoAlgorithmAES_CFB_Key::generateKey(JSContext *cx, bool extractable,
+                                                  CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_CFB_Key::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                JS::HandleObject key) {
+  return nullptr;
+}
+size_t CryptoAlgorithmAES_CFB_Key::getKeyLength(JSContext *cx) { return this->length; }
+
+JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                             JS::HandleObject key) {
+  return nullptr;
 }
 
-JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-
-JSObject* CryptoAlgorithmRSA_PSS_KeyImport::importKey(JSContext* cx, CryptoKeyFormat, JS::HandleValue, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmRSA_PSS_KeyImport::importKey(JSContext* cx, CryptoKeyFormat, KeyData, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmRSA_PSS_KeyImport::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-
-
-JSObject* CryptoAlgorithmAES_CTR_KeyImport::importKey(JSContext* cx, CryptoKeyFormat, JS::HandleValue, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmAES_CTR_KeyImport::importKey(JSContext* cx, CryptoKeyFormat, KeyData, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmAES_CTR_KeyImport::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-
-JSObject* CryptoAlgorithmAES_CBC_KeyImport::importKey(JSContext* cx, CryptoKeyFormat, JS::HandleValue, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmAES_CBC_KeyImport::importKey(JSContext* cx, CryptoKeyFormat, KeyData, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmAES_CBC_KeyImport::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-
-JSObject* CryptoAlgorithmAES_GCM_KeyImport::importKey(JSContext* cx, CryptoKeyFormat, JS::HandleValue, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmAES_GCM_KeyImport::importKey(JSContext* cx, CryptoKeyFormat, KeyData, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmAES_GCM_KeyImport::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-
-JSObject* CryptoAlgorithmAES_CFB_KeyImport::importKey(JSContext* cx, CryptoKeyFormat, JS::HandleValue, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmAES_CFB_KeyImport::importKey(JSContext* cx, CryptoKeyFormat, KeyData, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmAES_CFB_KeyImport::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-
-JSObject* CryptoAlgorithmAES_KWImport::importKey(JSContext* cx, CryptoKeyFormat, JS::HandleValue, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmAES_KWImport::importKey(JSContext* cx, CryptoKeyFormat, KeyData, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmAES_KWImport::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-
-JSObject* CryptoAlgorithmHKDFImport::importKey(JSContext* cx, CryptoKeyFormat, JS::HandleValue, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmHKDFImport::importKey(JSContext* cx, CryptoKeyFormat, KeyData, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-
-JSObject* CryptoAlgorithmPBKDF2Key::deriveBits(JSContext *cx, CryptoKey, size_t length){return nullptr;}
-JSObject* CryptoAlgorithmPBKDF2Key::importKey(JSContext* cx, CryptoKeyFormat, JS::HandleValue, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmPBKDF2Key::importKey(JSContext *cx, CryptoKeyFormat, KeyData, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-
-size_t CryptoAlgorithmAES_CBC_Key::getKeyLength(JSContext*) {
-  return this->length;
-};
-
-JSObject* CryptoAlgorithmAES_CTR_Key::importKey(JSContext* cx, CryptoKeyFormat, JS::HandleValue, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmAES_CTR_Key::importKey(JSContext* cx, CryptoKeyFormat, KeyData, bool extractable, CryptoKeyUsageBitmap){return nullptr;}
-JSObject* CryptoAlgorithmAES_CTR_Key::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-size_t CryptoAlgorithmAES_CTR_Key::getKeyLength(JSContext* cx) {
-  return this->length;
+JSObject *CryptoAlgorithmRSA_PSS_KeyImport::importKey(JSContext *cx, CryptoKeyFormat,
+                                                      JS::HandleValue, bool extractable,
+                                                      CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmRSA_PSS_KeyImport::importKey(JSContext *cx, CryptoKeyFormat, KeyData,
+                                                      bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmRSA_PSS_KeyImport::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                      JS::HandleObject key) {
+  return nullptr;
 }
 
-JSObject* CryptoAlgorithmAES_GCM_Key::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-size_t CryptoAlgorithmAES_GCM_Key::getKeyLength(JSContext* cx) {
-  return this->length;
+JSObject *CryptoAlgorithmAES_CTR_KeyImport::importKey(JSContext *cx, CryptoKeyFormat,
+                                                      JS::HandleValue, bool extractable,
+                                                      CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_CTR_KeyImport::importKey(JSContext *cx, CryptoKeyFormat, KeyData,
+                                                      bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_CTR_KeyImport::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                      JS::HandleObject key) {
+  return nullptr;
 }
 
-JSObject* CryptoAlgorithmAES_KW::exportKey(JSContext* cx, CryptoKeyFormat format, JS::HandleObject key){return nullptr;}
-JSObject* CryptoAlgorithmAES_KW::wrapKey(JSContext* cx, CryptoKey, std::vector<uint8_t>){return nullptr;}
-JSObject* CryptoAlgorithmAES_KW::unwrapKey(JSContext* cx, CryptoKey, std::vector<uint8_t>){return nullptr;}
-size_t CryptoAlgorithmAES_KW::getKeyLength(JSContext* cx) {
-  return this->length;
+JSObject *CryptoAlgorithmAES_CBC_KeyImport::importKey(JSContext *cx, CryptoKeyFormat,
+                                                      JS::HandleValue, bool extractable,
+                                                      CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_CBC_KeyImport::importKey(JSContext *cx, CryptoKeyFormat, KeyData,
+                                                      bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_CBC_KeyImport::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                      JS::HandleObject key) {
+  return nullptr;
 }
 
-JSObject* CryptoAlgorithmAES_CBC_Key::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmAES_CBC_KeyImport::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmAES_CFB_Key::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmAES_CFB_KeyImport::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmAES_CTR_Key::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmAES_CTR_KeyImport::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmAES_GCM_Key::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmAES_GCM_KeyImport::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmAES_KW::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmAES_KWImport::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmECDHGenKey::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmECDHKey::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmECDSAGenKey::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmECDSAKey::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmECDSASignVerify::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmHKDF::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmHKDFDerive::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmHKDFImport::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmHMAC::toObject(JSContext *cx){
-  JS::RootedObject object (cx, JS_NewPlainObject(cx));
-  
+JSObject *CryptoAlgorithmAES_GCM_KeyImport::importKey(JSContext *cx, CryptoKeyFormat,
+                                                      JS::HandleValue, bool extractable,
+                                                      CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_GCM_KeyImport::importKey(JSContext *cx, CryptoKeyFormat, KeyData,
+                                                      bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_GCM_KeyImport::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                      JS::HandleObject key) {
+  return nullptr;
+}
+
+JSObject *CryptoAlgorithmAES_CFB_KeyImport::importKey(JSContext *cx, CryptoKeyFormat,
+                                                      JS::HandleValue, bool extractable,
+                                                      CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_CFB_KeyImport::importKey(JSContext *cx, CryptoKeyFormat, KeyData,
+                                                      bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_CFB_KeyImport::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                      JS::HandleObject key) {
+  return nullptr;
+}
+
+JSObject *CryptoAlgorithmAES_KWImport::importKey(JSContext *cx, CryptoKeyFormat, JS::HandleValue,
+                                                 bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_KWImport::importKey(JSContext *cx, CryptoKeyFormat, KeyData,
+                                                 bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_KWImport::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                 JS::HandleObject key) {
+  return nullptr;
+}
+
+JSObject *CryptoAlgorithmHKDFImport::importKey(JSContext *cx, CryptoKeyFormat, JS::HandleValue,
+                                               bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmHKDFImport::importKey(JSContext *cx, CryptoKeyFormat, KeyData,
+                                               bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+
+JSObject *CryptoAlgorithmPBKDF2Key::deriveBits(JSContext *cx, CryptoKey, size_t length) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmPBKDF2Key::importKey(JSContext *cx, CryptoKeyFormat, JS::HandleValue,
+                                              bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmPBKDF2Key::importKey(JSContext *cx, CryptoKeyFormat, KeyData,
+                                              bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+
+size_t CryptoAlgorithmAES_CBC_Key::getKeyLength(JSContext *) { return this->length; };
+
+JSObject *CryptoAlgorithmAES_CTR_Key::importKey(JSContext *cx, CryptoKeyFormat, JS::HandleValue,
+                                                bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_CTR_Key::importKey(JSContext *cx, CryptoKeyFormat, KeyData,
+                                                bool extractable, CryptoKeyUsageBitmap) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_CTR_Key::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                JS::HandleObject key) {
+  return nullptr;
+}
+size_t CryptoAlgorithmAES_CTR_Key::getKeyLength(JSContext *cx) { return this->length; }
+
+JSObject *CryptoAlgorithmAES_GCM_Key::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                                JS::HandleObject key) {
+  return nullptr;
+}
+size_t CryptoAlgorithmAES_GCM_Key::getKeyLength(JSContext *cx) { return this->length; }
+
+JSObject *CryptoAlgorithmAES_KW::exportKey(JSContext *cx, CryptoKeyFormat format,
+                                           JS::HandleObject key) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_KW::wrapKey(JSContext *cx, CryptoKey, std::vector<uint8_t>) {
+  return nullptr;
+}
+JSObject *CryptoAlgorithmAES_KW::unwrapKey(JSContext *cx, CryptoKey, std::vector<uint8_t>) {
+  return nullptr;
+}
+size_t CryptoAlgorithmAES_KW::getKeyLength(JSContext *cx) { return this->length; }
+
+JSObject *CryptoAlgorithmAES_CBC_Key::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmAES_CBC_KeyImport::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmAES_CFB_Key::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmAES_CFB_KeyImport::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmAES_CTR_Key::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmAES_CTR_KeyImport::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmAES_GCM_Key::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmAES_GCM_KeyImport::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmAES_KW::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmAES_KWImport::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmECDHGenKey::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmECDHKey::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmECDSAGenKey::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmECDSAKey::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmECDSASignVerify::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmHKDF::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmHKDFDerive::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmHKDFImport::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmHMAC::toObject(JSContext *cx) {
+  JS::RootedObject object(cx, JS_NewPlainObject(cx));
+
   auto alg_name = JS_NewStringCopyZ(cx, this->name());
   if (!alg_name) {
     return nullptr;
@@ -3832,16 +4100,15 @@ JSObject* CryptoAlgorithmHMAC::toObject(JSContext *cx){
     return nullptr;
   }
 
-
   return object;
 }
-JSObject* CryptoAlgorithmPBKDF2::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmPBKDF2Key::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmRSAES_PKCS1_v1_5::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::toObject(JSContext *cx) {
-  JS::RootedObject object (cx, JS_NewPlainObject(cx));
-  
+JSObject *CryptoAlgorithmPBKDF2::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmPBKDF2Key::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmRSAES_PKCS1_v1_5::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::toObject(JSContext *cx) {
+  JS::RootedObject object(cx, JS_NewPlainObject(cx));
+
   auto alg_name = JS_NewStringCopyZ(cx, this->name());
   if (!alg_name) {
     return nullptr;
@@ -3866,9 +4133,9 @@ JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::toObject(JSContext *cx) {
   }
   return object;
 }
-JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen::toObject(JSContext *cx){
-  JS::RootedObject object (cx, JS_NewPlainObject(cx));
-  
+JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen::toObject(JSContext *cx) {
+  JS::RootedObject object(cx, JS_NewPlainObject(cx));
+
   auto alg_name = JS_NewStringCopyZ(cx, this->name());
   if (!alg_name) {
     return nullptr;
@@ -3897,23 +4164,25 @@ JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen::toObject(JSContext *cx){
     return nullptr;
   }
 
-  uint8_t* p = reinterpret_cast<uint8_t*>(calloc(this->publicExponent.size(), sizeof(uint8_t)));
+  uint8_t *p = reinterpret_cast<uint8_t *>(calloc(this->publicExponent.size(), sizeof(uint8_t)));
   auto exp = this->publicExponent;
   std::copy(exp.begin(), exp.end(), p);
 
   JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, this->publicExponent.size(), p));
   if (!buffer) {
-    // We can be here is the array buffer was too large -- if that was the case then a JSMSG_BAD_ARRAY_LENGTH will have been created.
-      // No other failure scenarios in this path will create a JS exception and so we need to create one.
-      if (!JS_IsExceptionPending(cx)) {
-        // TODO Rename error to InternalError
-        JS_ReportErrorLatin1(cx, "InternalError");
-      }
+    // We can be here is the array buffer was too large -- if that was the case then a
+    // JSMSG_BAD_ARRAY_LENGTH will have been created. No other failure scenarios in this path will
+    // create a JS exception and so we need to create one.
+    if (!JS_IsExceptionPending(cx)) {
+      // TODO Rename error to InternalError
+      JS_ReportErrorLatin1(cx, "InternalError");
+    }
     JS_free(cx, p);
     return nullptr;
   }
 
-  JS::RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, this->publicExponent.size()));
+  JS::RootedObject byte_array(
+      cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, this->publicExponent.size()));
   JS::RootedValue publicExponent(cx, JS::ObjectValue(*byte_array));
   if (!JS_SetProperty(cx, object, "publicExponent", publicExponent)) {
     return nullptr;
@@ -3921,10 +4190,10 @@ JSObject* CryptoAlgorithmRSASSA_PKCS1_v1_5_KeyGen::toObject(JSContext *cx){
 
   return object;
 }
-JSObject* CryptoAlgorithmRSA_OAEP_EncDec::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmRSA_OAEP_KeyImport::toObject(JSContext *cx){
-  JS::RootedObject object (cx, JS_NewPlainObject(cx));
-  
+JSObject *CryptoAlgorithmRSA_OAEP_EncDec::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmRSA_OAEP_KeyImport::toObject(JSContext *cx) {
+  JS::RootedObject object(cx, JS_NewPlainObject(cx));
+
   auto alg_name = JS_NewStringCopyZ(cx, this->name());
   if (!alg_name) {
     return nullptr;
@@ -3949,13 +4218,13 @@ JSObject* CryptoAlgorithmRSA_OAEP_KeyImport::toObject(JSContext *cx){
   }
   return object;
 }
-JSObject* CryptoAlgorithmRSA_PSS_Key::toObject(JSContext *cx){return nullptr;}
-JSObject* CryptoAlgorithmRSA_PSS_KeyImport::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmRSA_PSS_SignVerify::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmSHA1::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmSHA224::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmSHA256::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmSHA384::toObject(JSContext* cx) {return nullptr;}
-JSObject* CryptoAlgorithmSHA512::toObject(JSContext* cx) {return nullptr;}
+JSObject *CryptoAlgorithmRSA_PSS_Key::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmRSA_PSS_KeyImport::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmRSA_PSS_SignVerify::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmSHA1::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmSHA224::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmSHA256::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmSHA384::toObject(JSContext *cx) { return nullptr; }
+JSObject *CryptoAlgorithmSHA512::toObject(JSContext *cx) { return nullptr; }
 
 } // namespace builtins

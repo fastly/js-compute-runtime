@@ -13,24 +13,13 @@ public:
   std::string primeFactor;
   std::string factorCRTExponent;
   std::string factorCRTCoefficient;
-  PrimeInfo(
-    std::string primeFactor,
-    std::string factorCRTExponent,
-    std::string factorCRTCoefficient): 
-    primeFactor{primeFactor}, 
-    factorCRTExponent{factorCRTExponent}, 
-    factorCRTCoefficient{factorCRTCoefficient} 
-  {};
-  PrimeInfo(
-    std::string primeFactor,
-    std::string factorCRTExponent
-    ): 
-    primeFactor{primeFactor}, 
-    factorCRTExponent{factorCRTExponent} {};
-  PrimeInfo(
-    std::string primeFactor
-    ): 
-    primeFactor{primeFactor} {};
+  PrimeInfo(std::string primeFactor, std::string factorCRTExponent,
+            std::string factorCRTCoefficient)
+      : primeFactor{primeFactor}, factorCRTExponent{factorCRTExponent},
+        factorCRTCoefficient{factorCRTCoefficient} {};
+  PrimeInfo(std::string primeFactor, std::string factorCRTExponent)
+      : primeFactor{primeFactor}, factorCRTExponent{factorCRTExponent} {};
+  PrimeInfo(std::string primeFactor) : primeFactor{primeFactor} {};
 };
 
 class CryptoKeyRSAComponents {
@@ -46,10 +35,10 @@ public:
     return CryptoKeyRSAComponents(modulus, exponent, privateExponent);
   }
 
-
   static CryptoKeyRSAComponents createPrivateWithAdditionalData(
       std::string modulus, std::string exponent, std::string privateExponent,
-      std::optional<PrimeInfo> firstPrimeInfo, std::optional<PrimeInfo> secondPrimeInfo, std::vector<PrimeInfo> otherPrimeInfos);
+      std::optional<PrimeInfo> firstPrimeInfo, std::optional<PrimeInfo> secondPrimeInfo,
+      std::vector<PrimeInfo> otherPrimeInfos);
 
   virtual ~CryptoKeyRSAComponents();
 
@@ -70,7 +59,8 @@ public:
   CryptoKeyRSAComponents(std::string modulus, std::string exponent, std::string privateExponent);
 
   CryptoKeyRSAComponents(std::string modulus, std::string exponent, std::string privateExponent,
-                         std::optional<PrimeInfo> firstPrimeInfo, std::optional<PrimeInfo> secondPrimeInfo,
+                         std::optional<PrimeInfo> firstPrimeInfo,
+                         std::optional<PrimeInfo> secondPrimeInfo,
                          std::vector<PrimeInfo> otherPrimeInfos);
 
   Type _type;
@@ -86,5 +76,5 @@ public:
   std::optional<PrimeInfo> _secondPrimeInfo;
   std::vector<PrimeInfo>
       _otherPrimeInfos; // When three or more primes have been used, the number of array elements
-                         // is be the number of primes used minus two.
+                        // is be the number of primes used minus two.
 };

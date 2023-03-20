@@ -108,13 +108,14 @@ bool SubtleCrypto::exportKey(JSContext *cx, unsigned argc, JS::Value *vp) {
       format = CryptoKeyFormat::Spki;
     } else if (format_string == "pkcs8") {
       format = CryptoKeyFormat::Pkcs8;
-    } else if (format_string == "jwk"){
+    } else if (format_string == "jwk") {
       format = CryptoKeyFormat::Jwk;
-    } else if (format_string == "raw"){
+    } else if (format_string == "raw") {
       format = CryptoKeyFormat::Raw;
     } else {
       // TODO: Change to an OperationError instance
-      JS_ReportErrorLatin1(cx, "Provided format parameter is not supported. Supported formats are: 'spki', 'pkcs8', 'jwk', and 'raw'");
+      JS_ReportErrorLatin1(cx, "Provided format parameter is not supported. Supported formats are: "
+                               "'spki', 'pkcs8', 'jwk', and 'raw'");
       return RejectPromiseWithPendingError(cx, promise);
     }
   }
@@ -128,7 +129,7 @@ bool SubtleCrypto::exportKey(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::RootedObject key(cx, &key_data.toObject());
 
-  JSObject* result = CryptoAlgorithmRSASSA_PKCS1_v1_5::exportKey(cx, format, key);
+  JSObject *result = CryptoAlgorithmRSASSA_PKCS1_v1_5::exportKey(cx, format, key);
   if (!result) {
     return RejectPromiseWithPendingError(cx, promise);
   }
@@ -197,7 +198,6 @@ bool SubtleCrypto::generateKey(JSContext *cx, unsigned argc, JS::Value *vp) {
   // 7. Let result be the result of performing the generate key operation specified by
   // normalizedAlgorithm using algorithm, extractable and usages.
 
-
   JS::RootedValue result(cx);
   JSObject *cryptoKey = normalizedAlgorithm->generateKey(cx, extractable, keyUsageMask);
   if (!cryptoKey) {
@@ -208,7 +208,7 @@ bool SubtleCrypto::generateKey(JSContext *cx, unsigned argc, JS::Value *vp) {
     return RejectPromiseWithPendingError(cx, promise);
   }
   result.setObject(*cryptoKey);
-  
+
   // 8. If result is a CryptoKey object:
   //      If the [[type]] internal slot of result is "secret" or "private" and usages is empty, then
   //      throw a SyntaxError.
@@ -275,13 +275,14 @@ bool SubtleCrypto::importKey(JSContext *cx, unsigned argc, JS::Value *vp) {
       format = CryptoKeyFormat::Spki;
     } else if (format_string == "pkcs8") {
       format = CryptoKeyFormat::Pkcs8;
-    } else if (format_string == "jwk"){
+    } else if (format_string == "jwk") {
       format = CryptoKeyFormat::Jwk;
-    } else if (format_string == "raw"){
+    } else if (format_string == "raw") {
       format = CryptoKeyFormat::Raw;
     } else {
       // TODO: Change to a SyntaxError instance
-      JS_ReportErrorLatin1(cx, "Provided format parameter is not supported. Supported formats are: 'spki', 'pkcs8', 'jwk', and 'raw'");
+      JS_ReportErrorLatin1(cx, "Provided format parameter is not supported. Supported formats are: "
+                               "'spki', 'pkcs8', 'jwk', and 'raw'");
       return RejectPromiseWithPendingError(cx, promise);
     }
   }
@@ -300,7 +301,6 @@ bool SubtleCrypto::importKey(JSContext *cx, unsigned argc, JS::Value *vp) {
     usages = keyUsageMaskResult.unwrap();
   }
 
-
   // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm
   // and op set to "importKey".
   // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
@@ -315,7 +315,7 @@ bool SubtleCrypto::importKey(JSContext *cx, unsigned argc, JS::Value *vp) {
   // import key operation specified by normalizedAlgorithm using keyData,
   // algorithm, format, extractable and usages.
   JS::RootedObject result(cx);
-  JSObject* key = normalizedAlgorithm->importKey(cx, format, key_data, extractable, usages);
+  JSObject *key = normalizedAlgorithm->importKey(cx, format, key_data, extractable, usages);
   if (!key) {
     return RejectPromiseWithPendingError(cx, promise);
   }
@@ -382,8 +382,8 @@ bool SubtleCrypto::verify(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // 2. Let signature be the result of getting a copy of the bytes held by the signature
   // parameter passed to the verify() method.
-  std::optional<std::span<uint8_t>> signature = value_to_buffer(
-      cx, args.get(2), "SubtleCrypto.verify: signature (argument 3)");
+  std::optional<std::span<uint8_t>> signature =
+      value_to_buffer(cx, args.get(2), "SubtleCrypto.verify: signature (argument 3)");
   if (!signature) {
     return RejectPromiseWithPendingError(cx, promise);
   }
@@ -426,7 +426,7 @@ bool SubtleCrypto::verify(JSContext *cx, unsigned argc, JS::Value *vp) {
   // 11. Let result be the result of performing the verify operation specified by
   // normalizedAlgorithm using key, algorithm and signature and with data as message.
 
-  auto matchResult = normalizedAlgorithm->verify(cx, key, signature.value(), data.value()); 
+  auto matchResult = normalizedAlgorithm->verify(cx, key, signature.value(), data.value());
 
   if (matchResult.isErr()) {
     JS_ReportErrorUTF8(cx, "Crypto verification failed");
@@ -465,7 +465,8 @@ bool SubtleCrypto::digest(JSContext *cx, unsigned argc, JS::Value *vp) {
   // passed to the digest() method.
   auto data = value_to_buffer(cx, args.get(1), "SubtleCrypto.digest: data");
   if (!data.has_value()) {
-    // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
+    // value_to_buffer would have already created a JS exception so we don't need to create one
+    // ourselves.
     return RejectPromiseWithPendingError(cx, promise);
   }
 
@@ -487,7 +488,7 @@ bool SubtleCrypto::digest(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!array_buffer) {
     return RejectPromiseWithPendingError(cx, promise);
   }
-  
+
   // 9. Resolve promise with result.
   JS::RootedValue result(cx);
   result.setObject(*array_buffer);
@@ -534,9 +535,11 @@ bool SubtleCrypto::sign(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to
   // the sign() method.
-  std::optional<std::span<uint8_t>> data = value_to_buffer(cx, args.get(2), "SubtleCrypto.sign: data");
+  std::optional<std::span<uint8_t>> data =
+      value_to_buffer(cx, args.get(2), "SubtleCrypto.sign: data");
   if (!data.has_value()) {
-    // value_to_buffer would have already created a JS exception so we don't need to create one ourselves.
+    // value_to_buffer would have already created a JS exception so we don't need to create one
+    // ourselves.
     return RejectPromiseWithPendingError(cx, promise);
   }
 

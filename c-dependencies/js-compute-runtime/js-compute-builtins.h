@@ -120,9 +120,8 @@ bool response_started(JSObject *self);
 bool respondWithError(JSContext *cx, JS::HandleObject self);
 } // namespace FetchEvent
 
-
 namespace GlobalProperties {
-  // Maps an encoded character to a value in the Base64 alphabet, per
+// Maps an encoded character to a value in the Base64 alphabet, per
 // RFC 4648, Table 1. Invalid input characters map to UINT8_MAX.
 // https://datatracker.ietf.org/doc/html/rfc4648#section-4
 
@@ -183,9 +182,9 @@ static const char base64URLEncodeTable[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 // clang-format on
 
-std::string forgivingBase64Encode(std::string_view data, const char* encodeTable);
-JS::Result<std::string> forgivingBase64Decode(std::string_view data, const uint8_t* decodeTable);
-}
+std::string forgivingBase64Encode(std::string_view data, const char *encodeTable);
+JS::Result<std::string> forgivingBase64Decode(std::string_view data, const uint8_t *decodeTable);
+} // namespace GlobalProperties
 
 bool has_pending_async_tasks();
 bool process_pending_async_tasks(JSContext *cx);

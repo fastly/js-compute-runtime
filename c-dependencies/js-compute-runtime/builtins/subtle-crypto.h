@@ -1,8 +1,8 @@
 #pragma once
 
 #include "builtin.h"
-#include "js-compute-builtins.h"
 #include "crypto-key.h"
+#include "js-compute-builtins.h"
 
 namespace builtins {
 
@@ -36,8 +36,10 @@ public:
   static bool sign(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool verify(JSContext *cx, unsigned argc, JS::Value *vp);
 
-  static std::unique_ptr<CryptoAlgorithm> normalizeAlgorithm(JSContext *cx, JS::HandleValue value, Operations operation);
-  static JS::Result<builtins::CryptoAlgorithmIdentifier> toHashIdentifier(JSContext *cx, JS::HandleValue value);
+  static std::unique_ptr<CryptoAlgorithm> normalizeAlgorithm(JSContext *cx, JS::HandleValue value,
+                                                             Operations operation);
+  static JS::Result<builtins::CryptoAlgorithmIdentifier> toHashIdentifier(JSContext *cx,
+                                                                          JS::HandleValue value);
 
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool init_class(JSContext *cx, JS::HandleObject global);

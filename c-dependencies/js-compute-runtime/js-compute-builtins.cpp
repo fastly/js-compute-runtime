@@ -42,8 +42,8 @@
 #include "builtins/client-info.h"
 #include "builtins/compression-stream.h"
 #include "builtins/config-store.h"
-#include "builtins/crypto.h"
 #include "builtins/crypto-key.h"
+#include "builtins/crypto.h"
 #include "builtins/decompression-stream.h"
 #include "builtins/dictionary.h"
 #include "builtins/env.h"
@@ -341,7 +341,7 @@ JS::PersistentRooted<js::UniquePtr<ScheduledTimers>> timers;
 
 namespace GlobalProperties {
 
-bool base64CharacterToValue(char character, uint8_t *value, const uint8_t* decodeTable) {
+bool base64CharacterToValue(char character, uint8_t *value, const uint8_t *decodeTable) {
   static const size_t mask = 127;
   auto index = static_cast<size_t>(character);
 
@@ -353,12 +353,15 @@ bool base64CharacterToValue(char character, uint8_t *value, const uint8_t* decod
   return *value != 255;
 }
 
-inline JS::Result<mozilla::Ok> base64Decode4to3(std::string_view input, std::string &output, const uint8_t* decodeTable) {
+inline JS::Result<mozilla::Ok> base64Decode4to3(std::string_view input, std::string &output,
+                                                const uint8_t *decodeTable) {
   uint8_t w, x, y, z;
   // 8.1 Find the code point pointed to by position in the second column of Table 1: The Base 64
   // Alphabet of RFC 4648. Let n be the number given in the first cell of the same row. [RFC4648]
-  if (!base64CharacterToValue(input[0], &w, decodeTable) || !base64CharacterToValue(input[1], &x, decodeTable) ||
-      !base64CharacterToValue(input[2], &y, decodeTable) || !base64CharacterToValue(input[3], &z, decodeTable)) {
+  if (!base64CharacterToValue(input[0], &w, decodeTable) ||
+      !base64CharacterToValue(input[1], &x, decodeTable) ||
+      !base64CharacterToValue(input[2], &y, decodeTable) ||
+      !base64CharacterToValue(input[3], &z, decodeTable)) {
     return JS::Result<mozilla::Ok>(JS::Error());
   }
 
@@ -371,11 +374,13 @@ inline JS::Result<mozilla::Ok> base64Decode4to3(std::string_view input, std::str
   return mozilla::Ok();
 }
 
-inline JS::Result<mozilla::Ok> base64Decode3to2(std::string_view input, std::string &output, const uint8_t* decodeTable) {
+inline JS::Result<mozilla::Ok> base64Decode3to2(std::string_view input, std::string &output,
+                                                const uint8_t *decodeTable) {
   uint8_t w, x, y;
   // 8.1 Find the code point pointed to by position in the second column of Table 1: The Base 64
   // Alphabet of RFC 4648. Let n be the number given in the first cell of the same row. [RFC4648]
-  if (!base64CharacterToValue(input[0], &w, decodeTable) || !base64CharacterToValue(input[1], &x, decodeTable) ||
+  if (!base64CharacterToValue(input[0], &w, decodeTable) ||
+      !base64CharacterToValue(input[1], &x, decodeTable) ||
       !base64CharacterToValue(input[2], &y, decodeTable)) {
     return JS::Result<mozilla::Ok>(JS::Error());
   }
@@ -389,11 +394,13 @@ inline JS::Result<mozilla::Ok> base64Decode3to2(std::string_view input, std::str
   return mozilla::Ok();
 }
 
-inline JS::Result<mozilla::Ok> base64Decode2to1(std::string_view input, std::string &output, const uint8_t* decodeTable) {
+inline JS::Result<mozilla::Ok> base64Decode2to1(std::string_view input, std::string &output,
+                                                const uint8_t *decodeTable) {
   uint8_t w, x;
   // 8.1 Find the code point pointed to by position in the second column of Table 1: The Base 64
   // Alphabet of RFC 4648. Let n be the number given in the first cell of the same row. [RFC4648]
-  if (!base64CharacterToValue(input[0], &w, decodeTable) || !base64CharacterToValue(input[1], &x, decodeTable)) {
+  if (!base64CharacterToValue(input[0], &w, decodeTable) ||
+      !base64CharacterToValue(input[1], &x, decodeTable)) {
     return JS::Result<mozilla::Ok>(JS::Error());
   }
   // 9. If buffer is not empty, it contains either 12 or 18 bits. If it contains 12 bits, then
@@ -419,7 +426,8 @@ bool isAsciiWhitespace(char c) {
 }
 
 // https://infra.spec.whatwg.org/#forgiving-base64-decode
-JS::Result<std::string> forgivingBase64Decode(std::string_view data, const uint8_t* decodeTable = base64DecodeTable) {
+JS::Result<std::string> forgivingBase64Decode(std::string_view data,
+                                              const uint8_t *decodeTable = base64DecodeTable) {
   // 1. Remove all ASCII whitespace from data.
   // ASCII whitespace is U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, or U+0020 SPACE.
   auto hasWhitespace = std::find_if(data.begin(), data.end(), &isAsciiWhitespace);
@@ -533,7 +541,7 @@ bool atob(JSContext *cx, unsigned argc, Value *vp) {
 }
 
 inline uint8_t CharTo8Bit(char character) { return uint8_t(character); }
-inline void base64Encode3to4(std::string_view data, std::string &output, const char* encodeTable) {
+inline void base64Encode3to4(std::string_view data, std::string &output, const char *encodeTable) {
   uint32_t b32 = 0;
   int i, j = 18;
 
@@ -548,7 +556,7 @@ inline void base64Encode3to4(std::string_view data, std::string &output, const c
   }
 }
 
-inline void base64Encode2to4(std::string_view data, std::string &output, const char* encodeTable) {
+inline void base64Encode2to4(std::string_view data, std::string &output, const char *encodeTable) {
   uint8_t src0 = CharTo8Bit(data[0]);
   uint8_t src1 = CharTo8Bit(data[1]);
   output += encodeTable[(uint32_t)((src0 >> 2) & 0x3F)];
@@ -557,7 +565,7 @@ inline void base64Encode2to4(std::string_view data, std::string &output, const c
   output += '=';
 }
 
-inline void base64Encode1to4(std::string_view data, std::string &output, const char* encodeTable) {
+inline void base64Encode1to4(std::string_view data, std::string &output, const char *encodeTable) {
   uint8_t src0 = CharTo8Bit(data[0]);
   output += encodeTable[(uint32_t)((src0 >> 2) & 0x3F)];
   output += encodeTable[(uint32_t)((src0 & 0x03) << 4)];
@@ -570,7 +578,7 @@ inline void base64Encode1to4(std::string_view data, std::string &output, const c
 // section 4 of RFC 4648 to data and return the result. [RFC4648] Note: This is named
 // forgiving-base64 encode for symmetry with forgiving-base64 decode, which is different from the
 // RFC as it defines error handling for certain inputs.
-std::string forgivingBase64Encode(std::string_view data, const char* encodeTable) {
+std::string forgivingBase64Encode(std::string_view data, const char *encodeTable) {
   int length = data.length();
   std::string output = "";
   // The Base64 version of a string will be at least 133% the size of the string.
