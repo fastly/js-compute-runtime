@@ -391,54 +391,93 @@ JS::Result<std::string> ConvertJSValueToByteString(JSContext *cx, JS::Handle<JS:
   return byteString;
 }
 
+JS::Result<std::string> ConvertJSValueToByteString(JSContext *cx, std::string v) {
+  JS::RootedValue s(cx);
+  s.setString(JS_NewStringCopyN(cx, v.c_str(), v.length()));
+  return ConvertJSValueToByteString(cx, s);
+}
+
 // Maps an encoded character to a value in the Base64 alphabet, per
 // RFC 4648, Table 1. Invalid input characters map to UINT8_MAX.
 // https://datatracker.ietf.org/doc/html/rfc4648#section-4
 
-static const uint8_t base64DecodeTable[] = {
-    // clang-format off
-  /* 0 */  255, 255, 255, 255, 255, 255, 255, 255,
-  /* 8 */  255, 255, 255, 255, 255, 255, 255, 255,
-  /* 16 */ 255, 255, 255, 255, 255, 255, 255, 255,
-  /* 24 */ 255, 255, 255, 255, 255, 255, 255, 255,
-  /* 32 */ 255, 255, 255, 255, 255, 255, 255, 255,
-  /* 40 */ 255, 255, 255,
+constexpr uint8_t nonAlphabet = 255;
+
+// clang-format off
+const uint8_t base64DecodeTable[128] = {
+  /* 0 */  nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 8 */  nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 16 */ nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 24 */ nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 32 */ nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 40 */ nonAlphabet, nonAlphabet, nonAlphabet,
   62 /* + */,
-  255, 255, 255,
+  nonAlphabet, nonAlphabet, nonAlphabet,
   63 /* / */,
 
   /* 48 */ /* 0 - 9 */ 52, 53, 54, 55, 56, 57, 58, 59,
-  /* 56 */ 60, 61, 255, 255, 255, 255, 255, 255,
+  /* 56 */ 60, 61, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
 
-  /* 64 */ 255, /* A - Z */ 0, 1, 2, 3, 4, 5, 6,
+  /* 64 */ nonAlphabet, /* A - Z */ 0, 1, 2, 3, 4, 5, 6,
   /* 72 */ 7, 8, 9, 10, 11, 12, 13, 14,
   /* 80 */ 15, 16, 17, 18, 19, 20, 21, 22,
-  /* 88 */ 23, 24, 25, 255, 255, 255, 255, 255,
-  /* 96 */ 255, /* a - z */ 26, 27, 28, 29, 30, 31, 32,
+  /* 88 */ 23, 24, 25, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 96 */ nonAlphabet, /* a - z */ 26, 27, 28, 29, 30, 31, 32,
   /* 104 */ 33, 34, 35, 36, 37, 38, 39, 40,
   /* 112 */ 41, 42, 43, 44, 45, 46, 47, 48,
-  /* 120 */ 49, 50, 51, 255, 255, 255, 255, 255,
+  /* 120 */ 49, 50, 51, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
 };
+
+const uint8_t base64URLDecodeTable[128] = { 
+  /* 0 */    nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, 
+  /* 8 */    nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, 
+  /* 16 */   nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, 
+  /* 24 */   nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, 
+  /* 32 */   nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 40 */   nonAlphabet, nonAlphabet, nonAlphabet,          62, nonAlphabet,          62, nonAlphabet,          63,
+  /* 48 */            52,          53,          54,          55,          56,          57,          58,          59,
+  /* 56 */            60,          61, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,
+  /* 64 */   nonAlphabet,           0,           1,           2,           3,           4,           5,           6,
+  /* 72 */             7,           8,           9,          10,          11,          12,          13,          14,
+  /* 80 */            15,          16,          17,          18,          19,          20,          21,          22,
+  /* 88 */            23,          24,          25, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet,          63,
+  /* 96 */   nonAlphabet,          26,          27,          28,          29,          30,          31,          32,
+  /* 104 */           33,          34,          35,          36,          37,          38,          39,          40,
+  /* 112 */           41,          42,          43,          44,          45,          46,          47,          48,
+  /* 120 */           49,          50,          51, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet, nonAlphabet
+};
+
+const char base64EncodeTable[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                      "abcdefghijklmnopqrstuvwxyz"
+                      "0123456789+/";
+
+const char base64URLEncodeTable[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                      "abcdefghijklmnopqrstuvwxyz"
+                      "0123456789-_";
+
 // clang-format on
 
-bool base64CharacterToValue(char character, uint8_t *value) {
+bool base64CharacterToValue(char character, uint8_t *value, const uint8_t *decodeTable) {
   static const size_t mask = 127;
   auto index = static_cast<size_t>(character);
 
   if (index & ~mask) {
     return false;
   }
-  *value = base64DecodeTable[index & mask];
+  *value = decodeTable[index & mask];
 
   return *value != 255;
 }
 
-inline JS::Result<mozilla::Ok> base64Decode4to3(std::string_view input, std::string &output) {
+inline JS::Result<mozilla::Ok> base64Decode4to3(std::string_view input, std::string &output,
+                                                const uint8_t *decodeTable) {
   uint8_t w, x, y, z;
   // 8.1 Find the code point pointed to by position in the second column of Table 1: The Base 64
   // Alphabet of RFC 4648. Let n be the number given in the first cell of the same row. [RFC4648]
-  if (!base64CharacterToValue(input[0], &w) || !base64CharacterToValue(input[1], &x) ||
-      !base64CharacterToValue(input[2], &y) || !base64CharacterToValue(input[3], &z)) {
+  if (!base64CharacterToValue(input[0], &w, decodeTable) ||
+      !base64CharacterToValue(input[1], &x, decodeTable) ||
+      !base64CharacterToValue(input[2], &y, decodeTable) ||
+      !base64CharacterToValue(input[3], &z, decodeTable)) {
     return JS::Result<mozilla::Ok>(JS::Error());
   }
 
@@ -451,12 +490,14 @@ inline JS::Result<mozilla::Ok> base64Decode4to3(std::string_view input, std::str
   return mozilla::Ok();
 }
 
-inline JS::Result<mozilla::Ok> base64Decode3to2(std::string_view input, std::string &output) {
+inline JS::Result<mozilla::Ok> base64Decode3to2(std::string_view input, std::string &output,
+                                                const uint8_t *decodeTable) {
   uint8_t w, x, y;
   // 8.1 Find the code point pointed to by position in the second column of Table 1: The Base 64
   // Alphabet of RFC 4648. Let n be the number given in the first cell of the same row. [RFC4648]
-  if (!base64CharacterToValue(input[0], &w) || !base64CharacterToValue(input[1], &x) ||
-      !base64CharacterToValue(input[2], &y)) {
+  if (!base64CharacterToValue(input[0], &w, decodeTable) ||
+      !base64CharacterToValue(input[1], &x, decodeTable) ||
+      !base64CharacterToValue(input[2], &y, decodeTable)) {
     return JS::Result<mozilla::Ok>(JS::Error());
   }
   // 9. If buffer is not empty, it contains either 12 or 18 bits. If it contains 12 bits, then
@@ -469,11 +510,13 @@ inline JS::Result<mozilla::Ok> base64Decode3to2(std::string_view input, std::str
   return mozilla::Ok();
 }
 
-inline JS::Result<mozilla::Ok> base64Decode2to1(std::string_view input, std::string &output) {
+inline JS::Result<mozilla::Ok> base64Decode2to1(std::string_view input, std::string &output,
+                                                const uint8_t *decodeTable) {
   uint8_t w, x;
   // 8.1 Find the code point pointed to by position in the second column of Table 1: The Base 64
   // Alphabet of RFC 4648. Let n be the number given in the first cell of the same row. [RFC4648]
-  if (!base64CharacterToValue(input[0], &w) || !base64CharacterToValue(input[1], &x)) {
+  if (!base64CharacterToValue(input[0], &w, decodeTable) ||
+      !base64CharacterToValue(input[1], &x, decodeTable)) {
     return JS::Result<mozilla::Ok>(JS::Error());
   }
   // 9. If buffer is not empty, it contains either 12 or 18 bits. If it contains 12 bits, then
@@ -499,7 +542,8 @@ bool isAsciiWhitespace(char c) {
 }
 
 // https://infra.spec.whatwg.org/#forgiving-base64-decode
-JS::Result<std::string> forgivingBase64Decode(std::string_view data) {
+JS::Result<std::string> forgivingBase64Decode(std::string_view data,
+                                              const uint8_t *decodeTable = base64DecodeTable) {
   // 1. Remove all ASCII whitespace from data.
   // ASCII whitespace is U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, or U+0020 SPACE.
   auto hasWhitespace = std::find_if(data.begin(), data.end(), &isAsciiWhitespace);
@@ -558,17 +602,17 @@ JS::Result<std::string> forgivingBase64Decode(std::string_view data) {
   // dealt with some characters.
 
   while (data_view.length() >= 4) {
-    MOZ_TRY(base64Decode4to3(data_view, output));
+    MOZ_TRY(base64Decode4to3(data_view, output, decodeTable));
     data_view.remove_prefix(4);
   }
 
   switch (data_view.length()) {
   case 3: {
-    MOZ_TRY(base64Decode3to2(data_view, output));
+    MOZ_TRY(base64Decode3to2(data_view, output, decodeTable));
     break;
   }
   case 2: {
-    MOZ_TRY(base64Decode2to1(data_view, output));
+    MOZ_TRY(base64Decode2to1(data_view, output, decodeTable));
     break;
   }
   case 1:
@@ -612,12 +656,8 @@ bool atob(JSContext *cx, unsigned argc, Value *vp) {
   return true;
 }
 
-const char base[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                      "abcdefghijklmnopqrstuvwxyz"
-                      "0123456789+/";
-
 inline uint8_t CharTo8Bit(char character) { return uint8_t(character); }
-inline void base64Encode3to4(std::string_view data, std::string &output) {
+inline void base64Encode3to4(std::string_view data, std::string &output, const char *encodeTable) {
   uint32_t b32 = 0;
   int i, j = 18;
 
@@ -627,24 +667,24 @@ inline void base64Encode3to4(std::string_view data, std::string &output) {
   }
 
   for (i = 0; i < 4; ++i) {
-    output += base[(uint32_t)((b32 >> j) & 0x3F)];
+    output += encodeTable[(uint32_t)((b32 >> j) & 0x3F)];
     j -= 6;
   }
 }
 
-inline void base64Encode2to4(std::string_view data, std::string &output) {
+inline void base64Encode2to4(std::string_view data, std::string &output, const char *encodeTable) {
   uint8_t src0 = CharTo8Bit(data[0]);
   uint8_t src1 = CharTo8Bit(data[1]);
-  output += base[(uint32_t)((src0 >> 2) & 0x3F)];
-  output += base[(uint32_t)(((src0 & 0x03) << 4) | ((src1 >> 4) & 0x0F))];
-  output += base[(uint32_t)((src1 & 0x0F) << 2)];
+  output += encodeTable[(uint32_t)((src0 >> 2) & 0x3F)];
+  output += encodeTable[(uint32_t)(((src0 & 0x03) << 4) | ((src1 >> 4) & 0x0F))];
+  output += encodeTable[(uint32_t)((src1 & 0x0F) << 2)];
   output += '=';
 }
 
-inline void base64Encode1to4(std::string_view data, std::string &output) {
+inline void base64Encode1to4(std::string_view data, std::string &output, const char *encodeTable) {
   uint8_t src0 = CharTo8Bit(data[0]);
-  output += base[(uint32_t)((src0 >> 2) & 0x3F)];
-  output += base[(uint32_t)((src0 & 0x03) << 4)];
+  output += encodeTable[(uint32_t)((src0 >> 2) & 0x3F)];
+  output += encodeTable[(uint32_t)((src0 & 0x03) << 4)];
   output += '=';
   output += '=';
 }
@@ -654,23 +694,23 @@ inline void base64Encode1to4(std::string_view data, std::string &output) {
 // section 4 of RFC 4648 to data and return the result. [RFC4648] Note: This is named
 // forgiving-base64 encode for symmetry with forgiving-base64 decode, which is different from the
 // RFC as it defines error handling for certain inputs.
-std::string forgivingBase64Encode(std::string_view data) {
+std::string forgivingBase64Encode(std::string_view data, const char *encodeTable) {
   int length = data.length();
   std::string output = "";
   // The Base64 version of a string will be at least 133% the size of the string.
   output.reserve(length * 1.33);
   while (length >= 3) {
-    base64Encode3to4(data, output);
+    base64Encode3to4(data, output, encodeTable);
     data.remove_prefix(3);
     length -= 3;
   }
 
   switch (length) {
   case 2:
-    base64Encode2to4(data, output);
+    base64Encode2to4(data, output, encodeTable);
     break;
   case 1:
-    base64Encode1to4(data, output);
+    base64Encode1to4(data, output, encodeTable);
     break;
   case 0:
     break;
@@ -702,7 +742,7 @@ bool btoa(JSContext *cx, unsigned argc, Value *vp) {
   }
   auto byteString = byteStringResult.unwrap();
 
-  auto result = forgivingBase64Encode(byteString);
+  auto result = forgivingBase64Encode(byteString, GlobalProperties::base64EncodeTable);
 
   JSString *str = JS_NewStringCopyN(cx, result.c_str(), result.length());
   if (!str) {
