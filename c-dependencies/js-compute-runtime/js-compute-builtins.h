@@ -85,6 +85,16 @@ bool define_fastly_sys(JSContext *cx, JS::HandleObject global);
 
 bool RejectPromiseWithPendingError(JSContext *cx, JS::HandleObject promise);
 
+namespace GlobalProperties {
+extern const uint8_t base64DecodeTable[128];
+extern const uint8_t base64URLDecodeTable[128];
+extern const char base64EncodeTable[65];
+extern const char base64URLEncodeTable[65];
+
+std::string forgivingBase64Encode(std::string_view data, const char *encodeTable);
+JS::Result<std::string> forgivingBase64Decode(std::string_view data, const uint8_t *decodeTable);
+} // namespace GlobalProperties
+
 bool has_pending_async_tasks();
 bool process_pending_async_tasks(JSContext *cx);
 
