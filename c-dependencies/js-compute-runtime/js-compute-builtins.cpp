@@ -3,7 +3,6 @@
 #include <cmath>
 #include <iostream>
 #include <list>
-#include <regex> // std::regex
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
