@@ -176,9 +176,10 @@ wasi_snapshot_preview1.reactor.wasm:
 openssl: $(BUILD)/openssl/token
 
 # Extract and prepare the openssl build directory.
-$(BUILD)/openssl-$(OPENSSL_VERSION)/token: $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz $(FSM_SRC)/third_party/getuid.patch
+$(BUILD)/openssl-$(OPENSSL_VERSION)/token: $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz $(FSM_SRC)/third_party/getuid.patch $(FSM_SRC)/third_party/rand.patch
 	$Q tar -C $(BUILD) -xf $<
 	$Q patch -d $(BUILD)/openssl-$(OPENSSL_VERSION) -p1 < $(FSM_SRC)/third_party/getuid.patch
+	$Q patch -d $(BUILD)/openssl-$(OPENSSL_VERSION) -p1 < $(FSM_SRC)/third_party/rand.patch
 	$Q touch $@
 
 OPENSSL_OPTS := -static -no-sock -no-asm -no-ui-console -no-egd
