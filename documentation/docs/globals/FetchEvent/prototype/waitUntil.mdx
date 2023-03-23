@@ -1,0 +1,29 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# FetchEvent.waitUntil()
+
+
+The **`waitUntil()`** method tells the host environment that work is ongoing until the promise settles, and it shouldn't terminate
+the application if it wants that work to complete.
+
+The `waitUntil()` method must be initially called within the event callback,
+but after that it can be called multiple times, until all the promises passed to it
+settle.
+
+## Syntax
+
+```js
+waitUntil(promise)
+```
+
+### Parameters
+
+A [`Promise`](../../Promise/Promise.mdx).
+
+### Return value
+
+None `undefined`.
