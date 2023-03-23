@@ -1,0 +1,28 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# FetchEvent
+
+This is the event type for `fetch` events. It contains information about the fetch, including the request and how the receiver will treat the response. 
+It provides the [`event.respondWith()`](./prototype/respondWith.mdx) method, which allows us to provide a response to this fetch.
+
+## Instance properties
+
+- `FetchEvent.request` _**readonly**_
+    - : The `Request` that was recieved by the application.
+- `FetchEvent.client` _**readonly**_
+    - : Information about the downstream client that made the request.
+    - `FetchEvent.client.address` _**readonly**_
+        - : A string representation of the IPv4 or IPv6 address of the downstream client.
+    - `FetchEvent.client.geo` _**readonly**_
+        - : A [geolocation dictionary](../../fastly:geolocation/getGeolocationForIpAddress.mdx) corresponding to the IP address of the downstream client. 
+
+## Instance methods
+
+- [`FetchEvent.respondWith()`](./prototype/respondWith.mdx)
+    - : Provide (a promise for) a response for this request.
+- [`FetchEvent.waitUntil()`](./prototype/waitUntil.mdx)
+    - : Extends the lifetime of the event. Used to notify the host environment of tasks that extend beyond the returning of a response, such as streaming and caching.

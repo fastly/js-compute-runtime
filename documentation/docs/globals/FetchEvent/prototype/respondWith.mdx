@@ -1,0 +1,25 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# FetchEvent.respondWith()
+
+The **`respondWith()`** method allows you to provide a promise for a [`Response`](../../Response/Response.mdx) to send back to the client which made the incoming request to your application.
+
+## Syntax
+
+```js
+respondWith(response)
+```
+
+### Parameters
+
+- `response`
+  - : A [`Response`](../../Response/Response.mdx) or a [`Promise`](../../Promise/Promise.mdx) that resolves to a
+    [`Response`](../../Response/Response.mdx). Otherwise, a network error is returned to Fetch.
+
+### Return value
+
+None `undefined`.
