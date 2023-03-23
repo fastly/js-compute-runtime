@@ -19,7 +19,7 @@ declare module "fastly:geolocation" {
    *   ],
    *   "src": {
    *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
-   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { getGeolocationForIpAddress } from \"fastly:geolocation\"\n\nasync function app(event) {\n  try {\n    let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address\n    let geo = getGeolocationForIpAddress(ip);\n\n    return new Response(JSON.stringify(geo), {\n      headers: {\n        \"Content-Type\": \"application/json\",\n      },\n    });\n  } catch (error) {\n    console.error(error);\n    return new Response(\"Internal Server Error\", {\n      stauts: 500\n    });\n  }\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
+   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { getGeolocationForIpAddress } from \"fastly:geolocation\"\n\nasync function app(event) {\n  try {\n    let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address\n    let geo = getGeolocationForIpAddress(ip);\n\n    return new Response(JSON.stringify(geo), {\n      headers: {\n        \"Content-Type\": \"application/json\",\n      },\n    });\n  } catch (error) {\n    console.error(error);\n    return new Response(\"Internal Server Error\", {\n      status: 500\n    });\n  }\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
    *   },
    *   "requests": [
    *     {
@@ -55,7 +55,7 @@ declare module "fastly:geolocation" {
    *   } catch (error) {
    *     console.error(error);
    *     return new Response("Internal Server Error", {
-   *       stauts: 500
+   *       status: 500
    *     });
    *   }
    * }
@@ -87,7 +87,7 @@ declare module "fastly:geolocation" {
    *   ],
    *   "src": {
    *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
-   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { getGeolocationForIpAddress } from \"fastly:geolocation\"\n\nasync function app(event) {\n  try {\n    let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address\n    let geo = getGeolocationForIpAddress(ip);\n\n    return new Response(JSON.stringify(geo), {\n      headers: {\n        \"Content-Type\": \"application/json\",\n      },\n    });\n  } catch (error) {\n    console.error(error);\n    return new Response(\"Internal Server Error\", {\n      stauts: 500\n    });\n  }\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
+   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { getGeolocationForIpAddress } from \"fastly:geolocation\"\n\nasync function app(event) {\n  try {\n    let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address\n    let geo = getGeolocationForIpAddress(ip);\n\n    return new Response(JSON.stringify(geo), {\n      headers: {\n        \"Content-Type\": \"application/json\",\n      },\n    });\n  } catch (error) {\n    console.error(error);\n    return new Response(\"Internal Server Error\", {\n      status: 500\n    });\n  }\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
    *   },
    *   "requests": [
    *     {
@@ -123,7 +123,7 @@ declare module "fastly:geolocation" {
    *   } catch (error) {
    *     console.error(error);
    *     return new Response("Internal Server Error", {
-   *       stauts: 500
+   *       status: 500
    *     });
    *   }
    * }
