@@ -10,8 +10,8 @@ pagination_prev: null
 The **`waitUntil()`** method tells the host environment that work is ongoing until the promise settles, and it shouldn't terminate
 the application if it wants that work to complete.
 
-The `waitUntil()` method must be initially called within the event callback,
-but after that it can be called multiple times, until all the promises passed to it
+The `waitUntil()` method must be initially called synchronously within the event callback,
+but after that it can be called multiple times, and will hold the process open until all the promises passed to it
 settle.
 
 ## Syntax
