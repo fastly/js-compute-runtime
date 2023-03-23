@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.2](https://github.com/fastly/js-compute-runtime/compare/v1.5.1...v1.5.2) (2023-03-23)
+
+
+### Bug Fixes
+
+* Add documentation for FetchEvent, FetchEvent.prototype.respondWith, and FetchEvent.prototype.waitUntil ([78e6d92](https://github.com/fastly/js-compute-runtime/commit/78e6d925d1ec6cdedd4f2678997e333aba9ebae6))
+* fix typo in geolocation example ([f53a06e](https://github.com/fastly/js-compute-runtime/commit/f53a06ecb46c5ad1f91806c1c13ce6215a254192))
+
 ## [1.5.1](https://github.com/fastly/js-compute-runtime/compare/v1.5.0...v1.5.1) (2023-03-10)
 
 
