@@ -9,18 +9,31 @@ namespace builtins {
 
 enum class CryptoKeyType : uint8_t { Public, Private, Secret };
 
-enum {
-  CryptoKeyUsageEncrypt = 1 << 0,
-  CryptoKeyUsageDecrypt = 1 << 1,
-  CryptoKeyUsageSign = 1 << 2,
-  CryptoKeyUsageVerify = 1 << 3,
-  CryptoKeyUsageDeriveKey = 1 << 4,
-  CryptoKeyUsageDeriveBits = 1 << 5,
-  CryptoKeyUsageWrapKey = 1 << 6,
-  CryptoKeyUsageUnwrapKey = 1 << 7
-};
+class CryptoKeyUsages {
+private:
+  uint8_t mask;
+  static constexpr const uint8_t encrypt_flag = 1 << 0;
+  static constexpr const uint8_t decrypt_flag = 1 << 1;
+  static constexpr const uint8_t sign_flag = 1 << 2;
+  static constexpr const uint8_t verify_flag = 1 << 3;
+  static constexpr const uint8_t derive_key_flag = 1 << 4;
+  static constexpr const uint8_t derive_bits_flag = 1 << 5;
+  static constexpr const uint8_t wrap_key_flag = 1 << 6;
+  static constexpr const uint8_t unwrap_key_flag = 1 << 7;
 
-typedef int CryptoKeyUsageBitmap;
+public:
+  CryptoKeyUsages(uint8_t mask);
+  CryptoKeyUsages(bool encrypt, bool decrypt, bool sign, bool verify, bool derive_key,
+                  bool derive_bits, bool wrap_key, bool unwrap_key);
+  bool canEncrypt() { return this->mask & encrypt_flag; };
+  bool canDecrypt() { return this->mask & decrypt_flag; };
+  bool canSign() { return this->mask & sign_flag; };
+  bool canVerify() { return this->mask & verify_flag; };
+  bool canDeriveKey() { return this->mask & derive_key_flag; };
+  bool canDeriveBits() { return this->mask & derive_bits_flag; };
+  bool canWrapKey() { return this->mask & wrap_key_flag; };
+  bool canUnwrapKey() { return this->mask & unwrap_key_flag; };
+};
 
 class CryptoKey : public BuiltinImpl<CryptoKey> {
 public:
