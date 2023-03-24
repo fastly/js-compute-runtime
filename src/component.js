@@ -1,10 +1,10 @@
-import { componentEmbed, componentNew } from '@bytecodealliance/jco';
+import { componentEmbed, componentNew, preview1AdapterReactorPath } from '@bytecodealliance/jco';
 import { readFile, writeFile } from 'node:fs/promises';
 
 export async function compileComponent (path) {
   const coreComponent = await readFile(path);
   const wit = await readFile(new URL('../c-at-e.wit', import.meta.url), 'utf8');
   const coreComponentEmbedded = await componentEmbed(coreComponent, wit);
-  const generatedComponent = await componentNew(coreComponentEmbedded, [['wasi_snapshot_preview1', await readFile(new URL('../wasi_snapshot_preview1.reactor.wasm', import.meta.url))]]);
+  const generatedComponent = await componentNew(coreComponentEmbedded, [['wasi_snapshot_preview1', await readFile(preview1AdapterReactorPath())]]);
   await writeFile(path, generatedComponent);
 }

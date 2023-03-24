@@ -109,7 +109,6 @@ LD_FLAGS += -L$(BUILD)/openssl/libx32 -lcrypto
 .PHONY: all
 all: $(FSM_SRC)/js-compute-runtime.wasm
 all: $(FSM_SRC)/js-compute-runtime-component.wasm
-all: wasi_snapshot_preview1.reactor.wasm
 
 # Remove just the build artifacts for the current runtime build.
 .PHONY: clean
@@ -163,10 +162,6 @@ shared:
 
 $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz: URL=https://www.openssl.org/source/openssl-$(OPENSSL_VERSION).tar.gz
 $(BUILD)/openssl-$(OPENSSL_VERSION).tar.gz: | $(BUILD)
-	$(call cmd,wget,$@)
-
-wasi_snapshot_preview1.reactor.wasm: URL=https://github.com/bytecodealliance/preview2-prototyping/releases/download/latest/wasi_snapshot_preview1.reactor.wasm
-wasi_snapshot_preview1.reactor.wasm:
 	$(call cmd,wget,$@)
 
 # OpenSSL build ################################################################

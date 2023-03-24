@@ -33,10 +33,10 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bytecodealliance/jco@^0.4.1":
-  version "0.4.1"
-  resolved "https://registry.npmjs.org/@bytecodealliance/jco/-/jco-0.4.1.tgz"
-  integrity sha512-fb7QID6CtJhBO2jj71/VqBVphPcxWi72uIZnwCHDobgiq+8TM4XFuJEYFD7OOd8u19HlXGrtTujgFPXErx4JwA==
+"@bytecodealliance/jco@^0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/jco/-/jco-0.5.2.tgz#edec41d666be37c7972ac940722631a94dcf6c67"
+  integrity sha512-82Kfp8D4PkrcNwwEyYP+cAXmM4QlW8xXq6oxpBruFkZIuHMxH0QK/fdR6LvDjTeLZcalvpkjpHGQfN0eQbpkiw==
 
 "@bytecodealliance/wizer-darwin-arm64@1.6.1-beta.4":
   version "1.6.1-beta.4"
