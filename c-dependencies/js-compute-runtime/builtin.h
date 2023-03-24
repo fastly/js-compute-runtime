@@ -91,6 +91,12 @@ const JSErrorFormatString *GetErrorMessageBuiltin(void *userRef, unsigned errorN
   if (!args.requireAtLeast(cx, name, required_argc))                                               \
     return false;
 
+// This macro:
+// - Declares a `JS::CallArgs args` which contains the arguments provided to the method
+// - Checks the receiver (`this`) is an instance of the class containing the called method
+// - Declares a `JS::RootedObject self` which contains the receiver (`this`)
+// - Checks that the number of arguments provided to the member is at least the number provided to
+// the macro.
 #define METHOD_HEADER(required_argc) METHOD_HEADER_WITH_NAME(required_argc, __func__)
 
 #define CTOR_HEADER(name, required_argc)                                                           \
