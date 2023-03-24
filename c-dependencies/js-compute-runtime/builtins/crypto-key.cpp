@@ -3,6 +3,37 @@
 
 namespace builtins {
 
+CryptoKeyUsages::CryptoKeyUsages(uint8_t mask) { this->mask = mask; };
+CryptoKeyUsages::CryptoKeyUsages(bool encrypt, bool decrypt, bool sign, bool verify,
+                                 bool derive_key, bool derive_bits, bool wrap_key,
+                                 bool unwrap_key) {
+  this->mask = 0;
+  if (encrypt) {
+    this->mask |= encrypt_flag;
+  }
+  if (decrypt) {
+    this->mask |= decrypt_flag;
+  }
+  if (sign) {
+    this->mask |= sign_flag;
+  }
+  if (verify) {
+    this->mask |= verify_flag;
+  }
+  if (derive_key) {
+    this->mask |= derive_key_flag;
+  }
+  if (derive_bits) {
+    this->mask |= derive_bits_flag;
+  }
+  if (wrap_key) {
+    this->mask |= wrap_key_flag;
+  }
+  if (unwrap_key) {
+    this->mask |= unwrap_key_flag;
+  }
+};
+
 bool CryptoKey::algorithm_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
@@ -114,7 +145,7 @@ bool CryptoKey::usages_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   // Else, grab the CryptoKeyUsageBitmap value from Slots::Usages and convert
   // it into a JS Array and store the result in Slots::UsagesArray.
-  auto usage = JS::GetReservedSlot(self, Slots::Usages).toInt32();
+  auto usage = CryptoKeyUsages(JS::GetReservedSlot(self, Slots::Usages).toInt32());
   // The result is ordered alphabetically.
   JS::RootedValueVector result(cx);
   JS::RootedString str(cx);
@@ -128,42 +159,42 @@ bool CryptoKey::usages_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
     return true;
   };
-  if (usage & CryptoKeyUsageDecrypt) {
+  if (usage.canDecrypt()) {
     if (!append("decrypt")) {
       return false;
     }
   }
-  if (usage & CryptoKeyUsageDeriveBits) {
+  if (usage.canDeriveBits()) {
     if (!append("deriveBits")) {
       return false;
     }
   }
-  if (usage & CryptoKeyUsageDeriveKey) {
+  if (usage.canDeriveKey()) {
     if (!append("deriveKey")) {
       return false;
     }
   }
-  if (usage & CryptoKeyUsageEncrypt) {
+  if (usage.canEncrypt()) {
     if (!append("encrypt")) {
       return false;
     }
   }
-  if (usage & CryptoKeyUsageSign) {
+  if (usage.canSign()) {
     if (!append("sign")) {
       return false;
     }
   }
-  if (usage & CryptoKeyUsageUnwrapKey) {
+  if (usage.canUnwrapKey()) {
     if (!append("unwrapKey")) {
       return false;
     }
   }
-  if (usage & CryptoKeyUsageVerify) {
+  if (usage.canVerify()) {
     if (!append("verify")) {
       return false;
     }
   }
-  if (usage & CryptoKeyUsageWrapKey) {
+  if (usage.canWrapKey()) {
     if (!append("wrapKey")) {
       return false;
     }
