@@ -173,6 +173,7 @@ jobs:
           - async-select
           - btoa
           - byte-repeater
+          - crypto
           - config-store
           - console
           - dynamic-backend
@@ -295,6 +296,7 @@ jobs:
     - name: Locate component resources
       run: |
         cp c-dependencies/js-compute-runtime/c-at-e.wit .
+        cp c-dependencies/js-compute-runtime/wasi_snapshot_preview1.reactor.wasm .
     - run: yarn
       shell: bash
     - run: npm test
@@ -310,6 +312,7 @@ jobs:
           - 'async-select'
           - 'byte-repeater'
           - 'cache-override'
+          - 'crypto'
           - 'edge-dictionary'
           - 'error'
           - 'geoip'
@@ -322,7 +325,7 @@ jobs:
           - 'request-upstream'
           - 'response'
           - 'response-headers'
-          - secret-store
+          - 'secret-store'
           - 'status'
           - 'timers'
     steps:
