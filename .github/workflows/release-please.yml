@@ -137,7 +137,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
       - run: yarn
-        working-directory: ./documentation/app
+        working-directory: ./documentation
 
       - name: Set up Fastly CLI
         uses: fastly/compute-actions/setup@v2
@@ -148,4 +148,4 @@ jobs:
       - run: yarn deploy
         env:
           FASTLY_API_TOKEN: ${{secrets.FASTLY_API_TOKEN}}
-        working-directory: ./documentation/app
+        working-directory: ./documentation
