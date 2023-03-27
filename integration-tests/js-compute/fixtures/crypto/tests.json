@@ -1,0 +1,170 @@
+{
+    "GET /crypto": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle.digest": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle.digest"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle.digest/length": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle.digest/length"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle.digest/called-as-constructor": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle.digest/called-as-constructor"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle.digest/called-with-wrong-this": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle.digest/called-with-wrong-this"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle.digest/called-with-no-arguments": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle.digest/called-with-no-arguments"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle.digest/first-parameter-calls-7.1.17-ToString": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle.digest/first-parameter-calls-7.1.17-ToString"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle.digest/first-parameter-non-existant-format": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle.digest/first-parameter-non-existant-format"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle.digest/second-parameter-undefined": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle.digest/second-parameter-undefined"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle.digest/sha-1": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle.digest/sha-1"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle.digest/sha-256": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle.digest/sha-256"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle.digest/sha-384": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle.digest/sha-384"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    },
+    "GET /crypto.subtle.digest/sha-512": {
+        "environments": [
+            "viceroy", "c@e"
+        ],
+        "downstream_request": {
+            "method": "GET",
+            "pathname": "/crypto.subtle.digest/sha-512"
+        },
+        "downstream_response": {
+            "status": 200
+        }
+    }
+}
