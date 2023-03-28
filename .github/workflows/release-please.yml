@@ -161,6 +161,7 @@ jobs:
           cli_version: '7.0.1'
 
       - run: yarn deploy
+        timeout-minutes: 120
         env:
           FASTLY_API_TOKEN: ${{secrets.FASTLY_API_TOKEN}}
         working-directory: ./documentation
