@@ -3,6 +3,7 @@
 import { parseInputs } from './src/parseInputs.js'
 import { printVersion } from "./src/printVersion.js";
 import { printHelp } from "./src/printHelp.js";
+import { addSdkMetadataField } from "./src/addSdkMetadataField.js";
 
 const {wasmEngine, input, component, output, version, help} = await parseInputs(process.argv.slice(2))
 
@@ -23,4 +24,5 @@ if (version) {
     const {compileComponent} = await import('./src/component.js');
     await compileComponent(output);
   }
+  await addSdkMetadataField(output);
 }
