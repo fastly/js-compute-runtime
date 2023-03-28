@@ -85,6 +85,20 @@ jobs:
       - uses: ./.github/actions/install-rust
         with:
           path: c-dependencies
+      
+      - name: Restore wasm-tools from cache
+        uses: actions/cache@v3
+        id: wasm-tools
+        with:
+          path: "/home/runner/.cargo/bin/wasm-tools"
+          key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
+      
+      - name: "Check wasm-tools has been restored"
+        if: steps.wasm-tools.outputs.cache-hit != 'true'
+        run: |
+          echo "wasm-tools was not restored from the cache"
+          echo "bailing out from the build early"
+          exit 1
 
       - name: Cache SpiderMonkey object files
         uses: actions/cache@v2
