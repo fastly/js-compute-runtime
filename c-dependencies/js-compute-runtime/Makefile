@@ -1,12 +1,17 @@
 
 # Build constants ##############################################################
 
+
 # The path to the directory containing this Makefile, the
 # //c-dependencies/js-compute-runtime directory.
 FSM_SRC := $(shell dirname "$(realpath $(firstword $(MAKEFILE_LIST)))")
 
 # The path to the //c-dependencies directory.
 ROOT_SRC := $(shell dirname "$(FSM_SRC)")
+
+# The name of the project
+PROJECT_NAME := $(shell npm info "$(ROOT_SRC)/.." --json name)
+PROJECT_VERSION := $(shell npm info "$(ROOT_SRC)/.." --json version)
 
 # Environmentally derived config ###############################################
 
@@ -60,6 +65,15 @@ else
 
   # Strip binaries when making a non-debug build.
   WASM_STRIP = wasm-opt --strip-debug -o $1 $1
+endif
+
+# The path to the wasm-tools executable
+WASM_TOOLS ?= $(shell which wasm-tools)
+
+ifeq ($(WASM_TOOLS),)
+$(error ERROR: "No wasm-tools found in PATH, consider running 'cargo install wasm-tools'")
+else
+WASM_METADATA = $(WASM_TOOLS) metadata add --sdk $(PROJECT_NAME)=$(PROJECT_VERSION) --output $1 $1
 endif
 
 # The base build directory, where all our build artifacts go.
@@ -275,6 +289,7 @@ $(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/c-at-e-world/c_at_e_world_adapter
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
 	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
+	$(call cmd_format,WASM_METADATA,$@) $(call WASM_METADATA,$@)
 
 $(eval $(call compile_cxx,$(FSM_SRC)/impl/main.cpp))
 
@@ -294,6 +309,7 @@ $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/c-at-e-world/c_at_e_wor
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
 	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
+	$(call cmd_format,WASM_METADATA,$@) $(call WASM_METADATA,$@)
 
 $(eval $(call compile_cxx,$(FSM_SRC)/impl/main_component.cpp))
 
