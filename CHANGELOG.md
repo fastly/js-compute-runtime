@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/fastly/js-compute-runtime/compare/v1.5.2...v1.6.0) (2023-03-28)
+
+
+### Features
+
+* Implement JS CryptoKey Interface ([adb31f7](https://github.com/fastly/js-compute-runtime/commit/adb31f7197acf869af1852c0656847e4ab240089))
+
 ## [1.5.2](https://github.com/fastly/js-compute-runtime/compare/v1.5.1...v1.5.2) (2023-03-23)
 
 
