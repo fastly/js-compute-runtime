@@ -6,7 +6,7 @@ const compareUpstreamRequest = async (configRequest, actualRequest, isDownstream
 
   // Check if this request should have happened after the downstream request
   if (configRequest.timing === "afterDownstreamRequest" && !isDownstreamResponseHandled) {
-    throw new Error(`Local Upstream Request recieved before the Downstream Request was finished`);
+    throw new Error(`Local Upstream Request received before the Downstream Request was finished`);
   }
 
   // Check the method
