@@ -931,6 +931,8 @@ bool self_set(JSContext *cx, unsigned argc, Value *vp) {
  *
  * Currently the only relevant builtin is URLSearchParams, but that'll grow to
  * include Blob and FormData, too.
+ *
+ * TODO: Add support for CryptoKeys
  */
 JSObject *ReadStructuredClone(JSContext *cx, JSStructuredCloneReader *r,
                               const JS::CloneDataPolicy &cloneDataPolicy, uint32_t tag,
@@ -966,6 +968,8 @@ JSObject *ReadStructuredClone(JSContext *cx, JSStructuredCloneReader *r,
  *
  * Currently the only relevant builtin is URLSearchParams, but that'll grow to
  * include Blob and FormData, too.
+ *
+ * TODO: Add support for CryptoKeys
  */
 bool WriteStructuredClone(JSContext *cx, JSStructuredCloneWriter *w, JS::HandleObject obj,
                           bool *sameProcessScopeRequired, void *closure) {
@@ -1295,6 +1299,8 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
   if (!builtins::SubtleCrypto::init_class(cx, global))
     return false;
   if (!builtins::Crypto::init_class(cx, global))
+    return false;
+  if (!builtins::CryptoKey::init_class(cx, global))
     return false;
 
   if (!builtins::NativeStreamSource::init_class(cx, global))

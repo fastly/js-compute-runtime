@@ -81,34 +81,34 @@
     "status": "PASS"
   },
   "CryptoKey interface: existence and properties of interface object": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "CryptoKey interface object length": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "CryptoKey interface object name": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "CryptoKey interface: existence and properties of interface prototype object": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "CryptoKey interface: existence and properties of interface prototype object's \"constructor\" property": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "CryptoKey interface: existence and properties of interface prototype object's @@unscopables property": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "CryptoKey interface: attribute type": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "CryptoKey interface: attribute extractable": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "CryptoKey interface: attribute algorithm": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "CryptoKey interface: attribute usages": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "SubtleCrypto interface: existence and properties of interface object": {
     "status": "FAIL"
@@ -153,7 +153,7 @@
     "status": "FAIL"
   },
   "SubtleCrypto interface: operation importKey(KeyFormat, (BufferSource or JsonWebKey), AlgorithmIdentifier, boolean, sequence<KeyUsage>)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "SubtleCrypto interface: operation exportKey(KeyFormat, CryptoKey)": {
     "status": "FAIL"
@@ -219,10 +219,10 @@
     "status": "FAIL"
   },
   "SubtleCrypto interface: crypto.subtle must inherit property \"importKey(KeyFormat, (BufferSource or JsonWebKey), AlgorithmIdentifier, boolean, sequence<KeyUsage>)\" with the proper type": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "SubtleCrypto interface: calling importKey(KeyFormat, (BufferSource or JsonWebKey), AlgorithmIdentifier, boolean, sequence<KeyUsage>) on crypto.subtle with too few arguments must throw TypeError": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "SubtleCrypto interface: crypto.subtle must inherit property \"exportKey(KeyFormat, CryptoKey)\" with the proper type": {
     "status": "FAIL"

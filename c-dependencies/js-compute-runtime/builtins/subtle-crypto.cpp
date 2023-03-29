@@ -61,7 +61,111 @@ bool SubtleCrypto::digest(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+//  Promise<CryptoKey> importKey(KeyFormat format,
+//                         (BufferSource or JsonWebKey) keyData,
+//                         AlgorithmIdentifier algorithm,
+//                         boolean extractable,
+//                         sequence<KeyUsage> keyUsages );
+// https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-importKey
+bool SubtleCrypto::importKey(JSContext *cx, unsigned argc, JS::Value *vp) {
+  MOZ_ASSERT(cx);
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "SubtleCrypto.importKey", 5)) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  if (!check_receiver(cx, args.thisv(), "SubtleCrypto.importKey")) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // 1. Let format, algorithm, extractable and usages, be the format, algorithm,
+  // extractable and keyUsages parameters passed to the importKey() method, respectively.
+  CryptoKeyFormat format;
+  {
+    auto format_arg = args.get(0);
+    size_t format_length;
+    // Convert into a String following https://tc39.es/ecma262/#sec-tostring
+    JS::UniqueChars format_chars = encode(cx, format_arg, &format_length);
+    if (!format_chars || format_length == 0) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    std::string_view format_string(format_chars.get(), format_length);
+    if (format_string == "spki") {
+      format = CryptoKeyFormat::Spki;
+    } else if (format_string == "pkcs8") {
+      format = CryptoKeyFormat::Pkcs8;
+    } else if (format_string == "jwk") {
+      format = CryptoKeyFormat::Jwk;
+    } else if (format_string == "raw") {
+      format = CryptoKeyFormat::Raw;
+    } else {
+      // TODO: Change to a SyntaxError instance
+      JS_ReportErrorLatin1(cx, "Provided format parameter is not supported. Supported formats are: "
+                               "'spki', 'pkcs8', 'jwk', and 'raw'");
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+  }
+  auto key_data = args.get(1);
+  auto algorithm = args.get(2);
+  bool extractable = JS::ToBoolean(args.get(3));
+  CryptoKeyUsages usages;
+  {
+    auto usages_arg = args.get(4);
+
+    std::string_view error_message("SubtleCrypto.importKey: Invalid keyUsages argument");
+    auto keyUsageMaskResult = builtins::CryptoKeyUsages::from(cx, usages_arg, error_message);
+    if (keyUsageMaskResult.isErr()) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    usages = keyUsageMaskResult.unwrap();
+  }
+
+  // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm
+  // and op set to "importKey".
+  // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
+  auto normalizedAlgorithm = CryptoAlgorithmImportKey::normalize(cx, algorithm);
+  if (!normalizedAlgorithm) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // 5. Let promise be a new Promise.
+  JS::RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!promise) {
+    JS_ReportErrorASCII(cx, "InternalError");
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // 6. Return promise and perform the remaining steps in parallel.
+  args.rval().setObject(*promise);
+
+  // 7. If the following steps or referenced procedures say to throw an error,
+  // reject promise with the returned error and then terminate the algorithm.
+
+  // Steps 8 - 11 are all done in the `importKey` call
+  // 8. Let result be the CryptoKey object that results from performing the
+  // import key operation specified by normalizedAlgorithm using keyData,
+  // algorithm, format, extractable and usages.
+  // 9. If the [[type]] internal slot of result is "secret" or "private" and
+  // usages is empty, then throw a SyntaxError.
+  // 10. Set the [[extractable]] internal slot of result to extractable.
+  // 11. Set the [[usages]] internal slot of result to the normalized value of
+  // usages.
+  JS::RootedObject result(cx);
+  JSObject *key = normalizedAlgorithm->importKey(cx, format, key_data, extractable, usages);
+  if (!key) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 12. Resolve promise with result.
+  JS::RootedValue result_val(cx);
+  result_val.setObject(*key);
+  JS::ResolvePromise(cx, promise, result_val);
+
+  return true;
+}
+
 const JSFunctionSpec SubtleCrypto::methods[] = {JS_FN("digest", digest, 2, JSPROP_ENUMERATE),
+                                                JS_FN("importKey", importKey, 5, JSPROP_ENUMERATE),
                                                 JS_FS_END};
 
 const JSPropertySpec SubtleCrypto::properties[] = {

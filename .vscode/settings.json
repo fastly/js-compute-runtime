@@ -89,7 +89,25 @@
         "__functional_base_03": "cpp",
         "memory_resource": "cpp",
         "numeric": "cpp",
-        "c_at_e_world.h": "c"
+        "c_at_e_world.h": "c",
+        "__bits": "cpp",
+        "__verbose_abort": "cpp",
+        "any": "cpp",
+        "cfenv": "cpp",
+        "cinttypes": "cpp",
+        "codecvt": "cpp",
+        "complex": "cpp",
+        "condition_variable": "cpp",
+        "csignal": "cpp",
+        "forward_list": "cpp",
+        "future": "cpp",
+        "queue": "cpp",
+        "scoped_allocator": "cpp",
+        "shared_mutex": "cpp",
+        "span": "cpp",
+        "typeindex": "cpp",
+        "valarray": "cpp",
+        "variant": "cpp"
     },
     "git.ignoreLimitWarning": true
 }

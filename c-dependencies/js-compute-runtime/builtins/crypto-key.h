@@ -1,17 +1,21 @@
 #ifndef JS_COMPUTE_RUNTIME_CRYPTO_KEY_H
 #define JS_COMPUTE_RUNTIME_CRYPTO_KEY_H
-#include <span>
 
 #include "builtin.h"
-#include "openssl/evp.h"
+// #include "crypto-algorithm.h"
+#include "crypto-key-rsa-components.h"
 
 namespace builtins {
-
+class CryptoAlgorithmRSASSA_PKCS1_v1_5_Import;
 enum class CryptoKeyType : uint8_t { Public, Private, Secret };
+
+enum class CryptoKeyFormat : uint8_t { Raw, Spki, Pkcs8, Jwk };
 
 class CryptoKeyUsages {
 private:
-  uint8_t mask;
+  uint8_t mask = 0;
+
+public:
   static constexpr const uint8_t encrypt_flag = 1 << 0;
   static constexpr const uint8_t decrypt_flag = 1 << 1;
   static constexpr const uint8_t sign_flag = 1 << 2;
@@ -21,10 +25,19 @@ private:
   static constexpr const uint8_t wrap_key_flag = 1 << 6;
   static constexpr const uint8_t unwrap_key_flag = 1 << 7;
 
-public:
+  CryptoKeyUsages() = default;
   CryptoKeyUsages(uint8_t mask);
   CryptoKeyUsages(bool encrypt, bool decrypt, bool sign, bool verify, bool derive_key,
                   bool derive_bits, bool wrap_key, bool unwrap_key);
+  static CryptoKeyUsages from(std::vector<std::string> key_usages);
+  static JS::Result<CryptoKeyUsages> from(JSContext *cx, JS::HandleValue key_usages,
+                                          std::string_view error_message);
+
+  uint8_t toInt() { return this->mask; };
+
+  bool isEmpty() { return this->mask == 0; };
+  bool isSuperSetOf(CryptoKeyUsages &other) { return this->mask & other.mask; };
+
   bool canEncrypt() { return this->mask & encrypt_flag; };
   bool canDecrypt() { return this->mask & decrypt_flag; };
   bool canSign() { return this->mask & sign_flag; };
@@ -71,7 +84,7 @@ public:
     // We store a JS::BooleanValue in this slot
     Extractable,
     // Indicates which cryptographic operations are permissible to be used with this key
-    // We store a JS::Int32Value representation of a CryptoKeyUsageBitmap in this slot
+    // We store a JS::Int32Value representation of a CryptoKeyUsages. in this slot
     Usages,
     // Returns the cached ECMAScript object associated with the [[usages]] internal slot,
     // which indicates which cryptographic operations are permissible to be used with this key.
@@ -86,6 +99,10 @@ public:
   static const JSPropertySpec properties[];
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool init_class(JSContext *cx, JS::HandleObject global);
+
+  static JSObject *createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_Import *algorithm,
+                             std::unique_ptr<CryptoKeyRSAComponents> keyData, bool extractable,
+                             CryptoKeyUsages usages);
 };
 
 } // namespace builtins
