@@ -24,6 +24,40 @@ async function app(event) {
     return fail(`The routeHandler threw an error: ${error.message}` + '\n' + error.stack)
   }
 }
+const publicJsonWebKeyData = {
+  "alg": "RS256",
+  "e": "AQAB",
+  "ext": true,
+  "key_ops": [
+    "verify"
+  ],
+  "kty": "RSA",
+  "n": "-PkS7Axd_lf93wJQBVNz0VKcNGF1d0yIoBjo8JTND2tW13orEBh__4ufS6m5orc30hfmiE5nH7R6b8Scbznlikm4qijLE3DhU2ykIcbcIB0JWSovXbu4CqzIIPbEjJO7QeDwhGPbwBH1L4NbMXvPLgtF0UQG9WBhCithfwG9qRG6aneBXRsiGxLQh45fyfdWhlrL1RkHBvnmPtgKxui4-Xz-O_lVSXtlx_tmx46ORmuEFbSXs6bBVJvOUTNgvIVkrd6WIEqbwY6DMYkntLYgsx_gvuCeOjOFqcCkD9DgaQ489Ptpk9B2AEynJ9r0sRrzS3c9S-p56uHJry4H_gC4Qw"
+};
+
+const privateJsonWebKeyData = {
+  "alg": "RS256",
+  "d": "lFle2UeY4Wp5AgX8Rc2u-eNmuaf2GwvhvzR6-kFg2oBpoL_b1TGI67uUzKgZ4MbU3m4kPbE-rWp5__eJPr0FpjkzbM31bgKFyi-i_0IvwAZ5d875zKUNtZ1loe_dyvlPc0BZmZyrjsaG7z7LyOty6ejhToD_Lkncw4E9IIP8uZhHTgml0NCWI-txbPv0w9LnuNs8Jgu5op3rdQ2PCeUJxXXtateSZ7eCnAkO1aiYNABX47rDaCvT1bAd50B7ZVjQTyg3o3G2A6XyyEoAKZnKgg9ggXmiiNxYo_2D33A_6jaR71HqQQVbRqAAKhm3t9NBeBoi8wdbEvmMAfCxLLgp",
+  "dp": "8EhrMIt2BOI_5oeA_4nplGk5VRgYnR-Zd0KzlmFMOltYix0LlZub6ctyPV8Aw8Wnbn_rzw90t_P9tVQS81snKoS2L-AK_y2Yc2rwNLjwsslj-kFdtYFC-fm89bzGDYza7enMCHfB9czEV0RpJMm5m4b9kaVJJjfsZfeloIz82AU",
+  "dq": "tZ6GeJ45wAlQonf6Qp2OceUWVA6SToYjFgsfdrtSzcJyn4XMTaNATMtLA9uIUcJJYESy6gWK_Y8OvZ8QlWO7JqTROQh6Y1hf1XQnZ1UfAOuoNdi-qJNT0cKTV-jGDhlDAr_pnIh9mYQSI17QNxWFrx5ZkS_ROIa9hO5v8Z_WQbU",
+  "e": "AQAB",
+  "ext": true,
+  "key_ops": [
+    "sign"
+  ],
+  "kty": "RSA",
+  "n": "-PkS7Axd_lf93wJQBVNz0VKcNGF1d0yIoBjo8JTND2tW13orEBh__4ufS6m5orc30hfmiE5nH7R6b8Scbznlikm4qijLE3DhU2ykIcbcIB0JWSovXbu4CqzIIPbEjJO7QeDwhGPbwBH1L4NbMXvPLgtF0UQG9WBhCithfwG9qRG6aneBXRsiGxLQh45fyfdWhlrL1RkHBvnmPtgKxui4-Xz-O_lVSXtlx_tmx46ORmuEFbSXs6bBVJvOUTNgvIVkrd6WIEqbwY6DMYkntLYgsx_gvuCeOjOFqcCkD9DgaQ489Ptpk9B2AEynJ9r0sRrzS3c9S-p56uHJry4H_gC4Qw",
+  "p": "_l0tnkgvRh66H8epUwYx4x-vrD7LYKrKV6PZQBO6GUv6WnUxENBqWBVSGxcNwrxu66xdXcsgr38j_CdI3L2MBG6svf4JCT6REmLioIErfvoYFvJ1F9fGlcjbsABQOwc3vX54y7G5a5YAWxMX7TBadvPq6eKHPZaoHcGh-hTBdfU",
+  "q": "-pME5kwLVGE5wsKIv_xMRAKAdtk4j4dgMvN5BSgHYNn8fzBBHuDDep_uJW_I4sAceA_iEm8GIMyZVqh1S0SWIrpnDWgmQ0BKDt_PK7Ak2hW2x23IHB76wblXlrHbERoOvrr8vIx6EQR4oUBbLLq1jnAfIDPsFUxP3esNI6oz2lc",
+  "qi": "GXR5pIAjCNwNmE2DnhLnwN1EnqAgBqw0M6wlu3kovgX4VDBT_lL737v_G-GCYOm6i9zO0-qyuP23lD_B170DKzdZTRPCCePxzZZlcIjcsZyFufFCCcp_hewTtIqPQsWkD7AOFQllLCtCyRAxJC5D34QfJfUglnYo2XhOFuldLV4"
+}
+
+const jsonWebKeyAlgorithm = {
+  name: "RSASSA-PKCS1-v1_5",
+  hash: { name: "SHA-256" },
+};
+
+
 
 // From https://www.rfc-editor.org/rfc/rfc7517#appendix-A.1
 const publicJsonWebKeyData = {

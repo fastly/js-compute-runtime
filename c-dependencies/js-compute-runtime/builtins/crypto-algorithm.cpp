@@ -76,9 +76,6 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPrivateKeyFromJWK(JSContext *cx
   }
   auto dataResult = GlobalProperties::convertJSValueToByteString(cx, jwk->e.value());
   if (dataResult.isErr()) {
-    // TODO: Change to a DataError instance
-    JS_ReportErrorLatin1(cx, "Data provided to an operation does not meet requirements");
-    return nullptr;
   }
   auto data = dataResult.unwrap();
   auto exponentResult =
