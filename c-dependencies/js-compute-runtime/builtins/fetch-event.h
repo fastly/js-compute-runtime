@@ -2,7 +2,7 @@
 #define BUILTINS_FETCH_EVENT_H
 
 #include "builtin.h"
-#include "host_interface/c-at-e.h"
+#include "host_interface/fastly.h"
 
 namespace builtins {
 

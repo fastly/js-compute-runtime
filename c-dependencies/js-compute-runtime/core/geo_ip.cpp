@@ -1,7 +1,7 @@
 #include <arpa/inet.h>
 
 #include "core/geo_ip.h"
-#include "host_interface/c-at-e.h"
+#include "host_interface/fastly.h"
 #include "host_interface/host_call.h"
 #include "js-compute-builtins.h" // for encode
 
@@ -36,7 +36,7 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
 
   fastly_list_u8_t octets_list = {const_cast<uint8_t *>(&octets[0]), octets_len};
 
-  c_at_e_world_string_t ret;
+  fastly_world_string_t ret;
   fastly_error_t err;
   if (!fastly_geo_lookup(&octets_list, &ret, &err)) {
     HANDLE_ERROR(cx, err);

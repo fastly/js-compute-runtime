@@ -1,7 +1,7 @@
 #include <algorithm>
 
-#include "c-at-e-world/c_at_e_world.h"
 #include "core/allocator.h"
+#include "fastly-world/fastly_world.h"
 #include "host_interface/host_api.h"
 
 Result<HttpBody> HttpBody::make() {
@@ -35,7 +35,7 @@ Result<HostString> HttpBody::read(uint32_t chunk_size) const {
 Result<uint32_t> HttpBody::write(const uint8_t *ptr, size_t len) const {
   Result<uint32_t> res;
 
-  // The write call doesn't mutate the buffer; the cast is just for the generated c-at-e api.
+  // The write call doesn't mutate the buffer; the cast is just for the generated fastly api.
   fastly_list_u8_t chunk{const_cast<uint8_t *>(ptr), len};
 
   fastly_error_t err;
@@ -121,7 +121,7 @@ Result<std::optional<std::vector<HostString>>> generic_get_header_values(auto ha
                                                                          std::string_view name) {
   Result<std::optional<std::vector<HostString>>> res;
 
-  c_at_e_world_string_t hdr{const_cast<char *>(name.data()), name.size()};
+  fastly_world_string_t hdr{const_cast<char *>(name.data()), name.size()};
   fastly_option_list_string_t ret;
   fastly_error_t err;
   if (!header_values_get(handle, &hdr, &ret, &err)) {
@@ -151,8 +151,8 @@ template <auto header_op>
 Result<Void> generic_header_op(auto handle, std::string_view name, std::string_view value) {
   Result<Void> res;
 
-  c_at_e_world_string_t hdr{const_cast<char *>(name.data()), name.size()};
-  c_at_e_world_string_t val{const_cast<char *>(value.data()), value.size()};
+  fastly_world_string_t hdr{const_cast<char *>(name.data()), name.size()};
+  fastly_world_string_t val{const_cast<char *>(value.data()), value.size()};
   fastly_error_t err;
   if (!header_op(handle, &hdr, &val, &err)) {
     res.emplace_err(err);
@@ -165,7 +165,7 @@ template <auto remove_header>
 Result<Void> generic_header_remove(auto handle, std::string_view name) {
   Result<Void> res;
 
-  c_at_e_world_string_t hdr{const_cast<char *>(name.data()), name.size()};
+  fastly_world_string_t hdr{const_cast<char *>(name.data()), name.size()};
   fastly_error_t err;
   if (!remove_header(handle, &hdr, &err)) {
     res.emplace_err(err);

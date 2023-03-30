@@ -11,7 +11,7 @@ fastly_dictionary_handle_t ConfigStore::config_store_handle(JSObject *obj) {
 bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
-  c_at_e_world_string_t key_str;
+  fastly_world_string_t key_str;
   JS::UniqueChars key = encode(cx, args[0], &key_str.len);
   // If the converted string has a length of 0 then we throw an Error
   // because Dictionary keys have to be at-least 1 character.
@@ -58,7 +58,7 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The ConfigStore builtin");
   CTOR_HEADER("ConfigStore", 1);
 
-  c_at_e_world_string_t name_str;
+  fastly_world_string_t name_str;
   JS::UniqueChars name_chars = encode(cx, args[0], &name_str.len);
   name_str.ptr = name_chars.get();
 

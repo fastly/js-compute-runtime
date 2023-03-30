@@ -13,7 +13,7 @@ public:
   static const int ctor_length = 1;
 
   // The values stored in these slots are ultimately passed to the host
-  // via the c_at_e_req_cache_override_v2_set hostcall.
+  // via the fastly_req_cache_override_v2_set hostcall.
   //
   // If `Mode` is not `Override`, all other values are ignored.
   //

@@ -92,7 +92,7 @@ bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request
                       JS::Int32Value(body_handle));
 
   // Set the method.
-  c_at_e_world_string_t method_str;
+  fastly_world_string_t method_str;
   if (!fastly_http_req_method_get(request_handle, &method_str, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
@@ -120,7 +120,7 @@ bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request
     JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::HasBody), JS::TrueValue());
   }
 
-  c_at_e_world_string_t uri_str;
+  fastly_world_string_t uri_str;
   if (!fastly_http_req_uri_get(request_handle, &uri_str, &err)) {
     HANDLE_ERROR(cx, err);
     return false;

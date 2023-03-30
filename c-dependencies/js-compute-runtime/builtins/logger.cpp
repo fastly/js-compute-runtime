@@ -15,7 +15,7 @@ bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
 
   fastly_error_t err;
-  c_at_e_world_string_t msg_str = {msg.get(), msg_len};
+  fastly_world_string_t msg_str = {msg.get(), msg_len};
   if (!fastly_log_write(endpoint, &msg_str, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
@@ -35,7 +35,7 @@ JSObject *Logger::create(JSContext *cx, const char *name) {
     return nullptr;
 
   fastly_log_endpoint_handle_t handle;
-  c_at_e_world_string_t name_str = {const_cast<char *>(name), strlen(name)};
+  fastly_world_string_t name_str = {const_cast<char *>(name), strlen(name)};
   fastly_error_t err;
   if (!fastly_log_endpoint_get(&name_str, &handle, &err)) {
     HANDLE_ERROR(cx, err);
@@ -51,7 +51,7 @@ bool Logger::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The Logger builtin");
   CTOR_HEADER("Logger", 1);
 
-  c_at_e_world_string_t name_str;
+  fastly_world_string_t name_str;
   JS::UniqueChars name = encode(cx, args[0], &name_str.len);
   name_str.ptr = name.get();
   JS::RootedObject logger(cx, JS_NewObjectForConstructor(cx, &class_, args));

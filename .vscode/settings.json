@@ -4,7 +4,7 @@
         "cstddef": "c",
         "limits": "c",
         "type_traits": "c",
-        "c-at-e.h": "c",
+        "fastly.h": "c",
         "algorithm": "cpp",
         "memory": "cpp",
         "__functional_base": "cpp",
@@ -89,7 +89,7 @@
         "__functional_base_03": "cpp",
         "memory_resource": "cpp",
         "numeric": "cpp",
-        "c_at_e_world.h": "c"
+        "fastly_world.h": "c"
     },
     "git.ignoreLimitWarning": true
 }

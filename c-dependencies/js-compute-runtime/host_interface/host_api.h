@@ -7,8 +7,8 @@
 #include <variant>
 #include <vector>
 
-#include "c-at-e-world/c_at_e_world.h"
 #include "core/allocator.h"
+#include "fastly-world/fastly_world.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
@@ -73,7 +73,7 @@ struct HostString final {
   size_t len;
 
   HostString() = default;
-  explicit HostString(c_at_e_world_string_t str) : ptr{str.ptr}, len{str.len} {}
+  explicit HostString(fastly_world_string_t str) : ptr{str.ptr}, len{str.len} {}
   HostString(JS::UniqueChars ptr, size_t len) : ptr{std::move(ptr)}, len{len} {}
 
   using iterator = char *;

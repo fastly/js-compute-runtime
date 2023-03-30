@@ -186,7 +186,7 @@ bool ObjectStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue key(cx, args.get(0));
 
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  c_at_e_world_string_t key_str;
+  fastly_world_string_t key_str;
   JS::UniqueChars key_chars = encode(cx, key, &key_str.len);
   if (!key_chars)
     return false;
@@ -232,7 +232,7 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue key(cx, args.get(0));
 
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  c_at_e_world_string_t key_str;
+  fastly_world_string_t key_str;
   JS::UniqueChars key_chars = encode(cx, key, &key_str.len);
   if (!key_chars)
     return false;
@@ -384,7 +384,7 @@ bool ObjectStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::HandleValue name_arg = args.get(0);
 
-  c_at_e_world_string_t name_str;
+  fastly_world_string_t name_str;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
   JS::UniqueChars name = encode(cx, name_arg, &name_str.len);
   if (!name) {
