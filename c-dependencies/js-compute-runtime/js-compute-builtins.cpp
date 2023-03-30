@@ -9,7 +9,7 @@
 #include <strings.h>
 #include <vector>
 
-#include "c-at-e-world/c_at_e_world.h"
+#include "fastly-world/fastly_world.h"
 #include "js-compute-builtins.h"
 #include "rust-url/rust-url.h"
 
@@ -788,7 +788,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
       if (!backend) {
         fastly_request_handle_t handle = builtins::Request::request_handle(request);
 
-        c_at_e_world_string_t uri_str;
+        fastly_world_string_t uri_str;
         fastly_error_t err;
         if (fastly_http_req_uri_get(handle, &uri_str, &err)) {
           JS_ReportErrorLatin1(cx,
@@ -824,7 +824,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
 
-  c_at_e_world_string_t backend_str = {backend_chars.get(), backend_len};
+  fastly_world_string_t backend_str = {backend_chars.get(), backend_len};
 
   {
     fastly_error_t err;
@@ -1268,7 +1268,7 @@ bool process_pending_async_tasks(JSContext *cx) {
 
 bool math_random(JSContext *cx, unsigned argc, Value *vp) {
   uint32_t storage;
-  random_get(reinterpret_cast<int32_t>(&storage), sizeof(storage));
+  fastly::random_get(reinterpret_cast<int32_t>(&storage), sizeof(storage));
   double newvalue = static_cast<double>(storage) / std::pow(2.0, 32.0);
 
   CallArgs args = CallArgsFromVp(argc, vp);

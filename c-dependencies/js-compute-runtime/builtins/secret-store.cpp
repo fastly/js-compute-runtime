@@ -99,7 +99,7 @@ bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  c_at_e_world_string_t key_str;
+  fastly_world_string_t key_str;
   key_str.len = length;
   key_str.ptr = key.get();
   fastly_option_secret_handle_t secret;
@@ -175,7 +175,7 @@ bool SecretStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!secret_store) {
     return false;
   }
-  c_at_e_world_string_t name_str;
+  fastly_world_string_t name_str;
   name_str.ptr = name_chars.get();
   name_str.len = length;
   fastly_secret_store_handle_t handle = INVALID_HANDLE;

@@ -712,12 +712,12 @@ bool Backend::isCipherSuiteSupportedByFastly(std::string_view cipherSpec) {
 JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::HandleObject backend) {
   MOZ_ASSERT(is_instance(backend));
 
-  c_at_e_world_string_t name_str;
+  fastly_world_string_t name_str;
   JS::RootedString name(cx, JS::GetReservedSlot(backend, Backend::Slots::Name).toString());
   JS::UniqueChars nameChars = encode(cx, name, &name_str.len);
   name_str.ptr = nameChars.get();
 
-  c_at_e_world_string_t target_str;
+  fastly_world_string_t target_str;
   JS::RootedString target(cx, JS::GetReservedSlot(backend, Backend::Slots::Target).toString());
   JS::UniqueChars targetChars = encode(cx, target, &target_str.len);
   target_str.ptr = targetChars.get();
@@ -1120,13 +1120,13 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     if (version == 1.3) {
-      tlsMinVersion = TLS::VERSION_1_3;
+      tlsMinVersion = fastly::TLS::VERSION_1_3;
     } else if (version == 1.2) {
-      tlsMinVersion = TLS::VERSION_1_2;
+      tlsMinVersion = fastly::TLS::VERSION_1_2;
     } else if (version == 1.1) {
-      tlsMinVersion = TLS::VERSION_1_1;
+      tlsMinVersion = fastly::TLS::VERSION_1_1;
     } else if (version == 1) {
-      tlsMinVersion = TLS::VERSION_1;
+      tlsMinVersion = fastly::TLS::VERSION_1;
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MIN_INVALID);
       return false;
@@ -1156,13 +1156,13 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     if (version == 1.3) {
-      tlsMaxVersion = TLS::VERSION_1_3;
+      tlsMaxVersion = fastly::TLS::VERSION_1_3;
     } else if (version == 1.2) {
-      tlsMaxVersion = TLS::VERSION_1_2;
+      tlsMaxVersion = fastly::TLS::VERSION_1_2;
     } else if (version == 1.1) {
-      tlsMaxVersion = TLS::VERSION_1_1;
+      tlsMaxVersion = fastly::TLS::VERSION_1_1;
     } else if (version == 1) {
-      tlsMaxVersion = TLS::VERSION_1;
+      tlsMaxVersion = fastly::TLS::VERSION_1;
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MAX_INVALID);
       return false;

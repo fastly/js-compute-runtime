@@ -342,7 +342,7 @@ jobs:
         name: engine-release
     - name: Locate component resources
       run: |
-        cp c-dependencies/js-compute-runtime/c-at-e.wit .
+        cp c-dependencies/js-compute-runtime/fastly.wit .
     - run: yarn
       shell: bash
     - run: npm test

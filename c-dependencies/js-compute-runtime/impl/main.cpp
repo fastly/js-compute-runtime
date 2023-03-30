@@ -1,8 +1,8 @@
-#include "host_interface/c-at-e.h"
+#include "host_interface/fastly.h"
 
 int main(int argc, const char *argv[]) {
   fastly_request_t req;
-  if (c_at_e_req_body_downstream_get(&req.f0, &req.f1) != 0) {
+  if (fastly::req_body_downstream_get(&req.f0, &req.f1) != 0) {
     abort();
     return 1;
   }

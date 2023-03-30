@@ -1,4 +1,4 @@
-default world c-at-e-world {
+default world fastly-world {
   import fastly: interface {
     // TODO: split this up into function-specific error enums
     enum error {
