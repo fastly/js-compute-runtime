@@ -7,11 +7,7 @@
     },
     "downstream_response": {
       "status": 200,
-      "body": "heyheyhey"
-    },
-    "logs": [
-      "stdout :: Log: Passed 1",
-      "stdout :: Log: Passed 2"
-    ]
+      "body": "hey1hey2hey3"
+    }
   }
 }
