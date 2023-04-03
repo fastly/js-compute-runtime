@@ -2,8 +2,8 @@
 /* global fastly */
 function strictEqual (a, b) {
   if (a !== b) {
-    console.log('LHS: ', a);
-    console.log('RHS: ', b);
+    console.log('ACTUAL: ', a);
+    console.log('EXPECTED: ', b);
     throw new Error(`Assertion failure`);
   }
 }
@@ -15,8 +15,8 @@ addEventListener("fetch", async (event) => {
     autoAllocateChunkSize: 1024,
     async pull (controller) {
       const view = controller.byobRequest.view;
-
-      if (cnt === 0) {
+      cnt++;
+      if (cnt === 1) {
         let cnt = 0;
         const stream = new ReadableStream({
           type: 'bytes',
@@ -72,7 +72,7 @@ addEventListener("fetch", async (event) => {
         view[3] = 49;
         controller.byobRequest.respond(4);
       }
-      else if (cnt === 1) {
+      else if (cnt === 2) {
         let cnt = 0;
         const stream = new ReadableStream({
           type: 'bytes',
@@ -111,7 +111,7 @@ addEventListener("fetch", async (event) => {
           controller.byobRequest.respond(4);
         }
       }
-      else if (cnt === 2) {
+      else if (cnt === 3) {
         view[0] = 104;
         view[1] = 101;
         view[2] = 121;
@@ -119,7 +119,6 @@ addEventListener("fetch", async (event) => {
         controller.byobRequest.respond(4);
         controller.close();
       }
-      cnt++;
     }
   });
   event.respondWith(new Response(stream));

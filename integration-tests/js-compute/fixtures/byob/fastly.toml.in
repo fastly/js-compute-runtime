@@ -5,7 +5,7 @@ authors = ["jchampion@fastly.com"]
 description = ""
 language = "other"
 manifest_version = 2
-name = "console"
+name = "byob"
 service_id = ""
 
 [scripts]
