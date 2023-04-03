@@ -356,6 +356,7 @@ jobs:
       matrix:
         fixture: 
           - 'async-select'
+          - 'byob'
           - 'byte-repeater'
           - 'cache-override'
           - 'crypto'
