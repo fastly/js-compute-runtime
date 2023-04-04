@@ -35,5 +35,3 @@ std::unique_ptr<CryptoKeyRSAComponents> CryptoKeyRSAComponents::createPrivateWit
   return std::make_unique<CryptoKeyRSAComponents>(modulus, exponent, privateExponent,
                                                   firstPrimeInfo, secondPrimeInfo, otherPrimeInfos);
 }
-
-CryptoKeyRSAComponents::~CryptoKeyRSAComponents() = default;

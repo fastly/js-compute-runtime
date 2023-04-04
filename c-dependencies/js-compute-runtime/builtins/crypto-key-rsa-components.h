@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-class CryptoKeyRSAComponents {
+class CryptoKeyRSAComponents final {
 public:
   class PrimeInfo {
   public:
@@ -54,6 +54,5 @@ public:
                          std::string_view privateExponent, std::optional<PrimeInfo> firstPrimeInfo,
                          std::optional<PrimeInfo> secondPrimeInfo,
                          std::vector<PrimeInfo> otherPrimeInfos);
-  virtual ~CryptoKeyRSAComponents();
 };
 #endif
