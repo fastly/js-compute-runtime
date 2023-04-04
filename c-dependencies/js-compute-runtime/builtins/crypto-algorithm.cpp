@@ -533,10 +533,10 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
     bool isUsagesAllowed = false;
     // public key
     if (jwk->d.has_value()) {
-      isUsagesAllowed = usages.canSign();
+      isUsagesAllowed = usages.canOnlySign();
     } else {
       // private key
-      isUsagesAllowed = usages.canVerify();
+      isUsagesAllowed = usages.canOnlyVerify();
     }
     if (!isUsagesAllowed) {
       // TODO Rename error to SyntaxError

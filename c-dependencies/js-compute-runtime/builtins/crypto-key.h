@@ -46,6 +46,15 @@ public:
   bool canDeriveBits() { return this->mask & derive_bits_flag; };
   bool canWrapKey() { return this->mask & wrap_key_flag; };
   bool canUnwrapKey() { return this->mask & unwrap_key_flag; };
+
+  bool canOnlyEncrypt() { return this->mask == encrypt_flag; };
+  bool canOnlyDecrypt() { return this->mask == decrypt_flag; };
+  bool canOnlySign() { return this->mask == sign_flag; };
+  bool canOnlyVerify() { return this->mask == verify_flag; };
+  bool canOnlyDeriveKey() { return this->mask == derive_key_flag; };
+  bool canOnlyDeriveBits() { return this->mask == derive_bits_flag; };
+  bool canOnlyWrapKey() { return this->mask == wrap_key_flag; };
+  bool canOnlyUnwrapKey() { return this->mask == unwrap_key_flag; };
 };
 
 class CryptoKey : public BuiltinImpl<CryptoKey> {
