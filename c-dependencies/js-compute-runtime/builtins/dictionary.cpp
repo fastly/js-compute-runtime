@@ -13,7 +13,7 @@ bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::HandleValue name_arg = args.get(0);
 
-  c_at_e_world_string_t name_str;
+  fastly_world_string_t name_str;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
   JS::UniqueChars name = encode(cx, name_arg, &name_str.len);
   if (!name) {
@@ -66,7 +66,7 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::HandleValue name_arg = args.get(0);
 
-  c_at_e_world_string_t name_str;
+  fastly_world_string_t name_str;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
   JS::UniqueChars name = encode(cx, name_arg, &name_str.len);
   if (!name) {

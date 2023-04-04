@@ -65,7 +65,7 @@ npm run build
 
 The JS Compute Runtime has automated tests which run on all pull-requests. The test applications are located within <./integration-tests/js-compute>.
 
-To run an end-to-end test which builds and deploys an application to c-at-e:
+To run an end-to-end test which builds and deploys an application to fastly:
 - Build the runtime and cli: `npm run build` in the root of the project
 - Change to the test directory for the runtime: `cd integration-tests/js-compute/`
 - Install the test dependencies: `npm install`

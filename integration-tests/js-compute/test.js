@@ -8,7 +8,9 @@ import { retry, expBackoff } from 'zx/experimental'
 import { compareDownstreamResponse } from "./compare-downstream-response.js";
 import { argv, exit } from "node:process";
 import { existsSync } from "node:fs";
-import { copyFile, readdir, readFile } from "node:fs/promises";
+import { copyFile, readdir, readFile, writeFile } from "node:fs/promises";
+import core from '@actions/core';
+import TOML from '@iarna/toml'
 
 const startTime = Date.now();
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -73,38 +75,53 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
 }
 const FASTLY_API_TOKEN = process.env.FASTLY_API_TOKEN;
 zx.verbose = true;
+const branchName = (await $`git branch --show-current`).stdout.trim().replace(/[^a-zA-Z0-9_-]/g, '_')
 
 for (const fixture of testFixtures) {
+    const serviceName = `${fixture}--${branchName}`
+    let domain;
     await within(async () => {
         const fixturePath = join(__dirname, 'fixtures', fixture)
         try {
             const startTime = Date.now();
             await cd(fixturePath);
             await copyFile(join(fixturePath, 'fastly.toml.in'), join(fixturePath, 'fastly.toml'))
+            const config = TOML.parse(await readFile(join(fixturePath, 'fastly.toml'), 'utf-8'))
+            config.name = serviceName;
+            await writeFile(join(fixturePath, 'fastly.toml'), TOML.stringify(config), 'utf-8')
+            core.startGroup('Delete service if already exists')
             try {
-                await zx`fastly service delete --quiet --force --service-name ${fixture} --token $FASTLY_API_TOKEN`
+                await zx`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`
             } catch {}
-            // build and deploy application to compute@edge
+            core.endGroup()
+            core.startGroup('Build and deploy service')
             await zx`npm i`
-            await zx`fastly compute publish -i --quiet --token $FASTLY_API_TOKEN`
-
+            await $`fastly compute publish -i --quiet --token $FASTLY_API_TOKEN`
+            core.endGroup()
+            
             // get the public domain of the deployed application
-            const domain = JSON.parse(await $`fastly domain list --quiet --version latest --json`)[0].Name
-
+            domain = JSON.parse(await $`fastly domain list --quiet --version latest --json`)[0].Name
+            core.notice(`Service is running on https://${domain}`)
+            
             const setupPath = join(fixturePath, 'setup.js')
             if (existsSync(setupPath)) {
+                core.startGroup('Extra set-up steps for the service')
                 await $`${setupPath}`
+                core.endGroup()
             }
-
+            
+            core.startGroup('Check service is up and running')
             await retry(10, expBackoff('60s', '30s'), async () => {
                 const response = await request(`https://${domain}`)
                 if (response.statusCode !== 200) {
                     throw new Error(`Application "${fixture}" :: Not yet available on domain: ${domain}`)
                 }
             })
-
+            core.endGroup()
+            
             const { default: tests } = await import(join(fixturePath, 'tests.json'), { assert: { type: 'json' } });
-
+            
+            core.startGroup('Running tests')
             let counter = 0;
             await Promise.all(Object.entries(tests).map(async ([title, test]) => {
                 if (test.environments.includes("c@e")) {
@@ -122,19 +139,26 @@ for (const fixture of testFixtures) {
                     })
                 }
             }))
+            core.endGroup()
             console.log(`Application "${fixture}" :: All ${counter} tests passed! Took ${(Date.now() - startTime) / 1000} seconds to complete`)
-        } catch (error) {
-            console.error(`Application "${fixture}" :: ${error.message}`)
-            process.exitCode = 1;
-        } finally {
             const teardownPath = join(fixturePath, 'teardown.js')
             if (existsSync(teardownPath)) {
+                core.startGroup('Tear down the extra set-up for the service')
                 await $`${teardownPath}`
+                core.endGroup()
             }
-
-
+            
+            core.startGroup('Delete service')
             // Delete the service now the tests have finished
-            await zx`fastly service delete --quiet --force --service-name ${fixture} --token $FASTLY_API_TOKEN`
+            await zx`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`
+            core.endGroup()
+        } catch (error) {
+            console.error(`Application "${fixture}" :: ${error.message}`)
+            core.notice(`Tests failed, the service is named "${serviceName}"`)
+            if (domain) {
+                core.notice(`You can debug the service on https://${domain}`)
+            }
+            process.exitCode = 1;
         }
 
     })

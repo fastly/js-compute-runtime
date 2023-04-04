@@ -1174,7 +1174,7 @@ bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
     swr = val.toInt32();
   }
 
-  c_at_e_world_string_t sk_str;
+  fastly_world_string_t sk_str;
   val = builtins::CacheOverride::surrogate_key(override);
   if (val.isUndefined()) {
     sk_str.len = 0;
@@ -1598,14 +1598,14 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
 
   // Actually set the URL derived in steps 5 or 6 above.
   RequestOrResponse::set_url(request, StringValue(url_str));
-  c_at_e_world_string_t url_c_at_e_str;
-  JS::UniqueChars url = encode(cx, url_str, &url_c_at_e_str.len);
+  fastly_world_string_t url_fastly_str;
+  JS::UniqueChars url = encode(cx, url_str, &url_fastly_str.len);
   if (!url) {
     return nullptr;
   } else {
-    url_c_at_e_str.ptr = url.get();
+    url_fastly_str.ptr = url.get();
     fastly_error_t err;
-    if (!fastly_http_req_uri_set(request_handle, &url_c_at_e_str, &err)) {
+    if (!fastly_http_req_uri_set(request_handle, &url_fastly_str, &err)) {
       HANDLE_ERROR(cx, err);
       return nullptr;
     }
@@ -1747,9 +1747,9 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     is_get_or_head = strcmp(method.get(), "GET") == 0 || strcmp(method.get(), "HEAD") == 0;
 
     JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::Method), JS::StringValue(method_str));
-    c_at_e_world_string_t method_c_at_e_str = {method.get(), method_len};
+    fastly_world_string_t method_fastly_str = {method.get(), method_len};
     fastly_error_t err;
-    if (!fastly_http_req_method_set(request_handle, &method_c_at_e_str, &err)) {
+    if (!fastly_http_req_method_set(request_handle, &method_fastly_str, &err)) {
       HANDLE_ERROR(cx, err);
       return nullptr;
     }

@@ -8,7 +8,7 @@
 #include "jsapi.h"
 #pragma clang diagnostic pop
 
-#include "host_interface/c-at-e.h"
+#include "host_interface/fastly.h"
 
 /* Returns false if an exception is set on `cx` and the caller should
    immediately return to propagate the exception. */

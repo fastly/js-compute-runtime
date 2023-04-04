@@ -6,7 +6,7 @@
 #pragma clang diagnostic pop
 
 #include "crypto.h"
-#include "host_interface/c-at-e.h"
+#include "host_interface/fastly.h"
 #include "subtle-crypto.h"
 
 bool is_int_typed_array(JSObject *obj) {
@@ -45,7 +45,7 @@ bool Crypto::get_random_values(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::AutoCheckCannotGC noGC(cx);
   bool is_shared;
   void *buffer = JS_GetArrayBufferViewData(typed_array, &is_shared, noGC);
-  random_get((int32_t)buffer, byte_length);
+  fastly::random_get((int32_t)buffer, byte_length);
 
   args.rval().setObject(*typed_array);
   return true;
@@ -129,7 +129,7 @@ struct UUID {
 bool Crypto::random_uuid(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   UUID id;
-  random_get(reinterpret_cast<int32_t>(&id), sizeof(id));
+  fastly::random_get(reinterpret_cast<int32_t>(&id), sizeof(id));
 
   // Set the two most significant bits (bits 6 and 7) of the clock_seq_hi_and_reserved to zero and
   // one, respectively.
