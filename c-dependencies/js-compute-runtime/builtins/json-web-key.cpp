@@ -247,7 +247,7 @@ std::unique_ptr<JsonWebKey> JsonWebKey::parse(JSContext *cx, JS::HandleValue val
             return nullptr;
           }
 
-          key_ops.push_back(op);
+          key_ops.push_back(std::move(op));
         }
       }
     }
