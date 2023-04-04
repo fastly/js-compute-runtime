@@ -489,6 +489,8 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
   std::copy(exp.begin(), exp.end(), p);
 
   JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, keyData->exponent.size(), p));
+  // `buffer` takes ownership of `p` if the call to NewArrayBufferWithContents was successful
+  // if the call was not successful, we need to free `p` before exiting from the function.
   if (!buffer) {
     // We can be here if the array buffer was too large -- if that was the case then a
     // JSMSG_BAD_ARRAY_LENGTH will have been created. No other failure scenarios in this path will
