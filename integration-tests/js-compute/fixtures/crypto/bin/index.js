@@ -24,33 +24,36 @@ async function app(event) {
     return fail(`The routeHandler threw an error: ${error.message}` + '\n' + error.stack)
   }
 }
+
+// From https://www.rfc-editor.org/rfc/rfc7517#appendix-A.1
 const publicJsonWebKeyData = {
-  "alg": "RS256",
-  "e": "AQAB",
+  "alg":"RS256",
+  "e":"AQAB",
   "ext": true,
   "key_ops": [
     "verify"
   ],
-  "kty": "RSA",
-  "n": "-PkS7Axd_lf93wJQBVNz0VKcNGF1d0yIoBjo8JTND2tW13orEBh__4ufS6m5orc30hfmiE5nH7R6b8Scbznlikm4qijLE3DhU2ykIcbcIB0JWSovXbu4CqzIIPbEjJO7QeDwhGPbwBH1L4NbMXvPLgtF0UQG9WBhCithfwG9qRG6aneBXRsiGxLQh45fyfdWhlrL1RkHBvnmPtgKxui4-Xz-O_lVSXtlx_tmx46ORmuEFbSXs6bBVJvOUTNgvIVkrd6WIEqbwY6DMYkntLYgsx_gvuCeOjOFqcCkD9DgaQ489Ptpk9B2AEynJ9r0sRrzS3c9S-p56uHJry4H_gC4Qw"
+  "kty":"RSA",
+  "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw"
 };
 
+// From https://www.rfc-editor.org/rfc/rfc7517#appendix-A.2
 const privateJsonWebKeyData = {
-  "alg": "RS256",
-  "d": "lFle2UeY4Wp5AgX8Rc2u-eNmuaf2GwvhvzR6-kFg2oBpoL_b1TGI67uUzKgZ4MbU3m4kPbE-rWp5__eJPr0FpjkzbM31bgKFyi-i_0IvwAZ5d875zKUNtZ1loe_dyvlPc0BZmZyrjsaG7z7LyOty6ejhToD_Lkncw4E9IIP8uZhHTgml0NCWI-txbPv0w9LnuNs8Jgu5op3rdQ2PCeUJxXXtateSZ7eCnAkO1aiYNABX47rDaCvT1bAd50B7ZVjQTyg3o3G2A6XyyEoAKZnKgg9ggXmiiNxYo_2D33A_6jaR71HqQQVbRqAAKhm3t9NBeBoi8wdbEvmMAfCxLLgp",
-  "dp": "8EhrMIt2BOI_5oeA_4nplGk5VRgYnR-Zd0KzlmFMOltYix0LlZub6ctyPV8Aw8Wnbn_rzw90t_P9tVQS81snKoS2L-AK_y2Yc2rwNLjwsslj-kFdtYFC-fm89bzGDYza7enMCHfB9czEV0RpJMm5m4b9kaVJJjfsZfeloIz82AU",
-  "dq": "tZ6GeJ45wAlQonf6Qp2OceUWVA6SToYjFgsfdrtSzcJyn4XMTaNATMtLA9uIUcJJYESy6gWK_Y8OvZ8QlWO7JqTROQh6Y1hf1XQnZ1UfAOuoNdi-qJNT0cKTV-jGDhlDAr_pnIh9mYQSI17QNxWFrx5ZkS_ROIa9hO5v8Z_WQbU",
-  "e": "AQAB",
+  "alg":"RS256",
+  "d":"X4cTteJY_gn4FYPsXB8rdXix5vwsg1FLN5E3EaG6RJoVH-HLLKD9M7dx5oo7GURknchnrRweUkC7hT5fJLM0WbFAKNLWY2vv7B6NqXSzUvxT0_YSfqijwp3RTzlBaCxWp4doFk5N2o8Gy_nHNKroADIkJ46pRUohsXywbReAdYaMwFs9tv8d_cPVY3i07a3t8MN6TNwm0dSawm9v47UiCl3Sk5ZiG7xojPLu4sbg1U2jx4IBTNBznbJSzFHK66jT8bgkuqsk0GjskDJk19Z4qwjwbsnn4j2WBii3RL-Us2lGVkY8fkFzme1z0HbIkfz0Y6mqnOYtqc0X4jfcKoAC8Q",
+  "dp":"G4sPXkc6Ya9y8oJW9_ILj4xuppu0lzi_H7VTkS8xj5SdX3coE0oimYwxIi2emTAue0UOa5dpgFGyBJ4c8tQ2VF402XRugKDTP8akYhFo5tAA77Qe_NmtuYZc3C3m3I24G2GvR5sSDxUyAN2zq8Lfn9EUms6rY3Ob8YeiKkTiBj0",
+  "dq":"s9lAH9fggBsoFR8Oac2R_E2gw282rT2kGOAhvIllETE1efrA6huUUvMfBcMpn8lqeW6vzznYY5SSQF7pMdC_agI3nG8Ibp1BUb0JUiraRNqUfLhcQb_d9GF4Dh7e74WbRsobRonujTYN1xCaP6TO61jvWrX-L18txXw494Q_cgk",
+  "e":"AQAB",
   "ext": true,
   "key_ops": [
     "sign"
   ],
-  "kty": "RSA",
-  "n": "-PkS7Axd_lf93wJQBVNz0VKcNGF1d0yIoBjo8JTND2tW13orEBh__4ufS6m5orc30hfmiE5nH7R6b8Scbznlikm4qijLE3DhU2ykIcbcIB0JWSovXbu4CqzIIPbEjJO7QeDwhGPbwBH1L4NbMXvPLgtF0UQG9WBhCithfwG9qRG6aneBXRsiGxLQh45fyfdWhlrL1RkHBvnmPtgKxui4-Xz-O_lVSXtlx_tmx46ORmuEFbSXs6bBVJvOUTNgvIVkrd6WIEqbwY6DMYkntLYgsx_gvuCeOjOFqcCkD9DgaQ489Ptpk9B2AEynJ9r0sRrzS3c9S-p56uHJry4H_gC4Qw",
-  "p": "_l0tnkgvRh66H8epUwYx4x-vrD7LYKrKV6PZQBO6GUv6WnUxENBqWBVSGxcNwrxu66xdXcsgr38j_CdI3L2MBG6svf4JCT6REmLioIErfvoYFvJ1F9fGlcjbsABQOwc3vX54y7G5a5YAWxMX7TBadvPq6eKHPZaoHcGh-hTBdfU",
-  "q": "-pME5kwLVGE5wsKIv_xMRAKAdtk4j4dgMvN5BSgHYNn8fzBBHuDDep_uJW_I4sAceA_iEm8GIMyZVqh1S0SWIrpnDWgmQ0BKDt_PK7Ak2hW2x23IHB76wblXlrHbERoOvrr8vIx6EQR4oUBbLLq1jnAfIDPsFUxP3esNI6oz2lc",
-  "qi": "GXR5pIAjCNwNmE2DnhLnwN1EnqAgBqw0M6wlu3kovgX4VDBT_lL737v_G-GCYOm6i9zO0-qyuP23lD_B170DKzdZTRPCCePxzZZlcIjcsZyFufFCCcp_hewTtIqPQsWkD7AOFQllLCtCyRAxJC5D34QfJfUglnYo2XhOFuldLV4"
-}
+  "kty":"RSA",
+  "n":"0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
+  "p":"83i-7IvMGXoMXCskv73TKr8637FiO7Z27zv8oj6pbWUQyLPQBQxtPVnwD20R-60eTDmD2ujnMt5PoqMrm8RfmNhVWDtjjMmCMjOpSXicFHj7XOuVIYQyqVWlWEh6dN36GVZYk93N8Bc9vY41xy8B9RzzOGVQzXvNEvn7O0nVbfs",
+  "q":"3dfOR9cuYq-0S-mkFLzgItgMEfFzB2q3hWehMuG0oCuqnb3vobLyumqjVZQO1dIrdwgTnCdpYzBcOfW5r370AFXjiWft_NGEiovonizhKpo9VVS78TzFgxkIdrecRezsZ-1kYd_s1qDbxtkDEgfAITAG9LUnADun4vIcb6yelxk",
+  "qi":"GyM_p6JrXySiz1toFgKbWV-JdI3jQ4ypu9rbMWx3rQJBfmt0FoYzgUIZEVFEcOqwemRN81zoDAaa-Bk0KWNGDjJHZDdDmFhW3AN7lI-puxk_mHZGJ11rxyR8O55XLSe3SPmRfKwZI6yU24ZxvQKFYItdldUKGzO6Ia6zTKhAVRU",
+};
 
 const jsonWebKeyAlgorithm = {
   name: "RSASSA-PKCS1-v1_5",
@@ -457,7 +460,6 @@ routes.set("/crypto.subtle", async () => {
   {
     routes.set("/crypto.subtle.importKey/JWK-RS256-Public", async () => {
       const key = await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops);
-      console.log({key})
       error = await assert(key instanceof CryptoKey, true, `key instanceof CryptoKey`);
       if (error) { return error; }
       error = await assert(key.algorithm, {
