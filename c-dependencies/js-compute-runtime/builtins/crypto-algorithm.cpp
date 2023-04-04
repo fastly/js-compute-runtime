@@ -538,7 +538,6 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
       // private key
       isUsagesAllowed = usages.canVerify();
     }
-    isUsagesAllowed = isUsagesAllowed || !usages.isEmpty();
     if (!isUsagesAllowed) {
       // TODO Rename error to SyntaxError
       JS_ReportErrorLatin1(cx,
