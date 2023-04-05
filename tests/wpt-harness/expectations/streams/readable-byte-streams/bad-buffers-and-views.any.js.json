@@ -24,46 +24,46 @@
     "status": "PASS"
   },
   "ReadableStream with byte source: respond() throws if the BYOB request's buffer has been detached (in the readable state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respond() throws if the BYOB request's buffer has been detached (in the closed state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view's buffer has been detached (in the readable state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view's buffer is zero-length (in the readable state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view is zero-length on a non-zero-length buffer (in the readable state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view has a different offset (in the readable state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view has a different offset (in the closed state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view's buffer has a different length (in the readable state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view's buffer has a different length (autoAllocateChunkSize)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view has a larger length (in the readable state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view's buffer has been detached (in the closed state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view's buffer is zero-length (in the closed state)": {
     "status": "FAIL"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view is non-zero-length (in the closed state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view's buffer has a different length (in the closed state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: enqueue() throws if the BYOB request's buffer has been detached (in the readable state)": {
     "status": "PASS"

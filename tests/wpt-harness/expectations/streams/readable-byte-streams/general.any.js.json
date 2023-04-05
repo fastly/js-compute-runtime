@@ -98,6 +98,9 @@
   "ReadableStream with byte source: read(view), then respond()": {
     "status": "FAIL"
   },
+  "ReadableStream with byte source: read(view), then respondWithNewView() with a transferred ArrayBuffer": {
+    "status": "FAIL"
+  },
   "ReadableStream with byte source: read(view), then respond() with too big value": {
     "status": "PASS"
   },
@@ -111,6 +114,12 @@
     "status": "PASS"
   },
   "ReadableStream with byte source: enqueue(), getReader(), then cancel() (mode = BYOB)": {
+    "status": "PASS"
+  },
+  "ReadableStream with byte source: getReader(), read(view), then cancel()": {
+    "status": "PASS"
+  },
+  "ReadableStream with byte source: cancel() with partially filled pending pull() request": {
     "status": "PASS"
   },
   "ReadableStream with byte source: enqueue(), getReader(), then read(view) where view.buffer is not fully covered by view": {
@@ -155,6 +164,9 @@
   "ReadableStream with byte source: read() twice, then enqueue() twice": {
     "status": "FAIL"
   },
+  "ReadableStream with byte source: Multiple read(view), close() and respond()": {
+    "status": "PASS"
+  },
   "ReadableStream with byte source: Multiple read(view), big enqueue()": {
     "status": "PASS"
   },
@@ -197,6 +209,15 @@
   "calling respond() twice on the same byobRequest should throw": {
     "status": "PASS"
   },
+  "calling respondWithNewView() twice on the same byobRequest should throw": {
+    "status": "FAIL"
+  },
+  "calling respond(0) twice on the same byobRequest should throw even when closed": {
+    "status": "PASS"
+  },
+  "calling respond() should throw when canceled": {
+    "status": "FAIL"
+  },
   "pull() resolving should not resolve read()": {
     "status": "FAIL"
   },
@@ -218,6 +239,24 @@
   "ReadableStreamBYOBReader constructor requires a ReadableStream with type \"bytes\"": {
     "status": "PASS"
   },
+  "ReadableStream constructor should not accept a strategy with a size defined if type is \"bytes\"": {
+    "status": "FAIL"
+  },
+  "ReadableStream with byte source: respondWithNewView() with a smaller view": {
+    "status": "FAIL"
+  },
+  "ReadableStream with byte source: respondWithNewView() with a zero-length view (in the closed state)": {
+    "status": "FAIL"
+  },
+  "ReadableStream with byte source: respondWithNewView() with a transferred non-zero-length view (in the readable state)": {
+    "status": "FAIL"
+  },
+  "ReadableStream with byte source: respondWithNewView() with a transferred zero-length view (in the closed state)": {
+    "status": "FAIL"
+  },
+  "ReadableStream with byte source: enqueue() discards auto-allocated BYOB request": {
+    "status": "FAIL"
+  },
   "ReadableStream with byte source: releaseLock() with pending read(view), read(view) on second reader, respond()": {
     "status": "FAIL"
   },
@@ -225,6 +264,9 @@
     "status": "FAIL"
   },
   "ReadableStream with byte source: releaseLock() with pending read(view), read(view) on second reader with 2 element Uint8Array, respond(3)": {
+    "status": "FAIL"
+  },
+  "ReadableStream with byte source: releaseLock() with pending read(view), read(view) on second reader, respondWithNewView()": {
     "status": "FAIL"
   },
   "ReadableStream with byte source: releaseLock() with pending read(view), read(view) on second reader, enqueue()": {
@@ -249,6 +291,9 @@
     "status": "FAIL"
   },
   "ReadableStream with byte source: read(view) with 1 element Uint16Array, respond(1), releaseLock(), read() on second reader, enqueue()": {
+    "status": "FAIL"
+  },
+  "ReadableStream with byte source: autoAllocateChunkSize, read(), respondWithNewView()": {
     "status": "FAIL"
   }
 }

@@ -1,7 +1,9 @@
 /* eslint-env serviceworker */
 /* global fastly */
-function strictEqual (a, b) {
+function strictEqual (a, b, description) {
   if (a !== b) {
+    if (description)
+      console.log('-- ' + description + ' --');
     console.log('ACTUAL: ', a);
     console.log('EXPECTED: ', b);
     throw new Error(`Assertion failure`);
@@ -17,6 +19,8 @@ addEventListener("fetch", async (event) => {
       const view = controller.byobRequest.view;
       cnt++;
       if (cnt === 1) {
+      }
+      else if (cnt === 2) {
         let cnt = 0;
         const stream = new ReadableStream({
           type: 'bytes',
@@ -72,7 +76,7 @@ addEventListener("fetch", async (event) => {
         view[3] = 49;
         controller.byobRequest.respond(4);
       }
-      else if (cnt === 2) {
+      else if (cnt === 3) {
         let cnt = 0;
         const stream = new ReadableStream({
           type: 'bytes',
@@ -111,7 +115,7 @@ addEventListener("fetch", async (event) => {
           controller.byobRequest.respond(4);
         }
       }
-      else if (cnt === 3) {
+      else if (cnt === 4) {
         view[0] = 104;
         view[1] = 101;
         view[2] = 121;

@@ -8,8 +8,17 @@
   "ReadableStream teeing with byte source: chunks should be cloned for each branch": {
     "status": "FAIL"
   },
+  "ReadableStream teeing with byte source: chunks for BYOB requests from branch 1 should be cloned to branch 2": {
+    "status": "FAIL"
+  },
   "ReadableStream teeing with byte source: errors in the source should propagate to both branches": {
     "status": "FAIL"
+  },
+  "ReadableStream teeing with byte source: canceling branch1 should not impact branch2": {
+    "status": "PASS"
+  },
+  "ReadableStream teeing with byte source: canceling branch2 should not impact branch1": {
+    "status": "PASS"
   },
   "Running templatedRSTeeCancel with ReadableStream teeing with byte source": {
     "status": "PASS"
@@ -24,12 +33,6 @@
     "status": "PASS"
   },
   "ReadableStream teeing with byte source: erroring a teed stream should properly handle canceled branches": {
-    "status": "PASS"
-  },
-  "ReadableStream teeing with byte source: canceling branch1 should not impact branch2": {
-    "status": "PASS"
-  },
-  "ReadableStream teeing with byte source: canceling branch2 should not impact branch1": {
     "status": "PASS"
   },
   "ReadableStream teeing with byte source: closing the original should close the branches": {
