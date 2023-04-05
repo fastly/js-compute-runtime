@@ -49,10 +49,10 @@
 #include "builtins/fastly.h"
 #include "builtins/fetch-event.h"
 #include "builtins/headers.h"
+#include "builtins/kv-store.h"
 #include "builtins/logger.h"
 #include "builtins/native-stream-sink.h"
 #include "builtins/native-stream-source.h"
-#include "builtins/object-store.h"
 #include "builtins/request-response.h"
 #include "builtins/secret-store.h"
 #include "builtins/shared/console.h"
@@ -1347,9 +1347,9 @@ bool define_fastly_sys(JSContext *cx, HandleObject global, FastlyOptions options
     return false;
   if (!builtins::WorkerLocation::init_class(cx, global))
     return false;
-  if (!builtins::ObjectStore::init_class(cx, global))
+  if (!builtins::KVStore::init_class(cx, global))
     return false;
-  if (!builtins::ObjectStoreEntry::init_class(cx, global))
+  if (!builtins::KVStoreEntry::init_class(cx, global))
     return false;
   if (!builtins::SecretStore::init_class(cx, global))
     return false;

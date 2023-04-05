@@ -15,8 +15,8 @@
 #include "js/Stream.h"
 
 #include "builtin.h"
+#include "builtins/kv-store.h"
 #include "builtins/native-stream-source.h"
-#include "builtins/object-store.h"
 #include "builtins/shared/url.h"
 #include "host_interface/host_api.h"
 #include "host_interface/host_call.h"
@@ -28,7 +28,7 @@ namespace {
 
 std::string_view bad_chars{"#?*[]\n\r"};
 
-std::optional<char> find_invalid_character_for_object_store_key(const char *str) {
+std::optional<char> find_invalid_character_for_kv_store_key(const char *str) {
   std::optional<char> res;
 
   std::string_view view{str, strlen(str)};
@@ -46,12 +46,12 @@ std::optional<char> find_invalid_character_for_object_store_key(const char *str)
 } // namespace
 
 template <RequestOrResponse::BodyReadResult result_type>
-bool ObjectStoreEntry::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool KVStoreEntry::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   return RequestOrResponse::bodyAll<result_type>(cx, args, self);
 }
 
-bool ObjectStoreEntry::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool KVStoreEntry::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   if (!JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody)).isBoolean()) {
     JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(false));
@@ -59,7 +59,7 @@ bool ObjectStoreEntry::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return RequestOrResponse::body_get(cx, args, self, true);
 }
 
-bool ObjectStoreEntry::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool KVStoreEntry::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   if (!JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BodyUsed)).isBoolean()) {
     JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyUsed), JS::BooleanValue(false));
@@ -68,15 +68,15 @@ bool ObjectStoreEntry::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp)
   return true;
 }
 
-const JSFunctionSpec ObjectStoreEntry::static_methods[] = {
+const JSFunctionSpec KVStoreEntry::static_methods[] = {
     JS_FS_END,
 };
 
-const JSPropertySpec ObjectStoreEntry::static_properties[] = {
+const JSPropertySpec KVStoreEntry::static_properties[] = {
     JS_PS_END,
 };
 
-const JSFunctionSpec ObjectStoreEntry::methods[] = {
+const JSFunctionSpec KVStoreEntry::methods[] = {
     JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
@@ -84,60 +84,59 @@ const JSFunctionSpec ObjectStoreEntry::methods[] = {
     JS_FS_END,
 };
 
-const JSPropertySpec ObjectStoreEntry::properties[] = {
+const JSPropertySpec KVStoreEntry::properties[] = {
     JS_PSG("body", body_get, JSPROP_ENUMERATE),
     JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
     JS_PS_END,
 };
 
-bool ObjectStoreEntry::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorUTF8(cx, "ObjectStoreEntry can't be instantiated directly");
+bool KVStoreEntry::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS_ReportErrorUTF8(cx, "KVStoreEntry can't be instantiated directly");
   return false;
 }
 
-JSObject *ObjectStoreEntry::create(JSContext *cx, fastly_body_handle_t body_handle) {
-  JS::RootedObject objectStoreEntry(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!objectStoreEntry)
+JSObject *KVStoreEntry::create(JSContext *cx, fastly_body_handle_t body_handle) {
+  JS::RootedObject kvStoreEntry(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  if (!kvStoreEntry)
     return nullptr;
 
-  JS::SetReservedSlot(objectStoreEntry, static_cast<uint32_t>(Slots::Body),
+  JS::SetReservedSlot(kvStoreEntry, static_cast<uint32_t>(Slots::Body),
                       JS::Int32Value(body_handle));
-  JS::SetReservedSlot(objectStoreEntry, static_cast<uint32_t>(Slots::BodyStream), JS::NullValue());
-  JS::SetReservedSlot(objectStoreEntry, static_cast<uint32_t>(Slots::HasBody),
-                      JS::BooleanValue(true));
-  JS::SetReservedSlot(objectStoreEntry, static_cast<uint32_t>(Slots::BodyUsed), JS::FalseValue());
+  JS::SetReservedSlot(kvStoreEntry, static_cast<uint32_t>(Slots::BodyStream), JS::NullValue());
+  JS::SetReservedSlot(kvStoreEntry, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(true));
+  JS::SetReservedSlot(kvStoreEntry, static_cast<uint32_t>(Slots::BodyUsed), JS::FalseValue());
 
-  return objectStoreEntry;
+  return kvStoreEntry;
 }
 
-bool ObjectStoreEntry::init_class(JSContext *cx, JS::HandleObject global) {
+bool KVStoreEntry::init_class(JSContext *cx, JS::HandleObject global) {
   return init_class_impl(cx, global);
 }
 
 namespace {
 
-fastly_object_store_handle_t object_store_handle(JSObject *obj) {
-  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ObjectStore::Slots::ObjectStore));
+fastly_object_store_handle_t kv_store_handle(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(KVStore::Slots::KVStore));
   return fastly_object_store_handle_t{static_cast<uint32_t>(val.toInt32())};
 }
 
 bool parse_and_validate_key(JSContext *cx, JS::UniqueChars *key, size_t len) {
   // If the converted string has a length of 0 then we throw an Error
-  // because ObjectStore Keys have to be at-least 1 character.
+  // because KVStore Keys have to be at-least 1 character.
   if (len == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_EMPTY);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_KEY_EMPTY);
     return false;
   }
 
   // If the converted string has a length of more than 1024 then we throw an Error
-  // because ObjectStore Keys have to be less than 1025 characters.
+  // because KVStore Keys have to be less than 1025 characters.
   if (len > 1024) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_TOO_LONG);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_KEY_TOO_LONG);
     return false;
   }
 
   auto key_chars = key->get();
-  auto res = find_invalid_character_for_object_store_key(key_chars);
+  auto res = find_invalid_character_for_kv_store_key(key_chars);
   if (res.has_value()) {
     std::string character;
     switch (res.value()) {
@@ -163,18 +162,18 @@ bool parse_and_validate_key(JSContext *cx, JS::UniqueChars *key, size_t len) {
       character = '#';
       break;
     }
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_INVALID_CHARACTER,
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_KEY_INVALID_CHARACTER,
                              character.c_str());
     return false;
   }
   auto acme_challenge = ".well-known/acme-challenge/";
   if (strncmp(key_chars, acme_challenge, strlen(acme_challenge)) == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_ACME);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_KEY_ACME);
     return false;
   }
 
   if (strcmp(key_chars, ".") == 0 || strcmp(key_chars, "..") == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_KEY_RELATIVE);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_KEY_RELATIVE);
     return false;
   }
 
@@ -183,7 +182,7 @@ bool parse_and_validate_key(JSContext *cx, JS::UniqueChars *key, size_t len) {
 
 } // namespace
 
-bool ObjectStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool KVStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   JS::RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
@@ -205,7 +204,7 @@ bool ObjectStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_option_body_handle_t ret;
   fastly_error_t err;
-  if (!fastly_object_store_lookup(object_store_handle(self), &key_str, &ret, &err)) {
+  if (!fastly_object_store_lookup(kv_store_handle(self), &key_str, &ret, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -216,7 +215,7 @@ bool ObjectStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     result.setNull();
     JS::ResolvePromise(cx, result_promise, result);
   } else {
-    JS::RootedObject entry(cx, ObjectStoreEntry::create(cx, ret.val));
+    JS::RootedObject entry(cx, KVStoreEntry::create(cx, ret.val));
     if (!entry) {
       return false;
     }
@@ -229,7 +228,7 @@ bool ObjectStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(2)
 
   JS::RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
@@ -271,7 +270,7 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     // If the body stream is backed by a C@E body handle, we can directly pipe
-    // that handle into the object store.
+    // that handle into the kv store.
     if (builtins::NativeStreamSource::stream_is_body(cx, body_obj)) {
       JS::RootedObject stream_source(cx,
                                      builtins::NativeStreamSource::get_stream_source(cx, body_obj));
@@ -279,7 +278,7 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       auto body = RequestOrResponse::body_handle(source_owner);
 
       fastly_error_t err;
-      if (!fastly_object_store_insert(object_store_handle(self), &key_str, body.handle, &err)) {
+      if (!fastly_object_store_insert(kv_store_handle(self), &key_str, body.handle, &err)) {
         HANDLE_ERROR(cx, err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
@@ -292,8 +291,7 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
       return true;
     } else {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_OBJECT_STORE_PUT_CONTENT_STREAM);
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_PUT_CONTENT_STREAM);
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
   } else {
@@ -322,9 +320,9 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
     } else {
       // Convert into a String following https://tc39.es/ecma262/#sec-tostring
       text = encode(cx, body_val, &length);
-      // 30MB in bytes is the max size allowed for ObjectStore.
+      // 30MB in bytes is the max size allowed for KVStore.
       if (length > 30 * 1024 * 1024) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_PUT_OVER_30_MB);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_PUT_OVER_30_MB);
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
       if (!text) {
@@ -358,7 +356,7 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     fastly_error_t err;
-    if (!fastly_object_store_insert(object_store_handle(self), &key_str, body.handle, &err)) {
+    if (!fastly_object_store_insert(kv_store_handle(self), &key_str, body.handle, &err)) {
       // Ensure that we throw an exception for all unexpected host errors.
       HANDLE_ERROR(cx, err);
       return RejectPromiseWithPendingError(cx, result_promise);
@@ -376,27 +374,27 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
   return false;
 }
 
-const JSFunctionSpec ObjectStore::static_methods[] = {
+const JSFunctionSpec KVStore::static_methods[] = {
     JS_FS_END,
 };
 
-const JSPropertySpec ObjectStore::static_properties[] = {
+const JSPropertySpec KVStore::static_properties[] = {
     JS_PS_END,
 };
 
-const JSFunctionSpec ObjectStore::methods[] = {
+const JSFunctionSpec KVStore::methods[] = {
     JS_FN("get", get, 1, JSPROP_ENUMERATE),
     JS_FN("put", put, 1, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
-const JSPropertySpec ObjectStore::properties[] = {
+const JSPropertySpec KVStore::properties[] = {
     JS_PS_END,
 };
 
-bool ObjectStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  REQUEST_HANDLER_ONLY("The ObjectStore builtin");
-  CTOR_HEADER("ObjectStore", 1);
+bool KVStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+  REQUEST_HANDLER_ONLY("The KVStore builtin");
+  CTOR_HEADER("KVStore", 1);
 
   JS::HandleValue name_arg = args.get(0);
 
@@ -409,16 +407,16 @@ bool ObjectStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   name_str.ptr = name.get();
 
   // If the converted string has a length of 0 then we throw an Error
-  // because ObjectStore names have to be at-least 1 character.
+  // because KVStore names have to be at-least 1 character.
   if (name_str.len == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_NAME_EMPTY);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_NAME_EMPTY);
     return false;
   }
 
   // If the converted string has a length of more than 255 then we throw an Error
-  // because ObjectStore names have to be less than 255 characters.
+  // because KVStore names have to be less than 255 characters.
   if (name_str.len > 255) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_NAME_TOO_LONG);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_NAME_TOO_LONG);
     return false;
   }
 
@@ -426,16 +424,16 @@ bool ObjectStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     char character = name_str.ptr[i];
     if (std::iscntrl(static_cast<unsigned char>(character)) != 0) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_OBJECT_STORE_NAME_NO_CONTROL_CHARACTERS);
+                                JSMSG_KV_STORE_NAME_NO_CONTROL_CHARACTERS);
       return false;
     }
   }
 
-  fastly_object_store_handle_t object_store_handle = INVALID_HANDLE;
+  fastly_object_store_handle_t kv_store_handle = INVALID_HANDLE;
   fastly_error_t err;
-  if (!fastly_object_store_open(&name_str, &object_store_handle, &err)) {
+  if (!fastly_object_store_open(&name_str, &kv_store_handle, &err)) {
     if (err == FASTLY_ERROR_INVALID_ARGUMENT) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_OBJECT_STORE_DOES_NOT_EXIST,
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_DOES_NOT_EXIST,
                                 name_str.ptr);
       return false;
     } else {
@@ -444,17 +442,17 @@ bool ObjectStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
   }
 
-  JS::RootedObject object_store(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  if (!object_store) {
+  JS::RootedObject kv_store(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  if (!kv_store) {
     return false;
   }
-  JS::SetReservedSlot(object_store, static_cast<uint32_t>(Slots::ObjectStore),
-                      JS::Int32Value(object_store_handle));
-  args.rval().setObject(*object_store);
+  JS::SetReservedSlot(kv_store, static_cast<uint32_t>(Slots::KVStore),
+                      JS::Int32Value(kv_store_handle));
+  args.rval().setObject(*kv_store);
   return true;
 }
 
-bool ObjectStore::init_class(JSContext *cx, JS::HandleObject global) {
+bool KVStore::init_class(JSContext *cx, JS::HandleObject global) {
   return init_class_impl(cx, global);
 }
 

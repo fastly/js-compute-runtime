@@ -30,4 +30,4 @@ This command generates static content into the `build` directory and can be serv
 $ yarn deploy
 ```
 
-This command will run `yarn build` and then will upload the website to Fastly Object Store and deploy the application to Fastly Compute@Edge.
+This command will run `yarn build` and then will upload the website to Fastly KV Store and deploy the application to Fastly Compute@Edge.

@@ -237,7 +237,7 @@ jobs:
           - log
           - missing-backend
           - multiple-set-cookie
-          - object-store
+          - kv-store
           - random
           - react-byob
           - regex
@@ -391,7 +391,7 @@ jobs:
           - 'geoip'
           - 'hello-world'
           - 'multiple-set-cookie'
-          - 'object-store'
+          - 'kv-store'
           - 'react-byob'
           - 'request-clone'
           - 'request-headers'

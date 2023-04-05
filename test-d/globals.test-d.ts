@@ -105,25 +105,25 @@ import { expectError, expectType } from 'tsd';
   expectType<string>(backend.toString())
 }
 
-// ObjectStore
+// KVStore
 {
-  expectError(ObjectStore())
-  expectError(ObjectStore('secrets'))
-  expectType<ObjectStore>(new ObjectStore("secrets"))
-  expectError(new ObjectStore('secrets', {}))
-  const store = new ObjectStore('secrets')
+  expectError(KVStore())
+  expectError(KVStore('secrets'))
+  expectType<KVStore>(new KVStore("secrets"))
+  expectError(new KVStore('secrets', {}))
+  const store = new KVStore('secrets')
   expectError(store.get())
   expectError(store.get(1))
-  expectType<Promise<ObjectStoreEntry|null>>(store.get('cat'))
+  expectType<Promise<KVStoreEntry|null>>(store.get('cat'))
   expectError(store.put())
   expectError(store.put('cat'))
   expectError(store.put('cat', 1))
   expectType<Promise<undefined>>(store.put('cat', 'Aki'))
 }
 
-// ObjectStoreEntry
+// KVStoreEntry
 {
-  const entry = {} as ObjectStoreEntry
+  const entry = {} as KVStoreEntry
   expectType<ReadableStream<any>>(entry.body)
   expectType<boolean>(entry.bodyUsed)
   expectType<Promise<ArrayBuffer>>(entry.arrayBuffer())

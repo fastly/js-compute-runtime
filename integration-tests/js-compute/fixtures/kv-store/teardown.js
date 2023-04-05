@@ -17,6 +17,7 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
 }
 const FASTLY_API_TOKEN = process.env.FASTLY_API_TOKEN;
 zx.verbose = true;
+// TODO: update this to the kv api when it is ready
 let stores = await fetch("https://api.fastly.com/resources/stores/object", {
     method: 'GET',
     headers: {
@@ -26,7 +27,7 @@ let stores = await fetch("https://api.fastly.com/resources/stores/object", {
     }
 })
 
-let STORE_ID = (await stores.json()).data.find(({ name }) => name === 'example-test-object-store')?.id
+let STORE_ID = (await stores.json()).data.find(({ name }) => name === 'example-test-kv-store')?.id
 if (STORE_ID) {
     await fetch(`https://api.fastly.com/resources/stores/object/${STORE_ID}`, {
         method: 'DELETE',

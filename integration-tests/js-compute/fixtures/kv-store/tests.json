@@ -1,569 +1,569 @@
 {
-  "GET /object-store/exposed-as-global": {
+  "GET /kv-store/exposed-as-global": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/exposed-as-global"
+      "pathname": "/kv-store/exposed-as-global"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/interface": {
+  "GET /kv-store/interface": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/interface"
+      "pathname": "/kv-store/interface"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/constructor/called-as-regular-function": {
+  "GET /kv-store/constructor/called-as-regular-function": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/constructor/called-as-regular-function"
+      "pathname": "/kv-store/constructor/called-as-regular-function"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/constructor/parameter-calls-7.1.17-ToString": {
+  "GET /kv-store/constructor/parameter-calls-7.1.17-ToString": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/constructor/parameter-calls-7.1.17-ToString"
+      "pathname": "/kv-store/constructor/parameter-calls-7.1.17-ToString"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/constructor/empty-parameter": {
+  "GET /kv-store/constructor/empty-parameter": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/constructor/empty-parameter"
+      "pathname": "/kv-store/constructor/empty-parameter"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/constructor/found-store": {
+  "GET /kv-store/constructor/found-store": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/constructor/found-store"
+      "pathname": "/kv-store/constructor/found-store"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/constructor/missing-store": {
+  "GET /kv-store/constructor/missing-store": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/constructor/missing-store"
+      "pathname": "/kv-store/constructor/missing-store"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/constructor/invalid-name": {
+  "GET /kv-store/constructor/invalid-name": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/constructor/invalid-name"
+      "pathname": "/kv-store/constructor/invalid-name"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/called-as-constructor": {
+  "GET /kv-store/put/called-as-constructor": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/called-as-constructor"
+      "pathname": "/kv-store/put/called-as-constructor"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/called-unbound": {
+  "GET /kv-store/put/called-unbound": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/called-unbound"
+      "pathname": "/kv-store/put/called-unbound"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/key-parameter-calls-7.1.17-ToString": {
+  "GET /kv-store/put/key-parameter-calls-7.1.17-ToString": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/key-parameter-calls-7.1.17-ToString"
+      "pathname": "/kv-store/put/key-parameter-calls-7.1.17-ToString"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/key-parameter-not-supplied": {
+  "GET /kv-store/put/key-parameter-not-supplied": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/key-parameter-not-supplied"
+      "pathname": "/kv-store/put/key-parameter-not-supplied"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/key-parameter-empty-string": {
+  "GET /kv-store/put/key-parameter-empty-string": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/key-parameter-empty-string"
+      "pathname": "/kv-store/put/key-parameter-empty-string"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/key-parameter-1024-character-string": {
+  "GET /kv-store/put/key-parameter-1024-character-string": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/key-parameter-1024-character-string"
+      "pathname": "/kv-store/put/key-parameter-1024-character-string"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/key-parameter-1025-character-string": {
+  "GET /kv-store/put/key-parameter-1025-character-string": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/key-parameter-1025-character-string"
+      "pathname": "/kv-store/put/key-parameter-1025-character-string"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/key-parameter-containing-newline": {
+  "GET /kv-store/put/key-parameter-containing-newline": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/key-parameter-containing-newline"
+      "pathname": "/kv-store/put/key-parameter-containing-newline"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/key-parameter-containing-carriage-return": {
+  "GET /kv-store/put/key-parameter-containing-carriage-return": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/key-parameter-containing-carriage-return"
+      "pathname": "/kv-store/put/key-parameter-containing-carriage-return"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/key-parameter-starting-with-well-known-acme-challenge": {
+  "GET /kv-store/put/key-parameter-starting-with-well-known-acme-challenge": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/key-parameter-starting-with-well-known-acme-challenge"
+      "pathname": "/kv-store/put/key-parameter-starting-with-well-known-acme-challenge"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/key-parameter-single-dot": {
+  "GET /kv-store/put/key-parameter-single-dot": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/key-parameter-single-dot"
+      "pathname": "/kv-store/put/key-parameter-single-dot"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/key-parameter-double-dot": {
+  "GET /kv-store/put/key-parameter-double-dot": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/key-parameter-double-dot"
+      "pathname": "/kv-store/put/key-parameter-double-dot"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/key-parameter-containing-special-characters": {
+  "GET /kv-store/put/key-parameter-containing-special-characters": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/key-parameter-containing-special-characters"
+      "pathname": "/kv-store/put/key-parameter-containing-special-characters"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-as-undefined": {
+  "GET /kv-store/put/value-parameter-as-undefined": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-as-undefined"
+      "pathname": "/kv-store/put/value-parameter-as-undefined"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-not-supplied": {
+  "GET /kv-store/put/value-parameter-not-supplied": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-not-supplied"
+      "pathname": "/kv-store/put/value-parameter-not-supplied"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-readablestream-empty": {
+  "GET /kv-store/put/value-parameter-readablestream-empty": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-readablestream-empty"
+      "pathname": "/kv-store/put/value-parameter-readablestream-empty"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-readablestream-under-30mb": {
+  "GET /kv-store/put/value-parameter-readablestream-under-30mb": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-readablestream-under-30mb"
+      "pathname": "/kv-store/put/value-parameter-readablestream-under-30mb"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-readablestream-over-30mb": {
+  "GET /kv-store/put/value-parameter-readablestream-over-30mb": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-readablestream-over-30mb"
+      "pathname": "/kv-store/put/value-parameter-readablestream-over-30mb"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-readablestream-locked": {
+  "GET /kv-store/put/value-parameter-readablestream-locked": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-readablestream-locked"
+      "pathname": "/kv-store/put/value-parameter-readablestream-locked"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-URLSearchParams": {
+  "GET /kv-store/put/value-parameter-URLSearchParams": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-URLSearchParams"
+      "pathname": "/kv-store/put/value-parameter-URLSearchParams"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-strings": {
+  "GET /kv-store/put/value-parameter-strings": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-strings"
+      "pathname": "/kv-store/put/value-parameter-strings"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-string-over-30mb": {
+  "GET /kv-store/put/value-parameter-string-over-30mb": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-string-over-30mb"
+      "pathname": "/kv-store/put/value-parameter-string-over-30mb"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-calls-7.1.17-ToString": {
+  "GET /kv-store/put/value-parameter-calls-7.1.17-ToString": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-calls-7.1.17-ToString"
+      "pathname": "/kv-store/put/value-parameter-calls-7.1.17-ToString"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-buffer": {
+  "GET /kv-store/put/value-parameter-buffer": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-buffer"
+      "pathname": "/kv-store/put/value-parameter-buffer"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-arraybuffer": {
+  "GET /kv-store/put/value-parameter-arraybuffer": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-arraybuffer"
+      "pathname": "/kv-store/put/value-parameter-arraybuffer"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-typed-arrays": {
+  "GET /kv-store/put/value-parameter-typed-arrays": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-typed-arrays"
+      "pathname": "/kv-store/put/value-parameter-typed-arrays"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/put/value-parameter-dataview": {
+  "GET /kv-store/put/value-parameter-dataview": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/put/value-parameter-dataview"
+      "pathname": "/kv-store/put/value-parameter-dataview"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/called-as-constructor": {
+  "GET /kv-store/get/called-as-constructor": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/called-as-constructor"
+      "pathname": "/kv-store/get/called-as-constructor"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/called-unbound": {
+  "GET /kv-store/get/called-unbound": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/called-unbound"
+      "pathname": "/kv-store/get/called-unbound"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-parameter-calls-7.1.17-ToString": {
+  "GET /kv-store/get/key-parameter-calls-7.1.17-ToString": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-parameter-calls-7.1.17-ToString"
+      "pathname": "/kv-store/get/key-parameter-calls-7.1.17-ToString"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-parameter-not-supplied": {
+  "GET /kv-store/get/key-parameter-not-supplied": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-parameter-not-supplied"
+      "pathname": "/kv-store/get/key-parameter-not-supplied"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-parameter-empty-string": {
+  "GET /kv-store/get/key-parameter-empty-string": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-parameter-empty-string"
+      "pathname": "/kv-store/get/key-parameter-empty-string"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-parameter-1024-character-string": {
+  "GET /kv-store/get/key-parameter-1024-character-string": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-parameter-1024-character-string"
+      "pathname": "/kv-store/get/key-parameter-1024-character-string"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-parameter-1025-character-string": {
+  "GET /kv-store/get/key-parameter-1025-character-string": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-parameter-1025-character-string"
+      "pathname": "/kv-store/get/key-parameter-1025-character-string"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-parameter-containing-newline": {
+  "GET /kv-store/get/key-parameter-containing-newline": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-parameter-containing-newline"
+      "pathname": "/kv-store/get/key-parameter-containing-newline"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-parameter-containing-carriage-return": {
+  "GET /kv-store/get/key-parameter-containing-carriage-return": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-parameter-containing-carriage-return"
+      "pathname": "/kv-store/get/key-parameter-containing-carriage-return"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-parameter-starting-with-well-known-acme-challenge": {
+  "GET /kv-store/get/key-parameter-starting-with-well-known-acme-challenge": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-parameter-starting-with-well-known-acme-challenge"
+      "pathname": "/kv-store/get/key-parameter-starting-with-well-known-acme-challenge"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-parameter-single-dot": {
+  "GET /kv-store/get/key-parameter-single-dot": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-parameter-single-dot"
+      "pathname": "/kv-store/get/key-parameter-single-dot"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-parameter-double-dot": {
+  "GET /kv-store/get/key-parameter-double-dot": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-parameter-double-dot"
+      "pathname": "/kv-store/get/key-parameter-double-dot"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-parameter-containing-special-characters": {
+  "GET /kv-store/get/key-parameter-containing-special-characters": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-parameter-containing-special-characters"
+      "pathname": "/kv-store/get/key-parameter-containing-special-characters"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-does-not-exist-returns-null": {
+  "GET /kv-store/get/key-does-not-exist-returns-null": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-does-not-exist-returns-null"
+      "pathname": "/kv-store/get/key-does-not-exist-returns-null"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store/get/key-exists": {
+  "GET /kv-store/get/key-exists": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store/get/key-exists"
+      "pathname": "/kv-store/get/key-exists"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store-entry/interface": {
+  "GET /kv-store-entry/interface": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store-entry/interface"
+      "pathname": "/kv-store-entry/interface"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store-entry/text/valid": {
+  "GET /kv-store-entry/text/valid": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store-entry/text/valid"
+      "pathname": "/kv-store-entry/text/valid"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store-entry/json/valid": {
+  "GET /kv-store-entry/json/valid": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store-entry/json/valid"
+      "pathname": "/kv-store-entry/json/valid"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store-entry/json/invalid": {
+  "GET /kv-store-entry/json/invalid": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store-entry/json/invalid"
+      "pathname": "/kv-store-entry/json/invalid"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store-entry/arrayBuffer/valid": {
+  "GET /kv-store-entry/arrayBuffer/valid": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store-entry/arrayBuffer/valid"
+      "pathname": "/kv-store-entry/arrayBuffer/valid"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store-entry/body": {
+  "GET /kv-store-entry/body": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store-entry/body"
+      "pathname": "/kv-store-entry/body"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /object-store-entry/bodyUsed": {
+  "GET /kv-store-entry/bodyUsed": {
     "environments": ["c@e", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/object-store-entry/bodyUsed"
+      "pathname": "/kv-store-entry/bodyUsed"
     },
     "downstream_response": {
       "status": 200
