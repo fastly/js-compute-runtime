@@ -121,6 +121,7 @@
   "streams/piping/throwing-options.any.js",
   "streams/piping/transform-streams.any.js",
   "streams/queuing-strategies.any.js",
+  "streams/readable-byte-streams/enqueue-with-detached-buffer.window.js",
   "streams/readable-byte-streams/tee.any.js",
   "streams/readable-streams/bad-strategies.any.js",
   "streams/readable-streams/bad-underlying-sources.any.js",
