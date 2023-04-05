@@ -224,6 +224,7 @@ jobs:
           - multiple-set-cookie
           - object-store
           - random
+          - react-byob
           - regex
           - request-cache-key
           - request-clone
