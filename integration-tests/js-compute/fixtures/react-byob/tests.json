@@ -1,0 +1,13 @@
+{
+  "GET /": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": ["<!DOCTYPE html><html><title>My app</title><body><h1>App</h1></body></html><script src=\"/main.js\" async=\"\"></script>"]
+    }
+  }
+}
