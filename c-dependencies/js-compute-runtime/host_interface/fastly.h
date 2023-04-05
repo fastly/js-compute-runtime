@@ -322,6 +322,15 @@ int object_store_open(const char *name, size_t name_len,
 WASM_IMPORT("fastly_object_store", "lookup")
 int object_store_get(fastly_object_store_handle_t object_store_handle, const char *key,
                      size_t key_len, fastly_body_handle_t *opt_body_handle_out);
+WASM_IMPORT("fastly_object_store", "lookup_async")
+int object_store_get_async(
+    fastly_object_store_handle_t object_store_handle, const char *key, size_t key_len,
+    fastly_pending_object_store_lookup_handle_t *pending_object_store_lookup_handle_out);
+
+WASM_IMPORT("fastly_object_store", "lookup_wait")
+int object_store_lookup_wait(fastly_pending_object_store_lookup_handle_t handle,
+                             fastly_option_body_handle_t *handle_out);
+
 WASM_IMPORT("fastly_object_store", "insert")
 int object_store_insert(fastly_object_store_handle_t object_store_handle, const char *key,
                         size_t key_len, fastly_body_handle_t body_handle);

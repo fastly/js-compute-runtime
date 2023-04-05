@@ -413,6 +413,7 @@ default world fastly-world {
      */
     type fd = u32
     type object-store-handle = u32
+    type pending-object-store-lookup-handle = u32
 
     object-store-open: func(name: string) -> result<object-store-handle, error>
 
@@ -422,6 +423,10 @@ default world fastly-world {
 
     // Should object store insert return "inserted" bool?
     object-store-insert: func(store: object-store-handle, key: string, body-handle: body-handle) -> result<_, error>
+
+    object-store-lookup-async: func(store: object-store-handle, key: string) -> result<pending-object-store-lookup-handle, error>
+
+    object-store-lookup-wait: func(h: pending-object-store-lookup-handle) -> result<option<body-handle>, error>
 
 
     /*
@@ -441,11 +446,12 @@ default world fastly-world {
      * Fastly Async IO
      */
     /// A handle to an object supporting generic async operations.
-    /// Can be either a `BodyHandle` or a `PendingRequestHandle`.
+    /// Can be either a `body-handle`, `pending-object-store-lookup-handle`, or `pending-request-handle`.
     ///
     /// Each async item has an associated I/O action:
     ///
     /// * Pending requests: awaiting the response headers / `Response` object
+    /// * Pending object store lookups: awaiting the result of a looking up a key within an Object Store
     /// * Normal bodies: reading bytes from the body
     /// * Streaming bodies: writing bytes to the body
     ///

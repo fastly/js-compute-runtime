@@ -188,6 +188,14 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
+    fastly_pending_object_store_lookup_handle_t ok;
+    fastly_error_t err;
+  } val;
+} fastly_result_pending_object_store_lookup_handle_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
     fastly_secret_store_handle_t ok;
     fastly_error_t err;
   } val;
@@ -426,6 +434,12 @@ void __wasm_import_fastly_object_store_lookup_as_fd(int32_t, int32_t, int32_t, i
 
 __attribute__((import_module("fastly"), import_name("object-store-insert")))
 void __wasm_import_fastly_object_store_insert(int32_t, int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((import_module("fastly"), import_name("object-store-lookup-async")))
+void __wasm_import_fastly_object_store_lookup_async(int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((import_module("fastly"), import_name("object-store-lookup-wait")))
+void __wasm_import_fastly_object_store_lookup_wait(int32_t, int32_t);
 
 __attribute__((import_module("fastly"), import_name("secret-store-open")))
 void __wasm_import_fastly_secret_store_open(int32_t, int32_t, int32_t);
@@ -2480,6 +2494,73 @@ bool fastly_object_store_insert(fastly_object_store_handle_t store, fastly_world
     }
   }
   if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_object_store_lookup_async(fastly_object_store_handle_t store, fastly_world_string_t *key, fastly_pending_object_store_lookup_handle_t *ret, fastly_error_t *err) {
+  __attribute__((aligned(4)))
+  uint8_t ret_area[8];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_object_store_lookup_async((int32_t) (store), (int32_t) (*key).ptr, (int32_t) (*key).len, ptr);
+  fastly_result_pending_object_store_lookup_handle_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (uint32_t) (*((int32_t*) (ptr + 4)));
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_object_store_lookup_wait(fastly_pending_object_store_lookup_handle_t h, fastly_option_body_handle_t *ret, fastly_error_t *err) {
+  __attribute__((aligned(4)))
+  uint8_t ret_area[12];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_object_store_lookup_wait((int32_t) (h), ptr);
+  fastly_result_option_body_handle_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      fastly_option_body_handle_t option;
+      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
+        case 0: {
+          option.is_some = false;
+          break;
+        }
+        case 1: {
+          option.is_some = true;
+          option.val = (uint32_t) (*((int32_t*) (ptr + 8)));
+          break;
+        }
+      }
+      
+      result.val.ok = option;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
     return 1;
   } else {
     *err = result.val.err;

@@ -43,6 +43,8 @@ typedef struct {
 
 typedef uint32_t fastly_pending_request_handle_t;
 
+typedef uint32_t fastly_pending_object_store_lookup_handle_t;
+
 typedef uint32_t fastly_object_store_handle_t;
 
 typedef uint32_t fastly_log_endpoint_handle_t;
@@ -175,11 +177,12 @@ typedef struct {
 } fastly_request_t;
 
 // A handle to an object supporting generic async operations.
-// Can be either a `BodyHandle` or a `PendingRequestHandle`.
+// Can be either a `body-handle`, `pending-object-store-lookup-handle`, or `pending-request-handle`.
 //
 // Each async item has an associated I/O action:
 //
 // * Pending requests: awaiting the response headers / `Response` object
+// * Pending object store lookups: awaiting the result of a looking up a key within an Object Store
 // * Normal bodies: reading bytes from the body
 // * Streaming bodies: writing bytes to the body
 //
@@ -378,6 +381,12 @@ bool fastly_object_store_lookup_as_fd(fastly_object_store_handle_t store,
                                       fastly_error_t *err);
 bool fastly_object_store_insert(fastly_object_store_handle_t store, fastly_world_string_t *key,
                                 fastly_body_handle_t body_handle, fastly_error_t *err);
+bool fastly_object_store_lookup_async(fastly_object_store_handle_t store,
+                                      fastly_world_string_t *key,
+                                      fastly_pending_object_store_lookup_handle_t *ret,
+                                      fastly_error_t *err);
+bool fastly_object_store_lookup_wait(fastly_pending_object_store_lookup_handle_t h,
+                                     fastly_option_body_handle_t *ret, fastly_error_t *err);
 bool fastly_secret_store_open(fastly_world_string_t *name, fastly_secret_store_handle_t *ret,
                               fastly_error_t *err);
 bool fastly_secret_store_get(fastly_secret_store_handle_t store, fastly_world_string_t *key,
