@@ -7,7 +7,7 @@
     },
     "downstream_response": {
       "status": 200,
-      "body": ["hey1hey2hey3"]
+      "body": ["hey3"]
     }
   }
 }
