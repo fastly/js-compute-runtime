@@ -342,7 +342,7 @@ std::unique_ptr<JsonWebKey> JsonWebKey::parse(JSContext *cx, JS::HandleValue val
           }
           std::string t(t_chars.get(), t_length);
 
-          oth.push_back(RsaOtherPrimesInfo(r, d, t));
+          oth.emplace_back(r, d, t);
         }
       }
     }

@@ -191,8 +191,7 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPrivateKeyFromJWK(JSContext *cx
     }
     auto factorCRTCoefficient = factorCRTCoefficientResult.unwrap();
 
-    otherPrimeInfos.push_back(
-        CryptoKeyRSAComponents::PrimeInfo(primeFactor, factorCRTExponent, factorCRTCoefficient));
+    otherPrimeInfos.emplace_back(primeFactor, factorCRTExponent, factorCRTCoefficient);
   }
 
   auto privateKeyComponents = CryptoKeyRSAComponents::createPrivateWithAdditionalData(
