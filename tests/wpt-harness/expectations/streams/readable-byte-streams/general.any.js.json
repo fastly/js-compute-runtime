@@ -60,7 +60,7 @@
     "status": "PASS"
   },
   "ReadableStream with byte source: Mix of auto allocate and BYOB": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: Automatic pull() after start() and read(view)": {
     "status": "PASS"
@@ -78,7 +78,7 @@
     "status": "PASS"
   },
   "ReadableStream with byte source: enqueue(), read(view) partially, then read()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: getReader(), enqueue(), close(), then read()": {
     "status": "PASS"
@@ -123,7 +123,7 @@
     "status": "PASS"
   },
   "ReadableStream with byte source: enqueue(), getReader(), then read(view) where view.buffer is not fully covered by view": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: Multiple enqueue(), getReader(), then read(view)": {
     "status": "PASS"

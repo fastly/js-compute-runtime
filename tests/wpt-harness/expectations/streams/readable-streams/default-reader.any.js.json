@@ -1,27 +1,27 @@
 {
   "ReadableStreamDefaultReader constructor should get a ReadableStream object as argument": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStreamDefaultReader closed should always return the same promise object": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Constructing a ReadableStreamDefaultReader directly should fail if the stream is already locked (via direct construction)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Getting a ReadableStreamDefaultReader via getReader should fail if the stream is already locked (via direct construction)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Constructing a ReadableStreamDefaultReader directly should fail if the stream is already locked (via getReader)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Getting a ReadableStreamDefaultReader via getReader should fail if the stream is already locked (via getReader)": {
     "status": "PASS"
   },
   "Constructing a ReadableStreamDefaultReader directly should be OK if the stream is closed": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Constructing a ReadableStreamDefaultReader directly should be OK if the stream is errored": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Reading from a reader for an empty stream will wait until a chunk is available": {
     "status": "PASS"
