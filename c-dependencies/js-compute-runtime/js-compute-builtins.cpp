@@ -1222,6 +1222,8 @@ bool process_pending_async_tasks(JSContext *cx) {
     HandleObject pending_obj = (*pending_async_tasks)[i];
     if (builtins::Request::is_instance(pending_obj)) {
       handles[i] = builtins::Request::pending_handle(pending_obj);
+    } else if (builtins::ObjectStore::is_instance(pending_obj)) {
+      handles[i] = builtins::ObjectStore::pending_lookup_handle(pending_obj);
     } else {
       MOZ_ASSERT(builtins::NativeStreamSource::is_instance(pending_obj));
       RootedObject owner(cx, builtins::NativeStreamSource::owner(pending_obj));
@@ -1261,6 +1263,8 @@ bool process_pending_async_tasks(JSContext *cx) {
   bool ok;
   if (builtins::Request::is_instance(ready_obj)) {
     ok = process_pending_request(cx, ready_obj);
+  } else if (builtins::ObjectStore::is_instance(ready_obj)) {
+    ok = builtins::ObjectStore::process_pending_object_store_lookup(cx, ready_obj);
   } else {
     MOZ_ASSERT(builtins::NativeStreamSource::is_instance(ready_obj));
     ok = process_body_read(cx, ready_obj);

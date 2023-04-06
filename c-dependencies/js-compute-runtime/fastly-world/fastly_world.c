@@ -438,8 +438,8 @@ void __wasm_import_fastly_object_store_insert(int32_t, int32_t, int32_t, int32_t
 __attribute__((import_module("fastly"), import_name("object-store-lookup-async")))
 void __wasm_import_fastly_object_store_lookup_async(int32_t, int32_t, int32_t, int32_t);
 
-__attribute__((import_module("fastly"), import_name("object-store-lookup-wait")))
-void __wasm_import_fastly_object_store_lookup_wait(int32_t, int32_t);
+__attribute__((import_module("fastly"), import_name("object-store-pending-lookup-wait")))
+void __wasm_import_fastly_object_store_pending_lookup_wait(int32_t, int32_t);
 
 __attribute__((import_module("fastly"), import_name("secret-store-open")))
 void __wasm_import_fastly_secret_store_open(int32_t, int32_t, int32_t);
@@ -2528,11 +2528,11 @@ bool fastly_object_store_lookup_async(fastly_object_store_handle_t store, fastly
   }
 }
 
-bool fastly_object_store_lookup_wait(fastly_pending_object_store_lookup_handle_t h, fastly_option_body_handle_t *ret, fastly_error_t *err) {
+bool fastly_object_store_pending_lookup_wait(fastly_pending_object_store_lookup_handle_t h, fastly_option_body_handle_t *ret, fastly_error_t *err) {
   __attribute__((aligned(4)))
   uint8_t ret_area[12];
   int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_object_store_lookup_wait((int32_t) (h), ptr);
+  __wasm_import_fastly_object_store_pending_lookup_wait((int32_t) (h), ptr);
   fastly_result_option_body_handle_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {

@@ -665,15 +665,18 @@ bool fastly_object_store_lookup(fastly_object_store_handle_t store, fastly_world
   return ok;
 }
 
-bool fastly_object_store_lookup_async(fastly_object_store_handle_t store, fastly_world_string_t *key,
-                                fastly_pending_object_store_lookup_handle_t *ret, fastly_error_t *err) {
-  return convert_result(fastly::object_store_get_async(handle, key->ptr, key->len, ret), err);
+bool fastly_object_store_lookup_async(fastly_object_store_handle_t store,
+                                      fastly_world_string_t *key,
+                                      fastly_pending_object_store_lookup_handle_t *ret,
+                                      fastly_error_t *err) {
+  return convert_result(fastly::object_store_get_async(store, key->ptr, key->len, ret), err);
 }
 
-bool fastly_object_store_lookup_wait(fastly_pending_object_store_lookup_handle_t h, fastly_option_body_handle_t *ret,
-                                      fastly_error_t *err) {
+bool fastly_object_store_pending_lookup_wait(fastly_pending_object_store_lookup_handle_t h,
+                                             fastly_option_body_handle_t *ret,
+                                             fastly_error_t *err) {
   ret->val = INVALID_HANDLE;
-  bool ok = convert_result(fastly::object_store_lookup_wait(h, &ret->val), err);
+  bool ok = convert_result(fastly::object_store_pending_lookup_wait(h, &ret->val), err);
   if ((!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) || ret->val == INVALID_HANDLE) {
     ret->is_some = false;
     return true;

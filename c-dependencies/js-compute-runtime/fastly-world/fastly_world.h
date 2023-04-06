@@ -385,8 +385,8 @@ bool fastly_object_store_lookup_async(fastly_object_store_handle_t store,
                                       fastly_world_string_t *key,
                                       fastly_pending_object_store_lookup_handle_t *ret,
                                       fastly_error_t *err);
-bool fastly_object_store_lookup_wait(fastly_pending_object_store_lookup_handle_t h,
-                                     fastly_option_body_handle_t *ret, fastly_error_t *err);
+bool fastly_object_store_pending_lookup_wait(fastly_pending_object_store_lookup_handle_t h,
+                                             fastly_option_body_handle_t *ret, fastly_error_t *err);
 bool fastly_secret_store_open(fastly_world_string_t *name, fastly_secret_store_handle_t *ret,
                               fastly_error_t *err);
 bool fastly_secret_store_get(fastly_secret_store_handle_t store, fastly_world_string_t *key,

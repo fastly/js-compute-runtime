@@ -426,7 +426,7 @@ default world fastly-world {
 
     object-store-lookup-async: func(store: object-store-handle, key: string) -> result<pending-object-store-lookup-handle, error>
 
-    object-store-lookup-wait: func(h: pending-object-store-lookup-handle) -> result<option<body-handle>, error>
+    object-store-pending-lookup-wait: func(h: pending-object-store-lookup-handle) -> result<option<body-handle>, error>
 
 
     /*

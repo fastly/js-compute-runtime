@@ -183,31 +183,34 @@ bool parse_and_validate_key(JSContext *cx, JS::UniqueChars *key, size_t len) {
 
 } // namespace
 
-bool ObjectStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(1)
+fastly_pending_object_store_lookup_handle_t ObjectStore::pending_lookup_handle(JSObject *self) {
+  MOZ_ASSERT(ObjectStore::is_instance(self));
 
-  JS::RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
-  if (!result_promise) {
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+  JS::Value handle_value =
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PendingLookupHandle));
+
+  if (handle_value.isInt32()) {
+    return handle_value.toInt32();
   }
 
-  JS::RootedValue key(cx, args.get(0));
+  return INVALID_HANDLE;
+}
 
-  // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  fastly_world_string_t key_str;
-  JS::UniqueChars key_chars = encode(cx, key, &key_str.len);
-  if (!key_chars)
-    return false;
-  key_str.ptr = key_chars.get();
+bool ObjectStore::process_pending_object_store_lookup(JSContext *cx, JS::HandleObject self) {
+  MOZ_ASSERT(ObjectStore::is_instance(self));
 
-  if (!parse_and_validate_key(cx, &key_chars, key_str.len))
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+  auto pending_promise_value =
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PendingLookupPromise));
+  MOZ_ASSERT(pending_promise_value.isObject());
+  JS::RootedObject result_promise(cx, &pending_promise_value.toObject());
 
   fastly_option_body_handle_t ret;
   fastly_error_t err;
-  if (!fastly_object_store_lookup(object_store_handle(self), &key_str, &ret, &err)) {
+  bool ok = fastly_object_store_pending_lookup_wait(
+      builtins::ObjectStore::pending_lookup_handle(self), &ret, &err);
+  if (!ok) {
     HANDLE_ERROR(cx, err);
-    return false;
+    return RejectPromiseWithPendingError(cx, result_promise);
   }
 
   // When no entry is found, we are going to resolve the Promise with `null`.
@@ -223,6 +226,45 @@ bool ObjectStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS::RootedValue result(cx);
     result.setObject(*entry);
     JS::ResolvePromise(cx, result_promise, result);
+  }
+
+  return true;
+}
+
+bool ObjectStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+
+  JS::RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!result_promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  JS::RootedValue key(cx, args.get(0));
+
+  // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
+  fastly_world_string_t key_str;
+  JS::UniqueChars key_chars = encode(cx, key, &key_str.len);
+  if (!key_chars) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  key_str.ptr = key_chars.get();
+
+  if (!parse_and_validate_key(cx, &key_chars, key_str.len))
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+
+  fastly_pending_object_store_lookup_handle_t ret;
+  fastly_error_t err;
+  if (!fastly_object_store_lookup_async(object_store_handle(self), &key_str, &ret, &err)) {
+    HANDLE_ERROR(cx, err);
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::PendingLookupHandle), JS::Int32Value(ret));
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::PendingLookupPromise),
+                      JS::ObjectValue(*result_promise));
+
+  if (!pending_async_tasks->append(self)) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
   args.rval().setObject(*result_promise);

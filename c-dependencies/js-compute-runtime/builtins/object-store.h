@@ -37,6 +37,8 @@ public:
   static constexpr const char *class_name = "ObjectStore";
   enum class Slots {
     ObjectStore,
+    PendingLookupPromise,
+    PendingLookupHandle,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -48,6 +50,8 @@ public:
 
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
+  static fastly_pending_object_store_lookup_handle_t pending_lookup_handle(JSObject *self);
+  static bool process_pending_object_store_lookup(JSContext *cx, JS::HandleObject self);
 };
 
 } // namespace builtins
