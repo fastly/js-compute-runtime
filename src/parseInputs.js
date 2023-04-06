@@ -7,6 +7,7 @@ export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
   let component = false;
+  let enableExperimentalByobStreams = false;
   let customEngineSet = false;
   let wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
   let customInputSet = false;
@@ -19,6 +20,10 @@ export async function parseInputs(cliInputs) {
     switch (cliInput) {
       case "--": {
         break loop;
+      }
+      case "--enable-experimental-byob-streams": {
+        enableExperimentalByobStreams = true;
+        break;
       }
       case "-V":
       case "--version": {
@@ -88,5 +93,5 @@ export async function parseInputs(cliInputs) {
       }
     }
   }
-  return { wasmEngine, component, input, output };
+  return { wasmEngine, component, input, output, enableExperimentalByobStreams };
 }
