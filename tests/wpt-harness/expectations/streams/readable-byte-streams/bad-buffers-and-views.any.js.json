@@ -57,7 +57,7 @@
     "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view's buffer is zero-length (in the closed state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() throws if the supplied view is non-zero-length (in the closed state)": {
     "status": "PASS"
