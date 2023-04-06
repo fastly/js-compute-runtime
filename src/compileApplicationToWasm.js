@@ -99,13 +99,16 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
         shell: true,
         encoding: "utf-8",
         env: {
-          ENABLE_EXPERIMENTAL_BYOB_STREAMS: enableExperimentalByobStreams ? 1 : 0
+          ENABLE_EXPERIMENTAL_BYOB_STREAMS: enableExperimentalByobStreams ? '1' : '0'
         }
       }
     );
+    if (wizerProcess.status !== 0) {
+      throw new Error(`Wizer initialization failure`);
+    }
     process.exitCode = wizerProcess.status;
   } catch (error) {
-    console.error(`Error: Failed to compile JavaScript to Wasm`, error.message);
+    console.error(`Error: Failed to compile JavaScript to Wasm: `, error.message);
     process.exit(1);
   }
 }

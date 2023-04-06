@@ -210,7 +210,7 @@
     "status": "PASS"
   },
   "calling respondWithNewView() twice on the same byobRequest should throw": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "calling respond(0) twice on the same byobRequest should throw even when closed": {
     "status": "PASS"
@@ -243,10 +243,10 @@
     "status": "FAIL"
   },
   "ReadableStream with byte source: respondWithNewView() with a smaller view": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() with a zero-length view (in the closed state)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() with a transferred non-zero-length view (in the readable state)": {
     "status": "FAIL"
@@ -294,6 +294,6 @@
     "status": "FAIL"
   },
   "ReadableStream with byte source: autoAllocateChunkSize, read(), respondWithNewView()": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }
