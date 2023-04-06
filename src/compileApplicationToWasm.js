@@ -8,7 +8,7 @@ import { precompile } from "./precompile.js";
 import { bundle } from "./bundle.js";
 import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
 
-export async function compileApplicationToWasm(input, output, wasmEngine) {
+export async function compileApplicationToWasm(input, output, wasmEngine, enableExperimentalByobStreams = false) {
   try {
     if (!(await isFile(input))) {
       console.error(
@@ -85,6 +85,7 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
     let wizerProcess = spawnSync(
       wizer,
       [
+        "--inherit-env=true",
         "--allow-wasi",
         `--dir=.`,
         `--wasm-bulk-memory=true`,
@@ -97,6 +98,9 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
         input: application,
         shell: true,
         encoding: "utf-8",
+        env: {
+          ENABLE_EXPERIMENTAL_BYOB_STREAMS: enableExperimentalByobStreams ? 1 : 0
+        }
       }
     );
     process.exitCode = wizerProcess.status;
