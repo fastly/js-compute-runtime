@@ -1,9 +1,9 @@
 {
   "ReadableStream with byte source: read()ing from a closed stream still transfers the buffer": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: read()ing from a stream with queued chunks still transfers the buffer": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: enqueuing an already-detached buffer throws": {
     "status": "PASS"
