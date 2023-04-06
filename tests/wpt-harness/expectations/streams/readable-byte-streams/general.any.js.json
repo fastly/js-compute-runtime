@@ -48,7 +48,7 @@
     "status": "FAIL"
   },
   "ReadableStream with byte source: releaseLock() on ReadableStreamBYOBReader must reject pending read()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: Automatic pull() after start()": {
     "status": "PASS"
@@ -219,7 +219,7 @@
     "status": "FAIL"
   },
   "pull() resolving should not resolve read()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: default reader + autoAllocateChunkSize + byobRequest interaction": {
     "status": "PASS"

@@ -123,7 +123,6 @@
   "streams/queuing-strategies.any.js",
   "streams/readable-byte-streams/bad-buffers-and-views.any.js",
   "streams/readable-byte-streams/construct-byob-request.any.js",
-  "streams/readable-byte-streams/enqueue-with-detached-buffer.window.js",
   "streams/readable-byte-streams/general.any.js",
   "streams/readable-byte-streams/respond-after-enqueue.any.js",
   "streams/readable-byte-streams/tee.any.js",
