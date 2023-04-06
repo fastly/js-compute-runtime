@@ -4,7 +4,6 @@ globalThis.GLOBAL = {
   isShadowRealm: function() { return false; },
 };
 
-function transferArrayBufferView () {}
 function ReadableByteStreamController () {}
 
 globalThis.Window=self;
