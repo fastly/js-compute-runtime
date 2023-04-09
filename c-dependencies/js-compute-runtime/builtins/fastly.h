@@ -21,9 +21,9 @@ public:
   static JS::PersistentRooted<JSString *> defaultBackend;
   static bool allowDynamicBackends;
 
-  static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
+  static bool now(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool dump(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -36,7 +36,7 @@ public:
   static bool defaultBackend_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool allowDynamicBackends_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool create(JSContext *cx, JS::HandleObject global);
+  static bool create(JSContext *cx, JS::HandleObject global, FastlyOptions options);
 };
 
 } // namespace builtins

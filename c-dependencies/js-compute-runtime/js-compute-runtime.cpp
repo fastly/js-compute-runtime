@@ -358,7 +358,13 @@ void init() {
   JSAutoRealm ar(cx, global);
   FETCH_HANDLERS = new JS::PersistentRootedObjectVector(cx);
 
-  define_fastly_sys(cx, global);
+  bool ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS =
+      std::string(std::getenv("ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS")) == "1";
+  FastlyOptions options;
+  options.setExperimentalHighResolutionTimeMethodsEnabled(
+      ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS);
+
+  define_fastly_sys(cx, global, options);
   if (!JS_DefineFunction(cx, global, "addEventListener", addEventListener, 2, 0))
     exit(1);
 

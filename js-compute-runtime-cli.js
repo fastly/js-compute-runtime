@@ -5,7 +5,15 @@ import { printVersion } from "./src/printVersion.js";
 import { printHelp } from "./src/printHelp.js";
 import { addSdkMetadataField } from "./src/addSdkMetadataField.js";
 
-const {wasmEngine, input, component, output, version, help} = await parseInputs(process.argv.slice(2))
+const {
+  enableExperimentalHighResolutionTimeMethods,
+  wasmEngine,
+  input,
+  component,
+  output,
+  version,
+  help
+} = await parseInputs(process.argv.slice(2))
 
 if (version) {
   await printVersion();
@@ -19,7 +27,7 @@ if (version) {
   // it could be that the user is using an older version of js-compute-runtime
   // and a newer version does support the platform they are using.
   const {compileApplicationToWasm} = await import('./src/compileApplicationToWasm.js')
-  await compileApplicationToWasm(input, output, wasmEngine);
+  await compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods);
   if (component) {
     const {compileComponent} = await import('./src/component.js');
     await compileComponent(output);
