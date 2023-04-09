@@ -81,7 +81,28 @@ bool hasWizeningFinished();
 bool isWizening();
 void markWizeningAsFinished();
 
-bool define_fastly_sys(JSContext *cx, JS::HandleObject global);
+class FastlyOptions {
+private:
+  uint8_t mask = 0;
+
+public:
+  static constexpr const uint8_t experimental_high_resolution_time_methods_enabled_flag = 1 << 0;
+
+  FastlyOptions() = default;
+
+  bool getExperimentalHighResolutionTimeMethodsEnabled() {
+    return this->mask & experimental_high_resolution_time_methods_enabled_flag;
+  };
+  void setExperimentalHighResolutionTimeMethodsEnabled(bool set) {
+    if (set) {
+      this->mask |= experimental_high_resolution_time_methods_enabled_flag;
+    } else {
+      this->mask &= ~experimental_high_resolution_time_methods_enabled_flag;
+    }
+  };
+};
+
+bool define_fastly_sys(JSContext *cx, JS::HandleObject global, FastlyOptions options);
 
 bool RejectPromiseWithPendingError(JSContext *cx, JS::HandleObject promise);
 

@@ -130,13 +130,11 @@ bool Fastly::includeBytes(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-const JSFunctionSpec Fastly::methods[] = {
-    JS_FN("dump", dump, 1, 0),
-    JS_FN("enableDebugLogging", enableDebugLogging, 1, JSPROP_ENUMERATE),
-    JS_FN("getGeolocationForIpAddress", getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
-    JS_FN("getLogger", getLogger, 1, JSPROP_ENUMERATE),
-    JS_FN("includeBytes", includeBytes, 1, JSPROP_ENUMERATE),
-    JS_FS_END};
+bool Fastly::now(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setNumber(JS_Now());
+  return true;
+}
 
 bool Fastly::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -204,19 +202,35 @@ const JSPropertySpec Fastly::properties[] = {
             JSPROP_ENUMERATE),
     JS_PS_END};
 
-bool Fastly::create(JSContext *cx, JS::HandleObject global) {
+bool Fastly::create(JSContext *cx, JS::HandleObject global, FastlyOptions options) {
   JS::RootedObject fastly(cx, JS_NewPlainObject(cx));
-  if (!fastly)
+  if (!fastly) {
     return false;
+  }
 
   env.init(cx, Env::create(cx));
-  if (!env)
+  if (!env) {
     return false;
+  }
   baseURL.init(cx);
   defaultBackend.init(cx);
 
-  if (!JS_DefineProperty(cx, global, "fastly", fastly, 0))
+  if (!JS_DefineProperty(cx, global, "fastly", fastly, 0)) {
     return false;
+  }
+
+  JSFunctionSpec nowfn = JS_FN("now", now, 0, JSPROP_ENUMERATE);
+  JSFunctionSpec end = JS_FS_END;
+
+  const JSFunctionSpec methods[] = {
+      JS_FN("dump", dump, 1, 0),
+      JS_FN("enableDebugLogging", enableDebugLogging, 1, JSPROP_ENUMERATE),
+      JS_FN("getGeolocationForIpAddress", getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
+      JS_FN("getLogger", getLogger, 1, JSPROP_ENUMERATE),
+      JS_FN("includeBytes", includeBytes, 1, JSPROP_ENUMERATE),
+      options.getExperimentalHighResolutionTimeMethodsEnabled() ? nowfn : end,
+      end};
+
   return JS_DefineFunctions(cx, fastly, methods) && JS_DefineProperties(cx, fastly, properties);
 }
 
