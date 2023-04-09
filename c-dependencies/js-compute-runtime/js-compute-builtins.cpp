@@ -340,7 +340,7 @@ JS::PersistentRooted<js::UniquePtr<ScheduledTimers>> timers;
 
 namespace GlobalProperties {
 
-JS::Result<std::string> ConvertJSValueToByteString(JSContext *cx, JS::Handle<JS::Value> v) {
+JS::Result<std::string> convertJSValueToByteString(JSContext *cx, JS::Handle<JS::Value> v) {
   JS::RootedString s(cx);
   if (v.isString()) {
     s = v.toString();
@@ -391,10 +391,10 @@ JS::Result<std::string> ConvertJSValueToByteString(JSContext *cx, JS::Handle<JS:
   return byteString;
 }
 
-JS::Result<std::string> ConvertJSValueToByteString(JSContext *cx, std::string v) {
+JS::Result<std::string> convertJSValueToByteString(JSContext *cx, std::string v) {
   JS::RootedValue s(cx);
   s.setString(JS_NewStringCopyN(cx, v.c_str(), v.length()));
-  return ConvertJSValueToByteString(cx, s);
+  return convertJSValueToByteString(cx, s);
 }
 
 // Maps an encoded character to a value in the Base64 alphabet, per
@@ -627,7 +627,7 @@ bool atob(JSContext *cx, unsigned argc, Value *vp) {
   if (!args.requireAtLeast(cx, "atob", 1)) {
     return false;
   }
-  auto dataResult = ConvertJSValueToByteString(cx, args.get(0));
+  auto dataResult = convertJSValueToByteString(cx, args.get(0));
   if (dataResult.isErr()) {
     return false;
   }
@@ -730,8 +730,8 @@ bool btoa(JSContext *cx, unsigned argc, Value *vp) {
   auto data = args.get(0);
   auto out = args.rval();
   // Note: We do not check if data contains any character whose code point is greater than U+00FF
-  // before calling ConvertJSValueToByteString as ConvertJSValueToByteString does the same check
-  auto byteStringResult = ConvertJSValueToByteString(cx, data);
+  // before calling convertJSValueToByteString as convertJSValueToByteString does the same check
+  auto byteStringResult = convertJSValueToByteString(cx, data);
   if (byteStringResult.isErr()) {
     return false;
   }
@@ -931,6 +931,8 @@ bool self_set(JSContext *cx, unsigned argc, Value *vp) {
  *
  * Currently the only relevant builtin is URLSearchParams, but that'll grow to
  * include Blob and FormData, too.
+ *
+ * TODO: Add support for CryptoKeys
  */
 JSObject *ReadStructuredClone(JSContext *cx, JSStructuredCloneReader *r,
                               const JS::CloneDataPolicy &cloneDataPolicy, uint32_t tag,
@@ -966,6 +968,8 @@ JSObject *ReadStructuredClone(JSContext *cx, JSStructuredCloneReader *r,
  *
  * Currently the only relevant builtin is URLSearchParams, but that'll grow to
  * include Blob and FormData, too.
+ *
+ * TODO: Add support for CryptoKeys
  */
 bool WriteStructuredClone(JSContext *cx, JSStructuredCloneWriter *w, JS::HandleObject obj,
                           bool *sameProcessScopeRequired, void *closure) {
@@ -1295,6 +1299,8 @@ bool define_fastly_sys(JSContext *cx, HandleObject global) {
   if (!builtins::SubtleCrypto::init_class(cx, global))
     return false;
   if (!builtins::Crypto::init_class(cx, global))
+    return false;
+  if (!builtins::CryptoKey::init_class(cx, global))
     return false;
 
   if (!builtins::NativeStreamSource::init_class(cx, global))

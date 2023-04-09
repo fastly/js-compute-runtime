@@ -1,7 +1,7 @@
 /// <reference path="../../../../../types/index.d.ts" />
 
 import { env } from 'fastly:env';
-import { pass, fail, assert, assertThrows, assertRejects } from "../../../assertions.js";
+import { pass, fail, assert, assertThrows, assertRejects, assertResolves } from "../../../assertions.js";
 
 addEventListener("fetch", event => {
   event.respondWith(app(event));
@@ -24,6 +24,43 @@ async function app(event) {
     return fail(`The routeHandler threw an error: ${error.message}` + '\n' + error.stack)
   }
 }
+
+// From https://www.rfc-editor.org/rfc/rfc7517#appendix-A.1
+const publicJsonWebKeyData = {
+  "alg":"RS256",
+  "e":"AQAB",
+  "ext": true,
+  "key_ops": [
+    "verify"
+  ],
+  "kty":"RSA",
+  "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw"
+};
+
+// From https://www.rfc-editor.org/rfc/rfc7517#appendix-A.2
+const privateJsonWebKeyData = {
+  "alg":"RS256",
+  "d":"X4cTteJY_gn4FYPsXB8rdXix5vwsg1FLN5E3EaG6RJoVH-HLLKD9M7dx5oo7GURknchnrRweUkC7hT5fJLM0WbFAKNLWY2vv7B6NqXSzUvxT0_YSfqijwp3RTzlBaCxWp4doFk5N2o8Gy_nHNKroADIkJ46pRUohsXywbReAdYaMwFs9tv8d_cPVY3i07a3t8MN6TNwm0dSawm9v47UiCl3Sk5ZiG7xojPLu4sbg1U2jx4IBTNBznbJSzFHK66jT8bgkuqsk0GjskDJk19Z4qwjwbsnn4j2WBii3RL-Us2lGVkY8fkFzme1z0HbIkfz0Y6mqnOYtqc0X4jfcKoAC8Q",
+  "dp":"G4sPXkc6Ya9y8oJW9_ILj4xuppu0lzi_H7VTkS8xj5SdX3coE0oimYwxIi2emTAue0UOa5dpgFGyBJ4c8tQ2VF402XRugKDTP8akYhFo5tAA77Qe_NmtuYZc3C3m3I24G2GvR5sSDxUyAN2zq8Lfn9EUms6rY3Ob8YeiKkTiBj0",
+  "dq":"s9lAH9fggBsoFR8Oac2R_E2gw282rT2kGOAhvIllETE1efrA6huUUvMfBcMpn8lqeW6vzznYY5SSQF7pMdC_agI3nG8Ibp1BUb0JUiraRNqUfLhcQb_d9GF4Dh7e74WbRsobRonujTYN1xCaP6TO61jvWrX-L18txXw494Q_cgk",
+  "e":"AQAB",
+  "ext": true,
+  "key_ops": [
+    "sign"
+  ],
+  "kty":"RSA",
+  "n":"0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
+  "p":"83i-7IvMGXoMXCskv73TKr8637FiO7Z27zv8oj6pbWUQyLPQBQxtPVnwD20R-60eTDmD2ujnMt5PoqMrm8RfmNhVWDtjjMmCMjOpSXicFHj7XOuVIYQyqVWlWEh6dN36GVZYk93N8Bc9vY41xy8B9RzzOGVQzXvNEvn7O0nVbfs",
+  "q":"3dfOR9cuYq-0S-mkFLzgItgMEfFzB2q3hWehMuG0oCuqnb3vobLyumqjVZQO1dIrdwgTnCdpYzBcOfW5r370AFXjiWft_NGEiovonizhKpo9VVS78TzFgxkIdrecRezsZ-1kYd_s1qDbxtkDEgfAITAG9LUnADun4vIcb6yelxk",
+  "qi":"GyM_p6JrXySiz1toFgKbWV-JdI3jQ4ypu9rbMWx3rQJBfmt0FoYzgUIZEVFEcOqwemRN81zoDAaa-Bk0KWNGDjJHZDdDmFhW3AN7lI-puxk_mHZGJ11rxyR8O55XLSe3SPmRfKwZI6yU24ZxvQKFYItdldUKGzO6Ia6zTKhAVRU",
+};
+
+const jsonWebKeyAlgorithm = {
+  name: "RSASSA-PKCS1-v1_5",
+  hash: { name: "SHA-256" },
+};
+
+
 
 const routes = new Map();
 routes.set('/', () => {
@@ -48,6 +85,402 @@ routes.set("/crypto.subtle", async () => {
   if (error) { return error; }
   return pass();
 });
+
+// importKey
+{
+  routes.set("/crypto.subtle.importKey", async () => {
+    error = assert(typeof crypto.subtle.importKey, 'function', `typeof crypto.subtle.importKey`)
+    if (error) { return error; }
+    error = assert(crypto.subtle.importKey, SubtleCrypto.prototype.importKey, `crypto.subtle.importKey === SubtleCrypto.prototype.importKey`)
+    if (error) { return error; }
+    return pass();
+  });
+  routes.set("/crypto.subtle.importKey/length", async () => {
+    error = assert(crypto.subtle.importKey.length, 5, `crypto.subtle.importKey.length === 5`)
+    if (error) { return error; }
+    return pass();
+  });
+  routes.set("/crypto.subtle.importKey/called-as-constructor", async () => {
+    error = assertThrows(() => {
+      new crypto.subtle.importKey
+    }, TypeError, "crypto.subtle.importKey is not a constructor")
+    if (error) { return error; }
+    return pass();
+  });
+  routes.set("/crypto.subtle.importKey/called-with-wrong-this", async () => {
+    error = await assertRejects(async () => {
+      await crypto.subtle.importKey.call(undefined, 'jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+    }, TypeError, "Method SubtleCrypto.importKey called on receiver that's not an instance of SubtleCrypto")
+    if (error) { return error; }
+    return pass();
+  });
+  routes.set("/crypto.subtle.importKey/called-with-no-arguments", async () => {
+    error = await assertRejects(async () => {
+      await crypto.subtle.importKey()
+    }, TypeError, "SubtleCrypto.importKey: At least 5 arguments required, but only 0 passed")
+    if (error) { return error; }
+    return pass();
+  });
+
+  // first-parameter
+  {
+    routes.set("/crypto.subtle.importKey/first-parameter-calls-7.1.17-ToString", async () => {
+      const sentinel = Symbol("sentinel");
+      const test = async () => {
+        const format = {
+          toString() {
+            throw sentinel;
+          }
+        }
+        await crypto.subtle.importKey(format, publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+      }
+      let error = await assertRejects(test)
+      if (error) { return error; }
+      try {
+        await test()
+      } catch (thrownError) {
+        let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+        if (error) { return error; }
+      }
+      return pass();
+    });
+    routes.set("/crypto.subtle.importKey/first-parameter-non-existant-format", async () => {
+      let error = await assertRejects(async () => {
+        await crypto.subtle.importKey('jake', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+      }, Error, "Provided format parameter is not supported. Supported formats are: 'spki', 'pkcs8', 'jwk', and 'raw'")
+      if (error) { return error; }
+      return pass();
+    });
+  }
+
+  // second-parameter
+  {
+    routes.set("/crypto.subtle.importKey/second-parameter-invalid-format", async () => {
+      let error = await assertRejects(async () => {
+        await crypto.subtle.importKey('jwk', Symbol(), jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+      }, Error, "The provided value is not of type JsonWebKey")
+      if (error) { return error; }
+      return pass();
+    });
+    // jwk public key
+    {
+      routes.set("/crypto.subtle.importKey/second-parameter-missing-e-field", async () => {
+        let error = await assertRejects(async () => {
+          delete publicJsonWebKeyData.e;
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+        }, Error, "Data provided to an operation does not meet requirements")
+        if (error) { return error; }
+        return pass();
+      });
+      routes.set("/crypto.subtle.importKey/second-parameter-e-field-calls-7.1.17-ToString", async () => {
+        let sentinel = Symbol("sentinel");
+        const test = async () => {
+          sentinel = Symbol();
+          publicJsonWebKeyData.e = {
+            toString() {
+              throw sentinel;
+            }
+          }
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+        }
+        let error = await assertRejects(test)
+        if (error) { return error; }
+        try {
+          await test()
+        } catch (thrownError) {
+          let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+          if (error) { return error; }
+        }
+        return pass();
+      });
+      routes.set("/crypto.subtle.importKey/second-parameter-invalid-e-field", async () => {
+        let error = await assertRejects(async () => {
+          publicJsonWebKeyData.e = "`~!@#@#$Q%^%&^*";
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+        }, Error, "The JWK member 'e' could not be base64url decoded or contained padding")
+        if (error) { return error; }
+        return pass();
+      });
+      routes.set("/crypto.subtle.importKey/second-parameter-missing-kty-field", async () => {
+        let error = await assertRejects(async () => {
+          delete publicJsonWebKeyData.kty;
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+        }, Error, "The required JWK member 'kty' was missing")
+        if (error) { return error; }
+        return pass();
+      });
+      routes.set("/crypto.subtle.importKey/second-parameter-invalid-kty-field", async () => {
+        let error = await assertRejects(async () => {
+          publicJsonWebKeyData.kty = "jake";
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+        }, Error, "The JWK 'kty' member was not 'RSA'")
+        if (error) { return error; }
+        return pass();
+      });
+      routes.set("/crypto.subtle.importKey/second-parameter-missing-key_ops-field", async () => {
+        let error = await assertResolves(async () => {
+          const key_ops = Array.from(publicJsonWebKeyData.key_ops);
+          delete publicJsonWebKeyData.key_ops;
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, key_ops)
+        })
+        if (error) { return error; }
+        return pass();
+      });
+      routes.set("/crypto.subtle.importKey/second-parameter-non-sequence-key_ops-field", async () => {
+        let error = await assertRejects(async () => {
+          const key_ops = Array.from(publicJsonWebKeyData.key_ops);
+          publicJsonWebKeyData.key_ops = "jake";
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, key_ops)
+        }, Error, "Failed to read the 'key_ops' property from 'JsonWebKey': The provided value cannot be converted to a sequence")
+        if (error) { return error; }
+        return pass();
+      });
+
+      routes.set("/crypto.subtle.importKey/second-parameter-empty-key_ops-field", async () => {
+        let error = await assertResolves(async () => {
+          const key_ops = Array.from(publicJsonWebKeyData.key_ops);
+          publicJsonWebKeyData.key_ops = [];
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, key_ops)
+        })
+        if (error) { return error; }
+        return pass();
+      });
+      routes.set("/crypto.subtle.importKey/second-parameter-duplicated-key_ops-field", async () => {
+        let error = await assertRejects(async () => {
+          const key_ops = Array.from(publicJsonWebKeyData.key_ops);
+          publicJsonWebKeyData.key_ops = ["sign", "sign"];
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, key_ops)
+        }, Error, "The 'key_ops' member of the JWK dictionary contains duplicate usages")
+        if (error) { return error; }
+        return pass();
+      });
+      routes.set("/crypto.subtle.importKey/second-parameter-invalid-key_ops-field", async () => {
+        let error = await assertRejects(async () => {
+          const key_ops = Array.from(publicJsonWebKeyData.key_ops);
+          publicJsonWebKeyData.key_ops = ["sign", "jake"];
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, key_ops)
+        }, TypeError, "Invalid keyUsages argument")
+        if (error) { return error; }
+        return pass();
+      });
+
+      routes.set("/crypto.subtle.importKey/second-parameter-key_ops-field-calls-7.1.17-ToString", async () => {
+        let sentinel = Symbol("sentinel");
+        const key_ops = Array.from(publicJsonWebKeyData.key_ops);
+        const test = async () => {
+          sentinel = Symbol();
+          const op = {
+            toString() {
+              throw sentinel;
+            }
+          }
+          publicJsonWebKeyData.key_ops = ["sign", op];
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, key_ops)
+        }
+        let error = await assertRejects(test)
+        if (error) { return error; }
+        try {
+          await test()
+        } catch (thrownError) {
+          let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+          if (error) { return error; }
+        }
+        return pass();
+      });
+
+      routes.set("/crypto.subtle.importKey/second-parameter-missing-n-field", async () => {
+        let error = await assertRejects(async () => {
+          delete publicJsonWebKeyData.n;
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+        }, Error, "Data provided to an operation does not meet requirements")
+        if (error) { return error; }
+        return pass();
+      });
+      routes.set("/crypto.subtle.importKey/second-parameter-n-field-calls-7.1.17-ToString", async () => {
+        let sentinel = Symbol("sentinel");
+        const test = async () => {
+          sentinel = Symbol();
+          publicJsonWebKeyData.n = {
+            toString() {
+              throw sentinel;
+            }
+          }
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+        }
+        let error = await assertRejects(test)
+        if (error) { return error; }
+        try {
+          await test()
+        } catch (thrownError) {
+          let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+          if (error) { return error; }
+        }
+        return pass();
+      });
+      routes.set("/crypto.subtle.importKey/second-parameter-invalid-n-field", async () => {
+        let error = await assertRejects(async () => {
+          publicJsonWebKeyData.n = "`~!@#@#$Q%^%&^*";
+          await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+        }, Error, "The JWK member 'n' could not be base64url decoded or contained padding")
+        if (error) { return error; }
+        return pass();
+      });
+    }
+    // jwk private key
+    // raw AES 
+    // raw HMAC secret keys
+    // raw Elliptic Curve public keys
+    // pkcs8 RSA private keys
+    // pkcs8 Elliptic Curve private keys
+  }
+  // third-parameter 
+  {
+    routes.set("/crypto.subtle.importKey/third-parameter-undefined", async () => {
+      let error = await assertRejects(async () => {
+        await crypto.subtle.importKey('jwk', publicJsonWebKeyData, undefined, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+      }, Error, "Algorithm: Unrecognized name")
+      if (error) { return error; }
+      return pass();
+    });
+    routes.set("/crypto.subtle.importKey/third-parameter-name-field-calls-7.1.17-ToString", async () => {
+      const sentinel = Symbol("sentinel");
+      const test = async () => {
+        jsonWebKeyAlgorithm.name = {
+          toString() {
+            throw sentinel;
+          }
+        }
+        await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+      }
+      let error = await assertRejects(test)
+      if (error) { return error; }
+      try {
+        await test()
+      } catch (thrownError) {
+        let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+        if (error) { return error; }
+      }
+      return pass();
+    });
+    routes.set("/crypto.subtle.importKey/third-parameter-invalid-name-field", async () => {
+      let error = await assertRejects(async () => {
+        jsonWebKeyAlgorithm.name = "`~!@#@#$Q%^%&^*";
+        await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+      }, Error, "Algorithm: Unrecognized name")
+      if (error) { return error; }
+      return pass();
+    });
+    routes.set("/crypto.subtle.importKey/third-parameter-hash-name-field-calls-7.1.17-ToString", async () => {
+      const sentinel = Symbol("sentinel");
+      const test = async () => {
+        jsonWebKeyAlgorithm.hash.name = {
+          toString() {
+            throw sentinel;
+          }
+        }
+        await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+      }
+      let error = await assertRejects(test)
+      if (error) { return error; }
+      try {
+        await test()
+      } catch (thrownError) {
+        let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+        if (error) { return error; }
+      }
+      return pass();
+    });
+    routes.set("/crypto.subtle.importKey/third-parameter-hash-algorithm-does-not-match-json-web-key-hash-algorithm", async () => {
+      let error = await assertRejects(async () => {
+        jsonWebKeyAlgorithm.hash.name = "SHA-1";
+        await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
+      }, Error, "The JWK 'alg' member was inconsistent with that specified by the Web Crypto call")
+      if (error) { return error; }
+      return pass();
+    });
+  }
+
+  // fifth-parameter
+  {
+    routes.set("/crypto.subtle.importKey/fifth-parameter-undefined", async () => {
+      let error = await assertRejects(async () => {
+        await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, undefined)
+      }, Error, "The provided value cannot be converted to a sequence")
+      if (error) { return error; }
+      return pass();
+    });
+    routes.set("/crypto.subtle.importKey/fifth-parameter-invalid", async () => {
+      let error = await assertRejects(async () => {
+        await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, ["jake"])
+      }, Error, "SubtleCrypto.importKey: Invalid keyUsages argument")
+      if (error) { return error; }
+      return pass();
+    });
+    routes.set("/crypto.subtle.importKey/fifth-parameter-duplicate-operations", async () => {
+      let error = await assertResolves(async () => {
+        const key_ops = publicJsonWebKeyData.key_ops.concat(publicJsonWebKeyData.key_ops);
+        await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, key_ops)
+      })
+      if (error) { return error; }
+      return pass();
+    });
+
+    routes.set("/crypto.subtle.importKey/fifth-parameter-operations-do-not-match-json-web-key-operations", async () => {
+      let error = await assertRejects(async () => {
+        await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, ["sign"])
+      }, Error, "The JWK 'key_ops' member was inconsistent with that specified by the Web Crypto call. The JWK usage must be a superset of those requested")
+      if (error) { return error; }
+      return pass();
+    });
+
+    routes.set("/crypto.subtle.importKey/fifth-parameter-operation-fields-calls-7.1.17-ToString", async () => {
+      let sentinel = Symbol("sentinel");
+      const test = async () => {
+        sentinel = Symbol();
+        const op = {
+          toString() {
+            throw sentinel;
+          }
+        }
+        await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, ["sign", op])
+      }
+      let error = await assertRejects(test)
+      if (error) { return error; }
+      try {
+        await test()
+      } catch (thrownError) {
+        let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+        if (error) { return error; }
+      }
+      return pass();
+    });
+  }
+
+  // happy paths
+  {
+    routes.set("/crypto.subtle.importKey/JWK-RS256-Public", async () => {
+      const key = await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops);
+      error = await assert(key instanceof CryptoKey, true, `key instanceof CryptoKey`);
+      if (error) { return error; }
+      error = await assert(key.algorithm, {
+        "name": "RSASSA-PKCS1-v1_5", 
+        "hash": {
+          "name": "SHA-256"
+        },
+        "modulusLength":2048,
+        "publicExponent": new Uint8Array([1,0,1])
+      }, `key.algorithm deep equals "carrot"`);
+      if (error) { return error; }
+      error = await assert(key.extractable, true, `key.extractable === true`);
+      if (error) { return error; }
+      error = await assert(key.type, "public", `key.type === "public"`);
+      if (error) { return error; }
+      error = await assert(key.usages, ["verify"], `key.usages deep equals ["verify"]`);
+      if (error) { return error; }
+      return pass();
+    });
+  }
+}
 
 // digest
 {

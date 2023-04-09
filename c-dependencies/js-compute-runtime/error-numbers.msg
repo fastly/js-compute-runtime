@@ -100,4 +100,7 @@ MSG_DEF(JSMSG_CACHE_OVERRIDE_MODE_INVALID,                     1, JSEXN_TYPEERR,
 MSG_DEF(JSMSG_RESPONSE_VALUE_NOT_UINT8ARRAY,                   0, JSEXN_TYPEERR, "Can't convert value to Uint8Array while consuming Body")
 MSG_DEF(JSMSG_RESPONSE_BODY_DISTURBED_OR_LOCKED,               0, JSEXN_TYPEERR, "Response body object should not be disturbed or locked")
 MSG_DEF(JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST,                  1, JSEXN_TYPEERR, "Requested backend named '{0}' does not exist")
+MSG_DEF(JSMSG_SUBTLE_CRYPTO_ERROR,                             1, JSEXN_ERR, "{0}")
+MSG_DEF(JSMSG_SUBTLE_CRYPTO_INVALID_JWK_KTY_VALUE,             1, JSEXN_ERR, "The JWK 'kty' member was not '{0}'")
+MSG_DEF(JSMSG_SUBTLE_CRYPTO_INVALID_KEY_USAGES_VALUE,          0, JSEXN_TYPEERR, "Invalid keyUsages argument")
 //clang-format on

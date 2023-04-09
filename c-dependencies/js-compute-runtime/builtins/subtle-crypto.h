@@ -6,7 +6,7 @@
 
 namespace builtins {
 
-enum class Operations {
+enum class Operations : uint8_t {
   Encrypt,
   Decrypt,
   Sign,
@@ -30,6 +30,7 @@ public:
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
   static bool digest(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool importKey(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool init_class(JSContext *cx, JS::HandleObject global);
