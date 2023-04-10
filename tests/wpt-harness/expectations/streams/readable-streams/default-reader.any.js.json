@@ -84,6 +84,6 @@
     "status": "PASS"
   },
   "Second reader can read chunks after first reader was released with pending read requests": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }

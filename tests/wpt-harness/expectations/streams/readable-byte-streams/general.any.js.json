@@ -45,7 +45,7 @@
     "status": "PASS"
   },
   "ReadableStream with byte source: releaseLock() on ReadableStreamDefaultReader must reject pending read()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: releaseLock() on ReadableStreamBYOBReader must reject pending read()": {
     "status": "PASS"
@@ -87,16 +87,16 @@
     "status": "PASS"
   },
   "ReadableStream with byte source: Respond to pull() by enqueue()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: Respond to pull() by enqueue() asynchronously": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: Respond to multiple pull() by separate enqueue()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: read(view), then respond()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: read(view), then respondWithNewView() with a transferred ArrayBuffer": {
     "status": "FAIL"
@@ -162,7 +162,7 @@
     "status": "PASS"
   },
   "ReadableStream with byte source: read() twice, then enqueue() twice": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: Multiple read(view), close() and respond()": {
     "status": "PASS"
@@ -195,10 +195,10 @@
     "status": "PASS"
   },
   "ReadableStream with byte source: Throwing in pull function must error the stream": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: Throwing in pull in response to read() must be ignored if the stream is errored in it": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: Throwing in pull in response to read(view) function must error the stream": {
     "status": "PASS"
@@ -240,7 +240,7 @@
     "status": "PASS"
   },
   "ReadableStream constructor should not accept a strategy with a size defined if type is \"bytes\"": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: respondWithNewView() with a smaller view": {
     "status": "PASS"
@@ -255,43 +255,43 @@
     "status": "FAIL"
   },
   "ReadableStream with byte source: enqueue() discards auto-allocated BYOB request": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: releaseLock() with pending read(view), read(view) on second reader, respond()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: releaseLock() with pending read(view), read(view) on second reader with 1 element Uint16Array, respond(1)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: releaseLock() with pending read(view), read(view) on second reader with 2 element Uint8Array, respond(3)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: releaseLock() with pending read(view), read(view) on second reader, respondWithNewView()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: releaseLock() with pending read(view), read(view) on second reader, enqueue()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: releaseLock() with pending read(view), read(view) on second reader, close(), respond(0)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: autoAllocateChunkSize, releaseLock() with pending read(), read() on second reader, respond()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: autoAllocateChunkSize, releaseLock() with pending read(), read() on second reader, enqueue()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: autoAllocateChunkSize, releaseLock() with pending read(), read(view) on second reader, respond()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: autoAllocateChunkSize, releaseLock() with pending read(), read(view) on second reader, enqueue()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: read(view) with 1 element Uint16Array, respond(1), releaseLock(), read(view) on second reader with 1 element Uint16Array, respond(1)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: read(view) with 1 element Uint16Array, respond(1), releaseLock(), read() on second reader, enqueue()": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream with byte source: autoAllocateChunkSize, read(), respondWithNewView()": {
     "status": "PASS"
