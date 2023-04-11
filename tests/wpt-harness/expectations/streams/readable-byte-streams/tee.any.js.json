@@ -1,6 +1,6 @@
 {
   "ReadableStream teeing with byte source: rs.tee() returns an array of two ReadableStreams": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "ReadableStream teeing with byte source: should be able to read one branch to the end without affecting the other": {
     "status": "FAIL"
@@ -15,25 +15,25 @@
     "status": "FAIL"
   },
   "ReadableStream teeing with byte source: canceling branch1 should not impact branch2": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "ReadableStream teeing with byte source: canceling branch2 should not impact branch1": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Running templatedRSTeeCancel with ReadableStream teeing with byte source": {
     "status": "PASS"
   },
   "ReadableStream teeing with byte source: canceling both branches should aggregate the cancel reasons into an array": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "ReadableStream teeing with byte source: canceling both branches in reverse order should aggregate the cancel reasons into an array": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "ReadableStream teeing with byte source: failing to cancel the original stream should cause cancel() to reject on branches": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "ReadableStream teeing with byte source: erroring a teed stream should properly handle canceled branches": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "ReadableStream teeing with byte source: closing the original should close the branches": {
     "status": "FAIL"
@@ -42,7 +42,7 @@
     "status": "FAIL"
   },
   "ReadableStream teeing with byte source: erroring the original should error pending reads from default reader": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "ReadableStream teeing with byte source: erroring the original should error pending reads from BYOB reader": {
     "status": "FAIL"
@@ -108,7 +108,7 @@
     "status": "FAIL"
   },
   "ReadableStream teeing with byte source: enqueue() and close() while both branches are pulling": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "ReadableStream teeing with byte source: respond() and close() while both branches are pulling": {
     "status": "FAIL"
