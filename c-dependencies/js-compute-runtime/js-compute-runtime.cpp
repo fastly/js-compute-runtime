@@ -115,15 +115,12 @@ bool init_js() {
   if (!js::UseInternalJobQueues(cx) || !JS::InitSelfHostedCode(cx))
     return false;
 
-  bool ENABLE_EXPERIMENTAL_BYOB_STREAMS =
-      std::string(std::getenv("ENABLE_EXPERIMENTAL_BYOB_STREAMS")) == "1";
-
   // TODO: check if we should set a different creation zone.
   JS::RealmOptions options;
   options.creationOptions()
       .setStreamsEnabled(true)
-      .setReadableByteStreamsEnabled(ENABLE_EXPERIMENTAL_BYOB_STREAMS)
-      .setBYOBStreamReadersEnabled(ENABLE_EXPERIMENTAL_BYOB_STREAMS)
+      .setReadableByteStreamsEnabled(true)
+      .setBYOBStreamReadersEnabled(true)
       .setReadableStreamPipeToEnabled(true)
       .setWritableStreamsEnabled(true)
       .setWeakRefsEnabled(JS::WeakRefSpecifier::EnabledWithoutCleanupSome);
