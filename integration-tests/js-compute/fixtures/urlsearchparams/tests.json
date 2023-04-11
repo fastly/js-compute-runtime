@@ -1,0 +1,12 @@
+{
+  "GET /urlsearchparams/sort": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/urlsearchparams/sort"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  }
+}

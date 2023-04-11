@@ -48,6 +48,6 @@
     "status": "PASS"
   },
   "Sorting non-existent params removes ? from URL": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }

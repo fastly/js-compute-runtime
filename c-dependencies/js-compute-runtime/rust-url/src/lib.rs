@@ -36,13 +36,23 @@ impl JSUrlSearchParams {
         match self.url_or_str {
             UrlOrString::Url(url) => {
                 let url = unsafe { url.as_mut().unwrap() };
-                let mut pairs = url.url.query_pairs_mut();
-                pairs.clear().extend_pairs(self.list.iter());
+                if self.list.is_empty() {
+                    url.url.set_query(None);
+                } else {
+                    let mut pairs = url.url.query_pairs_mut();
+                    pairs.clear();
+                    pairs.extend_pairs(self.list.iter());
+                }
             }
             UrlOrString::Str(_) => {
-                let str = form_urlencoded::Serializer::new(String::new())
-                    .extend_pairs(&*self.list)
-                    .finish();
+                let str;
+                if self.list.is_empty() {
+                    str = form_urlencoded::Serializer::new(String::new()).finish();
+                } else {
+                    str = form_urlencoded::Serializer::new(String::new())
+                        .extend_pairs(&*self.list)
+                        .finish();
+                }
                 self.url_or_str = UrlOrString::Str(str);
             }
         }
