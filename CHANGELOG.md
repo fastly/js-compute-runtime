@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1](https://github.com/fastly/js-compute-runtime/compare/v1.7.0...v1.7.1) (2023-04-11)
+
+
+### Bug Fixes
+
+* Lower the supported NodeJS version from 18 or greater to only 18 ([5cc1cd6](https://github.com/fastly/js-compute-runtime/commit/5cc1cd6e5bfb8926944457e81c045682b0a37e4c))
+* When converting a URL to a string, do not add a `?` if there are no query string parameters ([73cdc27](https://github.com/fastly/js-compute-runtime/commit/73cdc279fa8c038a012c050000960577dda21280))
+
 ## [1.7.0](https://github.com/fastly/js-compute-runtime/compare/v1.6.0...v1.7.0) (2023-04-11)
 
 
