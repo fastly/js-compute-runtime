@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.0](https://github.com/fastly/js-compute-runtime/compare/v1.6.0...v1.7.0) (2023-04-11)
+
+
+### Features
+
+* BYOB streams, basic usage, _pending WPT_ ([ab97e75](https://github.com/fastly/js-compute-runtime/commit/ab97e75e3b595911432327b35fcf4716675a0dd0))
+* Implement subset of crypto.subtle.importKey which can import a JSONWebKey using RSASSA-PKCS1-v1_5 ([#472](https://github.com/fastly/js-compute-runtime/issues/472)) ([110e7f4](https://github.com/fastly/js-compute-runtime/commit/110e7f42c1a86c4b4b722ea4b6780bb68f7f4523))
+
 ## [1.6.0](https://github.com/fastly/js-compute-runtime/compare/v1.5.2...v1.6.0) (2023-03-28)
 
 
