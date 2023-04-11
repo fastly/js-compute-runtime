@@ -1,6 +1,6 @@
 {
   "GET /": {
-    "environments": ["viceroy"],
+    "environments": ["viceroy", "c@e"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/"
