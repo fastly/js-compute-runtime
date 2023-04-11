@@ -4,7 +4,6 @@ globalThis.GLOBAL = {
   isShadowRealm: function() { return false; },
 };
 
-
 globalThis.Window=self;
 let originalAEL = addEventListener;
 addEventListener = function addEventListener_wpt(type, handler) {
