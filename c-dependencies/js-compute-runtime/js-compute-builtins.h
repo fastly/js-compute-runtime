@@ -83,22 +83,16 @@ void markWizeningAsFinished();
 
 class FastlyOptions {
 private:
-  uint8_t mask = 0;
+  bool experimental_high_resolution_time_methods_enabled = false;
 
 public:
-  static constexpr const uint8_t experimental_high_resolution_time_methods_enabled_flag = 1 << 0;
-
   FastlyOptions() = default;
 
   bool getExperimentalHighResolutionTimeMethodsEnabled() {
-    return this->mask & experimental_high_resolution_time_methods_enabled_flag;
+    return this->experimental_high_resolution_time_methods_enabled;
   };
   void setExperimentalHighResolutionTimeMethodsEnabled(bool set) {
-    if (set) {
-      this->mask |= experimental_high_resolution_time_methods_enabled_flag;
-    } else {
-      this->mask &= ~experimental_high_resolution_time_methods_enabled_flag;
-    }
+    this->experimental_high_resolution_time_methods_enabled = set;
   };
 };
 
