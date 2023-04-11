@@ -358,6 +358,7 @@ jobs:
       matrix:
         fixture: 
           - 'async-select'
+          - 'byob'
           - 'byte-repeater'
           - 'cache-override'
           - 'crypto'
@@ -367,6 +368,7 @@ jobs:
           - 'hello-world'
           - 'multiple-set-cookie'
           - 'object-store'
+          - 'react-byob'
           - 'request-clone'
           - 'request-headers'
           - 'request-limits'
