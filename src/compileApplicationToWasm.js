@@ -99,9 +99,12 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
         encoding: "utf-8",
       }
     );
+    if (wizerProcess.status !== 0) {
+      throw new Error(`Wizer initialization failure`);
+    }
     process.exitCode = wizerProcess.status;
   } catch (error) {
-    console.error(`Error: Failed to compile JavaScript to Wasm`, error.message);
+    console.error(`Error: Failed to compile JavaScript to Wasm: `, error.message);
     process.exit(1);
   }
 }
