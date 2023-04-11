@@ -6,9 +6,9 @@
     "status": "PASS"
   },
   "Deleting all params removes ? from URL": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Removing non-existent param removes ? from URL": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }
