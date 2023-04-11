@@ -12,10 +12,10 @@ service_id = ""
   build = "node ../../../../js-compute-runtime-cli.js"
 
 [local_server]
-  [local_server.secret_store]
-    [[local_server.secret_store.example-test-secret-store]]
+  [local_server.secret_stores]
+    [[local_server.secret_stores.example-test-secret-store]]
       key = "first"
       data = "This is also some secret data"
-    [[local_server.secret_store.example-test-secret-store]]
+    [[local_server.secret_stores.example-test-secret-store]]
       key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       data = "This is some secret data"
