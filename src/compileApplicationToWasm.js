@@ -85,7 +85,6 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
     let wizerProcess = spawnSync(
       wizer,
       [
-        "--inherit-env=true",
         "--allow-wasi",
         `--dir=.`,
         `--wasm-bulk-memory=true`,
@@ -98,8 +97,6 @@ export async function compileApplicationToWasm(input, output, wasmEngine) {
         input: application,
         shell: true,
         encoding: "utf-8",
-        env: {
-        }
       }
     );
     if (wizerProcess.status !== 0) {
