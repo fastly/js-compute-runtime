@@ -2,7 +2,7 @@
   "name": "@fastly/js-compute",
   "version": "1.8.0",
   "engines": {
-    "node": "16 - 18",
+    "node": "16 - 20",
     "npm": "^8 || ^9"
   },
   "license": "Apache-2.0",
