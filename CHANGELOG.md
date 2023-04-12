@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.0](https://github.com/fastly/js-compute-runtime/compare/v1.7.1...v1.8.0) (2023-04-12)
+
+
+### Features
+
+* Add high-resolution timing function "fastly.now()" behind feature flag "--enable-experimental-high-resolution-time-methods" ([f090838](https://github.com/fastly/js-compute-runtime/commit/f0908384d48d0bc2e5c29083e8a20bed041d47ed))
+* replace tree-sitter with acorn + magic string ([08a0695](https://github.com/fastly/js-compute-runtime/commit/08a0695a00088fe51c289ea783a771b4f3b993f8))
+
 ## [1.7.1](https://github.com/fastly/js-compute-runtime/compare/v1.7.0...v1.7.1) (2023-04-11)
 
 
