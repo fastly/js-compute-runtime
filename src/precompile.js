@@ -4,7 +4,7 @@ import MagicString from "magic-string";
 import { simple as simpleWalk } from "acorn-walk";
 
 const PREAMBLE = `;{ const precompileRegex = (r) => { r.exec('a'); r.exec('\\u1000'); }; `;
-const POSTAMBLE = "; };";
+const POSTAMBLE = "; }; ";
 
 /// Emit a block of javascript that will pre-compile the regular expressions given. As spidermonkey
 /// will intern regular expressions, duplicating them at the top level and testing them with both
@@ -35,7 +35,7 @@ export function precompile(source, filename = "<input>") {
         transpiledPattern = pattern;
       }
       const transpiledRegex = `/${transpiledPattern}/${regex.flags}`;
-      precompileCalls.push(`precompile(${transpiledRegex});`);
+      precompileCalls.push(`precompile(${transpiledRegex})`);
       magicString.overwrite(node.start, node.end, tranpiledRegex);
     },
   });
