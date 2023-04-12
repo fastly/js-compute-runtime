@@ -1,76 +1,57 @@
-import Parser, { Query } from "tree-sitter";
-import JavaScript from "tree-sitter-javascript";
-import regexpuc from 'regexpu-core';
+import regexpuc from "regexpu-core";
+import { parse } from "acorn";
+import MagicString from "magic-string";
+import { simple as simpleWalk } from "acorn-walk";
 
-function findRegexLiterals(source) {
-  const parser = new Parser();
-  parser.setLanguage(JavaScript);
+const PREAMBLE = `;{ const precompileRegex = (r) => { r.exec('a'); r.exec('\\u1000'); }; `;
+const POSTAMBLE = "; };";
 
-  const tree = parser.parse(source);
-  const query = new Query(
-    JavaScript,
-    "(regex pattern: (regex_pattern) @pattern flags: (regex_flags)? @flags)"
-  );
-  const regexLiterals = [];
-  for (const m of query.matches(tree.rootNode)) {
-    const pattern = m.captures[0].node.text;
-    const flags = m.captures[1]?.node.text || "";
-    // transpile unicode property escapes
-    let patternTranspiled;
-    try {
-      patternTranspiled = regexpuc(pattern, flags, { unicodePropertyEscapes: 'transform' });
-    } catch {
-      // swallow regex parse errors here to instead throw them at the engine level
-      // this then also avoids regex parser bugs being thrown unnecessarily
-      patternTranspiled = pattern;
-    }
-    regexLiterals.push({
-      patternStart: m.captures[0].node.startIndex,
-      patternEnd: m.captures[0].node.endIndex,
-      pattern,
-      patternTranspiled,
-      flags,
-      flagsStart: m.captures[1]?.node.startIndex,
-      flagsEnd: m.captures[1]?.node.endIndex,
-    });
-  }
-  return regexLiterals;
-}
-
-const PREAMBLE = `;{
-  // Precompiled regular expressions
-  const precompile = (r) => { r.exec('a'); r.exec('\\u1000'); };`;
-const POSTAMBLE = "}";
-
-// TODO: This should also detect and update sourcemaps if they are present, otherwise the sourcemaps would be incorrect.
-//       We could use https://github.com/rich-harris/magic-string to create and/or update sourcemaps
-// 
 /// Emit a block of javascript that will pre-compile the regular expressions given. As spidermonkey
 /// will intern regular expressions, duplicating them at the top level and testing them with both
 /// an ascii and utf8 string should ensure that they won't be re-compiled when run in the fetch
 /// handler.
-export function precompile(inputApplication) {
-  let lits = findRegexLiterals(inputApplication);
+export function precompile(source, filename = "<input>") {
+  const magicString = new MagicString(source, {
+    filename,
+  });
 
-  if (lits.length === 0) {
-    return inputApplication;
-  }
+  const ast = parse(source, {
+    ecmaVersion: "latest",
+    sourceType: "script",
+  });
 
-  let offset = 0;
-  for (const lit of lits) {
-    if (lit.pattern === lit.patternTranspiled)
-      continue;
-    inputApplication = inputApplication.slice(0, lit.patternStart + offset) + lit.patternTranspiled + inputApplication.slice(lit.patternEnd + offset);
-    offset += lit.patternTranspiled.length - lit.pattern.length;
-  }
+  const precompileCalls = [];
+  simpleWalk(ast, {
+    Literal(node) {
+      if (!node.regex) return;
+      let transpiledPattern;
+      try {
+        transpiledPattern = regexpuc(node.regex.pattern, node.regex.flags, {
+          unicodePropertyEscapes: "transform",
+        });
+      } catch {
+        // swallow regex parse errors here to instead throw them at the engine level
+        // this then also avoids regex parser bugs being thrown unnecessarily
+        transpiledPattern = pattern;
+      }
+      const transpiledRegex = `/${transpiledPattern}/${regex.flags}`;
+      precompileCalls.push(`precompile(${transpiledRegex});`);
+      magicString.overwrite(node.start, node.end, tranpiledRegex);
+    },
+  });
 
-  return (
-    PREAMBLE +
-    lits
-      .map((regex) => {
-        return `precompile(/${regex.patternTranspiled}/${regex.flags});`;
-      })
-      .join("\n") +
-    POSTAMBLE + inputApplication
-  );
+  if (!precompileCalls.length) return source;
+
+  // by keeping this a one-liner, source maps will align since they use line offsets
+  magicString.prepend(`${PREAMBLE}${precompileCalls.join(";")}${POSTAMBLE}`);
+
+  // When we're ready to pipe in source maps:
+  // const map = magicString.generateMap({
+  //   source: 'source.js',
+  //   file: 'converted.js.map',
+  //   includeContent: true
+  // });
+
+  console.log(magicString.toString());
+  return magicString.toString();
 }
