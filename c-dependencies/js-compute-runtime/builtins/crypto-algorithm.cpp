@@ -743,12 +743,14 @@ namespace {
       // 2. If performing the operation results in an error, then throw an OperationError.
       // TODO: Change to an OperationError DOMException
       JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: failed to create digest");
+      JS_free(cx, buf);
       return nullptr;
     }
     // 3. Return a new ArrayBuffer containing result.
     JS::RootedObject array_buffer(cx);
     array_buffer.set(JS::NewArrayBufferWithContents(cx, size, buf));
     if (!array_buffer) {
+      JS_free(cx, buf);
       JS_ReportOutOfMemory(cx);
       return nullptr;
     }
