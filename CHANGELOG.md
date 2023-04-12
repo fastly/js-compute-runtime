@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/fastly/js-compute-runtime/compare/v1.8.0...v1.8.1) (2023-04-12)
+
+
+### Bug Fixes
+
+* Mark NodeJS 19 and 20 as supported ([#492](https://github.com/fastly/js-compute-runtime/issues/492)) ([27b3428](https://github.com/fastly/js-compute-runtime/commit/27b34289988b6ef55ea3ce703b878dbd1da68d7a))
+
 ## [1.8.0](https://github.com/fastly/js-compute-runtime/compare/v1.7.1...v1.8.0) (2023-04-12)
 
 
