@@ -50,6 +50,29 @@ public:
   static std::unique_ptr<CryptoAlgorithmImportKey> normalize(JSContext *cx, JS::HandleValue value);
 };
 
+class CryptoAlgorithmSignVerify : public CryptoAlgorithm {
+public:
+  virtual JSObject *sign(JSContext *cx, JS::HandleObject key, std::span<uint8_t> data) = 0;
+  virtual JS::Result<bool> verify(JSContext *cx, JS::HandleObject key, std::span<uint8_t> signature,
+                                  std::span<uint8_t> data) = 0;
+  static std::unique_ptr<CryptoAlgorithmSignVerify> normalize(JSContext *cx, JS::HandleValue value);
+};
+
+class CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify final : public CryptoAlgorithmSignVerify {
+public:
+  const char *name() const noexcept override { return "RSASSA-PKCS1-v1_5"; };
+  CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify(){};
+  CryptoAlgorithmIdentifier identifier() final {
+    return CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5;
+  };
+
+  JSObject *sign(JSContext *cx, JS::HandleObject key, std::span<uint8_t> data) override;
+  JS::Result<bool> verify(JSContext *cx, JS::HandleObject key, std::span<uint8_t> signature,
+                          std::span<uint8_t> data) override;
+  static JSObject *exportKey(JSContext *cx, CryptoKeyFormat format, JS::HandleObject key);
+  JSObject *toObject(JSContext *cx);
+};
+
 class CryptoAlgorithmRSASSA_PKCS1_v1_5_Import final : public CryptoAlgorithmImportKey {
 public:
   // The hash member describes the hash algorithm to use.

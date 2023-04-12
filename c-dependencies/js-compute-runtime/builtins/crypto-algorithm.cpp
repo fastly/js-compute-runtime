@@ -1,3 +1,4 @@
+#include "openssl/rsa.h"
 #include "openssl/sha.h"
 #include <iostream>
 #include <span>
@@ -9,6 +10,83 @@
 namespace builtins {
 
 namespace {
+
+const EVP_MD *createDigestAlgorithm(JSContext *cx, JS::HandleObject key) {
+
+  JS::RootedObject alg(cx, CryptoKey::get_algorithm(key));
+
+  JS::RootedValue hash_val(cx);
+  JS_GetProperty(cx, alg, "hash", &hash_val);
+  JS::RootedObject hash(cx, &hash_val.toObject());
+  JS::RootedValue name_val(cx);
+  JS_GetProperty(cx, hash, "name", &name_val);
+  size_t name_length;
+  auto cc = encode(cx, name_val, &name_length);
+
+  std::string_view name(cc.get(), name_length);
+  if (name == "SHA-1") {
+    return EVP_sha1();
+  } else if (name == "SHA-224") {
+    return EVP_sha224();
+  } else if (name == "SHA-256") {
+    return EVP_sha256();
+  } else if (name == "SHA-384") {
+    return EVP_sha384();
+  } else if (name == "SHA-512") {
+    return EVP_sha512();
+  } else {
+    // TODO Rename error to NotSupportedError
+    JS_ReportErrorLatin1(cx, "NotSupportedError");
+    return nullptr;
+  }
+}
+// This implements https://w3c.github.io/webcrypto/#sha-operations for all
+// the SHA algorithms that we support.
+std::optional<std::span<uint8_t>> rawDigest(JSContext *cx, std::span<uint8_t> data,
+                                            const EVP_MD *algorithm, size_t buffer_size) {
+  unsigned int size;
+  auto buf = static_cast<unsigned char *>(JS_malloc(cx, buffer_size));
+  if (!buf) {
+    JS_ReportOutOfMemory(cx);
+    return std::nullopt;
+  }
+  if (!EVP_Digest(data.data(), data.size(), buf, &size, algorithm, NULL)) {
+    // 2. If performing the operation results in an error, then throw an OperationError.
+    // TODO: Change to an OperationError DOMException
+    JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: failed to create digest");
+    JS_free(cx, buf);
+    return std::nullopt;
+  }
+  return std::span<uint8_t>(buf, size);
+};
+
+// This implements https://w3c.github.io/webcrypto/#sha-operations for all
+// the SHA algorithms that we support.
+JSObject *digest(JSContext *cx, std::span<uint8_t> data, const EVP_MD *algorithm,
+                 size_t buffer_size) {
+  unsigned int size;
+  auto buf = static_cast<unsigned char *>(JS_malloc(cx, buffer_size));
+  if (!buf) {
+    JS_ReportOutOfMemory(cx);
+    return nullptr;
+  }
+  if (!EVP_Digest(data.data(), data.size(), buf, &size, algorithm, NULL)) {
+    // 2. If performing the operation results in an error, then throw an OperationError.
+    // TODO: Change to an OperationError DOMException
+    JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: failed to create digest");
+    JS_free(cx, buf);
+    return nullptr;
+  }
+  // 3. Return a new ArrayBuffer containing result.
+  JS::RootedObject array_buffer(cx);
+  array_buffer.set(JS::NewArrayBufferWithContents(cx, size, buf));
+  if (!array_buffer) {
+    JS_free(cx, buf);
+    JS_ReportOutOfMemory(cx);
+    return nullptr;
+  }
+  return array_buffer;
+};
 
 // https://datatracker.ietf.org/doc/html/rfc7518#section-6.3.1
 // 6.3.1.  Parameters for RSA Public Keys
@@ -436,6 +514,196 @@ std::unique_ptr<CryptoAlgorithmDigest> CryptoAlgorithmDigest::normalize(JSContex
   }
 };
 
+std::unique_ptr<CryptoAlgorithmSignVerify>
+CryptoAlgorithmSignVerify::normalize(JSContext *cx, JS::HandleValue value) {
+  // Do steps 1 through 5.1 of https://w3c.github.io/webcrypto/#algorithm-normalization-normalize-an-algorithm
+  auto identifierResult = normalizeIdentifier(cx, value);
+  if (identifierResult.isErr()) {
+    // If we are here, this means either the identifier could not be coerced to a String or was not recognized
+    // In both those scenarios an exception will have already been created, which is why we are not creating one here.
+    return nullptr;
+  }
+  auto identifier = identifierResult.unwrap();
+  JS::Rooted<JSObject *> params(cx);
+
+  // The value can either be a JS String or a JS Object with a 'name' property which is the algorithm identifier.
+  // Other properties within the object will be the parameters for the algorithm to use.
+  if (value.isString()) {
+    auto obj = JS_NewPlainObject(cx);
+    params.set(obj);
+    if (!JS_SetProperty(cx, params, "name", value)) {
+      return nullptr;
+    }
+  } else if (value.isObject()) {
+    params.set(&value.toObject());
+  }
+
+  // The table listed at https://w3c.github.io/webcrypto/#h-note-15 is what defines which algorithms support which operations
+  // RSASSA-PKCS1-v1_5, RSA-PSS, ECDSA, HMAC, are the algorithms
+  // which support the sign operation
+  switch (identifier) {
+  case CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5: {
+    return std::make_unique<CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify>();
+    break;
+  }
+  case CryptoAlgorithmIdentifier::HMAC:
+  case CryptoAlgorithmIdentifier::ECDSA:
+  case CryptoAlgorithmIdentifier::RSA_PSS: {
+    MOZ_ASSERT(false);
+    JS_ReportErrorASCII(cx, "Supplied algorithm is not yet supported");
+    convertErrorToNotSupported(cx);
+    return nullptr;
+  }
+  default: {
+    return nullptr;
+  }
+  }
+};
+
+JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify::sign(JSContext *cx, JS::HandleObject key,
+                                                 std::span<uint8_t> data) {
+
+  // 1. If the [[type]] internal slot of key is not "private", then throw an InvalidAccessError.
+  if (CryptoKey::type(key) != CryptoKeyType::Private) {
+    // TODO: Change to an InvalidAccessError instance
+    JS_ReportErrorLatin1(cx, "InvalidAccessError");
+    return nullptr;
+  }
+
+  MOZ_ASSERT(CryptoKey::is_instance(key));
+  if (CryptoKey::type(key) != CryptoKeyType::Private) {
+    // TODO Rename error to InvalidAccessError
+    JS_ReportErrorLatin1(cx, "InvalidAccessError");
+    return nullptr;
+  }
+
+  const EVP_MD *algorithm = createDigestAlgorithm(cx, key);
+  if (!algorithm) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return nullptr;
+  }
+
+  auto digestOption = ::builtins::rawDigest(cx, data, algorithm, EVP_MD_size(algorithm));
+  if (!digestOption.has_value()) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return nullptr;
+  }
+  auto digest = digestOption.value();
+
+  // 2. Perform the signature generation operation defined in Section 8.2 of [RFC3447] with the
+  //  key represented by the [[handle]] internal slot of key as the signer's private key and the
+  //  contents of message as M and using the hash function specified in the hash attribute of the
+  //  [[algorithm]] internal slot of key as the Hash option for the EMSA-PKCS1-v1_5 encoding
+  //  method.
+  // 3. If performing the operation results in an error, then throw an OperationError.
+  auto ctx = EVP_PKEY_CTX_new(CryptoKey::key(key), nullptr);
+  if (!ctx) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return nullptr;
+  }
+
+  if (EVP_PKEY_sign_init(ctx) <= 0) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return nullptr;
+  }
+
+  if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) <= 0) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return nullptr;
+  }
+
+  if (EVP_PKEY_CTX_set_signature_md(ctx, algorithm) <= 0) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return nullptr;
+  }
+
+  size_t signature_length;
+  if (EVP_PKEY_sign(ctx, nullptr, &signature_length, digest.data(), digest.size()) <= 0) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return nullptr;
+  }
+
+  // 4. Let signature be the value S that results from performing the operation.
+  uint8_t *signature = reinterpret_cast<uint8_t *>(calloc(signature_length, sizeof(uint8_t)));
+  if (EVP_PKEY_sign(ctx, signature, &signature_length, digest.data(), digest.size()) <= 0) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return nullptr;
+  }
+
+  // 5. Return a new ArrayBuffer associated with the relevant global object of this [HTML], and
+  // containing the bytes of signature.
+  JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, signature_length, signature));
+  if (!buffer) {
+    // We can be here is the array buffer was too large -- if that was the case then a
+    // JSMSG_BAD_ARRAY_LENGTH will have been created. No other failure scenarios in this path will
+    // create a JS exception and so we need to create one.
+    if (!JS_IsExceptionPending(cx)) {
+      // TODO Rename error to InternalError
+      JS_ReportErrorLatin1(cx, "InternalError");
+    }
+    JS_free(cx, signature);
+    return nullptr;
+  }
+  return buffer;
+}
+
+JS::Result<bool> CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify::verify(JSContext *cx, JS::HandleObject key,
+                                                          std::span<uint8_t> signature,
+                                                          std::span<uint8_t> data) {
+  MOZ_ASSERT(CryptoKey::is_instance(key));
+
+  if (CryptoKey::type(key) != CryptoKeyType::Public) {
+    // TODO Rename error to InvalidAccessError
+    JS_ReportErrorLatin1(cx, "InvalidAccessError");
+    return JS::Result<bool>(JS::Error());
+  }
+  const EVP_MD *algorithm = createDigestAlgorithm(cx, key);
+
+  auto digestOption = ::builtins::rawDigest(cx, data, algorithm, EVP_MD_size(algorithm));
+  if (!digestOption.has_value()) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return JS::Result<bool>(JS::Error());
+  }
+
+  auto digest = digestOption.value();
+
+  auto ctx = EVP_PKEY_CTX_new(CryptoKey::key(key), nullptr);
+  if (!ctx) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return JS::Result<bool>(JS::Error());
+  }
+
+  if (EVP_PKEY_verify_init(ctx) != 1) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return JS::Result<bool>(JS::Error());
+  }
+
+  if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) != 1) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return JS::Result<bool>(JS::Error());
+  }
+
+  if (EVP_PKEY_CTX_set_signature_md(ctx, algorithm) != 1) {
+    // TODO Rename error to OperationError
+    JS_ReportErrorLatin1(cx, "OperationError");
+    return JS::Result<bool>(JS::Error());
+  }
+
+  return EVP_PKEY_verify(ctx, signature.data(), signature.size(), digest.data(), digest.size()) ==
+         1;
+}
 
 std::unique_ptr<CryptoAlgorithmImportKey>
 CryptoAlgorithmImportKey::normalize(JSContext *cx, JS::HandleValue value) {
@@ -460,7 +728,7 @@ CryptoAlgorithmImportKey::normalize(JSContext *cx, JS::HandleValue value) {
   }
 
   // The table listed at https://w3c.github.io/webcrypto/#h-note-15 is what defines which algorithms support which operations
-  // RSASSA-PKCS1-v1_5, RSA-PSS, RSA-OAEP, ECDSA, ECDH, AES-CTR, AES-CBC, AES-GCM, AES-KW, HMAC, HKDF, PBKDF2 are the algorithms 
+  // RSASSA-PKCS1-v1_5, RSA-PSS, RSA-OAEP, ECDSA, ECDH, AES-CTR, AES-CBC, AES-GCM, AES-KW, HMAC, HKDF, PBKDF2 are the algorithms
   // which support the importKey operation
   switch (identifier) {
   case CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5: {
@@ -524,7 +792,7 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
 
 
     // 2.2 If the d field of jwk is present and usages contains an entry which 
-    // is not "sign", or, if the d field of jwk is not present and usages 
+    // is not "sign", or, if the d field of jwk is not present and usages
     // contains an entry which is not "verify" then throw a SyntaxError.
     bool isUsagesAllowed = false;
     // public key
@@ -727,35 +995,6 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::toObject(JSContext *cx) {
     return nullptr;
   }
   return algorithm;
-}
-
-namespace {
-  // This implements https://w3c.github.io/webcrypto/#sha-operations for all
-  // the SHA algorithms that we support.
-  JSObject *digest(JSContext *cx, std::span<uint8_t> data, const EVP_MD * algorithm, size_t buffer_size) {
-    unsigned int size;
-    auto buf = static_cast<unsigned char *>(JS_malloc(cx, buffer_size));
-    if (!buf) {
-      JS_ReportOutOfMemory(cx);
-      return nullptr;
-    }
-    if (!EVP_Digest(data.data(), data.size(), buf, &size, algorithm, NULL)) {
-      // 2. If performing the operation results in an error, then throw an OperationError.
-      // TODO: Change to an OperationError DOMException
-      JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: failed to create digest");
-      JS_free(cx, buf);
-      return nullptr;
-    }
-    // 3. Return a new ArrayBuffer containing result.
-    JS::RootedObject array_buffer(cx);
-    array_buffer.set(JS::NewArrayBufferWithContents(cx, size, buf));
-    if (!array_buffer) {
-      JS_free(cx, buf);
-      JS_ReportOutOfMemory(cx);
-      return nullptr;
-    }
-    return array_buffer;
-  };
 }
 
 JSObject *CryptoAlgorithmSHA1::digest(JSContext *cx, std::span<uint8_t> data) {

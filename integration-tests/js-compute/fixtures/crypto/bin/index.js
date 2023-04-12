@@ -1,4 +1,5 @@
 /// <reference path="../../../../../types/index.d.ts" />
+/* eslint-env serviceworker, shared-node-browser, browser */
 
 import { env } from 'fastly:env';
 import { pass, fail, assert, assertThrows, assertRejects, assertResolves } from "../../../assertions.js";
@@ -59,45 +60,6 @@ const jsonWebKeyAlgorithm = {
   name: "RSASSA-PKCS1-v1_5",
   hash: { name: "SHA-256" },
 };
-
-
-
-// From https://www.rfc-editor.org/rfc/rfc7517#appendix-A.1
-const publicJsonWebKeyData = {
-  "alg":"RS256",
-  "e":"AQAB",
-  "ext": true,
-  "key_ops": [
-    "verify"
-  ],
-  "kty":"RSA",
-  "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw"
-};
-
-// From https://www.rfc-editor.org/rfc/rfc7517#appendix-A.2
-const privateJsonWebKeyData = {
-  "alg":"RS256",
-  "d":"X4cTteJY_gn4FYPsXB8rdXix5vwsg1FLN5E3EaG6RJoVH-HLLKD9M7dx5oo7GURknchnrRweUkC7hT5fJLM0WbFAKNLWY2vv7B6NqXSzUvxT0_YSfqijwp3RTzlBaCxWp4doFk5N2o8Gy_nHNKroADIkJ46pRUohsXywbReAdYaMwFs9tv8d_cPVY3i07a3t8MN6TNwm0dSawm9v47UiCl3Sk5ZiG7xojPLu4sbg1U2jx4IBTNBznbJSzFHK66jT8bgkuqsk0GjskDJk19Z4qwjwbsnn4j2WBii3RL-Us2lGVkY8fkFzme1z0HbIkfz0Y6mqnOYtqc0X4jfcKoAC8Q",
-  "dp":"G4sPXkc6Ya9y8oJW9_ILj4xuppu0lzi_H7VTkS8xj5SdX3coE0oimYwxIi2emTAue0UOa5dpgFGyBJ4c8tQ2VF402XRugKDTP8akYhFo5tAA77Qe_NmtuYZc3C3m3I24G2GvR5sSDxUyAN2zq8Lfn9EUms6rY3Ob8YeiKkTiBj0",
-  "dq":"s9lAH9fggBsoFR8Oac2R_E2gw282rT2kGOAhvIllETE1efrA6huUUvMfBcMpn8lqeW6vzznYY5SSQF7pMdC_agI3nG8Ibp1BUb0JUiraRNqUfLhcQb_d9GF4Dh7e74WbRsobRonujTYN1xCaP6TO61jvWrX-L18txXw494Q_cgk",
-  "e":"AQAB",
-  "ext": true,
-  "key_ops": [
-    "sign"
-  ],
-  "kty":"RSA",
-  "n":"0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
-  "p":"83i-7IvMGXoMXCskv73TKr8637FiO7Z27zv8oj6pbWUQyLPQBQxtPVnwD20R-60eTDmD2ujnMt5PoqMrm8RfmNhVWDtjjMmCMjOpSXicFHj7XOuVIYQyqVWlWEh6dN36GVZYk93N8Bc9vY41xy8B9RzzOGVQzXvNEvn7O0nVbfs",
-  "q":"3dfOR9cuYq-0S-mkFLzgItgMEfFzB2q3hWehMuG0oCuqnb3vobLyumqjVZQO1dIrdwgTnCdpYzBcOfW5r370AFXjiWft_NGEiovonizhKpo9VVS78TzFgxkIdrecRezsZ-1kYd_s1qDbxtkDEgfAITAG9LUnADun4vIcb6yelxk",
-  "qi":"GyM_p6JrXySiz1toFgKbWV-JdI3jQ4ypu9rbMWx3rQJBfmt0FoYzgUIZEVFEcOqwemRN81zoDAaa-Bk0KWNGDjJHZDdDmFhW3AN7lI-puxk_mHZGJ11rxyR8O55XLSe3SPmRfKwZI6yU24ZxvQKFYItdldUKGzO6Ia6zTKhAVRU",
-};
-
-const jsonWebKeyAlgorithm = {
-  name: "RSASSA-PKCS1-v1_5",
-  hash: { name: "SHA-256" },
-};
-
-
 
 const routes = new Map();
 routes.set('/', () => {
@@ -364,7 +326,7 @@ routes.set("/crypto.subtle", async () => {
       });
     }
     // jwk private key
-    // raw AES 
+    // raw AES
     // raw HMAC secret keys
     // raw Elliptic Curve public keys
     // pkcs8 RSA private keys
@@ -598,7 +560,7 @@ routes.set("/crypto.subtle", async () => {
       return pass();
     });
   }
-  // happy paths 
+  // happy paths
   {
     // "SHA-1"
     routes.set("/crypto.subtle.digest/sha-1", async () => {
@@ -634,4 +596,116 @@ routes.set("/crypto.subtle", async () => {
     });
   }
 
+}
+
+// sign
+{
+  const enc = new TextEncoder();
+  const data = enc.encode('hello world');
+  routes.set("/crypto.subtle.sign", async () => {
+    error = assert(typeof crypto.subtle.sign, 'function', `typeof crypto.subtle.sign`)
+    if (error) { return error; }
+    error = assert(crypto.subtle.sign, SubtleCrypto.prototype.sign, `crypto.subtle.sign === SubtleCrypto.prototype.sign`)
+    if (error) { return error; }
+    return pass();
+  });
+  routes.set("/crypto.subtle.sign/length", async () => {
+    error = assert(crypto.subtle.sign.length, 3, `crypto.subtle.sign.length === 3`)
+    if (error) { return error; }
+    return pass();
+  });
+  routes.set("/crypto.subtle.sign/called-as-constructor", async () => {
+    error = assertThrows(() => {
+      new crypto.subtle.sign
+    }, TypeError, "crypto.subtle.sign is not a constructor")
+    if (error) { return error; }
+    return pass();
+  });
+  routes.set("/crypto.subtle.sign/called-with-wrong-this", async () => {
+    error = await assertRejects(async () => {
+      await crypto.subtle.sign.call(undefined, jsonWebKeyAlgorithm, publicJsonWebKeyData, data)
+    }, TypeError, "Method SubtleCrypto.sign called on receiver that's not an instance of SubtleCrypto")
+    if (error) { return error; }
+    return pass();
+  });
+  routes.set("/crypto.subtle.sign/called-with-no-arguments", async () => {
+    error = await assertRejects(async () => {
+      await crypto.subtle.sign()
+    }, TypeError, "SubtleCrypto.sign: At least 3 arguments required, but only 0 passed")
+    if (error) { return error; }
+    return pass();
+  });
+  // first-parameter
+  {
+    routes.set("/crypto.subtle.sign/first-parameter-calls-7.1.17-ToString", async () => {
+      const sentinel = Symbol("sentinel");
+      const key = await crypto.subtle.importKey('jwk', privateJsonWebKeyData, jsonWebKeyAlgorithm, privateJsonWebKeyData.ext, privateJsonWebKeyData.key_ops);
+      const test = async () => {
+        await crypto.subtle.sign({
+          name: {
+            toString() {
+              throw sentinel;
+            }
+          }
+        }, key, data);
+      }
+      let error = await assertRejects(test)
+      if (error) { return error; }
+      try {
+        await test()
+      } catch (thrownError) {
+        let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+        if (error) { return error; }
+      }
+      return pass();
+    });
+    routes.set("/crypto.subtle.sign/first-parameter-non-existant-algorithm", async () => {
+      let error = await assertRejects(async () => {
+        const key = await crypto.subtle.importKey('jwk', privateJsonWebKeyData, jsonWebKeyAlgorithm, privateJsonWebKeyData.ext, privateJsonWebKeyData.key_ops);
+        await crypto.subtle.sign('jake', key, data)
+      }, Error, "Algorithm: Unrecognized name")
+      if (error) { return error; }
+      return pass();
+    });
+  }
+  // second-parameter
+  {
+    routes.set("/crypto.subtle.sign/second-parameter-invalid-format", async () => {
+      let error = await assertRejects(async () => {
+        await crypto.subtle.sign(jsonWebKeyAlgorithm, "jake", data)
+      }, Error, "parameter 2 is not of type 'CryptoKey'")
+      if (error) { return error; }
+      return pass();
+    });
+    routes.set("/crypto.subtle.sign/second-parameter-invalid-usages", async () => {
+      let error = await assertRejects(async () => {
+        const key = await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops);
+        await crypto.subtle.sign(jsonWebKeyAlgorithm, key, data);
+      }, Error, "CryptoKey doesn't support signing")
+      if (error) { return error; }
+      return pass();
+    });
+  }
+  // third-parameter
+  {
+    routes.set("/crypto.subtle.sign/third-parameter-invalid-format", async () => {
+      let error = await assertRejects(async () => {
+        const key = await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops);
+        await crypto.subtle.sign(jsonWebKeyAlgorithm, key, undefined)
+      }, Error, "SubtleCrypto.sign: data must be of type ArrayBuffer or ArrayBufferView but got \"\"")
+      if (error) { return error; }
+      return pass();
+    });
+  }
+  // happy-path
+  {
+    routes.set("/crypto.subtle.sign/happy-path", async () => {
+      const key = await crypto.subtle.importKey('jwk', privateJsonWebKeyData, jsonWebKeyAlgorithm, privateJsonWebKeyData.ext, privateJsonWebKeyData.key_ops);
+      const signature = new Uint8Array(await crypto.subtle.sign(jsonWebKeyAlgorithm, key, data));
+      const expected = new Uint8Array([70,96,33,185,93,42,67,49,243,70,88,68,194,148,53,249,255,192,232,132,161,194,41,244,174,211,218,203,7,238,71,182,101,49,139,222,165,70,222,105,82,156,184,44,100,108,121,237,250,119,66,228,156,243,71,105,62,246,22,2,160,116,71,147,202,168,24,92,224,41,148,161,124,80,212,169,212,64,29,189,2,171,174,188,159,89,93,122,219,166,105,92,107,173,103,238,145,226,94,139,71,124,17,233,49,138,89,246,3,82,238,154,169,188,66,198,32,23,230,90,164,140,51,47,221,149,161,14,254,169,224,223,119,94,27,63,199,93,65,53,24,151,146,242,239,41,108,136,31,99,42,213,128,244,140,238,157,107,117,241,219,137,97,39,109,185,176,97,193,60,117,244,106,62,193,188,87,199,37,70,137,37,231,110,228,228,139,53,240,56,92,102,220,176,127,248,24,217,208,29,209,216,29,251,100,252,243,183,195,96,126,102,136,48,39,186,45,202,10,187,22,52,183,190,149,153,32,12,90,66,49,122,190,154,167,9,12,32,77,177,222,54,211,233,219,205,133,0,113,77,158,1,125,5,15,195]);
+      error = assert(signature, expected, "signature deep equals expected");
+      if (error) { return error; }
+      return pass();
+    });
+  }
 }

@@ -4,8 +4,10 @@
 #include "builtin.h"
 // #include "crypto-algorithm.h"
 #include "crypto-key-rsa-components.h"
+#include "openssl/evp.h"
 
 namespace builtins {
+enum class CryptoAlgorithmIdentifier : uint8_t;
 class CryptoAlgorithmRSASSA_PKCS1_v1_5_Import;
 enum class CryptoKeyType : uint8_t { Public, Private, Secret };
 
@@ -112,6 +114,12 @@ public:
   static JSObject *createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_Import *algorithm,
                              std::unique_ptr<CryptoKeyRSAComponents> keyData, bool extractable,
                              CryptoKeyUsages usages);
+  static CryptoKeyType type(JSObject *self);
+  static JSObject *get_algorithm(JS::HandleObject self);
+  static EVP_PKEY *key(JSObject *self);
+  static bool canSign(JS::HandleObject self);
+  static JS::Result<bool> is_algorithm(JSContext *cx, JS::HandleObject self,
+                                       CryptoAlgorithmIdentifier algorithm);
 };
 
 } // namespace builtins
