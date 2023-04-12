@@ -52,6 +52,5 @@ export function precompile(source, filename = "<input>") {
   //   includeContent: true
   // });
 
-  console.log(magicString.toString());
   return magicString.toString();
 }
