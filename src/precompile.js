@@ -36,7 +36,7 @@ export function precompile(source, filename = "<input>") {
       }
       const transpiledRegex = `/${transpiledPattern}/${node.regex.flags}`;
       precompileCalls.push(`precompile(${transpiledRegex})`);
-      magicString.overwrite(node.start, node.end, tranpiledRegex);
+      magicString.overwrite(node.start, node.end, transpiledRegex);
     },
   });
 
