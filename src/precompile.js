@@ -3,8 +3,10 @@ import { parse } from "acorn";
 import MagicString from "magic-string";
 import { simple as simpleWalk } from "acorn-walk";
 
-const PREAMBLE = `;{ const precompileRegex = (r) => { r.exec('a'); r.exec('\\u1000'); }; `;
-const POSTAMBLE = "; }; ";
+const PREAMBLE = `;{
+  // Precompiled regular expressions
+  const precompile = (r) => { r.exec('a'); r.exec('\\u1000'); };`;
+const POSTAMBLE = "}";
 
 /// Emit a block of javascript that will pre-compile the regular expressions given. As spidermonkey
 /// will intern regular expressions, duplicating them at the top level and testing them with both
@@ -35,15 +37,14 @@ export function precompile(source, filename = "<input>") {
         transpiledPattern = pattern;
       }
       const transpiledRegex = `/${transpiledPattern}/${node.regex.flags}`;
-      precompileCalls.push(`precompileRegex(${transpiledRegex})`);
+      precompileCalls.push(`precompile(${transpiledRegex});`);
       magicString.overwrite(node.start, node.end, transpiledRegex);
     },
   });
 
   if (!precompileCalls.length) return source;
 
-  // by keeping this a one-liner, source maps will align since they use line offsets
-  magicString.prepend(`${PREAMBLE}${precompileCalls.join(";")}${POSTAMBLE}`);
+  magicString.prepend(`${PREAMBLE}${precompileCalls.join("\n")}${POSTAMBLE}`);
 
   // When we're ready to pipe in source maps:
   // const map = magicString.generateMap({
