@@ -164,8 +164,109 @@ bool SubtleCrypto::importKey(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+// https://w3c.github.io/webcrypto/#SubtleCrypto-method-sign
+bool SubtleCrypto::sign(JSContext *cx, unsigned argc, JS::Value *vp) {
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(vp);
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "SubtleCrypto.sign", 3)) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  if (!check_receiver(cx, args.thisv(), "SubtleCrypto.sign")) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // 1. Let algorithm and key be the algorithm and key parameters passed to the sign() method,
+  // respectively.
+  auto algorithm = args.get(0);
+  JS::RootedObject key(cx);
+  {
+    auto key_arg = args.get(1);
+    if (!key_arg.isObject()) {
+      JS_ReportErrorLatin1(cx, "parameter 2 is not of type 'CryptoKey'");
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    key.set(&key_arg.toObject());
+    if (!CryptoKey::is_instance(key)) {
+      JS_ReportErrorLatin1(cx, "parameter 2 is not of type 'CryptoKey'");
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+  }
+
+  // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to
+  // the sign() method.
+  std::span<uint8_t> data;
+  {
+    std::optional<std::span<uint8_t>> dataOptional =
+        value_to_buffer(cx, args.get(2), "SubtleCrypto.sign: data");
+    if (!dataOptional.has_value()) {
+      // value_to_buffer would have already created a JS exception so we don't need to create one
+      // ourselves.
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    data = dataOptional.value();
+  }
+
+  // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm
+  // and op set to "sign".
+  auto normalizedAlgorithm = CryptoAlgorithmSignVerify::normalize(cx, algorithm);
+  // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.
+  if (!normalizedAlgorithm) {
+    // TODO Rename error to NotSupportedError
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // 5. Let promise be a new Promise.
+  JS::RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  // 6. Return promise and perform the remaining steps in parallel.
+  args.rval().setObject(*promise);
+
+  // 7. If the following steps or referenced procedures say to throw an error, reject promise with
+  // the returned error and then terminate the algorithm.
+
+  // 8. If the name member of normalizedAlgorithm is not equal to the name attribute of the
+  // [[algorithm]] internal slot of key then throw an InvalidAccessError.
+  auto identifier = normalizedAlgorithm->identifier();
+  auto match_result = CryptoKey::is_algorithm(cx, key, identifier);
+  if (match_result.isErr()) {
+    JS_ReportErrorUTF8(cx, "CryptoKey doesn't match AlgorithmIdentifier");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  if (match_result.unwrap() == false) {
+    // TODO: Change to an InvalidAccessError instance
+    JS_ReportErrorUTF8(cx, "CryptoKey doesn't match AlgorithmIdentifier");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 9. If the [[usages]] internal slot of key does not contain an entry that is "sign", then throw
+  // an InvalidAccessError.
+  if (!CryptoKey::canSign(key)) {
+    // TODO: Change to an InvalidAccessError instance
+    JS_ReportErrorLatin1(cx, "CryptoKey doesn't support signing");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  // 10. Let result be the result of performing the sign operation specified by normalizedAlgorithm
+  // using key and algorithm and with data as message.
+  auto signature = normalizedAlgorithm->sign(cx, key, data);
+  if (!signature) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  JS::RootedValue result(cx, JS::ObjectValue(*signature));
+
+  // 11. Resolve promise with result.
+  JS::ResolvePromise(cx, promise, result);
+  return true;
+}
+
 const JSFunctionSpec SubtleCrypto::methods[] = {JS_FN("digest", digest, 2, JSPROP_ENUMERATE),
                                                 JS_FN("importKey", importKey, 5, JSPROP_ENUMERATE),
+                                                JS_FN("sign", sign, 3, JSPROP_ENUMERATE),
                                                 JS_FS_END};
 
 const JSPropertySpec SubtleCrypto::properties[] = {

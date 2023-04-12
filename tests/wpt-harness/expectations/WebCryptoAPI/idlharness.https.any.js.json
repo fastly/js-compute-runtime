@@ -135,7 +135,7 @@
     "status": "FAIL"
   },
   "SubtleCrypto interface: operation sign(AlgorithmIdentifier, CryptoKey, BufferSource)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "SubtleCrypto interface: operation verify(AlgorithmIdentifier, CryptoKey, BufferSource, BufferSource)": {
     "status": "FAIL"
@@ -183,10 +183,10 @@
     "status": "FAIL"
   },
   "SubtleCrypto interface: crypto.subtle must inherit property \"sign(AlgorithmIdentifier, CryptoKey, BufferSource)\" with the proper type": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "SubtleCrypto interface: calling sign(AlgorithmIdentifier, CryptoKey, BufferSource) on crypto.subtle with too few arguments must throw TypeError": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "SubtleCrypto interface: crypto.subtle must inherit property \"verify(AlgorithmIdentifier, CryptoKey, BufferSource, BufferSource)\" with the proper type": {
     "status": "FAIL"

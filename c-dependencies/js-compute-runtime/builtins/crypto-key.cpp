@@ -5,6 +5,82 @@
 
 namespace builtins {
 
+namespace {
+const char *algorithmName(CryptoAlgorithmIdentifier algorithm) {
+  const char *result = nullptr;
+  switch (algorithm) {
+  case CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5: {
+    result = "RSASSA-PKCS1-v1_5";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::RSA_PSS: {
+    result = "RSA-PSS";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::RSA_OAEP: {
+    result = "RSA-OAEP";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::ECDSA: {
+    result = "ECDSA";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::ECDH: {
+    result = "ECDH";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::AES_CTR: {
+    result = "AES-CTR";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::AES_CBC: {
+    result = "AES-CBC";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::AES_GCM: {
+    result = "AES-GCM";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::AES_KW: {
+    result = "AES-KW";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::HMAC: {
+    result = "HMAC";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::SHA_1: {
+    result = "SHA-1";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::SHA_256: {
+    result = "SHA-256";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::SHA_384: {
+    result = "SHA-384";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::SHA_512: {
+    result = "SHA-512";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::HKDF: {
+    result = "HKDF";
+    break;
+  }
+  case CryptoAlgorithmIdentifier::PBKDF2: {
+    result = "PBKDF2";
+    break;
+  }
+  default: {
+    MOZ_ASSERT_UNREACHABLE("Unknown `CryptoAlgorithmIdentifier` value");
+  }
+  }
+  return result;
+}
+} // namespace
+
 CryptoKeyUsages::CryptoKeyUsages(uint8_t mask) { this->mask = mask; };
 CryptoKeyUsages::CryptoKeyUsages(bool encrypt, bool decrypt, bool sign, bool verify,
                                  bool derive_key, bool derive_bits, bool wrap_key,
@@ -518,6 +594,54 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
   JS::SetReservedSlot(instance, Slots::Usages, JS::Int32Value(usages.toInt()));
   JS::SetReservedSlot(instance, Slots::Key, JS::PrivateValue(pkey));
   return instance;
+}
+
+CryptoKeyType CryptoKey::type(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+
+  return static_cast<CryptoKeyType>(JS::GetReservedSlot(self, Slots::Type).toInt32());
+}
+
+JSObject *CryptoKey::get_algorithm(JS::HandleObject self) {
+  MOZ_ASSERT(is_instance(self));
+  auto algorithm = JS::GetReservedSlot(self, Slots::Algorithm).toObjectOrNull();
+  return algorithm;
+}
+
+EVP_PKEY *CryptoKey::key(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+  return static_cast<EVP_PKEY *>(JS::GetReservedSlot(self, Slots::Key).toPrivate());
+}
+
+JS::Result<bool> CryptoKey::is_algorithm(JSContext *cx, JS::HandleObject self,
+                                         CryptoAlgorithmIdentifier algorithm) {
+  MOZ_ASSERT(is_instance(self));
+  JS::RootedObject self_algorithm(cx, JS::GetReservedSlot(self, Slots::Algorithm).toObjectOrNull());
+  MOZ_ASSERT(self_algorithm != nullptr);
+  JS::Rooted<JS::Value> name_val(cx);
+  if (!JS_GetProperty(cx, self_algorithm, "name", &name_val)) {
+    return JS::Result<bool>(JS::Error());
+  }
+  JS::Rooted<JSString *> str(cx, JS::ToString(cx, name_val));
+  if (!str) {
+    return JS::Result<bool>(JS::Error());
+  }
+  size_t length;
+  auto chars = encode(cx, str, &length);
+  if (!chars) {
+    return JS::Result<bool>(JS::Error());
+  }
+  bool match;
+  if (!JS_StringEqualsAscii(cx, JS::ToString(cx, name_val), algorithmName(algorithm), &match)) {
+    return JS::Result<bool>(JS::Error());
+  }
+  return match;
+}
+
+bool CryptoKey::canSign(JS::HandleObject self) {
+  MOZ_ASSERT(is_instance(self));
+  auto usage = CryptoKeyUsages(JS::GetReservedSlot(self, Slots::Usages).toInt32());
+  return usage.canSign();
 }
 
 } // namespace builtins
