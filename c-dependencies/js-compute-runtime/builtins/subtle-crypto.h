@@ -32,6 +32,7 @@ public:
   static bool digest(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool importKey(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool sign(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool verify(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool init_class(JSContext *cx, JS::HandleObject global);

@@ -618,7 +618,7 @@ EVP_PKEY *CryptoKey::key(JSObject *self) {
 
 JS::Result<bool> CryptoKey::is_algorithm(JSContext *cx, JS::HandleObject self,
                                          CryptoAlgorithmIdentifier algorithm) {
-  MOZ_ASSERT(is_instance(self));
+  MOZ_ASSERT(CryptoKey::is_instance(self));
   JS::RootedObject self_algorithm(cx, JS::GetReservedSlot(self, Slots::Algorithm).toObjectOrNull());
   MOZ_ASSERT(self_algorithm != nullptr);
   JS::Rooted<JS::Value> name_val(cx);
@@ -647,6 +647,12 @@ bool CryptoKey::canSign(JS::HandleObject self) {
   MOZ_ASSERT(std::in_range<std::uint8_t>(usages));
   auto usage = CryptoKeyUsages(static_cast<uint8_t>(usages));
   return usage.canSign();
+}
+
+bool CryptoKey::canVerify(JS::HandleObject self) {
+  MOZ_ASSERT(is_instance(self));
+  auto usage = CryptoKeyUsages(JS::GetReservedSlot(self, Slots::Usages).toInt32());
+  return usage.canVerify();
 }
 
 } // namespace builtins
