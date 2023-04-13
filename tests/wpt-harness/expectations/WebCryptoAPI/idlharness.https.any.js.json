@@ -138,7 +138,7 @@
     "status": "PASS"
   },
   "SubtleCrypto interface: operation verify(AlgorithmIdentifier, CryptoKey, BufferSource, BufferSource)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "SubtleCrypto interface: operation digest(AlgorithmIdentifier, BufferSource)": {
     "status": "PASS"
@@ -189,10 +189,10 @@
     "status": "PASS"
   },
   "SubtleCrypto interface: crypto.subtle must inherit property \"verify(AlgorithmIdentifier, CryptoKey, BufferSource, BufferSource)\" with the proper type": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "SubtleCrypto interface: calling verify(AlgorithmIdentifier, CryptoKey, BufferSource, BufferSource) on crypto.subtle with too few arguments must throw TypeError": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "SubtleCrypto interface: crypto.subtle must inherit property \"digest(AlgorithmIdentifier, BufferSource)\" with the proper type": {
     "status": "PASS"

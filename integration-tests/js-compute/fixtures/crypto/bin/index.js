@@ -709,3 +709,141 @@ routes.set("/crypto.subtle", async () => {
     });
   }
 }
+
+// verify
+{
+  routes.set("/crypto.subtle.verify", async () => {
+    error = assert(typeof crypto.subtle.verify, 'function', `typeof crypto.subtle.verify`)
+    if (error) { return error; }
+    error = assert(crypto.subtle.verify, SubtleCrypto.prototype.verify, `crypto.subtle.verify === SubtleCrypto.prototype.verify`)
+    if (error) { return error; }
+    return pass();
+  });
+  routes.set("/crypto.subtle.verify/length", async () => {
+    error = assert(crypto.subtle.verify.length, 4, `crypto.subtle.verify.length === 4`)
+    if (error) { return error; }
+    return pass();
+  });
+  routes.set("/crypto.subtle.verify/called-as-constructor", async () => {
+    error = assertThrows(() => {
+      new crypto.subtle.verify
+    }, TypeError, "crypto.subtle.verify is not a constructor")
+    if (error) { return error; }
+    return pass();
+  });
+  routes.set("/crypto.subtle.verify/called-with-wrong-this", async () => {
+    error = await assertRejects(async () => {
+      const key = await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops);
+      await crypto.subtle.verify.call(undefined, jsonWebKeyAlgorithm, key, new Uint8Array, new Uint8Array)
+    }, TypeError, "Method SubtleCrypto.verify called on receiver that's not an instance of SubtleCrypto")
+    if (error) { return error; }
+    return pass();
+  });
+  routes.set("/crypto.subtle.verify/called-with-no-arguments", async () => {
+    error = await assertRejects(async () => {
+      await crypto.subtle.verify()
+    }, TypeError, "SubtleCrypto.verify: At least 4 arguments required, but only 0 passed")
+    if (error) { return error; }
+    return pass();
+  });
+  // first-parameter
+  {
+    routes.set("/crypto.subtle.verify/first-parameter-calls-7.1.17-ToString", async () => {
+      const sentinel = Symbol("sentinel");
+      const test = async () => {
+        const key = await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops);
+        await crypto.subtle.verify({
+          name: {
+            toString() {
+              throw sentinel;
+            }
+          }
+        }, key, new Uint8Array, new Uint8Array);
+      }
+      let error = await assertRejects(test)
+      if (error) { return error; }
+      try {
+        await test()
+      } catch (thrownError) {
+        let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+        if (error) { return error; }
+      }
+      return pass();
+    });
+    routes.set("/crypto.subtle.verify/first-parameter-non-existant-algorithm", async () => {
+      let error = await assertRejects(async () => {
+        const key = await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops);
+        await crypto.subtle.verify('jake', key, new Uint8Array, new Uint8Array)
+      }, Error, "Algorithm: Unrecognized name")
+      if (error) { return error; }
+      return pass();
+    });
+  }
+  // second-parameter
+  {
+    routes.set("/crypto.subtle.verify/second-parameter-invalid-format", async () => {
+      let error = await assertRejects(async () => {
+        await crypto.subtle.verify(jsonWebKeyAlgorithm, "jake", new Uint8Array, new Uint8Array)
+      }, Error, "parameter 2 is not of type 'CryptoKey'")
+      if (error) { return error; }
+      return pass();
+    });
+    routes.set("/crypto.subtle.verify/second-parameter-invalid-usages", async () => {
+      let error = await assertRejects(async () => {
+        const key = await crypto.subtle.importKey('jwk', privateJsonWebKeyData, jsonWebKeyAlgorithm, privateJsonWebKeyData.ext, privateJsonWebKeyData.key_ops);
+        await crypto.subtle.verify(jsonWebKeyAlgorithm, key, new Uint8Array(), new Uint8Array());
+      }, Error, "CryptoKey doesn't support verification")
+      if (error) { return error; }
+      return pass();
+    });
+  }
+  // third-parameter
+  {
+    routes.set("/crypto.subtle.verify/third-parameter-invalid-format", async () => {
+      let error = await assertRejects(async () => {
+        const key = await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops);
+        await crypto.subtle.verify(jsonWebKeyAlgorithm, key, undefined, new Uint8Array());
+      }, Error, "SubtleCrypto.verify: signature (argument 3) must be of type ArrayBuffer or ArrayBufferView but got \"\"")
+      if (error) { return error; }
+      return pass();
+    });
+  }
+  // fourth-parameter
+  {
+    routes.set("/crypto.subtle.verify/fourth-parameter-invalid-format", async () => {
+      let error = await assertRejects(async () => {
+        const key = await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops);
+        await crypto.subtle.verify(jsonWebKeyAlgorithm, key, new Uint8Array(), undefined);
+      }, Error, "SubtleCrypto.verify: data (argument 4) must be of type ArrayBuffer or ArrayBufferView but got \"\"")
+      if (error) { return error; }
+      return pass();
+    });
+  }
+  // incorrect-signature
+  {
+    routes.set("/crypto.subtle.verify/incorrect-signature", async () => {
+      const key = await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops);
+      const signature = new Uint8Array;
+      const enc = new TextEncoder();
+      const data = enc.encode('hello world');
+      const result = await crypto.subtle.verify(jsonWebKeyAlgorithm, key, signature, data);
+      error = assert(result, false, "result === false");
+      if (error) { return error; }
+      return pass();
+    });
+  }
+  // correct-signature
+  {
+    routes.set("/crypto.subtle.verify/incorrect-signature", async () => {
+      const pkey = await crypto.subtle.importKey('jwk', privateJsonWebKeyData, jsonWebKeyAlgorithm, privateJsonWebKeyData.ext, privateJsonWebKeyData.key_ops);
+      const key = await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops);
+      const enc = new TextEncoder();
+      const data = enc.encode('hello world');
+      const signature = await crypto.subtle.sign(jsonWebKeyAlgorithm, pkey, data);
+      const result = await crypto.subtle.verify(jsonWebKeyAlgorithm, key, signature, data);
+      error = assert(result, true, "result === true");
+      if (error) { return error; }
+      return pass();
+    });
+  }
+}

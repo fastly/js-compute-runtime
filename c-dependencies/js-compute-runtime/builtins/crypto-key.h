@@ -118,6 +118,7 @@ public:
   static JSObject *get_algorithm(JS::HandleObject self);
   static EVP_PKEY *key(JSObject *self);
   static bool canSign(JS::HandleObject self);
+  static bool canVerify(JS::HandleObject self);
   static JS::Result<bool> is_algorithm(JSContext *cx, JS::HandleObject self,
                                        CryptoAlgorithmIdentifier algorithm);
 };
