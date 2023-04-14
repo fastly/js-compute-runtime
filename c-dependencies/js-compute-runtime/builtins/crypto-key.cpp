@@ -315,7 +315,7 @@ bool CryptoKey::usages_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   // Else, grab the CryptoKeyUsages value from Slots::Usages and convert
   // it into a JS Array and store the result in Slots::UsagesArray.
-  auto usage = CryptoKeyUsages(JS::GetReservedSlot(self, Slots::Usages).toInt32());
+  auto usage = CryptoKeyUsages(static_cast<uint8_t>(JS::GetReservedSlot(self, Slots::Usages).toInt32()));
   // The result is ordered alphabetically.
   JS::RootedValueVector result(cx);
   JS::RootedString str(cx);
