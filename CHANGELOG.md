@@ -1,69 +1,72 @@
 # Changelog
 
-## [1.8.1](https://github.com/fastly/js-compute-runtime/compare/v1.8.0...v1.8.1) (2023-04-12)
+## 1.8.1 (2023-04-12)
 
 
-### Bug Fixes
+### Fixed
 
 * Mark NodeJS 19 and 20 as supported ([#492](https://github.com/fastly/js-compute-runtime/issues/492)) ([27b3428](https://github.com/fastly/js-compute-runtime/commit/27b34289988b6ef55ea3ce703b878dbd1da68d7a))
 
-## [1.8.0](https://github.com/fastly/js-compute-runtime/compare/v1.7.1...v1.8.0) (2023-04-12)
+## 1.8.0 (2023-04-12)
 
 
-### Features
+### Added
 
 * Add high-resolution timing function "fastly.now()" behind feature flag "--enable-experimental-high-resolution-time-methods" ([f090838](https://github.com/fastly/js-compute-runtime/commit/f0908384d48d0bc2e5c29083e8a20bed041d47ed))
+
+### Changed
+
 * replace tree-sitter with acorn + magic string ([08a0695](https://github.com/fastly/js-compute-runtime/commit/08a0695a00088fe51c289ea783a771b4f3b993f8))
 
-## [1.7.1](https://github.com/fastly/js-compute-runtime/compare/v1.7.0...v1.7.1) (2023-04-11)
+## 1.7.1 (2023-04-11)
 
 
-### Bug Fixes
+### Fixed
 
 * Lower the supported NodeJS version from 18 or greater to only 18 ([5cc1cd6](https://github.com/fastly/js-compute-runtime/commit/5cc1cd6e5bfb8926944457e81c045682b0a37e4c))
 * When converting a URL to a string, do not add a `?` if there are no query string parameters ([73cdc27](https://github.com/fastly/js-compute-runtime/commit/73cdc279fa8c038a012c050000960577dda21280))
 
-## [1.7.0](https://github.com/fastly/js-compute-runtime/compare/v1.6.0...v1.7.0) (2023-04-11)
+## 1.7.0 (2023-04-11)
 
 
-### Features
+### Added
 
 * BYOB streams, basic usage, _pending WPT_ ([ab97e75](https://github.com/fastly/js-compute-runtime/commit/ab97e75e3b595911432327b35fcf4716675a0dd0))
 * Implement subset of crypto.subtle.importKey which can import a JSONWebKey using RSASSA-PKCS1-v1_5 ([#472](https://github.com/fastly/js-compute-runtime/issues/472)) ([110e7f4](https://github.com/fastly/js-compute-runtime/commit/110e7f42c1a86c4b4b722ea4b6780bb68f7f4523))
 
-## [1.6.0](https://github.com/fastly/js-compute-runtime/compare/v1.5.2...v1.6.0) (2023-03-28)
+## 1.6.0 (2023-03-28)
 
 
-### Features
+### Added
 
 * Implement JS CryptoKey Interface ([adb31f7](https://github.com/fastly/js-compute-runtime/commit/adb31f7197acf869af1852c0656847e4ab240089))
 
-## [1.5.2](https://github.com/fastly/js-compute-runtime/compare/v1.5.1...v1.5.2) (2023-03-23)
+## 1.5.2 (2023-03-23)
 
 
-### Bug Fixes
+### Fixed
 
 * Add documentation for FetchEvent, FetchEvent.prototype.respondWith, and FetchEvent.prototype.waitUntil ([78e6d92](https://github.com/fastly/js-compute-runtime/commit/78e6d925d1ec6cdedd4f2678997e333aba9ebae6))
 * fix typo in geolocation example ([f53a06e](https://github.com/fastly/js-compute-runtime/commit/f53a06ecb46c5ad1f91806c1c13ce6215a254192))
 
-## [1.5.1](https://github.com/fastly/js-compute-runtime/compare/v1.5.0...v1.5.1) (2023-03-10)
+## 1.5.1 (2023-03-10)
 
 
-### Bug Fixes
+### Fixed
 
 * handle fallthrough of regex parser bugs ([#447](https://github.com/fastly/js-compute-runtime/issues/447)) ([8f38980](https://github.com/fastly/js-compute-runtime/commit/8f389805d6a88e476f0281df974cb971d7e78896))
 
-## [1.5.0](https://github.com/fastly/js-compute-runtime/compare/v1.4.2...v1.5.0) (2023-03-10)
+## 1.5.0 (2023-03-10)
 
 
-### Features
+### Added
 
 * support unicode patterns via precompilation ([87a0dce](https://github.com/fastly/js-compute-runtime/commit/87a0dce62115cfd6d665f1d2aa617cf53a8b6b01))
 
-## [1.4.2](https://github.com/fastly/js-compute-runtime/compare/v1.4.1...v1.4.2) (2023-03-09)
+## 1.4.2 (2023-03-09)
 
 
-### Bug Fixes
+### Fixed
 
 * console logging support improvements ([#434](https://github.com/fastly/js-compute-runtime/issues/434)) ([7a74d76](https://github.com/fastly/js-compute-runtime/commit/7a74d76ed1d03c1c588caf664f471eab226c10a6))
 
@@ -159,13 +162,13 @@
 ## 0.7.0 (2022-12-10)
 
 
-### ⚠ BREAKING CHANGES
-
-* compute runtime component build ([#326](https://github.com/fastly/js-compute-runtime/issues/326))
-
 ### Added
 
 * compute runtime component build ([#326](https://github.com/fastly/js-compute-runtime/issues/326)) ([197504c](https://github.com/fastly/js-compute-runtime/commit/197504c4192e019264011d732a7009786a7a38d0))
+
+#### BREAKING CHANGES
+
+* compute runtime component build ([#326](https://github.com/fastly/js-compute-runtime/issues/326))
 
 
 ### Changed
@@ -175,10 +178,6 @@
 ## 0.6.0 (2022-12-09)
 
 
-### ⚠ BREAKING CHANGES
-
-* Disable JS iterator helpers as the feature is at Stage 3 and we should only enable by default Stage 4 features
-
 ### Added
 
 * Disable JS iterator helpers as the feature is at Stage 3 and we should only enable by default Stage 4 features ([c90c145](https://github.com/fastly/js-compute-runtime/commit/c90c14570a0375692da62eb11811e01babe28de8))
@@ -187,6 +186,10 @@
 ### Changed
 
 * Throw TypeErrors in config-store if supplied with invalid parameters or the config-store does not exist ([6b70180](https://github.com/fastly/js-compute-runtime/commit/6b70180560b0c28bbc009af49fa7b25bd890d4a2))
+
+### Removed
+
+* Disable JS iterator helpers as the feature is at Stage 3 and we should only enable by default Stage 4 features
 
 ## 0.5.15 (2022-12-08)
 
@@ -270,7 +273,7 @@
 
 * implement setTimeout, setInterval, clearTimeout, and clearInterval ([128bca9](https://github.com/fastly/js-compute-runtime/commit/128bca901c9ad4b6d6c1084bf13c5c474ef63a41))
 
-## 0.5.5-v0.5.5) (2022-11-23)
+## 0.5.5 (2022-11-23)
 
 
 ### Added
@@ -284,6 +287,12 @@
 * respond with 500 Internal Server Error when an unhandled error has occured and no response has already been sent to the client ([e5982d8](https://github.com/fastly/js-compute-runtime/commit/e5982d879223a8e5940717ab74c9f01a64b35ce2))
 
 ## 0.5.4 (2022-09-28)
+
+### Added
+
+* Add ConfigStore class ([#270](https://github.com/fastly/js-compute-runtime/pull/270))
+* Add Dynamic Backends support ([#250](https://github.com/fastly/js-compute-runtime/issues/250))
+* Improved performance when constructing a ObjectStore instance ([#272](https://github.com/fastly/js-compute-runtime/pull/272)
 
 #### Dynamic Backend support
 
@@ -355,18 +364,11 @@ addEventListener("fetch", event => {
 ```
 
 
-### Added
-
-* Add ConfigStore class ([#270](https://github.com/fastly/js-compute-runtime/pull/270))
-* Add Dynamic Backends support ([#250](https://github.com/fastly/js-compute-runtime/issues/250))
-* Improved performance when constructing a ObjectStore instance ([#272](https://github.com/fastly/js-compute-runtime/pull/272)
-
-
 ## 0.5.3 (2022-09-16)
 
-### Security Fixes
+### Security
 
-* [CVE-2022-39218](https://github.com/fastly/js-compute-runtime/security/advisories/GHSA-cmr8-5w4c-44v8): 
+* [CVE-2022-39218](https://github.com/fastly/js-compute-runtime/security/advisories/GHSA-cmr8-5w4c-44v8):
   Fixed `Math.random` and `crypto.getRandomValues` methods to always use sufficiently random values. The previous versions would use a PRNG (pseudorandom number generator) which we would seed with a random value however due to our use of [Wizer](https://github.com/bytecodealliance/wizer), the initial value to seed the PRNG was baked-in to the final WebAssembly module meaning the sequence of numbers generated was predictable for that specific WebAssembly module. The new implementations of both `Math.random` and `crypto.getRandomValues` do not use a PRNG and instead pull random values from WASI (WebAssembly System Interface) libc’s `random_get` function, which is always a sufficiently random value.
   
   An attacker with access to the same WebAssembly module that calls the affected methods could use the fixed seed to predict random numbers generated by these functions. This information could be used to bypass cryptographic security controls, for example to disclose sensitive data encrypted by functions that use these generators.
@@ -398,6 +400,10 @@ addEventListener("fetch", event => {
 ## 0.5.0 (2022-08-30)
 
 ### Added
+
+* Implemented ObjectStore and ObjectStoreEntry classes for interacting with Fastly ObjectStore ([#110](https://github.com/fastly/js-compute-runtime/issues/110))
+* add btoa and atob native implementations ([#227](https://github.com/fastly/js-compute-runtime/issues/227)) ([8b8c31f](https://github.com/fastly/js-compute-runtime/commit/8b8c31fa9ad70337b1060a3242b8e3495ae47df3))
+
 
 #### Object-store support
 
@@ -460,12 +466,6 @@ const request = new Request('https://www.fastly.com', {body:'I am the body', met
 console.log(request); // outputs `Request: {method: POST, url: https://www.fastly.com/, version: 2, headers: {}, body: null, bodyUsed: false}`.
 ```
 
-
-### Added
-
-* Implemented ObjectStore and ObjectStoreEntry classes for interacting with Fastly ObjectStore ([#110](https://github.com/fastly/js-compute-runtime/issues/110))
-* add btoa and atob native implementations ([#227](https://github.com/fastly/js-compute-runtime/issues/227)) ([8b8c31f](https://github.com/fastly/js-compute-runtime/commit/8b8c31fa9ad70337b1060a3242b8e3495ae47df3))
-
 ### Changed
 
 * Improved console output for all types ([#204](https://github.com/fastly/js-compute-runtime/issues/204))
@@ -502,7 +502,7 @@ console.log(request); // outputs `Request: {method: POST, url: https://www.fastl
 - Fix the behavior of `console.debug`
 - Allow builtin classes to be extended
 
-## 0.2.5  (2022-04-20)
+## 0.2.5 (2022-04-20)
 
 ### Changed
 
@@ -537,8 +537,6 @@ console.log(request); // outputs `Request: {method: POST, url: https://www.fastl
 - Avoid waiting for async tasks that weren't passed to `FetchEvent#waitUntil`
 - Significantly improve spec-compliance of Request and Response builtins
 
-### Changed
-
 ## 0.2.1 (2021-11-10)
 
 ### Added
@@ -565,6 +563,8 @@ console.log(request); // outputs `Request: {method: POST, url: https://www.fastl
 - Properly support `base` argument in `URL` constructor
 
 ## 0.1.0 (2021-07-28)
+
+### Added
 
 - Initial Release
 - Includes TypeScript type definitions for Compute@Edge flavored ServiceWorkers APIs
