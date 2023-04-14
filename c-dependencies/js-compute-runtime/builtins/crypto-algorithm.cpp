@@ -17,6 +17,10 @@ const EVP_MD *createDigestAlgorithm(JSContext *cx, JS::HandleObject key) {
 
   JS::RootedValue hash_val(cx);
   JS_GetProperty(cx, alg, "hash", &hash_val);
+  if (!hash_val.isObject()) {
+    JS_ReportErrorLatin1(cx, "NotSupportedError");
+    return nullptr;
+  }
   JS::RootedObject hash(cx, &hash_val.toObject());
   JS::RootedValue name_val(cx);
   JS_GetProperty(cx, hash, "name", &name_val);
