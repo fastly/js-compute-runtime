@@ -635,7 +635,7 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify::sign(JSContext *cx, JS::
   }
 
   // 4. Let signature be the value S that results from performing the operation.
-  uint8_t *signature = reinterpret_cast<uint8_t *>(calloc(signature_length, sizeof(uint8_t)));
+  uint8_t *signature = reinterpret_cast<uint8_t *>(JS_malloc(cx, signature_length));
   if (EVP_PKEY_sign(ctx, signature, &signature_length, digest.data(), digest.size()) <= 0) {
     // TODO Rename error to OperationError
     JS_ReportErrorLatin1(cx, "OperationError");
