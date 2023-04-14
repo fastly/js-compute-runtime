@@ -21,9 +21,13 @@ const EVP_MD *createDigestAlgorithm(JSContext *cx, JS::HandleObject key) {
   JS::RootedValue name_val(cx);
   JS_GetProperty(cx, hash, "name", &name_val);
   size_t name_length;
-  auto cc = encode(cx, name_val, &name_length);
+  auto name_chars = encode(cx, name_val, &name_length);
+  if (!name_chars) {
+    JS_ReportErrorLatin1(cx, "NotSupportedError");
+    return nullptr;
+  }
 
-  std::string_view name(cc.get(), name_length);
+  std::string_view name(name_chars.get(), name_length);
   if (name == "SHA-1") {
     return EVP_sha1();
   } else if (name == "SHA-224") {
