@@ -22,3 +22,4 @@ docs-app/pkg/*.tar.gz
 c-dependencies/js-compute-runtime/fastly-world/fastly_world_component_type.o
 
 *.a
+yarn-error.log
