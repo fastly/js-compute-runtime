@@ -1,3 +1,4 @@
+#include <utility>
 #include "crypto-key.h"
 #include "crypto-algorithm.h"
 #include "js-compute-builtins.h"
@@ -651,7 +652,9 @@ bool CryptoKey::canSign(JS::HandleObject self) {
 
 bool CryptoKey::canVerify(JS::HandleObject self) {
   MOZ_ASSERT(is_instance(self));
-  auto usage = CryptoKeyUsages(JS::GetReservedSlot(self, Slots::Usages).toInt32());
+  auto usages = JS::GetReservedSlot(self, Slots::Usages).toInt32();
+  MOZ_ASSERT(std::in_range<std::uint8_t>(usages));
+  auto usage = CryptoKeyUsages(static_cast<uint8_t>(usages));
   return usage.canVerify();
 }
 
