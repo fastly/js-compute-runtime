@@ -14,6 +14,19 @@ env:
   wasm-tools_version: 1.0.28
 
 jobs:
+
+  check-changelog:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'yarn'
+    - run: yarn install --immutable
+    - run: npm run check-changelog
+
   build:
     name: Build
     needs: [ensure_cargo_installs]
@@ -150,6 +163,7 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 19
+        cache: 'yarn'
 
     - name: Download Engine
       uses: actions/download-artifact@v3
@@ -246,6 +260,7 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 19
+        cache: 'yarn'
 
     - name: Set up Fastly CLI
       uses: fastly/compute-actions/setup@v4
@@ -342,6 +357,7 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
+        cache: 'yarn'
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
