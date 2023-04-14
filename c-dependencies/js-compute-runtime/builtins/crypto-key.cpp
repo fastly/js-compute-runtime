@@ -2,6 +2,7 @@
 #include "crypto-algorithm.h"
 #include "js-compute-builtins.h"
 #include "openssl/rsa.h"
+#include <utility>
 
 namespace builtins {
 
@@ -315,8 +316,9 @@ bool CryptoKey::usages_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   // Else, grab the CryptoKeyUsages value from Slots::Usages and convert
   // it into a JS Array and store the result in Slots::UsagesArray.
-  auto usage =
-      CryptoKeyUsages(static_cast<uint8_t>(JS::GetReservedSlot(self, Slots::Usages).toInt32()));
+  auto usages = JS::GetReservedSlot(self, Slots::Usages).toInt32();
+  MOZ_ASSERT(std::in_range<std::uint8_t>(usages));
+  auto usage = CryptoKeyUsages(static_cast<uint8_t>(usages));
   // The result is ordered alphabetically.
   JS::RootedValueVector result(cx);
   JS::RootedString str(cx);
@@ -641,7 +643,9 @@ JS::Result<bool> CryptoKey::is_algorithm(JSContext *cx, JS::HandleObject self,
 
 bool CryptoKey::canSign(JS::HandleObject self) {
   MOZ_ASSERT(is_instance(self));
-  auto usage = CryptoKeyUsages(JS::GetReservedSlot(self, Slots::Usages).toInt32());
+  auto usages = JS::GetReservedSlot(self, Slots::Usages).toInt32();
+  MOZ_ASSERT(std::in_range<std::uint8_t>(usages));
+  auto usage = CryptoKeyUsages(static_cast<uint8_t>(usages));
   return usage.canSign();
 }
 
