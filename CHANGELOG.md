@@ -1,16 +1,16 @@
 # Changelog
 
-## [1.9.0](https://github.com/fastly/js-compute-runtime/compare/v1.8.1...v1.9.0) (2023-04-15)
+## 1.9.0 (2023-04-15)
 
 
-### Features
+### Added
 
 * Implement subset of crypto.subtle.importKey which can import a JSONWebKey using RSASSA-PKCS1-v1_5 ([b66bf50](https://github.com/fastly/js-compute-runtime/commit/b66bf506a9bf25cf251f7c58a34ba2e1a0e68c5d))
 * Implement subset of crypto.subtle.sign which can sign data with a JSONWebKey using RSASSA-PKCS1-v1_5 ([800fb66](https://github.com/fastly/js-compute-runtime/commit/800fb666aca957a62d79dbf4fefa35aad8212de5))
 * Implement subset of crypto.subtle.verify which can verify a signature with a JSONWebKey using RSASSA-PKCS1-v1_5 ([077adfd](https://github.com/fastly/js-compute-runtime/commit/077adfd16f870564e945d14e4caf0c21762c64f1))
 
 
-### Bug Fixes
+### Fixed
 
 * free `buf` if an error has occured ([bfa84cc](https://github.com/fastly/js-compute-runtime/commit/bfa84cc4fa22c1d2ea860cad597dd25878a24e20))
 
