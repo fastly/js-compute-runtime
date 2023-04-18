@@ -361,6 +361,14 @@ bool FetchEvent::waitUntil(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+const JSFunctionSpec FetchEvent::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec FetchEvent::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec FetchEvent::methods[] = {
     JS_FN("respondWith", respondWith, 1, JSPROP_ENUMERATE),
     JS_FN("waitUntil", waitUntil, 1, JSPROP_ENUMERATE),

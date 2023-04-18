@@ -144,7 +144,8 @@ public:
   static fastly_pending_request_handle_t pending_handle(JSObject *obj);
   static bool is_downstream(JSObject *obj);
   static JSString *backend(JSObject *obj);
-
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
@@ -171,6 +172,7 @@ class Response final : public BuiltinImpl<Response> {
   static bool version_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool type_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool headers_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool redirect(JSContext *cx, unsigned argc, JS::Value *vp);
 
   template <RequestOrResponse::BodyReadResult result_type>
   static bool bodyAll(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -192,7 +194,8 @@ public:
     StatusMessage,
     Count,
   };
-
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 

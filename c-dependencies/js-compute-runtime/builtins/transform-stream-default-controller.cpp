@@ -113,6 +113,14 @@ bool TransformStreamDefaultController::terminate_js(JSContext *cx, unsigned argc
   return true;
 }
 
+const JSFunctionSpec TransformStreamDefaultController::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec TransformStreamDefaultController::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec TransformStreamDefaultController::methods[] = {
     JS_FN("enqueue", enqueue_js, 1, JSPROP_ENUMERATE),
     JS_FN("error", error_js, 1, JSPROP_ENUMERATE),

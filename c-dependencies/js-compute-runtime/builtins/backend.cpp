@@ -832,6 +832,14 @@ bool Backend::toString(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+const JSFunctionSpec Backend::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec Backend::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec Backend::methods[] = {JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
                                            JS_FS_END};
 

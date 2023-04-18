@@ -13,6 +13,8 @@ private:
 public:
   static constexpr const char *class_name = "Env";
 
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 

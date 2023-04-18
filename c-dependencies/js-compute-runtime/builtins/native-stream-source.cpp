@@ -154,6 +154,14 @@ bool NativeStreamSource::cancel(JSContext *cx, unsigned argc, JS::Value *vp) {
   return cancel(cx, args, self, owner, reason);
 }
 
+const JSFunctionSpec NativeStreamSource::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec NativeStreamSource::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec NativeStreamSource::methods[] = {JS_FN("start", start, 1, 0),
                                                       JS_FN("pull", pull, 1, 0),
                                                       JS_FN("cancel", cancel, 1, 0), JS_FS_END};

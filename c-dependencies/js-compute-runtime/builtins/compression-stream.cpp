@@ -194,6 +194,14 @@ bool CompressionStream::writable_get(JSContext *cx, unsigned argc, JS::Value *vp
   return true;
 }
 
+const JSFunctionSpec CompressionStream::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec CompressionStream::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec CompressionStream::methods[] = {
     JS_FS_END,
 };

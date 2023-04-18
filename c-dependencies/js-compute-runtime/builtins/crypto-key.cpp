@@ -385,6 +385,14 @@ bool CryptoKey::usages_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+const JSFunctionSpec CryptoKey::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec CryptoKey::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec CryptoKey::methods[] = {JS_FS_END};
 
 const JSPropertySpec CryptoKey::properties[] = {

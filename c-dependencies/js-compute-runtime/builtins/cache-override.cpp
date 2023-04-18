@@ -304,6 +304,8 @@ bool CacheOverride::accessor_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   return accessor_fn(cx, self, args[0], args.rval());
 }
 
+const JSFunctionSpec CacheOverride::static_methods[] = {JS_FS_END};
+const JSPropertySpec CacheOverride::static_properties[] = {JS_PS_END};
 const JSFunctionSpec CacheOverride::methods[] = {JS_FS_END};
 
 const JSPropertySpec CacheOverride::properties[] = {

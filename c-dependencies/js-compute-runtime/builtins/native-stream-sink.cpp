@@ -112,6 +112,14 @@ bool NativeStreamSink::close(JSContext *cx, unsigned argc, JS::Value *vp) {
   return close(cx, args, self, owner);
 }
 
+const JSFunctionSpec NativeStreamSink::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec NativeStreamSink::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec NativeStreamSink::methods[] = {
     JS_FN("start", start, 1, 0), JS_FN("write", write, 2, 0), JS_FN("abort", abort, 2, 0),
     JS_FN("close", close, 1, 0), JS_FS_END};

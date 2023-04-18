@@ -198,6 +198,14 @@ bool DecompressionStream::writable_get(JSContext *cx, unsigned argc, JS::Value *
   return true;
 }
 
+const JSFunctionSpec DecompressionStream::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec DecompressionStream::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec DecompressionStream::methods[] = {
     JS_FS_END,
 };

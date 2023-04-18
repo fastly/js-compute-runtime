@@ -40,6 +40,14 @@ bool WorkerLocation::toString(JSContext *cx, unsigned argc, JS::Value *vp) {
   return href_get(cx, argc, vp);
 }
 
+const JSFunctionSpec WorkerLocation::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec WorkerLocation::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec WorkerLocation::methods[] = {JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
                                                   JS_FS_END};
 

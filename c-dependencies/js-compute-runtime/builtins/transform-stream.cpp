@@ -363,6 +363,14 @@ bool TransformStream::writable_get(JSContext *cx, unsigned argc, JS::Value *vp) 
   return true;
 }
 
+const JSFunctionSpec TransformStream::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec TransformStream::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec TransformStream::methods[] = {JS_FS_END};
 
 const JSPropertySpec TransformStream::properties[] = {

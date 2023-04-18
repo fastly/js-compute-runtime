@@ -68,6 +68,14 @@ bool ObjectStoreEntry::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp)
   return true;
 }
 
+const JSFunctionSpec ObjectStoreEntry::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec ObjectStoreEntry::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec ObjectStoreEntry::methods[] = {
     JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
@@ -367,6 +375,14 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   return false;
 }
+
+const JSFunctionSpec ObjectStore::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec ObjectStore::static_properties[] = {
+    JS_PS_END,
+};
 
 const JSFunctionSpec ObjectStore::methods[] = {
     JS_FN("get", get, 1, JSPROP_ENUMERATE),

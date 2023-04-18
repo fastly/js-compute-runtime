@@ -12,6 +12,8 @@ public:
 
   static bool next(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
@@ -41,6 +43,8 @@ public:
 
   enum Slots { Url, Params, Count };
 
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
@@ -88,7 +92,8 @@ public:
   static constexpr const char *class_name = "URL";
 
   enum Slots { Url, Params, Count };
-
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 

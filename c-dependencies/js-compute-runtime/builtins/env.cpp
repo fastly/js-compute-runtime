@@ -20,6 +20,14 @@ bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+const JSFunctionSpec Env::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec Env::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec Env::methods[] = {JS_FN("get", env_get, 1, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSPropertySpec Env::properties[] = {JS_PS_END};

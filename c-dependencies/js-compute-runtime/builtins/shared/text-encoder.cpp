@@ -52,6 +52,14 @@ bool TextEncoder::encoding_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+const JSFunctionSpec TextEncoder::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec TextEncoder::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec TextEncoder::methods[] = {
     JS_FN("encode", encode, 1, JSPROP_ENUMERATE),
     JS_FS_END,

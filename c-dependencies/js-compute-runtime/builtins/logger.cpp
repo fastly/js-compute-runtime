@@ -25,6 +25,14 @@ bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+const JSFunctionSpec Logger::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec Logger::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec Logger::methods[] = {JS_FN("log", log, 1, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSPropertySpec Logger::properties[] = {JS_PS_END};
