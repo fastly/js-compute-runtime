@@ -1,0 +1,12 @@
+{
+  "GET /response/redirect": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/response/redirect"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  }
+}

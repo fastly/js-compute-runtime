@@ -234,6 +234,7 @@ jobs:
           - request-upstream
           - response
           - response-headers
+          - response-redirect
           - secret-store
           - status
           - streaming-close
@@ -379,6 +380,7 @@ jobs:
           - 'request-upstream'
           - 'response'
           - 'response-headers'
+          - 'response-redirect'
           - 'secret-store'
           - 'status'
           - 'timers'
