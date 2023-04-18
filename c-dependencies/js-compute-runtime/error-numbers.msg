@@ -103,4 +103,6 @@ MSG_DEF(JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST,                  1, JSEXN_TYPEERR,
 MSG_DEF(JSMSG_SUBTLE_CRYPTO_ERROR,                             1, JSEXN_ERR, "{0}")
 MSG_DEF(JSMSG_SUBTLE_CRYPTO_INVALID_JWK_KTY_VALUE,             1, JSEXN_ERR, "The JWK 'kty' member was not '{0}'")
 MSG_DEF(JSMSG_SUBTLE_CRYPTO_INVALID_KEY_USAGES_VALUE,          0, JSEXN_TYPEERR, "Invalid keyUsages argument")
+MSG_DEF(JSMSG_RESPONSE_REDIRECT_INVALID_URI,                   0, JSEXN_TYPEERR, "Response.redirect: url parameter is not a valid URL.")
+MSG_DEF(JSMSG_RESPONSE_REDIRECT_INVALID_STATUS,                0, JSEXN_RANGEERR, "Response.redirect: Invalid redirect status code.")
 //clang-format on

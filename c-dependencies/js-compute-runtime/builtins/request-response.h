@@ -172,7 +172,7 @@ class Response final : public BuiltinImpl<Response> {
   static bool version_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool type_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool headers_get(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool redirect(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool redirected_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
   template <RequestOrResponse::BodyReadResult result_type>
   static bool bodyAll(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -192,6 +192,7 @@ public:
     IsUpstream = static_cast<int>(RequestOrResponse::Slots::Count),
     Status,
     StatusMessage,
+    Redirected,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -204,6 +205,7 @@ public:
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  static bool redirect(JSContext *cx, unsigned argc, JS::Value *vp);
   static JSObject *create(JSContext *cx, JS::HandleObject response,
                           fastly_response_handle_t response_handle,
                           fastly_body_handle_t body_handle, bool is_upstream);
