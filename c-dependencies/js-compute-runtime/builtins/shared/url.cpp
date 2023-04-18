@@ -85,6 +85,14 @@ bool URLSearchParamsIterator::next(JSContext *cx, unsigned argc, JS::Value *vp) 
   return true;
 }
 
+const JSFunctionSpec URLSearchParamsIterator::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec URLSearchParamsIterator::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec URLSearchParamsIterator::methods[] = {
     JS_FN("next", URLSearchParamsIterator::next, 0, JSPROP_ENUMERATE),
     JS_FS_END,
@@ -129,6 +137,14 @@ JSObject *URLSearchParamsIterator::create(JSContext *cx, JS::HandleObject params
 
   return self;
 }
+
+const JSFunctionSpec URLSearchParams::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec URLSearchParams::static_properties[] = {
+    JS_PS_END,
+};
 
 const JSFunctionSpec URLSearchParams::methods[] = {
     JS_FN("append", URLSearchParams::append, 2, JSPROP_ENUMERATE),
@@ -491,6 +507,14 @@ ACCESSOR(username)
 #undef ACCESSOR_GET
 #undef ACCESSOR_SET
 #undef ACCESSOR
+
+const JSFunctionSpec URL::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec URL::static_properties[] = {
+    JS_PS_END,
+};
 
 const JSFunctionSpec URL::methods[] = {
     JS_FN("toString", toString, 0, JSPROP_ENUMERATE),

@@ -22,6 +22,8 @@ public:
                             // RequestOrResponse's body.
     Count
   };
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
   typedef bool PullAlgorithmImplementation(JSContext *cx, JS::CallArgs args,

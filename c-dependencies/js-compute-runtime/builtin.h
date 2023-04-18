@@ -186,7 +186,7 @@ public:
                               JS::HandleObject parent_proto = nullptr) {
     proto_obj.init(cx, JS_InitClass(cx, global, &class_, parent_proto, Impl::class_name,
                                     Impl::constructor, Impl::ctor_length, Impl::properties,
-                                    Impl::methods, nullptr, nullptr));
+                                    Impl::methods, Impl::static_properties, Impl::static_methods));
 
     return proto_obj != nullptr;
   }

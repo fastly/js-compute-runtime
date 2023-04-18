@@ -23,6 +23,8 @@ public:
 
   enum Slots { Transform, Format, State, Buffer, Count };
 
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 

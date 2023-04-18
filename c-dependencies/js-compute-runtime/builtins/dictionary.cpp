@@ -56,6 +56,14 @@ bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+const JSFunctionSpec Dictionary::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec Dictionary::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec Dictionary::methods[] = {JS_FN("get", get, 1, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSPropertySpec Dictionary::properties[] = {JS_PS_END};

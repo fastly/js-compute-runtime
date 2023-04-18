@@ -171,6 +171,14 @@ bool Crypto::subtle_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+const JSFunctionSpec Crypto::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec Crypto::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec Crypto::methods[] = {
     JS_FN("getRandomValues", get_random_values, 1, JSPROP_ENUMERATE),
     JS_FN("randomUUID", random_uuid, 0, JSPROP_ENUMERATE), JS_FS_END};

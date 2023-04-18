@@ -112,6 +112,14 @@ bool ClientInfo::geo_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return JS_ParseJSON(cx, geo_info_str, args.rval());
 }
 
+const JSFunctionSpec ClientInfo::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec ClientInfo::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec ClientInfo::methods[] = {
     JS_FS_END,
 };

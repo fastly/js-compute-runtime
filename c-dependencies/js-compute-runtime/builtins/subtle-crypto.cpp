@@ -366,6 +366,15 @@ bool SubtleCrypto::verify(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   return true;
 }
+
+const JSFunctionSpec SubtleCrypto::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec SubtleCrypto::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec SubtleCrypto::methods[] = {
     JS_FN("digest", digest, 2, JSPROP_ENUMERATE),
     JS_FN("importKey", importKey, 5, JSPROP_ENUMERATE), JS_FN("sign", sign, 3, JSPROP_ENUMERATE),

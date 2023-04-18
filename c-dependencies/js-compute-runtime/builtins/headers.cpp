@@ -737,6 +737,14 @@ bool Headers::values(JSContext *cx, unsigned argc, JS::Value *vp) {
   return JS::MapValues(cx, backing_map, args.rval());
 }
 
+const JSFunctionSpec Headers::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec Headers::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec Headers::methods[] = {
     JS_FN("get", Headers::get, 1, JSPROP_ENUMERATE),
     JS_FN("has", Headers::has, 1, JSPROP_ENUMERATE),

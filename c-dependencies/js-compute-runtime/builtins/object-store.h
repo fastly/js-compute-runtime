@@ -17,7 +17,8 @@ public:
   static constexpr const char *class_name = "ObjectStoreEntry";
 
   using Slots = RequestOrResponse::Slots;
-
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
@@ -38,7 +39,8 @@ public:
     ObjectStore,
     Count,
   };
-
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 

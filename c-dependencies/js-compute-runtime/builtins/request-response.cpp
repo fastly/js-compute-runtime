@@ -1406,6 +1406,14 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+const JSFunctionSpec Request::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec Request::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec Request::methods[] = {
     JS_FN("arrayBuffer", Request::bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
@@ -2256,6 +2264,14 @@ bool Response::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   args.rval().setBoolean(RequestOrResponse::body_used(self));
   return true;
 }
+
+const JSFunctionSpec Response::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec Response::static_properties[] = {
+    JS_PS_END,
+};
 
 const JSFunctionSpec Response::methods[] = {
     JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,

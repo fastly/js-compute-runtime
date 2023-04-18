@@ -33,6 +33,8 @@ public:
   typedef bool CloseAlgorithmImplementation(JSContext *cx, JS::CallArgs args,
                                             JS::HandleObject stream, JS::HandleObject owner);
 
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 

@@ -29,6 +29,14 @@ bool SecretStoreEntry::plaintext(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+const JSFunctionSpec SecretStoreEntry::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec SecretStoreEntry::static_properties[] = {
+    JS_PS_END,
+};
+
 const JSFunctionSpec SecretStoreEntry::methods[] = {
     JS_FN("plaintext", plaintext, 0, JSPROP_ENUMERATE), JS_FS_END};
 
@@ -129,6 +137,14 @@ bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   return true;
 }
+
+const JSFunctionSpec SecretStore::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec SecretStore::static_properties[] = {
+    JS_PS_END,
+};
 
 const JSFunctionSpec SecretStore::methods[] = {JS_FN("get", get, 1, JSPROP_ENUMERATE), JS_FS_END};
 

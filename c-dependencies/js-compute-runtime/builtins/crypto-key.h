@@ -106,6 +106,8 @@ public:
     Key,
     Count
   };
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);

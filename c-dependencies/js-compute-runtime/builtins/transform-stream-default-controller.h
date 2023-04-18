@@ -28,6 +28,8 @@ public:
                                                      JS::HandleValue chunk);
   typedef JSObject *FlushAlgorithmImplementation(JSContext *cx, JS::HandleObject controller);
 
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
