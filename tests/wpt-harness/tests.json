@@ -97,6 +97,7 @@
   "fetch/api/response/response-init-002.any.js",
   "fetch/api/response/response-init-contenttype.any.js",
   "fetch/api/response/response-static-error.any.js",
+  "fetch/api/response/response-static-json.any.js",
   "fetch/api/response/response-static-redirect.any.js",
   "fetch/api/response/response-stream-disturbed-1.any.js",
   "fetch/api/response/response-stream-disturbed-2.any.js",

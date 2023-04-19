@@ -179,6 +179,9 @@ class Response final : public BuiltinImpl<Response> {
   static bool body_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  static bool redirect(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool json(JSContext *cx, unsigned argc, JS::Value *vp);
+
 public:
   static constexpr const char *class_name = "Response";
 
@@ -205,7 +208,6 @@ public:
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
-  static bool redirect(JSContext *cx, unsigned argc, JS::Value *vp);
   static JSObject *create(JSContext *cx, JS::HandleObject response,
                           fastly_response_handle_t response_handle,
                           fastly_body_handle_t body_handle, bool is_upstream);
