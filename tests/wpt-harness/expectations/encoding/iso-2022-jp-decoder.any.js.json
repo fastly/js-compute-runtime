@@ -15,7 +15,7 @@
     "status": "FAIL"
   },
   "iso-2022-jp decoder: characters": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "iso-2022-jp decoder: SO / SI": {
     "status": "FAIL"

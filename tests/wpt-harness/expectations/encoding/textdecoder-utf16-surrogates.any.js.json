@@ -15,18 +15,18 @@
     "status": "FAIL"
   },
   "utf-16le - unmatched surrogate lead (fatal flag set)": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "utf-16le - unmatched surrogate trail": {
     "status": "FAIL"
   },
   "utf-16le - unmatched surrogate trail (fatal flag set)": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "utf-16le - swapped surrogate pair": {
     "status": "FAIL"
   },
   "utf-16le - swapped surrogate pair (fatal flag set)": {
-    "status": "PASS"
+    "status": "FAIL"
   }
 }

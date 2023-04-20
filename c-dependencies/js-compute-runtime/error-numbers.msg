@@ -107,4 +107,7 @@ MSG_DEF(JSMSG_RESPONSE_REDIRECT_INVALID_URI,                   0, JSEXN_TYPEERR,
 MSG_DEF(JSMSG_RESPONSE_REDIRECT_INVALID_STATUS,                0, JSEXN_RANGEERR, "Response.redirect: Invalid redirect status code.")
 MSG_DEF(JSMSG_RESPONSE_NULL_BODY_STATUS_WITH_BODY,             0, JSEXN_TYPEERR, "Response with null body status cannot have body")
 MSG_DEF(JSMSG_RESPONSE_JSON_INVALID_VALUE,                     0, JSEXN_TYPEERR, "Redirect.json: The data is not JSON serializable")
+MSG_DEF(JSMSG_TEXT_DECODER_INVALID_ENCODING,                   1, JSEXN_RANGEERR, "TextDecoder constructor: The given encoding '{0}' is not supported.")
+MSG_DEF(JSMSG_TEXT_DECODER_DECODING_FAILED,                    0, JSEXN_TYPEERR, "TextDecoder.decode: Decoding failed.")
+MSG_DEF(JSMSG_TEXT_DECODER_OPTIONS_NOT_DICTIONARY,             0, JSEXN_TYPEERR, "TextDecoder constructor: options argument can't be converted to a dictionary.")
 //clang-format on

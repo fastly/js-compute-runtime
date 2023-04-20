@@ -3,10 +3,10 @@
     "status": "PASS"
   },
   "Fatal flag: utf-8 - ends early": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Fatal flag: utf-8 - ends early 2": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Fatal flag: utf-8 - invalid trail": {
     "status": "PASS"
@@ -15,10 +15,10 @@
     "status": "PASS"
   },
   "Fatal flag: utf-8 - invalid trail 3": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Fatal flag: utf-8 - invalid trail 4": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Fatal flag: utf-8 - invalid trail 5": {
     "status": "PASS"
@@ -105,6 +105,6 @@
     "status": "FAIL"
   },
   "Error seen with fatal does not prevent future decodes": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }

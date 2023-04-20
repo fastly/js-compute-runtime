@@ -12,7 +12,12 @@ class TextDecoder final : public BuiltinImpl<TextDecoder> {
 public:
   static constexpr const char *class_name = "TextDecoder";
 
-  enum class Slots { Count };
+  enum class Slots {
+    Encoding,
+    Fatal,
+    IgnoreBOM,
+    Count,
+  };
 
   static const JSFunctionSpec static_methods[];
   static const JSPropertySpec static_properties[];
