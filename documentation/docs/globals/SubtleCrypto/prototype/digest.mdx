@@ -25,6 +25,7 @@ digest(algorithm, data)
 
 - `algorithm`
   - : This may be a string or an object with a single property `name` that is a string. The string names the hash function to use. Supported values are:
+    - `"MD5"` (but don't use this in cryptographic applications)
     - `"SHA-1"` (but don't use this in cryptographic applications)
     - `"SHA-256"`
     - `"SHA-384"`

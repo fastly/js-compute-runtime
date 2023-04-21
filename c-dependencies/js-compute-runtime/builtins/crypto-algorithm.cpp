@@ -32,7 +32,9 @@ const EVP_MD *createDigestAlgorithm(JSContext *cx, JS::HandleObject key) {
   }
 
   std::string_view name(name_chars.get(), name_length);
-  if (name == "SHA-1") {
+  if (name == "MD5") {
+    return EVP_md5();
+  } else if (name == "SHA-1") {
     return EVP_sha1();
   } else if (name == "SHA-224") {
     return EVP_sha224();
@@ -282,62 +284,6 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPrivateKeyFromJWK(JSContext *cx
   return privateKeyComponents;
 }
 
-const char *algorithmName(CryptoAlgorithmIdentifier algorithm) {
-  switch (algorithm) {
-  case CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5: {
-    return "RSASSA-PKCS1-v1_5";
-  }
-  case CryptoAlgorithmIdentifier::RSA_PSS: {
-    return "RSA-PSS";
-  }
-  case CryptoAlgorithmIdentifier::RSA_OAEP: {
-    return "RSA-OAEP";
-  }
-  case CryptoAlgorithmIdentifier::ECDSA: {
-    return "ECDSA";
-  }
-  case CryptoAlgorithmIdentifier::ECDH: {
-    return "ECDH";
-  }
-  case CryptoAlgorithmIdentifier::AES_CTR: {
-    return "AES-CTR";
-  }
-  case CryptoAlgorithmIdentifier::AES_CBC: {
-    return "AES-CBC";
-  }
-  case CryptoAlgorithmIdentifier::AES_GCM: {
-    return "AES-GCM";
-  }
-  case CryptoAlgorithmIdentifier::AES_KW: {
-    return "AES-KW";
-  }
-  case CryptoAlgorithmIdentifier::HMAC: {
-    return "HMAC";
-  }
-  case CryptoAlgorithmIdentifier::SHA_1: {
-    return "SHA-1";
-  }
-  case CryptoAlgorithmIdentifier::SHA_256: {
-    return "SHA-256";
-  }
-  case CryptoAlgorithmIdentifier::SHA_384: {
-    return "SHA-384";
-  }
-  case CryptoAlgorithmIdentifier::SHA_512: {
-    return "SHA-512";
-  }
-  case CryptoAlgorithmIdentifier::HKDF: {
-    return "HKDF";
-  }
-  case CryptoAlgorithmIdentifier::PBKDF2: {
-    return "PBKDF2";
-  }
-  default: {
-    MOZ_ASSERT_UNREACHABLE("Unknown `CryptoAlgorithmIdentifier` value");
-  }
-  }
-}
-
 // Web Crypto API uses DOMExceptions to indicate errors
 // We are adding the fields which are tested for in Web Platform Tests
 // TODO: Implement DOMExceptions class and use that instead of duck-typing on an Error instance
@@ -445,6 +391,8 @@ JS::Result<CryptoAlgorithmIdentifier> normalizeIdentifier(JSContext *cx, JS::Han
     return CryptoAlgorithmIdentifier::AES_KW;
   } else if (algorithm == "HMAC") {
     return CryptoAlgorithmIdentifier::HMAC;
+  } else if (algorithm == "MD5") {
+    return CryptoAlgorithmIdentifier::MD5;
   } else if (algorithm == "SHA-1") {
     return CryptoAlgorithmIdentifier::SHA_1;
   } else if (algorithm == "SHA-256") {
@@ -464,6 +412,65 @@ JS::Result<CryptoAlgorithmIdentifier> normalizeIdentifier(JSContext *cx, JS::Han
   }
 }
 } // namespace
+
+const char *algorithmName(CryptoAlgorithmIdentifier algorithm) {
+  switch (algorithm) {
+  case CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5: {
+    return "RSASSA-PKCS1-v1_5";
+  }
+  case CryptoAlgorithmIdentifier::RSA_PSS: {
+    return "RSA-PSS";
+  }
+  case CryptoAlgorithmIdentifier::RSA_OAEP: {
+    return "RSA-OAEP";
+  }
+  case CryptoAlgorithmIdentifier::ECDSA: {
+    return "ECDSA";
+  }
+  case CryptoAlgorithmIdentifier::ECDH: {
+    return "ECDH";
+  }
+  case CryptoAlgorithmIdentifier::AES_CTR: {
+    return "AES-CTR";
+  }
+  case CryptoAlgorithmIdentifier::AES_CBC: {
+    return "AES-CBC";
+  }
+  case CryptoAlgorithmIdentifier::AES_GCM: {
+    return "AES-GCM";
+  }
+  case CryptoAlgorithmIdentifier::AES_KW: {
+    return "AES-KW";
+  }
+  case CryptoAlgorithmIdentifier::HMAC: {
+    return "HMAC";
+  }
+  case CryptoAlgorithmIdentifier::MD5: {
+    return "MD5";
+  }
+  case CryptoAlgorithmIdentifier::SHA_1: {
+    return "SHA-1";
+  }
+  case CryptoAlgorithmIdentifier::SHA_256: {
+    return "SHA-256";
+  }
+  case CryptoAlgorithmIdentifier::SHA_384: {
+    return "SHA-384";
+  }
+  case CryptoAlgorithmIdentifier::SHA_512: {
+    return "SHA-512";
+  }
+  case CryptoAlgorithmIdentifier::HKDF: {
+    return "HKDF";
+  }
+  case CryptoAlgorithmIdentifier::PBKDF2: {
+    return "PBKDF2";
+  }
+  default: {
+    MOZ_ASSERT_UNREACHABLE("Unknown `CryptoAlgorithmIdentifier` value");
+  }
+  }
+}
 
 // clang-format off
 /// This table is from https://w3c.github.io/webcrypto/#h-note-15
@@ -499,9 +506,13 @@ std::unique_ptr<CryptoAlgorithmDigest> CryptoAlgorithmDigest::normalize(JSContex
 
   // The table listed at https://w3c.github.io/webcrypto/#h-note-15 is what defines which algorithms support which operations
   // SHA-1, SHA-256, SHA-384, and SHA-512 are the only algorithms which support the digest operation
+  // We also support MD5 as an extra implementor defined algorithm
 
   // Note: The specification states that none of the SHA algorithms take any parameters -- https://w3c.github.io/webcrypto/#sha-registration
   switch (identifier) {
+  case CryptoAlgorithmIdentifier::MD5: {
+    return std::make_unique<CryptoAlgorithmMD5>();
+  }
   case CryptoAlgorithmIdentifier::SHA_1: {
     return std::make_unique<CryptoAlgorithmSHA1>();
   }
@@ -991,7 +1002,7 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::toObject(JSContext *cx) {
   // Set the hash attribute of algorithm to the hash member of normalizedAlgorithm.
   JS::RootedObject hash(cx, JS_NewObject(cx, nullptr));
 
-  auto hash_name = JS_NewStringCopyZ(cx, algorithmName(this->hashIdentifier));
+  auto hash_name = JS_NewStringCopyZ(cx, builtins::algorithmName(this->hashIdentifier));
   if (!hash_name) {
     return nullptr;
   }
@@ -1006,6 +1017,9 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::toObject(JSContext *cx) {
   return algorithm;
 }
 
+JSObject *CryptoAlgorithmMD5::digest(JSContext *cx, std::span<uint8_t> data) {
+  return ::builtins::digest(cx, data, EVP_md5(), MD5_DIGEST_LENGTH);
+}
 JSObject *CryptoAlgorithmSHA1::digest(JSContext *cx, std::span<uint8_t> data) {
   return ::builtins::digest(cx, data, EVP_sha1(), SHA_DIGEST_LENGTH);
 }
