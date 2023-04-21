@@ -562,6 +562,14 @@ routes.set("/crypto.subtle", async () => {
   }
   // happy paths
   {
+    // "MD5"
+    routes.set("/crypto.subtle.digest/md5", async () => {
+      const result = new Uint8Array(await crypto.subtle.digest("md5", new Uint8Array));
+      const expected = new Uint8Array([212, 29, 140, 217, 143, 0, 178, 4, 233, 128, 9, 152, 236, 248, 66, 126]);
+      error = assert(result, expected, "result deep equals expected");
+      if (error) { return error; }
+      return pass();
+    });
     // "SHA-1"
     routes.set("/crypto.subtle.digest/sha-1", async () => {
       const result = new Uint8Array(await crypto.subtle.digest("sha-1", new Uint8Array));

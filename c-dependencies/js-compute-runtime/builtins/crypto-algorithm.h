@@ -6,6 +6,7 @@
 #include "crypto-key.h"
 #include "json-web-key.h"
 #include "openssl/evp.h"
+#include <openssl/md5.h>
 
 namespace builtins {
 
@@ -22,6 +23,7 @@ enum class CryptoAlgorithmIdentifier : uint8_t {
   AES_GCM,
   AES_KW,
   HMAC,
+  MD5,
   SHA_1,
   SHA_256,
   SHA_384,
@@ -29,6 +31,8 @@ enum class CryptoAlgorithmIdentifier : uint8_t {
   HKDF,
   PBKDF2
 };
+
+const char *algorithmName(CryptoAlgorithmIdentifier algorithm);
 
 /// The base class that all algorithm implementations should derive from.
 class CryptoAlgorithm {
@@ -102,6 +106,13 @@ class CryptoAlgorithmDigest : public CryptoAlgorithm {
 public:
   virtual JSObject *digest(JSContext *cx, std::span<uint8_t>) = 0;
   static std::unique_ptr<CryptoAlgorithmDigest> normalize(JSContext *cx, JS::HandleValue value);
+};
+
+class CryptoAlgorithmMD5 final : public CryptoAlgorithmDigest {
+public:
+  const char *name() const noexcept override { return "MD5"; };
+  CryptoAlgorithmIdentifier identifier() override { return CryptoAlgorithmIdentifier::MD5; };
+  JSObject *digest(JSContext *cx, std::span<uint8_t>) override;
 };
 
 class CryptoAlgorithmSHA1 final : public CryptoAlgorithmDigest {
