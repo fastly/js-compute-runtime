@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.0](https://github.com/fastly/js-compute-runtime/compare/v1.9.0...v1.10.0) (2023-04-21)
+
+
+### Features
+
+* Add MD5 support into crypto.subtle.digest ([9c8efab](https://github.com/fastly/js-compute-runtime/commit/9c8efabc89c20e5e20f8ef429b555c1d85fe0db1))
+* implement Response.redirect static method and Response.prototype.redirected getter ([1623d74](https://github.com/fastly/js-compute-runtime/commit/1623d740405dcaaa5a8c946981c6840ab611c36a))
+
 ## 1.9.0 (2023-04-15)
 
 
