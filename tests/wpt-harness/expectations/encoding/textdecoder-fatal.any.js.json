@@ -99,10 +99,10 @@
     "status": "PASS"
   },
   "Fatal flag: utf-16le - truncated code unit": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "The fatal attribute of TextDecoder": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Error seen with fatal does not prevent future decodes": {
     "status": "PASS"

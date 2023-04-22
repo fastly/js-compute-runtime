@@ -42,16 +42,16 @@
     "status": "PASS"
   },
   "TextDecoder interface: operation decode(optional BufferSource, optional TextDecodeOptions)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextDecoder interface: attribute encoding": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextDecoder interface: attribute fatal": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextDecoder interface: attribute ignoreBOM": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextDecoder must be primary interface of new TextDecoder()": {
     "status": "PASS"
@@ -69,10 +69,10 @@
     "status": "PASS"
   },
   "TextDecoder interface: new TextDecoder() must inherit property \"fatal\" with the proper type": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextDecoder interface: new TextDecoder() must inherit property \"ignoreBOM\" with the proper type": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextEncoder interface: existence and properties of interface object": {
     "status": "PASS"
@@ -93,13 +93,13 @@
     "status": "PASS"
   },
   "TextEncoder interface: operation encode(optional USVString)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextEncoder interface: operation encodeInto(USVString, Uint8Array)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextEncoder interface: attribute encoding": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextEncoder must be primary interface of new TextEncoder()": {
     "status": "PASS"
@@ -114,10 +114,10 @@
     "status": "PASS"
   },
   "TextEncoder interface: new TextEncoder() must inherit property \"encodeInto(USVString, Uint8Array)\" with the proper type": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextEncoder interface: calling encodeInto(USVString, Uint8Array) on new TextEncoder() with too few arguments must throw TypeError": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextEncoder interface: new TextEncoder() must inherit property \"encoding\" with the proper type": {
     "status": "PASS"

@@ -1,11 +1,11 @@
 {
   "TextDecoder decode() with explicit undefined": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextDecoder decode() with undefined and undefined": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TextDecoder decode() with undefined and options": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }
