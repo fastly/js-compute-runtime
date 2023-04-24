@@ -34,7 +34,7 @@ export function precompile(source, filename = "<input>") {
       } catch {
         // swallow regex parse errors here to instead throw them at the engine level
         // this then also avoids regex parser bugs being thrown unnecessarily
-        transpiledPattern = pattern;
+        transpiledPattern = node.regex.pattern;
       }
       const transpiledRegex = `/${transpiledPattern}/${node.regex.flags}`;
       precompileCalls.push(`precompile(${transpiledRegex});`);
