@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/fastly/js-compute-runtime/compare/v1.10.0...v1.10.1) (2023-04-24)
+
+
+### Bug Fixes
+
+* Fix for `ReferenceError: pattern is not defined` ([#506](https://github.com/fastly/js-compute-runtime/issues/506)) ([107c9be](https://github.com/fastly/js-compute-runtime/commit/107c9be4c0b0c41c4d630ba556a10b697a1508f4))
+
 ## [1.10.0](https://github.com/fastly/js-compute-runtime/compare/v1.9.0...v1.10.0) (2023-04-21)
 
 
