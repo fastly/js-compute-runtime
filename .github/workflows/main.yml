@@ -248,6 +248,7 @@ jobs:
           - request-upstream
           - response
           - response-headers
+          - response-json
           - response-redirect
           - secret-store
           - status
@@ -396,6 +397,7 @@ jobs:
           - 'request-upstream'
           - 'response'
           - 'response-headers'
+          - 'response-json'
           - 'response-redirect'
           - 'secret-store'
           - 'status'

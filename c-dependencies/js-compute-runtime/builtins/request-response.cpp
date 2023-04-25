@@ -2373,7 +2373,7 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!headers) {
     return false;
   }
-  if (!builtins::Headers::maybe_add(cx, headers, "Location", value)) {
+  if (!builtins::Headers::maybe_add(cx, headers, "location", value)) {
     return false;
   }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::ObjectValue(*headers));
@@ -2384,8 +2384,160 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+namespace {
+bool callbackCalled;
+bool write_json_to_buf(const char16_t *str, uint32_t strlen, void *out) {
+  callbackCalled = true;
+  auto outstr = static_cast<std::u16string *>(out);
+  outstr->append(str, strlen);
+
+  return true;
+}
+} // namespace
+
+bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "json", 1)) {
+    return false;
+  }
+  JS::RootedValue data(cx, args.get(0));
+  JS::RootedValue init_val(cx, args.get(1));
+  JS::RootedObject replacer(cx);
+  JS::RootedValue space(cx);
+
+  std::u16string out;
+  // 1. Let bytes the result of running serialize a JavaScript value to JSON bytes on data.
+  callbackCalled = false;
+  if (!JS::ToJSON(cx, data, replacer, space, &write_json_to_buf, &out)) {
+    return false;
+  }
+  if (!callbackCalled) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_RESPONSE_JSON_INVALID_VALUE);
+    return false;
+  }
+  // 2. Let body be the result of extracting bytes.
+
+  // 3. Let responseObject be the result of creating a Response object, given a new response,
+  // "response", and this’s relevant Realm.
+  JS::RootedValue status_val(cx);
+  uint16_t status = 200;
+
+  JS::RootedValue statusText_val(cx);
+  JS::RootedString statusText(cx, JS_GetEmptyString(cx));
+  JS::RootedValue headers_val(cx);
+
+  if (init_val.isObject()) {
+    JS::RootedObject init(cx, init_val.toObjectOrNull());
+    if (!JS_GetProperty(cx, init, "status", &status_val) ||
+        !JS_GetProperty(cx, init, "statusText", &statusText_val) ||
+        !JS_GetProperty(cx, init, "headers", &headers_val)) {
+      return false;
+    }
+
+    if (!status_val.isUndefined() && !JS::ToUint16(cx, status_val, &status)) {
+      return false;
+    }
+
+    if (status == 204 || status == 205 || status == 304) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_RESPONSE_NULL_BODY_STATUS_WITH_BODY);
+      return false;
+    }
+
+    if (!statusText_val.isUndefined() && !(statusText = JS::ToString(cx, statusText_val))) {
+      return false;
+    }
+
+  } else if (!init_val.isNullOrUndefined()) {
+    JS_ReportErrorLatin1(cx, "Response constructor: |init| parameter can't be converted to "
+                             "a dictionary");
+    return false;
+  }
+
+  fastly_response_handle_t response_handle = INVALID_HANDLE;
+  fastly_error_t err;
+  if (!fastly_http_resp_new(&response_handle, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+  if (response_handle == INVALID_HANDLE) {
+    return false;
+  }
+
+  auto make_res = HttpBody::make();
+  if (auto *err = make_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  auto body = make_res.unwrap();
+  JS::RootedString string(cx, JS_NewUCStringCopyN(cx, out.c_str(), out.length()));
+  size_t encoded_len;
+  auto stringChars = encode(cx, string, &encoded_len);
+
+  auto write_res = body.write_all(reinterpret_cast<uint8_t *>(stringChars.get()), encoded_len);
+  if (auto *err = write_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  JS::RootedObject response_instance(cx, JS_NewObjectWithGivenProto(cx, &builtins::Response::class_,
+                                                                    builtins::Response::proto_obj));
+  if (!response_instance) {
+    return false;
+  }
+  JS::RootedObject response(cx, create(cx, response_instance, response_handle, body.handle, false));
+  if (!response) {
+    return false;
+  }
+
+  // Set `this`’s `response`’s `status` to `init`["status"].
+  if (!fastly_http_resp_status_set(response_handle, status, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+  // To ensure that we really have the same status value as the host,
+  // we always read it back here.
+  if (!fastly_http_resp_status_get(response_handle, &status, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Status), JS::Int32Value(status));
+
+  // Set `this`’s `response`’s `status message` to `init`["statusText"].
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::StatusMessage),
+                      JS::StringValue(statusText));
+
+  // If `init`["headers"] `exists`, then `fill` `this`’s `headers` with
+  // `init`["headers"].
+  JS::RootedObject headers(cx);
+  JS::RootedObject headersInstance(
+      cx, JS_NewObjectWithGivenProto(cx, &builtins::Headers::class_, builtins::Headers::proto_obj));
+  if (!headersInstance)
+    return false;
+
+  headers = builtins::Headers::create(cx, headersInstance, builtins::Headers::Mode::ProxyToResponse,
+                                      response, headers_val);
+  if (!headers) {
+    return false;
+  }
+  // 4. Perform initialize a response given responseObject, init, and (body, "application/json").
+  if (!builtins::Headers::maybe_add(cx, headers, "content-type", "application/json")) {
+    return false;
+  }
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::ObjectValue(*headers));
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Redirected), JS::FalseValue());
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::HasBody), JS::TrueValue());
+  RequestOrResponse::set_url(response, JS_GetEmptyStringValue(cx));
+
+  // 5. Return responseObject.
+  args.rval().setObjectOrNull(response);
+  return true;
+}
+
 const JSFunctionSpec Response::static_methods[] = {
     JS_FN("redirect", redirect, 1, JSPROP_ENUMERATE),
+    JS_FN("json", json, 1, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 

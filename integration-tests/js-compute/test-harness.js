@@ -1,6 +1,6 @@
 /* eslint-env serviceworker */
 import { env } from 'fastly:env';
-import { fail } from "../../../assertions.js";
+import { fail } from "./assertions.js";
 
 addEventListener("fetch", event => {
     event.respondWith(app(event))

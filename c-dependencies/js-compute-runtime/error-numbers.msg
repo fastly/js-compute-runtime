@@ -105,4 +105,6 @@ MSG_DEF(JSMSG_SUBTLE_CRYPTO_INVALID_JWK_KTY_VALUE,             1, JSEXN_ERR, "Th
 MSG_DEF(JSMSG_SUBTLE_CRYPTO_INVALID_KEY_USAGES_VALUE,          0, JSEXN_TYPEERR, "Invalid keyUsages argument")
 MSG_DEF(JSMSG_RESPONSE_REDIRECT_INVALID_URI,                   0, JSEXN_TYPEERR, "Response.redirect: url parameter is not a valid URL.")
 MSG_DEF(JSMSG_RESPONSE_REDIRECT_INVALID_STATUS,                0, JSEXN_RANGEERR, "Response.redirect: Invalid redirect status code.")
+MSG_DEF(JSMSG_RESPONSE_NULL_BODY_STATUS_WITH_BODY,             0, JSEXN_TYPEERR, "Response with null body status cannot have body")
+MSG_DEF(JSMSG_RESPONSE_JSON_INVALID_VALUE,                     0, JSEXN_TYPEERR, "Redirect.json: The data is not JSON serializable")
 //clang-format on

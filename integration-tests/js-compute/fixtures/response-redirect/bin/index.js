@@ -1,6 +1,6 @@
 /* eslint-env serviceworker */
 import { pass, assert, assertThrows } from "../../../assertions.js";
-import { routes } from "./test-harness.js";
+import { routes } from "../../../test-harness.js";
 
 routes.set("/response/redirect", async () => {
     const url = "http://test.url:1234/";
