@@ -2385,8 +2385,8 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 namespace {
-static bool callbackCalled;
-static bool write_json_to_buf(const char16_t *str, uint32_t strlen, void *out) {
+bool callbackCalled;
+bool write_json_to_buf(const char16_t *str, uint32_t strlen, void *out) {
   callbackCalled = true;
   auto outstr = static_cast<std::u16string *>(out);
   outstr->reserve(1 + outstr->length() + strlen);
