@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/fastly/js-compute-runtime/compare/v1.10.1...v1.11.0) (2023-04-25)
+
+
+### Features
+
+* implement Response.json static method ([#499](https://github.com/fastly/js-compute-runtime/issues/499)) ([780067d](https://github.com/fastly/js-compute-runtime/commit/780067d429dbd90bd529f42169c2c1af6c139bb7))
+
 ## [1.10.1](https://github.com/fastly/js-compute-runtime/compare/v1.10.0...v1.10.1) (2023-04-24)
 
 
