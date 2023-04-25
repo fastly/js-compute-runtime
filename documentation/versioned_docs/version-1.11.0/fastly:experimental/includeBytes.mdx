@@ -1,0 +1,40 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# includeBytes
+
+The **`includeBytes()`** function is used embed a file as a Uint8Array.
+
+>**Note**: Can only be used during build-time initialization, not when processing requests.
+
+## Syntax
+
+```js
+includeBytes(path)
+```
+
+### Parameters
+
+- `path` _: string_
+  - The path to include, relative to the Compute@Edge application's top-level directory during build-time initialization.
+
+### Return value
+
+Returns a `Uint8Array`
+
+## Examples
+
+In this example we include the README.md file as a Uint8Array and use it for the body in the response we return to the client.
+
+```js
+/// <reference types="@fastly/js-compute" />
+import { includeBytes } from "fastly:experimental";
+const readme = includeBytes('README.md');
+async function app() {
+    return new Response(readme);
+}
+addEventListener("fetch", event => event.respondWith(app(event)));
+```
