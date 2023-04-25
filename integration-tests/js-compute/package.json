@@ -4,12 +4,12 @@
     "lint": "npx prettier --write ./fixtures/**/*.js"
   },
   "devDependencies": {
-    "prettier": "^2.8.7"
+    "prettier": "^2.8.8"
   },
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@iarna/toml": "^2.2.5",
-    "undici": "^5.21.2",
+    "undici": "^5.22.0",
     "zx": "^7.2.0"
   },
   "type": "module"
