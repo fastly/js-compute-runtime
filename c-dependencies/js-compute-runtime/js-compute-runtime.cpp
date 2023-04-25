@@ -119,10 +119,6 @@ bool init_js() {
   JS::RealmOptions options;
   options.creationOptions()
       .setStreamsEnabled(true)
-      .setReadableByteStreamsEnabled(true)
-      .setBYOBStreamReadersEnabled(true)
-      .setReadableStreamPipeToEnabled(true)
-      .setWritableStreamsEnabled(true)
       .setWeakRefsEnabled(JS::WeakRefSpecifier::EnabledWithoutCleanupSome);
 
   JS::DisableIncrementalGC(cx);

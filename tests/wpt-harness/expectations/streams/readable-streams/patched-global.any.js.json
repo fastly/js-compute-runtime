@@ -1,6 +1,6 @@
 {
   "ReadableStream tee() should not touch Object.prototype properties": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ReadableStream tee() should not call the global ReadableStream": {
     "status": "PASS"

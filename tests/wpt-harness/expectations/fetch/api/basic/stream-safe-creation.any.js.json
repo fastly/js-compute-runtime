@@ -1,24 +1,24 @@
 {
   "throwing Object.prototype.start accessor should not affect stream creation by 'fetch'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.start accessor returning invalid value should not affect stream creation by 'fetch'": {
     "status": "PASS"
   },
   "throwing Object.prototype.type accessor should not affect stream creation by 'fetch'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.type accessor returning invalid value should not affect stream creation by 'fetch'": {
     "status": "PASS"
   },
   "throwing Object.prototype.size accessor should not affect stream creation by 'fetch'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.size accessor returning invalid value should not affect stream creation by 'fetch'": {
     "status": "PASS"
   },
   "throwing Object.prototype.highWaterMark accessor should not affect stream creation by 'fetch'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.highWaterMark accessor returning invalid value should not affect stream creation by 'fetch'": {
     "status": "PASS"
@@ -27,25 +27,25 @@
     "status": "PASS"
   },
   "throwing Object.prototype.start accessor should not affect stream creation by 'request'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.start accessor returning invalid value should not affect stream creation by 'request'": {
     "status": "PASS"
   },
   "throwing Object.prototype.type accessor should not affect stream creation by 'request'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.type accessor returning invalid value should not affect stream creation by 'request'": {
     "status": "PASS"
   },
   "throwing Object.prototype.size accessor should not affect stream creation by 'request'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.size accessor returning invalid value should not affect stream creation by 'request'": {
     "status": "PASS"
   },
   "throwing Object.prototype.highWaterMark accessor should not affect stream creation by 'request'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.highWaterMark accessor returning invalid value should not affect stream creation by 'request'": {
     "status": "PASS"
@@ -54,25 +54,25 @@
     "status": "PASS"
   },
   "throwing Object.prototype.start accessor should not affect stream creation by 'response'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.start accessor returning invalid value should not affect stream creation by 'response'": {
     "status": "PASS"
   },
   "throwing Object.prototype.type accessor should not affect stream creation by 'response'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.type accessor returning invalid value should not affect stream creation by 'response'": {
     "status": "PASS"
   },
   "throwing Object.prototype.size accessor should not affect stream creation by 'response'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.size accessor returning invalid value should not affect stream creation by 'response'": {
     "status": "PASS"
   },
   "throwing Object.prototype.highWaterMark accessor should not affect stream creation by 'response'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.highWaterMark accessor returning invalid value should not affect stream creation by 'response'": {
     "status": "PASS"
@@ -81,25 +81,25 @@
     "status": "PASS"
   },
   "throwing Object.prototype.start accessor should not affect stream creation by 'consumeEmptyResponse'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.start accessor returning invalid value should not affect stream creation by 'consumeEmptyResponse'": {
     "status": "PASS"
   },
   "throwing Object.prototype.type accessor should not affect stream creation by 'consumeEmptyResponse'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.type accessor returning invalid value should not affect stream creation by 'consumeEmptyResponse'": {
     "status": "PASS"
   },
   "throwing Object.prototype.size accessor should not affect stream creation by 'consumeEmptyResponse'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.size accessor returning invalid value should not affect stream creation by 'consumeEmptyResponse'": {
     "status": "PASS"
   },
   "throwing Object.prototype.highWaterMark accessor should not affect stream creation by 'consumeEmptyResponse'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.highWaterMark accessor returning invalid value should not affect stream creation by 'consumeEmptyResponse'": {
     "status": "PASS"
@@ -108,25 +108,25 @@
     "status": "PASS"
   },
   "throwing Object.prototype.start accessor should not affect stream creation by 'consumeNonEmptyResponse'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.start accessor returning invalid value should not affect stream creation by 'consumeNonEmptyResponse'": {
     "status": "PASS"
   },
   "throwing Object.prototype.type accessor should not affect stream creation by 'consumeNonEmptyResponse'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.type accessor returning invalid value should not affect stream creation by 'consumeNonEmptyResponse'": {
     "status": "PASS"
   },
   "throwing Object.prototype.size accessor should not affect stream creation by 'consumeNonEmptyResponse'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.size accessor returning invalid value should not affect stream creation by 'consumeNonEmptyResponse'": {
     "status": "PASS"
   },
   "throwing Object.prototype.highWaterMark accessor should not affect stream creation by 'consumeNonEmptyResponse'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.highWaterMark accessor returning invalid value should not affect stream creation by 'consumeNonEmptyResponse'": {
     "status": "PASS"
@@ -135,25 +135,25 @@
     "status": "PASS"
   },
   "throwing Object.prototype.start accessor should not affect stream creation by 'consumeEmptyRequest'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.start accessor returning invalid value should not affect stream creation by 'consumeEmptyRequest'": {
     "status": "PASS"
   },
   "throwing Object.prototype.type accessor should not affect stream creation by 'consumeEmptyRequest'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.type accessor returning invalid value should not affect stream creation by 'consumeEmptyRequest'": {
     "status": "PASS"
   },
   "throwing Object.prototype.size accessor should not affect stream creation by 'consumeEmptyRequest'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.size accessor returning invalid value should not affect stream creation by 'consumeEmptyRequest'": {
     "status": "PASS"
   },
   "throwing Object.prototype.highWaterMark accessor should not affect stream creation by 'consumeEmptyRequest'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.highWaterMark accessor returning invalid value should not affect stream creation by 'consumeEmptyRequest'": {
     "status": "PASS"
@@ -162,25 +162,25 @@
     "status": "PASS"
   },
   "throwing Object.prototype.start accessor should not affect stream creation by 'consumeNonEmptyRequest'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.start accessor returning invalid value should not affect stream creation by 'consumeNonEmptyRequest'": {
     "status": "PASS"
   },
   "throwing Object.prototype.type accessor should not affect stream creation by 'consumeNonEmptyRequest'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.type accessor returning invalid value should not affect stream creation by 'consumeNonEmptyRequest'": {
     "status": "PASS"
   },
   "throwing Object.prototype.size accessor should not affect stream creation by 'consumeNonEmptyRequest'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.size accessor returning invalid value should not affect stream creation by 'consumeNonEmptyRequest'": {
     "status": "PASS"
   },
   "throwing Object.prototype.highWaterMark accessor should not affect stream creation by 'consumeNonEmptyRequest'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object.prototype.highWaterMark accessor returning invalid value should not affect stream creation by 'consumeNonEmptyRequest'": {
     "status": "PASS"

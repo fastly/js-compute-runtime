@@ -18,7 +18,7 @@
     "status": "PASS"
   },
   "blocking transform() should cause backpressure": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "writer.closed should resolve after readable is canceled during start": {
     "status": "PASS"
