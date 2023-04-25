@@ -2415,7 +2415,6 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_RESPONSE_JSON_INVALID_VALUE);
     return false;
   }
-  out.shrink_to_fit();
   // 2. Let body be the result of extracting bytes.
 
   // 3. Let responseObject be the result of creating a Response object, given a new response,
