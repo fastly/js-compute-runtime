@@ -146,8 +146,9 @@ bool pipeThrough(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool initialize_additions(JSContext *cx, JS::HandleObject global) {
   JS::RootedValue val(cx);
-  if (!JS_GetProperty(cx, global, "ReadableStream", &val))
+  if (!JS_GetProperty(cx, global, "ReadableStream", &val)) {
     return false;
+  }
   JS::RootedObject readableStream_builtin(cx, &val.toObject());
 
   if (!JS_GetProperty(cx, readableStream_builtin, "prototype", &val)) {
@@ -158,8 +159,9 @@ bool initialize_additions(JSContext *cx, JS::HandleObject global) {
 
   original_pipeTo.init(cx);
   overridden_pipeTo.init(cx);
-  if (!JS_GetProperty(cx, proto_obj, "pipeTo", &original_pipeTo))
+  if (!JS_GetProperty(cx, proto_obj, "pipeTo", &original_pipeTo)) {
     return false;
+  }
   MOZ_ASSERT(JS::IsCallable(&original_pipeTo.toObject()));
 
   JSFunction *pipeTo_fun = JS_DefineFunction(cx, proto_obj, "pipeTo", pipeTo, 1, JSPROP_ENUMERATE);
@@ -222,7 +224,7 @@ bool ExtractStrategy(JSContext *cx, JS::HandleValue strategy, double default_hwm
     if (!JS::ToNumber(cx, val, hwm)) {
       return false;
     }
-    if (mozilla::IsNaN(*hwm) || *hwm < 0) {
+    if (std::isnan(*hwm) || *hwm < 0) {
       JS_ReportErrorLatin1(cx, "Invalid value for highWaterMark: %f", *hwm);
       return false;
     }
