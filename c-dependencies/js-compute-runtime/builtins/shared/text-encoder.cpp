@@ -85,8 +85,9 @@ bool TextEncoder::encodeInto(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!maybe) {
     return false;
   }
-  size_t read = Get<0>(*maybe);
-  size_t written = Get<1>(*maybe);
+  size_t read;
+  size_t written;
+  std::tie(read, written) = *maybe;
 
   MOZ_ASSERT(written <= len);
 
