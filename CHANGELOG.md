@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/fastly/js-compute-runtime/compare/v1.11.0...v1.11.1) (2023-04-26)
+
+
+### Bug Fixes
+
+* **TextDecoder:** add (nearly) full support for TextDecoder and TextEncoder ([#501](https://github.com/fastly/js-compute-runtime/issues/501)) ([a4c312e](https://github.com/fastly/js-compute-runtime/commit/a4c312e62284147da73d82323ac095670d41cdf3))
+
 ## [1.11.0](https://github.com/fastly/js-compute-runtime/compare/v1.10.1...v1.11.0) (2023-04-25)
 
 
