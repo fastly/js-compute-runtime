@@ -242,6 +242,27 @@ $(RUST_URL_LIB): | $(BUILD)
 		--target-dir $(BUILD)/rusturl \
 		--target=wasm32-wasi $(CARGO_FLAG)
 
+# rustencoding build ################################################################
+
+RUST_ENCODING_SRC := $(FSM_SRC)/rust-encoding
+
+RUST_ENCODING_RS_FILES := $(shell find $(RUST_ENCODING_SRC)/src -name '*.rs')
+
+RUST_ENCODING_LIB := $(BUILD)/rustencoding/wasm32-wasi/$(MODE)/librust_encoding.a
+
+rustencoding: $(RUST_ENCODING_LIB)
+
+$(RUST_ENCODING_LIB): $(RUST_ENCODING_RS_FILES)
+$(RUST_ENCODING_LIB): $(RUST_ENCODING_SRC)/Cargo.toml
+$(RUST_ENCODING_LIB): $(RUST_ENCODING_SRC)/cbindgen.toml
+$(RUST_ENCODING_LIB): | $(BUILD)
+	$(call cmd_format,CARGO,$@) \
+	cd $(RUST_ENCODING_SRC) && cbindgen --output rust-encoding.h && \
+	cargo build $(call quiet_flag,--quiet) \
+		--manifest-path $(RUST_ENCODING_SRC)/Cargo.toml \
+		--target-dir $(BUILD)/rustencoding \
+		--target=wasm32-wasi $(CARGO_FLAG)
+
 
 # wit-bindgen integration ######################################################
 
@@ -283,7 +304,7 @@ $(eval $(call compile_cxx,$(FSM_SRC)/fastly-world/fastly_world_adapter.cpp))
 # NOTE: we shadow wasm-opt by adding $(FSM_SRC)/scripts to the path, which
 # includes a script called wasm-opt that immediately exits successfully. See
 # that script for more information about why we do this.
-$(OBJ_DIR)/js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
+$(OBJ_DIR)/js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
 $(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/impl/main.o
 $(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/fastly-world/fastly_world_adapter.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
@@ -303,7 +324,7 @@ $(eval $(call compile_c,$(FSM_SRC)/fastly-world/fastly_world.c))
 # NOTE: we shadow wasm-opt by adding $(FSM_SRC)/scripts to the path, which
 # includes a script called wasm-opt that immediately exits successfully. See
 # that script for more information about why we do this.
-$(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB)
+$(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/impl/main_component.o
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/fastly-world/fastly_world.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
@@ -315,12 +336,15 @@ $(eval $(call compile_cxx,$(FSM_SRC)/impl/main_component.cpp))
 
 # Shared builtins build ########################################################
 
-shared-builtins: shared/builtins.a shared/librust_url.a
+shared-builtins: shared/builtins.a shared/librust_url.a shared/librust_encoding.a
 
 shared/builtins.a: $(OBJ_DIR)/builtins/shared/*.o $(OBJ_DIR)/builtin.o | shared
 	$(call cmd,wasi_ar,$^)
 
 shared/librust_url.a: $(RUST_URL_LIB) | shared
+	$(call cmd,cp,$@)
+
+shared/librust_encoding.a: $(RUST_ENCODING_LIB) | shared
 	$(call cmd,cp,$@)
 
 # These two rules copy the built artifacts into the $(FSM_SRC) directory, and

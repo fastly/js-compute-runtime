@@ -1,6 +1,6 @@
 {
   "Modify buffer after passing it in (ArrayBuffer)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Modify buffer after passing it in (SharedArrayBuffer)": {
     "status": "FAIL"

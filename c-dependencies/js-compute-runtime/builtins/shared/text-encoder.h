@@ -7,6 +7,7 @@ namespace builtins {
 
 class TextEncoder final : public BuiltinImpl<TextEncoder> {
   static bool encode(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool encodeInto(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool encoding_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:

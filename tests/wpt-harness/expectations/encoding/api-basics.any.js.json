@@ -3,18 +3,18 @@
     "status": "PASS"
   },
   "Default inputs": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Encode/decode round trip: utf-8": {
     "status": "PASS"
   },
   "Decode sample: utf-16le": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Decode sample: utf-16be": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Decode sample: utf-16": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }

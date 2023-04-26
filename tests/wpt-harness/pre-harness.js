@@ -14,6 +14,8 @@ addEventListener = function addEventListener_wpt(type, handler) {
   }
 }
 
-class Blob {}
-class FormData {}
+globalThis.Blob = class Blob{};
+globalThis.FormData = class FormData{};
+globalThis.SharedArrayBuffer = class SharedArrayBuffer{};
+globalThis.MessageChannel = class MessageChannel{};
 ;
