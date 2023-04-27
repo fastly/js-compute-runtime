@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.2](https://github.com/fastly/js-compute-runtime/compare/v1.11.1...v1.11.2) (2023-04-27)
+
+
+### Bug Fixes
+
+* Add TypeScript definitions for Response.redirect() and Response.json() ([#512](https://github.com/fastly/js-compute-runtime/issues/512)) ([ebe429f](https://github.com/fastly/js-compute-runtime/commit/ebe429fc895f8da837e47393ebc35fe6dec5159a))
+
 ## [1.11.1](https://github.com/fastly/js-compute-runtime/compare/v1.11.0...v1.11.1) (2023-04-26)
 
 
