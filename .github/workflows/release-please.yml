@@ -63,7 +63,7 @@ jobs:
           git push --force
 
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: release
     if: ${{ needs.release.outputs.releases_created }}
     steps:
