@@ -62,7 +62,7 @@ get started adding a change and open up a PR
 It also helps to understand how we structure the JS Compute Runtime code base.
 - Under `src` is the code related to bulding a JS file and the JS runtime iself into a
 `.wasm` file.
-- Under `c-dependencies/js-compute-runtime` is the code for the actual JS runtime itself.
+- Under `runtime/js-compute-runtime` is the code for the actual JS runtime itself.
   See below for building the runtime.
   - The main logic for initializing the JS runtime, reading the JS source code from `stdin`,
     and evaluating the JS top-level code is in `js-compute-runtime.cpp`.

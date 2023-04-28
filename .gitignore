@@ -13,13 +13,13 @@ node_modules/
 # compiler_flags
 /js-compute-runtime.wasm
 /js-compute-runtime-component.wasm
-/c-dependencies/js-compute-runtime/obj
+/runtime/js-compute-runtime/obj
 tests/wpt-harness/wpt-test-runner.js
 /fastly.wit
 wpt-runtime.wasm
 docs-app/bin/main.wasm
 docs-app/pkg/*.tar.gz
-c-dependencies/js-compute-runtime/fastly-world/fastly_world_component_type.o
+runtime/js-compute-runtime/fastly-world/fastly_world_component_type.o
 
 *.a
 yarn-error.log

@@ -3,10 +3,10 @@
 
 
 # The path to the directory containing this Makefile, the
-# //c-dependencies/js-compute-runtime directory.
+# //runtime/js-compute-runtime directory.
 FSM_SRC := $(shell dirname "$(realpath $(firstword $(MAKEFILE_LIST)))")
 
-# The path to the //c-dependencies directory.
+# The path to the //runtime directory.
 ROOT_SRC := $(shell dirname "$(FSM_SRC)")
 
 # The name of the project
@@ -82,7 +82,7 @@ BUILD := $(FSM_SRC)/build
 # The output directory for the current build mode (relase/debug).
 OBJ_DIR := $(BUILD)/$(MODE)
 
-# The path to the //c-dependencies/spidermonkey/$(MODE) directory.
+# The path to the //runtime/spidermonkey/$(MODE) directory.
 SM_SRC := $(ROOT_SRC)/spidermonkey/$(MODE)
 
 # The objects we link in from spidermonkey

@@ -31,8 +31,8 @@
     "test": "npm run test:types && npm run test:cli",
     "test:cli": "brittle --bail integration-tests/cli/**.test.js",
     "test:types": "tsd",
-    "build": "make -j8 -C c-dependencies/js-compute-runtime && cp c-dependencies/js-compute-runtime/*.wasm c-dependencies/js-compute-runtime/fastly.wit .",
-    "build:debug": "DEBUG=true make -j8 -C c-dependencies/js-compute-runtime && cp c-dependencies/js-compute-runtime/*.wasm c-dependencies/js-compute-runtime/fastly.wit .",
+    "build": "make -j8 -C runtime/js-compute-runtime && cp runtime/js-compute-runtime/*.wasm runtime/js-compute-runtime/fastly.wit .",
+    "build:debug": "DEBUG=true make -j8 -C runtime/js-compute-runtime && cp runtime/js-compute-runtime/*.wasm runtime/js-compute-runtime/fastly.wit .",
     "check-changelog": "cae-release-notes-format-checker CHANGELOG.md"
   },
   "devDependencies": {

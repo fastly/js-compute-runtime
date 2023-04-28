@@ -11,7 +11,7 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "cargo"
-    directory: "/c-dependencies/js-compute-runtime/rust-url"
+    directory: "/runtime/js-compute-runtime/rust-url"
     schedule:
       interval: "daily"
 

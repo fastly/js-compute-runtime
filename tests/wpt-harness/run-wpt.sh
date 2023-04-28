@@ -22,7 +22,7 @@
 #
 # For this to work, you'll need to have run the following command in advance:
 #
-# > cd c-dependencies/spidermonkey
+# > cd runtime/spidermonkey
 # > ./download-engine.sh debug
 #
 # If you get an error about missing "jsapi.h" while building the runtime,
