@@ -81,11 +81,11 @@ jobs:
 
       - uses: ./.github/actions/cache-crates
         with:
-          lockfiles: "c-dependencies/js-compute-runtime/**/Cargo.lock"
+          lockfiles: "runtime/js-compute-runtime/**/Cargo.lock"
 
       - uses: ./.github/actions/install-rust
         with:
-          path: c-dependencies
+          path: runtime
       
       - name: Restore wasm-tools from cache
         uses: actions/cache@v3
@@ -106,18 +106,18 @@ jobs:
         id: sm-cache
         with:
           path: |
-            c-dependencies/spidermonkey/release
+            runtime/spidermonkey/release
           key: cache-${{ hashFiles(
-            'c-dependencies/spidermonkey/build-engine.sh',
-            'c-dependencies/spidermonkey/gecko-revision',
-            'c-dependencies/spidermonkey/object-files.list',
-            'c-dependencies/rust-toolchain.toml'
+            'runtime/spidermonkey/build-engine.sh',
+            'runtime/spidermonkey/gecko-revision',
+            'runtime/spidermonkey/object-files.list',
+            'runtime/rust-toolchain.toml'
             ) }}-release
 
       - name: "Build SpiderMonkey"
         if: ${{ steps.sm-cache.outputs.cache-hit != 'true' }}
         run: |
-          cd c-dependencies/spidermonkey/
+          cd runtime/spidermonkey/
           bash ./build-engine.sh release
 
       - name: "Install wasi-sdk-19 (linux)"
@@ -138,8 +138,8 @@ jobs:
       - name: Cache built Rust dependencies
         uses: actions/cache@v3
         with:
-          path: c-dependencies/js-compute-runtime/rusturl
-          key: engine-cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('c-dependencies/rust-toolchain.toml', 'c-dependencies/js-compute-runtime/**/Cargo.lock') }}
+          path: runtime/js-compute-runtime/rusturl
+          key: engine-cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('runtime/rust-toolchain.toml', 'runtime/js-compute-runtime/**/Cargo.lock') }}
           # We trust cargo to only reuse valid parts of the cache when dependencies change.
           restore-keys: engine-cargo-${{ runner.os }}-${{ runner.arch }}-
 

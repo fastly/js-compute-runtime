@@ -1,5 +1,5 @@
-[submodule "c-dependencies/spidermonkey"]
-	path = c-dependencies/spidermonkey
+[submodule "runtime/spidermonkey"]
+	path = runtime/spidermonkey
 	url = https://github.com/fastly/spidermonkey-wasi-embedding.git
 	shallow = true
 [submodule "tests/wpt-harness/wpt"]

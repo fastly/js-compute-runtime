@@ -41,7 +41,7 @@ jobs:
 
     - uses: ./.github/actions/cache-crates
       with:
-        lockfiles: 'c-dependencies/js-compute-runtime/**/Cargo.lock'
+        lockfiles: 'runtime/js-compute-runtime/**/Cargo.lock'
     
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
@@ -59,26 +59,26 @@ jobs:
 
     - uses: ./.github/actions/install-rust
       with:
-        path: c-dependencies
+        path: runtime
 
     - name: Cache SpiderMonkey object files
       uses: actions/cache@v3
       id: sm-cache
       with:
         path: |
-          c-dependencies/spidermonkey/${{ matrix.profile }}
+          runtime/spidermonkey/${{ matrix.profile }}
         key: cache-${{ hashFiles(
-            'c-dependencies/spidermonkey/build-engine.sh',
-            'c-dependencies/spidermonkey/gecko-revision',
-            'c-dependencies/spidermonkey/object-files.list',
-            'c-dependencies/rust-toolchain.toml'
+            'runtime/spidermonkey/build-engine.sh',
+            'runtime/spidermonkey/gecko-revision',
+            'runtime/spidermonkey/object-files.list',
+            'runtime/rust-toolchain.toml'
           ) }}-${{ matrix.profile }}
       if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
     - name: "Build SpiderMonkey"
       if: steps.sm-cache.outputs.cache-hit != 'true'
       run: |
-        cd c-dependencies/spidermonkey/
+        cd runtime/spidermonkey/
         sudo apt-get update -y
         bash ./build-engine.sh ${{ matrix.profile }}
 
@@ -100,8 +100,8 @@ jobs:
     - name: Cache built Rust dependencies
       uses: actions/cache@v3
       with:
-        path: c-dependencies/js-compute-runtime/rusturl
-        key: engine-cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('c-dependencies/rust-toolchain.toml', 'c-dependencies/js-compute-runtime/**/Cargo.lock') }}
+        path: runtime/js-compute-runtime/rusturl
+        key: engine-cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('runtime/rust-toolchain.toml', 'runtime/js-compute-runtime/**/Cargo.lock') }}
         # We trust cargo to only reuse valid parts of the cache when dependencies change.
         restore-keys: engine-cargo-${{ runner.os }}-${{ runner.arch }}-
       # Out of an abundance of caution, ensure that tagged releases rebuild all
@@ -366,7 +366,7 @@ jobs:
         name: engine-release
     - name: Locate component resources
       run: |
-        cp c-dependencies/js-compute-runtime/fastly.wit .
+        cp runtime/js-compute-runtime/fastly.wit .
     - run: yarn
       shell: bash
     - run: npm test
