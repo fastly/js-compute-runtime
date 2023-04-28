@@ -1,2 +1,3 @@
 runtime/js-compute-runtime/third_party/wizer.h
 runtime/js-compute-runtime/rust-url/rust-url.h
+runtime/js-compute-runtime/rust-encoding/rust-encoding.h
