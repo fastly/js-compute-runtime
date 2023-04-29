@@ -336,22 +336,22 @@
     "status": "PASS"
   },
   "Setting host with leading U+001F (https:)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Setting hostname with leading U+001F (https:)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Setting host with middle U+001F (https:)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Setting hostname with middle U+001F (https:)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Setting host with trailing U+001F (https:)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Setting hostname with trailing U+001F (https:)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Setting port with leading U+001F (https:)": {
     "status": "FAIL"
