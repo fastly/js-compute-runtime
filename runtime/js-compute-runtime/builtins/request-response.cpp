@@ -17,7 +17,6 @@
 #include "js/JSON.h"
 #include "js/Stream.h"
 #include <algorithm>
-#include <iostream>
 #include <vector>
 
 #pragma clang diagnostic push
@@ -1978,6 +1977,20 @@ bool Response::is_upstream(JSObject *obj) {
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::IsUpstream)).toBoolean();
 }
 
+bool Response::is_grip_upgrade(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::IsGripUpgrade)).toBoolean();
+}
+
+const char *Response::grip_backend(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+
+  auto backend = reinterpret_cast<char *>(
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::GripBackend)).toPrivate());
+  MOZ_ASSERT(backend);
+  return backend;
+}
+
 uint16_t Response::status(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
   return (uint16_t)JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Status)).toInt32();
@@ -2341,7 +2354,8 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!response_instance) {
     return false;
   }
-  JS::RootedObject response(cx, create(cx, response_instance, response_handle, body.handle, false));
+  JS::RootedObject response(
+      cx, create(cx, response_instance, response_handle, body.handle, false, false, nullptr));
   if (!response) {
     return false;
   }
@@ -2485,7 +2499,8 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!response_instance) {
     return false;
   }
-  JS::RootedObject response(cx, create(cx, response_instance, response_handle, body.handle, false));
+  JS::RootedObject response(
+      cx, create(cx, response_instance, response_handle, body.handle, false, false, nullptr));
   if (!response) {
     return false;
   }
@@ -2644,7 +2659,8 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto body = make_res.unwrap();
   JS::RootedObject responseInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  JS::RootedObject response(cx, create(cx, responseInstance, response_handle, body.handle, false));
+  JS::RootedObject response(
+      cx, create(cx, responseInstance, response_handle, body.handle, false, false, nullptr));
   if (!response) {
     return false;
   }
@@ -2730,7 +2746,8 @@ bool Response::init_class(JSContext *cx, JS::HandleObject global) {
 
 JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                            fastly_response_handle_t response_handle,
-                           fastly_body_handle_t body_handle, bool is_upstream) {
+                           fastly_body_handle_t body_handle, bool is_upstream, bool is_grip,
+                           JS::UniqueChars backend) {
   // MOZ_ASSERT(cx);
   // MOZ_ASSERT(is_instance(response));
   // MOZ_ASSERT(response_handle);
@@ -2745,6 +2762,10 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Redirected), JS::FalseValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::IsUpstream),
                       JS::BooleanValue(is_upstream));
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::IsGripUpgrade),
+                      JS::BooleanValue(is_grip));
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::GripBackend),
+                      JS::PrivateValue(std::move(backend.release())));
 
   if (is_upstream) {
     uint16_t status = 0;

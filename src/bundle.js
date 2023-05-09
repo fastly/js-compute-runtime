@@ -27,6 +27,11 @@ export const allowDynamicBackends = Object.getOwnPropertyDescriptor(globalThis.f
 `
           }
         }
+        case 'fanout': {
+          return {
+            contents: `export const createFanoutHandoff = globalThis.fastly.createFanoutHandoff;`
+          }
+        }
         case 'geolocation': { return { contents: `export const getGeolocationForIpAddress = globalThis.fastly.getGeolocationForIpAddress;` } }
         case 'logger': { return { contents: `export const Logger = globalThis.Logger;` } }
         case 'object-store': { return { contents: `export const ObjectStore = globalThis.ObjectStore;` } }
