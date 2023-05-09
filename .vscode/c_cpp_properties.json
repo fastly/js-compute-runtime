@@ -4,6 +4,7 @@
             "name": "sm-wasi",
             "includePath": [
                 "${workspaceFolder}/runtime/spidermonkey/debug/include",
+                "${workspaceFolder}/runtime/spidermonkey/release/include",
                 "/opt/wasi-sdk/share/wasi-sysroot/include/",
                 "${workspaceFolder}/runtime/js-compute-runtime",
                 "${workspaceFolder}/runtime/js-compute-runtime/build/openssl-3.0.7/include"

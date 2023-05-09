@@ -4,6 +4,7 @@
 /// <reference path="fastly:dictionary.d.ts" />
 /// <reference path="fastly:env.d.ts" />
 /// <reference path="fastly:experimental.d.ts" />
+/// <reference path="fastly:fanout.d.ts" />
 /// <reference path="fastly:geolocation.d.ts" />
 /// <reference path="fastly:logger.d.ts" />
 /// <reference path="fastly:object-store.d.ts" />

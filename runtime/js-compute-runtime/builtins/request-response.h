@@ -196,6 +196,8 @@ public:
     Status,
     StatusMessage,
     Redirected,
+    IsGripUpgrade,
+    GripBackend,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -210,10 +212,13 @@ public:
 
   static JSObject *create(JSContext *cx, JS::HandleObject response,
                           fastly_response_handle_t response_handle,
-                          fastly_body_handle_t body_handle, bool is_upstream);
+                          fastly_body_handle_t body_handle, bool is_upstream, bool is_grip_upgrade,
+                          JS::UniqueChars backend);
 
   static fastly_response_handle_t response_handle(JSObject *obj);
   static bool is_upstream(JSObject *obj);
+  static bool is_grip_upgrade(JSObject *obj);
+  static const char *grip_backend(JSObject *obj);
   static uint16_t status(JSObject *obj);
   static JSString *status_message(JSObject *obj);
   static void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code);

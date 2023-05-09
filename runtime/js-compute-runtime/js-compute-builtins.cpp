@@ -1129,8 +1129,10 @@ bool process_pending_request(JSContext *cx, HandleObject request) {
     return false;
   }
 
-  RootedObject response(
-      cx, builtins::Response::create(cx, response_instance, response_handle, body, true));
+  bool is_upstream = true;
+  bool is_grip_upgrade = false;
+  RootedObject response(cx, builtins::Response::create(cx, response_instance, response_handle, body,
+                                                       is_upstream, is_grip_upgrade, nullptr));
   if (!response) {
     return false;
   }

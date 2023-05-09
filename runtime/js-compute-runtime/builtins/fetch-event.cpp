@@ -223,6 +223,20 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   }
 
   bool streaming = false;
+  if (Response::is_grip_upgrade(response_obj)) {
+    std::string backend(Response::grip_backend(response_obj));
+    fastly_world_string_t backend_str;
+    backend_str.len = backend.length();
+    backend_str.ptr = backend.data();
+
+    fastly_error_t err;
+    if (!fastly_http_req_redirect_to_grip_proxy(&backend_str, &err)) {
+      HANDLE_ERROR(cx, err);
+      return false;
+    }
+    return true;
+  }
+
   if (!RequestOrResponse::maybe_stream_body(cx, response_obj, &streaming)) {
     return false;
   }

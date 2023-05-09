@@ -112,6 +112,9 @@ WASM_IMPORT("fastly_http_req", "body_downstream_get")
 int req_body_downstream_get(fastly_request_handle_t *req_handle_out,
                             fastly_body_handle_t *body_handle_out);
 
+WASM_IMPORT("fastly_http_req", "redirect_to_grip_proxy")
+int req_redirect_to_grip_proxy(const char *backend_name, size_t backend_name_len);
+
 /**
  * Set the cache override behavior for this request.
  *

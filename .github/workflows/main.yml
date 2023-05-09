@@ -230,6 +230,7 @@ jobs:
           - error
           - extend-from-builtins
           - extend-from-request
+          - fanout
           - geoip
           - hello-world
           - includeBytes
@@ -378,7 +379,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fixture: 
+        fixture:
           - 'async-select'
           - 'byob'
           - 'byte-repeater'
@@ -386,6 +387,7 @@ jobs:
           - 'crypto'
           - 'edge-dictionary'
           - 'error'
+          - 'fanout'
           - 'geoip'
           - 'hello-world'
           - 'multiple-set-cookie'

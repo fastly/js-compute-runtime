@@ -12,6 +12,7 @@
 #include "builtins/env.h"
 #include "builtins/fastly.h"
 #include "builtins/logger.h"
+#include "builtins/request-response.h"
 #include "builtins/shared/url.h"
 #include "core/geo_ip.h"
 #include "host_interface/host_call.h"
@@ -130,6 +131,69 @@ bool Fastly::includeBytes(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  REQUEST_HANDLER_ONLY("createFanoutHandoff");
+  if (!args.requireAtLeast(cx, "createFanoutHandoff", 2)) {
+    return false;
+  }
+
+  auto request_value = args.get(0);
+  if (!Request::is_instance(request_value)) {
+    JS_ReportErrorUTF8(cx, "createFanoutHandoff: request parameter must be an instance of Request");
+    return false;
+  }
+
+  fastly_response_handle_t response_handle = INVALID_HANDLE;
+  fastly_error_t err;
+  if (!fastly_http_resp_new(&response_handle, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+  fastly_body_handle_t body_handle = INVALID_HANDLE;
+  if (!fastly_http_body_new(&body_handle, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+
+  JS::RootedObject response_instance(cx, JS_NewObjectWithGivenProto(cx, &builtins::Response::class_,
+                                                                    builtins::Response::proto_obj));
+  if (!response_instance) {
+    return false;
+  }
+
+  auto backend_value = args.get(1);
+  size_t length;
+  auto backend_chars = encode(cx, backend_value, &length);
+  if (!backend_chars) {
+    return false;
+  }
+  if (length == 0) {
+    JS_ReportErrorUTF8(cx, "createFanoutHandoff: Backend parameter can not be an empty string");
+    return false;
+  }
+
+  if (length > 254) {
+    JS_ReportErrorUTF8(cx, "createFanoutHandoff: name can not be more than 254 characters");
+    return false;
+  }
+
+  bool is_upstream = true;
+  bool is_grip_upgrade = true;
+  JS::RootedObject response(
+      cx, builtins::Response::create(cx, response_instance, response_handle, body_handle,
+                                     is_upstream, is_grip_upgrade, std::move(backend_chars)));
+  if (!response) {
+    return false;
+  }
+
+  builtins::RequestOrResponse::set_url(response,
+                                       builtins::RequestOrResponse::url(&request_value.toObject()));
+  args.rval().setObject(*response);
+
+  return true;
+}
+
 bool Fastly::now(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setNumber(JS_Now());
@@ -228,6 +292,7 @@ bool Fastly::create(JSContext *cx, JS::HandleObject global, FastlyOptions option
       JS_FN("getGeolocationForIpAddress", getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
       JS_FN("getLogger", getLogger, 1, JSPROP_ENUMERATE),
       JS_FN("includeBytes", includeBytes, 1, JSPROP_ENUMERATE),
+      JS_FN("createFanoutHandoff", createFanoutHandoff, 2, JSPROP_ENUMERATE),
       options.getExperimentalHighResolutionTimeMethodsEnabled() ? nowfn : end,
       end};
 

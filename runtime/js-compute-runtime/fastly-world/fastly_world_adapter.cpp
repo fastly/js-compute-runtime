@@ -137,6 +137,12 @@ bool fastly_http_req_body_downstream_get(fastly_request_t *ret, fastly_error_t *
   return convert_result(fastly::req_body_downstream_get(&ret->f0, &ret->f1), err);
 }
 
+bool fastly_http_req_redirect_to_grip_proxy(fastly_world_string_t *backend, fastly_error_t *err) {
+  return convert_result(fastly::req_redirect_to_grip_proxy(
+                            reinterpret_cast<const char *>(backend->ptr), backend->len),
+                        err);
+}
+
 int convert_tag(fastly_http_cache_override_tag_t tag) {
   int out_tag = 0;
   if ((tag & FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS) > 0) {
