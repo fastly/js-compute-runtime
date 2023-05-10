@@ -6,7 +6,10 @@
 #pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
 #include <js/experimental/TypedData.h>
 #pragma clang diagnostic pop
+#include <map>
 
+auto static count_map = std::map<std::string, size_t>{};
+auto static timer_map = std::map<std::string, int64_t>{};
 JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::HandleValue val,
                                  JS::MutableHandleObjectVector visitedObjects);
 
@@ -431,22 +434,390 @@ static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+// https://console.spec.whatwg.org/#assert
+// assert(condition, ...data)
+static bool assert(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  auto condition = args.get(0).toBoolean();
+  // 1. If condition is true, return.
+  if (!condition) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  // 2. Let message be a string without any formatting specifiers indicating generically an
+  // assertion failure (such as "Assertion failed").
+  std::string message = "Assertion failed";
+  // 3. If data is empty, append message to data.
+  // 4. Otherwise:
+  // 4.1. Let first be data[0].
+  // 4.2. If Type(first) is not String, then prepend message to data.
+  // 4.3. Otherwise:
+  // 4.3.1. Let concat be the concatenation of message, U+003A (:), U+0020 SPACE, and first.
+  // 4.3.2. Set data[0] to concat.
+  auto length = args.length();
+  if (length > 1) {
+    message += ": ";
+    JS::RootedObjectVector visitedObjects(cx);
+    for (int i = 0; i < length; i++) {
+      JS::HandleValue arg = args.get(i);
+      std::string source = "";
+      auto result = ToSource(cx, source, arg, &visitedObjects);
+      if (result.isErr()) {
+        return false;
+      }
+      // strip quotes for direct string logs
+      if (source[0] == '"' && source[source.length() - 1] == '"') {
+        source = source.substr(1, source.length() - 2);
+      }
+      if (message.length()) {
+        message += " ";
+        message += source;
+      } else {
+        message += source;
+      }
+    }
+  }
+
+  // 5. Perform Logger("assert", data).
+  builtin_impl_console_log(Console::LogType::Error, message.c_str());
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool count(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  // 1. Let map be the associated count map.
+  std::string concat = "";
+  std::string label = "";
+  if (args.hasDefined(0)) {
+    auto label_val = args.get(0);
+    size_t length;
+    auto label_string = encode(cx, label_val, &length);
+    if (!label_string) {
+      return false;
+    }
+    label = label_string.get();
+  } else {
+    label = "default";
+  }
+  size_t count;
+  // 2. If map[label] exists, set map[label] to map[label] + 1.
+  if (count_map.contains(label)) {
+    count = count_map.at(label);
+    count += 1;
+  } else {
+    // 3. Otherwise, set map[label] to 1.
+    count = 1;
+  }
+  count_map[label] = count;
+  // 4. Let concat be the concatenation of label, U+003A (:), U+0020 SPACE, and
+  // ToString(map[label]).
+  concat += label;
+  concat += ": ";
+  concat += std::to_string(count);
+  // 5. Perform Logger("count", « concat »).
+  builtin_impl_console_log(Console::LogType::Log, concat.c_str());
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool countReset(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  // 1. Let map be the associated count map.
+  std::string label;
+  if (args.hasDefined(0)) {
+    auto label_val = args.get(0);
+    size_t length;
+    auto label_string = encode(cx, label_val, &length);
+    if (!label_string) {
+      return false;
+    }
+    label = label_string.get();
+  } else {
+    label = "default";
+  }
+  // 2. If map[label] exists, set map[label] to 0.
+  if (count_map.contains(label)) {
+    count_map[label] = 0;
+  } else {
+    // 3. Otherwise:
+    // 3.1. Let message be a string without any formatting specifiers indicating generically that
+    // the given label does not have an associated count. 3.2. Perform Logger("countReset", «
+    // message »);
+    std::string message = "Count for '";
+    message += label;
+    message += "' does not exist";
+    builtin_impl_console_log(Console::LogType::Warn, message.c_str());
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool no_op(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool time(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  std::string label;
+  if (args.hasDefined(0)) {
+    auto label_val = args.get(0);
+    size_t length;
+    auto label_string = encode(cx, label_val, &length);
+    if (!label_string) {
+      return false;
+    }
+    label = label_string.get();
+  } else {
+    label = "default";
+  }
+  // 1. If the associated timer table contains an entry with key label, return, optionally reporting
+  // a warning to the console indicating that a timer with label label has already been started.
+  if (!timer_map.contains(label)) {
+    // 2. Otherwise, set the value of the entry with key label in the associated timer table to the
+    // current time.
+    timer_map[label] = JS_Now();
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool timeLog(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  // 1. Let timerTable be the associated timer table.
+  std::string label;
+  if (args.hasDefined(0)) {
+    auto label_val = args.get(0);
+    size_t length;
+    auto label_string = encode(cx, label_val, &length);
+    if (!label_string) {
+      return false;
+    }
+    label = label_string.get();
+  } else {
+    label = "default";
+  }
+  if (!timer_map.contains(label)) {
+    std::string message = "No such label '";
+    message += label;
+    message += "' for console.timeLog()";
+    builtin_impl_console_log(Console::LogType::Warn, message.c_str());
+    args.rval().setUndefined();
+    return true;
+  }
+
+  // 2. Let startTime be timerTable[label].
+  auto startTime = timer_map[label];
+
+  // 3. Let duration be a string representing the difference between the current time and startTime,
+  // in an implementation-defined format.
+  auto duration = JS_Now() - startTime;
+  // 4. Let concat be the concatenation of label, U+003A (:), U+0020 SPACE, and duration.
+  std::string concat = label;
+  concat += ": ";
+  concat += std::to_string(duration);
+  concat += "ns";
+
+  std::string data = "";
+  if (args.length() > 1) {
+    auto length = args.length();
+    JS::RootedObjectVector visitedObjects(cx);
+    for (int i = 1; i < length; i++) {
+      JS::HandleValue arg = args.get(i);
+      std::string source = "";
+      auto result = ToSource(cx, source, arg, &visitedObjects);
+      if (result.isErr()) {
+        return false;
+      }
+      // strip quotes for direct string logs
+      if (source[0] == '"' && source[source.length() - 1] == '"') {
+        source = source.substr(1, source.length() - 2);
+      }
+      if (data.length()) {
+        data += " ";
+        data += source;
+      } else {
+        data += source;
+      }
+    }
+  }
+
+  // 5. Prepend concat to data.
+  concat += " ";
+  concat += data;
+
+  // 6. Perform Printer("timeLog", « concat »).
+  builtin_impl_console_log(Console::LogType::Log, concat.c_str());
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool timeEnd(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  // 1. Let timerTable be the associated timer table.
+  std::string label;
+  if (args.hasDefined(0)) {
+    auto label_val = args.get(0);
+    size_t length;
+    auto label_string = encode(cx, label_val, &length);
+    if (!label_string) {
+      return false;
+    }
+    label = label_string.get();
+  } else {
+    label = "default";
+  }
+  if (!timer_map.contains(label)) {
+    std::string message = "No such label '";
+    message += label;
+    message += "' for console.timeEnd()";
+    builtin_impl_console_log(Console::LogType::Warn, message.c_str());
+    args.rval().setUndefined();
+    return true;
+  }
+
+  // 2. Let startTime be timerTable[label].
+  // 3. Remove timerTable[label].
+  auto startTime = timer_map.extract(label).mapped();
+
+  // 4. Let duration be a string representing the difference between the current time and startTime,
+  // in an implementation-defined format.
+  auto duration = JS_Now() - startTime;
+  // 5. Let concat be the concatenation of label, U+003A (:), U+0020 SPACE, and duration.
+  std::string concat = label;
+  concat += ": ";
+  concat += std::to_string(duration);
+  concat += "ns";
+
+  // 6. Perform Printer("timeEnd", « concat »).
+  builtin_impl_console_log(Console::LogType::Info, concat.c_str());
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool dir(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  std::string fullLogLine = "";
+  JS::RootedObjectVector visitedObjects(cx);
+  JS::HandleValue arg = args.get(0);
+  std::string source = "";
+  auto result = ToSource(cx, source, arg, &visitedObjects);
+  if (result.isErr()) {
+    return false;
+  }
+  // strip quotes for direct string logs
+  if (source[0] == '"' && source[source.length() - 1] == '"') {
+    source = source.substr(1, source.length() - 2);
+  }
+  if (fullLogLine.length()) {
+    fullLogLine += " ";
+    fullLogLine += source;
+  } else {
+    fullLogLine += source;
+  }
+
+  builtin_impl_console_log(Console::LogType::Log, fullLogLine.c_str());
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool trace(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  // 1. Let trace be some implementation-specific, potentially-interactive representation of the
+  // callstack from where this function was called.
+
+  JS::RootedObject stack(cx);
+  if (!CaptureCurrentStack(cx, &stack, JS::StackCapture(JS::MaxFrames(1u << 7)))) {
+    return false;
+  }
+  auto principals = JS::GetRealmPrincipals(JS::GetCurrentRealmOrNull(cx));
+  JS::RootedString str(cx);
+  if (!BuildStackString(cx, principals, stack, &str)) {
+    return false;
+  }
+  size_t length;
+  auto stack_string = encode(cx, str, &length);
+  if (!stack_string) {
+    return false;
+  }
+
+  // 2. Optionally, let formattedData be the result of Formatter(data), and incorporate
+  // formattedData as a label for trace.
+  std::string fullLogLine = "";
+  JS::RootedObjectVector visitedObjects(cx);
+  for (int i = 0; i < args.length(); i++) {
+    JS::HandleValue arg = args.get(i);
+    std::string source = "";
+    auto result = ToSource(cx, source, arg, &visitedObjects);
+    if (result.isErr()) {
+      return false;
+    }
+    // strip quotes for direct string logs
+    if (source[0] == '"' && source[source.length() - 1] == '"') {
+      source = source.substr(1, source.length() - 2);
+    }
+    if (fullLogLine.length()) {
+      fullLogLine += " ";
+      fullLogLine += source;
+    } else {
+      fullLogLine += source;
+    }
+  }
+  fullLogLine += "\n";
+  fullLogLine += stack_string.get();
+
+  // 3. Perform Printer("trace", « trace »).
+  builtin_impl_console_log(Console::LogType::Log, fullLogLine.c_str());
+  args.rval().setUndefined();
+  return true;
+}
+
 const JSFunctionSpec Console::methods[] = {
-    JS_FN("log", (console_out<Console::LogType::Log>), 1, JSPROP_ENUMERATE),
-    JS_FN("debug", (console_out<Console::LogType::Debug>), 1, JSPROP_ENUMERATE),
-    JS_FN("info", (console_out<Console::LogType::Info>), 1, JSPROP_ENUMERATE),
-    JS_FN("warn", (console_out<Console::LogType::Warn>), 1, JSPROP_ENUMERATE),
-    JS_FN("error", (console_out<Console::LogType::Error>), 1, JSPROP_ENUMERATE),
+    JS_FN("assert", assert, 0, JSPROP_ENUMERATE),
+    JS_FN("clear", no_op, 0, JSPROP_ENUMERATE),
+    JS_FN("count", count, 0, JSPROP_ENUMERATE),
+    JS_FN("countReset", countReset, 0, JSPROP_ENUMERATE),
+    JS_FN("debug", (console_out<Console::LogType::Debug>), 0, JSPROP_ENUMERATE),
+    JS_FN("dir", dir, 0, JSPROP_ENUMERATE),
+    JS_FN("dirxml", (console_out<Console::LogType::Log>), 0, JSPROP_ENUMERATE),
+    JS_FN("error", (console_out<Console::LogType::Error>), 0, JSPROP_ENUMERATE),
+    JS_FN("group", (console_out<Console::LogType::Log>), 0, JSPROP_ENUMERATE),
+    JS_FN("groupCollapsed", (console_out<Console::LogType::Log>), 0, JSPROP_ENUMERATE),
+    JS_FN("groupEnd", no_op, 0, JSPROP_ENUMERATE),
+    JS_FN("info", (console_out<Console::LogType::Info>), 0, JSPROP_ENUMERATE),
+    JS_FN("log", (console_out<Console::LogType::Log>), 0, JSPROP_ENUMERATE),
+    JS_FN("table", (console_out<Console::LogType::Log>), 0, JSPROP_ENUMERATE),
+    JS_FN("time", time, 0, JSPROP_ENUMERATE),
+    JS_FN("timeEnd", timeEnd, 0, JSPROP_ENUMERATE),
+    JS_FN("timeLog", timeLog, 0, JSPROP_ENUMERATE),
+    JS_FN("trace", trace, 0, JSPROP_ENUMERATE),
+    JS_FN("warn", (console_out<Console::LogType::Warn>), 0, JSPROP_ENUMERATE),
     JS_FS_END};
 
-const JSPropertySpec Console::properties[] = {JS_PS_END};
+const JSPropertySpec Console::properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "console", JSPROP_READONLY), JS_PS_END};
 
 bool Console::create(JSContext *cx, JS::HandleObject global) {
-  JS::RootedObject console(cx, JS_NewPlainObject(cx));
-  if (!console)
+  JS::RootedObject proto(cx, JS_NewPlainObject(cx));
+  JS::RootedObject console(cx, JS_NewObjectWithGivenProto(cx, &builtins::Console::class_, proto));
+  if (!console) {
     return false;
-  if (!JS_DefineProperty(cx, global, "console", console, JSPROP_ENUMERATE))
+  }
+  if (!JS_DefineProperty(cx, global, "console", console, 0)) {
     return false;
+  }
+  if (!JS_DefineProperties(cx, console, properties)) {
+    return false;
+  }
   return JS_DefineFunctions(cx, console, methods);
 }
 } // namespace builtins
