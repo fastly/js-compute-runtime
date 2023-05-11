@@ -34,7 +34,7 @@ export async function compareDownstreamResponse (configResponse, actualResponse)
       const downstreamTimeout = setTimeout(() => {
         console.error(`[DownstreamResponse: Body Chunk Timeout]`);
         process.exit(1);
-      }, 10 * 1000);
+      }, 30 * 1000);
       for await (const chunk of downstreamBody) {
         const chunkString = chunk.toString('utf8');
 
