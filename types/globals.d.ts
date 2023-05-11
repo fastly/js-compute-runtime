@@ -68,7 +68,7 @@ declare interface BackendConfiguration {
   firstByteTimeout?: number,
   /**
    * Maximum duration in milliseconds that Fastly will wait while receiving no data on a download from a backend.
-   * If exceeded, the response received so far will be considered complete and the fetch will end. 
+   * If exceeded, the response received so far will be considered complete and the fetch will end.
    * Defaults to 10,000 milliseconds.
    */
   betweenBytesTimeout?: number,
@@ -608,12 +608,26 @@ declare class URLSearchParams {
  * **Note**: Messages are prefixed with the respective log level, starting with an upper-case letter, e.g. `"Log: "`.
  * @group Console API
  */
-declare interface Console {
-  log(...objects: any[]): void;
-  debug(...objects: any[]): void;
-  info(...objects: any[]): void;
-  warn(...objects: any[]): void;
-  error(...objects: any[]): void;
+interface Console {
+  assert(condition?: boolean, ...data: any[]): void;
+  clear(): void;
+  count(label?: string): void;
+  countReset(label?: string): void;
+  debug(...data: any[]): void;
+  dir(item?: any, options?: any): void;
+  dirxml(...data: any[]): void;
+  error(...data: any[]): void;
+  group(...data: any[]): void;
+  groupCollapsed(...data: any[]): void;
+  groupEnd(): void;
+  info(...data: any[]): void;
+  log(...data: any[]): void;
+  table(tabularData?: any, properties?: string[]): void;
+  time(label?: string): void;
+  timeEnd(label?: string): void;
+  timeLog(label?: string, ...data: any[]): void;
+  trace(...data: any[]): void;
+  warn(...data: any[]): void;
 }
 
 /**
@@ -625,7 +639,7 @@ declare var console: Console;
 /**
  * An implementation of the [WHATWG Encoding Standard](https://encoding.spec.whatwg.org/) `TextEncoder` API. All
  * instances of `TextEncoder` only support UTF-8 encoding.
- * 
+ *
  * TextEncoder takes a stream of code points as input and emits a stream of UTF-8 bytes.
  * 
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder | TextEncoder on MDN}
