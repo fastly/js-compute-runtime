@@ -58,10 +58,9 @@ struct ReadResult {
 
 // Returns a UniqueChars and the length of that string. The UniqueChars value is not
 // null-terminated.
-ReadResult read_from_handle_all(JSContext *cx, uint32_t handle) {
+ReadResult read_from_handle_all(JSContext *cx, HttpBody body) {
   std::vector<HostString> chunks;
   size_t bytes_read = 0;
-  HttpBody body{handle};
   while (true) {
     auto res = body.read(HANDLE_READ_CHUNK_SIZE);
     if (auto *err = res.to_err()) {
@@ -135,9 +134,9 @@ bool RequestOrResponse::has_body(JSObject *obj) {
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::HasBody)).toBoolean();
 }
 
-fastly_body_handle_t RequestOrResponse::body_handle(JSObject *obj) {
+HttpBody RequestOrResponse::body_handle(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
-  return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Body)).toInt32();
+  return HttpBody(JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Body)).toInt32());
 }
 
 JSObject *RequestOrResponse::body_stream(JSObject *obj) {
@@ -190,8 +189,8 @@ bool RequestOrResponse::move_body_handle(JSContext *cx, JS::HandleObject from,
   // underlying handle.
   // TODO: Let the host know we'll not use the old handle anymore, once C@E has
   // a hostcall for that.
-  fastly_body_handle_t body = body_handle(from);
-  JS::SetReservedSlot(to, static_cast<uint32_t>(Slots::Body), JS::Int32Value(body));
+  auto body = body_handle(from);
+  JS::SetReservedSlot(to, static_cast<uint32_t>(Slots::Body), JS::Int32Value(body.handle));
 
   // Mark the source's body as used, and the stream as locked to prevent any
   // future attempts to use the underlying handle we just removed.
@@ -700,7 +699,7 @@ bool RequestOrResponse::consume_content_stream_for_bodyAll(JSContext *cx, JS::Ha
 bool RequestOrResponse::consume_body_handle_for_bodyAll(JSContext *cx, JS::HandleObject self,
                                                         JS::HandleValue body_parser,
                                                         JS::CallArgs args) {
-  fastly_body_handle_t body = body_handle(self);
+  auto body = body_handle(self);
   auto *parse_body = reinterpret_cast<ParseBodyCB *>(body_parser.toPrivate());
   auto [buf, bytes_read] = read_from_handle_all(cx, body);
   if (!buf) {
@@ -833,7 +832,7 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
   // So we get that first, then the reader.
   JS::RootedObject catch_handler(cx, &extra.toObject());
   JS::RootedObject reader(cx, &js::GetFunctionNativeReserved(catch_handler, 1).toObject());
-  HttpBody body{RequestOrResponse::body_handle(body_owner)};
+  auto body = RequestOrResponse::body_handle(body_owner);
 
   // We're guaranteed to work with a native ReadableStreamDefaultReader here,
   // which in turn is guaranteed to vend {done: bool, value: any} objects to
@@ -1060,8 +1059,9 @@ bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObj
   return true;
 }
 
-fastly_request_handle_t Request::request_handle(JSObject *obj) {
-  return JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::Request)).toInt32();
+HttpReq Request::request_handle(JSObject *obj) {
+  return HttpReq(
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::Request)).toInt32());
 }
 
 fastly_pending_request_handle_t Request::pending_handle(JSObject *obj) {
@@ -1187,9 +1187,9 @@ bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
   }
 
   fastly_error_t err;
-  if (!fastly_http_req_cache_override_set(Request::request_handle(self), tag, has_ttl ? &ttl : NULL,
-                                          has_swr ? &swr : NULL, sk_str.len ? &sk_str : NULL,
-                                          &err)) {
+  if (!fastly_http_req_cache_override_set(Request::request_handle(self).handle, tag,
+                                          has_ttl ? &ttl : NULL, has_swr ? &swr : NULL,
+                                          sk_str.len ? &sk_str : NULL, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -1219,7 +1219,7 @@ bool Request::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_error_t err;
   fastly_http_version_t version = 0;
-  if (!fastly_http_req_version_get(request_handle(self), &version, &err)) {
+  if (!fastly_http_req_version_get(request_handle(self).handle, &version, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -1447,14 +1447,13 @@ bool Request::init_class(JSContext *cx, JS::HandleObject global) {
   return !!GET_atom;
 }
 
-JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
-                          fastly_request_handle_t request_handle, fastly_body_handle_t body_handle,
-                          bool is_downstream) {
+JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, HttpReq request_handle,
+                          HttpBody body_handle, bool is_downstream) {
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Request),
-                      JS::Int32Value(request_handle));
+                      JS::Int32Value(request_handle.handle));
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Headers), JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Body),
-                      JS::Int32Value(body_handle));
+                      JS::Int32Value(body_handle.handle));
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::BodyStream), JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::HasBody), JS::FalseValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::BodyUsed), JS::FalseValue());
@@ -1477,21 +1476,20 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
  */
 JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::HandleValue input,
                           JS::HandleValue init_val) {
-  fastly_error_t err;
-  fastly_request_handle_t request_handle = INVALID_HANDLE;
-  if (!fastly_http_req_new(&request_handle, &err)) {
-    HANDLE_ERROR(cx, err);
-    return nullptr;
-  }
-
-  auto make_res = HttpBody::make();
-  if (auto *err = make_res.to_err()) {
+  auto request_handle_res = HttpReq::make();
+  if (auto *err = request_handle_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return nullptr;
   }
 
-  auto body = make_res.unwrap();
-  JS::RootedObject request(cx, create(cx, requestInstance, request_handle, body.handle, false));
+  auto body = HttpBody::make();
+  if (auto *err = body.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return nullptr;
+  }
+
+  auto request_handle = request_handle_res.unwrap();
+  JS::RootedObject request(cx, create(cx, requestInstance, request_handle, body.unwrap(), false));
   if (!request) {
     return nullptr;
   }
@@ -1613,7 +1611,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   } else {
     url_fastly_str.ptr = url.get();
     fastly_error_t err;
-    if (!fastly_http_req_uri_set(request_handle, &url_fastly_str, &err)) {
+    if (!fastly_http_req_uri_set(request_handle.handle, &url_fastly_str, &err)) {
       HANDLE_ERROR(cx, err);
       return nullptr;
     }
@@ -1757,7 +1755,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::Method), JS::StringValue(method_str));
     fastly_world_string_t method_fastly_str = {method.get(), method_len};
     fastly_error_t err;
-    if (!fastly_http_req_method_set(request_handle, &method_fastly_str, &err)) {
+    if (!fastly_http_req_method_set(request_handle.handle, &method_fastly_str, &err)) {
       HANDLE_ERROR(cx, err);
       return nullptr;
     }
@@ -1966,10 +1964,9 @@ static_assert((int)Response::Slots::BodyUsed == (int)Request::Slots::BodyUsed);
 static_assert((int)Response::Slots::Headers == (int)Request::Slots::Headers);
 static_assert((int)Response::Slots::Response == (int)Request::Slots::Request);
 
-fastly_response_handle_t Response::response_handle(JSObject *obj) {
+HttpResp Response::response_handle(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
-  return fastly_response_handle_t{
-      (uint32_t)(JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Response)).toInt32())};
+  return HttpResp(JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Response)).toInt32());
 }
 
 bool Response::is_upstream(JSObject *obj) {
@@ -2229,7 +2226,7 @@ bool Response::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_http_version_t version = 0;
   fastly_error_t err;
-  if (!fastly_http_resp_version_get(response_handle(self), &version, &err)) {
+  if (!fastly_http_resp_version_get(response_handle(self).handle, &version, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -2332,13 +2329,14 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   // 4. Let responseObject be the result of creating a Response object, given a new response,
   // "immutable", and this’s relevant Realm.
-  fastly_response_handle_t response_handle = INVALID_HANDLE;
-  fastly_error_t err;
-  if (!fastly_http_resp_new(&response_handle, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto response_handle_res = HttpResp::make();
+  if (auto *err = response_handle_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
-  if (response_handle == INVALID_HANDLE) {
+
+  auto response_handle = response_handle_res.unwrap();
+  if (!response_handle.is_valid()) {
     return false;
   }
 
@@ -2355,19 +2353,20 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedObject response(
-      cx, create(cx, response_instance, response_handle, body.handle, false, false, nullptr));
+      cx, create(cx, response_instance, response_handle, body, false, false, nullptr));
   if (!response) {
     return false;
   }
 
   // 5. Set responseObject’s response’s status to status.
-  if (!fastly_http_resp_status_set(response_handle, status, &err)) {
+  fastly_error_t err;
+  if (!fastly_http_resp_status_set(response_handle.handle, status, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
   // To ensure that we really have the same status value as the host,
   // we always read it back here.
-  if (!fastly_http_resp_status_get(response_handle, &status, &err)) {
+  if (!fastly_http_resp_status_get(response_handle.handle, &status, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -2468,13 +2467,14 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  fastly_response_handle_t response_handle = INVALID_HANDLE;
-  fastly_error_t err;
-  if (!fastly_http_resp_new(&response_handle, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto response_handle_res = HttpResp::make();
+  if (auto *err = response_handle_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
-  if (response_handle == INVALID_HANDLE) {
+
+  auto response_handle = response_handle_res.unwrap();
+  if (!response_handle.is_valid()) {
     return false;
   }
 
@@ -2500,19 +2500,20 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedObject response(
-      cx, create(cx, response_instance, response_handle, body.handle, false, false, nullptr));
+      cx, create(cx, response_instance, response_handle, body, false, false, nullptr));
   if (!response) {
     return false;
   }
 
   // Set `this`’s `response`’s `status` to `init`["status"].
-  if (!fastly_http_resp_status_set(response_handle, status, &err)) {
+  fastly_error_t err;
+  if (!fastly_http_resp_status_set(response_handle.handle, status, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
   // To ensure that we really have the same status value as the host,
   // we always read it back here.
-  if (!fastly_http_resp_status_get(response_handle, &status, &err)) {
+  if (!fastly_http_resp_status_get(response_handle.handle, &status, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -2644,10 +2645,9 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   // TODO(performance): enable creating Response objects during the init phase, and only
   // creating the host-side representation when processing requests.
   // https://github.com/fastly/js-compute-runtime/issues/220
-  fastly_response_handle_t response_handle = INVALID_HANDLE;
-  fastly_error_t err;
-  if (!fastly_http_resp_new(&response_handle, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto response_handle_res = HttpResp::make();
+  if (auto *err = response_handle_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
@@ -2657,10 +2657,11 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  auto response_handle = response_handle_res.unwrap();
   auto body = make_res.unwrap();
   JS::RootedObject responseInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
   JS::RootedObject response(
-      cx, create(cx, responseInstance, response_handle, body.handle, false, false, nullptr));
+      cx, create(cx, responseInstance, response_handle, body, false, false, nullptr));
   if (!response) {
     return false;
   }
@@ -2674,13 +2675,14 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   // (implicit)
 
   // 5.  Set `this`’s `response`’s `status` to `init`["status"].
-  if (!fastly_http_resp_status_set(response_handle, status, &err)) {
+  fastly_error_t err;
+  if (!fastly_http_resp_status_set(response_handle.handle, status, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
   // To ensure that we really have the same status value as the host,
   // we always read it back here.
-  if (!fastly_http_resp_status_get(response_handle, &status, &err)) {
+  if (!fastly_http_resp_status_get(response_handle.handle, &status, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -2744,18 +2746,18 @@ bool Response::init_class(JSContext *cx, JS::HandleObject global) {
          (type_error_atom = JS_AtomizeAndPinString(cx, "error"));
 }
 
-JSObject *Response::create(JSContext *cx, JS::HandleObject response,
-                           fastly_response_handle_t response_handle,
-                           fastly_body_handle_t body_handle, bool is_upstream, bool is_grip,
+JSObject *Response::create(JSContext *cx, JS::HandleObject response, HttpResp response_handle,
+                           HttpBody body_handle, bool is_upstream, bool is_grip,
                            JS::UniqueChars backend) {
   // MOZ_ASSERT(cx);
   // MOZ_ASSERT(is_instance(response));
   // MOZ_ASSERT(response_handle);
   // MOZ_ASSERT(body_handle);
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Response),
-                      JS::Int32Value(response_handle));
+                      JS::Int32Value(response_handle.handle));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::NullValue());
-  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Body), JS::Int32Value(body_handle));
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Body),
+                      JS::Int32Value(body_handle.handle));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::BodyStream), JS::NullValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::HasBody), JS::FalseValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::BodyUsed), JS::FalseValue());
@@ -2768,7 +2770,7 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
   if (is_upstream) {
     uint16_t status = 0;
     fastly_error_t err;
-    if (!fastly_http_resp_status_get(response_handle, &status, &err)) {
+    if (!fastly_http_resp_status_get(response_handle.handle, &status, &err)) {
       HANDLE_ERROR(cx, err);
       return nullptr;
     }

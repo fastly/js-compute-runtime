@@ -176,6 +176,22 @@ Result<Void> generic_header_remove(auto handle, std::string_view name) {
 
 } // namespace
 
+Result<HttpReq> HttpReq::make() {
+  Result<HttpReq> res;
+
+  fastly_request_handle_t handle;
+  fastly_error_t err;
+  if (!fastly_http_req_new(&handle, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(handle);
+  }
+
+  return res;
+}
+
+bool HttpReq::is_valid() const { return this->handle != HttpReq::invalid; }
+
 Result<std::vector<HostString>> HttpReq::get_header_names() {
   return generic_get_header_names<fastly_http_req_header_names_get>(this->handle);
 }
@@ -195,6 +211,22 @@ Result<Void> HttpReq::append_header(std::string_view name, std::string_view valu
 Result<Void> HttpReq::remove_header(std::string_view name) {
   return generic_header_remove<fastly_http_req_header_remove>(this->handle, name);
 }
+
+Result<HttpResp> HttpResp::make() {
+  Result<HttpResp> res;
+
+  fastly_response_handle_t handle;
+  fastly_error_t err;
+  if (!fastly_http_resp_new(&handle, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(handle);
+  }
+
+  return res;
+}
+
+bool HttpResp::is_valid() const { return this->handle != HttpResp::invalid; }
 
 Result<std::vector<HostString>> HttpResp::get_header_names() {
   return generic_get_header_names<fastly_http_resp_header_names_get>(this->handle);

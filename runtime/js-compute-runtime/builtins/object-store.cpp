@@ -276,10 +276,10 @@ bool ObjectStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       JS::RootedObject stream_source(cx,
                                      builtins::NativeStreamSource::get_stream_source(cx, body_obj));
       JS::RootedObject source_owner(cx, builtins::NativeStreamSource::owner(stream_source));
-      fastly_body_handle_t body = RequestOrResponse::body_handle(source_owner);
+      auto body = RequestOrResponse::body_handle(source_owner);
 
       fastly_error_t err;
-      if (!fastly_object_store_insert(object_store_handle(self), &key_str, body, &err)) {
+      if (!fastly_object_store_insert(object_store_handle(self), &key_str, body.handle, &err)) {
         HANDLE_ERROR(cx, err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
