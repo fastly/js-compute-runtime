@@ -443,10 +443,10 @@ static bool console_out(JSContext *cx, unsigned argc, JS::Value *vp) {
 // assert(condition, ...data)
 static bool assert(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
   auto condition = args.get(0).toBoolean();
   // 1. If condition is true, return.
   if (!condition) {
-    args.rval().setUndefined();
     return true;
   }
 
@@ -486,8 +486,6 @@ static bool assert(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // 5. Perform Logger("assert", data).
   builtin_impl_console_log(Console::LogType::Error, message.c_str());
-
-  args.rval().setUndefined();
   return true;
 }
 
