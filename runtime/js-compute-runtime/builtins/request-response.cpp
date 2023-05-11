@@ -2764,8 +2764,6 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                       JS::BooleanValue(is_upstream));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::IsGripUpgrade),
                       JS::BooleanValue(is_grip));
-  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::GripBackend),
-                      JS::PrivateValue(std::move(backend.release())));
 
   if (is_upstream) {
     uint16_t status = 0;
@@ -2782,7 +2780,8 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
       JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::HasBody), JS::TrueValue());
     }
   }
-
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::GripBackend),
+                      JS::PrivateValue(std::move(backend.release())));
   return response;
 }
 
