@@ -1,10 +1,10 @@
 # Changelog
 
 
-## [1.13.0](https://github.com/fastly/js-compute-runtime/compare/v1.12.0...v1.13.0) (2023-05-11)
+## 1.13.0 (2023-05-11)
 
 
-### Features
+### Added
 
 * Implement all the web console methods ([#522](https://github.com/fastly/js-compute-runtime/issues/522)) ([a12a1d3](https://github.com/fastly/js-compute-runtime/commit/a12a1d35f0b68c549d802ea2df87eb5bd5a1cd31))
 
