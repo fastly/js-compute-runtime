@@ -9,12 +9,11 @@
 #include <chrono>
 #include <map>
 
-using FpMilliseconds =
-      std::chrono::duration<float, std::chrono::milliseconds::period>;
 namespace {
-  auto count_map = std::map<std::string, size_t>{};
-  auto timer_map = std::map<std::string, std::chrono::steady_clock::time_point>{};
-}
+using FpMilliseconds = std::chrono::duration<float, std::chrono::milliseconds::period>;
+auto count_map = std::map<std::string, size_t>{};
+auto timer_map = std::map<std::string, std::chrono::steady_clock::time_point>{};
+} // namespace
 JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::HandleValue val,
                                  JS::MutableHandleObjectVector visitedObjects);
 
