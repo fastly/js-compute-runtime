@@ -8,8 +8,10 @@
 #pragma clang diagnostic pop
 #include <map>
 
-auto static count_map = std::map<std::string, size_t>{};
-auto static timer_map = std::map<std::string, int64_t>{};
+namespace {
+  auto count_map = std::map<std::string, size_t>{};
+  auto timer_map = std::map<std::string, int64_t>{};
+}
 JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::HandleValue val,
                                  JS::MutableHandleObjectVector visitedObjects);
 
@@ -470,7 +472,7 @@ static bool assert(JSContext *cx, unsigned argc, JS::Value *vp) {
       if (source[0] == '"' && source[source.length() - 1] == '"') {
         source = source.substr(1, source.length() - 2);
       }
-      if (message.length()) {
+      if (!message.empty()) {
         message += " ";
         message += source;
       } else {
@@ -502,15 +504,13 @@ static bool count(JSContext *cx, unsigned argc, JS::Value *vp) {
   } else {
     label = "default";
   }
-  size_t count;
+  size_t count = 0;
   // 2. If map[label] exists, set map[label] to map[label] + 1.
-  if (count_map.contains(label)) {
-    count = count_map.at(label);
-    count += 1;
-  } else {
-    // 3. Otherwise, set map[label] to 1.
-    count = 1;
+  auto it = count_map.find(label);
+  if (it != count_map.end()) {
+    count = it->second;
   }
+  count += 1;
   count_map[label] = count;
   // 4. Let concat be the concatenation of label, U+003A (:), U+0020 SPACE, and
   // ToString(map[label]).
@@ -539,8 +539,9 @@ static bool countReset(JSContext *cx, unsigned argc, JS::Value *vp) {
     label = "default";
   }
   // 2. If map[label] exists, set map[label] to 0.
-  if (count_map.contains(label)) {
-    count_map[label] = 0;
+  auto it = count_map.find(label);
+  if (it != count_map.end()) {
+    it->second = 0;
   } else {
     // 3. Otherwise:
     // 3.1. Let message be a string without any formatting specifiers indicating generically that
