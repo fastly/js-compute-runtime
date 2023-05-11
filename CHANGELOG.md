@@ -1,37 +1,37 @@
 # Changelog
 
-## [1.11.2](https://github.com/fastly/js-compute-runtime/compare/v1.11.1...v1.11.2) (2023-04-27)
+## 1.11.2 (2023-04-27)
 
 
-### Bug Fixes
+### Fixed
 
 * Add TypeScript definitions for Response.redirect() and Response.json() ([#512](https://github.com/fastly/js-compute-runtime/issues/512)) ([ebe429f](https://github.com/fastly/js-compute-runtime/commit/ebe429fc895f8da837e47393ebc35fe6dec5159a))
 
-## [1.11.1](https://github.com/fastly/js-compute-runtime/compare/v1.11.0...v1.11.1) (2023-04-26)
+## 1.11.1 (2023-04-26)
 
 
-### Bug Fixes
+### Fixed
 
 * **TextDecoder:** add (nearly) full support for TextDecoder and TextEncoder ([#501](https://github.com/fastly/js-compute-runtime/issues/501)) ([a4c312e](https://github.com/fastly/js-compute-runtime/commit/a4c312e62284147da73d82323ac095670d41cdf3))
 
-## [1.11.0](https://github.com/fastly/js-compute-runtime/compare/v1.10.1...v1.11.0) (2023-04-25)
+## 1.11.0 (2023-04-25)
 
 
-### Features
+### Added
 
 * implement Response.json static method ([#499](https://github.com/fastly/js-compute-runtime/issues/499)) ([780067d](https://github.com/fastly/js-compute-runtime/commit/780067d429dbd90bd529f42169c2c1af6c139bb7))
 
-## [1.10.1](https://github.com/fastly/js-compute-runtime/compare/v1.10.0...v1.10.1) (2023-04-24)
+## 1.10.1 (2023-04-24)
 
 
-### Bug Fixes
+### Fixed
 
 * Fix for `ReferenceError: pattern is not defined` ([#506](https://github.com/fastly/js-compute-runtime/issues/506)) ([107c9be](https://github.com/fastly/js-compute-runtime/commit/107c9be4c0b0c41c4d630ba556a10b697a1508f4))
 
-## [1.10.0](https://github.com/fastly/js-compute-runtime/compare/v1.9.0...v1.10.0) (2023-04-21)
+## 1.10.0 (2023-04-21)
 
 
-### Features
+### Added
 
 * Add MD5 support into crypto.subtle.digest ([9c8efab](https://github.com/fastly/js-compute-runtime/commit/9c8efabc89c20e5e20f8ef429b555c1d85fe0db1))
 * implement Response.redirect static method and Response.prototype.redirected getter ([1623d74](https://github.com/fastly/js-compute-runtime/commit/1623d740405dcaaa5a8c946981c6840ab611c36a))
