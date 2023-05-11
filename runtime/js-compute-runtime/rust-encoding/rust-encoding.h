@@ -1,8 +1,9 @@
 // The constructor created by cbindgen's `derive_constructor` causes this warning.
 // Gecko's various uses of cbindgen silence it, so we do, too.
 #ifdef __clang__
-#pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
+#  pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
 #endif
+
 
 #ifndef rust_encoding_bindings_h
 #define rust_encoding_bindings_h
@@ -15,8 +16,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <new>
 #include <ostream>
+#include <new>
+
 
 namespace jsencoding {
 
@@ -312,6 +314,7 @@ struct Encoder;
 /// Instances of `Encoding` can be compared with `==` (in both Rust and in
 /// C/C++).
 struct Encoding;
+
 
 extern "C" {
 
@@ -766,8 +769,13 @@ size_t decoder_max_utf8_buffer_length_without_replacement(const Decoder *decoder
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Decoder.html
-uint32_t decoder_decode_to_utf8(Decoder *decoder, const uint8_t *src, size_t *src_len, uint8_t *dst,
-                                size_t *dst_len, bool last, bool *had_replacements);
+uint32_t decoder_decode_to_utf8(Decoder *decoder,
+                                const uint8_t *src,
+                                size_t *src_len,
+                                uint8_t *dst,
+                                size_t *dst_len,
+                                bool last,
+                                bool *had_replacements);
 
 /// Incrementally decode a byte stream into UTF-8 _without replacement_.
 ///
@@ -787,8 +795,11 @@ uint32_t decoder_decode_to_utf8(Decoder *decoder, const uint8_t *src, size_t *sr
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Decoder.html
-uint32_t decoder_decode_to_utf8_without_replacement(Decoder *decoder, const uint8_t *src,
-                                                    size_t *src_len, uint8_t *dst, size_t *dst_len,
+uint32_t decoder_decode_to_utf8_without_replacement(Decoder *decoder,
+                                                    const uint8_t *src,
+                                                    size_t *src_len,
+                                                    uint8_t *dst,
+                                                    size_t *dst_len,
                                                     bool last);
 
 /// Query the worst-case UTF-16 output size (with or without replacement).
@@ -826,8 +837,13 @@ size_t decoder_max_utf16_buffer_length(const Decoder *decoder, size_t u16_length
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Decoder.html
-uint32_t decoder_decode_to_utf16(Decoder *decoder, const uint8_t *src, size_t *src_len,
-                                 uint16_t *dst, size_t *dst_len, bool last, bool *had_replacements);
+uint32_t decoder_decode_to_utf16(Decoder *decoder,
+                                 const uint8_t *src,
+                                 size_t *src_len,
+                                 uint16_t *dst,
+                                 size_t *dst_len,
+                                 bool last,
+                                 bool *had_replacements);
 
 /// Incrementally decode a byte stream into UTF-16 _without replacement_.
 ///
@@ -847,9 +863,12 @@ uint32_t decoder_decode_to_utf16(Decoder *decoder, const uint8_t *src, size_t *s
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Decoder.html
-uint32_t decoder_decode_to_utf16_without_replacement(Decoder *decoder, const uint8_t *src,
-                                                     size_t *src_len, uint16_t *dst,
-                                                     size_t *dst_len, bool last);
+uint32_t decoder_decode_to_utf16_without_replacement(Decoder *decoder,
+                                                     const uint8_t *src,
+                                                     size_t *src_len,
+                                                     uint16_t *dst,
+                                                     size_t *dst_len,
+                                                     bool last);
 
 /// Checks for compatibility with storing Unicode scalar values as unsigned
 /// bytes taking into account the state of the decoder.
@@ -871,7 +890,8 @@ uint32_t decoder_decode_to_utf16_without_replacement(Decoder *decoder, const uin
 ///
 /// UB ensues if `buffer` and `*buffer_len` don't designate a valid memory
 /// block of if `buffer` is `NULL`.
-size_t decoder_latin1_byte_compatible_up_to(const Decoder *decoder, const uint8_t *buffer,
+size_t decoder_latin1_byte_compatible_up_to(const Decoder *decoder,
+                                            const uint8_t *buffer,
                                             size_t buffer_len);
 
 /// Deallocates an `Encoder` previously allocated by `encoding_new_encoder()`.
@@ -937,8 +957,13 @@ size_t encoder_max_buffer_length_from_utf8_without_replacement(const Encoder *en
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Encoder.html
-uint32_t encoder_encode_from_utf8(Encoder *encoder, const uint8_t *src, size_t *src_len,
-                                  uint8_t *dst, size_t *dst_len, bool last, bool *had_replacements);
+uint32_t encoder_encode_from_utf8(Encoder *encoder,
+                                  const uint8_t *src,
+                                  size_t *src_len,
+                                  uint8_t *dst,
+                                  size_t *dst_len,
+                                  bool last,
+                                  bool *had_replacements);
 
 /// Incrementally encode into byte stream from UTF-8 _without replacement_.
 ///
@@ -961,9 +986,12 @@ uint32_t encoder_encode_from_utf8(Encoder *encoder, const uint8_t *src, size_t *
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Encoder.html
-uint32_t encoder_encode_from_utf8_without_replacement(Encoder *encoder, const uint8_t *src,
-                                                      size_t *src_len, uint8_t *dst,
-                                                      size_t *dst_len, bool last);
+uint32_t encoder_encode_from_utf8_without_replacement(Encoder *encoder,
+                                                      const uint8_t *src,
+                                                      size_t *src_len,
+                                                      uint8_t *dst,
+                                                      size_t *dst_len,
+                                                      bool last);
 
 /// Query the worst-case output size when encoding from UTF-16 with
 /// replacement.
@@ -1003,8 +1031,12 @@ size_t encoder_max_buffer_length_from_utf16_without_replacement(const Encoder *e
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Encoder.html
-uint32_t encoder_encode_from_utf16(Encoder *encoder, const uint16_t *src, size_t *src_len,
-                                   uint8_t *dst, size_t *dst_len, bool last,
+uint32_t encoder_encode_from_utf16(Encoder *encoder,
+                                   const uint16_t *src,
+                                   size_t *src_len,
+                                   uint8_t *dst,
+                                   size_t *dst_len,
+                                   bool last,
                                    bool *had_replacements);
 
 /// Incrementally encode into byte stream from UTF-16 _without replacement_.
@@ -1025,9 +1057,12 @@ uint32_t encoder_encode_from_utf16(Encoder *encoder, const uint16_t *src, size_t
 /// designate a valid block of memory.
 ///
 /// [1]: https://docs.rs/encoding_rs/0.6.10/encoding_rs/struct.Encoder.html
-uint32_t encoder_encode_from_utf16_without_replacement(Encoder *encoder, const uint16_t *src,
-                                                       size_t *src_len, uint8_t *dst,
-                                                       size_t *dst_len, bool last);
+uint32_t encoder_encode_from_utf16_without_replacement(Encoder *encoder,
+                                                       const uint16_t *src,
+                                                       size_t *src_len,
+                                                       uint8_t *dst,
+                                                       size_t *dst_len,
+                                                       bool last);
 
 } // extern "C"
 
