@@ -131,6 +131,8 @@ class HttpBase {
 public:
   virtual ~HttpBase() = default;
 
+  virtual bool is_valid() const = 0;
+
   virtual Result<std::vector<HostString>> get_header_names() = 0;
   virtual Result<std::optional<std::vector<HostString>>>
   get_header_values(std::string_view name) = 0;
@@ -148,6 +150,10 @@ public:
   HttpReq() = default;
   explicit HttpReq(fastly_request_handle_t handle) : handle{handle} {}
 
+  static Result<HttpReq> make();
+
+  bool is_valid() const override;
+
   Result<std::vector<HostString>> get_header_names() override;
   Result<std::optional<std::vector<HostString>>> get_header_values(std::string_view name) override;
   Result<Void> insert_header(std::string_view name, std::string_view value) override;
@@ -163,6 +169,10 @@ public:
 
   HttpResp() = default;
   explicit HttpResp(fastly_response_handle_t handle) : handle{handle} {}
+
+  static Result<HttpResp> make();
+
+  bool is_valid() const override;
 
   Result<std::vector<HostString>> get_header_names() override;
   Result<std::optional<std::vector<HostString>>> get_header_values(std::string_view name) override;

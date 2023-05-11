@@ -786,11 +786,11 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     } else {
       backend = builtins::Fastly::defaultBackend;
       if (!backend) {
-        fastly_request_handle_t handle = builtins::Request::request_handle(request);
+        auto handle = builtins::Request::request_handle(request);
 
         fastly_world_string_t uri_str;
         fastly_error_t err;
-        if (fastly_http_req_uri_get(handle, &uri_str, &err)) {
+        if (fastly_http_req_uri_get(handle.handle, &uri_str, &err)) {
           JS_ReportErrorLatin1(cx,
                                "No backend specified for request with url %s. "
                                "Must provide a `backend` property on the `init` object "
@@ -810,7 +810,6 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   if (!backend_chars)
     return ReturnPromiseRejectedWithPendingError(cx, args);
 
-  fastly_pending_request_handle_t request_handle = INVALID_HANDLE;
   RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
   if (!response_promise)
     return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -826,17 +825,18 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   fastly_world_string_t backend_str = {backend_chars.get(), backend_len};
 
+  fastly_pending_request_handle_t pending_handle = INVALID_HANDLE;
   {
     fastly_error_t err;
     bool ok;
+    auto request_handle = builtins::Request::request_handle(request);
+    auto body = builtins::RequestOrResponse::body_handle(request);
     if (streaming) {
-      ok = fastly_http_req_send_async_streaming(builtins::Request::request_handle(request),
-                                                builtins::RequestOrResponse::body_handle(request),
-                                                &backend_str, &request_handle, &err);
+      ok = fastly_http_req_send_async_streaming(request_handle.handle, body.handle, &backend_str,
+                                                &pending_handle, &err);
     } else {
-      ok = fastly_http_req_send_async(builtins::Request::request_handle(request),
-                                      builtins::RequestOrResponse::body_handle(request),
-                                      &backend_str, &request_handle, &err);
+      ok = fastly_http_req_send_async(request_handle.handle, body.handle, &backend_str,
+                                      &pending_handle, &err);
     }
 
     if (!ok) {
@@ -858,7 +858,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
 
   JS::SetReservedSlot(request, static_cast<uint32_t>(builtins::Request::Slots::PendingRequest),
-                      JS::Int32Value(request_handle));
+                      JS::Int32Value(pending_handle));
   JS::SetReservedSlot(request, static_cast<uint32_t>(builtins::Request::Slots::ResponsePromise),
                       JS::ObjectValue(*response_promise));
 
@@ -1113,8 +1113,8 @@ bool process_pending_request(JSContext *cx, HandleObject request) {
   fastly_error_t err;
   bool ok =
       fastly_http_req_pending_req_wait(builtins::Request::pending_handle(request), &ret, &err);
-  fastly_response_handle_t response_handle = ret.f0;
-  fastly_body_handle_t body = ret.f1;
+  HttpResp response_handle{ret.f0};
+  HttpBody body{ret.f1};
 
   RootedObject response_promise(cx, builtins::Request::response_promise(request));
 
@@ -1227,7 +1227,7 @@ bool process_pending_async_tasks(JSContext *cx) {
     } else {
       MOZ_ASSERT(builtins::NativeStreamSource::is_instance(pending_obj));
       RootedObject owner(cx, builtins::NativeStreamSource::owner(pending_obj));
-      handles[i] = builtins::RequestOrResponse::body_handle(owner);
+      handles[i] = builtins::RequestOrResponse::body_handle(owner).handle;
     }
   }
 

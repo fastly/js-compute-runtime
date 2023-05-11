@@ -74,12 +74,12 @@ JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {
       cx, JS_NewObjectWithGivenProto(cx, &Request::class_, Request::proto_obj));
   if (!requestInstance)
     return nullptr;
-  return Request::create(cx, requestInstance, INVALID_HANDLE, INVALID_HANDLE, true);
+  return Request::create(cx, requestInstance, HttpReq{}, HttpBody{}, true);
 }
 
 bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request,
                                          fastly_request_t *req) {
-  MOZ_ASSERT(Request::request_handle(request) == INVALID_HANDLE);
+  MOZ_ASSERT(!Request::request_handle(request).is_valid());
 
   fastly_error_t err;
 
@@ -176,11 +176,11 @@ bool FetchEvent::request_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 namespace {
 
 bool start_response(JSContext *cx, JS::HandleObject response_obj, bool streaming) {
-  fastly_response_handle_t response = Response::response_handle(response_obj);
-  fastly_body_handle_t body = RequestOrResponse::body_handle(response_obj);
+  auto response = Response::response_handle(response_obj);
+  auto body = RequestOrResponse::body_handle(response_obj);
 
   fastly_error_t err;
-  if (!fastly_http_resp_send_downstream(response, body, streaming, &err)) {
+  if (!fastly_http_resp_send_downstream(response.handle, body.handle, streaming, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }

@@ -144,15 +144,14 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  fastly_response_handle_t response_handle = INVALID_HANDLE;
-  fastly_error_t err;
-  if (!fastly_http_resp_new(&response_handle, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto response_handle = HttpResp::make();
+  if (auto *err = response_handle.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
-  fastly_body_handle_t body_handle = INVALID_HANDLE;
-  if (!fastly_http_body_new(&body_handle, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto body_handle = HttpBody::make();
+  if (auto *err = body_handle.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
@@ -181,8 +180,9 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
   bool is_upstream = true;
   bool is_grip_upgrade = true;
   JS::RootedObject response(
-      cx, builtins::Response::create(cx, response_instance, response_handle, body_handle,
-                                     is_upstream, is_grip_upgrade, std::move(backend_chars)));
+      cx, builtins::Response::create(cx, response_instance, response_handle.unwrap(),
+                                     body_handle.unwrap(), is_upstream, is_grip_upgrade,
+                                     std::move(backend_chars)));
   if (!response) {
     return false;
   }
