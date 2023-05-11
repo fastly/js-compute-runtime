@@ -6,11 +6,14 @@
 #pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
 #include <js/experimental/TypedData.h>
 #pragma clang diagnostic pop
+#include <chrono>
 #include <map>
 
+using FpMilliseconds =
+      std::chrono::duration<float, std::chrono::milliseconds::period>;
 namespace {
   auto count_map = std::map<std::string, size_t>{};
-  auto timer_map = std::map<std::string, int64_t>{};
+  auto timer_map = std::map<std::string, std::chrono::steady_clock::time_point>{};
 }
 JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::HandleValue val,
                                  JS::MutableHandleObjectVector visitedObjects);
@@ -582,7 +585,7 @@ static bool time(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!timer_map.contains(label)) {
     // 2. Otherwise, set the value of the entry with key label in the associated timer table to the
     // current time.
-    timer_map[label] = JS_Now();
+    timer_map[label] = std::chrono::high_resolution_clock::now();
   }
 
   args.rval().setUndefined();
@@ -618,12 +621,14 @@ static bool timeLog(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // 3. Let duration be a string representing the difference between the current time and startTime,
   // in an implementation-defined format.
-  auto duration = JS_Now() - startTime;
+  auto finish = std::chrono::high_resolution_clock::now();
+  auto duration = FpMilliseconds(finish - startTime).count();
+
   // 4. Let concat be the concatenation of label, U+003A (:), U+0020 SPACE, and duration.
   std::string concat = label;
   concat += ": ";
   concat += std::to_string(duration);
-  concat += "ns";
+  concat += "ms";
 
   std::string data = "";
   if (args.length() > 1) {
@@ -690,12 +695,13 @@ static bool timeEnd(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // 4. Let duration be a string representing the difference between the current time and startTime,
   // in an implementation-defined format.
-  auto duration = JS_Now() - startTime;
+  auto finish = std::chrono::high_resolution_clock::now();
+  auto duration = FpMilliseconds(finish - startTime).count();
   // 5. Let concat be the concatenation of label, U+003A (:), U+0020 SPACE, and duration.
   std::string concat = label;
   concat += ": ";
   concat += std::to_string(duration);
-  concat += "ns";
+  concat += "ms";
 
   // 6. Perform Printer("timeEnd", « concat »).
   builtin_impl_console_log(Console::LogType::Info, concat.c_str());
