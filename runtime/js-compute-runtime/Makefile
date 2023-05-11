@@ -326,6 +326,7 @@ $(eval $(call compile_c,$(FSM_SRC)/fastly-world/fastly_world.c))
 # that script for more information about why we do this.
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/impl/main_component.o
+$(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_SRC)/fastly-world/fastly_world_component_type.o
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/fastly-world/fastly_world.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^

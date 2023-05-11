@@ -22,7 +22,7 @@ JSString *geo_info(JSObject *obj) {
 static JSString *retrieve_address(JSContext *cx, JS::HandleObject self) {
   JS::RootedString address(cx);
 
-  fastly_list_u8_t octets;
+  fastly_world_list_u8_t octets;
   fastly_error_t err;
   if (!fastly_http_req_downstream_client_ip_addr(&octets, &err)) {
     HANDLE_ERROR(cx, err);

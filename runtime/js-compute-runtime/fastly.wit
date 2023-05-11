@@ -486,7 +486,7 @@ default world fastly-world {
     purge-surrogate-key: func(surrogate-key: string, soft-purge: bool) -> result<purge-result, error>
   }
 
-  export js-compute-runtime: interface {
+  export compute-at-edge: interface {
     type request-handle = u32
     type body-handle = u32
     type request = tuple<request-handle, body-handle>

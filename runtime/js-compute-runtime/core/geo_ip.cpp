@@ -34,7 +34,7 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
     return nullptr;
   }
 
-  fastly_list_u8_t octets_list = {const_cast<uint8_t *>(&octets[0]), octets_len};
+  fastly_world_list_u8_t octets_list = {const_cast<uint8_t *>(&octets[0]), octets_len};
 
   fastly_world_string_t ret;
   fastly_error_t err;

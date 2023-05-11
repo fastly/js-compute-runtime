@@ -202,7 +202,7 @@ bool KVStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!parse_and_validate_key(cx, &key_chars, key_str.len))
     return ReturnPromiseRejectedWithPendingError(cx, args);
 
-  fastly_option_body_handle_t ret;
+  fastly_world_option_body_handle_t ret;
   fastly_error_t err;
   if (!fastly_object_store_lookup(kv_store_handle(self), &key_str, &ret, &err)) {
     HANDLE_ERROR(cx, err);

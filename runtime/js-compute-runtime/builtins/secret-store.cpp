@@ -11,7 +11,7 @@ fastly_secret_handle_t SecretStoreEntry::secret_handle(JSObject *obj) {
 bool SecretStoreEntry::plaintext(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  fastly_option_string_t ret;
+  fastly_world_option_string_t ret;
   fastly_error_t err;
   // Ensure that we throw an exception for all unexpected host errors.
   if (!fastly_secret_store_plaintext(SecretStoreEntry::secret_handle(self), &ret, &err)) {
@@ -110,7 +110,7 @@ bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   fastly_world_string_t key_str;
   key_str.len = length;
   key_str.ptr = key.get();
-  fastly_option_secret_handle_t secret;
+  fastly_world_option_secret_handle_t secret;
   fastly_error_t err;
   // Ensure that we throw an exception for all unexpected host errors.
   if (!fastly_secret_store_get(SecretStore::secret_store_handle(self), &key_str, &secret, &err)) {

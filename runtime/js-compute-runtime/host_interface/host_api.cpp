@@ -34,10 +34,10 @@ Result<std::optional<uint32_t>> AsyncHandle::select(const std::vector<AsyncHandl
   Result<std::optional<uint32_t>> res;
 
   static_assert(sizeof(AsyncHandle) == sizeof(fastly_async_handle_t));
-  fastly_list_async_handle_t hs{
+  fastly_world_list_async_handle_t hs{
       .ptr = reinterpret_cast<fastly_async_handle_t *>(const_cast<AsyncHandle *>(handles.data())),
       .len = handles.size()};
-  fastly_option_u32_t ret;
+  fastly_world_option_u32_t ret;
   fastly_error_t err;
   if (!fastly_async_io_select(&hs, timeout_ms, &ret, &err)) {
     res.emplace_err(err);
@@ -67,7 +67,7 @@ Result<HttpBody> HttpBody::make() {
 Result<HostString> HttpBody::read(uint32_t chunk_size) const {
   Result<HostString> res;
 
-  fastly_list_u8_t ret;
+  fastly_world_list_u8_t ret;
   fastly_error_t err;
   if (!fastly_http_body_read(this->handle, chunk_size, &ret, &err)) {
     res.emplace_err(err);
@@ -82,7 +82,7 @@ Result<uint32_t> HttpBody::write(const uint8_t *ptr, size_t len) const {
   Result<uint32_t> res;
 
   // The write call doesn't mutate the buffer; the cast is just for the generated fastly api.
-  fastly_list_u8_t chunk{const_cast<uint8_t *>(ptr), len};
+  fastly_world_list_u8_t chunk{const_cast<uint8_t *>(ptr), len};
 
   fastly_error_t err;
   uint32_t written;
@@ -144,7 +144,7 @@ template <auto header_names_get>
 Result<std::vector<HostString>> generic_get_header_names(auto handle) {
   Result<std::vector<HostString>> res;
 
-  fastly_list_string_t ret;
+  fastly_world_list_string_t ret;
   fastly_error_t err;
   if (!header_names_get(handle, &ret, &err)) {
     res.emplace_err(err);
@@ -170,7 +170,7 @@ Result<std::optional<std::vector<HostString>>> generic_get_header_values(auto ha
   Result<std::optional<std::vector<HostString>>> res;
 
   fastly_world_string_t hdr = string_view_to_world_string(name);
-  fastly_option_list_string_t ret;
+  fastly_world_option_list_string_t ret;
   fastly_error_t err;
   if (!header_values_get(handle, &hdr, &ret, &err)) {
     res.emplace_err(err);
@@ -228,7 +228,7 @@ Result<std::optional<Response>> HttpPendingReq::poll() {
   Result<std::optional<Response>> res;
 
   fastly_error_t err;
-  fastly_option_response_t ret;
+  fastly_world_option_response_t ret;
   if (!fastly_http_req_pending_req_poll(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else if (ret.is_some) {
