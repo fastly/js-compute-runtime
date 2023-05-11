@@ -1,5 +1,13 @@
 # Changelog
 
+
+## 1.12.0 (2023-05-11)
+
+
+### Added
+
+* Implement Fanout for JS SDK ([5198884](https://github.com/fastly/js-compute-runtime/commit/5198884d35c616785399d1702efa2454f9303421))
+
 ## 1.11.2 (2023-04-27)
 
 
