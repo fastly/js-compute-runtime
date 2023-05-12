@@ -7,6 +7,7 @@ import { addSdkMetadataField } from "./src/addSdkMetadataField.js";
 
 const {
   enableExperimentalHighResolutionTimeMethods,
+  enableWeval,
   wasmEngine,
   input,
   component,
@@ -27,7 +28,7 @@ if (version) {
   // it could be that the user is using an older version of js-compute-runtime
   // and a newer version does not support the platform they are using.
   const {compileApplicationToWasm} = await import('./src/compileApplicationToWasm.js')
-  await compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods);
+  await compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods, enableWeval);
   if (component) {
     const {compileComponent} = await import('./src/component.js');
     await compileComponent(output);

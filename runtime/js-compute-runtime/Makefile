@@ -67,6 +67,9 @@ else
   WASM_STRIP = wasm-opt --strip-debug -o $1 $1
 endif
 
+# The build variant (normal or weval).
+VARIANT ?= -normal
+
 # The path to the wasm-tools executable
 WASM_TOOLS ?= $(shell which wasm-tools)
 
@@ -80,10 +83,10 @@ endif
 BUILD := $(FSM_SRC)/build
 
 # The output directory for the current build mode (relase/debug).
-OBJ_DIR := $(BUILD)/$(MODE)
+OBJ_DIR := $(BUILD)/$(MODE)$(VARIANT)
 
 # The path to the //runtime/spidermonkey/$(MODE) directory.
-SM_SRC := $(ROOT_SRC)/spidermonkey/$(MODE)
+SM_SRC := $(ROOT_SRC)/spidermonkey/$(MODE)$(VARIANT)
 
 # The objects we link in from spidermonkey
 SM_OBJ := $(wildcard $(SM_SRC)/lib/*.o)
@@ -121,14 +124,16 @@ LD_FLAGS += -L$(BUILD)/openssl/libx32 -lcrypto
 # Default targets ##############################################################
 
 .PHONY: all
-all: $(FSM_SRC)/js-compute-runtime.wasm
-all: $(FSM_SRC)/js-compute-runtime-component.wasm
+all: $(FSM_SRC)/js-compute-runtime$(VARIANT).wasm
+all: $(FSM_SRC)/js-compute-runtime-component$(VARIANT).wasm
 
 # Remove just the build artifacts for the current runtime build.
 .PHONY: clean
 clean:
-	$(call cmd,rm,$(FSM_SRC)/js-compute-runtime.wasm)
-	$(call cmd,rm,$(FSM_SRC)/js-compute-runtime-component.wasm)
+	$(call cmd,rm,$(FSM_SRC)/js-compute-runtime-normal.wasm)
+	$(call cmd,rm,$(FSM_SRC)/js-compute-runtime-component-normal.wasm)
+	$(call cmd,rm,$(FSM_SRC)/js-compute-runtime-weval.wasm)
+	$(call cmd,rm,$(FSM_SRC)/js-compute-runtime-component-weval.wasm)
 	$(call cmd,rmdir,$(BUILD)/release)
 	$(call cmd,rmdir,$(BUILD)/debug)
 
@@ -304,9 +309,9 @@ $(eval $(call compile_cxx,$(FSM_SRC)/fastly-world/fastly_world_adapter.cpp))
 # NOTE: we shadow wasm-opt by adding $(FSM_SRC)/scripts to the path, which
 # includes a script called wasm-opt that immediately exits successfully. See
 # that script for more information about why we do this.
-$(OBJ_DIR)/js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
-$(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/impl/main.o
-$(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/fastly-world/fastly_world_adapter.o
+$(OBJ_DIR)/js-compute-runtime$(VARIANT).wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
+$(OBJ_DIR)/js-compute-runtime$(VARIANT).wasm: $(OBJ_DIR)/impl/main.o
+$(OBJ_DIR)/js-compute-runtime$(VARIANT).wasm: $(OBJ_DIR)/fastly-world/fastly_world_adapter.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
 	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
@@ -324,13 +329,13 @@ $(eval $(call compile_c,$(FSM_SRC)/fastly-world/fastly_world.c))
 # NOTE: we shadow wasm-opt by adding $(FSM_SRC)/scripts to the path, which
 # includes a script called wasm-opt that immediately exits successfully. See
 # that script for more information about why we do this.
-$(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
-$(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/impl/main_component.o
+$(OBJ_DIR)/js-compute-runtime-component$(VARIANT).wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
+$(OBJ_DIR)/js-compute-runtime-component$(VARIANT).wasm: $(OBJ_DIR)/impl/main_component.o
 # NOTE: we don't currently link in the component type object because we
 # explicitly reference fastly.wit when building the component. If this changes,
 # uncommenting this line will link the component type object in.
-# $(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_SRC)/fastly-world/fastly_world_component_type.o
-$(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/fastly-world/fastly_world.o
+# $(OBJ_DIR)/js-compute-runtime-component$(VARIANT).wasm: $(FSM_SRC)/fastly-world/fastly_world_component_type.o
+$(OBJ_DIR)/js-compute-runtime-component$(VARIANT).wasm: $(OBJ_DIR)/fastly-world/fastly_world.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
 	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
@@ -360,12 +365,12 @@ shared/librust_encoding.a: $(RUST_ENCODING_LIB) | shared
 # Without marking them phony, the wasm won't be copied in the last invocation of
 # make, as it will look up-to-date.
 
-.PHONY: $(FSM_SRC)/js-compute-runtime.wasm
-$(FSM_SRC)/js-compute-runtime.wasm: $(OBJ_DIR)/js-compute-runtime.wasm
+.PHONY: $(FSM_SRC)/js-compute-runtime$(VARIANT).wasm
+$(FSM_SRC)/js-compute-runtime$(VARIANT).wasm: $(OBJ_DIR)/js-compute-runtime$(VARIANT).wasm
 	$(call cmd,cp,$@)
 
-.PHONY: $(FSM_SRC)/js-compute-runtime-component.wasm
-$(FSM_SRC)/js-compute-runtime-component.wasm: $(OBJ_DIR)/js-compute-runtime-component.wasm
+.PHONY: $(FSM_SRC)/js-compute-runtime-component$(VARIANT).wasm
+$(FSM_SRC)/js-compute-runtime-component$(VARIANT).wasm: $(OBJ_DIR)/js-compute-runtime-component$(VARIANT).wasm
 	$(call cmd,cp,$@)
 
 

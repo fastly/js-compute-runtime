@@ -8,8 +8,10 @@ export async function parseInputs(cliInputs) {
 
   let component = false;
   let enableExperimentalHighResolutionTimeMethods = false;
+  let enableWeval = false;
   let customEngineSet = false;
-  let wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
+  let wasmEngineBase = join(__dirname, "../js-compute-runtime");
+  let wasmEngine;
   let customInputSet = false;
   let input = join(process.cwd(), "bin/index.js");
   let customOutputSet = false;
@@ -25,6 +27,10 @@ export async function parseInputs(cliInputs) {
         enableExperimentalHighResolutionTimeMethods = true;
         break;
       }
+      case "--enable-weval": {
+        enableWeval = true;
+        break;
+      }
       case "-V":
       case "--version": {
         return { version: true };
@@ -35,7 +41,6 @@ export async function parseInputs(cliInputs) {
       }
       case "--component": {
         component = true;
-        wasmEngine = join(__dirname, "../js-compute-runtime-component.wasm");
         break;
       }
       case "--engine-wasm": {
@@ -93,5 +98,17 @@ export async function parseInputs(cliInputs) {
       }
     }
   }
-  return { wasmEngine, component, input, output, enableExperimentalHighResolutionTimeMethods };
+
+  if (!wasmEngine) {
+    wasmEngine = wasmEngineBase;
+    if (component) {
+      wasmEngine += "-component";
+    }
+    if (enableWeval) {
+      wasmEngine += "-weval.wasm";
+    } else {
+      wasmEngine += "-normal.wasm";
+    }
+  }
+  return { wasmEngine, component, input, output, enableExperimentalHighResolutionTimeMethods, enableWeval };
 }

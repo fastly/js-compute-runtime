@@ -42,7 +42,7 @@ if ! npm run build > "$output" 2>&1; then
   cat "$output"
   exit 1
 fi
-cp js-compute-runtime.wasm "$working_dir"
+cp js-compute-runtime-normal.wasm "$working_dir"/js-compute-runtime.wasm
 
 cd "$working_dir"
 

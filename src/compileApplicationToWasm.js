@@ -4,11 +4,12 @@ import { mkdir, readFile } from "node:fs/promises";
 import { isFile } from "./isFile.js";
 import { isFileOrDoesNotExist } from "./isFileOrDoesNotExist.js";
 import wizer from "@bytecodealliance/wizer";
+import weval from "@cfallin/weval";
 import { precompile } from "./precompile.js";
 import { bundle } from "./bundle.js";
 import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
 
-export async function compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods = false) {
+export async function compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods = false, enableWeval = false) {
   try {
     if (!(await isFile(input))) {
       console.error(
@@ -82,17 +83,8 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
   let application = precompile(contents.outputFiles[0].text);
 
   try {
-    let wizerProcess = spawnSync(
-      wizer,
-      [
-        "--inherit-env=true",
-        "--allow-wasi",
-        `--dir=.`,
-        `--wasm-bulk-memory=true`,
-        "-r _start=wizer.resume",
-        `-o=${output}`,
-        wasmEngine,
-      ],
+    let wizerProcess;
+    let spawnEnv = 
       {
         stdio: [null, process.stdout, process.stderr],
         input: application,
@@ -101,8 +93,35 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
         env: {
           ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS: enableExperimentalHighResolutionTimeMethods ? '1' : '0'
         }
-      }
-    );
+      };
+    if (enableWeval) {
+      let wevalBinary = await weval();  // Lazily fetch the toolchain.
+      wizerProcess = spawnSync(
+        wevalBinary,
+        [
+          "-w",
+          "-o",
+          output,
+          "-i",
+          wasmEngine,
+        ],
+        spawnEnv
+      );
+    } else {
+      wizerProcess = spawnSync(
+        wizer,
+        [
+          "--inherit-env=true",
+          "--allow-wasi",
+          `--dir=.`,
+          `--wasm-bulk-memory=true`,
+          "-r _start=wizer.resume",
+          `-o=${output}`,
+          wasmEngine,
+        ],
+        spawnEnv
+      );
+    }
     if (wizerProcess.status !== 0) {
       throw new Error(`Wizer initialization failure`);
     }
