@@ -6,6 +6,8 @@
 #include "builtins/worker-location.h"
 #include "host_interface/host_api.h"
 
+using namespace std::literals::string_view_literals;
+
 namespace builtins {
 
 namespace {
@@ -77,33 +79,30 @@ JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {
   return Request::create(cx, requestInstance, HttpReq{}, HttpBody{}, true);
 }
 
-bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request,
-                                         fastly_request_t *req) {
+bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request, HttpReq req,
+                                         HttpBody body) {
   MOZ_ASSERT(!Request::request_handle(request).is_valid());
 
   fastly_error_t err;
 
-  fastly_request_handle_t request_handle = req->f0;
-  fastly_body_handle_t body_handle = req->f1;
-
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Request),
-                      JS::Int32Value(request_handle));
+                      JS::Int32Value(req.handle));
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Body),
-                      JS::Int32Value(body_handle));
+                      JS::Int32Value(body.handle));
 
   // Set the method.
-  fastly_world_string_t method_str;
-  if (!fastly_http_req_method_get(request_handle, &method_str, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto res = req.get_method();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  bool is_get = strncmp(method_str.ptr, "GET", method_str.len) == 0;
-  bool is_head = strncmp(method_str.ptr, "HEAD", method_str.len) == 0;
+  auto method_str = std::move(res.unwrap());
+  bool is_get = method_str == "GET"sv;
+  bool is_head = method_str == "HEAD"sv;
 
   if (!is_get) {
-    JS::RootedString method(cx, JS_NewStringCopyN(cx, method_str.ptr, method_str.len));
-    JS_free(cx, method_str.ptr);
+    JS::RootedString method(cx, JS_NewStringCopyN(cx, method_str.ptr.release(), method_str.len));
     if (!method) {
       return false;
     }
@@ -121,7 +120,7 @@ bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request
   }
 
   fastly_world_string_t uri_str;
-  if (!fastly_http_req_uri_get(request_handle, &uri_str, &err)) {
+  if (!fastly_http_req_uri_get(req.handle, &uri_str, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
@@ -423,10 +422,10 @@ JSObject *FetchEvent::create(JSContext *cx) {
 
 JS::HandleObject FetchEvent::instance() { return INSTANCE; }
 
-bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, fastly_request_t *req) {
+bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, HttpReq req, HttpBody body) {
   JS::RootedObject request(
       cx, &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)).toObject());
-  return init_downstream_request(cx, request, req);
+  return init_downstream_request(cx, request, req, body);
 }
 
 bool FetchEvent::is_active(JSObject *self) {

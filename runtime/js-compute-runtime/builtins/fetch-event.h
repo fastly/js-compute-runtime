@@ -3,6 +3,7 @@
 
 #include "builtin.h"
 #include "host_interface/fastly.h"
+#include "host_interface/host_api.h"
 
 namespace builtins {
 
@@ -51,11 +52,11 @@ public:
   /**
    * Fully initialize the Request object based on the incoming request.
    */
-  static bool init_downstream_request(JSContext *cx, JS::HandleObject request,
-                                      fastly_request_t *req);
+  static bool init_downstream_request(JSContext *cx, JS::HandleObject request, HttpReq req,
+                                      HttpBody body);
 
   static bool respondWithError(JSContext *cx, JS::HandleObject self);
-  static bool init_request(JSContext *cx, JS::HandleObject self, fastly_request_t *req);
+  static bool init_request(JSContext *cx, JS::HandleObject self, HttpReq req, HttpBody body);
   static bool is_active(JSObject *self);
   static bool is_dispatching(JSObject *self);
   static void start_dispatching(JSObject *self);
