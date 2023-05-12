@@ -133,6 +133,9 @@ public:
 
   virtual bool is_valid() const = 0;
 
+  /// Get the http version used for this request.
+  virtual Result<fastly_http_version_t> get_version() const = 0;
+
   virtual Result<std::vector<HostString>> get_header_names() = 0;
   virtual Result<std::optional<std::vector<HostString>>>
   get_header_values(std::string_view name) = 0;
@@ -152,7 +155,17 @@ public:
 
   static Result<HttpReq> make();
 
+  /// Get the http version used for this request.
+
+  /// Set the request method.
+  Result<Void> set_method(std::string_view method);
+
+  /// Get the request method.
+  Result<HostString> get_method() const;
+
   bool is_valid() const override;
+
+  Result<fastly_http_version_t> get_version() const override;
 
   Result<std::vector<HostString>> get_header_names() override;
   Result<std::optional<std::vector<HostString>>> get_header_values(std::string_view name) override;
@@ -173,6 +186,8 @@ public:
   static Result<HttpResp> make();
 
   bool is_valid() const override;
+
+  Result<fastly_http_version_t> get_version() const override;
 
   Result<std::vector<HostString>> get_header_names() override;
   Result<std::optional<std::vector<HostString>>> get_header_values(std::string_view name) override;

@@ -21,6 +21,7 @@
 
 #include "builtins/fetch-event.h"
 #include "core/allocator.h"
+#include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
 #include "third_party/wizer.h"
 #ifdef MEM_STATS
@@ -488,8 +489,7 @@ bool js_compute_runtime_serve(js_compute_runtime_request_t *req) {
   js::ResetMathRandomSeed(cx);
 
   HandleObject fetch_event = builtins::FetchEvent::instance();
-  builtins::FetchEvent::init_request(cx, fetch_event,
-                                     static_cast<fastly_request_t *>(static_cast<void *>(req)));
+  builtins::FetchEvent::init_request(cx, fetch_event, HttpReq{req->f0}, HttpBody{req->f1});
 
   dispatch_fetch_event(cx, fetch_event, &total_compute);
 

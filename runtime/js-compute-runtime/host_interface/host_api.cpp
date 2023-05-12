@@ -4,6 +4,17 @@
 #include "fastly-world/fastly_world.h"
 #include "host_interface/host_api.h"
 
+namespace {
+
+fastly_world_string_t string_view_to_world_string(std::string_view str) {
+  return {
+      .ptr = const_cast<char *>(str.data()),
+      .len = str.size(),
+  };
+}
+
+} // namespace
+
 Result<HttpBody> HttpBody::make() {
   Result<HttpBody> res;
 
@@ -121,7 +132,7 @@ Result<std::optional<std::vector<HostString>>> generic_get_header_values(auto ha
                                                                          std::string_view name) {
   Result<std::optional<std::vector<HostString>>> res;
 
-  fastly_world_string_t hdr{const_cast<char *>(name.data()), name.size()};
+  fastly_world_string_t hdr = string_view_to_world_string(name);
   fastly_option_list_string_t ret;
   fastly_error_t err;
   if (!header_values_get(handle, &hdr, &ret, &err)) {
@@ -151,8 +162,8 @@ template <auto header_op>
 Result<Void> generic_header_op(auto handle, std::string_view name, std::string_view value) {
   Result<Void> res;
 
-  fastly_world_string_t hdr{const_cast<char *>(name.data()), name.size()};
-  fastly_world_string_t val{const_cast<char *>(value.data()), value.size()};
+  fastly_world_string_t hdr = string_view_to_world_string(name);
+  fastly_world_string_t val = string_view_to_world_string(value);
   fastly_error_t err;
   if (!header_op(handle, &hdr, &val, &err)) {
     res.emplace_err(err);
@@ -165,7 +176,7 @@ template <auto remove_header>
 Result<Void> generic_header_remove(auto handle, std::string_view name) {
   Result<Void> res;
 
-  fastly_world_string_t hdr{const_cast<char *>(name.data()), name.size()};
+  fastly_world_string_t hdr = string_view_to_world_string(name);
   fastly_error_t err;
   if (!remove_header(handle, &hdr, &err)) {
     res.emplace_err(err);
@@ -190,7 +201,47 @@ Result<HttpReq> HttpReq::make() {
   return res;
 }
 
+Result<Void> HttpReq::set_method(std::string_view method) {
+  Result<Void> res;
+
+  fastly_error_t err;
+  fastly_world_string_t str = string_view_to_world_string(method);
+  if (!fastly_http_req_method_set(this->handle, &str, &err)) {
+    res.emplace_err(err);
+  }
+
+  return res;
+}
+
+Result<HostString> HttpReq::get_method() const {
+  Result<HostString> res;
+
+  fastly_error_t err;
+  fastly_world_string_t ret;
+  if (!fastly_http_req_method_get(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
 bool HttpReq::is_valid() const { return this->handle != HttpReq::invalid; }
+
+Result<fastly_http_version_t> HttpReq::get_version() const {
+  Result<fastly_http_version_t> res;
+
+  fastly_error_t err;
+  fastly_http_version_t ret;
+  if (!fastly_http_req_version_get(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
 
 Result<std::vector<HostString>> HttpReq::get_header_names() {
   return generic_get_header_names<fastly_http_req_header_names_get>(this->handle);
@@ -227,6 +278,20 @@ Result<HttpResp> HttpResp::make() {
 }
 
 bool HttpResp::is_valid() const { return this->handle != HttpResp::invalid; }
+
+Result<fastly_http_version_t> HttpResp::get_version() const {
+  Result<fastly_http_version_t> res;
+
+  fastly_error_t err;
+  fastly_http_version_t ret;
+  if (!fastly_http_resp_version_get(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
 
 Result<std::vector<HostString>> HttpResp::get_header_names() {
   return generic_get_header_names<fastly_http_resp_header_names_get>(this->handle);

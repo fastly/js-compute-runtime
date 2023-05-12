@@ -1217,14 +1217,13 @@ bool Request::url_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Request::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  fastly_error_t err;
-  fastly_http_version_t version = 0;
-  if (!fastly_http_req_version_get(request_handle(self).handle, &version, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto res = request_handle(self).get_version();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  args.rval().setInt32(version);
+  args.rval().setInt32(res.unwrap());
   return true;
 }
 
@@ -1753,10 +1752,9 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     is_get_or_head = strcmp(method.get(), "GET") == 0 || strcmp(method.get(), "HEAD") == 0;
 
     JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::Method), JS::StringValue(method_str));
-    fastly_world_string_t method_fastly_str = {method.get(), method_len};
-    fastly_error_t err;
-    if (!fastly_http_req_method_set(request_handle.handle, &method_fastly_str, &err)) {
-      HANDLE_ERROR(cx, err);
+    auto res = request_handle.set_method(std::string_view{method.get(), method_len});
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
       return nullptr;
     }
   }
@@ -2224,14 +2222,13 @@ bool Response::url_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  fastly_http_version_t version = 0;
-  fastly_error_t err;
-  if (!fastly_http_resp_version_get(response_handle(self).handle, &version, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto res = response_handle(self).get_version();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  args.rval().setInt32(version);
+  args.rval().setInt32(res.unwrap());
   return true;
 }
 
