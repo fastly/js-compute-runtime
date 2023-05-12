@@ -141,7 +141,7 @@ public:
   static bool apply_cache_override(JSContext *cx, JS::HandleObject self);
 
   static HttpReq request_handle(JSObject *obj);
-  static fastly_pending_request_handle_t pending_handle(JSObject *obj);
+  static HttpPendingReq pending_handle(JSObject *obj);
   static bool is_downstream(JSObject *obj);
   static JSString *backend(JSObject *obj);
   static const JSFunctionSpec static_methods[];

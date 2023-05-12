@@ -15,6 +15,41 @@ fastly_world_string_t string_view_to_world_string(std::string_view str) {
 
 } // namespace
 
+Result<bool> AsyncHandle::is_ready() const {
+  Result<bool> res;
+
+  fastly_error_t err;
+  bool ret;
+  if (!fastly_async_io_is_ready(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<std::optional<uint32_t>> AsyncHandle::select(const std::vector<AsyncHandle> &handles,
+                                                    uint32_t timeout_ms) {
+  Result<std::optional<uint32_t>> res;
+
+  static_assert(sizeof(AsyncHandle) == sizeof(fastly_async_handle_t));
+  fastly_list_async_handle_t hs{
+      .ptr = reinterpret_cast<fastly_async_handle_t *>(const_cast<AsyncHandle *>(handles.data())),
+      .len = handles.size()};
+  fastly_option_u32_t ret;
+  fastly_error_t err;
+  if (!fastly_async_io_select(&hs, timeout_ms, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(ret.val);
+  } else {
+    res.emplace(std::nullopt);
+  }
+
+  return res;
+}
+
 Result<HttpBody> HttpBody::make() {
   Result<HttpBody> res;
 
@@ -100,6 +135,8 @@ Result<Void> HttpBody::close() {
 
   return res;
 }
+
+AsyncHandle HttpBody::async_handle() const { return AsyncHandle{this->handle}; }
 
 namespace {
 
@@ -187,6 +224,38 @@ Result<Void> generic_header_remove(auto handle, std::string_view name) {
 
 } // namespace
 
+Result<std::optional<Response>> HttpPendingReq::poll() {
+  Result<std::optional<Response>> res;
+
+  fastly_error_t err;
+  fastly_option_response_t ret;
+  if (!fastly_http_req_pending_req_poll(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(ret.val);
+  } else {
+    res.emplace(std::nullopt);
+  }
+
+  return res;
+}
+
+Result<Response> HttpPendingReq::wait() {
+  Result<Response> res;
+
+  fastly_error_t err;
+  fastly_response_t ret;
+  if (!fastly_http_req_pending_req_wait(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+AsyncHandle HttpPendingReq::async_handle() const { return AsyncHandle{this->handle}; }
+
 Result<HttpReq> HttpReq::make() {
   Result<HttpReq> res;
 
@@ -196,6 +265,51 @@ Result<HttpReq> HttpReq::make() {
     res.emplace_err(err);
   } else {
     res.emplace(handle);
+  }
+
+  return res;
+}
+
+Result<Response> HttpReq::send(HttpBody body, std::string_view backend) {
+  Result<Response> res;
+
+  fastly_error_t err;
+  fastly_response_t ret;
+  fastly_world_string_t backend_str = string_view_to_world_string(backend);
+  if (!fastly_http_req_send(this->handle, body.handle, &backend_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<HttpPendingReq> HttpReq::send_async(HttpBody body, std::string_view backend) {
+  Result<HttpPendingReq> res;
+
+  fastly_error_t err;
+  fastly_pending_request_handle_t ret;
+  fastly_world_string_t backend_str = string_view_to_world_string(backend);
+  if (!fastly_http_req_send_async(this->handle, body.handle, &backend_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<HttpPendingReq> HttpReq::send_async_streaming(HttpBody body, std::string_view backend) {
+  Result<HttpPendingReq> res;
+
+  fastly_error_t err;
+  fastly_pending_request_handle_t ret;
+  fastly_world_string_t backend_str = string_view_to_world_string(backend);
+  if (!fastly_http_req_send_async_streaming(this->handle, body.handle, &backend_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
   }
 
   return res;

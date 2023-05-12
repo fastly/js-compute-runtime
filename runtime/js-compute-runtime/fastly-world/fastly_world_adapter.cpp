@@ -685,7 +685,10 @@ bool fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
     }
     return false;
   }
-  ret->is_some = true;
+
+  // The result is only valid if the timeout didn't expire.
+  ret->is_some = ret->val != UINT32_MAX;
+
   return true;
 }
 bool fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret, fastly_error_t *err) {

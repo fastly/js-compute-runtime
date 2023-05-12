@@ -1063,14 +1063,16 @@ HttpReq Request::request_handle(JSObject *obj) {
       JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::Request)).toInt32());
 }
 
-fastly_pending_request_handle_t Request::pending_handle(JSObject *obj) {
+HttpPendingReq Request::pending_handle(JSObject *obj) {
+  HttpPendingReq res;
+
   JS::Value handle_val =
       JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::PendingRequest));
   if (handle_val.isInt32()) {
-    return handle_val.toInt32();
+    res = HttpPendingReq(handle_val.toInt32());
   }
 
-  return INVALID_HANDLE;
+  return res;
 }
 
 bool Request::is_downstream(JSObject *obj) {
