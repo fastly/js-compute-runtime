@@ -1,6 +1,52 @@
 # Changelog
 
 
+## 2.0.0 (2023-05-15)
+
+
+### Changed
+
+* Object Store renamed to KV Store ([#476](https://github.com/fastly/js-compute-runtime/issues/476))
+
+We have renamed the `ObjectStore` class to `KVStore`, and the module name from `fastly:object-store` to `fastly:kv-store`.
+
+You will need to update your code to use the new class name and module name.
+
+Below is the change that would need to be made for the imported module name:
+```diff
+- import { ObjectStore } from 'fastly:object-store';
++ import { KVStore } from 'fastly:kv-store';
+```
+
+And this is the change that would need to be made for constructing an instance of the class:
+```diff
+- const store = new ObjectStore('my-store');
++ const store = new KVStore('my-store');
+```
+
+
+Here is a full example of migrating an applicatin from ObjectStore to KVStore:
+```diff
+/// <reference types="@fastly/js-compute" />
+
+- import { ObjectStore } from 'fastly:object-store';
++ import { KVStore } from 'fastly:kv-store';
+
+async function app(event) {
+-   const files = new ObjectStore('files');
++   const files = new KVStore('files');
+
+  await files.put('hello', 'world')
+
+  const entry = await files.get('hello')
+
+  return new Response(await entry.text())
+}
+
+addEventListener("fetch", (event) => event.respondWith(app(event)))
+```
+
+
 ## 1.13.0 (2023-05-11)
 
 
