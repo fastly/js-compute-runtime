@@ -1,6 +1,17 @@
 # Changelog
 
 
+## [2.0.0](https://github.com/fastly/js-compute-runtime/compare/v1.13.0...v2.0.0) (2023-05-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* Rename Object Store and related APIs to KV Store ([#476](https://github.com/fastly/js-compute-runtime/issues/476))
+
+### Features
+
+* Rename Object Store and related APIs to KV Store ([#476](https://github.com/fastly/js-compute-runtime/issues/476)) ([01a4729](https://github.com/fastly/js-compute-runtime/commit/01a4729bb4326916eebc6205914dd502671f0af1))
+
 ## 1.13.0 (2023-05-11)
 
 
