@@ -165,6 +165,7 @@ default world fastly-world {
       h2,
       h3
     }
+
     http-req-version-get: func(h: request-handle) -> result<http-version, error>
 
     http-req-version-set: func(h: request-handle, version: http-version) -> result<_, error>
@@ -409,7 +410,7 @@ default world fastly-world {
 
 
     /*
-     * Fastly Object Store
+     * Fastly KV Store
      */
     type fd = u32
     type object-store-handle = u32

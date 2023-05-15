@@ -13,9 +13,9 @@ service_id = ""
 
 
 [local_server]
-  [local_server.object_store]
+  [local_server.kv_stores]
 
-  [[local_server.object_store.example]]
+  [[local_server.kv_stores.example]]
     key = "placeholder"
     data = 'placholder'
 

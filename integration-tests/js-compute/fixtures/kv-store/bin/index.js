@@ -1,5 +1,5 @@
 /* eslint-env serviceworker */
-/* global ReadableStream ObjectStore ObjectStoreEntry */
+/* global ReadableStream KVStore KVStoreEntry */
 import { env } from 'fastly:env';
 import { pass, fail, assert, assertThrows, assertRejects, assertResolves } from "../../../assertions.js";
 
@@ -31,26 +31,26 @@ routes.set('/', () => {
     let test_routes = Array.from(routes.keys())
     return new Response(JSON.stringify(test_routes), { 'headers': { 'content-type': 'application/json' } });
 });
-// ObjectStore
+// KVStore
 {
-    routes.set("/object-store/exposed-as-global", async () => {
-        let error = assert(typeof ObjectStore, 'function', `typeof ObjectStore`)
+    routes.set("/kv-store/exposed-as-global", async () => {
+        let error = assert(typeof KVStore, 'function', `typeof KVStore`)
         if (error) { return error }
         return pass()
     });
-    routes.set("/object-store/interface", objectStoreInterfaceTests);
-    // ObjectStore constructor
+    routes.set("/kv-store/interface", kvStoreInterfaceTests);
+    // KVStore constructor
     {
 
-        routes.set("/object-store/constructor/called-as-regular-function", async () => {
+        routes.set("/kv-store/constructor/called-as-regular-function", async () => {
             let error = assertThrows(() => {
-                ObjectStore()
-            }, TypeError, `calling a builtin ObjectStore constructor without new is forbidden`)
+                KVStore()
+            }, TypeError, `calling a builtin KVStore constructor without new is forbidden`)
             if (error) { return error }
             return pass()
         });
         // https://tc39.es/ecma262/#sec-tostring
-        routes.set("/object-store/constructor/parameter-calls-7.1.17-ToString", async () => {
+        routes.set("/kv-store/constructor/parameter-calls-7.1.17-ToString", async () => {
             let sentinel;
             const test = () => {
                 sentinel = Symbol();
@@ -59,7 +59,7 @@ routes.set('/', () => {
                         throw sentinel;
                     }
                 }
-                new ObjectStore(name)
+                new KVStore(name)
             }
             let error = assertThrows(test)
             if (error) { return error }
@@ -69,31 +69,31 @@ routes.set('/', () => {
                 let error = assert(thrownError, sentinel, 'thrownError === sentinel')
                 if (error) { return error }
             }
-            error = assertThrows(() => new ObjectStore(Symbol()), TypeError, `can't convert symbol to string`)
+            error = assertThrows(() => new KVStore(Symbol()), TypeError, `can't convert symbol to string`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/constructor/empty-parameter", async () => {
+        routes.set("/kv-store/constructor/empty-parameter", async () => {
             let error = assertThrows(() => {
-                new ObjectStore()
-            }, TypeError, `ObjectStore constructor: At least 1 argument required, but only 0 passed`)
+                new KVStore()
+            }, TypeError, `KVStore constructor: At least 1 argument required, but only 0 passed`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/constructor/found-store", async () => {
+        routes.set("/kv-store/constructor/found-store", async () => {
             const store = createValidStore()
-            let error = assert(store instanceof ObjectStore, true, `store instanceof ObjectStore`)
+            let error = assert(store instanceof KVStore, true, `store instanceof KVStore`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/constructor/missing-store", async () => {
+        routes.set("/kv-store/constructor/missing-store", async () => {
             let error = assertThrows(() => {
-                new ObjectStore('missing')
-            }, Error, `ObjectStore constructor: No ObjectStore named 'missing' exists`)
+                new KVStore('missing')
+            }, Error, `KVStore constructor: No KVStore named 'missing' exists`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/constructor/invalid-name", async () => {
+        routes.set("/kv-store/constructor/invalid-name", async () => {
             // control Characters (\\u0000-\\u001F) are not allowed
             const controlCharacters = [
                 '\u0000', '\u0001', '\u0002', '\u0003', '\u0004', '\u0005',
@@ -105,44 +105,44 @@ routes.set('/', () => {
             ];
             for (const character of controlCharacters) {
                 let error = assertThrows(() => {
-                    new ObjectStore(character)
-                }, TypeError, `ObjectStore constructor: name can not contain control characters (\\u0000-\\u001F)`)
+                    new KVStore(character)
+                }, TypeError, `KVStore constructor: name can not contain control characters (\\u0000-\\u001F)`)
                 if (error) { return error }
             }
 
             // must be less than 256 characters
             let error = assertThrows(() => {
-                new ObjectStore('1'.repeat(256))
-            }, TypeError, `ObjectStore constructor: name can not be more than 255 characters`)
+                new KVStore('1'.repeat(256))
+            }, TypeError, `KVStore constructor: name can not be more than 255 characters`)
             if (error) { return error }
 
             // empty string not allowed
             error = assertThrows(() => {
-                new ObjectStore('')
-            }, TypeError, `ObjectStore constructor: name can not be an empty string`)
+                new KVStore('')
+            }, TypeError, `KVStore constructor: name can not be an empty string`)
             if (error) { return error }
             return pass()
         });
     }
-    // ObjectStore put method
+    // KVStore put method
     {
 
-        routes.set("/object-store/put/called-as-constructor", async () => {
+        routes.set("/kv-store/put/called-as-constructor", async () => {
             let error = assertThrows(() => {
-                new ObjectStore.prototype.put('1', '1')
-            }, TypeError, `ObjectStore.prototype.put is not a constructor`)
+                new KVStore.prototype.put('1', '1')
+            }, TypeError, `KVStore.prototype.put is not a constructor`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/called-unbound", async () => {
+        routes.set("/kv-store/put/called-unbound", async () => {
             let error = assertThrows(() => {
-                ObjectStore.prototype.put.call(undefined, '1', '2')
-            }, TypeError, "Method put called on receiver that's not an instance of ObjectStore")
+                KVStore.prototype.put.call(undefined, '1', '2')
+            }, TypeError, "Method put called on receiver that's not an instance of KVStore")
             if (error) { return error }
             return pass()
         });
         // https://tc39.es/ecma262/#sec-tostring
-        routes.set("/object-store/put/key-parameter-calls-7.1.17-ToString", async () => {
+        routes.set("/kv-store/put/key-parameter-calls-7.1.17-ToString", async () => {
             let sentinel;
             const test = async () => {
                 sentinel = Symbol();
@@ -169,7 +169,7 @@ routes.set('/', () => {
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/key-parameter-not-supplied", async () => {
+        routes.set("/kv-store/put/key-parameter-not-supplied", async () => {
             let error = await assertRejects(async () => {
                 const store = createValidStore()
                 await store.put()
@@ -177,15 +177,15 @@ routes.set('/', () => {
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/key-parameter-empty-string", async () => {
+        routes.set("/kv-store/put/key-parameter-empty-string", async () => {
             let error = await assertRejects(async () => {
                 const store = createValidStore()
                 await store.put('', '')
-            }, TypeError, `ObjectStore key can not be an empty string`)
+            }, TypeError, `KVStore key can not be an empty string`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/key-parameter-1024-character-string", async () => {
+        routes.set("/kv-store/put/key-parameter-1024-character-string", async () => {
             let error = await assertResolves(async () => {
                 const store = createValidStore()
                 const key = 'a'.repeat(1024)
@@ -194,67 +194,67 @@ routes.set('/', () => {
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/key-parameter-1025-character-string", async () => {
+        routes.set("/kv-store/put/key-parameter-1025-character-string", async () => {
             let error = await assertRejects(async () => {
                 const store = createValidStore()
                 const key = 'a'.repeat(1025)
                 await store.put(key, '')
-            }, TypeError, `ObjectStore key can not be more than 1024 characters`)
+            }, TypeError, `KVStore key can not be more than 1024 characters`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/key-parameter-containing-newline", async () => {
+        routes.set("/kv-store/put/key-parameter-containing-newline", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
                 await store.put('\n', '')
-            }, TypeError, `ObjectStore key can not contain newline character`)
+            }, TypeError, `KVStore key can not contain newline character`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/key-parameter-containing-carriage-return", async () => {
+        routes.set("/kv-store/put/key-parameter-containing-carriage-return", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
                 await store.put('\r', '')
-            }, TypeError, `ObjectStore key can not contain carriage return character`)
+            }, TypeError, `KVStore key can not contain carriage return character`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/key-parameter-starting-with-well-known-acme-challenge", async () => {
+        routes.set("/kv-store/put/key-parameter-starting-with-well-known-acme-challenge", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
                 await store.put('.well-known/acme-challenge/', '')
-            }, TypeError, `ObjectStore key can not start with .well-known/acme-challenge/`)
+            }, TypeError, `KVStore key can not start with .well-known/acme-challenge/`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/key-parameter-single-dot", async () => {
+        routes.set("/kv-store/put/key-parameter-single-dot", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
                 await store.put('.', '')
-            }, TypeError, `ObjectStore key can not be '.' or '..'`)
+            }, TypeError, `KVStore key can not be '.' or '..'`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/key-parameter-double-dot", async () => {
+        routes.set("/kv-store/put/key-parameter-double-dot", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
                 await store.put('..', '')
-            }, TypeError, `ObjectStore key can not be '.' or '..'`)
+            }, TypeError, `KVStore key can not be '.' or '..'`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/key-parameter-containing-special-characters", async () => {
+        routes.set("/kv-store/put/key-parameter-containing-special-characters", async () => {
             const specialCharacters = ['[', ']', '*', '?', '#'];
             for (const character of specialCharacters) {
                 let error = await assertRejects(async () => {
                     let store = createValidStore()
                     await store.put(character, '')
-                }, TypeError, `ObjectStore key can not contain ${character} character`)
+                }, TypeError, `KVStore key can not contain ${character} character`)
                 if (error) { return error }
             }
             return pass()
         });
-        routes.set("/object-store/put/value-parameter-as-undefined", async () => {
+        routes.set("/kv-store/put/value-parameter-as-undefined", async () => {
             const store = createValidStore()
             let result = store.put("undefined", undefined)
             let error = assert(result instanceof Promise, true, 'store.put("undefined", undefined) instanceof Promise')
@@ -263,7 +263,7 @@ routes.set('/', () => {
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/value-parameter-not-supplied", async () => {
+        routes.set("/kv-store/put/value-parameter-not-supplied", async () => {
             let error = await assertRejects(async () => {
                 const store = createValidStore()
                 await store.put("test")
@@ -272,13 +272,13 @@ routes.set('/', () => {
             return pass()
         });
         // - ReadableStream
-        routes.set("/object-store/put/value-parameter-readablestream-empty", async () => {
+        routes.set("/kv-store/put/value-parameter-readablestream-empty", async () => {
             // TODO: remove this when streams are supported
             let error = await assertRejects(async () => {
                 const stream = iteratableToStream([])
                 const store = createValidStore()
                 await store.put('readablestream-empty', stream)
-            }, TypeError, `Content-provided streams are not yet supported for streaming into ObjectStore`)
+            }, TypeError, `Content-provided streams are not yet supported for streaming into KVStore`)
             if (error) { return error }
             return pass()
             // TODO: uncomment this when conte-provided (guest) streams are supported
@@ -291,7 +291,7 @@ routes.set('/', () => {
             // if (error) { return error }
             // return pass()
         });
-        routes.set("/object-store/put/value-parameter-readablestream-under-30mb", async () => {
+        routes.set("/kv-store/put/value-parameter-readablestream-under-30mb", async () => {
             const res = await fetch('https://compute-sdk-test-backend.edgecompute.app/', {
                 backend: "TheOrigin",
             })
@@ -303,13 +303,13 @@ routes.set('/', () => {
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/put/value-parameter-readablestream-over-30mb", async () => {
+        routes.set("/kv-store/put/value-parameter-readablestream-over-30mb", async () => {
             // TODO: remove this when streams are supported
             let error = await assertRejects(async () => {
                 const stream = iteratableToStream(['x'.repeat(30 * 1024 * 1024) + 'x'])
                 const store = createValidStore()
                 await store.put('readablestream-over-30mb', stream)
-            }, Error, `Content-provided streams are not yet supported for streaming into ObjectStore`)
+            }, Error, `Content-provided streams are not yet supported for streaming into KVStore`)
             if (error) { return error }
             return pass()
             // TODO: uncomment this when conte-provided (guest) streams are supported
@@ -322,7 +322,7 @@ routes.set('/', () => {
             // if (error) { return error }
             // return pass()
         });
-        routes.set("/object-store/put/value-parameter-readablestream-locked", async () => {
+        routes.set("/kv-store/put/value-parameter-readablestream-locked", async () => {
             const stream = iteratableToStream([])
             // getReader() causes the stream to become locked
             stream.getReader()
@@ -336,7 +336,7 @@ routes.set('/', () => {
         });
 
         // - URLSearchParams
-        routes.set("/object-store/put/value-parameter-URLSearchParams", async () => {
+        routes.set("/kv-store/put/value-parameter-URLSearchParams", async () => {
             const items = [
                 new URLSearchParams,
                 new URLSearchParams({ a: 'b', c: 'd' }),
@@ -352,7 +352,7 @@ routes.set('/', () => {
             return pass()
         });
         // - USV strings
-        routes.set("/object-store/put/value-parameter-strings", async () => {
+        routes.set("/kv-store/put/value-parameter-strings", async () => {
             const strings = [
                 // empty
                 '',
@@ -373,16 +373,16 @@ routes.set('/', () => {
             return pass()
         });
 
-        routes.set("/object-store/put/value-parameter-string-over-30mb", async () => {
+        routes.set("/kv-store/put/value-parameter-string-over-30mb", async () => {
             const string = 'x'.repeat(35 * 1024 * 1024) + 'x'
             const store = createValidStore()
-            let error = await assertRejects(() => store.put('string-over-30mb', string), TypeError, `ObjectStore value can not be more than 30 Megabytes in size`)
+            let error = await assertRejects(() => store.put('string-over-30mb', string), TypeError, `KVStore value can not be more than 30 Megabytes in size`)
             if (error) { return error }
             return pass()
         });
 
         // https://tc39.es/ecma262/#sec-tostring
-        routes.set("/object-store/put/value-parameter-calls-7.1.17-ToString", async () => {
+        routes.set("/kv-store/put/value-parameter-calls-7.1.17-ToString", async () => {
             let sentinel;
             const test = async () => {
                 sentinel = Symbol();
@@ -411,7 +411,7 @@ routes.set('/', () => {
         });
 
         // - buffer source
-        routes.set("/object-store/put/value-parameter-buffer", async () => {
+        routes.set("/kv-store/put/value-parameter-buffer", async () => {
             const typedArrayConstructors = [
                 Int8Array,
                 Int16Array,
@@ -436,7 +436,7 @@ routes.set('/', () => {
             }
             return pass()
         });
-        routes.set("/object-store/put/value-parameter-arraybuffer", async () => {
+        routes.set("/kv-store/put/value-parameter-arraybuffer", async () => {
             const typedArrayConstructors = [
                 Int8Array,
                 Int16Array,
@@ -461,7 +461,7 @@ routes.set('/', () => {
             }
             return pass()
         });
-        routes.set("/object-store/put/value-parameter-typed-arrays", async () => {
+        routes.set("/kv-store/put/value-parameter-typed-arrays", async () => {
             const typedArrayConstructors = [
                 Int8Array,
                 Int16Array,
@@ -486,7 +486,7 @@ routes.set('/', () => {
             }
             return pass()
         });
-        routes.set("/object-store/put/value-parameter-dataview", async () => {
+        routes.set("/kv-store/put/value-parameter-dataview", async () => {
             const typedArrayConstructors = [
                 Int8Array,
                 Uint8Array,
@@ -514,24 +514,24 @@ routes.set('/', () => {
         });
     }
 
-    // ObjectStore get method
+    // KVStore get method
     {
-        routes.set("/object-store/get/called-as-constructor", async () => {
+        routes.set("/kv-store/get/called-as-constructor", async () => {
             let error = assertThrows(() => {
-                new ObjectStore.prototype.get('1')
-            }, TypeError, `ObjectStore.prototype.get is not a constructor`)
+                new KVStore.prototype.get('1')
+            }, TypeError, `KVStore.prototype.get is not a constructor`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/called-unbound", async () => {
+        routes.set("/kv-store/get/called-unbound", async () => {
             let error = await assertRejects(async () => {
-                await ObjectStore.prototype.get.call(undefined, '1')
-            }, TypeError, "Method get called on receiver that's not an instance of ObjectStore")
+                await KVStore.prototype.get.call(undefined, '1')
+            }, TypeError, "Method get called on receiver that's not an instance of KVStore")
             if (error) { return error }
             return pass()
         });
         // https://tc39.es/ecma262/#sec-tostring
-        routes.set("/object-store/get/key-parameter-calls-7.1.17-ToString", async () => {
+        routes.set("/kv-store/get/key-parameter-calls-7.1.17-ToString", async () => {
             let sentinel;
             const test = async () => {
                 sentinel = Symbol();
@@ -558,7 +558,7 @@ routes.set('/', () => {
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/key-parameter-not-supplied", async () => {
+        routes.set("/kv-store/get/key-parameter-not-supplied", async () => {
             let error = await assertRejects(async () => {
                 const store = createValidStore()
                 await store.get()
@@ -566,15 +566,15 @@ routes.set('/', () => {
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/key-parameter-empty-string", async () => {
+        routes.set("/kv-store/get/key-parameter-empty-string", async () => {
             let error = await assertRejects(async () => {
                 const store = createValidStore()
                 await store.get('')
-            }, TypeError, `ObjectStore key can not be an empty string`)
+            }, TypeError, `KVStore key can not be an empty string`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/key-parameter-1024-character-string", async () => {
+        routes.set("/kv-store/get/key-parameter-1024-character-string", async () => {
             let error = await assertResolves(async () => {
                 const store = createValidStore()
                 const key = 'a'.repeat(1024)
@@ -583,67 +583,67 @@ routes.set('/', () => {
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/key-parameter-1025-character-string", async () => {
+        routes.set("/kv-store/get/key-parameter-1025-character-string", async () => {
             let error = await assertRejects(async () => {
                 const store = createValidStore()
                 const key = 'a'.repeat(1025)
                 await store.get(key)
-            }, TypeError, `ObjectStore key can not be more than 1024 characters`)
+            }, TypeError, `KVStore key can not be more than 1024 characters`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/key-parameter-containing-newline", async () => {
+        routes.set("/kv-store/get/key-parameter-containing-newline", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
                 await store.get('\n')
-            }, TypeError, `ObjectStore key can not contain newline character`)
+            }, TypeError, `KVStore key can not contain newline character`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/key-parameter-containing-carriage-return", async () => {
+        routes.set("/kv-store/get/key-parameter-containing-carriage-return", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
                 await store.get('\r')
-            }, TypeError, `ObjectStore key can not contain carriage return character`)
+            }, TypeError, `KVStore key can not contain carriage return character`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/key-parameter-starting-with-well-known-acme-challenge", async () => {
+        routes.set("/kv-store/get/key-parameter-starting-with-well-known-acme-challenge", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
                 await store.get('.well-known/acme-challenge/')
-            }, TypeError, `ObjectStore key can not start with .well-known/acme-challenge/`)
+            }, TypeError, `KVStore key can not start with .well-known/acme-challenge/`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/key-parameter-single-dot", async () => {
+        routes.set("/kv-store/get/key-parameter-single-dot", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
                 await store.get('.')
-            }, TypeError, `ObjectStore key can not be '.' or '..'`)
+            }, TypeError, `KVStore key can not be '.' or '..'`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/key-parameter-double-dot", async () => {
+        routes.set("/kv-store/get/key-parameter-double-dot", async () => {
             let error = await assertRejects(async () => {
                 let store = createValidStore()
                 await store.get('..')
-            }, TypeError, `ObjectStore key can not be '.' or '..'`)
+            }, TypeError, `KVStore key can not be '.' or '..'`)
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/key-parameter-containing-special-characters", async () => {
+        routes.set("/kv-store/get/key-parameter-containing-special-characters", async () => {
             const specialCharacters = ['[', ']', '*', '?', '#'];
             for (const character of specialCharacters) {
                 let error = await assertRejects(async () => {
                     let store = createValidStore()
                     await store.get(character)
-                }, TypeError, `ObjectStore key can not contain ${character} character`)
+                }, TypeError, `KVStore key can not contain ${character} character`)
                 if (error) { return error }
             }
             return pass()
         });
-        routes.set("/object-store/get/key-does-not-exist-returns-null", async () => {
+        routes.set("/kv-store/get/key-does-not-exist-returns-null", async () => {
             let store = createValidStore()
             let result = store.get(Math.random())
             let error = assert(result instanceof Promise, true, `store.get(Math.random()) instanceof Promise`)
@@ -652,7 +652,7 @@ routes.set('/', () => {
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/key-does-not-exist-returns-null", async () => {
+        routes.set("/kv-store/get/key-does-not-exist-returns-null", async () => {
             let store = createValidStore()
             let result = store.get(Math.random())
             let error = assert(result instanceof Promise, true, `store.get(Math.random()) instanceof Promise`)
@@ -661,7 +661,7 @@ routes.set('/', () => {
             if (error) { return error }
             return pass()
         });
-        routes.set("/object-store/get/key-exists", async () => {
+        routes.set("/kv-store/get/key-exists", async () => {
             let store = createValidStore()
             let key = `key-exists-${Math.random()}`;
             await store.put(key, 'hello')
@@ -669,18 +669,18 @@ routes.set('/', () => {
             let error = assert(result instanceof Promise, true, `store.get(key) instanceof Promise`)
             if (error) { return error }
             result = await result
-            error = assert(result instanceof ObjectStoreEntry, true, `(await store.get(key) instanceof ObjectStoreEntry)`)
+            error = assert(result instanceof KVStoreEntry, true, `(await store.get(key) instanceof KVStoreEntry)`)
             if (error) { return error }
             return pass()
         });
     }
 }
-// ObjectStoreEntry
+// KVStoreEntry
 {
-    routes.set("/object-store-entry/interface", async () => {
-        return objectStoreEntryInterfaceTests()
+    routes.set("/kv-store-entry/interface", async () => {
+        return kvStoreEntryInterfaceTests()
     });
-    routes.set("/object-store-entry/text/valid", async () => {
+    routes.set("/kv-store-entry/text/valid", async () => {
         let store = createValidStore()
         let key = `entry-text-valid`;
         await store.put(key, 'hello')
@@ -693,7 +693,7 @@ routes.set('/', () => {
         if (error) { return error }
         return pass()
     });
-    routes.set("/object-store-entry/json/valid", async () => {
+    routes.set("/kv-store-entry/json/valid", async () => {
         let store = createValidStore()
         let key = `entry-json-valid`;
         const obj = { a: 1, b: 2, c: 3 }
@@ -707,7 +707,7 @@ routes.set('/', () => {
         if (error) { return error }
         return pass()
     });
-    routes.set("/object-store-entry/json/invalid", async () => {
+    routes.set("/kv-store-entry/json/invalid", async () => {
         let store = createValidStore()
         let key = `entry-json-invalid`;
         await store.put(key, "132abc;['-=9")
@@ -716,7 +716,7 @@ routes.set('/', () => {
         if (error) { return error }
         return pass()
     });
-    routes.set("/object-store-entry/arrayBuffer/valid", async () => {
+    routes.set("/kv-store-entry/arrayBuffer/valid", async () => {
         let store = createValidStore()
         let key = `entry-arraybuffer-valid`;
         await store.put(key, new Int8Array([0, 1, 2, 3]))
@@ -730,7 +730,7 @@ routes.set('/', () => {
         return pass()
     });
 
-    routes.set("/object-store-entry/body", async () => {
+    routes.set("/kv-store-entry/body", async () => {
         let store = createValidStore()
         let key = `entry-body`;
         await store.put(key, 'body body body')
@@ -743,7 +743,7 @@ routes.set('/', () => {
         if (error) { return error }
         return pass()
     });
-    routes.set("/object-store-entry/bodyUsed", async () => {
+    routes.set("/kv-store-entry/bodyUsed", async () => {
         let store = createValidStore()
         let key = `entry-bodyUsed`;
         await store.put(key, 'body body body')
@@ -756,301 +756,301 @@ routes.set('/', () => {
         return pass()
     });
 }
-async function objectStoreEntryInterfaceTests() {
-    let actual = Reflect.ownKeys(ObjectStoreEntry)
+async function kvStoreEntryInterfaceTests() {
+    let actual = Reflect.ownKeys(KVStoreEntry)
     let expected = ["prototype", "length", "name"]
-    let error = assert(actual, expected, `Reflect.ownKeys(ObjectStoreEntry)`)
+    let error = assert(actual, expected, `Reflect.ownKeys(KVStoreEntry)`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry, 'prototype')
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'prototype')
     expected = {
-        "value": ObjectStoreEntry.prototype,
+        "value": KVStoreEntry.prototype,
         "writable": false,
         "enumerable": false,
         "configurable": false
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry, 'prototype')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'prototype')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry, 'length')
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'length')
     expected = {
         "value": 0,
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry, 'length')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'length')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry, 'name')
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'name')
     expected = {
-        "value": "ObjectStoreEntry",
+        "value": "KVStoreEntry",
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry, 'name')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'name')`)
     if (error) { return error }
 
-    actual = Reflect.ownKeys(ObjectStoreEntry.prototype)
+    actual = Reflect.ownKeys(KVStoreEntry.prototype)
     expected = ["constructor", "body", "bodyUsed", "arrayBuffer", "json", "text"]
-    error = assert(actual, expected, `Reflect.ownKeys(ObjectStoreEntry.prototype)`)
+    error = assert(actual, expected, `Reflect.ownKeys(KVStoreEntry.prototype)`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'constructor')
-    expected = { "writable": true, "enumerable": false, "configurable": true, value: ObjectStoreEntry.prototype.constructor }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'constructor')`)
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'constructor')
+    expected = { "writable": true, "enumerable": false, "configurable": true, value: KVStoreEntry.prototype.constructor }
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'constructor')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'text')
-    expected = { "writable": true, "enumerable": true, "configurable": true, value: ObjectStoreEntry.prototype.text }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'text')`)
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'text')
+    expected = { "writable": true, "enumerable": true, "configurable": true, value: KVStoreEntry.prototype.text }
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'text')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'json')
-    expected = { "writable": true, "enumerable": true, "configurable": true, value: ObjectStoreEntry.prototype.json }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'json')`)
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'json')
+    expected = { "writable": true, "enumerable": true, "configurable": true, value: KVStoreEntry.prototype.json }
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'json')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'arrayBuffer')
-    expected = { "writable": true, "enumerable": true, "configurable": true, value: ObjectStoreEntry.prototype.arrayBuffer }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'arrayBuffer')`)
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'arrayBuffer')
+    expected = { "writable": true, "enumerable": true, "configurable": true, value: KVStoreEntry.prototype.arrayBuffer }
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'arrayBuffer')`)
     if (error) { return error }
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'body')
-    error = assert(actual.enumerable, true, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'body').enumerable`)
-    error = assert(actual.configurable, true, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'body').configurable`)
-    error = assert('set' in actual, true, `'set' in Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'body')`)
-    error = assert(actual.set, undefined, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'body').set`)
-    error = assert(typeof actual.get, 'function', `typeof Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'body').get`)
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'body')
+    error = assert(actual.enumerable, true, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'body').enumerable`)
+    error = assert(actual.configurable, true, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'body').configurable`)
+    error = assert('set' in actual, true, `'set' in Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'body')`)
+    error = assert(actual.set, undefined, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'body').set`)
+    error = assert(typeof actual.get, 'function', `typeof Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'body').get`)
     if (error) { return error }
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'bodyUsed')
-    error = assert(actual.enumerable, true, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'bodyUsed').enumerable`)
-    error = assert(actual.configurable, true, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'bodyUsed').configurable`)
-    error = assert('set' in actual, true, `'set' in Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'bodyUsed')`)
-    error = assert(actual.set, undefined, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'bodyUsed').set`)
-    error = assert(typeof actual.get, 'function', `typeof Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype, 'bodyUsed').get`)
-    if (error) { return error }
-
-    error = assert(typeof ObjectStoreEntry.prototype.constructor, 'function', `typeof ObjectStoreEntry.prototype.constructor`)
-    if (error) { return error }
-    error = assert(typeof ObjectStoreEntry.prototype.text, 'function', `typeof ObjectStoreEntry.prototype.text`)
-    if (error) { return error }
-    error = assert(typeof ObjectStoreEntry.prototype.json, 'function', `typeof ObjectStoreEntry.prototype.json`)
-    if (error) { return error }
-    error = assert(typeof ObjectStoreEntry.prototype.arrayBuffer, 'function', `typeof ObjectStoreEntry.prototype.arrayBuffer`)
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'bodyUsed')
+    error = assert(actual.enumerable, true, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'bodyUsed').enumerable`)
+    error = assert(actual.configurable, true, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'bodyUsed').configurable`)
+    error = assert('set' in actual, true, `'set' in Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'bodyUsed')`)
+    error = assert(actual.set, undefined, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'bodyUsed').set`)
+    error = assert(typeof actual.get, 'function', `typeof Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'bodyUsed').get`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.constructor, 'length')
+    error = assert(typeof KVStoreEntry.prototype.constructor, 'function', `typeof KVStoreEntry.prototype.constructor`)
+    if (error) { return error }
+    error = assert(typeof KVStoreEntry.prototype.text, 'function', `typeof KVStoreEntry.prototype.text`)
+    if (error) { return error }
+    error = assert(typeof KVStoreEntry.prototype.json, 'function', `typeof KVStoreEntry.prototype.json`)
+    if (error) { return error }
+    error = assert(typeof KVStoreEntry.prototype.arrayBuffer, 'function', `typeof KVStoreEntry.prototype.arrayBuffer`)
+    if (error) { return error }
+
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.constructor, 'length')
     expected = {
         "value": 0,
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.constructor, 'length')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.constructor, 'length')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.constructor, 'name')
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.constructor, 'name')
     expected = {
-        "value": "ObjectStoreEntry",
+        "value": "KVStoreEntry",
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.constructor, 'name')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.constructor, 'name')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.text, 'length')
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.text, 'length')
     expected = {
         "value": 0,
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.text, 'length')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.text, 'length')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.text, 'name')
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.text, 'name')
     expected = {
         "value": "text",
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.text, 'name')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.text, 'name')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.json, 'length')
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.json, 'length')
     expected = {
         "value": 0,
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.json, 'length')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.json, 'length')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.json, 'name')
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.json, 'name')
     expected = {
         "value": "json",
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.json, 'name')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.json, 'name')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.arrayBuffer, 'length')
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.arrayBuffer, 'length')
     expected = {
         "value": 0,
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.arrayBuffer, 'length')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.arrayBuffer, 'length')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.arrayBuffer, 'name')
+    actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.arrayBuffer, 'name')
     expected = {
         "value": "arrayBuffer",
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStoreEntry.prototype.arrayBuffer, 'name')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.arrayBuffer, 'name')`)
     if (error) { return error }
 
     return pass()
 }
 
-async function objectStoreInterfaceTests() {
-    let actual = Reflect.ownKeys(ObjectStore)
+async function kvStoreInterfaceTests() {
+    let actual = Reflect.ownKeys(KVStore)
     let expected = ["prototype", "length", "name"]
-    let error = assert(actual, expected, `Reflect.ownKeys(ObjectStore)`)
+    let error = assert(actual, expected, `Reflect.ownKeys(KVStore)`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore, 'prototype')
+    actual = Reflect.getOwnPropertyDescriptor(KVStore, 'prototype')
     expected = {
-        "value": ObjectStore.prototype,
+        "value": KVStore.prototype,
         "writable": false,
         "enumerable": false,
         "configurable": false
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore, 'prototype')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore, 'prototype')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore, 'length')
+    actual = Reflect.getOwnPropertyDescriptor(KVStore, 'length')
     expected = {
         "value": 1,
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore, 'length')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore, 'length')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore, 'name')
+    actual = Reflect.getOwnPropertyDescriptor(KVStore, 'name')
     expected = {
-        "value": "ObjectStore",
+        "value": "KVStore",
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore, 'name')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore, 'name')`)
     if (error) { return error }
 
-    actual = Reflect.ownKeys(ObjectStore.prototype)
+    actual = Reflect.ownKeys(KVStore.prototype)
     expected = ["constructor", "get", "put"]
-    error = assert(actual, expected, `Reflect.ownKeys(ObjectStore.prototype)`)
+    error = assert(actual, expected, `Reflect.ownKeys(KVStore.prototype)`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype, 'constructor')
-    expected = { "writable": true, "enumerable": false, "configurable": true, value: ObjectStore.prototype.constructor }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype, 'constructor')`)
+    actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'constructor')
+    expected = { "writable": true, "enumerable": false, "configurable": true, value: KVStore.prototype.constructor }
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'constructor')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype, 'get')
-    expected = { "writable": true, "enumerable": true, "configurable": true, value: ObjectStore.prototype.get }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype, 'get')`)
+    actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'get')
+    expected = { "writable": true, "enumerable": true, "configurable": true, value: KVStore.prototype.get }
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'get')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype, 'put')
-    expected = { "writable": true, "enumerable": true, "configurable": true, value: ObjectStore.prototype.put }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype, 'put')`)
+    actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'put')
+    expected = { "writable": true, "enumerable": true, "configurable": true, value: KVStore.prototype.put }
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'put')`)
     if (error) { return error }
 
-    error = assert(typeof ObjectStore.prototype.constructor, 'function', `typeof ObjectStore.prototype.constructor`)
+    error = assert(typeof KVStore.prototype.constructor, 'function', `typeof KVStore.prototype.constructor`)
     if (error) { return error }
-    error = assert(typeof ObjectStore.prototype.get, 'function', `typeof ObjectStore.prototype.get`)
+    error = assert(typeof KVStore.prototype.get, 'function', `typeof KVStore.prototype.get`)
     if (error) { return error }
-    error = assert(typeof ObjectStore.prototype.put, 'function', `typeof ObjectStore.prototype.put`)
+    error = assert(typeof KVStore.prototype.put, 'function', `typeof KVStore.prototype.put`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.constructor, 'length')
+    actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype.constructor, 'length')
     expected = {
         "value": 1,
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.constructor, 'length')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype.constructor, 'length')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.constructor, 'name')
+    actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype.constructor, 'name')
     expected = {
-        "value": "ObjectStore",
+        "value": "KVStore",
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.constructor, 'name')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype.constructor, 'name')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.get, 'length')
+    actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype.get, 'length')
     expected = {
         "value": 1,
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.get, 'length')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype.get, 'length')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.get, 'name')
+    actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype.get, 'name')
     expected = {
         "value": "get",
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.get, 'name')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype.get, 'name')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.put, 'length')
+    actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype.put, 'length')
     expected = {
         "value": 1,
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.put, 'length')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype.put, 'length')`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.put, 'name')
+    actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype.put, 'name')
     expected = {
         "value": "put",
         "writable": false,
         "enumerable": false,
         "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(ObjectStore.prototype.put, 'name')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype.put, 'name')`)
     if (error) { return error }
 
     return pass()
 }
 
 function createValidStore() {
-    return new ObjectStore('example-test-object-store')
+    return new KVStore('example-test-kv-store')
 }
 
 function iteratableToStream(iterable) {

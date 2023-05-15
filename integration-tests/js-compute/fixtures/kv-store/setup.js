@@ -24,6 +24,7 @@ zx.verbose = true;
 
 let stores = await (async function() {
     try {
+        // TODO: update this to the kv api when it is ready
         let response = await fetch("https://api.fastly.com/resources/stores/object", {
             method: 'GET',
             headers: {
@@ -38,7 +39,7 @@ let stores = await (async function() {
     }
 }())
 
-let STORE_ID = stores.data.find(({ name }) => name === 'example-test-object-store')?.id
+let STORE_ID = stores.data.find(({ name }) => name === 'example-test-kv-store')?.id
 if (!STORE_ID) {
     STORE_ID = await fetch("https://api.fastly.com/resources/stores/object", {
         method: 'POST',
@@ -47,7 +48,7 @@ if (!STORE_ID) {
             Accept: "application/json",
             "Fastly-Key": FASTLY_API_TOKEN
         },
-        body: '{"name":"example-test-object-store"}'
+        body: '{"name":"example-test-kv-store"}'
     })
     STORE_ID = (await STORE_ID.json()).id
 }
@@ -64,7 +65,7 @@ await fetch(`https://api.fastly.com/service/${SERVICE_ID}/version/${VERSION}/res
         Accept: "application/json",
         "Fastly-Key": FASTLY_API_TOKEN
     },
-    body: `name=example-test-object-store&resource_id=${STORE_ID}`
+    body: `name=example-test-kv-store&resource_id=${STORE_ID}`
 })
 await $`fastly service-version activate --version=${VERSION} --quiet --token $FASTLY_API_TOKEN`
 

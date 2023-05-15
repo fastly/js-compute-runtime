@@ -13,4 +13,4 @@ service_id = "1B3wrEgiLdTaCjsmK5Jq25"
 
 [local_server]
 
-[local_server.object_store]
+[local_server.kv_stores]

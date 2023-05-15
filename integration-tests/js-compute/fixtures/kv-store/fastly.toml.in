@@ -5,16 +5,17 @@ authors = ["me@jakechampion.name"]
 description = ""
 language = "other"
 manifest_version = 2
-name = "object-store"
+name = "kv-store"
 service_id = ""
 
 [scripts]
   build = "node ../../../../js-compute-runtime-cli.js"
 
 [local_server]
-  [local_server.object_store]
+  # TODO: update this to the kv api when it is ready
+  [local_server.kv_stores]
 
-  [[local_server.object_store.example-test-object-store]]
+  [[local_server.kv_stores.example-test-kv-store]]
   key = "placeholder"
   data = 'placholder'
 

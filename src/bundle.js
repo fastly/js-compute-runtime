@@ -34,7 +34,7 @@ export const allowDynamicBackends = Object.getOwnPropertyDescriptor(globalThis.f
         }
         case 'geolocation': { return { contents: `export const getGeolocationForIpAddress = globalThis.fastly.getGeolocationForIpAddress;` } }
         case 'logger': { return { contents: `export const Logger = globalThis.Logger;` } }
-        case 'object-store': { return { contents: `export const ObjectStore = globalThis.ObjectStore;` } }
+        case 'kv-store': { return { contents: `export const KVStore = globalThis.KVStore;` } }
         case 'secret-store': { return { contents: `export const SecretStore = globalThis.SecretStore;export const SecretStoreEntry = globalThis.SecretStoreEntry;` } }
       }
     })

@@ -1,7 +1,6 @@
 /* eslint-env serviceworker */
-/* global ReadableStream ObjectStore ObjectStoreEntry */
 import { env } from 'fastly:env';
-import { pass, fail, assert, assertThrows, assertRejects, assertResolves } from "../../../assertions.js";
+import { pass, fail, assertRejects } from "../../../assertions.js";
 
 addEventListener("fetch", event => {
     event.respondWith(app(event))

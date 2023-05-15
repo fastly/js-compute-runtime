@@ -4,8 +4,8 @@
 #include "builtins/client-info.h"
 #include "builtins/fastly.h"
 #include "builtins/fetch-event.h"
+#include "builtins/kv-store.h"
 #include "builtins/native-stream-source.h"
-#include "builtins/object-store.h"
 #include "builtins/shared/url.h"
 #include "builtins/transform-stream.h"
 #include "host_interface/host_api.h"
@@ -119,8 +119,7 @@ bool enqueue_internal_method(JSContext *cx, JS::HandleObject receiver,
 } // namespace
 
 bool RequestOrResponse::is_instance(JSObject *obj) {
-  return Request::is_instance(obj) || Response::is_instance(obj) ||
-         ObjectStoreEntry::is_instance(obj);
+  return Request::is_instance(obj) || Response::is_instance(obj) || KVStoreEntry::is_instance(obj);
 }
 
 uint32_t RequestOrResponse::handle(JSObject *obj) {

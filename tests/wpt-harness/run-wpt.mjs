@@ -313,7 +313,7 @@ async function startViceroy(runtime, config, logLevel) {
   if (logLevel > LogLevel.Quiet) {
     console.info(`Starting Viceroy server ...`);
   }
-  let viceroy = execFile("viceroy", [runtime, "-C", config]);
+  let viceroy = execFile("viceroy", [runtime, "-C", config, "-v"]);
   viceroy.on("error", event => {
     console.error(`error starting Viceroy: ${event}`);
     process.exit(1);

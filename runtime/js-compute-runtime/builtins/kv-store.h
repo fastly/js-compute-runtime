@@ -1,5 +1,5 @@
-#ifndef JS_COMPUTE_RUNTIME_OBJECT_STORE_H
-#define JS_COMPUTE_RUNTIME_OBJECT_STORE_H
+#ifndef JS_COMPUTE_RUNTIME_KV_STORE_H
+#define JS_COMPUTE_RUNTIME_KV_STORE_H
 
 #include "builtin.h"
 #include "builtins/request-response.h"
@@ -7,14 +7,14 @@
 
 namespace builtins {
 
-class ObjectStoreEntry final : public BuiltinImpl<ObjectStoreEntry> {
+class KVStoreEntry final : public BuiltinImpl<KVStoreEntry> {
   template <RequestOrResponse::BodyReadResult result_type>
   static bool bodyAll(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool body_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
-  static constexpr const char *class_name = "ObjectStoreEntry";
+  static constexpr const char *class_name = "KVStoreEntry";
 
   using Slots = RequestOrResponse::Slots;
   static const JSFunctionSpec static_methods[];
@@ -29,14 +29,14 @@ public:
   static JSObject *create(JSContext *cx, fastly_body_handle_t body_handle);
 };
 
-class ObjectStore final : public BuiltinImpl<ObjectStore> {
+class KVStore final : public BuiltinImpl<KVStore> {
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool put(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
-  static constexpr const char *class_name = "ObjectStore";
+  static constexpr const char *class_name = "KVStore";
   enum class Slots {
-    ObjectStore,
+    KVStore,
     Count,
   };
   static const JSFunctionSpec static_methods[];

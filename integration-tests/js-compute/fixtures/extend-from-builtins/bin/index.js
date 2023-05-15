@@ -2,7 +2,7 @@
 /* global TransformStream CompressionStream */
 import {Dictionary} from 'fastly:dictionary';
 import {CacheOverride} from 'fastly:cache-override';
-import {ObjectStore} from 'fastly:object-store';
+import {KVStore} from 'fastly:kv-store';
 const builtins = [
   TransformStream,
   CompressionStream,
@@ -15,7 +15,7 @@ const builtins = [
   TextDecoder,
   URL,
   URLSearchParams,
-  ObjectStore,
+  KVStore,
 ];
 
 addEventListener("fetch", (event) => {
@@ -32,7 +32,7 @@ addEventListener("fetch", (event) => {
             break;
           }
           case "Dictionary":
-          case "ObjectStore": {
+          case "KVStore": {
             super("example");
             break;
           }

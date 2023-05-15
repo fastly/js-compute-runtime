@@ -38,7 +38,6 @@ routes.set("/createFanoutHandoff", async () => {
   if (error) { return error }
 
   // https://tc39.es/ecma262/#sec-tostring
-  // routes.set("/object-store/get/key-parameter-calls-7.1.17-ToString", async () => {
   let sentinel;
   const test = () => {
     sentinel = Symbol();
