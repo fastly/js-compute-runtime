@@ -25,7 +25,7 @@ And this is the change that would need to be made for constructing an instance o
 ```
 
 
-Here is a full example of migrating an applicatin from ObjectStore to KVStore:
+Here is a full example of migrating an application from ObjectStore to KVStore:
 ```diff
 /// <reference types="@fastly/js-compute" />
 
