@@ -18,7 +18,7 @@ to pull down or update submodules.
 
 To build from source, you need to ensure that the headers and object files for the [SpiderMonkey JavaScript engine](https://spidermonkey.dev/) are available. It's recommended to download pre-built object files:
 ```sh
-(cd runtime/spidermonkey && sh download-engine.sh)
+(cd runtime/spidermonkey && bash download-engine.sh)
 ```
 
 
