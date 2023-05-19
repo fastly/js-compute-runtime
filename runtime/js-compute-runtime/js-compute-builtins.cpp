@@ -1105,24 +1105,17 @@ static bool init(JSContext *cx, HandleObject global) {
 
 bool has_pending_async_tasks() { return pending_async_tasks->length() > 0 || !timers->empty(); }
 
-bool process_body_read(JSContext *cx, HandleObject streamSource);
-
-bool process_pending_request(JSContext *cx, HandleObject request) {
-
-  fastly_response_t ret = {INVALID_HANDLE, INVALID_HANDLE};
-  fastly_error_t err;
-  bool ok =
-      fastly_http_req_pending_req_wait(builtins::Request::pending_handle(request), &ret, &err);
-  HttpResp response_handle{ret.f0};
-  HttpBody body{ret.f1};
+bool process_pending_request(JSContext *cx, HandleObject request, HttpPendingReq pending) {
 
   RootedObject response_promise(cx, builtins::Request::response_promise(request));
 
-  if (!ok) {
+  auto res = pending.wait();
+  if (auto *err = res.to_err()) {
     JS_ReportErrorUTF8(cx, "NetworkError when attempting to fetch resource.");
     return RejectPromiseWithPendingError(cx, response_promise);
   }
 
+  auto [response_handle, body] = res.unwrap();
   RootedObject response_instance(cx, JS_NewObjectWithGivenProto(cx, &builtins::Response::class_,
                                                                 builtins::Response::proto_obj));
   if (!response_instance) {
@@ -1154,11 +1147,10 @@ bool error_stream_controller_with_pending_exception(JSContext *cx, HandleObject 
   return JS::Call(cx, controller, "error", args, &r);
 }
 
-bool process_body_read(JSContext *cx, HandleObject streamSource) {
+bool process_body_read(JSContext *cx, HandleObject streamSource, HttpBody body) {
   RootedObject owner(cx, builtins::NativeStreamSource::owner(streamSource));
   RootedObject controller(cx, builtins::NativeStreamSource::controller(streamSource));
 
-  HttpBody body{builtins::RequestOrResponse::body_handle(owner)};
   auto read_res = body.read(HANDLE_READ_CHUNK_SIZE);
   if (auto *err = read_res.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -1210,62 +1202,60 @@ bool process_pending_async_tasks(JSContext *cx) {
       return timers->run_first_timer(cx);
     }
 
-    timeout = uint32_t(diff);
+    timeout = diff;
+    MOZ_ASSERT(timeout > 0);
   }
 
   size_t count = pending_async_tasks->length();
-  auto handles =
-      mozilla::MakeUnique<fastly_async_handle_t[]>(sizeof(fastly_async_handle_t) * count);
-  if (!handles) {
-    return false;
-  }
+  std::vector<AsyncHandle> handles;
+  handles.reserve(count);
 
   for (size_t i = 0; i < count; i++) {
     HandleObject pending_obj = (*pending_async_tasks)[i];
     if (builtins::Request::is_instance(pending_obj)) {
-      handles[i] = builtins::Request::pending_handle(pending_obj);
+      handles.push_back(builtins::Request::pending_handle(pending_obj).async_handle());
     } else {
       MOZ_ASSERT(builtins::NativeStreamSource::is_instance(pending_obj));
       RootedObject owner(cx, builtins::NativeStreamSource::owner(pending_obj));
-      handles[i] = builtins::RequestOrResponse::body_handle(owner).handle;
+      handles.push_back(builtins::RequestOrResponse::body_handle(owner).async_handle());
     }
   }
 
-  fastly_list_async_handle_t handle_list = {handles.get(), count};
-
-  fastly_option_u32_t ret;
-  fastly_error_t err;
-  if (!fastly_async_io_select(&handle_list, timeout, &ret, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto res = AsyncHandle::select(handles, timeout);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  if (!ret.is_some) {
+  auto ret = res.unwrap();
+  if (!ret.has_value()) {
+    // The only path that leads us to the timeout expiring is if there were timers to run, otherwise
+    // the timeout would have been set to `0` and we would have waited until an async handle was
+    // ready.
     MOZ_ASSERT(!timers->empty());
     return timers->run_first_timer(cx);
   }
 
-  uint32_t ready_index = ret.val;
-
-  if (ready_index == UINT32_MAX) {
-    // The index will be UINT32_MAX if the timeout expires before any objects are ready for I/O.
-    return true;
-  }
+  // At this point we know that handles is not empty, and that ready_index is valid, both because
+  // the timeout wasn't reached. If handles was empty and timeout was zero, we would have errored
+  // out after the call to `select`. If the timeout was non-zero and handles was empty, the timeout
+  // would expire and we would exit through the path that runs the first timer.
+  auto ready_index = ret.value();
+  auto ready_handle = handles[ready_index];
 
 #ifdef DEBUG
-  bool is_ready = 0;
-  MOZ_ASSERT(fastly_async_io_is_ready(handles[ready_index], &is_ready, &err));
-  MOZ_ASSERT(is_ready);
+  auto is_ready = ready_handle.is_ready();
+  MOZ_ASSERT(!is_ready.is_err());
+  MOZ_ASSERT(is_ready.unwrap());
 #endif
 
-  HandleObject ready_obj = (*pending_async_tasks)[ready_index];
-
   bool ok;
+  HandleObject ready_obj = (*pending_async_tasks)[ready_index];
   if (builtins::Request::is_instance(ready_obj)) {
-    ok = process_pending_request(cx, ready_obj);
+    ok = process_pending_request(cx, ready_obj, HttpPendingReq{ready_handle});
   } else {
     MOZ_ASSERT(builtins::NativeStreamSource::is_instance(ready_obj));
-    ok = process_body_read(cx, ready_obj);
+    ok = process_body_read(cx, ready_obj, HttpBody{ready_handle});
   }
 
   pending_async_tasks->erase(const_cast<JSObject **>(ready_obj.address()));

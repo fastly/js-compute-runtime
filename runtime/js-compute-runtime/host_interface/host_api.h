@@ -90,6 +90,33 @@ struct HostString final {
   operator std::string_view() { return std::string_view(this->ptr.get(), this->len); }
 };
 
+/// Common methods for async handles.
+class AsyncHandle {
+public:
+  static constexpr fastly_async_handle_t invalid = UINT32_MAX - 1;
+
+  fastly_async_handle_t handle;
+
+  AsyncHandle() = default;
+  explicit AsyncHandle(fastly_async_handle_t handle) : handle{handle} {}
+
+  /// Check to see if this handle is ready.
+  Result<bool> is_ready() const;
+
+  /// Return the index in handles of the `AsyncHandle` that's ready. If the select call finishes
+  /// successfully and returns `std::nullopt`, the timeout has expired.
+  ///
+  /// If the timeout is `0`, two behaviors are possible
+  ///   * if handles is empty, an error will be returned immediately
+  ///   * otherwise, block until a handle is ready and return its index
+  ///
+  /// If the timeout is non-zero, two behaviors are possible
+  ///   * no handle becomes ready within timeout, and the successful `std::nullopt` is returned
+  ///   * a handle becomes ready within the timeout, and its index is returned.
+  static Result<std::optional<uint32_t>> select(const std::vector<AsyncHandle> &handles,
+                                                uint32_t timeout_ms);
+};
+
 /// A convenience wrapper for the host calls involving http bodies.
 class HttpBody final {
 public:
@@ -101,6 +128,7 @@ public:
 
   HttpBody() = default;
   explicit HttpBody(fastly_body_handle_t handle) : handle{handle} {}
+  explicit HttpBody(AsyncHandle async) : handle{async.handle} {}
 
   /// Returns true when this body handle is valid.
   bool valid() const { return this->handle != invalid; }
@@ -125,6 +153,30 @@ public:
 
   /// Close this handle, and reset internal state to invalid.
   Result<Void> close();
+
+  AsyncHandle async_handle() const;
+};
+
+struct Response;
+
+class HttpPendingReq final {
+public:
+  static constexpr fastly_pending_request_handle_t invalid = UINT32_MAX - 1;
+
+  fastly_pending_request_handle_t handle = invalid;
+
+  HttpPendingReq() = default;
+  explicit HttpPendingReq(fastly_pending_request_handle_t handle) : handle{handle} {}
+  explicit HttpPendingReq(AsyncHandle async) : handle{async.handle} {}
+
+  /// Poll for the response to this request.
+  Result<std::optional<Response>> poll();
+
+  /// Block until the response is ready.
+  Result<Response> wait();
+
+  /// Fetch the AsyncHandle for this pending request.
+  AsyncHandle async_handle() const;
 };
 
 class HttpBase {
@@ -154,6 +206,15 @@ public:
   explicit HttpReq(fastly_request_handle_t handle) : handle{handle} {}
 
   static Result<HttpReq> make();
+
+  /// Send this request synchronously, and wait for the response.
+  Result<Response> send(HttpBody body, std::string_view backend);
+
+  /// Send this request asynchronously.
+  Result<HttpPendingReq> send_async(HttpBody body, std::string_view backend);
+
+  /// Send this request asynchronously, and allow sending additional data through the body.
+  Result<HttpPendingReq> send_async_streaming(HttpBody body, std::string_view backend);
 
   /// Get the http version used for this request.
 
@@ -194,6 +255,15 @@ public:
   Result<Void> insert_header(std::string_view name, std::string_view value) override;
   Result<Void> append_header(std::string_view name, std::string_view value) override;
   Result<Void> remove_header(std::string_view name) override;
+};
+
+/// The pair of a response and its body.
+struct Response {
+  HttpResp resp;
+  HttpBody body;
+
+  Response() = default;
+  explicit Response(fastly_response_t resp) : resp{HttpResp{resp.f0}}, body{HttpBody{resp.f1}} {}
 };
 
 #endif
