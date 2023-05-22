@@ -270,6 +270,20 @@ Result<HttpReq> HttpReq::make() {
   return res;
 }
 
+Result<Void> HttpReq::redirect_to_grip_proxy(std::string_view backend) {
+  Result<Void> res;
+
+  fastly_error_t err;
+  fastly_world_string_t backend_str = string_view_to_world_string(backend);
+  if (!fastly_http_req_redirect_to_grip_proxy(&backend_str, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
 Result<Response> HttpReq::send(HttpBody body, std::string_view backend) {
   Result<Response> res;
 
@@ -341,6 +355,65 @@ Result<HostString> HttpReq::get_method() const {
   return res;
 }
 
+Result<Void> HttpReq::set_uri(std::string_view str) {
+  Result<Void> res;
+
+  fastly_error_t err;
+  fastly_world_string_t uri = string_view_to_world_string(str);
+  if (!fastly_http_req_uri_set(this->handle, &uri, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
+Result<HostString> HttpReq::get_uri() const {
+  Result<HostString> res;
+
+  fastly_error_t err;
+  fastly_world_string_t uri;
+  if (!fastly_http_req_uri_get(this->handle, &uri, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(uri);
+  }
+
+  return res;
+}
+
+Result<Void> HttpReq::cache_override(fastly_http_cache_override_tag_t tag,
+                                     std::optional<uint32_t> opt_ttl,
+                                     std::optional<uint32_t> opt_swr,
+                                     std::optional<std::string_view> opt_sk) {
+  Result<Void> res;
+
+  uint32_t *ttl = nullptr;
+  if (opt_ttl.has_value()) {
+    ttl = &opt_ttl.value();
+  }
+
+  uint32_t *swr = nullptr;
+  if (opt_swr.has_value()) {
+    swr = &opt_swr.value();
+  }
+
+  fastly_world_string_t sk{nullptr, 0};
+  if (opt_sk.has_value()) {
+    sk = string_view_to_world_string(opt_sk.value());
+  }
+
+  fastly_error_t err;
+  if (!fastly_http_req_cache_override_set(this->handle, tag, ttl, swr, &sk, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
 bool HttpReq::is_valid() const { return this->handle != HttpReq::invalid; }
 
 Result<fastly_http_version_t> HttpReq::get_version() const {
@@ -386,6 +459,46 @@ Result<HttpResp> HttpResp::make() {
     res.emplace_err(err);
   } else {
     res.emplace(handle);
+  }
+
+  return res;
+}
+
+Result<uint16_t> HttpResp::get_status() const {
+  Result<uint16_t> res;
+
+  fastly_http_status_t ret;
+  fastly_error_t err;
+  if (!fastly_http_resp_status_get(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<Void> HttpResp::set_status(uint16_t status) {
+  Result<Void> res;
+
+  fastly_error_t err;
+  if (!fastly_http_resp_status_set(this->handle, status, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
+Result<Void> HttpResp::send_downstream(HttpBody body, bool streaming) {
+  Result<Void> res;
+
+  fastly_error_t err;
+  if (!fastly_http_resp_send_downstream(this->handle, body.handle, streaming, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
   }
 
   return res;

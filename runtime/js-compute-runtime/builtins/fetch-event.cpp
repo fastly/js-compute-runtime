@@ -83,8 +83,6 @@ bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request
                                          HttpBody body) {
   MOZ_ASSERT(!Request::request_handle(request).is_valid());
 
-  fastly_error_t err;
-
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Request),
                       JS::Int32Value(req.handle));
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Body),
@@ -119,15 +117,15 @@ bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request
     JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::HasBody), JS::TrueValue());
   }
 
-  fastly_world_string_t uri_str;
-  if (!fastly_http_req_uri_get(req.handle, &uri_str, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto uri_res = req.get_uri();
+  if (auto *err = uri_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  JS::RootedString url(cx, JS_NewStringCopyN(cx, uri_str.ptr, uri_str.len));
+  auto uri_str = std::move(uri_res.unwrap());
+  JS::RootedString url(cx, JS_NewStringCopyN(cx, uri_str.ptr.get(), uri_str.len));
   if (!url) {
-    JS_free(cx, uri_str.ptr);
     return false;
   }
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::URL), JS::StringValue(url));
@@ -136,13 +134,11 @@ bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request
   JS::RootedObject url_instance(
       cx, JS_NewObjectWithGivenProto(cx, &builtins::URL::class_, builtins::URL::proto_obj));
   if (!url_instance) {
-    JS_free(cx, uri_str.ptr);
     return false;
   }
 
-  jsurl::SpecString spec(reinterpret_cast<uint8_t *>(uri_str.ptr), uri_str.len, uri_str.len);
+  jsurl::SpecString spec(reinterpret_cast<uint8_t *>(uri_str.ptr.get()), uri_str.len, uri_str.len);
   builtins::WorkerLocation::url = builtins::URL::create(cx, url_instance, spec);
-  JS_free(cx, uri_str.ptr);
   if (!builtins::WorkerLocation::url) {
     return false;
   }
@@ -178,9 +174,9 @@ bool start_response(JSContext *cx, JS::HandleObject response_obj, bool streaming
   auto response = Response::response_handle(response_obj);
   auto body = RequestOrResponse::body_handle(response_obj);
 
-  fastly_error_t err;
-  if (!fastly_http_resp_send_downstream(response.handle, body.handle, streaming, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto res = response.send_downstream(body, streaming);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
   return true;
@@ -224,13 +220,10 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   bool streaming = false;
   if (Response::is_grip_upgrade(response_obj)) {
     std::string backend(Response::grip_backend(response_obj));
-    fastly_world_string_t backend_str;
-    backend_str.len = backend.length();
-    backend_str.ptr = backend.data();
 
-    fastly_error_t err;
-    if (!fastly_http_req_redirect_to_grip_proxy(&backend_str, &err)) {
-      HANDLE_ERROR(cx, err);
+    auto res = HttpReq::redirect_to_grip_proxy(backend);
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
       return false;
     }
     return true;
@@ -313,11 +306,10 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
   MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
   set_state(self, State::responsedWithError);
-  fastly_response_handle_t response = INVALID_HANDLE;
-  fastly_error_t err;
 
-  if (!fastly_http_resp_new(&response, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto response_res = HttpResp::make();
+  if (auto *err = response_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
@@ -327,12 +319,19 @@ bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
     return false;
   }
 
-  auto body = make_res.unwrap();
-  if (!fastly_http_resp_status_set(response, 500, &err) ||
-      !fastly_http_resp_send_downstream(response, body.handle, false, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto response = response_res.unwrap();
+  auto status_res = response.set_status(500);
+  if (auto *err = status_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
+
+  auto send_res = response.send_downstream(make_res.unwrap(), false);
+  if (auto *err = send_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
   return true;
 }
 
