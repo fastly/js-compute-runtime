@@ -33,10 +33,17 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bytecodealliance/jco@^0.6.1":
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/@bytecodealliance/jco/-/jco-0.6.1.tgz#29f972a5ad5d8b6790ea692c4e0f4c4fa851ead1"
-  integrity sha512-AchbXV361SDG51Bk+OKgU1qLm/3th7ncNrBBQHMgncqM7xiONCM5E3regxj+LSnK07dNgdSAnbjwT5MI4QsyDw==
+"@bytecodealliance/jco@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/jco/-/jco-0.7.0.tgz#c48ad88877d5c80054a7bbb13329a47b0ee9ba2d"
+  integrity sha512-YPqmvNHfcmDUMz2TC7LEYramGiKhMLjbHaZ2kqEtOrAOSOiFmkDXAyJLHp7j8QzBbotOhZDrvdKrAGlxiQZigQ==
+  dependencies:
+    "@bytecodealliance/preview2-shim" "0.0.8"
+
+"@bytecodealliance/preview2-shim@0.0.8":
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/preview2-shim/-/preview2-shim-0.0.8.tgz#8ee11d18b29105b64d2ceac2410cd9215c4b887d"
+  integrity sha512-yeY8wHpCBlRlHCU4YzvGn41z3UV9svDE7Z3OkEyU5TbzJiy1S9mMB3R43d2YE/f6rPLRZyE141TDDyPf6zdcWQ==
 
 "@bytecodealliance/wizer-darwin-arm64@1.6.1-beta.4":
   version "1.6.1-beta.4"
