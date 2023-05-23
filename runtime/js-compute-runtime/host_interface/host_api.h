@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <string>
 #include <string_view>
 #include <variant>
 #include <vector>
@@ -88,7 +89,7 @@ struct HostString final {
   const char *end() const { return this->begin() + this->len; }
 
   /// Conversion to a `std::string_view`.
-  operator std::string_view() { return std::string_view(this->ptr.get(), this->len); }
+  operator std::string_view() const { return std::string_view(this->ptr.get(), this->len); }
 };
 
 /// Common methods for async handles.
@@ -197,6 +198,20 @@ public:
   virtual Result<Void> remove_header(std::string_view name) = 0;
 };
 
+struct BackendConfig {
+  std::optional<HostString> host_override;
+  std::optional<uint32_t> connect_timeout;
+  std::optional<uint32_t> first_byte_timeout;
+  std::optional<uint32_t> between_bytes_timeout;
+  std::optional<bool> use_ssl;
+  std::optional<fastly_tls_version_t> ssl_min_version;
+  std::optional<fastly_tls_version_t> ssl_max_version;
+  std::optional<HostString> cert_hostname;
+  std::optional<HostString> ca_cert;
+  std::optional<HostString> ciphers;
+  std::optional<HostString> sni_hostname;
+};
+
 class HttpReq final : public HttpBase {
 public:
   static constexpr fastly_request_handle_t invalid = UINT32_MAX - 1;
@@ -209,6 +224,9 @@ public:
   static Result<HttpReq> make();
 
   static Result<Void> redirect_to_grip_proxy(std::string_view backend);
+
+  static Result<Void> register_dynamic_backend(std::string_view name, std::string_view target,
+                                               const BackendConfig &config);
 
   /// Send this request synchronously, and wait for the response.
   Result<Response> send(HttpBody body, std::string_view backend);
@@ -293,7 +311,6 @@ class GeoIp final {
   ~GeoIp() = delete;
 
 public:
-
   /// Lookup information about the ip address provided.
   static Result<HostString> lookup(std::span<uint8_t> bytes);
 };

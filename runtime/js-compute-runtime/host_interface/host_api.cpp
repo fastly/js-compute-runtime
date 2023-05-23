@@ -284,6 +284,80 @@ Result<Void> HttpReq::redirect_to_grip_proxy(std::string_view backend) {
   return res;
 }
 
+Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::string_view target,
+                                               const BackendConfig &config) {
+  Result<Void> res;
+
+  fastly_dynamic_backend_config_t backend_config;
+  memset(&backend_config, 0, sizeof(backend_config));
+
+  if (auto &val = config.host_override) {
+    backend_config.host_override.is_some = true;
+    backend_config.host_override.val = string_view_to_world_string(*val);
+  }
+
+  if (auto &val = config.connect_timeout) {
+    backend_config.connect_timeout.is_some = true;
+    backend_config.connect_timeout.val = *val;
+  }
+
+  if (auto &val = config.first_byte_timeout) {
+    backend_config.first_byte_timeout.is_some = true;
+    backend_config.first_byte_timeout.val = *val;
+  }
+
+  if (auto &val = config.between_bytes_timeout) {
+    backend_config.between_bytes_timeout.is_some = true;
+    backend_config.between_bytes_timeout.val = *val;
+  }
+
+  if (auto &val = config.use_ssl) {
+    backend_config.use_ssl.is_some = true;
+    backend_config.use_ssl.val = *val;
+  }
+
+  if (auto &val = config.ssl_min_version) {
+    backend_config.ssl_min_version.is_some = true;
+    backend_config.ssl_min_version.val = *val;
+  }
+
+  if (auto &val = config.ssl_max_version) {
+    backend_config.ssl_max_version.is_some = true;
+    backend_config.ssl_max_version.val = *val;
+  }
+
+  if (auto &val = config.cert_hostname) {
+    backend_config.cert_hostname.is_some = true;
+    backend_config.cert_hostname.val = string_view_to_world_string(*val);
+  }
+
+  if (auto &val = config.ca_cert) {
+    backend_config.ca_cert.is_some = true;
+    backend_config.ca_cert.val = string_view_to_world_string(*val);
+  }
+
+  if (auto &val = config.ciphers) {
+    backend_config.ciphers.is_some = true;
+    backend_config.ciphers.val = string_view_to_world_string(*val);
+  }
+
+  if (auto &val = config.sni_hostname) {
+    backend_config.sni_hostname.is_some = true;
+    backend_config.sni_hostname.val = string_view_to_world_string(*val);
+  }
+
+  auto name_str = string_view_to_world_string(name);
+  auto target_str = string_view_to_world_string(target);
+  fastly_error_t err;
+  if (!fastly_http_req_register_dynamic_backend(&name_str, &target_str, &backend_config, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
 Result<Response> HttpReq::send(HttpBody body, std::string_view backend) {
   Result<Response> res;
 
