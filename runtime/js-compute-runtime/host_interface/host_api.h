@@ -315,4 +315,16 @@ public:
   static Result<HostString> lookup(std::span<uint8_t> bytes);
 };
 
+class LogEndpoint final {
+public:
+  fastly_log_endpoint_handle_t handle = UINT32_MAX - 1;
+
+  LogEndpoint() = default;
+  explicit LogEndpoint(fastly_log_endpoint_handle_t handle) : handle{handle} {}
+
+  static Result<LogEndpoint> get(std::string_view name);
+
+  Result<Void> write(std::string_view msg);
+};
+
 #endif

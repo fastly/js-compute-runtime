@@ -628,3 +628,32 @@ Result<HostString> GeoIp::lookup(std::span<uint8_t> bytes) {
 
   return res;
 }
+
+Result<LogEndpoint> LogEndpoint::get(std::string_view name) {
+  Result<LogEndpoint> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_log_endpoint_handle_t handle;
+  fastly_error_t err;
+  if (!fastly_log_endpoint_get(&name_str, &handle, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(LogEndpoint{handle});
+  }
+
+  return res;
+}
+
+Result<Void> LogEndpoint::write(std::string_view msg) {
+  Result<Void> res;
+
+  auto msg_str = string_view_to_world_string(msg);
+  fastly_error_t err;
+  if (!fastly_log_write(this->handle, &msg_str, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
