@@ -488,6 +488,20 @@ Result<Void> HttpReq::cache_override(fastly_http_cache_override_tag_t tag,
   return res;
 }
 
+Result<HostBytes> HttpReq::downstream_client_ip_addr() {
+  Result<HostBytes> res;
+
+  fastly_world_list_u8_t octets;
+  fastly_error_t err;
+  if (!fastly_http_req_downstream_client_ip_addr(&octets, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(octets);
+  }
+
+  return res;
+}
+
 bool HttpReq::is_valid() const { return this->handle != HttpReq::invalid; }
 
 Result<fastly_http_version_t> HttpReq::get_version() const {

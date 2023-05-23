@@ -11,6 +11,7 @@
 
 #include "core/allocator.h"
 #include "fastly-world/fastly_world.h"
+#include "host_interface/host_call.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
@@ -79,17 +80,40 @@ struct HostString final {
   HostString(JS::UniqueChars ptr, size_t len) : ptr{std::move(ptr)}, len{len} {}
 
   using iterator = char *;
+  using const_iterator = const char *;
 
   size_t size() const { return this->len; }
 
-  char *begin() { return this->ptr.get(); }
-  char *end() { return this->begin() + this->len; }
+  iterator begin() { return this->ptr.get(); }
+  iterator end() { return this->begin() + this->len; }
 
-  const char *begin() const { return this->ptr.get(); }
-  const char *end() const { return this->begin() + this->len; }
+  const_iterator begin() const { return this->ptr.get(); }
+  const_iterator end() const { return this->begin() + this->len; }
 
   /// Conversion to a `std::string_view`.
   operator std::string_view() const { return std::string_view(this->ptr.get(), this->len); }
+};
+
+struct HostBytes final {
+  std::unique_ptr<uint8_t[]> ptr;
+  size_t len;
+
+  HostBytes() = default;
+  explicit HostBytes(fastly_world_list_u8_t bytes) : ptr{bytes.ptr}, len{bytes.len} {}
+
+  using iterator = uint8_t *;
+  using const_iterator = const uint8_t *;
+
+  size_t size() const { return this->len; }
+
+  iterator begin() { return this->ptr.get(); }
+  iterator end() { return this->begin() + this->len; }
+
+  const_iterator begin() const { return this->ptr.get(); }
+  const_iterator end() const { return this->begin() + this->len; }
+
+  /// Converstion to a `std::span<uint8_t>`.
+  operator std::span<uint8_t>() const { return std::span{this->ptr.get(), this->len}; }
 };
 
 /// Common methods for async handles.
@@ -227,6 +251,9 @@ public:
 
   static Result<Void> register_dynamic_backend(std::string_view name, std::string_view target,
                                                const BackendConfig &config);
+
+  /// Get the downstream ip address.
+  static Result<HostBytes> downstream_client_ip_addr();
 
   /// Send this request synchronously, and wait for the response.
   Result<Response> send(HttpBody body, std::string_view backend);
