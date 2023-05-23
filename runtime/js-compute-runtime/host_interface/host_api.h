@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <optional>
+#include <span>
 #include <string_view>
 #include <variant>
 #include <vector>
@@ -286,6 +287,15 @@ struct Response {
 
   Response() = default;
   explicit Response(fastly_response_t resp) : resp{HttpResp{resp.f0}}, body{HttpBody{resp.f1}} {}
+};
+
+class GeoIp final {
+  ~GeoIp() = delete;
+
+public:
+
+  /// Lookup information about the ip address provided.
+  static Result<HostString> lookup(std::span<uint8_t> bytes);
 };
 
 #endif

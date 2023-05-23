@@ -539,3 +539,18 @@ Result<Void> HttpResp::append_header(std::string_view name, std::string_view val
 Result<Void> HttpResp::remove_header(std::string_view name) {
   return generic_header_remove<fastly_http_resp_header_remove>(this->handle, name);
 }
+
+Result<HostString> GeoIp::lookup(std::span<uint8_t> bytes) {
+  Result<HostString> res;
+
+  fastly_world_list_u8_t octets_list{const_cast<uint8_t *>(bytes.data()), bytes.size()};
+  fastly_world_string_t ret;
+  fastly_error_t err;
+  if (!fastly_geo_lookup(&octets_list, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
