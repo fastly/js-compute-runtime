@@ -467,7 +467,7 @@ static void wait_for_backends(JSContext *cx, double *total_compute) {
     printf("Done, waited for %fms\n", diff / 1000);
 }
 
-bool js_compute_runtime_serve(js_compute_runtime_request_t *req) {
+bool compute_at_edge_serve(compute_at_edge_request_t *req) {
   assert(hasWizeningFinished());
   // fprintf(stderr, "js.wasm must be initialized with a JS source file using
   // Wizer\n");

@@ -33,7 +33,7 @@ bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  fastly_option_string_t ret;
+  fastly_world_option_string_t ret;
   fastly_error_t err;
 
   // Ensure that we throw an exception for all unexpected host errors.
