@@ -207,6 +207,8 @@ public:
 
   static Result<HttpReq> make();
 
+  static Result<Void> redirect_to_grip_proxy(std::string_view backend);
+
   /// Send this request synchronously, and wait for the response.
   Result<Response> send(HttpBody body, std::string_view backend);
 
@@ -223,6 +225,17 @@ public:
 
   /// Get the request method.
   Result<HostString> get_method() const;
+
+  /// Set the request uri.
+  Result<Void> set_uri(std::string_view str);
+
+  /// Get the request uri.
+  Result<HostString> get_uri() const;
+
+  /// Configure cache-override settings.
+  Result<Void> cache_override(fastly_http_cache_override_tag_t tag, std::optional<uint32_t> ttl,
+                              std::optional<uint32_t> stale_while_revalidate,
+                              std::optional<std::string_view> surrogate_key);
 
   bool is_valid() const override;
 
@@ -245,6 +258,15 @@ public:
   explicit HttpResp(fastly_response_handle_t handle) : handle{handle} {}
 
   static Result<HttpResp> make();
+
+  /// Get the http status for the response.
+  Result<uint16_t> get_status() const;
+
+  /// Set the http status for the response.
+  Result<Void> set_status(uint16_t status);
+
+  /// Immediately begin sending this response to the downstream client.
+  Result<Void> send_downstream(HttpBody body, bool streaming);
 
   bool is_valid() const override;
 
