@@ -19,7 +19,6 @@
 #include "builtins/native-stream-source.h"
 #include "builtins/shared/url.h"
 #include "host_interface/host_api.h"
-#include "host_interface/host_call.h"
 #include "js-compute-builtins.h"
 
 namespace builtins {
@@ -95,13 +94,13 @@ bool KVStoreEntry::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   return false;
 }
 
-JSObject *KVStoreEntry::create(JSContext *cx, fastly_body_handle_t body_handle) {
+JSObject *KVStoreEntry::create(JSContext *cx, HttpBody body_handle) {
   JS::RootedObject kvStoreEntry(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!kvStoreEntry)
     return nullptr;
 
   JS::SetReservedSlot(kvStoreEntry, static_cast<uint32_t>(Slots::Body),
-                      JS::Int32Value(body_handle));
+                      JS::Int32Value(body_handle.handle));
   JS::SetReservedSlot(kvStoreEntry, static_cast<uint32_t>(Slots::BodyStream), JS::NullValue());
   JS::SetReservedSlot(kvStoreEntry, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(true));
   JS::SetReservedSlot(kvStoreEntry, static_cast<uint32_t>(Slots::BodyUsed), JS::FalseValue());
@@ -115,12 +114,12 @@ bool KVStoreEntry::init_class(JSContext *cx, JS::HandleObject global) {
 
 namespace {
 
-fastly_object_store_handle_t kv_store_handle(JSObject *obj) {
+ObjectStore kv_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(KVStore::Slots::KVStore));
-  return fastly_object_store_handle_t{static_cast<uint32_t>(val.toInt32())};
+  return ObjectStore(static_cast<fastly_object_store_handle_t>(val.toInt32()));
 }
 
-bool parse_and_validate_key(JSContext *cx, JS::UniqueChars *key, size_t len) {
+bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
   // If the converted string has a length of 0 then we throw an Error
   // because KVStore Keys have to be at-least 1 character.
   if (len == 0) {
@@ -135,7 +134,7 @@ bool parse_and_validate_key(JSContext *cx, JS::UniqueChars *key, size_t len) {
     return false;
   }
 
-  auto key_chars = key->get();
+  auto key_chars = key;
   auto res = find_invalid_character_for_kv_store_key(key_chars);
   if (res.has_value()) {
     std::string character;
@@ -193,29 +192,31 @@ bool KVStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue key(cx, args.get(0));
 
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  fastly_world_string_t key_str;
-  JS::UniqueChars key_chars = encode(cx, key, &key_str.len);
-  if (!key_chars)
+  size_t key_len;
+  JS::UniqueChars key_chars = encode(cx, key, &key_len);
+  if (!key_chars) {
     return false;
-  key_str.ptr = key_chars.get();
+  }
 
-  if (!parse_and_validate_key(cx, &key_chars, key_str.len))
+  std::string_view key_str{key_chars.get(), key_len};
+  if (!parse_and_validate_key(cx, key_str.data(), key_str.size())) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
 
-  fastly_world_option_body_handle_t ret;
-  fastly_error_t err;
-  if (!fastly_object_store_lookup(kv_store_handle(self), &key_str, &ret, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto res = kv_store_handle(self).lookup(key_str);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
   // When no entry is found, we are going to resolve the Promise with `null`.
-  if (!ret.is_some) {
+  auto ret = res.unwrap();
+  if (!ret.has_value()) {
     JS::RootedValue result(cx);
     result.setNull();
     JS::ResolvePromise(cx, result_promise, result);
   } else {
-    JS::RootedObject entry(cx, KVStoreEntry::create(cx, ret.val));
+    JS::RootedObject entry(cx, KVStoreEntry::create(cx, *ret));
     if (!entry) {
       return false;
     }
@@ -239,14 +240,16 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue key(cx, args.get(0));
 
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  fastly_world_string_t key_str;
-  JS::UniqueChars key_chars = encode(cx, key, &key_str.len);
-  if (!key_chars)
+  size_t key_len;
+  JS::UniqueChars key_chars = encode(cx, key, &key_len);
+  if (!key_chars) {
     return false;
-  key_str.ptr = key_chars.get();
+  }
 
-  if (!parse_and_validate_key(cx, &key_chars, key_str.len))
+  std::string_view key_str{key_chars.get(), key_len};
+  if (!parse_and_validate_key(cx, key_str.data(), key_str.size())) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
 
   JS::HandleValue body_val = args.get(1);
 
@@ -277,9 +280,9 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       JS::RootedObject source_owner(cx, builtins::NativeStreamSource::owner(stream_source));
       auto body = RequestOrResponse::body_handle(source_owner);
 
-      fastly_error_t err;
-      if (!fastly_object_store_insert(kv_store_handle(self), &key_str, body.handle, &err)) {
-        HANDLE_ERROR(cx, err);
+      auto res = kv_store_handle(self).insert(key_str, body);
+      if (auto *err = res.to_err()) {
+        HANDLE_ERROR(cx, *err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
 
@@ -355,10 +358,10 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    fastly_error_t err;
-    if (!fastly_object_store_insert(kv_store_handle(self), &key_str, body.handle, &err)) {
+    auto insert_res = kv_store_handle(self).insert(key_str, body);
+    if (auto *err = insert_res.to_err()) {
       // Ensure that we throw an exception for all unexpected host errors.
-      HANDLE_ERROR(cx, err);
+      HANDLE_ERROR(cx, *err);
       return RejectPromiseWithPendingError(cx, result_promise);
     }
 
@@ -398,46 +401,44 @@ bool KVStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::HandleValue name_arg = args.get(0);
 
-  fastly_world_string_t name_str;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  JS::UniqueChars name = encode(cx, name_arg, &name_str.len);
+  size_t name_len;
+  JS::UniqueChars name = encode(cx, name_arg, &name_len);
   if (!name) {
     return false;
   }
-  name_str.ptr = name.get();
 
   // If the converted string has a length of 0 then we throw an Error
   // because KVStore names have to be at-least 1 character.
-  if (name_str.len == 0) {
+  if (name_len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_NAME_EMPTY);
     return false;
   }
 
   // If the converted string has a length of more than 255 then we throw an Error
   // because KVStore names have to be less than 255 characters.
-  if (name_str.len > 255) {
+  if (name_len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_NAME_TOO_LONG);
     return false;
   }
 
-  for (int i = 0; i < name_str.len; i++) {
-    char character = name_str.ptr[i];
-    if (std::iscntrl(static_cast<unsigned char>(character)) != 0) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_KV_STORE_NAME_NO_CONTROL_CHARACTERS);
-      return false;
-    }
+  std::string_view name_str{name.get(), name_len};
+  if (std::any_of(name_str.begin(), name_str.end(), [](auto character) {
+        return std::iscntrl(static_cast<unsigned char>(character)) != 0;
+      })) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_KV_STORE_NAME_NO_CONTROL_CHARACTERS);
+    return false;
   }
 
-  fastly_object_store_handle_t kv_store_handle = INVALID_HANDLE;
-  fastly_error_t err;
-  if (!fastly_object_store_open(&name_str, &kv_store_handle, &err)) {
-    if (err == FASTLY_ERROR_INVALID_ARGUMENT) {
+  auto res = ObjectStore::open(name_str);
+  if (auto *err = res.to_err()) {
+    if (*err == FASTLY_ERROR_INVALID_ARGUMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_DOES_NOT_EXIST,
-                                name_str.ptr);
+                                name_str.data());
       return false;
     } else {
-      HANDLE_ERROR(cx, err);
+      HANDLE_ERROR(cx, *err);
       return false;
     }
   }
@@ -447,7 +448,7 @@ bool KVStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::SetReservedSlot(kv_store, static_cast<uint32_t>(Slots::KVStore),
-                      JS::Int32Value(kv_store_handle));
+                      JS::Int32Value(res.unwrap().handle));
   args.rval().setObject(*kv_store);
   return true;
 }

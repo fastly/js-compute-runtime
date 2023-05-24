@@ -366,4 +366,18 @@ public:
   Result<std::optional<HostString>> get(std::string_view name);
 };
 
+class ObjectStore final {
+public:
+  fastly_object_store_handle_t handle = UINT32_MAX - 1;
+
+  ObjectStore() = default;
+  explicit ObjectStore(fastly_object_store_handle_t handle) : handle{handle} {}
+
+  static Result<ObjectStore> open(std::string_view name);
+
+  Result<std::optional<HttpBody>> lookup(std::string_view name);
+
+  Result<Void> insert(std::string_view name, HttpBody body);
+};
+
 #endif
