@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 2.0.1 (2023-05-24)
+
+
+### Fixed
+
+* When using implicit backends with https protocol, use the hostname for the sni hostname value to match `fetch` behaviour in browsers and other runtimes ([84fb6a2](https://github.com/fastly/js-compute-runtime/commit/84fb6a2fa57408fb13e9319da91d6de3533f1e3c))
+
 ## 2.0.0 (2023-05-15)
 
 
