@@ -380,4 +380,30 @@ public:
   Result<Void> insert(std::string_view name, HttpBody body);
 };
 
+namespace host_api {
+
+class Secret final {
+public:
+  fastly_secret_handle_t handle = UINT32_MAX - 1;
+
+  Secret() = default;
+  explicit Secret(fastly_secret_handle_t handle) : handle{handle} {}
+
+  Result<std::optional<HostString>> plaintext() const;
+};
+
+class SecretStore final {
+public:
+  fastly_secret_store_handle_t handle = UINT32_MAX - 1;
+
+  SecretStore() = default;
+  explicit SecretStore(fastly_secret_store_handle_t handle) : handle{handle} {}
+
+  static Result<SecretStore> open(std::string_view name);
+
+  Result<std::optional<Secret>> get(std::string_view name);
+};
+
+} // namespace host_api
+
 #endif

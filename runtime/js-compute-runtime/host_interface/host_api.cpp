@@ -749,3 +749,55 @@ Result<Void> ObjectStore::insert(std::string_view name, HttpBody body) {
 
   return res;
 }
+
+namespace host_api {
+
+Result<std::optional<HostString>> Secret::plaintext() const {
+  Result<std::optional<HostString>> res;
+
+  fastly_world_option_string_t ret;
+  fastly_error_t err;
+  if (!fastly_secret_store_plaintext(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(ret.val);
+  } else {
+    res.emplace(std::nullopt);
+  }
+
+  return res;
+}
+
+Result<SecretStore> SecretStore::open(std::string_view name) {
+  Result<SecretStore> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_secret_store_handle_t ret;
+  fastly_error_t err;
+  if (!fastly_secret_store_open(&name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<std::optional<Secret>> SecretStore::get(std::string_view name) {
+  Result<std::optional<Secret>> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_world_option_secret_handle_t ret;
+  fastly_error_t err;
+  if (!fastly_secret_store_get(this->handle, &name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(ret.val);
+  } else {
+    res.emplace(std::nullopt);
+  }
+
+  return res;
+}
+
+} // namespace host_api
