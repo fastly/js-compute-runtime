@@ -354,4 +354,16 @@ public:
   Result<Void> write(std::string_view msg);
 };
 
+class Dict final {
+public:
+  fastly_dictionary_handle_t handle = UINT32_MAX - 1;
+
+  Dict() = default;
+  explicit Dict(fastly_dictionary_handle_t handle) : handle{handle} {}
+
+  static Result<Dict> open(std::string_view name);
+
+  Result<std::optional<HostString>> get(std::string_view name);
+};
+
 #endif

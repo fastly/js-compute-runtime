@@ -671,3 +671,35 @@ Result<Void> LogEndpoint::write(std::string_view msg) {
 
   return res;
 }
+
+Result<Dict> Dict::open(std::string_view name) {
+  Result<Dict> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_dictionary_handle_t ret;
+  fastly_error_t err;
+  if (!fastly_dictionary_open(&name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<std::optional<HostString>> Dict::get(std::string_view name) {
+  Result<std::optional<HostString>> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_world_option_string_t ret;
+  fastly_error_t err;
+  if (!fastly_dictionary_get(this->handle, &name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(ret.val);
+  } else {
+    res.emplace(std::nullopt);
+  }
+
+  return res;
+}
