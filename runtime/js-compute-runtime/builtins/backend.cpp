@@ -883,6 +883,20 @@ bool Backend::set_host_override(JSContext *cx, JSObject *backend,
   return true;
 }
 
+bool Backend::set_sni_hostname(JSContext *cx, JSObject *backend, JS::HandleValue sniHostname_val) {
+  auto sniHostname = JS::ToString(cx, sniHostname_val);
+  if (!sniHostname) {
+    return false;
+  }
+
+  if (JS_GetStringLength(sniHostname) == 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_SNI_HOSTNAME_EMPTY);
+    return false;
+  }
+  JS::SetReservedSlot(backend, Backend::Slots::SniHostname, JS::StringValue(sniHostname));
+  return true;
+}
+
 /// Timeouts for backends must be less than 2^32 milliseconds, or
 /// about a month and a half.
 bool Backend::set_timeout_slot(JSContext *cx, JSObject *backend, JS::HandleValue value,
@@ -1001,6 +1015,11 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
 
   auto use_ssl = origin.rfind("https://", 0) == 0;
   JS::SetReservedSlot(backend, Backend::Slots::UseSsl, JS::BooleanValue(use_ssl));
+  if (use_ssl) {
+    if (!Backend::set_sni_hostname(cx, backend, name)) {
+      return nullptr;
+    }
+  }
 
   auto result = Backend::register_dynamic_backend(cx, backend);
   if (result.isErr()) {
