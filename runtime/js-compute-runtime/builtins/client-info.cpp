@@ -1,6 +1,6 @@
 #include "builtins/client-info.h"
 #include "core/geo_ip.h"
-#include "host_interface/host_call.h"
+#include "host_interface/host_api.h"
 
 #include "js/JSON.h"
 #include <arpa/inet.h>
@@ -20,45 +20,43 @@ JSString *geo_info(JSObject *obj) {
 }
 
 static JSString *retrieve_address(JSContext *cx, JS::HandleObject self) {
-  JS::RootedString address(cx);
-
-  fastly_world_list_u8_t octets;
-  fastly_error_t err;
-  if (!fastly_http_req_downstream_client_ip_addr(&octets, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto res = HttpReq::downstream_client_ip_addr();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return nullptr;
   }
+
+  auto octets = std::move(res.unwrap());
+  char address_chars[INET6_ADDRSTRLEN];
+  int addr_family = 0;
+  socklen_t size = 0;
 
   switch (octets.len) {
   case 0: {
     // No address to be had, leave `address` as a nullptr.
-    JS_free(cx, octets.ptr);
     break;
   }
   case 4: {
-    char address_chars[INET_ADDRSTRLEN];
-    // TODO: do we need to do error handling here, or can we depend on the
-    // host giving us a valid address?
-    inet_ntop(AF_INET, octets.ptr, address_chars, INET_ADDRSTRLEN);
-    address = JS_NewStringCopyZ(cx, address_chars);
-    JS_free(cx, octets.ptr);
-    if (!address)
-      return nullptr;
-
+    addr_family = AF_INET;
+    size = INET_ADDRSTRLEN;
     break;
   }
   case 16: {
-    char address_chars[INET6_ADDRSTRLEN];
-    // TODO: do we need to do error handling here, or can we depend on the
-    // host giving us a valid address?
-    inet_ntop(AF_INET6, octets.ptr, address_chars, INET6_ADDRSTRLEN);
-    address = JS_NewStringCopyZ(cx, address_chars);
-    JS_free(cx, octets.ptr);
-    if (!address)
-      return nullptr;
-
+    addr_family = AF_INET6;
+    size = INET6_ADDRSTRLEN;
     break;
   }
+  }
+
+  JS::RootedString address(cx);
+  if (octets.len > 0) {
+    // TODO: do we need to do error handling here, or can we depend on the
+    // host giving us a valid address?
+    inet_ntop(addr_family, octets.begin(), address_chars, size);
+    address = JS_NewStringCopyZ(cx, address_chars);
+    if (!address) {
+      return nullptr;
+    }
   }
 
   JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::Address),

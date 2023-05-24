@@ -3,12 +3,15 @@
 
 #include <memory>
 #include <optional>
+#include <span>
+#include <string>
 #include <string_view>
 #include <variant>
 #include <vector>
 
 #include "core/allocator.h"
 #include "fastly-world/fastly_world.h"
+#include "host_interface/host_call.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
@@ -77,17 +80,40 @@ struct HostString final {
   HostString(JS::UniqueChars ptr, size_t len) : ptr{std::move(ptr)}, len{len} {}
 
   using iterator = char *;
+  using const_iterator = const char *;
 
   size_t size() const { return this->len; }
 
-  char *begin() { return this->ptr.get(); }
-  char *end() { return this->begin() + this->len; }
+  iterator begin() { return this->ptr.get(); }
+  iterator end() { return this->begin() + this->len; }
 
-  const char *begin() const { return this->ptr.get(); }
-  const char *end() const { return this->begin() + this->len; }
+  const_iterator begin() const { return this->ptr.get(); }
+  const_iterator end() const { return this->begin() + this->len; }
 
   /// Conversion to a `std::string_view`.
-  operator std::string_view() { return std::string_view(this->ptr.get(), this->len); }
+  operator std::string_view() const { return std::string_view(this->ptr.get(), this->len); }
+};
+
+struct HostBytes final {
+  std::unique_ptr<uint8_t[]> ptr;
+  size_t len;
+
+  HostBytes() = default;
+  explicit HostBytes(fastly_world_list_u8_t bytes) : ptr{bytes.ptr}, len{bytes.len} {}
+
+  using iterator = uint8_t *;
+  using const_iterator = const uint8_t *;
+
+  size_t size() const { return this->len; }
+
+  iterator begin() { return this->ptr.get(); }
+  iterator end() { return this->begin() + this->len; }
+
+  const_iterator begin() const { return this->ptr.get(); }
+  const_iterator end() const { return this->begin() + this->len; }
+
+  /// Converstion to a `std::span<uint8_t>`.
+  operator std::span<uint8_t>() const { return std::span{this->ptr.get(), this->len}; }
 };
 
 /// Common methods for async handles.
@@ -196,6 +222,20 @@ public:
   virtual Result<Void> remove_header(std::string_view name) = 0;
 };
 
+struct BackendConfig {
+  std::optional<HostString> host_override;
+  std::optional<uint32_t> connect_timeout;
+  std::optional<uint32_t> first_byte_timeout;
+  std::optional<uint32_t> between_bytes_timeout;
+  std::optional<bool> use_ssl;
+  std::optional<fastly_tls_version_t> ssl_min_version;
+  std::optional<fastly_tls_version_t> ssl_max_version;
+  std::optional<HostString> cert_hostname;
+  std::optional<HostString> ca_cert;
+  std::optional<HostString> ciphers;
+  std::optional<HostString> sni_hostname;
+};
+
 class HttpReq final : public HttpBase {
 public:
   static constexpr fastly_request_handle_t invalid = UINT32_MAX - 1;
@@ -208,6 +248,12 @@ public:
   static Result<HttpReq> make();
 
   static Result<Void> redirect_to_grip_proxy(std::string_view backend);
+
+  static Result<Void> register_dynamic_backend(std::string_view name, std::string_view target,
+                                               const BackendConfig &config);
+
+  /// Get the downstream ip address.
+  static Result<HostBytes> downstream_client_ip_addr();
 
   /// Send this request synchronously, and wait for the response.
   Result<Response> send(HttpBody body, std::string_view backend);
@@ -287,5 +333,77 @@ struct Response {
   Response() = default;
   explicit Response(fastly_response_t resp) : resp{HttpResp{resp.f0}}, body{HttpBody{resp.f1}} {}
 };
+
+class GeoIp final {
+  ~GeoIp() = delete;
+
+public:
+  /// Lookup information about the ip address provided.
+  static Result<HostString> lookup(std::span<uint8_t> bytes);
+};
+
+class LogEndpoint final {
+public:
+  fastly_log_endpoint_handle_t handle = UINT32_MAX - 1;
+
+  LogEndpoint() = default;
+  explicit LogEndpoint(fastly_log_endpoint_handle_t handle) : handle{handle} {}
+
+  static Result<LogEndpoint> get(std::string_view name);
+
+  Result<Void> write(std::string_view msg);
+};
+
+class Dict final {
+public:
+  fastly_dictionary_handle_t handle = UINT32_MAX - 1;
+
+  Dict() = default;
+  explicit Dict(fastly_dictionary_handle_t handle) : handle{handle} {}
+
+  static Result<Dict> open(std::string_view name);
+
+  Result<std::optional<HostString>> get(std::string_view name);
+};
+
+class ObjectStore final {
+public:
+  fastly_object_store_handle_t handle = UINT32_MAX - 1;
+
+  ObjectStore() = default;
+  explicit ObjectStore(fastly_object_store_handle_t handle) : handle{handle} {}
+
+  static Result<ObjectStore> open(std::string_view name);
+
+  Result<std::optional<HttpBody>> lookup(std::string_view name);
+
+  Result<Void> insert(std::string_view name, HttpBody body);
+};
+
+namespace host_api {
+
+class Secret final {
+public:
+  fastly_secret_handle_t handle = UINT32_MAX - 1;
+
+  Secret() = default;
+  explicit Secret(fastly_secret_handle_t handle) : handle{handle} {}
+
+  Result<std::optional<HostString>> plaintext() const;
+};
+
+class SecretStore final {
+public:
+  fastly_secret_store_handle_t handle = UINT32_MAX - 1;
+
+  SecretStore() = default;
+  explicit SecretStore(fastly_secret_store_handle_t handle) : handle{handle} {}
+
+  static Result<SecretStore> open(std::string_view name);
+
+  Result<std::optional<Secret>> get(std::string_view name);
+};
+
+} // namespace host_api
 
 #endif

@@ -284,6 +284,80 @@ Result<Void> HttpReq::redirect_to_grip_proxy(std::string_view backend) {
   return res;
 }
 
+Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::string_view target,
+                                               const BackendConfig &config) {
+  Result<Void> res;
+
+  fastly_dynamic_backend_config_t backend_config;
+  memset(&backend_config, 0, sizeof(backend_config));
+
+  if (auto &val = config.host_override) {
+    backend_config.host_override.is_some = true;
+    backend_config.host_override.val = string_view_to_world_string(*val);
+  }
+
+  if (auto &val = config.connect_timeout) {
+    backend_config.connect_timeout.is_some = true;
+    backend_config.connect_timeout.val = *val;
+  }
+
+  if (auto &val = config.first_byte_timeout) {
+    backend_config.first_byte_timeout.is_some = true;
+    backend_config.first_byte_timeout.val = *val;
+  }
+
+  if (auto &val = config.between_bytes_timeout) {
+    backend_config.between_bytes_timeout.is_some = true;
+    backend_config.between_bytes_timeout.val = *val;
+  }
+
+  if (auto &val = config.use_ssl) {
+    backend_config.use_ssl.is_some = true;
+    backend_config.use_ssl.val = *val;
+  }
+
+  if (auto &val = config.ssl_min_version) {
+    backend_config.ssl_min_version.is_some = true;
+    backend_config.ssl_min_version.val = *val;
+  }
+
+  if (auto &val = config.ssl_max_version) {
+    backend_config.ssl_max_version.is_some = true;
+    backend_config.ssl_max_version.val = *val;
+  }
+
+  if (auto &val = config.cert_hostname) {
+    backend_config.cert_hostname.is_some = true;
+    backend_config.cert_hostname.val = string_view_to_world_string(*val);
+  }
+
+  if (auto &val = config.ca_cert) {
+    backend_config.ca_cert.is_some = true;
+    backend_config.ca_cert.val = string_view_to_world_string(*val);
+  }
+
+  if (auto &val = config.ciphers) {
+    backend_config.ciphers.is_some = true;
+    backend_config.ciphers.val = string_view_to_world_string(*val);
+  }
+
+  if (auto &val = config.sni_hostname) {
+    backend_config.sni_hostname.is_some = true;
+    backend_config.sni_hostname.val = string_view_to_world_string(*val);
+  }
+
+  auto name_str = string_view_to_world_string(name);
+  auto target_str = string_view_to_world_string(target);
+  fastly_error_t err;
+  if (!fastly_http_req_register_dynamic_backend(&name_str, &target_str, &backend_config, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
 Result<Response> HttpReq::send(HttpBody body, std::string_view backend) {
   Result<Response> res;
 
@@ -414,6 +488,20 @@ Result<Void> HttpReq::cache_override(fastly_http_cache_override_tag_t tag,
   return res;
 }
 
+Result<HostBytes> HttpReq::downstream_client_ip_addr() {
+  Result<HostBytes> res;
+
+  fastly_world_list_u8_t octets;
+  fastly_error_t err;
+  if (!fastly_http_req_downstream_client_ip_addr(&octets, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(octets);
+  }
+
+  return res;
+}
+
 bool HttpReq::is_valid() const { return this->handle != HttpReq::invalid; }
 
 Result<fastly_http_version_t> HttpReq::get_version() const {
@@ -539,3 +627,177 @@ Result<Void> HttpResp::append_header(std::string_view name, std::string_view val
 Result<Void> HttpResp::remove_header(std::string_view name) {
   return generic_header_remove<fastly_http_resp_header_remove>(this->handle, name);
 }
+
+Result<HostString> GeoIp::lookup(std::span<uint8_t> bytes) {
+  Result<HostString> res;
+
+  fastly_world_list_u8_t octets_list{const_cast<uint8_t *>(bytes.data()), bytes.size()};
+  fastly_world_string_t ret;
+  fastly_error_t err;
+  if (!fastly_geo_lookup(&octets_list, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<LogEndpoint> LogEndpoint::get(std::string_view name) {
+  Result<LogEndpoint> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_log_endpoint_handle_t handle;
+  fastly_error_t err;
+  if (!fastly_log_endpoint_get(&name_str, &handle, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(LogEndpoint{handle});
+  }
+
+  return res;
+}
+
+Result<Void> LogEndpoint::write(std::string_view msg) {
+  Result<Void> res;
+
+  auto msg_str = string_view_to_world_string(msg);
+  fastly_error_t err;
+  if (!fastly_log_write(this->handle, &msg_str, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
+Result<Dict> Dict::open(std::string_view name) {
+  Result<Dict> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_dictionary_handle_t ret;
+  fastly_error_t err;
+  if (!fastly_dictionary_open(&name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<std::optional<HostString>> Dict::get(std::string_view name) {
+  Result<std::optional<HostString>> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_world_option_string_t ret;
+  fastly_error_t err;
+  if (!fastly_dictionary_get(this->handle, &name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(ret.val);
+  } else {
+    res.emplace(std::nullopt);
+  }
+
+  return res;
+}
+
+Result<ObjectStore> ObjectStore::open(std::string_view name) {
+  Result<ObjectStore> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_object_store_handle_t ret;
+  fastly_error_t err;
+  if (!fastly_object_store_open(&name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<std::optional<HttpBody>> ObjectStore::lookup(std::string_view name) {
+  Result<std::optional<HttpBody>> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_world_option_body_handle_t ret;
+  fastly_error_t err;
+  if (!fastly_object_store_lookup(this->handle, &name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(ret.val);
+  } else {
+    res.emplace(std::nullopt);
+  }
+
+  return res;
+}
+
+Result<Void> ObjectStore::insert(std::string_view name, HttpBody body) {
+  Result<Void> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_error_t err;
+  if (!fastly_object_store_insert(this->handle, &name_str, body.handle, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
+namespace host_api {
+
+Result<std::optional<HostString>> Secret::plaintext() const {
+  Result<std::optional<HostString>> res;
+
+  fastly_world_option_string_t ret;
+  fastly_error_t err;
+  if (!fastly_secret_store_plaintext(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(ret.val);
+  } else {
+    res.emplace(std::nullopt);
+  }
+
+  return res;
+}
+
+Result<SecretStore> SecretStore::open(std::string_view name) {
+  Result<SecretStore> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_secret_store_handle_t ret;
+  fastly_error_t err;
+  if (!fastly_secret_store_open(&name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<std::optional<Secret>> SecretStore::get(std::string_view name) {
+  Result<std::optional<Secret>> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_world_option_secret_handle_t ret;
+  fastly_error_t err;
+  if (!fastly_secret_store_get(this->handle, &name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(ret.val);
+  } else {
+    res.emplace(std::nullopt);
+  }
+
+  return res;
+}
+
+} // namespace host_api

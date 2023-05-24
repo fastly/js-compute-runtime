@@ -2,6 +2,7 @@
 #define JS_COMPUTE_RUNTIME_CONFIG_STORE_H
 
 #include "builtin.h"
+#include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
 
 namespace builtins {
@@ -20,7 +21,7 @@ public:
 
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
 
-  static fastly_dictionary_handle_t config_store_handle(JSObject *obj);
+  static Dict config_store_handle(JSObject *obj);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static bool init_class(JSContext *cx, JS::HandleObject global);
