@@ -380,12 +380,11 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
   JS::RootedValue result(cx);
 
   if constexpr (result_type == RequestOrResponse::BodyReadResult::ArrayBuffer) {
-    auto *rawBuf = buf.release();
-    JS::RootedObject array_buffer(cx, JS::NewArrayBufferWithContents(cx, len, rawBuf));
+    JS::RootedObject array_buffer(cx, JS::NewArrayBufferWithContents(cx, len, buf.get()));
     if (!array_buffer) {
-      JS_free(cx, rawBuf);
       return RejectPromiseWithPendingError(cx, result_promise);
     }
+    static_cast<void>(buf.release());
     result.setObject(*array_buffer);
   } else {
     JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), len)));
@@ -505,7 +504,7 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
       }
     }
 
-    auto buf = static_cast<char *>(JS_malloc(cx, buf_size + 1));
+    JS::UniqueChars buf{static_cast<char *>(JS_malloc(cx, buf_size + 1))};
     if (!buf) {
       JS_ReportOutOfMemory(cx);
       return false;
@@ -516,7 +515,6 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
     for (uint32_t index = 0; index < contentsLength; index++) {
       JS::RootedValue val(cx);
       if (!JS_GetElement(cx, contents, index, &val)) {
-        JS_free(cx, buf);
         return false;
       }
       {
@@ -529,7 +527,7 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
         if (length) {
           static_assert(CHAR_BIT == 8, "Strange char");
           auto bytes = reinterpret_cast<char *>(JS_GetUint8ArrayData(array, &is_shared, nogc));
-          memcpy(buf + offset, bytes, length);
+          memcpy(buf.get() + offset, bytes, length);
           offset += length;
         }
       }
@@ -538,7 +536,6 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
 #ifdef DEBUG
     bool foundBodyParser;
     if (!JS_HasElement(cx, catch_handler, 2, &foundBodyParser)) {
-      JS_free(cx, buf);
       return false;
     }
     MOZ_ASSERT(foundBodyParser);
@@ -546,12 +543,10 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
     // Now we can call parse_body on the result
     JS::RootedValue body_parser(cx);
     if (!JS_GetElement(cx, catch_handler, 2, &body_parser)) {
-      JS_free(cx, buf);
       return false;
     }
     auto parse_body = (ParseBodyCB *)body_parser.toPrivate();
-    JS::UniqueChars body(buf);
-    return parse_body(cx, self, std::move(body), offset);
+    return parse_body(cx, self, std::move(buf), offset);
   }
 
   JS::RootedValue val(cx);

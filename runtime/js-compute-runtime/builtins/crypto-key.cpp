@@ -495,11 +495,12 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
     return nullptr;
   }
 
-  uint8_t *p = reinterpret_cast<uint8_t *>(calloc(keyData->exponent.size(), sizeof(uint8_t)));
+  auto p = mozilla::MakeUnique<uint8_t[]>(keyData->exponent.size());
   auto exp = keyData->exponent;
-  std::copy(exp.begin(), exp.end(), p);
+  std::copy(exp.begin(), exp.end(), p.get());
 
-  JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, keyData->exponent.size(), p));
+  JS::RootedObject buffer(cx,
+                          JS::NewArrayBufferWithContents(cx, keyData->exponent.size(), p.get()));
   // `buffer` takes ownership of `p` if the call to NewArrayBufferWithContents was successful
   // if the call was not successful, we need to free `p` before exiting from the function.
   if (!buffer) {
@@ -510,9 +511,11 @@ JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_I
       // TODO Rename error to InternalError
       JS_ReportErrorLatin1(cx, "InternalError");
     }
-    JS_free(cx, p);
     return nullptr;
   }
+
+  // At this point, `buffer` owns the memory managed by `p`.
+  static_cast<void>(p.release());
 
   // Set the publicExponent attribute of algorithm to the BigInteger representation of the RSA
   // public exponent.
