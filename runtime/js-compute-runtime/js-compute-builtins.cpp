@@ -788,17 +788,15 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
       if (!backend) {
         auto handle = builtins::Request::request_handle(request);
 
-        fastly_world_string_t uri_str;
-        fastly_error_t err;
-        if (fastly_http_req_uri_get(handle.handle, &uri_str, &err)) {
+        auto res = handle.get_uri();
+        if (auto *err = res.to_err()) {
+          HANDLE_ERROR(cx, *err);
+        } else {
           JS_ReportErrorLatin1(cx,
                                "No backend specified for request with url %s. "
                                "Must provide a `backend` property on the `init` object "
                                "passed to either `new Request()` or `fetch`",
-                               uri_str.ptr);
-          JS_free(cx, uri_str.ptr);
-        } else {
-          HANDLE_ERROR(cx, err);
+                               res.unwrap().begin());
         }
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
