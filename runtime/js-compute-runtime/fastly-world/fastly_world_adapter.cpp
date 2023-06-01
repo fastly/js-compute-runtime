@@ -696,3 +696,160 @@ bool fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret, fastly_er
   *ret = (bool)ret_int;
   return true;
 }
+
+bool fastly_purge_surrogate_key(fastly_world_string_t *surrogate_key,
+                                fastly_purge_options_mask_t options_mask,
+                                fastly_option_string_t *ret, fastly_error_t *err) {
+  fastly::PurgeOptions options{nullptr, 0, nullptr};
+
+  MOZ_ASSERT(!(options_mask & FASTLY_PURGE_OPTIONS_MASK_SOFT_PURGE));
+  MOZ_ASSERT(!(options_mask & FASTLY_PURGE_OPTIONS_MASK_RET_BUF));
+
+  ret->is_some = false;
+
+  return convert_result(
+      fastly::purge_surrogate_key(surrogate_key->ptr, surrogate_key->len, options_mask, &options),
+      err);
+}
+
+bool fastly_cache_lookup(fastly_world_string_t *cache_key, fastly_cache_lookup_options_t *options,
+                         fastly_cache_handle_t *ret, fastly_error_t *err) {
+  // uint32_t reserved = 1u << 0;
+  // uint32_t request_headers = 1u << 1;
+  uint32_t options_mask = 0;
+  // options_mask |= request_headers;
+  return convert_result(
+      fastly::cache_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret), err);
+}
+bool fastly_cache_insert(fastly_world_string_t *cache_key, fastly_cache_write_options_t *options,
+                         fastly_body_handle_t *ret, fastly_error_t *err) {
+  fastly_cache_write_options_mask_t options_mask = 0;
+  fastly::CacheWriteOptions opts;
+  std::memset(&opts, 0, sizeof(opts));
+  opts.max_age_ns = options->max_age_ns;
+
+  if (options->request_headers != INVALID_HANDLE && options->request_headers != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_REQUEST_HEADERS;
+    opts.request_headers = options->request_headers;
+  }
+  if (options->vary_rule.ptr != nullptr) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_VARY_RULE;
+    opts.vary_rule_len = options->vary_rule.len;
+    opts.vary_rule_ptr = reinterpret_cast<uint8_t *>(options->vary_rule.ptr);
+  }
+  if (options->initial_age_ns != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS;
+    opts.initial_age_ns = options->initial_age_ns;
+  }
+  if (options->stale_while_revalidate_ns != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS;
+    opts.stale_while_revalidate_ns = options->stale_while_revalidate_ns;
+  }
+  if (options->surrogate_keys.ptr != nullptr) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS;
+    opts.surrogate_keys_len = options->surrogate_keys.len;
+    opts.surrogate_keys_ptr = reinterpret_cast<uint8_t *>(options->surrogate_keys.ptr);
+  }
+  if (options->length != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_LENGTH;
+    opts.length = options->length;
+  }
+  if (options->user_metadata.ptr != nullptr) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_USER_METADATA;
+    opts.user_metadata_len = options->user_metadata.len;
+    opts.user_metadata_ptr = options->user_metadata.ptr;
+  }
+  if (options->sensitive_data) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA;
+  }
+  return convert_result(
+      fastly::cache_insert(cache_key->ptr, cache_key->len, options_mask, &opts, ret), err);
+}
+bool fastly_transaction_lookup(fastly_world_string_t *cache_key,
+                               fastly_cache_lookup_options_t *options, fastly_cache_handle_t *ret,
+                               fastly_error_t *err) {
+  fastly_cache_lookup_options_mask_t options_mask = 0;
+  // options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS;
+  return convert_result(
+      fastly::cache_transaction_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret),
+      err);
+  return true;
+}
+bool fastly_transaction_insert(fastly_cache_handle_t handle, fastly_cache_write_options_t *options,
+                               fastly_body_handle_t *ret, fastly_error_t *err) {
+  return true;
+}
+bool fastly_transaction_insert_and_stream_back(fastly_cache_handle_t handle,
+                                               fastly_cache_write_options_t *options,
+                                               fastly_tuple2_body_handle_cache_handle_t *ret,
+                                               fastly_error_t *err) {
+  return true;
+}
+bool fastly_transaction_update(fastly_cache_handle_t handle, fastly_cache_write_options_t *options,
+                               fastly_error_t *err) {
+  return true;
+}
+bool fastly_transaction_cancel(fastly_cache_handle_t handle, fastly_error_t *err) { return true; }
+bool fastly_cache_close(fastly_cache_handle_t handle, fastly_error_t *err) { return true; }
+bool fastly_cache_get_state(fastly_cache_handle_t handle, fastly_cache_lookup_state_t *ret,
+                            fastly_error_t *err) {
+  return convert_result(fastly::cache_get_state(handle, ret), err);
+}
+bool fastly_cache_get_user_metadata(fastly_cache_handle_t h, uint32_t chunk_size,
+                                    fastly_list_u8_t *ret, fastly_error_t *err) {
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(chunk_size, 1));
+  return convert_result(fastly::cache_get_user_metadata(h, reinterpret_cast<char *>(ret->ptr),
+                                                        static_cast<size_t>(chunk_size), &ret->len),
+                        err);
+}
+bool fastly_cache_get_body(fastly_cache_handle_t handle, fastly_cache_get_body_options_t *options,
+                           fastly_body_handle_t *ret, fastly_error_t *err) {
+  uint32_t options_mask = 0;
+  bool ok = convert_result(fastly::cache_get_body(handle, options_mask, options, ret), err);
+  if (!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) {
+    *ret = INVALID_HANDLE;
+    return true;
+  }
+  return ok;
+}
+bool fastly_cache_get_length(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err) {
+  bool ok = convert_result(fastly::cache_get_length(handle, ret), err);
+  if (!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) {
+    *ret = 0;
+    return true;
+  }
+  return ok;
+}
+bool fastly_cache_get_max_age_ns(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err) {
+  bool ok = convert_result(fastly::cache_get_max_age_ns(handle, ret), err);
+  if (!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) {
+    *ret = 0;
+    return true;
+  }
+  return ok;
+}
+bool fastly_cache_get_stale_while_revalidate_ns(fastly_cache_handle_t handle, uint64_t *ret,
+                                                fastly_error_t *err) {
+  bool ok = convert_result(fastly::cache_get_stale_while_revalidate_ns(handle, ret), err);
+  if (!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) {
+    *ret = 0;
+    return true;
+  }
+  return ok;
+}
+bool fastly_cache_get_age_ns(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err) {
+  bool ok = convert_result(fastly::cache_get_age_ns(handle, ret), err);
+  if (!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) {
+    *ret = 0;
+    return true;
+  }
+  return ok;
+}
+bool fastly_cache_get_hits(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err) {
+  bool ok = convert_result(fastly::cache_get_hits(handle, ret), err);
+  if (!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) {
+    *ret = 0;
+    return true;
+  }
+  return ok;
+}

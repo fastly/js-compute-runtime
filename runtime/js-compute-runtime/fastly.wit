@@ -479,11 +479,190 @@ default world fastly-world {
     /*
      * Fastly Purge
      */
-    record purge-result {
-      id: string
+
+    flags purge-options-mask {
+      soft-purge,
+      ret-buf
     }
 
-    purge-surrogate-key: func(surrogate-key: string, soft-purge: bool) -> result<purge-result, error>
+    /*
+     * A surrogate key can be a max of 1024 characters.
+     * A surrogate key must contain only printable ASCII characters (those between `0x21` and `0x7E`, inclusive).
+     */
+    purge-surrogate-key: func(surrogate-keys: string, purge-options: purge-options-mask) -> result<option<string>, error>
+
+    /*
+     * Fastly Cache
+     */
+    /// The outcome of a cache lookup (either bare or as part of a cache transaction)
+    type cache-handle = u32
+    type cache-object-length = u64
+    type cache-duration-ns = u64
+    type cache-hit-count = u64
+
+    /// Extensible options for cache lookup operations; currently used for both `lookup` and `transaction_lookup`.
+    record cache-lookup-options {
+      /**
+       * A full request handle, but used only for its headers
+       */
+      request-headers: option<request-handle>,
+    }
+
+    flags cache-lookup-options-mask {
+      reserved,
+      request-headers,
+    }
+
+
+    /// Configuration for several hostcalls that write to the cache:
+    /// - `insert`
+    /// - `transaction-insert`
+    /// - `transaction-insert-and-stream-back`
+    /// - `transaction-update`
+    ///
+    /// Some options are only allowed for certain of these hostcalls; see `cache-write-options-mask`.
+    record cache-write-options {
+      /// this is a required field; there's no flag for it
+      max-age-ns: cache-duration-ns,
+      /// a full request handle, but used only for its headers
+      request-headers: request-handle,
+      /// a list of header names separated by spaces
+      vary-rule: string,
+      /// The initial age of the object in nanoseconds (default: 0).
+      ///
+      /// This age is used to determine the freshness lifetime of the object as well as to
+      /// prioritize which variant to return if a subsequent lookup matches more than one vary rule
+      initial-age-ns: cache-duration-ns,
+      stale-while-revalidate-ns: cache-duration-ns,
+      /// a list of surrogate keys separated by spaces
+      surrogate-keys: string,
+      length: cache-object-length,
+      user-metadata: list<u8>,
+      sensitive-data: bool,
+    }
+
+    flags cache-write-options-mask {
+      reserved,
+      request-headers, /// Only allowed for non-transactional `insert`
+      vary-rule,
+      initial-age-ns,
+      stale-while-revalidate-ns,
+      surrogate-keys,
+      length,
+      user-metadata,
+      sensitive-data,
+    }
+
+    record cache-get-body-options {
+      start: u64,
+      end: u64,
+    }
+
+    /// The status of this lookup (and potential transaction)
+    flags cache-lookup-state {
+      /// a cached object was found
+      found,
+      /// the cached object is valid to use (implies found)
+      usable,
+      /// the cached object is stale (but may or may not be valid to use)
+      stale,
+      /// this client is requested to insert or revalidate an object
+      must-insert-or-update,
+    }
+
+    /// Performs a non-request-collapsing cache lookup.
+    ///
+    /// Returns a result without waiting for any request collapsing that may be ongoing.
+    cache-lookup: func(cache-key: string, options: cache-lookup-options) -> result<cache-handle, error>
+
+    /// Performs a non-request-collapsing cache insertion (or update).
+    ///
+    /// The returned handle is to a streaming body that is used for writing the object into
+    /// the cache.
+    cache-insert: func(cache-key: string, options: cache-write-options) -> result<body-handle, error>
+
+    /// The entrypoint to the request-collapsing cache transaction API.
+    ///
+    /// This operation always participates in request collapsing and may return stale objects. To bypass
+    /// request collapsing, use `lookup` and `insert` instead.
+    transaction-lookup: func(cache-key: string, options: cache-lookup-options) -> result<cache-handle, error>
+
+    /// Insert an object into the cache with the given metadata.
+    ///
+    /// Can only be used in if the cache handle state includes the `$must_insert_or_update` flag.
+    ///
+    /// The returned handle is to a streaming body that is used for writing the object into
+    /// the cache.
+    transaction-insert: func(handle: cache-handle, options: cache-write-options) -> result<body-handle, error>
+
+    /// Insert an object into the cache with the given metadata, and return a readable stream of the
+    /// bytes as they are stored.
+    ///
+    /// This helps avoid the "slow reader" problem on a teed stream, for example when a program wishes
+    /// to store a backend request in the cache while simultaneously streaming to a client in an HTTP
+    /// response.
+    ///
+    /// The returned body handle is to a streaming body that is used for writing the object _into_
+    /// the cache. The returned cache handle provides a separate transaction for reading out the
+    /// newly cached object to send elsewhere.
+    transaction-insert-and-stream-back: func(handle: cache-handle, options: cache-write-options) -> result<tuple<body-handle, cache-handle>, error>
+
+    /// Update the metadata of an object in the cache without changing its data.
+    ///
+    /// Can only be used in if the cache handle state includes both of the flags:
+    /// - `$found`
+    /// - `$must_insert_or_update`
+    transaction-update: func(handle: cache-handle, options: cache-write-options) -> result<_, error>
+
+    /// Cancel an obligation to provide an object to the cache.
+    ///
+    /// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
+    transaction-cancel: func(handle: cache-handle) -> result<_, error>
+
+    /// Close an ongoing interaction with the cache.
+    ///
+    /// If the cache handle state includes the `$must_insert_or_update` (and hence no insert or
+    /// update has been performed), closing the handle cancels any request collapsing, potentially
+    /// choosing a new waiter to perform the insertion/update.
+    cache-close: func(handle: cache-handle) -> result<_, error>
+
+    cache-get-state: func(handle: cache-handle) -> result<cache-lookup-state, error>
+
+    /// Gets the user metadata of the found object, returning the `$none` error if there
+    /// was no found object.
+    /// cache-get-user-metadata: func(handle: cache-handle) -> result<list<u8>, error>
+    cache-get-user-metadata: func(h: cache-handle, chunk-size: u32) -> result<list<u8>, error>
+
+    /// Gets a range of the found object body, returning the `$none` error if there
+    /// was no found object.
+    ///
+    /// The returned `body_handle` must be closed before calling this function again on the same
+    /// `cache_handle`.
+    ///
+    /// Note: until the CacheD protocol is adjusted to fully support this functionality,
+    /// the body of objects that are past the stale-while-revalidate period will not
+    /// be available, even when other metadata is.
+    cache-get-body: func(handle: cache-handle, options: cache-get-body-options) -> result<body-handle, error>
+
+    /// Gets the content length of the found object, returning the `$none` error if there
+    /// was no found object, or no content length was provided.
+    cache-get-length: func(handle: cache-handle) -> result<u64, error>
+
+    /// Gets the configured max age of the found object, returning the `$none` error if there
+    /// was no found object.
+    cache-get-max-age-ns: func(handle: cache-handle) -> result<u64, error>
+
+    /// Gets the configured stale-while-revalidate period of the found object, returning the
+    /// `$none` error if there was no found object.
+    cache-get-stale-while-revalidate-ns: func(handle: cache-handle) -> result<u64, error>
+
+    /// Gets the age of the found object, returning the `$none` error if there
+    /// was no found object.
+    cache-get-age-ns: func(handle: cache-handle) -> result<u64, error>
+
+    /// Gets the number of cache hits for the found object, returning the `$none` error if there
+    /// was no found object.
+    cache-get-hits: func(handle: cache-handle) -> result<u64, error>
   }
 
   export js-compute-runtime: interface {

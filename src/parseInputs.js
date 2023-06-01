@@ -93,5 +93,11 @@ export async function parseInputs(cliInputs) {
       }
     }
   }
-  return { wasmEngine, component, input, output, enableExperimentalHighResolutionTimeMethods };
+  return {
+    wasmEngine,
+    component,
+    input,
+    output,
+    enableExperimentalHighResolutionTimeMethods,
+  };
 }

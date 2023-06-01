@@ -331,7 +331,7 @@ const JSPropertySpec CryptoKey::properties[] = {
 // https://w3c.github.io/webcrypto/#cryptokey-interface We throw a JS Error if the application
 // attempts to call the CryptoKey constructor directly
 bool CryptoKey::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ILLEGAL_CTOR);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_ILLEGAL_CTOR);
   return false;
 }
 

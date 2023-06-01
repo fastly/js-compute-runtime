@@ -38,6 +38,37 @@ bool Fastly::dump(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Fastly::purgeSurrogateKey(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, __func__, 1)) {
+    return false;
+  }
+
+  /// A cache key consists of up to 4KiB of arbitrary bytes.
+  fastly_world_string_t key_str;
+  JS::UniqueChars key_chars = encode(cx, args.get(0), &key_str.len);
+  if (!key_chars) {
+    return false;
+  }
+  key_str.ptr = key_chars.get();
+
+  if (key_str.len >= 8136) {
+    JS_ReportErrorASCII(
+        cx, "SimpleCache.delete: cacheKey is too long, the maximum allowed length is 8135.");
+    return false;
+  }
+
+  fastly_error_t err;
+  fastly_option_string_t ret;
+  fastly_purge_options_mask_t purge_options = 0;
+  if (!fastly_purge_surrogate_key(&key_str, purge_options, &ret, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+  args.rval().setNull();
+  return true;
+}
+
 bool Fastly::enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, __func__, 1))
@@ -288,6 +319,7 @@ bool Fastly::create(JSContext *cx, JS::HandleObject global, FastlyOptions option
 
   const JSFunctionSpec methods[] = {
       JS_FN("dump", dump, 1, 0),
+      JS_FN("purgeSurrogateKey", purgeSurrogateKey, 1, 0),
       JS_FN("enableDebugLogging", enableDebugLogging, 1, JSPROP_ENUMERATE),
       JS_FN("getGeolocationForIpAddress", getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
       JS_FN("getLogger", getLogger, 1, JSPROP_ENUMERATE),

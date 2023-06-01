@@ -384,6 +384,7 @@ jobs:
           - 'byob'
           - 'byte-repeater'
           - 'cache-override'
+          - 'cache-simple'
           - 'crypto'
           - 'edge-dictionary'
           - 'error'

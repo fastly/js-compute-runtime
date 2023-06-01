@@ -37,9 +37,10 @@ typedef uint32_t fastly_response_handle_t;
 
 typedef uint32_t fastly_request_handle_t;
 
-typedef struct {
-  fastly_world_string_t id;
-} fastly_purge_result_t;
+typedef uint8_t fastly_purge_options_mask_t;
+
+#define FASTLY_PURGE_OPTIONS_MASK_SOFT_PURGE (1 << 0)
+#define FASTLY_PURGE_OPTIONS_MASK_RET_BUF (1 << 1)
 
 typedef uint32_t fastly_pending_request_handle_t;
 
@@ -157,6 +158,80 @@ typedef uint8_t fastly_content_encodings_t;
 
 #define FASTLY_CONTENT_ENCODINGS_GZIP (1 << 0)
 
+typedef uint16_t fastly_cache_write_options_mask_t;
+
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_RESERVED (1 << 0)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_REQUEST_HEADERS (1 << 1)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_VARY_RULE (1 << 2)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS (1 << 3)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS (1 << 4)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS (1 << 5)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_LENGTH (1 << 6)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_USER_METADATA (1 << 7)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA (1 << 8)
+
+typedef uint64_t fastly_cache_object_length_t;
+
+// The status of this lookup (and potential transaction)
+typedef uint8_t fastly_cache_lookup_state_t;
+
+#define FASTLY_CACHE_LOOKUP_STATE_FOUND (1 << 0)
+#define FASTLY_CACHE_LOOKUP_STATE_USABLE (1 << 1)
+#define FASTLY_CACHE_LOOKUP_STATE_STALE (1 << 2)
+#define FASTLY_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE (1 << 3)
+
+typedef uint8_t fastly_cache_lookup_options_mask_t;
+
+#define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_RESERVED (1 << 0)
+#define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS (1 << 1)
+
+typedef struct {
+  bool is_some;
+  fastly_request_handle_t val;
+} fastly_option_request_handle_t;
+
+// Extensible options for cache lookup operations; currently used for both `lookup` and
+// `transaction_lookup`.
+typedef struct {
+  fastly_option_request_handle_t request_headers;
+} fastly_cache_lookup_options_t;
+
+typedef uint64_t fastly_cache_hit_count_t;
+
+// The outcome of a cache lookup (either bare or as part of a cache transaction)
+typedef uint32_t fastly_cache_handle_t;
+
+typedef struct {
+  uint64_t start;
+  uint64_t end;
+} fastly_cache_get_body_options_t;
+
+typedef uint64_t fastly_cache_duration_ns_t;
+
+typedef struct {
+  uint8_t *ptr;
+  size_t len;
+} fastly_list_u8_t;
+
+// Configuration for several hostcalls that write to the cache:
+// - `insert`
+// - `transaction-insert`
+// - `transaction-insert-and-stream-back`
+// - `transaction-update`
+//
+// Some options are only allowed for certain of these hostcalls; see `cache-write-options-mask`.
+typedef struct {
+  fastly_cache_duration_ns_t max_age_ns;
+  fastly_request_handle_t request_headers;
+  fastly_world_string_t vary_rule;
+  fastly_cache_duration_ns_t initial_age_ns;
+  fastly_cache_duration_ns_t stale_while_revalidate_ns;
+  fastly_world_string_t surrogate_keys;
+  fastly_cache_object_length_t length;
+  fastly_list_u8_t user_metadata;
+  bool sensitive_data;
+} fastly_cache_write_options_t;
+
 typedef uint8_t fastly_body_write_end_t;
 
 #define FASTLY_BODY_WRITE_END_BACK 0
@@ -186,11 +261,6 @@ typedef struct {
 // For writing bytes, note that there is a large host-side buffer that bytes can eagerly be written
 // into, even before the origin itself consumes that data.
 typedef uint32_t fastly_async_handle_t;
-
-typedef struct {
-  uint8_t *ptr;
-  size_t len;
-} fastly_list_u8_t;
 
 typedef struct {
   fastly_world_string_t *ptr;
@@ -236,6 +306,11 @@ typedef struct {
   fastly_async_handle_t *ptr;
   size_t len;
 } fastly_list_async_handle_t;
+
+typedef struct {
+  fastly_body_handle_t f0;
+  fastly_cache_handle_t f1;
+} fastly_tuple2_body_handle_cache_handle_t;
 
 typedef uint32_t js_compute_runtime_request_handle_t;
 
@@ -387,8 +462,38 @@ bool fastly_secret_store_plaintext(fastly_secret_handle_t secret, fastly_option_
 bool fastly_async_io_select(fastly_list_async_handle_t *hs, uint32_t timeout_ms,
                             fastly_option_u32_t *ret, fastly_error_t *err);
 bool fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret, fastly_error_t *err);
-bool fastly_purge_surrogate_key(fastly_world_string_t *surrogate_key, bool soft_purge,
-                                fastly_purge_result_t *ret, fastly_error_t *err);
+bool fastly_purge_surrogate_key(fastly_world_string_t *surrogate_key,
+                                fastly_purge_options_mask_t purge_options,
+                                fastly_option_string_t *ret, fastly_error_t *err);
+bool fastly_cache_lookup(fastly_world_string_t *cache_key, fastly_cache_lookup_options_t *options,
+                         fastly_cache_handle_t *ret, fastly_error_t *err);
+bool fastly_cache_insert(fastly_world_string_t *cache_key, fastly_cache_write_options_t *options,
+                         fastly_body_handle_t *ret, fastly_error_t *err);
+bool fastly_transaction_lookup(fastly_world_string_t *cache_key,
+                               fastly_cache_lookup_options_t *options, fastly_cache_handle_t *ret,
+                               fastly_error_t *err);
+bool fastly_transaction_insert(fastly_cache_handle_t handle, fastly_cache_write_options_t *options,
+                               fastly_body_handle_t *ret, fastly_error_t *err);
+bool fastly_transaction_insert_and_stream_back(fastly_cache_handle_t handle,
+                                               fastly_cache_write_options_t *options,
+                                               fastly_tuple2_body_handle_cache_handle_t *ret,
+                                               fastly_error_t *err);
+bool fastly_transaction_update(fastly_cache_handle_t handle, fastly_cache_write_options_t *options,
+                               fastly_error_t *err);
+bool fastly_transaction_cancel(fastly_cache_handle_t handle, fastly_error_t *err);
+bool fastly_cache_close(fastly_cache_handle_t handle, fastly_error_t *err);
+bool fastly_cache_get_state(fastly_cache_handle_t handle, fastly_cache_lookup_state_t *ret,
+                            fastly_error_t *err);
+bool fastly_cache_get_user_metadata(fastly_cache_handle_t h, uint32_t chunk_size,
+                                    fastly_list_u8_t *ret, fastly_error_t *err);
+bool fastly_cache_get_body(fastly_cache_handle_t handle, fastly_cache_get_body_options_t *options,
+                           fastly_body_handle_t *ret, fastly_error_t *err);
+bool fastly_cache_get_length(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err);
+bool fastly_cache_get_max_age_ns(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err);
+bool fastly_cache_get_stale_while_revalidate_ns(fastly_cache_handle_t handle, uint64_t *ret,
+                                                fastly_error_t *err);
+bool fastly_cache_get_age_ns(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err);
+bool fastly_cache_get_hits(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err);
 
 // Exported Functions from `js-compute-runtime`
 bool js_compute_runtime_serve(js_compute_runtime_request_t *req);

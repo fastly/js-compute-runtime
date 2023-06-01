@@ -8,4 +8,5 @@
 /// <reference path="fastly:geolocation.d.ts" />
 /// <reference path="fastly:logger.d.ts" />
 /// <reference path="fastly:kv-store.d.ts" />
+/// <reference path="fastly:cache.d.ts" />
 /// <reference path="globals.d.ts" />

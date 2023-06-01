@@ -21,8 +21,8 @@ if (version) {
   await printHelp();
 } else {
   // This is a dynamic import because this import will throw an error
-  // if if does not have a pre-compiled version of Wizer available the platform 
-  // running the CLI. In that situation, we would still like the 
+  // if it does not have a pre-compiled version of Wizer available the platform
+  // running the CLI. In that situation, we would still like the
   // js-compute-runtime cli's --version and --help flags to work as
   // it could be that the user is using an older version of js-compute-runtime
   // and a newer version does support the platform they are using.
