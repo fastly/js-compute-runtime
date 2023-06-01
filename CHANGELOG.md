@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [2.0.2](https://github.com/fastly/js-compute-runtime/compare/v2.0.1...v2.0.2) (2023-06-01)
+
+
+### Bug Fixes
+
+* add fastly:secret-store types ([3805238](https://github.com/fastly/js-compute-runtime/commit/38052381331999d00b6f2cc878ae41c51068ff94))
+
 ## 2.0.1 (2023-05-24)
 
 

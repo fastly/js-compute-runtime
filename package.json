@@ -1,6 +1,6 @@
 {
   "name": "@fastly/js-compute",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "engines": {
     "node": "16 - 20",
     "npm": "^8 || ^9"
