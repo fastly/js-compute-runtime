@@ -220,8 +220,7 @@ bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
       JS::RootedObject stream_source(cx,
                                      builtins::NativeStreamSource::get_stream_source(cx, body_obj));
       JS::RootedObject source_owner(cx, builtins::NativeStreamSource::owner(stream_source));
-      auto body = RequestOrResponse::body_handle(source_owner);
-      source_body = HttpBody(body.handle);
+      source_body = RequestOrResponse::body_handle(source_owner);
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_SIMPLE_CACHE_SET_CONTENT_STREAM);
