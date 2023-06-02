@@ -205,7 +205,6 @@ bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::HandleValue body_val = args.get(1);
   HttpBody source_body;
   JS::UniqueChars buf;
-  size_t length;
   JS::RootedObject body_obj(cx, body_val.isObject() ? &body_val.toObject() : nullptr);
   // If the body parameter is a Host-backed ReadableStream we optimise our implementation
   // by using the ReadableStream's handle directly.
@@ -255,8 +254,7 @@ bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
     if (result.isErr()) {
       return false;
     }
-    std::tie(buf, length) = result.unwrap();
-    options.length = length;
+    std::tie(buf, options.length) = result.unwrap();
   }
 
   // We create a surrogate-key from the cache-key, as this allows the cached contents to be purgable
@@ -291,7 +289,7 @@ bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
     args.rval().setUndefined();
     return true;
   } else {
-    auto write_res = body.write_all(reinterpret_cast<uint8_t *>(buf.get()), length);
+    auto write_res = body.write_all(reinterpret_cast<uint8_t *>(buf.get()), options.length);
     if (auto *err = write_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
