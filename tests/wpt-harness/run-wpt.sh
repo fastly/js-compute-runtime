@@ -18,7 +18,7 @@
 #
 # > mkdir my_test
 # > cd my_test
-# > DEBUG=true ../tests/wpt-harness/run-wpt.sh
+# > DEBUG=true WEVAL=true ../tests/wpt-harness/run-wpt.sh
 #
 # For this to work, you'll need to have run the following command in advance:
 #
@@ -42,7 +42,6 @@ if ! npm run build > "$output" 2>&1; then
   cat "$output"
   exit 1
 fi
-cp js-compute-runtime-normal.wasm "$working_dir"/js-compute-runtime.wasm
 
 cd "$working_dir"
 
