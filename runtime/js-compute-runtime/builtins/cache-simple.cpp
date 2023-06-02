@@ -149,8 +149,7 @@ JS::Result<std::string> createSurrogateKeyFromCacheKey(JSContext *cx,
     return JS::Result<std::string>(JS::Error());
   }
   JS::UniqueChars data{OPENSSL_buf2hexstr(md.data(), size)};
-  std::string_view hexstr{data.get(), size};
-  std::string surrogate_key{std::remove(hexstr.begin(), hexstr.end(), ':')};
+  std::string surrogate_key{data.get(), std::remove(data.get(), data.get() + size, ':')};
 
   return JS::Result<std::string>(surrogate_key);
 }
