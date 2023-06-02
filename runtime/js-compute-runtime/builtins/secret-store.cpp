@@ -1,26 +1,29 @@
 #include "secret-store.h"
-#include "host_interface/host_call.h"
+#include "host_interface/host_api.h"
 
 namespace builtins {
 
-fastly_secret_handle_t SecretStoreEntry::secret_handle(JSObject *obj) {
+host_api::Secret SecretStoreEntry::secret_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, SecretStoreEntry::Slots::Handle);
-  return static_cast<fastly_secret_handle_t>(val.toInt32());
+  return host_api::Secret{static_cast<fastly_secret_handle_t>(val.toInt32())};
 }
 
 bool SecretStoreEntry::plaintext(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  fastly_option_string_t ret;
-  fastly_error_t err;
   // Ensure that we throw an exception for all unexpected host errors.
-  if (!fastly_secret_store_plaintext(SecretStoreEntry::secret_handle(self), &ret, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto res = SecretStoreEntry::secret_handle(self).plaintext();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.val.ptr, ret.val.len)));
-  JS_free(cx, ret.val.ptr);
+  auto ret = std::move(res.unwrap());
+  if (!ret.has_value()) {
+    return false;
+  }
+
+  JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret->begin(), ret->size())));
   if (!text) {
     return false;
   }
@@ -47,14 +50,14 @@ bool SecretStoreEntry::constructor(JSContext *cx, unsigned argc, JS::Value *vp) 
   return false;
 }
 
-JSObject *SecretStoreEntry::create(JSContext *cx, fastly_secret_handle_t handle) {
+JSObject *SecretStoreEntry::create(JSContext *cx, host_api::Secret secret) {
   JS::RootedObject entry(
       cx, JS_NewObjectWithGivenProto(cx, &SecretStoreEntry::class_, SecretStoreEntry::proto_obj));
   if (!entry) {
     return nullptr;
   }
 
-  JS::SetReservedSlot(entry, Slots::Handle, JS::Int32Value(handle));
+  JS::SetReservedSlot(entry, Slots::Handle, JS::Int32Value(secret.handle));
 
   return entry;
 }
@@ -63,9 +66,9 @@ bool SecretStoreEntry::init_class(JSContext *cx, JS::HandleObject global) {
   return BuiltinImpl<SecretStoreEntry>::init_class_impl(cx, global);
 }
 
-fastly_secret_store_handle_t SecretStore::secret_store_handle(JSObject *obj) {
+host_api::SecretStore SecretStore::secret_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, SecretStore::Slots::Handle);
-  return static_cast<fastly_secret_store_handle_t>(val.toInt32());
+  return host_api::SecretStore{static_cast<fastly_secret_store_handle_t>(val.toInt32())};
 }
 
 bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -94,10 +97,10 @@ bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  std::string_view key_view(key.get(), length);
+  std::string_view key_str(key.get(), length);
 
   // key must contain only letters, numbers, dashes (-), underscores (_), and periods (.).
-  auto is_valid_key = std::all_of(key_view.begin(), key_view.end(), [&](auto character) {
+  auto is_valid_key = std::all_of(key_str.begin(), key_str.end(), [&](auto character) {
     return std::isalnum(character) || character == '_' || character == '-' || character == '.';
   });
 
@@ -107,24 +110,21 @@ bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  fastly_world_string_t key_str;
-  key_str.len = length;
-  key_str.ptr = key.get();
-  fastly_option_secret_handle_t secret;
-  fastly_error_t err;
   // Ensure that we throw an exception for all unexpected host errors.
-  if (!fastly_secret_store_get(SecretStore::secret_store_handle(self), &key_str, &secret, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto get_res = SecretStore::secret_store_handle(self).get(key_str);
+  if (auto *err = get_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
   // When no entry is found, we are going to resolve the Promise with `null`.
-  if (!secret.is_some) {
+  auto secret = get_res.unwrap();
+  if (!secret.has_value()) {
     JS::RootedValue result(cx);
     result.setNull();
     JS::ResolvePromise(cx, result_promise, result);
   } else {
-    JS::RootedObject entry(cx, SecretStoreEntry::create(cx, secret.val));
+    JS::RootedObject entry(cx, SecretStoreEntry::create(cx, *secret));
     if (!entry) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
@@ -191,23 +191,21 @@ bool SecretStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!secret_store) {
     return false;
   }
-  fastly_world_string_t name_str;
-  name_str.ptr = name_chars.get();
-  name_str.len = length;
-  fastly_secret_store_handle_t handle = INVALID_HANDLE;
-  fastly_error_t err;
-  if (!fastly_secret_store_open(&name_str, &handle, &err)) {
-    if (err == FASTLY_ERROR_OPTIONAL_NONE) {
+
+  auto res = host_api::SecretStore::open(name);
+  if (auto *err = res.to_err()) {
+    if (*err == FASTLY_ERROR_OPTIONAL_NONE) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SECRET_STORE_DOES_NOT_EXIST,
                                 name.data());
       return false;
     } else {
-      HANDLE_ERROR(cx, err);
+      HANDLE_ERROR(cx, *err);
       return false;
     }
   }
 
-  JS::SetReservedSlot(secret_store, SecretStore::Slots::Handle, JS::Int32Value(handle));
+  JS::SetReservedSlot(secret_store, SecretStore::Slots::Handle,
+                      JS::Int32Value(res.unwrap().handle));
   args.rval().setObject(*secret_store);
   return true;
 }

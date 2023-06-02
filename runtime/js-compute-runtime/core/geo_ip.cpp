@@ -1,8 +1,7 @@
 #include <arpa/inet.h>
 
 #include "core/geo_ip.h"
-#include "host_interface/fastly.h"
-#include "host_interface/host_call.h"
+#include "host_interface/host_api.h"
 #include "js-compute-builtins.h" // for encode
 
 JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
@@ -34,14 +33,13 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
     return nullptr;
   }
 
-  fastly_list_u8_t octets_list = {const_cast<uint8_t *>(&octets[0]), octets_len};
-
-  fastly_world_string_t ret;
-  fastly_error_t err;
-  if (!fastly_geo_lookup(&octets_list, &ret, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto res = GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return nullptr;
   }
 
-  return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.ptr, ret.len));
+  auto ret = std::move(res.unwrap());
+
+  return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.ptr.release(), ret.len));
 }

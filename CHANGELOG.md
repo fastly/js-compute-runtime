@@ -1,6 +1,22 @@
 # Changelog
 
 
+## 2.0.2 (2023-06-01)
+
+
+### Fixed
+
+* add fastly:secret-store types ([3805238](https://github.com/fastly/js-compute-runtime/commit/38052381331999d00b6f2cc878ae41c51068ff94))
+
+* update to the latest wizer which brings support for prebuilt linux s390x and aarch64 wizer binaries ([69484c2](https://github.com/fastly/js-compute-runtime/commit/69484c25465a2674513f83f8c9674e1857e01cb9))
+
+## 2.0.1 (2023-05-24)
+
+
+### Fixed
+
+* When using implicit backends with https protocol, use the hostname for the sni hostname value to match `fetch` behaviour in browsers and other runtimes ([84fb6a2](https://github.com/fastly/js-compute-runtime/commit/84fb6a2fa57408fb13e9319da91d6de3533f1e3c))
+
 ## 2.0.0 (2023-05-15)
 
 
@@ -25,7 +41,7 @@ And this is the change that would need to be made for constructing an instance o
 ```
 
 
-Here is a full example of migrating an applicatin from ObjectStore to KVStore:
+Here is a full example of migrating an application from ObjectStore to KVStore:
 ```diff
 /// <reference types="@fastly/js-compute" />
 

@@ -401,7 +401,7 @@ bool SimpleCache::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   skey.len = surrogate_key.length();
 
   fastly_error_t err;
-  fastly_option_string_t ret;
+  fastly_world_option_string_t ret;
   fastly_purge_options_mask_t purge_options = 0;
   if (!fastly_purge_surrogate_key(&skey, purge_options, &ret, &err)) {
     HANDLE_ERROR(cx, err);

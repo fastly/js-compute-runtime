@@ -712,109 +712,93 @@ bool Backend::isCipherSuiteSupportedByFastly(std::string_view cipherSpec) {
 JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::HandleObject backend) {
   MOZ_ASSERT(is_instance(backend));
 
-  fastly_world_string_t name_str;
   JS::RootedString name(cx, JS::GetReservedSlot(backend, Backend::Slots::Name).toString());
-  JS::UniqueChars nameChars = encode(cx, name, &name_str.len);
-  name_str.ptr = nameChars.get();
+  size_t name_len;
+  JS::UniqueChars nameChars = encode(cx, name, &name_len);
+  std::string_view name_str{nameChars.get(), name_len};
 
-  fastly_world_string_t target_str;
   JS::RootedString target(cx, JS::GetReservedSlot(backend, Backend::Slots::Target).toString());
-  JS::UniqueChars targetChars = encode(cx, target, &target_str.len);
-  target_str.ptr = targetChars.get();
+  size_t target_len;
+  JS::UniqueChars targetChars = encode(cx, target, &target_len);
+  std::string_view target_str{targetChars.get(), target_len};
 
-  fastly_dynamic_backend_config_t backend_config;
-  std::memset(&backend_config, 0, sizeof(backend_config));
+  BackendConfig backend_config;
 
-  std::string hostOverride;
   auto hostOverrideSlot = JS::GetReservedSlot(backend, Backend::Slots::HostOverride);
-  if ((backend_config.host_override.is_some = !hostOverrideSlot.isNullOrUndefined())) {
+  if (!hostOverrideSlot.isNullOrUndefined()) {
     JS::RootedString hostOverrideString(cx, hostOverrideSlot.toString());
     size_t hostOverride_len;
     JS::UniqueChars hostOverrideChars = encode(cx, hostOverrideString, &hostOverride_len);
-    hostOverride = std::string(hostOverrideChars.get(), hostOverride_len);
-    backend_config.host_override.val.ptr = const_cast<char *>(hostOverride.c_str());
-    backend_config.host_override.val.len = hostOverride.length();
+    backend_config.host_override.emplace(std::move(hostOverrideChars), hostOverride_len);
   }
 
   auto connectTimeoutSlot = JS::GetReservedSlot(backend, Backend::Slots::ConnectTimeout);
-  if ((backend_config.connect_timeout.is_some = !connectTimeoutSlot.isNullOrUndefined())) {
-    backend_config.connect_timeout.val = connectTimeoutSlot.toInt32();
+  if (!connectTimeoutSlot.isNullOrUndefined()) {
+    backend_config.connect_timeout = connectTimeoutSlot.toInt32();
   }
 
   auto firstByteTimeoutSlot = JS::GetReservedSlot(backend, Backend::Slots::FirstByteTimeout);
-  if ((backend_config.first_byte_timeout.is_some = !firstByteTimeoutSlot.isNullOrUndefined())) {
-    backend_config.first_byte_timeout.val = firstByteTimeoutSlot.toInt32();
+  if (!firstByteTimeoutSlot.isNullOrUndefined()) {
+    backend_config.first_byte_timeout = firstByteTimeoutSlot.toInt32();
   }
 
   auto betweenBytesTimeoutSlot = JS::GetReservedSlot(backend, Backend::Slots::BetweenBytesTimeout);
-  if ((backend_config.between_bytes_timeout.is_some =
-           !betweenBytesTimeoutSlot.isNullOrUndefined())) {
-    backend_config.between_bytes_timeout.val = betweenBytesTimeoutSlot.toInt32();
+  if (!betweenBytesTimeoutSlot.isNullOrUndefined()) {
+    backend_config.between_bytes_timeout = betweenBytesTimeoutSlot.toInt32();
   }
 
   auto useSslSlot = JS::GetReservedSlot(backend, Backend::Slots::UseSsl);
-  if ((backend_config.use_ssl.is_some = !useSslSlot.isNullOrUndefined())) {
-    backend_config.use_ssl.val = useSslSlot.toBoolean();
+  if (!useSslSlot.isNullOrUndefined()) {
+    backend_config.use_ssl = useSslSlot.toBoolean();
   }
 
   auto tlsMinVersion = JS::GetReservedSlot(backend, Backend::Slots::TlsMinVersion);
-  if ((backend_config.ssl_min_version.is_some = !tlsMinVersion.isNullOrUndefined())) {
-    backend_config.ssl_min_version.val = (int8_t)tlsMinVersion.toInt32();
+  if (!tlsMinVersion.isNullOrUndefined()) {
+    backend_config.ssl_min_version = static_cast<uint8_t>(tlsMinVersion.toInt32());
   }
 
   auto tlsMaxVersion = JS::GetReservedSlot(backend, Backend::Slots::TlsMaxVersion);
-  if ((backend_config.ssl_max_version.is_some = !tlsMaxVersion.isNullOrUndefined())) {
-    backend_config.ssl_max_version.val = (int8_t)tlsMaxVersion.toInt32();
+  if (!tlsMaxVersion.isNullOrUndefined()) {
+    backend_config.ssl_max_version = static_cast<int8_t>(tlsMaxVersion.toInt32());
   }
 
-  std::string certificateHostname;
   auto certificateHostnameSlot = JS::GetReservedSlot(backend, Backend::Slots::CertificateHostname);
-  if ((backend_config.cert_hostname.is_some = !certificateHostnameSlot.isNullOrUndefined())) {
+  if (!certificateHostnameSlot.isNullOrUndefined()) {
     JS::RootedString certificateHostnameString(cx, certificateHostnameSlot.toString());
     size_t certificateHostname_len;
     JS::UniqueChars certificateHostnameChars =
         encode(cx, certificateHostnameString, &certificateHostname_len);
-    certificateHostname = std::string(certificateHostnameChars.get(), certificateHostname_len);
-    backend_config.cert_hostname.val.ptr = const_cast<char *>(certificateHostname.c_str());
-    backend_config.cert_hostname.val.len = certificateHostname.length();
+    backend_config.cert_hostname.emplace(std::move(certificateHostnameChars),
+                                         certificateHostname_len);
   }
 
-  std::string caCertificate;
   auto caCertificateSlot = JS::GetReservedSlot(backend, Backend::Slots::CaCertificate);
-  if ((backend_config.ca_cert.is_some = !caCertificateSlot.isNullOrUndefined())) {
+  if (!caCertificateSlot.isNullOrUndefined()) {
     JS::RootedString caCertificateString(cx, caCertificateSlot.toString());
     size_t caCertificate_len;
     JS::UniqueChars caCertificateChars = encode(cx, caCertificateString, &caCertificate_len);
-    caCertificate = std::string(caCertificateChars.get(), caCertificate_len);
-    backend_config.ca_cert.val.ptr = const_cast<char *>(caCertificate.c_str());
-    backend_config.ca_cert.val.len = caCertificate.length();
+    backend_config.ca_cert.emplace(std::move(caCertificateChars), caCertificate_len);
   }
 
-  std::string ciphers;
   auto ciphersSlot = JS::GetReservedSlot(backend, Backend::Slots::Ciphers);
-  if ((backend_config.ciphers.is_some = !ciphersSlot.isNullOrUndefined())) {
+  if (!ciphersSlot.isNullOrUndefined()) {
     JS::RootedString ciphersString(cx, ciphersSlot.toString());
     size_t ciphers_len;
     JS::UniqueChars ciphersChars = encode(cx, ciphersString, &ciphers_len);
-    ciphers = std::string(ciphersChars.get(), ciphers_len);
-    backend_config.ciphers.val.ptr = const_cast<char *>(ciphers.c_str());
-    backend_config.ciphers.val.len = ciphers.length();
+    backend_config.ciphers.emplace(std::move(ciphersChars), ciphers_len);
   }
 
-  std::string sniHostname;
   auto sniHostnameSlot = JS::GetReservedSlot(backend, Backend::Slots::SniHostname);
-  if ((backend_config.sni_hostname.is_some = !sniHostnameSlot.isNullOrUndefined())) {
+  if (!sniHostnameSlot.isNullOrUndefined()) {
     JS::RootedString sniHostnameString(cx, sniHostnameSlot.toString());
     size_t sniHostname_len;
     JS::UniqueChars sniHostnameChars = encode(cx, sniHostnameString, &sniHostname_len);
-    sniHostname = std::string(sniHostnameChars.get(), sniHostname_len);
-    backend_config.sni_hostname.val.ptr = const_cast<char *>(sniHostname.c_str());
-    backend_config.sni_hostname.val.len = sniHostname.length();
+    backend_config.sni_hostname.emplace(std::move(sniHostnameChars), sniHostname_len);
   }
 
-  fastly_error_t err;
-  if (!fastly_http_req_register_dynamic_backend(&name_str, &target_str, &backend_config, &err)) {
-    HANDLE_ERROR(cx, err);
+  auto res = HttpReq::register_dynamic_backend(name_str, target_str, backend_config);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return JS::Result<mozilla::Ok>(JS::Error());
   }
   return mozilla::Ok();
@@ -880,6 +864,20 @@ bool Backend::set_host_override(JSContext *cx, JSObject *backend,
     return false;
   }
   JS::SetReservedSlot(backend, Backend::Slots::HostOverride, JS::StringValue(hostOverride));
+  return true;
+}
+
+bool Backend::set_sni_hostname(JSContext *cx, JSObject *backend, JS::HandleValue sniHostname_val) {
+  auto sniHostname = JS::ToString(cx, sniHostname_val);
+  if (!sniHostname) {
+    return false;
+  }
+
+  if (JS_GetStringLength(sniHostname) == 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_SNI_HOSTNAME_EMPTY);
+    return false;
+  }
+  JS::SetReservedSlot(backend, Backend::Slots::SniHostname, JS::StringValue(sniHostname));
   return true;
 }
 
@@ -1001,6 +999,11 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
 
   auto use_ssl = origin.rfind("https://", 0) == 0;
   JS::SetReservedSlot(backend, Backend::Slots::UseSsl, JS::BooleanValue(use_ssl));
+  if (use_ssl) {
+    if (!Backend::set_sni_hostname(cx, backend, name)) {
+      return nullptr;
+    }
+  }
 
   auto result = Backend::register_dynamic_backend(cx, backend);
   if (result.isErr()) {

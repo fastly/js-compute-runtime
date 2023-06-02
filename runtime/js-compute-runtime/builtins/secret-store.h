@@ -2,6 +2,7 @@
 #define JS_COMPUTE_RUNTIME_SECRET_STORE_H
 
 #include "builtin.h"
+#include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
 
 namespace builtins {
@@ -19,9 +20,9 @@ public:
 
   static bool plaintext(JSContext *cx, unsigned argc, JS::Value *vp);
 
-  static fastly_secret_handle_t secret_handle(JSObject *obj);
+  static host_api::Secret secret_handle(JSObject *obj);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-  static JSObject *create(JSContext *cx, fastly_secret_handle_t handle);
+  static JSObject *create(JSContext *cx, host_api::Secret handle);
 
   static bool init_class(JSContext *cx, JS::HandleObject global);
 };
@@ -39,7 +40,7 @@ public:
 
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
 
-  static fastly_secret_store_handle_t secret_store_handle(JSObject *obj);
+  static host_api::SecretStore secret_store_handle(JSObject *obj);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static bool init_class(JSContext *cx, JS::HandleObject global);

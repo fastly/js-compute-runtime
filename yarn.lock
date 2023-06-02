@@ -33,40 +33,59 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bytecodealliance/jco@^0.6.1":
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/@bytecodealliance/jco/-/jco-0.6.1.tgz#29f972a5ad5d8b6790ea692c4e0f4c4fa851ead1"
-  integrity sha512-AchbXV361SDG51Bk+OKgU1qLm/3th7ncNrBBQHMgncqM7xiONCM5E3regxj+LSnK07dNgdSAnbjwT5MI4QsyDw==
+"@bytecodealliance/jco@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/jco/-/jco-0.7.0.tgz#c48ad88877d5c80054a7bbb13329a47b0ee9ba2d"
+  integrity sha512-YPqmvNHfcmDUMz2TC7LEYramGiKhMLjbHaZ2kqEtOrAOSOiFmkDXAyJLHp7j8QzBbotOhZDrvdKrAGlxiQZigQ==
+  dependencies:
+    "@bytecodealliance/preview2-shim" "0.0.8"
 
-"@bytecodealliance/wizer-darwin-arm64@1.6.1-beta.4":
-  version "1.6.1-beta.4"
-  resolved "https://registry.npmjs.org/@bytecodealliance/wizer-darwin-arm64/-/wizer-darwin-arm64-1.6.1-beta.4.tgz"
-  integrity sha512-NyleEH0GKBqS0DCuKceY3a2ZxF/aNzYa68swbKKljSFh6uo/3Cqr/U5/SuTxval6/VwtZ1eEzRPaLbLlUE5r4w==
+"@bytecodealliance/preview2-shim@0.0.8":
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/preview2-shim/-/preview2-shim-0.0.8.tgz#8ee11d18b29105b64d2ceac2410cd9215c4b887d"
+  integrity sha512-yeY8wHpCBlRlHCU4YzvGn41z3UV9svDE7Z3OkEyU5TbzJiy1S9mMB3R43d2YE/f6rPLRZyE141TDDyPf6zdcWQ==
 
-"@bytecodealliance/wizer-darwin-x64@1.6.1-beta.4":
-  version "1.6.1-beta.4"
-  resolved "https://registry.npmjs.org/@bytecodealliance/wizer-darwin-x64/-/wizer-darwin-x64-1.6.1-beta.4.tgz"
-  integrity sha512-2s8HPLrttAyYUJNHQlLVi3rDGlnk9IzEJTbw0DApfpVnCZZ1aTLt6MXTIBeOYo9si5Q4cqyDHT5bAoNZvJTk9A==
+"@bytecodealliance/wizer-darwin-arm64@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-darwin-arm64/-/wizer-darwin-arm64-3.0.1.tgz#cee796abb1a1e3b34d5889f431cdb39bc6a1d77f"
+  integrity sha512-/8KYSajyhO9koAE3qQhYfC6belZheJw9X3XqW7hrizTpj6n4z4OJFhhqwJmiYFUUsPtC7OxcXMFFPbTuSQPBcw==
 
-"@bytecodealliance/wizer-linux-x64@1.6.1-beta.4":
-  version "1.6.1-beta.4"
-  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-linux-x64/-/wizer-linux-x64-1.6.1-beta.4.tgz#fec633bbeb9f01579ab3988e0babc917abc4e0bb"
-  integrity sha512-S+oYRGGveuPLtiI6V7SQpZHhw43asLArC+fGrJRQ3OsHs8aj/IVusRLVYgWfKw1HtZm9iIWrjH9WYO6BWak4eQ==
+"@bytecodealliance/wizer-darwin-x64@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-darwin-x64/-/wizer-darwin-x64-3.0.1.tgz#0a4131f210cbaab0df46ad64d065768c0803c977"
+  integrity sha512-bMReultN/r+W/BRXV0F+28U5dZwbQT/ZO0k4icZlhUhrv5/wpQJix7Z/ZvBnVQ+/JHb0QDUpFk2/zCtgkRXP6Q==
 
-"@bytecodealliance/wizer-win32-x64@1.6.1-beta.4":
-  version "1.6.1-beta.4"
-  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-win32-x64/-/wizer-win32-x64-1.6.1-beta.4.tgz#71b6af911cb3620522df6e592a73b05d7cc50b17"
-  integrity sha512-NxqrLqFnaMyldkN7lBVS+Em23f84/RKrHjBXt9WnZK2RtJjvwoCXr+so6+qfj4f1K9BhIZ8UaBfYwqPvtLOcZQ==
+"@bytecodealliance/wizer-linux-arm64@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-linux-arm64/-/wizer-linux-arm64-3.0.1.tgz#9cdd378a0b7ccaf4c195d648ee5f88658df04779"
+  integrity sha512-35ZhAeYxWK3bTqqgwysbBWlGlrlMNKNng3ZITQV2PAtafpE7aCeqywl7VAS4lLRG5eTb7wxNgN7zf8d3wiIFTQ==
 
-"@bytecodealliance/wizer@^1.6.1-beta.4":
-  version "1.6.1-beta.4"
-  resolved "https://registry.npmjs.org/@bytecodealliance/wizer/-/wizer-1.6.1-beta.4.tgz"
-  integrity sha512-afgV4lyYVMBN/9/yNDgYGTn92D7VrqS0yTZ3WZgDyDTiOWjmSuQimEiX+VzCiYjF9GXsKwzCY1FEOu1pY2Evgw==
+"@bytecodealliance/wizer-linux-s390x@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-linux-s390x/-/wizer-linux-s390x-3.0.1.tgz#d53d7ae5809573fa72d0d4dc4742cec9ae4aed1b"
+  integrity sha512-Smvy9mguEMtX0lupDLTPshXUzAHeOhgscr1bhGNjeCCLD1sd8rIjBvWV19Wtra0BL1zTuU2EPOHjR/4k8WoyDg==
+
+"@bytecodealliance/wizer-linux-x64@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-linux-x64/-/wizer-linux-x64-3.0.1.tgz#fa074bc047d693dc5a95ce4b1b800bd58dae24ee"
+  integrity sha512-uUue78xl7iwndsGgTsagHLTLyLBVHhwzuywiwHt1xw8y0X0O8REKRLBoB7+LdM+pttDPdFtKJgbTFL4UPAA7Yw==
+
+"@bytecodealliance/wizer-win32-x64@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer-win32-x64/-/wizer-win32-x64-3.0.1.tgz#d5f59c56cf65c4aa261078a04ca46b8540a4416d"
+  integrity sha512-ycd38sx1UTZpHZwh8IfH/4N3n0OQUB8awxkUSLXf9PolEd088YbxoPB3noHy4E+L2oYN7KZMrg9517pX0z2RhQ==
+
+"@bytecodealliance/wizer@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@bytecodealliance/wizer/-/wizer-3.0.1.tgz#34fd5f3cc6a86e44ddb4da064c28a9e22fcdbf43"
+  integrity sha512-f0NBiBHCNBkbFHTPRbA7aKf/t4KyNhi2KvSqw3QzCgi8wFF/uLZ0dhejj93rbiKO/iwWbmU7v9K3SVkW81mcjQ==
   optionalDependencies:
-    "@bytecodealliance/wizer-darwin-arm64" "1.6.1-beta.4"
-    "@bytecodealliance/wizer-darwin-x64" "1.6.1-beta.4"
-    "@bytecodealliance/wizer-linux-x64" "1.6.1-beta.4"
-    "@bytecodealliance/wizer-win32-x64" "1.6.1-beta.4"
+    "@bytecodealliance/wizer-darwin-arm64" "3.0.1"
+    "@bytecodealliance/wizer-darwin-x64" "3.0.1"
+    "@bytecodealliance/wizer-linux-arm64" "3.0.1"
+    "@bytecodealliance/wizer-linux-s390x" "3.0.1"
+    "@bytecodealliance/wizer-linux-x64" "3.0.1"
+    "@bytecodealliance/wizer-win32-x64" "3.0.1"
 
 "@esbuild/android-arm64@0.17.18":
   version "0.17.18"

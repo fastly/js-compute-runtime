@@ -7,7 +7,7 @@ int main(int argc, const char *argv[]) {
     return 1;
   }
 
-  js_compute_runtime_serve(static_cast<js_compute_runtime_request_t *>(static_cast<void *>(&req)));
+  compute_at_edge_serve(static_cast<compute_at_edge_request_t *>(static_cast<void *>(&req)));
 
   // Note: we deliberately skip shutdown, because it takes quite a while,
   // and serves no purpose for us.

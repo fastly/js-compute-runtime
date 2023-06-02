@@ -29,13 +29,13 @@ bool TextEncoder::encode(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   size_t chars_len;
   JS::UniqueChars chars = ::encode(cx, args[0], &chars_len);
-
-  auto *rawChars = chars.release();
-  JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, chars_len, rawChars));
+  JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, chars_len, chars.get()));
   if (!buffer) {
-    JS_free(cx, rawChars);
     return false;
   }
+
+  // `buffer` now owns `chars`
+  static_cast<void>(chars.release());
 
   JS::RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, chars_len));
   if (!byte_array) {
