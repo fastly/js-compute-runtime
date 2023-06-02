@@ -23,7 +23,6 @@ public:
 
   static const JSPropertySpec properties[];
 
-  static bool purgeSurrogateKey(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool now(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool dump(JSContext *cx, unsigned argc, JS::Value *vp);
