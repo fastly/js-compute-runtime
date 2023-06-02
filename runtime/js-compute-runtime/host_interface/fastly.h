@@ -358,6 +358,43 @@ int async_select(fastly_async_handle_t handles[], size_t handles_len, uint32_t t
 // type.
 WASM_IMPORT("fastly_async_io", "is_ready")
 int async_is_ready(fastly_async_handle_t handle, uint32_t *is_ready_out);
+
+struct __attribute__((aligned(4))) PurgeOptions {
+  uint8_t *ret_buf_ptr;
+  size_t ret_buf_len;
+  size_t *ret_buf_nwritten_out;
+};
+
+WASM_IMPORT("fastly_purge", "purge_surrogate_key")
+int purge_surrogate_key(char *surrogate_key, size_t surrogate_key_len, uint32_t options_mask,
+                        PurgeOptions *purge_options);
+
+WASM_IMPORT("fastly_cache", "lookup")
+int cache_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,
+                 fastly_cache_lookup_options_t *options, fastly_cache_handle_t *ret);
+
+typedef __attribute__((aligned(8))) struct {
+  uint64_t max_age_ns;
+  uint32_t request_headers;
+  const uint8_t *vary_rule_ptr;
+  size_t vary_rule_len;
+  uint64_t initial_age_ns;
+  uint64_t stale_while_revalidate_ns;
+  const uint8_t *surrogate_keys_ptr;
+  size_t surrogate_keys_len;
+  uint64_t length;
+  const uint8_t *user_metadata_ptr;
+  size_t user_metadata_len;
+} CacheWriteOptions;
+
+WASM_IMPORT("fastly_cache", "insert")
+int cache_insert(char *cache_key, size_t cache_key_len, uint32_t options_mask,
+                 CacheWriteOptions *options, fastly_body_handle_t *ret);
+
+WASM_IMPORT("fastly_cache", "get_body")
+int cache_get_body(fastly_cache_handle_t handle, uint32_t options_mask,
+                   fastly_cache_get_body_options_t *options, fastly_body_handle_t *ret);
+
 } // namespace fastly
 #ifdef __cplusplus
 }

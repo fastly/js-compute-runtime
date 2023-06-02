@@ -10,7 +10,7 @@ defaults:
   run:
     shell: bash
 env:
-  viceroy_version: 0.4.4
+  viceroy_version: 0.5.1
   wasm-tools_version: 1.0.28
 
 jobs:
@@ -128,7 +128,7 @@ jobs:
       matrix:
         include:
           - crate: viceroy
-            version: 0.4.4 # Note: workflow-level env vars can't be used in matrix definitions
+            version: 0.5.1 # Note: workflow-level env vars can't be used in matrix definitions
             options: ""
           - crate: wasm-tools
             version: 1.0.28 # Note: workflow-level env vars can't be used in matrix definitions
@@ -383,6 +383,7 @@ jobs:
           - 'byob'
           - 'byte-repeater'
           - 'cache-override'
+          - 'cache-simple'
           - 'crypto'
           - 'edge-dictionary'
           - 'error'

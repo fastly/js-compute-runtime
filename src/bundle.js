@@ -36,6 +36,7 @@ export const allowDynamicBackends = Object.getOwnPropertyDescriptor(globalThis.f
         case 'logger': { return { contents: `export const Logger = globalThis.Logger;` } }
         case 'kv-store': { return { contents: `export const KVStore = globalThis.KVStore;` } }
         case 'secret-store': { return { contents: `export const SecretStore = globalThis.SecretStore;export const SecretStoreEntry = globalThis.SecretStoreEntry;` } }
+        case 'cache': { return { contents: `export const SimpleCache = globalThis.SimpleCache;export const SimpleCacheEntry = globalThis.SimpleCacheEntry;` } }
       }
     })
   },

@@ -1,4 +1,32 @@
+/* global ReadableStream */
+
 // Testing/Assertion functions //
+
+// TODO: Implement ReadableStream getIterator() and [@@asyncIterator]() methods
+export async function streamToString(stream) {
+    const decoder = new TextDecoder();
+    let string = '';
+    let reader = stream.getReader()
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            return string;
+        }
+        string += decoder.decode(value)
+    }
+}
+
+export function iteratableToStream(iterable) {
+    return new ReadableStream({
+        async pull(controller) {
+            for await (const value of iterable) {
+                controller.enqueue(value);
+            }
+            controller.close();
+        }
+    });
+}
 
 export function pass(message = '') {
     return new Response(message)

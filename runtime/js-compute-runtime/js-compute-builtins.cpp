@@ -39,6 +39,7 @@
 #include "builtin.h"
 #include "builtins/backend.h"
 #include "builtins/cache-override.h"
+#include "builtins/cache-simple.h"
 #include "builtins/client-info.h"
 #include "builtins/compression-stream.h"
 #include "builtins/config-store.h"
@@ -1343,6 +1344,12 @@ bool define_fastly_sys(JSContext *cx, HandleObject global, FastlyOptions options
     return false;
   if (!builtins::SecretStoreEntry::init_class(cx, global))
     return false;
+  if (!builtins::SimpleCache::init_class(cx, global)) {
+    return false;
+  }
+  if (!builtins::SimpleCacheEntry::init_class(cx, global)) {
+    return false;
+  }
 
   pending_async_tasks = new JS::PersistentRootedObjectVector(cx);
 

@@ -1,0 +1,542 @@
+{
+  "GET /simple-cache/interface": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-store/constructor/called-as-regular-function": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-store/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/constructor/throws": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/constructor/throws"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/delete/called-as-constructor": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/delete/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/delete/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/delete/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/delete/key-parameter-not-supplied": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/delete/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/delete/key-parameter-empty-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/delete/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/delete/key-parameter-1024-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/delete/key-parameter-1024-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/delete/key-parameter-1025-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/delete/key-parameter-1025-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/delete/returns-undefined": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/delete/returns-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/called-as-constructor": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/tll-parameter-7.1.4-ToNumber": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/tll-parameter-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/no-parameters-supplied": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/no-parameters-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/key-parameter-empty-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/key-parameter-8135-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/key-parameter-8135-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/key-parameter-8136-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/key-parameter-8136-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/ttl-parameter-negative-number": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/ttl-parameter-negative-number"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/ttl-parameter-NaN": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/ttl-parameter-NaN"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/ttl-parameter-Infinity": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/ttl-parameter-Infinity"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-as-undefined": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-as-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-missing-length-parameter": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-missing-length-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-negative-length-parameter": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-negative-length-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-nan-length-parameter": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-nan-length-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-negative-infinity-length-parameter": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-negative-infinity-length-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-positive-infinity-length-parameter": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-positive-infinity-length-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/length-parameter-7.1.4-ToNumber": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/length-parameter-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-empty": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-empty"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-locked": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-locked"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-URLSearchParams": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-URLSearchParams"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-strings": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-strings"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-buffer": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-buffer"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-arraybuffer": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-arraybuffer"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-typed-arrays": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-typed-arrays"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-dataview": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-dataview"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/returns-undefined": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/returns-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/called-as-constructor": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-parameter-not-supplied": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-parameter-empty-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-parameter-8135-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-parameter-8135-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-parameter-8136-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-parameter-8136-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-does-not-exist-returns-null": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-does-not-exist-returns-null"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-exists": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-exists"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/interface": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/text/valid": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/text/valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/json/valid": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/json/valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/json/invalid": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/json/invalid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/arrayBuffer/valid": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/arrayBuffer/valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/body": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/body"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/bodyUsed": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/bodyUsed"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/readablestream": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/readablestream"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  }
+}
