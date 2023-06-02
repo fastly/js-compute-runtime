@@ -23,7 +23,7 @@
 # For this to work, you'll need to have run the following command in advance:
 #
 # > cd runtime/spidermonkey
-# > ./download-engine.sh debug
+# > ./download-engine.sh debug normal
 #
 # If you get an error about missing "jsapi.h" while building the runtime,
 # something's gone wrong with the engine download.
