@@ -60,7 +60,6 @@ typedef uint16_t fastly_http_status_t;
 
 typedef uint8_t fastly_http_cache_override_tag_t;
 
-// Do not cache the response to this request, regardless of the origin response's headers.
 #define FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS (1 << 0)
 #define FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL (1 << 1)
 #define FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE (1 << 2)
@@ -82,84 +81,24 @@ typedef struct {
 } fastly_world_option_float32_t;
 
 typedef struct {
-  // * The name of the organization associated with as_number.
-  //       *
-  //       * For example, fastly is the value given for IP addresses under AS-54113.
   fastly_world_option_string_t as_name;
-  // * [Autonomous system](https://en.wikipedia.org/wiki/Autonomous_system_(Internet)) (AS) number.
   fastly_world_option_u32_t as_number;
-  // * The telephone area code associated with an IP address.
-  //       *
-  //       * These are only available for IP addresses in the United States, its territories, and
-  //       Canada.
   fastly_world_option_u32_t area_code;
-  // * City or town name.
   fastly_world_option_string_t city;
-  // * Connection speed.
   fastly_world_option_string_t conn_speed;
-  // * Connection type.
   fastly_world_option_string_t conn_type;
-  // * Continent.
   fastly_world_option_string_t continent;
-  // * A two-character [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) country code for the
-  // country associated with an IP address.
-  //       *
-  //       * The US country code is returned for IP addresses associated with overseas United States
-  //       military bases.
-  //       *
-  //       * These values include subdivisions that are assigned their own country codes in ISO
-  //       3166-1. For example, subdivisions NO-21 and NO-22 are presented with the country code SJ
-  //       for Svalbard and the Jan Mayen Islands.
   fastly_world_option_string_t country_code;
-  // * A three-character [ISO 3166-1 alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3)
-  // country code for the country associated with the IP address.
-  //       *
-  //       * The USA country code is returned for IP addresses associated with overseas United
-  //       States military bases.
   fastly_world_option_string_t country_code3;
-  // * Country name.
-  //       *
-  //       * This field is the [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) English short
-  //       name for a country.
   fastly_world_option_string_t country_name;
-  // * Time zone offset from Greenwich Mean Time (GMT) for `city`.
   fastly_world_option_string_t gmt_offset;
-  // * Latitude, in units of degrees from the equator.
-  //       *
-  //       * Values range from -90.0 to +90.0 inclusive, and are based on the [WGS
-  //       84](https://en.wikipedia.org/wiki/World_Geodetic_System) coordinate reference system.
   fastly_world_option_float32_t latitude;
-  // * Longitude, in units of degrees from the [IERS Reference
-  // Meridian](https://en.wikipedia.org/wiki/IERS_Reference_Meridian).
-  //       *
-  //       * Values range from -180.0 to +180.0 inclusive, and are based on the [WGS
-  //       84](https://en.wikipedia.org/wiki/World_Geodetic_System) coordinate reference system.
   fastly_world_option_float32_t longitude;
-  // * Metro code, representing designated market areas (DMAs) in the United States.
   fastly_world_option_u32_t metro_code;
-  // * The postal code associated with the IP address.
-  //       *
-  //       * These are available for some IP addresses in Australia, Canada, France, Germany, Italy,
-  //       Spain, Switzerland, the United Kingdom, and the United States.
-  //       *
-  //       * For Canadian postal codes, this is the first 3 characters. For the United Kingdom, this
-  //       is the first 2-4 characters (outward code). For countries with alphanumeric postal codes,
-  //       this field is a lowercase transliteration.
   fastly_world_option_string_t postal_code;
-  // * Client proxy description.
   fastly_world_option_string_t proxy_description;
-  // * Client proxy type.
   fastly_world_option_string_t proxy_type;
-  // * [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2) country subdivision code.
-  //       *
-  //       * For countries with multiple levels of subdivision (for example, nations within the
-  //       United Kingdom), this variable gives the more specific subdivision.
-  //       *
-  //       * This field can be None for countries that do not have ISO country subdivision codes.
-  //       For example, None is given for IP addresses assigned to the Åland Islands (country code
-  //       AX, illustrated below).
   fastly_world_option_string_t region;
-  // * Time zone offset from coordinated universal time (UTC) for `city`.
   fastly_world_option_u32_t utc_offset;
 } fastly_geo_data_t;
 
@@ -173,51 +112,19 @@ typedef uint32_t fastly_fd_t;
 
 typedef uint8_t fastly_error_t;
 
-// Unknown error value.
-// It should be an internal error if this is returned.
 #define FASTLY_ERROR_UNKNOWN_ERROR 0
-// Generic error value.
-// This means that some unexpected error occurred during a hostcall.
 #define FASTLY_ERROR_GENERIC_ERROR 1
-// Invalid argument.
 #define FASTLY_ERROR_INVALID_ARGUMENT 2
-// Invalid handle.
-// Thrown when a handle is not valid. E.G. No dictionary exists with the given name.
 #define FASTLY_ERROR_BAD_HANDLE 3
-// Buffer length error.
-// Thrown when a buffer is too long.
 #define FASTLY_ERROR_BUFFER_LEN 4
-// Unsupported operation error.
-// This error is thrown when some operation cannot be performed, because it is not supported.
 #define FASTLY_ERROR_UNSUPPORTED 5
-// Alignment error.
-// This is thrown when a pointer does not point to a properly aligned slice of memory.
 #define FASTLY_ERROR_BAD_ALIGN 6
-// Invalid HTTP error.
-// This can be thrown when a method, URI, header, or status is not valid. This can also
-// be thrown if a message head is too large.
 #define FASTLY_ERROR_HTTP_INVALID 7
-// HTTP user error.
-// This is thrown in cases where user code caused an HTTP error. For example, attempt to send
-// a 1xx response code, or a request with a non-absolute URI. This can also be caused by
-// an unexpected header: both `content-length` and `transfer-encoding`, for example.
 #define FASTLY_ERROR_HTTP_USER 8
-// HTTP incomplete message error.
-// This can be thrown when a stream ended unexpectedly.
 #define FASTLY_ERROR_HTTP_INCOMPLETE 9
-// A `None` error.
-// This status code is used to indicate when an optional value did not exist, as opposed to
-// an empty value.
-// Note, this value should no longer be used, as we have explicit optional types now.
 #define FASTLY_ERROR_OPTIONAL_NONE 10
-// Message head too large.
 #define FASTLY_ERROR_HTTP_HEAD_TOO_LARGE 11
-// Invalid HTTP status.
 #define FASTLY_ERROR_HTTP_INVALID_STATUS 12
-// Limit exceeded
-//
-// This is returned when an attempt to allocate a resource has exceeded the maximum number of
-// resources permitted. For example, creating too many response handles.
 #define FASTLY_ERROR_LIMIT_EXCEEDED 13
 
 typedef struct {
@@ -251,32 +158,7 @@ typedef uint8_t fastly_content_encodings_t;
 
 #define FASTLY_CONTENT_ENCODINGS_GZIP (1 << 0)
 
-typedef uint16_t fastly_cache_write_options_mask_t;
-
-#define FASTLY_CACHE_WRITE_OPTIONS_MASK_RESERVED (1 << 0)
-#define FASTLY_CACHE_WRITE_OPTIONS_MASK_REQUEST_HEADERS (1 << 1)
-#define FASTLY_CACHE_WRITE_OPTIONS_MASK_VARY_RULE (1 << 2)
-#define FASTLY_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS (1 << 3)
-#define FASTLY_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS (1 << 4)
-#define FASTLY_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS (1 << 5)
-#define FASTLY_CACHE_WRITE_OPTIONS_MASK_LENGTH (1 << 6)
-#define FASTLY_CACHE_WRITE_OPTIONS_MASK_USER_METADATA (1 << 7)
-#define FASTLY_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA (1 << 8)
-
 typedef uint64_t fastly_cache_object_length_t;
-
-// The status of this lookup (and potential transaction)
-typedef uint8_t fastly_cache_lookup_state_t;
-
-#define FASTLY_CACHE_LOOKUP_STATE_FOUND (1 << 0)
-#define FASTLY_CACHE_LOOKUP_STATE_USABLE (1 << 1)
-#define FASTLY_CACHE_LOOKUP_STATE_STALE (1 << 2)
-#define FASTLY_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE (1 << 3)
-
-typedef uint8_t fastly_cache_lookup_options_mask_t;
-
-#define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_RESERVED (1 << 0)
-#define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS (1 << 1)
 
 typedef struct {
   bool is_some;
@@ -484,9 +366,6 @@ bool fastly_http_req_pending_req_wait(fastly_pending_request_handle_t h, fastly_
 bool fastly_http_req_pending_req_select(fastly_world_list_pending_request_handle_t *h,
                                         fastly_world_tuple2_u32_response_t *ret,
                                         fastly_error_t *err);
-// Returns whether or not the original client request arrived with a
-// Fastly-Key belonging to a user with the rights to purge content on this
-// service.
 bool fastly_http_req_key_is_valid(bool *ret, fastly_error_t *err);
 bool fastly_http_req_close(fastly_request_handle_t h, fastly_error_t *err);
 bool fastly_http_req_auto_decompress_response_set(fastly_request_handle_t h,
@@ -530,7 +409,6 @@ bool fastly_http_resp_status_get(fastly_response_handle_t h, fastly_http_status_
 bool fastly_http_resp_status_set(fastly_response_handle_t h, fastly_http_status_t status,
                                  fastly_error_t *err);
 bool fastly_http_resp_close(fastly_response_handle_t h, fastly_error_t *err);
-// Adjust how this response's framing headers are determined.
 bool fastly_http_resp_framing_headers_mode_set(fastly_response_handle_t h,
                                                fastly_framing_headers_mode_t mode,
                                                fastly_error_t *err);
@@ -538,7 +416,6 @@ bool fastly_dictionary_open(fastly_world_string_t *name, fastly_dictionary_handl
                             fastly_error_t *err);
 bool fastly_dictionary_get(fastly_dictionary_handle_t h, fastly_world_string_t *key,
                            fastly_world_option_string_t *ret, fastly_error_t *err);
-// JSON string for now
 bool fastly_geo_lookup(fastly_world_list_u8_t *addr_octets, fastly_world_string_t *ret,
                        fastly_error_t *err);
 bool fastly_object_store_open(fastly_world_string_t *name, fastly_object_store_handle_t *ret,
@@ -556,25 +433,8 @@ bool fastly_secret_store_get(fastly_secret_store_handle_t store, fastly_world_st
                              fastly_world_option_secret_handle_t *ret, fastly_error_t *err);
 bool fastly_secret_store_plaintext(fastly_secret_handle_t secret, fastly_world_option_string_t *ret,
                                    fastly_error_t *err);
-// Blocks until one of the given objects is ready for I/O, or the optional timeout expires.
-//
-// Valid object handles includes bodies and pending requests. See the `async_item_handle`
-// definition for more details, including what I/O actions are associated with each handle
-// type.
-//
-// The timeout is specified in milliseconds, or 0 if no timeout is desired.
-//
-// Returns the _index_ (not handle!) of the first object that is ready, or u32::MAX if the
-// timeout expires before any objects are ready for I/O.
 bool fastly_async_io_select(fastly_world_list_async_handle_t *hs, uint32_t timeout_ms,
                             fastly_world_option_u32_t *ret, fastly_error_t *err);
-// Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
-//
-// If an object is ready, the I/O action is guaranteed to complete without blocking.
-//
-// Valid object handles includes bodies and pending requests. See the `async_item_handle`
-// definition for more details, including what I/O actions are associated with each handle
-// type.
 bool fastly_async_io_is_ready(fastly_async_handle_t handle, bool *ret, fastly_error_t *err);
 bool fastly_purge_surrogate_key(fastly_world_string_t *surrogate_keys,
                                 fastly_purge_options_mask_t purge_options,

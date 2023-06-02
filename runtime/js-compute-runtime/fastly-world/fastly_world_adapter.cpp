@@ -721,17 +721,31 @@ bool fastly_purge_surrogate_key(fastly_world_string_t *surrogate_key,
       err);
 }
 
+#define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_RESERVED (1 << 0)
+#define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS (1 << 1)
+
 bool fastly_cache_lookup(fastly_world_string_t *cache_key, fastly_cache_lookup_options_t *options,
                          fastly_cache_handle_t *ret, fastly_error_t *err) {
   // Currently this host-call has been implemented to support the `SimpleCache.get(key)` method,
   // which does not use any fields from `fastly_cache_lookup_options_t`.
-  uint32_t options_mask = 0;
+  uint8_t options_mask = 0;
   return convert_result(
       fastly::cache_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret), err);
 }
+
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_RESERVED (1 << 0)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_REQUEST_HEADERS (1 << 1)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_VARY_RULE (1 << 2)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS (1 << 3)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS (1 << 4)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS (1 << 5)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_LENGTH (1 << 6)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_USER_METADATA (1 << 7)
+#define FASTLY_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA (1 << 8)
+
 bool fastly_cache_insert(fastly_world_string_t *cache_key, fastly_cache_write_options_t *options,
                          fastly_body_handle_t *ret, fastly_error_t *err) {
-  fastly_cache_write_options_mask_t options_mask = 0;
+  uint16_t options_mask = 0;
   fastly::CacheWriteOptions opts;
   std::memset(&opts, 0, sizeof(opts));
   opts.max_age_ns = options->max_age_ns;
