@@ -117,7 +117,7 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
     uint8_t *bytes;
     JS::GetArrayBufferLengthAndData(bodyObj, &length, &is_shared, &bytes);
     MOZ_ASSERT(!is_shared);
-    buf.reset(reinterpret_cast<char*>(bytes));
+    buf.reset(reinterpret_cast<char *>(bytes));
   } else if (bodyObj && builtins::URLSearchParams::is_instance(bodyObj)) {
     jsurl::SpecSlice slice = builtins::URLSearchParams::serialize(cx, bodyObj);
     buf = JS::UniqueChars(reinterpret_cast<char *>(const_cast<uint8_t *>(slice.data)));
@@ -381,8 +381,8 @@ bool SimpleCache::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   if (key.len > 1024) {
-    JS_ReportErrorASCII(
-        cx, "SimpleCache.delete: key is too long, the maximum allowed length is 1024.");
+    JS_ReportErrorASCII(cx,
+                        "SimpleCache.delete: key is too long, the maximum allowed length is 1024.");
     return false;
   }
 
