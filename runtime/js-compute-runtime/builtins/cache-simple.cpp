@@ -371,22 +371,20 @@ bool SimpleCache::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   fastly_world_string_t key;
   // Convert key parameter into a string and check the value adheres to our validation rules.
-  {
-    JS::UniqueChars key_chars = encode(cx, args.get(0), &key.len);
-    if (!key_chars) {
-      return false;
-    }
-    key.ptr = key_chars.get();
+  JS::UniqueChars key_chars = encode(cx, args.get(0), &key.len);
+  if (!key_chars) {
+    return false;
+  }
+  key.ptr = key_chars.get();
 
-    if (key.len == 0) {
-      JS_ReportErrorASCII(cx, "SimpleCache.delete: key can not be an empty string");
-      return false;
-    }
-    if (key.len > 1024) {
-      JS_ReportErrorASCII(
-          cx, "SimpleCache.delete: key is too long, the maximum allowed length is 1024.");
-      return false;
-    }
+  if (key.len == 0) {
+    JS_ReportErrorASCII(cx, "SimpleCache.delete: key can not be an empty string");
+    return false;
+  }
+  if (key.len > 1024) {
+    JS_ReportErrorASCII(
+        cx, "SimpleCache.delete: key is too long, the maximum allowed length is 1024.");
+    return false;
   }
 
   // We create a surrogate-key from the cache-key, as this allows the cached contents to be purgable
