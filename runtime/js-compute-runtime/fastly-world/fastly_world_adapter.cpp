@@ -775,4 +775,3 @@ bool fastly_cache_get_body(fastly_cache_handle_t handle, fastly_cache_get_body_o
   }
   return ok;
 }
-bool fastly_cache_get_length(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err) {
