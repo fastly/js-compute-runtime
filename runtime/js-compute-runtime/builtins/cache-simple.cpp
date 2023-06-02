@@ -111,9 +111,11 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
     length = JS_GetArrayBufferViewByteLength(bodyObj);
     buf = JS::UniqueChars(
         reinterpret_cast<char *>(JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC)));
+    MOZ_ASSERT(!is_shared);
   } else if (bodyObj && JS::IsArrayBufferObject(bodyObj)) {
     bool is_shared;
     JS::GetArrayBufferLengthAndData(bodyObj, &length, &is_shared, (uint8_t **)&buf);
+    MOZ_ASSERT(!is_shared);
   } else if (bodyObj && builtins::URLSearchParams::is_instance(bodyObj)) {
     jsurl::SpecSlice slice = builtins::URLSearchParams::serialize(cx, bodyObj);
     buf = JS::UniqueChars(reinterpret_cast<char *>(const_cast<uint8_t *>(slice.data)));
