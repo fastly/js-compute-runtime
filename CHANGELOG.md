@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 2.1.0 (2023-06-02)
+
+
+### Added
+
+* Implement a SimpleCache Class ([#548](https://github.com/fastly/js-compute-runtime/issues/548)) ([865382d](https://github.com/fastly/js-compute-runtime/commit/865382df3a74832abce1f0d40e3627d8339b4aeb))
+
 ## 2.0.2 (2023-06-01)
 
 
