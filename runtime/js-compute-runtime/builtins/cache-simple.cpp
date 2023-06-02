@@ -148,9 +148,9 @@ JS::Result<std::string> createSurrogateKeyFromCacheKey(JSContext *cx,
   if (!EVP_Digest(cache_key.ptr, cache_key.len, md.data(), &size, algorithm, nullptr)) {
     return JS::Result<std::string>(JS::Error());
   }
-  std::string surrogate_key(OPENSSL_buf2hexstr(md.data(), size), size);
-  surrogate_key.erase(std::remove(surrogate_key.begin(), surrogate_key.end(), ':'),
-                      surrogate_key.end());
+  JS::UniqueChars data{OPENSSL_buf2hexstr(md.data(), size)};
+  std::string_view hexstr{data.get(), size};
+  std::string surrogate_key{std::remove(hexstr.begin(), hexstr.end(), ':')};
 
   return JS::Result<std::string>(surrogate_key);
 }
