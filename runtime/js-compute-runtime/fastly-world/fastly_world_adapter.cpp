@@ -702,8 +702,10 @@ bool fastly_purge_surrogate_key(fastly_world_string_t *surrogate_key,
                                 fastly_option_string_t *ret, fastly_error_t *err) {
   fastly::PurgeOptions options{nullptr, 0, nullptr};
 
-  // Currently this host-call has been implemented to support the `SimpleCache.delete(key)` method, which uses hard-purging and not soft-purging.
-  // TODO: Create a JS API for this hostcall which supports hard-purging and another which supports soft-purging. E.G. `fastly.purgeSurrogateKey(key)` and `fastly.softPurgeSurrogateKey(key)` 
+  // Currently this host-call has been implemented to support the `SimpleCache.delete(key)` method,
+  // which uses hard-purging and not soft-purging.
+  // TODO: Create a JS API for this hostcall which supports hard-purging and another which supports
+  // soft-purging. E.G. `fastly.purgeSurrogateKey(key)` and `fastly.softPurgeSurrogateKey(key)`
   MOZ_ASSERT(!(options_mask & FASTLY_PURGE_OPTIONS_MASK_SOFT_PURGE));
   MOZ_ASSERT(!(options_mask & FASTLY_PURGE_OPTIONS_MASK_RET_BUF));
 
@@ -716,7 +718,8 @@ bool fastly_purge_surrogate_key(fastly_world_string_t *surrogate_key,
 
 bool fastly_cache_lookup(fastly_world_string_t *cache_key, fastly_cache_lookup_options_t *options,
                          fastly_cache_handle_t *ret, fastly_error_t *err) {
-  // Currently this host-call has been implemented to support the `SimpleCache.get(key)` method, which does not use any fields from `fastly_cache_lookup_options_t`.
+  // Currently this host-call has been implemented to support the `SimpleCache.get(key)` method,
+  // which does not use any fields from `fastly_cache_lookup_options_t`.
   uint32_t options_mask = 0;
   return convert_result(
       fastly::cache_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret), err);

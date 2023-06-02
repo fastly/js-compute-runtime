@@ -391,8 +391,6 @@ WASM_IMPORT("fastly_cache", "insert")
 int cache_insert(char *cache_key, size_t cache_key_len, uint32_t options_mask,
                  CacheWriteOptions *options, fastly_body_handle_t *ret);
 
-
-
 WASM_IMPORT("fastly_cache", "get_body")
 int cache_get_body(fastly_cache_handle_t handle, uint32_t options_mask,
                    fastly_cache_get_body_options_t *options, fastly_body_handle_t *ret);
