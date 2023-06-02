@@ -558,17 +558,6 @@ default world fastly-world {
       end: u64,
     }
 
-    /// The status of this lookup (and potential transaction)
-    flags cache-lookup-state {
-      /// a cached object was found
-      found,
-      /// the cached object is valid to use (implies found)
-      usable,
-      /// the cached object is stale (but may or may not be valid to use)
-      stale,
-      /// this client is requested to insert or revalidate an object
-      must-insert-or-update,
-    }
 
     /// Performs a non-request-collapsing cache lookup.
     ///
