@@ -404,6 +404,9 @@ bool SimpleCache::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   fastly_world_option_string_t ret;
   fastly_purge_options_mask_t purge_options = 0;
   if (!fastly_purge_surrogate_key(&skey, purge_options, &ret, &err)) {
+    if (ret.is_some) {
+      cabi_free(ret.val.ptr);
+    }
     HANDLE_ERROR(cx, err);
     return false;
   }
