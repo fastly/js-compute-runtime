@@ -702,6 +702,8 @@ bool fastly_purge_surrogate_key(fastly_world_string_t *surrogate_key,
                                 fastly_option_string_t *ret, fastly_error_t *err) {
   fastly::PurgeOptions options{nullptr, 0, nullptr};
 
+  // Currently this host-call has been implemented to support the `SimpleCache.delete(key)` method, which uses hard-purging and not soft-purging.
+  // TODO: Create a JS API for this hostcall which supports hard-purging and another which supports soft-purging. E.G. `fastly.purgeSurrogateKey(key)` and `fastly.softPurgeSurrogateKey(key)` 
   MOZ_ASSERT(!(options_mask & FASTLY_PURGE_OPTIONS_MASK_SOFT_PURGE));
   MOZ_ASSERT(!(options_mask & FASTLY_PURGE_OPTIONS_MASK_RET_BUF));
 
@@ -714,10 +716,8 @@ bool fastly_purge_surrogate_key(fastly_world_string_t *surrogate_key,
 
 bool fastly_cache_lookup(fastly_world_string_t *cache_key, fastly_cache_lookup_options_t *options,
                          fastly_cache_handle_t *ret, fastly_error_t *err) {
-  // uint32_t reserved = 1u << 0;
-  // uint32_t request_headers = 1u << 1;
+  // Currently this host-call has been implemented to support the `SimpleCache.get(key)` method, which does not use any fields from `fastly_cache_lookup_options_t`.
   uint32_t options_mask = 0;
-  // options_mask |= request_headers;
   return convert_result(
       fastly::cache_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret), err);
 }
@@ -765,43 +765,6 @@ bool fastly_cache_insert(fastly_world_string_t *cache_key, fastly_cache_write_op
   return convert_result(
       fastly::cache_insert(cache_key->ptr, cache_key->len, options_mask, &opts, ret), err);
 }
-bool fastly_transaction_lookup(fastly_world_string_t *cache_key,
-                               fastly_cache_lookup_options_t *options, fastly_cache_handle_t *ret,
-                               fastly_error_t *err) {
-  fastly_cache_lookup_options_mask_t options_mask = 0;
-  // options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS;
-  return convert_result(
-      fastly::cache_transaction_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret),
-      err);
-  return true;
-}
-bool fastly_transaction_insert(fastly_cache_handle_t handle, fastly_cache_write_options_t *options,
-                               fastly_body_handle_t *ret, fastly_error_t *err) {
-  return true;
-}
-bool fastly_transaction_insert_and_stream_back(fastly_cache_handle_t handle,
-                                               fastly_cache_write_options_t *options,
-                                               fastly_tuple2_body_handle_cache_handle_t *ret,
-                                               fastly_error_t *err) {
-  return true;
-}
-bool fastly_transaction_update(fastly_cache_handle_t handle, fastly_cache_write_options_t *options,
-                               fastly_error_t *err) {
-  return true;
-}
-bool fastly_transaction_cancel(fastly_cache_handle_t handle, fastly_error_t *err) { return true; }
-bool fastly_cache_close(fastly_cache_handle_t handle, fastly_error_t *err) { return true; }
-bool fastly_cache_get_state(fastly_cache_handle_t handle, fastly_cache_lookup_state_t *ret,
-                            fastly_error_t *err) {
-  return convert_result(fastly::cache_get_state(handle, ret), err);
-}
-bool fastly_cache_get_user_metadata(fastly_cache_handle_t h, uint32_t chunk_size,
-                                    fastly_list_u8_t *ret, fastly_error_t *err) {
-  ret->ptr = static_cast<uint8_t *>(cabi_malloc(chunk_size, 1));
-  return convert_result(fastly::cache_get_user_metadata(h, reinterpret_cast<char *>(ret->ptr),
-                                                        static_cast<size_t>(chunk_size), &ret->len),
-                        err);
-}
 bool fastly_cache_get_body(fastly_cache_handle_t handle, fastly_cache_get_body_options_t *options,
                            fastly_body_handle_t *ret, fastly_error_t *err) {
   uint32_t options_mask = 0;
@@ -813,43 +776,3 @@ bool fastly_cache_get_body(fastly_cache_handle_t handle, fastly_cache_get_body_o
   return ok;
 }
 bool fastly_cache_get_length(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err) {
-  bool ok = convert_result(fastly::cache_get_length(handle, ret), err);
-  if (!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) {
-    *ret = 0;
-    return true;
-  }
-  return ok;
-}
-bool fastly_cache_get_max_age_ns(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err) {
-  bool ok = convert_result(fastly::cache_get_max_age_ns(handle, ret), err);
-  if (!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) {
-    *ret = 0;
-    return true;
-  }
-  return ok;
-}
-bool fastly_cache_get_stale_while_revalidate_ns(fastly_cache_handle_t handle, uint64_t *ret,
-                                                fastly_error_t *err) {
-  bool ok = convert_result(fastly::cache_get_stale_while_revalidate_ns(handle, ret), err);
-  if (!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) {
-    *ret = 0;
-    return true;
-  }
-  return ok;
-}
-bool fastly_cache_get_age_ns(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err) {
-  bool ok = convert_result(fastly::cache_get_age_ns(handle, ret), err);
-  if (!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) {
-    *ret = 0;
-    return true;
-  }
-  return ok;
-}
-bool fastly_cache_get_hits(fastly_cache_handle_t handle, uint64_t *ret, fastly_error_t *err) {
-  bool ok = convert_result(fastly::cache_get_hits(handle, ret), err);
-  if (!ok && *err == FASTLY_ERROR_OPTIONAL_NONE) {
-    *ret = 0;
-    return true;
-  }
-  return ok;
-}

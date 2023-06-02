@@ -188,7 +188,7 @@ const JSPropertySpec Crypto::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "Crypto", JSPROP_READONLY), JS_PS_END};
 
 bool Crypto::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_ILLEGAL_CTOR);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ILLEGAL_CTOR);
   return false;
 }
 
