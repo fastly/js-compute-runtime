@@ -69,21 +69,21 @@
       "status": 200
     }
   },
-  "GET /simple-cache/delete/key-parameter-1024-character-string": {
+  "GET /simple-cache/delete/key-parameter-8135-character-string": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/simple-cache/delete/key-parameter-1024-character-string"
+      "pathname": "/simple-cache/delete/key-parameter-8135-character-string"
     },
     "downstream_response": {
       "status": 200
     }
   },
-  "GET /simple-cache/delete/key-parameter-1025-character-string": {
+  "GET /simple-cache/delete/key-parameter-8136-character-string": {
     "environments": ["c@e"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/simple-cache/delete/key-parameter-1025-character-string"
+      "pathname": "/simple-cache/delete/key-parameter-8136-character-string"
     },
     "downstream_response": {
       "status": 200

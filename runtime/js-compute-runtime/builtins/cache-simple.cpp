@@ -379,9 +379,9 @@ bool SimpleCache::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS_ReportErrorASCII(cx, "SimpleCache.delete: key can not be an empty string");
     return false;
   }
-  if (key.len > 1024) {
+  if (key.len > 8135) {
     JS_ReportErrorASCII(cx,
-                        "SimpleCache.delete: key is too long, the maximum allowed length is 1024.");
+                        "SimpleCache.delete: key is too long, the maximum allowed length is 8135.");
     return false;
   }
 

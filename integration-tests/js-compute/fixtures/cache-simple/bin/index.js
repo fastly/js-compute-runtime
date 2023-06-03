@@ -265,19 +265,19 @@ routes.set("/simple-cache/interface", () => {
         if (error) { return error }
         return pass()
     });
-    routes.set("/simple-cache/delete/key-parameter-1024-character-string", () => {
+    routes.set("/simple-cache/delete/key-parameter-8135-character-string", () => {
         error = assertDoesNotThrow(() => {
-            const key = 'a'.repeat(1024)
+            const key = 'a'.repeat(8135)
             SimpleCache.delete(key)
         })
         if (error) { return error }
         return pass()
     });
-    routes.set("/simple-cache/delete/key-parameter-1025-character-string", () => {
+    routes.set("/simple-cache/delete/key-parameter-8136-character-string", () => {
         error = assertThrows(() => {
-            const key = 'a'.repeat(1025)
+            const key = 'a'.repeat(8136)
             SimpleCache.delete(key)
-        }, Error, `SimpleCache.delete: key is too long, the maximum allowed length is 1024.`)
+        }, Error, `SimpleCache.delete: key is too long, the maximum allowed length is 8135.`)
         if (error) { return error }
         return pass()
     });
