@@ -20,6 +20,9 @@
   "Adding valid request header \"Set-Cookie2: OK\"": {
     "status": "PASS"
   },
+  "Adding valid request header \"User-Agent: OK\"": {
+    "status": "PASS"
+  },
   "Adding invalid request header \"Accept-Charset: KO\"": {
     "status": "FAIL"
   },
@@ -36,6 +39,9 @@
     "status": "FAIL"
   },
   "Adding invalid request header \"Access-Control-Request-Method: KO\"": {
+    "status": "FAIL"
+  },
+  "Adding invalid request header \"Access-Control-Request-Private-Network: KO\"": {
     "status": "FAIL"
   },
   "Adding invalid request header \"Connection: KO\"": {
@@ -144,6 +150,9 @@
     "status": "FAIL"
   },
   "Adding invalid no-cors request header \"secb: KO\"": {
+    "status": "FAIL"
+  },
+  "Adding invalid no-cors request header \"Empty-Value: \"": {
     "status": "FAIL"
   },
   "Check that request constructor is filtering headers provided as init parameter": {
