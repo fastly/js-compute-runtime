@@ -27,7 +27,7 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
     await readFile(input, { encoding: "utf-8" });
   } catch (error) {
     console.error(
-      "Error: Failed to open the `input` (${input})",
+      `Error: Failed to open the \`input\` (${input})`,
       error.message
     );
     process.exit(1);
