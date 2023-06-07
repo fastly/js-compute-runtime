@@ -156,6 +156,446 @@ JS::Result<std::string> createSurrogateKeyFromCacheKey(JSContext *cx,
 
 } // namespace
 
+bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS::HandleValue extra,
+                                      JS::CallArgs args) {
+  MOZ_ASSERT(extra.isObject());
+  JS::RootedObject extraObj(cx, &extra.toObject());
+  JS::RootedValue handleVal(cx);
+  JS::RootedValue promiseVal(cx);
+  if (!JS_GetProperty(cx, extraObj, "promise", &promiseVal)) {
+    return false;
+  }
+  MOZ_ASSERT(promiseVal.isObject());
+  JS::RootedObject promise(cx, &promiseVal.toObject());
+  if (!promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  if (!JS_GetProperty(cx, extraObj, "handle", &handleVal)) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  MOZ_ASSERT(handleVal.isInt32());
+  fastly_cache_handle_t handle = handleVal.toInt32();
+  fastly_error_t err;
+  JS::RootedValue keyVal(cx);
+  if (!JS_GetProperty(cx, extraObj, "key", &keyVal)) {
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  auto arg0 = args.get(0);
+  if (!arg0.isObject()) {
+    JS_ReportErrorASCII(cx, "SimpleCache.getOrSet: does not adhere to interface {value: BodyInit,  "
+                            "ttl: number, length?:number}");
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  JS::RootedObject insertionObject(cx, &arg0.toObject());
+
+  JS::RootedValue ttl_val(cx);
+  if (!JS_GetProperty(cx, insertionObject, "ttl", &ttl_val)) {
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  // Convert ttl (time-to-live) field into a number and check the value adheres to our
+  // validation rules.
+  double ttl;
+  if (!JS::ToNumber(cx, ttl_val, &ttl)) {
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  if (ttl < 0 || std::isnan(ttl) || std::isinf(ttl)) {
+    JS_ReportErrorASCII(
+        cx, "SimpleCache.getOrSet: TTL field is an invalid value, only positive numbers can "
+            "be used for TTL values.");
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  fastly_cache_write_options_t options;
+  std::memset(&options, 0, sizeof(options));
+  // turn second representation into nanosecond representation
+  options.max_age_ns = JS::ToUint64(ttl) * 1'000'000'000;
+
+  JS::RootedValue body_val(cx);
+  if (!JS_GetProperty(cx, insertionObject, "value", &body_val)) {
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  HttpBody source_body;
+  JS::UniqueChars buf;
+  JS::RootedObject body_obj(cx, body_val.isObject() ? &body_val.toObject() : nullptr);
+  // If the body is a Host-backed ReadableStream we optimise our implementation
+  // by using the ReadableStream's handle directly.
+  if (body_obj && JS::IsReadableStream(body_obj)) {
+    if (RequestOrResponse::body_unusable(cx, body_obj)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return RejectPromiseWithPendingError(cx, promise);
+      }
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+
+    // If the stream is backed by a C@E body handle, we can use that handle directly.
+    if (builtins::NativeStreamSource::stream_is_body(cx, body_obj)) {
+      JS::RootedObject stream_source(cx,
+                                     builtins::NativeStreamSource::get_stream_source(cx, body_obj));
+      JS::RootedObject source_owner(cx, builtins::NativeStreamSource::owner(stream_source));
+      source_body = RequestOrResponse::body_handle(source_owner);
+    } else {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_SIMPLE_CACHE_SET_CONTENT_STREAM);
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return RejectPromiseWithPendingError(cx, promise);
+      }
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+
+    // The cache APIs require the length to be known upfront, we don't know the length of a
+    // stream upfront, which means the caller will need to supply the information explicitly for us.
+    bool found;
+    if (!JS_HasProperty(cx, insertionObject, "length", &found)) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return RejectPromiseWithPendingError(cx, promise);
+      }
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    if (!found) {
+      JS_ReportErrorASCII(cx, "SimpleCache.getOrSet: length property is required when the value "
+                              "property is a ReadableStream. The length of the stream needs to be "
+                              "known before inserting into the cache.");
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return RejectPromiseWithPendingError(cx, promise);
+      }
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+
+    JS::RootedValue length_val(cx);
+    if (!JS_GetProperty(cx, insertionObject, "length", &length_val)) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return RejectPromiseWithPendingError(cx, promise);
+      }
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    double number;
+    if (!JS::ToNumber(cx, length_val, &number)) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return RejectPromiseWithPendingError(cx, promise);
+      }
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    if (number < 0 || std::isnan(number) || std::isinf(number)) {
+      JS_ReportErrorASCII(
+          cx,
+          "SimpleCache.getOrSet: length property is an invalid value, only positive numbers can "
+          "be used for length values.");
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return RejectPromiseWithPendingError(cx, promise);
+      }
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    options.length = JS::ToInteger(number);
+  } else {
+    auto result = convertBodyInit(cx, body_val);
+    if (result.isErr()) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return RejectPromiseWithPendingError(cx, promise);
+      }
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    std::tie(buf, options.length) = result.unwrap();
+  }
+
+  // We create a surrogate-key from the cache-key, as this allows the cached contents to be purgable
+  // from within the JavaScript application
+  // This is because the cache API currently only supports purging via surrogate-key
+  fastly_world_string_t key;
+  JS::UniqueChars key_chars = encode(cx, keyVal, &key.len);
+  if (!key_chars) {
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  key.ptr = key_chars.get();
+  auto key_result = createSurrogateKeyFromCacheKey(cx, key);
+  if (key_result.isErr()) {
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  auto surrogate_key = key_result.unwrap();
+  options.surrogate_keys.ptr = const_cast<char *>(surrogate_key.c_str());
+  options.surrogate_keys.len = surrogate_key.length();
+
+  fastly_world_tuple2_body_handle_cache_handle_t ret{.f0 = INVALID_HANDLE, .f1 = INVALID_HANDLE};
+  if (!fastly_transaction_insert_and_stream_back(handle, &options, &ret, &err)) {
+    HANDLE_ERROR(cx, err);
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  auto body = HttpBody(ret.f0);
+  if (!body.valid()) {
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  // source_body will only be valid when the body is a Host-backed ReadableStream
+  if (source_body.valid()) {
+    auto res = body.append(source_body);
+    if (auto *error = res.to_err()) {
+      HANDLE_ERROR(cx, *error);
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return RejectPromiseWithPendingError(cx, promise);
+      }
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+  } else {
+    auto write_res = body.write_all(reinterpret_cast<uint8_t *>(buf.get()), options.length);
+    if (auto *error = write_res.to_err()) {
+      HANDLE_ERROR(cx, *error);
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return RejectPromiseWithPendingError(cx, promise);
+      }
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    auto close_res = body.close();
+    if (auto *error = close_res.to_err()) {
+      HANDLE_ERROR(cx, *error);
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return RejectPromiseWithPendingError(cx, promise);
+      }
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+  }
+
+  fastly_body_handle_t bodyHandle = INVALID_HANDLE;
+  fastly_cache_get_body_options_t opts;
+  if (!fastly_cache_get_body(ret.f1, &opts, &bodyHandle, &err)) {
+    HANDLE_ERROR(cx, err);
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  JS::RootedObject entry(cx, SimpleCacheEntry::create(cx, bodyHandle));
+  if (!entry) {
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  JS::RootedValue result(cx);
+  result.setObject(*entry);
+  JS::ResolvePromise(cx, promise, result);
+  return true;
+}
+
+// static getOrSet(key: string, set: () => Promise<{value: BodyInit,  ttl: number}>):
+// SimpleCacheEntry | null; static getOrSet(key: string, set: () => Promise<{value: ReadableStream,
+// ttl: number, length: number}>): SimpleCacheEntry | null;
+bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
+  REQUEST_HANDLER_ONLY("The SimpleCache builtin");
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "SimpleCache.getOrSet", 2)) {
+    return false;
+  }
+
+  fastly_world_string_t key;
+  // Convert key parameter into a string and check the value adheres to our validation rules.
+  JS::UniqueChars key_chars = encode(cx, args.get(0), &key.len);
+  if (!key_chars) {
+    return false;
+  }
+  key.ptr = key_chars.get();
+
+  if (key.len == 0) {
+    JS_ReportErrorASCII(cx, "SimpleCache.getOrSet: key can not be an empty string");
+    return false;
+  }
+  if (key.len > 8135) {
+    JS_ReportErrorASCII(
+        cx, "SimpleCache.getOrSet: key is too long, the maximum allowed length is 8135.");
+    return false;
+  }
+
+  fastly_error_t err;
+  fastly_cache_lookup_options_t options;
+  std::memset(&options, 0, sizeof(options));
+
+  fastly_cache_handle_t handle = INVALID_HANDLE;
+  if (!fastly_transaction_lookup(&key, &options, &handle, &err)) {
+    HANDLE_ERROR(cx, err);
+    return false;
+  }
+
+  // Check if a fresh cache item was found, if that's the case, then we will resolve
+  // with a SimpleCacheEntry containing the value. Else, call the content-provided
+  // function in the `set` parameter and insert it's returned value property into the
+  // cache under the provided `key`, and then we will resolve with a SimpleCacheEntry
+  // containing the value.
+  alignas(4) fastly_cache_lookup_state_t state;
+  if (!fastly_cache_get_state(handle, &state, &err)) {
+    if (!fastly_transaction_cancel(handle, &err)) {
+      HANDLE_ERROR(cx, err);
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    HANDLE_ERROR(cx, err);
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  JS::RootedObject promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  args.rval().setObject(*promise);
+  if (state & FASTLY_CACHE_LOOKUP_STATE_USABLE) {
+    fastly_body_handle_t body = INVALID_HANDLE;
+    fastly_cache_get_body_options_t opts;
+    if (!fastly_cache_get_body(handle, &opts, &body, &err)) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+      HANDLE_ERROR(cx, err);
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+
+    JS::RootedObject entry(cx, SimpleCacheEntry::create(cx, body));
+    if (!entry) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    JS::RootedValue result(cx);
+    result.setObject(*entry);
+    JS::ResolvePromise(cx, promise, result);
+    return true;
+  } else {
+    auto arg1 = args.get(1);
+    if (!arg1.isObject() || !JS::IsCallable(&arg1.toObject())) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+      JS_ReportErrorLatin1(cx, "SimpleCache.getOrSet: set argument is not a function");
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    JS::RootedValueArray<0> fnargs(cx);
+    JS::RootedObject fn(cx, &arg1.toObject());
+    JS::RootedValue result(cx);
+    if (!JS::Call(cx, JS::NullHandleValue, fn, fnargs, &result)) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    // Coercion of `result` to a Promise<typeof result>
+    JS::RootedObject result_promise(cx, JS::CallOriginalPromiseResolve(cx, result));
+    if (!result_promise) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+
+    // JS::RootedObject owner(cx, JS_NewPlainObject(cx));
+    JS::RootedObject extraObj(cx, JS_NewPlainObject(cx));
+    JS::RootedValue handleVal(cx, JS::NumberValue(handle));
+    if (!JS_SetProperty(cx, extraObj, "handle", handleVal)) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    JS::RootedValue keyVal(cx, JS::StringValue(JS_NewStringCopyN(cx, key.ptr, key.len)));
+    if (!JS_SetProperty(cx, extraObj, "key", keyVal)) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    JS::RootedValue promiseVal(cx, JS::ObjectValue(*promise));
+    if (!JS_SetProperty(cx, extraObj, "promise", promiseVal)) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+
+    JS::RootedValue extra(cx, JS::ObjectValue(*extraObj));
+    JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+    JS::RootedObject then_handler(cx,
+                                  create_internal_method<getOrSetThenHandler>(cx, global, extra));
+    if (!then_handler) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    if (!JS::AddPromiseReactions(cx, result_promise, then_handler, nullptr)) {
+      if (!fastly_transaction_cancel(handle, &err)) {
+        HANDLE_ERROR(cx, err);
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+  }
+
+  return true;
+}
+
 // static set(key: string, value: BodyInit, ttl: number): undefined;
 // static set(key: string, value: ReadableStream, ttl: number, length: number): undefined;
 bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -414,6 +854,7 @@ bool SimpleCache::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
 const JSFunctionSpec SimpleCache::static_methods[] = {
     JS_FN("delete", delete_, 1, JSPROP_ENUMERATE),
     JS_FN("get", get, 1, JSPROP_ENUMERATE),
+    JS_FN("getOrSet", getOrSet, 2, JSPROP_ENUMERATE),
     JS_FN("set", set, 3, JSPROP_ENUMERATE),
     JS_FS_END,
 };

@@ -540,6 +540,17 @@ default world fastly-world {
       end: u64,
     }
 
+    /// The status of this lookup (and potential transaction)
+    flags cache-lookup-state {
+      /// a cached object was found
+      found,
+      /// the cached object is valid to use (implies found)
+      usable,
+      /// the cached object is stale (but may or may not be valid to use)
+      stale,
+      /// this client is requested to insert or revalidate an object
+      must-insert-or-update,
+    }
 
     /// Performs a non-request-collapsing cache lookup.
     ///
@@ -552,6 +563,30 @@ default world fastly-world {
     /// the cache.
     cache-insert: func(cache-key: string, options: cache-write-options) -> result<body-handle, error>
 
+    /// The entrypoint to the request-collapsing cache transaction API.
+    ///
+    /// This operation always participates in request collapsing and may return stale objects. To bypass
+    /// request collapsing, use `lookup` and `insert` instead.
+    transaction-lookup: func(cache-key: string, options: cache-lookup-options) -> result<cache-handle, error>
+
+    /// Insert an object into the cache with the given metadata, and return a readable stream of the
+    /// bytes as they are stored.
+    ///
+    /// This helps avoid the "slow reader" problem on a teed stream, for example when a program wishes
+    /// to store a backend request in the cache while simultaneously streaming to a client in an HTTP
+    /// response.
+    ///
+    /// The returned body handle is to a streaming body that is used for writing the object _into_
+    /// the cache. The returned cache handle provides a separate transaction for reading out the
+    /// newly cached object to send elsewhere.
+    transaction-insert-and-stream-back: func(handle: cache-handle, options: cache-write-options) -> result<tuple<body-handle, cache-handle>, error>
+
+    /// Cancel an obligation to provide an object to the cache.
+    ///
+    /// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
+    transaction-cancel: func(handle: cache-handle) -> result<_, error>
+
+    cache-get-state: func(handle: cache-handle) -> result<cache-lookup-state, error>
 
     /// Gets a range of the found object body, returning the `$none` error if there
     /// was no found object.

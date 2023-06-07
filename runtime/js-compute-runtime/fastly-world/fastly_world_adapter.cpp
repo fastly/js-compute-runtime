@@ -797,3 +797,70 @@ bool fastly_cache_get_body(fastly_cache_handle_t handle, fastly_cache_get_body_o
   }
   return ok;
 }
+bool fastly_transaction_lookup(fastly_world_string_t *cache_key,
+                               fastly_cache_lookup_options_t *options, fastly_cache_handle_t *ret,
+                               fastly_error_t *err) {
+  // Currently this host-call has been implemented to support the `SimpleCache.getOrSet` method,
+  // which does not use any fields from `fastly_cache_lookup_options_t`.
+  uint32_t options_mask = 0;
+  return convert_result(
+      fastly::cache_transaction_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret),
+      err);
+}
+bool fastly_transaction_insert_and_stream_back(fastly_cache_handle_t handle,
+                                               fastly_cache_write_options_t *options,
+                                               fastly_world_tuple2_body_handle_cache_handle_t *ret,
+                                               fastly_error_t *err) {
+  uint16_t options_mask = 0;
+  fastly::CacheWriteOptions opts;
+  std::memset(&opts, 0, sizeof(opts));
+  opts.max_age_ns = options->max_age_ns;
+
+  MOZ_ASSERT(options->request_headers == INVALID_HANDLE || options->request_headers == 0);
+
+  if (options->vary_rule.ptr != nullptr) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_VARY_RULE;
+    opts.vary_rule_len = options->vary_rule.len;
+    opts.vary_rule_ptr = reinterpret_cast<uint8_t *>(options->vary_rule.ptr);
+  }
+  if (options->initial_age_ns != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS;
+    opts.initial_age_ns = options->initial_age_ns;
+  }
+  if (options->stale_while_revalidate_ns != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS;
+    opts.stale_while_revalidate_ns = options->stale_while_revalidate_ns;
+  }
+  if (options->surrogate_keys.ptr != nullptr) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS;
+    opts.surrogate_keys_len = options->surrogate_keys.len;
+    opts.surrogate_keys_ptr = reinterpret_cast<uint8_t *>(options->surrogate_keys.ptr);
+  }
+  if (options->length != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_LENGTH;
+    opts.length = options->length;
+  }
+  if (options->user_metadata.ptr != nullptr) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_USER_METADATA;
+    opts.user_metadata_len = options->user_metadata.len;
+    opts.user_metadata_ptr = options->user_metadata.ptr;
+  }
+  if (options->sensitive_data) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA;
+  }
+  return convert_result(fastly::cache_transaction_insert_and_stream_back(handle, options_mask,
+                                                                         &opts, &ret->f0, &ret->f1),
+                        err);
+}
+
+/// Cancel an obligation to provide an object to the cache.
+///
+/// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
+bool fastly_transaction_cancel(fastly_cache_handle_t handle, fastly_error_t *err) {
+  return convert_result(fastly::cache_transaction_cancel(handle), err);
+}
+
+bool fastly_cache_get_state(fastly_cache_handle_t handle, fastly_cache_lookup_state_t *ret,
+                            fastly_error_t *err) {
+  return convert_result(fastly::cache_get_state(handle, ret), err);
+}

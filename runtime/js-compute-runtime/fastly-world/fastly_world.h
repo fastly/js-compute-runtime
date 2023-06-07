@@ -160,6 +160,14 @@ typedef uint8_t fastly_content_encodings_t;
 
 typedef uint64_t fastly_cache_object_length_t;
 
+// The status of this lookup (and potential transaction)
+typedef uint8_t fastly_cache_lookup_state_t;
+
+#define FASTLY_CACHE_LOOKUP_STATE_FOUND (1 << 0)
+#define FASTLY_CACHE_LOOKUP_STATE_USABLE (1 << 1)
+#define FASTLY_CACHE_LOOKUP_STATE_STALE (1 << 2)
+#define FASTLY_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE (1 << 3)
+
 typedef struct {
   bool is_some;
   fastly_request_handle_t val;
@@ -281,6 +289,11 @@ typedef struct {
   fastly_async_handle_t *ptr;
   size_t len;
 } fastly_world_list_async_handle_t;
+
+typedef struct {
+  fastly_body_handle_t f0;
+  fastly_cache_handle_t f1;
+} fastly_world_tuple2_body_handle_cache_handle_t;
 
 typedef uint32_t compute_at_edge_request_handle_t;
 
@@ -443,6 +456,16 @@ bool fastly_cache_lookup(fastly_world_string_t *cache_key, fastly_cache_lookup_o
                          fastly_cache_handle_t *ret, fastly_error_t *err);
 bool fastly_cache_insert(fastly_world_string_t *cache_key, fastly_cache_write_options_t *options,
                          fastly_body_handle_t *ret, fastly_error_t *err);
+bool fastly_transaction_lookup(fastly_world_string_t *cache_key,
+                               fastly_cache_lookup_options_t *options, fastly_cache_handle_t *ret,
+                               fastly_error_t *err);
+bool fastly_transaction_insert_and_stream_back(fastly_cache_handle_t handle,
+                                               fastly_cache_write_options_t *options,
+                                               fastly_world_tuple2_body_handle_cache_handle_t *ret,
+                                               fastly_error_t *err);
+bool fastly_transaction_cancel(fastly_cache_handle_t handle, fastly_error_t *err);
+bool fastly_cache_get_state(fastly_cache_handle_t handle, fastly_cache_lookup_state_t *ret,
+                            fastly_error_t *err);
 bool fastly_cache_get_body(fastly_cache_handle_t handle, fastly_cache_get_body_options_t *options,
                            fastly_body_handle_t *ret, fastly_error_t *err);
 
