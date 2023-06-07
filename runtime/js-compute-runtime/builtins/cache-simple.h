@@ -44,6 +44,10 @@ public:
   static bool delete_(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool getOrSet(JSContext *cx, unsigned argc, JS::Value *vp);
+
+  static bool getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS::HandleValue extra,
+                                  JS::CallArgs args);
 
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 

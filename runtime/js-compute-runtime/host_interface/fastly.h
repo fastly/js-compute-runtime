@@ -391,6 +391,22 @@ WASM_IMPORT("fastly_cache", "insert")
 int cache_insert(char *cache_key, size_t cache_key_len, uint32_t options_mask,
                  CacheWriteOptions *options, fastly_body_handle_t *ret);
 
+WASM_IMPORT("fastly_cache", "transaction_lookup")
+int cache_transaction_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,
+                             fastly_cache_lookup_options_t *options, fastly_cache_handle_t *ret);
+
+WASM_IMPORT("fastly_cache", "transaction_insert_and_stream_back")
+int cache_transaction_insert_and_stream_back(fastly_cache_handle_t handle, uint32_t options_mask,
+                                             CacheWriteOptions *options,
+                                             fastly_body_handle_t *ret_body,
+                                             fastly_cache_handle_t *ret_cache);
+
+WASM_IMPORT("fastly_cache", "transaction_cancel")
+int cache_transaction_cancel(fastly_cache_handle_t handle);
+
+WASM_IMPORT("fastly_cache", "get_state")
+int cache_get_state(fastly_cache_handle_t handle, fastly_cache_lookup_state_t *ret);
+
 WASM_IMPORT("fastly_cache", "get_body")
 int cache_get_body(fastly_cache_handle_t handle, uint32_t options_mask,
                    fastly_cache_get_body_options_t *options, fastly_body_handle_t *ret);
