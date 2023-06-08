@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 2.2.0 (2023-06-08)
+
+
+### Added
+
+* Implement SimpleCache.getOrSet method ([a1f4517](https://github.com/fastly/js-compute-runtime/commit/a1f4517e5e377354254ee2a635f97a562c87e13c))
+
 ## 2.1.0 (2023-06-02)
 
 
