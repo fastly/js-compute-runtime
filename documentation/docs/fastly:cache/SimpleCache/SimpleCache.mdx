@@ -24,12 +24,13 @@ addEventListener('fetch', event => event.respondWith(app(event)));
 
 async function app(event) {
   const path = new URL(event.request).pathname;
-  let page = SimpleCache.get(path);
-  if (!page) {
-    page = await render(path);
-    // Store the page in the cache for 1 minute.
-    SimpleCache.set(path, page, 60);
-  }
+  let page = SimpleCache.getOrSet(path, async () => {
+    return {
+      value: await render(path),
+      // Store the page in the cache for 1 minute.
+      ttl: 60
+    }
+  });
   return new Response(page, {
     headers: {
       'content-type': 'text/plain;charset=UTF-8'
