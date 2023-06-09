@@ -42,8 +42,7 @@ bool pipeTo(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedObject target(cx, args[0].isObject() ? &args[0].toObject() : nullptr);
   if (target && builtins::NativeStreamSource::stream_has_native_source(cx, self) &&
       JS::IsWritableStream(target) && builtins::TransformStream::is_ts_writable(cx, target)) {
-    auto ts = builtins::TransformStream::ts_from_writable(cx, target);
-    if (ts) {
+    if (auto ts = builtins::TransformStream::ts_from_writable(cx, target)) {
       auto streamHasTransformer =
           JS::GetReservedSlot(ts, builtins::TransformStream::Slots::HasTransformer).toBoolean();
       // We only want to apply the optimisation on identity-streams
