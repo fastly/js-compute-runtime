@@ -255,6 +255,7 @@ jobs:
           - streaming-close
           - tee
           - timers
+          - transform-stream
           - urlsearchparams
     steps:
     - name: Checkout fastly/js-compute-runtime
@@ -404,6 +405,7 @@ jobs:
           - 'secret-store'
           - 'status'
           - 'timers'
+          - 'transform-stream'
           - 'urlsearchparams'
     steps:
     - uses: actions/checkout@v3
