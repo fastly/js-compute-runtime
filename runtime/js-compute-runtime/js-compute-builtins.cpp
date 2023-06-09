@@ -57,6 +57,7 @@
 #include "builtins/request-response.h"
 #include "builtins/secret-store.h"
 #include "builtins/shared/console.h"
+#include "builtins/shared/performance.h"
 #include "builtins/shared/text-decoder.h"
 #include "builtins/shared/text-encoder.h"
 #include "builtins/shared/url.h"
@@ -1348,6 +1349,12 @@ bool define_fastly_sys(JSContext *cx, HandleObject global, FastlyOptions options
     return false;
   }
   if (!builtins::SimpleCacheEntry::init_class(cx, global)) {
+    return false;
+  }
+  if (!builtins::Performance::init_class(cx, global)) {
+    return false;
+  }
+  if (!builtins::Performance::create(cx, global)) {
     return false;
   }
 
