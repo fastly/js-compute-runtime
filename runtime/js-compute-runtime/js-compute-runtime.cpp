@@ -28,6 +28,8 @@
 #include "memory-reporting.h"
 #endif
 
+#include "builtins/shared/performance.h"
+
 using std::chrono::duration_cast;
 using std::chrono::microseconds;
 using std::chrono::system_clock;
@@ -111,10 +113,12 @@ bool init_js() {
   JS_Init();
 
   JSContext *cx = JS_NewContext(JS::DefaultHeapMaxBytes);
-  if (!cx)
+  if (!cx) {
     return false;
-  if (!js::UseInternalJobQueues(cx) || !JS::InitSelfHostedCode(cx))
+  }
+  if (!js::UseInternalJobQueues(cx) || !JS::InitSelfHostedCode(cx)) {
     return false;
+  }
 
   // TODO: check if we should set a different creation zone.
   JS::RealmOptions options;
@@ -126,20 +130,25 @@ bool init_js() {
 
   RootedObject global(
       cx, JS_NewGlobalObject(cx, &global_class, nullptr, JS::FireOnNewGlobalHook, options));
-  if (!global)
+  if (!global) {
     return false;
+  }
 
   JSAutoRealm ar(cx, global);
-  if (!JS::InitRealmStandardClasses(cx))
+  if (!JS::InitRealmStandardClasses(cx)) {
     return false;
+  }
 
   JS::SetPromiseRejectionTrackerCallback(cx, rejection_tracker);
 
   CONTEXT = cx;
   GLOBAL.init(cx, global);
   unhandledRejectedPromises.init(cx, JS::NewSetObject(cx));
-  if (!unhandledRejectedPromises)
+  if (!unhandledRejectedPromises) {
     return false;
+  }
+
+  builtins::Performance::timeOrigin.emplace(std::chrono::high_resolution_clock::now());
 
   return true;
 }
@@ -469,9 +478,8 @@ static void wait_for_backends(JSContext *cx, double *total_compute) {
 
 bool compute_at_edge_serve(compute_at_edge_request_t *req) {
   assert(hasWizeningFinished());
-  // fprintf(stderr, "js.wasm must be initialized with a JS source file using
-  // Wizer\n");
-  // return;
+
+  builtins::Performance::timeOrigin.emplace(std::chrono::high_resolution_clock::now());
 
   double total_compute = 0;
   auto start = system_clock::now();
