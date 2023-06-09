@@ -42,7 +42,14 @@ bool pipeTo(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedObject target(cx, args[0].isObject() ? &args[0].toObject() : nullptr);
   if (target && builtins::NativeStreamSource::stream_has_native_source(cx, self) &&
       JS::IsWritableStream(target) && builtins::TransformStream::is_ts_writable(cx, target)) {
-    builtins::NativeStreamSource::set_stream_piped_to_ts_writable(cx, self, target);
+    if (auto ts = builtins::TransformStream::ts_from_writable(cx, target)) {
+      auto streamHasTransformer =
+          JS::GetReservedSlot(ts, builtins::TransformStream::Slots::HasTransformer).toBoolean();
+      // We only want to apply the optimisation on identity-streams
+      if (!streamHasTransformer) {
+        builtins::NativeStreamSource::set_stream_piped_to_ts_writable(cx, self, target);
+      }
+    }
   }
 
   return JS::Call(cx, args.thisv(), original_pipeTo, JS::HandleValueArray(args), args.rval());
@@ -318,6 +325,15 @@ JSObject *TransformStream::writable(JSObject *self) {
   return &JS::GetReservedSlot(self, TransformStream::Slots::Writable).toObject();
 }
 
+JSObject *TransformStream::ts_from_writable(JSContext *cx, JS::HandleObject writable) {
+  MOZ_ASSERT(is_ts_writable(cx, writable));
+  JSObject *sink = builtins::NativeStreamSink::get_stream_sink(cx, writable);
+  if (!sink || !builtins::NativeStreamSink::is_instance(sink)) {
+    return nullptr;
+  }
+  return builtins::NativeStreamSink::owner(sink);
+}
+
 bool TransformStream::is_ts_writable(JSContext *cx, JS::HandleObject writable) {
   JSObject *sink = builtins::NativeStreamSink::get_stream_sink(cx, writable);
   if (!sink || !builtins::NativeStreamSink::is_instance(sink)) {
@@ -465,6 +481,9 @@ bool TransformStream::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
                                transformer, startFunction, transformFunction, flushFunction));
   if (!self)
     return false;
+
+  JS::SetReservedSlot(self, TransformStream::Slots::HasTransformer,
+                      JS::BooleanValue(JS::ToBoolean(transformer)));
 
   args.rval().setObject(*self);
   return true;

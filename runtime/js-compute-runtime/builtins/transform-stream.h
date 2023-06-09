@@ -22,6 +22,7 @@ public:
                  // used as a body.
     UsedAsMixin, // `true` if the TransformStream is used in another transforming
                  // builtin, such as CompressionStream.
+    HasTransformer,
     Count
   };
   static const JSFunctionSpec static_methods[];
@@ -39,6 +40,7 @@ public:
                                         JS::HandleObject target);
   static JSObject *writable(JSObject *self);
   static bool is_ts_writable(JSContext *cx, JS::HandleObject writable);
+  static JSObject *ts_from_writable(JSContext *cx, JS::HandleObject writable);
   static JSObject *controller(JSObject *self);
   static bool backpressure(JSObject *self);
   static JSObject *backpressureChangePromise(JSObject *self);
