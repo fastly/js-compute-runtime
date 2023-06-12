@@ -9,7 +9,7 @@ name = "missing-backend"
 service_id = ""
 
 [scripts]
-  build = "node ../../../../js-compute-runtime-cli.js"
+  build = "node ../../../../js-compute-runtime-cli.js --enable-weval"
 
 [local_server]
 
