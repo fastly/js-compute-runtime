@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 2.2.1 (2023-06-09)
+
+
+### Fixed
+
+* only apply our pipeTo/pipeThrough optimisations to TransformStreams who have no transformers (IdentityStreams). ([#556](https://github.com/fastly/js-compute-runtime/issues/556)) ([a88616c](https://github.com/fastly/js-compute-runtime/commit/a88616c7a5aa4e13d3f1eeef259ba7480416f3f0))
+
 ## 2.2.0 (2023-06-08)
 
 
