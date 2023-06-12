@@ -40,8 +40,5 @@
   },
   "pipeTo() promise should resolve if null is passed": {
     "status": "FAIL"
-  },
-  "enqueue() must not synchronously call write algorithm": {
-    "status": "PASS"
   }
 }

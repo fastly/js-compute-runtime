@@ -1,9 +1,9 @@
 {
   "Fetch with POST with empty ReadableStream": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Fetch with POST with ReadableStream": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Fetch with POST with ReadableStream on 421 response should return the response and not retry.": {
     "status": "PASS"
@@ -21,13 +21,13 @@
     "status": "PASS"
   },
   "Streaming upload with body containing a String": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Streaming upload with body containing null": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Streaming upload with body containing a number": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Streaming upload should fail on a 401 response": {
     "status": "FAIL"

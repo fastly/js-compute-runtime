@@ -26,15 +26,6 @@
   "response.formData() with input: %EF%BB%BFtest=%EF%BB%BF": {
     "status": "FAIL"
   },
-  "URLSearchParams constructed with: %EF%BF%BF=%EF%BF%BF": {
-    "status": "PASS"
-  },
-  "request.formData() with input: %EF%BF%BF=%EF%BF%BF": {
-    "status": "FAIL"
-  },
-  "response.formData() with input: %EF%BF%BF=%EF%BF%BF": {
-    "status": "FAIL"
-  },
   "URLSearchParams constructed with: %FE%FF": {
     "status": "PASS"
   },

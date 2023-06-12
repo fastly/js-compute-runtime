@@ -56,19 +56,7 @@
   "Check isHistoryNavigation attribute": {
     "status": "FAIL"
   },
-  "Check duplex attribute": {
-    "status": "FAIL"
-  },
   "Check bodyUsed attribute": {
-    "status": "PASS"
-  },
-  "Request does not expose priority attribute": {
-    "status": "PASS"
-  },
-  "Request does not expose internalpriority attribute": {
-    "status": "PASS"
-  },
-  "Request does not expose blocking attribute": {
     "status": "PASS"
   }
 }

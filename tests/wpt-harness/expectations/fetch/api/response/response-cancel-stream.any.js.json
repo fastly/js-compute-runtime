@@ -16,8 +16,5 @@
   },
   "Cancelling a closed Response stream": {
     "status": "PASS"
-  },
-  "Accessing .body after canceling it": {
-    "status": "PASS"
   }
 }
