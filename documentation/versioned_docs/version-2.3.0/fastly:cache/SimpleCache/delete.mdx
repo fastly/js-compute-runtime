@@ -1,0 +1,74 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# SimpleCache.delete
+
+▸ **delete**(): `string`
+
+Delete the entry associated with the key `key` from the cache.
+
+## Syntax
+
+```js
+delete(key)
+```
+
+### Parameters
+
+- `key` _: string_
+  - The key to retrieve from within the cache.
+
+### Return value
+
+Returns `undefined`.
+
+### Exceptions
+
+- `TypeError`
+  - If the provided `key`:
+    - Is an empty string
+    - Cannot be coerced to a string
+    - Is longer than 8135 characters
+
+## Examples
+
+In this example, when a request contains a `delete` querystring parameter, we delete the an entry from the cache.
+
+```js
+/// <reference types="@fastly/js-compute" />
+
+import { SimpleCache } from 'fastly:cache';
+
+addEventListener('fetch', event => event.respondWith(app(event)));
+
+async function app(event) {
+  const url = new URL(event.request);
+  const path = url.pathname;
+  if (url.searchParams.has('delete')) {
+    SimpleCache.delete(path);
+    return new Response(page, { status: 204 });
+  }
+
+  let page = SimpleCache.get(path);
+  if (!page) {
+    page = await render(path);
+    // Store the page in the cache for 1 minute.
+    SimpleCache.set(path, page, 60);
+  }
+  return new Response(page, {
+    headers: {
+      'content-type': 'text/plain;charset=UTF-8'
+    }
+  });
+}
+
+async function render(path) {
+  // expensive/slow function which constructs and returns the contents for a given path
+  await new Promise(resolve => setTimeout(resolve, 10_000));
+  return path;
+}
+
+```
