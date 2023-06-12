@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [2.3.0](https://github.com/fastly/js-compute-runtime/compare/v2.2.1...v2.3.0) (2023-06-12)
+
+
+### Features
+
+* implement web performance api ([ddfe11e](https://github.com/fastly/js-compute-runtime/commit/ddfe11ec92a48495edd920e48ffad3d20e69c159))
+
 ## 2.2.1 (2023-06-09)
 
 
