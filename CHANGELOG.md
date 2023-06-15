@@ -562,7 +562,7 @@ addEventListener("fetch", event => {
 
 #### Object-store support
 
-This release adds support for Fastly [Object-store](https://developer.fastly.com/reference/api/object-store/), which is globally consistent key-value storage accessible across the Fastly Network. This makes it possible for your Compute@Edge application to read and write from Object-stores.
+This release adds support for Fastly [Object-store](https://developer.fastly.com/reference/api/services/resources/kv-store/), which is globally consistent key-value storage accessible across the Fastly Network. This makes it possible for your Compute@Edge application to read and write from Object-stores.
 
 We've added two classes, `ObjectStore`, and `ObjectStoreEntry`. `ObjectStore` is used to interact with a particular Object-store and `ObjectStoreEntry` is a particular value within an Object-store. We've made `ObjectStoreEntry` have a similar API as `Response` to make it simpler to read and write from Object-stores. I.e. `ObjectStoreEntry` has a `body` property which is a `ReadableStream` and has `arrayBuffer`/`json`/`text` methods - just like `Response`.
 
