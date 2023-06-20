@@ -119,8 +119,11 @@ jobs:
       with:
         name: engine-${{ matrix.profile }}
         path: |
-          js-compute-runtime.wasm
+          js-compute-runtime-component-normal.wasm
+          js-compute-runtime-component-weval.wasm
           js-compute-runtime-component.wasm
+          js-compute-runtime-normal.wasm
+          js-compute-runtime-weval.wasm
 
   ensure_cargo_installs:
     name: Ensure that all required "cargo install" commands are run, or we have a cache hit
@@ -152,7 +155,14 @@ jobs:
       matrix:
         include:
           - profile: debug
+            weval: false
+          - profile: debug
+            weval: true
           - profile: release
+            weval: false
+          - profile: release
+          - profile: release
+            weval: true
     needs: [build, ensure_cargo_installs]
     runs-on: ubuntu-latest
     steps:
@@ -193,7 +203,7 @@ jobs:
 
     - name: Build WPT runtime
       run: |
-        bash ./tests/wpt-harness/build-wpt-runtime.sh
+        WEVAL=${{matrix.weval}} bash ./tests/wpt-harness/build-wpt-runtime.sh
 
     - name: Prepare WPT hosts
       run: |

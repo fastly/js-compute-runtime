@@ -45,13 +45,13 @@
     "status": "PASS"
   },
   "chunk of type SharedArrayBuffer should error the stream for gzip": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "chunk of type SharedArrayBuffer should error the stream for deflate": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "chunk of type SharedArrayBuffer should error the stream for deflate-raw": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "chunk of type shared Uint8Array should error the stream for gzip": {
     "status": "FAIL"

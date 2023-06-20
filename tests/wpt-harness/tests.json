@@ -54,7 +54,6 @@
   "fetch/api/basic/request-headers.any.js",
   "fetch/api/basic/request-referrer.any.js",
   "fetch/api/basic/request-upload.any.js",
-  "fetch/api/basic/request-upload.h2.any.js",
   "fetch/api/basic/response-url.sub.any.js",
   "fetch/api/basic/scheme-about.any.js",
   "fetch/api/basic/scheme-blob.sub.any.js",

@@ -18,12 +18,12 @@
 #
 # > mkdir my_test
 # > cd my_test
-# > DEBUG=true ../tests/wpt-harness/run-wpt.sh
+# > DEBUG=true WEVAL=true ../tests/wpt-harness/run-wpt.sh
 #
 # For this to work, you'll need to have run the following command in advance:
 #
 # > cd runtime/spidermonkey
-# > ./download-engine.sh debug
+# > ./download-engine.sh debug normal
 #
 # If you get an error about missing "jsapi.h" while building the runtime,
 # something's gone wrong with the engine download.
@@ -42,7 +42,6 @@ if ! npm run build > "$output" 2>&1; then
   cat "$output"
   exit 1
 fi
-cp js-compute-runtime.wasm "$working_dir"
 
 cd "$working_dir"
 
