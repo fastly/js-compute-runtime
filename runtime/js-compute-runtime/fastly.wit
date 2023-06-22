@@ -1,4 +1,6 @@
-default world fastly-world {
+package fastly:compute-at-edge
+
+world fastly-world {
   import fastly: interface {
     // TODO: split this up into function-specific error enums
     enum error {
