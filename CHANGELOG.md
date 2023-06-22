@@ -1,10 +1,10 @@
 # Changelog
 
 
-## [2.4.0](https://github.com/fastly/js-compute-runtime/compare/v2.3.0...v2.4.0) (2023-06-22)
+## 2.4.0 (2023-06-22)
 
 
-### Features
+### Changed
 
 * Update to SpiderMonkey version 114.0.1 ([#563](https://github.com/fastly/js-compute-runtime/issues/563)) ([03e2254](https://github.com/fastly/js-compute-runtime/commit/03e22542cd439990ad530eb1958a12ce8ab85120))
 
