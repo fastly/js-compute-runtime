@@ -1,0 +1,68 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# KVStore.prototype.put
+
+The **`put()`** method stores a `value` into the KV store under a `key`.
+
+> **Note**: KV stores are eventually consistent, this means that the updated contents associated with the key `key` may not be available to read from all edge locations immediately and some edge locations may continue returning the previous contents associated with the key.
+
+## Syntax
+
+```js
+put(key, value)
+```
+
+### Parameters
+
+- `key` _: string_
+  - The key to store the supplied value under within the KV store.
+- `value` _:  ArrayBuffer | TypedArray | DataView| ReadableStream | URLSearchParams | String | string literal_
+  - The value to store within the KV store.
+
+### Return value
+
+Returns a `Promise` which resolves with `undefined` when the provided `value` has been written into the KV store.
+
+## Description
+
+Stores the supplied `value` into the KV store under the supplied `key`.
+
+The `put()` method requires its `this` value to be a [`KVStore`](../KVStore.mdx) object.
+
+If the `this` value does not inherit from `KVStore.prototype`, a [`TypeError`](../../../globals/TypeError/TypeError.mdx) is thrown.
+
+### Exceptions
+
+- `TypeError`
+  - If the provided `key`:
+    - Is any of the strings `""`, `"."`, or `".."`
+    - Starts with the string `".well-known/acme-challenge/"`
+    - Contains any of the characters `"#?*[]\n\r"`
+    - Is longer than 1024 characters
+
+## Examples
+
+In this example we connect to an KV Store named `'files'` and save an entry to the store under the key `'hello'` and then read back the value and return it to the client.
+
+```js
+/// <reference types="@fastly/js-compute" />
+
+import { KVStore } from "fastly:kv-store";
+
+async function app(event) {
+  const files = new KVStore('files')
+
+  await files.put('hello', 'world')
+
+  const entry = await files.put('hello')
+
+  return new Response(await entry.text())
+}
+
+addEventListener("fetch", (event) => event.respondWith(app(event)))
+
+```
