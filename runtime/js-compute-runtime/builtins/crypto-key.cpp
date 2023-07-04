@@ -2,6 +2,7 @@
 #include "crypto-algorithm.h"
 #include "js-compute-builtins.h"
 #include "openssl/rsa.h"
+#include <iostream>
 #include <utility>
 
 namespace builtins {
@@ -347,6 +348,32 @@ BIGNUM *convertToBigNumber(std::string_view bytes) {
 int getBigNumberLength(BIGNUM *a) { return BN_num_bytes(a) * 8; }
 } // namespace
 
+JSObject *CryptoKey::createHMAC(JSContext *cx, CryptoAlgorithmHMAC_Import *algorithm,
+                                std::unique_ptr<std::span<uint8_t>> data, unsigned long length,
+                                bool extractable, CryptoKeyUsages usages) {
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(algorithm);
+  JS::RootedObject instance(
+      cx, JS_NewObjectWithGivenProto(cx, &CryptoKey::class_, CryptoKey::proto_obj));
+  if (!instance) {
+    return nullptr;
+  }
+
+  JS::RootedObject alg(cx, algorithm->toObject(cx));
+  if (!alg) {
+    return nullptr;
+  }
+
+  JS::SetReservedSlot(instance, Slots::Algorithm, JS::ObjectValue(*alg));
+  JS::SetReservedSlot(instance, Slots::Type,
+                      JS::Int32Value(static_cast<uint8_t>(CryptoKeyType::Secret)));
+  JS::SetReservedSlot(instance, Slots::Extractable, JS::BooleanValue(extractable));
+  JS::SetReservedSlot(instance, Slots::Usages, JS::Int32Value(usages.toInt()));
+  JS::SetReservedSlot(instance, Slots::KeyDataLength, JS::Int32Value(data->size()));
+  JS::SetReservedSlot(instance, Slots::KeyData, JS::PrivateValue(data.release()->data()));
+  return instance;
+}
+
 JSObject *CryptoKey::createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_Import *algorithm,
                                std::unique_ptr<CryptoKeyRSAComponents> keyData, bool extractable,
                                CryptoKeyUsages usages) {
@@ -549,6 +576,13 @@ JSObject *CryptoKey::get_algorithm(JS::HandleObject self) {
 EVP_PKEY *CryptoKey::key(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return static_cast<EVP_PKEY *>(JS::GetReservedSlot(self, Slots::Key).toPrivate());
+}
+
+std::span<uint8_t> CryptoKey::hmacKeyData(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+  return std::span<uint8_t>(
+      static_cast<uint8_t *>(JS::GetReservedSlot(self, Slots::KeyData).toPrivate()),
+      JS::GetReservedSlot(self, Slots::KeyDataLength).toInt32());
 }
 
 JS::Result<bool> CryptoKey::is_algorithm(JSContext *cx, JS::HandleObject self,

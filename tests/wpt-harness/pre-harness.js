@@ -14,6 +14,7 @@ addEventListener = function addEventListener_wpt(type, handler) {
   }
 }
 
+globalThis.crypto.subtle.generateKey = function () {return Promise.reject(new Error('globalThis.crypto.subtle.generateKey unimplemented'))}
 globalThis.Blob = class Blob{};
 globalThis.FormData = class FormData{};
 globalThis.SharedArrayBuffer = class SharedArrayBuffer{};

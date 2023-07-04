@@ -2,13 +2,14 @@
 #define JS_COMPUTE_RUNTIME_CRYPTO_KEY_H
 
 #include "builtin.h"
-// #include "crypto-algorithm.h"
+
 #include "crypto-key-rsa-components.h"
 #include "openssl/evp.h"
 
 namespace builtins {
 enum class CryptoAlgorithmIdentifier : uint8_t;
 class CryptoAlgorithmRSASSA_PKCS1_v1_5_Import;
+class CryptoAlgorithmHMAC_Import;
 enum class CryptoKeyType : uint8_t { Public, Private, Secret };
 
 enum class CryptoKeyFormat : uint8_t { Raw, Spki, Pkcs8, Jwk };
@@ -53,6 +54,7 @@ public:
   bool canOnlyDecrypt() { return this->mask == decrypt_flag; };
   bool canOnlySign() { return this->mask == sign_flag; };
   bool canOnlyVerify() { return this->mask == verify_flag; };
+  bool canOnlySignOrVerify() { return this->mask & (sign_flag | verify_flag); };
   bool canOnlyDeriveKey() { return this->mask == derive_key_flag; };
   bool canOnlyDeriveBits() { return this->mask == derive_bits_flag; };
   bool canOnlyWrapKey() { return this->mask == wrap_key_flag; };
@@ -104,6 +106,8 @@ public:
     // It will either be an `EVP_PKEY *` or an `uint8_t *`.
     // `uint8_t *` is used only for HMAC keys, `EVP_PKEY *` is used for all the other key types.
     Key,
+    KeyData,
+    KeyDataLength,
     Count
   };
   static const JSFunctionSpec static_methods[];
@@ -113,12 +117,16 @@ public:
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool init_class(JSContext *cx, JS::HandleObject global);
 
+  static JSObject *createHMAC(JSContext *cx, CryptoAlgorithmHMAC_Import *algorithm,
+                              std::unique_ptr<std::span<uint8_t>> data, unsigned long length,
+                              bool extractable, CryptoKeyUsages usages);
   static JSObject *createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_Import *algorithm,
                              std::unique_ptr<CryptoKeyRSAComponents> keyData, bool extractable,
                              CryptoKeyUsages usages);
   static CryptoKeyType type(JSObject *self);
   static JSObject *get_algorithm(JS::HandleObject self);
   static EVP_PKEY *key(JSObject *self);
+  static std::span<uint8_t> hmacKeyData(JSObject *self);
   static bool canSign(JS::HandleObject self);
   static bool canVerify(JS::HandleObject self);
   static JS::Result<bool> is_algorithm(JSContext *cx, JS::HandleObject self,
