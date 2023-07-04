@@ -3,6 +3,22 @@
 #include "js-compute-builtins.h"
 
 namespace builtins {
+
+namespace {
+void convertErrorToInvalidAccessError(JSContext *cx) {
+  MOZ_ASSERT(JS_IsExceptionPending(cx));
+  JS::RootedValue exn(cx);
+  if (!JS_GetPendingException(cx, &exn)) {
+    return;
+  }
+  MOZ_ASSERT(exn.isObject());
+  JS::RootedObject error(cx, &exn.toObject());
+  JS::RootedValue name(cx, JS::StringValue(JS_NewStringCopyZ(cx, "InvalidAccessError")));
+  JS_SetProperty(cx, error, "name", name);
+  JS::RootedValue code(cx, JS::NumberValue(15));
+  JS_SetProperty(cx, error, "code", code);
+}
+} // namespace
 // digest(algorithm, data)
 // https://w3c.github.io/webcrypto/#SubtleCrypto-method-digest
 bool SubtleCrypto::digest(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -180,33 +196,27 @@ bool SubtleCrypto::sign(JSContext *cx, unsigned argc, JS::Value *vp) {
   // 1. Let algorithm and key be the algorithm and key parameters passed to the sign() method,
   // respectively.
   auto algorithm = args.get(0);
-  JS::RootedObject key(cx);
-  {
-    auto key_arg = args.get(1);
-    if (!key_arg.isObject()) {
-      JS_ReportErrorLatin1(cx, "parameter 2 is not of type 'CryptoKey'");
-      return ReturnPromiseRejectedWithPendingError(cx, args);
-    }
-    key.set(&key_arg.toObject());
-    if (!CryptoKey::is_instance(key)) {
-      JS_ReportErrorLatin1(cx, "parameter 2 is not of type 'CryptoKey'");
-      return ReturnPromiseRejectedWithPendingError(cx, args);
-    }
+  auto key_arg = args.get(1);
+  if (!key_arg.isObject()) {
+    JS_ReportErrorLatin1(cx, "parameter 2 is not of type 'CryptoKey'");
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  JS::RootedObject key(cx, &key_arg.toObject());
+  if (!CryptoKey::is_instance(key)) {
+    JS_ReportErrorLatin1(cx, "parameter 2 is not of type 'CryptoKey'");
+    return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
   // 2. Let data be the result of getting a copy of the bytes held by the data parameter passed to
   // the sign() method.
-  std::span<uint8_t> data;
-  {
-    std::optional<std::span<uint8_t>> dataOptional =
-        value_to_buffer(cx, args.get(2), "SubtleCrypto.sign: data");
-    if (!dataOptional.has_value()) {
-      // value_to_buffer would have already created a JS exception so we don't need to create one
-      // ourselves.
-      return ReturnPromiseRejectedWithPendingError(cx, args);
-    }
-    data = dataOptional.value();
+  std::optional<std::span<uint8_t>> dataOptional =
+      value_to_buffer(cx, args.get(2), "SubtleCrypto.sign: data");
+  if (!dataOptional.has_value()) {
+    // value_to_buffer would have already created a JS exception so we don't need to create one
+    // ourselves.
+    return ReturnPromiseRejectedWithPendingError(cx, args);
   }
+  std::span<uint8_t> data = dataOptional.value();
 
   // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm
   // and op set to "sign".
@@ -234,20 +244,21 @@ bool SubtleCrypto::sign(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto match_result = CryptoKey::is_algorithm(cx, key, identifier);
   if (match_result.isErr()) {
     JS_ReportErrorUTF8(cx, "CryptoKey doesn't match AlgorithmIdentifier");
+    convertErrorToInvalidAccessError(cx);
     return RejectPromiseWithPendingError(cx, promise);
   }
 
   if (match_result.unwrap() == false) {
-    // TODO: Change to an InvalidAccessError instance
     JS_ReportErrorUTF8(cx, "CryptoKey doesn't match AlgorithmIdentifier");
+    convertErrorToInvalidAccessError(cx);
     return RejectPromiseWithPendingError(cx, promise);
   }
 
   // 9. If the [[usages]] internal slot of key does not contain an entry that is "sign", then throw
   // an InvalidAccessError.
   if (!CryptoKey::canSign(key)) {
-    // TODO: Change to an InvalidAccessError instance
     JS_ReportErrorLatin1(cx, "CryptoKey doesn't support signing");
+    convertErrorToInvalidAccessError(cx);
     return RejectPromiseWithPendingError(cx, promise);
   }
 
@@ -284,20 +295,17 @@ bool SubtleCrypto::verify(JSContext *cx, unsigned argc, JS::Value *vp) {
   // 1. Let algorithm and key be the algorithm and key parameters passed to the verify() method,
   // respectively.
   auto algorithm = args.get(0);
-  JS::RootedObject key(cx);
-  {
-    auto key_arg = args.get(1);
-    if (!key_arg.isObject()) {
-      JS_ReportErrorLatin1(cx, "parameter 2 is not of type 'CryptoKey'");
-      return ReturnPromiseRejectedWithPendingError(cx, args);
-    }
-    key.set(&key_arg.toObject());
+  auto key_arg = args.get(1);
+  if (!key_arg.isObject()) {
+    JS_ReportErrorLatin1(cx, "parameter 2 is not of type 'CryptoKey'");
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  JS::RootedObject key(cx, &key_arg.toObject());
 
-    if (!CryptoKey::is_instance(key)) {
-      JS_ReportErrorASCII(
-          cx, "SubtleCrypto.verify: key (argument 2)  does not implement interface CryptoKey");
-      return ReturnPromiseRejectedWithPendingError(cx, args);
-    }
+  if (!CryptoKey::is_instance(key)) {
+    JS_ReportErrorASCII(
+        cx, "SubtleCrypto.verify: key (argument 2)  does not implement interface CryptoKey");
+    return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
   // 2. Let signature be the result of getting a copy of the bytes held by the signature
@@ -341,15 +349,15 @@ bool SubtleCrypto::verify(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto identifier = normalizedAlgorithm->identifier();
   auto match_result = CryptoKey::is_algorithm(cx, key, identifier);
   if (match_result.isErr() || match_result.unwrap() == false) {
-    // TODO: Change to an InvalidAccessError instance
     JS_ReportErrorUTF8(cx, "CryptoKey doesn't match AlgorithmIdentifier");
+    convertErrorToInvalidAccessError(cx);
     return RejectPromiseWithPendingError(cx, promise);
   }
   // 10. If the [[usages]] internal slot of key does not contain an entry that is "verify", then
   // throw an InvalidAccessError.
   if (!CryptoKey::canVerify(key)) {
-    // TODO: Change to an InvalidAccessError instance
     JS_ReportErrorUTF8(cx, "CryptoKey doesn't support verification");
+    convertErrorToInvalidAccessError(cx);
     return RejectPromiseWithPendingError(cx, promise);
   }
   // 11. Let result be the result of performing the verify operation specified by
