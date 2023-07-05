@@ -5,6 +5,7 @@
 #include <span>
 #include <vector>
 
+#include "builtins/shared/dom-exception.h"
 #include "crypto-algorithm.h"
 #include "crypto-key-rsa-components.h"
 #include "js-compute-builtins.h"
@@ -13,67 +14,6 @@ namespace builtins {
 
 namespace {
 
-// Web Crypto API uses DOMExceptions to indicate errors
-// We are adding the fields which are tested for in Web Platform Tests
-// TODO: Implement DOMExceptions class and use that instead of duck-typing on an Error instance
-void convertErrorToNotSupported(JSContext *cx) {
-  MOZ_ASSERT(JS_IsExceptionPending(cx));
-  JS::RootedValue exn(cx);
-  if (!JS_GetPendingException(cx, &exn)) {
-    return;
-  }
-  MOZ_ASSERT(exn.isObject());
-  JS::RootedObject error(cx, &exn.toObject());
-  JS::RootedValue name(cx, JS::StringValue(JS_NewStringCopyZ(cx, "NotSupportedError")));
-  JS_SetProperty(cx, error, "name", name);
-  JS::RootedValue code(cx, JS::NumberValue(9));
-  JS_SetProperty(cx, error, "code", code);
-}
-
-// Web Crypto API uses DOMExceptions to indicate errors
-// We are adding the fields which are tested for in Web Platform Tests
-// TODO: Implement DOMExceptions class and use that instead of duck-typing on an Error instance
-void convertErrorToDataError(JSContext *cx) {
-  MOZ_ASSERT(JS_IsExceptionPending(cx));
-  JS::RootedValue exn(cx);
-  if (!JS_GetPendingException(cx, &exn)) {
-    return;
-  }
-  MOZ_ASSERT(exn.isObject());
-  JS::RootedObject error(cx, &exn.toObject());
-  JS::RootedValue name(cx, JS::StringValue(JS_NewStringCopyZ(cx, "DataError")));
-  JS_SetProperty(cx, error, "name", name);
-}
-
-// Web Crypto API uses DOMExceptions to indicate errors
-// We are adding the fields which are tested for in Web Platform Tests
-// TODO: Implement DOMExceptions class and use that instead of duck-typing on an Error instance
-void convertErrorToOperationError(JSContext *cx) {
-  MOZ_ASSERT(JS_IsExceptionPending(cx));
-  JS::RootedValue exn(cx);
-  if (!JS_GetPendingException(cx, &exn)) {
-    return;
-  }
-  MOZ_ASSERT(exn.isObject());
-  JS::RootedObject error(cx, &exn.toObject());
-  JS::RootedValue name(cx, JS::StringValue(JS_NewStringCopyZ(cx, "OperationError")));
-  JS_SetProperty(cx, error, "name", name);
-}
-
-void convertErrorToInvalidAccessError(JSContext *cx) {
-  MOZ_ASSERT(JS_IsExceptionPending(cx));
-  JS::RootedValue exn(cx);
-  if (!JS_GetPendingException(cx, &exn)) {
-    return;
-  }
-  MOZ_ASSERT(exn.isObject());
-  JS::RootedObject error(cx, &exn.toObject());
-  JS::RootedValue name(cx, JS::StringValue(JS_NewStringCopyZ(cx, "InvalidAccessError")));
-  JS_SetProperty(cx, error, "name", name);
-  JS::RootedValue code(cx, JS::NumberValue(15));
-  JS_SetProperty(cx, error, "code", code);
-}
-
 const EVP_MD *createDigestAlgorithm(JSContext *cx, JS::HandleObject key) {
 
   JS::RootedObject alg(cx, CryptoKey::get_algorithm(key));
@@ -81,8 +21,7 @@ const EVP_MD *createDigestAlgorithm(JSContext *cx, JS::HandleObject key) {
   JS::RootedValue hash_val(cx);
   JS_GetProperty(cx, alg, "hash", &hash_val);
   if (!hash_val.isObject()) {
-    JS_ReportErrorLatin1(cx, "NotSupportedError");
-    convertErrorToNotSupported(cx);
+    DOMException::raise(cx, "NotSupportedError", "NotSupportedError");
     return nullptr;
   }
   JS::RootedObject hash(cx, &hash_val.toObject());
@@ -91,8 +30,7 @@ const EVP_MD *createDigestAlgorithm(JSContext *cx, JS::HandleObject key) {
   size_t name_length;
   auto name_chars = encode(cx, name_val, &name_length);
   if (!name_chars) {
-    JS_ReportErrorLatin1(cx, "NotSupportedError");
-    convertErrorToNotSupported(cx);
+    DOMException::raise(cx, "NotSupportedError", "NotSupportedError");
     return nullptr;
   }
 
@@ -110,8 +48,7 @@ const EVP_MD *createDigestAlgorithm(JSContext *cx, JS::HandleObject key) {
   } else if (name == "SHA-512") {
     return EVP_sha512();
   } else {
-    JS_ReportErrorLatin1(cx, "NotSupportedError");
-    convertErrorToNotSupported(cx);
+    DOMException::raise(cx, "NotSupportedError", "NotSupportedError");
     return nullptr;
   }
 }
@@ -123,8 +60,7 @@ std::optional<std::vector<uint8_t>> rawDigest(JSContext *cx, std::span<uint8_t> 
   std::vector<uint8_t> buf(buffer_size, 0);
   if (!EVP_Digest(data.data(), data.size(), buf.data(), &size, algorithm, NULL)) {
     // 2. If performing the operation results in an error, then throw an OperationError.
-    JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: failed to create digest");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "SubtleCrypto.digest: failed to create digest", "OperationError");
     return std::nullopt;
   }
   return {std::move(buf)};
@@ -143,8 +79,7 @@ JSObject *digest(JSContext *cx, std::span<uint8_t> data, const EVP_MD *algorithm
   }
   if (!EVP_Digest(data.data(), data.size(), buf.get(), &size, algorithm, NULL)) {
     // 2. If performing the operation results in an error, then throw an OperationError.
-    JS_ReportErrorUTF8(cx, "SubtleCrypto.digest: failed to create digest");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "SubtleCrypto.digest: failed to create digest", "OperationError");
     return nullptr;
   }
   // 3. Return a new ArrayBuffer containing result.
@@ -165,16 +100,15 @@ JSObject *digest(JSContext *cx, std::span<uint8_t> data, const EVP_MD *algorithm
 // 6.3.1.  Parameters for RSA Public Keys
 std::unique_ptr<CryptoKeyRSAComponents> createRSAPublicKeyFromJWK(JSContext *cx, JsonWebKey *jwk) {
   if (!jwk->n.has_value() || !jwk->e.has_value()) {
-    JS_ReportErrorLatin1(cx, "Data provided to an operation does not meet requirements");
-    convertErrorToDataError(cx);
+    DOMException::raise(cx, "Data provided to an operation does not meet requirements",
+                        "DataError");
     return nullptr;
   }
   auto modulusResult = GlobalProperties::forgivingBase64Decode(
       jwk->n.value(), GlobalProperties::base64URLDecodeTable);
   if (modulusResult.isErr()) {
-    JS_ReportErrorLatin1(cx,
-                         "The JWK member 'n' could not be base64url decoded or contained padding");
-    convertErrorToDataError(cx);
+    DOMException::raise(
+        cx, "The JWK member 'n' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto modulus = modulusResult.unwrap();
@@ -185,17 +119,16 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPublicKeyFromJWK(JSContext *cx,
   }
   auto dataResult = GlobalProperties::convertJSValueToByteString(cx, jwk->e.value());
   if (dataResult.isErr()) {
-    JS_ReportErrorLatin1(cx, "Data provided to an operation does not meet requirements");
-    convertErrorToDataError(cx);
+    DOMException::raise(cx, "Data provided to an operation does not meet requirements",
+                        "DataError");
     return nullptr;
   }
   auto data = dataResult.unwrap();
   auto exponentResult =
       GlobalProperties::forgivingBase64Decode(data, GlobalProperties::base64URLDecodeTable);
   if (exponentResult.isErr()) {
-    JS_ReportErrorLatin1(cx,
-                         "The JWK member 'e' could not be base64url decoded or contained padding");
-    convertErrorToDataError(cx);
+    DOMException::raise(
+        cx, "The JWK member 'e' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto exponent = exponentResult.unwrap();
@@ -215,9 +148,8 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPrivateKeyFromJWK(JSContext *cx
   auto modulusResult = GlobalProperties::forgivingBase64Decode(
       jwk->n.value(), GlobalProperties::base64URLDecodeTable);
   if (modulusResult.isErr()) {
-    JS_ReportErrorLatin1(cx,
-                         "The JWK member 'n' could not be base64url decoded or contained padding");
-    convertErrorToDataError(cx);
+    DOMException::raise(
+        cx, "The JWK member 'n' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto modulus = modulusResult.unwrap();
@@ -227,25 +159,23 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPrivateKeyFromJWK(JSContext *cx
   }
   auto dataResult = GlobalProperties::convertJSValueToByteString(cx, jwk->e.value());
   if (dataResult.isErr()) {
-    JS_ReportErrorLatin1(cx, "Data provided to an operation does not meet requirements");
-    convertErrorToDataError(cx);
+    DOMException::raise(cx, "Data provided to an operation does not meet requirements",
+                        "DataError");
   }
   auto data = dataResult.unwrap();
   auto exponentResult =
       GlobalProperties::forgivingBase64Decode(data, GlobalProperties::base64URLDecodeTable);
   if (exponentResult.isErr()) {
-    JS_ReportErrorLatin1(cx,
-                         "The JWK member 'e' could not be base64url decoded or contained padding");
-    convertErrorToDataError(cx);
+    DOMException::raise(
+        cx, "The JWK member 'e' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto exponent = exponentResult.unwrap();
   auto privateExponentResult = GlobalProperties::forgivingBase64Decode(
       jwk->d.value(), GlobalProperties::base64URLDecodeTable);
   if (privateExponentResult.isErr()) {
-    JS_ReportErrorLatin1(cx,
-                         "The JWK member 'd' could not be base64url decoded or contained padding");
-    convertErrorToDataError(cx);
+    DOMException::raise(
+        cx, "The JWK member 'd' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto privateExponent = privateExponentResult.unwrap();
@@ -258,53 +188,48 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPrivateKeyFromJWK(JSContext *cx
 
   if (!jwk->p.has_value() || !jwk->q.has_value() || !jwk->dp.has_value() || !jwk->dq.has_value() ||
       !jwk->qi.has_value()) {
-    JS_ReportErrorLatin1(cx, "Data provided to an operation does not meet requirements");
-    convertErrorToDataError(cx);
+    DOMException::raise(cx, "Data provided to an operation does not meet requirements",
+                        "DataError");
     return nullptr;
   }
 
   auto firstPrimeFactorResult = GlobalProperties::forgivingBase64Decode(
       jwk->p.value(), GlobalProperties::base64URLDecodeTable);
   if (firstPrimeFactorResult.isErr()) {
-    JS_ReportErrorLatin1(cx,
-                         "The JWK member 'p' could not be base64url decoded or contained padding");
-    convertErrorToDataError(cx);
+    DOMException::raise(
+        cx, "The JWK member 'p' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto firstPrimeFactor = firstPrimeFactorResult.unwrap();
   auto firstFactorCRTExponentResult = GlobalProperties::forgivingBase64Decode(
       jwk->dp.value(), GlobalProperties::base64URLDecodeTable);
   if (firstFactorCRTExponentResult.isErr()) {
-    JS_ReportErrorLatin1(cx,
-                         "The JWK member 'dp' could not be base64url decoded or contained padding");
-    convertErrorToDataError(cx);
+    DOMException::raise(
+        cx, "The JWK member 'dp' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto firstFactorCRTExponent = firstFactorCRTExponentResult.unwrap();
   auto secondPrimeFactorResult = GlobalProperties::forgivingBase64Decode(
       jwk->q.value(), GlobalProperties::base64URLDecodeTable);
   if (secondPrimeFactorResult.isErr()) {
-    JS_ReportErrorLatin1(cx,
-                         "The JWK member 'q' could not be base64url decoded or contained padding");
-    convertErrorToDataError(cx);
+    DOMException::raise(
+        cx, "The JWK member 'q' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto secondPrimeFactor = secondPrimeFactorResult.unwrap();
   auto secondFactorCRTExponentResult = GlobalProperties::forgivingBase64Decode(
       jwk->dq.value(), GlobalProperties::base64URLDecodeTable);
   if (secondFactorCRTExponentResult.isErr()) {
-    JS_ReportErrorLatin1(cx,
-                         "The JWK member 'dq' could not be base64url decoded or contained padding");
-    convertErrorToDataError(cx);
+    DOMException::raise(
+        cx, "The JWK member 'dq' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto secondFactorCRTExponent = secondFactorCRTExponentResult.unwrap();
   auto secondFactorCRTCoefficientResult = GlobalProperties::forgivingBase64Decode(
       jwk->qi.value(), GlobalProperties::base64URLDecodeTable);
   if (secondFactorCRTCoefficientResult.isErr()) {
-    JS_ReportErrorLatin1(cx,
-                         "The JWK member 'qi' could not be base64url decoded or contained padding");
-    convertErrorToDataError(cx);
+    DOMException::raise(
+        cx, "The JWK member 'qi' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto secondFactorCRTCoefficient = secondFactorCRTCoefficientResult.unwrap();
@@ -455,8 +380,7 @@ JS::Result<CryptoAlgorithmIdentifier> normalizeIdentifier(JSContext *cx, JS::Han
     return CryptoAlgorithmIdentifier::PBKDF2;
   } else {
     // Otherwise: Return a new NotSupportedError and terminate this algorithm.
-    JS_ReportErrorUTF8(cx, "Algorithm: Unrecognized name");
-    convertErrorToNotSupported(cx);
+    DOMException::raise(cx, "Algorithm: Unrecognized name", "NotSupportedError");
     return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
   }
 }
@@ -575,8 +499,7 @@ std::unique_ptr<CryptoAlgorithmDigest> CryptoAlgorithmDigest::normalize(JSContex
     return std::make_unique<CryptoAlgorithmSHA512>();
   }
   default: {
-    JS_ReportErrorASCII(cx, "Supplied algorithm does not support the digest operation");
-    convertErrorToNotSupported(cx);
+    DOMException::raise(cx, "Supplied algorithm does not support the digest operation", "NotSupportedError");
     return nullptr;
   }
   }
@@ -619,8 +542,7 @@ CryptoAlgorithmSignVerify::normalize(JSContext *cx, JS::HandleValue value) {
   case CryptoAlgorithmIdentifier::ECDSA:
   case CryptoAlgorithmIdentifier::RSA_PSS: {
     MOZ_ASSERT(false);
-    JS_ReportErrorASCII(cx, "Supplied algorithm is not yet supported");
-    convertErrorToNotSupported(cx);
+    DOMException::raise(cx, "Supplied algorithm is not yet supported", "NotSupportedError");
     return nullptr;
   }
   default: {
@@ -675,16 +597,14 @@ JSObject *CryptoAlgorithmHMAC_Sign_Verify::sign(JSContext *cx, JS::HandleObject 
   // 1. Let mac be the result of performing the MAC Generation operation described in Section 4 of [FIPS-198-1] using the key represented by [[handle]] internal slot of key, the hash function identified by the hash attribute of the [[algorithm]] internal slot of key and message as the input data text.
   const EVP_MD *algorithm = createDigestAlgorithm(cx, key);
   if (!algorithm) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return nullptr;
   }
 
   std::span<uint8_t> keyData = CryptoKey::hmacKeyData(key);
   auto result = hmacSignature(cx, algorithm, keyData, data);
   if (!result.has_value()) {
-    JS_ReportErrorUTF8(cx, "SubtleCrypto.sign: failed to sign");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "SubtleCrypto.sign: failed to sign", "OperationError");
     return nullptr;
   }
   auto sig = std::move(result.value().first);
@@ -709,16 +629,14 @@ JS::Result<bool> CryptoAlgorithmHMAC_Sign_Verify::verify(JSContext *cx, JS::Hand
   // 1. Let mac be the result of performing the MAC Generation operation described in Section 4 of [FIPS-198-1] using the key represented by [[handle]] internal slot of key, the hash function identified by the hash attribute of the [[algorithm]] internal slot of key and message as the input data text.
   const EVP_MD *algorithm = createDigestAlgorithm(cx, key);
   if (!algorithm) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return JS::Result<bool>(JS::Error());
   }
 
   std::span<uint8_t> keyData = CryptoKey::hmacKeyData(key);
   auto result = hmacSignature(cx, algorithm, keyData, data);
   if (!result.has_value()) {
-    JS_ReportErrorUTF8(cx, "SubtleCrypto.verify: failed to verify");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "SubtleCrypto.verify: failed to verify", "OperationError");
     return JS::Result<bool>(JS::Error());
   }
   auto sig = std::move(result.value().first);
@@ -738,29 +656,25 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify::sign(JSContext *cx, JS::
 
   // 1. If the [[type]] internal slot of key is not "private", then throw an InvalidAccessError.
   if (CryptoKey::type(key) != CryptoKeyType::Private) {
-    JS_ReportErrorLatin1(cx, "InvalidAccessError");
-    convertErrorToInvalidAccessError(cx);
+    DOMException::raise(cx, "InvalidAccessError", "InvalidAccessError");
     return nullptr;
   }
 
   MOZ_ASSERT(CryptoKey::is_instance(key));
   if (CryptoKey::type(key) != CryptoKeyType::Private) {
-    JS_ReportErrorLatin1(cx, "InvalidAccessError");
-    convertErrorToInvalidAccessError(cx);
+    DOMException::raise(cx, "InvalidAccessError", "InvalidAccessError");
     return nullptr;
   }
 
   const EVP_MD *algorithm = createDigestAlgorithm(cx, key);
   if (!algorithm) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return nullptr;
   }
 
   auto digest = ::builtins::rawDigest(cx, data, algorithm, EVP_MD_size(algorithm));
   if (!digest.has_value()) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return nullptr;
   }
 
@@ -772,41 +686,35 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify::sign(JSContext *cx, JS::
   // 3. If performing the operation results in an error, then throw an OperationError.
   auto ctx = EVP_PKEY_CTX_new(CryptoKey::key(key), nullptr);
   if (!ctx) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return nullptr;
   }
 
   if (EVP_PKEY_sign_init(ctx) <= 0) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return nullptr;
   }
 
   if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) <= 0) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return nullptr;
   }
 
   if (EVP_PKEY_CTX_set_signature_md(ctx, algorithm) <= 0) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return nullptr;
   }
 
   size_t signature_length;
   if (EVP_PKEY_sign(ctx, nullptr, &signature_length, digest->data(), digest->size()) <= 0) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return nullptr;
   }
 
   // 4. Let signature be the value S that results from performing the operation.
   mozilla::UniquePtr<uint8_t[], JS::FreePolicy> signature{static_cast<uint8_t *>(JS_malloc(cx, signature_length))};
   if (EVP_PKEY_sign(ctx, signature.get(), &signature_length, digest->data(), digest->size()) <= 0) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return nullptr;
   }
 
@@ -836,16 +744,14 @@ JS::Result<bool> CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify::verify(JSContext 
   MOZ_ASSERT(CryptoKey::is_instance(key));
 
   if (CryptoKey::type(key) != CryptoKeyType::Public) {
-    JS_ReportErrorLatin1(cx, "InvalidAccessError");
-    convertErrorToInvalidAccessError(cx);
+    DOMException::raise(cx, "InvalidAccessError", "InvalidAccessError");
     return JS::Result<bool>(JS::Error());
   }
   const EVP_MD *algorithm = createDigestAlgorithm(cx, key);
 
   auto digestOption = ::builtins::rawDigest(cx, data, algorithm, EVP_MD_size(algorithm));
   if (!digestOption.has_value()) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return JS::Result<bool>(JS::Error());
   }
 
@@ -853,26 +759,22 @@ JS::Result<bool> CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify::verify(JSContext 
 
   auto ctx = EVP_PKEY_CTX_new(CryptoKey::key(key), nullptr);
   if (!ctx) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return JS::Result<bool>(JS::Error());
   }
 
   if (EVP_PKEY_verify_init(ctx) != 1) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return JS::Result<bool>(JS::Error());
   }
 
   if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) != 1) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return JS::Result<bool>(JS::Error());
   }
 
   if (EVP_PKEY_CTX_set_signature_md(ctx, algorithm) != 1) {
-    JS_ReportErrorLatin1(cx, "OperationError");
-    convertErrorToOperationError(cx);
+    DOMException::raise(cx, "OperationError", "OperationError");
     return JS::Result<bool>(JS::Error());
   }
 
@@ -923,13 +825,11 @@ CryptoAlgorithmImportKey::normalize(JSContext *cx, JS::HandleValue value) {
   case CryptoAlgorithmIdentifier::HKDF:
   case CryptoAlgorithmIdentifier::PBKDF2: {
     MOZ_ASSERT(false);
-    JS_ReportErrorASCII(cx, "Supplied algorithm is not yet supported");
-    convertErrorToNotSupported(cx);
+    DOMException::raise(cx, "Supplied algorithm is not yet supported", "NotSupportedError");
     return nullptr;
   }
   default: {
-    JS_ReportErrorASCII(cx, "Supplied algorithm does not support the importKey operation");
-    convertErrorToNotSupported(cx);
+    DOMException::raise(cx, "Supplied algorithm does not support the importKey operation", "NotSupportedError");
     return nullptr;
   }
   }
@@ -987,8 +887,7 @@ JSObject *CryptoAlgorithmHMAC_Import::importKey(JSContext *cx, CryptoKeyFormat f
     // 5.1 Let data be the octet string contained in keyData.
     data = std::make_unique<std::span<uint8_t>>(std::get<std::span<uint8_t>>(keyData));
     if (!data) {
-      JS_ReportErrorLatin1(cx, "Supplied keyData must be either an ArrayBuffer, TypedArray, or DataView.");
-      convertErrorToDataError(cx);
+      DOMException::raise(cx, "Supplied keyData must be either an ArrayBuffer, TypedArray, or DataView.", "DataError");
       return nullptr;
     }
 
@@ -1016,9 +915,8 @@ JSObject *CryptoAlgorithmHMAC_Import::importKey(JSContext *cx, CryptoKeyFormat f
     auto dataResult = GlobalProperties::forgivingBase64Decode(
       jwk->k.value(), GlobalProperties::base64URLDecodeTable);
     if (dataResult.isErr()) {
-      JS_ReportErrorLatin1(cx,
-                         "The JWK member 'k' could not be base64url decoded or contained padding");
-      convertErrorToDataError(cx);
+      DOMException::raise(cx,
+                         "The JWK member 'k' could not be base64url decoded or contained padding", "DataError");
       return nullptr;
     }
     auto data_string = dataResult.unwrap();
@@ -1033,8 +931,7 @@ JSObject *CryptoAlgorithmHMAC_Import::importKey(JSContext *cx, CryptoKeyFormat f
       case CryptoAlgorithmIdentifier::SHA_1: {
         // If the alg field of jwk is present and is not "HS1", then throw a DataError.
         if (jwk->alg.has_value() && jwk->alg.value() != "HS1") {
-          JS_ReportErrorLatin1(cx, "Operation not permitted");
-          convertErrorToDataError(cx);
+          DOMException::raise(cx, "Operation not permitted", "DataError");
           return nullptr;
         }
         break;
@@ -1043,8 +940,7 @@ JSObject *CryptoAlgorithmHMAC_Import::importKey(JSContext *cx, CryptoKeyFormat f
       case CryptoAlgorithmIdentifier::SHA_256: {
         // If the alg field of jwk is present and is not "HS256", then throw a DataError.
         if (jwk->alg.has_value() && jwk->alg.value() != "HS256") {
-          JS_ReportErrorLatin1(cx, "Operation not permitted");
-          convertErrorToDataError(cx);
+          DOMException::raise(cx, "Operation not permitted", "DataError");
           return nullptr;
         }
         break;
@@ -1053,8 +949,7 @@ JSObject *CryptoAlgorithmHMAC_Import::importKey(JSContext *cx, CryptoKeyFormat f
       case CryptoAlgorithmIdentifier::SHA_384: {
         // If the alg field of jwk is present and is not "HS384", then throw a DataError.
         if (jwk->alg.has_value() && jwk->alg.value() != "HS384") {
-          JS_ReportErrorLatin1(cx, "Operation not permitted");
-          convertErrorToDataError(cx);
+          DOMException::raise(cx, "Operation not permitted", "DataError");
           return nullptr;
         }
         break;
@@ -1063,8 +958,7 @@ JSObject *CryptoAlgorithmHMAC_Import::importKey(JSContext *cx, CryptoKeyFormat f
       case CryptoAlgorithmIdentifier::SHA_512: {
         // If the alg field of jwk is present and is not "HS512", then throw a DataError.
         if (jwk->alg.has_value() && jwk->alg.value() != "HS512") {
-          JS_ReportErrorLatin1(cx, "Operation not permitted");
-          convertErrorToDataError(cx);
+          DOMException::raise(cx, "Operation not permitted", "DataError");
           return nullptr;
         }
         break;
@@ -1072,40 +966,35 @@ JSObject *CryptoAlgorithmHMAC_Import::importKey(JSContext *cx, CryptoKeyFormat f
       // 6.12 Otherwise, if the name attribute of hash is defined in another applicable specification:
       default: {
         // 6.13 Perform any key import steps defined by other applicable specifications, passing format, jwk and hash and obtaining hash.
-        JS_ReportErrorLatin1(cx, "Operation not permitted");
-        convertErrorToDataError(cx);
+        DOMException::raise(cx, "Operation not permitted", "DataError");
         return nullptr;
       }
     }
     // 6.14 If usages is non-empty and the use field of jwk is present and is not "sign", then throw a DataError.
     if (!usages.isEmpty() && jwk->use.has_value() && jwk->use != "sign") {
-      JS_ReportErrorLatin1(cx, "Operation not permitted");
-      convertErrorToDataError(cx);
+      DOMException::raise(cx, "Operation not permitted", "DataError");
       return nullptr;
     }
     // 6.15 If the key_ops field of jwk is present, and is invalid according to the requirements of JSON Web Key [JWK] or does not contain all of the specified usages values, then throw a DataError.
     if (jwk->key_ops.size() > 0) {
       auto ops = CryptoKeyUsages::from(jwk->key_ops);
       if (!ops.isSuperSetOf(usages)) {
-        JS_ReportErrorASCII(cx,
+        DOMException::raise(cx,
                             "The JWK 'key_ops' member was inconsistent with that specified by the "
-                            "Web Crypto call. The JWK usage must be a superset of those requested");
-        convertErrorToDataError(cx);
+                            "Web Crypto call. The JWK usage must be a superset of those requested", "DataError");
         return nullptr;
       }
     }
     // 6.16 If the ext field of jwk is present and has the value false and extractable is true, then throw a DataError.
     if (jwk->ext && !jwk->ext.value() && extractable) {
-      JS_ReportErrorLatin1(cx, "Data provided to an operation does not meet requirements");
-      convertErrorToDataError(cx);
+      DOMException::raise(cx, "Data provided to an operation does not meet requirements", "DataError");
       return nullptr;
     }
     break;
   }
   // 7. Otherwise: throw a NotSupportedError.
   default: {
-    JS_ReportErrorLatin1(cx, "Supplied format is not supported");
-    convertErrorToNotSupported(cx);
+    DOMException::raise(cx, "Supplied format is not supported", "NotSupportedError");
     return nullptr;
   }
   }
@@ -1115,8 +1004,7 @@ JSObject *CryptoAlgorithmHMAC_Import::importKey(JSContext *cx, CryptoKeyFormat f
   auto length = data->size() * 8;
   // 9. If length is zero then throw a DataError.
   if (length == 0) {
-    JS_ReportErrorLatin1(cx, "Supplied keyData can not have a length of 0.");
-    convertErrorToDataError(cx);
+    DOMException::raise(cx, "Supplied keyData can not have a length of 0.", "DataError");
     return nullptr;
   }
 
@@ -1125,14 +1013,12 @@ JSObject *CryptoAlgorithmHMAC_Import::importKey(JSContext *cx, CryptoKeyFormat f
     // 11. If the length member of normalizedAlgorithm is greater than length:
     if (this->length.value() > length) {
       // throw a DataError.
-      JS_ReportErrorLatin1(cx, "The optional HMAC key length must be shorter than the key data, and by no more than 7 bits.");
-      convertErrorToDataError(cx);
+      DOMException::raise(cx, "The optional HMAC key length must be shorter than the key data, and by no more than 7 bits.", "DataError");
       return nullptr;
     // 12. If the length member of normalizedAlgorithm, is less than or equal to length minus eight:
     } else if (this->length.value() <= (length - 8)) {
       // throw a DataError.
-      JS_ReportErrorLatin1(cx, "The optional HMAC key length must be shorter than the key data, and by no more than 7 bits.");
-      convertErrorToDataError(cx);
+      DOMException::raise(cx, "The optional HMAC key length must be shorter than the key data, and by no more than 7 bits.", "DataError");
       return nullptr;
     // 13. Otherwise:
     } else {
@@ -1279,8 +1165,7 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
     // 2.4. If usages is non-empty and the use field of jwk is present and is
     // not a case-sensitive string match to "sig", then throw a DataError.
     if (!usages.isEmpty() && jwk->use.has_value() && jwk->use != "sig") {
-      JS_ReportErrorLatin1(cx, "Operation not permitted");
-      convertErrorToDataError(cx);
+      DOMException::raise(cx, "Operation not permitted", "DataError");
       return nullptr;
     }
 
@@ -1290,10 +1175,9 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
     if (jwk->key_ops.size() > 0) {
       auto ops = CryptoKeyUsages::from(jwk->key_ops);
       if (!ops.isSuperSetOf(usages)) {
-        JS_ReportErrorASCII(cx,
+        DOMException::raise(cx,
                             "The JWK 'key_ops' member was inconsistent with that specified by the "
-                            "Web Crypto call. The JWK usage must be a superset of those requested");
-        convertErrorToDataError(cx);
+                            "Web Crypto call. The JWK usage must be a superset of those requested", "DataError");
         return nullptr;
       }
     }
@@ -1301,8 +1185,7 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
     // 2.6 If the ext field of jwk is present and has the value false and 
     // extractable is true, then throw a DataError.
     if (jwk->ext && !jwk->ext.value() && extractable) {
-      JS_ReportErrorLatin1(cx, "Data provided to an operation does not meet requirements");
-      convertErrorToDataError(cx);
+      DOMException::raise(cx, "Data provided to an operation does not meet requirements", "DataError");
       return nullptr;
     }
 
@@ -1387,8 +1270,7 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
     // TODO: Add implementations for these
   }
   default: {
-    JS_ReportErrorLatin1(cx, "Supplied format is not supported");
-    convertErrorToDataError(cx);
+    DOMException::raise(cx, "Supplied format is not supported", "DataError");
     return nullptr;
   }
   }
@@ -1419,7 +1301,6 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx,
     if (!buffer.has_value()) {
       // value_to_buffer would have already created a JS exception so we don't need to create one
       // ourselves.
-      convertErrorToDataError(cx);
       return nullptr;
     }
     data = buffer.value();

@@ -167,7 +167,7 @@ routes.set("/crypto.subtle", async () => {
         let error = await assertRejects(async () => {
           delete publicJsonWebKeyData.e;
           await crypto.subtle.importKey('jwk', publicJsonWebKeyData, jsonWebKeyAlgorithm, publicJsonWebKeyData.ext, publicJsonWebKeyData.key_ops)
-        }, Error, "Data provided to an operation does not meet requirements")
+        }, DOMException, "Data provided to an operation does not meet requirements")
         if (error) { return error; }
         return pass('ok');
       });
