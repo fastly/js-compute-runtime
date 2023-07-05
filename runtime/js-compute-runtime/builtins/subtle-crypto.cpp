@@ -1,24 +1,9 @@
-
 #include "subtle-crypto.h"
+#include "builtins/shared/dom-exception.h"
 #include "js-compute-builtins.h"
 
 namespace builtins {
 
-namespace {
-void convertErrorToInvalidAccessError(JSContext *cx) {
-  MOZ_ASSERT(JS_IsExceptionPending(cx));
-  JS::RootedValue exn(cx);
-  if (!JS_GetPendingException(cx, &exn)) {
-    return;
-  }
-  MOZ_ASSERT(exn.isObject());
-  JS::RootedObject error(cx, &exn.toObject());
-  JS::RootedValue name(cx, JS::StringValue(JS_NewStringCopyZ(cx, "InvalidAccessError")));
-  JS_SetProperty(cx, error, "name", name);
-  JS::RootedValue code(cx, JS::NumberValue(15));
-  JS_SetProperty(cx, error, "code", code);
-}
-} // namespace
 // digest(algorithm, data)
 // https://w3c.github.io/webcrypto/#SubtleCrypto-method-digest
 bool SubtleCrypto::digest(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -243,22 +228,19 @@ bool SubtleCrypto::sign(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto identifier = normalizedAlgorithm->identifier();
   auto match_result = CryptoKey::is_algorithm(cx, key, identifier);
   if (match_result.isErr()) {
-    JS_ReportErrorUTF8(cx, "CryptoKey doesn't match AlgorithmIdentifier");
-    convertErrorToInvalidAccessError(cx);
+    DOMException::raise(cx, "CryptoKey doesn't match AlgorithmIdentifier", "InvalidAccessError");
     return RejectPromiseWithPendingError(cx, promise);
   }
 
   if (match_result.unwrap() == false) {
-    JS_ReportErrorUTF8(cx, "CryptoKey doesn't match AlgorithmIdentifier");
-    convertErrorToInvalidAccessError(cx);
+    DOMException::raise(cx, "CryptoKey doesn't match AlgorithmIdentifier", "InvalidAccessError");
     return RejectPromiseWithPendingError(cx, promise);
   }
 
   // 9. If the [[usages]] internal slot of key does not contain an entry that is "sign", then throw
   // an InvalidAccessError.
   if (!CryptoKey::canSign(key)) {
-    JS_ReportErrorLatin1(cx, "CryptoKey doesn't support signing");
-    convertErrorToInvalidAccessError(cx);
+    DOMException::raise(cx, "CryptoKey doesn't support signing", "InvalidAccessError");
     return RejectPromiseWithPendingError(cx, promise);
   }
 
@@ -349,15 +331,13 @@ bool SubtleCrypto::verify(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto identifier = normalizedAlgorithm->identifier();
   auto match_result = CryptoKey::is_algorithm(cx, key, identifier);
   if (match_result.isErr() || match_result.unwrap() == false) {
-    JS_ReportErrorUTF8(cx, "CryptoKey doesn't match AlgorithmIdentifier");
-    convertErrorToInvalidAccessError(cx);
+    DOMException::raise(cx, "CryptoKey doesn't match AlgorithmIdentifier", "InvalidAccessError");
     return RejectPromiseWithPendingError(cx, promise);
   }
   // 10. If the [[usages]] internal slot of key does not contain an entry that is "verify", then
   // throw an InvalidAccessError.
   if (!CryptoKey::canVerify(key)) {
-    JS_ReportErrorUTF8(cx, "CryptoKey doesn't support verification");
-    convertErrorToInvalidAccessError(cx);
+    DOMException::raise(cx, "CryptoKey doesn't support verification", "InvalidAccessError");
     return RejectPromiseWithPendingError(cx, promise);
   }
   // 11. Let result be the result of performing the verify operation specified by

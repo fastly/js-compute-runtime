@@ -9,7 +9,7 @@
     "status": "PASS"
   },
   "URLSearchParams constructor, DOMException as argument": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URLSearchParams constructor, empty string as argument": {
     "status": "PASS"

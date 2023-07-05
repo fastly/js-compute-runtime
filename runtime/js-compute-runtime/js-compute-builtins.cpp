@@ -57,6 +57,7 @@
 #include "builtins/request-response.h"
 #include "builtins/secret-store.h"
 #include "builtins/shared/console.h"
+#include "builtins/shared/dom-exception.h"
 #include "builtins/shared/performance.h"
 #include "builtins/shared/text-decoder.h"
 #include "builtins/shared/text-encoder.h"
@@ -1282,6 +1283,9 @@ bool define_fastly_sys(JSContext *cx, HandleObject global, FastlyOptions options
   if (!GlobalProperties::init(cx, global))
     return false;
 
+  if (!builtins::DOMException::init_class(cx, global)) {
+    return false;
+  }
   if (!builtins::Backend::init_class(cx, global))
     return false;
   if (!builtins::Fastly::create(cx, global, options))

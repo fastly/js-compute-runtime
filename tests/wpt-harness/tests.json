@@ -202,5 +202,9 @@
   "html/webappapis/timers/negative-setinterval.any.js",
   "html/webappapis/timers/negative-settimeout.any.js",
   "html/webappapis/timers/type-long-setinterval.any.js",
-  "html/webappapis/timers/type-long-settimeout.any.js"
+  "html/webappapis/timers/type-long-settimeout.any.js",
+  "webidl/ecmascript-binding/es-exceptions/DOMException-constants.any.js",
+  "webidl/ecmascript-binding/es-exceptions/DOMException-constructor-and-prototype.any.js",
+  "webidl/ecmascript-binding/es-exceptions/DOMException-constructor-behavior.any.js",
+  "webidl/ecmascript-binding/es-exceptions/DOMException-custom-bindings.any.js"
 ]
