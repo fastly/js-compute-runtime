@@ -1,6 +1,19 @@
 # Changelog
 
 
+## [2.5.0](https://github.com/fastly/js-compute-runtime/compare/v2.4.0...v2.5.0) (2023-07-05)
+
+
+### Features
+
+* add DOMException class ([58b8086](https://github.com/fastly/js-compute-runtime/commit/58b8086edce2d93928743aec462843df369d458b))
+* Add support for HMAC within SubtleCrypto implementation ([96ac02d](https://github.com/fastly/js-compute-runtime/commit/96ac02d1e62b6d34f73a18ba3be30266a4b0f27e))
+
+
+### Bug Fixes
+
+* update types for subtlecrypto to show we support a subset of importKey/sign/verify ([#568](https://github.com/fastly/js-compute-runtime/issues/568)) ([329b733](https://github.com/fastly/js-compute-runtime/commit/329b733e77d4bcb2b341eb1e1b36a5d6a7c999cc))
+
 ## 2.4.0 (2023-06-22)
 
 
