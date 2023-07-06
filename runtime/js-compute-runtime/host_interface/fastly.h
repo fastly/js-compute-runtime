@@ -33,6 +33,8 @@ namespace fastly {
 #define BACKEND_CONFIG_CA_CERT (1u << 9)
 #define BACKEND_CONFIG_CIPHERS (1u << 10)
 #define BACKEND_CONFIG_SNI_HOSTNAME (1u << 11)
+#define BACKEND_CONFIG_DONT_POOL (1u << 12)
+#define BACKEND_CONFIG_CLIENT_CERT (1u << 13)
 
 typedef enum TLS {
   VERSION_1 = 0,

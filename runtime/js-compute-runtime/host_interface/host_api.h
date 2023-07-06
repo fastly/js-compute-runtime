@@ -228,6 +228,7 @@ struct BackendConfig {
   std::optional<uint32_t> first_byte_timeout;
   std::optional<uint32_t> between_bytes_timeout;
   std::optional<bool> use_ssl;
+  std::optional<bool> dont_pool;
   std::optional<fastly_tls_version_t> ssl_min_version;
   std::optional<fastly_tls_version_t> ssl_max_version;
   std::optional<HostString> cert_hostname;

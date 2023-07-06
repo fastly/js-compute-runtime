@@ -455,24 +455,36 @@ bool fastly_http_req_register_dynamic_backend(fastly_world_string_t *prefix,
                                               fastly_error_t *err) {
   uint32_t backend_config_mask = 0;
 
-  if (config->host_override.is_some)
+  if (config->host_override.is_some) {
     backend_config_mask |= BACKEND_CONFIG_HOST_OVERRIDE;
-  if (config->connect_timeout.is_some)
+  }
+  if (config->connect_timeout.is_some) {
     backend_config_mask |= BACKEND_CONFIG_CONNECT_TIMEOUT;
-  if (config->use_ssl.is_some)
+  }
+  if (config->use_ssl.is_some && config->use_ssl.val) {
     backend_config_mask |= BACKEND_CONFIG_USE_SSL;
-  if (config->ssl_min_version.is_some)
+  }
+  if (config->dont_pool.is_some && config->dont_pool.val) {
+    backend_config_mask |= BACKEND_CONFIG_DONT_POOL;
+  }
+  if (config->ssl_min_version.is_some) {
     backend_config_mask |= BACKEND_CONFIG_SSL_MIN_VERSION;
-  if (config->ssl_max_version.is_some)
+  }
+  if (config->ssl_max_version.is_some) {
     backend_config_mask |= BACKEND_CONFIG_SSL_MAX_VERSION;
-  if (config->cert_hostname.is_some)
+  }
+  if (config->cert_hostname.is_some) {
     backend_config_mask |= BACKEND_CONFIG_CERT_HOSTNAME;
-  if (config->ca_cert.is_some)
+  }
+  if (config->ca_cert.is_some) {
     backend_config_mask |= BACKEND_CONFIG_CA_CERT;
-  if (config->ciphers.is_some)
+  }
+  if (config->ciphers.is_some) {
     backend_config_mask |= BACKEND_CONFIG_CIPHERS;
-  if (config->sni_hostname.is_some)
+  }
+  if (config->sni_hostname.is_some) {
     backend_config_mask |= BACKEND_CONFIG_SNI_HOSTNAME;
+  }
   fastly::DynamicBackendConfig backend_configuration{
       .host_override = config->host_override.val.ptr,
       .host_override_len = config->host_override.val.len,

@@ -42,25 +42,25 @@ routes.set('/', () => {
 {
   routes.set("/implicit-dynamic-backend/dynamic-backends-disabled", async () => {
     allowDynamicBackends(false);
-    let error = await assertRejects(() => fetch('https://httpbin.org/headers'));
+    let error = await assertRejects(() => fetch('https://http-me.glitch.me/headers'));
     if (error) { return error }
-    return pass()
+    return pass('ok')
   });
   routes.set("/implicit-dynamic-backend/dynamic-backends-enabled", async () => {
     allowDynamicBackends(true);
-    let error = await assertResolves(() => fetch('https://httpbin.org/headers'));
+    let error = await assertResolves(() => fetch('https://http-me.glitch.me/headers'));
     if (error) { return error }
     error = await assertResolves(() => fetch('https://www.fastly.com'));
     if (error) { return error }
-    return pass()
+    return pass('ok')
   });
   routes.set("/implicit-dynamic-backend/dynamic-backends-enabled-called-twice", async () => {
     allowDynamicBackends(true);
-    let error = await assertResolves(() => fetch('https://httpbin.org/headers'));
+    let error = await assertResolves(() => fetch('https://http-me.glitch.me/headers'));
     if (error) { return error }
-    error = await assertResolves(() => fetch('https://httpbin.org/headers'));
+    error = await assertResolves(() => fetch('https://http-me.glitch.me/headers'));
     if (error) { return error }
-    return pass()
+    return pass('ok')
   });
 }
 
@@ -68,13 +68,13 @@ routes.set('/', () => {
 {
   routes.set("/explicit-dynamic-backend/dynamic-backends-enabled-all-fields", async () => {
     allowDynamicBackends(true);
-    let backend = createValidHttpBinBackend();
-    let error = await assertResolves(() => fetch('https://httpbin.org/headers', {
+    let backend = createValidHttpMeBackend();
+    let error = await assertResolves(() => fetch('https://http-me.glitch.me/headers', {
       backend,
       cacheOverride: new CacheOverride("pass"),
     }));
     if (error) { return error }
-    return pass()
+    return pass('ok')
   });
   routes.set("/explicit-dynamic-backend/dynamic-backends-enabled-minimal-fields", async () => {
     allowDynamicBackends(true);
@@ -84,7 +84,7 @@ routes.set('/', () => {
       cacheOverride: new CacheOverride("pass"),
     }));
     if (error) { return error }
-    return pass()
+    return pass('ok')
   });
 }
 
@@ -186,7 +186,7 @@ routes.set('/', () => {
     error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Backend.prototype.toString, 'name')`)
     if (error) { return error }
 
-    return pass()
+    return pass('ok')
   });
 
   // constructor
@@ -197,14 +197,14 @@ routes.set('/', () => {
         Backend()
       }, TypeError, `calling a builtin Backend constructor without new is forbidden`)
       if (error) { return error }
-      return pass()
+      return pass('ok')
     });
     routes.set("/backend/constructor/empty-parameter", async () => {
       let error = assertThrows(() => {
         new Backend()
       }, TypeError, `Backend constructor: At least 1 argument required, but only 0 passed`)
       if (error) { return error }
-      return pass()
+      return pass('ok')
     });
     routes.set("/backend/constructor/parameter-not-an-object", async () => {
       const constructorArguments = [true, false, 1, 1n, "hello", null, undefined, Symbol(), NaN]
@@ -214,7 +214,7 @@ routes.set('/', () => {
         }, TypeError, `Backend constructor: configuration parameter must be an Object`)
         if (error) { return error }
       }
-      return pass()
+      return pass('ok')
     });
     // name property
     {
@@ -223,28 +223,28 @@ routes.set('/', () => {
           new Backend({ name: null })
         }, TypeError, `Backend constructor: name can not be null or undefined`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       routes.set("/backend/constructor/parameter-name-property-undefined", async () => {
         let error = assertThrows(() => {
           new Backend({ name: undefined })
         }, TypeError, `Backend constructor: name can not be null or undefined`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       routes.set("/backend/constructor/parameter-name-property-too-long", async () => {
         let error = assertThrows(() => {
           new Backend({ name: "a".repeat(255) })
         }, TypeError, `Backend constructor: name can not be more than 254 characters`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       routes.set("/backend/constructor/parameter-name-property-empty-string", async () => {
         let error = assertThrows(() => {
           new Backend({ name: "" })
         }, TypeError, `Backend constructor: name can not be an empty string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       // https://tc39.es/ecma262/#sec-tostring
       routes.set("/backend/constructor/parameter-name-property-calls-7.1.17-ToString", async () => {
@@ -268,7 +268,7 @@ routes.set('/', () => {
         }
         error = assertThrows(() => new Backend({ name: Symbol() }), TypeError, `can't convert symbol to string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
     }
 
@@ -279,21 +279,21 @@ routes.set('/', () => {
           new Backend({ name: 'a', target: null })
         }, TypeError, `Backend constructor: target can not be null or undefined`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       routes.set("/backend/constructor/parameter-target-property-undefined", async () => {
         let error = assertThrows(() => {
           new Backend({ name: 'a', target: undefined })
         }, TypeError, `Backend constructor: target can not be null or undefined`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       routes.set("/backend/constructor/parameter-target-property-empty-string", async () => {
         let error = assertThrows(() => {
           new Backend({ name: 'a', target: "" })
         }, TypeError, `Backend constructor: target can not be an empty string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       // https://tc39.es/ecma262/#sec-tostring
       routes.set("/backend/constructor/parameter-target-property-calls-7.1.17-ToString", async () => {
@@ -317,7 +317,7 @@ routes.set('/', () => {
         }
         error = assertThrows(() => new Backend({ name: 'a', target: Symbol() }), TypeError, `can't convert symbol to string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
 
       routes.set("/backend/constructor/parameter-target-property-valid-host", async () => {
@@ -363,7 +363,7 @@ routes.set('/', () => {
           if (error) { return error }
           i++;
         }
-        return pass()
+        return pass('ok')
       });
 
       routes.set("/backend/constructor/parameter-target-property-invalid-host", async () => {
@@ -421,7 +421,7 @@ routes.set('/', () => {
           if (error) { return error }
           i++;
         }
-        return pass()
+        return pass('ok')
       });
     }
 
@@ -432,14 +432,14 @@ routes.set('/', () => {
           new Backend({ name: 'a', target: 'a', ciphers: "" })
         }, TypeError, `Backend constructor: ciphers can not be an empty string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       routes.set("/backend/constructor/parameter-ciphers-property-invalid-cipherlist-string", async () => {
         let error = assertThrows(() => {
           new Backend({ name: 'a', target: 'a', ciphers: ",;'^%$#^" })
         }, TypeError, `Backend constructor: none of the provided ciphers are supported by Fastly. The list of supported ciphers is available on https://developer.fastly.com/learning/concepts/routing-traffic-to-fastly/#use-a-tls-configuration`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       const validCiphers = [
         "ALL",
@@ -739,7 +739,7 @@ routes.set('/', () => {
           new Backend({ name: 'all-ciphers-invalid-marked-as-exclude', target: 'a', ciphers: validCiphers.concat(invalidCiphers.map(c => '!' + c)).join(':') })
         })
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       routes.set("/backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-but-not-supported-by-fastly", async () => {
         const ciphers = [...invalidCiphers];
@@ -757,7 +757,7 @@ routes.set('/', () => {
           new Backend({ name: 'all-ciphers-valid-marked-as-exclude', target: 'a', ciphers: invalidCiphers.concat(validCiphers.map(c => '!' + c)).join(':') })
         }, TypeError, `Backend constructor: none of the provided ciphers are supported by Fastly. The list of supported ciphers is available on https://developer.fastly.com/learning/concepts/routing-traffic-to-fastly/#use-a-tls-configuration`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       // https://tc39.es/ecma262/#sec-tostring
       routes.set("/backend/constructor/parameter-ciphers-property-calls-7.1.17-ToString", async () => {
@@ -781,7 +781,7 @@ routes.set('/', () => {
         }
         error = assertThrows(() => new Backend({ name: 'a', target: 'a', ciphers: Symbol() }), TypeError, `can't convert symbol to string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
     }
 
@@ -792,7 +792,7 @@ routes.set('/', () => {
           new Backend({ name: 'hostOverride-property-empty-string', target: 'a', hostOverride: "" })
         }, TypeError, `Backend constructor: hostOverride can not be an empty string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       // https://tc39.es/ecma262/#sec-tostring
       routes.set("/backend/constructor/parameter-hostOverride-property-calls-7.1.17-ToString", async () => {
@@ -816,7 +816,7 @@ routes.set('/', () => {
         }
         error = assertThrows(() => new Backend({ name: 'hostOverride-property-calls-ToString', target: 'a', hostOverride: Symbol() }), TypeError, `can't convert symbol to string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
 
       routes.set("/backend/constructor/parameter-hostOverride-property-valid-string", async () => {
@@ -824,7 +824,7 @@ routes.set('/', () => {
           new Backend({ name: 'hostOverride-property-valid-string', target: 'a', hostOverride: "www.fastly.com" })
         })
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
     }
 
@@ -835,14 +835,14 @@ routes.set('/', () => {
           new Backend({ name: 'connectTimeout-property-negative-number', target: 'a', connectTimeout: -1 })
         }, RangeError, `Backend constructor: connectTimeout can not be a negative number`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       routes.set("/backend/constructor/parameter-connectTimeout-property-too-big", async () => {
         let error = assertThrows(() => {
           new Backend({ name: 'connectTimeout-property-too-big', target: 'a', connectTimeout: Math.pow(2, 32) })
         }, RangeError, `Backend constructor: connectTimeout must be less than 2^32`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       // https://tc39.es/ecma262/#sec-tonumber
       routes.set("/backend/constructor/parameter-connectTimeout-property-calls-7.1.4-ToNumber", async () => {
@@ -870,7 +870,7 @@ routes.set('/', () => {
         }
         error = assertThrows(() => new Backend({ name: 'connectTimeout-property-calls-ToNumber', target: 'a', connectTimeout: Symbol() }), TypeError, `can't convert symbol to number`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
 
       routes.set("/backend/constructor/parameter-connectTimeout-property-valid-number", async () => {
@@ -878,7 +878,7 @@ routes.set('/', () => {
           new Backend({ name: 'connectTimeout-property-valid-number', target: 'a', connectTimeout: 1 })
         })
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
     }
 
@@ -889,14 +889,14 @@ routes.set('/', () => {
           new Backend({ name: 'firstByteTimeout-property-negative-number', target: 'a', firstByteTimeout: -1 })
         }, RangeError, `Backend constructor: firstByteTimeout can not be a negative number`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       routes.set("/backend/constructor/parameter-firstByteTimeout-property-too-big", async () => {
         let error = assertThrows(() => {
           new Backend({ name: 'firstByteTimeout-property-too-big', target: 'a', firstByteTimeout: Math.pow(2, 32) })
         }, RangeError, `Backend constructor: firstByteTimeout must be less than 2^32`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       // https://tc39.es/ecma262/#sec-tonumber
       routes.set("/backend/constructor/parameter-firstByteTimeout-property-calls-7.1.4-ToNumber", async () => {
@@ -924,7 +924,7 @@ routes.set('/', () => {
         }
         error = assertThrows(() => new Backend({ name: 'firstByteTimeout-property-calls-ToNumber', target: 'a', firstByteTimeout: Symbol() }), TypeError, `can't convert symbol to number`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
 
       routes.set("/backend/constructor/parameter-firstByteTimeout-property-valid-number", async () => {
@@ -932,7 +932,7 @@ routes.set('/', () => {
           new Backend({ name: 'firstByteTimeout-property-valid-number', target: 'a', firstByteTimeout: 1 })
         })
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
     }
 
@@ -943,14 +943,14 @@ routes.set('/', () => {
           new Backend({ name: 'betweenBytesTimeout-property-negative-number', target: 'a', betweenBytesTimeout: -1 })
         }, RangeError, `Backend constructor: betweenBytesTimeout can not be a negative number`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       routes.set("/backend/constructor/parameter-betweenBytesTimeout-property-too-big", async () => {
         let error = assertThrows(() => {
           new Backend({ name: 'betweenBytesTimeout-property-too-big', target: 'a', betweenBytesTimeout: Math.pow(2, 32) })
         }, RangeError, `Backend constructor: betweenBytesTimeout must be less than 2^32`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       // https://tc39.es/ecma262/#sec-tonumber
       routes.set("/backend/constructor/parameter-betweenBytesTimeout-property-calls-7.1.4-ToNumber", async () => {
@@ -978,7 +978,7 @@ routes.set('/', () => {
         }
         error = assertThrows(() => new Backend({ name: 'betweenBytesTimeout-property-calls-ToNumber', target: 'a', betweenBytesTimeout: Symbol() }), TypeError, `can't convert symbol to number`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
 
       routes.set("/backend/constructor/parameter-betweenBytesTimeout-property-valid-number", async () => {
@@ -986,7 +986,7 @@ routes.set('/', () => {
           new Backend({ name: 'betweenBytesTimeout-property-valid-number', target: 'a', betweenBytesTimeout: 1 })
         })
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
     }
 
@@ -1008,7 +1008,29 @@ routes.set('/', () => {
           new Backend({ name: 'useSSL-property-valid-boolean-false', target: 'a', useSSL: false })
         })
         if (error) { return error }
-        return pass()
+        return pass('ok')
+      });
+    }
+
+    // dontPool property
+    {
+      routes.set("/backend/constructor/parameter-dontPool-property-valid-boolean", async () => {
+        const types = [{}, [], Symbol(), 1, "2"];
+        for (const type of types) {
+          let error = assertDoesNotThrow(() => {
+            new Backend({ name: 'dontPool-property-valid-boolean' + String(type), target: 'a', dontPool: type })
+          })
+          if (error) { return error }
+        }
+        let error = assertDoesNotThrow(() => {
+          new Backend({ name: 'dontPool-property-valid-boolean-true', target: 'a', dontPool: true })
+        })
+        if (error) { return error }
+        error = assertDoesNotThrow(() => {
+          new Backend({ name: 'dontPool-property-valid-boolean-false', target: 'a', dontPool: false })
+        })
+        if (error) { return error }
+        return pass('ok')
       });
     }
 
@@ -1019,14 +1041,14 @@ routes.set('/', () => {
           new Backend({ name: 'tlsMinVersion-property-nan', target: 'a', tlsMinVersion: NaN })
         }, RangeError, `Backend constructor: tlsMinVersion must be either 1, 1.1, 1.2, or 1.3`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       routes.set("/backend/constructor/parameter-tlsMinVersion-property-invalid-number", async () => {
         let error = assertThrows(() => {
           new Backend({ name: 'tlsMinVersion-property-invalid-number', target: 'a', tlsMinVersion: 1.4 })
         }, RangeError, `Backend constructor: tlsMinVersion must be either 1, 1.1, 1.2, or 1.3`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       // https://tc39.es/ecma262/#sec-tonumber
       routes.set("/backend/constructor/parameter-tlsMinVersion-property-calls-7.1.4-ToNumber", async () => {
@@ -1054,7 +1076,7 @@ routes.set('/', () => {
         }
         error = assertThrows(() => new Backend({ name: 'tlsMinVersion-property-calls-ToNumber', target: 'a', tlsMinVersion: Symbol() }), TypeError, `can't convert symbol to number`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
 
       routes.set("/backend/constructor/parameter-tlsMinVersion-property-valid-number", async () => {
@@ -1079,7 +1101,7 @@ routes.set('/', () => {
           new Backend({ name: 'tlsMinVersion-property-valid-number-1.3', target: 'a', tlsMinVersion: 1.3 })
         })
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
 
       routes.set("/backend/constructor/parameter-tlsMinVersion-greater-than-tlsMaxVersion", async () => {
@@ -1087,7 +1109,7 @@ routes.set('/', () => {
           new Backend({ name: 'tlsMinVersion-property-valid-number', target: 'a', tlsMinVersion: 1.3, tlsMaxVersion: 1.2 })
         }, RangeError, `Backend constructor: tlsMinVersion must be less than or equal to tlsMaxVersion`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
     }
 
@@ -1098,14 +1120,14 @@ routes.set('/', () => {
           new Backend({ name: 'tlsMaxVersion-property-nan', target: 'a', tlsMaxVersion: NaN })
         }, RangeError, `Backend constructor: tlsMaxVersion must be either 1, 1.1, 1.2, or 1.3`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       routes.set("/backend/constructor/parameter-tlsMaxVersion-property-invalid-number", async () => {
         let error = assertThrows(() => {
           new Backend({ name: 'tlsMaxVersion-property-invalid-number', target: 'a', tlsMaxVersion: 1.4 })
         }, RangeError, `Backend constructor: tlsMaxVersion must be either 1, 1.1, 1.2, or 1.3`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       // https://tc39.es/ecma262/#sec-tonumber
       routes.set("/backend/constructor/parameter-tlsMaxVersion-property-calls-7.1.4-ToNumber", async () => {
@@ -1133,7 +1155,7 @@ routes.set('/', () => {
         }
         error = assertThrows(() => new Backend({ name: 'tlsMaxVersion-property-calls-ToNumber', target: 'a', tlsMaxVersion: Symbol() }), TypeError, `can't convert symbol to number`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
 
       routes.set("/backend/constructor/parameter-tlsMaxVersion-property-valid-number", async () => {
@@ -1145,7 +1167,7 @@ routes.set('/', () => {
           new Backend({ name: 'tlsMaxVersion-property-valid-number-1.3', target: 'a', tlsMaxVersion: 1.3 })
         })
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
     }
 
@@ -1156,7 +1178,7 @@ routes.set('/', () => {
           new Backend({ name: 'certificateHostname-property-empty-string', target: 'a', certificateHostname: "" })
         }, TypeError, `Backend constructor: certificateHostname can not be an empty string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       // https://tc39.es/ecma262/#sec-tostring
       routes.set("/backend/constructor/parameter-certificateHostname-property-calls-7.1.17-ToString", async () => {
@@ -1180,7 +1202,7 @@ routes.set('/', () => {
         }
         error = assertThrows(() => new Backend({ name: 'certificateHostname-property-calls-ToString', target: 'a', certificateHostname: Symbol() }), TypeError, `can't convert symbol to string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
 
       routes.set("/backend/constructor/parameter-certificateHostname-property-valid-string", async () => {
@@ -1188,7 +1210,7 @@ routes.set('/', () => {
           new Backend({ name: 'certificateHostname-property-valid-string', target: 'a', certificateHostname: "www.fastly.com" })
         })
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
     }
 
@@ -1210,7 +1232,7 @@ routes.set('/', () => {
           new Backend({ name: 'checkCertificate-property-valid-boolean-false', target: 'a', checkCertificate: false })
         })
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
     }
 
@@ -1221,7 +1243,7 @@ routes.set('/', () => {
           new Backend({ name: 'caCertificate-property-empty-string', target: 'a', caCertificate: "" })
         }, TypeError, `Backend constructor: caCertificate can not be an empty string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       // https://tc39.es/ecma262/#sec-tostring
       routes.set("/backend/constructor/parameter-caCertificate-property-calls-7.1.17-ToString", async () => {
@@ -1245,7 +1267,7 @@ routes.set('/', () => {
         }
         error = assertThrows(() => new Backend({ name: 'caCertificate-property-calls-ToString', target: 'a', caCertificate: Symbol() }), TypeError, `can't convert symbol to string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
 
       routes.set("/backend/constructor/parameter-caCertificate-property-valid-string", async () => {
@@ -1253,7 +1275,7 @@ routes.set('/', () => {
           new Backend({ name: 'caCertificate-property-valid-string', target: 'a', caCertificate: "www.fastly.com" })
         })
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
     }
 
@@ -1264,7 +1286,7 @@ routes.set('/', () => {
           new Backend({ name: 'sniHostname-property-empty-string', target: 'a', sniHostname: "" })
         }, TypeError, `Backend constructor: sniHostname can not be an empty string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
       // https://tc39.es/ecma262/#sec-tostring
       routes.set("/backend/constructor/parameter-sniHostname-property-calls-7.1.17-ToString", async () => {
@@ -1288,7 +1310,7 @@ routes.set('/', () => {
         }
         error = assertThrows(() => new Backend({ name: 'sniHostname-property-calls-ToString', target: 'a', sniHostname: Symbol() }), TypeError, `can't convert symbol to string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
 
       routes.set("/backend/constructor/parameter-sniHostname-property-valid-string", async () => {
@@ -1296,68 +1318,66 @@ routes.set('/', () => {
           new Backend({ name: 'sniHostname-property-valid-string', target: 'a', sniHostname: "www.fastly.com" })
         })
         if (error) { return error }
-        return pass()
+        return pass('ok')
       });
     }
   }
 }
 
-function createValidHttpBinBackend() {
+function createValidHttpMeBackend() {
   // We are defining all the possible fields here but any number of fields can be defined - the ones which are not defined will use their default value instead.
   return new Backend(
     {
-      name: 'httpbin',
-      target: 'httpbin.org',
-      hostOverride: "httpbin.org",
+      name: 'http-me',
+      target: 'http-me.glitch.me',
+      hostOverride: "http-me.glitch.me",
       connectTimeout: 1000,
       firstByteTimeout: 15000,
       betweenBytesTimeout: 10000,
       useSSL: true,
+      dontPool: false,
       tlsMinVersion: 1.2,
       tlsMaxVersion: 1.2,
-      certificateHostname: "httpbin.org",
+      certificateHostname: "http-me.glitch.me",
       checkCertificate: true,
       caCertificate: `-----BEGIN CERTIFICATE-----
-MIIGgjCCBWqgAwIBAgIQASW9vtgUNIzM07bVg9HdEzANBgkqhkiG9w0BAQsFADBY
-MQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEuMCwGA1UE
-AxMlR2xvYmFsU2lnbiBBdGxhcyBSMyBEViBUTFMgQ0EgMjAyMiBRMTAeFw0yMjAz
-MzExNDI4NTBaFw0yMzA1MDIxNDI4NDlaMBkxFzAVBgNVBAMMDnd3dy5mYXN0bHku
-Y29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmtLSpTiRzJaFiAEi
-Eua36KwkZBm647y7cEkYEu6GgStXAWtzDF4ttzI8q9iRpqlljFDjQF2EeWLXN2X2
-MEQPxKOOkM+OuJny0pXDCkKiSGS6MwVzNqCNW5tnxkJMMUAq5ciyQFwF72Z+ymlo
-NGCl3CIDAJbHcudm4CiVR5ip7KYFH7uaBRLPXtMLX2lmQ1q2TbU/GXrbDhz5OXCD
-H9SKAUSHLqwLplj8mojxWayda9zy3bqbTVXsqRVW0Xar62T33Uis0fm+xW4hJbxf
-bya5I0aQbAjtxvEjfUa1kSalUqPwfHOXMvvXwoqUIKk1ndZScWl9TGLH84izTCPw
-bOVsTQIDAQABo4IDhTCCA4EwOwYDVR0RBDQwMoIOd3d3LmZhc3RseS5jb22CFGRl
-dmVsb3Blci5mYXN0bHkuY29tggpmYXN0bHkuY29tMA4GA1UdDwEB/wQEAwIFoDAd
-BgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0OBBYEFCYC4rPzDtR8
-EI3XULw/wr8lfnv2MFcGA1UdIARQME4wCAYGZ4EMAQIBMEIGCisGAQQBoDIKAQMw
-NDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2lnbi5jb20vcmVwb3Np
-dG9yeS8wDAYDVR0TAQH/BAIwADCBngYIKwYBBQUHAQEEgZEwgY4wQAYIKwYBBQUH
-MAGGNGh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2NhL2dzYXRsYXNyM2R2dGxz
-Y2EyMDIycTEwSgYIKwYBBQUHMAKGPmh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5j
-b20vY2FjZXJ0L2dzYXRsYXNyM2R2dGxzY2EyMDIycTEuY3J0MB8GA1UdIwQYMBaA
-FJwqZ9C0gzFbgMspllV1CTc4uDylMEgGA1UdHwRBMD8wPaA7oDmGN2h0dHA6Ly9j
-cmwuZ2xvYmFsc2lnbi5jb20vY2EvZ3NhdGxhc3IzZHZ0bHNjYTIwMjJxMS5jcmww
-ggF/BgorBgEEAdZ5AgQCBIIBbwSCAWsBaQB3AK33vvp8/xDIi509nB4+GGq0Zyld
-z7EMJMqFhjTr3IKKAAABf+BhC9UAAAQDAEgwRgIhAI/TiJpulEywYHMuudQ6fYcK
-dl18wDnJtAD+3JqFkrXuAiEA+i6ryPZTeENZJ6wEgRnndsggk8blsfch13e4s76u
-WngAdQB6MoxU2LcttiDqOOBSHumEFnAyE4VNO9IrwTpXo1LrUgAAAX/gYQwqAAAE
-AwBGMEQCIEldTkse3joAWr1llSoi9EOle0K0hz086GrCjL5YDhXkAiARW5dUit2q
-Tq/mD+aN+XHfupYiYC7htPvHMWM6iUHPFgB3ALNzdwfhhFD4Y4bWBancEQlKeS2x
-ZwwLh9zwAw55NqWaAAABf+BhDFQAAAQDAEgwRgIhAIQ1nuPDm08OuXDmLBkreA7L
-LdGLmdhnJOdzOW0n7PDGAiEA4cEZYQ+uFrAoIHezQXBe05/ovXLacu5SVoInRJIK
-gBYwDQYJKoZIhvcNAQELBQADggEBAPH+sQGtGBE6BlC0Zp02rJo/1QCPC+/L1T1+
-uErHb0175NKnxXmT0HYoXr3gduMoMFXQr0VkhtQzCq7OaAX89+UdQ/OkfdU6CK0z
-H4318J11ZShIHqGUCL+w27JsAgzJw/9UQBfT3FLCto735lwfo/l6HyD7qNqNYwhK
-UlkETWIEFB5CUAvG5mVmNbnUI8fnF3CvEB7IJcX9DxIkfsS08+4lMi3jHFMthJqY
-N5RGelXh07FAawRDugRPO0gh5bHo+hxZnWYTW9s6+A/D9E3pP2OJcyvhnvtWUrjg
-rgzylmjRmAH2KP86mK9jRwFvTdn666JZFKzpubei6XjWVdG/eS8=
------END CERTIFICATE-----
-`,
+MIIGFTCCBP2gAwIBAgIQBWn2NbRr0RaO2KoKZawI3DANBgkqhkiG9w0BAQsFADA8
+MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRwwGgYDVQQDExNBbWF6b24g
+UlNBIDIwNDggTTAxMB4XDTIzMDIyMjAwMDAwMFoXDTI0MDIwMTIzNTk1OVowFTET
+MBEGA1UEAxMKZ2xpdGNoLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBAI9b/W4A/W6ayoqEgANycU0izvmZbTzcVzTA9+UsGKgsYRscIvc7hzx5LQ/v
+odG3ZN1d+j1hmE5BJVIU9T32ROJgj/fSV5flvW66B9mNMKndjVElC/bV+Gdaro3B
+QbwdgJnJhWZUQozCKuVB6bajIlbX7MM7zl8b1Iu0d+sXEBB/cYPfz97NM1HXDilg
+EI2gJQ0TehggrmZiNStK5wEz1Lt41dBnt00tuYWdvNgMBSffxDKrrcZhA8BQZBls
+1SH+GfyUJnfuleuC9m7xICsAQhXDQeuRGxR9TwDruIqAPfQkwsetAMH2L7nCdeFv
+5Pc4ziFiOrB5zuMBxZBbqiO5nlcCAwEAAaOCAzgwggM0MB8GA1UdIwQYMBaAFIG4
+DmOKiRIY5fo7O1CVn+blkBOFMB0GA1UdDgQWBBS5l/ww3EumPf1skwK6ksHL5lB6
+nDBpBgNVHREEYjBgggpnbGl0Y2guY29tggoqLmdvbWl4Lm1lgglnb21peC5jb22C
+CGdvbWl4Lm1lgglnbGl0Y2gubWWCDCouZ2xpdGNoLmNvbYILKi5nb21peC5jb22C
+CyouZ2xpdGNoLm1lMA4GA1UdDwEB/wQEAwIFoDAdBgNVHSUEFjAUBggrBgEFBQcD
+AQYIKwYBBQUHAwIwOwYDVR0fBDQwMjAwoC6gLIYqaHR0cDovL2NybC5yMm0wMS5h
+bWF6b250cnVzdC5jb20vcjJtMDEuY3JsMBMGA1UdIAQMMAowCAYGZ4EMAQIBMHUG
+CCsGAQUFBwEBBGkwZzAtBggrBgEFBQcwAYYhaHR0cDovL29jc3AucjJtMDEuYW1h
+em9udHJ1c3QuY29tMDYGCCsGAQUFBzAChipodHRwOi8vY3J0LnIybTAxLmFtYXpv
+bnRydXN0LmNvbS9yMm0wMS5jZXIwDAYDVR0TAQH/BAIwADCCAX8GCisGAQQB1nkC
+BAIEggFvBIIBawFpAHcA7s3QZNXbGs7FXLedtM0TojKHRny87N7DUUhZRnEftZsA
+AAGGdsIYiwAABAMASDBGAiEA9ZoylVZ1uxVwq8pg/4FUIDpr/ATbJUrGKV/qtOu9
+tb4CIQDUkC1upftKiDbJ8SY6pwWdRRhF4RemWnWk7NMJlEqg6wB3AHPZnokbTJZ4
+oCB9R53mssYc0FFecRkqjGuAEHrBd3K1AAABhnbCGOEAAAQDAEgwRgIhAOl6AWKw
+ER7jdba+1JsVxytqq/UXYxcagJr86N8/XTZjAiEAteNRdS0oPHaDUcsX3GKCd96b
+fvvIvl/xQ5LjPw9kZuQAdQBIsONr2qZHNA/lagL6nTDrHFIBy1bdLIHZu7+rOdiE
+cwAAAYZ2whinAAAEAwBGMEQCIFyQrYFFQAVc1GpIJVXKQLKg+0O8QWErE2VtSo8N
+9/0QAiBbnuzpTdIa6qqltabbj2JWw0I72l9GswXK5YM6RTDPdTANBgkqhkiG9w0B
+AQsFAAOCAQEAlaKQm/pbfZbmcECekZtLU9zQAmbcjKtfZ6IdbNx3+SV5u13/lUUO
+o/yUuQ/BRoTYKLYnTY5ojY1/O4en4cLd9msSN+C5nuAEw//twiczBCwv9aAA+eQw
+ssu1JNRB0qiV5wnpoyQ3/xF+TsOMT2heDOvpoG0WDLfrzuFJvWAfNwrRDjhORAQQ
+7M740SMXdSv9aAZ8R1Aj/QyQqlwKOGPImqHvUDDmStEtjSrrMPM+BpuHrEdpQpbi
+g6yC3gfHo2GQS2n3KDbk6JrqAk1ZIIhYrcU7TX9iuWj4MrEvse7mrL7GYF8ISrt8
+j141R75hpv7ieDAtvoIL33FHE59ikJRwkg==
+-----END CERTIFICATE-----`,
       // Colon-delimited list of permitted SSL Ciphers
       ciphers: "ECDHE-RSA-AES128-GCM-SHA256:!RC4",
-      sniHostname: "httpbin.org",
+      sniHostname: "http-me.glitch.me",
     }
   );
 }
@@ -1368,7 +1388,8 @@ function createValidFastlyBackend() {
       name: 'fastly',
       target: 'www.fastly.com',
       hostOverride: "www.fastly.com",
-      useSSL: true
+      useSSL: true,
+      dontPool: true,
     }
   );
 }
