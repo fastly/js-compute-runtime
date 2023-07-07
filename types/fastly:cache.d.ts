@@ -1,6 +1,10 @@
 declare module "fastly:cache" {
 
   interface PurgeOptions {
+    /**
+     * "pop" - This will remove the content from the POP that contains the currently executing instance.
+     * "global" - This will remove the content from all of Fastly.
+     */
     scope: "pop" | "global"
   }
 
