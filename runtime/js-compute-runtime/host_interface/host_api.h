@@ -259,6 +259,8 @@ public:
 
   static Result<HostString> http_req_downstream_tls_protocol();
 
+  static Result<HostBytes> http_req_downstream_tls_client_hello();
+
   /// Send this request synchronously, and wait for the response.
   Result<Response> send(HttpBody body, std::string_view backend);
 

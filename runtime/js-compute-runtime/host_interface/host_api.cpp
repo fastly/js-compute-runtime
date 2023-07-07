@@ -531,6 +531,21 @@ Result<HostString> HttpReq::http_req_downstream_tls_protocol() {
 
   return res;
 }
+
+// http-req-downstream-tls-client-hello: func() -> result<list<u8>, error>
+Result<HostBytes> HttpReq::http_req_downstream_tls_client_hello() {
+  Result<HostBytes> res;
+
+  fastly_world_list_u8_t ret;
+  fastly_error_t err;
+  if (!fastly_http_req_downstream_tls_client_hello(&ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
 bool HttpReq::is_valid() const { return this->handle != HttpReq::invalid; }
 
 Result<fastly_http_version_t> HttpReq::get_version() const {
