@@ -126,6 +126,29 @@ bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::V
   return true;
 }
 
+bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  auto res = HttpReq::http_req_downstream_tls_client_hello();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  HostBytes hello = std::move(res.unwrap());
+  JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, hello.len, hello.ptr.get()));
+  if (!buffer) {
+    // We can be here if the array buffer was too large -- if that was the case then a
+    // JSMSG_BAD_ARRAY_LENGTH will have been created.
+    return false;
+  }
+
+  // `hello` is now owned by `buffer`
+  static_cast<void>(hello.ptr.release());
+
+  args.rval().setObject(*buffer);
+  return true;
+}
 
 bool ClientInfo::tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
@@ -160,6 +183,7 @@ const JSPropertySpec ClientInfo::properties[] = {
     JS_PSG("geo", geo_get, JSPROP_ENUMERATE),
     JS_PSG("tlsCipherOpensslName", tls_cipher_openssl_name_get, JSPROP_ENUMERATE),
     JS_PSG("tlsProtocol", tls_protocol_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsClientHello", tls_client_hello_get, JSPROP_ENUMERATE),
     JS_PS_END,
 };
 

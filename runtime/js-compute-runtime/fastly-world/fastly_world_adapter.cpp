@@ -200,6 +200,17 @@ bool fastly_http_req_downstream_tls_protocol(fastly_world_string_t *ret, fastly_
       fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret->ptr), 32, &ret->len), err);
 }
 
+bool fastly_http_req_downstream_tls_client_hello(fastly_world_list_u8_t *ret, fastly_error_t *err) {
+  auto default_size = 512;
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
+  auto status = fastly::req_downstream_tls_client_hello(reinterpret_cast<char *>(ret->ptr), default_size, &ret->len);
+  if (status == FASTLY_ERROR_BUFFER_LEN) {
+    cabi_realloc(ret->ptr, default_size, 4, ret->len);
+    status = fastly::req_downstream_tls_client_hello(reinterpret_cast<char *>(ret->ptr), ret->len, &ret->len);
+  }
+  return convert_result(status, err);
+}
+
 bool fastly_http_req_new(fastly_request_handle_t *ret, fastly_error_t *err) {
   return convert_result(fastly::req_new(ret), err);
 }
