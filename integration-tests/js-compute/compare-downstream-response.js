@@ -15,6 +15,10 @@ import compareHeaders from './compare-headers.js';
 export async function compareDownstreamResponse (configResponse, actualResponse) {
   // Status
   if (configResponse.status != actualResponse.statusCode) {
+    try {
+      let downstreamBodyText = await actualResponse.body.text();
+      console.error({downstreamBodyText})
+    } catch { /* empty */ }
     throw new Error(`[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.status}`);
   }
 
