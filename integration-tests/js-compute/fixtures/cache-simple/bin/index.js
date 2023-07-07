@@ -8,7 +8,7 @@ import { SimpleCache, SimpleCacheEntry } from 'fastly:cache';
 let error;
 routes.set("/simple-cache/interface", () => {
     let actual = Reflect.ownKeys(SimpleCache)
-    let expected = ["prototype", "delete", "get", "getOrSet", "set", "length", "name"]
+    let expected = ["prototype", "purge", "get", "getOrSet", "set", "length", "name"]
     error = assert(actual, expected, `Reflect.ownKeys(SimpleCache)`)
     if (error) { return error }
 
@@ -163,34 +163,34 @@ routes.set("/simple-cache/interface", () => {
         if (error) { return error }
     }
 
-    // Check the delete static method has correct descriptors, length and name
+    // Check the purge static method has correct descriptors, length and name
     {
-        actual = Reflect.getOwnPropertyDescriptor(SimpleCache, 'delete')
-        expected = { "writable": true, "enumerable": true, "configurable": true, value: SimpleCache.delete }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(SimpleCache, 'delete')`)
+        actual = Reflect.getOwnPropertyDescriptor(SimpleCache, 'purge')
+        expected = { "writable": true, "enumerable": true, "configurable": true, value: SimpleCache.purge }
+        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(SimpleCache, 'purge')`)
         if (error) { return error }
 
-        error = assert(typeof SimpleCache.delete, 'function', `typeof SimpleCache.delete`)
+        error = assert(typeof SimpleCache.purge, 'function', `typeof SimpleCache.purge`)
         if (error) { return error }
 
-        actual = Reflect.getOwnPropertyDescriptor(SimpleCache.delete, 'length')
+        actual = Reflect.getOwnPropertyDescriptor(SimpleCache.purge, 'length')
         expected = {
-            "value": 1,
+            "value": 2,
             "writable": false,
             "enumerable": false,
             "configurable": true
         }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(SimpleCache.delete, 'length')`)
+        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(SimpleCache.purge, 'length')`)
         if (error) { return error }
 
-        actual = Reflect.getOwnPropertyDescriptor(SimpleCache.delete, 'name')
+        actual = Reflect.getOwnPropertyDescriptor(SimpleCache.purge, 'name')
         expected = {
-            "value": "delete",
+            "value": "purge",
             "writable": false,
             "enumerable": false,
             "configurable": true
         }
-        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(SimpleCache.delete, 'name')`)
+        error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(SimpleCache.purge, 'name')`)
         if (error) { return error }
     }
 
@@ -245,19 +245,19 @@ routes.set("/simple-cache/interface", () => {
     });
 }
 
-// SimpleCache delete static method
-// static delete(key: string): undefined;
+// SimpleCache purge static method
+// static purge(key: string, options: PurgeOptions): undefined;
 {
-    routes.set("/simple-cache/delete/called-as-constructor", () => {
+    routes.set("/simple-cache/purge/called-as-constructor", () => {
         error = assertThrows(() => {
-            new SimpleCache.delete('1')
-        }, TypeError, `SimpleCache.delete is not a constructor`)
+            new SimpleCache.purge('1', {scope:"global"})
+        }, TypeError, `SimpleCache.purge is not a constructor`)
         if (error) { return error }
         return pass()
     });
     // Ensure we correctly coerce the parameter to a string as according to
     // https://tc39.es/ecma262/#sec-tostring
-    routes.set("/simple-cache/delete/key-parameter-calls-7.1.17-ToString", () => {
+    routes.set("/simple-cache/purge/key-parameter-calls-7.1.17-ToString", () => {
         let sentinel;
         const test = () => {
             sentinel = Symbol('sentinel');
@@ -266,7 +266,7 @@ routes.set("/simple-cache/interface", () => {
                     throw sentinel;
                 }
             }
-            SimpleCache.delete(key)
+            SimpleCache.purge(key, {scope:"global"})
         }
         error = assertThrows(test)
         if (error) { return error }
@@ -277,43 +277,71 @@ routes.set("/simple-cache/interface", () => {
             if (error) { return error }
         }
         error = assertThrows(() => {
-            SimpleCache.delete(Symbol())
+            SimpleCache.purge(Symbol(),{scope:"global"})
         }, TypeError, `can't convert symbol to string`)
         if (error) { return error }
         return pass()
     });
-    routes.set("/simple-cache/delete/key-parameter-not-supplied", () => {
+    routes.set("/simple-cache/purge/key-parameter-not-supplied", () => {
         error = assertThrows(() => {
-            SimpleCache.delete()
-        }, TypeError, `SimpleCache.delete: At least 1 argument required, but only 0 passed`)
+            SimpleCache.purge()
+        }, TypeError, `SimpleCache.purge: At least 2 arguments required, but only 0 passed`)
         if (error) { return error }
         return pass()
     });
-    routes.set("/simple-cache/delete/key-parameter-empty-string", () => {
+    routes.set("/simple-cache/purge/key-parameter-empty-string", () => {
         error = assertThrows(() => {
-            SimpleCache.delete('')
-        }, Error, `SimpleCache.delete: key can not be an empty string`)
+            SimpleCache.purge('',{scope:"global"})
+        }, Error, `SimpleCache.purge: key can not be an empty string`)
         if (error) { return error }
         return pass()
     });
-    routes.set("/simple-cache/delete/key-parameter-8135-character-string", () => {
+    routes.set("/simple-cache/purge/key-parameter-8135-character-string", () => {
         error = assertDoesNotThrow(() => {
             const key = 'a'.repeat(8135)
-            SimpleCache.delete(key)
+            SimpleCache.purge(key,{scope:"global"})
         })
         if (error) { return error }
         return pass()
     });
-    routes.set("/simple-cache/delete/key-parameter-8136-character-string", () => {
+    routes.set("/simple-cache/purge/key-parameter-8136-character-string", () => {
         error = assertThrows(() => {
             const key = 'a'.repeat(8136)
-            SimpleCache.delete(key)
-        }, Error, `SimpleCache.delete: key is too long, the maximum allowed length is 8135.`)
+            SimpleCache.purge(key,{scope:"global"})
+        }, Error, `SimpleCache.purge: key is too long, the maximum allowed length is 8135.`)
         if (error) { return error }
         return pass()
     });
-    routes.set("/simple-cache/delete/returns-undefined", () => {
-        error = assert(SimpleCache.delete('meow'), undefined, "SimpleCache.delete('meow') === undefined")
+    routes.set("/simple-cache/purge/options-parameter", () => {
+        error = assertThrows(() => {
+            const key = 'a'
+            SimpleCache.purge(key, "hello")
+        }, Error, `SimpleCache.purge: options parameter is not an object.`)
+        if (error) { return error }
+        error = assertThrows(() => {
+            const key = 'a'
+            SimpleCache.purge(key, {scope: Symbol()})
+        }, Error, `can't convert symbol to string`)
+        if (error) { return error }
+        error = assertThrows(() => {
+            const key = 'a'
+            SimpleCache.purge(key, {scope: ""})
+        }, Error, `SimpleCache.purge: scope field of options parameter must be either 'pop', or 'global'.`)
+        if (error) { return error }
+        error = assertDoesNotThrow(() => {
+            const key = 'a'
+            SimpleCache.purge(key, {scope: "pop"})
+        })
+        if (error) { return error }
+        error = assertDoesNotThrow(() => {
+            const key = 'a'
+            SimpleCache.purge(key, {scope: "global"})
+        })
+        if (error) { return error }
+        return pass()
+    });
+    routes.set("/simple-cache/purge/returns-undefined", () => {
+        error = assert(SimpleCache.purge('meow', {scope:"global"}), undefined, "SimpleCache.purge('meow', {scope'global'})")
         if (error) { return error }
         return pass()
     });

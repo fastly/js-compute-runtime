@@ -43,6 +43,7 @@ public:
 
   static bool delete_(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool purge(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool getOrSet(JSContext *cx, unsigned argc, JS::Value *vp);
 
