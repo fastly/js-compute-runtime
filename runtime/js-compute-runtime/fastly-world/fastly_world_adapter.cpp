@@ -211,6 +211,12 @@ bool fastly_http_req_downstream_tls_raw_client_certificate(fastly_world_list_u8_
   }
   return convert_result(status, err);
 }
+
+bool fastly_http_req_downstream_tls_ja3_md5(fastly_world_list_u8_t *ret, fastly_error_t *err) {
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(16, 1));
+  return convert_result(
+      fastly::req_downstream_tls_ja3_md5(reinterpret_cast<char *>(ret->ptr), &ret->len), err);
+}
 bool fastly_http_req_downstream_tls_client_hello(fastly_world_list_u8_t *ret, fastly_error_t *err) {
   auto default_size = 512;
   ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
