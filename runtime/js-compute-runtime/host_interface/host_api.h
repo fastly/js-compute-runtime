@@ -261,6 +261,8 @@ public:
 
   static Result<HostBytes> http_req_downstream_tls_client_hello();
 
+  static Result<HostBytes> http_req_downstream_tls_raw_client_certificate();
+
   /// Send this request synchronously, and wait for the response.
   Result<Response> send(HttpBody body, std::string_view backend);
 
