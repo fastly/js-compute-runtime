@@ -17,18 +17,18 @@ async function app(event) {
     try {
         const path = (new URL(event.request.url)).pathname
         console.log(`path: ${path}`)
-        FASTLY_SERVICE_VERSION = env('FASTLY_SERVICE_VERSION')
+        FASTLY_SERVICE_VERSION = env('FASTLY_SERVICE_VERSION') || 'local'
         console.log(`FASTLY_SERVICE_VERSION: ${FASTLY_SERVICE_VERSION}`)
         if (routes.has(path)) {
             const routeHandler = routes.get(path)
-            res = await routeHandler()
+            res = await routeHandler(event)
         } else {
             res = fail(`${path} endpoint does not exist`)
         }
     } catch (error) {
         res = fail(`The routeHandler threw an error: ${error.message}` + '\n' + error.stack)
     } finally {
-        res.headers.set('FASTLY_SERVICE_VERSION', env('FASTLY_SERVICE_VERSION'));
+        res.headers.set('fastly_service_version', FASTLY_SERVICE_VERSION);
     }
     return res;
 }
