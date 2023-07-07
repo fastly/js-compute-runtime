@@ -11,6 +11,7 @@ class ClientInfo final : public BuiltinNoConstructor<ClientInfo> {
   static bool tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
   static constexpr const char *class_name = "FetchEvent";
