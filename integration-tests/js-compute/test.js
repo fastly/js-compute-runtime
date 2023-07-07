@@ -98,18 +98,18 @@ for (const fixture of testFixtures) {
             await zx`npm i`
             await $`fastly compute publish -i --quiet --token $FASTLY_API_TOKEN`
             core.endGroup()
-            
+
             // get the public domain of the deployed application
             domain = JSON.parse(await $`fastly domain list --quiet --version latest --json`)[0].Name
             core.notice(`Service is running on https://${domain}`)
-            
+
             const setupPath = join(fixturePath, 'setup.js')
             if (existsSync(setupPath)) {
                 core.startGroup('Extra set-up steps for the service')
                 await $`${setupPath}`
                 core.endGroup()
             }
-            
+
             core.startGroup('Check service is up and running')
             await retry(10, expBackoff('60s', '30s'), async () => {
                 const response = await request(`https://${domain}`)
@@ -118,9 +118,9 @@ for (const fixture of testFixtures) {
                 }
             })
             core.endGroup()
-            
+
             const { default: tests } = await import(join(fixturePath, 'tests.json'), { assert: { type: 'json' } });
-            
+
             core.startGroup('Running tests')
             let counter = 0;
             await Promise.all(Object.entries(tests).map(async ([title, test]) => {
@@ -147,7 +147,7 @@ for (const fixture of testFixtures) {
                 await $`${teardownPath}`
                 core.endGroup()
             }
-            
+
             core.startGroup('Delete service')
             // Delete the service now the tests have finished
             await zx`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`
