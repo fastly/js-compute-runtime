@@ -130,7 +130,7 @@ world fastly-world {
 
     http-req-downstream-tls-client-hello: func() -> result<list<u8>, error>
 
-    http-req-downstream-tls-client-certificate: func() -> result<list<u8>, error>
+    http-req-downstream-tls-raw-client-certificate: func() -> result<list<u8>, error>
 
     http-req-downstream-tls-client-cert-verify-result: func() -> result<_, error>
 
