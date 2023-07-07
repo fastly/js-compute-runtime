@@ -189,23 +189,26 @@ bool fastly_http_req_downstream_client_ip_addr(fastly_world_list_u8_t *ret, fast
 bool fastly_http_req_downstream_tls_cipher_openssl_name(fastly_world_string_t *ret,
                                                         fastly_error_t *err) {
   auto default_size = 128;
-  ret->ptr = static_cast<char *>(cabi_malloc(default_size, 1));
-  auto status = fastly::req_downstream_tls_cipher_openssl_name(
-                            reinterpret_cast<char *>(ret->ptr), default_size, &ret->len);
+  ret->ptr = static_cast<char *>(cabi_malloc(default_size, 4));
+  auto status = fastly::req_downstream_tls_cipher_openssl_name(reinterpret_cast<char *>(ret->ptr),
+                                                               default_size, &ret->len);
   if (status == FASTLY_ERROR_BUFFER_LEN) {
     cabi_realloc(ret->ptr, default_size, 4, ret->len);
-    status = fastly::req_downstream_tls_cipher_openssl_name(reinterpret_cast<char *>(ret->ptr), ret->len, &ret->len);
+    status = fastly::req_downstream_tls_cipher_openssl_name(reinterpret_cast<char *>(ret->ptr),
+                                                            ret->len, &ret->len);
   }
   return convert_result(status, err);
 }
 
 bool fastly_http_req_downstream_tls_protocol(fastly_world_string_t *ret, fastly_error_t *err) {
   auto default_size = 32;
-  ret->ptr = static_cast<char *>(cabi_malloc(default_size, 1));
-  auto status = fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret->ptr), default_size, &ret->len);
+  ret->ptr = static_cast<char *>(cabi_malloc(default_size, 4));
+  auto status = fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret->ptr),
+                                                    default_size, &ret->len);
   if (status == FASTLY_ERROR_BUFFER_LEN) {
     cabi_realloc(ret->ptr, default_size, 4, ret->len);
-    status = fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret->ptr), ret->len, &ret->len);
+    status = fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret->ptr), ret->len,
+                                                 &ret->len);
   }
   return convert_result(status, err);
 }
@@ -226,11 +229,11 @@ bool fastly_http_req_downstream_tls_raw_client_certificate(fastly_world_list_u8_
 
 bool fastly_http_req_downstream_tls_ja3_md5(fastly_world_list_u8_t *ret, fastly_error_t *err) {
   auto default_size = 16;
-  ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 1));
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
   auto status = fastly::req_downstream_tls_ja3_md5(reinterpret_cast<char *>(ret->ptr), &ret->len);
   if (status == FASTLY_ERROR_BUFFER_LEN) {
     cabi_realloc(ret->ptr, default_size, 4, ret->len);
-    status = fastly::req_downstream_tls_ja3_md5(reinterpret_cast<char *>(ret->ptr, &ret->len);
+    status = fastly::req_downstream_tls_ja3_md5(reinterpret_cast<char *>(ret->ptr), &ret->len);
   }
   return convert_result(status, err);
 }
