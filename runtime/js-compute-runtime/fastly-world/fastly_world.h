@@ -437,8 +437,8 @@ bool fastly_http_req_downstream_tls_cipher_openssl_name(fastly_world_string_t *r
                                                         fastly_error_t *err);
 bool fastly_http_req_downstream_tls_protocol(fastly_world_string_t *ret, fastly_error_t *err);
 bool fastly_http_req_downstream_tls_client_hello(fastly_world_list_u8_t *ret, fastly_error_t *err);
-bool fastly_http_req_downstream_tls_client_certificate(fastly_world_list_u8_t *ret,
-                                                       fastly_error_t *err);
+bool fastly_http_req_downstream_tls_raw_client_certificate(fastly_world_list_u8_t *ret,
+                                                           fastly_error_t *err);
 bool fastly_http_req_downstream_tls_client_cert_verify_result(fastly_error_t *err);
 bool fastly_http_req_downstream_tls_ja3_md5(fastly_world_list_u8_t *ret, fastly_error_t *err);
 bool fastly_http_req_new(fastly_request_handle_t *ret, fastly_error_t *err);

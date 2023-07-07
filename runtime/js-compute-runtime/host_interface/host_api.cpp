@@ -502,6 +502,20 @@ Result<HostBytes> HttpReq::downstream_client_ip_addr() {
   return res;
 }
 
+// http-req-downstream-tls-cipher-openssl-name: func() -> result<string, error>
+Result<HostString> HttpReq::http_req_downstream_tls_cipher_openssl_name() {
+  Result<HostString> res;
+
+  fastly_error_t err;
+  fastly_world_string_t ret;
+  if (!fastly_http_req_downstream_tls_cipher_openssl_name(&ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
 bool HttpReq::is_valid() const { return this->handle != HttpReq::invalid; }
 
 Result<fastly_http_version_t> HttpReq::get_version() const {

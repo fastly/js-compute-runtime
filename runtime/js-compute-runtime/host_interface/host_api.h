@@ -255,6 +255,8 @@ public:
   /// Get the downstream ip address.
   static Result<HostBytes> downstream_client_ip_addr();
 
+  static Result<HostString> http_req_downstream_tls_cipher_openssl_name();
+
   /// Send this request synchronously, and wait for the response.
   Result<Response> send(HttpBody body, std::string_view backend);
 

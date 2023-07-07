@@ -149,7 +149,8 @@ int req_cache_override_v2_set(fastly_request_handle_t req_handle, int tag, uint3
 WASM_IMPORT("fastly_http_req", "downstream_client_ip_addr")
 int req_downstream_client_ip_addr_get(char *octets, size_t *nwritten);
 
-// TODO:
+WASM_IMPORT("fastly_http_req", "downstream_tls_cipher_openssl_name")
+int req_downstream_tls_cipher_openssl_name(char *ret, size_t ret_len, size_t *nwritten);
 
 // (@interface func (export "downstream_tls_cipher_openssl_name")
 //    (param $cipher_out (@witx pointer char8))

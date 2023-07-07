@@ -284,8 +284,8 @@ void __wasm_import_fastly_http_req_downstream_tls_protocol(int32_t);
 __attribute__((__import_module__("fastly"), __import_name__("http-req-downstream-tls-client-hello")))
 void __wasm_import_fastly_http_req_downstream_tls_client_hello(int32_t);
 
-__attribute__((__import_module__("fastly"), __import_name__("http-req-downstream-tls-client-certificate")))
-void __wasm_import_fastly_http_req_downstream_tls_client_certificate(int32_t);
+__attribute__((__import_module__("fastly"), __import_name__("http-req-downstream-tls-raw-client-certificate")))
+void __wasm_import_fastly_http_req_downstream_tls_raw_client_certificate(int32_t);
 
 __attribute__((__import_module__("fastly"), __import_name__("http-req-downstream-tls-client-cert-verify-result")))
 void __wasm_import_fastly_http_req_downstream_tls_client_cert_verify_result(int32_t);
@@ -937,11 +937,11 @@ bool fastly_http_req_downstream_tls_client_hello(fastly_world_list_u8_t *ret, fa
   }
 }
 
-bool fastly_http_req_downstream_tls_client_certificate(fastly_world_list_u8_t *ret, fastly_error_t *err) {
+bool fastly_http_req_downstream_tls_raw_client_certificate(fastly_world_list_u8_t *ret, fastly_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[12];
   int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_http_req_downstream_tls_client_certificate(ptr);
+  __wasm_import_fastly_http_req_downstream_tls_raw_client_certificate(ptr);
   fastly_world_result_list_u8_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
