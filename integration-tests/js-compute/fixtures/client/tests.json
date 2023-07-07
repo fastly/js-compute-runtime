@@ -1,0 +1,67 @@
+{
+  "GET /client/tlsJA3MD5": {
+    "environments": [
+      "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/client/tlsJA3MD5"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /client/tlsClientHello": {
+    "environments": [
+      "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/client/tlsClientHello"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /client/tlsClientCertificate": {
+    "environments": [
+      "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/client/tlsClientCertificate"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /client/tlsCipherOpensslName": {
+    "environments": [
+      "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/client/tlsCipherOpensslName"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /client/tlsProtocol": {
+    "environments": [
+      "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/client/tlsProtocol"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  }
+}
