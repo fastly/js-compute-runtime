@@ -194,6 +194,12 @@ bool fastly_http_req_downstream_tls_cipher_openssl_name(fastly_world_string_t *r
                         err);
 }
 
+bool fastly_http_req_downstream_tls_protocol(fastly_world_string_t *ret, fastly_error_t *err) {
+  ret->ptr = static_cast<char *>(cabi_malloc(32, 1));
+  return convert_result(
+      fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret->ptr), 32, &ret->len), err);
+}
+
 bool fastly_http_req_new(fastly_request_handle_t *ret, fastly_error_t *err) {
   return convert_result(fastly::req_new(ret), err);
 }
