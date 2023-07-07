@@ -385,6 +385,7 @@ jobs:
           - 'byte-repeater'
           - 'cache-override'
           - 'cache-simple'
+          - 'client'
           - 'crypto'
           - 'edge-dictionary'
           - 'error'
