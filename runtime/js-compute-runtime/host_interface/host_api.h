@@ -263,6 +263,8 @@ public:
 
   static Result<HostBytes> http_req_downstream_tls_raw_client_certificate();
 
+  static Result<HostBytes> http_req_downstream_tls_ja3_md5();
+
   /// Send this request synchronously, and wait for the response.
   Result<Response> send(HttpBody body, std::string_view backend);
 

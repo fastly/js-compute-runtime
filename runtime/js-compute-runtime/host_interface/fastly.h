@@ -160,6 +160,10 @@ int req_downstream_tls_client_hello(char *ret, size_t ret_len, size_t *nwritten)
 
 WASM_IMPORT("fastly_http_req", "downstream_tls_raw_client_certificate")
 int req_downstream_tls_raw_client_certificate(char *ret, size_t ret_len, size_t *nwritten);
+
+WASM_IMPORT("fastly_http_req", "downstream_tls_ja3_md5")
+int req_downstream_tls_ja3_md5(char *ret, size_t *nwritten);
+
 WASM_IMPORT("fastly_http_req", "new")
 int req_new(fastly_request_handle_t *req_handle_out);
 

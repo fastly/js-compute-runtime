@@ -561,6 +561,22 @@ Result<HostBytes> HttpReq::http_req_downstream_tls_raw_client_certificate() {
 
   return res;
 }
+
+// http-req-downstream-tls-ja3-md5: func() -> result<list<u8>, error>
+Result<HostBytes> HttpReq::http_req_downstream_tls_ja3_md5() {
+  Result<HostBytes> res;
+
+  fastly_world_list_u8_t ret;
+  fastly_error_t err;
+  if (!fastly_http_req_downstream_tls_ja3_md5(&ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
 bool HttpReq::is_valid() const { return this->handle != HttpReq::invalid; }
 
 Result<fastly_http_version_t> HttpReq::get_version() const {

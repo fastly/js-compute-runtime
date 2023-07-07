@@ -1,6 +1,7 @@
 #include "builtins/client-info.h"
 #include "core/geo_ip.h"
 #include "host_interface/host_api.h"
+#include "openssl/evp.h"
 
 #include "js/JSON.h"
 #include <arpa/inet.h>
@@ -126,6 +127,24 @@ bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::V
   return true;
 }
 
+bool ClientInfo::tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  auto res = HttpReq::http_req_downstream_tls_ja3_md5();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  auto ja3 = std::move(res.unwrap());
+  JS::UniqueChars hex{OPENSSL_buf2hexstr(ja3.ptr.get(), ja3.len)};
+  std::string ja3hex{hex.get(), std::remove(hex.get(), hex.get() + strlen(hex.get()), ':')};
+
+  JS::RootedString s(cx, JS_NewStringCopyN(cx, ja3hex.c_str(), ja3hex.length()));
+  args.rval().setString(s);
+  return true;
+}
+
 bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
@@ -207,6 +226,7 @@ const JSPropertySpec ClientInfo::properties[] = {
     JS_PSG("geo", geo_get, JSPROP_ENUMERATE),
     JS_PSG("tlsCipherOpensslName", tls_cipher_openssl_name_get, JSPROP_ENUMERATE),
     JS_PSG("tlsProtocol", tls_protocol_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsJA3MD5", tls_ja3_md5_get, JSPROP_ENUMERATE),
     JS_PSG("tlsClientCertificate", tls_client_certificate_get, JSPROP_ENUMERATE),
     JS_PSG("tlsClientHello", tls_client_hello_get, JSPROP_ENUMERATE),
     JS_PS_END,
