@@ -110,6 +110,21 @@ bool ClientInfo::geo_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return JS_ParseJSON(cx, geo_info_str, args.rval());
 }
 
+bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  auto res = HttpReq::http_req_downstream_tls_cipher_openssl_name();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  HostString cipher = std::move(res.unwrap());
+  JS::RootedString result(cx, JS_NewStringCopyN(cx, cipher.ptr.get(), cipher.len));
+
+  args.rval().setString(result);
+  return true;
+}
 const JSFunctionSpec ClientInfo::static_methods[] = {
     JS_FS_END,
 };
@@ -125,6 +140,7 @@ const JSFunctionSpec ClientInfo::methods[] = {
 const JSPropertySpec ClientInfo::properties[] = {
     JS_PSG("address", address_get, JSPROP_ENUMERATE),
     JS_PSG("geo", geo_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsCipherOpensslName", tls_cipher_openssl_name_get, JSPROP_ENUMERATE),
     JS_PS_END,
 };
 
