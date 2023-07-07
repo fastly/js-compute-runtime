@@ -139,8 +139,8 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
 // Note: We should keep this consistent across the Compute SDKs, this would allow
 // a Compute Service to move from one SDK to another, and have consistent purging
 // behavior between the Compute Service Versions which were using a different SDK.
-JS::Result<std::string> createSurrogateKeyFromCacheKey(JSContext *cx,
-                                                       fastly_world_string_t cache_key) {
+JS::Result<std::string> createGlobalSurrogateKeyFromCacheKey(JSContext *cx,
+                                                             fastly_world_string_t cache_key) {
   const EVP_MD *algorithm = EVP_sha256();
   unsigned int size = EVP_MD_size(algorithm);
   std::vector<unsigned char> md(size);
@@ -152,6 +152,63 @@ JS::Result<std::string> createSurrogateKeyFromCacheKey(JSContext *cx,
   std::string surrogate_key{data.get(), std::remove(data.get(), data.get() + size, ':')};
 
   return JS::Result<std::string>(surrogate_key);
+}
+
+// Purging/Deleting a cache item within the Compute SDKs via a hostcall is only
+// possible via surrogate-keys. We add a surrogate key to all the cache entries,
+// which is the sha-256 digest of the cache entries cache-key and the FASTLY_POP
+// environment variable, converted to uppercase hexadecimal.
+// Note: We should keep this consistent across the Compute SDKs, this would allow
+// a Compute Service to move from one SDK to another, and have consistent purging
+// behavior between the Compute Service Versions which were using a different SDK.
+JS::Result<std::string> createPopSurrogateKeyFromCacheKey(JSContext *cx,
+                                                          fastly_world_string_t cache_key) {
+  const EVP_MD *algorithm = EVP_sha256();
+  unsigned int size = EVP_MD_size(algorithm);
+  std::vector<unsigned char> md(size);
+
+  std::string key(cache_key.ptr, cache_key.len);
+  auto pop = getenv("FASTLY_POP");
+  if (pop) {
+    key += pop;
+  }
+
+  if (!EVP_Digest(key.c_str(), key.length(), md.data(), &size, algorithm, nullptr)) {
+    return JS::Result<std::string>(JS::Error());
+  }
+  JS::UniqueChars data{OPENSSL_buf2hexstr(md.data(), size)};
+  std::string surrogate_key{data.get(), std::remove(data.get(), data.get() + size, ':')};
+
+  return JS::Result<std::string>(surrogate_key);
+}
+
+// Create all the surrogate keys for the cache key
+JS::Result<std::string> createSurrogateKeysFromCacheKey(JSContext *cx,
+                                                        fastly_world_string_t cache_key) {
+  const EVP_MD *algorithm = EVP_sha256();
+  unsigned int size = EVP_MD_size(algorithm);
+  std::vector<unsigned char> md(size);
+
+  std::string key(cache_key.ptr, cache_key.len);
+
+  if (!EVP_Digest(key.c_str(), key.length(), md.data(), &size, algorithm, nullptr)) {
+    return JS::Result<std::string>(JS::Error());
+  }
+  JS::UniqueChars data{OPENSSL_buf2hexstr(md.data(), size)};
+  std::string surrogate_keys{data.get(), std::remove(data.get(), data.get() + size, ':')};
+
+  auto pop = getenv("FASTLY_POP");
+  if (pop) {
+    key += pop;
+    if (!EVP_Digest(key.c_str(), key.length(), md.data(), &size, algorithm, nullptr)) {
+      return JS::Result<std::string>(JS::Error());
+    }
+    JS::UniqueChars data{OPENSSL_buf2hexstr(md.data(), size)};
+    std::string surrogate_key{data.get(), std::remove(data.get(), data.get() + size, ':')};
+    surrogate_keys += " " + surrogate_key;
+  }
+
+  return JS::Result<std::string>(surrogate_keys);
 }
 
 } // namespace
@@ -346,7 +403,7 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
     return RejectPromiseWithPendingError(cx, promise);
   }
   key.ptr = key_chars.get();
-  auto key_result = createSurrogateKeyFromCacheKey(cx, key);
+  auto key_result = createSurrogateKeysFromCacheKey(cx, key);
   if (key_result.isErr()) {
     if (!fastly_transaction_cancel(handle, &err)) {
       HANDLE_ERROR(cx, err);
@@ -698,7 +755,7 @@ bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
   // We create a surrogate-key from the cache-key, as this allows the cached contents to be purgable
   // from within the JavaScript application
   // This is because the cache API currently only supports purging via surrogate-key
-  auto key_result = createSurrogateKeyFromCacheKey(cx, key);
+  auto key_result = createSurrogateKeysFromCacheKey(cx, key);
   if (key_result.isErr()) {
     return false;
   }
@@ -799,11 +856,11 @@ bool SimpleCache::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-// static delete(key: string): undefined;
-bool SimpleCache::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
+// static purge(key: string, options: PurgeOptions): undefined;
+bool SimpleCache::purge(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The SimpleCache builtin");
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "SimpleCache.delete", 1)) {
+  if (!args.requireAtLeast(cx, "SimpleCache.purge", 2)) {
     return false;
   }
 
@@ -816,24 +873,51 @@ bool SimpleCache::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   key.ptr = key_chars.get();
 
   if (key.len == 0) {
-    JS_ReportErrorASCII(cx, "SimpleCache.delete: key can not be an empty string");
+    JS_ReportErrorASCII(cx, "SimpleCache.purge: key can not be an empty string");
     return false;
   }
   if (key.len > 8135) {
     JS_ReportErrorASCII(cx,
-                        "SimpleCache.delete: key is too long, the maximum allowed length is 8135.");
+                        "SimpleCache.purge: key is too long, the maximum allowed length is 8135.");
     return false;
   }
 
-  // We create a surrogate-key from the cache-key, as this allows the cached contents to be purgable
-  // from within the JavaScript application
-  // This is because the cache API currently only supports purging via surrogate-key
-  auto surrogate_key_result = createSurrogateKeyFromCacheKey(cx, key);
-  if (surrogate_key_result.isErr()) {
+  auto secondArgument = args.get(1);
+  if (!secondArgument.isObject()) {
+    JS_ReportErrorASCII(cx, "SimpleCache.purge: options parameter is not an object.");
     return false;
   }
-  auto surrogate_key = surrogate_key_result.unwrap();
 
+  JS::RootedObject options(cx, &secondArgument.toObject());
+  JS::RootedValue scope_val(cx);
+  if (!JS_GetProperty(cx, options, "scope", &scope_val)) {
+    return false;
+  }
+  size_t length;
+  auto scope_chars = encode(cx, scope_val, &length);
+  if (!scope_chars) {
+    return false;
+  }
+  std::string_view scope(scope_chars.get(), length);
+  std::string surrogate_key;
+  if (scope == "pop") {
+    auto surrogate_key_result = createPopSurrogateKeyFromCacheKey(cx, key);
+    if (surrogate_key_result.isErr()) {
+      return false;
+    }
+    surrogate_key = surrogate_key_result.unwrap();
+  } else if (scope == "global") {
+    auto surrogate_key_result = createGlobalSurrogateKeyFromCacheKey(cx, key);
+    if (surrogate_key_result.isErr()) {
+      return false;
+    }
+    surrogate_key = surrogate_key_result.unwrap();
+  } else {
+    JS_ReportErrorASCII(
+        cx,
+        "SimpleCache.purge: scope field of options parameter must be either 'pop', or 'global'.");
+    return false;
+  }
   fastly_world_string_t skey;
   skey.ptr = const_cast<char *>(surrogate_key.c_str());
   skey.len = surrogate_key.length();
@@ -852,7 +936,7 @@ bool SimpleCache::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 const JSFunctionSpec SimpleCache::static_methods[] = {
-    JS_FN("delete", delete_, 1, JSPROP_ENUMERATE),
+    JS_FN("purge", purge, 2, JSPROP_ENUMERATE),
     JS_FN("get", get, 1, JSPROP_ENUMERATE),
     JS_FN("getOrSet", getOrSet, 2, JSPROP_ENUMERATE),
     JS_FN("set", set, 3, JSPROP_ENUMERATE),
