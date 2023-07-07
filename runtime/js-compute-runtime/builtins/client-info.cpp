@@ -125,6 +125,24 @@ bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::V
   args.rval().setString(result);
   return true;
 }
+
+
+bool ClientInfo::tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  auto res = HttpReq::http_req_downstream_tls_protocol();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  HostString protocol = std::move(res.unwrap());
+  JS::RootedString result(cx, JS_NewStringCopyN(cx, protocol.ptr.get(), protocol.len));
+
+  args.rval().setString(result);
+  return true;
+}
+
 const JSFunctionSpec ClientInfo::static_methods[] = {
     JS_FS_END,
 };
@@ -141,6 +159,7 @@ const JSPropertySpec ClientInfo::properties[] = {
     JS_PSG("address", address_get, JSPROP_ENUMERATE),
     JS_PSG("geo", geo_get, JSPROP_ENUMERATE),
     JS_PSG("tlsCipherOpensslName", tls_cipher_openssl_name_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsProtocol", tls_protocol_get, JSPROP_ENUMERATE),
     JS_PS_END,
 };
 

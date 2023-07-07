@@ -152,12 +152,8 @@ int req_downstream_client_ip_addr_get(char *octets, size_t *nwritten);
 WASM_IMPORT("fastly_http_req", "downstream_tls_cipher_openssl_name")
 int req_downstream_tls_cipher_openssl_name(char *ret, size_t ret_len, size_t *nwritten);
 
-// (@interface func (export "downstream_tls_cipher_openssl_name")
-//    (param $cipher_out (@witx pointer char8))
-//    (param $cipher_max_len (@witx usize))
-//    (param $nwritten_out (@witx pointer (@witx usize)))
-//    (result $err $fastly_status)
-// )
+WASM_IMPORT("fastly_http_req", "downstream_tls_protocol")
+int req_downstream_tls_protocol(char *ret, size_t ret_len, size_t *nwritten);
 
 // (@interface func (export "downstream_tls_protocol")
 //    (param $protocol_out (@witx pointer char8))

@@ -257,6 +257,8 @@ public:
 
   static Result<HostString> http_req_downstream_tls_cipher_openssl_name();
 
+  static Result<HostString> http_req_downstream_tls_protocol();
+
   /// Send this request synchronously, and wait for the response.
   Result<Response> send(HttpBody body, std::string_view backend);
 
