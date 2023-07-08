@@ -1,6 +1,22 @@
 # Changelog
 
 
+## [3.0.0](https://github.com/fastly/js-compute-runtime/compare/v2.5.0...v3.0.0) (2023-07-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* Rename SimpleCache.delete to SimpleCache.purge and require purge options to be supplied as the second parameter
+
+### Features
+
+* add event.client.tlsCipherOpensslName ([49b0c99](https://github.com/fastly/js-compute-runtime/commit/49b0c99523147998304dc559b836bcc79008e8b0))
+* add event.client.tlsClientCertificate ([cf93b62](https://github.com/fastly/js-compute-runtime/commit/cf93b6226b01ca653688571ed0db27e0f6d39bc2))
+* add event.client.tlsClientHello ([3d87cb2](https://github.com/fastly/js-compute-runtime/commit/3d87cb28a670735441a0d8c6d16291867c8f2244))
+* add event.client.tlsJA3MD5 ([2ecf4af](https://github.com/fastly/js-compute-runtime/commit/2ecf4afcc503e60a1aa972c88d47149b22dbf70c))
+* add event.client.tlsProtocol ([4c91142](https://github.com/fastly/js-compute-runtime/commit/4c9114213343d4dea2a1ac2955980e19540a4463))
+* Rename SimpleCache.delete to SimpleCache.purge and require purge options to be supplied as the second parameter ([20113c1](https://github.com/fastly/js-compute-runtime/commit/20113c1df6ad57a98c5b8c27b06d67117d2029ef))
+
 ## 2.5.0 (2023-07-05)
 
 
