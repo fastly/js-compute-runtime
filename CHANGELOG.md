@@ -1,6 +1,70 @@
 # Changelog
 
 
+## 3.0.0 (2023-07-08)
+
+
+### Changed
+
+*⚠ BREAKING CHANGE*
+
+* Rename SimpleCache.delete to SimpleCache.purge and require purge options to be supplied as the second parameter
+
+We are renaming because "purge" is already a well-known and documented concept for removing content from Fastly's cache.
+
+The new addition of a second argument allows the caller to decide what scope to purge the content from, currently they can choose to purge from all of Fastly ("global") or from the POP that contains the currently executing instance ("pop"). We do not provide a default option right now, in the future we may provide a default option, if we discover a common pattern is being used.
+
+
+Here is an example of migrating an application using SimpleCache.delete to SimpleCache.purge with the same behaviour:
+```diff
+/// <reference types="@fastly/js-compute" />
+
+import { SimpleCache } from 'fastly:cache';
+
+addEventListener('fetch', event => event.respondWith(app(event)));
+
+async function app(event) {
+  const url = new URL(event.request);
+  const path = url.pathname;
+  if (url.searchParams.has('delete')) {
+-    SimpleCache.delete(path);
++    SimpleCache.purge(path, { scope: "global" });
+    return new Response(page, { status: 204 });
+  }
+
+  let page = SimpleCache.getOrSet(path, async () => {
+    return {
+      value: await render(path),
+      // Store the page in the cache for 1 minute.
+      ttl: 60
+    }
+  });
+  return new Response(page, {
+    headers: {
+      'content-type': 'text/plain;charset=UTF-8'
+    }
+  });
+}
+
+async function render(path) {
+  // expensive/slow function which constructs and returns the contents for a given path
+  await new Promise(resolve => setTimeout(resolve, 10_000));
+  return path;
+}
+
+
+```
+
+
+### Added
+
+* add event.client.tlsCipherOpensslName ([49b0c99](https://github.com/fastly/js-compute-runtime/commit/49b0c99523147998304dc559b836bcc79008e8b0))
+* add event.client.tlsClientCertificate ([cf93b62](https://github.com/fastly/js-compute-runtime/commit/cf93b6226b01ca653688571ed0db27e0f6d39bc2))
+* add event.client.tlsClientHello ([3d87cb2](https://github.com/fastly/js-compute-runtime/commit/3d87cb28a670735441a0d8c6d16291867c8f2244))
+* add event.client.tlsJA3MD5 ([2ecf4af](https://github.com/fastly/js-compute-runtime/commit/2ecf4afcc503e60a1aa972c88d47149b22dbf70c))
+* add event.client.tlsProtocol ([4c91142](https://github.com/fastly/js-compute-runtime/commit/4c9114213343d4dea2a1ac2955980e19540a4463))
+* Rename SimpleCache.delete to SimpleCache.purge and require purge options to be supplied as the second parameter ([20113c1](https://github.com/fastly/js-compute-runtime/commit/20113c1df6ad57a98c5b8c27b06d67117d2029ef))
+
 ## 2.5.0 (2023-07-05)
 
 
