@@ -18,7 +18,7 @@ To learn more about the fundamentals of using JavaScript with Compute@Edge, see 
 
 ## Understanding the JavaScript SDK
 
-Incoming HTTP requests to domains that are attached to your Fastly service will start an instance of your application and invoke a `fetch` event, which can be bound using the `addEventListener` function:
+Incoming HTTP requests to [domains that are attached to your Fastly service](https://developer.fastly.com/learning/concepts/) will start an instance of your application and invoke a `fetch` event, which can be bound using the `addEventListener` function:
 
 ```js
 addEventListener("fetch", event => event.respondWith(handleRequest(event)) );
