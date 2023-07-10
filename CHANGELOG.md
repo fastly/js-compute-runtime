@@ -24,8 +24,7 @@ import { SimpleCache } from 'fastly:cache';
 addEventListener('fetch', event => event.respondWith(app(event)));
 
 async function app(event) {
-  const url = new URL(event.request);
-  const path = url.pathname;
+  const path = new URL(event.request.url).pathname;
   if (url.searchParams.has('delete')) {
 -    SimpleCache.delete(path);
 +    SimpleCache.purge(path, { scope: "global" });
