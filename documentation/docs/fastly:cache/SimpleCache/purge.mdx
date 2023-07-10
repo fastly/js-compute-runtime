@@ -51,7 +51,8 @@ import { SimpleCache } from 'fastly:cache';
 addEventListener('fetch', event => event.respondWith(app(event)));
 
 async function app(event) {
-  const path = new URL(event.request.url).pathname;
+  const url = new URL(event.request.url);
+  const path = url.pathname;
   if (url.searchParams.has('purge')) {
     SimpleCache.purge(path, { scope: "global" });
     return new Response(page, { status: 204 });
