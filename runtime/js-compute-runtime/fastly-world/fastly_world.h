@@ -237,6 +237,7 @@ typedef struct {
   fastly_world_option_u32_t first_byte_timeout;
   fastly_world_option_u32_t between_bytes_timeout;
   fastly_world_option_bool_t use_ssl;
+  fastly_world_option_bool_t dont_pool;
   fastly_world_option_tls_version_t ssl_min_version;
   fastly_world_option_tls_version_t ssl_max_version;
   fastly_world_option_string_t cert_hostname;

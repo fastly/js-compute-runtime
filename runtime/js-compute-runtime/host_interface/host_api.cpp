@@ -316,6 +316,11 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
     backend_config.use_ssl.val = *val;
   }
 
+  if (auto &val = config.dont_pool) {
+    backend_config.dont_pool.is_some = true;
+    backend_config.dont_pool.val = *val;
+  }
+
   if (auto &val = config.ssl_min_version) {
     backend_config.ssl_min_version.is_some = true;
     backend_config.ssl_min_version.val = *val;

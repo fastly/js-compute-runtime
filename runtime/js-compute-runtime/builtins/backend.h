@@ -25,6 +25,7 @@ public:
     CaCertificate,
     Ciphers,
     SniHostname,
+    DontPool,
     Count
   };
 

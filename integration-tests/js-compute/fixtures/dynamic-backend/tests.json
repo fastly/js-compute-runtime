@@ -1,602 +1,795 @@
 {
   "GET /implicit-dynamic-backend/dynamic-backends-disabled": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/implicit-dynamic-backend/dynamic-backends-disabled"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /implicit-dynamic-backend/dynamic-backends-enabled": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/implicit-dynamic-backend/dynamic-backends-enabled"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /implicit-dynamic-backend/dynamic-backends-enabled-called-twice": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/implicit-dynamic-backend/dynamic-backends-enabled-called-twice"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /explicit-dynamic-backend/dynamic-backends-enabled-all-fields": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/explicit-dynamic-backend/dynamic-backends-enabled-all-fields"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /explicit-dynamic-backend/dynamic-backends-enabled-minimal-fields": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/explicit-dynamic-backend/dynamic-backends-enabled-minimal-fields"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/interface": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/interface"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/called-as-regular-function": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/called-as-regular-function"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/empty-parameter": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/empty-parameter"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-not-an-object": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-not-an-object"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-name-property-null": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-name-property-null"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-name-property-undefined": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-name-property-undefined"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-name-property-too-long": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-name-property-too-long"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-name-property-empty-string": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-name-property-empty-string"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-name-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-name-property-calls-7.1.17-ToString"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-target-property-null": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-target-property-null"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-target-property-undefined": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-target-property-undefined"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-target-property-empty-string": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-target-property-empty-string"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-target-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-target-property-calls-7.1.17-ToString"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-target-property-valid-host": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-target-property-valid-host"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-target-property-invalid-host": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-target-property-invalid-host"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-ciphers-property-empty-string": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-ciphers-property-empty-string"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-ciphers-property-invalid-cipherlist-string": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-ciphers-property-invalid-cipherlist-string"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-supported-by-fastly": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-supported-by-fastly"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-but-not-supported-by-fastly": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-but-not-supported-by-fastly"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-ciphers-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-ciphers-property-calls-7.1.17-ToString"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-hostOverride-property-empty-string": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-hostOverride-property-empty-string"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-hostOverride-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-hostOverride-property-calls-7.1.17-ToString"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-hostOverride-property-valid-string": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-hostOverride-property-valid-string"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-connectTimeout-property-negative-number": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-connectTimeout-property-negative-number"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-connectTimeout-property-too-big": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-connectTimeout-property-too-big"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-connectTimeout-property-calls-7.1.4-ToNumber": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-connectTimeout-property-calls-7.1.4-ToNumber"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-connectTimeout-property-valid-number": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-connectTimeout-property-valid-number"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-firstByteTimeout-property-negative-number": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-firstByteTimeout-property-negative-number"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-firstByteTimeout-property-too-big": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-firstByteTimeout-property-too-big"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-firstByteTimeout-property-calls-7.1.4-ToNumber": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-firstByteTimeout-property-calls-7.1.4-ToNumber"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-firstByteTimeout-property-valid-number": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-firstByteTimeout-property-valid-number"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-betweenBytesTimeout-property-negative-number": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-betweenBytesTimeout-property-negative-number"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-betweenBytesTimeout-property-too-big": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-betweenBytesTimeout-property-too-big"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-betweenBytesTimeout-property-calls-7.1.4-ToNumber": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-betweenBytesTimeout-property-calls-7.1.4-ToNumber"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-betweenBytesTimeout-property-valid-number": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-betweenBytesTimeout-property-valid-number"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-useSSL-property-valid-boolean": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-useSSL-property-valid-boolean"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-dontPool-property-valid-boolean": {
+    "environments": [
+      "viceroy"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-dontPool-property-valid-boolean"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-tlsMinVersion-property-nan": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-tlsMinVersion-property-nan"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-tlsMinVersion-property-invalid-number": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-tlsMinVersion-property-invalid-number"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-tlsMinVersion-property-calls-7.1.4-ToNumber": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-tlsMinVersion-property-calls-7.1.4-ToNumber"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-tlsMinVersion-property-valid-number": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-tlsMinVersion-property-valid-number"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-tlsMinVersion-greater-than-tlsMaxVersion": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-tlsMinVersion-greater-than-tlsMaxVersion"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-tlsMaxVersion-property-nan": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-tlsMaxVersion-property-nan"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-tlsMaxVersion-property-invalid-number": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-tlsMaxVersion-property-invalid-number"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-tlsMaxVersion-property-calls-7.1.4-ToNumber": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-tlsMaxVersion-property-calls-7.1.4-ToNumber"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-tlsMaxVersion-property-valid-number": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-tlsMaxVersion-property-valid-number"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-certificateHostname-property-empty-string": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-certificateHostname-property-empty-string"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-certificateHostname-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-certificateHostname-property-calls-7.1.17-ToString"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-certificateHostname-property-valid-string": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-certificateHostname-property-valid-string"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-checkCertificate-property-valid-boolean": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-checkCertificate-property-valid-boolean"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-caCertificate-property-empty-string": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-caCertificate-property-empty-string"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-caCertificate-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-caCertificate-property-calls-7.1.17-ToString"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-caCertificate-property-valid-string": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-caCertificate-property-valid-string"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-sniHostname-property-empty-string": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-sniHostname-property-empty-string"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-sniHostname-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-sniHostname-property-calls-7.1.17-ToString"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   },
   "GET /backend/constructor/parameter-sniHostname-property-valid-string": {
-    "environments": ["viceroy"],
+    "environments": [
+      "viceroy"
+    ],
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-sniHostname-property-valid-string"
     },
     "downstream_response": {
-      "status": 200
+      "status": 200,
+      "body": "ok"
     }
   }
 }

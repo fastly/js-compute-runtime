@@ -14,6 +14,7 @@ import {expectError, expectType} from 'tsd';
     expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', firstByteTimeout: 5000, }))
     expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', betweenBytesTimeout: 5000, }))
     expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', useSSL: true,}))
+    expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', dontPool: true,}))
     expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', tlsMinVersion: 1.2,}))
     expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', tlsMaxVersion: 1.2,}))
     expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', certificateHostname: 'example.com',}))

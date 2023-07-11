@@ -226,6 +226,7 @@ world fastly-world {
       first-byte-timeout: option<u32>,
       between-bytes-timeout: option<u32>,
       use-ssl: option<bool>,
+      dont-pool: option<bool>,
       ssl-min-version: option<tls-version>,
       ssl-max-version: option<tls-version>,
       cert-hostname: option<string>,

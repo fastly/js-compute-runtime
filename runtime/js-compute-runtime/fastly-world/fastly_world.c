@@ -1817,63 +1817,70 @@ bool fastly_http_req_register_dynamic_backend(fastly_world_string_t *prefix, fas
   } else {
     *((int8_t*)(ptr + 52)) = 0;
   }
-  if (((*config).ssl_min_version).is_some) {
-    const fastly_tls_version_t *payload10 = &((*config).ssl_min_version).val;
+  if (((*config).dont_pool).is_some) {
+    const bool *payload10 = &((*config).dont_pool).val;
     *((int8_t*)(ptr + 54)) = 1;
-    *((int8_t*)(ptr + 55)) = (int32_t) *payload10;
+    *((int8_t*)(ptr + 55)) = *payload10;
   } else {
     *((int8_t*)(ptr + 54)) = 0;
   }
-  if (((*config).ssl_max_version).is_some) {
-    const fastly_tls_version_t *payload12 = &((*config).ssl_max_version).val;
+  if (((*config).ssl_min_version).is_some) {
+    const fastly_tls_version_t *payload12 = &((*config).ssl_min_version).val;
     *((int8_t*)(ptr + 56)) = 1;
     *((int8_t*)(ptr + 57)) = (int32_t) *payload12;
   } else {
     *((int8_t*)(ptr + 56)) = 0;
   }
+  if (((*config).ssl_max_version).is_some) {
+    const fastly_tls_version_t *payload14 = &((*config).ssl_max_version).val;
+    *((int8_t*)(ptr + 58)) = 1;
+    *((int8_t*)(ptr + 59)) = (int32_t) *payload14;
+  } else {
+    *((int8_t*)(ptr + 58)) = 0;
+  }
   if (((*config).cert_hostname).is_some) {
-    const fastly_world_string_t *payload14 = &((*config).cert_hostname).val;
+    const fastly_world_string_t *payload16 = &((*config).cert_hostname).val;
     *((int8_t*)(ptr + 60)) = 1;
-    *((int32_t*)(ptr + 68)) = (int32_t) (*payload14).len;
-    *((int32_t*)(ptr + 64)) = (int32_t) (*payload14).ptr;
+    *((int32_t*)(ptr + 68)) = (int32_t) (*payload16).len;
+    *((int32_t*)(ptr + 64)) = (int32_t) (*payload16).ptr;
   } else {
     *((int8_t*)(ptr + 60)) = 0;
   }
   if (((*config).ca_cert).is_some) {
-    const fastly_world_string_t *payload16 = &((*config).ca_cert).val;
+    const fastly_world_string_t *payload18 = &((*config).ca_cert).val;
     *((int8_t*)(ptr + 72)) = 1;
-    *((int32_t*)(ptr + 80)) = (int32_t) (*payload16).len;
-    *((int32_t*)(ptr + 76)) = (int32_t) (*payload16).ptr;
+    *((int32_t*)(ptr + 80)) = (int32_t) (*payload18).len;
+    *((int32_t*)(ptr + 76)) = (int32_t) (*payload18).ptr;
   } else {
     *((int8_t*)(ptr + 72)) = 0;
   }
   if (((*config).ciphers).is_some) {
-    const fastly_world_string_t *payload18 = &((*config).ciphers).val;
+    const fastly_world_string_t *payload20 = &((*config).ciphers).val;
     *((int8_t*)(ptr + 84)) = 1;
-    *((int32_t*)(ptr + 92)) = (int32_t) (*payload18).len;
-    *((int32_t*)(ptr + 88)) = (int32_t) (*payload18).ptr;
+    *((int32_t*)(ptr + 92)) = (int32_t) (*payload20).len;
+    *((int32_t*)(ptr + 88)) = (int32_t) (*payload20).ptr;
   } else {
     *((int8_t*)(ptr + 84)) = 0;
   }
   if (((*config).sni_hostname).is_some) {
-    const fastly_world_string_t *payload20 = &((*config).sni_hostname).val;
+    const fastly_world_string_t *payload22 = &((*config).sni_hostname).val;
     *((int8_t*)(ptr + 96)) = 1;
-    *((int32_t*)(ptr + 104)) = (int32_t) (*payload20).len;
-    *((int32_t*)(ptr + 100)) = (int32_t) (*payload20).ptr;
+    *((int32_t*)(ptr + 104)) = (int32_t) (*payload22).len;
+    *((int32_t*)(ptr + 100)) = (int32_t) (*payload22).ptr;
   } else {
     *((int8_t*)(ptr + 96)) = 0;
   }
-  int32_t ptr21 = (int32_t) &ret_area;
-  __wasm_import_fastly_http_req_register_dynamic_backend(ptr, ptr21);
+  int32_t ptr23 = (int32_t) &ret_area;
+  __wasm_import_fastly_http_req_register_dynamic_backend(ptr, ptr23);
   fastly_world_result_void_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr21 + 0)))) {
+  switch ((int32_t) (*((uint8_t*) (ptr23 + 0)))) {
     case 0: {
       result.is_err = false;
       break;
     }
     case 1: {
       result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr21 + 1)));
+      result.val.err = (int32_t) (*((uint8_t*) (ptr23 + 1)));
       break;
     }
   }

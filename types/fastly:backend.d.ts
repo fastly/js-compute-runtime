@@ -59,6 +59,14 @@ declare module 'fastly:backend' {
      */
     useSSL?: boolean;
     /**
+     * Determine whether or not connections to the same backend should be pooled across different sessions.
+     * Fastly considers two backends “the same” if they’re registered with the same name and the exact same settings.
+     * In those cases, when pooling is enabled, if Session 1 opens a connection to this backend it will be left open, and can be re-used by Session 2.
+     * This can help improve backend latency, by removing the need for the initial network / TLS handshake(s).
+     * By default, pooling is enabled for dynamic backends.
+     */
+    dontPool?: boolean;
+    /**
      * Minimum allowed TLS version on SSL connections to this backend.
      * If the backend server is not able to negotiate a connection meeting this constraint, a 503 response will be presented instead.
      * 
