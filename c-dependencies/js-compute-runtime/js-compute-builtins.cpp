@@ -1093,7 +1093,7 @@ bool extract_body(JSContext *cx, HandleObject self, HandleValue body_val) {
       return false;
     }
 
-    JS_SetReservedSlot(self, RequestOrResponse::Slots::BodyStream, body_val);
+    JS::SetReservedSlot(self, RequestOrResponse::Slots::BodyStream, body_val);
 
     // Ensure that we take the right steps for shortcutting operations on
     // TransformStreams later on.
@@ -1182,7 +1182,7 @@ template <auto mode> JSObject *headers(JSContext *cx, HandleObject obj) {
     headers = Headers::create(cx, headersInstance, mode, obj);
     if (!headers)
       return nullptr;
-    JS_SetReservedSlot(obj, Slots::Headers, ObjectValue(*headers));
+    JS::SetReservedSlot(obj, Slots::Headers, ObjectValue(*headers));
   }
 
   return headers;
@@ -1569,7 +1569,7 @@ JSObject *create_body_stream(JSContext *cx, HandleObject owner) {
 
   // TODO: immediately lock the stream if the owner's body is already used.
 
-  JS_SetReservedSlot(owner, Slots::BodyStream, JS::ObjectValue(*body_stream));
+  JS::SetReservedSlot(owner, Slots::BodyStream, JS::ObjectValue(*body_stream));
   return body_stream;
 }
 
@@ -4927,6 +4927,11 @@ void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code) {
 const unsigned ctor_length = 1;
 
 bool check_receiver(JSContext *cx, HandleValue receiver, const char *method_name);
+JSObject *create(JSContext *cx, JS::CallArgs args);
+JSObject *create(JSContext *cx, HandleObject response, ResponseHandle response_handle,
+                 BodyHandle body_handle, bool is_upstream);
+
+bool clone(JSContext *cx, unsigned argc, Value *vp);
 
 bool ok_get(JSContext *cx, unsigned argc, Value *vp) {
   METHOD_HEADER(0)
@@ -5008,6 +5013,7 @@ bool bodyUsed_get(JSContext *cx, unsigned argc, Value *vp) {
 
 const JSFunctionSpec methods[] = {
     JS_FN("arrayBuffer", bodyAll<BodyReadResult::ArrayBuffer>, 0, JSPROP_ENUMERATE),
+    JS_FN("clone", clone, 0, JSPROP_ENUMERATE),
     JS_FN("json", bodyAll<BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<BodyReadResult::Text>, 0, JSPROP_ENUMERATE), JS_FS_END};
 
@@ -5180,6 +5186,10 @@ bool init_class(JSContext *cx, HandleObject global) {
          (type_error_atom = JS_AtomizeAndPinString(cx, "error"));
 }
 
+JSObject *create(JSContext *cx, JS::CallArgs args) {
+  return JS_NewObjectForConstructor(cx, &class_, args);
+}
+
 JSObject *create(JSContext *cx, HandleObject response, ResponseHandle response_handle,
                  BodyHandle body_handle, bool is_upstream) {
   JS::SetReservedSlot(response, Slots::Response, JS::Int32Value(response_handle.handle));
@@ -5204,6 +5214,120 @@ JSObject *create(JSContext *cx, HandleObject response, ResponseHandle response_h
   }
 
   return response;
+}
+
+// The clone() method steps are:
+bool clone(JSContext *cx, unsigned argc, Value *vp) {
+  METHOD_HEADER(0);
+  RootedObject stream(cx, RequestOrResponse::body_stream(self));
+  // Step 1. if this is unusable, then throw a TypeError.
+  if (stream && RequestOrResponse::body_unusable(cx, stream)) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_BODY_UNUSABLE, "Response.clone");
+    return false;
+  }
+
+  // Step 2. Let clonedResponse be the result of cloning this’s response.
+  // https://fetch.spec.whatwg.org/#concept-response-clone
+  // {
+  // Step 1. If response is a filtered response, then return a new identical filtered response whose
+  // internal response is a clone of response’s internal response.
+
+  // Step 2. Let newResponse be a copy of response, except for its body.
+
+  // Step 3. If response’s body is non-null, then set newResponse’s body to the result of cloning
+  // response’s body.
+
+  // Step 4. Return newResponse.
+
+  // }
+
+  // Step 3. Return the result of creating a Response object, given clonedResponse, this’s headers’s
+  // guard, and this’s relevant Realm.
+
+  // JS::GetReservedSlot(self, Slots::Response);
+  // JS::GetReservedSlot(self, Slots::Headers);
+  // JS::GetReservedSlot(self, Slots::Body);
+  // JS::GetReservedSlot(self, Slots::BodyStream);
+  // JS::GetReservedSlot(self, Slots::HasBody);
+  // JS::GetReservedSlot(self, Slots::BodyUsed);
+  // JS::GetReservedSlot(self, Slots::IsUpstream);
+
+  ResponseHandle response_handle = {.handle = INVALID_HANDLE};
+  if (!HANDLE_RESULT(cx, xqd_resp_new(&response_handle))) {
+    return false;
+  }
+
+  RootedObject response(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  if (!response) {
+    return false;
+  }
+  auto t = JS::Int32Value(response_handle.handle);
+  JS::SetReservedSlot(response, Slots::Response, t);
+  JS::SetReservedSlot(response, Slots::BodyStream, JS::BooleanValue(false));
+  JS::SetReservedSlot(response, Slots::HasBody, JS::BooleanValue(false));
+  JS::SetReservedSlot(response, Slots::BodyUsed, JS::BooleanValue(false));
+  JS::SetReservedSlot(response, Slots::IsUpstream, JS::GetReservedSlot(self, Slots::IsUpstream));
+  if (!response) {
+    return false;
+  }
+  RootedValue headers_val(cx);
+
+  if (!JS_GetProperty(cx, self, "headers", &headers_val)) {
+    return false;
+  }
+  RootedObject headers_obj(cx, &headers_val.toObject());
+  RootedObject headers(cx);
+  RootedObject headersInstance(
+      cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
+  if (!headersInstance) {
+    return false;
+  }
+  Headers::Mode mode = Headers::detail::mode(headers_obj);
+  headers = Headers::create(cx, headersInstance, mode, response, headers_val);
+  if (!headers) {
+    return false;
+  }
+
+  RequestOrResponse::set_url(response, JS_GetEmptyStringValue(cx));
+
+  RootedValue status_val(cx, JS::GetReservedSlot(self, Slots::Status));
+  uint16_t status = 0;
+  if (!status_val.isUndefined() && !JS::ToUint16(cx, status_val, &status)) {
+    return false;
+  }
+
+  if (!HANDLE_RESULT(cx, xqd_resp_status_set(response_handle, status))) {
+    return false;
+  }
+  // To ensure that we really have the same status value as the host,
+  // we always read it back here.
+  if (!HANDLE_RESULT(cx, xqd_resp_status_get(response_handle, &status))) {
+    return false;
+  }
+
+  JS::SetReservedSlot(response, Slots::Status, JS::Int32Value(status));
+  JS::SetReservedSlot(response, Slots::StatusMessage,
+                      JS::GetReservedSlot(self, Slots::StatusMessage));
+
+  BodyHandle original_body_handle = RequestOrResponse::body_handle(self);
+  JS::SetReservedSlot(response, Slots::Body, JS::Int32Value(original_body_handle.handle));
+
+  BodyHandle body_handle = {.handle = INVALID_HANDLE};
+  if (!HANDLE_RESULT(cx, xqd_body_new(&body_handle))) {
+    return false;
+  }
+  RootedValue body(cx, JS::GetReservedSlot(response, Slots::Body));
+  // JS::SetReservedSlot(response, Slots::Headers, JS::GetReservedSlot(self, Slots::Headers));
+  JS::SetReservedSlot(response, Slots::Headers, JS::ObjectValue(*headers));
+  if (!RequestOrResponse::extract_body(cx, self, body)) {
+    return false;
+  }
+  if (!RequestOrResponse::extract_body(cx, response, body)) {
+    return false;
+  }
+
+  args.rval().setObject(*response);
+  return true;
 }
 } // namespace Response
 
@@ -6177,11 +6301,11 @@ bool init_class(JSContext *cx, HandleObject global) {
 }
 
 JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner) {
-  JS_SetReservedSlot(self, Slots::Mode, JS::Int32Value(static_cast<int32_t>(mode)));
+  JS::SetReservedSlot(self, Slots::Mode, JS::Int32Value(static_cast<int32_t>(mode)));
   uint32_t handle = UINT32_MAX - 1;
   if (mode != Mode::Standalone)
     handle = RequestOrResponse::handle(owner);
-  JS_SetReservedSlot(self, Slots::Handle, JS::Int32Value(static_cast<int32_t>(handle)));
+  JS::SetReservedSlot(self, Slots::Handle, JS::Int32Value(static_cast<int32_t>(handle)));
 
   RootedObject backing_map(cx, JS::NewMapObject(cx));
   if (!backing_map)
@@ -6196,7 +6320,7 @@ JSObject *create(JSContext *cx, HandleObject self, Mode mode, HandleObject owner
       return nullptr;
   }
 
-  JS_SetReservedSlot(self, Slots::HasLazyValues, JS::BooleanValue(lazy));
+  JS::SetReservedSlot(self, Slots::HasLazyValues, JS::BooleanValue(lazy));
 
   return self;
 }

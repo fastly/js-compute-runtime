@@ -42,4 +42,5 @@
 MSG_DEF(JSMSG_NOT_AN_ERROR,                    0, JSEXN_ERR, "<Error #0 is reserved>")
 MSG_DEF(JSMSG_BUILTIN_CTOR_NO_NEW,             1, JSEXN_TYPEERR, "calling a builtin {0} constructor without new is forbidden")
 MSG_DEF(JSMSG_INVALID_BUFFER_ARG,              2, JSEXN_TYPEERR, "{0} must be of type ArrayBuffer or ArrayBufferView but got \"{1}\"")
+MSG_DEF(JSMSG_BODY_UNUSABLE,                   1, JSEXN_TYPEERR, "{0}: Body has already been consumed.")
 //clang-format on
