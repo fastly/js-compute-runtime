@@ -1,15 +1,15 @@
 # Changelog
 
 
-## [3.1.0](https://github.com/fastly/js-compute-runtime/compare/v3.0.0...v3.1.0) (2023-07-12)
+## 3.1.0 (2023-07-12)
 
 
-### Features
+### Added
 
 * Add ability to disable connection-pooling behavior for Dynamic Backends ([#574](https://github.com/fastly/js-compute-runtime/issues/574)) ([718bea8](https://github.com/fastly/js-compute-runtime/commit/718bea8e2b950bc00c43187e479a7a7de41eaa70))
 
 
-### Bug Fixes
+### Changed
 
 * Deprecate SimpleCache.set and recommend SimpleCache.getOrSet as the alternative ([bff1bf5](https://github.com/fastly/js-compute-runtime/commit/bff1bf587c7de6012c617745b059dea24e6299ad))
 
