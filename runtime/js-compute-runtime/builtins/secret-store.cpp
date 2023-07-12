@@ -5,7 +5,8 @@ namespace builtins {
 
 host_api::Secret SecretStoreEntry::secret_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, SecretStoreEntry::Slots::Handle);
-  return host_api::Secret{static_cast<fastly_compute_at_edge_fastly_secret_handle_t>(val.toInt32())};
+  return host_api::Secret{
+      static_cast<fastly_compute_at_edge_fastly_secret_handle_t>(val.toInt32())};
 }
 
 bool SecretStoreEntry::plaintext(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -68,7 +69,8 @@ bool SecretStoreEntry::init_class(JSContext *cx, JS::HandleObject global) {
 
 host_api::SecretStore SecretStore::secret_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, SecretStore::Slots::Handle);
-  return host_api::SecretStore{static_cast<fastly_compute_at_edge_fastly_secret_store_handle_t>(val.toInt32())};
+  return host_api::SecretStore{
+      static_cast<fastly_compute_at_edge_fastly_secret_store_handle_t>(val.toInt32())};
 }
 
 bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {

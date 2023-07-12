@@ -12,8 +12,8 @@
 
 /* Returns false if an exception is set on `cx` and the caller should
    immediately return to propagate the exception. */
-static inline void handle_fastly_error(JSContext *cx, fastly_compute_at_edge_fastly_error_t err, int line,
-                                       const char *func) {
+static inline void handle_fastly_error(JSContext *cx, fastly_compute_at_edge_fastly_error_t err,
+                                       int line, const char *func) {
   switch (err) {
   case FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_GENERIC_ERROR:
     JS_ReportErrorUTF8(cx,

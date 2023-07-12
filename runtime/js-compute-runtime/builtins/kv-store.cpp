@@ -116,7 +116,8 @@ namespace {
 
 ObjectStore kv_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(KVStore::Slots::KVStore));
-  return ObjectStore(static_cast<fastly_compute_at_edge_fastly_object_store_handle_t>(val.toInt32()));
+  return ObjectStore(
+      static_cast<fastly_compute_at_edge_fastly_object_store_handle_t>(val.toInt32()));
 }
 
 bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {

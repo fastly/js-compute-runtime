@@ -22,7 +22,8 @@
 struct Void final {};
 
 template <typename T> class Result final {
-  /// A private wrapper to distinguish `fastly_compute_at_edge_fastly_error_t` in the private variant.
+  /// A private wrapper to distinguish `fastly_compute_at_edge_fastly_error_t` in the private
+  /// variant.
   struct Error {
     fastly_compute_at_edge_fastly_error_t value;
 
@@ -63,7 +64,8 @@ public:
 
   /// Return a pointer to the error value of this result, if the call failed.
   const fastly_compute_at_edge_fastly_error_t *to_err() const {
-    return reinterpret_cast<const fastly_compute_at_edge_fastly_error_t *>(std::get_if<Error>(&this->result));
+    return reinterpret_cast<const fastly_compute_at_edge_fastly_error_t *>(
+        std::get_if<Error>(&this->result));
   }
 
   /// Assume the call was successful, and return a reference to the result.
@@ -192,7 +194,8 @@ public:
   fastly_compute_at_edge_fastly_pending_request_handle_t handle = invalid;
 
   HttpPendingReq() = default;
-  explicit HttpPendingReq(fastly_compute_at_edge_fastly_pending_request_handle_t handle) : handle{handle} {}
+  explicit HttpPendingReq(fastly_compute_at_edge_fastly_pending_request_handle_t handle)
+      : handle{handle} {}
   explicit HttpPendingReq(AsyncHandle async) : handle{async.handle} {}
 
   /// Poll for the response to this request.
@@ -290,7 +293,8 @@ public:
   Result<HostString> get_uri() const;
 
   /// Configure cache-override settings.
-  Result<Void> cache_override(fastly_compute_at_edge_fastly_http_cache_override_tag_t tag, std::optional<uint32_t> ttl,
+  Result<Void> cache_override(fastly_compute_at_edge_fastly_http_cache_override_tag_t tag,
+                              std::optional<uint32_t> ttl,
                               std::optional<uint32_t> stale_while_revalidate,
                               std::optional<std::string_view> surrogate_key);
 
@@ -342,7 +346,8 @@ struct Response {
   HttpBody body;
 
   Response() = default;
-  explicit Response(fastly_compute_at_edge_fastly_response_t resp) : resp{HttpResp{resp.f0}}, body{HttpBody{resp.f1}} {}
+  explicit Response(fastly_compute_at_edge_fastly_response_t resp)
+      : resp{HttpResp{resp.f0}}, body{HttpBody{resp.f1}} {}
 };
 
 class GeoIp final {
@@ -358,7 +363,8 @@ public:
   fastly_compute_at_edge_fastly_log_endpoint_handle_t handle = UINT32_MAX - 1;
 
   LogEndpoint() = default;
-  explicit LogEndpoint(fastly_compute_at_edge_fastly_log_endpoint_handle_t handle) : handle{handle} {}
+  explicit LogEndpoint(fastly_compute_at_edge_fastly_log_endpoint_handle_t handle)
+      : handle{handle} {}
 
   static Result<LogEndpoint> get(std::string_view name);
 
@@ -382,7 +388,8 @@ public:
   fastly_compute_at_edge_fastly_object_store_handle_t handle = UINT32_MAX - 1;
 
   ObjectStore() = default;
-  explicit ObjectStore(fastly_compute_at_edge_fastly_object_store_handle_t handle) : handle{handle} {}
+  explicit ObjectStore(fastly_compute_at_edge_fastly_object_store_handle_t handle)
+      : handle{handle} {}
 
   static Result<ObjectStore> open(std::string_view name);
 
@@ -408,7 +415,8 @@ public:
   fastly_compute_at_edge_fastly_secret_store_handle_t handle = UINT32_MAX - 1;
 
   SecretStore() = default;
-  explicit SecretStore(fastly_compute_at_edge_fastly_secret_store_handle_t handle) : handle{handle} {}
+  explicit SecretStore(fastly_compute_at_edge_fastly_secret_store_handle_t handle)
+      : handle{handle} {}
 
   static Result<SecretStore> open(std::string_view name);
 

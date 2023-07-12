@@ -64,7 +64,8 @@ bool SimpleCacheEntry::constructor(JSContext *cx, unsigned argc, JS::Value *vp) 
   return false;
 }
 
-JSObject *SimpleCacheEntry::create(JSContext *cx, fastly_compute_at_edge_fastly_body_handle_t body_handle) {
+JSObject *SimpleCacheEntry::create(JSContext *cx,
+                                   fastly_compute_at_edge_fastly_body_handle_t body_handle) {
   JS::RootedObject SimpleCacheEntry(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!SimpleCacheEntry)
     return nullptr;
@@ -416,7 +417,8 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
   options.surrogate_keys.len = surrogate_key.length();
 
   fastly_world_tuple2_body_handle_cache_handle_t ret{.f0 = INVALID_HANDLE, .f1 = INVALID_HANDLE};
-  if (!fastly_compute_at_edge_fastly_transaction_insert_and_stream_back(handle, &options, &ret, &err)) {
+  if (!fastly_compute_at_edge_fastly_transaction_insert_and_stream_back(handle, &options, &ret,
+                                                                        &err)) {
     HANDLE_ERROR(cx, err);
     if (!fastly_compute_at_edge_fastly_transaction_cancel(handle, &err)) {
       HANDLE_ERROR(cx, err);
