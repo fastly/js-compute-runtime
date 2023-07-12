@@ -37,7 +37,7 @@ If the key does exist in the cache, this returns a `SimpleCacheEntry`.
 
 ## Examples
 
-In this example we attempt to retrieve an entry from the Fastly Cache, if the entry does not exist, we create the content and insert it into the Fastly Cache before finally returning.
+In this example we attempt to retrieve an entry from the Fastly Cache, and return a message stating whether the entry was in the Fastly Cache or not.
 
 ```js
 /// <reference types="@fastly/js-compute" />
@@ -47,14 +47,9 @@ import { SimpleCache } from 'fastly:cache';
 addEventListener('fetch', event => event.respondWith(app(event)));
 
 async function app(event) {
-  const path = new URL(event.request).pathname;
+  const path = new URL(event.request.url).pathname;
   let page = SimpleCache.get(path);
-  if (!page) {
-    page = await render(path);
-    // Store the page in the cache for 1 minute.
-    SimpleCache.set(path, page, 60);
-  }
-  return new Response(page, {
+  return new Response(page ? `${path} is in the cache` : `${path} is not in the cache`, {
     headers: {
       'content-type': 'text/plain;charset=UTF-8'
     }
