@@ -10,7 +10,13 @@ declare module "fastly:cache" {
 
   export class SimpleCache {
     static get(key: string): SimpleCacheEntry | null;
+    /**
+      * @deprecated Use `SimpleCache.getOrSet` instead.
+      */
     static set(key: string, value: BodyInit, ttl: number): undefined;
+    /**
+      * @deprecated Use `SimpleCache.getOrSet` instead.
+      */
     static set(key: string, value: ReadableStream, ttl: number, length: number): undefined;
     static getOrSet(key: string, set: () => Promise<{value: BodyInit,  ttl: number}>): Promise<SimpleCacheEntry>;
     static getOrSet(key: string, set: () => Promise<{value: ReadableStream, ttl: number, length: number}>): Promise<SimpleCacheEntry>;
