@@ -22,11 +22,11 @@
 struct Void final {};
 
 template <typename T> class Result final {
-  /// A private wrapper to distinguish `fastly_error_t` in the private variant.
+  /// A private wrapper to distinguish `fastly_compute_at_edge_fastly_error_t` in the private variant.
   struct Error {
-    fastly_error_t value;
+    fastly_compute_at_edge_fastly_error_t value;
 
-    explicit Error(fastly_error_t value) : value{value} {}
+    explicit Error(fastly_compute_at_edge_fastly_error_t value) : value{value} {}
   };
 
   std::variant<T, Error> result;
@@ -35,7 +35,7 @@ public:
   Result() = default;
 
   /// Explicitly construct an error.
-  static Result err(fastly_error_t err) {
+  static Result err(fastly_compute_at_edge_fastly_error_t err) {
     Result res;
     res.emplace_err(err);
     return res;
@@ -49,7 +49,7 @@ public:
   }
 
   /// Construct an error in-place.
-  fastly_error_t &emplace_err(fastly_error_t err) & {
+  fastly_compute_at_edge_fastly_error_t &emplace_err(fastly_compute_at_edge_fastly_error_t err) & {
     return this->result.template emplace<Error>(err).value;
   }
 
@@ -62,8 +62,8 @@ public:
   bool is_err() const { return std::holds_alternative<Error>(this->result); }
 
   /// Return a pointer to the error value of this result, if the call failed.
-  const fastly_error_t *to_err() const {
-    return reinterpret_cast<const fastly_error_t *>(std::get_if<Error>(&this->result));
+  const fastly_compute_at_edge_fastly_error_t *to_err() const {
+    return reinterpret_cast<const fastly_compute_at_edge_fastly_error_t *>(std::get_if<Error>(&this->result));
   }
 
   /// Assume the call was successful, and return a reference to the result.
@@ -119,12 +119,12 @@ struct HostBytes final {
 /// Common methods for async handles.
 class AsyncHandle {
 public:
-  static constexpr fastly_async_handle_t invalid = UINT32_MAX - 1;
+  static constexpr fastly_compute_at_edge_fastly_async_handle_t invalid = UINT32_MAX - 1;
 
-  fastly_async_handle_t handle;
+  fastly_compute_at_edge_fastly_async_handle_t handle;
 
   AsyncHandle() = default;
-  explicit AsyncHandle(fastly_async_handle_t handle) : handle{handle} {}
+  explicit AsyncHandle(fastly_compute_at_edge_fastly_async_handle_t handle) : handle{handle} {}
 
   /// Check to see if this handle is ready.
   Result<bool> is_ready() const;
@@ -146,14 +146,14 @@ public:
 /// A convenience wrapper for the host calls involving http bodies.
 class HttpBody final {
 public:
-  static constexpr fastly_body_handle_t invalid = UINT32_MAX - 1;
+  static constexpr fastly_compute_at_edge_fastly_body_handle_t invalid = UINT32_MAX - 1;
 
   /// The handle to use when making host calls, initialized to the special invalid value used by
   /// executed.
-  fastly_body_handle_t handle = invalid;
+  fastly_compute_at_edge_fastly_body_handle_t handle = invalid;
 
   HttpBody() = default;
-  explicit HttpBody(fastly_body_handle_t handle) : handle{handle} {}
+  explicit HttpBody(fastly_compute_at_edge_fastly_body_handle_t handle) : handle{handle} {}
   explicit HttpBody(AsyncHandle async) : handle{async.handle} {}
 
   /// Returns true when this body handle is valid.
@@ -187,12 +187,12 @@ struct Response;
 
 class HttpPendingReq final {
 public:
-  static constexpr fastly_pending_request_handle_t invalid = UINT32_MAX - 1;
+  static constexpr fastly_compute_at_edge_fastly_pending_request_handle_t invalid = UINT32_MAX - 1;
 
-  fastly_pending_request_handle_t handle = invalid;
+  fastly_compute_at_edge_fastly_pending_request_handle_t handle = invalid;
 
   HttpPendingReq() = default;
-  explicit HttpPendingReq(fastly_pending_request_handle_t handle) : handle{handle} {}
+  explicit HttpPendingReq(fastly_compute_at_edge_fastly_pending_request_handle_t handle) : handle{handle} {}
   explicit HttpPendingReq(AsyncHandle async) : handle{async.handle} {}
 
   /// Poll for the response to this request.
@@ -212,7 +212,7 @@ public:
   virtual bool is_valid() const = 0;
 
   /// Get the http version used for this request.
-  virtual Result<fastly_http_version_t> get_version() const = 0;
+  virtual Result<fastly_compute_at_edge_fastly_http_version_t> get_version() const = 0;
 
   virtual Result<std::vector<HostString>> get_header_names() = 0;
   virtual Result<std::optional<std::vector<HostString>>>
@@ -229,8 +229,8 @@ struct BackendConfig {
   std::optional<uint32_t> between_bytes_timeout;
   std::optional<bool> use_ssl;
   std::optional<bool> dont_pool;
-  std::optional<fastly_tls_version_t> ssl_min_version;
-  std::optional<fastly_tls_version_t> ssl_max_version;
+  std::optional<fastly_compute_at_edge_fastly_tls_version_t> ssl_min_version;
+  std::optional<fastly_compute_at_edge_fastly_tls_version_t> ssl_max_version;
   std::optional<HostString> cert_hostname;
   std::optional<HostString> ca_cert;
   std::optional<HostString> ciphers;
@@ -239,12 +239,12 @@ struct BackendConfig {
 
 class HttpReq final : public HttpBase {
 public:
-  static constexpr fastly_request_handle_t invalid = UINT32_MAX - 1;
+  static constexpr fastly_compute_at_edge_fastly_request_handle_t invalid = UINT32_MAX - 1;
 
-  fastly_request_handle_t handle = invalid;
+  fastly_compute_at_edge_fastly_request_handle_t handle = invalid;
 
   HttpReq() = default;
-  explicit HttpReq(fastly_request_handle_t handle) : handle{handle} {}
+  explicit HttpReq(fastly_compute_at_edge_fastly_request_handle_t handle) : handle{handle} {}
 
   static Result<HttpReq> make();
 
@@ -290,13 +290,13 @@ public:
   Result<HostString> get_uri() const;
 
   /// Configure cache-override settings.
-  Result<Void> cache_override(fastly_http_cache_override_tag_t tag, std::optional<uint32_t> ttl,
+  Result<Void> cache_override(fastly_compute_at_edge_fastly_http_cache_override_tag_t tag, std::optional<uint32_t> ttl,
                               std::optional<uint32_t> stale_while_revalidate,
                               std::optional<std::string_view> surrogate_key);
 
   bool is_valid() const override;
 
-  Result<fastly_http_version_t> get_version() const override;
+  Result<fastly_compute_at_edge_fastly_http_version_t> get_version() const override;
 
   Result<std::vector<HostString>> get_header_names() override;
   Result<std::optional<std::vector<HostString>>> get_header_values(std::string_view name) override;
@@ -307,12 +307,12 @@ public:
 
 class HttpResp final : public HttpBase {
 public:
-  static constexpr fastly_response_handle_t invalid = UINT32_MAX - 1;
+  static constexpr fastly_compute_at_edge_fastly_response_handle_t invalid = UINT32_MAX - 1;
 
-  fastly_response_handle_t handle = invalid;
+  fastly_compute_at_edge_fastly_response_handle_t handle = invalid;
 
   HttpResp() = default;
-  explicit HttpResp(fastly_response_handle_t handle) : handle{handle} {}
+  explicit HttpResp(fastly_compute_at_edge_fastly_response_handle_t handle) : handle{handle} {}
 
   static Result<HttpResp> make();
 
@@ -327,7 +327,7 @@ public:
 
   bool is_valid() const override;
 
-  Result<fastly_http_version_t> get_version() const override;
+  Result<fastly_compute_at_edge_fastly_http_version_t> get_version() const override;
 
   Result<std::vector<HostString>> get_header_names() override;
   Result<std::optional<std::vector<HostString>>> get_header_values(std::string_view name) override;
@@ -342,7 +342,7 @@ struct Response {
   HttpBody body;
 
   Response() = default;
-  explicit Response(fastly_response_t resp) : resp{HttpResp{resp.f0}}, body{HttpBody{resp.f1}} {}
+  explicit Response(fastly_compute_at_edge_fastly_response_t resp) : resp{HttpResp{resp.f0}}, body{HttpBody{resp.f1}} {}
 };
 
 class GeoIp final {
@@ -355,10 +355,10 @@ public:
 
 class LogEndpoint final {
 public:
-  fastly_log_endpoint_handle_t handle = UINT32_MAX - 1;
+  fastly_compute_at_edge_fastly_log_endpoint_handle_t handle = UINT32_MAX - 1;
 
   LogEndpoint() = default;
-  explicit LogEndpoint(fastly_log_endpoint_handle_t handle) : handle{handle} {}
+  explicit LogEndpoint(fastly_compute_at_edge_fastly_log_endpoint_handle_t handle) : handle{handle} {}
 
   static Result<LogEndpoint> get(std::string_view name);
 
@@ -367,10 +367,10 @@ public:
 
 class Dict final {
 public:
-  fastly_dictionary_handle_t handle = UINT32_MAX - 1;
+  fastly_compute_at_edge_fastly_dictionary_handle_t handle = UINT32_MAX - 1;
 
   Dict() = default;
-  explicit Dict(fastly_dictionary_handle_t handle) : handle{handle} {}
+  explicit Dict(fastly_compute_at_edge_fastly_dictionary_handle_t handle) : handle{handle} {}
 
   static Result<Dict> open(std::string_view name);
 
@@ -379,10 +379,10 @@ public:
 
 class ObjectStore final {
 public:
-  fastly_object_store_handle_t handle = UINT32_MAX - 1;
+  fastly_compute_at_edge_fastly_object_store_handle_t handle = UINT32_MAX - 1;
 
   ObjectStore() = default;
-  explicit ObjectStore(fastly_object_store_handle_t handle) : handle{handle} {}
+  explicit ObjectStore(fastly_compute_at_edge_fastly_object_store_handle_t handle) : handle{handle} {}
 
   static Result<ObjectStore> open(std::string_view name);
 
@@ -395,20 +395,20 @@ namespace host_api {
 
 class Secret final {
 public:
-  fastly_secret_handle_t handle = UINT32_MAX - 1;
+  fastly_compute_at_edge_fastly_secret_handle_t handle = UINT32_MAX - 1;
 
   Secret() = default;
-  explicit Secret(fastly_secret_handle_t handle) : handle{handle} {}
+  explicit Secret(fastly_compute_at_edge_fastly_secret_handle_t handle) : handle{handle} {}
 
   Result<std::optional<HostString>> plaintext() const;
 };
 
 class SecretStore final {
 public:
-  fastly_secret_store_handle_t handle = UINT32_MAX - 1;
+  fastly_compute_at_edge_fastly_secret_store_handle_t handle = UINT32_MAX - 1;
 
   SecretStore() = default;
-  explicit SecretStore(fastly_secret_store_handle_t handle) : handle{handle} {}
+  explicit SecretStore(fastly_compute_at_edge_fastly_secret_store_handle_t handle) : handle{handle} {}
 
   static Result<SecretStore> open(std::string_view name);
 

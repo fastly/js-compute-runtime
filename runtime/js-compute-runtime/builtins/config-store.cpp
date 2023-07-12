@@ -5,7 +5,7 @@ namespace builtins {
 
 Dict ConfigStore::config_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, ConfigStore::Slots::Handle);
-  return Dict{static_cast<fastly_dictionary_handle_t>(val.toInt32())};
+  return Dict{static_cast<fastly_compute_at_edge_fastly_dictionary_handle_t>(val.toInt32())};
 }
 
 bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -105,7 +105,7 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedObject config_store(cx, JS_NewObjectForConstructor(cx, &class_, args));
   auto open_res = Dict::open(name);
   if (auto *err = open_res.to_err()) {
-    if (*err == FASTLY_ERROR_BAD_HANDLE) {
+    if (*err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_BAD_HANDLE) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_DOES_NOT_EXIST,
                                 name.data());
       return false;

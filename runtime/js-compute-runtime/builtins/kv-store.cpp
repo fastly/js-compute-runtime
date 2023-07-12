@@ -116,7 +116,7 @@ namespace {
 
 ObjectStore kv_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(KVStore::Slots::KVStore));
-  return ObjectStore(static_cast<fastly_object_store_handle_t>(val.toInt32()));
+  return ObjectStore(static_cast<fastly_compute_at_edge_fastly_object_store_handle_t>(val.toInt32()));
 }
 
 bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
@@ -433,7 +433,7 @@ bool KVStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto res = ObjectStore::open(name_str);
   if (auto *err = res.to_err()) {
-    if (*err == FASTLY_ERROR_INVALID_ARGUMENT) {
+    if (*err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_INVALID_ARGUMENT) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_DOES_NOT_EXIST,
                                 name_str.data());
       return false;

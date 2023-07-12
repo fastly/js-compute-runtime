@@ -5,7 +5,7 @@ namespace builtins {
 
 Dict Dictionary::dictionary_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, Dictionary::Slots::Handle);
-  return Dict{static_cast<fastly_dictionary_handle_t>(val.toInt32())};
+  return Dict{static_cast<fastly_compute_at_edge_fastly_dictionary_handle_t>(val.toInt32())};
 }
 
 bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -116,7 +116,7 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto res = Dict::open(name_view);
   if (auto *err = res.to_err()) {
-    if (*err == FASTLY_ERROR_BAD_HANDLE) {
+    if (*err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_BAD_HANDLE) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_DOES_NOT_EXIST,
                                 name_view.data());
       return false;

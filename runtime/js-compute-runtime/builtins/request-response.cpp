@@ -740,7 +740,7 @@ bool RequestOrResponse::bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObje
 
   JS::RootedValue body_parser(cx, JS::PrivateValue((void *)parse_body<result_type>));
 
-  // If the body is a ReadableStream that's not backed by a fastly_body_handle_t,
+  // If the body is a ReadableStream that's not backed by a fastly_compute_at_edge_fastly_body_handle_t,
   // we need to manually read all chunks from the stream.
   // TODO(performance): ensure that we're properly shortcutting reads from TransformStream
   // readables.

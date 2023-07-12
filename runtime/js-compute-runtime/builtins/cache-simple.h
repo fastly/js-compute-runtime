@@ -26,7 +26,7 @@ public:
 
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-  static JSObject *create(JSContext *cx, fastly_body_handle_t body_handle);
+  static JSObject *create(JSContext *cx, fastly_compute_at_edge_fastly_body_handle_t body_handle);
 };
 
 class SimpleCache : public BuiltinImpl<SimpleCache> {

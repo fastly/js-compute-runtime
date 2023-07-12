@@ -5,7 +5,7 @@ namespace builtins {
 
 host_api::Secret SecretStoreEntry::secret_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, SecretStoreEntry::Slots::Handle);
-  return host_api::Secret{static_cast<fastly_secret_handle_t>(val.toInt32())};
+  return host_api::Secret{static_cast<fastly_compute_at_edge_fastly_secret_handle_t>(val.toInt32())};
 }
 
 bool SecretStoreEntry::plaintext(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -68,7 +68,7 @@ bool SecretStoreEntry::init_class(JSContext *cx, JS::HandleObject global) {
 
 host_api::SecretStore SecretStore::secret_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, SecretStore::Slots::Handle);
-  return host_api::SecretStore{static_cast<fastly_secret_store_handle_t>(val.toInt32())};
+  return host_api::SecretStore{static_cast<fastly_compute_at_edge_fastly_secret_store_handle_t>(val.toInt32())};
 }
 
 bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -194,7 +194,7 @@ bool SecretStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto res = host_api::SecretStore::open(name);
   if (auto *err = res.to_err()) {
-    if (*err == FASTLY_ERROR_OPTIONAL_NONE) {
+    if (*err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_OPTIONAL_NONE) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SECRET_STORE_DOES_NOT_EXIST,
                                 name.data());
       return false;
