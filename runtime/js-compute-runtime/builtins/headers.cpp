@@ -73,7 +73,7 @@ bool lazy_values(JSObject *self) {
       .toBoolean();
 }
 
-fastly_compute_at_edge_fastly_request_handle_t get_handle(JSObject *self) {
+uint32_t get_handle(JSObject *self) {
   MOZ_ASSERT(Headers::is_instance(self));
   return static_cast<uint32_t>(
       JS::GetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::Handle)).toInt32());
@@ -197,9 +197,7 @@ JS::UniqueChars normalize_header_value(JSContext *cx, JS::MutableHandleValue val
   return value;
 }
 
-namespace {
 JS::PersistentRooted<JSString *> comma;
-}
 
 // Append an already normalized value for an already normalized header name
 // to the JS side map, but not the host.

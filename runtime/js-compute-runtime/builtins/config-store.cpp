@@ -5,7 +5,7 @@ namespace builtins {
 
 Dict ConfigStore::config_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, ConfigStore::Slots::Handle);
-  return Dict{static_cast<fastly_compute_at_edge_fastly_dictionary_handle_t>(val.toInt32())};
+  return Dict(val.toInt32());
 }
 
 bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {

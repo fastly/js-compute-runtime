@@ -1275,12 +1275,6 @@ bool math_random(JSContext *cx, unsigned argc, Value *vp) {
 }
 
 bool define_fastly_sys(JSContext *cx, HandleObject global, FastlyOptions options) {
-  // Allocating the reusable hostcall buffer here means it's baked into the
-  // snapshot, and since it's all zeros, it won't increase the size of the
-  // snapshot.
-  if (!OwnedHostCallBuffer::initialize(cx))
-    return false;
-
   if (!GlobalProperties::init(cx, global))
     return false;
 
