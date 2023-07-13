@@ -2,6 +2,7 @@
 #include "builtin.h"
 #include "builtins/native-stream-source.h"
 #include "builtins/shared/url.h"
+#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 #include "host_interface/host_call.h"
 #include "js-compute-builtins.h"
@@ -64,14 +65,13 @@ bool SimpleCacheEntry::constructor(JSContext *cx, unsigned argc, JS::Value *vp) 
   return false;
 }
 
-JSObject *SimpleCacheEntry::create(JSContext *cx,
-                                   fastly_compute_at_edge_fastly_body_handle_t body_handle) {
+JSObject *SimpleCacheEntry::create(JSContext *cx, HttpBody body_handle) {
   JS::RootedObject SimpleCacheEntry(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!SimpleCacheEntry)
     return nullptr;
 
   JS::SetReservedSlot(SimpleCacheEntry, static_cast<uint32_t>(Slots::Body),
-                      JS::Int32Value(body_handle));
+                      JS::Int32Value(body_handle.handle));
   JS::SetReservedSlot(SimpleCacheEntry, static_cast<uint32_t>(Slots::BodyStream), JS::NullValue());
   JS::SetReservedSlot(SimpleCacheEntry, static_cast<uint32_t>(Slots::HasBody),
                       JS::BooleanValue(true));
@@ -467,9 +467,9 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
     }
   }
 
-  fastly_compute_at_edge_fastly_body_handle_t bodyHandle = INVALID_HANDLE;
+  HttpBody bodyHandle;
   fastly_compute_at_edge_fastly_cache_get_body_options_t opts;
-  if (!fastly_compute_at_edge_fastly_cache_get_body(ret.f1, &opts, &bodyHandle, &err)) {
+  if (!fastly_compute_at_edge_fastly_cache_get_body(ret.f1, &opts, &bodyHandle.handle, &err)) {
     HANDLE_ERROR(cx, err);
     if (!fastly_compute_at_edge_fastly_transaction_cancel(handle, &err)) {
       HANDLE_ERROR(cx, err);
@@ -552,9 +552,9 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   args.rval().setObject(*promise);
   if (state & FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_USABLE) {
-    fastly_compute_at_edge_fastly_body_handle_t body = INVALID_HANDLE;
+    HttpBody body;
     fastly_compute_at_edge_fastly_cache_get_body_options_t opts;
-    if (!fastly_compute_at_edge_fastly_cache_get_body(handle, &opts, &body, &err)) {
+    if (!fastly_compute_at_edge_fastly_cache_get_body(handle, &opts, &body.handle, &err)) {
       if (!fastly_compute_at_edge_fastly_transaction_cancel(handle, &err)) {
         HANDLE_ERROR(cx, err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -838,14 +838,14 @@ bool SimpleCache::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  fastly_compute_at_edge_fastly_body_handle_t body = INVALID_HANDLE;
+  HttpBody body;
   fastly_compute_at_edge_fastly_cache_get_body_options_t opts;
-  if (!fastly_compute_at_edge_fastly_cache_get_body(handle, &opts, &body, &err)) {
+  if (!fastly_compute_at_edge_fastly_cache_get_body(handle, &opts, &body.handle, &err)) {
     HANDLE_ERROR(cx, err);
     return false;
   }
 
-  if (body == INVALID_HANDLE) {
+  if (!body.valid()) {
     args.rval().setNull();
   } else {
     JS::RootedObject entry(cx, SimpleCacheEntry::create(cx, body));

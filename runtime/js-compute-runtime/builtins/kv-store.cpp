@@ -18,6 +18,7 @@
 #include "builtins/kv-store.h"
 #include "builtins/native-stream-source.h"
 #include "builtins/shared/url.h"
+#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
 
