@@ -73,7 +73,7 @@ bool lazy_values(JSObject *self) {
       .toBoolean();
 }
 
-fastly_request_handle_t get_handle(JSObject *self) {
+fastly_compute_at_edge_fastly_request_handle_t get_handle(JSObject *self) {
   MOZ_ASSERT(Headers::is_instance(self));
   return static_cast<uint32_t>(
       JS::GetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::Handle)).toInt32());

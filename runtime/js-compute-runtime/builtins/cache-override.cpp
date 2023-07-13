@@ -74,23 +74,23 @@ void CacheOverride::set_pci(JSObject *self, bool pci) {
   JS::SetReservedSlot(self, CacheOverride::Slots::PCI, JS::BooleanValue(pci));
 }
 
-fastly_http_cache_override_tag_t CacheOverride::abi_tag(JSObject *self) {
+fastly_compute_at_edge_fastly_http_cache_override_tag_t CacheOverride::abi_tag(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   switch (CacheOverride::mode(self)) {
   case CacheOverride::CacheOverrideMode::None:
     return 0;
   case CacheOverride::CacheOverrideMode::Pass:
-    return FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS;
+    return FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS;
   default:;
   }
 
-  fastly_http_cache_override_tag_t tag = 0;
+  fastly_compute_at_edge_fastly_http_cache_override_tag_t tag = 0;
   if (!ttl(self).isUndefined())
-    tag |= FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL;
+    tag |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL;
   if (!swr(self).isUndefined())
-    tag |= FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE;
+    tag |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE;
   if (!pci(self).isUndefined())
-    tag |= FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI;
+    tag |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI;
 
   return tag;
 }

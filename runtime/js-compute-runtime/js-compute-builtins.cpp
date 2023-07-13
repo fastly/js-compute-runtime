@@ -826,22 +826,23 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   fastly_world_string_t backend_str = {backend_chars.get(), backend_len};
 
-  fastly_pending_request_handle_t pending_handle = INVALID_HANDLE;
+  fastly_compute_at_edge_fastly_pending_request_handle_t pending_handle = INVALID_HANDLE;
   {
-    fastly_error_t err;
+    fastly_compute_at_edge_fastly_error_t err;
     bool ok;
     auto request_handle = builtins::Request::request_handle(request);
     auto body = builtins::RequestOrResponse::body_handle(request);
     if (streaming) {
-      ok = fastly_http_req_send_async_streaming(request_handle.handle, body.handle, &backend_str,
-                                                &pending_handle, &err);
+      ok = fastly_compute_at_edge_fastly_http_req_send_async_streaming(
+          request_handle.handle, body.handle, &backend_str, &pending_handle, &err);
     } else {
-      ok = fastly_http_req_send_async(request_handle.handle, body.handle, &backend_str,
-                                      &pending_handle, &err);
+      ok = fastly_compute_at_edge_fastly_http_req_send_async(request_handle.handle, body.handle,
+                                                             &backend_str, &pending_handle, &err);
     }
 
     if (!ok) {
-      if (err == FASTLY_ERROR_GENERIC_ERROR || err == FASTLY_ERROR_INVALID_ARGUMENT) {
+      if (err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_GENERIC_ERROR ||
+          err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_INVALID_ARGUMENT) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST, backend_chars.get());
       } else {
