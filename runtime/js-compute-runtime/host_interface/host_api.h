@@ -1,6 +1,7 @@
 #ifndef JS_COMPUTE_RUNTIME_HOST_API_H
 #define JS_COMPUTE_RUNTIME_HOST_API_H
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <span>
@@ -10,15 +11,29 @@
 #include <vector>
 
 #include "core/allocator.h"
-#include "host_interface/host_call.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
+#include "jsapi.h"
 #include "js/Utility.h"
 #pragma clang diagnostic pop
 
 /// A type to signal that a result produces no value.
 struct Void final {};
+
+/// The type of erros returned from the host.
+using FastlyError = uint8_t;
+
+bool error_is_generic(FastlyError e);
+bool error_is_invalid_argument(FastlyError e);
+bool error_is_optional_none(FastlyError e);
+bool error_is_bad_handle(FastlyError e);
+
+/// Generate an error in the JSContext.
+void handle_fastly_error(JSContext *cx, FastlyError err, int line, const char *func);
+
+/// Wrap up a call to handle_fastly_error with the current line and function.
+#define HANDLE_ERROR(cx, err) handle_fastly_error(cx, err, __LINE__, __func__)
 
 template <typename T> class Result final {
   /// A private wrapper to distinguish `fastly_compute_at_edge_fastly_error_t` in the private

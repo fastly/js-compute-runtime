@@ -15,7 +15,6 @@
 #include "builtins/request-response.h"
 #include "builtins/shared/url.h"
 #include "core/geo_ip.h"
-#include "host_interface/host_call.h"
 
 namespace builtins {
 
