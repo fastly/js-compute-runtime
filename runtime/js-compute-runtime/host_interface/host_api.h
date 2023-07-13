@@ -14,8 +14,8 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
-#include "jsapi.h"
 #include "js/Utility.h"
+#include "jsapi.h"
 #pragma clang diagnostic pop
 
 /// A type to signal that a result produces no value.

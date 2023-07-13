@@ -1,8 +1,11 @@
 #ifndef JS_COMPUTE_RUNTIME_JSON_WEB_KEY_H
 #define JS_COMPUTE_RUNTIME_JSON_WEB_KEY_H
 #include "jsapi.h"
+#include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace builtins {
 
