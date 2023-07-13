@@ -1,6 +1,7 @@
 #include "builtins/client-info.h"
 #include "core/geo_ip.h"
 #include "host_interface/host_api.h"
+#include "host_interface/host_call.h"
 #include "openssl/evp.h"
 
 #include "js/JSON.h"
