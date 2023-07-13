@@ -326,10 +326,7 @@ $(eval $(call compile_c,$(FSM_SRC)/fastly-world/fastly_world.c))
 # that script for more information about why we do this.
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/impl/main_component.o
-# NOTE: we don't currently link in the component type object because we
-# explicitly reference fastly.wit when building the component. If this changes,
-# uncommenting this line will link the component type object in.
-# $(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_SRC)/fastly-world/fastly_world_component_type.o
+$(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_SRC)/fastly-world/fastly_world_component_type.o
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/fastly-world/fastly_world.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
