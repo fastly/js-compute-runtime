@@ -1,5 +1,4 @@
 #include "secret-store.h"
-#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 
 namespace builtins {
@@ -195,7 +194,7 @@ bool SecretStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto res = host_api::SecretStore::open(name);
   if (auto *err = res.to_err()) {
-    if (*err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_OPTIONAL_NONE) {
+    if (error_is_optional_none(*err)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SECRET_STORE_DOES_NOT_EXIST,
                                 name.data());
       return false;

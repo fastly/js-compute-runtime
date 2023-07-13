@@ -8,19 +8,12 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
 #pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
-#include "jsapi.h"
-#include "jsfriendapi.h"
-
 #include "js/ForOfIterator.h"
 #include "js/Object.h"
 #include "js/Promise.h"
-
+#include "jsapi.h"
+#include "jsfriendapi.h"
 #pragma clang diagnostic pop
-
-#include "host_interface/host_call.h"
-#include "rust-url/rust-url.h"
-
-struct JSErrorFormatString;
 
 extern JS::PersistentRootedObjectVector *pending_async_tasks;
 
@@ -30,6 +23,8 @@ enum JSErrNum {
 #undef MSG_DEF
   JSErrNum_Limit
 };
+
+struct JSErrorFormatString;
 
 const JSErrorFormatString js_ErrorFormatString[JSErrNum_Limit] = {
 #define MSG_DEF(name, count, exception, format) {#name, format, count, exception},
@@ -116,6 +111,12 @@ bool process_pending_async_tasks(JSContext *cx);
 
 JS::UniqueChars encode(JSContext *cx, JS::HandleString val, size_t *encoded_len);
 JS::UniqueChars encode(JSContext *cx, JS::HandleValue val, size_t *encoded_len);
+
+// Forward decls for encode
+namespace jsurl {
+struct SpecString;
+}
+
 jsurl::SpecString encode(JSContext *cx, JS::HandleValue val);
 
 bool debug_logging_enabled();

@@ -40,6 +40,10 @@ static_assert(
 static_assert(std::is_same_v<Dict::Handle, fastly_compute_at_edge_fastly_dictionary_handle_t>);
 static_assert(
     std::is_same_v<ObjectStore::Handle, fastly_compute_at_edge_fastly_object_store_handle_t>);
+static_assert(std::is_same_v<HttpVersion, fastly_compute_at_edge_fastly_http_version_t>);
+static_assert(
+    std::is_same_v<CacheOverrideTag, fastly_compute_at_edge_fastly_http_cache_override_tag_t>);
+static_assert(std::is_same_v<TlsVersion, fastly_compute_at_edge_fastly_tls_version_t>);
 
 Result<bool> AsyncHandle::is_ready() const {
   Result<bool> res;
