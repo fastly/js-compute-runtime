@@ -11,7 +11,6 @@
 #include "builtins/decompression-stream.h"
 #include "builtins/transform-stream-default-controller.h"
 #include "builtins/transform-stream.h"
-#include "host_interface/host_call.h"
 #include "js-compute-builtins.h"
 
 namespace builtins {

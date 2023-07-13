@@ -4,7 +4,6 @@
 #include "builtins/shared/url.h"
 #include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
-#include "host_interface/host_call.h"
 #include "js-compute-builtins.h"
 #include "js/ArrayBuffer.h"
 #include "js/Result.h"
