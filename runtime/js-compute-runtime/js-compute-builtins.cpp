@@ -9,7 +9,6 @@
 #include <strings.h>
 #include <vector>
 
-#include "fastly-world/fastly_world.h"
 #include "js-compute-builtins.h"
 #include "rust-url/rust-url.h"
 
@@ -33,6 +32,7 @@
 #include "js/shadow/Object.h"
 #include "zlib.h"
 
+#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 #include "host_interface/host_call.h"
 
@@ -806,10 +806,11 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     }
   }
 
-  size_t backend_len;
-  UniqueChars backend_chars = encode(cx, backend, &backend_len);
-  if (!backend_chars)
+  HostString backend_chars;
+  backend_chars.ptr = encode(cx, backend, &backend_chars.len);
+  if (!backend_chars.ptr) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
 
   RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
   if (!response_promise)
@@ -824,32 +825,24 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
 
-  fastly_world_string_t backend_str = {backend_chars.get(), backend_len};
-
-  fastly_compute_at_edge_fastly_pending_request_handle_t pending_handle = INVALID_HANDLE;
+  HttpPendingReq pending_handle;
   {
-    fastly_compute_at_edge_fastly_error_t err;
-    bool ok;
     auto request_handle = builtins::Request::request_handle(request);
     auto body = builtins::RequestOrResponse::body_handle(request);
-    if (streaming) {
-      ok = fastly_compute_at_edge_fastly_http_req_send_async_streaming(
-          request_handle.handle, body.handle, &backend_str, &pending_handle, &err);
-    } else {
-      ok = fastly_compute_at_edge_fastly_http_req_send_async(request_handle.handle, body.handle,
-                                                             &backend_str, &pending_handle, &err);
-    }
+    auto res = streaming ? request_handle.send_async_streaming(body, backend_chars)
+                         : request_handle.send_async(body, backend_chars);
 
-    if (!ok) {
-      if (err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_GENERIC_ERROR ||
-          err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_INVALID_ARGUMENT) {
+    if (auto *err = res.to_err()) {
+      if (error_is_generic(*err) || error_is_invalid_argument(*err)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST, backend_chars.get());
+                                  JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST, backend_chars.ptr.get());
       } else {
-        HANDLE_ERROR(cx, err);
+        HANDLE_ERROR(cx, *err);
       }
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
+
+    pending_handle = res.unwrap();
   }
 
   // If the request body is streamed, we need to wait for streaming to complete before marking the
@@ -860,7 +853,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
 
   JS::SetReservedSlot(request, static_cast<uint32_t>(builtins::Request::Slots::PendingRequest),
-                      JS::Int32Value(pending_handle));
+                      JS::Int32Value(pending_handle.handle));
   JS::SetReservedSlot(request, static_cast<uint32_t>(builtins::Request::Slots::ResponsePromise),
                       JS::ObjectValue(*response_promise));
 

@@ -18,8 +18,8 @@
 #include "builtins/kv-store.h"
 #include "builtins/native-stream-source.h"
 #include "builtins/shared/url.h"
-#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
+#include "host_interface/host_call.h"
 #include "js-compute-builtins.h"
 
 namespace builtins {
@@ -434,7 +434,7 @@ bool KVStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto res = ObjectStore::open(name_str);
   if (auto *err = res.to_err()) {
-    if (*err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_INVALID_ARGUMENT) {
+    if (error_is_invalid_argument(*err)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_DOES_NOT_EXIST,
                                 name_str.data());
       return false;

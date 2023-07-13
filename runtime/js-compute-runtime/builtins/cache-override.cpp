@@ -9,6 +9,7 @@
 
 #include "cache-override.h"
 #include "host_interface/fastly.h"
+#include "host_interface/host_api.h"
 #include "host_interface/host_call.h"
 #include "js-compute-builtins.h"
 
@@ -75,7 +76,7 @@ void CacheOverride::set_pci(JSObject *self, bool pci) {
   JS::SetReservedSlot(self, CacheOverride::Slots::PCI, JS::BooleanValue(pci));
 }
 
-fastly_compute_at_edge_fastly_http_cache_override_tag_t CacheOverride::abi_tag(JSObject *self) {
+CacheOverrideTag CacheOverride::abi_tag(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   switch (CacheOverride::mode(self)) {
   case CacheOverride::CacheOverrideMode::None:
@@ -85,7 +86,7 @@ fastly_compute_at_edge_fastly_http_cache_override_tag_t CacheOverride::abi_tag(J
   default:;
   }
 
-  fastly_compute_at_edge_fastly_http_cache_override_tag_t tag = 0;
+  CacheOverrideTag tag = 0;
   if (!ttl(self).isUndefined())
     tag |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL;
   if (!swr(self).isUndefined())

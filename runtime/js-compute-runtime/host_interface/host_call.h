@@ -12,6 +12,11 @@
 
 using FastlyError = uint8_t;
 
+bool error_is_generic(FastlyError e);
+bool error_is_invalid_argument(FastlyError e);
+bool error_is_optional_none(FastlyError e);
+bool error_is_bad_handle(FastlyError e);
+
 void handle_fastly_error(JSContext *cx, FastlyError err, int line, const char *func);
 
 #define HANDLE_ERROR(cx, err) handle_fastly_error(cx, err, __LINE__, __func__)

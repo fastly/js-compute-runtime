@@ -1,5 +1,4 @@
 #include "config-store.h"
-#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 
 namespace builtins {
@@ -106,7 +105,7 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedObject config_store(cx, JS_NewObjectForConstructor(cx, &class_, args));
   auto open_res = Dict::open(name);
   if (auto *err = open_res.to_err()) {
-    if (*err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_BAD_HANDLE) {
+    if (error_is_bad_handle(*err)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_DOES_NOT_EXIST,
                                 name.data());
       return false;

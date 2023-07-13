@@ -1,5 +1,4 @@
 #include "dictionary.h"
-#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 
 namespace builtins {
@@ -117,7 +116,7 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto res = Dict::open(name_view);
   if (auto *err = res.to_err()) {
-    if (*err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_BAD_HANDLE) {
+    if (error_is_bad_handle(*err)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_DOES_NOT_EXIST,
                                 name_view.data());
       return false;

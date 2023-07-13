@@ -21,6 +21,7 @@
 
 #include "builtins/fetch-event.h"
 #include "core/allocator.h"
+#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
 #include "third_party/wizer.h"
