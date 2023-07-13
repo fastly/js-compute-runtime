@@ -17,7 +17,6 @@
 
 #pragma clang diagnostic pop
 
-#include "host_interface/fastly.h"
 #include "host_interface/host_call.h"
 #include "rust-url/rust-url.h"
 

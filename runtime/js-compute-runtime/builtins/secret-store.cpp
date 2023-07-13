@@ -1,4 +1,5 @@
 #include "secret-store.h"
+#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 
 namespace builtins {

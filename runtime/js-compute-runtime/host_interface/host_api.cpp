@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <type_traits>
 
 #include "core/allocator.h"
 #include "fastly-world/fastly_world.h"
@@ -13,7 +14,32 @@ fastly_world_string_t string_view_to_world_string(std::string_view str) {
   };
 }
 
+HostString make_host_string(fastly_world_string_t str) {
+  return HostString{JS::UniqueChars{str.ptr}, str.len};
+}
+
+HostBytes make_host_bytes(fastly_world_list_u8_t str) {
+  return HostBytes{std::unique_ptr<uint8_t[]>{str.ptr}, str.len};
+}
+
+Response make_response(fastly_compute_at_edge_fastly_response_t &resp) {
+  return Response{HttpResp{resp.f0}, HttpBody{resp.f1}};
+}
+
 } // namespace
+
+// Ensure that the handle types stay in sync with fastly-world.h
+static_assert(std::is_same_v<AsyncHandle::Handle, fastly_compute_at_edge_fastly_async_handle_t>);
+static_assert(std::is_same_v<HttpBody::Handle, fastly_compute_at_edge_fastly_body_handle_t>);
+static_assert(
+    std::is_same_v<HttpPendingReq::Handle, fastly_compute_at_edge_fastly_pending_request_handle_t>);
+static_assert(std::is_same_v<HttpReq::Handle, fastly_compute_at_edge_fastly_request_handle_t>);
+static_assert(std::is_same_v<HttpResp::Handle, fastly_compute_at_edge_fastly_response_handle_t>);
+static_assert(
+    std::is_same_v<LogEndpoint::Handle, fastly_compute_at_edge_fastly_log_endpoint_handle_t>);
+static_assert(std::is_same_v<Dict::Handle, fastly_compute_at_edge_fastly_dictionary_handle_t>);
+static_assert(
+    std::is_same_v<ObjectStore::Handle, fastly_compute_at_edge_fastly_object_store_handle_t>);
 
 Result<bool> AsyncHandle::is_ready() const {
   Result<bool> res;
@@ -155,7 +181,7 @@ Result<std::vector<HostString>> generic_get_header_names(auto handle) {
     std::vector<HostString> names;
 
     for (int i = 0; i < ret.len; i++) {
-      names.emplace_back(HostString{ret.ptr[i]});
+      names.emplace_back(make_host_string(ret.ptr[i]));
     }
 
     // Free the vector of string pointers, but leave the individual strings alone.
@@ -183,7 +209,7 @@ Result<std::optional<std::vector<HostString>>> generic_get_header_values(auto ha
       std::vector<HostString> names;
 
       for (int i = 0; i < ret.val.len; i++) {
-        names.emplace_back(HostString{ret.val.ptr[i]});
+        names.emplace_back(make_host_string(ret.val.ptr[i]));
       }
 
       // Free the vector of string pointers, but leave the individual strings alone.
@@ -235,7 +261,7 @@ Result<std::optional<Response>> HttpPendingReq::poll() {
   if (!fastly_compute_at_edge_fastly_http_req_pending_req_poll(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else if (ret.is_some) {
-    res.emplace(ret.val);
+    res.emplace(make_response(ret.val));
   } else {
     res.emplace(std::nullopt);
   }
@@ -251,7 +277,7 @@ Result<Response> HttpPendingReq::wait() {
   if (!fastly_compute_at_edge_fastly_http_req_pending_req_wait(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else {
-    res.emplace(ret);
+    res.emplace(make_response(ret));
   }
 
   return res;
@@ -377,7 +403,7 @@ Result<Response> HttpReq::send(HttpBody body, std::string_view backend) {
                                                    &err)) {
     res.emplace_err(err);
   } else {
-    res.emplace(ret);
+    res.emplace(make_response(ret));
   }
 
   return res;
@@ -435,7 +461,7 @@ Result<HostString> HttpReq::get_method() const {
   if (!fastly_compute_at_edge_fastly_http_req_method_get(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else {
-    res.emplace(ret);
+    res.emplace(make_host_string(ret));
   }
 
   return res;
@@ -463,7 +489,7 @@ Result<HostString> HttpReq::get_uri() const {
   if (!fastly_compute_at_edge_fastly_http_req_uri_get(this->handle, &uri, &err)) {
     res.emplace_err(err);
   } else {
-    res.emplace(uri);
+    res.emplace(make_host_string(uri));
   }
 
   return res;
@@ -509,7 +535,7 @@ Result<HostBytes> HttpReq::downstream_client_ip_addr() {
   if (!fastly_compute_at_edge_fastly_http_req_downstream_client_ip_addr(&octets, &err)) {
     res.emplace_err(err);
   } else {
-    res.emplace(octets);
+    res.emplace(make_host_bytes(octets));
   }
 
   return res;
@@ -524,7 +550,7 @@ Result<HostString> HttpReq::http_req_downstream_tls_cipher_openssl_name() {
   if (!fastly_compute_at_edge_fastly_http_req_downstream_tls_cipher_openssl_name(&ret, &err)) {
     res.emplace_err(err);
   } else {
-    res.emplace(ret);
+    res.emplace(make_host_string(ret));
   }
 
   return res;
@@ -539,7 +565,7 @@ Result<HostString> HttpReq::http_req_downstream_tls_protocol() {
   if (!fastly_compute_at_edge_fastly_http_req_downstream_tls_protocol(&ret, &err)) {
     res.emplace_err(err);
   } else {
-    res.emplace(ret);
+    res.emplace(make_host_string(ret));
   }
 
   return res;
@@ -554,7 +580,7 @@ Result<HostBytes> HttpReq::http_req_downstream_tls_client_hello() {
   if (!fastly_compute_at_edge_fastly_http_req_downstream_tls_client_hello(&ret, &err)) {
     res.emplace_err(err);
   } else {
-    res.emplace(ret);
+    res.emplace(make_host_bytes(ret));
   }
 
   return res;
@@ -569,7 +595,7 @@ Result<HostBytes> HttpReq::http_req_downstream_tls_raw_client_certificate() {
   if (!fastly_compute_at_edge_fastly_http_req_downstream_tls_raw_client_certificate(&ret, &err)) {
     res.emplace_err(err);
   } else {
-    res.emplace(ret);
+    res.emplace(make_host_bytes(ret));
   }
 
   return res;
@@ -584,7 +610,7 @@ Result<HostBytes> HttpReq::http_req_downstream_tls_ja3_md5() {
   if (!fastly_compute_at_edge_fastly_http_req_downstream_tls_ja3_md5(&ret, &err)) {
     res.emplace_err(err);
   } else {
-    res.emplace(ret);
+    res.emplace(make_host_bytes(ret));
   }
 
   return res;
@@ -736,7 +762,7 @@ Result<HostString> GeoIp::lookup(std::span<uint8_t> bytes) {
   if (!fastly_compute_at_edge_fastly_geo_lookup(&octets_list, &ret, &err)) {
     res.emplace_err(err);
   } else {
-    res.emplace(ret);
+    res.emplace(make_host_string(ret));
   }
 
   return res;
@@ -795,7 +821,7 @@ Result<std::optional<HostString>> Dict::get(std::string_view name) {
   if (!fastly_compute_at_edge_fastly_dictionary_get(this->handle, &name_str, &ret, &err)) {
     res.emplace_err(err);
   } else if (ret.is_some) {
-    res.emplace(ret.val);
+    res.emplace(make_host_string(ret.val));
   } else {
     res.emplace(std::nullopt);
   }
@@ -852,6 +878,10 @@ Result<Void> ObjectStore::insert(std::string_view name, HttpBody body) {
 
 namespace host_api {
 
+static_assert(std::is_same_v<Secret::Handle, fastly_compute_at_edge_fastly_secret_handle_t>);
+static_assert(
+    std::is_same_v<SecretStore::Handle, fastly_compute_at_edge_fastly_secret_store_handle_t>);
+
 Result<std::optional<HostString>> Secret::plaintext() const {
   Result<std::optional<HostString>> res;
 
@@ -860,7 +890,7 @@ Result<std::optional<HostString>> Secret::plaintext() const {
   if (!fastly_compute_at_edge_fastly_secret_store_plaintext(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else if (ret.is_some) {
-    res.emplace(ret.val);
+    res.emplace(make_host_string(ret.val));
   } else {
     res.emplace(std::nullopt);
   }

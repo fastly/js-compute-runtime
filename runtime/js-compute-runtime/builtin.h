@@ -1,6 +1,8 @@
 #ifndef JS_COMPUTE_RUNTIME_BUILTIN_H
 #define JS_COMPUTE_RUNTIME_BUILTIN_H
 
+#include <optional>
+#include <span>
 #include <tuple>
 
 // TODO: remove these once the warnings are fixed
@@ -16,8 +18,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "rust-url/rust-url.h"
-#include <span>
-
 #pragma clang diagnostic pop
 
 std::optional<std::span<uint8_t>> value_to_buffer(JSContext *cx, JS::HandleValue val,
