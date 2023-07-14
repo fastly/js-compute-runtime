@@ -1,4 +1,5 @@
 /* eslint-env serviceworker */
+/* global ReadableStream */
 import { env } from 'fastly:env';
 import { pass, fail, assert, assertThrows } from "../../../assertions.js";
 
@@ -45,25 +46,37 @@ routes.set("/request/clone/called-unbound", () => {
     return pass()
 });
 routes.set("/request/clone/valid", async () => {
-    const request = new Request('https://www.fastly.com', {
+    let request = new Request('https://www.fastly.com', {
         headers: {
             hello: 'world'
         },
         body: 'te',
         method: 'post'
     })
-    const newRequest = request.clone();
+    let newRequest = request.clone();
     let error = assert(newRequest instanceof Request, true, 'newRequest instanceof Request')
     if (error) { return error }
-    error = assert(newRequest.method, request.method, 'newRequest.method === request.method')
+    error = assert(newRequest.method, request.method, 'newRequest.method')
     if (error) { return error }
-    error = assert(newRequest.url, request.url, 'newRequest.url === request.url')
+    error = assert(newRequest.url, request.url, 'newRequest.url')
     if (error) { return error }
-    error = assert(newRequest.headers, request.headers, 'newRequest.headers === request.headers')
+    error = assert(newRequest.headers, request.headers, 'newRequest.headers')
     if (error) { return error }
-    error = assert(request.bodyUsed, false, 'request.bodyUsed === false')
+    error = assert(request.bodyUsed, false, 'request.bodyUsed')
     if (error) { return error }
-    error = assert(newRequest.bodyUsed, false, 'newRequest.bodyUsed === false')
+    error = assert(newRequest.bodyUsed, false, 'newRequest.bodyUsed')
+    if (error) { return error }
+    error = assert(newRequest.body instanceof ReadableStream, true, 'newRequest.body instanceof ReadableStream')
+    if (error) { return error }
+
+    request = new Request('https://www.fastly.com', {
+        method: 'get'
+    })
+    newRequest = request.clone()
+
+    error = assert(newRequest.bodyUsed, false, 'newRequest.bodyUsed')
+    if (error) { return error }
+    error = assert(newRequest.body, null, 'newRequest.body')
     if (error) { return error }
     return pass()
 });
