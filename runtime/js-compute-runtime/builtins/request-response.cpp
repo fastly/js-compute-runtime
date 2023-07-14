@@ -1269,46 +1269,7 @@ bool Request::setCacheKey(JSContext *cx, unsigned argc, JS::Value *vp) {
 JSString *GET_atom;
 
 bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(0)
-
-  if (RequestOrResponse::body_used(self)) {
-    JS_ReportErrorLatin1(cx, "Request.prototype.clone: the request's body isn't usable.");
-    return false;
-  }
-
-  // Here we get the current requests body stream and call ReadableStream.prototype.tee to return
-  // two versions of the stream. Once we get the two streams, we create a new request handle and
-  // attach one of the streams to the new handle and the other stream is attached to the request
-  // handle that `clone()` was called upon.
-  JS::RootedObject body_stream(cx, RequestOrResponse::body_stream(self));
-  if (!body_stream) {
-    body_stream = RequestOrResponse::create_body_stream(cx, self);
-    if (!body_stream) {
-      return false;
-    }
-  }
-  JS::RootedValue tee_val(cx);
-  if (!JS_GetProperty(cx, body_stream, "tee", &tee_val)) {
-    return false;
-  }
-  JS::Rooted<JSFunction *> tee(cx, JS_GetObjectFunction(&tee_val.toObject()));
-  if (!tee) {
-    return false;
-  }
-  JS::RootedVector<JS::Value> argv(cx);
-  JS::RootedValue rval(cx);
-  if (!JS::Call(cx, body_stream, tee, argv, &rval)) {
-    return false;
-  }
-  JS::RootedObject rval_array(cx, &rval.toObject());
-  JS::RootedValue body1_val(cx);
-  if (!JS_GetProperty(cx, rval_array, "0", &body1_val)) {
-    return false;
-  }
-  JS::RootedValue body2_val(cx);
-  if (!JS_GetProperty(cx, rval_array, "1", &body2_val)) {
-    return false;
-  }
+  METHOD_HEADER(0);
 
   auto request_handle_res = HttpReq::make();
   if (auto *err = request_handle_res.to_err()) {
@@ -1316,41 +1277,87 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto res = HttpBody::make();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
-  }
-
   auto request_handle = request_handle_res.unwrap();
-  auto body_handle = res.unwrap();
-  if (!JS::IsReadableStream(&body1_val.toObject())) {
-    return false;
-  }
-  body_stream.set(&body1_val.toObject());
-  if (RequestOrResponse::body_unusable(cx, body_stream)) {
-    JS_ReportErrorLatin1(cx, "Can't use a ReadableStream that's locked or has ever been "
-                             "read from or canceled as a Request body.");
-    return false;
-  }
 
   JS::RootedObject requestInstance(cx, Request::create_instance(cx));
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Request),
                       JS::Int32Value(request_handle.handle));
-  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Body),
-                      JS::Int32Value(body_handle.handle));
-  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::BodyStream), body1_val);
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::BodyUsed), JS::FalseValue());
-  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::HasBody),
-                      JS::BooleanValue(true));
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::URL),
                       JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::URL)));
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::IsDownstream)));
 
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyStream), body2_val);
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyUsed), JS::FalseValue());
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(true));
+  auto hasBody = RequestOrResponse::has_body(self);
+
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::HasBody),
+                      JS::BooleanValue(hasBody));
+
+  if (hasBody) {
+    if (RequestOrResponse::body_used(self)) {
+      JS_ReportErrorLatin1(cx, "Request.prototype.clone: the request's body isn't usable.");
+      return false;
+    }
+
+    // Here we get the current requests body stream and call ReadableStream.prototype.tee to return
+    // two versions of the stream. Once we get the two streams, we create a new request handle and
+    // attach one of the streams to the new handle and the other stream is attached to the request
+    // handle that `clone()` was called upon.
+    JS::RootedObject body_stream(cx, RequestOrResponse::body_stream(self));
+    if (!body_stream) {
+      body_stream = RequestOrResponse::create_body_stream(cx, self);
+      if (!body_stream) {
+        return false;
+      }
+    }
+    JS::RootedValue tee_val(cx);
+    if (!JS_GetProperty(cx, body_stream, "tee", &tee_val)) {
+      return false;
+    }
+    JS::Rooted<JSFunction *> tee(cx, JS_GetObjectFunction(&tee_val.toObject()));
+    if (!tee) {
+      return false;
+    }
+    JS::RootedVector<JS::Value> argv(cx);
+    JS::RootedValue rval(cx);
+    if (!JS::Call(cx, body_stream, tee, argv, &rval)) {
+      return false;
+    }
+    JS::RootedObject rval_array(cx, &rval.toObject());
+    JS::RootedValue body1_val(cx);
+    if (!JS_GetProperty(cx, rval_array, "0", &body1_val)) {
+      return false;
+    }
+    JS::RootedValue body2_val(cx);
+    if (!JS_GetProperty(cx, rval_array, "1", &body2_val)) {
+      return false;
+    }
+
+    auto res = HttpBody::make();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    auto body_handle = res.unwrap();
+    if (!JS::IsReadableStream(&body1_val.toObject())) {
+      return false;
+    }
+    body_stream.set(&body1_val.toObject());
+    if (RequestOrResponse::body_unusable(cx, body_stream)) {
+      JS_ReportErrorLatin1(cx, "Can't use a ReadableStream that's locked or has ever been "
+                               "read from or canceled as a Request body.");
+      return false;
+    }
+
+    JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Body),
+                        JS::Int32Value(body_handle.handle));
+    JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::BodyStream), body1_val);
+
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyStream), body2_val);
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyUsed), JS::FalseValue());
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(true));
+  }
 
   JS::RootedObject headers(cx);
   JS::RootedObject headers_obj(
