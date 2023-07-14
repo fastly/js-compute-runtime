@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 3.1.1 (2023-07-14)
+
+
+### Fixed
+
+* Request.prototype.clone - Do not create a body on the new request if the request instance being cloned does not contain a body ([5debe80](https://github.com/fastly/js-compute-runtime/commit/5debe806a4a40e0d3b07bdd6b71489aa7d739cff))
+
 ## 3.1.0 (2023-07-12)
 
 
