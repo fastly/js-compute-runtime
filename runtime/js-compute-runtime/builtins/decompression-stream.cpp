@@ -11,6 +11,7 @@
 #include "builtins/decompression-stream.h"
 #include "builtins/transform-stream-default-controller.h"
 #include "builtins/transform-stream.h"
+#include "core/encode.h"
 #include "js-compute-builtins.h"
 
 namespace builtins {
@@ -295,22 +296,21 @@ bool DecompressionStream::constructor(JSContext *cx, unsigned argc, JS::Value *v
   // `TypeError`.
   CTOR_HEADER("DecompressionStream", 1);
 
-  size_t format_len;
-  JS::UniqueChars format_chars = encode(cx, args[0], &format_len);
+  auto format_chars = fastly::core::encode(cx, args[0]);
   if (!format_chars) {
     return false;
   }
 
   enum Format format;
-  if (!strcmp(format_chars.get(), "deflate-raw")) {
+  if (!strcmp(format_chars.begin(), "deflate-raw")) {
     format = Format::DeflateRaw;
-  } else if (!strcmp(format_chars.get(), "deflate")) {
+  } else if (!strcmp(format_chars.begin(), "deflate")) {
     format = Format::Deflate;
-  } else if (!strcmp(format_chars.get(), "gzip")) {
+  } else if (!strcmp(format_chars.begin(), "gzip")) {
     format = Format::GZIP;
   } else {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_INVALID_COMPRESSION_FORMAT,
-                             format_chars.get());
+                             format_chars.begin());
     return false;
   }
 

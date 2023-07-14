@@ -1,5 +1,7 @@
 
 #include "env.h"
+#include "core/encode.h"
+
 namespace builtins {
 
 bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -7,12 +9,11 @@ bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!args.requireAtLeast(cx, "fastly.env.get", 1))
     return false;
 
-  size_t var_name_len;
-  JS::UniqueChars var_name_chars = encode(cx, args[0], &var_name_len);
+  auto var_name_chars = fastly::core::encode(cx, args[0]);
   if (!var_name_chars) {
     return false;
   }
-  JS::RootedString env_var(cx, JS_NewStringCopyZ(cx, getenv(var_name_chars.get())));
+  JS::RootedString env_var(cx, JS_NewStringCopyZ(cx, getenv(var_name_chars.begin())));
   if (!env_var)
     return false;
 

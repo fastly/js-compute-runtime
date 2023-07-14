@@ -1,4 +1,5 @@
 #include "secret-store.h"
+#include "core/encode.h"
 #include "host_interface/host_api.h"
 
 namespace builtins {
@@ -79,28 +80,25 @@ bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  size_t length;
-  JS::UniqueChars key = encode(cx, args[0], &length);
+  auto key = fastly::core::encode(cx, args[0]);
   if (!key) {
     return false;
   }
   // If the converted string has a length of 0 then we throw an Error
   // because keys have to be at-least 1 character.
-  if (length == 0) {
+  if (key.len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SECRET_STORE_KEY_EMPTY);
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
   // key has to be less than 256
-  if (length > 255) {
+  if (key.len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SECRET_STORE_KEY_TOO_LONG);
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  std::string_view key_str(key.get(), length);
-
   // key must contain only letters, numbers, dashes (-), underscores (_), and periods (.).
-  auto is_valid_key = std::all_of(key_str.begin(), key_str.end(), [&](auto character) {
+  auto is_valid_key = std::all_of(key.begin(), key.end(), [&](auto character) {
     return std::isalnum(character) || character == '_' || character == '-' || character == '.';
   });
 
@@ -111,7 +109,7 @@ bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // Ensure that we throw an exception for all unexpected host errors.
-  auto get_res = SecretStore::secret_store_handle(self).get(key_str);
+  auto get_res = SecretStore::secret_store_handle(self).get(key);
   if (auto *err = get_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -154,27 +152,24 @@ bool SecretStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The SecretStore builtin");
   CTOR_HEADER("SecretStore", 1);
 
-  size_t length;
-  JS::UniqueChars name_chars = encode(cx, args[0], &length);
-  if (!name_chars) {
+  auto name = fastly::core::encode(cx, args[0]);
+  if (!name) {
     return false;
   }
 
   // If the converted string has a length of 0 then we throw an Error
   // because names have to be at-least 1 character.
-  if (length == 0) {
+  if (name.len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SECRET_STORE_NAME_EMPTY);
     return false;
   }
 
   // If the converted string has a length of more than 255 then we throw an Error
   // because names have to be less than 255 characters.
-  if (length > 255) {
+  if (name.len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SECRET_STORE_NAME_TOO_LONG);
     return false;
   }
-
-  std::string_view name(name_chars.get(), length);
 
   // Name must contain only letters, numbers, dashes (-), underscores (_), and periods (.).
   auto is_valid_name = std::all_of(name.begin(), name.end(), [&](auto character) {
@@ -196,7 +191,7 @@ bool SecretStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (auto *err = res.to_err()) {
     if (error_is_optional_none(*err)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SECRET_STORE_DOES_NOT_EXIST,
-                                name.data());
+                                name.begin());
       return false;
     } else {
       HANDLE_ERROR(cx, *err);

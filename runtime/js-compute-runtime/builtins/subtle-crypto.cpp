@@ -1,5 +1,6 @@
 #include "subtle-crypto.h"
 #include "builtins/shared/dom-exception.h"
+#include "core/encode.h"
 #include "js-compute-builtins.h"
 
 namespace builtins {
@@ -84,13 +85,12 @@ bool SubtleCrypto::importKey(JSContext *cx, unsigned argc, JS::Value *vp) {
   CryptoKeyFormat format;
   {
     auto format_arg = args.get(0);
-    size_t format_length;
     // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-    JS::UniqueChars format_chars = encode(cx, format_arg, &format_length);
-    if (!format_chars || format_length == 0) {
+    auto format_chars = fastly::core::encode(cx, format_arg);
+    if (!format_chars || format_chars.len == 0) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
-    std::string_view format_string(format_chars.get(), format_length);
+    std::string_view format_string = format_chars;
     if (format_string == "spki") {
       format = CryptoKeyFormat::Spki;
     } else if (format_string == "pkcs8") {

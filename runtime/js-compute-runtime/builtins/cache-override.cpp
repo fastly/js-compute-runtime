@@ -8,6 +8,7 @@
 #include "js/Conversions.h"
 
 #include "cache-override.h"
+#include "core/encode.h"
 #include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
@@ -141,21 +142,22 @@ bool CacheOverride::mode_set(JSContext *cx, JS::HandleObject self, JS::HandleVal
                               "CacheOverride");
     return false;
   }
-  size_t mode_len;
-  JS::UniqueChars mode_chars = encode(cx, val, &mode_len);
-  if (!mode_chars)
+
+  auto mode_chars = fastly::core::encode(cx, val);
+  if (!mode_chars) {
     return false;
+  }
 
   CacheOverride::CacheOverrideMode mode;
-  if (!strcmp(mode_chars.get(), "none")) {
+  if (!strcmp(mode_chars.begin(), "none")) {
     mode = CacheOverride::CacheOverrideMode::None;
-  } else if (!strcmp(mode_chars.get(), "pass")) {
+  } else if (!strcmp(mode_chars.begin(), "pass")) {
     mode = CacheOverride::CacheOverrideMode::Pass;
-  } else if (!strcmp(mode_chars.get(), "override")) {
+  } else if (!strcmp(mode_chars.begin(), "override")) {
     mode = CacheOverride::CacheOverrideMode::Override;
   } else {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CACHE_OVERRIDE_MODE_INVALID,
-                              mode_chars.get());
+                              mode_chars.begin());
     return false;
   }
 

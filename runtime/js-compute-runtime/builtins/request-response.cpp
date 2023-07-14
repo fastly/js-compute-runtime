@@ -8,6 +8,7 @@
 #include "builtins/native-stream-source.h"
 #include "builtins/shared/url.h"
 #include "builtins/transform-stream.h"
+#include "core/encode.h"
 #include "host_interface/host_api.h"
 #include "third_party/picosha2.h"
 
@@ -297,7 +298,12 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
       length = slice.len;
       content_type = "application/x-www-form-urlencoded;charset=UTF-8";
     } else {
-      text = encode(cx, body_val, &length);
+      {
+        auto str = fastly::core::encode(cx, body_val);
+        text = std::move(str.ptr);
+        length = str.len;
+      }
+
       if (!text)
         return false;
       buf = text.get();
@@ -1090,15 +1096,13 @@ JSString *Request::method(JSContext *cx, JS::HandleObject obj) {
 
 bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValue cache_key_val) {
   MOZ_ASSERT(is_instance(self));
-  size_t key_len;
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  JS::UniqueChars keyString = encode(cx, cache_key_val, &key_len);
+  auto keyString = fastly::core::encode(cx, cache_key_val);
   if (!keyString) {
     return false;
   }
-  std::string_view key(keyString.get(), key_len);
   std::string hex_str;
-  picosha2::hash256_hex_string(key, hex_str);
+  picosha2::hash256_hex_string(keyString, hex_str);
   std::transform(hex_str.begin(), hex_str.end(), hex_str.begin(),
                  [](unsigned char c) { return std::toupper(c); });
 
@@ -1162,17 +1166,16 @@ bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
     stale_while_revalidate = val.toInt32();
   }
 
-  JS::UniqueChars sk_chars;
+  HostString sk_chars;
   std::optional<std::string_view> surrogate_key;
   val = builtins::CacheOverride::surrogate_key(override);
   if (!val.isUndefined()) {
-    size_t len;
-    sk_chars = encode(cx, val, &len);
+    sk_chars = fastly::core::encode(cx, val);
     if (!sk_chars) {
       return false;
     }
 
-    surrogate_key.emplace(sk_chars.get(), len);
+    surrogate_key.emplace(sk_chars);
   }
 
   auto tag = builtins::CacheOverride::abi_tag(override);
@@ -1491,7 +1494,6 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   }
 
   JS::RootedString url_str(cx);
-  size_t method_len;
   JS::RootedString method_str(cx);
   bool method_needs_normalization = false;
 
@@ -1533,7 +1535,6 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     if (!method_str) {
       return nullptr;
     }
-    method_len = JS::GetStringLength(method_str);
 
     // referrer: `request`’s referrer.
     // TODO: evaluate whether we want to implement support for setting the
@@ -1600,12 +1601,11 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
 
   // Actually set the URL derived in steps 5 or 6 above.
   RequestOrResponse::set_url(request, StringValue(url_str));
-  size_t len;
-  auto url = encode(cx, url_str, &len);
+  auto url = fastly::core::encode(cx, url_str);
   if (!url) {
     return nullptr;
   } else {
-    auto res = request_handle.set_uri(std::string_view{url.get(), len});
+    auto res = request_handle.set_uri(url);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
@@ -1730,25 +1730,25 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   bool is_get_or_head = is_get;
 
   if (!is_get) {
-    JS::UniqueChars method = encode(cx, method_str, &method_len);
+    auto method = fastly::core::encode(cx, method_str);
     if (!method) {
       return nullptr;
     }
 
     if (method_needs_normalization) {
-      if (normalize_http_method(method.get())) {
+      if (normalize_http_method(method.begin())) {
         // Replace the JS string with the normalized name.
-        method_str = JS_NewStringCopyN(cx, method.get(), method_len);
+        method_str = JS_NewStringCopyN(cx, method.begin(), method.len);
         if (!method_str) {
           return nullptr;
         }
       }
     }
 
-    is_get_or_head = strcmp(method.get(), "GET") == 0 || strcmp(method.get(), "HEAD") == 0;
+    is_get_or_head = strcmp(method.begin(), "GET") == 0 || strcmp(method.begin(), "HEAD") == 0;
 
     JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::Method), JS::StringValue(method_str));
-    auto res = request_handle.set_method(std::string_view{method.get(), method_len});
+    auto res = request_handle.set_method(method);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
@@ -2299,12 +2299,10 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedValue url_val(cx, JS::ObjectValue(*parsedURL));
-  size_t length;
-  auto url_str = encode(cx, url_val, &length);
+  auto url_str = fastly::core::encode(cx, url_val);
   if (!url_str) {
     return false;
   }
-  auto value = url_str.get();
   // 3. If status is not a redirect status, then throw a RangeError.
   // A redirect status is a status that is 301, 302, 303, 307, or 308.
   auto statusVal = args.get(1);
@@ -2382,7 +2380,7 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!headers) {
     return false;
   }
-  if (!builtins::Headers::maybe_add(cx, headers, "location", value)) {
+  if (!builtins::Headers::maybe_add(cx, headers, "location", url_str.begin())) {
     return false;
   }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::ObjectValue(*headers));
@@ -2482,10 +2480,10 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto body = make_res.unwrap();
   JS::RootedString string(cx, JS_NewUCStringCopyN(cx, out.c_str(), out.length()));
-  size_t encoded_len;
-  auto stringChars = encode(cx, string, &encoded_len);
+  auto stringChars = fastly::core::encode(cx, string);
 
-  auto write_res = body.write_all(reinterpret_cast<uint8_t *>(stringChars.get()), encoded_len);
+  auto write_res =
+      body.write_all(reinterpret_cast<uint8_t *>(stringChars.begin()), stringChars.len);
   if (auto *err = write_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;

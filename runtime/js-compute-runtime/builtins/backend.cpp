@@ -19,6 +19,7 @@
 
 #include "builtins/backend.h"
 #include "builtins/request-response.h"
+#include "core/encode.h"
 #include "host_interface/fastly.h"
 #include "js-compute-builtins.h"
 #include "js/Conversions.h"
@@ -713,23 +714,20 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   MOZ_ASSERT(is_instance(backend));
 
   JS::RootedString name(cx, JS::GetReservedSlot(backend, Backend::Slots::Name).toString());
-  size_t name_len;
-  JS::UniqueChars nameChars = encode(cx, name, &name_len);
-  std::string_view name_str{nameChars.get(), name_len};
+  auto nameChars = fastly::core::encode(cx, name);
+  std::string_view name_str = nameChars;
 
   JS::RootedString target(cx, JS::GetReservedSlot(backend, Backend::Slots::Target).toString());
-  size_t target_len;
-  JS::UniqueChars targetChars = encode(cx, target, &target_len);
-  std::string_view target_str{targetChars.get(), target_len};
+  auto targetChars = fastly::core::encode(cx, target);
+  std::string_view target_str = targetChars;
 
   BackendConfig backend_config;
 
   auto hostOverrideSlot = JS::GetReservedSlot(backend, Backend::Slots::HostOverride);
   if (!hostOverrideSlot.isNullOrUndefined()) {
     JS::RootedString hostOverrideString(cx, hostOverrideSlot.toString());
-    size_t hostOverride_len;
-    JS::UniqueChars hostOverrideChars = encode(cx, hostOverrideString, &hostOverride_len);
-    backend_config.host_override.emplace(std::move(hostOverrideChars), hostOverride_len);
+    auto hostOverrideChars = fastly::core::encode(cx, hostOverrideString);
+    backend_config.host_override.emplace(std::move(hostOverrideChars));
   }
 
   auto connectTimeoutSlot = JS::GetReservedSlot(backend, Backend::Slots::ConnectTimeout);
@@ -770,35 +768,29 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   auto certificateHostnameSlot = JS::GetReservedSlot(backend, Backend::Slots::CertificateHostname);
   if (!certificateHostnameSlot.isNullOrUndefined()) {
     JS::RootedString certificateHostnameString(cx, certificateHostnameSlot.toString());
-    size_t certificateHostname_len;
-    JS::UniqueChars certificateHostnameChars =
-        encode(cx, certificateHostnameString, &certificateHostname_len);
-    backend_config.cert_hostname.emplace(std::move(certificateHostnameChars),
-                                         certificateHostname_len);
+    auto certificateHostnameChars = fastly::core::encode(cx, certificateHostnameString);
+    backend_config.cert_hostname.emplace(std::move(certificateHostnameChars));
   }
 
   auto caCertificateSlot = JS::GetReservedSlot(backend, Backend::Slots::CaCertificate);
   if (!caCertificateSlot.isNullOrUndefined()) {
     JS::RootedString caCertificateString(cx, caCertificateSlot.toString());
-    size_t caCertificate_len;
-    JS::UniqueChars caCertificateChars = encode(cx, caCertificateString, &caCertificate_len);
-    backend_config.ca_cert.emplace(std::move(caCertificateChars), caCertificate_len);
+    auto caCertificateChars = fastly::core::encode(cx, caCertificateString);
+    backend_config.ca_cert.emplace(std::move(caCertificateChars));
   }
 
   auto ciphersSlot = JS::GetReservedSlot(backend, Backend::Slots::Ciphers);
   if (!ciphersSlot.isNullOrUndefined()) {
     JS::RootedString ciphersString(cx, ciphersSlot.toString());
-    size_t ciphers_len;
-    JS::UniqueChars ciphersChars = encode(cx, ciphersString, &ciphers_len);
-    backend_config.ciphers.emplace(std::move(ciphersChars), ciphers_len);
+    auto ciphersChars = fastly::core::encode(cx, ciphersString);
+    backend_config.ciphers.emplace(std::move(ciphersChars));
   }
 
   auto sniHostnameSlot = JS::GetReservedSlot(backend, Backend::Slots::SniHostname);
   if (!sniHostnameSlot.isNullOrUndefined()) {
     JS::RootedString sniHostnameString(cx, sniHostnameSlot.toString());
-    size_t sniHostname_len;
-    JS::UniqueChars sniHostnameChars = encode(cx, sniHostnameString, &sniHostname_len);
-    backend_config.sni_hostname.emplace(std::move(sniHostnameChars), sniHostname_len);
+    auto sniHostnameChars = fastly::core::encode(cx, sniHostnameString);
+    backend_config.sni_hostname.emplace(std::move(sniHostnameChars));
   }
 
   auto res = HttpReq::register_dynamic_backend(name_str, target_str, backend_config);
@@ -915,7 +907,7 @@ bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue targe
     return false;
   }
 
-  auto targetStringSlice = encode(cx, target_val);
+  auto targetStringSlice = fastly::core::encode_spec_string(cx, target_val);
   if (!targetStringSlice.data) {
     return false;
   }
@@ -948,7 +940,7 @@ bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue targe
 
 JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   JS::RootedValue request_url(cx, RequestOrResponse::url(request));
-  auto url_string = encode(cx, request_url);
+  auto url_string = fastly::core::encode_spec_string(cx, request_url);
   if (!url_string.data) {
     return nullptr;
   }
@@ -1132,7 +1124,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    if (isnan(version)) {
+    if (std::isnan(version)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MIN_INVALID);
       return false;
     }
@@ -1272,27 +1264,28 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     if (!JS_GetProperty(cx, configuration, "ciphers", &ciphers_val)) {
       return false;
     }
-    size_t length;
-    auto ciphers_chars = encode(cx, ciphers_val, &length);
+    auto ciphers_chars = fastly::core::encode(cx, ciphers_val);
     if (!ciphers_chars) {
       return false;
     }
-    if (length == 0) {
+    if (ciphers_chars.size() == 0) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_CIPHERS_EMPTY);
       return false;
     }
-    std::string cipherSpec(ciphers_chars.get(), length);
+    std::string cipherSpec(ciphers_chars.begin(), ciphers_chars.len);
     if (!isCipherSuiteSupportedByFastly(cipherSpec)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_CIPHERS_NOT_AVALIABLE);
       return false;
     }
-    JS::SetReservedSlot(backend, Backend::Slots::Ciphers,
-                        JS::StringValue(JS_NewStringCopyN(cx, ciphers_chars.get(), length)));
+    JS::SetReservedSlot(
+        backend, Backend::Slots::Ciphers,
+        JS::StringValue(JS_NewStringCopyN(cx, ciphers_chars.begin(), ciphers_chars.len)));
     auto ciphersSlot = JS::GetReservedSlot(backend, Backend::Slots::Ciphers);
     if (!ciphersSlot.isNullOrUndefined()) {
       JS::RootedString ciphers(cx, ciphersSlot.toString());
-      size_t ciphers_len;
-      JS::UniqueChars ciphersChars = encode(cx, ciphers, &ciphers_len);
+
+      // TODO: what should this be used for?
+      auto ciphersChars = fastly::core::encode(cx, ciphers);
     }
   }
 

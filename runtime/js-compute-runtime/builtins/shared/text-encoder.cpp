@@ -1,4 +1,5 @@
 #include "builtins/shared/text-encoder.h"
+#include "core/encode.h"
 #include "js-compute-builtins.h"
 #include <iostream>
 #include <tuple>
@@ -27,17 +28,16 @@ bool TextEncoder::encode(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
 
-  size_t chars_len;
-  JS::UniqueChars chars = ::encode(cx, args[0], &chars_len);
-  JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, chars_len, chars.get()));
+  auto chars = fastly::core::encode(cx, args[0]);
+  JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, chars.len, chars.begin()));
   if (!buffer) {
     return false;
   }
 
   // `buffer` now owns `chars`
-  static_cast<void>(chars.release());
+  static_cast<void>(chars.ptr.release());
 
-  JS::RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, chars_len));
+  JS::RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, chars.len));
   if (!byte_array) {
     return false;
   }

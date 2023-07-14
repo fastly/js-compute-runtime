@@ -1,5 +1,6 @@
 #include "builtins/shared/text-decoder.h"
 #include "builtin.h"
+#include "core/encode.h"
 #include "js-compute-builtins.h"
 #include "rust-encoding/rust-encoding.h"
 
@@ -198,18 +199,17 @@ bool TextDecoder::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   // 1. Remove any leading and trailing ASCII whitespace from label.
   // 2. If label is an ASCII case-insensitive match for any of the labels listed in the table
   // below, then return the corresponding encoding; otherwise return failure. JS-Compute-Runtime:
-  size_t length;
   jsencoding::Encoding *encoding;
   if (label_value.isUndefined()) {
     encoding = const_cast<jsencoding::Encoding *>(jsencoding::encoding_for_label_no_replacement(
         reinterpret_cast<uint8_t *>(const_cast<char *>("UTF-8")), 5));
   } else {
-    auto label_chars = encode(cx, label_value, &length);
+    auto label_chars = fastly::core::encode(cx, label_value);
     if (!label_chars) {
       return false;
     }
     encoding = const_cast<jsencoding::Encoding *>(jsencoding::encoding_for_label_no_replacement(
-        reinterpret_cast<uint8_t *>(label_chars.get()), length));
+        reinterpret_cast<uint8_t *>(label_chars.begin()), label_chars.len));
   }
   if (!encoding) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TEXT_DECODER_INVALID_ENCODING);

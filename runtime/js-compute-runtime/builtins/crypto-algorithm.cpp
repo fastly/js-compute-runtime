@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "builtins/shared/dom-exception.h"
+#include "core/encode.h"
 #include "crypto-algorithm.h"
 #include "crypto-key-rsa-components.h"
 #include "js-compute-builtins.h"
@@ -27,14 +28,13 @@ const EVP_MD *createDigestAlgorithm(JSContext *cx, JS::HandleObject key) {
   JS::RootedObject hash(cx, &hash_val.toObject());
   JS::RootedValue name_val(cx);
   JS_GetProperty(cx, hash, "name", &name_val);
-  size_t name_length;
-  auto name_chars = encode(cx, name_val, &name_length);
+  auto name_chars = fastly::core::encode(cx, name_val);
   if (!name_chars) {
     DOMException::raise(cx, "NotSupportedError", "NotSupportedError");
     return nullptr;
   }
 
-  std::string_view name(name_chars.get(), name_length);
+  std::string_view name = name_chars;
   if (name == "MD5") {
     return EVP_md5();
   } else if (name == "SHA-1") {
@@ -330,12 +330,11 @@ JS::Result<CryptoAlgorithmIdentifier> normalizeIdentifier(JSContext *cx, JS::Han
 
   // TODO: We convert from JSString to std::string quite a lot in the codebase, should we pull this
   // logic out into a new function?
-  size_t algorithmLen;
-  JS::UniqueChars algorithmChars = encode(cx, algName, &algorithmLen);
+  auto algorithmChars = fastly::core::encode(cx, algName);
   if (!algorithmChars) {
     return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
   }
-  std::string algorithm(algorithmChars.get(), algorithmLen);
+  std::string algorithm(algorithmChars.begin(), algorithmChars.len);
 
   // 5. If registeredAlgorithms contains a key that is a case-insensitive string match for algName:
   // 5.1 Set algName to the value of the matching key.

@@ -1,4 +1,5 @@
 #include "logger.h"
+#include "core/encode.h"
 #include "host_interface/host_api.h"
 
 namespace builtins {
@@ -8,13 +9,12 @@ bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   LogEndpoint endpoint(JS::GetReservedSlot(self, Logger::Slots::Endpoint).toInt32());
 
-  size_t msg_len;
-  JS::UniqueChars msg = encode(cx, args.get(0), &msg_len);
+  auto msg = fastly::core::encode(cx, args.get(0));
   if (!msg) {
     return false;
   }
 
-  auto res = endpoint.write(std::string_view{msg.get(), msg_len});
+  auto res = endpoint.write(msg);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -57,10 +57,8 @@ bool Logger::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The Logger builtin");
   CTOR_HEADER("Logger", 1);
 
-  size_t name_len;
-  JS::UniqueChars name = encode(cx, args[0], &name_len);
-
-  auto handle_res = LogEndpoint::get(std::string_view{name.get(), name_len});
+  auto name = fastly::core::encode(cx, args[0]);
+  auto handle_res = LogEndpoint::get(name);
   if (auto *err = handle_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;

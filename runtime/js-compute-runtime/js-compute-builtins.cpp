@@ -65,6 +65,7 @@
 #include "builtins/transform-stream-default-controller.h"
 #include "builtins/transform-stream.h"
 #include "builtins/worker-location.h"
+#include "core/encode.h"
 
 using namespace std::literals;
 
@@ -805,8 +806,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     }
   }
 
-  HostString backend_chars;
-  backend_chars.ptr = encode(cx, backend, &backend_chars.len);
+  HostString backend_chars = fastly::core::encode(cx, backend);
   if (!backend_chars.ptr) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
@@ -1405,8 +1405,10 @@ void builtin_impl_console_log(Console::LogType log_ty, const char *msg) {
 bool dump_value(JSContext *cx, JS::Value val, FILE *fp) {
   RootedValue value(cx, val);
   UniqueChars utf8chars = stringify_value(cx, value);
-  if (!utf8chars)
+  if (!utf8chars) {
     return false;
+  }
+
   fprintf(fp, "%s\n", utf8chars.get());
   return true;
 }
@@ -1416,12 +1418,13 @@ bool print_stack(JSContext *cx, HandleObject stack, FILE *fp) {
   if (!BuildStackString(cx, nullptr, stack, &stackStr, 2)) {
     return false;
   }
-  size_t stack_len;
 
-  UniqueChars utf8chars = encode(cx, stackStr, &stack_len);
-  if (!utf8chars)
+  auto utf8chars = fastly::core::encode(cx, stackStr);
+  if (!utf8chars) {
     return false;
-  fprintf(fp, "%s\n", utf8chars.get());
+  }
+
+  fprintf(fp, "%s\n", utf8chars.begin());
   return true;
 }
 

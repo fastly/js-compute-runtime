@@ -2,6 +2,7 @@
 
 #include "builtin.h"
 #include "builtins/shared/url.h"
+#include "core/encode.h"
 #include "core/sequence.hpp"
 #include "rust-url/rust-url.h"
 
@@ -177,11 +178,11 @@ bool append_impl(JSContext *cx, JS::HandleObject self, JS::HandleValue key, JS::
                  const char *_) {
   const auto params = URLSearchParams::get_params(self);
 
-  auto name = encode(cx, key);
+  auto name = fastly::core::encode_spec_string(cx, key);
   if (!name.data)
     return false;
 
-  auto value = encode(cx, val);
+  auto value = fastly::core::encode_spec_string(cx, val);
   if (!value.data)
     return false;
 
@@ -209,7 +210,7 @@ bool URLSearchParams::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto *params =
       static_cast<jsurl::JSUrlSearchParams *>(JS::GetReservedSlot(self, Slots::Params).toPrivate());
 
-  auto name = encode(cx, args.get(0));
+  auto name = fastly::core::encode_spec_string(cx, args.get(0));
   if (!name.data)
     return false;
 
@@ -223,7 +224,7 @@ bool URLSearchParams::has(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto *params =
       static_cast<jsurl::JSUrlSearchParams *>(JS::GetReservedSlot(self, Slots::Params).toPrivate());
 
-  auto name = encode(cx, args.get(0));
+  auto name = fastly::core::encode_spec_string(cx, args.get(0));
   if (!name.data)
     return false;
 
@@ -236,7 +237,7 @@ bool URLSearchParams::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto *params = static_cast<const jsurl::JSUrlSearchParams *>(
       JS::GetReservedSlot(self, Slots::Params).toPrivate());
 
-  auto name = encode(cx, args.get(0));
+  auto name = fastly::core::encode_spec_string(cx, args.get(0));
   if (!name.data)
     return false;
 
@@ -259,7 +260,7 @@ bool URLSearchParams::getAll(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto *params = static_cast<const jsurl::JSUrlSearchParams *>(
       JS::GetReservedSlot(self, Slots::Params).toPrivate());
 
-  auto name = encode(cx, args.get(0));
+  auto name = fastly::core::encode_spec_string(cx, args.get(0));
   if (!name.data)
     return false;
 
@@ -292,11 +293,11 @@ bool URLSearchParams::set(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto *params =
       static_cast<jsurl::JSUrlSearchParams *>(JS::GetReservedSlot(self, Slots::Params).toPrivate());
 
-  auto name = encode(cx, args[0]);
+  auto name = fastly::core::encode_spec_string(cx, args[0]);
   if (!name.data)
     return false;
 
-  auto value = encode(cx, args[1]);
+  auto value = fastly::core::encode_spec_string(cx, args[1]);
   if (!value.data)
     return false;
 
@@ -430,7 +431,7 @@ JSObject *URLSearchParams::create(JSContext *cx, JS::HandleObject self,
   }
 
   if (!consumed) {
-    auto init = encode(cx, params_val);
+    auto init = fastly::core::encode_spec_string(cx, params_val);
     if (!init.data)
       return nullptr;
 
@@ -478,7 +479,7 @@ JSObject *URLSearchParams::create(JSContext *cx, JS::HandleObject self, jsurl::J
     jsurl::JSUrl *url =                                                                            \
         static_cast<jsurl::JSUrl *>(JS::GetReservedSlot(self, URL::Slots::Url).toPrivate());       \
                                                                                                    \
-    jsurl::SpecString str = encode(cx, args.get(0));                                               \
+    jsurl::SpecString str = fastly::core::encode_spec_string(cx, args.get(0));                     \
     if (!str.data) {                                                                               \
       return false;                                                                                \
     }                                                                                              \
@@ -625,7 +626,7 @@ JSObject *URL::create(JSContext *cx, JS::HandleObject self, jsurl::SpecString ur
 
 JSObject *URL::create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
                       const jsurl::JSUrl *base) {
-  auto str = encode(cx, url_val);
+  auto str = fastly::core::encode_spec_string(cx, url_val);
   if (!str.data)
     return nullptr;
 
@@ -651,7 +652,7 @@ JSObject *URL::create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_
   jsurl::JSUrl *base = nullptr;
 
   if (!base_val.isUndefined()) {
-    auto str = encode(cx, base_val);
+    auto str = fastly::core::encode_spec_string(cx, base_val);
     if (!str.data)
       return nullptr;
 

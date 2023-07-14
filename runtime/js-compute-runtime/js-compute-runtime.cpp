@@ -21,6 +21,7 @@
 
 #include "builtins/fetch-event.h"
 #include "core/allocator.h"
+#include "core/encode.h"
 #include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
@@ -328,19 +329,20 @@ bool eval_stdin(JSContext *cx, MutableHandleValue result) {
 
 static bool addEventListener(JSContext *cx, unsigned argc, Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "addEventListener", 2))
+  if (!args.requireAtLeast(cx, "addEventListener", 2)) {
     return false;
+  }
 
-  size_t event_len;
-  JS::UniqueChars event_chars = encode(cx, args[0], &event_len);
-  if (!event_chars)
+  auto event_chars = fastly::core::encode(cx, args[0]);
+  if (!event_chars) {
     return false;
+  }
 
-  if (strncmp(event_chars.get(), "fetch", event_len)) {
+  if (strncmp(event_chars.begin(), "fetch", event_chars.len)) {
     fprintf(stderr,
             "Error: addEventListener only supports the event 'fetch' right now, "
             "but got event '%s'\n",
-            event_chars.get());
+            event_chars.begin());
     exit(1);
   }
 
