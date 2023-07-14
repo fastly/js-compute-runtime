@@ -18,6 +18,7 @@
 #include "builtins/kv-store.h"
 #include "builtins/native-stream-source.h"
 #include "builtins/shared/url.h"
+#include "core/encode.h"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
 
@@ -192,18 +193,16 @@ bool KVStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue key(cx, args.get(0));
 
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  size_t key_len;
-  JS::UniqueChars key_chars = encode(cx, key, &key_len);
+  auto key_chars = fastly::core::encode(cx, key);
   if (!key_chars) {
     return false;
   }
 
-  std::string_view key_str{key_chars.get(), key_len};
-  if (!parse_and_validate_key(cx, key_str.data(), key_str.size())) {
+  if (!parse_and_validate_key(cx, key_chars.begin(), key_chars.len)) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  auto res = kv_store_handle(self).lookup(key_str);
+  auto res = kv_store_handle(self).lookup(key_chars);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -240,14 +239,12 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue key(cx, args.get(0));
 
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  size_t key_len;
-  JS::UniqueChars key_chars = encode(cx, key, &key_len);
+  auto key_chars = fastly::core::encode(cx, key);
   if (!key_chars) {
     return false;
   }
 
-  std::string_view key_str{key_chars.get(), key_len};
-  if (!parse_and_validate_key(cx, key_str.data(), key_str.size())) {
+  if (!parse_and_validate_key(cx, key_chars.begin(), key_chars.len)) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
@@ -280,7 +277,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       JS::RootedObject source_owner(cx, builtins::NativeStreamSource::owner(stream_source));
       auto body = RequestOrResponse::body_handle(source_owner);
 
-      auto res = kv_store_handle(self).insert(key_str, body);
+      auto res = kv_store_handle(self).insert(key_chars, body);
       if (auto *err = res.to_err()) {
         HANDLE_ERROR(cx, *err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -322,7 +319,11 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       length = slice.len;
     } else {
       // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-      text = encode(cx, body_val, &length);
+      {
+        auto str = fastly::core::encode(cx, body_val);
+        text = std::move(str.ptr);
+        length = str.len;
+      }
       // 30MB in bytes is the max size allowed for KVStore.
       if (length > 30 * 1024 * 1024) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_PUT_OVER_30_MB);
@@ -358,7 +359,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    auto insert_res = kv_store_handle(self).insert(key_str, body);
+    auto insert_res = kv_store_handle(self).insert(key_chars, body);
     if (auto *err = insert_res.to_err()) {
       // Ensure that we throw an exception for all unexpected host errors.
       HANDLE_ERROR(cx, *err);
@@ -402,28 +403,26 @@ bool KVStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::HandleValue name_arg = args.get(0);
 
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  size_t name_len;
-  JS::UniqueChars name = encode(cx, name_arg, &name_len);
+  auto name = fastly::core::encode(cx, name_arg);
   if (!name) {
     return false;
   }
 
   // If the converted string has a length of 0 then we throw an Error
   // because KVStore names have to be at-least 1 character.
-  if (name_len == 0) {
+  if (name.len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_NAME_EMPTY);
     return false;
   }
 
   // If the converted string has a length of more than 255 then we throw an Error
   // because KVStore names have to be less than 255 characters.
-  if (name_len > 255) {
+  if (name.len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_NAME_TOO_LONG);
     return false;
   }
 
-  std::string_view name_str{name.get(), name_len};
-  if (std::any_of(name_str.begin(), name_str.end(), [](auto character) {
+  if (std::any_of(name.begin(), name.end(), [](auto character) {
         return std::iscntrl(static_cast<unsigned char>(character)) != 0;
       })) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -431,11 +430,11 @@ bool KVStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto res = ObjectStore::open(name_str);
+  auto res = ObjectStore::open(name);
   if (auto *err = res.to_err()) {
     if (error_is_invalid_argument(*err)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_DOES_NOT_EXIST,
-                                name_str.data());
+                                name.begin());
       return false;
     } else {
       HANDLE_ERROR(cx, *err);

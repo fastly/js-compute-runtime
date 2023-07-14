@@ -2,6 +2,7 @@
 #include "builtin.h"
 #include "builtins/native-stream-source.h"
 #include "builtins/shared/url.h"
+#include "core/encode.h"
 #include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
@@ -124,10 +125,12 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
     length = slice.len;
   } else {
     // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-    buf = encode(cx, bodyInit, &length);
-    if (!buf) {
+    auto str = fastly::core::encode(cx, bodyInit);
+    if (!str) {
       return JS::Result<std::tuple<JS::UniqueChars, size_t>>(JS::Error());
     }
+    buf.reset(str.ptr.release());
+    length = str.len;
   }
   return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
 }
@@ -393,8 +396,7 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
   // We create a surrogate-key from the cache-key, as this allows the cached contents to be purgable
   // from within the JavaScript application
   // This is because the cache API currently only supports purging via surrogate-key
-  fastly_world_string_t key;
-  JS::UniqueChars key_chars = encode(cx, keyVal, &key.len);
+  auto key_chars = fastly::core::encode(cx, keyVal);
   if (!key_chars) {
     if (!fastly_compute_at_edge_fastly_transaction_cancel(handle, &err)) {
       HANDLE_ERROR(cx, err);
@@ -402,7 +404,7 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
     }
     return RejectPromiseWithPendingError(cx, promise);
   }
-  key.ptr = key_chars.get();
+  fastly_world_string_t key{.ptr = key_chars.begin(), .len = key_chars.len};
   auto key_result = createSurrogateKeysFromCacheKey(cx, key);
   if (key_result.isErr()) {
     if (!fastly_compute_at_edge_fastly_transaction_cancel(handle, &err)) {
@@ -502,13 +504,12 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  fastly_world_string_t key;
   // Convert key parameter into a string and check the value adheres to our validation rules.
-  JS::UniqueChars key_chars = encode(cx, args.get(0), &key.len);
+  auto key_chars = fastly::core::encode(cx, args.get(0));
   if (!key_chars) {
     return false;
   }
-  key.ptr = key_chars.get();
+  fastly_world_string_t key{.ptr = key_chars.begin(), .len = key_chars.len};
 
   if (key.len == 0) {
     JS_ReportErrorASCII(cx, "SimpleCache.getOrSet: key can not be an empty string");
@@ -663,14 +664,13 @@ bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  fastly_world_string_t key;
   // Convert key parameter into a string and check the value adheres to our validation rules.
-  JS::UniqueChars key_chars = encode(cx, args.get(0), &key.len);
+  auto key_chars = fastly::core::encode(cx, args.get(0));
   if (!key_chars) {
     return false;
   }
-  key.ptr = key_chars.get();
 
+  fastly_world_string_t key{.ptr = key_chars.begin(), .len = key_chars.len};
   if (key.len == 0) {
     JS_ReportErrorASCII(cx, "SimpleCache.set: key can not be an empty string");
     return false;
@@ -809,14 +809,13 @@ bool SimpleCache::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  fastly_world_string_t key;
   // Convert key parameter into a string and check the value adheres to our validation rules.
-  JS::UniqueChars key_chars = encode(cx, args[0], &key.len);
+  auto key_chars = fastly::core::encode(cx, args[0]);
   if (!key_chars) {
     return false;
   }
-  key.ptr = key_chars.get();
 
+  fastly_world_string_t key{.ptr = key_chars.begin(), .len = key_chars.len};
   if (key.len == 0) {
     JS_ReportErrorASCII(cx, "SimpleCache.get: key can not be an empty string");
     return false;
@@ -865,14 +864,13 @@ bool SimpleCache::purge(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  fastly_world_string_t key;
   // Convert key parameter into a string and check the value adheres to our validation rules.
-  JS::UniqueChars key_chars = encode(cx, args.get(0), &key.len);
+  auto key_chars = fastly::core::encode(cx, args.get(0));
   if (!key_chars) {
     return false;
   }
-  key.ptr = key_chars.get();
 
+  fastly_world_string_t key{.ptr = key_chars.begin(), .len = key_chars.len};
   if (key.len == 0) {
     JS_ReportErrorASCII(cx, "SimpleCache.purge: key can not be an empty string");
     return false;
@@ -894,12 +892,12 @@ bool SimpleCache::purge(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!JS_GetProperty(cx, options, "scope", &scope_val)) {
     return false;
   }
-  size_t length;
-  auto scope_chars = encode(cx, scope_val, &length);
+  auto scope_chars = fastly::core::encode(cx, scope_val);
   if (!scope_chars) {
     return false;
   }
-  std::string_view scope(scope_chars.get(), length);
+
+  std::string_view scope = scope_chars;
   std::string surrogate_key;
   if (scope == "pop") {
     auto surrogate_key_result = createPopSurrogateKeyFromCacheKey(cx, key);

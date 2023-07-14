@@ -32,6 +32,8 @@ const JSErrorFormatString js_ErrorFormatString[JSErrNum_Limit] = {
 #undef MSG_DEF
 };
 
+#include "host_interface/host_api.h"
+
 const JSErrorFormatString *GetErrorMessage(void *userRef, unsigned errorNumber);
 
 JSObject *PromiseRejectedWithPendingError(JSContext *cx);
@@ -108,16 +110,6 @@ JS::Result<std::string> convertJSValueToByteString(JSContext *cx, std::string v)
 
 bool has_pending_async_tasks();
 bool process_pending_async_tasks(JSContext *cx);
-
-JS::UniqueChars encode(JSContext *cx, JS::HandleString val, size_t *encoded_len);
-JS::UniqueChars encode(JSContext *cx, JS::HandleValue val, size_t *encoded_len);
-
-// Forward decls for encode
-namespace jsurl {
-struct SpecString;
-}
-
-jsurl::SpecString encode(JSContext *cx, JS::HandleValue val);
 
 bool debug_logging_enabled();
 bool dump_value(JSContext *cx, JS::Value value, FILE *fp);

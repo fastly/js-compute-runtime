@@ -1,5 +1,6 @@
 #include "dom-exception.h"
 #include "builtin.h"
+#include "core/encode.h"
 #include "js-compute-builtins.h"
 #include "js/Context.h"
 
@@ -34,13 +35,12 @@ bool DOMException::code_get(JSContext *cx, unsigned argc, JS::Value *vp) {
                               JSBuiltinErrNum::JSMSG_INVALID_INTERFACE, "name get", "DOMException");
     return false;
   }
-  size_t length;
   JS::RootedString name_string(cx, JS::GetReservedSlot(self, Slots::Name).toString());
-  auto chars = encode(cx, name_string, &length);
+  auto chars = fastly::core::encode(cx, name_string);
   if (!chars) {
     return false;
   }
-  std::string_view name(chars.get(), length);
+  std::string_view name(chars.begin(), chars.len);
   int32_t code = 0;
   if (name == "IndexSizeError") {
     code = 1;

@@ -1,13 +1,15 @@
 #include "console.h"
+#include "core/encode.h"
+#include <chrono>
+#include <map>
+
 #include <js/Array.h>
-#include <js/PropertyAndElement.h>
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
 #pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+#include <js/PropertyAndElement.h>
 #include <js/experimental/TypedData.h>
 #pragma clang diagnostic pop
-#include <chrono>
-#include <map>
 
 namespace {
 using FpMilliseconds = std::chrono::duration<float, std::chrono::milliseconds::period>;
@@ -217,13 +219,12 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
       JS::RootedValue v(cx, SymbolValue(id.toSymbol()));
       MOZ_TRY(ToSource(cx, sourceOut, v, visitedObjects));
     } else {
-      size_t message_len;
       JS::RootedValue v(cx, js::IdToValue(id));
-      auto msg = encode(cx, v, &message_len);
+      auto msg = fastly::core::encode(cx, v);
       if (!msg) {
         return JS::Result<mozilla::Ok>(JS::Error());
       }
-      sourceOut += std::string(msg.get(), message_len);
+      sourceOut += std::string(msg.begin(), msg.len);
     }
 
     sourceOut += ": ";
@@ -251,12 +252,11 @@ mozilla::Maybe<std::string> get_class_name(JSContext *cx, JS::HandleObject obj) 
     JS::RootedValue name(cx);
     JS::RootedObject constructorObj(cx, &constructorVal.toObject());
     if (JS_GetProperty(cx, constructorObj, "name", &name) && name.isString()) {
-      size_t message_len;
-      auto msg = encode(cx, name, &message_len);
+      auto msg = fastly::core::encode(cx, name);
       if (!msg) {
         return result;
       }
-      std::string name_str(msg.get(), message_len);
+      std::string name_str(msg.begin(), msg.len);
       result.emplace(name_str);
     }
   }
@@ -289,12 +289,11 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
       if (id) {
         sourceOut += " ";
         JS::RootedString name(cx, id);
-        size_t name_len;
-        auto msg = encode(cx, name, &name_len);
+        auto msg = fastly::core::encode(cx, name);
         if (!msg) {
           return JS::Result<mozilla::Ok>(JS::Error());
         }
-        sourceOut += std::string(msg.get(), name_len);
+        sourceOut += std::string(msg.begin(), msg.len);
       }
       sourceOut += "]";
       return mozilla::Ok();
@@ -332,12 +331,11 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
     case js::ESClass::Error:
     case js::ESClass::RegExp: {
       JS::RootedString source(cx, JS_ValueToSource(cx, val));
-      size_t message_len;
-      auto msg = encode(cx, source, &message_len);
+      auto msg = fastly::core::encode(cx, source);
       if (!msg) {
         return JS::Result<mozilla::Ok>(JS::Error());
       }
-      sourceOut += std::string(msg.get(), message_len);
+      sourceOut += std::string(msg.begin(), msg.len);
       return mozilla::Ok();
     }
     case js::ESClass::Array: {
@@ -382,24 +380,22 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
     }
   }
   case JS::ValueType::String: {
-    size_t message_len;
-    auto msg = encode(cx, val, &message_len);
+    auto msg = fastly::core::encode(cx, val);
     if (!msg) {
       return JS::Result<mozilla::Ok>(JS::Error());
     }
     sourceOut += '"';
-    sourceOut += std::string(msg.get(), message_len);
+    sourceOut += std::string(msg.begin(), msg.len);
     sourceOut += '"';
     return mozilla::Ok();
   }
   default: {
     JS::RootedString source(cx, JS_ValueToSource(cx, val));
-    size_t message_len;
-    auto msg = encode(cx, source, &message_len);
+    auto msg = fastly::core::encode(cx, source);
     if (!msg) {
       return JS::Result<mozilla::Ok>(JS::Error());
     }
-    sourceOut += std::string(msg.get(), message_len);
+    sourceOut += std::string(msg.begin(), msg.len);
     return mozilla::Ok();
   }
   }
@@ -495,12 +491,11 @@ static bool count(JSContext *cx, unsigned argc, JS::Value *vp) {
   std::string label = "";
   if (args.hasDefined(0)) {
     auto label_val = args.get(0);
-    size_t length;
-    auto label_string = encode(cx, label_val, &length);
+    auto label_string = fastly::core::encode(cx, label_val);
     if (!label_string) {
       return false;
     }
-    label = label_string.get();
+    label = std::string{label_string.begin(), label_string.len};
   } else {
     label = "default";
   }
@@ -529,12 +524,11 @@ static bool countReset(JSContext *cx, unsigned argc, JS::Value *vp) {
   std::string label;
   if (args.hasDefined(0)) {
     auto label_val = args.get(0);
-    size_t length;
-    auto label_string = encode(cx, label_val, &length);
+    auto label_string = fastly::core::encode(cx, label_val);
     if (!label_string) {
       return false;
     }
-    label = label_string.get();
+    label = std::string{label_string.begin(), label_string.len};
   } else {
     label = "default";
   }
@@ -568,12 +562,11 @@ static bool time(JSContext *cx, unsigned argc, JS::Value *vp) {
   std::string label;
   if (args.hasDefined(0)) {
     auto label_val = args.get(0);
-    size_t length;
-    auto label_string = encode(cx, label_val, &length);
+    auto label_string = fastly::core::encode(cx, label_val);
     if (!label_string) {
       return false;
     }
-    label = label_string.get();
+    label = std::string{label_string.begin(), label_string.len};
   } else {
     label = "default";
   }
@@ -595,12 +588,11 @@ static bool timeLog(JSContext *cx, unsigned argc, JS::Value *vp) {
   std::string label;
   if (args.hasDefined(0)) {
     auto label_val = args.get(0);
-    size_t length;
-    auto label_string = encode(cx, label_val, &length);
+    auto label_string = fastly::core::encode(cx, label_val);
     if (!label_string) {
       return false;
     }
-    label = label_string.get();
+    label = std::string{label_string.begin(), label_string.len};
   } else {
     label = "default";
   }
@@ -668,12 +660,11 @@ static bool timeEnd(JSContext *cx, unsigned argc, JS::Value *vp) {
   std::string label;
   if (args.hasDefined(0)) {
     auto label_val = args.get(0);
-    size_t length;
-    auto label_string = encode(cx, label_val, &length);
+    auto label_string = fastly::core::encode(cx, label_val);
     if (!label_string) {
       return false;
     }
-    label = label_string.get();
+    label = std::string{label_string.begin(), label_string.len};
   } else {
     label = "default";
   }
@@ -748,8 +739,7 @@ static bool trace(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!BuildStackString(cx, principals, stack, &str)) {
     return false;
   }
-  size_t length;
-  auto stack_string = encode(cx, str, &length);
+  auto stack_string = fastly::core::encode(cx, str);
   if (!stack_string) {
     return false;
   }
@@ -777,7 +767,7 @@ static bool trace(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
   }
   fullLogLine += "\n";
-  fullLogLine += stack_string.get();
+  fullLogLine += stack_string.begin();
 
   // 3. Perform Printer("trace", « trace »).
   builtin_impl_console_log(Console::LogType::Log, fullLogLine.c_str());

@@ -1,4 +1,5 @@
 #include "crypto-key.h"
+#include "core/encode.h"
 #include "crypto-algorithm.h"
 #include "js-compute-builtins.h"
 #include "openssl/rsa.h"
@@ -97,13 +98,12 @@ JS::Result<CryptoKeyUsages> CryptoKeyUsages::from(JSContext *cx, JS::HandleValue
       return JS::Result<CryptoKeyUsages>(JS::Error());
     }
 
-    size_t val_len;
-    JS::UniqueChars utf8chars = encode(cx, val, &val_len);
+    auto utf8chars = fastly::core::encode(cx, val);
     if (!utf8chars) {
       return JS::Result<CryptoKeyUsages>(JS::Error());
     }
 
-    std::string_view usage(utf8chars.get(), val_len);
+    std::string_view usage = utf8chars;
 
     if (usage == "encrypt") {
       mask |= encrypt_flag;
@@ -598,8 +598,8 @@ JS::Result<bool> CryptoKey::is_algorithm(JSContext *cx, JS::HandleObject self,
   if (!str) {
     return JS::Result<bool>(JS::Error());
   }
-  size_t length;
-  auto chars = encode(cx, str, &length);
+  // TODO: should chars be used?
+  auto chars = fastly::core::encode(cx, str);
   if (!chars) {
     return JS::Result<bool>(JS::Error());
   }

@@ -12,8 +12,9 @@
 #include "jsfriendapi.h"
 #pragma clang diagnostic pop
 
+#include "builtins/json-web-key.h"
+#include "core/encode.h"
 #include "js-compute-builtins.h"
-#include "json-web-key.h"
 
 namespace builtins {
 
@@ -31,13 +32,12 @@ extractStringPropertyFromObject(JSContext *cx, JS::HandleObject object, std::str
   if (!JS_GetProperty(cx, object, property.data(), &value)) {
     return JS::Result<std::optional<std::string>>(JS::Error());
   }
-  size_t length;
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  JS::UniqueChars chars = encode(cx, value, &length);
+  auto chars = fastly::core::encode(cx, value);
   if (!chars) {
     return JS::Result<std::optional<std::string>>(JS::Error());
   }
-  return std::optional<std::string>(std::string(chars.get(), length));
+  return std::optional<std::string>(std::string(chars.begin(), chars.len));
 }
 } // namespace
 
@@ -225,13 +225,12 @@ std::unique_ptr<JsonWebKey> JsonWebKey::parse(JSContext *cx, JS::HandleValue val
             return nullptr;
           }
 
-          size_t op_length;
-          auto op_chars = encode(cx, op_val, &op_length);
+          auto op_chars = fastly::core::encode(cx, op_val);
           if (!op_chars) {
             return nullptr;
           }
 
-          std::string op(op_chars.get(), op_length);
+          std::string op(op_chars.begin(), op_chars.len);
 
           if (op != "encrypt" && op != "decrypt" && op != "sign" && op != "verify" &&
               op != "deriveKey" && op != "deriveBits" && op != "wrapKey" && op != "unwrapKey") {
@@ -308,39 +307,36 @@ std::unique_ptr<JsonWebKey> JsonWebKey::parse(JSContext *cx, JS::HandleValue val
           if (!JS_GetProperty(cx, info_obj, "r", &r_val)) {
             return nullptr;
           }
-          size_t r_length;
-          auto r_chars = encode(cx, info_val, &r_length);
+          auto r_chars = fastly::core::encode(cx, info_val);
           if (!r_chars) {
             JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The "
                                     "provided value is not of type 'RsaOtherPrimesInfo'");
             return nullptr;
           }
-          std::string r(r_chars.get(), r_length);
+          std::string r(r_chars.begin(), r_chars.len);
           JS::RootedValue d_val(cx);
           if (!JS_GetProperty(cx, info_obj, "d", &d_val)) {
             return nullptr;
           }
-          size_t d_length;
-          auto d_chars = encode(cx, info_val, &d_length);
+          auto d_chars = fastly::core::encode(cx, info_val);
           if (!d_chars) {
             JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The "
                                     "provided value is not of type 'RsaOtherPrimesInfo'");
             return nullptr;
           }
-          std::string d(d_chars.get(), d_length);
+          std::string d(d_chars.begin(), d_chars.len);
 
           JS::RootedValue t_val(cx);
           if (!JS_GetProperty(cx, info_obj, "t", &t_val)) {
             return nullptr;
           }
-          size_t t_length;
-          auto t_chars = encode(cx, info_val, &t_length);
+          auto t_chars = fastly::core::encode(cx, info_val);
           if (!t_chars) {
             JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The "
                                     "provided value is not of type 'RsaOtherPrimesInfo'");
             return nullptr;
           }
-          std::string t(t_chars.get(), t_length);
+          std::string t(t_chars.begin(), t_chars.len);
 
           oth.emplace_back(r, d, t);
         }

@@ -1,4 +1,5 @@
 #include "dictionary.h"
+#include "core/encode.h"
 #include "host_interface/host_api.h"
 
 namespace builtins {
@@ -14,26 +15,25 @@ bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::HandleValue name_arg = args.get(0);
 
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  size_t name_len;
-  JS::UniqueChars name = encode(cx, name_arg, &name_len);
+  auto name = fastly::core::encode(cx, name_arg);
   if (!name) {
     return false;
   }
 
   // If the converted string has a length of 0 then we throw an Error
   // because Dictionary keys have to be at-least 1 character.
-  if (name_len == 0) {
+  if (name.len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_KEY_EMPTY);
     return false;
   }
   // key has to be less than 256
-  if (name_len > 255) {
+  if (name.len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_KEY_TOO_LONG);
     return false;
   }
 
   // Ensure that we throw an exception for all unexpected host errors.
-  auto res = Dictionary::dictionary_handle(self).get(std::string_view{name.get(), name_len});
+  auto res = Dictionary::dictionary_handle(self).get(name);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -72,29 +72,28 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::HandleValue name_arg = args.get(0);
 
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  size_t name_len;
-  JS::UniqueChars name = encode(cx, name_arg, &name_len);
+  auto name = fastly::core::encode(cx, name_arg);
   if (!name) {
     return false;
   }
 
   // If the converted string has a length of 0 then we throw an Error
   // because Dictionary names have to be at-least 1 character.
-  if (name_len == 0) {
+  if (name.len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_NAME_EMPTY);
     return false;
   }
 
   // If the converted string has a length of more than 255 then we throw an Error
   // because Dictionary names have to be less than 255 characters.
-  if (name_len > 255) {
+  if (name.len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_NAME_TOO_LONG);
     return false;
   }
 
   // Name must start with ascii alphabetical and contain only ascii alphanumeric, underscore, and
   // whitespace
-  std::string_view name_view{name.get(), name_len};
+  std::string_view name_view = name;
   if (!std::isalpha(name_view.front())) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_DICTIONARY_NAME_START_WITH_ASCII_ALPHA);

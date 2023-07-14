@@ -1,4 +1,5 @@
 #include "config-store.h"
+#include "core/encode.h"
 #include "host_interface/host_api.h"
 
 namespace builtins {
@@ -11,22 +12,21 @@ Dict ConfigStore::config_store_handle(JSObject *obj) {
 bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
-  size_t key_len;
-  JS::UniqueChars key = encode(cx, args[0], &key_len);
+  auto key = fastly::core::encode(cx, args[0]);
   // If the converted string has a length of 0 then we throw an Error
   // because Dictionary keys have to be at-least 1 character.
-  if (!key || key_len == 0) {
+  if (!key || key.len == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_KEY_EMPTY);
     return false;
   }
 
   // key has to be less than 256
-  if (key_len > 255) {
+  if (key.len > 255) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_KEY_TOO_LONG);
     return false;
   }
 
-  std::string_view key_str{key.get(), key_len};
+  std::string_view key_str = key;
   // Ensure that we throw an exception for all unexpected host errors.
   auto get_res = ConfigStore::config_store_handle(self).get(key_str);
   if (auto *err = get_res.to_err()) {
@@ -66,13 +66,11 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The ConfigStore builtin");
   CTOR_HEADER("ConfigStore", 1);
 
-  size_t name_len;
-  JS::UniqueChars name_chars = encode(cx, args[0], &name_len);
-  std::string_view name{name_chars.get(), name_len};
+  auto name = fastly::core::encode(cx, args[0]);
 
   // If the converted string has a length of 0 then we throw an Error
   // because Dictionary names have to be at-least 1 character.
-  if (name.empty()) {
+  if (!name) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_NAME_EMPTY);
     return false;
   }
@@ -86,7 +84,7 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // Name must start with ascii alphabetical and contain only ascii alphanumeric, underscore, and
   // whitespace
-  if (!std::isalpha(name.front())) {
+  if (!std::isalpha(*name.begin())) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_CONFIG_STORE_NAME_START_WITH_ASCII_ALPHA);
     return false;
@@ -107,7 +105,7 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (auto *err = open_res.to_err()) {
     if (error_is_bad_handle(*err)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_DOES_NOT_EXIST,
-                                name.data());
+                                name.begin());
       return false;
     } else {
       HANDLE_ERROR(cx, *err);

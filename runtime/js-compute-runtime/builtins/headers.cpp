@@ -1,5 +1,6 @@
 #include "builtins/headers.h"
 #include "builtins/request-response.h"
+#include "core/encode.h"
 #include "core/sequence.hpp"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
@@ -41,17 +42,14 @@ const char VALID_NAME_CHARS[128] = {
 
 #define NORMALIZE_NAME(name, fun_name)                                                             \
   JS::RootedValue normalized_name(cx, name);                                                       \
-  size_t name_len;                                                                                 \
-  JS::UniqueChars name_chars = normalize_header_name(cx, &normalized_name, &name_len, fun_name);   \
+  auto name_chars = normalize_header_name(cx, &normalized_name, fun_name);                         \
   if (!name_chars) {                                                                               \
     return false;                                                                                  \
   }
 
 #define NORMALIZE_VALUE(value, fun_name)                                                           \
   JS::RootedValue normalized_value(cx, value);                                                     \
-  size_t value_len;                                                                                \
-  JS::UniqueChars value_chars =                                                                    \
-      normalize_header_value(cx, &normalized_value, &value_len, fun_name);                         \
+  auto value_chars = normalize_header_value(cx, &normalized_value, fun_name);                      \
   if (!value_chars) {                                                                              \
     return false;                                                                                  \
   }
@@ -93,26 +91,27 @@ uint32_t get_handle(JSObject *self) {
  * JSString and the char* version, so they'd otherwise have to recreate one of
  * the two.
  */
-JS::UniqueChars normalize_header_name(JSContext *cx, JS::MutableHandleValue name_val,
-                                      size_t *name_len, const char *fun_name) {
+HostString normalize_header_name(JSContext *cx, JS::MutableHandleValue name_val,
+                                 const char *fun_name) {
   JS::RootedString name_str(cx, JS::ToString(cx, name_val));
-  if (!name_str)
+  if (!name_str) {
     return nullptr;
+  }
 
-  size_t len;
-  JS::UniqueChars name = encode(cx, name_str, &len);
-  if (!name)
+  auto name = fastly::core::encode(cx, name_str);
+  if (!name) {
     return nullptr;
+  }
 
-  if (len == 0) {
+  if (name.len == 0) {
     JS_ReportErrorASCII(cx, "%s: Header name can't be empty", fun_name);
     return nullptr;
   }
 
   bool changed = false;
 
-  char *name_chars = name.get();
-  for (size_t i = 0; i < len; i++) {
+  char *name_chars = name.begin();
+  for (size_t i = 0; i < name.len; i++) {
     unsigned char ch = name_chars[i];
     if (ch > 127 || !VALID_NAME_CHARS[ch]) {
       JS_ReportErrorUTF8(cx, "%s: Invalid header name '%s'", fun_name, name_chars);
@@ -126,32 +125,31 @@ JS::UniqueChars normalize_header_name(JSContext *cx, JS::MutableHandleValue name
   }
 
   if (changed) {
-    name_str = JS_NewStringCopyN(cx, name_chars, len);
-    if (!name_str)
+    name_str = JS_NewStringCopyN(cx, name_chars, name.len);
+    if (!name_str) {
       return nullptr;
+    }
   }
 
   name_val.setString(name_str);
-  *name_len = len;
   return name;
 }
 
-JS::UniqueChars normalize_header_value(JSContext *cx, JS::MutableHandleValue value_val,
-                                       size_t *value_len, const char *fun_name) {
+HostString normalize_header_value(JSContext *cx, JS::MutableHandleValue value_val,
+                                  const char *fun_name) {
   JS::RootedString value_str(cx, JS::ToString(cx, value_val));
   if (!value_str) {
     return nullptr;
   }
 
-  size_t len;
-  JS::UniqueChars value = encode(cx, value_str, &len);
+  auto value = fastly::core::encode(cx, value_str);
   if (!value) {
     return nullptr;
   }
 
-  char *value_chars = value.get();
+  auto *value_chars = value.begin();
   size_t start = 0;
-  size_t end = len;
+  size_t end = value.len;
 
   // We follow Gecko's interpretation of what's a valid header value. After
   // stripping leading and trailing whitespace, all interior line breaks and
@@ -184,7 +182,7 @@ JS::UniqueChars normalize_header_value(JSContext *cx, JS::MutableHandleValue val
     }
   }
 
-  if (start != 0 || end != len) {
+  if (start != 0 || end != value.len) {
     value_str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(value_chars + start, end - start));
     if (!value_str) {
       return nullptr;
@@ -192,7 +190,6 @@ JS::UniqueChars normalize_header_value(JSContext *cx, JS::MutableHandleValue val
   }
 
   value_val.setString(value_str);
-  *value_len = len;
 
   return value;
 }
@@ -272,12 +269,10 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
   uint32_t handle = get_handle(self);
 
   JS::RootedString name_str(cx, name.toString());
-  size_t len;
-  JS::UniqueChars name_chars = ::encode(cx, name_str, &len);
-  std::string_view hdr{name_chars.get(), len};
+  auto name_chars = fastly::core::encode(cx, name_str);
 
-  auto ret = mode == Headers::Mode::ProxyToRequest ? HttpReq{handle}.get_header_values(hdr)
-                                                   : HttpResp{handle}.get_header_values(hdr);
+  auto ret = mode == Headers::Mode::ProxyToRequest ? HttpReq{handle}.get_header_values(name_chars)
+                                                   : HttpResp{handle}.get_header_values(name_chars);
 
   if (auto *err = ret.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -337,11 +332,13 @@ bool get_header_value_for_name(JSContext *cx, JS::HandleObject self, JS::HandleV
                                JS::MutableHandleValue rval, const char *fun_name) {
   NORMALIZE_NAME(name, fun_name)
 
-  if (!ensure_value_for_header(cx, self, normalized_name, rval))
+  if (!ensure_value_for_header(cx, self, normalized_name, rval)) {
     return false;
+  }
 
-  if (rval.isString())
+  if (rval.isString()) {
     return true;
+  }
 
   JS::RootedObject map(cx, get_backing_map(self));
   if (!JS::MapGet(cx, map, normalized_name, rval)) {
@@ -451,8 +448,8 @@ bool Headers::append_header_value(JSContext *cx, JS::HandleObject self, JS::Hand
   auto mode = get_mode(self);
   if (mode != Headers::Mode::Standalone) {
     auto handle = get_handle(self);
-    std::string_view name{name_chars.get(), name_len};
-    std::string_view value(value_chars.get(), value_len);
+    std::string_view name = name_chars;
+    std::string_view value = value_chars;
     if (name == "set-cookie") {
       for (auto value : splitCookiesString(value)) {
         auto res = mode == Headers::Mode::ProxyToRequest
@@ -573,8 +570,8 @@ bool Headers::set(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto mode = get_mode(self);
   if (mode != Mode::Standalone) {
     auto handle = get_handle(self);
-    std::string_view name{name_chars.get(), name_len};
-    std::string_view val{value_chars.get(), value_len};
+    std::string_view name = name_chars;
+    std::string_view val = value_chars;
     auto res = mode == Mode::ProxyToRequest ? HttpReq{handle}.insert_header(name, val)
                                             : HttpResp{handle}.insert_header(name, val);
     if (auto *err = res.to_err()) {
@@ -663,7 +660,7 @@ bool Headers::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto mode = get_mode(self);
   if (mode != Headers::Mode::Standalone) {
     auto handle = get_handle(self);
-    std::string_view name{name_chars.get(), name_len};
+    std::string_view name = name_chars;
     auto res = mode == Mode::ProxyToRequest ? HttpReq{handle}.remove_header(name)
                                             : HttpResp{handle}.remove_header(name);
     if (auto *err = res.to_err()) {

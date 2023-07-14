@@ -14,6 +14,7 @@
 #include "builtins/logger.h"
 #include "builtins/request-response.h"
 #include "builtins/shared/url.h"
+#include "core/encode.h"
 #include "core/geo_ip.h"
 
 namespace builtins {
@@ -75,14 +76,14 @@ bool Fastly::getLogger(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!args.requireAtLeast(cx, "fastly.getLogger", 1))
     return false;
 
-  size_t name_len;
-  JS::UniqueChars name = encode(cx, args[0], &name_len);
+  auto name = fastly::core::encode(cx, args[0]);
   if (!name)
     return false;
 
-  JS::RootedObject logger(cx, builtins::Logger::create(cx, name.get()));
-  if (!logger)
+  JS::RootedObject logger(cx, builtins::Logger::create(cx, name.begin()));
+  if (!logger) {
     return false;
+  }
 
   args.rval().setObject(*logger);
   return true;
@@ -95,14 +96,14 @@ bool Fastly::includeBytes(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!args.requireAtLeast(cx, "fastly.includeBytes", 1))
     return false;
 
-  size_t path_len;
-  JS::UniqueChars path = encode(cx, args[0], &path_len);
-  if (!path)
+  auto path = fastly::core::encode(cx, args[0]);
+  if (!path) {
     return false;
+  }
 
-  FILE *fp = fopen(path.get(), "r");
+  FILE *fp = fopen(path.begin(), "r");
   if (!fp) {
-    JS_ReportErrorUTF8(cx, "Error opening file %s", path.get());
+    JS_ReportErrorUTF8(cx, "Error opening file %s", path.begin());
     return false;
   }
 
@@ -122,7 +123,7 @@ bool Fastly::includeBytes(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   if (read_bytes != size) {
-    JS_ReportErrorUTF8(cx, "Failed to read contents of file %s", path.get());
+    JS_ReportErrorUTF8(cx, "Failed to read contents of file %s", path.begin());
     return false;
   }
 
@@ -161,17 +162,16 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   auto backend_value = args.get(1);
-  size_t length;
-  auto backend_chars = encode(cx, backend_value, &length);
+  auto backend_chars = fastly::core::encode(cx, backend_value);
   if (!backend_chars) {
     return false;
   }
-  if (length == 0) {
+  if (backend_chars.len == 0) {
     JS_ReportErrorUTF8(cx, "createFanoutHandoff: Backend parameter can not be an empty string");
     return false;
   }
 
-  if (length > 254) {
+  if (backend_chars.len > 254) {
     JS_ReportErrorUTF8(cx, "createFanoutHandoff: name can not be more than 254 characters");
     return false;
   }
@@ -181,7 +181,7 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedObject response(
       cx, builtins::Response::create(cx, response_instance, response_handle.unwrap(),
                                      body_handle.unwrap(), is_upstream, is_grip_upgrade,
-                                     std::move(backend_chars)));
+                                     std::move(backend_chars.ptr)));
   if (!response) {
     return false;
   }

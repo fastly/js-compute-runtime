@@ -91,6 +91,7 @@ struct HostString final {
   size_t len;
 
   HostString() = default;
+  HostString(std::nullptr_t) : HostString() {}
   HostString(JS::UniqueChars ptr, size_t len) : ptr{std::move(ptr)}, len{len} {}
 
   HostString(const HostString &other) = delete;
@@ -114,6 +115,15 @@ struct HostString final {
   const_iterator begin() const { return this->ptr.get(); }
   const_iterator end() const { return this->begin() + this->len; }
 
+  /// Conversion to a bool, testing for an empty pointer.
+  operator bool() const { return this->ptr != nullptr; }
+
+  /// Comparison against nullptr
+  bool operator==(std::nullptr_t) { return this->ptr == nullptr; }
+
+  /// Comparison against nullptr
+  bool operator!=(std::nullptr_t) { return this->ptr != nullptr; }
+
   /// Conversion to a `std::string_view`.
   operator std::string_view() const { return std::string_view(this->ptr.get(), this->len); }
 };
@@ -123,6 +133,7 @@ struct HostBytes final {
   size_t len;
 
   HostBytes() = default;
+  HostBytes(std::nullptr_t) : HostBytes() {}
   HostBytes(std::unique_ptr<uint8_t[]> ptr, size_t len) : ptr{std::move(ptr)}, len{len} {}
 
   HostBytes(const HostBytes &other) = delete;
@@ -145,6 +156,15 @@ struct HostBytes final {
 
   const_iterator begin() const { return this->ptr.get(); }
   const_iterator end() const { return this->begin() + this->len; }
+
+  /// Conversion to a bool, testing for an empty pointer.
+  operator bool() const { return this->ptr != nullptr; }
+
+  /// Comparison against nullptr
+  bool operator==(std::nullptr_t) { return this->ptr == nullptr; }
+
+  /// Comparison against nullptr
+  bool operator!=(std::nullptr_t) { return this->ptr != nullptr; }
 
   /// Converstion to a `std::span<uint8_t>`.
   operator std::span<uint8_t>() const { return std::span{this->ptr.get(), this->len}; }

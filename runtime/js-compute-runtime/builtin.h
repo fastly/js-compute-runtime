@@ -22,16 +22,6 @@
 
 std::optional<std::span<uint8_t>> value_to_buffer(JSContext *cx, JS::HandleValue val,
                                                   const char *val_desc);
-
-// TODO(performance): introduce a version that writes into an existing buffer, and use that
-// with the hostcall buffer where possible.
-// https://github.com/fastly/js-compute-runtime/issues/215
-JS::UniqueChars encode(JSContext *cx, JS::HandleString str, size_t *encoded_len);
-
-JS::UniqueChars encode(JSContext *cx, JS::HandleValue val, size_t *encoded_len);
-
-jsurl::SpecString encode(JSContext *cx, JS::HandleValue val);
-
 enum JSBuiltinErrNum {
 #define MSG_DEF(name, count, exception, format) name,
 #include "./builtin-error-numbers.msg"
