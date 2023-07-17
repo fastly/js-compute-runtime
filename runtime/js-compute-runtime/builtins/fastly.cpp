@@ -59,7 +59,7 @@ bool Fastly::getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value 
   if (!address_str)
     return false;
 
-  JS::RootedString geo_info_str(cx, get_geo_info(cx, address_str));
+  JS::RootedString geo_info_str(cx, core::get_geo_info(cx, address_str));
   if (!geo_info_str)
     return false;
 
