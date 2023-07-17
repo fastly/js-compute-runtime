@@ -204,7 +204,7 @@ bool TextDecoder::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     encoding = const_cast<jsencoding::Encoding *>(jsencoding::encoding_for_label_no_replacement(
         reinterpret_cast<uint8_t *>(const_cast<char *>("UTF-8")), 5));
   } else {
-    auto label_chars = fastly::core::encode(cx, label_value);
+    auto label_chars = core::encode(cx, label_value);
     if (!label_chars) {
       return false;
     }

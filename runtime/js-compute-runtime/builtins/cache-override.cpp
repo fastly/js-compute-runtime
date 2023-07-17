@@ -143,7 +143,7 @@ bool CacheOverride::mode_set(JSContext *cx, JS::HandleObject self, JS::HandleVal
     return false;
   }
 
-  auto mode_chars = fastly::core::encode(cx, val);
+  auto mode_chars = core::encode(cx, val);
   if (!mode_chars) {
     return false;
   }

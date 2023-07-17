@@ -76,7 +76,7 @@ bool Fastly::getLogger(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!args.requireAtLeast(cx, "fastly.getLogger", 1))
     return false;
 
-  auto name = fastly::core::encode(cx, args[0]);
+  auto name = core::encode(cx, args[0]);
   if (!name)
     return false;
 
@@ -96,7 +96,7 @@ bool Fastly::includeBytes(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!args.requireAtLeast(cx, "fastly.includeBytes", 1))
     return false;
 
-  auto path = fastly::core::encode(cx, args[0]);
+  auto path = core::encode(cx, args[0]);
   if (!path) {
     return false;
   }
@@ -162,7 +162,7 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   auto backend_value = args.get(1);
-  auto backend_chars = fastly::core::encode(cx, backend_value);
+  auto backend_chars = core::encode(cx, backend_value);
   if (!backend_chars) {
     return false;
   }

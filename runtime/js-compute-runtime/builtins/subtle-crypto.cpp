@@ -86,7 +86,7 @@ bool SubtleCrypto::importKey(JSContext *cx, unsigned argc, JS::Value *vp) {
   {
     auto format_arg = args.get(0);
     // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-    auto format_chars = fastly::core::encode(cx, format_arg);
+    auto format_chars = core::encode(cx, format_arg);
     if (!format_chars || format_chars.len == 0) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }

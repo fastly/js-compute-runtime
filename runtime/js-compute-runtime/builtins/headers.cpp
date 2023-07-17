@@ -98,7 +98,7 @@ HostString normalize_header_name(JSContext *cx, JS::MutableHandleValue name_val,
     return nullptr;
   }
 
-  auto name = fastly::core::encode(cx, name_str);
+  auto name = core::encode(cx, name_str);
   if (!name) {
     return nullptr;
   }
@@ -142,7 +142,7 @@ HostString normalize_header_value(JSContext *cx, JS::MutableHandleValue value_va
     return nullptr;
   }
 
-  auto value = fastly::core::encode(cx, value_str);
+  auto value = core::encode(cx, value_str);
   if (!value) {
     return nullptr;
   }
@@ -269,7 +269,7 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
   uint32_t handle = get_handle(self);
 
   JS::RootedString name_str(cx, name.toString());
-  auto name_chars = fastly::core::encode(cx, name_str);
+  auto name_chars = core::encode(cx, name_str);
 
   auto ret = mode == Headers::Mode::ProxyToRequest ? HttpReq{handle}.get_header_values(name_chars)
                                                    : HttpResp{handle}.get_header_values(name_chars);

@@ -15,7 +15,7 @@ bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::HandleValue name_arg = args.get(0);
 
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  auto name = fastly::core::encode(cx, name_arg);
+  auto name = core::encode(cx, name_arg);
   if (!name) {
     return false;
   }
@@ -72,7 +72,7 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::HandleValue name_arg = args.get(0);
 
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  auto name = fastly::core::encode(cx, name_arg);
+  auto name = core::encode(cx, name_arg);
   if (!name) {
     return false;
   }

@@ -36,7 +36,7 @@ bool DOMException::code_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedString name_string(cx, JS::GetReservedSlot(self, Slots::Name).toString());
-  auto chars = fastly::core::encode(cx, name_string);
+  auto chars = core::encode(cx, name_string);
   if (!chars) {
     return false;
   }

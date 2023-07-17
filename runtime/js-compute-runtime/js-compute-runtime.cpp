@@ -333,7 +333,7 @@ static bool addEventListener(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
 
-  auto event_chars = fastly::core::encode(cx, args[0]);
+  auto event_chars = core::encode(cx, args[0]);
   if (!event_chars) {
     return false;
   }

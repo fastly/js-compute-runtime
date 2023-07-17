@@ -4,7 +4,7 @@
 #include "host_interface/host_api.h"
 #include "rust-url/rust-url.h"
 
-namespace fastly::core {
+namespace core {
 
 // TODO(performance): introduce a version that writes into an existing buffer, and use that
 // with the hostcall buffer where possible.
@@ -14,6 +14,6 @@ HostString encode(JSContext *cx, JS::HandleValue val);
 
 jsurl::SpecString encode_spec_string(JSContext *cx, JS::HandleValue val);
 
-} // namespace fastly::core
+} // namespace core
 
 #endif

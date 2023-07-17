@@ -292,7 +292,7 @@ bool CompressionStream::constructor(JSContext *cx, unsigned argc, JS::Value *vp)
   // `TypeError`.
   CTOR_HEADER("CompressionStream", 1);
 
-  auto format_chars = fastly::core::encode(cx, args[0]);
+  auto format_chars = core::encode(cx, args[0]);
   if (!format_chars) {
     return false;
   }

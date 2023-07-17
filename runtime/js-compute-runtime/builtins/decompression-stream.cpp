@@ -296,7 +296,7 @@ bool DecompressionStream::constructor(JSContext *cx, unsigned argc, JS::Value *v
   // `TypeError`.
   CTOR_HEADER("DecompressionStream", 1);
 
-  auto format_chars = fastly::core::encode(cx, args[0]);
+  auto format_chars = core::encode(cx, args[0]);
   if (!format_chars) {
     return false;
   }
