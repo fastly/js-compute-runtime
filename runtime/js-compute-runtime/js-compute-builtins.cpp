@@ -66,6 +66,7 @@
 #include "builtins/transform-stream.h"
 #include "builtins/worker-location.h"
 #include "core/encode.h"
+#include "core/event_loop.h"
 
 using namespace std::literals;
 
@@ -95,8 +96,6 @@ using JS::HandleValueArray;
 using JS::MutableHandleValue;
 
 using JS::PersistentRooted;
-
-JS::PersistentRootedObjectVector *pending_async_tasks;
 
 const JSErrorFormatString *GetErrorMessage(void *userRef, unsigned errorNumber) {
   if (errorNumber > 0 && errorNumber < JSErrNum_Limit) {
@@ -203,143 +202,6 @@ ReadResult read_from_handle_all(JSContext *cx, uint32_t handle) {
 
   return {std::move(buf), bytes_read};
 }
-
-using TimerArgumentsVector = std::vector<JS::Heap<JS::Value>>;
-
-namespace {
-class Timer {
-public:
-  uint32_t id;
-  JS::Heap<JSObject *> callback;
-  TimerArgumentsVector arguments;
-  uint32_t delay;
-  system_clock::time_point deadline;
-  bool repeat;
-
-  Timer(uint32_t id, HandleObject callback, uint32_t delay, JS::HandleValueVector args, bool repeat)
-      : id(id), callback(callback), delay(delay), repeat(repeat) {
-    deadline = system_clock::now() + system_clock::duration(delay * 1000);
-    arguments.reserve(args.length());
-    for (auto &arg : args) {
-      arguments.push_back(JS::Heap(arg));
-    }
-  }
-
-  void trace(JSTracer *trc) {
-    JS::TraceEdge(trc, &callback, "Timer callback");
-    for (auto &arg : arguments) {
-      JS::TraceEdge(trc, &arg, "Timer callback arguments");
-    }
-  }
-};
-
-class ScheduledTimers {
-public:
-  Timer *first() {
-    if (std::empty(timers)) {
-      return nullptr;
-    } else {
-      return timers.front();
-    }
-  }
-
-private:
-  std::list<Timer *> timers;
-  static uint32_t next_id;
-
-  void add_timer(Timer *timer) {
-    auto iter = timers.begin();
-
-    for (; iter != timers.end(); iter++) {
-      if ((*iter)->deadline > timer->deadline) {
-        break;
-      }
-    }
-
-    timers.insert(iter, timer);
-  }
-
-  // `repeat_first` must only be called if the `timers` list is not empty
-  // The caller of repeat_first needs to check the `timers` list is not empty
-  void repeat_first() {
-    Timer *timer = first();
-    MOZ_ASSERT(timer);
-    timer->deadline = system_clock::now() + milliseconds(timer->delay);
-    timers.remove(timer);
-    add_timer(timer);
-  }
-
-public:
-  bool empty() { return timers.empty(); }
-
-  uint32_t add_timer(HandleObject callback, uint32_t delay, JS::HandleValueVector arguments,
-                     bool repeat) {
-    auto timer = new Timer(next_id++, callback, delay, arguments, repeat);
-    add_timer(timer);
-    return timer->id;
-  }
-
-  void remove_timer(uint32_t id) {
-    for (auto timer : timers) {
-      if (timer->id == id) {
-        timers.remove(timer);
-        break;
-      }
-    }
-  }
-
-  bool run_first_timer(JSContext *cx) {
-    RootedValue fun_val(cx);
-    JS::RootedVector<JS::Value> argv(cx);
-    uint32_t id;
-    {
-      Timer *timer = first();
-      MOZ_ASSERT(timer);
-      MOZ_ASSERT(system_clock::now() > timer->deadline);
-      id = timer->id;
-      RootedObject fun(cx, timer->callback);
-      fun_val.setObject(*fun.get());
-      if (!argv.initCapacity(timer->arguments.size())) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-      }
-
-      for (auto &arg : timer->arguments) {
-        argv.infallibleAppend(arg);
-      }
-    }
-
-    RootedObject fun(cx, &fun_val.toObject());
-
-    RootedValue rval(cx);
-    if (!JS::Call(cx, JS::NullHandleValue, fun, argv, &rval)) {
-      return false;
-    }
-
-    // Repeat / remove the first timer if it's still the one we just ran.
-    auto timer = first();
-    if (timer && timer->id == id) {
-      if (timer->repeat) {
-        repeat_first();
-      } else {
-        remove_timer(timer->id);
-      }
-    }
-
-    return true;
-  }
-
-  void trace(JSTracer *trc) {
-    for (auto &timer : timers) {
-      timer->trace(trc);
-    }
-  }
-};
-
-} // namespace
-
-uint32_t ScheduledTimers::next_id = 1;
-JS::PersistentRooted<js::UniquePtr<ScheduledTimers>> timers;
 
 namespace GlobalProperties {
 
@@ -847,7 +709,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   // If the request body is streamed, we need to wait for streaming to complete before marking the
   // request as pending.
   if (!streaming) {
-    if (!pending_async_tasks->append(request))
+    if (!core::EventLoop::queue_async_task(request))
       return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
@@ -1047,7 +909,7 @@ template <bool repeat> bool setTimeout_or_interval(JSContext *cx, unsigned argc,
     handler_args.infallibleAppend(args[i]);
   }
 
-  uint32_t id = timers->add_timer(handler, delay, handler_args, repeat);
+  uint32_t id = core::EventLoop::add_timer(handler, delay, handler_args, repeat);
 
   args.rval().setInt32(id);
   return true;
@@ -1070,7 +932,7 @@ template <bool interval> bool clearTimeout_or_interval(JSContext *cx, unsigned a
     return false;
   }
 
-  timers->remove_timer(uint32_t(id));
+  core::EventLoop::remove_timer(uint32_t(id));
 
   args.rval().setUndefined();
   return true;
@@ -1096,165 +958,6 @@ static bool init(JSContext *cx, HandleObject global) {
   return JS_DefineFunctions(cx, global, methods) && JS_DefineProperties(cx, global, properties);
 }
 } // namespace GlobalProperties
-
-bool has_pending_async_tasks() { return pending_async_tasks->length() > 0 || !timers->empty(); }
-
-bool process_pending_request(JSContext *cx, HandleObject request, HttpPendingReq pending) {
-
-  RootedObject response_promise(cx, builtins::Request::response_promise(request));
-
-  auto res = pending.wait();
-  if (auto *err = res.to_err()) {
-    JS_ReportErrorUTF8(cx, "NetworkError when attempting to fetch resource.");
-    return RejectPromiseWithPendingError(cx, response_promise);
-  }
-
-  auto [response_handle, body] = res.unwrap();
-  RootedObject response_instance(cx, JS_NewObjectWithGivenProto(cx, &builtins::Response::class_,
-                                                                builtins::Response::proto_obj));
-  if (!response_instance) {
-    return false;
-  }
-
-  bool is_upstream = true;
-  bool is_grip_upgrade = false;
-  RootedObject response(cx, builtins::Response::create(cx, response_instance, response_handle, body,
-                                                       is_upstream, is_grip_upgrade, nullptr));
-  if (!response) {
-    return false;
-  }
-
-  builtins::RequestOrResponse::set_url(response, builtins::RequestOrResponse::url(request));
-  RootedValue response_val(cx, JS::ObjectValue(*response));
-  return JS::ResolvePromise(cx, response_promise, response_val);
-}
-
-bool error_stream_controller_with_pending_exception(JSContext *cx, HandleObject controller) {
-  RootedValue exn(cx);
-  if (!JS_GetPendingException(cx, &exn))
-    return false;
-  JS_ClearPendingException(cx);
-
-  JS::RootedValueArray<1> args(cx);
-  args[0].set(exn);
-  RootedValue r(cx);
-  return JS::Call(cx, controller, "error", args, &r);
-}
-
-bool process_body_read(JSContext *cx, HandleObject streamSource, HttpBody body) {
-  RootedObject owner(cx, builtins::NativeStreamSource::owner(streamSource));
-  RootedObject controller(cx, builtins::NativeStreamSource::controller(streamSource));
-
-  auto read_res = body.read(HANDLE_READ_CHUNK_SIZE);
-  if (auto *err = read_res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return error_stream_controller_with_pending_exception(cx, controller);
-  }
-
-  auto &chunk = read_res.unwrap();
-  if (chunk.len == 0) {
-    RootedValue r(cx);
-    return JS::Call(cx, controller, "close", HandleValueArray::empty(), &r);
-  }
-
-  // We don't release control of chunk's data until after we've checked that the array buffer
-  // allocation has been successful, as that ensures that the return path frees chunk automatically
-  // when necessary.
-  RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, chunk.len, chunk.ptr.get()));
-  if (!buffer) {
-    return error_stream_controller_with_pending_exception(cx, controller);
-  }
-
-  // At this point `buffer` has taken full ownership of the chunk's data.
-  std::ignore = chunk.ptr.release();
-
-  RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, chunk.len));
-  if (!byte_array) {
-    return false;
-  }
-
-  JS::RootedValueArray<1> enqueue_args(cx);
-  enqueue_args[0].setObject(*byte_array);
-  RootedValue r(cx);
-  if (!JS::Call(cx, controller, "enqueue", enqueue_args, &r)) {
-    return error_stream_controller_with_pending_exception(cx, controller);
-  }
-
-  return true;
-}
-
-bool process_pending_async_tasks(JSContext *cx) {
-  MOZ_ASSERT(has_pending_async_tasks());
-
-  uint32_t timeout = 0;
-  if (!timers->empty()) {
-    Timer *timer = timers->first();
-    double diff = ceil<milliseconds>(timer->deadline - system_clock::now()).count();
-
-    // If a timeout is already overdue, run it immediately and return.
-    if (diff <= 0) {
-      return timers->run_first_timer(cx);
-    }
-
-    timeout = diff;
-    MOZ_ASSERT(timeout > 0);
-  }
-
-  size_t count = pending_async_tasks->length();
-  std::vector<AsyncHandle> handles;
-  handles.reserve(count);
-
-  for (size_t i = 0; i < count; i++) {
-    HandleObject pending_obj = (*pending_async_tasks)[i];
-    if (builtins::Request::is_instance(pending_obj)) {
-      handles.push_back(builtins::Request::pending_handle(pending_obj).async_handle());
-    } else {
-      MOZ_ASSERT(builtins::NativeStreamSource::is_instance(pending_obj));
-      RootedObject owner(cx, builtins::NativeStreamSource::owner(pending_obj));
-      handles.push_back(builtins::RequestOrResponse::body_handle(owner).async_handle());
-    }
-  }
-
-  auto res = AsyncHandle::select(handles, timeout);
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
-  }
-
-  auto ret = res.unwrap();
-  if (!ret.has_value()) {
-    // The only path that leads us to the timeout expiring is if there were timers to run, otherwise
-    // the timeout would have been set to `0` and we would have waited until an async handle was
-    // ready.
-    MOZ_ASSERT(!timers->empty());
-    return timers->run_first_timer(cx);
-  }
-
-  // At this point we know that handles is not empty, and that ready_index is valid, both because
-  // the timeout wasn't reached. If handles was empty and timeout was zero, we would have errored
-  // out after the call to `select`. If the timeout was non-zero and handles was empty, the timeout
-  // would expire and we would exit through the path that runs the first timer.
-  auto ready_index = ret.value();
-  auto ready_handle = handles[ready_index];
-
-#ifdef DEBUG
-  auto is_ready = ready_handle.is_ready();
-  MOZ_ASSERT(!is_ready.is_err());
-  MOZ_ASSERT(is_ready.unwrap());
-#endif
-
-  bool ok;
-  HandleObject ready_obj = (*pending_async_tasks)[ready_index];
-  if (builtins::Request::is_instance(ready_obj)) {
-    ok = process_pending_request(cx, ready_obj, HttpPendingReq{ready_handle});
-  } else {
-    MOZ_ASSERT(builtins::NativeStreamSource::is_instance(ready_obj));
-    ok = process_body_read(cx, ready_obj, HttpBody{ready_handle});
-  }
-
-  pending_async_tasks->erase(const_cast<JSObject **>(ready_obj.address()));
-  return ok;
-}
 
 bool math_random(JSContext *cx, unsigned argc, Value *vp) {
   uint32_t storage;
@@ -1349,9 +1052,7 @@ bool define_fastly_sys(JSContext *cx, HandleObject global, FastlyOptions options
     return false;
   }
 
-  pending_async_tasks = new JS::PersistentRootedObjectVector(cx);
-
-  timers.init(cx, js::MakeUnique<ScheduledTimers>());
+  core::EventLoop::init(cx);
 
   JS::RootedValue math_val(cx);
   if (!JS_GetProperty(cx, global, "Math", &math_val)) {

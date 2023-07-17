@@ -22,6 +22,7 @@
 #include "builtins/fetch-event.h"
 #include "core/allocator.h"
 #include "core/encode.h"
+#include "core/event_loop.h"
 #include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
@@ -462,7 +463,7 @@ static void process_pending_jobs(JSContext *cx, double *total_compute) {
 }
 
 static void wait_for_backends(JSContext *cx, double *total_compute) {
-  if (!has_pending_async_tasks())
+  if (!core::EventLoop::has_pending_async_tasks())
     return;
 
   auto pre_requests = system_clock::now();
@@ -471,7 +472,7 @@ static void wait_for_backends(JSContext *cx, double *total_compute) {
     fflush(stdout);
   }
 
-  if (!process_pending_async_tasks(cx))
+  if (!core::EventLoop::process_pending_async_tasks(cx))
     abort(cx, "processing network requests");
 
   double diff = duration_cast<microseconds>(system_clock::now() - pre_requests).count();
@@ -521,9 +522,9 @@ bool compute_at_edge_serve(compute_at_edge_request_t *req) {
 
     // Process async tasks.
     wait_for_backends(cx, &total_compute);
-  } while (js::HasJobsPending(cx) || has_pending_async_tasks());
+  } while (js::HasJobsPending(cx) || core::EventLoop::has_pending_async_tasks());
 
-  if (debug_logging_enabled() && has_pending_async_tasks()) {
+  if (debug_logging_enabled() && core::EventLoop::has_pending_async_tasks()) {
     fprintf(stderr, "Service terminated with async tasks pending. "
                     "Use FetchEvent#waitUntil to extend the service's lifetime "
                     "if needed.\n");
