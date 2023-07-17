@@ -9,6 +9,8 @@
 #include "js/ForOfIterator.h"
 #pragma clang diagnostic pop
 
+namespace core {
+
 inline bool report_sequence_or_record_arg_error(JSContext *cx, const char *name,
                                                 const char *alt_text) {
   JS_ReportErrorUTF8(cx,
@@ -115,6 +117,8 @@ bool maybe_consume_sequence_or_record(JSContext *cx, JS::HandleValue initv, JS::
   }
 
   return true;
+}
+
 }
 
 #endif

@@ -540,13 +540,13 @@ JSObject *Headers::create(JSContext *cx, JS::HandleObject self, Headers::Mode mo
     return nullptr;
 
   bool consumed = false;
-  if (!maybe_consume_sequence_or_record<Headers::append_header_value>(cx, initv, headers, &consumed,
-                                                                      "Headers")) {
+  if (!core::maybe_consume_sequence_or_record<Headers::append_header_value>(cx, initv, headers,
+                                                                            &consumed, "Headers")) {
     return nullptr;
   }
 
   if (!consumed) {
-    report_sequence_or_record_arg_error(cx, "Headers", "");
+    core::report_sequence_or_record_arg_error(cx, "Headers", "");
     return nullptr;
   }
 

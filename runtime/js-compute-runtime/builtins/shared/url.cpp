@@ -425,8 +425,8 @@ JSObject *URLSearchParams::create(JSContext *cx, JS::HandleObject self,
 
   bool consumed = false;
   const char *alt_text = ", or a value that can be stringified";
-  if (!maybe_consume_sequence_or_record<append_impl>(cx, params_val, self, &consumed,
-                                                     "URLSearchParams", alt_text)) {
+  if (!core::maybe_consume_sequence_or_record<append_impl>(cx, params_val, self, &consumed,
+                                                           "URLSearchParams", alt_text)) {
     return nullptr;
   }
 
@@ -479,7 +479,7 @@ JSObject *URLSearchParams::create(JSContext *cx, JS::HandleObject self, jsurl::J
     jsurl::JSUrl *url =                                                                            \
         static_cast<jsurl::JSUrl *>(JS::GetReservedSlot(self, URL::Slots::Url).toPrivate());       \
                                                                                                    \
-    jsurl::SpecString str = core::encode_spec_string(cx, args.get(0));                     \
+    jsurl::SpecString str = core::encode_spec_string(cx, args.get(0));                             \
     if (!str.data) {                                                                               \
       return false;                                                                                \
     }                                                                                              \
