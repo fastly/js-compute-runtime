@@ -4,9 +4,9 @@
 
 namespace builtins {
 
-Dict ConfigStore::config_store_handle(JSObject *obj) {
+host_api::Dict ConfigStore::config_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, ConfigStore::Slots::Handle);
-  return Dict(val.toInt32());
+  return host_api::Dict(val.toInt32());
 }
 
 bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -101,9 +101,9 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   JS::RootedObject config_store(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  auto open_res = Dict::open(name);
+  auto open_res = host_api::Dict::open(name);
   if (auto *err = open_res.to_err()) {
-    if (error_is_bad_handle(*err)) {
+    if (host_api::error_is_bad_handle(*err)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONFIG_STORE_DOES_NOT_EXIST,
                                 name.begin());
       return false;

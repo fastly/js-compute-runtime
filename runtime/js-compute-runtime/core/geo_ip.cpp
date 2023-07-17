@@ -31,7 +31,7 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
     return nullptr;
   }
 
-  auto res = GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
+  auto res = host_api::GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return nullptr;

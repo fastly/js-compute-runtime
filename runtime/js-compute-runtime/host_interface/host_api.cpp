@@ -5,6 +5,8 @@
 #include "fastly-world/fastly_world.h"
 #include "host_interface/host_api.h"
 
+namespace host_api {
+
 namespace {
 
 fastly_world_string_t string_view_to_world_string(std::string_view str) {
@@ -879,8 +881,6 @@ Result<Void> ObjectStore::insert(std::string_view name, HttpBody body) {
 
   return res;
 }
-
-namespace host_api {
 
 static_assert(std::is_same_v<Secret::Handle, fastly_compute_at_edge_fastly_secret_handle_t>);
 static_assert(

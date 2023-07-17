@@ -26,7 +26,7 @@ public:
 
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-  static JSObject *create(JSContext *cx, HttpBody body_handle);
+  static JSObject *create(JSContext *cx, host_api::HttpBody body_handle);
 };
 
 class KVStore final : public BuiltinImpl<KVStore> {

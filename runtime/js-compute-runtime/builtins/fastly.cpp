@@ -144,12 +144,12 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto response_handle = HttpResp::make();
+  auto response_handle = host_api::HttpResp::make();
   if (auto *err = response_handle.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
-  auto body_handle = HttpBody::make();
+  auto body_handle = host_api::HttpBody::make();
   if (auto *err = body_handle.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;

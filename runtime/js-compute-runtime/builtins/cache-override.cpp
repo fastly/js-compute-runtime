@@ -76,7 +76,7 @@ void CacheOverride::set_pci(JSObject *self, bool pci) {
   JS::SetReservedSlot(self, CacheOverride::Slots::PCI, JS::BooleanValue(pci));
 }
 
-CacheOverrideTag CacheOverride::abi_tag(JSObject *self) {
+host_api::CacheOverrideTag CacheOverride::abi_tag(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   switch (CacheOverride::mode(self)) {
   case CacheOverride::CacheOverrideMode::None:
@@ -86,7 +86,7 @@ CacheOverrideTag CacheOverride::abi_tag(JSObject *self) {
   default:;
   }
 
-  CacheOverrideTag tag = 0;
+  host_api::CacheOverrideTag tag = 0;
   if (!ttl(self).isUndefined())
     tag |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL;
   if (!swr(self).isUndefined())

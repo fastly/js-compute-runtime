@@ -18,6 +18,8 @@
 #include "jsapi.h"
 #pragma clang diagnostic pop
 
+namespace host_api {
+
 /// A type to signal that a result produces no value.
 struct Void final {};
 
@@ -33,7 +35,7 @@ bool error_is_bad_handle(FastlyError e);
 void handle_fastly_error(JSContext *cx, FastlyError err, int line, const char *func);
 
 /// Wrap up a call to handle_fastly_error with the current line and function.
-#define HANDLE_ERROR(cx, err) handle_fastly_error(cx, err, __LINE__, __func__)
+#define HANDLE_ERROR(cx, err) ::host_api::handle_fastly_error(cx, err, __LINE__, __func__)
 
 template <typename T> class Result final {
   /// A private wrapper to distinguish `fastly_compute_at_edge_fastly_error_t` in the private
@@ -466,8 +468,6 @@ public:
 
   Result<Void> insert(std::string_view name, HttpBody body);
 };
-
-namespace host_api {
 
 class Secret final {
 public:

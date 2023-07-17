@@ -24,7 +24,7 @@ public:
   static bool is_instance(JSObject *obj);
   static uint32_t handle(JSObject *obj);
   static bool has_body(JSObject *obj);
-  static HttpBody body_handle(JSObject *obj);
+  static host_api::HttpBody body_handle(JSObject *obj);
   static JSObject *body_stream(JSObject *obj);
   static JSObject *body_source(JSContext *cx, JS::HandleObject obj);
   static bool body_used(JSObject *obj);
@@ -140,8 +140,8 @@ public:
                                  JS::HandleValue cache_override_val);
   static bool apply_cache_override(JSContext *cx, JS::HandleObject self);
 
-  static HttpReq request_handle(JSObject *obj);
-  static HttpPendingReq pending_handle(JSObject *obj);
+  static host_api::HttpReq request_handle(JSObject *obj);
+  static host_api::HttpPendingReq pending_handle(JSObject *obj);
   static bool is_downstream(JSObject *obj);
   static JSString *backend(JSObject *obj);
   static const JSFunctionSpec static_methods[];
@@ -154,8 +154,9 @@ public:
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
-  static JSObject *create(JSContext *cx, JS::HandleObject requestInstance, HttpReq request_handle,
-                          HttpBody body_handle, bool is_downstream);
+  static JSObject *create(JSContext *cx, JS::HandleObject requestInstance,
+                          host_api::HttpReq request_handle, host_api::HttpBody body_handle,
+                          bool is_downstream);
   static JSObject *create(JSContext *cx, JS::HandleObject requestInstance, JS::HandleValue input,
                           JS::HandleValue init_val);
 
@@ -209,11 +210,11 @@ public:
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
-  static JSObject *create(JSContext *cx, JS::HandleObject response, HttpResp response_handle,
-                          HttpBody body_handle, bool is_upstream, bool is_grip_upgrade,
-                          JS::UniqueChars backend);
+  static JSObject *create(JSContext *cx, JS::HandleObject response,
+                          host_api::HttpResp response_handle, host_api::HttpBody body_handle,
+                          bool is_upstream, bool is_grip_upgrade, JS::UniqueChars backend);
 
-  static HttpResp response_handle(JSObject *obj);
+  static host_api::HttpResp response_handle(JSObject *obj);
   static bool is_upstream(JSObject *obj);
   static bool is_grip_upgrade(JSObject *obj);
   static const char *grip_backend(JSObject *obj);

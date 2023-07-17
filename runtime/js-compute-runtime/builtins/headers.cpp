@@ -91,8 +91,8 @@ uint32_t get_handle(JSObject *self) {
  * JSString and the char* version, so they'd otherwise have to recreate one of
  * the two.
  */
-HostString normalize_header_name(JSContext *cx, JS::MutableHandleValue name_val,
-                                 const char *fun_name) {
+host_api::HostString normalize_header_name(JSContext *cx, JS::MutableHandleValue name_val,
+                                           const char *fun_name) {
   JS::RootedString name_str(cx, JS::ToString(cx, name_val));
   if (!name_str) {
     return nullptr;
@@ -135,8 +135,8 @@ HostString normalize_header_name(JSContext *cx, JS::MutableHandleValue name_val,
   return name;
 }
 
-HostString normalize_header_value(JSContext *cx, JS::MutableHandleValue value_val,
-                                  const char *fun_name) {
+host_api::HostString normalize_header_value(JSContext *cx, JS::MutableHandleValue value_val,
+                                            const char *fun_name) {
   JS::RootedString value_str(cx, JS::ToString(cx, value_val));
   if (!value_str) {
     return nullptr;
@@ -239,8 +239,9 @@ bool append_header_value_to_map(JSContext *cx, JS::HandleObject self,
 bool get_header_names_from_handle(JSContext *cx, uint32_t handle, Headers::Mode mode,
                                   JS::HandleObject backing_map) {
 
-  auto names = mode == Headers::Mode::ProxyToRequest ? HttpReq{handle}.get_header_names()
-                                                     : HttpResp{handle}.get_header_names();
+  auto names = mode == Headers::Mode::ProxyToRequest
+                   ? host_api::HttpReq{handle}.get_header_names()
+                   : host_api::HttpResp{handle}.get_header_names();
   if (auto *err = names.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -271,8 +272,9 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
   JS::RootedString name_str(cx, name.toString());
   auto name_chars = core::encode(cx, name_str);
 
-  auto ret = mode == Headers::Mode::ProxyToRequest ? HttpReq{handle}.get_header_values(name_chars)
-                                                   : HttpResp{handle}.get_header_values(name_chars);
+  auto ret = mode == Headers::Mode::ProxyToRequest
+                 ? host_api::HttpReq{handle}.get_header_values(name_chars)
+                 : host_api::HttpResp{handle}.get_header_values(name_chars);
 
   if (auto *err = ret.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -453,8 +455,8 @@ bool Headers::append_header_value(JSContext *cx, JS::HandleObject self, JS::Hand
     if (name == "set-cookie") {
       for (auto value : splitCookiesString(value)) {
         auto res = mode == Headers::Mode::ProxyToRequest
-                       ? HttpReq{handle}.append_header(name, value)
-                       : HttpResp{handle}.append_header(name, value);
+                       ? host_api::HttpReq{handle}.append_header(name, value)
+                       : host_api::HttpResp{handle}.append_header(name, value);
         if (auto *err = res.to_err()) {
           HANDLE_ERROR(cx, *err);
           return false;
@@ -462,8 +464,8 @@ bool Headers::append_header_value(JSContext *cx, JS::HandleObject self, JS::Hand
       }
     } else {
       auto res = mode == Headers::Mode::ProxyToRequest
-                     ? HttpReq{handle}.append_header(name, value)
-                     : HttpResp{handle}.append_header(name, value);
+                     ? host_api::HttpReq{handle}.append_header(name, value)
+                     : host_api::HttpResp{handle}.append_header(name, value);
       if (auto *err = res.to_err()) {
         HANDLE_ERROR(cx, *err);
         return false;
@@ -572,8 +574,8 @@ bool Headers::set(JSContext *cx, unsigned argc, JS::Value *vp) {
     auto handle = get_handle(self);
     std::string_view name = name_chars;
     std::string_view val = value_chars;
-    auto res = mode == Mode::ProxyToRequest ? HttpReq{handle}.insert_header(name, val)
-                                            : HttpResp{handle}.insert_header(name, val);
+    auto res = mode == Mode::ProxyToRequest ? host_api::HttpReq{handle}.insert_header(name, val)
+                                            : host_api::HttpResp{handle}.insert_header(name, val);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -661,8 +663,8 @@ bool Headers::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (mode != Headers::Mode::Standalone) {
     auto handle = get_handle(self);
     std::string_view name = name_chars;
-    auto res = mode == Mode::ProxyToRequest ? HttpReq{handle}.remove_header(name)
-                                            : HttpResp{handle}.remove_header(name);
+    auto res = mode == Mode::ProxyToRequest ? host_api::HttpReq{handle}.remove_header(name)
+                                            : host_api::HttpResp{handle}.remove_header(name);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;

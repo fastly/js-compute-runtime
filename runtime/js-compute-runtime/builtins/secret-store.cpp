@@ -189,7 +189,7 @@ bool SecretStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto res = host_api::SecretStore::open(name);
   if (auto *err = res.to_err()) {
-    if (error_is_optional_none(*err)) {
+    if (host_api::error_is_optional_none(*err)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SECRET_STORE_DOES_NOT_EXIST,
                                 name.begin());
       return false;
