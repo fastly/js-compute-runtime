@@ -294,7 +294,16 @@ public:
   virtual Result<Void> remove_header(std::string_view name) = 0;
 };
 
-using TlsVersion = uint8_t;
+struct TlsVersion {
+  uint8_t value = 0;
+
+  explicit TlsVersion(uint8_t raw);
+
+  static TlsVersion version_1();
+  static TlsVersion version_1_1();
+  static TlsVersion version_1_2();
+  static TlsVersion version_1_3();
+};
 
 struct BackendConfig {
   std::optional<HostString> host_override;

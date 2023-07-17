@@ -47,7 +47,8 @@ static_assert(
 static_assert(std::is_same_v<HttpVersion, fastly_compute_at_edge_fastly_http_version_t>);
 static_assert(std::is_same_v<typeof(CacheOverrideTag::value),
                              fastly_compute_at_edge_fastly_http_cache_override_tag_t>);
-static_assert(std::is_same_v<TlsVersion, fastly_compute_at_edge_fastly_tls_version_t>);
+static_assert(
+    std::is_same_v<typeof(TlsVersion::value), fastly_compute_at_edge_fastly_tls_version_t>);
 
 Result<bool> AsyncHandle::is_ready() const {
   Result<bool> res;
@@ -309,6 +310,35 @@ void CacheOverrideTag::set_pci() {
   this->value |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI;
 }
 
+TlsVersion::TlsVersion(uint8_t raw) : value{raw} {
+  switch (raw) {
+  case FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS1:
+  case FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS11:
+  case FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS12:
+  case FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS13:
+    break;
+
+  default:
+    MOZ_ASSERT(false, "Making a TlsValue from an invalid raw value");
+  }
+}
+
+TlsVersion TlsVersion::version_1() {
+  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS1};
+}
+
+TlsVersion TlsVersion::version_1_1() {
+  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS11};
+}
+
+TlsVersion TlsVersion::version_1_2() {
+  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS12};
+}
+
+TlsVersion TlsVersion::version_1_3() {
+  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS13};
+}
+
 Result<HttpReq> HttpReq::make() {
   Result<HttpReq> res;
 
@@ -376,12 +406,12 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
 
   if (auto &val = config.ssl_min_version) {
     backend_config.ssl_min_version.is_some = true;
-    backend_config.ssl_min_version.val = *val;
+    backend_config.ssl_min_version.val = val->value;
   }
 
   if (auto &val = config.ssl_max_version) {
     backend_config.ssl_max_version.is_some = true;
-    backend_config.ssl_max_version.val = *val;
+    backend_config.ssl_max_version.val = val->value;
   }
 
   if (auto &val = config.cert_hostname) {
