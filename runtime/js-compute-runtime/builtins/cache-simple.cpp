@@ -125,7 +125,7 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
     length = slice.len;
   } else {
     // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-    auto str = fastly::core::encode(cx, bodyInit);
+    auto str = core::encode(cx, bodyInit);
     if (!str) {
       return JS::Result<std::tuple<JS::UniqueChars, size_t>>(JS::Error());
     }
@@ -396,7 +396,7 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
   // We create a surrogate-key from the cache-key, as this allows the cached contents to be purgable
   // from within the JavaScript application
   // This is because the cache API currently only supports purging via surrogate-key
-  auto key_chars = fastly::core::encode(cx, keyVal);
+  auto key_chars = core::encode(cx, keyVal);
   if (!key_chars) {
     if (!fastly_compute_at_edge_fastly_transaction_cancel(handle, &err)) {
       HANDLE_ERROR(cx, err);
@@ -505,7 +505,7 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // Convert key parameter into a string and check the value adheres to our validation rules.
-  auto key_chars = fastly::core::encode(cx, args.get(0));
+  auto key_chars = core::encode(cx, args.get(0));
   if (!key_chars) {
     return false;
   }
@@ -665,7 +665,7 @@ bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // Convert key parameter into a string and check the value adheres to our validation rules.
-  auto key_chars = fastly::core::encode(cx, args.get(0));
+  auto key_chars = core::encode(cx, args.get(0));
   if (!key_chars) {
     return false;
   }
@@ -810,7 +810,7 @@ bool SimpleCache::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // Convert key parameter into a string and check the value adheres to our validation rules.
-  auto key_chars = fastly::core::encode(cx, args[0]);
+  auto key_chars = core::encode(cx, args[0]);
   if (!key_chars) {
     return false;
   }
@@ -865,7 +865,7 @@ bool SimpleCache::purge(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // Convert key parameter into a string and check the value adheres to our validation rules.
-  auto key_chars = fastly::core::encode(cx, args.get(0));
+  auto key_chars = core::encode(cx, args.get(0));
   if (!key_chars) {
     return false;
   }
@@ -892,7 +892,7 @@ bool SimpleCache::purge(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!JS_GetProperty(cx, options, "scope", &scope_val)) {
     return false;
   }
-  auto scope_chars = fastly::core::encode(cx, scope_val);
+  auto scope_chars = core::encode(cx, scope_val);
   if (!scope_chars) {
     return false;
   }

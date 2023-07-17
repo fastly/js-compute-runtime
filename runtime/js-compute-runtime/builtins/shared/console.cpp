@@ -220,7 +220,7 @@ JS::Result<mozilla::Ok> ObjectToSource(JSContext *cx, std::string &sourceOut, JS
       MOZ_TRY(ToSource(cx, sourceOut, v, visitedObjects));
     } else {
       JS::RootedValue v(cx, js::IdToValue(id));
-      auto msg = fastly::core::encode(cx, v);
+      auto msg = core::encode(cx, v);
       if (!msg) {
         return JS::Result<mozilla::Ok>(JS::Error());
       }
@@ -252,7 +252,7 @@ mozilla::Maybe<std::string> get_class_name(JSContext *cx, JS::HandleObject obj) 
     JS::RootedValue name(cx);
     JS::RootedObject constructorObj(cx, &constructorVal.toObject());
     if (JS_GetProperty(cx, constructorObj, "name", &name) && name.isString()) {
-      auto msg = fastly::core::encode(cx, name);
+      auto msg = core::encode(cx, name);
       if (!msg) {
         return result;
       }
@@ -289,7 +289,7 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
       if (id) {
         sourceOut += " ";
         JS::RootedString name(cx, id);
-        auto msg = fastly::core::encode(cx, name);
+        auto msg = core::encode(cx, name);
         if (!msg) {
           return JS::Result<mozilla::Ok>(JS::Error());
         }
@@ -331,7 +331,7 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
     case js::ESClass::Error:
     case js::ESClass::RegExp: {
       JS::RootedString source(cx, JS_ValueToSource(cx, val));
-      auto msg = fastly::core::encode(cx, source);
+      auto msg = core::encode(cx, source);
       if (!msg) {
         return JS::Result<mozilla::Ok>(JS::Error());
       }
@@ -380,7 +380,7 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
     }
   }
   case JS::ValueType::String: {
-    auto msg = fastly::core::encode(cx, val);
+    auto msg = core::encode(cx, val);
     if (!msg) {
       return JS::Result<mozilla::Ok>(JS::Error());
     }
@@ -391,7 +391,7 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
   }
   default: {
     JS::RootedString source(cx, JS_ValueToSource(cx, val));
-    auto msg = fastly::core::encode(cx, source);
+    auto msg = core::encode(cx, source);
     if (!msg) {
       return JS::Result<mozilla::Ok>(JS::Error());
     }
@@ -491,7 +491,7 @@ static bool count(JSContext *cx, unsigned argc, JS::Value *vp) {
   std::string label = "";
   if (args.hasDefined(0)) {
     auto label_val = args.get(0);
-    auto label_string = fastly::core::encode(cx, label_val);
+    auto label_string = core::encode(cx, label_val);
     if (!label_string) {
       return false;
     }
@@ -524,7 +524,7 @@ static bool countReset(JSContext *cx, unsigned argc, JS::Value *vp) {
   std::string label;
   if (args.hasDefined(0)) {
     auto label_val = args.get(0);
-    auto label_string = fastly::core::encode(cx, label_val);
+    auto label_string = core::encode(cx, label_val);
     if (!label_string) {
       return false;
     }
@@ -562,7 +562,7 @@ static bool time(JSContext *cx, unsigned argc, JS::Value *vp) {
   std::string label;
   if (args.hasDefined(0)) {
     auto label_val = args.get(0);
-    auto label_string = fastly::core::encode(cx, label_val);
+    auto label_string = core::encode(cx, label_val);
     if (!label_string) {
       return false;
     }
@@ -588,7 +588,7 @@ static bool timeLog(JSContext *cx, unsigned argc, JS::Value *vp) {
   std::string label;
   if (args.hasDefined(0)) {
     auto label_val = args.get(0);
-    auto label_string = fastly::core::encode(cx, label_val);
+    auto label_string = core::encode(cx, label_val);
     if (!label_string) {
       return false;
     }
@@ -660,7 +660,7 @@ static bool timeEnd(JSContext *cx, unsigned argc, JS::Value *vp) {
   std::string label;
   if (args.hasDefined(0)) {
     auto label_val = args.get(0);
-    auto label_string = fastly::core::encode(cx, label_val);
+    auto label_string = core::encode(cx, label_val);
     if (!label_string) {
       return false;
     }
@@ -739,7 +739,7 @@ static bool trace(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!BuildStackString(cx, principals, stack, &str)) {
     return false;
   }
-  auto stack_string = fastly::core::encode(cx, str);
+  auto stack_string = core::encode(cx, str);
   if (!stack_string) {
     return false;
   }

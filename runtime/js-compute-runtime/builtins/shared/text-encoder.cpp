@@ -28,7 +28,7 @@ bool TextEncoder::encode(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
 
-  auto chars = fastly::core::encode(cx, args[0]);
+  auto chars = core::encode(cx, args[0]);
   JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, chars.len, chars.begin()));
   if (!buffer) {
     return false;

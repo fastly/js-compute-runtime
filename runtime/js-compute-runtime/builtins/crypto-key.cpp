@@ -98,7 +98,7 @@ JS::Result<CryptoKeyUsages> CryptoKeyUsages::from(JSContext *cx, JS::HandleValue
       return JS::Result<CryptoKeyUsages>(JS::Error());
     }
 
-    auto utf8chars = fastly::core::encode(cx, val);
+    auto utf8chars = core::encode(cx, val);
     if (!utf8chars) {
       return JS::Result<CryptoKeyUsages>(JS::Error());
     }
@@ -599,7 +599,7 @@ JS::Result<bool> CryptoKey::is_algorithm(JSContext *cx, JS::HandleObject self,
     return JS::Result<bool>(JS::Error());
   }
   // TODO: should chars be used?
-  auto chars = fastly::core::encode(cx, str);
+  auto chars = core::encode(cx, str);
   if (!chars) {
     return JS::Result<bool>(JS::Error());
   }

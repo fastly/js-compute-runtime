@@ -11,6 +11,10 @@
 
 #pragma clang diagnostic pop
 
+namespace core {
+
 JSString *get_geo_info(JSContext *cx, JS::HandleString address_str);
+
+}
 
 #endif

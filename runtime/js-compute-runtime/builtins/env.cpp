@@ -9,7 +9,7 @@ bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!args.requireAtLeast(cx, "fastly.env.get", 1))
     return false;
 
-  auto var_name_chars = fastly::core::encode(cx, args[0]);
+  auto var_name_chars = core::encode(cx, args[0]);
   if (!var_name_chars) {
     return false;
   }

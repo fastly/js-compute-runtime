@@ -12,7 +12,7 @@ Dict ConfigStore::config_store_handle(JSObject *obj) {
 bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
-  auto key = fastly::core::encode(cx, args[0]);
+  auto key = core::encode(cx, args[0]);
   // If the converted string has a length of 0 then we throw an Error
   // because Dictionary keys have to be at-least 1 character.
   if (!key || key.len == 0) {
@@ -66,7 +66,7 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The ConfigStore builtin");
   CTOR_HEADER("ConfigStore", 1);
 
-  auto name = fastly::core::encode(cx, args[0]);
+  auto name = core::encode(cx, args[0]);
 
   // If the converted string has a length of 0 then we throw an Error
   // because Dictionary names have to be at-least 1 character.

@@ -7,7 +7,7 @@
 #include "rust-url/rust-url.h"
 #pragma clang diagnostic pop
 
-namespace fastly::core {
+namespace core {
 
 HostString encode(JSContext *cx, JS::HandleString str) {
   HostString res;
@@ -41,4 +41,4 @@ jsurl::SpecString encode_spec_string(JSContext *cx, JS::HandleValue val) {
   return slice;
 }
 
-} // namespace fastly::core
+} // namespace core

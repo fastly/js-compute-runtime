@@ -193,7 +193,7 @@ bool KVStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue key(cx, args.get(0));
 
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  auto key_chars = fastly::core::encode(cx, key);
+  auto key_chars = core::encode(cx, key);
   if (!key_chars) {
     return false;
   }
@@ -239,7 +239,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue key(cx, args.get(0));
 
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  auto key_chars = fastly::core::encode(cx, key);
+  auto key_chars = core::encode(cx, key);
   if (!key_chars) {
     return false;
   }
@@ -320,7 +320,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
     } else {
       // Convert into a String following https://tc39.es/ecma262/#sec-tostring
       {
-        auto str = fastly::core::encode(cx, body_val);
+        auto str = core::encode(cx, body_val);
         text = std::move(str.ptr);
         length = str.len;
       }
@@ -403,7 +403,7 @@ bool KVStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::HandleValue name_arg = args.get(0);
 
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  auto name = fastly::core::encode(cx, name_arg);
+  auto name = core::encode(cx, name_arg);
   if (!name) {
     return false;
   }

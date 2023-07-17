@@ -73,7 +73,7 @@ JSString *retrieve_geo_info(JSContext *cx, JS::HandleObject self) {
       return nullptr;
   }
 
-  JS::RootedString geo(cx, get_geo_info(cx, address_str));
+  JS::RootedString geo(cx, core::get_geo_info(cx, address_str));
   if (!geo)
     return nullptr;
 

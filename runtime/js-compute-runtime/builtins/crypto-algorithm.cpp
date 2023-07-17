@@ -28,7 +28,7 @@ const EVP_MD *createDigestAlgorithm(JSContext *cx, JS::HandleObject key) {
   JS::RootedObject hash(cx, &hash_val.toObject());
   JS::RootedValue name_val(cx);
   JS_GetProperty(cx, hash, "name", &name_val);
-  auto name_chars = fastly::core::encode(cx, name_val);
+  auto name_chars = core::encode(cx, name_val);
   if (!name_chars) {
     DOMException::raise(cx, "NotSupportedError", "NotSupportedError");
     return nullptr;
@@ -330,7 +330,7 @@ JS::Result<CryptoAlgorithmIdentifier> normalizeIdentifier(JSContext *cx, JS::Han
 
   // TODO: We convert from JSString to std::string quite a lot in the codebase, should we pull this
   // logic out into a new function?
-  auto algorithmChars = fastly::core::encode(cx, algName);
+  auto algorithmChars = core::encode(cx, algName);
   if (!algorithmChars) {
     return JS::Result<CryptoAlgorithmIdentifier>(JS::Error());
   }

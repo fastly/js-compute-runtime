@@ -806,7 +806,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     }
   }
 
-  HostString backend_chars = fastly::core::encode(cx, backend);
+  HostString backend_chars = core::encode(cx, backend);
   if (!backend_chars.ptr) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
@@ -1419,7 +1419,7 @@ bool print_stack(JSContext *cx, HandleObject stack, FILE *fp) {
     return false;
   }
 
-  auto utf8chars = fastly::core::encode(cx, stackStr);
+  auto utf8chars = core::encode(cx, stackStr);
   if (!utf8chars) {
     return false;
   }

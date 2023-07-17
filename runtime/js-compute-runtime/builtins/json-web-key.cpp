@@ -33,7 +33,7 @@ extractStringPropertyFromObject(JSContext *cx, JS::HandleObject object, std::str
     return JS::Result<std::optional<std::string>>(JS::Error());
   }
   // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-  auto chars = fastly::core::encode(cx, value);
+  auto chars = core::encode(cx, value);
   if (!chars) {
     return JS::Result<std::optional<std::string>>(JS::Error());
   }
@@ -225,7 +225,7 @@ std::unique_ptr<JsonWebKey> JsonWebKey::parse(JSContext *cx, JS::HandleValue val
             return nullptr;
           }
 
-          auto op_chars = fastly::core::encode(cx, op_val);
+          auto op_chars = core::encode(cx, op_val);
           if (!op_chars) {
             return nullptr;
           }
@@ -307,7 +307,7 @@ std::unique_ptr<JsonWebKey> JsonWebKey::parse(JSContext *cx, JS::HandleValue val
           if (!JS_GetProperty(cx, info_obj, "r", &r_val)) {
             return nullptr;
           }
-          auto r_chars = fastly::core::encode(cx, info_val);
+          auto r_chars = core::encode(cx, info_val);
           if (!r_chars) {
             JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The "
                                     "provided value is not of type 'RsaOtherPrimesInfo'");
@@ -318,7 +318,7 @@ std::unique_ptr<JsonWebKey> JsonWebKey::parse(JSContext *cx, JS::HandleValue val
           if (!JS_GetProperty(cx, info_obj, "d", &d_val)) {
             return nullptr;
           }
-          auto d_chars = fastly::core::encode(cx, info_val);
+          auto d_chars = core::encode(cx, info_val);
           if (!d_chars) {
             JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The "
                                     "provided value is not of type 'RsaOtherPrimesInfo'");
@@ -330,7 +330,7 @@ std::unique_ptr<JsonWebKey> JsonWebKey::parse(JSContext *cx, JS::HandleValue val
           if (!JS_GetProperty(cx, info_obj, "t", &t_val)) {
             return nullptr;
           }
-          auto t_chars = fastly::core::encode(cx, info_val);
+          auto t_chars = core::encode(cx, info_val);
           if (!t_chars) {
             JS_ReportErrorASCII(cx, "Failed to read the 'oth' property from 'JsonWebKey': The "
                                     "provided value is not of type 'RsaOtherPrimesInfo'");

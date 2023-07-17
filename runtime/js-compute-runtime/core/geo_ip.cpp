@@ -4,8 +4,10 @@
 #include "core/encode.h"
 #include "core/geo_ip.h"
 
+namespace core {
+
 JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
-  auto address = fastly::core::encode(cx, address_str);
+  auto address = core::encode(cx, address_str);
   if (!address) {
     return nullptr;
   }
@@ -39,3 +41,5 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
 
   return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.ptr.release(), ret.len));
 }
+
+} // namespace core

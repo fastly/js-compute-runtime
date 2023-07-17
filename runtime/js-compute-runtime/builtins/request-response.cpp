@@ -299,7 +299,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
       content_type = "application/x-www-form-urlencoded;charset=UTF-8";
     } else {
       {
-        auto str = fastly::core::encode(cx, body_val);
+        auto str = core::encode(cx, body_val);
         text = std::move(str.ptr);
         length = str.len;
       }
@@ -1097,7 +1097,7 @@ JSString *Request::method(JSContext *cx, JS::HandleObject obj) {
 bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValue cache_key_val) {
   MOZ_ASSERT(is_instance(self));
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  auto keyString = fastly::core::encode(cx, cache_key_val);
+  auto keyString = core::encode(cx, cache_key_val);
   if (!keyString) {
     return false;
   }
@@ -1170,7 +1170,7 @@ bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
   std::optional<std::string_view> surrogate_key;
   val = builtins::CacheOverride::surrogate_key(override);
   if (!val.isUndefined()) {
-    sk_chars = fastly::core::encode(cx, val);
+    sk_chars = core::encode(cx, val);
     if (!sk_chars) {
       return false;
     }
@@ -1601,7 +1601,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
 
   // Actually set the URL derived in steps 5 or 6 above.
   RequestOrResponse::set_url(request, StringValue(url_str));
-  auto url = fastly::core::encode(cx, url_str);
+  auto url = core::encode(cx, url_str);
   if (!url) {
     return nullptr;
   } else {
@@ -1730,7 +1730,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   bool is_get_or_head = is_get;
 
   if (!is_get) {
-    auto method = fastly::core::encode(cx, method_str);
+    auto method = core::encode(cx, method_str);
     if (!method) {
       return nullptr;
     }
@@ -2299,7 +2299,7 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedValue url_val(cx, JS::ObjectValue(*parsedURL));
-  auto url_str = fastly::core::encode(cx, url_val);
+  auto url_str = core::encode(cx, url_val);
   if (!url_str) {
     return false;
   }
@@ -2480,7 +2480,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto body = make_res.unwrap();
   JS::RootedString string(cx, JS_NewUCStringCopyN(cx, out.c_str(), out.length()));
-  auto stringChars = fastly::core::encode(cx, string);
+  auto stringChars = core::encode(cx, string);
 
   auto write_res =
       body.write_all(reinterpret_cast<uint8_t *>(stringChars.begin()), stringChars.len);
