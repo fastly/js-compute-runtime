@@ -21,7 +21,7 @@ JSString *geo_info(JSObject *obj) {
 }
 
 static JSString *retrieve_address(JSContext *cx, JS::HandleObject self) {
-  auto res = HttpReq::downstream_client_ip_addr();
+  auto res = host_api::HttpReq::downstream_client_ip_addr();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return nullptr;
@@ -114,13 +114,13 @@ bool ClientInfo::geo_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  auto res = HttpReq::http_req_downstream_tls_cipher_openssl_name();
+  auto res = host_api::HttpReq::http_req_downstream_tls_cipher_openssl_name();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  HostString cipher = std::move(res.unwrap());
+  auto cipher = std::move(res.unwrap());
   JS::RootedString result(cx, JS_NewStringCopyN(cx, cipher.ptr.get(), cipher.len));
 
   args.rval().setString(result);
@@ -130,7 +130,7 @@ bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::V
 bool ClientInfo::tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  auto res = HttpReq::http_req_downstream_tls_ja3_md5();
+  auto res = host_api::HttpReq::http_req_downstream_tls_ja3_md5();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -148,13 +148,13 @@ bool ClientInfo::tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  auto res = HttpReq::http_req_downstream_tls_client_hello();
+  auto res = host_api::HttpReq::http_req_downstream_tls_client_hello();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  HostBytes hello = std::move(res.unwrap());
+  auto hello = std::move(res.unwrap());
   JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, hello.len, hello.ptr.get()));
   if (!buffer) {
     // We can be here if the array buffer was too large -- if that was the case then a
@@ -172,12 +172,12 @@ bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *v
 bool ClientInfo::tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  auto res = HttpReq::http_req_downstream_tls_raw_client_certificate();
+  auto res = host_api::HttpReq::http_req_downstream_tls_raw_client_certificate();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
-  HostBytes cert = std::move(res.unwrap());
+  auto cert = std::move(res.unwrap());
 
   JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, cert.len, cert.ptr.get()));
   if (!buffer) {
@@ -196,13 +196,13 @@ bool ClientInfo::tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Va
 bool ClientInfo::tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  auto res = HttpReq::http_req_downstream_tls_protocol();
+  auto res = host_api::HttpReq::http_req_downstream_tls_protocol();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  HostString protocol = std::move(res.unwrap());
+  auto protocol = std::move(res.unwrap());
   JS::RootedString result(cx, JS_NewStringCopyN(cx, protocol.ptr.get(), protocol.len));
 
   args.rval().setString(result);

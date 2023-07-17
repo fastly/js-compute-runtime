@@ -501,7 +501,8 @@ bool compute_at_edge_serve(compute_at_edge_request_t *req) {
   js::ResetMathRandomSeed(cx);
 
   HandleObject fetch_event = builtins::FetchEvent::instance();
-  builtins::FetchEvent::init_request(cx, fetch_event, HttpReq{req->f0}, HttpBody{req->f1});
+  builtins::FetchEvent::init_request(cx, fetch_event, host_api::HttpReq{req->f0},
+                                     host_api::HttpBody{req->f1});
 
   dispatch_fetch_event(cx, fetch_event, &total_compute);
 

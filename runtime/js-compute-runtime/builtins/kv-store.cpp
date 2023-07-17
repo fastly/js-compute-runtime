@@ -95,7 +95,7 @@ bool KVStoreEntry::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   return false;
 }
 
-JSObject *KVStoreEntry::create(JSContext *cx, HttpBody body_handle) {
+JSObject *KVStoreEntry::create(JSContext *cx, host_api::HttpBody body_handle) {
   JS::RootedObject kvStoreEntry(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!kvStoreEntry)
     return nullptr;
@@ -115,9 +115,9 @@ bool KVStoreEntry::init_class(JSContext *cx, JS::HandleObject global) {
 
 namespace {
 
-ObjectStore kv_store_handle(JSObject *obj) {
+host_api::ObjectStore kv_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(KVStore::Slots::KVStore));
-  return ObjectStore(val.toInt32());
+  return host_api::ObjectStore(val.toInt32());
 }
 
 bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
@@ -335,7 +335,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       buf = text.get();
     }
 
-    auto make_res = HttpBody::make();
+    auto make_res = host_api::HttpBody::make();
     if (auto *err = make_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -430,9 +430,9 @@ bool KVStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto res = ObjectStore::open(name);
+  auto res = host_api::ObjectStore::open(name);
   if (auto *err = res.to_err()) {
-    if (error_is_invalid_argument(*err)) {
+    if (host_api::error_is_invalid_argument(*err)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_DOES_NOT_EXIST,
                                 name.begin());
       return false;

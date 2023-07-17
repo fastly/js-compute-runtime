@@ -721,7 +721,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   auto targetChars = core::encode(cx, target);
   std::string_view target_str = targetChars;
 
-  BackendConfig backend_config;
+  host_api::BackendConfig backend_config;
 
   auto hostOverrideSlot = JS::GetReservedSlot(backend, Backend::Slots::HostOverride);
   if (!hostOverrideSlot.isNullOrUndefined()) {
@@ -793,7 +793,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
     backend_config.sni_hostname.emplace(std::move(sniHostnameChars));
   }
 
-  auto res = HttpReq::register_dynamic_backend(name_str, target_str, backend_config);
+  auto res = host_api::HttpReq::register_dynamic_backend(name_str, target_str, backend_config);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return JS::Result<mozilla::Ok>(JS::Error());

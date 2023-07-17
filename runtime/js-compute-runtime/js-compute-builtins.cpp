@@ -162,9 +162,9 @@ struct ReadResult {
 // Returns a UniqueChars and the length of that string. The UniqueChars value is not
 // null-terminated.
 ReadResult read_from_handle_all(JSContext *cx, uint32_t handle) {
-  std::vector<HostString> chunks;
+  std::vector<host_api::HostString> chunks;
   size_t bytes_read = 0;
-  HttpBody body{handle};
+  host_api::HttpBody body{handle};
   while (true) {
     auto res = body.read(HANDLE_READ_CHUNK_SIZE);
     if (auto *err = res.to_err()) {
@@ -668,7 +668,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     }
   }
 
-  HostString backend_chars = core::encode(cx, backend);
+  host_api::HostString backend_chars = core::encode(cx, backend);
   if (!backend_chars.ptr) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
@@ -686,7 +686,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
 
-  HttpPendingReq pending_handle;
+  host_api::HttpPendingReq pending_handle;
   {
     auto request_handle = builtins::Request::request_handle(request);
     auto body = builtins::RequestOrResponse::body_handle(request);
@@ -694,7 +694,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
                          : request_handle.send_async(body, backend_chars);
 
     if (auto *err = res.to_err()) {
-      if (error_is_generic(*err) || error_is_invalid_argument(*err)) {
+      if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST, backend_chars.ptr.get());
       } else {

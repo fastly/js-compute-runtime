@@ -76,11 +76,11 @@ JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {
       cx, JS_NewObjectWithGivenProto(cx, &Request::class_, Request::proto_obj));
   if (!requestInstance)
     return nullptr;
-  return Request::create(cx, requestInstance, HttpReq{}, HttpBody{}, true);
+  return Request::create(cx, requestInstance, host_api::HttpReq{}, host_api::HttpBody{}, true);
 }
 
-bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request, HttpReq req,
-                                         HttpBody body) {
+bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request,
+                                         host_api::HttpReq req, host_api::HttpBody body) {
   MOZ_ASSERT(!Request::request_handle(request).is_valid());
 
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Request),
@@ -221,7 +221,7 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   if (Response::is_grip_upgrade(response_obj)) {
     std::string backend(Response::grip_backend(response_obj));
 
-    auto res = HttpReq::redirect_to_grip_proxy(backend);
+    auto res = host_api::HttpReq::redirect_to_grip_proxy(backend);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -307,13 +307,13 @@ bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
   MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
   set_state(self, State::responsedWithError);
 
-  auto response_res = HttpResp::make();
+  auto response_res = host_api::HttpResp::make();
   if (auto *err = response_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  auto make_res = HttpBody::make();
+  auto make_res = host_api::HttpBody::make();
   if (auto *err = make_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -421,7 +421,8 @@ JSObject *FetchEvent::create(JSContext *cx) {
 
 JS::HandleObject FetchEvent::instance() { return INSTANCE; }
 
-bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, HttpReq req, HttpBody body) {
+bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::HttpReq req,
+                              host_api::HttpBody body) {
   JS::RootedObject request(
       cx, &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)).toObject());
   return init_downstream_request(cx, request, req, body);

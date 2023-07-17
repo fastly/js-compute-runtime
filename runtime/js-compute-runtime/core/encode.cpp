@@ -9,8 +9,8 @@
 
 namespace core {
 
-HostString encode(JSContext *cx, JS::HandleString str) {
-  HostString res;
+host_api::HostString encode(JSContext *cx, JS::HandleString str) {
+  host_api::HostString res;
   res.ptr = JS_EncodeStringToUTF8(cx, str);
   if (res.ptr) {
     // This shouldn't fail, since the encode operation ensured `str` is linear.
@@ -21,10 +21,10 @@ HostString encode(JSContext *cx, JS::HandleString str) {
   return res;
 }
 
-HostString encode(JSContext *cx, JS::HandleValue val) {
+host_api::HostString encode(JSContext *cx, JS::HandleValue val) {
   JS::RootedString str(cx, JS::ToString(cx, val));
   if (!str) {
-    return HostString{};
+    return host_api::HostString{};
   }
 
   return encode(cx, str);

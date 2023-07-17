@@ -65,7 +65,7 @@ bool SimpleCacheEntry::constructor(JSContext *cx, unsigned argc, JS::Value *vp) 
   return false;
 }
 
-JSObject *SimpleCacheEntry::create(JSContext *cx, HttpBody body_handle) {
+JSObject *SimpleCacheEntry::create(JSContext *cx, host_api::HttpBody body_handle) {
   JS::RootedObject SimpleCacheEntry(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!SimpleCacheEntry)
     return nullptr;
@@ -300,7 +300,7 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
     return RejectPromiseWithPendingError(cx, promise);
   }
 
-  HttpBody source_body;
+  host_api::HttpBody source_body;
   JS::UniqueChars buf;
   JS::RootedObject body_obj(cx, body_val.isObject() ? &body_val.toObject() : nullptr);
   // If the body is a Host-backed ReadableStream we optimise our implementation
@@ -428,7 +428,7 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
     return RejectPromiseWithPendingError(cx, promise);
   }
 
-  auto body = HttpBody(ret.f0);
+  auto body = host_api::HttpBody(ret.f0);
   if (!body.valid()) {
     if (!fastly_compute_at_edge_fastly_transaction_cancel(handle, &err)) {
       HANDLE_ERROR(cx, err);
@@ -468,7 +468,7 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
     }
   }
 
-  HttpBody bodyHandle;
+  host_api::HttpBody bodyHandle;
   fastly_compute_at_edge_fastly_cache_get_body_options_t opts;
   if (!fastly_compute_at_edge_fastly_cache_get_body(ret.f1, &opts, &bodyHandle.handle, &err)) {
     HANDLE_ERROR(cx, err);
@@ -552,7 +552,7 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   args.rval().setObject(*promise);
   if (state & FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_USABLE) {
-    HttpBody body;
+    host_api::HttpBody body;
     fastly_compute_at_edge_fastly_cache_get_body_options_t opts;
     if (!fastly_compute_at_edge_fastly_cache_get_body(handle, &opts, &body.handle, &err)) {
       if (!fastly_compute_at_edge_fastly_transaction_cancel(handle, &err)) {
@@ -700,7 +700,7 @@ bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
                        1'000'000'000; // turn second representation into nanosecond representation
 
   JS::HandleValue body_val = args.get(1);
-  HttpBody source_body;
+  host_api::HttpBody source_body;
   JS::UniqueChars buf;
   JS::RootedObject body_obj(cx, body_val.isObject() ? &body_val.toObject() : nullptr);
   // If the body parameter is a Host-backed ReadableStream we optimise our implementation
@@ -771,7 +771,7 @@ bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto body = HttpBody(body_handle);
+  auto body = host_api::HttpBody(body_handle);
   if (!body.valid()) {
     return false;
   }
@@ -836,7 +836,7 @@ bool SimpleCache::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  HttpBody body;
+  host_api::HttpBody body;
   fastly_compute_at_edge_fastly_cache_get_body_options_t opts;
   if (!fastly_compute_at_edge_fastly_cache_get_body(handle, &opts, &body.handle, &err)) {
     HANDLE_ERROR(cx, err);

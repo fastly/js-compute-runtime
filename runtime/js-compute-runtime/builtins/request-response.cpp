@@ -60,8 +60,8 @@ struct ReadResult {
 
 // Returns a UniqueChars and the length of that string. The UniqueChars value is not
 // null-terminated.
-ReadResult read_from_handle_all(JSContext *cx, HttpBody body) {
-  std::vector<HostString> chunks;
+ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
+  std::vector<host_api::HostString> chunks;
   size_t bytes_read = 0;
   while (true) {
     auto res = body.read(HANDLE_READ_CHUNK_SIZE);
@@ -135,9 +135,9 @@ bool RequestOrResponse::has_body(JSObject *obj) {
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::HasBody)).toBoolean();
 }
 
-HttpBody RequestOrResponse::body_handle(JSObject *obj) {
+host_api::HttpBody RequestOrResponse::body_handle(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
-  return HttpBody(JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Body)).toInt32());
+  return host_api::HttpBody(JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Body)).toInt32());
 }
 
 JSObject *RequestOrResponse::body_stream(JSObject *obj) {
@@ -311,7 +311,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
       content_type = "text/plain;charset=UTF-8";
     }
 
-    HttpBody body{RequestOrResponse::body_handle(self)};
+    host_api::HttpBody body{RequestOrResponse::body_handle(self)};
     auto write_res = body.write_all(reinterpret_cast<uint8_t *>(buf), length);
 
     // Ensure that the NoGC is reset, so throwing an error in HANDLE_ERROR
@@ -346,8 +346,8 @@ JSObject *RequestOrResponse::maybe_headers(JSObject *obj) {
 
 bool RequestOrResponse::append_body(JSContext *cx, JS::HandleObject self, JS::HandleObject source) {
   MOZ_ASSERT(!body_used(source));
-  HttpBody source_body{body_handle(source)};
-  HttpBody dest_body{body_handle(self)};
+  host_api::HttpBody source_body{body_handle(source)};
+  host_api::HttpBody dest_body{body_handle(self)};
   auto res = dest_body.append(source_body);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -896,7 +896,7 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     return false;
   }
 
-  Result<Void> res;
+  host_api::Result<host_api::Void> res;
   {
     JS::AutoCheckCannotGC nogc;
     JSObject *array = &val.toObject();
@@ -1060,18 +1060,18 @@ bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObj
   return true;
 }
 
-HttpReq Request::request_handle(JSObject *obj) {
-  return HttpReq(
+host_api::HttpReq Request::request_handle(JSObject *obj) {
+  return host_api::HttpReq(
       JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::Request)).toInt32());
 }
 
-HttpPendingReq Request::pending_handle(JSObject *obj) {
-  HttpPendingReq res;
+host_api::HttpPendingReq Request::pending_handle(JSObject *obj) {
+  host_api::HttpPendingReq res;
 
   JS::Value handle_val =
       JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::PendingRequest));
   if (handle_val.isInt32()) {
-    res = HttpPendingReq(handle_val.toInt32());
+    res = host_api::HttpPendingReq(handle_val.toInt32());
   }
 
   return res;
@@ -1167,7 +1167,7 @@ bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
     stale_while_revalidate = val.toInt32();
   }
 
-  HostString sk_chars;
+  host_api::HostString sk_chars;
   std::optional<std::string_view> surrogate_key;
   val = builtins::CacheOverride::surrogate_key(override);
   if (!val.isUndefined()) {
@@ -1275,7 +1275,7 @@ JSString *GET_atom;
 bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  auto request_handle_res = HttpReq::make();
+  auto request_handle_res = host_api::HttpReq::make();
   if (auto *err = request_handle_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1337,7 +1337,7 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    auto res = HttpBody::make();
+    auto res = host_api::HttpBody::make();
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -1447,8 +1447,9 @@ bool Request::init_class(JSContext *cx, JS::HandleObject global) {
   return !!GET_atom;
 }
 
-JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, HttpReq request_handle,
-                          HttpBody body_handle, bool is_downstream) {
+JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
+                          host_api::HttpReq request_handle, host_api::HttpBody body_handle,
+                          bool is_downstream) {
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Request),
                       JS::Int32Value(request_handle.handle));
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Headers), JS::NullValue());
@@ -1476,13 +1477,13 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, HttpR
  */
 JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::HandleValue input,
                           JS::HandleValue init_val) {
-  auto request_handle_res = HttpReq::make();
+  auto request_handle_res = host_api::HttpReq::make();
   if (auto *err = request_handle_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return nullptr;
   }
 
-  auto body = HttpBody::make();
+  auto body = host_api::HttpBody::make();
   if (auto *err = body.to_err()) {
     HANDLE_ERROR(cx, *err);
     return nullptr;
@@ -1959,9 +1960,10 @@ static_assert((int)Response::Slots::BodyUsed == (int)Request::Slots::BodyUsed);
 static_assert((int)Response::Slots::Headers == (int)Request::Slots::Headers);
 static_assert((int)Response::Slots::Response == (int)Request::Slots::Request);
 
-HttpResp Response::response_handle(JSObject *obj) {
+host_api::HttpResp Response::response_handle(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
-  return HttpResp(JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Response)).toInt32());
+  return host_api::HttpResp(
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Response)).toInt32());
 }
 
 bool Response::is_upstream(JSObject *obj) {
@@ -2321,7 +2323,7 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   // 4. Let responseObject be the result of creating a Response object, given a new response,
   // "immutable", and this’s relevant Realm.
-  auto response_handle_res = HttpResp::make();
+  auto response_handle_res = host_api::HttpResp::make();
   if (auto *err = response_handle_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -2332,7 +2334,7 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto make_res = HttpBody::make();
+  auto make_res = host_api::HttpBody::make();
   if (auto *err = make_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -2462,7 +2464,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto response_handle_res = HttpResp::make();
+  auto response_handle_res = host_api::HttpResp::make();
   if (auto *err = response_handle_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -2473,7 +2475,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto make_res = HttpBody::make();
+  auto make_res = host_api::HttpBody::make();
   if (auto *err = make_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -2642,13 +2644,13 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   // TODO(performance): enable creating Response objects during the init phase, and only
   // creating the host-side representation when processing requests.
   // https://github.com/fastly/js-compute-runtime/issues/220
-  auto response_handle_res = HttpResp::make();
+  auto response_handle_res = host_api::HttpResp::make();
   if (auto *err = response_handle_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  auto make_res = HttpBody::make();
+  auto make_res = host_api::HttpBody::make();
   if (auto *err = make_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -2745,9 +2747,9 @@ bool Response::init_class(JSContext *cx, JS::HandleObject global) {
          (type_error_atom = JS_AtomizeAndPinString(cx, "error"));
 }
 
-JSObject *Response::create(JSContext *cx, JS::HandleObject response, HttpResp response_handle,
-                           HttpBody body_handle, bool is_upstream, bool is_grip,
-                           JS::UniqueChars backend) {
+JSObject *Response::create(JSContext *cx, JS::HandleObject response,
+                           host_api::HttpResp response_handle, host_api::HttpBody body_handle,
+                           bool is_upstream, bool is_grip, JS::UniqueChars backend) {
   // MOZ_ASSERT(cx);
   // MOZ_ASSERT(is_instance(response));
   // MOZ_ASSERT(response_handle);

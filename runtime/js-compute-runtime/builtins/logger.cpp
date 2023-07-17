@@ -7,7 +7,7 @@ namespace builtins {
 bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
-  LogEndpoint endpoint(JS::GetReservedSlot(self, Logger::Slots::Endpoint).toInt32());
+  host_api::LogEndpoint endpoint(JS::GetReservedSlot(self, Logger::Slots::Endpoint).toInt32());
 
   auto msg = core::encode(cx, args.get(0));
   if (!msg) {
@@ -42,7 +42,7 @@ JSObject *Logger::create(JSContext *cx, const char *name) {
     return nullptr;
   }
 
-  auto res = LogEndpoint::get(std::string_view{name, strlen(name)});
+  auto res = host_api::LogEndpoint::get(std::string_view{name, strlen(name)});
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return nullptr;
@@ -58,7 +58,7 @@ bool Logger::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   CTOR_HEADER("Logger", 1);
 
   auto name = core::encode(cx, args[0]);
-  auto handle_res = LogEndpoint::get(name);
+  auto handle_res = host_api::LogEndpoint::get(name);
   if (auto *err = handle_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;

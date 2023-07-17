@@ -4,9 +4,9 @@
 
 namespace builtins {
 
-Dict Dictionary::dictionary_handle(JSObject *obj) {
+host_api::Dict Dictionary::dictionary_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, Dictionary::Slots::Handle);
-  return Dict(val.toInt32());
+  return host_api::Dict(val.toInt32());
 }
 
 bool Dictionary::get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -113,9 +113,9 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::RootedObject dictionary(cx, JS_NewObjectForConstructor(cx, &class_, args));
 
-  auto res = Dict::open(name_view);
+  auto res = host_api::Dict::open(name_view);
   if (auto *err = res.to_err()) {
-    if (error_is_bad_handle(*err)) {
+    if (host_api::error_is_bad_handle(*err)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DICTIONARY_DOES_NOT_EXIST,
                                 name_view.data());
       return false;

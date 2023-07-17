@@ -139,7 +139,8 @@ JS::PersistentRooted<js::UniquePtr<ScheduledTimers>> timers;
 
 JS::PersistentRootedObjectVector *pending_async_tasks;
 
-bool process_pending_request(JSContext *cx, JS::HandleObject request, HttpPendingReq pending) {
+bool process_pending_request(JSContext *cx, JS::HandleObject request,
+                             host_api::HttpPendingReq pending) {
 
   JS::RootedObject response_promise(cx, builtins::Request::response_promise(request));
 
@@ -184,7 +185,7 @@ bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObj
 
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
 
-bool process_body_read(JSContext *cx, JS::HandleObject streamSource, HttpBody body) {
+bool process_body_read(JSContext *cx, JS::HandleObject streamSource, host_api::HttpBody body) {
   JS::RootedObject owner(cx, builtins::NativeStreamSource::owner(streamSource));
   JS::RootedObject controller(cx, builtins::NativeStreamSource::controller(streamSource));
 
@@ -247,7 +248,7 @@ bool EventLoop::process_pending_async_tasks(JSContext *cx) {
   }
 
   size_t count = pending_async_tasks->length();
-  std::vector<AsyncHandle> handles;
+  std::vector<host_api::AsyncHandle> handles;
   handles.reserve(count);
 
   for (size_t i = 0; i < count; i++) {
@@ -261,7 +262,7 @@ bool EventLoop::process_pending_async_tasks(JSContext *cx) {
     }
   }
 
-  auto res = AsyncHandle::select(handles, timeout);
+  auto res = host_api::AsyncHandle::select(handles, timeout);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -292,10 +293,10 @@ bool EventLoop::process_pending_async_tasks(JSContext *cx) {
   bool ok;
   JS::HandleObject ready_obj = (*pending_async_tasks)[ready_index];
   if (builtins::Request::is_instance(ready_obj)) {
-    ok = process_pending_request(cx, ready_obj, HttpPendingReq{ready_handle});
+    ok = process_pending_request(cx, ready_obj, host_api::HttpPendingReq{ready_handle});
   } else {
     MOZ_ASSERT(builtins::NativeStreamSource::is_instance(ready_obj));
-    ok = process_body_read(cx, ready_obj, HttpBody{ready_handle});
+    ok = process_body_read(cx, ready_obj, host_api::HttpBody{ready_handle});
   }
 
   pending_async_tasks->erase(const_cast<JSObject **>(ready_obj.address()));
