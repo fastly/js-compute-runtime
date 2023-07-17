@@ -9,6 +9,7 @@
 #include "builtins/shared/url.h"
 #include "builtins/transform-stream.h"
 #include "core/encode.h"
+#include "core/event_loop.h"
 #include "host_interface/host_api.h"
 #include "third_party/picosha2.h"
 
@@ -810,7 +811,7 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
   // (This deadlock happens in automated tests, but admittedly might not happen
   // in real usage.)
 
-  if (!pending_async_tasks->append(source))
+  if (!core::EventLoop::queue_async_task(source))
     return false;
 
   args.rval().setUndefined();
@@ -858,7 +859,7 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     }
 
     if (Request::is_instance(body_owner)) {
-      if (!pending_async_tasks->append(body_owner)) {
+      if (!core::EventLoop::queue_async_task(body_owner)) {
         return false;
       }
     }

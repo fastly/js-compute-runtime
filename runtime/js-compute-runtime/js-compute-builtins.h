@@ -15,8 +15,6 @@
 #include "jsfriendapi.h"
 #pragma clang diagnostic pop
 
-extern JS::PersistentRootedObjectVector *pending_async_tasks;
-
 enum JSErrNum {
 #define MSG_DEF(name, count, exception, format) name,
 #include "./error-numbers.msg"
@@ -107,9 +105,6 @@ JS::Result<std::string> forgivingBase64Decode(std::string_view data, const uint8
 
 JS::Result<std::string> convertJSValueToByteString(JSContext *cx, std::string v);
 } // namespace GlobalProperties
-
-bool has_pending_async_tasks();
-bool process_pending_async_tasks(JSContext *cx);
 
 bool debug_logging_enabled();
 bool dump_value(JSContext *cx, JS::Value value, FILE *fp);
