@@ -781,7 +781,7 @@ console.log(request); // outputs `Request: {method: POST, url: https://www.fastl
 - Add support for the `queueMicrotask` global function
 - Add support for the `structuredClone` global function
 - Add support for the `location` global object as an instance of `WorkerLocation`
-- Support Big{Ui,I}nt64Array in crypto.getRandomValues
+- Support BigUint64Array and BigInt64Array in crypto.getRandomValues
 - Enable class static blocks syntax
 - Returned the exit code from the JS Compute Runtime, by passing it up through our CLI
 
