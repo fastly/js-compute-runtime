@@ -148,6 +148,14 @@ struct HostBytes final {
     return *this;
   }
 
+  /// Allocate a zeroed HostBytes with the given number of bytes.
+  static HostBytes with_capacity(size_t len) {
+    HostBytes ret;
+    ret.ptr = std::make_unique<uint8_t[]>(len);
+    ret.len = len;
+    return ret;
+  }
+
   using iterator = uint8_t *;
   using const_iterator = const uint8_t *;
 
@@ -303,7 +311,14 @@ struct BackendConfig {
   std::optional<HostString> sni_hostname;
 };
 
-using CacheOverrideTag = uint8_t;
+struct CacheOverrideTag final {
+  uint8_t value = 0;
+
+  void set_pass();
+  void set_ttl();
+  void set_stale_while_revalidate();
+  void set_pci();
+};
 
 class HttpReq final : public HttpBase {
 public:
@@ -493,6 +508,11 @@ public:
   static Result<SecretStore> open(std::string_view name);
 
   Result<std::optional<Secret>> get(std::string_view name);
+};
+
+class Random final {
+public:
+  static Result<HostBytes> get_bytes(size_t num_bytes);
 };
 
 } // namespace host_api
