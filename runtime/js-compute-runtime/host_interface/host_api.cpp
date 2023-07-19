@@ -1,8 +1,10 @@
 #include <algorithm>
 #include <type_traits>
 
+#include "builtins/cache-override.h"
 #include "core/allocator.h"
 #include "fastly-world/fastly_world.h"
+#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 
 namespace host_api {
@@ -43,9 +45,10 @@ static_assert(std::is_same_v<Dict::Handle, fastly_compute_at_edge_fastly_diction
 static_assert(
     std::is_same_v<ObjectStore::Handle, fastly_compute_at_edge_fastly_object_store_handle_t>);
 static_assert(std::is_same_v<HttpVersion, fastly_compute_at_edge_fastly_http_version_t>);
+static_assert(std::is_same_v<typeof(CacheOverrideTag::value),
+                             fastly_compute_at_edge_fastly_http_cache_override_tag_t>);
 static_assert(
-    std::is_same_v<CacheOverrideTag, fastly_compute_at_edge_fastly_http_cache_override_tag_t>);
-static_assert(std::is_same_v<TlsVersion, fastly_compute_at_edge_fastly_tls_version_t>);
+    std::is_same_v<typeof(TlsVersion::value), fastly_compute_at_edge_fastly_tls_version_t>);
 
 Result<bool> AsyncHandle::is_ready() const {
   Result<bool> res;
@@ -291,6 +294,51 @@ Result<Response> HttpPendingReq::wait() {
 
 AsyncHandle HttpPendingReq::async_handle() const { return AsyncHandle{this->handle}; }
 
+void CacheOverrideTag::set_pass() {
+  this->value |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS;
+}
+
+void CacheOverrideTag::set_ttl() {
+  this->value |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL;
+}
+
+void CacheOverrideTag::set_stale_while_revalidate() {
+  this->value |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE;
+}
+
+void CacheOverrideTag::set_pci() {
+  this->value |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI;
+}
+
+TlsVersion::TlsVersion(uint8_t raw) : value{raw} {
+  switch (raw) {
+  case FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS1:
+  case FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS11:
+  case FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS12:
+  case FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS13:
+    break;
+
+  default:
+    MOZ_ASSERT(false, "Making a TlsValue from an invalid raw value");
+  }
+}
+
+TlsVersion TlsVersion::version_1() {
+  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS1};
+}
+
+TlsVersion TlsVersion::version_1_1() {
+  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS11};
+}
+
+TlsVersion TlsVersion::version_1_2() {
+  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS12};
+}
+
+TlsVersion TlsVersion::version_1_3() {
+  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_FASTLY_TLS_VERSION_TLS13};
+}
+
 Result<HttpReq> HttpReq::make() {
   Result<HttpReq> res;
 
@@ -358,12 +406,12 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
 
   if (auto &val = config.ssl_min_version) {
     backend_config.ssl_min_version.is_some = true;
-    backend_config.ssl_min_version.val = *val;
+    backend_config.ssl_min_version.val = val->value;
   }
 
   if (auto &val = config.ssl_max_version) {
     backend_config.ssl_max_version.is_some = true;
-    backend_config.ssl_max_version.val = *val;
+    backend_config.ssl_max_version.val = val->value;
   }
 
   if (auto &val = config.cert_hostname) {
@@ -501,8 +549,7 @@ Result<HostString> HttpReq::get_uri() const {
   return res;
 }
 
-Result<Void> HttpReq::cache_override(fastly_compute_at_edge_fastly_http_cache_override_tag_t tag,
-                                     std::optional<uint32_t> opt_ttl,
+Result<Void> HttpReq::cache_override(CacheOverrideTag tag, std::optional<uint32_t> opt_ttl,
                                      std::optional<uint32_t> opt_swr,
                                      std::optional<std::string_view> opt_sk) {
   Result<Void> res;
@@ -523,8 +570,8 @@ Result<Void> HttpReq::cache_override(fastly_compute_at_edge_fastly_http_cache_ov
   }
 
   fastly_compute_at_edge_fastly_error_t err;
-  if (!fastly_compute_at_edge_fastly_http_req_cache_override_set(this->handle, tag, ttl, swr, &sk,
-                                                                 &err)) {
+  if (!fastly_compute_at_edge_fastly_http_req_cache_override_set(this->handle, tag.value, ttl, swr,
+                                                                 &sk, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace();
@@ -929,6 +976,21 @@ Result<std::optional<Secret>> SecretStore::get(std::string_view name) {
     res.emplace(ret.val);
   } else {
     res.emplace(std::nullopt);
+  }
+
+  return res;
+}
+
+Result<HostBytes> Random::get_bytes(size_t num_bytes) {
+  Result<HostBytes> res;
+
+  auto ret = HostBytes::with_capacity(num_bytes);
+  auto err =
+      fastly::random_get(reinterpret_cast<uint32_t>(static_cast<void *>(ret.begin())), num_bytes);
+  if (err != 0) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(std::move(ret));
   }
 
   return res;

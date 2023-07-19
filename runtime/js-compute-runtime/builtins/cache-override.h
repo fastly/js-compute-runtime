@@ -34,7 +34,7 @@ public:
   static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
-  static uint8_t abi_tag(JSObject *self);
+  static host_api::CacheOverrideTag abi_tag(JSObject *self);
   static JS::Value ttl(JSObject *self);
   static void set_ttl(JSObject *self, uint32_t ttl);
   static JS::Value swr(JSObject *self);

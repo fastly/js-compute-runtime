@@ -20,7 +20,6 @@
 #include "builtins/backend.h"
 #include "builtins/request-response.h"
 #include "core/encode.h"
-#include "host_interface/fastly.h"
 #include "js-compute-builtins.h"
 #include "js/Conversions.h"
 
@@ -757,12 +756,12 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
 
   auto tlsMinVersion = JS::GetReservedSlot(backend, Backend::Slots::TlsMinVersion);
   if (!tlsMinVersion.isNullOrUndefined()) {
-    backend_config.ssl_min_version = static_cast<uint8_t>(tlsMinVersion.toInt32());
+    backend_config.ssl_min_version = host_api::TlsVersion(tlsMinVersion.toInt32());
   }
 
   auto tlsMaxVersion = JS::GetReservedSlot(backend, Backend::Slots::TlsMaxVersion);
   if (!tlsMaxVersion.isNullOrUndefined()) {
-    backend_config.ssl_max_version = static_cast<int8_t>(tlsMaxVersion.toInt32());
+    backend_config.ssl_max_version = host_api::TlsVersion(tlsMaxVersion.toInt32());
   }
 
   auto certificateHostnameSlot = JS::GetReservedSlot(backend, Backend::Slots::CertificateHostname);
@@ -1111,7 +1110,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   /// Has to be either: 1; 1.1; 1.2; 1.3;
   JS::RootedValue tlsMinVersion_val(cx);
-  std::optional<int> tlsMinVersion;
+  std::optional<host_api::TlsVersion> tlsMinVersion;
   if (!JS_HasProperty(cx, configuration, "tlsMinVersion", &found)) {
     return false;
   }
@@ -1130,24 +1129,24 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     if (version == 1.3) {
-      tlsMinVersion = fastly::TLS::VERSION_1_3;
+      tlsMinVersion = host_api::TlsVersion::version_1_3();
     } else if (version == 1.2) {
-      tlsMinVersion = fastly::TLS::VERSION_1_2;
+      tlsMinVersion = host_api::TlsVersion::version_1_2();
     } else if (version == 1.1) {
-      tlsMinVersion = fastly::TLS::VERSION_1_1;
+      tlsMinVersion = host_api::TlsVersion::version_1_1();
     } else if (version == 1) {
-      tlsMinVersion = fastly::TLS::VERSION_1;
+      tlsMinVersion = host_api::TlsVersion::version_1();
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MIN_INVALID);
       return false;
     }
     JS::SetReservedSlot(backend, Backend::Slots::TlsMinVersion,
-                        JS::Int32Value(tlsMinVersion.value()));
+                        JS::Int32Value(tlsMinVersion->value));
   }
 
   /// Has to be either: 1; 1.1; 1.2; 1.3;
   JS::RootedValue tlsMaxVersion_val(cx);
-  std::optional<int> tlsMaxVersion;
+  std::optional<host_api::TlsVersion> tlsMaxVersion;
   if (!JS_HasProperty(cx, configuration, "tlsMaxVersion", &found)) {
     return false;
   }
@@ -1160,29 +1159,29 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    if (isnan(version)) {
+    if (std::isnan(version)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MAX_INVALID);
       return false;
     }
 
     if (version == 1.3) {
-      tlsMaxVersion = fastly::TLS::VERSION_1_3;
+      tlsMaxVersion = host_api::TlsVersion::version_1_3();
     } else if (version == 1.2) {
-      tlsMaxVersion = fastly::TLS::VERSION_1_2;
+      tlsMaxVersion = host_api::TlsVersion::version_1_2();
     } else if (version == 1.1) {
-      tlsMaxVersion = fastly::TLS::VERSION_1_1;
+      tlsMaxVersion = host_api::TlsVersion::version_1_1();
     } else if (version == 1) {
-      tlsMaxVersion = fastly::TLS::VERSION_1;
+      tlsMaxVersion = host_api::TlsVersion::version_1();
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MAX_INVALID);
       return false;
     }
     JS::SetReservedSlot(backend, Backend::Slots::TlsMaxVersion,
-                        JS::Int32Value(tlsMaxVersion.value()));
+                        JS::Int32Value(tlsMaxVersion->value));
   }
 
   if (tlsMinVersion.has_value() && tlsMaxVersion.has_value()) {
-    if (tlsMinVersion.value() > tlsMaxVersion.value()) {
+    if (tlsMinVersion->value > tlsMaxVersion->value) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BACKEND_TLS_MIN_GREATER_THAN_TLS_MAX);
       return false;

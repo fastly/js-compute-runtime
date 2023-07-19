@@ -9,7 +9,6 @@
 
 #include "cache-override.h"
 #include "core/encode.h"
-#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
 
@@ -77,22 +76,29 @@ void CacheOverride::set_pci(JSObject *self, bool pci) {
 }
 
 host_api::CacheOverrideTag CacheOverride::abi_tag(JSObject *self) {
+  host_api::CacheOverrideTag tag;
+
   MOZ_ASSERT(is_instance(self));
   switch (CacheOverride::mode(self)) {
   case CacheOverride::CacheOverrideMode::None:
-    return 0;
+    return tag;
   case CacheOverride::CacheOverrideMode::Pass:
-    return FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS;
+    tag.set_pass();
+    return tag;
   default:;
   }
 
-  host_api::CacheOverrideTag tag = 0;
-  if (!ttl(self).isUndefined())
-    tag |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL;
-  if (!swr(self).isUndefined())
-    tag |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE;
-  if (!pci(self).isUndefined())
-    tag |= FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI;
+  if (!ttl(self).isUndefined()) {
+    tag.set_ttl();
+  }
+
+  if (!swr(self).isUndefined()) {
+    tag.set_stale_while_revalidate();
+  }
+
+  if (!pci(self).isUndefined()) {
+    tag.set_pci();
+  }
 
   return tag;
 }

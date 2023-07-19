@@ -6,7 +6,6 @@
 #pragma clang diagnostic pop
 
 #include "crypto.h"
-#include "host_interface/fastly.h"
 #include "subtle-crypto.h"
 
 bool is_int_typed_array(JSObject *obj) {
@@ -44,8 +43,16 @@ bool Crypto::get_random_values(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::AutoCheckCannotGC noGC(cx);
   bool is_shared;
-  void *buffer = JS_GetArrayBufferViewData(typed_array, &is_shared, noGC);
-  fastly::random_get((int32_t)buffer, byte_length);
+  auto *buffer = static_cast<uint8_t *>(JS_GetArrayBufferViewData(typed_array, &is_shared, noGC));
+
+  auto res = host_api::Random::get_bytes(byte_length);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  auto bytes = std::move(res.unwrap());
+  std::copy_n(bytes.begin(), byte_length, buffer);
 
   args.rval().setObject(*typed_array);
   return true;
@@ -129,7 +136,17 @@ struct UUID {
 bool Crypto::random_uuid(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   UUID id;
-  fastly::random_get(reinterpret_cast<int32_t>(&id), sizeof(id));
+
+  {
+    auto res = host_api::Random::get_bytes(sizeof(id));
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    auto bytes = std::move(res.unwrap());
+    std::copy_n(bytes.begin(), sizeof(id), reinterpret_cast<uint8_t *>(&id));
+  }
 
   // Set the two most significant bits (bits 6 and 7) of the clock_seq_hi_and_reserved to zero and
   // one, respectively.
