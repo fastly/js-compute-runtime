@@ -13,9 +13,6 @@ routes.set("/client/tlsJA3MD5", event => {
     return pass('ok')
 });
 routes.set("/client/tlsClientHello", event => {
-    console.log('hello');
-    console.log('event.client.tlsJA3MD5', event.client.tlsJA3MD5);
-    console.log('event.client.tlsClientHello', event.client.tlsClientHello);
     error = assert(event.client.tlsClientHello instanceof ArrayBuffer, true, 'event.client.tlsClientHello instanceof ArrayBuffer')
     if (error) { return error }
     error = assert(typeof event.client.tlsClientHello.byteLength, 'number', 'typeof event.client.tlsClientHello.byteLength')
@@ -38,7 +35,6 @@ routes.set("/client/tlsCipherOpensslName", event => {
 });
 
 routes.set("/client/tlsProtocol", event => {
-    console.log("tlsProtocol", event.client.tlsProtocol)
     error = assert(typeof event.client.tlsProtocol, 'string', 'typeof event.client.tlsProtocol')
     if (error) { return error }
     return pass('ok')
