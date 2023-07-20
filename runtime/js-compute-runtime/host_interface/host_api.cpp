@@ -6,10 +6,18 @@
 #include "fastly-world/fastly_world.h"
 #include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
+#include "js-compute-builtins.h"
 
 namespace host_api {
 
 namespace {
+
+fastly_world_list_u8_t span_to_list_u8(std::span<uint8_t> span) {
+  return {
+      .ptr = const_cast<uint8_t *>(span.data()),
+      .len = span.size(),
+  };
+}
 
 fastly_world_string_t string_view_to_world_string(std::string_view str) {
   return {
@@ -49,6 +57,10 @@ static_assert(std::is_same_v<typeof(CacheOverrideTag::value),
                              fastly_compute_at_edge_fastly_http_cache_override_tag_t>);
 static_assert(
     std::is_same_v<typeof(TlsVersion::value), fastly_compute_at_edge_fastly_tls_version_t>);
+static_assert(std::is_same_v<CacheHandle::Handle, fastly_compute_at_edge_fastly_cache_handle_t>);
+
+static_assert(
+    std::is_same_v<typeof(CacheState::state), fastly_compute_at_edge_fastly_cache_lookup_state_t>);
 
 Result<bool> AsyncHandle::is_ready() const {
   Result<bool> res;
@@ -991,6 +1003,187 @@ Result<HostBytes> Random::get_bytes(size_t num_bytes) {
     res.emplace_err(err);
   } else {
     res.emplace(std::move(ret));
+  }
+
+  return res;
+}
+
+bool CacheState::is_found() const {
+  return this->state & FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_FOUND;
+}
+
+bool CacheState::is_usable() const {
+  return this->state & FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_USABLE;
+}
+
+bool CacheState::is_stale() const {
+  return this->state & FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_STALE;
+}
+
+bool CacheState::must_insert_or_update() const {
+  return this->state & FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE;
+}
+
+Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupOptions &opts) {
+  Result<CacheHandle> res;
+
+  auto key_str = string_view_to_world_string(key);
+
+  fastly_compute_at_edge_fastly_cache_lookup_options_t os;
+  memset(&os, 0, sizeof(os));
+
+  if (opts.request_headers.is_valid()) {
+    os.request_headers.is_some = true;
+    os.request_headers.val = opts.request_headers.handle;
+  }
+
+  fastly_compute_at_edge_fastly_error_t err;
+  fastly_compute_at_edge_fastly_cache_handle_t handle;
+  if (!fastly_compute_at_edge_fastly_transaction_lookup(&key_str, &os, &handle, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(handle);
+  }
+
+  return res;
+}
+
+namespace {
+
+void init_write_options(fastly_compute_at_edge_fastly_cache_write_options_t &options,
+                        const CacheWriteOptions &opts) {
+  memset(&options, 0, sizeof(options));
+
+  options.max_age_ns = opts.max_age_ns;
+  options.request_headers = opts.req.handle;
+
+  if (opts.vary_rule.empty()) {
+    options.vary_rule.ptr = 0;
+    options.vary_rule.len = 0;
+  } else {
+    options.vary_rule = string_view_to_world_string(opts.vary_rule);
+  }
+
+  options.initial_age_ns = opts.initial_age_ns;
+  options.stale_while_revalidate_ns = opts.stale_while_revalidate_ns;
+
+  if (opts.surrogate_keys.empty()) {
+    options.surrogate_keys.ptr = 0;
+    options.surrogate_keys.len = 0;
+  } else {
+    options.surrogate_keys = string_view_to_world_string(opts.surrogate_keys);
+  }
+
+  options.length = opts.length;
+
+  if (opts.metadata.empty()) {
+    options.user_metadata.ptr = 0;
+    options.user_metadata.len = 0;
+  } else {
+    options.user_metadata = span_to_list_u8(opts.metadata);
+  }
+
+  options.sensitive_data = opts.sensitive;
+}
+
+} // namespace
+
+Result<HttpBody> CacheHandle::insert(std::string_view key, const CacheWriteOptions &opts) {
+  Result<HttpBody> res;
+
+  fastly_compute_at_edge_fastly_cache_write_options_t options;
+  init_write_options(options, opts);
+
+  fastly_compute_at_edge_fastly_error_t err;
+  fastly_compute_at_edge_fastly_body_handle_t ret;
+  auto host_key = string_view_to_world_string(key);
+  if (!fastly_compute_at_edge_fastly_cache_insert(&host_key, &options, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(HttpBody{ret});
+  }
+
+  return res;
+}
+
+Result<std::tuple<HttpBody, CacheHandle>>
+CacheHandle::insert_and_stream_back(const CacheWriteOptions &opts) {
+  Result<std::tuple<HttpBody, CacheHandle>> res;
+
+  fastly_compute_at_edge_fastly_cache_write_options_t options;
+  init_write_options(options, opts);
+
+  fastly_compute_at_edge_fastly_error_t err;
+  fastly_world_tuple2_body_handle_cache_handle_t ret;
+  if (!fastly_compute_at_edge_fastly_transaction_insert_and_stream_back(this->handle, &options,
+                                                                        &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(HttpBody{ret.f0}, CacheHandle{ret.f1});
+  }
+
+  return res;
+}
+
+Result<Void> CacheHandle::transaction_cancel() {
+  Result<Void> res;
+
+  fastly_compute_at_edge_fastly_error_t err;
+  if (!fastly_compute_at_edge_fastly_transaction_cancel(this->handle, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
+Result<HttpBody> CacheHandle::get_body(const CacheGetBodyOptions &opts) {
+  Result<HttpBody> res;
+
+  fastly_compute_at_edge_fastly_cache_get_body_options_t options{
+      .start = opts.start,
+      .end = opts.end,
+  };
+  fastly_compute_at_edge_fastly_body_handle_t body;
+  fastly_compute_at_edge_fastly_error_t err;
+  if (!fastly_compute_at_edge_fastly_cache_get_body(this->handle, &options, &body, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(HttpBody{body});
+  }
+
+  return res;
+}
+
+Result<CacheState> CacheHandle::get_state() {
+  Result<CacheState> res;
+
+  fastly_compute_at_edge_fastly_error_t err;
+  alignas(4) fastly_compute_at_edge_fastly_cache_lookup_state_t state;
+  if (!fastly_compute_at_edge_fastly_cache_get_state(this->handle, &state, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(CacheState{state});
+  }
+
+  return res;
+}
+
+Result<std::optional<HostString>> Fastly::purge_surrogate_key(std::string_view key) {
+  Result<std::optional<HostString>> res;
+
+  auto host_key = string_view_to_world_string(key);
+  fastly_world_option_string_t ret;
+  fastly_compute_at_edge_fastly_error_t err;
+  // TODO: we don't currently define any meaningful options in fastly.wit
+  fastly_compute_at_edge_fastly_purge_options_mask_t purge_options = 0;
+  if (!fastly_compute_at_edge_fastly_purge_surrogate_key(&host_key, purge_options, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(make_host_string(ret.val));
+  } else {
+    res.emplace(std::nullopt);
   }
 
   return res;

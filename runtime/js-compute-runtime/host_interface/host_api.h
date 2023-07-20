@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "core/allocator.h"
+#include "js/TypeDecls.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
@@ -522,6 +523,85 @@ public:
 class Random final {
 public:
   static Result<HostBytes> get_bytes(size_t num_bytes);
+};
+
+struct CacheLookupOptions final {
+  /// A full request handle, used only for its headers.
+  HttpReq request_headers;
+};
+
+struct CacheGetBodyOptions final {
+  uint64_t start = 0;
+  uint64_t end = 0;
+};
+
+struct CacheWriteOptions final {
+  uint64_t max_age_ns = 0;
+  HttpReq req;
+  std::string_view vary_rule;
+
+  uint64_t initial_age_ns = 0;
+  uint64_t stale_while_revalidate_ns = 0;
+
+  std::string_view surrogate_keys;
+
+  uint64_t length = 0;
+
+  std::span<uint8_t> metadata;
+
+  bool sensitive = false;
+};
+
+struct CacheState final {
+  uint8_t state = 0;
+
+  CacheState() = default;
+  CacheState(uint8_t state) : state{state} {}
+
+  bool is_found() const;
+  bool is_usable() const;
+  bool is_stale() const;
+  bool must_insert_or_update() const;
+};
+
+class CacheHandle final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  CacheHandle() = default;
+  explicit CacheHandle(Handle handle) : handle{handle} {}
+
+  /// Lookup a cached object.
+  static Result<CacheHandle> lookup(std::string_view key, const CacheLookupOptions &opts);
+
+  /// Insert a cache object.
+  static Result<HttpBody> insert(std::string_view key, const CacheWriteOptions &opts);
+
+  /// Insert this cached object and stream it back.
+  Result<std::tuple<HttpBody, CacheHandle>> insert_and_stream_back(const CacheWriteOptions &opts);
+
+  bool is_valid() const { return this->handle != invalid; }
+
+  /// Cancel a transaction.
+  Result<Void> transaction_cancel();
+
+  /// Fetch the body handle for the cached data.
+  Result<HttpBody> get_body(const CacheGetBodyOptions &opts);
+
+  /// Fetch the state for this cache handle.
+  Result<CacheState> get_state();
+};
+
+class Fastly final {
+  ~Fastly() = delete;
+
+public:
+  /// Purge the given surrogate key.
+  static Result<std::optional<HostString>> purge_surrogate_key(std::string_view key);
 };
 
 } // namespace host_api
