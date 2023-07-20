@@ -1,9 +1,8 @@
 #include "builtins/client-info.h"
 #include "core/geo_ip.h"
 #include "host_interface/host_api.h"
-#include "openssl/evp.h"
-
 #include "js/JSON.h"
+#include "openssl/evp.h"
 #include <arpa/inet.h>
 
 namespace builtins {
@@ -17,6 +16,27 @@ JSString *address(JSObject *obj) {
 
 JSString *geo_info(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::GeoInfo));
+  return val.isString() ? val.toString() : nullptr;
+}
+
+JSString *cipher(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::Cipher));
+  return val.isString() ? val.toString() : nullptr;
+}
+JSString *ja3(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::JA3));
+  return val.isString() ? val.toString() : nullptr;
+}
+JSObject *clientHello(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::ClientHello));
+  return val.isObject() ? val.toObjectOrNull() : nullptr;
+}
+JSObject *clientCert(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::ClientCert));
+  return val.isObject() ? val.toObjectOrNull() : nullptr;
+}
+JSString *protocol(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::Protocol));
   return val.isString() ? val.toString() : nullptr;
 }
 
@@ -85,7 +105,7 @@ JSString *retrieve_geo_info(JSContext *cx, JS::HandleObject self) {
 } // namespace
 
 bool ClientInfo::address_get(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(0)
+  METHOD_HEADER(0);
 
   JS::RootedString address_str(cx, address(self));
   if (!address_str) {
@@ -114,14 +134,19 @@ bool ClientInfo::geo_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  auto res = host_api::HttpReq::http_req_downstream_tls_cipher_openssl_name();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
-  }
+  JS::RootedString result(cx, cipher(self));
+  if (!result) {
+    auto res = host_api::HttpReq::http_req_downstream_tls_cipher_openssl_name();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
 
-  auto cipher = std::move(res.unwrap());
-  JS::RootedString result(cx, JS_NewStringCopyN(cx, cipher.ptr.get(), cipher.len));
+    auto cipher = std::move(res.unwrap());
+    result.set(JS_NewStringCopyN(cx, cipher.ptr.get(), cipher.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::Cipher),
+                        JS::StringValue(result));
+  }
 
   args.rval().setString(result);
   return true;
@@ -130,40 +155,50 @@ bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::V
 bool ClientInfo::tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  auto res = host_api::HttpReq::http_req_downstream_tls_ja3_md5();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  JS::RootedString result(cx, ja3(self));
+  if (!result) {
+    auto res = host_api::HttpReq::http_req_downstream_tls_ja3_md5();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    auto ja3 = std::move(res.unwrap());
+    JS::UniqueChars hex{OPENSSL_buf2hexstr(ja3.ptr.get(), ja3.len)};
+    std::string ja3hex{hex.get(), std::remove(hex.get(), hex.get() + strlen(hex.get()), ':')};
+
+    result.set(JS_NewStringCopyN(cx, ja3hex.c_str(), ja3hex.length()));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::JA3),
+                        JS::StringValue(result));
   }
-
-  auto ja3 = std::move(res.unwrap());
-  JS::UniqueChars hex{OPENSSL_buf2hexstr(ja3.ptr.get(), ja3.len)};
-  std::string ja3hex{hex.get(), std::remove(hex.get(), hex.get() + strlen(hex.get()), ':')};
-
-  JS::RootedString s(cx, JS_NewStringCopyN(cx, ja3hex.c_str(), ja3hex.length()));
-  args.rval().setString(s);
+  args.rval().setString(result);
   return true;
 }
 
 bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  auto res = host_api::HttpReq::http_req_downstream_tls_client_hello();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
-  }
-
-  auto hello = std::move(res.unwrap());
-  JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, hello.len, hello.ptr.get()));
+  JS::RootedObject buffer(cx, clientHello(self));
   if (!buffer) {
-    // We can be here if the array buffer was too large -- if that was the case then a
-    // JSMSG_BAD_ARRAY_LENGTH will have been created.
-    return false;
-  }
+    auto res = host_api::HttpReq::http_req_downstream_tls_client_hello();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
 
-  // `hello` is now owned by `buffer`
-  static_cast<void>(hello.ptr.release());
+    auto hello = std::move(res.unwrap());
+    buffer.set(JS::NewArrayBufferWithContents(cx, hello.len, hello.ptr.get()));
+    if (!buffer) {
+      // We can be here if the array buffer was too large -- if that was the case then a
+      // JSMSG_BAD_ARRAY_LENGTH will have been created.
+      return false;
+    }
+
+    // `hello` is now owned by `buffer`
+    static_cast<void>(hello.ptr.release());
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::ClientHello),
+                        JS::ObjectValue(*buffer));
+  }
 
   args.rval().setObject(*buffer);
   return true;
@@ -172,22 +207,27 @@ bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *v
 bool ClientInfo::tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  auto res = host_api::HttpReq::http_req_downstream_tls_raw_client_certificate();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
-  }
-  auto cert = std::move(res.unwrap());
-
-  JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, cert.len, cert.ptr.get()));
+  JS::RootedObject buffer(cx, clientCert(self));
   if (!buffer) {
-    // We can be here if the array buffer was too large -- if that was the case then a
-    // JSMSG_BAD_ARRAY_LENGTH will have been created.
-    return false;
-  }
+    auto res = host_api::HttpReq::http_req_downstream_tls_raw_client_certificate();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+    auto cert = std::move(res.unwrap());
 
-  // `cert` is now owned by `buffer`
-  static_cast<void>(cert.ptr.release());
+    buffer.set(JS::NewArrayBufferWithContents(cx, cert.len, cert.ptr.get()));
+    if (!buffer) {
+      // We can be here if the array buffer was too large -- if that was the case then a
+      // JSMSG_BAD_ARRAY_LENGTH will have been created.
+      return false;
+    }
+
+    // `cert` is now owned by `buffer`
+    static_cast<void>(cert.ptr.release());
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::ClientCert),
+                        JS::ObjectValue(*buffer));
+  }
 
   args.rval().setObject(*buffer);
   return true;
@@ -196,14 +236,19 @@ bool ClientInfo::tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Va
 bool ClientInfo::tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  auto res = host_api::HttpReq::http_req_downstream_tls_protocol();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
-  }
+  JS::RootedString result(cx, protocol(self));
+  if (!result) {
+    auto res = host_api::HttpReq::http_req_downstream_tls_protocol();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
 
-  auto protocol = std::move(res.unwrap());
-  JS::RootedString result(cx, JS_NewStringCopyN(cx, protocol.ptr.get(), protocol.len));
+    auto protocol = std::move(res.unwrap());
+    result.set(JS_NewStringCopyN(cx, protocol.ptr.get(), protocol.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::Protocol),
+                        JS::StringValue(result));
+  }
 
   args.rval().setString(result);
   return true;
