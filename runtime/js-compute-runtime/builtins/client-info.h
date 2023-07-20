@@ -20,6 +20,11 @@ public:
   enum class Slots {
     Address,
     GeoInfo,
+    Cipher,
+    Protocol,
+    ClientHello,
+    JA3,
+    ClientCert,
     Count,
   };
   static const JSFunctionSpec static_methods[];
