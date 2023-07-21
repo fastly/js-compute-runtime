@@ -1911,40 +1911,40 @@
     "status": "PASS"
   },
   "Parsing: <non-spec:/.//> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <non-spec:/..//> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <non-spec:/a/..//> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <non-spec:/.//path> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <non-spec:/..//path> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <non-spec:/a/..//path> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: </.//path> against <non-spec:/p>": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: </..//path> against <non-spec:/p>": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <..//path> against <non-spec:/p>": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <a/..//path> against <non-spec:/p>": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <> against <non-spec:/..//p>": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <path> against <non-spec:/..//p>": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <../path> against <non-spec:/.//p>": {
     "status": "PASS"
