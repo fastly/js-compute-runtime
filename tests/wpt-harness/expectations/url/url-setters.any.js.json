@@ -453,10 +453,10 @@
     "status": "PASS"
   },
   "URL: Setting <non-spec:/.//p>.hostname = 'h' Drop /. from path": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "URL: Setting <non-spec:/.//p>.hostname = ''": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "URL: Setting <http://example.com/>.hostname = '///bad.com' Leading / is not stripped": {
     "status": "PASS"
@@ -633,7 +633,7 @@
     "status": "FAIL"
   },
   "URL: Setting <non-spec:/.//>.pathname = 'p' Drop /. from path": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "URL: Setting <data:/nospace>.pathname = 'space ' Non-special URLs with non-opaque paths percent-encode U+0020": {
     "status": "FAIL"
@@ -678,16 +678,16 @@
     "status": "PASS"
   },
   "URL: Setting <data:space ?query>.search = '' Drop trailing spaces from trailing opaque paths": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <sc:space ?query>.search = ''": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <data:space  ?query#fragment>.search = '' Do not drop trailing spaces from non-trailing opaque paths": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "URL: Setting <sc:space  ?query#fragment>.search = ''": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "URL: Setting <http://example.net>.search = ' ' Trailing space should be encoded": {
     "status": "PASS"
@@ -744,10 +744,10 @@
     "status": "PASS"
   },
   "URL: Setting <data:space                                                                                                                                  #fragment>.hash = '' Drop trailing spaces from trailing opaque paths": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <sc:space    #fragment>.hash = ''": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <data:space  ?query#fragment>.hash = '' Do not drop trailing spaces from non-trailing opaque paths": {
     "status": "PASS"
