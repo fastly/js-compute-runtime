@@ -19,5 +19,8 @@
   },
   "Readable stream: invalid strategy.size return value": {
     "status": "PASS"
+  },
+  "Readable stream: invalid strategy.size return value when pulling": {
+    "status": "PASS"
   }
 }

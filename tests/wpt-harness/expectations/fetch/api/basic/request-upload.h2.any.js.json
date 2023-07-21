@@ -14,6 +14,12 @@
   "Feature detect for POST with ReadableStream, using request object": {
     "status": "FAIL"
   },
+  "Synchronous feature detect": {
+    "status": "FAIL"
+  },
+  "Synchronous feature detect fails if feature unsupported": {
+    "status": "PASS"
+  },
   "Streaming upload with body containing a String": {
     "status": "FAIL"
   },
