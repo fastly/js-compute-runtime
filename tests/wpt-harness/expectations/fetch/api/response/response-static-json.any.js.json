@@ -37,5 +37,14 @@
   },
   "Check static json() propagates JSON serializer errors": {
     "status": "PASS"
+  },
+  "Check response returned by static json() with input 𝌆": {
+    "status": "PASS"
+  },
+  "Check response returned by static json() with input U+df06U+d834": {
+    "status": "PASS"
+  },
+  "Check response returned by static json() with input U+dead": {
+    "status": "PASS"
   }
 }
