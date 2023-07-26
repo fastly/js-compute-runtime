@@ -40,6 +40,10 @@ Response make_response(fastly_compute_at_edge_fastly_response_t &resp) {
 
 } // namespace
 
+// The host interface makes the assumption regularly that uint32_t is sufficient space to store a
+// pointer.
+static_assert(sizeof(uint32_t) == sizeof(void *));
+
 // Ensure that the handle types stay in sync with fastly-world.h
 static_assert(std::is_same_v<AsyncHandle::Handle, fastly_compute_at_edge_fastly_async_handle_t>);
 static_assert(std::is_same_v<HttpBody::Handle, fastly_compute_at_edge_fastly_body_handle_t>);
