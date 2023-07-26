@@ -97,12 +97,12 @@ DEFINES := -DMOZ_JS_STREAMS
 CXX_FLAGS := -std=gnu++20 -Wall -Werror -Qunused-arguments
 CXX_FLAGS += -fno-sized-deallocation -fno-aligned-new -mthread-model single
 CXX_FLAGS += -fPIC -fno-rtti -fno-exceptions -fno-math-errno -pipe
-CXX_FLAGS += -fno-omit-frame-pointer -funwind-tables
+CXX_FLAGS += -fno-omit-frame-pointer -funwind-tables -m32
 CXX_FLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
 
 # Flags for C compilation
 CFLAGS := -Wall -Werror -Wno-unknown-attributes -Wno-pointer-to-int-cast
-CFLAGS += -Wno-int-to-pointer-cast
+CFLAGS += -Wno-int-to-pointer-cast -m32
 CFLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
 
 # Includes for compiling c++
