@@ -1012,6 +1012,21 @@ Result<HostBytes> Random::get_bytes(size_t num_bytes) {
   return res;
 }
 
+Result<uint32_t> Random::get_u32() {
+  Result<uint32_t> res;
+
+  uint32_t storage;
+  auto err = fastly::random_get(reinterpret_cast<uint32_t>(static_cast<void *>(&storage)),
+                                sizeof(storage));
+  if (err != 0) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(storage);
+  }
+
+  return res;
+}
+
 bool CacheState::is_found() const {
   return this->state & FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_FOUND;
 }
