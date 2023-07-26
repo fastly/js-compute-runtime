@@ -523,6 +523,8 @@ public:
 class Random final {
 public:
   static Result<HostBytes> get_bytes(size_t num_bytes);
+
+  static Result<uint32_t> get_u32();
 };
 
 struct CacheLookupOptions final {

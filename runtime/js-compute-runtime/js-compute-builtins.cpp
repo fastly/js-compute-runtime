@@ -32,7 +32,6 @@
 #include "js/shadow/Object.h"
 #include "zlib.h"
 
-#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 
 #include "builtin.h"
@@ -960,9 +959,9 @@ static bool init(JSContext *cx, HandleObject global) {
 } // namespace GlobalProperties
 
 bool math_random(JSContext *cx, unsigned argc, Value *vp) {
-  uint32_t storage;
-  fastly::random_get(reinterpret_cast<int32_t>(&storage), sizeof(storage));
-  double newvalue = static_cast<double>(storage) / std::pow(2.0, 32.0);
+  auto res = host_api::Random::get_u32();
+  MOZ_ASSERT(!res.is_err());
+  double newvalue = static_cast<double>(res.unwrap()) / std::pow(2.0, 32.0);
 
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setDouble(newvalue);
