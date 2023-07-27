@@ -730,7 +730,8 @@ bool fastly_compute_at_edge_fastly_secret_store_open(
 
 bool fastly_compute_at_edge_fastly_secret_store_get(
     fastly_compute_at_edge_fastly_secret_store_handle_t store, fastly_world_string_t *key,
-    fastly_world_option_secret_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err) {
+    fastly_world_option_fastly_compute_at_edge_fastly_secret_handle_t *ret,
+    fastly_compute_at_edge_fastly_error_t *err) {
   ret->val = INVALID_HANDLE;
   bool ok = convert_result(fastly::secret_store_get(store, key->ptr, key->len, &ret->val), err);
   if ((!ok && *err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_OPTIONAL_NONE) ||
@@ -786,7 +787,8 @@ bool fastly_compute_at_edge_fastly_object_store_open(
 
 bool fastly_compute_at_edge_fastly_object_store_lookup(
     fastly_compute_at_edge_fastly_object_store_handle_t store, fastly_world_string_t *key,
-    fastly_world_option_body_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err) {
+    fastly_world_option_fastly_compute_at_edge_fastly_body_handle_t *ret,
+    fastly_compute_at_edge_fastly_error_t *err) {
   ret->val = INVALID_HANDLE;
   bool ok = convert_result(fastly::object_store_get(store, key->ptr, key->len, &ret->val), err);
   if ((!ok && *err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_OPTIONAL_NONE) ||
@@ -805,10 +807,9 @@ bool fastly_compute_at_edge_fastly_object_store_insert(
   return convert_result(fastly::object_store_insert(store, key->ptr, key->len, body_handle), err);
 }
 
-bool fastly_compute_at_edge_fastly_async_io_select(fastly_world_list_async_handle_t *hs,
-                                                   uint32_t timeout_ms,
-                                                   fastly_world_option_u32_t *ret,
-                                                   fastly_compute_at_edge_fastly_error_t *err) {
+bool fastly_compute_at_edge_fastly_async_io_select(
+    fastly_world_list_fastly_compute_at_edge_fastly_async_handle_t *hs, uint32_t timeout_ms,
+    fastly_world_option_u32_t *ret, fastly_compute_at_edge_fastly_error_t *err) {
   if (!convert_result(fastly::async_select(hs->ptr, hs->len, timeout_ms, &ret->val), err)) {
     if (*err == FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_OPTIONAL_NONE) {
       ret->is_some = false;
@@ -946,7 +947,8 @@ bool fastly_compute_at_edge_fastly_transaction_lookup(
 bool fastly_compute_at_edge_fastly_transaction_insert_and_stream_back(
     fastly_compute_at_edge_fastly_cache_handle_t handle,
     fastly_compute_at_edge_fastly_cache_write_options_t *options,
-    fastly_world_tuple2_body_handle_cache_handle_t *ret,
+    fastly_world_tuple2_fastly_compute_at_edge_fastly_body_handle_fastly_compute_at_edge_fastly_cache_handle_t
+        *ret,
     fastly_compute_at_edge_fastly_error_t *err) {
   uint16_t options_mask = 0;
   fastly::CacheWriteOptions opts;

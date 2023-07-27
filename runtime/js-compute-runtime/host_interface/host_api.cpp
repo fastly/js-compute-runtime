@@ -85,7 +85,7 @@ Result<std::optional<uint32_t>> AsyncHandle::select(const std::vector<AsyncHandl
   Result<std::optional<uint32_t>> res;
 
   static_assert(sizeof(AsyncHandle) == sizeof(fastly_compute_at_edge_fastly_async_handle_t));
-  fastly_world_list_async_handle_t hs{
+  fastly_world_list_fastly_compute_at_edge_fastly_async_handle_t hs{
       .ptr = reinterpret_cast<fastly_compute_at_edge_fastly_async_handle_t *>(
           const_cast<AsyncHandle *>(handles.data())),
       .len = handles.size()};
@@ -282,7 +282,7 @@ Result<std::optional<Response>> HttpPendingReq::poll() {
   Result<std::optional<Response>> res;
 
   fastly_compute_at_edge_fastly_error_t err;
-  fastly_world_option_response_t ret;
+  fastly_world_option_fastly_compute_at_edge_fastly_response_t ret;
   if (!fastly_compute_at_edge_fastly_http_req_pending_req_poll(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else if (ret.is_some) {
@@ -917,7 +917,7 @@ Result<std::optional<HttpBody>> ObjectStore::lookup(std::string_view name) {
   Result<std::optional<HttpBody>> res;
 
   auto name_str = string_view_to_world_string(name);
-  fastly_world_option_body_handle_t ret;
+  fastly_world_option_fastly_compute_at_edge_fastly_body_handle_t ret;
   fastly_compute_at_edge_fastly_error_t err;
   if (!fastly_compute_at_edge_fastly_object_store_lookup(this->handle, &name_str, &ret, &err)) {
     res.emplace_err(err);
@@ -984,7 +984,7 @@ Result<std::optional<Secret>> SecretStore::get(std::string_view name) {
   Result<std::optional<Secret>> res;
 
   auto name_str = string_view_to_world_string(name);
-  fastly_world_option_secret_handle_t ret;
+  fastly_world_option_fastly_compute_at_edge_fastly_secret_handle_t ret;
   fastly_compute_at_edge_fastly_error_t err;
   if (!fastly_compute_at_edge_fastly_secret_store_get(this->handle, &name_str, &ret, &err)) {
     res.emplace_err(err);
@@ -1133,7 +1133,8 @@ CacheHandle::insert_and_stream_back(const CacheWriteOptions &opts) {
   init_write_options(options, opts);
 
   fastly_compute_at_edge_fastly_error_t err;
-  fastly_world_tuple2_body_handle_cache_handle_t ret;
+  fastly_world_tuple2_fastly_compute_at_edge_fastly_body_handle_fastly_compute_at_edge_fastly_cache_handle_t
+      ret;
   if (!fastly_compute_at_edge_fastly_transaction_insert_and_stream_back(this->handle, &options,
                                                                         &ret, &err)) {
     res.emplace_err(err);
