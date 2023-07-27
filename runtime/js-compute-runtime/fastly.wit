@@ -1,6 +1,6 @@
 package fastly:compute-at-edge
 
-interface fastly {
+interface types {
   // TODO: split this up into function-specific error enums
   enum error {
     /// Unknown error value.
@@ -50,6 +50,10 @@ interface fastly {
     /// resources permitted. For example, creating too many response handles.
     limit-exceeded
   }
+}
+
+interface fastly {
+  use types.{error}
 
   /*
    * Fastly ABI

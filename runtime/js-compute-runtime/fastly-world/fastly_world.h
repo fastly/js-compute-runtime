@@ -15,54 +15,56 @@ typedef struct {
   size_t len;
 } fastly_world_string_t;
 
-typedef uint8_t fastly_compute_at_edge_fastly_error_t;
+typedef uint8_t fastly_compute_at_edge_types_error_t;
 
 // Unknown error value.
 // It should be an internal error if this is returned.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_UNKNOWN_ERROR 0
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_UNKNOWN_ERROR 0
 // Generic error value.
 // This means that some unexpected error occurred during a hostcall.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_GENERIC_ERROR 1
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_GENERIC_ERROR 1
 // Invalid argument.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_INVALID_ARGUMENT 2
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_INVALID_ARGUMENT 2
 // Invalid handle.
 // Thrown when a handle is not valid. E.G. No dictionary exists with the given name.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_BAD_HANDLE 3
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BAD_HANDLE 3
 // Buffer length error.
 // Thrown when a buffer is too long.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_BUFFER_LEN 4
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BUFFER_LEN 4
 // Unsupported operation error.
 // This error is thrown when some operation cannot be performed, because it is not supported.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_UNSUPPORTED 5
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_UNSUPPORTED 5
 // Alignment error.
 // This is thrown when a pointer does not point to a properly aligned slice of memory.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_BAD_ALIGN 6
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BAD_ALIGN 6
 // Invalid HTTP error.
 // This can be thrown when a method, URI, header, or status is not valid. This can also
 // be thrown if a message head is too large.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_HTTP_INVALID 7
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_HTTP_INVALID 7
 // HTTP user error.
 // This is thrown in cases where user code caused an HTTP error. For example, attempt to send
 // a 1xx response code, or a request with a non-absolute URI. This can also be caused by
 // an unexpected header: both `content-length` and `transfer-encoding`, for example.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_HTTP_USER 8
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_HTTP_USER 8
 // HTTP incomplete message error.
 // This can be thrown when a stream ended unexpectedly.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_HTTP_INCOMPLETE 9
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_HTTP_INCOMPLETE 9
 // A `None` error.
 // This status code is used to indicate when an optional value did not exist, as opposed to
 // an empty value.
 // Note, this value should no longer be used, as we have explicit optional types now.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_OPTIONAL_NONE 10
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE 10
 // Message head too large.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_HTTP_HEAD_TOO_LARGE 11
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_HTTP_HEAD_TOO_LARGE 11
 // Invalid HTTP status.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_HTTP_INVALID_STATUS 12
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_HTTP_INVALID_STATUS 12
 // Limit exceeded
 // 
 // This is returned when an attempt to allocate a resource has exceeded the maximum number of
 // resources permitted. For example, creating too many response handles.
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_ERROR_LIMIT_EXCEEDED 13
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_LIMIT_EXCEEDED 13
+
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_types_error_t;
 
 typedef struct {
   fastly_world_string_t family;
@@ -357,15 +359,15 @@ typedef struct {
   fastly_compute_at_edge_fastly_cache_handle_t f1;
 } fastly_world_tuple2_fastly_compute_at_edge_fastly_body_handle_fastly_compute_at_edge_fastly_cache_handle_t;
 
-typedef fastly_compute_at_edge_fastly_error_t fastly_compute_at_edge_log_error_t;
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_log_error_t;
 
 typedef uint32_t fastly_compute_at_edge_log_endpoint_handle_t;
 
-typedef fastly_compute_at_edge_fastly_error_t fastly_compute_at_edge_dictionary_error_t;
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_dictionary_error_t;
 
 typedef uint32_t fastly_compute_at_edge_dictionary_handle_t;
 
-typedef fastly_compute_at_edge_fastly_error_t fastly_compute_at_edge_secret_store_error_t;
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_secret_store_error_t;
 
 typedef uint32_t fastly_compute_at_edge_secret_store_store_handle_t;
 
@@ -378,7 +380,7 @@ typedef struct {
 
 typedef fastly_compute_at_edge_fastly_body_handle_t fastly_compute_at_edge_object_store_body_handle_t;
 
-typedef fastly_compute_at_edge_fastly_error_t fastly_compute_at_edge_object_store_error_t;
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_object_store_error_t;
 
 typedef uint32_t fastly_compute_at_edge_object_store_fd_t;
 
@@ -404,71 +406,71 @@ typedef struct {
 } compute_at_edge_request_t;
 
 // Imported Functions from `fastly:compute-at-edge/fastly`
-bool fastly_compute_at_edge_fastly_abi_init(uint64_t abi_version, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_uap_parse(fastly_world_string_t *user_agent, fastly_compute_at_edge_fastly_user_agent_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_body_new(fastly_compute_at_edge_fastly_body_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_body_append(fastly_compute_at_edge_fastly_body_handle_t dest, fastly_compute_at_edge_fastly_body_handle_t src, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_body_read(fastly_compute_at_edge_fastly_body_handle_t h, uint32_t chunk_size, fastly_world_list_u8_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_body_write(fastly_compute_at_edge_fastly_body_handle_t h, fastly_world_list_u8_t *buf, fastly_compute_at_edge_fastly_body_write_end_t end, uint32_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_body_close(fastly_compute_at_edge_fastly_body_handle_t h, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_cache_override_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_http_cache_override_tag_t tag, uint32_t *maybe_ttl, uint32_t *maybe_stale_while_revalidate, fastly_world_string_t *maybe_sk, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_downstream_client_ip_addr(fastly_world_list_u8_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_downstream_client_h2_fingerprint(fastly_world_list_u8_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_downstream_tls_cipher_openssl_name(fastly_world_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_downstream_tls_protocol(fastly_world_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_downstream_tls_client_hello(fastly_world_list_u8_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_downstream_tls_raw_client_certificate(fastly_world_list_u8_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_downstream_tls_client_cert_verify_result(fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_downstream_tls_ja3_md5(fastly_world_list_u8_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_new(fastly_compute_at_edge_fastly_request_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_header_names_get(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_list_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_header_value_get(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name, fastly_world_option_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_header_values_get(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name, fastly_world_option_list_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_header_values_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name, fastly_world_list_string_t *values, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_header_insert(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_header_append(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_header_remove(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_method_get(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_method_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *method, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_uri_get(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_uri_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *uri, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_version_get(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_http_version_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_version_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_http_version_t version, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_send(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_body_handle_t b, fastly_world_string_t *backend, fastly_compute_at_edge_fastly_response_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_send_async(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_body_handle_t b, fastly_world_string_t *backend, fastly_compute_at_edge_fastly_pending_request_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_send_async_streaming(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_body_handle_t b, fastly_world_string_t *backend, fastly_compute_at_edge_fastly_pending_request_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_pending_req_poll(fastly_compute_at_edge_fastly_pending_request_handle_t h, fastly_world_option_fastly_compute_at_edge_fastly_response_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_pending_req_wait(fastly_compute_at_edge_fastly_pending_request_handle_t h, fastly_compute_at_edge_fastly_response_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_pending_req_select(fastly_world_list_fastly_compute_at_edge_fastly_pending_request_handle_t *h, fastly_world_tuple2_u32_fastly_compute_at_edge_fastly_response_t *ret, fastly_compute_at_edge_fastly_error_t *err);
+bool fastly_compute_at_edge_fastly_abi_init(uint64_t abi_version, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_uap_parse(fastly_world_string_t *user_agent, fastly_compute_at_edge_fastly_user_agent_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_body_new(fastly_compute_at_edge_fastly_body_handle_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_body_append(fastly_compute_at_edge_fastly_body_handle_t dest, fastly_compute_at_edge_fastly_body_handle_t src, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_body_read(fastly_compute_at_edge_fastly_body_handle_t h, uint32_t chunk_size, fastly_world_list_u8_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_body_write(fastly_compute_at_edge_fastly_body_handle_t h, fastly_world_list_u8_t *buf, fastly_compute_at_edge_fastly_body_write_end_t end, uint32_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_body_close(fastly_compute_at_edge_fastly_body_handle_t h, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_cache_override_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_http_cache_override_tag_t tag, uint32_t *maybe_ttl, uint32_t *maybe_stale_while_revalidate, fastly_world_string_t *maybe_sk, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_downstream_client_ip_addr(fastly_world_list_u8_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_downstream_client_h2_fingerprint(fastly_world_list_u8_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_downstream_tls_cipher_openssl_name(fastly_world_string_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_downstream_tls_protocol(fastly_world_string_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_downstream_tls_client_hello(fastly_world_list_u8_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_downstream_tls_raw_client_certificate(fastly_world_list_u8_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_downstream_tls_client_cert_verify_result(fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_downstream_tls_ja3_md5(fastly_world_list_u8_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_new(fastly_compute_at_edge_fastly_request_handle_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_header_names_get(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_list_string_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_header_value_get(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name, fastly_world_option_string_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_header_values_get(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name, fastly_world_option_list_string_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_header_values_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name, fastly_world_list_string_t *values, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_header_insert(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_header_append(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_header_remove(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_method_get(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_method_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *method, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_uri_get(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_uri_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *uri, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_version_get(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_http_version_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_version_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_http_version_t version, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_send(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_body_handle_t b, fastly_world_string_t *backend, fastly_compute_at_edge_fastly_response_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_send_async(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_body_handle_t b, fastly_world_string_t *backend, fastly_compute_at_edge_fastly_pending_request_handle_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_send_async_streaming(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_body_handle_t b, fastly_world_string_t *backend, fastly_compute_at_edge_fastly_pending_request_handle_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_pending_req_poll(fastly_compute_at_edge_fastly_pending_request_handle_t h, fastly_world_option_fastly_compute_at_edge_fastly_response_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_pending_req_wait(fastly_compute_at_edge_fastly_pending_request_handle_t h, fastly_compute_at_edge_fastly_response_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_pending_req_select(fastly_world_list_fastly_compute_at_edge_fastly_pending_request_handle_t *h, fastly_world_tuple2_u32_fastly_compute_at_edge_fastly_response_t *ret, fastly_compute_at_edge_types_error_t *err);
 // Returns whether or not the original client request arrived with a
 // Fastly-Key belonging to a user with the rights to purge content on this
 // service.
-bool fastly_compute_at_edge_fastly_http_req_key_is_valid(bool *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_close(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_auto_decompress_response_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_content_encodings_t encodings, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_upgrade_websocket(fastly_world_string_t *backend, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_redirect_to_websocket_proxy(fastly_world_string_t *backend, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_redirect_to_grip_proxy(fastly_world_string_t *backend, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_framing_headers_mode_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_framing_headers_mode_t mode, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_req_register_dynamic_backend(fastly_world_string_t *prefix, fastly_world_string_t *target, fastly_compute_at_edge_fastly_dynamic_backend_config_t *config, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_new(fastly_compute_at_edge_fastly_response_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_names_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_list_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_value_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_option_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_values_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_option_list_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_values_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_list_string_t *values, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_insert(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_append(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_remove(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_version_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_version_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_version_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_version_t version, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_send_downstream(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_body_handle_t b, bool streaming, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_status_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_status_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_status_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_status_t status, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_close(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_key_is_valid(bool *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_close(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_auto_decompress_response_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_content_encodings_t encodings, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_upgrade_websocket(fastly_world_string_t *backend, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_redirect_to_websocket_proxy(fastly_world_string_t *backend, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_redirect_to_grip_proxy(fastly_world_string_t *backend, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_framing_headers_mode_set(fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_framing_headers_mode_t mode, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_req_register_dynamic_backend(fastly_world_string_t *prefix, fastly_world_string_t *target, fastly_compute_at_edge_fastly_dynamic_backend_config_t *config, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_new(fastly_compute_at_edge_fastly_response_handle_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_header_names_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_list_string_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_header_value_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_option_string_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_header_values_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_option_list_string_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_header_values_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_list_string_t *values, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_header_insert(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_header_append(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_header_remove(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_version_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_version_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_version_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_version_t version, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_send_downstream(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_body_handle_t b, bool streaming, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_status_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_status_t *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_status_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_status_t status, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_close(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_types_error_t *err);
 // Adjust how this response's framing headers are determined.
-bool fastly_compute_at_edge_fastly_http_resp_framing_headers_mode_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_framing_headers_mode_t mode, fastly_compute_at_edge_fastly_error_t *err);
+bool fastly_compute_at_edge_fastly_http_resp_framing_headers_mode_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_framing_headers_mode_t mode, fastly_compute_at_edge_types_error_t *err);
 // JSON string for now
-bool fastly_compute_at_edge_fastly_geo_lookup(fastly_world_list_u8_t *addr_octets, fastly_world_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
+bool fastly_compute_at_edge_fastly_geo_lookup(fastly_world_list_u8_t *addr_octets, fastly_world_string_t *ret, fastly_compute_at_edge_types_error_t *err);
 // Blocks until one of the given objects is ready for I/O, or the optional timeout expires.
 // 
 // Valid object handles includes bodies and pending requests. See the `async_item_handle`
@@ -479,7 +481,7 @@ bool fastly_compute_at_edge_fastly_geo_lookup(fastly_world_list_u8_t *addr_octet
 // 
 // Returns the _index_ (not handle!) of the first object that is ready, or
 // none if the timeout expires before any objects are ready for I/O.
-bool fastly_compute_at_edge_fastly_async_io_select(fastly_world_list_fastly_compute_at_edge_fastly_async_handle_t *hs, uint32_t timeout_ms, fastly_world_option_u32_t *ret, fastly_compute_at_edge_fastly_error_t *err);
+bool fastly_compute_at_edge_fastly_async_io_select(fastly_world_list_fastly_compute_at_edge_fastly_async_handle_t *hs, uint32_t timeout_ms, fastly_world_option_u32_t *ret, fastly_compute_at_edge_types_error_t *err);
 // Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
 // 
 // If an object is ready, the I/O action is guaranteed to complete without blocking.
@@ -487,22 +489,22 @@ bool fastly_compute_at_edge_fastly_async_io_select(fastly_world_list_fastly_comp
 // Valid object handles includes bodies and pending requests. See the `async_item_handle`
 // definition for more details, including what I/O actions are associated with each handle
 // type.
-bool fastly_compute_at_edge_fastly_async_io_is_ready(fastly_compute_at_edge_fastly_async_handle_t handle, bool *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_purge_surrogate_key(fastly_world_string_t *surrogate_keys, fastly_compute_at_edge_fastly_purge_options_mask_t purge_options, fastly_world_option_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
+bool fastly_compute_at_edge_fastly_async_io_is_ready(fastly_compute_at_edge_fastly_async_handle_t handle, bool *ret, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_purge_surrogate_key(fastly_world_string_t *surrogate_keys, fastly_compute_at_edge_fastly_purge_options_mask_t purge_options, fastly_world_option_string_t *ret, fastly_compute_at_edge_types_error_t *err);
 // Performs a non-request-collapsing cache lookup.
 // 
 // Returns a result without waiting for any request collapsing that may be ongoing.
-bool fastly_compute_at_edge_fastly_cache_lookup(fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_lookup_options_t *options, fastly_compute_at_edge_fastly_cache_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
+bool fastly_compute_at_edge_fastly_cache_lookup(fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_lookup_options_t *options, fastly_compute_at_edge_fastly_cache_handle_t *ret, fastly_compute_at_edge_types_error_t *err);
 // Performs a non-request-collapsing cache insertion (or update).
 // 
 // The returned handle is to a streaming body that is used for writing the object into
 // the cache.
-bool fastly_compute_at_edge_fastly_cache_insert(fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_write_options_t *options, fastly_compute_at_edge_fastly_body_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
+bool fastly_compute_at_edge_fastly_cache_insert(fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_write_options_t *options, fastly_compute_at_edge_fastly_body_handle_t *ret, fastly_compute_at_edge_types_error_t *err);
 // The entrypoint to the request-collapsing cache transaction API.
 // 
 // This operation always participates in request collapsing and may return stale objects. To bypass
 // request collapsing, use `lookup` and `insert` instead.
-bool fastly_compute_at_edge_fastly_transaction_lookup(fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_lookup_options_t *options, fastly_compute_at_edge_fastly_cache_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
+bool fastly_compute_at_edge_fastly_transaction_lookup(fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_lookup_options_t *options, fastly_compute_at_edge_fastly_cache_handle_t *ret, fastly_compute_at_edge_types_error_t *err);
 // Insert an object into the cache with the given metadata, and return a readable stream of the
 // bytes as they are stored.
 // 
@@ -513,12 +515,12 @@ bool fastly_compute_at_edge_fastly_transaction_lookup(fastly_world_string_t *cac
 // The returned body handle is to a streaming body that is used for writing the object _into_
 // the cache. The returned cache handle provides a separate transaction for reading out the
 // newly cached object to send elsewhere.
-bool fastly_compute_at_edge_fastly_transaction_insert_and_stream_back(fastly_compute_at_edge_fastly_cache_handle_t handle, fastly_compute_at_edge_fastly_cache_write_options_t *options, fastly_world_tuple2_fastly_compute_at_edge_fastly_body_handle_fastly_compute_at_edge_fastly_cache_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
+bool fastly_compute_at_edge_fastly_transaction_insert_and_stream_back(fastly_compute_at_edge_fastly_cache_handle_t handle, fastly_compute_at_edge_fastly_cache_write_options_t *options, fastly_world_tuple2_fastly_compute_at_edge_fastly_body_handle_fastly_compute_at_edge_fastly_cache_handle_t *ret, fastly_compute_at_edge_types_error_t *err);
 // Cancel an obligation to provide an object to the cache.
 // 
 // Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
-bool fastly_compute_at_edge_fastly_transaction_cancel(fastly_compute_at_edge_fastly_cache_handle_t handle, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_cache_get_state(fastly_compute_at_edge_fastly_cache_handle_t handle, fastly_compute_at_edge_fastly_cache_lookup_state_t *ret, fastly_compute_at_edge_fastly_error_t *err);
+bool fastly_compute_at_edge_fastly_transaction_cancel(fastly_compute_at_edge_fastly_cache_handle_t handle, fastly_compute_at_edge_types_error_t *err);
+bool fastly_compute_at_edge_fastly_cache_get_state(fastly_compute_at_edge_fastly_cache_handle_t handle, fastly_compute_at_edge_fastly_cache_lookup_state_t *ret, fastly_compute_at_edge_types_error_t *err);
 // Gets a range of the found object body, returning the `$none` error if there
 // was no found object.
 // 
@@ -528,7 +530,7 @@ bool fastly_compute_at_edge_fastly_cache_get_state(fastly_compute_at_edge_fastly
 // Note: until the CacheD protocol is adjusted to fully support this functionality,
 // the body of objects that are past the stale-while-revalidate period will not
 // be available, even when other metadata is.
-bool fastly_compute_at_edge_fastly_cache_get_body(fastly_compute_at_edge_fastly_cache_handle_t handle, fastly_compute_at_edge_fastly_cache_get_body_options_t *options, fastly_compute_at_edge_fastly_body_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
+bool fastly_compute_at_edge_fastly_cache_get_body(fastly_compute_at_edge_fastly_cache_handle_t handle, fastly_compute_at_edge_fastly_cache_get_body_options_t *options, fastly_compute_at_edge_fastly_body_handle_t *ret, fastly_compute_at_edge_types_error_t *err);
 
 // Imported Functions from `fastly:compute-at-edge/dictionary`
 bool fastly_compute_at_edge_dictionary_open(fastly_world_string_t *name, fastly_compute_at_edge_dictionary_handle_t *ret, fastly_compute_at_edge_dictionary_error_t *err);
