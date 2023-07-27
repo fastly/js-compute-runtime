@@ -91,16 +91,6 @@ interface fastly {
 
 
   /*
-   * Fastly Log
-   */
-  type log-endpoint-handle = u32
-
-  log-endpoint-get: func(name: string) -> result<log-endpoint-handle, error>
-
-  log-write: func(h: log-endpoint-handle, msg: string) -> result<_, error>
-
-
-  /*
    * Fastly HTTP Req
    */
   type request-handle = u32
@@ -274,16 +264,6 @@ interface fastly {
 
 
   /*
-   * Fastly Dictionary
-   */
-  type dictionary-handle = u32
-
-  dictionary-open: func(name: string) -> result<dictionary-handle, error>
-
-  dictionary-get: func(h: dictionary-handle, key: string) -> result<option<string>, error>
-
-
-  /*
    * Fastly Geo
    */
   record geo-data {
@@ -409,35 +389,6 @@ interface fastly {
 
   /// JSON string for now
   geo-lookup: func(addr-octets: list<u8>) -> result<string, error>
-
-
-  /*
-   * Fastly KV Store
-   */
-  type fd = u32
-  type object-store-handle = u32
-
-  object-store-open: func(name: string) -> result<object-store-handle, error>
-
-  object-store-lookup: func(store: object-store-handle, key: string) -> result<option<body-handle>, error>
-
-  object-store-lookup-as-fd: func(store: object-store-handle, key: string) -> result<option<fd>, error>
-
-  // Should object store insert return "inserted" bool?
-  object-store-insert: func(store: object-store-handle, key: string, body-handle: body-handle) -> result<_, error>
-
-
-  /*
-   * Fastly Secret Store
-   */
-  type secret-store-handle = u32
-  type secret-handle = u32
-
-  secret-store-open: func(name: string) -> result<secret-store-handle, error>
-
-  secret-store-get: func(store: secret-store-handle, key: string) -> result<option<secret-handle>, error>
-
-  secret-store-plaintext: func(secret: secret-handle) -> result<option<string>, error>
 
 
   /*
@@ -603,9 +554,80 @@ interface fastly {
 
 }
 
+/*
+ * Fastly Log
+ */
+interface log {
+
+  use fastly.{error}
+
+  type endpoint-handle = u32
+
+  endpoint-get: func(name: string) -> result<endpoint-handle, error>
+
+  write: func(h: endpoint-handle, msg: string) -> result<_, error>
+}
+
+/*
+ * Fastly Dictionary
+ */
+interface dictionary {
+
+  use fastly.{error}
+
+  type handle = u32
+
+  open: func(name: string) -> result<handle, error>
+
+  get: func(h: handle, key: string) -> result<option<string>, error>
+}
+
+/*
+ * Fastly Secret Store
+ */
+interface secret-store {
+
+  use fastly.{error}
+
+  type store-handle = u32
+  type secret-handle = u32
+
+  open: func(name: string) -> result<store-handle, error>
+
+  get: func(store: store-handle, key: string) -> result<option<secret-handle>, error>
+
+  plaintext: func(secret: secret-handle) -> result<option<string>, error>
+
+}
+
+/*
+ * Fastly KV Store
+ */
+interface object-store {
+
+  use fastly.{body-handle, error}
+
+  type fd = u32
+  type handle = u32
+
+  open: func(name: string) -> result<handle, error>
+
+  lookup: func(store: handle, key: string) -> result<option<body-handle>, error>
+
+  lookup-as-fd: func(store: handle, key: string) -> result<option<fd>, error>
+
+  // Should object store insert return "inserted" bool?
+  insert: func(store: handle, key: string, body-handle: body-handle) -> result<_, error>
+
+}
+
 world fastly-world {
 
   import fastly
+  import dictionary
+  import log
+  import secret-store
+  import object-store
 
   export compute-at-edge: interface {
     type request-handle = u32
