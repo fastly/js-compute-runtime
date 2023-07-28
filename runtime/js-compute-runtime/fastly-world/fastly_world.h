@@ -265,41 +265,25 @@ typedef uint8_t fastly_compute_at_edge_types_purge_options_mask_t;
 #define FASTLY_COMPUTE_AT_EDGE_TYPES_PURGE_OPTIONS_MASK_SOFT_PURGE (1 << 0)
 #define FASTLY_COMPUTE_AT_EDGE_TYPES_PURGE_OPTIONS_MASK_RET_BUF (1 << 1)
 
-typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_fastly_error_t;
-
-typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_fastly_body_handle_t;
-
-typedef fastly_compute_at_edge_types_response_t fastly_compute_at_edge_fastly_response_t;
-
-typedef fastly_compute_at_edge_types_http_version_t fastly_compute_at_edge_fastly_http_version_t;
-
-typedef fastly_compute_at_edge_types_framing_headers_mode_t fastly_compute_at_edge_fastly_framing_headers_mode_t;
-
-typedef fastly_compute_at_edge_types_request_handle_t fastly_compute_at_edge_fastly_request_handle_t;
-
-typedef fastly_compute_at_edge_types_response_handle_t fastly_compute_at_edge_fastly_response_handle_t;
-
-typedef fastly_compute_at_edge_types_user_agent_t fastly_compute_at_edge_fastly_user_agent_t;
-
 // The outcome of a cache lookup (either bare or as part of a cache transaction)
-typedef uint32_t fastly_compute_at_edge_fastly_cache_handle_t;
+typedef uint32_t fastly_compute_at_edge_types_cache_handle_t;
 
-typedef uint64_t fastly_compute_at_edge_fastly_cache_object_length_t;
+typedef uint64_t fastly_compute_at_edge_types_cache_object_length_t;
 
-typedef uint64_t fastly_compute_at_edge_fastly_cache_duration_ns_t;
+typedef uint64_t fastly_compute_at_edge_types_cache_duration_ns_t;
 
-typedef uint64_t fastly_compute_at_edge_fastly_cache_hit_count_t;
+typedef uint64_t fastly_compute_at_edge_types_cache_hit_count_t;
 
 typedef struct {
   bool is_some;
-  fastly_compute_at_edge_fastly_request_handle_t val;
-} fastly_world_option_fastly_compute_at_edge_fastly_request_handle_t;
+  fastly_compute_at_edge_types_request_handle_t val;
+} fastly_world_option_fastly_compute_at_edge_types_request_handle_t;
 
 // Extensible options for cache lookup operations; currently used for both `lookup` and `transaction_lookup`.
 typedef struct {
   // * A full request handle, but used only for its headers
-  fastly_world_option_fastly_compute_at_edge_fastly_request_handle_t request_headers;
-} fastly_compute_at_edge_fastly_cache_lookup_options_t;
+  fastly_world_option_fastly_compute_at_edge_types_request_handle_t request_headers;
+} fastly_compute_at_edge_types_cache_lookup_options_t;
 
 typedef struct {
   uint8_t *ptr;
@@ -315,45 +299,56 @@ typedef struct {
 // Some options are only allowed for certain of these hostcalls; see `cache-write-options-mask`.
 typedef struct {
   // this is a required field; there's no flag for it
-  fastly_compute_at_edge_fastly_cache_duration_ns_t max_age_ns;
+  fastly_compute_at_edge_types_cache_duration_ns_t max_age_ns;
   // a full request handle, but used only for its headers
-  fastly_compute_at_edge_fastly_request_handle_t request_headers;
+  fastly_compute_at_edge_types_request_handle_t request_headers;
   // a list of header names separated by spaces
   fastly_world_string_t vary_rule;
   // The initial age of the object in nanoseconds (default: 0).
   // 
   // This age is used to determine the freshness lifetime of the object as well as to
   // prioritize which variant to return if a subsequent lookup matches more than one vary rule
-  fastly_compute_at_edge_fastly_cache_duration_ns_t initial_age_ns;
-  fastly_compute_at_edge_fastly_cache_duration_ns_t stale_while_revalidate_ns;
+  fastly_compute_at_edge_types_cache_duration_ns_t initial_age_ns;
+  fastly_compute_at_edge_types_cache_duration_ns_t stale_while_revalidate_ns;
   // a list of surrogate keys separated by spaces
   fastly_world_string_t surrogate_keys;
-  fastly_compute_at_edge_fastly_cache_object_length_t length;
+  fastly_compute_at_edge_types_cache_object_length_t length;
   fastly_world_list_u8_t user_metadata;
   bool sensitive_data;
-} fastly_compute_at_edge_fastly_cache_write_options_t;
+} fastly_compute_at_edge_types_cache_write_options_t;
 
 typedef struct {
   uint64_t start;
   uint64_t end;
-} fastly_compute_at_edge_fastly_cache_get_body_options_t;
+} fastly_compute_at_edge_types_cache_get_body_options_t;
 
 // The status of this lookup (and potential transaction)
-typedef uint8_t fastly_compute_at_edge_fastly_cache_lookup_state_t;
+typedef uint8_t fastly_compute_at_edge_types_cache_lookup_state_t;
 
 // a cached object was found
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_FOUND (1 << 0)
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_CACHE_LOOKUP_STATE_FOUND (1 << 0)
 // the cached object is valid to use (implies found)
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_USABLE (1 << 1)
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_CACHE_LOOKUP_STATE_USABLE (1 << 1)
 // the cached object is stale (but may or may not be valid to use)
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_STALE (1 << 2)
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_CACHE_LOOKUP_STATE_STALE (1 << 2)
 // this client is requested to insert or revalidate an object
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE (1 << 3)
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE (1 << 3)
 
-typedef struct {
-  fastly_compute_at_edge_fastly_body_handle_t f0;
-  fastly_compute_at_edge_fastly_cache_handle_t f1;
-} fastly_world_tuple2_fastly_compute_at_edge_fastly_body_handle_fastly_compute_at_edge_fastly_cache_handle_t;
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_fastly_error_t;
+
+typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_fastly_body_handle_t;
+
+typedef fastly_compute_at_edge_types_response_t fastly_compute_at_edge_fastly_response_t;
+
+typedef fastly_compute_at_edge_types_http_version_t fastly_compute_at_edge_fastly_http_version_t;
+
+typedef fastly_compute_at_edge_types_framing_headers_mode_t fastly_compute_at_edge_fastly_framing_headers_mode_t;
+
+typedef fastly_compute_at_edge_types_request_handle_t fastly_compute_at_edge_fastly_request_handle_t;
+
+typedef fastly_compute_at_edge_types_response_handle_t fastly_compute_at_edge_fastly_response_handle_t;
+
+typedef fastly_compute_at_edge_types_user_agent_t fastly_compute_at_edge_fastly_user_agent_t;
 
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_log_error_t;
 
@@ -474,6 +469,25 @@ typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_purge_error_
 
 typedef fastly_compute_at_edge_types_purge_options_mask_t fastly_compute_at_edge_purge_purge_options_mask_t;
 
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_cache_error_t;
+
+typedef fastly_compute_at_edge_types_cache_lookup_options_t fastly_compute_at_edge_cache_cache_lookup_options_t;
+
+typedef fastly_compute_at_edge_types_cache_write_options_t fastly_compute_at_edge_cache_cache_write_options_t;
+
+typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_cache_body_handle_t;
+
+typedef fastly_compute_at_edge_types_cache_handle_t fastly_compute_at_edge_cache_cache_handle_t;
+
+typedef fastly_compute_at_edge_types_cache_lookup_state_t fastly_compute_at_edge_cache_cache_lookup_state_t;
+
+typedef fastly_compute_at_edge_types_cache_get_body_options_t fastly_compute_at_edge_cache_cache_get_body_options_t;
+
+typedef struct {
+  fastly_compute_at_edge_cache_body_handle_t f0;
+  fastly_compute_at_edge_cache_cache_handle_t f1;
+} fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_cache_handle_t;
+
 typedef uint32_t compute_at_edge_request_handle_t;
 
 typedef uint32_t compute_at_edge_body_handle_t;
@@ -482,48 +496,6 @@ typedef struct {
   compute_at_edge_request_handle_t f0;
   compute_at_edge_body_handle_t f1;
 } compute_at_edge_request_t;
-
-// Imported Functions from `fastly:compute-at-edge/fastly`
-// Performs a non-request-collapsing cache lookup.
-// 
-// Returns a result without waiting for any request collapsing that may be ongoing.
-bool fastly_compute_at_edge_fastly_cache_lookup(fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_lookup_options_t *options, fastly_compute_at_edge_fastly_cache_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-// Performs a non-request-collapsing cache insertion (or update).
-// 
-// The returned handle is to a streaming body that is used for writing the object into
-// the cache.
-bool fastly_compute_at_edge_fastly_cache_insert(fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_write_options_t *options, fastly_compute_at_edge_fastly_body_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-// The entrypoint to the request-collapsing cache transaction API.
-// 
-// This operation always participates in request collapsing and may return stale objects. To bypass
-// request collapsing, use `lookup` and `insert` instead.
-bool fastly_compute_at_edge_fastly_transaction_lookup(fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_lookup_options_t *options, fastly_compute_at_edge_fastly_cache_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-// Insert an object into the cache with the given metadata, and return a readable stream of the
-// bytes as they are stored.
-// 
-// This helps avoid the "slow reader" problem on a teed stream, for example when a program wishes
-// to store a backend request in the cache while simultaneously streaming to a client in an HTTP
-// response.
-// 
-// The returned body handle is to a streaming body that is used for writing the object _into_
-// the cache. The returned cache handle provides a separate transaction for reading out the
-// newly cached object to send elsewhere.
-bool fastly_compute_at_edge_fastly_transaction_insert_and_stream_back(fastly_compute_at_edge_fastly_cache_handle_t handle, fastly_compute_at_edge_fastly_cache_write_options_t *options, fastly_world_tuple2_fastly_compute_at_edge_fastly_body_handle_fastly_compute_at_edge_fastly_cache_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-// Cancel an obligation to provide an object to the cache.
-// 
-// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
-bool fastly_compute_at_edge_fastly_transaction_cancel(fastly_compute_at_edge_fastly_cache_handle_t handle, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_cache_get_state(fastly_compute_at_edge_fastly_cache_handle_t handle, fastly_compute_at_edge_fastly_cache_lookup_state_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-// Gets a range of the found object body, returning the `$none` error if there
-// was no found object.
-// 
-// The returned `body_handle` must be closed before calling this function again on the same
-// `cache_handle`.
-// 
-// Note: until the CacheD protocol is adjusted to fully support this functionality,
-// the body of objects that are past the stale-while-revalidate period will not
-// be available, even when other metadata is.
-bool fastly_compute_at_edge_fastly_cache_get_body(fastly_compute_at_edge_fastly_cache_handle_t handle, fastly_compute_at_edge_fastly_cache_get_body_options_t *options, fastly_compute_at_edge_fastly_body_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
 
 // Imported Functions from `fastly:compute-at-edge/dictionary`
 bool fastly_compute_at_edge_dictionary_open(fastly_world_string_t *name, fastly_compute_at_edge_dictionary_dictionary_handle_t *ret, fastly_compute_at_edge_dictionary_error_t *err);
@@ -641,6 +613,48 @@ bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_async_io_as
 
 // Imported Functions from `fastly:compute-at-edge/purge`
 bool fastly_compute_at_edge_purge_surrogate_key(fastly_world_string_t *surrogate_keys, fastly_compute_at_edge_purge_purge_options_mask_t purge_options, fastly_world_option_string_t *ret, fastly_compute_at_edge_purge_error_t *err);
+
+// Imported Functions from `fastly:compute-at-edge/cache`
+// Performs a non-request-collapsing cache lookup.
+// 
+// Returns a result without waiting for any request collapsing that may be ongoing.
+bool fastly_compute_at_edge_cache_lookup(fastly_world_string_t *cache_key, fastly_compute_at_edge_cache_cache_lookup_options_t *options, fastly_compute_at_edge_cache_cache_handle_t *ret, fastly_compute_at_edge_cache_error_t *err);
+// Performs a non-request-collapsing cache insertion (or update).
+// 
+// The returned handle is to a streaming body that is used for writing the object into
+// the cache.
+bool fastly_compute_at_edge_cache_insert(fastly_world_string_t *cache_key, fastly_compute_at_edge_cache_cache_write_options_t *options, fastly_compute_at_edge_cache_body_handle_t *ret, fastly_compute_at_edge_cache_error_t *err);
+// The entrypoint to the request-collapsing cache transaction API.
+// 
+// This operation always participates in request collapsing and may return stale objects. To bypass
+// request collapsing, use `lookup` and `insert` instead.
+bool fastly_compute_at_edge_cache_transaction_lookup(fastly_world_string_t *cache_key, fastly_compute_at_edge_cache_cache_lookup_options_t *options, fastly_compute_at_edge_cache_cache_handle_t *ret, fastly_compute_at_edge_cache_error_t *err);
+// Insert an object into the cache with the given metadata, and return a readable stream of the
+// bytes as they are stored.
+// 
+// This helps avoid the "slow reader" problem on a teed stream, for example when a program wishes
+// to store a backend request in the cache while simultaneously streaming to a client in an HTTP
+// response.
+// 
+// The returned body handle is to a streaming body that is used for writing the object _into_
+// the cache. The returned cache handle provides a separate transaction for reading out the
+// newly cached object to send elsewhere.
+bool fastly_compute_at_edge_cache_transaction_insert_and_stream_back(fastly_compute_at_edge_cache_cache_handle_t handle, fastly_compute_at_edge_cache_cache_write_options_t *options, fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_cache_handle_t *ret, fastly_compute_at_edge_cache_error_t *err);
+// Cancel an obligation to provide an object to the cache.
+// 
+// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
+bool fastly_compute_at_edge_cache_transaction_cancel(fastly_compute_at_edge_cache_cache_handle_t handle, fastly_compute_at_edge_cache_error_t *err);
+bool fastly_compute_at_edge_cache_get_state(fastly_compute_at_edge_cache_cache_handle_t handle, fastly_compute_at_edge_cache_cache_lookup_state_t *ret, fastly_compute_at_edge_cache_error_t *err);
+// Gets a range of the found object body, returning the `$none` error if there
+// was no found object.
+// 
+// The returned `body_handle` must be closed before calling this function again on the same
+// `cache_handle`.
+// 
+// Note: until the CacheD protocol is adjusted to fully support this functionality,
+// the body of objects that are past the stale-while-revalidate period will not
+// be available, even when other metadata is.
+bool fastly_compute_at_edge_cache_get_body(fastly_compute_at_edge_cache_cache_handle_t handle, fastly_compute_at_edge_cache_cache_get_body_options_t *options, fastly_compute_at_edge_cache_body_handle_t *ret, fastly_compute_at_edge_cache_error_t *err);
 
 // Exported Functions from `compute-at-edge`
 bool compute_at_edge_serve(compute_at_edge_request_t *req);

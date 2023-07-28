@@ -276,14 +276,7 @@ interface types {
     soft-purge,
     ret-buf
   }
-}
 
-interface fastly {
-  use types.{error, body-handle, response, http-version, framing-headers-mode, request-handle, response-handle, user-agent}
-
-  /*
-   * Fastly Cache
-   */
   /// The outcome of a cache lookup (either bare or as part of a cache transaction)
   type cache-handle = u32
   type cache-object-length = u64
@@ -341,53 +334,10 @@ interface fastly {
     /// this client is requested to insert or revalidate an object
     must-insert-or-update,
   }
+}
 
-  /// Performs a non-request-collapsing cache lookup.
-  ///
-  /// Returns a result without waiting for any request collapsing that may be ongoing.
-  cache-lookup: func(cache-key: string, options: cache-lookup-options) -> result<cache-handle, error>
-
-  /// Performs a non-request-collapsing cache insertion (or update).
-  ///
-  /// The returned handle is to a streaming body that is used for writing the object into
-  /// the cache.
-  cache-insert: func(cache-key: string, options: cache-write-options) -> result<body-handle, error>
-
-  /// The entrypoint to the request-collapsing cache transaction API.
-  ///
-  /// This operation always participates in request collapsing and may return stale objects. To bypass
-  /// request collapsing, use `lookup` and `insert` instead.
-  transaction-lookup: func(cache-key: string, options: cache-lookup-options) -> result<cache-handle, error>
-
-  /// Insert an object into the cache with the given metadata, and return a readable stream of the
-  /// bytes as they are stored.
-  ///
-  /// This helps avoid the "slow reader" problem on a teed stream, for example when a program wishes
-  /// to store a backend request in the cache while simultaneously streaming to a client in an HTTP
-  /// response.
-  ///
-  /// The returned body handle is to a streaming body that is used for writing the object _into_
-  /// the cache. The returned cache handle provides a separate transaction for reading out the
-  /// newly cached object to send elsewhere.
-  transaction-insert-and-stream-back: func(handle: cache-handle, options: cache-write-options) -> result<tuple<body-handle, cache-handle>, error>
-
-  /// Cancel an obligation to provide an object to the cache.
-  ///
-  /// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
-  transaction-cancel: func(handle: cache-handle) -> result<_, error>
-
-  cache-get-state: func(handle: cache-handle) -> result<cache-lookup-state, error>
-
-  /// Gets a range of the found object body, returning the `$none` error if there
-  /// was no found object.
-  ///
-  /// The returned `body_handle` must be closed before calling this function again on the same
-  /// `cache_handle`.
-  ///
-  /// Note: until the CacheD protocol is adjusted to fully support this functionality,
-  /// the body of objects that are past the stale-while-revalidate period will not
-  /// be available, even when other metadata is.
-  cache-get-body: func(handle: cache-handle, options: cache-get-body-options) -> result<body-handle, error>
+interface fastly {
+  use types.{error, body-handle, response, http-version, framing-headers-mode, request-handle, response-handle, user-agent}
 
 }
 
@@ -656,6 +606,63 @@ interface purge {
   surrogate-key: func(surrogate-keys: string, purge-options: purge-options-mask) -> result<option<string>, error>
 }
 
+/*
+ * Fastly Cache
+ */
+interface cache {
+
+  use types.{
+    error, cache-lookup-options, cache-write-options, body-handle, cache-handle,
+    cache-lookup-state, cache-get-body-options
+  }
+
+  /// Performs a non-request-collapsing cache lookup.
+  ///
+  /// Returns a result without waiting for any request collapsing that may be ongoing.
+  lookup: func(cache-key: string, options: cache-lookup-options) -> result<cache-handle, error>
+
+  /// Performs a non-request-collapsing cache insertion (or update).
+  ///
+  /// The returned handle is to a streaming body that is used for writing the object into
+  /// the cache.
+  insert: func(cache-key: string, options: cache-write-options) -> result<body-handle, error>
+
+  /// The entrypoint to the request-collapsing cache transaction API.
+  ///
+  /// This operation always participates in request collapsing and may return stale objects. To bypass
+  /// request collapsing, use `lookup` and `insert` instead.
+  transaction-lookup: func(cache-key: string, options: cache-lookup-options) -> result<cache-handle, error>
+
+  /// Insert an object into the cache with the given metadata, and return a readable stream of the
+  /// bytes as they are stored.
+  ///
+  /// This helps avoid the "slow reader" problem on a teed stream, for example when a program wishes
+  /// to store a backend request in the cache while simultaneously streaming to a client in an HTTP
+  /// response.
+  ///
+  /// The returned body handle is to a streaming body that is used for writing the object _into_
+  /// the cache. The returned cache handle provides a separate transaction for reading out the
+  /// newly cached object to send elsewhere.
+  transaction-insert-and-stream-back: func(handle: cache-handle, options: cache-write-options) -> result<tuple<body-handle, cache-handle>, error>
+
+  /// Cancel an obligation to provide an object to the cache.
+  ///
+  /// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
+  transaction-cancel: func(handle: cache-handle) -> result<_, error>
+
+  get-state: func(handle: cache-handle) -> result<cache-lookup-state, error>
+
+  /// Gets a range of the found object body, returning the `$none` error if there
+  /// was no found object.
+  ///
+  /// The returned `body_handle` must be closed before calling this function again on the same
+  /// `cache_handle`.
+  ///
+  /// Note: until the CacheD protocol is adjusted to fully support this functionality,
+  /// the body of objects that are past the stale-while-revalidate period will not
+  /// be available, even when other metadata is.
+  get-body: func(handle: cache-handle, options: cache-get-body-options) -> result<body-handle, error>
+}
 
 world fastly-world {
 
@@ -671,6 +678,7 @@ world fastly-world {
   import uap
   import async-io
   import purge
+  import cache
 
   export compute-at-edge: interface {
     type request-handle = u32

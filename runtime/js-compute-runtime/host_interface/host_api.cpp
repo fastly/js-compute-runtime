@@ -61,10 +61,10 @@ static_assert(std::is_same_v<typeof(CacheOverrideTag::value),
                              fastly_compute_at_edge_types_http_cache_override_tag_t>);
 static_assert(
     std::is_same_v<typeof(TlsVersion::value), fastly_compute_at_edge_types_tls_version_t>);
-static_assert(std::is_same_v<CacheHandle::Handle, fastly_compute_at_edge_fastly_cache_handle_t>);
+static_assert(std::is_same_v<CacheHandle::Handle, fastly_compute_at_edge_types_cache_handle_t>);
 
 static_assert(
-    std::is_same_v<typeof(CacheState::state), fastly_compute_at_edge_fastly_cache_lookup_state_t>);
+    std::is_same_v<typeof(CacheState::state), fastly_compute_at_edge_types_cache_lookup_state_t>);
 
 Result<bool> AsyncHandle::is_ready() const {
   Result<bool> res;
@@ -1021,19 +1021,19 @@ Result<uint32_t> Random::get_u32() {
 }
 
 bool CacheState::is_found() const {
-  return this->state & FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_FOUND;
+  return this->state & FASTLY_COMPUTE_AT_EDGE_TYPES_CACHE_LOOKUP_STATE_FOUND;
 }
 
 bool CacheState::is_usable() const {
-  return this->state & FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_USABLE;
+  return this->state & FASTLY_COMPUTE_AT_EDGE_TYPES_CACHE_LOOKUP_STATE_USABLE;
 }
 
 bool CacheState::is_stale() const {
-  return this->state & FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_STALE;
+  return this->state & FASTLY_COMPUTE_AT_EDGE_TYPES_CACHE_LOOKUP_STATE_STALE;
 }
 
 bool CacheState::must_insert_or_update() const {
-  return this->state & FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE;
+  return this->state & FASTLY_COMPUTE_AT_EDGE_TYPES_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE;
 }
 
 Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupOptions &opts) {
@@ -1041,7 +1041,7 @@ Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupO
 
   auto key_str = string_view_to_world_string(key);
 
-  fastly_compute_at_edge_fastly_cache_lookup_options_t os;
+  fastly_compute_at_edge_types_cache_lookup_options_t os;
   memset(&os, 0, sizeof(os));
 
   if (opts.request_headers.is_valid()) {
@@ -1050,8 +1050,8 @@ Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupO
   }
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_compute_at_edge_fastly_cache_handle_t handle;
-  if (!fastly_compute_at_edge_fastly_transaction_lookup(&key_str, &os, &handle, &err)) {
+  fastly_compute_at_edge_types_cache_handle_t handle;
+  if (!fastly_compute_at_edge_cache_transaction_lookup(&key_str, &os, &handle, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(handle);
@@ -1062,7 +1062,7 @@ Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupO
 
 namespace {
 
-void init_write_options(fastly_compute_at_edge_fastly_cache_write_options_t &options,
+void init_write_options(fastly_compute_at_edge_types_cache_write_options_t &options,
                         const CacheWriteOptions &opts) {
   memset(&options, 0, sizeof(options));
 
@@ -1103,13 +1103,13 @@ void init_write_options(fastly_compute_at_edge_fastly_cache_write_options_t &opt
 Result<HttpBody> CacheHandle::insert(std::string_view key, const CacheWriteOptions &opts) {
   Result<HttpBody> res;
 
-  fastly_compute_at_edge_fastly_cache_write_options_t options;
+  fastly_compute_at_edge_types_cache_write_options_t options;
   init_write_options(options, opts);
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_compute_at_edge_fastly_body_handle_t ret;
+  fastly_compute_at_edge_types_body_handle_t ret;
   auto host_key = string_view_to_world_string(key);
-  if (!fastly_compute_at_edge_fastly_cache_insert(&host_key, &options, &ret, &err)) {
+  if (!fastly_compute_at_edge_cache_insert(&host_key, &options, &ret, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(HttpBody{ret});
@@ -1122,14 +1122,14 @@ Result<std::tuple<HttpBody, CacheHandle>>
 CacheHandle::insert_and_stream_back(const CacheWriteOptions &opts) {
   Result<std::tuple<HttpBody, CacheHandle>> res;
 
-  fastly_compute_at_edge_fastly_cache_write_options_t options;
+  fastly_compute_at_edge_types_cache_write_options_t options;
   init_write_options(options, opts);
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_world_tuple2_fastly_compute_at_edge_fastly_body_handle_fastly_compute_at_edge_fastly_cache_handle_t
+  fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_cache_handle_t
       ret;
-  if (!fastly_compute_at_edge_fastly_transaction_insert_and_stream_back(this->handle, &options,
-                                                                        &ret, &err)) {
+  if (!fastly_compute_at_edge_cache_transaction_insert_and_stream_back(this->handle, &options, &ret,
+                                                                       &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(HttpBody{ret.f0}, CacheHandle{ret.f1});
@@ -1142,7 +1142,7 @@ Result<Void> CacheHandle::transaction_cancel() {
   Result<Void> res;
 
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_fastly_transaction_cancel(this->handle, &err)) {
+  if (!fastly_compute_at_edge_cache_transaction_cancel(this->handle, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace();
@@ -1154,13 +1154,13 @@ Result<Void> CacheHandle::transaction_cancel() {
 Result<HttpBody> CacheHandle::get_body(const CacheGetBodyOptions &opts) {
   Result<HttpBody> res;
 
-  fastly_compute_at_edge_fastly_cache_get_body_options_t options{
+  fastly_compute_at_edge_types_cache_get_body_options_t options{
       .start = opts.start,
       .end = opts.end,
   };
-  fastly_compute_at_edge_fastly_body_handle_t body;
+  fastly_compute_at_edge_types_body_handle_t body;
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_fastly_cache_get_body(this->handle, &options, &body, &err)) {
+  if (!fastly_compute_at_edge_cache_get_body(this->handle, &options, &body, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(HttpBody{body});
@@ -1173,8 +1173,8 @@ Result<CacheState> CacheHandle::get_state() {
   Result<CacheState> res;
 
   fastly_compute_at_edge_types_error_t err;
-  alignas(4) fastly_compute_at_edge_fastly_cache_lookup_state_t state;
-  if (!fastly_compute_at_edge_fastly_cache_get_state(this->handle, &state, &err)) {
+  alignas(4) fastly_compute_at_edge_types_cache_lookup_state_t state;
+  if (!fastly_compute_at_edge_cache_get_state(this->handle, &state, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(CacheState{state});

@@ -858,11 +858,11 @@ bool fastly_compute_at_edge_purge_surrogate_key(
 #define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_RESERVED (1 << 0)
 #define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS (1 << 1)
 
-bool fastly_compute_at_edge_fastly_cache_lookup(
-    fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_lookup_options_t *options,
-    fastly_compute_at_edge_fastly_cache_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_cache_lookup(
+    fastly_world_string_t *cache_key, fastly_compute_at_edge_types_cache_lookup_options_t *options,
+    fastly_compute_at_edge_types_cache_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
   // Currently this host-call has been implemented to support the `SimpleCache.get(key)` method,
-  // which does not use any fields from `fastly_compute_at_edge_fastly_cache_lookup_options_t`.
+  // which does not use any fields from `fastly_compute_at_edge_types_cache_lookup_options_t`.
   uint8_t options_mask = 0;
   return convert_result(
       fastly::cache_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret), err);
@@ -878,9 +878,9 @@ bool fastly_compute_at_edge_fastly_cache_lookup(
 #define FASTLY_CACHE_WRITE_OPTIONS_MASK_USER_METADATA (1 << 7)
 #define FASTLY_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA (1 << 8)
 
-bool fastly_compute_at_edge_fastly_cache_insert(
-    fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_write_options_t *options,
-    fastly_compute_at_edge_fastly_body_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_cache_insert(
+    fastly_world_string_t *cache_key, fastly_compute_at_edge_types_cache_write_options_t *options,
+    fastly_compute_at_edge_types_body_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
   uint16_t options_mask = 0;
   fastly::CacheWriteOptions opts;
   std::memset(&opts, 0, sizeof(opts));
@@ -923,10 +923,10 @@ bool fastly_compute_at_edge_fastly_cache_insert(
   return convert_result(
       fastly::cache_insert(cache_key->ptr, cache_key->len, options_mask, &opts, ret), err);
 }
-bool fastly_compute_at_edge_fastly_cache_get_body(
-    fastly_compute_at_edge_fastly_cache_handle_t handle,
-    fastly_compute_at_edge_fastly_cache_get_body_options_t *options,
-    fastly_compute_at_edge_fastly_body_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_cache_get_body(
+    fastly_compute_at_edge_types_cache_handle_t handle,
+    fastly_compute_at_edge_types_cache_get_body_options_t *options,
+    fastly_compute_at_edge_types_body_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
   uint32_t options_mask = 0;
   bool ok = convert_result(fastly::cache_get_body(handle, options_mask, options, ret), err);
   if (!ok && *err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) {
@@ -935,9 +935,9 @@ bool fastly_compute_at_edge_fastly_cache_get_body(
   }
   return ok;
 }
-bool fastly_compute_at_edge_fastly_transaction_lookup(
-    fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_lookup_options_t *options,
-    fastly_compute_at_edge_fastly_cache_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_cache_transaction_lookup(
+    fastly_world_string_t *cache_key, fastly_compute_at_edge_types_cache_lookup_options_t *options,
+    fastly_compute_at_edge_types_cache_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
   // Currently this host-call has been implemented to support the `SimpleCache.getOrSet` method,
   // which does not use any fields from `fastly_compute_at_edge_fastly_cache_lookup_options_t`.
   uint32_t options_mask = 0;
@@ -945,10 +945,10 @@ bool fastly_compute_at_edge_fastly_transaction_lookup(
       fastly::cache_transaction_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret),
       err);
 }
-bool fastly_compute_at_edge_fastly_transaction_insert_and_stream_back(
-    fastly_compute_at_edge_fastly_cache_handle_t handle,
-    fastly_compute_at_edge_fastly_cache_write_options_t *options,
-    fastly_world_tuple2_fastly_compute_at_edge_fastly_body_handle_fastly_compute_at_edge_fastly_cache_handle_t
+bool fastly_compute_at_edge_cache_transaction_insert_and_stream_back(
+    fastly_compute_at_edge_types_cache_handle_t handle,
+    fastly_compute_at_edge_types_cache_write_options_t *options,
+    fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_cache_handle_t
         *ret,
     fastly_compute_at_edge_types_error_t *err) {
   uint16_t options_mask = 0;
@@ -996,15 +996,13 @@ bool fastly_compute_at_edge_fastly_transaction_insert_and_stream_back(
 /// Cancel an obligation to provide an object to the cache.
 ///
 /// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
-bool fastly_compute_at_edge_fastly_transaction_cancel(
-    fastly_compute_at_edge_fastly_cache_handle_t handle,
-    fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_cache_transaction_cancel(
+    fastly_compute_at_edge_types_cache_handle_t handle, fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::cache_transaction_cancel(handle), err);
 }
 
-bool fastly_compute_at_edge_fastly_cache_get_state(
-    fastly_compute_at_edge_fastly_cache_handle_t handle,
-    fastly_compute_at_edge_fastly_cache_lookup_state_t *ret,
-    fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_cache_get_state(fastly_compute_at_edge_types_cache_handle_t handle,
+                                            fastly_compute_at_edge_types_cache_lookup_state_t *ret,
+                                            fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::cache_get_state(handle, ret), err);
 }

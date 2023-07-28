@@ -183,66 +183,65 @@ WASM_IMPORT("fastly_http_req", "original_header_count")
 int req_original_header_count(uint32_t *count);
 
 WASM_IMPORT("fastly_http_req", "header_value_get")
-int req_header_value_get(fastly_compute_at_edge_fastly_request_handle_t req_handle,
-                         const char *name, size_t name_len, char *value, size_t value_max_len,
-                         size_t *nwritten);
+int req_header_value_get(fastly_compute_at_edge_types_request_handle_t req_handle, const char *name,
+                         size_t name_len, char *value, size_t value_max_len, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "header_values_get")
-int req_header_values_get(fastly_compute_at_edge_fastly_request_handle_t req_handle,
+int req_header_values_get(fastly_compute_at_edge_types_request_handle_t req_handle,
                           const char *name, size_t name_len, char *buf, size_t buf_len,
                           uint32_t cursor, int64_t *ending_cursor, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "header_insert")
-int req_header_insert(fastly_compute_at_edge_fastly_request_handle_t req_handle, const char *name,
+int req_header_insert(fastly_compute_at_edge_types_request_handle_t req_handle, const char *name,
                       size_t name_len, const char *value, size_t value_len);
 
 WASM_IMPORT("fastly_http_req", "header_append")
-int req_header_append(fastly_compute_at_edge_fastly_request_handle_t req_handle, const char *name,
+int req_header_append(fastly_compute_at_edge_types_request_handle_t req_handle, const char *name,
                       size_t name_len, const char *value, size_t value_len);
 
 WASM_IMPORT("fastly_http_req", "header_remove")
-int req_header_remove(fastly_compute_at_edge_fastly_request_handle_t req_handle, const char *name,
+int req_header_remove(fastly_compute_at_edge_types_request_handle_t req_handle, const char *name,
                       size_t name_len);
 
 WASM_IMPORT("fastly_http_req", "method_get")
-int req_method_get(fastly_compute_at_edge_fastly_request_handle_t req_handle, char *method,
+int req_method_get(fastly_compute_at_edge_types_request_handle_t req_handle, char *method,
                    size_t method_max_len, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "method_set")
-int req_method_set(fastly_compute_at_edge_fastly_request_handle_t req_handle, const char *method,
+int req_method_set(fastly_compute_at_edge_types_request_handle_t req_handle, const char *method,
                    size_t method_len);
 
 WASM_IMPORT("fastly_http_req", "uri_get")
-int req_uri_get(fastly_compute_at_edge_fastly_request_handle_t req_handle, char *uri,
+int req_uri_get(fastly_compute_at_edge_types_request_handle_t req_handle, char *uri,
                 size_t uri_max_len, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "uri_set")
-int req_uri_set(fastly_compute_at_edge_fastly_request_handle_t req_handle, const char *uri,
+int req_uri_set(fastly_compute_at_edge_types_request_handle_t req_handle, const char *uri,
                 size_t uri_len);
 
 WASM_IMPORT("fastly_http_req", "version_get")
-int req_version_get(fastly_compute_at_edge_fastly_request_handle_t req_handle, uint32_t *version);
+int req_version_get(fastly_compute_at_edge_types_request_handle_t req_handle, uint32_t *version);
 
 WASM_IMPORT("fastly_http_req", "version_set")
-int req_version_set(fastly_compute_at_edge_fastly_request_handle_t req_handle, uint32_t version);
+int req_version_set(fastly_compute_at_edge_types_request_handle_t req_handle, uint32_t version);
 
 WASM_IMPORT("fastly_http_req", "send")
-int req_send(fastly_compute_at_edge_fastly_request_handle_t req_handle,
-             fastly_compute_at_edge_fastly_body_handle_t body_handle, const char *backend,
-             size_t backend_len, fastly_compute_at_edge_fastly_response_handle_t *resp_handle_out,
+int req_send(fastly_compute_at_edge_types_request_handle_t req_handle,
+             fastly_compute_at_edge_types_body_handle_t body_handle, const char *backend,
+             size_t backend_len, fastly_compute_at_edge_types_response_handle_t *resp_handle_out,
              fastly_compute_at_edge_fastly_body_handle_t *resp_body_handle_out);
 
 WASM_IMPORT("fastly_http_req", "send_async")
-int req_send_async(fastly_compute_at_edge_fastly_request_handle_t req_handle,
-                   fastly_compute_at_edge_fastly_body_handle_t body_handle, const char *backend,
+int req_send_async(fastly_compute_at_edge_types_request_handle_t req_handle,
+                   fastly_compute_at_edge_types_body_handle_t body_handle, const char *backend,
                    size_t backend_len,
                    fastly_compute_at_edge_types_pending_request_handle_t *pending_req_out);
 
 WASM_IMPORT("fastly_http_req", "send_async_streaming")
 int req_send_async_streaming(
-    fastly_compute_at_edge_fastly_request_handle_t req_handle,
-    fastly_compute_at_edge_fastly_body_handle_t body_handle, const char *backend,
-    size_t backend_len, fastly_compute_at_edge_types_pending_request_handle_t *pending_req_out);
+    fastly_compute_at_edge_types_request_handle_t req_handle,
+    fastly_compute_at_edge_types_body_handle_t body_handle, const char *backend, size_t backend_len,
+    fastly_compute_at_edge_types_pending_request_handle_t *pending_req_out);
 
 WASM_IMPORT("fastly_http_req", "pending_req_poll")
 int req_pending_req_poll(fastly_compute_at_edge_types_pending_request_handle_t req_handle,
@@ -385,8 +384,8 @@ int purge_surrogate_key(char *surrogate_key, size_t surrogate_key_len, uint32_t 
 
 WASM_IMPORT("fastly_cache", "lookup")
 int cache_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,
-                 fastly_compute_at_edge_fastly_cache_lookup_options_t *options,
-                 fastly_compute_at_edge_fastly_cache_handle_t *ret);
+                 fastly_compute_at_edge_types_cache_lookup_options_t *options,
+                 fastly_compute_at_edge_types_cache_handle_t *ret);
 
 typedef __attribute__((aligned(8))) struct {
   uint64_t max_age_ns;
@@ -408,25 +407,25 @@ int cache_insert(char *cache_key, size_t cache_key_len, uint32_t options_mask,
 
 WASM_IMPORT("fastly_cache", "transaction_lookup")
 int cache_transaction_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,
-                             fastly_compute_at_edge_fastly_cache_lookup_options_t *options,
-                             fastly_compute_at_edge_fastly_cache_handle_t *ret);
+                             fastly_compute_at_edge_types_cache_lookup_options_t *options,
+                             fastly_compute_at_edge_types_cache_handle_t *ret);
 
 WASM_IMPORT("fastly_cache", "transaction_insert_and_stream_back")
 int cache_transaction_insert_and_stream_back(
-    fastly_compute_at_edge_fastly_cache_handle_t handle, uint32_t options_mask,
+    fastly_compute_at_edge_types_cache_handle_t handle, uint32_t options_mask,
     CacheWriteOptions *options, fastly_compute_at_edge_fastly_body_handle_t *ret_body,
-    fastly_compute_at_edge_fastly_cache_handle_t *ret_cache);
+    fastly_compute_at_edge_types_cache_handle_t *ret_cache);
 
 WASM_IMPORT("fastly_cache", "transaction_cancel")
-int cache_transaction_cancel(fastly_compute_at_edge_fastly_cache_handle_t handle);
+int cache_transaction_cancel(fastly_compute_at_edge_types_cache_handle_t handle);
 
 WASM_IMPORT("fastly_cache", "get_state")
-int cache_get_state(fastly_compute_at_edge_fastly_cache_handle_t handle,
-                    fastly_compute_at_edge_fastly_cache_lookup_state_t *ret);
+int cache_get_state(fastly_compute_at_edge_types_cache_handle_t handle,
+                    fastly_compute_at_edge_types_cache_lookup_state_t *ret);
 
 WASM_IMPORT("fastly_cache", "get_body")
-int cache_get_body(fastly_compute_at_edge_fastly_cache_handle_t handle, uint32_t options_mask,
-                   fastly_compute_at_edge_fastly_cache_get_body_options_t *options,
+int cache_get_body(fastly_compute_at_edge_types_cache_handle_t handle, uint32_t options_mask,
+                   fastly_compute_at_edge_types_cache_get_body_options_t *options,
                    fastly_compute_at_edge_fastly_body_handle_t *ret);
 
 } // namespace fastly
