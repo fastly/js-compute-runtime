@@ -175,6 +175,8 @@ typedef struct {
   fastly_world_option_string_t sni_hostname;
 } fastly_compute_at_edge_types_dynamic_backend_config_t;
 
+typedef uint16_t fastly_compute_at_edge_types_http_status_t;
+
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_fastly_error_t;
 
 typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_fastly_body_handle_t;
@@ -190,8 +192,6 @@ typedef fastly_compute_at_edge_types_request_handle_t fastly_compute_at_edge_fas
 typedef fastly_compute_at_edge_types_response_handle_t fastly_compute_at_edge_fastly_response_handle_t;
 
 typedef fastly_compute_at_edge_types_user_agent_t fastly_compute_at_edge_fastly_user_agent_t;
-
-typedef uint16_t fastly_compute_at_edge_fastly_http_status_t;
 
 typedef struct {
   bool is_some;
@@ -351,16 +351,6 @@ typedef uint8_t fastly_compute_at_edge_fastly_cache_lookup_state_t;
 #define FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE (1 << 3)
 
 typedef struct {
-  fastly_world_string_t *ptr;
-  size_t len;
-} fastly_world_list_string_t;
-
-typedef struct {
-  bool is_some;
-  fastly_world_list_string_t val;
-} fastly_world_option_list_string_t;
-
-typedef struct {
   fastly_compute_at_edge_fastly_async_handle_t *ptr;
   size_t len;
 } fastly_world_list_fastly_compute_at_edge_fastly_async_handle_t;
@@ -434,6 +424,16 @@ typedef fastly_compute_at_edge_types_framing_headers_mode_t fastly_compute_at_ed
 typedef fastly_compute_at_edge_types_dynamic_backend_config_t fastly_compute_at_edge_http_req_dynamic_backend_config_t;
 
 typedef struct {
+  fastly_world_string_t *ptr;
+  size_t len;
+} fastly_world_list_string_t;
+
+typedef struct {
+  bool is_some;
+  fastly_world_list_string_t val;
+} fastly_world_option_list_string_t;
+
+typedef struct {
   bool is_some;
   fastly_compute_at_edge_http_req_response_t val;
 } fastly_world_option_fastly_compute_at_edge_http_req_response_t;
@@ -448,6 +448,18 @@ typedef struct {
   fastly_compute_at_edge_http_req_response_t f1;
 } fastly_world_tuple2_u32_fastly_compute_at_edge_http_req_response_t;
 
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_http_resp_error_t;
+
+typedef fastly_compute_at_edge_types_response_handle_t fastly_compute_at_edge_http_resp_response_handle_t;
+
+typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_http_resp_body_handle_t;
+
+typedef fastly_compute_at_edge_types_http_version_t fastly_compute_at_edge_http_resp_http_version_t;
+
+typedef fastly_compute_at_edge_types_http_status_t fastly_compute_at_edge_http_resp_http_status_t;
+
+typedef fastly_compute_at_edge_types_framing_headers_mode_t fastly_compute_at_edge_http_resp_framing_headers_mode_t;
+
 typedef uint32_t compute_at_edge_request_handle_t;
 
 typedef uint32_t compute_at_edge_body_handle_t;
@@ -460,22 +472,6 @@ typedef struct {
 // Imported Functions from `fastly:compute-at-edge/fastly`
 bool fastly_compute_at_edge_fastly_abi_init(uint64_t abi_version, fastly_compute_at_edge_fastly_error_t *err);
 bool fastly_compute_at_edge_fastly_uap_parse(fastly_world_string_t *user_agent, fastly_compute_at_edge_fastly_user_agent_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_new(fastly_compute_at_edge_fastly_response_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_names_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_list_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_value_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_option_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_values_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_option_list_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_values_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_list_string_t *values, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_insert(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_append(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_header_remove(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_version_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_version_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_version_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_version_t version, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_send_downstream(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_body_handle_t b, bool streaming, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_status_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_status_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_status_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_status_t status, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_http_resp_close(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_error_t *err);
-// Adjust how this response's framing headers are determined.
-bool fastly_compute_at_edge_fastly_http_resp_framing_headers_mode_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_framing_headers_mode_t mode, fastly_compute_at_edge_fastly_error_t *err);
 // JSON string for now
 bool fastly_compute_at_edge_fastly_geo_lookup(fastly_world_list_u8_t *addr_octets, fastly_world_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
 // Blocks until one of the given objects is ready for I/O, or the optional timeout expires.
@@ -606,6 +602,24 @@ bool fastly_compute_at_edge_http_req_redirect_to_websocket_proxy(fastly_world_st
 bool fastly_compute_at_edge_http_req_redirect_to_grip_proxy(fastly_world_string_t *backend, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_framing_headers_mode_set(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_framing_headers_mode_t mode, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_register_dynamic_backend(fastly_world_string_t *prefix, fastly_world_string_t *target, fastly_compute_at_edge_http_req_dynamic_backend_config_t *config, fastly_compute_at_edge_http_req_error_t *err);
+
+// Imported Functions from `fastly:compute-at-edge/http-resp`
+bool fastly_compute_at_edge_http_resp_new(fastly_compute_at_edge_http_resp_response_handle_t *ret, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_header_names_get(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_list_string_t *ret, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_header_value_get(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_string_t *name, fastly_world_option_string_t *ret, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_header_values_get(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_string_t *name, fastly_world_option_list_string_t *ret, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_header_values_set(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_string_t *name, fastly_world_list_string_t *values, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_header_insert(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_header_append(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_header_remove(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_string_t *name, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_version_get(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_http_version_t *ret, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_version_set(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_http_version_t version, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_send_downstream(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_body_handle_t b, bool streaming, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_status_get(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_http_status_t *ret, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_status_set(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_http_status_t status, fastly_compute_at_edge_http_resp_error_t *err);
+bool fastly_compute_at_edge_http_resp_close(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_error_t *err);
+// Adjust how this response's framing headers are determined.
+bool fastly_compute_at_edge_http_resp_framing_headers_mode_set(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_framing_headers_mode_t mode, fastly_compute_at_edge_http_resp_error_t *err);
 
 // Exported Functions from `compute-at-edge`
 bool compute_at_edge_serve(compute_at_edge_request_t *req);

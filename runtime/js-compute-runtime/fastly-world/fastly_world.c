@@ -20,54 +20,6 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
-    fastly_compute_at_edge_fastly_response_handle_t ok;
-    fastly_compute_at_edge_fastly_error_t err;
-  } val;
-} fastly_world_result_fastly_compute_at_edge_fastly_response_handle_fastly_compute_at_edge_fastly_error_t;
-
-typedef struct {
-  bool is_err;
-  union {
-    fastly_world_list_string_t ok;
-    fastly_compute_at_edge_fastly_error_t err;
-  } val;
-} fastly_world_result_list_string_fastly_compute_at_edge_fastly_error_t;
-
-typedef struct {
-  bool is_err;
-  union {
-    fastly_world_option_string_t ok;
-    fastly_compute_at_edge_fastly_error_t err;
-  } val;
-} fastly_world_result_option_string_fastly_compute_at_edge_fastly_error_t;
-
-typedef struct {
-  bool is_err;
-  union {
-    fastly_world_option_list_string_t ok;
-    fastly_compute_at_edge_fastly_error_t err;
-  } val;
-} fastly_world_result_option_list_string_fastly_compute_at_edge_fastly_error_t;
-
-typedef struct {
-  bool is_err;
-  union {
-    fastly_compute_at_edge_fastly_http_version_t ok;
-    fastly_compute_at_edge_fastly_error_t err;
-  } val;
-} fastly_world_result_fastly_compute_at_edge_fastly_http_version_fastly_compute_at_edge_fastly_error_t;
-
-typedef struct {
-  bool is_err;
-  union {
-    fastly_compute_at_edge_fastly_http_status_t ok;
-    fastly_compute_at_edge_fastly_error_t err;
-  } val;
-} fastly_world_result_fastly_compute_at_edge_fastly_http_status_fastly_compute_at_edge_fastly_error_t;
-
-typedef struct {
-  bool is_err;
-  union {
     fastly_world_string_t ok;
     fastly_compute_at_edge_fastly_error_t err;
   } val;
@@ -88,6 +40,14 @@ typedef struct {
     fastly_compute_at_edge_fastly_error_t err;
   } val;
 } fastly_world_result_bool_fastly_compute_at_edge_fastly_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    fastly_world_option_string_t ok;
+    fastly_compute_at_edge_fastly_error_t err;
+  } val;
+} fastly_world_result_option_string_fastly_compute_at_edge_fastly_error_t;
 
 typedef struct {
   bool is_err;
@@ -344,6 +304,61 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
+    fastly_compute_at_edge_http_resp_response_handle_t ok;
+    fastly_compute_at_edge_http_resp_error_t err;
+  } val;
+} fastly_world_result_fastly_compute_at_edge_http_resp_response_handle_fastly_compute_at_edge_http_resp_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    fastly_world_list_string_t ok;
+    fastly_compute_at_edge_http_resp_error_t err;
+  } val;
+} fastly_world_result_list_string_fastly_compute_at_edge_http_resp_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    fastly_world_option_string_t ok;
+    fastly_compute_at_edge_http_resp_error_t err;
+  } val;
+} fastly_world_result_option_string_fastly_compute_at_edge_http_resp_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    fastly_world_option_list_string_t ok;
+    fastly_compute_at_edge_http_resp_error_t err;
+  } val;
+} fastly_world_result_option_list_string_fastly_compute_at_edge_http_resp_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    fastly_compute_at_edge_http_resp_error_t err;
+  } val;
+} fastly_world_result_void_fastly_compute_at_edge_http_resp_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    fastly_compute_at_edge_http_resp_http_version_t ok;
+    fastly_compute_at_edge_http_resp_error_t err;
+  } val;
+} fastly_world_result_fastly_compute_at_edge_http_resp_http_version_fastly_compute_at_edge_http_resp_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    fastly_compute_at_edge_http_resp_http_status_t ok;
+    fastly_compute_at_edge_http_resp_error_t err;
+  } val;
+} fastly_world_result_fastly_compute_at_edge_http_resp_http_status_fastly_compute_at_edge_http_resp_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
   } val;
 } fastly_world_result_void_void_t;
 
@@ -352,51 +367,6 @@ void __wasm_import_fastly_compute_at_edge_fastly_abi_init(int64_t, int32_t);
 
 __attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("uap-parse")))
 void __wasm_import_fastly_compute_at_edge_fastly_uap_parse(int32_t, int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-new")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_new(int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-header-names-get")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_names_get(int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-header-value-get")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_value_get(int32_t, int32_t, int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-header-values-get")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_values_get(int32_t, int32_t, int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-header-values-set")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_values_set(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-header-insert")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_insert(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-header-append")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_append(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-header-remove")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_remove(int32_t, int32_t, int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-version-get")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_version_get(int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-version-set")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_version_set(int32_t, int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-send-downstream")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_send_downstream(int32_t, int32_t, int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-status-get")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_status_get(int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-status-set")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_status_set(int32_t, int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-close")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_close(int32_t, int32_t);
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("http-resp-framing-headers-mode-set")))
-void __wasm_import_fastly_compute_at_edge_fastly_http_resp_framing_headers_mode_set(int32_t, int32_t, int32_t);
 
 __attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("geo-lookup")))
 void __wasm_import_fastly_compute_at_edge_fastly_geo_lookup(int32_t, int32_t, int32_t);
@@ -590,6 +560,51 @@ void __wasm_import_fastly_compute_at_edge_http_req_framing_headers_mode_set(int3
 __attribute__((__import_module__("fastly:compute-at-edge/http-req"), __import_name__("register-dynamic-backend")))
 void __wasm_import_fastly_compute_at_edge_http_req_register_dynamic_backend(int32_t, int32_t);
 
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("new")))
+void __wasm_import_fastly_compute_at_edge_http_resp_new(int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("header-names-get")))
+void __wasm_import_fastly_compute_at_edge_http_resp_header_names_get(int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("header-value-get")))
+void __wasm_import_fastly_compute_at_edge_http_resp_header_value_get(int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("header-values-get")))
+void __wasm_import_fastly_compute_at_edge_http_resp_header_values_get(int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("header-values-set")))
+void __wasm_import_fastly_compute_at_edge_http_resp_header_values_set(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("header-insert")))
+void __wasm_import_fastly_compute_at_edge_http_resp_header_insert(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("header-append")))
+void __wasm_import_fastly_compute_at_edge_http_resp_header_append(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("header-remove")))
+void __wasm_import_fastly_compute_at_edge_http_resp_header_remove(int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("version-get")))
+void __wasm_import_fastly_compute_at_edge_http_resp_version_get(int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("version-set")))
+void __wasm_import_fastly_compute_at_edge_http_resp_version_set(int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("send-downstream")))
+void __wasm_import_fastly_compute_at_edge_http_resp_send_downstream(int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("status-get")))
+void __wasm_import_fastly_compute_at_edge_http_resp_status_get(int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("status-set")))
+void __wasm_import_fastly_compute_at_edge_http_resp_status_set(int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("close")))
+void __wasm_import_fastly_compute_at_edge_http_resp_close(int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-resp"), __import_name__("framing-headers-mode-set")))
+void __wasm_import_fastly_compute_at_edge_http_resp_framing_headers_mode_set(int32_t, int32_t, int32_t);
+
 __attribute__((__weak__, __export_name__("cabi_realloc")))
 void *cabi_realloc(void *ptr, size_t old_size, size_t align, size_t new_size) {
   (void) old_size;
@@ -651,419 +666,6 @@ bool fastly_compute_at_edge_fastly_uap_parse(fastly_world_string_t *user_agent, 
   }
   if (!result.is_err) {
     *ret = result.val.ok;
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_new(fastly_compute_at_edge_fastly_response_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(4)))
-  uint8_t ret_area[8];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_new(ptr);
-  fastly_world_result_fastly_compute_at_edge_fastly_response_handle_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      result.val.ok = (uint32_t) (*((int32_t*) (ptr + 4)));
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    *ret = result.val.ok;
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_header_names_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_list_string_t *ret, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(4)))
-  uint8_t ret_area[12];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_names_get((int32_t) (h), ptr);
-  fastly_world_result_list_string_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      result.val.ok = (fastly_world_list_string_t) { (fastly_world_string_t*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) };
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    *ret = result.val.ok;
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_header_value_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_option_string_t *ret, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(4)))
-  uint8_t ret_area[16];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_value_get((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
-  fastly_world_result_option_string_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      fastly_world_option_string_t option;
-      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
-        case 0: {
-          option.is_some = false;
-          break;
-        }
-        case 1: {
-          option.is_some = true;
-          option.val = (fastly_world_string_t) { (char*)(*((int32_t*) (ptr + 8))), (size_t)(*((int32_t*) (ptr + 12))) };
-          break;
-        }
-      }
-      
-      result.val.ok = option;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    *ret = result.val.ok;
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_header_values_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_option_list_string_t *ret, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(4)))
-  uint8_t ret_area[16];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_values_get((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
-  fastly_world_result_option_list_string_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      fastly_world_option_list_string_t option;
-      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
-        case 0: {
-          option.is_some = false;
-          break;
-        }
-        case 1: {
-          option.is_some = true;
-          option.val = (fastly_world_list_string_t) { (fastly_world_string_t*)(*((int32_t*) (ptr + 8))), (size_t)(*((int32_t*) (ptr + 12))) };
-          break;
-        }
-      }
-      
-      result.val.ok = option;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    *ret = result.val.ok;
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_header_values_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_list_string_t *values, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(1)))
-  uint8_t ret_area[2];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_values_set((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, (int32_t) (*values).ptr, (int32_t) (*values).len, ptr);
-  fastly_world_result_void_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_header_insert(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(1)))
-  uint8_t ret_area[2];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_insert((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, (int32_t) (*value).ptr, (int32_t) (*value).len, ptr);
-  fastly_world_result_void_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_header_append(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(1)))
-  uint8_t ret_area[2];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_append((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, (int32_t) (*value).ptr, (int32_t) (*value).len, ptr);
-  fastly_world_result_void_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_header_remove(fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(1)))
-  uint8_t ret_area[2];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_header_remove((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
-  fastly_world_result_void_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_version_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_version_t *ret, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(1)))
-  uint8_t ret_area[2];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_version_get((int32_t) (h), ptr);
-  fastly_world_result_fastly_compute_at_edge_fastly_http_version_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      result.val.ok = (int32_t) (*((uint8_t*) (ptr + 1)));
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    *ret = result.val.ok;
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_version_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_version_t version, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(1)))
-  uint8_t ret_area[2];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_version_set((int32_t) (h), (int32_t) version, ptr);
-  fastly_world_result_void_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_send_downstream(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_body_handle_t b, bool streaming, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(1)))
-  uint8_t ret_area[2];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_send_downstream((int32_t) (h), (int32_t) (b), streaming, ptr);
-  fastly_world_result_void_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_status_get(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_status_t *ret, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(2)))
-  uint8_t ret_area[4];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_status_get((int32_t) (h), ptr);
-  fastly_world_result_fastly_compute_at_edge_fastly_http_status_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      result.val.ok = (uint16_t) ((int32_t) (*((uint16_t*) (ptr + 2))));
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 2)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    *ret = result.val.ok;
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_status_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_http_status_t status, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(1)))
-  uint8_t ret_area[2];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_status_set((int32_t) (h), (int32_t) (status), ptr);
-  fastly_world_result_void_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_close(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(1)))
-  uint8_t ret_area[2];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_close((int32_t) (h), ptr);
-  fastly_world_result_void_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
-
-bool fastly_compute_at_edge_fastly_http_resp_framing_headers_mode_set(fastly_compute_at_edge_fastly_response_handle_t h, fastly_compute_at_edge_fastly_framing_headers_mode_t mode, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(1)))
-  uint8_t ret_area[2];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_http_resp_framing_headers_mode_set((int32_t) (h), (int32_t) mode, ptr);
-  fastly_world_result_void_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
-      break;
-    }
-  }
-  if (!result.is_err) {
     return 1;
   } else {
     *err = result.val.err;
@@ -3053,6 +2655,419 @@ bool fastly_compute_at_edge_http_req_register_dynamic_backend(fastly_world_strin
     case 1: {
       result.is_err = true;
       result.val.err = (int32_t) (*((uint8_t*) (ptr23 + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_new(fastly_compute_at_edge_http_resp_response_handle_t *ret, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[8];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_new(ptr);
+  fastly_world_result_fastly_compute_at_edge_http_resp_response_handle_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (uint32_t) (*((int32_t*) (ptr + 4)));
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_header_names_get(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_list_string_t *ret, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[12];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_header_names_get((int32_t) (h), ptr);
+  fastly_world_result_list_string_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (fastly_world_list_string_t) { (fastly_world_string_t*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) };
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_header_value_get(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_string_t *name, fastly_world_option_string_t *ret, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[16];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_header_value_get((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
+  fastly_world_result_option_string_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      fastly_world_option_string_t option;
+      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
+        case 0: {
+          option.is_some = false;
+          break;
+        }
+        case 1: {
+          option.is_some = true;
+          option.val = (fastly_world_string_t) { (char*)(*((int32_t*) (ptr + 8))), (size_t)(*((int32_t*) (ptr + 12))) };
+          break;
+        }
+      }
+      
+      result.val.ok = option;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_header_values_get(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_string_t *name, fastly_world_option_list_string_t *ret, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[16];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_header_values_get((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
+  fastly_world_result_option_list_string_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      fastly_world_option_list_string_t option;
+      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
+        case 0: {
+          option.is_some = false;
+          break;
+        }
+        case 1: {
+          option.is_some = true;
+          option.val = (fastly_world_list_string_t) { (fastly_world_string_t*)(*((int32_t*) (ptr + 8))), (size_t)(*((int32_t*) (ptr + 12))) };
+          break;
+        }
+      }
+      
+      result.val.ok = option;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_header_values_set(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_string_t *name, fastly_world_list_string_t *values, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_header_values_set((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, (int32_t) (*values).ptr, (int32_t) (*values).len, ptr);
+  fastly_world_result_void_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_header_insert(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_header_insert((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, (int32_t) (*value).ptr, (int32_t) (*value).len, ptr);
+  fastly_world_result_void_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_header_append(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_string_t *name, fastly_world_string_t *value, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_header_append((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, (int32_t) (*value).ptr, (int32_t) (*value).len, ptr);
+  fastly_world_result_void_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_header_remove(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_world_string_t *name, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_header_remove((int32_t) (h), (int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
+  fastly_world_result_void_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_version_get(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_http_version_t *ret, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_version_get((int32_t) (h), ptr);
+  fastly_world_result_fastly_compute_at_edge_http_resp_http_version_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_version_set(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_http_version_t version, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_version_set((int32_t) (h), (int32_t) version, ptr);
+  fastly_world_result_void_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_send_downstream(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_body_handle_t b, bool streaming, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_send_downstream((int32_t) (h), (int32_t) (b), streaming, ptr);
+  fastly_world_result_void_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_status_get(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_http_status_t *ret, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(2)))
+  uint8_t ret_area[4];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_status_get((int32_t) (h), ptr);
+  fastly_world_result_fastly_compute_at_edge_http_resp_http_status_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (uint16_t) ((int32_t) (*((uint16_t*) (ptr + 2))));
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 2)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_status_set(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_http_status_t status, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_status_set((int32_t) (h), (int32_t) (status), ptr);
+  fastly_world_result_void_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_close(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_close((int32_t) (h), ptr);
+  fastly_world_result_void_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_resp_framing_headers_mode_set(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_framing_headers_mode_t mode, fastly_compute_at_edge_http_resp_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_resp_framing_headers_mode_set((int32_t) (h), (int32_t) mode, ptr);
+  fastly_world_result_void_fastly_compute_at_edge_http_resp_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
       break;
     }
   }

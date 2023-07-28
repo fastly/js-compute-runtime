@@ -134,6 +134,8 @@ interface types {
     ciphers: option<string>,
     sni-hostname: option<string>,
   }
+
+  type http-status = u16
 }
 
 interface fastly {
@@ -147,43 +149,6 @@ interface fastly {
 
   uap-parse: func(user-agent: string) -> result<user-agent, error>
 
-
-
-  /*
-   * Fastly HTTP Resp
-   */
-  type http-status = u16
-
-  http-resp-new: func() -> result<response-handle, error>
-
-  http-resp-header-names-get: func(h: response-handle) -> result<list<string>, error>
-
-  http-resp-header-value-get: func(h: response-handle, name: string) -> result<option<string>, error>
-
-  http-resp-header-values-get: func(h: response-handle, name: string) -> result<option<list<string>>, error>
-
-  http-resp-header-values-set: func(h: response-handle, name: string, values: list<string>) -> result<_, error>
-
-  http-resp-header-insert: func(h: response-handle, name: string, value: string) -> result<_, error>
-
-  http-resp-header-append: func(h: response-handle, name: string, value: string) -> result<_, error>
-
-  http-resp-header-remove: func(h: response-handle, name: string) -> result<_, error>
-
-  http-resp-version-get: func(h: response-handle) -> result<http-version, error>
-
-  http-resp-version-set: func(h: response-handle, version: http-version) -> result<_, error>
-
-  http-resp-send-downstream: func(h: response-handle, b: body-handle, streaming: bool) -> result<_, error>
-
-  http-resp-status-get: func(h: response-handle) -> result<http-status, error>
-
-  http-resp-status-set: func(h: response-handle, status: http-status) -> result<_, error>
-
-  http-resp-close: func(h: response-handle) -> result<_, error>
-
-  /// Adjust how this response's framing headers are determined.
-  http-resp-framing-headers-mode-set: func(h: response-handle, mode: framing-headers-mode) -> result<_, error>
 
 
   /*
@@ -644,6 +609,47 @@ interface http-req {
 
 }
 
+/*
+ * Fastly HTTP Resp
+ */
+interface http-resp {
+  use types.{
+    error, response-handle, body-handle, http-version, http-status,
+    framing-headers-mode
+  }
+
+  new: func() -> result<response-handle, error>
+
+  header-names-get: func(h: response-handle) -> result<list<string>, error>
+
+  header-value-get: func(h: response-handle, name: string) -> result<option<string>, error>
+
+  header-values-get: func(h: response-handle, name: string) -> result<option<list<string>>, error>
+
+  header-values-set: func(h: response-handle, name: string, values: list<string>) -> result<_, error>
+
+  header-insert: func(h: response-handle, name: string, value: string) -> result<_, error>
+
+  header-append: func(h: response-handle, name: string, value: string) -> result<_, error>
+
+  header-remove: func(h: response-handle, name: string) -> result<_, error>
+
+  version-get: func(h: response-handle) -> result<http-version, error>
+
+  version-set: func(h: response-handle, version: http-version) -> result<_, error>
+
+  send-downstream: func(h: response-handle, b: body-handle, streaming: bool) -> result<_, error>
+
+  status-get: func(h: response-handle) -> result<http-status, error>
+
+  status-set: func(h: response-handle, status: http-status) -> result<_, error>
+
+  close: func(h: response-handle) -> result<_, error>
+
+  /// Adjust how this response's framing headers are determined.
+  framing-headers-mode-set: func(h: response-handle, mode: framing-headers-mode) -> result<_, error>
+}
+
 world fastly-world {
 
   import fastly
@@ -653,6 +659,7 @@ world fastly-world {
   import object-store
   import http-body
   import http-req
+  import http-resp
 
   export compute-at-edge: interface {
     type request-handle = u32

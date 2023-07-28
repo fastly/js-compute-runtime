@@ -727,7 +727,7 @@ Result<HttpResp> HttpResp::make() {
 
   fastly_compute_at_edge_fastly_response_handle_t handle;
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_fastly_http_resp_new(&handle, &err)) {
+  if (!fastly_compute_at_edge_http_resp_new(&handle, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(handle);
@@ -739,9 +739,9 @@ Result<HttpResp> HttpResp::make() {
 Result<uint16_t> HttpResp::get_status() const {
   Result<uint16_t> res;
 
-  fastly_compute_at_edge_fastly_http_status_t ret;
+  fastly_compute_at_edge_types_http_status_t ret;
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_fastly_http_resp_status_get(this->handle, &ret, &err)) {
+  if (!fastly_compute_at_edge_http_resp_status_get(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(ret);
@@ -754,7 +754,7 @@ Result<Void> HttpResp::set_status(uint16_t status) {
   Result<Void> res;
 
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_fastly_http_resp_status_set(this->handle, status, &err)) {
+  if (!fastly_compute_at_edge_http_resp_status_set(this->handle, status, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace();
@@ -767,8 +767,8 @@ Result<Void> HttpResp::send_downstream(HttpBody body, bool streaming) {
   Result<Void> res;
 
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_fastly_http_resp_send_downstream(this->handle, body.handle, streaming,
-                                                               &err)) {
+  if (!fastly_compute_at_edge_http_resp_send_downstream(this->handle, body.handle, streaming,
+                                                        &err)) {
     res.emplace_err(err);
   } else {
     res.emplace();
@@ -784,7 +784,7 @@ Result<fastly_compute_at_edge_fastly_http_version_t> HttpResp::get_version() con
 
   fastly_compute_at_edge_types_error_t err;
   fastly_compute_at_edge_fastly_http_version_t ret;
-  if (!fastly_compute_at_edge_fastly_http_resp_version_get(this->handle, &ret, &err)) {
+  if (!fastly_compute_at_edge_http_resp_version_get(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(ret);
@@ -794,28 +794,26 @@ Result<fastly_compute_at_edge_fastly_http_version_t> HttpResp::get_version() con
 }
 
 Result<std::vector<HostString>> HttpResp::get_header_names() {
-  return generic_get_header_names<fastly_compute_at_edge_fastly_http_resp_header_names_get>(
-      this->handle);
+  return generic_get_header_names<fastly_compute_at_edge_http_resp_header_names_get>(this->handle);
 }
 
 Result<std::optional<std::vector<HostString>>> HttpResp::get_header_values(std::string_view name) {
-  return generic_get_header_values<fastly_compute_at_edge_fastly_http_resp_header_values_get>(
-      this->handle, name);
+  return generic_get_header_values<fastly_compute_at_edge_http_resp_header_values_get>(this->handle,
+                                                                                       name);
 }
 
 Result<Void> HttpResp::insert_header(std::string_view name, std::string_view value) {
-  return generic_header_op<fastly_compute_at_edge_fastly_http_resp_header_insert>(this->handle,
-                                                                                  name, value);
+  return generic_header_op<fastly_compute_at_edge_http_resp_header_insert>(this->handle, name,
+                                                                           value);
 }
 
 Result<Void> HttpResp::append_header(std::string_view name, std::string_view value) {
-  return generic_header_op<fastly_compute_at_edge_fastly_http_resp_header_append>(this->handle,
-                                                                                  name, value);
+  return generic_header_op<fastly_compute_at_edge_http_resp_header_append>(this->handle, name,
+                                                                           value);
 }
 
 Result<Void> HttpResp::remove_header(std::string_view name) {
-  return generic_header_remove<fastly_compute_at_edge_fastly_http_resp_header_remove>(this->handle,
-                                                                                      name);
+  return generic_header_remove<fastly_compute_at_edge_http_resp_header_remove>(this->handle, name);
 }
 
 Result<HostString> GeoIp::lookup(std::span<uint8_t> bytes) {
