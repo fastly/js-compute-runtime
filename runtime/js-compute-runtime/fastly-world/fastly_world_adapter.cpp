@@ -73,7 +73,7 @@ static bool convert_result(int res, fastly_compute_at_edge_types_error_t *err) {
   return false;
 }
 
-fastly_compute_at_edge_fastly_http_version_t convert_http_version(uint32_t version) {
+fastly_compute_at_edge_types_http_version_t convert_http_version(uint32_t version) {
   switch (version) {
   case 0:
     return FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_VERSION_HTTP09;
@@ -89,18 +89,18 @@ fastly_compute_at_edge_fastly_http_version_t convert_http_version(uint32_t versi
   }
 }
 
-bool fastly_compute_at_edge_http_body_new(fastly_compute_at_edge_fastly_body_handle_t *ret,
+bool fastly_compute_at_edge_http_body_new(fastly_compute_at_edge_types_body_handle_t *ret,
                                           fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::body_new(ret), err);
 }
 
-bool fastly_compute_at_edge_http_body_append(fastly_compute_at_edge_fastly_body_handle_t src,
-                                             fastly_compute_at_edge_fastly_body_handle_t dest,
+bool fastly_compute_at_edge_http_body_append(fastly_compute_at_edge_types_body_handle_t src,
+                                             fastly_compute_at_edge_types_body_handle_t dest,
                                              fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::body_append(src, dest), err);
 }
 
-bool fastly_compute_at_edge_http_body_read(fastly_compute_at_edge_fastly_body_handle_t h,
+bool fastly_compute_at_edge_http_body_read(fastly_compute_at_edge_types_body_handle_t h,
                                            uint32_t chunk_size, fastly_world_list_u8_t *ret,
                                            fastly_compute_at_edge_types_error_t *err) {
   ret->ptr = static_cast<uint8_t *>(cabi_malloc(chunk_size, 1));
@@ -122,7 +122,7 @@ bool fastly_compute_at_edge_http_body_write(fastly_compute_at_edge_types_body_ha
                         err);
 }
 
-bool fastly_compute_at_edge_http_body_close(fastly_compute_at_edge_fastly_body_handle_t h,
+bool fastly_compute_at_edge_http_body_close(fastly_compute_at_edge_types_body_handle_t h,
                                             fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::body_close(h), err);
 }
@@ -266,7 +266,7 @@ bool fastly_compute_at_edge_http_req_downstream_tls_client_hello(
   return convert_result(status, err);
 }
 
-bool fastly_compute_at_edge_http_req_new(fastly_compute_at_edge_fastly_request_handle_t *ret,
+bool fastly_compute_at_edge_http_req_new(fastly_compute_at_edge_types_request_handle_t *ret,
                                          fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::req_new(ret), err);
 }
@@ -283,7 +283,7 @@ struct Chunk {
 };
 
 bool fastly_compute_at_edge_http_req_header_names_get(
-    fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_list_string_t *ret,
+    fastly_compute_at_edge_types_request_handle_t h, fastly_world_list_string_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
   std::vector<Chunk> header_names;
   {
@@ -538,13 +538,13 @@ bool fastly_compute_at_edge_http_req_register_dynamic_backend(
                         err);
 }
 
-bool fastly_compute_at_edge_http_resp_new(fastly_compute_at_edge_fastly_response_handle_t *ret,
+bool fastly_compute_at_edge_http_resp_new(fastly_compute_at_edge_types_response_handle_t *ret,
                                           fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::resp_new(ret), err);
 }
 
 bool fastly_compute_at_edge_http_resp_header_names_get(
-    fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_list_string_t *ret,
+    fastly_compute_at_edge_types_response_handle_t h, fastly_world_list_string_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
   fastly_world_string_t *strs = static_cast<fastly_world_string_t *>(
       cabi_malloc(LIST_ALLOC_SIZE * sizeof(fastly_world_string_t), 1));
@@ -593,7 +593,7 @@ bool fastly_compute_at_edge_http_resp_header_names_get(
 }
 
 bool fastly_compute_at_edge_http_resp_header_values_get(
-    fastly_compute_at_edge_fastly_response_handle_t h, fastly_world_string_t *name,
+    fastly_compute_at_edge_types_response_handle_t h, fastly_world_string_t *name,
     fastly_world_option_list_string_t *ret, fastly_compute_at_edge_types_error_t *err) {
   size_t str_max = LIST_ALLOC_SIZE;
   fastly_world_string_t *strs =
@@ -803,7 +803,7 @@ bool fastly_compute_at_edge_object_store_lookup(
 
 bool fastly_compute_at_edge_object_store_insert(
     fastly_compute_at_edge_types_object_store_handle_t store, fastly_world_string_t *key,
-    fastly_compute_at_edge_fastly_body_handle_t body_handle,
+    fastly_compute_at_edge_types_body_handle_t body_handle,
     fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::object_store_insert(store, key->ptr, key->len, body_handle), err);
 }
@@ -845,8 +845,8 @@ bool fastly_compute_at_edge_purge_surrogate_key(
   // which uses hard-purging and not soft-purging.
   // TODO: Create a JS API for this hostcall which supports hard-purging and another which supports
   // soft-purging. E.G. `fastly.purgeSurrogateKey(key)` and `fastly.softPurgeSurrogateKey(key)`
-  MOZ_ASSERT(!(options_mask & FASTLY_COMPUTE_AT_EDGE_FASTLY_PURGE_OPTIONS_MASK_SOFT_PURGE));
-  MOZ_ASSERT(!(options_mask & FASTLY_COMPUTE_AT_EDGE_FASTLY_PURGE_OPTIONS_MASK_RET_BUF));
+  MOZ_ASSERT(!(options_mask & FASTLY_COMPUTE_AT_EDGE_TYPES_PURGE_OPTIONS_MASK_SOFT_PURGE));
+  MOZ_ASSERT(!(options_mask & FASTLY_COMPUTE_AT_EDGE_TYPES_PURGE_OPTIONS_MASK_RET_BUF));
 
   ret->is_some = false;
 
@@ -939,7 +939,7 @@ bool fastly_compute_at_edge_cache_transaction_lookup(
     fastly_world_string_t *cache_key, fastly_compute_at_edge_types_cache_lookup_options_t *options,
     fastly_compute_at_edge_types_cache_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
   // Currently this host-call has been implemented to support the `SimpleCache.getOrSet` method,
-  // which does not use any fields from `fastly_compute_at_edge_fastly_cache_lookup_options_t`.
+  // which does not use any fields from `fastly_compute_at_edge_types_cache_lookup_options_t`.
   uint32_t options_mask = 0;
   return convert_result(
       fastly::cache_transaction_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret),

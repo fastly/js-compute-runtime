@@ -336,11 +336,6 @@ interface types {
   }
 }
 
-interface fastly {
-  use types.{error, body-handle, response, http-version, framing-headers-mode, request-handle, response-handle, user-agent}
-
-}
-
 /*
  * Fastly Log
  */
@@ -666,19 +661,18 @@ interface cache {
 
 world fastly-world {
 
-  import fastly
+  import async-io
+  import cache
   import dictionary
-  import log
-  import secret-store
-  import object-store
+  import geo
   import http-body
   import http-req
   import http-resp
-  import geo
-  import uap
-  import async-io
+  import log
+  import object-store
   import purge
-  import cache
+  import secret-store
+  import uap
 
   export compute-at-edge: interface {
     type request-handle = u32
