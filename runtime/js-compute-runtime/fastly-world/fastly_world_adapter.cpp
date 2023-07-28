@@ -835,9 +835,9 @@ bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_types_async
   return true;
 }
 
-bool fastly_compute_at_edge_fastly_purge_surrogate_key(
+bool fastly_compute_at_edge_purge_surrogate_key(
     fastly_world_string_t *surrogate_key,
-    fastly_compute_at_edge_fastly_purge_options_mask_t options_mask,
+    fastly_compute_at_edge_types_purge_options_mask_t options_mask,
     fastly_world_option_string_t *ret, fastly_compute_at_edge_types_error_t *err) {
   fastly::PurgeOptions options{nullptr, 0, nullptr};
 

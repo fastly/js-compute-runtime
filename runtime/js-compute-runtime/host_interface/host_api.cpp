@@ -1190,8 +1190,8 @@ Result<std::optional<HostString>> Fastly::purge_surrogate_key(std::string_view k
   fastly_world_option_string_t ret;
   fastly_compute_at_edge_types_error_t err;
   // TODO: we don't currently define any meaningful options in fastly.wit
-  fastly_compute_at_edge_fastly_purge_options_mask_t purge_options = 0;
-  if (!fastly_compute_at_edge_fastly_purge_surrogate_key(&host_key, purge_options, &ret, &err)) {
+  fastly_compute_at_edge_types_purge_options_mask_t purge_options = 0;
+  if (!fastly_compute_at_edge_purge_surrogate_key(&host_key, purge_options, &ret, &err)) {
     res.emplace_err(err);
   } else if (ret.is_some) {
     res.emplace(make_host_string(ret.val));

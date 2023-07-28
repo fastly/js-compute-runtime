@@ -271,25 +271,15 @@ interface types {
   /// into, even before the origin itself consumes that data.
   type async-handle = u32
 
-}
-
-interface fastly {
-  use types.{error, body-handle, response, http-version, framing-headers-mode, request-handle, response-handle, user-agent}
-
-  /*
-   * Fastly Purge
-   */
 
   flags purge-options-mask {
     soft-purge,
     ret-buf
   }
+}
 
-  /*
-   * A surrogate key can be a max of 1024 characters.
-   * A surrogate key must contain only printable ASCII characters (those between `0x21` and `0x7E`, inclusive).
-   */
-  purge-surrogate-key: func(surrogate-keys: string, purge-options: purge-options-mask) -> result<option<string>, error>
+interface fastly {
+  use types.{error, body-handle, response, http-version, framing-headers-mode, request-handle, response-handle, user-agent}
 
   /*
    * Fastly Cache
@@ -653,6 +643,19 @@ interface async-io {
   is-ready: func(handle: async-handle) -> result<bool, error>
 }
 
+/*
+ * Fastly Purge
+ */
+interface purge {
+  use types.{error, purge-options-mask}
+
+  /*
+   * A surrogate key can be a max of 1024 characters.
+   * A surrogate key must contain only printable ASCII characters (those between `0x21` and `0x7E`, inclusive).
+   */
+  surrogate-key: func(surrogate-keys: string, purge-options: purge-options-mask) -> result<option<string>, error>
+}
+
 
 world fastly-world {
 
@@ -667,6 +670,7 @@ world fastly-world {
   import geo
   import uap
   import async-io
+  import purge
 
   export compute-at-edge: interface {
     type request-handle = u32

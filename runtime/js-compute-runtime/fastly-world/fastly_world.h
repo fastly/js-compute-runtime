@@ -260,6 +260,11 @@ typedef struct {
 // into, even before the origin itself consumes that data.
 typedef uint32_t fastly_compute_at_edge_types_async_handle_t;
 
+typedef uint8_t fastly_compute_at_edge_types_purge_options_mask_t;
+
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_PURGE_OPTIONS_MASK_SOFT_PURGE (1 << 0)
+#define FASTLY_COMPUTE_AT_EDGE_TYPES_PURGE_OPTIONS_MASK_RET_BUF (1 << 1)
+
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_fastly_error_t;
 
 typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_fastly_body_handle_t;
@@ -275,11 +280,6 @@ typedef fastly_compute_at_edge_types_request_handle_t fastly_compute_at_edge_fas
 typedef fastly_compute_at_edge_types_response_handle_t fastly_compute_at_edge_fastly_response_handle_t;
 
 typedef fastly_compute_at_edge_types_user_agent_t fastly_compute_at_edge_fastly_user_agent_t;
-
-typedef uint8_t fastly_compute_at_edge_fastly_purge_options_mask_t;
-
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_PURGE_OPTIONS_MASK_SOFT_PURGE (1 << 0)
-#define FASTLY_COMPUTE_AT_EDGE_FASTLY_PURGE_OPTIONS_MASK_RET_BUF (1 << 1)
 
 // The outcome of a cache lookup (either bare or as part of a cache transaction)
 typedef uint32_t fastly_compute_at_edge_fastly_cache_handle_t;
@@ -470,6 +470,10 @@ typedef struct {
   size_t len;
 } fastly_world_list_fastly_compute_at_edge_async_io_async_handle_t;
 
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_purge_error_t;
+
+typedef fastly_compute_at_edge_types_purge_options_mask_t fastly_compute_at_edge_purge_purge_options_mask_t;
+
 typedef uint32_t compute_at_edge_request_handle_t;
 
 typedef uint32_t compute_at_edge_body_handle_t;
@@ -480,7 +484,6 @@ typedef struct {
 } compute_at_edge_request_t;
 
 // Imported Functions from `fastly:compute-at-edge/fastly`
-bool fastly_compute_at_edge_fastly_purge_surrogate_key(fastly_world_string_t *surrogate_keys, fastly_compute_at_edge_fastly_purge_options_mask_t purge_options, fastly_world_option_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
 // Performs a non-request-collapsing cache lookup.
 // 
 // Returns a result without waiting for any request collapsing that may be ongoing.
@@ -635,6 +638,9 @@ bool fastly_compute_at_edge_async_io_select(fastly_world_list_fastly_compute_at_
 // definition for more details, including what I/O actions are associated with each handle
 // type.
 bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_async_io_async_handle_t handle, bool *ret, fastly_compute_at_edge_async_io_error_t *err);
+
+// Imported Functions from `fastly:compute-at-edge/purge`
+bool fastly_compute_at_edge_purge_surrogate_key(fastly_world_string_t *surrogate_keys, fastly_compute_at_edge_purge_purge_options_mask_t purge_options, fastly_world_option_string_t *ret, fastly_compute_at_edge_purge_error_t *err);
 
 // Exported Functions from `compute-at-edge`
 bool compute_at_edge_serve(compute_at_edge_request_t *req);

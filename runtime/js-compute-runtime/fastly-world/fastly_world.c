@@ -5,14 +5,6 @@
 typedef struct {
   bool is_err;
   union {
-    fastly_world_option_string_t ok;
-    fastly_compute_at_edge_fastly_error_t err;
-  } val;
-} fastly_world_result_option_string_fastly_compute_at_edge_fastly_error_t;
-
-typedef struct {
-  bool is_err;
-  union {
     fastly_compute_at_edge_fastly_cache_handle_t ok;
     fastly_compute_at_edge_fastly_error_t err;
   } val;
@@ -359,11 +351,16 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
+    fastly_world_option_string_t ok;
+    fastly_compute_at_edge_purge_error_t err;
+  } val;
+} fastly_world_result_option_string_fastly_compute_at_edge_purge_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
   } val;
 } fastly_world_result_void_void_t;
-
-__attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("purge-surrogate-key")))
-void __wasm_import_fastly_compute_at_edge_fastly_purge_surrogate_key(int32_t, int32_t, int32_t, int32_t);
 
 __attribute__((__import_module__("fastly:compute-at-edge/fastly"), __import_name__("cache-lookup")))
 void __wasm_import_fastly_compute_at_edge_fastly_cache_lookup(int32_t, int32_t, int32_t, int32_t, int32_t);
@@ -602,6 +599,9 @@ void __wasm_import_fastly_compute_at_edge_async_io_select(int32_t, int32_t, int3
 __attribute__((__import_module__("fastly:compute-at-edge/async-io"), __import_name__("is-ready")))
 void __wasm_import_fastly_compute_at_edge_async_io_is_ready(int32_t, int32_t);
 
+__attribute__((__import_module__("fastly:compute-at-edge/purge"), __import_name__("surrogate-key")))
+void __wasm_import_fastly_compute_at_edge_purge_surrogate_key(int32_t, int32_t, int32_t, int32_t);
+
 __attribute__((__weak__, __export_name__("cabi_realloc")))
 void *cabi_realloc(void *ptr, size_t old_size, size_t align, size_t new_size) {
   (void) old_size;
@@ -612,46 +612,6 @@ void *cabi_realloc(void *ptr, size_t old_size, size_t align, size_t new_size) {
 }
 
 // Component Adapters
-
-bool fastly_compute_at_edge_fastly_purge_surrogate_key(fastly_world_string_t *surrogate_keys, fastly_compute_at_edge_fastly_purge_options_mask_t purge_options, fastly_world_option_string_t *ret, fastly_compute_at_edge_fastly_error_t *err) {
-  __attribute__((__aligned__(4)))
-  uint8_t ret_area[16];
-  int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_fastly_purge_surrogate_key((int32_t) (*surrogate_keys).ptr, (int32_t) (*surrogate_keys).len, purge_options, ptr);
-  fastly_world_result_option_string_fastly_compute_at_edge_fastly_error_t result;
-  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
-    case 0: {
-      result.is_err = false;
-      fastly_world_option_string_t option;
-      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
-        case 0: {
-          option.is_some = false;
-          break;
-        }
-        case 1: {
-          option.is_some = true;
-          option.val = (fastly_world_string_t) { (char*)(*((int32_t*) (ptr + 8))), (size_t)(*((int32_t*) (ptr + 12))) };
-          break;
-        }
-      }
-      
-      result.val.ok = option;
-      break;
-    }
-    case 1: {
-      result.is_err = true;
-      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
-      break;
-    }
-  }
-  if (!result.is_err) {
-    *ret = result.val.ok;
-    return 1;
-  } else {
-    *err = result.val.err;
-    return 0;
-  }
-}
 
 bool fastly_compute_at_edge_fastly_cache_lookup(fastly_world_string_t *cache_key, fastly_compute_at_edge_fastly_cache_lookup_options_t *options, fastly_compute_at_edge_fastly_cache_handle_t *ret, fastly_compute_at_edge_fastly_error_t *err) {
   __attribute__((__aligned__(4)))
@@ -3039,6 +2999,46 @@ bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_async_io_as
     case 1: {
       result.is_err = true;
       result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_purge_surrogate_key(fastly_world_string_t *surrogate_keys, fastly_compute_at_edge_purge_purge_options_mask_t purge_options, fastly_world_option_string_t *ret, fastly_compute_at_edge_purge_error_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[16];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_purge_surrogate_key((int32_t) (*surrogate_keys).ptr, (int32_t) (*surrogate_keys).len, purge_options, ptr);
+  fastly_world_result_option_string_fastly_compute_at_edge_purge_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      fastly_world_option_string_t option;
+      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
+        case 0: {
+          option.is_some = false;
+          break;
+        }
+        case 1: {
+          option.is_some = true;
+          option.val = (fastly_world_string_t) { (char*)(*((int32_t*) (ptr + 8))), (size_t)(*((int32_t*) (ptr + 12))) };
+          break;
+        }
+      }
+      
+      result.val.ok = option;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
       break;
     }
   }
