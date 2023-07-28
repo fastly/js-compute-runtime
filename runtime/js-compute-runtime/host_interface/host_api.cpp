@@ -51,9 +51,11 @@ static_assert(
     std::is_same_v<HttpPendingReq::Handle, fastly_compute_at_edge_fastly_pending_request_handle_t>);
 static_assert(std::is_same_v<HttpReq::Handle, fastly_compute_at_edge_fastly_request_handle_t>);
 static_assert(std::is_same_v<HttpResp::Handle, fastly_compute_at_edge_fastly_response_handle_t>);
-static_assert(std::is_same_v<LogEndpoint::Handle, fastly_compute_at_edge_log_endpoint_handle_t>);
-static_assert(std::is_same_v<Dict::Handle, fastly_compute_at_edge_dictionary_handle_t>);
-static_assert(std::is_same_v<ObjectStore::Handle, fastly_compute_at_edge_object_store_handle_t>);
+static_assert(
+    std::is_same_v<LogEndpoint::Handle, fastly_compute_at_edge_types_log_endpoint_handle_t>);
+static_assert(std::is_same_v<Dict::Handle, fastly_compute_at_edge_types_dictionary_handle_t>);
+static_assert(
+    std::is_same_v<ObjectStore::Handle, fastly_compute_at_edge_types_object_store_handle_t>);
 static_assert(std::is_same_v<HttpVersion, fastly_compute_at_edge_fastly_http_version_t>);
 static_assert(std::is_same_v<typeof(CacheOverrideTag::value),
                              fastly_compute_at_edge_fastly_http_cache_override_tag_t>);
@@ -839,7 +841,7 @@ Result<LogEndpoint> LogEndpoint::get(std::string_view name) {
   Result<LogEndpoint> res;
 
   auto name_str = string_view_to_world_string(name);
-  fastly_compute_at_edge_log_endpoint_handle_t handle;
+  fastly_compute_at_edge_types_log_endpoint_handle_t handle;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_log_endpoint_get(&name_str, &handle, &err)) {
     res.emplace_err(err);
@@ -868,7 +870,7 @@ Result<Dict> Dict::open(std::string_view name) {
   Result<Dict> res;
 
   auto name_str = string_view_to_world_string(name);
-  fastly_compute_at_edge_dictionary_handle_t ret;
+  fastly_compute_at_edge_types_dictionary_handle_t ret;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_dictionary_open(&name_str, &ret, &err)) {
     res.emplace_err(err);
@@ -900,7 +902,7 @@ Result<ObjectStore> ObjectStore::open(std::string_view name) {
   Result<ObjectStore> res;
 
   auto name_str = string_view_to_world_string(name);
-  fastly_compute_at_edge_object_store_handle_t ret;
+  fastly_compute_at_edge_types_object_store_handle_t ret;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_object_store_open(&name_str, &ret, &err)) {
     res.emplace_err(err);
@@ -944,7 +946,7 @@ Result<Void> ObjectStore::insert(std::string_view name, HttpBody body) {
 
 static_assert(std::is_same_v<Secret::Handle, fastly_compute_at_edge_secret_store_secret_handle_t>);
 static_assert(
-    std::is_same_v<SecretStore::Handle, fastly_compute_at_edge_secret_store_store_handle_t>);
+    std::is_same_v<SecretStore::Handle, fastly_compute_at_edge_secret_store_secret_store_handle_t>);
 
 Result<std::optional<HostString>> Secret::plaintext() const {
   Result<std::optional<HostString>> res;
@@ -966,7 +968,7 @@ Result<SecretStore> SecretStore::open(std::string_view name) {
   Result<SecretStore> res;
 
   auto name_str = string_view_to_world_string(name);
-  fastly_compute_at_edge_secret_store_store_handle_t ret;
+  fastly_compute_at_edge_secret_store_secret_store_handle_t ret;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_secret_store_open(&name_str, &ret, &err)) {
     res.emplace_err(err);

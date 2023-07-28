@@ -99,10 +99,10 @@ int body_close(fastly_compute_at_edge_fastly_body_handle_t body_handle);
 // Module fastly_log
 WASM_IMPORT("fastly_log", "endpoint_get")
 int log_endpoint_get(const char *name, size_t name_len,
-                     fastly_compute_at_edge_log_endpoint_handle_t *endpoint_handle);
+                     fastly_compute_at_edge_types_log_endpoint_handle_t *endpoint_handle);
 
 WASM_IMPORT("fastly_log", "write")
-int log_write(fastly_compute_at_edge_log_endpoint_handle_t endpoint_handle, const char *msg,
+int log_write(fastly_compute_at_edge_types_log_endpoint_handle_t endpoint_handle, const char *msg,
               size_t msg_len, size_t *nwritten);
 
 // Module fastly_http_req
@@ -310,19 +310,19 @@ int resp_status_set(fastly_compute_at_edge_fastly_response_handle_t resp_handle,
 // Module fastly_dictionary
 WASM_IMPORT("fastly_dictionary", "open")
 int dictionary_open(const char *name, size_t name_len,
-                    fastly_compute_at_edge_dictionary_handle_t *dict_handle_out);
+                    fastly_compute_at_edge_types_dictionary_handle_t *dict_handle_out);
 
 WASM_IMPORT("fastly_dictionary", "get")
-int dictionary_get(fastly_compute_at_edge_dictionary_handle_t dict_handle, const char *key,
+int dictionary_get(fastly_compute_at_edge_types_dictionary_handle_t dict_handle, const char *key,
                    size_t key_len, char *value, size_t value_max_len, size_t *nwritten);
 
 // Module fastly_secret_store
 WASM_IMPORT("fastly_secret_store", "open")
 int secret_store_open(const char *name, size_t name_len,
-                      fastly_compute_at_edge_secret_store_store_handle_t *dict_handle_out);
+                      fastly_compute_at_edge_secret_store_secret_store_handle_t *dict_handle_out);
 
 WASM_IMPORT("fastly_secret_store", "get")
-int secret_store_get(fastly_compute_at_edge_secret_store_store_handle_t dict_handle,
+int secret_store_get(fastly_compute_at_edge_secret_store_secret_store_handle_t dict_handle,
                      const char *key, size_t key_len,
                      fastly_compute_at_edge_secret_store_secret_handle_t *opt_secret_handle_out);
 
@@ -333,13 +333,13 @@ int secret_store_plaintext(fastly_compute_at_edge_secret_store_secret_handle_t s
 // Module fastly_object_store
 WASM_IMPORT("fastly_object_store", "open")
 int object_store_open(const char *name, size_t name_len,
-                      fastly_compute_at_edge_object_store_handle_t *object_store_handle_out);
+                      fastly_compute_at_edge_types_object_store_handle_t *object_store_handle_out);
 WASM_IMPORT("fastly_object_store", "lookup")
-int object_store_get(fastly_compute_at_edge_object_store_handle_t object_store_handle,
+int object_store_get(fastly_compute_at_edge_types_object_store_handle_t object_store_handle,
                      const char *key, size_t key_len,
                      fastly_compute_at_edge_fastly_body_handle_t *opt_body_handle_out);
 WASM_IMPORT("fastly_object_store", "insert")
-int object_store_insert(fastly_compute_at_edge_object_store_handle_t object_store_handle,
+int object_store_insert(fastly_compute_at_edge_types_object_store_handle_t object_store_handle,
                         const char *key, size_t key_len,
                         fastly_compute_at_edge_fastly_body_handle_t body_handle);
 WASM_IMPORT("fastly_geo", "lookup")

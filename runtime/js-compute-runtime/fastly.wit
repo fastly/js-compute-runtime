@@ -50,10 +50,24 @@ interface types {
     /// resources permitted. For example, creating too many response handles.
     limit-exceeded
   }
+
+  type body-handle = u32
+
+  type secret-store-handle = u32
+
+  type secret-handle = u32
+
+  type fd = u32
+
+  type object-store-handle = u32
+
+  type dictionary-handle = u32
+
+  type log-endpoint-handle = u32
 }
 
 interface fastly {
-  use types.{error}
+  use types.{error, body-handle}
 
   /*
    * Fastly ABI
@@ -77,7 +91,6 @@ interface fastly {
   /*
    * Fastly HTTP Body
    */
-  type body-handle = u32
 
   http-body-new: func() -> result<body-handle, error>
 
@@ -563,13 +576,11 @@ interface fastly {
  */
 interface log {
 
-  use fastly.{error}
+  use types.{error, log-endpoint-handle}
 
-  type endpoint-handle = u32
+  endpoint-get: func(name: string) -> result<log-endpoint-handle, error>
 
-  endpoint-get: func(name: string) -> result<endpoint-handle, error>
-
-  write: func(h: endpoint-handle, msg: string) -> result<_, error>
+  write: func(h: log-endpoint-handle, msg: string) -> result<_, error>
 }
 
 /*
@@ -577,13 +588,11 @@ interface log {
  */
 interface dictionary {
 
-  use fastly.{error}
+  use types.{error, dictionary-handle}
 
-  type handle = u32
+  open: func(name: string) -> result<dictionary-handle, error>
 
-  open: func(name: string) -> result<handle, error>
-
-  get: func(h: handle, key: string) -> result<option<string>, error>
+  get: func(h: dictionary-handle, key: string) -> result<option<string>, error>
 }
 
 /*
@@ -591,14 +600,11 @@ interface dictionary {
  */
 interface secret-store {
 
-  use fastly.{error}
+  use types.{error, secret-store-handle, secret-handle}
 
-  type store-handle = u32
-  type secret-handle = u32
+  open: func(name: string) -> result<secret-store-handle, error>
 
-  open: func(name: string) -> result<store-handle, error>
-
-  get: func(store: store-handle, key: string) -> result<option<secret-handle>, error>
+  get: func(store: secret-store-handle, key: string) -> result<option<secret-handle>, error>
 
   plaintext: func(secret: secret-handle) -> result<option<string>, error>
 
@@ -609,19 +615,16 @@ interface secret-store {
  */
 interface object-store {
 
-  use fastly.{body-handle, error}
+  use types.{object-store-handle, fd, body-handle, error}
 
-  type fd = u32
-  type handle = u32
+  open: func(name: string) -> result<object-store-handle, error>
 
-  open: func(name: string) -> result<handle, error>
+  lookup: func(store: object-store-handle, key: string) -> result<option<body-handle>, error>
 
-  lookup: func(store: handle, key: string) -> result<option<body-handle>, error>
-
-  lookup-as-fd: func(store: handle, key: string) -> result<option<fd>, error>
+  lookup-as-fd: func(store: object-store-handle, key: string) -> result<option<fd>, error>
 
   // Should object store insert return "inserted" bool?
-  insert: func(store: handle, key: string, body-handle: body-handle) -> result<_, error>
+  insert: func(store: object-store-handle, key: string, body-handle: body-handle) -> result<_, error>
 
 }
 

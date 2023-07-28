@@ -126,14 +126,14 @@ bool fastly_compute_at_edge_fastly_http_body_close(fastly_compute_at_edge_fastly
   return convert_result(fastly::body_close(h), err);
 }
 
-bool fastly_compute_at_edge_log_endpoint_get(fastly_world_string_t *name,
-                                             fastly_compute_at_edge_log_endpoint_handle_t *ret,
-                                             fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_log_endpoint_get(
+    fastly_world_string_t *name, fastly_compute_at_edge_types_log_endpoint_handle_t *ret,
+    fastly_compute_at_edge_types_error_t *err) {
   return convert_result(
       fastly::log_endpoint_get(reinterpret_cast<const char *>(name->ptr), name->len, ret), err);
 }
 
-bool fastly_compute_at_edge_log_write(fastly_compute_at_edge_log_endpoint_handle_t h,
+bool fastly_compute_at_edge_log_write(fastly_compute_at_edge_types_log_endpoint_handle_t h,
                                       fastly_world_string_t *msg,
                                       fastly_compute_at_edge_types_error_t *err) {
   size_t nwritten = 0;
@@ -690,18 +690,17 @@ bool fastly_compute_at_edge_fastly_http_resp_status_get(
 
 bool fastly_compute_at_edge_fastly_http_resp_status_set(
     fastly_compute_at_edge_fastly_response_handle_t h,
-    fastly_compute_at_edge_fastly_http_status_t status,
-    fastly_compute_at_edge_types_error_t *err) {
+    fastly_compute_at_edge_fastly_http_status_t status, fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::resp_status_set(h, status), err);
 }
 
 bool fastly_compute_at_edge_dictionary_open(fastly_world_string_t *name,
-                                            fastly_compute_at_edge_dictionary_handle_t *ret,
+                                            fastly_compute_at_edge_types_dictionary_handle_t *ret,
                                             fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::dictionary_open(name->ptr, name->len, ret), err);
 }
 
-bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_dictionary_handle_t h,
+bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_types_dictionary_handle_t h,
                                            fastly_world_string_t *key,
                                            fastly_world_option_string_t *ret,
                                            fastly_compute_at_edge_types_error_t *err) {
@@ -724,13 +723,13 @@ bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_dictionary_han
 }
 
 bool fastly_compute_at_edge_secret_store_open(
-    fastly_world_string_t *name, fastly_compute_at_edge_secret_store_store_handle_t *ret,
+    fastly_world_string_t *name, fastly_compute_at_edge_secret_store_secret_store_handle_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::secret_store_open(name->ptr, name->len, ret), err);
 }
 
 bool fastly_compute_at_edge_secret_store_get(
-    fastly_compute_at_edge_secret_store_store_handle_t store, fastly_world_string_t *key,
+    fastly_compute_at_edge_secret_store_secret_store_handle_t store, fastly_world_string_t *key,
     fastly_world_option_fastly_compute_at_edge_secret_store_secret_handle_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
   ret->val = INVALID_HANDLE;
@@ -780,14 +779,14 @@ bool fastly_compute_at_edge_fastly_geo_lookup(fastly_world_list_u8_t *addr_octet
   return true;
 }
 
-bool fastly_compute_at_edge_object_store_open(fastly_world_string_t *name,
-                                              fastly_compute_at_edge_object_store_handle_t *ret,
-                                              fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_object_store_open(
+    fastly_world_string_t *name, fastly_compute_at_edge_types_object_store_handle_t *ret,
+    fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::object_store_open(name->ptr, name->len, ret), err);
 }
 
 bool fastly_compute_at_edge_object_store_lookup(
-    fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key,
+    fastly_compute_at_edge_types_object_store_handle_t store, fastly_world_string_t *key,
     fastly_world_option_fastly_compute_at_edge_object_store_body_handle_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
   ret->val = INVALID_HANDLE;
@@ -802,7 +801,7 @@ bool fastly_compute_at_edge_object_store_lookup(
 }
 
 bool fastly_compute_at_edge_object_store_insert(
-    fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key,
+    fastly_compute_at_edge_types_object_store_handle_t store, fastly_world_string_t *key,
     fastly_compute_at_edge_fastly_body_handle_t body_handle,
     fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::object_store_insert(store, key->ptr, key->len, body_handle), err);
