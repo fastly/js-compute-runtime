@@ -45,7 +45,7 @@ Response make_response(fastly_compute_at_edge_fastly_response_t &resp) {
 static_assert(sizeof(uint32_t) == sizeof(void *));
 
 // Ensure that the handle types stay in sync with fastly-world.h
-static_assert(std::is_same_v<AsyncHandle::Handle, fastly_compute_at_edge_fastly_async_handle_t>);
+static_assert(std::is_same_v<AsyncHandle::Handle, fastly_compute_at_edge_types_async_handle_t>);
 static_assert(std::is_same_v<HttpBody::Handle, fastly_compute_at_edge_fastly_body_handle_t>);
 static_assert(
     std::is_same_v<HttpPendingReq::Handle, fastly_compute_at_edge_types_pending_request_handle_t>);
@@ -71,7 +71,7 @@ Result<bool> AsyncHandle::is_ready() const {
 
   fastly_compute_at_edge_types_error_t err;
   bool ret;
-  if (!fastly_compute_at_edge_fastly_async_io_is_ready(this->handle, &ret, &err)) {
+  if (!fastly_compute_at_edge_async_io_is_ready(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(ret);
@@ -84,14 +84,14 @@ Result<std::optional<uint32_t>> AsyncHandle::select(const std::vector<AsyncHandl
                                                     uint32_t timeout_ms) {
   Result<std::optional<uint32_t>> res;
 
-  static_assert(sizeof(AsyncHandle) == sizeof(fastly_compute_at_edge_fastly_async_handle_t));
-  fastly_world_list_fastly_compute_at_edge_fastly_async_handle_t hs{
-      .ptr = reinterpret_cast<fastly_compute_at_edge_fastly_async_handle_t *>(
+  static_assert(sizeof(AsyncHandle) == sizeof(fastly_compute_at_edge_types_async_handle_t));
+  fastly_world_list_fastly_compute_at_edge_async_io_async_handle_t hs{
+      .ptr = reinterpret_cast<fastly_compute_at_edge_types_async_handle_t *>(
           const_cast<AsyncHandle *>(handles.data())),
       .len = handles.size()};
   fastly_world_option_u32_t ret;
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_fastly_async_io_select(&hs, timeout_ms, &ret, &err)) {
+  if (!fastly_compute_at_edge_async_io_select(&hs, timeout_ms, &ret, &err)) {
     res.emplace_err(err);
   } else if (ret.is_some) {
     res.emplace(ret.val);
@@ -822,7 +822,7 @@ Result<HostString> GeoIp::lookup(std::span<uint8_t> bytes) {
   fastly_world_list_u8_t octets_list{const_cast<uint8_t *>(bytes.data()), bytes.size()};
   fastly_world_string_t ret;
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_fastly_geo_lookup(&octets_list, &ret, &err)) {
+  if (!fastly_compute_at_edge_geo_lookup(&octets_list, &ret, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(make_host_string(ret));

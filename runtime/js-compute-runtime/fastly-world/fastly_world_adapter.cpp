@@ -765,9 +765,9 @@ bool fastly_compute_at_edge_secret_store_plaintext(
   return true;
 }
 
-bool fastly_compute_at_edge_fastly_geo_lookup(fastly_world_list_u8_t *addr_octets,
-                                              fastly_world_string_t *ret,
-                                              fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_geo_lookup(fastly_world_list_u8_t *addr_octets,
+                                       fastly_world_string_t *ret,
+                                       fastly_compute_at_edge_types_error_t *err) {
   ret->ptr = static_cast<char *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
   if (!convert_result(fastly::geo_lookup(reinterpret_cast<char *>(addr_octets->ptr),
                                          addr_octets->len, ret->ptr, HOSTCALL_BUFFER_LEN,
@@ -808,8 +808,8 @@ bool fastly_compute_at_edge_object_store_insert(
   return convert_result(fastly::object_store_insert(store, key->ptr, key->len, body_handle), err);
 }
 
-bool fastly_compute_at_edge_fastly_async_io_select(
-    fastly_world_list_fastly_compute_at_edge_fastly_async_handle_t *hs, uint32_t timeout_ms,
+bool fastly_compute_at_edge_async_io_select(
+    fastly_world_list_fastly_compute_at_edge_async_io_async_handle_t *hs, uint32_t timeout_ms,
     fastly_world_option_u32_t *ret, fastly_compute_at_edge_types_error_t *err) {
   if (!convert_result(fastly::async_select(hs->ptr, hs->len, timeout_ms, &ret->val), err)) {
     if (*err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) {
@@ -824,9 +824,9 @@ bool fastly_compute_at_edge_fastly_async_io_select(
 
   return true;
 }
-bool fastly_compute_at_edge_fastly_async_io_is_ready(
-    fastly_compute_at_edge_fastly_async_handle_t handle, bool *ret,
-    fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_types_async_handle_t handle,
+                                              bool *ret,
+                                              fastly_compute_at_edge_types_error_t *err) {
   uint32_t ret_int;
   if (!convert_result(fastly::async_is_ready(handle, &ret_int), err)) {
     return false;

@@ -360,7 +360,7 @@ int32_t random_get(int32_t arg0, int32_t arg1);
 // Returns the _index_ (not handle!) of the first object that is ready, or u32::MAX if the
 // timeout expires before any objects are ready for I/O.
 WASM_IMPORT("fastly_async_io", "select")
-int async_select(fastly_compute_at_edge_fastly_async_handle_t handles[], size_t handles_len,
+int async_select(fastly_compute_at_edge_types_async_handle_t handles[], size_t handles_len,
                  uint32_t timeout_ms, uint32_t *ready_idx_out);
 
 // Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
@@ -371,7 +371,7 @@ int async_select(fastly_compute_at_edge_fastly_async_handle_t handles[], size_t 
 // definition for more details, including what I/O actions are associated with each handle
 // type.
 WASM_IMPORT("fastly_async_io", "is_ready")
-int async_is_ready(fastly_compute_at_edge_fastly_async_handle_t handle, uint32_t *is_ready_out);
+int async_is_ready(fastly_compute_at_edge_types_async_handle_t handle, uint32_t *is_ready_out);
 
 struct __attribute__((aligned(4))) PurgeOptions {
   uint8_t *ret_buf_ptr;

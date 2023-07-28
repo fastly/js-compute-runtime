@@ -177,22 +177,6 @@ typedef struct {
 
 typedef uint16_t fastly_compute_at_edge_types_http_status_t;
 
-typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_fastly_error_t;
-
-typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_fastly_body_handle_t;
-
-typedef fastly_compute_at_edge_types_response_t fastly_compute_at_edge_fastly_response_t;
-
-typedef fastly_compute_at_edge_types_http_version_t fastly_compute_at_edge_fastly_http_version_t;
-
-typedef fastly_compute_at_edge_types_framing_headers_mode_t fastly_compute_at_edge_fastly_framing_headers_mode_t;
-
-typedef fastly_compute_at_edge_types_request_handle_t fastly_compute_at_edge_fastly_request_handle_t;
-
-typedef fastly_compute_at_edge_types_response_handle_t fastly_compute_at_edge_fastly_response_handle_t;
-
-typedef fastly_compute_at_edge_types_user_agent_t fastly_compute_at_edge_fastly_user_agent_t;
-
 typedef struct {
   bool is_some;
   float val;
@@ -261,7 +245,7 @@ typedef struct {
   fastly_world_option_string_t region;
   // * Time zone offset from coordinated universal time (UTC) for `city`.
   fastly_world_option_u32_t utc_offset;
-} fastly_compute_at_edge_fastly_geo_data_t;
+} fastly_compute_at_edge_types_geo_data_t;
 
 // A handle to an object supporting generic async operations.
 // Can be either a `BodyHandle` or a `PendingRequestHandle`.
@@ -274,7 +258,23 @@ typedef struct {
 // 
 // For writing bytes, note that there is a large host-side buffer that bytes can eagerly be written
 // into, even before the origin itself consumes that data.
-typedef uint32_t fastly_compute_at_edge_fastly_async_handle_t;
+typedef uint32_t fastly_compute_at_edge_types_async_handle_t;
+
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_fastly_error_t;
+
+typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_fastly_body_handle_t;
+
+typedef fastly_compute_at_edge_types_response_t fastly_compute_at_edge_fastly_response_t;
+
+typedef fastly_compute_at_edge_types_http_version_t fastly_compute_at_edge_fastly_http_version_t;
+
+typedef fastly_compute_at_edge_types_framing_headers_mode_t fastly_compute_at_edge_fastly_framing_headers_mode_t;
+
+typedef fastly_compute_at_edge_types_request_handle_t fastly_compute_at_edge_fastly_request_handle_t;
+
+typedef fastly_compute_at_edge_types_response_handle_t fastly_compute_at_edge_fastly_response_handle_t;
+
+typedef fastly_compute_at_edge_types_user_agent_t fastly_compute_at_edge_fastly_user_agent_t;
 
 typedef uint8_t fastly_compute_at_edge_fastly_purge_options_mask_t;
 
@@ -349,11 +349,6 @@ typedef uint8_t fastly_compute_at_edge_fastly_cache_lookup_state_t;
 #define FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_STALE (1 << 2)
 // this client is requested to insert or revalidate an object
 #define FASTLY_COMPUTE_AT_EDGE_FASTLY_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE (1 << 3)
-
-typedef struct {
-  fastly_compute_at_edge_fastly_async_handle_t *ptr;
-  size_t len;
-} fastly_world_list_fastly_compute_at_edge_fastly_async_handle_t;
 
 typedef struct {
   fastly_compute_at_edge_fastly_body_handle_t f0;
@@ -460,6 +455,21 @@ typedef fastly_compute_at_edge_types_http_status_t fastly_compute_at_edge_http_r
 
 typedef fastly_compute_at_edge_types_framing_headers_mode_t fastly_compute_at_edge_http_resp_framing_headers_mode_t;
 
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_geo_error_t;
+
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_uap_error_t;
+
+typedef fastly_compute_at_edge_types_user_agent_t fastly_compute_at_edge_uap_user_agent_t;
+
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_async_io_error_t;
+
+typedef fastly_compute_at_edge_types_async_handle_t fastly_compute_at_edge_async_io_async_handle_t;
+
+typedef struct {
+  fastly_compute_at_edge_async_io_async_handle_t *ptr;
+  size_t len;
+} fastly_world_list_fastly_compute_at_edge_async_io_async_handle_t;
+
 typedef uint32_t compute_at_edge_request_handle_t;
 
 typedef uint32_t compute_at_edge_body_handle_t;
@@ -470,29 +480,6 @@ typedef struct {
 } compute_at_edge_request_t;
 
 // Imported Functions from `fastly:compute-at-edge/fastly`
-bool fastly_compute_at_edge_fastly_abi_init(uint64_t abi_version, fastly_compute_at_edge_fastly_error_t *err);
-bool fastly_compute_at_edge_fastly_uap_parse(fastly_world_string_t *user_agent, fastly_compute_at_edge_fastly_user_agent_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-// JSON string for now
-bool fastly_compute_at_edge_fastly_geo_lookup(fastly_world_list_u8_t *addr_octets, fastly_world_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-// Blocks until one of the given objects is ready for I/O, or the optional timeout expires.
-// 
-// Valid object handles includes bodies and pending requests. See the `async_item_handle`
-// definition for more details, including what I/O actions are associated with each handle
-// type.
-// 
-// The timeout is specified in milliseconds, or 0 if no timeout is desired.
-// 
-// Returns the _index_ (not handle!) of the first object that is ready, or
-// none if the timeout expires before any objects are ready for I/O.
-bool fastly_compute_at_edge_fastly_async_io_select(fastly_world_list_fastly_compute_at_edge_fastly_async_handle_t *hs, uint32_t timeout_ms, fastly_world_option_u32_t *ret, fastly_compute_at_edge_fastly_error_t *err);
-// Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
-// 
-// If an object is ready, the I/O action is guaranteed to complete without blocking.
-// 
-// Valid object handles includes bodies and pending requests. See the `async_item_handle`
-// definition for more details, including what I/O actions are associated with each handle
-// type.
-bool fastly_compute_at_edge_fastly_async_io_is_ready(fastly_compute_at_edge_fastly_async_handle_t handle, bool *ret, fastly_compute_at_edge_fastly_error_t *err);
 bool fastly_compute_at_edge_fastly_purge_surrogate_key(fastly_world_string_t *surrogate_keys, fastly_compute_at_edge_fastly_purge_options_mask_t purge_options, fastly_world_option_string_t *ret, fastly_compute_at_edge_fastly_error_t *err);
 // Performs a non-request-collapsing cache lookup.
 // 
@@ -620,6 +607,34 @@ bool fastly_compute_at_edge_http_resp_status_set(fastly_compute_at_edge_http_res
 bool fastly_compute_at_edge_http_resp_close(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_error_t *err);
 // Adjust how this response's framing headers are determined.
 bool fastly_compute_at_edge_http_resp_framing_headers_mode_set(fastly_compute_at_edge_http_resp_response_handle_t h, fastly_compute_at_edge_http_resp_framing_headers_mode_t mode, fastly_compute_at_edge_http_resp_error_t *err);
+
+// Imported Functions from `fastly:compute-at-edge/geo`
+// JSON string for now
+bool fastly_compute_at_edge_geo_lookup(fastly_world_list_u8_t *addr_octets, fastly_world_string_t *ret, fastly_compute_at_edge_geo_error_t *err);
+
+// Imported Functions from `fastly:compute-at-edge/uap`
+bool fastly_compute_at_edge_uap_parse(fastly_world_string_t *user_agent, fastly_compute_at_edge_uap_user_agent_t *ret, fastly_compute_at_edge_uap_error_t *err);
+
+// Imported Functions from `fastly:compute-at-edge/async-io`
+// Blocks until one of the given objects is ready for I/O, or the optional timeout expires.
+// 
+// Valid object handles includes bodies and pending requests. See the `async_item_handle`
+// definition for more details, including what I/O actions are associated with each handle
+// type.
+// 
+// The timeout is specified in milliseconds, or 0 if no timeout is desired.
+// 
+// Returns the _index_ (not handle!) of the first object that is ready, or
+// none if the timeout expires before any objects are ready for I/O.
+bool fastly_compute_at_edge_async_io_select(fastly_world_list_fastly_compute_at_edge_async_io_async_handle_t *hs, uint32_t timeout_ms, fastly_world_option_u32_t *ret, fastly_compute_at_edge_async_io_error_t *err);
+// Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
+// 
+// If an object is ready, the I/O action is guaranteed to complete without blocking.
+// 
+// Valid object handles includes bodies and pending requests. See the `async_item_handle`
+// definition for more details, including what I/O actions are associated with each handle
+// type.
+bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_async_io_async_handle_t handle, bool *ret, fastly_compute_at_edge_async_io_error_t *err);
 
 // Exported Functions from `compute-at-edge`
 bool compute_at_edge_serve(compute_at_edge_request_t *req);

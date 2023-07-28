@@ -136,24 +136,7 @@ interface types {
   }
 
   type http-status = u16
-}
 
-interface fastly {
-  use types.{error, body-handle, response, http-version, framing-headers-mode, request-handle, response-handle, user-agent}
-
-  /*
-   * Fastly ABI
-   */
-  abi-init: func(abi-version: u64) -> result<_, error>
-
-
-  uap-parse: func(user-agent: string) -> result<user-agent, error>
-
-
-
-  /*
-   * Fastly Geo
-   */
   record geo-data {
     /**
     * The name of the organization associated with as_number.
@@ -275,13 +258,6 @@ interface fastly {
     utc-offset: option<u32>,
   }
 
-  /// JSON string for now
-  geo-lookup: func(addr-octets: list<u8>) -> result<string, error>
-
-
-  /*
-   * Fastly Async IO
-   */
   /// A handle to an object supporting generic async operations.
   /// Can be either a `BodyHandle` or a `PendingRequestHandle`.
   ///
@@ -295,27 +271,10 @@ interface fastly {
   /// into, even before the origin itself consumes that data.
   type async-handle = u32
 
-  /// Blocks until one of the given objects is ready for I/O, or the optional timeout expires.
-  ///
-  /// Valid object handles includes bodies and pending requests. See the `async_item_handle`
-  /// definition for more details, including what I/O actions are associated with each handle
-  /// type.
-  ///
-  /// The timeout is specified in milliseconds, or 0 if no timeout is desired.
-  ///
-  /// Returns the _index_ (not handle!) of the first object that is ready, or
-  /// none if the timeout expires before any objects are ready for I/O.
-  async-io-select: func(hs: list<async-handle>, timeout-ms: u32) -> result<option<u32>, error>
+}
 
-  /// Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
-  ///
-  /// If an object is ready, the I/O action is guaranteed to complete without blocking.
-  ///
-  /// Valid object handles includes bodies and pending requests. See the `async_item_handle`
-  /// definition for more details, including what I/O actions are associated with each handle
-  /// type.
-  async-io-is-ready: func(handle: async-handle) -> result<bool, error>
-
+interface fastly {
+  use types.{error, body-handle, response, http-version, framing-headers-mode, request-handle, response-handle, user-agent}
 
   /*
    * Fastly Purge
@@ -650,6 +609,51 @@ interface http-resp {
   framing-headers-mode-set: func(h: response-handle, mode: framing-headers-mode) -> result<_, error>
 }
 
+/*
+ * Fastly Geo
+ */
+interface geo {
+  use types.{error}
+
+  /// JSON string for now
+  lookup: func(addr-octets: list<u8>) -> result<string, error>
+}
+
+interface uap {
+  use types.{error, user-agent}
+
+  parse: func(user-agent: string) -> result<user-agent, error>
+}
+
+/*
+ * Fastly Async IO
+ */
+interface async-io {
+  use types.{error, async-handle}
+
+  /// Blocks until one of the given objects is ready for I/O, or the optional timeout expires.
+  ///
+  /// Valid object handles includes bodies and pending requests. See the `async_item_handle`
+  /// definition for more details, including what I/O actions are associated with each handle
+  /// type.
+  ///
+  /// The timeout is specified in milliseconds, or 0 if no timeout is desired.
+  ///
+  /// Returns the _index_ (not handle!) of the first object that is ready, or
+  /// none if the timeout expires before any objects are ready for I/O.
+  select: func(hs: list<async-handle>, timeout-ms: u32) -> result<option<u32>, error>
+
+  /// Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
+  ///
+  /// If an object is ready, the I/O action is guaranteed to complete without blocking.
+  ///
+  /// Valid object handles includes bodies and pending requests. See the `async_item_handle`
+  /// definition for more details, including what I/O actions are associated with each handle
+  /// type.
+  is-ready: func(handle: async-handle) -> result<bool, error>
+}
+
+
 world fastly-world {
 
   import fastly
@@ -660,6 +664,9 @@ world fastly-world {
   import http-body
   import http-req
   import http-resp
+  import geo
+  import uap
+  import async-io
 
   export compute-at-edge: interface {
     type request-handle = u32
