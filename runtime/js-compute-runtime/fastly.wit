@@ -53,6 +53,11 @@ interface types {
 
   type body-handle = u32
 
+  enum body-write-end {
+    back,
+    front
+  }
+
   type secret-store-handle = u32
 
   type secret-handle = u32
@@ -86,25 +91,6 @@ interface fastly {
   }
 
   uap-parse: func(user-agent: string) -> result<user-agent, error>
-
-
-  /*
-   * Fastly HTTP Body
-   */
-
-  http-body-new: func() -> result<body-handle, error>
-
-  http-body-append: func(dest: body-handle, src: body-handle) -> result<_, error>
-
-  http-body-read: func(h: body-handle, chunk-size: u32) -> result<list<u8>, error>
-
-  enum body-write-end {
-    back,
-    front
-  }
-  http-body-write: func(h: body-handle, buf: list<u8>, end: body-write-end) -> result<u32, error>
-
-  http-body-close: func(h: body-handle) -> result<_, error>
 
 
   /*
@@ -628,6 +614,23 @@ interface object-store {
 
 }
 
+/*
+ * Fastly HTTP Body
+ */
+interface http-body {
+  use types.{error, body-handle, body-write-end}
+
+  new: func() -> result<body-handle, error>
+
+  append: func(dest: body-handle, src: body-handle) -> result<_, error>
+
+  read: func(h: body-handle, chunk-size: u32) -> result<list<u8>, error>
+
+  write: func(h: body-handle, buf: list<u8>, end: body-write-end) -> result<u32, error>
+
+  close: func(h: body-handle) -> result<_, error>
+}
+
 world fastly-world {
 
   import fastly
@@ -635,6 +638,7 @@ world fastly-world {
   import log
   import secret-store
   import object-store
+  import http-body
 
   export compute-at-edge: interface {
     type request-handle = u32

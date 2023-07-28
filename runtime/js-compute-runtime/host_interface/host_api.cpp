@@ -107,7 +107,7 @@ Result<HttpBody> HttpBody::make() {
 
   fastly_compute_at_edge_fastly_body_handle_t handle;
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_fastly_http_body_new(&handle, &err)) {
+  if (!fastly_compute_at_edge_http_body_new(&handle, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(handle);
@@ -121,7 +121,7 @@ Result<HostString> HttpBody::read(uint32_t chunk_size) const {
 
   fastly_world_list_u8_t ret;
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_fastly_http_body_read(this->handle, chunk_size, &ret, &err)) {
+  if (!fastly_compute_at_edge_http_body_read(this->handle, chunk_size, &ret, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(JS::UniqueChars(reinterpret_cast<char *>(ret.ptr)), ret.len);
@@ -138,9 +138,8 @@ Result<uint32_t> HttpBody::write(const uint8_t *ptr, size_t len) const {
 
   fastly_compute_at_edge_types_error_t err;
   uint32_t written;
-  if (!fastly_compute_at_edge_fastly_http_body_write(
-          this->handle, &chunk, FASTLY_COMPUTE_AT_EDGE_FASTLY_BODY_WRITE_END_BACK, &written,
-          &err)) {
+  if (!fastly_compute_at_edge_http_body_write(
+          this->handle, &chunk, FASTLY_COMPUTE_AT_EDGE_TYPES_BODY_WRITE_END_BACK, &written, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(written);
@@ -168,7 +167,7 @@ Result<Void> HttpBody::append(HttpBody other) const {
   Result<Void> res;
 
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_fastly_http_body_append(this->handle, other.handle, &err)) {
+  if (!fastly_compute_at_edge_http_body_append(this->handle, other.handle, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace();
@@ -181,7 +180,7 @@ Result<Void> HttpBody::close() {
   Result<Void> res;
 
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_fastly_http_body_close(this->handle, &err)) {
+  if (!fastly_compute_at_edge_http_body_close(this->handle, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace();
