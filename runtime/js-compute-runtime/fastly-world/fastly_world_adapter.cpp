@@ -76,16 +76,16 @@ static bool convert_result(int res, fastly_compute_at_edge_types_error_t *err) {
 fastly_compute_at_edge_fastly_http_version_t convert_http_version(uint32_t version) {
   switch (version) {
   case 0:
-    return FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_VERSION_HTTP09;
+    return FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_VERSION_HTTP09;
   case 1:
-    return FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_VERSION_HTTP10;
+    return FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_VERSION_HTTP10;
   case 2:
-    return FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_VERSION_HTTP11;
+    return FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_VERSION_HTTP11;
   case 3:
-    return FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_VERSION_H2;
+    return FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_VERSION_H2;
   case 4:
   default:
-    return FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_VERSION_H3;
+    return FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_VERSION_H3;
   }
 }
 
@@ -142,38 +142,38 @@ bool fastly_compute_at_edge_log_write(fastly_compute_at_edge_types_log_endpoint_
       fastly::log_write(h, reinterpret_cast<const char *>(msg->ptr), msg->len, &nwritten), err);
 }
 
-bool fastly_http_req_body_downstream_get(fastly_compute_at_edge_fastly_request_t *ret,
+bool fastly_http_req_body_downstream_get(fastly_compute_at_edge_types_request_t *ret,
                                          fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::req_body_downstream_get(&ret->f0, &ret->f1), err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_redirect_to_grip_proxy(
+bool fastly_compute_at_edge_http_req_redirect_to_grip_proxy(
     fastly_world_string_t *backend, fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::req_redirect_to_grip_proxy(
                             reinterpret_cast<const char *>(backend->ptr), backend->len),
                         err);
 }
 
-int convert_tag(fastly_compute_at_edge_fastly_http_cache_override_tag_t tag) {
+int convert_tag(fastly_compute_at_edge_types_http_cache_override_tag_t tag) {
   int out_tag = 0;
-  if ((tag & FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_PASS) > 0) {
+  if ((tag & FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_CACHE_OVERRIDE_TAG_PASS) > 0) {
     out_tag |= CACHE_OVERRIDE_PASS;
   }
-  if ((tag & FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_TTL) > 0) {
+  if ((tag & FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_CACHE_OVERRIDE_TAG_TTL) > 0) {
     out_tag |= CACHE_OVERRIDE_TTL;
   }
-  if ((tag & FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE) > 0) {
+  if ((tag & FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE) > 0) {
     out_tag |= CACHE_OVERRIDE_STALE_WHILE_REVALIDATE;
   }
-  if ((tag & FASTLY_COMPUTE_AT_EDGE_FASTLY_HTTP_CACHE_OVERRIDE_TAG_PCI) > 0) {
+  if ((tag & FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_CACHE_OVERRIDE_TAG_PCI) > 0) {
     out_tag |= CACHE_OVERRIDE_PCI;
   }
   return out_tag;
 }
 
-bool fastly_compute_at_edge_fastly_http_req_cache_override_set(
-    fastly_compute_at_edge_fastly_request_handle_t h,
-    fastly_compute_at_edge_fastly_http_cache_override_tag_t tag, uint32_t *maybe_ttl,
+bool fastly_compute_at_edge_http_req_cache_override_set(
+    fastly_compute_at_edge_types_request_handle_t h,
+    fastly_compute_at_edge_types_http_cache_override_tag_t tag, uint32_t *maybe_ttl,
     uint32_t *maybe_stale_while_revalidate, fastly_world_string_t *maybe_sk,
     fastly_compute_at_edge_types_error_t *err) {
   fastly_world_string_t sk_str;
@@ -191,7 +191,7 @@ bool fastly_compute_at_edge_fastly_http_req_cache_override_set(
       err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_downstream_client_ip_addr(
+bool fastly_compute_at_edge_http_req_downstream_client_ip_addr(
     fastly_world_list_u8_t *ret, fastly_compute_at_edge_types_error_t *err) {
   ret->ptr = static_cast<uint8_t *>(cabi_malloc(16, 1));
   return convert_result(
@@ -199,7 +199,7 @@ bool fastly_compute_at_edge_fastly_http_req_downstream_client_ip_addr(
       err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_downstream_tls_cipher_openssl_name(
+bool fastly_compute_at_edge_http_req_downstream_tls_cipher_openssl_name(
     fastly_world_string_t *ret, fastly_compute_at_edge_types_error_t *err) {
   auto default_size = 128;
   ret->ptr = static_cast<char *>(cabi_malloc(default_size, 4));
@@ -213,7 +213,7 @@ bool fastly_compute_at_edge_fastly_http_req_downstream_tls_cipher_openssl_name(
   return convert_result(status, err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_downstream_tls_protocol(
+bool fastly_compute_at_edge_http_req_downstream_tls_protocol(
     fastly_world_string_t *ret, fastly_compute_at_edge_types_error_t *err) {
   auto default_size = 32;
   ret->ptr = static_cast<char *>(cabi_malloc(default_size, 4));
@@ -227,7 +227,7 @@ bool fastly_compute_at_edge_fastly_http_req_downstream_tls_protocol(
   return convert_result(status, err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_downstream_tls_raw_client_certificate(
+bool fastly_compute_at_edge_http_req_downstream_tls_raw_client_certificate(
     fastly_world_list_u8_t *ret, fastly_compute_at_edge_types_error_t *err) {
   auto default_size = 4096;
   ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
@@ -241,7 +241,7 @@ bool fastly_compute_at_edge_fastly_http_req_downstream_tls_raw_client_certificat
   return convert_result(status, err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_downstream_tls_ja3_md5(
+bool fastly_compute_at_edge_http_req_downstream_tls_ja3_md5(
     fastly_world_list_u8_t *ret, fastly_compute_at_edge_types_error_t *err) {
   auto default_size = 16;
   ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
@@ -252,7 +252,7 @@ bool fastly_compute_at_edge_fastly_http_req_downstream_tls_ja3_md5(
   }
   return convert_result(status, err);
 }
-bool fastly_compute_at_edge_fastly_http_req_downstream_tls_client_hello(
+bool fastly_compute_at_edge_http_req_downstream_tls_client_hello(
     fastly_world_list_u8_t *ret, fastly_compute_at_edge_types_error_t *err) {
   auto default_size = 512;
   ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
@@ -266,8 +266,8 @@ bool fastly_compute_at_edge_fastly_http_req_downstream_tls_client_hello(
   return convert_result(status, err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_new(fastly_compute_at_edge_fastly_request_handle_t *ret,
-                                                fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_http_req_new(fastly_compute_at_edge_fastly_request_handle_t *ret,
+                                         fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::req_new(ret), err);
 }
 
@@ -282,7 +282,7 @@ struct Chunk {
   }
 };
 
-bool fastly_compute_at_edge_fastly_http_req_header_names_get(
+bool fastly_compute_at_edge_http_req_header_names_get(
     fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_list_string_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
   std::vector<Chunk> header_names;
@@ -334,8 +334,8 @@ bool fastly_compute_at_edge_fastly_http_req_header_names_get(
   return true;
 }
 
-bool fastly_compute_at_edge_fastly_http_req_header_values_get(
-    fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name,
+bool fastly_compute_at_edge_http_req_header_values_get(
+    fastly_compute_at_edge_types_request_handle_t h, fastly_world_string_t *name,
     fastly_world_option_list_string_t *ret, fastly_compute_at_edge_types_error_t *err) {
 
   std::vector<Chunk> header_values;
@@ -391,45 +391,47 @@ bool fastly_compute_at_edge_fastly_http_req_header_values_get(
   return true;
 }
 
-bool fastly_compute_at_edge_fastly_http_req_header_insert(
-    fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name,
-    fastly_world_string_t *value, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_http_req_header_insert(fastly_compute_at_edge_types_request_handle_t h,
+                                                   fastly_world_string_t *name,
+                                                   fastly_world_string_t *value,
+                                                   fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::req_header_insert(h, name->ptr, name->len, value->ptr, value->len),
                         err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_header_append(
-    fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name,
-    fastly_world_string_t *value, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_http_req_header_append(fastly_compute_at_edge_types_request_handle_t h,
+                                                   fastly_world_string_t *name,
+                                                   fastly_world_string_t *value,
+                                                   fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::req_header_append(h, name->ptr, name->len, value->ptr, value->len),
                         err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_header_remove(
-    fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *name,
-    fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_http_req_header_remove(fastly_compute_at_edge_types_request_handle_t h,
+                                                   fastly_world_string_t *name,
+                                                   fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::req_header_remove(h, name->ptr, name->len), err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_method_get(
-    fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *ret,
-    fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_http_req_method_get(fastly_compute_at_edge_types_request_handle_t h,
+                                                fastly_world_string_t *ret,
+                                                fastly_compute_at_edge_types_error_t *err) {
   ret->ptr = static_cast<char *>(cabi_malloc(METHOD_MAX_LEN, 1));
   return convert_result(
       fastly::req_method_get(h, reinterpret_cast<char *>(ret->ptr), METHOD_MAX_LEN, &ret->len),
       err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_method_set(
-    fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *method,
-    fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_http_req_method_set(fastly_compute_at_edge_types_request_handle_t h,
+                                                fastly_world_string_t *method,
+                                                fastly_compute_at_edge_types_error_t *err) {
   return convert_result(
       fastly::req_method_set(h, reinterpret_cast<const char *>(method->ptr), method->len), err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_uri_get(
-    fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *ret,
-    fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_http_req_uri_get(fastly_compute_at_edge_types_request_handle_t h,
+                                             fastly_world_string_t *ret,
+                                             fastly_compute_at_edge_types_error_t *err) {
   ret->ptr = static_cast<char *>(cabi_malloc(URI_MAX_LEN, 1));
   if (!convert_result(fastly::req_uri_get(h, ret->ptr, URI_MAX_LEN, &ret->len), err)) {
     cabi_free(ret->ptr);
@@ -439,15 +441,15 @@ bool fastly_compute_at_edge_fastly_http_req_uri_get(
   return true;
 }
 
-bool fastly_compute_at_edge_fastly_http_req_uri_set(
-    fastly_compute_at_edge_fastly_request_handle_t h, fastly_world_string_t *uri,
-    fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_http_req_uri_set(fastly_compute_at_edge_types_request_handle_t h,
+                                             fastly_world_string_t *uri,
+                                             fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::req_uri_set(h, uri->ptr, uri->len), err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_version_get(
-    fastly_compute_at_edge_fastly_request_handle_t h,
-    fastly_compute_at_edge_fastly_http_version_t *ret, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_http_req_version_get(fastly_compute_at_edge_types_request_handle_t h,
+                                                 fastly_compute_at_edge_types_http_version_t *ret,
+                                                 fastly_compute_at_edge_types_error_t *err) {
   uint32_t fastly_http_version;
   if (!convert_result(fastly::req_version_get(h, &fastly_http_version), err)) {
     return false;
@@ -456,30 +458,30 @@ bool fastly_compute_at_edge_fastly_http_req_version_get(
   return true;
 }
 
-bool fastly_compute_at_edge_fastly_http_req_send_async(
-    fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_body_handle_t b,
-    fastly_world_string_t *backend, fastly_compute_at_edge_fastly_pending_request_handle_t *ret,
+bool fastly_compute_at_edge_http_req_send_async(
+    fastly_compute_at_edge_types_request_handle_t h, fastly_compute_at_edge_types_body_handle_t b,
+    fastly_world_string_t *backend, fastly_compute_at_edge_types_pending_request_handle_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::req_send_async(h, b, backend->ptr, backend->len, ret), err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_send_async_streaming(
-    fastly_compute_at_edge_fastly_request_handle_t h, fastly_compute_at_edge_fastly_body_handle_t b,
-    fastly_world_string_t *backend, fastly_compute_at_edge_fastly_pending_request_handle_t *ret,
+bool fastly_compute_at_edge_http_req_send_async_streaming(
+    fastly_compute_at_edge_types_request_handle_t h, fastly_compute_at_edge_types_body_handle_t b,
+    fastly_world_string_t *backend, fastly_compute_at_edge_types_pending_request_handle_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::req_send_async_streaming(h, b, backend->ptr, backend->len, ret),
                         err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_pending_req_wait(
-    fastly_compute_at_edge_fastly_pending_request_handle_t h,
-    fastly_compute_at_edge_fastly_response_t *ret, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_http_req_pending_req_wait(
+    fastly_compute_at_edge_types_pending_request_handle_t h,
+    fastly_compute_at_edge_types_response_t *ret, fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::req_pending_req_wait(h, &ret->f0, &ret->f1), err);
 }
 
-bool fastly_compute_at_edge_fastly_http_req_register_dynamic_backend(
+bool fastly_compute_at_edge_http_req_register_dynamic_backend(
     fastly_world_string_t *prefix, fastly_world_string_t *target,
-    fastly_compute_at_edge_fastly_dynamic_backend_config_t *config,
+    fastly_compute_at_edge_types_dynamic_backend_config_t *config,
     fastly_compute_at_edge_types_error_t *err) {
   uint32_t backend_config_mask = 0;
 

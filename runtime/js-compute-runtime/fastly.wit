@@ -69,16 +69,6 @@ interface types {
   type dictionary-handle = u32
 
   type log-endpoint-handle = u32
-}
-
-interface fastly {
-  use types.{error, body-handle}
-
-  /*
-   * Fastly ABI
-   */
-  abi-init: func(abi-version: u64) -> result<_, error>
-
 
   /*
    * Fastly UAP
@@ -90,12 +80,6 @@ interface fastly {
     patch: string
   }
 
-  uap-parse: func(user-agent: string) -> result<user-agent, error>
-
-
-  /*
-   * Fastly HTTP Req
-   */
   type request-handle = u32
   type pending-request-handle = u32
   type response-handle = u32
@@ -110,48 +94,6 @@ interface fastly {
       pci,
   }
 
-  http-req-cache-override-set: func(h: request-handle, tag: http-cache-override-tag, ttl: option<u32>, stale-while-revalidate: option<u32>, sk: option<string>) -> result<_, error>
-
-  http-req-downstream-client-ip-addr: func() -> result<list<u8>, error>
-
-  http-req-downstream-client-h2-fingerprint: func() -> result<list<u8>, error>
-
-  http-req-downstream-tls-cipher-openssl-name: func() -> result<string, error>
-
-  http-req-downstream-tls-protocol: func() -> result<string, error>
-
-  http-req-downstream-tls-client-hello: func() -> result<list<u8>, error>
-
-  http-req-downstream-tls-raw-client-certificate: func() -> result<list<u8>, error>
-
-  http-req-downstream-tls-client-cert-verify-result: func() -> result<_, error>
-
-  http-req-downstream-tls-ja3-md5: func() -> result<list<u8>, error>
-
-  http-req-new: func() -> result<request-handle, error>
-
-  http-req-header-names-get: func(h: request-handle) -> result<list<string>, error>
-
-  http-req-header-value-get: func(h: request-handle, name: string) -> result<option<string>, error>
-
-  http-req-header-values-get: func(h: request-handle, name: string) -> result<option<list<string>>, error>
-
-  http-req-header-values-set: func(h: request-handle, name: string, values: list<string>) -> result<_, error>
-
-  http-req-header-insert: func(h: request-handle, name: string, value: string) -> result<_, error>
-
-  http-req-header-append: func(h: request-handle, name: string, value: string) -> result<_, error>
-
-  http-req-header-remove: func(h: request-handle, name: string) -> result<_, error>
-
-  http-req-method-get: func(h: request-handle) -> result<string, error>
-
-  http-req-method-set: func(h: request-handle, method: string) -> result<_, error>
-
-  http-req-uri-get: func(h: request-handle) -> result<string, error>
-
-  http-req-uri-set: func(h: request-handle, uri: string) -> result<_, error>
-
   enum http-version {
     http09,
     http10,
@@ -160,49 +102,15 @@ interface fastly {
     h3
   }
 
-  http-req-version-get: func(h: request-handle) -> result<http-version, error>
-
-  http-req-version-set: func(h: request-handle, version: http-version) -> result<_, error>
-
-  http-req-send: func(h: request-handle, b: body-handle, backend: string) -> result<response, error>
-
-  http-req-send-async: func(h: request-handle, b: body-handle, backend: string) -> result<pending-request-handle, error>
-
-  http-req-send-async-streaming: func(h: request-handle, b: body-handle, backend: string) -> result<pending-request-handle, error>
-
-  http-req-pending-req-poll: func(h: pending-request-handle) -> result<option<response>, error>
-
-  http-req-pending-req-wait: func(h: pending-request-handle) -> result<response, error>
-
-  http-req-pending-req-select: func(h: list<pending-request-handle>) -> result<tuple<
-    u32,
-    response
-  >, error>
-
-  /// Returns whether or not the original client request arrived with a
-  /// Fastly-Key belonging to a user with the rights to purge content on this
-  /// service.
-  http-req-key-is-valid: func() -> result<bool, error>
-
-  http-req-close: func(h: request-handle) -> result<_, error>
-
   flags content-encodings {
     gzip
   }
-  http-req-auto-decompress-response-set: func(h: request-handle, encodings: content-encodings) -> result<_, error>
-
-  http-req-upgrade-websocket: func(backend: string) -> result<_, error>
-
-  http-req-redirect-to-websocket-proxy: func(backend: string) -> result<_, error>
-
-  http-req-redirect-to-grip-proxy: func(backend: string) -> result<_, error>
 
   /// Adjust how this requests's framing headers are determined.
   enum framing-headers-mode {
     automatic,
     manually-from-headers
   }
-  http-req-framing-headers-mode-set: func(h: request-handle, mode: framing-headers-mode) -> result<_, error>
 
   enum tls-version {
     tls1,
@@ -226,7 +134,19 @@ interface fastly {
     ciphers: option<string>,
     sni-hostname: option<string>,
   }
-  http-req-register-dynamic-backend: func(prefix: string, target: string, config: dynamic-backend-config) -> result<_, error>
+}
+
+interface fastly {
+  use types.{error, body-handle, response, http-version, framing-headers-mode, request-handle, response-handle, user-agent}
+
+  /*
+   * Fastly ABI
+   */
+  abi-init: func(abi-version: u64) -> result<_, error>
+
+
+  uap-parse: func(user-agent: string) -> result<user-agent, error>
+
 
 
   /*
@@ -631,6 +551,99 @@ interface http-body {
   close: func(h: body-handle) -> result<_, error>
 }
 
+/*
+ * Fastly HTTP Req
+ */
+interface http-req {
+
+  use types.{
+    request-handle, http-cache-override-tag, http-version, body-handle, error,
+    response, pending-request-handle, content-encodings, framing-headers-mode,
+    dynamic-backend-config
+  }
+
+  cache-override-set: func(h: request-handle, tag: http-cache-override-tag, ttl: option<u32>, stale-while-revalidate: option<u32>, sk: option<string>) -> result<_, error>
+
+  downstream-client-ip-addr: func() -> result<list<u8>, error>
+
+  downstream-client-h2-fingerprint: func() -> result<list<u8>, error>
+
+  downstream-tls-cipher-openssl-name: func() -> result<string, error>
+
+  downstream-tls-protocol: func() -> result<string, error>
+
+  downstream-tls-client-hello: func() -> result<list<u8>, error>
+
+  downstream-tls-raw-client-certificate: func() -> result<list<u8>, error>
+
+  downstream-tls-client-cert-verify-result: func() -> result<_, error>
+
+  downstream-tls-ja3-md5: func() -> result<list<u8>, error>
+
+  new: func() -> result<request-handle, error>
+
+  header-names-get: func(h: request-handle) -> result<list<string>, error>
+
+  header-value-get: func(h: request-handle, name: string) -> result<option<string>, error>
+
+  header-values-get: func(h: request-handle, name: string) -> result<option<list<string>>, error>
+
+  header-values-set: func(h: request-handle, name: string, values: list<string>) -> result<_, error>
+
+  header-insert: func(h: request-handle, name: string, value: string) -> result<_, error>
+
+  header-append: func(h: request-handle, name: string, value: string) -> result<_, error>
+
+  header-remove: func(h: request-handle, name: string) -> result<_, error>
+
+  method-get: func(h: request-handle) -> result<string, error>
+
+  method-set: func(h: request-handle, method: string) -> result<_, error>
+
+  uri-get: func(h: request-handle) -> result<string, error>
+
+  uri-set: func(h: request-handle, uri: string) -> result<_, error>
+
+  version-get: func(h: request-handle) -> result<http-version, error>
+
+  version-set: func(h: request-handle, version: http-version) -> result<_, error>
+
+  send: func(h: request-handle, b: body-handle, backend: string) -> result<response, error>
+
+  send-async: func(h: request-handle, b: body-handle, backend: string) -> result<pending-request-handle, error>
+
+  send-async-streaming: func(h: request-handle, b: body-handle, backend: string) -> result<pending-request-handle, error>
+
+  pending-req-poll: func(h: pending-request-handle) -> result<option<response>, error>
+
+  pending-req-wait: func(h: pending-request-handle) -> result<response, error>
+
+  pending-req-select: func(h: list<pending-request-handle>) -> result<tuple<
+    u32,
+    response
+  >, error>
+
+  /// Returns whether or not the original client request arrived with a
+  /// Fastly-Key belonging to a user with the rights to purge content on this
+  /// service.
+  key-is-valid: func() -> result<bool, error>
+
+  close: func(h: request-handle) -> result<_, error>
+
+  auto-decompress-response-set: func(h: request-handle, encodings: content-encodings) -> result<_, error>
+
+  upgrade-websocket: func(backend: string) -> result<_, error>
+
+  redirect-to-websocket-proxy: func(backend: string) -> result<_, error>
+
+  redirect-to-grip-proxy: func(backend: string) -> result<_, error>
+
+  framing-headers-mode-set: func(h: request-handle, mode: framing-headers-mode) -> result<_, error>
+
+  register-dynamic-backend: func(prefix: string, target: string, config: dynamic-backend-config) -> result<_, error>
+
+}
+
 world fastly-world {
 
   import fastly
@@ -639,6 +652,7 @@ world fastly-world {
   import secret-store
   import object-store
   import http-body
+  import http-req
 
   export compute-at-edge: interface {
     type request-handle = u32

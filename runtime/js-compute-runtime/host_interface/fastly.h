@@ -236,30 +236,30 @@ WASM_IMPORT("fastly_http_req", "send_async")
 int req_send_async(fastly_compute_at_edge_fastly_request_handle_t req_handle,
                    fastly_compute_at_edge_fastly_body_handle_t body_handle, const char *backend,
                    size_t backend_len,
-                   fastly_compute_at_edge_fastly_pending_request_handle_t *pending_req_out);
+                   fastly_compute_at_edge_types_pending_request_handle_t *pending_req_out);
 
 WASM_IMPORT("fastly_http_req", "send_async_streaming")
 int req_send_async_streaming(
     fastly_compute_at_edge_fastly_request_handle_t req_handle,
     fastly_compute_at_edge_fastly_body_handle_t body_handle, const char *backend,
-    size_t backend_len, fastly_compute_at_edge_fastly_pending_request_handle_t *pending_req_out);
+    size_t backend_len, fastly_compute_at_edge_types_pending_request_handle_t *pending_req_out);
 
 WASM_IMPORT("fastly_http_req", "pending_req_poll")
-int req_pending_req_poll(fastly_compute_at_edge_fastly_pending_request_handle_t req_handle,
+int req_pending_req_poll(fastly_compute_at_edge_types_pending_request_handle_t req_handle,
                          uint32_t *is_done_out,
-                         fastly_compute_at_edge_fastly_response_handle_t *resp_handle_out,
-                         fastly_compute_at_edge_fastly_body_handle_t *resp_body_handle_out);
+                         fastly_compute_at_edge_types_response_handle_t *resp_handle_out,
+                         fastly_compute_at_edge_types_body_handle_t *resp_body_handle_out);
 
 WASM_IMPORT("fastly_http_req", "pending_req_select")
-int req_pending_req_select(fastly_compute_at_edge_fastly_pending_request_handle_t req_handles[],
+int req_pending_req_select(fastly_compute_at_edge_types_pending_request_handle_t req_handles[],
                            size_t req_handles_len, uint32_t *done_idx_out,
-                           fastly_compute_at_edge_fastly_response_handle_t *resp_handle_out,
-                           fastly_compute_at_edge_fastly_body_handle_t *resp_body_handle_out);
+                           fastly_compute_at_edge_types_response_handle_t *resp_handle_out,
+                           fastly_compute_at_edge_types_body_handle_t *resp_body_handle_out);
 
 WASM_IMPORT("fastly_http_req", "pending_req_wait")
-int req_pending_req_wait(fastly_compute_at_edge_fastly_pending_request_handle_t req_handle,
-                         fastly_compute_at_edge_fastly_response_handle_t *resp_handle_out,
-                         fastly_compute_at_edge_fastly_body_handle_t *resp_body_handle_out);
+int req_pending_req_wait(fastly_compute_at_edge_types_pending_request_handle_t req_handle,
+                         fastly_compute_at_edge_types_response_handle_t *resp_handle_out,
+                         fastly_compute_at_edge_types_body_handle_t *resp_body_handle_out);
 
 // Module fastly_http_resp
 WASM_IMPORT("fastly_http_resp", "new")
