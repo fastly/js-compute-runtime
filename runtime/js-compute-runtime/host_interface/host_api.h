@@ -39,7 +39,7 @@ void handle_fastly_error(JSContext *cx, FastlyError err, int line, const char *f
 #define HANDLE_ERROR(cx, err) ::host_api::handle_fastly_error(cx, err, __LINE__, __func__)
 
 template <typename T> class Result final {
-  /// A private wrapper to distinguish `fastly_compute_at_edge_fastly_error_t` in the private
+  /// A private wrapper to distinguish `fastly_compute_at_edge_types_error_t` in the private
   /// variant.
   struct Error {
     FastlyError value;
