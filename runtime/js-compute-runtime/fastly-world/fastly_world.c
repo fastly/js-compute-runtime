@@ -1063,7 +1063,7 @@ bool fastly_compute_at_edge_http_body_read(fastly_compute_at_edge_http_body_body
   }
 }
 
-bool fastly_compute_at_edge_http_body_write(fastly_compute_at_edge_http_body_body_handle_t h, fastly_world_list_u8_t *buf, fastly_compute_at_edge_http_body_body_write_end_t end, uint32_t *ret, fastly_compute_at_edge_http_body_error_t *err) {
+bool fastly_compute_at_edge_http_body_write(fastly_compute_at_edge_http_body_body_handle_t h, fastly_world_list_u8_t *buf, fastly_compute_at_edge_http_body_write_end_t end, uint32_t *ret, fastly_compute_at_edge_http_body_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[8];
   int32_t ptr = (int32_t) &ret_area;
@@ -1115,7 +1115,7 @@ bool fastly_compute_at_edge_http_body_close(fastly_compute_at_edge_http_body_bod
   }
 }
 
-bool fastly_compute_at_edge_http_req_cache_override_set(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_http_cache_override_tag_t tag, uint32_t *maybe_ttl, uint32_t *maybe_stale_while_revalidate, fastly_world_string_t *maybe_sk, fastly_compute_at_edge_http_req_error_t *err) {
+bool fastly_compute_at_edge_http_req_cache_override_set(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_cache_override_tag_t tag, uint32_t *maybe_ttl, uint32_t *maybe_stale_while_revalidate, fastly_world_string_t *maybe_sk, fastly_compute_at_edge_http_req_error_t *err) {
   __attribute__((__aligned__(1)))
   uint8_t ret_area[2];
   fastly_world_option_u32_t ttl;
@@ -1798,7 +1798,7 @@ bool fastly_compute_at_edge_http_req_send(fastly_compute_at_edge_http_req_reques
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
-      result.val.ok = (fastly_compute_at_edge_types_response_t) {
+      result.val.ok = (fastly_compute_at_edge_http_types_response_t) {
         (uint32_t) (*((int32_t*) (ptr + 4))),
         (uint32_t) (*((int32_t*) (ptr + 8))),
       };
@@ -1890,7 +1890,7 @@ bool fastly_compute_at_edge_http_req_pending_req_poll(fastly_compute_at_edge_htt
         }
         case 1: {
           option.is_some = true;
-          option.val = (fastly_compute_at_edge_types_response_t) {
+          option.val = (fastly_compute_at_edge_http_types_response_t) {
             (uint32_t) (*((int32_t*) (ptr + 8))),
             (uint32_t) (*((int32_t*) (ptr + 12))),
           };
@@ -1925,7 +1925,7 @@ bool fastly_compute_at_edge_http_req_pending_req_wait(fastly_compute_at_edge_htt
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
-      result.val.ok = (fastly_compute_at_edge_types_response_t) {
+      result.val.ok = (fastly_compute_at_edge_http_types_response_t) {
         (uint32_t) (*((int32_t*) (ptr + 4))),
         (uint32_t) (*((int32_t*) (ptr + 8))),
       };
@@ -1957,7 +1957,7 @@ bool fastly_compute_at_edge_http_req_pending_req_select(fastly_world_list_fastly
       result.is_err = false;
       result.val.ok = (fastly_world_tuple2_u32_fastly_compute_at_edge_http_req_response_t) {
         (uint32_t) (*((int32_t*) (ptr + 4))),
-        (fastly_compute_at_edge_types_response_t) {
+        (fastly_compute_at_edge_http_types_response_t) {
           (uint32_t) (*((int32_t*) (ptr + 8))),
           (uint32_t) (*((int32_t*) (ptr + 12))),
         },
@@ -2208,14 +2208,14 @@ bool fastly_compute_at_edge_http_req_register_dynamic_backend(fastly_world_strin
     *((int8_t*)(ptr + 54)) = 0;
   }
   if (((*config).ssl_min_version).is_some) {
-    const fastly_compute_at_edge_types_tls_version_t *payload12 = &((*config).ssl_min_version).val;
+    const fastly_compute_at_edge_http_types_tls_version_t *payload12 = &((*config).ssl_min_version).val;
     *((int8_t*)(ptr + 56)) = 1;
     *((int8_t*)(ptr + 57)) = (int32_t) *payload12;
   } else {
     *((int8_t*)(ptr + 56)) = 0;
   }
   if (((*config).ssl_max_version).is_some) {
-    const fastly_compute_at_edge_types_tls_version_t *payload14 = &((*config).ssl_max_version).val;
+    const fastly_compute_at_edge_http_types_tls_version_t *payload14 = &((*config).ssl_max_version).val;
     *((int8_t*)(ptr + 58)) = 1;
     *((int8_t*)(ptr + 59)) = (int32_t) *payload14;
   } else {

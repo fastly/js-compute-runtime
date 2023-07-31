@@ -50,71 +50,6 @@ interface types {
     /// resources permitted. For example, creating too many response handles.
     limit-exceeded
   }
-
-  type body-handle = u32
-
-  enum body-write-end {
-    back,
-    front
-  }
-
-  type request-handle = u32
-  type pending-request-handle = u32
-  type response-handle = u32
-  type request = tuple<request-handle, body-handle>
-  type response = tuple<response-handle, body-handle>
-
-  flags http-cache-override-tag {
-      /// Do not cache the response to this request, regardless of the origin response's headers.
-      pass,
-      ttl,
-      stale-while-revalidate,
-      pci,
-  }
-
-  enum http-version {
-    http09,
-    http10,
-    http11,
-    h2,
-    h3
-  }
-
-  flags content-encodings {
-    gzip
-  }
-
-  /// Adjust how this requests's framing headers are determined.
-  enum framing-headers-mode {
-    automatic,
-    manually-from-headers
-  }
-
-  enum tls-version {
-    tls1,
-    tls11,
-    tls12,
-    tls13
-  }
-
-  /// Create a backend for later use
-  record dynamic-backend-config {
-    host-override: option<string>,
-    connect-timeout: option<u32>,
-    first-byte-timeout: option<u32>,
-    between-bytes-timeout: option<u32>,
-    use-ssl: option<bool>,
-    dont-pool: option<bool>,
-    ssl-min-version: option<tls-version>,
-    ssl-max-version: option<tls-version>,
-    cert-hostname: option<string>,
-    ca-cert: option<string>,
-    ciphers: option<string>,
-    sni-hostname: option<string>,
-  }
-
-  type http-status = u16
-
 }
 
 /*
@@ -169,7 +104,9 @@ interface secret-store {
  */
 interface object-store {
 
-  use types.{body-handle, error}
+  use types.{error}
+
+  use http-types.{body-handle}
 
   type fd = u32
 
@@ -186,11 +123,72 @@ interface object-store {
 
 }
 
+interface http-types {
+
+  type body-handle = u32
+
+  type request-handle = u32
+  type pending-request-handle = u32
+  type response-handle = u32
+  type request = tuple<request-handle, body-handle>
+  type response = tuple<response-handle, body-handle>
+
+  enum http-version {
+    http09,
+    http10,
+    http11,
+    h2,
+    h3
+  }
+
+  flags content-encodings {
+    gzip
+  }
+
+  /// Adjust how this requests's framing headers are determined.
+  enum framing-headers-mode {
+    automatic,
+    manually-from-headers
+  }
+
+  enum tls-version {
+    tls1,
+    tls11,
+    tls12,
+    tls13
+  }
+
+  /// Create a backend for later use
+  record dynamic-backend-config {
+    host-override: option<string>,
+    connect-timeout: option<u32>,
+    first-byte-timeout: option<u32>,
+    between-bytes-timeout: option<u32>,
+    use-ssl: option<bool>,
+    dont-pool: option<bool>,
+    ssl-min-version: option<tls-version>,
+    ssl-max-version: option<tls-version>,
+    cert-hostname: option<string>,
+    ca-cert: option<string>,
+    ciphers: option<string>,
+    sni-hostname: option<string>,
+  }
+
+  type http-status = u16
+}
+
 /*
  * Fastly HTTP Body
  */
 interface http-body {
-  use types.{error, body-handle, body-write-end}
+  use types.{error}
+
+  use http-types.{body-handle}
+
+  enum write-end {
+    back,
+    front
+  }
 
   new: func() -> result<body-handle, error>
 
@@ -198,7 +196,7 @@ interface http-body {
 
   read: func(h: body-handle, chunk-size: u32) -> result<list<u8>, error>
 
-  write: func(h: body-handle, buf: list<u8>, end: body-write-end) -> result<u32, error>
+  write: func(h: body-handle, buf: list<u8>, end: write-end) -> result<u32, error>
 
   close: func(h: body-handle) -> result<_, error>
 }
@@ -208,13 +206,22 @@ interface http-body {
  */
 interface http-req {
 
-  use types.{
-    request-handle, http-cache-override-tag, http-version, body-handle, error,
-    response, pending-request-handle, content-encodings, framing-headers-mode,
-    dynamic-backend-config
+  use types.{error}
+
+  use http-types.{
+    body-handle, request-handle, http-version, response, pending-request-handle,
+    content-encodings, framing-headers-mode, dynamic-backend-config
   }
 
-  cache-override-set: func(h: request-handle, tag: http-cache-override-tag, ttl: option<u32>, stale-while-revalidate: option<u32>, sk: option<string>) -> result<_, error>
+  flags cache-override-tag {
+      /// Do not cache the response to this request, regardless of the origin response's headers.
+      pass,
+      ttl,
+      stale-while-revalidate,
+      pci,
+  }
+
+  cache-override-set: func(h: request-handle, tag: cache-override-tag, ttl: option<u32>, stale-while-revalidate: option<u32>, sk: option<string>) -> result<_, error>
 
   downstream-client-ip-addr: func() -> result<list<u8>, error>
 
@@ -300,8 +307,10 @@ interface http-req {
  * Fastly HTTP Resp
  */
 interface http-resp {
-  use types.{
-    error, response-handle, body-handle, http-version, http-status,
+  use types.{error}
+
+  use http-types.{
+    response-handle, body-handle, http-version, http-status,
     framing-headers-mode
   }
 
@@ -549,7 +558,8 @@ interface purge {
  */
 interface cache {
 
-  use types.{error, body-handle, request-handle}
+  use types.{error}
+  use http-types.{body-handle, request-handle}
 
   /// The outcome of a cache lookup (either bare or as part of a cache transaction)
   type handle = u32

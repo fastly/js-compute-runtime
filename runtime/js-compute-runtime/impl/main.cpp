@@ -1,7 +1,7 @@
 #include "host_interface/fastly.h"
 
 int main(int argc, const char *argv[]) {
-  fastly_compute_at_edge_types_request_t req;
+  fastly_compute_at_edge_http_types_request_t req;
   if (fastly::req_body_downstream_get(&req.f0, &req.f1) != 0) {
     abort();
     return 1;

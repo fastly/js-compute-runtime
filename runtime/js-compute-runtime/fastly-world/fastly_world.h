@@ -64,66 +64,72 @@ typedef uint8_t fastly_compute_at_edge_types_error_t;
 // resources permitted. For example, creating too many response handles.
 #define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_LIMIT_EXCEEDED 13
 
-typedef uint32_t fastly_compute_at_edge_types_body_handle_t;
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_log_error_t;
 
-typedef uint8_t fastly_compute_at_edge_types_body_write_end_t;
+typedef uint32_t fastly_compute_at_edge_log_handle_t;
 
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_BODY_WRITE_END_BACK 0
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_BODY_WRITE_END_FRONT 1
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_dictionary_error_t;
 
-typedef uint32_t fastly_compute_at_edge_types_request_handle_t;
-
-typedef uint32_t fastly_compute_at_edge_types_pending_request_handle_t;
-
-typedef uint32_t fastly_compute_at_edge_types_response_handle_t;
-
-typedef struct {
-  fastly_compute_at_edge_types_request_handle_t f0;
-  fastly_compute_at_edge_types_body_handle_t f1;
-} fastly_compute_at_edge_types_request_t;
-
-typedef struct {
-  fastly_compute_at_edge_types_response_handle_t f0;
-  fastly_compute_at_edge_types_body_handle_t f1;
-} fastly_compute_at_edge_types_response_t;
-
-typedef uint8_t fastly_compute_at_edge_types_http_cache_override_tag_t;
-
-// Do not cache the response to this request, regardless of the origin response's headers.
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_CACHE_OVERRIDE_TAG_PASS (1 << 0)
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_CACHE_OVERRIDE_TAG_TTL (1 << 1)
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE (1 << 2)
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_CACHE_OVERRIDE_TAG_PCI (1 << 3)
-
-typedef uint8_t fastly_compute_at_edge_types_http_version_t;
-
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_VERSION_HTTP09 0
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_VERSION_HTTP10 1
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_VERSION_HTTP11 2
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_VERSION_H2 3
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_VERSION_H3 4
-
-typedef uint8_t fastly_compute_at_edge_types_content_encodings_t;
-
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_CONTENT_ENCODINGS_GZIP (1 << 0)
-
-// Adjust how this requests's framing headers are determined.
-typedef uint8_t fastly_compute_at_edge_types_framing_headers_mode_t;
-
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_FRAMING_HEADERS_MODE_AUTOMATIC 0
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_FRAMING_HEADERS_MODE_MANUALLY_FROM_HEADERS 1
-
-typedef uint8_t fastly_compute_at_edge_types_tls_version_t;
-
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_TLS_VERSION_TLS1 0
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_TLS_VERSION_TLS11 1
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_TLS_VERSION_TLS12 2
-#define FASTLY_COMPUTE_AT_EDGE_TYPES_TLS_VERSION_TLS13 3
+typedef uint32_t fastly_compute_at_edge_dictionary_handle_t;
 
 typedef struct {
   bool is_some;
   fastly_world_string_t val;
 } fastly_world_option_string_t;
+
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_secret_store_error_t;
+
+typedef uint32_t fastly_compute_at_edge_secret_store_store_handle_t;
+
+typedef uint32_t fastly_compute_at_edge_secret_store_secret_handle_t;
+
+typedef struct {
+  bool is_some;
+  fastly_compute_at_edge_secret_store_secret_handle_t val;
+} fastly_world_option_fastly_compute_at_edge_secret_store_secret_handle_t;
+
+typedef uint32_t fastly_compute_at_edge_http_types_body_handle_t;
+
+typedef uint32_t fastly_compute_at_edge_http_types_request_handle_t;
+
+typedef uint32_t fastly_compute_at_edge_http_types_pending_request_handle_t;
+
+typedef uint32_t fastly_compute_at_edge_http_types_response_handle_t;
+
+typedef struct {
+  fastly_compute_at_edge_http_types_request_handle_t f0;
+  fastly_compute_at_edge_http_types_body_handle_t f1;
+} fastly_compute_at_edge_http_types_request_t;
+
+typedef struct {
+  fastly_compute_at_edge_http_types_response_handle_t f0;
+  fastly_compute_at_edge_http_types_body_handle_t f1;
+} fastly_compute_at_edge_http_types_response_t;
+
+typedef uint8_t fastly_compute_at_edge_http_types_http_version_t;
+
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_HTTP_VERSION_HTTP09 0
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_HTTP_VERSION_HTTP10 1
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_HTTP_VERSION_HTTP11 2
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_HTTP_VERSION_H2 3
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_HTTP_VERSION_H3 4
+
+typedef uint8_t fastly_compute_at_edge_http_types_content_encodings_t;
+
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_CONTENT_ENCODINGS_GZIP (1 << 0)
+
+// Adjust how this requests's framing headers are determined.
+typedef uint8_t fastly_compute_at_edge_http_types_framing_headers_mode_t;
+
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_FRAMING_HEADERS_MODE_AUTOMATIC 0
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_FRAMING_HEADERS_MODE_MANUALLY_FROM_HEADERS 1
+
+typedef uint8_t fastly_compute_at_edge_http_types_tls_version_t;
+
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS1 0
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS11 1
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS12 2
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS13 3
 
 typedef struct {
   bool is_some;
@@ -137,8 +143,8 @@ typedef struct {
 
 typedef struct {
   bool is_some;
-  fastly_compute_at_edge_types_tls_version_t val;
-} fastly_world_option_fastly_compute_at_edge_types_tls_version_t;
+  fastly_compute_at_edge_http_types_tls_version_t val;
+} fastly_world_option_fastly_compute_at_edge_http_types_tls_version_t;
 
 // Create a backend for later use
 typedef struct {
@@ -148,38 +154,19 @@ typedef struct {
   fastly_world_option_u32_t between_bytes_timeout;
   fastly_world_option_bool_t use_ssl;
   fastly_world_option_bool_t dont_pool;
-  fastly_world_option_fastly_compute_at_edge_types_tls_version_t ssl_min_version;
-  fastly_world_option_fastly_compute_at_edge_types_tls_version_t ssl_max_version;
+  fastly_world_option_fastly_compute_at_edge_http_types_tls_version_t ssl_min_version;
+  fastly_world_option_fastly_compute_at_edge_http_types_tls_version_t ssl_max_version;
   fastly_world_option_string_t cert_hostname;
   fastly_world_option_string_t ca_cert;
   fastly_world_option_string_t ciphers;
   fastly_world_option_string_t sni_hostname;
-} fastly_compute_at_edge_types_dynamic_backend_config_t;
+} fastly_compute_at_edge_http_types_dynamic_backend_config_t;
 
-typedef uint16_t fastly_compute_at_edge_types_http_status_t;
-
-typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_log_error_t;
-
-typedef uint32_t fastly_compute_at_edge_log_handle_t;
-
-typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_dictionary_error_t;
-
-typedef uint32_t fastly_compute_at_edge_dictionary_handle_t;
-
-typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_secret_store_error_t;
-
-typedef uint32_t fastly_compute_at_edge_secret_store_store_handle_t;
-
-typedef uint32_t fastly_compute_at_edge_secret_store_secret_handle_t;
-
-typedef struct {
-  bool is_some;
-  fastly_compute_at_edge_secret_store_secret_handle_t val;
-} fastly_world_option_fastly_compute_at_edge_secret_store_secret_handle_t;
-
-typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_object_store_body_handle_t;
+typedef uint16_t fastly_compute_at_edge_http_types_http_status_t;
 
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_object_store_error_t;
+
+typedef fastly_compute_at_edge_http_types_body_handle_t fastly_compute_at_edge_object_store_body_handle_t;
 
 typedef uint32_t fastly_compute_at_edge_object_store_fd_t;
 
@@ -197,34 +184,43 @@ typedef struct {
 
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_http_body_error_t;
 
-typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_http_body_body_handle_t;
+typedef fastly_compute_at_edge_http_types_body_handle_t fastly_compute_at_edge_http_body_body_handle_t;
 
-typedef fastly_compute_at_edge_types_body_write_end_t fastly_compute_at_edge_http_body_body_write_end_t;
+typedef uint8_t fastly_compute_at_edge_http_body_write_end_t;
+
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_BODY_WRITE_END_BACK 0
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_BODY_WRITE_END_FRONT 1
 
 typedef struct {
   uint8_t *ptr;
   size_t len;
 } fastly_world_list_u8_t;
 
-typedef fastly_compute_at_edge_types_request_handle_t fastly_compute_at_edge_http_req_request_handle_t;
-
-typedef fastly_compute_at_edge_types_http_cache_override_tag_t fastly_compute_at_edge_http_req_http_cache_override_tag_t;
-
-typedef fastly_compute_at_edge_types_http_version_t fastly_compute_at_edge_http_req_http_version_t;
-
-typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_http_req_body_handle_t;
-
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_http_req_error_t;
 
-typedef fastly_compute_at_edge_types_response_t fastly_compute_at_edge_http_req_response_t;
+typedef fastly_compute_at_edge_http_types_body_handle_t fastly_compute_at_edge_http_req_body_handle_t;
 
-typedef fastly_compute_at_edge_types_pending_request_handle_t fastly_compute_at_edge_http_req_pending_request_handle_t;
+typedef fastly_compute_at_edge_http_types_request_handle_t fastly_compute_at_edge_http_req_request_handle_t;
 
-typedef fastly_compute_at_edge_types_content_encodings_t fastly_compute_at_edge_http_req_content_encodings_t;
+typedef fastly_compute_at_edge_http_types_http_version_t fastly_compute_at_edge_http_req_http_version_t;
 
-typedef fastly_compute_at_edge_types_framing_headers_mode_t fastly_compute_at_edge_http_req_framing_headers_mode_t;
+typedef fastly_compute_at_edge_http_types_response_t fastly_compute_at_edge_http_req_response_t;
 
-typedef fastly_compute_at_edge_types_dynamic_backend_config_t fastly_compute_at_edge_http_req_dynamic_backend_config_t;
+typedef fastly_compute_at_edge_http_types_pending_request_handle_t fastly_compute_at_edge_http_req_pending_request_handle_t;
+
+typedef fastly_compute_at_edge_http_types_content_encodings_t fastly_compute_at_edge_http_req_content_encodings_t;
+
+typedef fastly_compute_at_edge_http_types_framing_headers_mode_t fastly_compute_at_edge_http_req_framing_headers_mode_t;
+
+typedef fastly_compute_at_edge_http_types_dynamic_backend_config_t fastly_compute_at_edge_http_req_dynamic_backend_config_t;
+
+typedef uint8_t fastly_compute_at_edge_http_req_cache_override_tag_t;
+
+// Do not cache the response to this request, regardless of the origin response's headers.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_REQ_CACHE_OVERRIDE_TAG_PASS (1 << 0)
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_REQ_CACHE_OVERRIDE_TAG_TTL (1 << 1)
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_REQ_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE (1 << 2)
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_REQ_CACHE_OVERRIDE_TAG_PCI (1 << 3)
 
 typedef struct {
   fastly_world_string_t *ptr;
@@ -253,15 +249,15 @@ typedef struct {
 
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_http_resp_error_t;
 
-typedef fastly_compute_at_edge_types_response_handle_t fastly_compute_at_edge_http_resp_response_handle_t;
+typedef fastly_compute_at_edge_http_types_response_handle_t fastly_compute_at_edge_http_resp_response_handle_t;
 
-typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_http_resp_body_handle_t;
+typedef fastly_compute_at_edge_http_types_body_handle_t fastly_compute_at_edge_http_resp_body_handle_t;
 
-typedef fastly_compute_at_edge_types_http_version_t fastly_compute_at_edge_http_resp_http_version_t;
+typedef fastly_compute_at_edge_http_types_http_version_t fastly_compute_at_edge_http_resp_http_version_t;
 
-typedef fastly_compute_at_edge_types_http_status_t fastly_compute_at_edge_http_resp_http_status_t;
+typedef fastly_compute_at_edge_http_types_http_status_t fastly_compute_at_edge_http_resp_http_status_t;
 
-typedef fastly_compute_at_edge_types_framing_headers_mode_t fastly_compute_at_edge_http_resp_framing_headers_mode_t;
+typedef fastly_compute_at_edge_http_types_framing_headers_mode_t fastly_compute_at_edge_http_resp_framing_headers_mode_t;
 
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_geo_error_t;
 
@@ -373,9 +369,9 @@ typedef uint8_t fastly_compute_at_edge_purge_options_mask_t;
 
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_cache_error_t;
 
-typedef fastly_compute_at_edge_types_body_handle_t fastly_compute_at_edge_cache_body_handle_t;
+typedef fastly_compute_at_edge_http_types_body_handle_t fastly_compute_at_edge_cache_body_handle_t;
 
-typedef fastly_compute_at_edge_types_request_handle_t fastly_compute_at_edge_cache_request_handle_t;
+typedef fastly_compute_at_edge_http_types_request_handle_t fastly_compute_at_edge_cache_request_handle_t;
 
 // The outcome of a cache lookup (either bare or as part of a cache transaction)
 typedef uint32_t fastly_compute_at_edge_cache_handle_t;
@@ -530,11 +526,11 @@ bool fastly_compute_at_edge_geo_lookup(fastly_world_list_u8_t *addr_octets, fast
 bool fastly_compute_at_edge_http_body_new(fastly_compute_at_edge_http_body_body_handle_t *ret, fastly_compute_at_edge_http_body_error_t *err);
 bool fastly_compute_at_edge_http_body_append(fastly_compute_at_edge_http_body_body_handle_t dest, fastly_compute_at_edge_http_body_body_handle_t src, fastly_compute_at_edge_http_body_error_t *err);
 bool fastly_compute_at_edge_http_body_read(fastly_compute_at_edge_http_body_body_handle_t h, uint32_t chunk_size, fastly_world_list_u8_t *ret, fastly_compute_at_edge_http_body_error_t *err);
-bool fastly_compute_at_edge_http_body_write(fastly_compute_at_edge_http_body_body_handle_t h, fastly_world_list_u8_t *buf, fastly_compute_at_edge_http_body_body_write_end_t end, uint32_t *ret, fastly_compute_at_edge_http_body_error_t *err);
+bool fastly_compute_at_edge_http_body_write(fastly_compute_at_edge_http_body_body_handle_t h, fastly_world_list_u8_t *buf, fastly_compute_at_edge_http_body_write_end_t end, uint32_t *ret, fastly_compute_at_edge_http_body_error_t *err);
 bool fastly_compute_at_edge_http_body_close(fastly_compute_at_edge_http_body_body_handle_t h, fastly_compute_at_edge_http_body_error_t *err);
 
 // Imported Functions from `fastly:compute-at-edge/http-req`
-bool fastly_compute_at_edge_http_req_cache_override_set(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_http_cache_override_tag_t tag, uint32_t *maybe_ttl, uint32_t *maybe_stale_while_revalidate, fastly_world_string_t *maybe_sk, fastly_compute_at_edge_http_req_error_t *err);
+bool fastly_compute_at_edge_http_req_cache_override_set(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_cache_override_tag_t tag, uint32_t *maybe_ttl, uint32_t *maybe_stale_while_revalidate, fastly_world_string_t *maybe_sk, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_downstream_client_ip_addr(fastly_world_list_u8_t *ret, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_downstream_client_h2_fingerprint(fastly_world_list_u8_t *ret, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_downstream_tls_cipher_openssl_name(fastly_world_string_t *ret, fastly_compute_at_edge_http_req_error_t *err);

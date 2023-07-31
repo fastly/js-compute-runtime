@@ -34,7 +34,7 @@ HostBytes make_host_bytes(fastly_world_list_u8_t str) {
   return HostBytes{std::unique_ptr<uint8_t[]>{str.ptr}, str.len};
 }
 
-Response make_response(fastly_compute_at_edge_types_response_t &resp) {
+Response make_response(fastly_compute_at_edge_http_types_response_t &resp) {
   return Response{HttpResp{resp.f0}, HttpBody{resp.f1}};
 }
 
@@ -46,19 +46,20 @@ static_assert(sizeof(uint32_t) == sizeof(void *));
 
 // Ensure that the handle types stay in sync with fastly-world.h
 static_assert(std::is_same_v<AsyncHandle::Handle, fastly_compute_at_edge_async_io_handle_t>);
-static_assert(std::is_same_v<HttpBody::Handle, fastly_compute_at_edge_types_body_handle_t>);
+static_assert(std::is_same_v<HttpBody::Handle, fastly_compute_at_edge_http_types_body_handle_t>);
+static_assert(std::is_same_v<HttpPendingReq::Handle,
+                             fastly_compute_at_edge_http_types_pending_request_handle_t>);
+static_assert(std::is_same_v<HttpReq::Handle, fastly_compute_at_edge_http_types_request_handle_t>);
 static_assert(
-    std::is_same_v<HttpPendingReq::Handle, fastly_compute_at_edge_types_pending_request_handle_t>);
-static_assert(std::is_same_v<HttpReq::Handle, fastly_compute_at_edge_types_request_handle_t>);
-static_assert(std::is_same_v<HttpResp::Handle, fastly_compute_at_edge_types_response_handle_t>);
+    std::is_same_v<HttpResp::Handle, fastly_compute_at_edge_http_types_response_handle_t>);
 static_assert(std::is_same_v<LogEndpoint::Handle, fastly_compute_at_edge_log_handle_t>);
 static_assert(std::is_same_v<Dict::Handle, fastly_compute_at_edge_dictionary_handle_t>);
 static_assert(std::is_same_v<ObjectStore::Handle, fastly_compute_at_edge_object_store_handle_t>);
-static_assert(std::is_same_v<HttpVersion, fastly_compute_at_edge_types_http_version_t>);
+static_assert(std::is_same_v<HttpVersion, fastly_compute_at_edge_http_types_http_version_t>);
 static_assert(std::is_same_v<typeof(CacheOverrideTag::value),
-                             fastly_compute_at_edge_types_http_cache_override_tag_t>);
+                             fastly_compute_at_edge_http_req_cache_override_tag_t>);
 static_assert(
-    std::is_same_v<typeof(TlsVersion::value), fastly_compute_at_edge_types_tls_version_t>);
+    std::is_same_v<typeof(TlsVersion::value), fastly_compute_at_edge_http_types_tls_version_t>);
 static_assert(std::is_same_v<CacheHandle::Handle, fastly_compute_at_edge_cache_handle_t>);
 
 static_assert(
@@ -103,7 +104,7 @@ Result<std::optional<uint32_t>> AsyncHandle::select(const std::vector<AsyncHandl
 Result<HttpBody> HttpBody::make() {
   Result<HttpBody> res;
 
-  fastly_compute_at_edge_types_body_handle_t handle;
+  fastly_compute_at_edge_http_types_body_handle_t handle;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_http_body_new(&handle, &err)) {
     res.emplace_err(err);
@@ -137,7 +138,7 @@ Result<uint32_t> HttpBody::write(const uint8_t *ptr, size_t len) const {
   fastly_compute_at_edge_types_error_t err;
   uint32_t written;
   if (!fastly_compute_at_edge_http_body_write(
-          this->handle, &chunk, FASTLY_COMPUTE_AT_EDGE_TYPES_BODY_WRITE_END_BACK, &written, &err)) {
+          this->handle, &chunk, FASTLY_COMPUTE_AT_EDGE_HTTP_BODY_WRITE_END_BACK, &written, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(written);
@@ -295,7 +296,7 @@ Result<Response> HttpPendingReq::wait() {
   Result<Response> res;
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_compute_at_edge_types_response_t ret;
+  fastly_compute_at_edge_http_types_response_t ret;
   if (!fastly_compute_at_edge_http_req_pending_req_wait(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else {
@@ -308,27 +309,27 @@ Result<Response> HttpPendingReq::wait() {
 AsyncHandle HttpPendingReq::async_handle() const { return AsyncHandle{this->handle}; }
 
 void CacheOverrideTag::set_pass() {
-  this->value |= FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_CACHE_OVERRIDE_TAG_PASS;
+  this->value |= FASTLY_COMPUTE_AT_EDGE_HTTP_REQ_CACHE_OVERRIDE_TAG_PASS;
 }
 
 void CacheOverrideTag::set_ttl() {
-  this->value |= FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_CACHE_OVERRIDE_TAG_TTL;
+  this->value |= FASTLY_COMPUTE_AT_EDGE_HTTP_REQ_CACHE_OVERRIDE_TAG_TTL;
 }
 
 void CacheOverrideTag::set_stale_while_revalidate() {
-  this->value |= FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE;
+  this->value |= FASTLY_COMPUTE_AT_EDGE_HTTP_REQ_CACHE_OVERRIDE_TAG_STALE_WHILE_REVALIDATE;
 }
 
 void CacheOverrideTag::set_pci() {
-  this->value |= FASTLY_COMPUTE_AT_EDGE_TYPES_HTTP_CACHE_OVERRIDE_TAG_PCI;
+  this->value |= FASTLY_COMPUTE_AT_EDGE_HTTP_REQ_CACHE_OVERRIDE_TAG_PCI;
 }
 
 TlsVersion::TlsVersion(uint8_t raw) : value{raw} {
   switch (raw) {
-  case FASTLY_COMPUTE_AT_EDGE_TYPES_TLS_VERSION_TLS1:
-  case FASTLY_COMPUTE_AT_EDGE_TYPES_TLS_VERSION_TLS11:
-  case FASTLY_COMPUTE_AT_EDGE_TYPES_TLS_VERSION_TLS12:
-  case FASTLY_COMPUTE_AT_EDGE_TYPES_TLS_VERSION_TLS13:
+  case FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS1:
+  case FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS11:
+  case FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS12:
+  case FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS13:
     break;
 
   default:
@@ -337,25 +338,25 @@ TlsVersion::TlsVersion(uint8_t raw) : value{raw} {
 }
 
 TlsVersion TlsVersion::version_1() {
-  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_TYPES_TLS_VERSION_TLS1};
+  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS1};
 }
 
 TlsVersion TlsVersion::version_1_1() {
-  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_TYPES_TLS_VERSION_TLS11};
+  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS11};
 }
 
 TlsVersion TlsVersion::version_1_2() {
-  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_TYPES_TLS_VERSION_TLS12};
+  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS12};
 }
 
 TlsVersion TlsVersion::version_1_3() {
-  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_TYPES_TLS_VERSION_TLS13};
+  return TlsVersion{FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS13};
 }
 
 Result<HttpReq> HttpReq::make() {
   Result<HttpReq> res;
 
-  fastly_compute_at_edge_types_request_handle_t handle;
+  fastly_compute_at_edge_http_types_request_handle_t handle;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_http_req_new(&handle, &err)) {
     res.emplace_err(err);
@@ -384,7 +385,7 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
                                                const BackendConfig &config) {
   Result<Void> res;
 
-  fastly_compute_at_edge_types_dynamic_backend_config_t backend_config;
+  fastly_compute_at_edge_http_types_dynamic_backend_config_t backend_config;
   memset(&backend_config, 0, sizeof(backend_config));
 
   if (auto &val = config.host_override) {
@@ -464,7 +465,7 @@ Result<Response> HttpReq::send(HttpBody body, std::string_view backend) {
   Result<Response> res;
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_compute_at_edge_types_response_t ret;
+  fastly_compute_at_edge_http_types_response_t ret;
   fastly_world_string_t backend_str = string_view_to_world_string(backend);
   if (!fastly_compute_at_edge_http_req_send(this->handle, body.handle, &backend_str, &ret, &err)) {
     res.emplace_err(err);
@@ -479,7 +480,7 @@ Result<HttpPendingReq> HttpReq::send_async(HttpBody body, std::string_view backe
   Result<HttpPendingReq> res;
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_compute_at_edge_types_pending_request_handle_t ret;
+  fastly_compute_at_edge_http_types_pending_request_handle_t ret;
   fastly_world_string_t backend_str = string_view_to_world_string(backend);
   if (!fastly_compute_at_edge_http_req_send_async(this->handle, body.handle, &backend_str, &ret,
                                                   &err)) {
@@ -495,7 +496,7 @@ Result<HttpPendingReq> HttpReq::send_async_streaming(HttpBody body, std::string_
   Result<HttpPendingReq> res;
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_compute_at_edge_types_pending_request_handle_t ret;
+  fastly_compute_at_edge_http_types_pending_request_handle_t ret;
   fastly_world_string_t backend_str = string_view_to_world_string(backend);
   if (!fastly_compute_at_edge_http_req_send_async_streaming(this->handle, body.handle, &backend_str,
                                                             &ret, &err)) {
@@ -683,11 +684,11 @@ Result<HostBytes> HttpReq::http_req_downstream_tls_ja3_md5() {
 
 bool HttpReq::is_valid() const { return this->handle != HttpReq::invalid; }
 
-Result<fastly_compute_at_edge_types_http_version_t> HttpReq::get_version() const {
-  Result<fastly_compute_at_edge_types_http_version_t> res;
+Result<fastly_compute_at_edge_http_types_http_version_t> HttpReq::get_version() const {
+  Result<fastly_compute_at_edge_http_types_http_version_t> res;
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_compute_at_edge_types_http_version_t ret;
+  fastly_compute_at_edge_http_types_http_version_t ret;
   if (!fastly_compute_at_edge_http_req_version_get(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else {
@@ -723,7 +724,7 @@ Result<Void> HttpReq::remove_header(std::string_view name) {
 Result<HttpResp> HttpResp::make() {
   Result<HttpResp> res;
 
-  fastly_compute_at_edge_types_response_handle_t handle;
+  fastly_compute_at_edge_http_types_response_handle_t handle;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_http_resp_new(&handle, &err)) {
     res.emplace_err(err);
@@ -737,7 +738,7 @@ Result<HttpResp> HttpResp::make() {
 Result<uint16_t> HttpResp::get_status() const {
   Result<uint16_t> res;
 
-  fastly_compute_at_edge_types_http_status_t ret;
+  fastly_compute_at_edge_http_types_http_status_t ret;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_http_resp_status_get(this->handle, &ret, &err)) {
     res.emplace_err(err);
@@ -777,11 +778,11 @@ Result<Void> HttpResp::send_downstream(HttpBody body, bool streaming) {
 
 bool HttpResp::is_valid() const { return this->handle != HttpResp::invalid; }
 
-Result<fastly_compute_at_edge_types_http_version_t> HttpResp::get_version() const {
-  Result<fastly_compute_at_edge_types_http_version_t> res;
+Result<fastly_compute_at_edge_http_types_http_version_t> HttpResp::get_version() const {
+  Result<fastly_compute_at_edge_http_types_http_version_t> res;
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_compute_at_edge_types_http_version_t ret;
+  fastly_compute_at_edge_http_types_http_version_t ret;
   if (!fastly_compute_at_edge_http_resp_version_get(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else {
@@ -1105,7 +1106,7 @@ Result<HttpBody> CacheHandle::insert(std::string_view key, const CacheWriteOptio
   init_write_options(options, opts);
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_compute_at_edge_types_body_handle_t ret;
+  fastly_compute_at_edge_http_types_body_handle_t ret;
   auto host_key = string_view_to_world_string(key);
   if (!fastly_compute_at_edge_cache_insert(&host_key, &options, &ret, &err)) {
     res.emplace_err(err);
@@ -1156,7 +1157,7 @@ Result<HttpBody> CacheHandle::get_body(const CacheGetBodyOptions &opts) {
       .start = opts.start,
       .end = opts.end,
   };
-  fastly_compute_at_edge_types_body_handle_t body;
+  fastly_compute_at_edge_http_types_body_handle_t body;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_cache_get_body(this->handle, &options, &body, &err)) {
     res.emplace_err(err);
