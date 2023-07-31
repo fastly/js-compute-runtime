@@ -127,14 +127,14 @@ bool fastly_compute_at_edge_http_body_close(fastly_compute_at_edge_types_body_ha
   return convert_result(fastly::body_close(h), err);
 }
 
-bool fastly_compute_at_edge_log_endpoint_get(
-    fastly_world_string_t *name, fastly_compute_at_edge_types_log_endpoint_handle_t *ret,
-    fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_log_endpoint_get(fastly_world_string_t *name,
+                                             fastly_compute_at_edge_log_handle_t *ret,
+                                             fastly_compute_at_edge_types_error_t *err) {
   return convert_result(
       fastly::log_endpoint_get(reinterpret_cast<const char *>(name->ptr), name->len, ret), err);
 }
 
-bool fastly_compute_at_edge_log_write(fastly_compute_at_edge_types_log_endpoint_handle_t h,
+bool fastly_compute_at_edge_log_write(fastly_compute_at_edge_log_handle_t h,
                                       fastly_world_string_t *msg,
                                       fastly_compute_at_edge_types_error_t *err) {
   size_t nwritten = 0;
@@ -696,12 +696,12 @@ bool fastly_compute_at_edge_http_resp_status_set(fastly_compute_at_edge_types_re
 }
 
 bool fastly_compute_at_edge_dictionary_open(fastly_world_string_t *name,
-                                            fastly_compute_at_edge_types_dictionary_handle_t *ret,
+                                            fastly_compute_at_edge_dictionary_handle_t *ret,
                                             fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::dictionary_open(name->ptr, name->len, ret), err);
 }
 
-bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_types_dictionary_handle_t h,
+bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_dictionary_handle_t h,
                                            fastly_world_string_t *key,
                                            fastly_world_option_string_t *ret,
                                            fastly_compute_at_edge_types_error_t *err) {
@@ -724,13 +724,13 @@ bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_types_dictiona
 }
 
 bool fastly_compute_at_edge_secret_store_open(
-    fastly_world_string_t *name, fastly_compute_at_edge_secret_store_secret_store_handle_t *ret,
+    fastly_world_string_t *name, fastly_compute_at_edge_secret_store_store_handle_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::secret_store_open(name->ptr, name->len, ret), err);
 }
 
 bool fastly_compute_at_edge_secret_store_get(
-    fastly_compute_at_edge_secret_store_secret_store_handle_t store, fastly_world_string_t *key,
+    fastly_compute_at_edge_secret_store_store_handle_t store, fastly_world_string_t *key,
     fastly_world_option_fastly_compute_at_edge_secret_store_secret_handle_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
   ret->val = INVALID_HANDLE;
@@ -780,14 +780,14 @@ bool fastly_compute_at_edge_geo_lookup(fastly_world_list_u8_t *addr_octets,
   return true;
 }
 
-bool fastly_compute_at_edge_object_store_open(
-    fastly_world_string_t *name, fastly_compute_at_edge_types_object_store_handle_t *ret,
-    fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_object_store_open(fastly_world_string_t *name,
+                                              fastly_compute_at_edge_object_store_handle_t *ret,
+                                              fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::object_store_open(name->ptr, name->len, ret), err);
 }
 
 bool fastly_compute_at_edge_object_store_lookup(
-    fastly_compute_at_edge_types_object_store_handle_t store, fastly_world_string_t *key,
+    fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key,
     fastly_world_option_fastly_compute_at_edge_object_store_body_handle_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
   ret->val = INVALID_HANDLE;
@@ -802,14 +802,14 @@ bool fastly_compute_at_edge_object_store_lookup(
 }
 
 bool fastly_compute_at_edge_object_store_insert(
-    fastly_compute_at_edge_types_object_store_handle_t store, fastly_world_string_t *key,
+    fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key,
     fastly_compute_at_edge_types_body_handle_t body_handle,
     fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::object_store_insert(store, key->ptr, key->len, body_handle), err);
 }
 
 bool fastly_compute_at_edge_async_io_select(
-    fastly_world_list_fastly_compute_at_edge_async_io_async_handle_t *hs, uint32_t timeout_ms,
+    fastly_world_list_fastly_compute_at_edge_async_io_handle_t *hs, uint32_t timeout_ms,
     fastly_world_option_u32_t *ret, fastly_compute_at_edge_types_error_t *err) {
   if (!convert_result(fastly::async_select(hs->ptr, hs->len, timeout_ms, &ret->val), err)) {
     if (*err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) {
@@ -824,7 +824,7 @@ bool fastly_compute_at_edge_async_io_select(
 
   return true;
 }
-bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_types_async_handle_t handle,
+bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_async_io_handle_t handle,
                                               bool *ret,
                                               fastly_compute_at_edge_types_error_t *err) {
   uint32_t ret_int;
@@ -836,8 +836,7 @@ bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_types_async
 }
 
 bool fastly_compute_at_edge_purge_surrogate_key(
-    fastly_world_string_t *surrogate_key,
-    fastly_compute_at_edge_types_purge_options_mask_t options_mask,
+    fastly_world_string_t *surrogate_key, fastly_compute_at_edge_purge_options_mask_t options_mask,
     fastly_world_option_string_t *ret, fastly_compute_at_edge_types_error_t *err) {
   fastly::PurgeOptions options{nullptr, 0, nullptr};
 
@@ -845,8 +844,8 @@ bool fastly_compute_at_edge_purge_surrogate_key(
   // which uses hard-purging and not soft-purging.
   // TODO: Create a JS API for this hostcall which supports hard-purging and another which supports
   // soft-purging. E.G. `fastly.purgeSurrogateKey(key)` and `fastly.softPurgeSurrogateKey(key)`
-  MOZ_ASSERT(!(options_mask & FASTLY_COMPUTE_AT_EDGE_TYPES_PURGE_OPTIONS_MASK_SOFT_PURGE));
-  MOZ_ASSERT(!(options_mask & FASTLY_COMPUTE_AT_EDGE_TYPES_PURGE_OPTIONS_MASK_RET_BUF));
+  MOZ_ASSERT(!(options_mask & FASTLY_COMPUTE_AT_EDGE_PURGE_OPTIONS_MASK_SOFT_PURGE));
+  MOZ_ASSERT(!(options_mask & FASTLY_COMPUTE_AT_EDGE_PURGE_OPTIONS_MASK_RET_BUF));
 
   ret->is_some = false;
 
@@ -858,11 +857,12 @@ bool fastly_compute_at_edge_purge_surrogate_key(
 #define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_RESERVED (1 << 0)
 #define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS (1 << 1)
 
-bool fastly_compute_at_edge_cache_lookup(
-    fastly_world_string_t *cache_key, fastly_compute_at_edge_types_cache_lookup_options_t *options,
-    fastly_compute_at_edge_types_cache_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_cache_lookup(fastly_world_string_t *cache_key,
+                                         fastly_compute_at_edge_cache_lookup_options_t *options,
+                                         fastly_compute_at_edge_cache_handle_t *ret,
+                                         fastly_compute_at_edge_types_error_t *err) {
   // Currently this host-call has been implemented to support the `SimpleCache.get(key)` method,
-  // which does not use any fields from `fastly_compute_at_edge_types_cache_lookup_options_t`.
+  // which does not use any fields from `fastly_compute_at_edge_cache_lookup_options_t`.
   uint8_t options_mask = 0;
   return convert_result(
       fastly::cache_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret), err);
@@ -878,9 +878,10 @@ bool fastly_compute_at_edge_cache_lookup(
 #define FASTLY_CACHE_WRITE_OPTIONS_MASK_USER_METADATA (1 << 7)
 #define FASTLY_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA (1 << 8)
 
-bool fastly_compute_at_edge_cache_insert(
-    fastly_world_string_t *cache_key, fastly_compute_at_edge_types_cache_write_options_t *options,
-    fastly_compute_at_edge_types_body_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_cache_insert(fastly_world_string_t *cache_key,
+                                         fastly_compute_at_edge_cache_write_options_t *options,
+                                         fastly_compute_at_edge_types_body_handle_t *ret,
+                                         fastly_compute_at_edge_types_error_t *err) {
   uint16_t options_mask = 0;
   fastly::CacheWriteOptions opts;
   std::memset(&opts, 0, sizeof(opts));
@@ -923,10 +924,10 @@ bool fastly_compute_at_edge_cache_insert(
   return convert_result(
       fastly::cache_insert(cache_key->ptr, cache_key->len, options_mask, &opts, ret), err);
 }
-bool fastly_compute_at_edge_cache_get_body(
-    fastly_compute_at_edge_types_cache_handle_t handle,
-    fastly_compute_at_edge_types_cache_get_body_options_t *options,
-    fastly_compute_at_edge_types_body_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_cache_get_body(fastly_compute_at_edge_cache_handle_t handle,
+                                           fastly_compute_at_edge_cache_get_body_options_t *options,
+                                           fastly_compute_at_edge_types_body_handle_t *ret,
+                                           fastly_compute_at_edge_types_error_t *err) {
   uint32_t options_mask = 0;
   bool ok = convert_result(fastly::cache_get_body(handle, options_mask, options, ret), err);
   if (!ok && *err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) {
@@ -936,19 +937,19 @@ bool fastly_compute_at_edge_cache_get_body(
   return ok;
 }
 bool fastly_compute_at_edge_cache_transaction_lookup(
-    fastly_world_string_t *cache_key, fastly_compute_at_edge_types_cache_lookup_options_t *options,
-    fastly_compute_at_edge_types_cache_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
+    fastly_world_string_t *cache_key, fastly_compute_at_edge_cache_lookup_options_t *options,
+    fastly_compute_at_edge_cache_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
   // Currently this host-call has been implemented to support the `SimpleCache.getOrSet` method,
-  // which does not use any fields from `fastly_compute_at_edge_types_cache_lookup_options_t`.
+  // which does not use any fields from `fastly_compute_at_edge_cache_lookup_options_t`.
   uint32_t options_mask = 0;
   return convert_result(
       fastly::cache_transaction_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret),
       err);
 }
 bool fastly_compute_at_edge_cache_transaction_insert_and_stream_back(
-    fastly_compute_at_edge_types_cache_handle_t handle,
-    fastly_compute_at_edge_types_cache_write_options_t *options,
-    fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_cache_handle_t
+    fastly_compute_at_edge_cache_handle_t handle,
+    fastly_compute_at_edge_cache_write_options_t *options,
+    fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_handle_t
         *ret,
     fastly_compute_at_edge_types_error_t *err) {
   uint16_t options_mask = 0;
@@ -996,13 +997,13 @@ bool fastly_compute_at_edge_cache_transaction_insert_and_stream_back(
 /// Cancel an obligation to provide an object to the cache.
 ///
 /// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
-bool fastly_compute_at_edge_cache_transaction_cancel(
-    fastly_compute_at_edge_types_cache_handle_t handle, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_cache_transaction_cancel(fastly_compute_at_edge_cache_handle_t handle,
+                                                     fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::cache_transaction_cancel(handle), err);
 }
 
-bool fastly_compute_at_edge_cache_get_state(fastly_compute_at_edge_types_cache_handle_t handle,
-                                            fastly_compute_at_edge_types_cache_lookup_state_t *ret,
+bool fastly_compute_at_edge_cache_get_state(fastly_compute_at_edge_cache_handle_t handle,
+                                            fastly_compute_at_edge_cache_lookup_state_t *ret,
                                             fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::cache_get_state(handle, ret), err);
 }

@@ -58,28 +58,6 @@ interface types {
     front
   }
 
-  type secret-store-handle = u32
-
-  type secret-handle = u32
-
-  type fd = u32
-
-  type object-store-handle = u32
-
-  type dictionary-handle = u32
-
-  type log-endpoint-handle = u32
-
-  /*
-   * Fastly UAP
-   */
-  record user-agent {
-    family: string,
-    major: string,
-    minor: string,
-    patch: string
-  }
-
   type request-handle = u32
   type pending-request-handle = u32
   type response-handle = u32
@@ -137,203 +115,6 @@ interface types {
 
   type http-status = u16
 
-  record geo-data {
-    /**
-    * The name of the organization associated with as_number.
-    *
-    * For example, fastly is the value given for IP addresses under AS-54113.
-    */
-    as-name: option<string>,
-
-    /**
-    * [Autonomous system](https://en.wikipedia.org/wiki/Autonomous_system_(Internet)) (AS) number.
-    */
-    as-number: option<u32>,
-
-    /**
-    * The telephone area code associated with an IP address.
-    *
-    * These are only available for IP addresses in the United States, its territories, and Canada.
-    */
-    area-code: option<u32>,
-
-    /**
-    * City or town name.
-    */
-    city: option<string>,
-
-    /**
-    * Connection speed.
-    */
-    conn-speed: option<string>,
-
-    /**
-    * Connection type.
-    */
-    conn-type: option<string>,
-
-    /**
-    * Continent.
-    */
-    continent: option<string>,
-
-    /**
-    * A two-character [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) country code for the country associated with an IP address.
-    *
-    * The US country code is returned for IP addresses associated with overseas United States military bases.
-    *
-    * These values include subdivisions that are assigned their own country codes in ISO 3166-1. For example, subdivisions NO-21 and NO-22 are presented with the country code SJ for Svalbard and the Jan Mayen Islands.
-    */
-    country-code: option<string>,
-
-    /**
-    * A three-character [ISO 3166-1 alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3) country code for the country associated with the IP address.
-    *
-    * The USA country code is returned for IP addresses associated with overseas United States military bases.
-    */
-    country-code3: option<string>,
-
-    /**
-    * Country name.
-    *
-    * This field is the [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) English short name for a country.
-    */
-    country-name: option<string>,
-
-    /**
-    * Time zone offset from Greenwich Mean Time (GMT) for `city`.
-    */
-    gmt-offset: option<string>,
-
-    /**
-    * Latitude, in units of degrees from the equator.
-    *
-    * Values range from -90.0 to +90.0 inclusive, and are based on the [WGS 84](https://en.wikipedia.org/wiki/World_Geodetic_System) coordinate reference system.
-    */
-    latitude: option<float32>,
-
-    /**
-    * Longitude, in units of degrees from the [IERS Reference Meridian](https://en.wikipedia.org/wiki/IERS_Reference_Meridian).
-    *
-    * Values range from -180.0 to +180.0 inclusive, and are based on the [WGS 84](https://en.wikipedia.org/wiki/World_Geodetic_System) coordinate reference system.
-    */
-    longitude: option<float32>,
-
-    /**
-    * Metro code, representing designated market areas (DMAs) in the United States.
-    */
-    metro-code: option<u32>,
-
-    /**
-    * The postal code associated with the IP address.
-    *
-    * These are available for some IP addresses in Australia, Canada, France, Germany, Italy, Spain, Switzerland, the United Kingdom, and the United States.
-    *
-    * For Canadian postal codes, this is the first 3 characters. For the United Kingdom, this is the first 2-4 characters (outward code). For countries with alphanumeric postal codes, this field is a lowercase transliteration.
-    */
-    postal-code: option<string>,
-
-    /**
-    * Client proxy description.
-    */
-    proxy-description: option<string>,
-
-    /**
-    * Client proxy type.
-    */
-    proxy-type: option<string>,
-
-    /**
-    * [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2) country subdivision code.
-    *
-    * For countries with multiple levels of subdivision (for example, nations within the United Kingdom), this variable gives the more specific subdivision.
-    *
-    * This field can be None for countries that do not have ISO country subdivision codes. For example, None is given for IP addresses assigned to the Åland Islands (country code AX, illustrated below).
-    */
-    region: option<string>,
-
-    /**
-    * Time zone offset from coordinated universal time (UTC) for `city`.
-    */
-    utc-offset: option<u32>,
-  }
-
-  /// A handle to an object supporting generic async operations.
-  /// Can be either a `BodyHandle` or a `PendingRequestHandle`.
-  ///
-  /// Each async item has an associated I/O action:
-  ///
-  /// * Pending requests: awaiting the response headers / `Response` object
-  /// * Normal bodies: reading bytes from the body
-  /// * Streaming bodies: writing bytes to the body
-  ///
-  /// For writing bytes, note that there is a large host-side buffer that bytes can eagerly be written
-  /// into, even before the origin itself consumes that data.
-  type async-handle = u32
-
-
-  flags purge-options-mask {
-    soft-purge,
-    ret-buf
-  }
-
-  /// The outcome of a cache lookup (either bare or as part of a cache transaction)
-  type cache-handle = u32
-  type cache-object-length = u64
-  type cache-duration-ns = u64
-  type cache-hit-count = u64
-
-  /// Extensible options for cache lookup operations; currently used for both `lookup` and `transaction_lookup`.
-  record cache-lookup-options {
-    /**
-     * A full request handle, but used only for its headers
-     */
-    request-headers: option<request-handle>,
-  }
-
-  /// Configuration for several hostcalls that write to the cache:
-  /// - `insert`
-  /// - `transaction-insert`
-  /// - `transaction-insert-and-stream-back`
-  /// - `transaction-update`
-  ///
-  /// Some options are only allowed for certain of these hostcalls; see `cache-write-options-mask`.
-  record cache-write-options {
-    /// this is a required field; there's no flag for it
-    max-age-ns: cache-duration-ns,
-    /// a full request handle, but used only for its headers
-    request-headers: request-handle,
-    /// a list of header names separated by spaces
-    vary-rule: string,
-    /// The initial age of the object in nanoseconds (default: 0).
-    ///
-    /// This age is used to determine the freshness lifetime of the object as well as to
-    /// prioritize which variant to return if a subsequent lookup matches more than one vary rule
-    initial-age-ns: cache-duration-ns,
-    stale-while-revalidate-ns: cache-duration-ns,
-    /// a list of surrogate keys separated by spaces
-    surrogate-keys: string,
-    length: cache-object-length,
-    user-metadata: list<u8>,
-    sensitive-data: bool,
-  }
-
-  record cache-get-body-options {
-    start: u64,
-    end: u64,
-  }
-
-  /// The status of this lookup (and potential transaction)
-  flags cache-lookup-state {
-    /// a cached object was found
-    found,
-    /// the cached object is valid to use (implies found)
-    usable,
-    /// the cached object is stale (but may or may not be valid to use)
-    stale,
-    /// this client is requested to insert or revalidate an object
-    must-insert-or-update,
-  }
 }
 
 /*
@@ -341,11 +122,13 @@ interface types {
  */
 interface log {
 
-  use types.{error, log-endpoint-handle}
+  use types.{error}
 
-  endpoint-get: func(name: string) -> result<log-endpoint-handle, error>
+  type handle = u32
 
-  write: func(h: log-endpoint-handle, msg: string) -> result<_, error>
+  endpoint-get: func(name: string) -> result<handle, error>
+
+  write: func(h: handle, msg: string) -> result<_, error>
 }
 
 /*
@@ -353,11 +136,13 @@ interface log {
  */
 interface dictionary {
 
-  use types.{error, dictionary-handle}
+  use types.{error}
 
-  open: func(name: string) -> result<dictionary-handle, error>
+  type handle = u32
 
-  get: func(h: dictionary-handle, key: string) -> result<option<string>, error>
+  open: func(name: string) -> result<handle, error>
+
+  get: func(h: handle, key: string) -> result<option<string>, error>
 }
 
 /*
@@ -365,11 +150,15 @@ interface dictionary {
  */
 interface secret-store {
 
-  use types.{error, secret-store-handle, secret-handle}
+  use types.{error}
 
-  open: func(name: string) -> result<secret-store-handle, error>
+  type store-handle = u32
 
-  get: func(store: secret-store-handle, key: string) -> result<option<secret-handle>, error>
+  type secret-handle = u32
+
+  open: func(name: string) -> result<store-handle, error>
+
+  get: func(store: store-handle, key: string) -> result<option<secret-handle>, error>
 
   plaintext: func(secret: secret-handle) -> result<option<string>, error>
 
@@ -380,16 +169,20 @@ interface secret-store {
  */
 interface object-store {
 
-  use types.{object-store-handle, fd, body-handle, error}
+  use types.{body-handle, error}
 
-  open: func(name: string) -> result<object-store-handle, error>
+  type fd = u32
 
-  lookup: func(store: object-store-handle, key: string) -> result<option<body-handle>, error>
+  type handle = u32
 
-  lookup-as-fd: func(store: object-store-handle, key: string) -> result<option<fd>, error>
+  open: func(name: string) -> result<handle, error>
+
+  lookup: func(store: handle, key: string) -> result<option<body-handle>, error>
+
+  lookup-as-fd: func(store: handle, key: string) -> result<option<fd>, error>
 
   // Should object store insert return "inserted" bool?
-  insert: func(store: object-store-handle, key: string, body-handle: body-handle) -> result<_, error>
+  insert: func(store: handle, key: string, body-handle: body-handle) -> result<_, error>
 
 }
 
@@ -550,12 +343,143 @@ interface http-resp {
 interface geo {
   use types.{error}
 
+  record geo-data {
+    /**
+    * The name of the organization associated with as_number.
+    *
+    * For example, fastly is the value given for IP addresses under AS-54113.
+    */
+    as-name: option<string>,
+
+    /**
+    * [Autonomous system](https://en.wikipedia.org/wiki/Autonomous_system_(Internet)) (AS) number.
+    */
+    as-number: option<u32>,
+
+    /**
+    * The telephone area code associated with an IP address.
+    *
+    * These are only available for IP addresses in the United States, its territories, and Canada.
+    */
+    area-code: option<u32>,
+
+    /**
+    * City or town name.
+    */
+    city: option<string>,
+
+    /**
+    * Connection speed.
+    */
+    conn-speed: option<string>,
+
+    /**
+    * Connection type.
+    */
+    conn-type: option<string>,
+
+    /**
+    * Continent.
+    */
+    continent: option<string>,
+
+    /**
+    * A two-character [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) country code for the country associated with an IP address.
+    *
+    * The US country code is returned for IP addresses associated with overseas United States military bases.
+    *
+    * These values include subdivisions that are assigned their own country codes in ISO 3166-1. For example, subdivisions NO-21 and NO-22 are presented with the country code SJ for Svalbard and the Jan Mayen Islands.
+    */
+    country-code: option<string>,
+
+    /**
+    * A three-character [ISO 3166-1 alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3) country code for the country associated with the IP address.
+    *
+    * The USA country code is returned for IP addresses associated with overseas United States military bases.
+    */
+    country-code3: option<string>,
+
+    /**
+    * Country name.
+    *
+    * This field is the [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) English short name for a country.
+    */
+    country-name: option<string>,
+
+    /**
+    * Time zone offset from Greenwich Mean Time (GMT) for `city`.
+    */
+    gmt-offset: option<string>,
+
+    /**
+    * Latitude, in units of degrees from the equator.
+    *
+    * Values range from -90.0 to +90.0 inclusive, and are based on the [WGS 84](https://en.wikipedia.org/wiki/World_Geodetic_System) coordinate reference system.
+    */
+    latitude: option<float32>,
+
+    /**
+    * Longitude, in units of degrees from the [IERS Reference Meridian](https://en.wikipedia.org/wiki/IERS_Reference_Meridian).
+    *
+    * Values range from -180.0 to +180.0 inclusive, and are based on the [WGS 84](https://en.wikipedia.org/wiki/World_Geodetic_System) coordinate reference system.
+    */
+    longitude: option<float32>,
+
+    /**
+    * Metro code, representing designated market areas (DMAs) in the United States.
+    */
+    metro-code: option<u32>,
+
+    /**
+    * The postal code associated with the IP address.
+    *
+    * These are available for some IP addresses in Australia, Canada, France, Germany, Italy, Spain, Switzerland, the United Kingdom, and the United States.
+    *
+    * For Canadian postal codes, this is the first 3 characters. For the United Kingdom, this is the first 2-4 characters (outward code). For countries with alphanumeric postal codes, this field is a lowercase transliteration.
+    */
+    postal-code: option<string>,
+
+    /**
+    * Client proxy description.
+    */
+    proxy-description: option<string>,
+
+    /**
+    * Client proxy type.
+    */
+    proxy-type: option<string>,
+
+    /**
+    * [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2) country subdivision code.
+    *
+    * For countries with multiple levels of subdivision (for example, nations within the United Kingdom), this variable gives the more specific subdivision.
+    *
+    * This field can be None for countries that do not have ISO country subdivision codes. For example, None is given for IP addresses assigned to the Åland Islands (country code AX, illustrated below).
+    */
+    region: option<string>,
+
+    /**
+    * Time zone offset from coordinated universal time (UTC) for `city`.
+    */
+    utc-offset: option<u32>,
+  }
+
   /// JSON string for now
   lookup: func(addr-octets: list<u8>) -> result<string, error>
 }
 
+/*
+ * Fastly UAP
+ */
 interface uap {
-  use types.{error, user-agent}
+  use types.{error}
+
+  record user-agent {
+    family: string,
+    major: string,
+    minor: string,
+    patch: string
+  }
 
   parse: func(user-agent: string) -> result<user-agent, error>
 }
@@ -564,7 +488,20 @@ interface uap {
  * Fastly Async IO
  */
 interface async-io {
-  use types.{error, async-handle}
+  use types.{error}
+
+  /// A handle to an object supporting generic async operations.
+  /// Can be either a `BodyHandle` or a `PendingRequestHandle`.
+  ///
+  /// Each async item has an associated I/O action:
+  ///
+  /// * Pending requests: awaiting the response headers / `Response` object
+  /// * Normal bodies: reading bytes from the body
+  /// * Streaming bodies: writing bytes to the body
+  ///
+  /// For writing bytes, note that there is a large host-side buffer that bytes can eagerly be written
+  /// into, even before the origin itself consumes that data.
+  type handle = u32
 
   /// Blocks until one of the given objects is ready for I/O, or the optional timeout expires.
   ///
@@ -576,7 +513,7 @@ interface async-io {
   ///
   /// Returns the _index_ (not handle!) of the first object that is ready, or
   /// none if the timeout expires before any objects are ready for I/O.
-  select: func(hs: list<async-handle>, timeout-ms: u32) -> result<option<u32>, error>
+  select: func(hs: list<handle>, timeout-ms: u32) -> result<option<u32>, error>
 
   /// Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
   ///
@@ -585,20 +522,26 @@ interface async-io {
   /// Valid object handles includes bodies and pending requests. See the `async_item_handle`
   /// definition for more details, including what I/O actions are associated with each handle
   /// type.
-  is-ready: func(handle: async-handle) -> result<bool, error>
+  is-ready: func(handle: handle) -> result<bool, error>
 }
 
 /*
  * Fastly Purge
  */
 interface purge {
-  use types.{error, purge-options-mask}
+
+  use types.{error}
+
+  flags options-mask {
+    soft-purge,
+    ret-buf
+  }
 
   /*
    * A surrogate key can be a max of 1024 characters.
    * A surrogate key must contain only printable ASCII characters (those between `0x21` and `0x7E`, inclusive).
    */
-  surrogate-key: func(surrogate-keys: string, purge-options: purge-options-mask) -> result<option<string>, error>
+  surrogate-key: func(surrogate-keys: string, purge-options: options-mask) -> result<option<string>, error>
 }
 
 /*
@@ -606,27 +549,82 @@ interface purge {
  */
 interface cache {
 
-  use types.{
-    error, cache-lookup-options, cache-write-options, body-handle, cache-handle,
-    cache-lookup-state, cache-get-body-options
+  use types.{error, body-handle, request-handle}
+
+  /// The outcome of a cache lookup (either bare or as part of a cache transaction)
+  type handle = u32
+  type object-length = u64
+  type duration-ns = u64
+  type cache-hit-count = u64
+
+  /// Extensible options for cache lookup operations; currently used for both `lookup` and `transaction_lookup`.
+  record lookup-options {
+    /**
+     * A full request handle, but used only for its headers
+     */
+    request-headers: option<request-handle>,
+  }
+
+  /// Configuration for several hostcalls that write to the cache:
+  /// - `insert`
+  /// - `transaction-insert`
+  /// - `transaction-insert-and-stream-back`
+  /// - `transaction-update`
+  ///
+  /// Some options are only allowed for certain of these hostcalls; see `cache-write-options-mask`.
+  record write-options {
+    /// this is a required field; there's no flag for it
+    max-age-ns: duration-ns,
+    /// a full request handle, but used only for its headers
+    request-headers: request-handle,
+    /// a list of header names separated by spaces
+    vary-rule: string,
+    /// The initial age of the object in nanoseconds (default: 0).
+    ///
+    /// This age is used to determine the freshness lifetime of the object as well as to
+    /// prioritize which variant to return if a subsequent lookup matches more than one vary rule
+    initial-age-ns: duration-ns,
+    stale-while-revalidate-ns: duration-ns,
+    /// a list of surrogate keys separated by spaces
+    surrogate-keys: string,
+    length: object-length,
+    user-metadata: list<u8>,
+    sensitive-data: bool,
+  }
+
+  record get-body-options {
+    start: u64,
+    end: u64,
+  }
+
+  /// The status of this lookup (and potential transaction)
+  flags lookup-state {
+    /// a cached object was found
+    found,
+    /// the cached object is valid to use (implies found)
+    usable,
+    /// the cached object is stale (but may or may not be valid to use)
+    stale,
+    /// this client is requested to insert or revalidate an object
+    must-insert-or-update,
   }
 
   /// Performs a non-request-collapsing cache lookup.
   ///
   /// Returns a result without waiting for any request collapsing that may be ongoing.
-  lookup: func(cache-key: string, options: cache-lookup-options) -> result<cache-handle, error>
+  lookup: func(key: string, options: lookup-options) -> result<handle, error>
 
   /// Performs a non-request-collapsing cache insertion (or update).
   ///
   /// The returned handle is to a streaming body that is used for writing the object into
   /// the cache.
-  insert: func(cache-key: string, options: cache-write-options) -> result<body-handle, error>
+  insert: func(key: string, options: write-options) -> result<body-handle, error>
 
   /// The entrypoint to the request-collapsing cache transaction API.
   ///
   /// This operation always participates in request collapsing and may return stale objects. To bypass
   /// request collapsing, use `lookup` and `insert` instead.
-  transaction-lookup: func(cache-key: string, options: cache-lookup-options) -> result<cache-handle, error>
+  transaction-lookup: func(key: string, options: lookup-options) -> result<handle, error>
 
   /// Insert an object into the cache with the given metadata, and return a readable stream of the
   /// bytes as they are stored.
@@ -638,14 +636,14 @@ interface cache {
   /// The returned body handle is to a streaming body that is used for writing the object _into_
   /// the cache. The returned cache handle provides a separate transaction for reading out the
   /// newly cached object to send elsewhere.
-  transaction-insert-and-stream-back: func(handle: cache-handle, options: cache-write-options) -> result<tuple<body-handle, cache-handle>, error>
+  transaction-insert-and-stream-back: func(handle: handle, options: write-options) -> result<tuple<body-handle, handle>, error>
 
   /// Cancel an obligation to provide an object to the cache.
   ///
   /// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
-  transaction-cancel: func(handle: cache-handle) -> result<_, error>
+  transaction-cancel: func(handle: handle) -> result<_, error>
 
-  get-state: func(handle: cache-handle) -> result<cache-lookup-state, error>
+  get-state: func(handle: handle) -> result<lookup-state, error>
 
   /// Gets a range of the found object body, returning the `$none` error if there
   /// was no found object.
@@ -656,7 +654,7 @@ interface cache {
   /// Note: until the CacheD protocol is adjusted to fully support this functionality,
   /// the body of objects that are past the stale-while-revalidate period will not
   /// be available, even when other metadata is.
-  get-body: func(handle: cache-handle, options: cache-get-body-options) -> result<body-handle, error>
+  get-body: func(handle: handle, options: get-body-options) -> result<body-handle, error>
 }
 
 world fastly-world {

@@ -5,10 +5,10 @@
 typedef struct {
   bool is_err;
   union {
-    fastly_compute_at_edge_log_log_endpoint_handle_t ok;
+    fastly_compute_at_edge_log_handle_t ok;
     fastly_compute_at_edge_log_error_t err;
   } val;
-} fastly_world_result_fastly_compute_at_edge_log_log_endpoint_handle_fastly_compute_at_edge_log_error_t;
+} fastly_world_result_fastly_compute_at_edge_log_handle_fastly_compute_at_edge_log_error_t;
 
 typedef struct {
   bool is_err;
@@ -20,10 +20,10 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
-    fastly_compute_at_edge_dictionary_dictionary_handle_t ok;
+    fastly_compute_at_edge_dictionary_handle_t ok;
     fastly_compute_at_edge_dictionary_error_t err;
   } val;
-} fastly_world_result_fastly_compute_at_edge_dictionary_dictionary_handle_fastly_compute_at_edge_dictionary_error_t;
+} fastly_world_result_fastly_compute_at_edge_dictionary_handle_fastly_compute_at_edge_dictionary_error_t;
 
 typedef struct {
   bool is_err;
@@ -36,10 +36,10 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
-    fastly_compute_at_edge_secret_store_secret_store_handle_t ok;
+    fastly_compute_at_edge_secret_store_store_handle_t ok;
     fastly_compute_at_edge_secret_store_error_t err;
   } val;
-} fastly_world_result_fastly_compute_at_edge_secret_store_secret_store_handle_fastly_compute_at_edge_secret_store_error_t;
+} fastly_world_result_fastly_compute_at_edge_secret_store_store_handle_fastly_compute_at_edge_secret_store_error_t;
 
 typedef struct {
   bool is_err;
@@ -60,10 +60,10 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
-    fastly_compute_at_edge_object_store_object_store_handle_t ok;
+    fastly_compute_at_edge_object_store_handle_t ok;
     fastly_compute_at_edge_object_store_error_t err;
   } val;
-} fastly_world_result_fastly_compute_at_edge_object_store_object_store_handle_fastly_compute_at_edge_object_store_error_t;
+} fastly_world_result_fastly_compute_at_edge_object_store_handle_fastly_compute_at_edge_object_store_error_t;
 
 typedef struct {
   bool is_err;
@@ -320,10 +320,10 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
-    fastly_compute_at_edge_cache_cache_handle_t ok;
+    fastly_compute_at_edge_cache_handle_t ok;
     fastly_compute_at_edge_cache_error_t err;
   } val;
-} fastly_world_result_fastly_compute_at_edge_cache_cache_handle_fastly_compute_at_edge_cache_error_t;
+} fastly_world_result_fastly_compute_at_edge_cache_handle_fastly_compute_at_edge_cache_error_t;
 
 typedef struct {
   bool is_err;
@@ -336,10 +336,10 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
-    fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_cache_handle_t ok;
+    fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_handle_t ok;
     fastly_compute_at_edge_cache_error_t err;
   } val;
-} fastly_world_result_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_cache_handle_fastly_compute_at_edge_cache_error_t;
+} fastly_world_result_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_handle_fastly_compute_at_edge_cache_error_t;
 
 typedef struct {
   bool is_err;
@@ -351,10 +351,10 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
-    fastly_compute_at_edge_cache_cache_lookup_state_t ok;
+    fastly_compute_at_edge_cache_lookup_state_t ok;
     fastly_compute_at_edge_cache_error_t err;
   } val;
-} fastly_world_result_fastly_compute_at_edge_cache_cache_lookup_state_fastly_compute_at_edge_cache_error_t;
+} fastly_world_result_fastly_compute_at_edge_cache_lookup_state_fastly_compute_at_edge_cache_error_t;
 
 typedef struct {
   bool is_err;
@@ -613,7 +613,7 @@ void *cabi_realloc(void *ptr, size_t old_size, size_t align, size_t new_size) {
 
 // Component Adapters
 
-bool fastly_compute_at_edge_async_io_select(fastly_world_list_fastly_compute_at_edge_async_io_async_handle_t *hs, uint32_t timeout_ms, fastly_world_option_u32_t *ret, fastly_compute_at_edge_async_io_error_t *err) {
+bool fastly_compute_at_edge_async_io_select(fastly_world_list_fastly_compute_at_edge_async_io_handle_t *hs, uint32_t timeout_ms, fastly_world_option_u32_t *ret, fastly_compute_at_edge_async_io_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[12];
   int32_t ptr = (int32_t) &ret_area;
@@ -653,7 +653,7 @@ bool fastly_compute_at_edge_async_io_select(fastly_world_list_fastly_compute_at_
   }
 }
 
-bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_async_io_async_handle_t handle, bool *ret, fastly_compute_at_edge_async_io_error_t *err) {
+bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_async_io_handle_t handle, bool *ret, fastly_compute_at_edge_async_io_error_t *err) {
   __attribute__((__aligned__(1)))
   uint8_t ret_area[2];
   int32_t ptr = (int32_t) &ret_area;
@@ -680,13 +680,13 @@ bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_async_io_as
   }
 }
 
-bool fastly_compute_at_edge_cache_lookup(fastly_world_string_t *cache_key, fastly_compute_at_edge_cache_cache_lookup_options_t *options, fastly_compute_at_edge_cache_cache_handle_t *ret, fastly_compute_at_edge_cache_error_t *err) {
+bool fastly_compute_at_edge_cache_lookup(fastly_world_string_t *key, fastly_compute_at_edge_cache_lookup_options_t *options, fastly_compute_at_edge_cache_handle_t *ret, fastly_compute_at_edge_cache_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[8];
   int32_t option;
   int32_t option1;
   if (((*options).request_headers).is_some) {
-    const fastly_compute_at_edge_types_request_handle_t *payload0 = &((*options).request_headers).val;
+    const fastly_compute_at_edge_cache_request_handle_t *payload0 = &((*options).request_headers).val;
     option = 1;
     option1 = (int32_t) (*payload0);
   } else {
@@ -694,8 +694,8 @@ bool fastly_compute_at_edge_cache_lookup(fastly_world_string_t *cache_key, fastl
     option1 = 0;
   }
   int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_cache_lookup((int32_t) (*cache_key).ptr, (int32_t) (*cache_key).len, option, option1, ptr);
-  fastly_world_result_fastly_compute_at_edge_cache_cache_handle_fastly_compute_at_edge_cache_error_t result;
+  __wasm_import_fastly_compute_at_edge_cache_lookup((int32_t) (*key).ptr, (int32_t) (*key).len, option, option1, ptr);
+  fastly_world_result_fastly_compute_at_edge_cache_handle_fastly_compute_at_edge_cache_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
@@ -717,11 +717,11 @@ bool fastly_compute_at_edge_cache_lookup(fastly_world_string_t *cache_key, fastl
   }
 }
 
-bool fastly_compute_at_edge_cache_insert(fastly_world_string_t *cache_key, fastly_compute_at_edge_cache_cache_write_options_t *options, fastly_compute_at_edge_cache_body_handle_t *ret, fastly_compute_at_edge_cache_error_t *err) {
+bool fastly_compute_at_edge_cache_insert(fastly_world_string_t *key, fastly_compute_at_edge_cache_write_options_t *options, fastly_compute_at_edge_cache_body_handle_t *ret, fastly_compute_at_edge_cache_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[8];
   int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_cache_insert((int32_t) (*cache_key).ptr, (int32_t) (*cache_key).len, (int64_t) ((*options).max_age_ns), (int32_t) ((*options).request_headers), (int32_t) ((*options).vary_rule).ptr, (int32_t) ((*options).vary_rule).len, (int64_t) ((*options).initial_age_ns), (int64_t) ((*options).stale_while_revalidate_ns), (int32_t) ((*options).surrogate_keys).ptr, (int32_t) ((*options).surrogate_keys).len, (int64_t) ((*options).length), (int32_t) ((*options).user_metadata).ptr, (int32_t) ((*options).user_metadata).len, (*options).sensitive_data, ptr);
+  __wasm_import_fastly_compute_at_edge_cache_insert((int32_t) (*key).ptr, (int32_t) (*key).len, (int64_t) ((*options).max_age_ns), (int32_t) ((*options).request_headers), (int32_t) ((*options).vary_rule).ptr, (int32_t) ((*options).vary_rule).len, (int64_t) ((*options).initial_age_ns), (int64_t) ((*options).stale_while_revalidate_ns), (int32_t) ((*options).surrogate_keys).ptr, (int32_t) ((*options).surrogate_keys).len, (int64_t) ((*options).length), (int32_t) ((*options).user_metadata).ptr, (int32_t) ((*options).user_metadata).len, (*options).sensitive_data, ptr);
   fastly_world_result_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
@@ -744,13 +744,13 @@ bool fastly_compute_at_edge_cache_insert(fastly_world_string_t *cache_key, fastl
   }
 }
 
-bool fastly_compute_at_edge_cache_transaction_lookup(fastly_world_string_t *cache_key, fastly_compute_at_edge_cache_cache_lookup_options_t *options, fastly_compute_at_edge_cache_cache_handle_t *ret, fastly_compute_at_edge_cache_error_t *err) {
+bool fastly_compute_at_edge_cache_transaction_lookup(fastly_world_string_t *key, fastly_compute_at_edge_cache_lookup_options_t *options, fastly_compute_at_edge_cache_handle_t *ret, fastly_compute_at_edge_cache_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[8];
   int32_t option;
   int32_t option1;
   if (((*options).request_headers).is_some) {
-    const fastly_compute_at_edge_types_request_handle_t *payload0 = &((*options).request_headers).val;
+    const fastly_compute_at_edge_cache_request_handle_t *payload0 = &((*options).request_headers).val;
     option = 1;
     option1 = (int32_t) (*payload0);
   } else {
@@ -758,8 +758,8 @@ bool fastly_compute_at_edge_cache_transaction_lookup(fastly_world_string_t *cach
     option1 = 0;
   }
   int32_t ptr = (int32_t) &ret_area;
-  __wasm_import_fastly_compute_at_edge_cache_transaction_lookup((int32_t) (*cache_key).ptr, (int32_t) (*cache_key).len, option, option1, ptr);
-  fastly_world_result_fastly_compute_at_edge_cache_cache_handle_fastly_compute_at_edge_cache_error_t result;
+  __wasm_import_fastly_compute_at_edge_cache_transaction_lookup((int32_t) (*key).ptr, (int32_t) (*key).len, option, option1, ptr);
+  fastly_world_result_fastly_compute_at_edge_cache_handle_fastly_compute_at_edge_cache_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
@@ -781,16 +781,16 @@ bool fastly_compute_at_edge_cache_transaction_lookup(fastly_world_string_t *cach
   }
 }
 
-bool fastly_compute_at_edge_cache_transaction_insert_and_stream_back(fastly_compute_at_edge_cache_cache_handle_t handle, fastly_compute_at_edge_cache_cache_write_options_t *options, fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_cache_handle_t *ret, fastly_compute_at_edge_cache_error_t *err) {
+bool fastly_compute_at_edge_cache_transaction_insert_and_stream_back(fastly_compute_at_edge_cache_handle_t handle, fastly_compute_at_edge_cache_write_options_t *options, fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_handle_t *ret, fastly_compute_at_edge_cache_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[12];
   int32_t ptr = (int32_t) &ret_area;
   __wasm_import_fastly_compute_at_edge_cache_transaction_insert_and_stream_back((int32_t) (handle), (int64_t) ((*options).max_age_ns), (int32_t) ((*options).request_headers), (int32_t) ((*options).vary_rule).ptr, (int32_t) ((*options).vary_rule).len, (int64_t) ((*options).initial_age_ns), (int64_t) ((*options).stale_while_revalidate_ns), (int32_t) ((*options).surrogate_keys).ptr, (int32_t) ((*options).surrogate_keys).len, (int64_t) ((*options).length), (int32_t) ((*options).user_metadata).ptr, (int32_t) ((*options).user_metadata).len, (*options).sensitive_data, ptr);
-  fastly_world_result_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_cache_handle_fastly_compute_at_edge_cache_error_t result;
+  fastly_world_result_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_handle_fastly_compute_at_edge_cache_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
-      result.val.ok = (fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_cache_handle_t) {
+      result.val.ok = (fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_handle_t) {
         (uint32_t) (*((int32_t*) (ptr + 4))),
         (uint32_t) (*((int32_t*) (ptr + 8))),
       };
@@ -811,7 +811,7 @@ bool fastly_compute_at_edge_cache_transaction_insert_and_stream_back(fastly_comp
   }
 }
 
-bool fastly_compute_at_edge_cache_transaction_cancel(fastly_compute_at_edge_cache_cache_handle_t handle, fastly_compute_at_edge_cache_error_t *err) {
+bool fastly_compute_at_edge_cache_transaction_cancel(fastly_compute_at_edge_cache_handle_t handle, fastly_compute_at_edge_cache_error_t *err) {
   __attribute__((__aligned__(1)))
   uint8_t ret_area[2];
   int32_t ptr = (int32_t) &ret_area;
@@ -836,12 +836,12 @@ bool fastly_compute_at_edge_cache_transaction_cancel(fastly_compute_at_edge_cach
   }
 }
 
-bool fastly_compute_at_edge_cache_get_state(fastly_compute_at_edge_cache_cache_handle_t handle, fastly_compute_at_edge_cache_cache_lookup_state_t *ret, fastly_compute_at_edge_cache_error_t *err) {
+bool fastly_compute_at_edge_cache_get_state(fastly_compute_at_edge_cache_handle_t handle, fastly_compute_at_edge_cache_lookup_state_t *ret, fastly_compute_at_edge_cache_error_t *err) {
   __attribute__((__aligned__(1)))
   uint8_t ret_area[2];
   int32_t ptr = (int32_t) &ret_area;
   __wasm_import_fastly_compute_at_edge_cache_get_state((int32_t) (handle), ptr);
-  fastly_world_result_fastly_compute_at_edge_cache_cache_lookup_state_fastly_compute_at_edge_cache_error_t result;
+  fastly_world_result_fastly_compute_at_edge_cache_lookup_state_fastly_compute_at_edge_cache_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
@@ -863,7 +863,7 @@ bool fastly_compute_at_edge_cache_get_state(fastly_compute_at_edge_cache_cache_h
   }
 }
 
-bool fastly_compute_at_edge_cache_get_body(fastly_compute_at_edge_cache_cache_handle_t handle, fastly_compute_at_edge_cache_cache_get_body_options_t *options, fastly_compute_at_edge_cache_body_handle_t *ret, fastly_compute_at_edge_cache_error_t *err) {
+bool fastly_compute_at_edge_cache_get_body(fastly_compute_at_edge_cache_handle_t handle, fastly_compute_at_edge_cache_get_body_options_t *options, fastly_compute_at_edge_cache_body_handle_t *ret, fastly_compute_at_edge_cache_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[8];
   int32_t ptr = (int32_t) &ret_area;
@@ -890,12 +890,12 @@ bool fastly_compute_at_edge_cache_get_body(fastly_compute_at_edge_cache_cache_ha
   }
 }
 
-bool fastly_compute_at_edge_dictionary_open(fastly_world_string_t *name, fastly_compute_at_edge_dictionary_dictionary_handle_t *ret, fastly_compute_at_edge_dictionary_error_t *err) {
+bool fastly_compute_at_edge_dictionary_open(fastly_world_string_t *name, fastly_compute_at_edge_dictionary_handle_t *ret, fastly_compute_at_edge_dictionary_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[8];
   int32_t ptr = (int32_t) &ret_area;
   __wasm_import_fastly_compute_at_edge_dictionary_open((int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
-  fastly_world_result_fastly_compute_at_edge_dictionary_dictionary_handle_fastly_compute_at_edge_dictionary_error_t result;
+  fastly_world_result_fastly_compute_at_edge_dictionary_handle_fastly_compute_at_edge_dictionary_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
@@ -917,7 +917,7 @@ bool fastly_compute_at_edge_dictionary_open(fastly_world_string_t *name, fastly_
   }
 }
 
-bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_dictionary_dictionary_handle_t h, fastly_world_string_t *key, fastly_world_option_string_t *ret, fastly_compute_at_edge_dictionary_error_t *err) {
+bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_dictionary_handle_t h, fastly_world_string_t *key, fastly_world_option_string_t *ret, fastly_compute_at_edge_dictionary_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[16];
   int32_t ptr = (int32_t) &ret_area;
@@ -2688,12 +2688,12 @@ bool fastly_compute_at_edge_http_resp_framing_headers_mode_set(fastly_compute_at
   }
 }
 
-bool fastly_compute_at_edge_log_endpoint_get(fastly_world_string_t *name, fastly_compute_at_edge_log_log_endpoint_handle_t *ret, fastly_compute_at_edge_log_error_t *err) {
+bool fastly_compute_at_edge_log_endpoint_get(fastly_world_string_t *name, fastly_compute_at_edge_log_handle_t *ret, fastly_compute_at_edge_log_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[8];
   int32_t ptr = (int32_t) &ret_area;
   __wasm_import_fastly_compute_at_edge_log_endpoint_get((int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
-  fastly_world_result_fastly_compute_at_edge_log_log_endpoint_handle_fastly_compute_at_edge_log_error_t result;
+  fastly_world_result_fastly_compute_at_edge_log_handle_fastly_compute_at_edge_log_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
@@ -2715,7 +2715,7 @@ bool fastly_compute_at_edge_log_endpoint_get(fastly_world_string_t *name, fastly
   }
 }
 
-bool fastly_compute_at_edge_log_write(fastly_compute_at_edge_log_log_endpoint_handle_t h, fastly_world_string_t *msg, fastly_compute_at_edge_log_error_t *err) {
+bool fastly_compute_at_edge_log_write(fastly_compute_at_edge_log_handle_t h, fastly_world_string_t *msg, fastly_compute_at_edge_log_error_t *err) {
   __attribute__((__aligned__(1)))
   uint8_t ret_area[2];
   int32_t ptr = (int32_t) &ret_area;
@@ -2740,12 +2740,12 @@ bool fastly_compute_at_edge_log_write(fastly_compute_at_edge_log_log_endpoint_ha
   }
 }
 
-bool fastly_compute_at_edge_object_store_open(fastly_world_string_t *name, fastly_compute_at_edge_object_store_object_store_handle_t *ret, fastly_compute_at_edge_object_store_error_t *err) {
+bool fastly_compute_at_edge_object_store_open(fastly_world_string_t *name, fastly_compute_at_edge_object_store_handle_t *ret, fastly_compute_at_edge_object_store_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[8];
   int32_t ptr = (int32_t) &ret_area;
   __wasm_import_fastly_compute_at_edge_object_store_open((int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
-  fastly_world_result_fastly_compute_at_edge_object_store_object_store_handle_fastly_compute_at_edge_object_store_error_t result;
+  fastly_world_result_fastly_compute_at_edge_object_store_handle_fastly_compute_at_edge_object_store_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
@@ -2767,7 +2767,7 @@ bool fastly_compute_at_edge_object_store_open(fastly_world_string_t *name, fastl
   }
 }
 
-bool fastly_compute_at_edge_object_store_lookup(fastly_compute_at_edge_object_store_object_store_handle_t store, fastly_world_string_t *key, fastly_world_option_fastly_compute_at_edge_object_store_body_handle_t *ret, fastly_compute_at_edge_object_store_error_t *err) {
+bool fastly_compute_at_edge_object_store_lookup(fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key, fastly_world_option_fastly_compute_at_edge_object_store_body_handle_t *ret, fastly_compute_at_edge_object_store_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[12];
   int32_t ptr = (int32_t) &ret_area;
@@ -2807,7 +2807,7 @@ bool fastly_compute_at_edge_object_store_lookup(fastly_compute_at_edge_object_st
   }
 }
 
-bool fastly_compute_at_edge_object_store_lookup_as_fd(fastly_compute_at_edge_object_store_object_store_handle_t store, fastly_world_string_t *key, fastly_world_option_fastly_compute_at_edge_object_store_fd_t *ret, fastly_compute_at_edge_object_store_error_t *err) {
+bool fastly_compute_at_edge_object_store_lookup_as_fd(fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key, fastly_world_option_fastly_compute_at_edge_object_store_fd_t *ret, fastly_compute_at_edge_object_store_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[12];
   int32_t ptr = (int32_t) &ret_area;
@@ -2847,7 +2847,7 @@ bool fastly_compute_at_edge_object_store_lookup_as_fd(fastly_compute_at_edge_obj
   }
 }
 
-bool fastly_compute_at_edge_object_store_insert(fastly_compute_at_edge_object_store_object_store_handle_t store, fastly_world_string_t *key, fastly_compute_at_edge_object_store_body_handle_t body_handle, fastly_compute_at_edge_object_store_error_t *err) {
+bool fastly_compute_at_edge_object_store_insert(fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key, fastly_compute_at_edge_object_store_body_handle_t body_handle, fastly_compute_at_edge_object_store_error_t *err) {
   __attribute__((__aligned__(1)))
   uint8_t ret_area[2];
   int32_t ptr = (int32_t) &ret_area;
@@ -2872,7 +2872,7 @@ bool fastly_compute_at_edge_object_store_insert(fastly_compute_at_edge_object_st
   }
 }
 
-bool fastly_compute_at_edge_purge_surrogate_key(fastly_world_string_t *surrogate_keys, fastly_compute_at_edge_purge_purge_options_mask_t purge_options, fastly_world_option_string_t *ret, fastly_compute_at_edge_purge_error_t *err) {
+bool fastly_compute_at_edge_purge_surrogate_key(fastly_world_string_t *surrogate_keys, fastly_compute_at_edge_purge_options_mask_t purge_options, fastly_world_option_string_t *ret, fastly_compute_at_edge_purge_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[16];
   int32_t ptr = (int32_t) &ret_area;
@@ -2912,12 +2912,12 @@ bool fastly_compute_at_edge_purge_surrogate_key(fastly_world_string_t *surrogate
   }
 }
 
-bool fastly_compute_at_edge_secret_store_open(fastly_world_string_t *name, fastly_compute_at_edge_secret_store_secret_store_handle_t *ret, fastly_compute_at_edge_secret_store_error_t *err) {
+bool fastly_compute_at_edge_secret_store_open(fastly_world_string_t *name, fastly_compute_at_edge_secret_store_store_handle_t *ret, fastly_compute_at_edge_secret_store_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[8];
   int32_t ptr = (int32_t) &ret_area;
   __wasm_import_fastly_compute_at_edge_secret_store_open((int32_t) (*name).ptr, (int32_t) (*name).len, ptr);
-  fastly_world_result_fastly_compute_at_edge_secret_store_secret_store_handle_fastly_compute_at_edge_secret_store_error_t result;
+  fastly_world_result_fastly_compute_at_edge_secret_store_store_handle_fastly_compute_at_edge_secret_store_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
@@ -2939,7 +2939,7 @@ bool fastly_compute_at_edge_secret_store_open(fastly_world_string_t *name, fastl
   }
 }
 
-bool fastly_compute_at_edge_secret_store_get(fastly_compute_at_edge_secret_store_secret_store_handle_t store, fastly_world_string_t *key, fastly_world_option_fastly_compute_at_edge_secret_store_secret_handle_t *ret, fastly_compute_at_edge_secret_store_error_t *err) {
+bool fastly_compute_at_edge_secret_store_get(fastly_compute_at_edge_secret_store_store_handle_t store, fastly_world_string_t *key, fastly_world_option_fastly_compute_at_edge_secret_store_secret_handle_t *ret, fastly_compute_at_edge_secret_store_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[12];
   int32_t ptr = (int32_t) &ret_area;
@@ -3028,7 +3028,7 @@ bool fastly_compute_at_edge_uap_parse(fastly_world_string_t *user_agent, fastly_
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
       result.is_err = false;
-      result.val.ok = (fastly_compute_at_edge_types_user_agent_t) {
+      result.val.ok = (fastly_compute_at_edge_uap_user_agent_t) {
         (fastly_world_string_t) { (char*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) },
         (fastly_world_string_t) { (char*)(*((int32_t*) (ptr + 12))), (size_t)(*((int32_t*) (ptr + 16))) },
         (fastly_world_string_t) { (char*)(*((int32_t*) (ptr + 20))), (size_t)(*((int32_t*) (ptr + 24))) },

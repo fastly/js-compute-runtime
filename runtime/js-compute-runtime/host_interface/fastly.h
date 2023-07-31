@@ -99,11 +99,11 @@ int body_close(fastly_compute_at_edge_types_body_handle_t body_handle);
 // Module fastly_log
 WASM_IMPORT("fastly_log", "endpoint_get")
 int log_endpoint_get(const char *name, size_t name_len,
-                     fastly_compute_at_edge_types_log_endpoint_handle_t *endpoint_handle);
+                     fastly_compute_at_edge_log_handle_t *endpoint_handle);
 
 WASM_IMPORT("fastly_log", "write")
-int log_write(fastly_compute_at_edge_types_log_endpoint_handle_t endpoint_handle, const char *msg,
-              size_t msg_len, size_t *nwritten);
+int log_write(fastly_compute_at_edge_log_handle_t endpoint_handle, const char *msg, size_t msg_len,
+              size_t *nwritten);
 
 // Module fastly_http_req
 WASM_IMPORT("fastly_http_req", "register_dynamic_backend")
@@ -309,19 +309,19 @@ int resp_status_set(fastly_compute_at_edge_types_response_handle_t resp_handle, 
 // Module fastly_dictionary
 WASM_IMPORT("fastly_dictionary", "open")
 int dictionary_open(const char *name, size_t name_len,
-                    fastly_compute_at_edge_types_dictionary_handle_t *dict_handle_out);
+                    fastly_compute_at_edge_dictionary_handle_t *dict_handle_out);
 
 WASM_IMPORT("fastly_dictionary", "get")
-int dictionary_get(fastly_compute_at_edge_types_dictionary_handle_t dict_handle, const char *key,
+int dictionary_get(fastly_compute_at_edge_dictionary_handle_t dict_handle, const char *key,
                    size_t key_len, char *value, size_t value_max_len, size_t *nwritten);
 
 // Module fastly_secret_store
 WASM_IMPORT("fastly_secret_store", "open")
 int secret_store_open(const char *name, size_t name_len,
-                      fastly_compute_at_edge_secret_store_secret_store_handle_t *dict_handle_out);
+                      fastly_compute_at_edge_secret_store_store_handle_t *dict_handle_out);
 
 WASM_IMPORT("fastly_secret_store", "get")
-int secret_store_get(fastly_compute_at_edge_secret_store_secret_store_handle_t dict_handle,
+int secret_store_get(fastly_compute_at_edge_secret_store_store_handle_t dict_handle,
                      const char *key, size_t key_len,
                      fastly_compute_at_edge_secret_store_secret_handle_t *opt_secret_handle_out);
 
@@ -332,13 +332,13 @@ int secret_store_plaintext(fastly_compute_at_edge_secret_store_secret_handle_t s
 // Module fastly_object_store
 WASM_IMPORT("fastly_object_store", "open")
 int object_store_open(const char *name, size_t name_len,
-                      fastly_compute_at_edge_types_object_store_handle_t *object_store_handle_out);
+                      fastly_compute_at_edge_object_store_handle_t *object_store_handle_out);
 WASM_IMPORT("fastly_object_store", "lookup")
-int object_store_get(fastly_compute_at_edge_types_object_store_handle_t object_store_handle,
+int object_store_get(fastly_compute_at_edge_object_store_handle_t object_store_handle,
                      const char *key, size_t key_len,
                      fastly_compute_at_edge_types_body_handle_t *opt_body_handle_out);
 WASM_IMPORT("fastly_object_store", "insert")
-int object_store_insert(fastly_compute_at_edge_types_object_store_handle_t object_store_handle,
+int object_store_insert(fastly_compute_at_edge_object_store_handle_t object_store_handle,
                         const char *key, size_t key_len,
                         fastly_compute_at_edge_types_body_handle_t body_handle);
 WASM_IMPORT("fastly_geo", "lookup")
@@ -359,7 +359,7 @@ int32_t random_get(int32_t arg0, int32_t arg1);
 // Returns the _index_ (not handle!) of the first object that is ready, or u32::MAX if the
 // timeout expires before any objects are ready for I/O.
 WASM_IMPORT("fastly_async_io", "select")
-int async_select(fastly_compute_at_edge_types_async_handle_t handles[], size_t handles_len,
+int async_select(fastly_compute_at_edge_async_io_handle_t handles[], size_t handles_len,
                  uint32_t timeout_ms, uint32_t *ready_idx_out);
 
 // Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
@@ -370,7 +370,7 @@ int async_select(fastly_compute_at_edge_types_async_handle_t handles[], size_t h
 // definition for more details, including what I/O actions are associated with each handle
 // type.
 WASM_IMPORT("fastly_async_io", "is_ready")
-int async_is_ready(fastly_compute_at_edge_types_async_handle_t handle, uint32_t *is_ready_out);
+int async_is_ready(fastly_compute_at_edge_async_io_handle_t handle, uint32_t *is_ready_out);
 
 struct __attribute__((aligned(4))) PurgeOptions {
   uint8_t *ret_buf_ptr;
@@ -384,8 +384,8 @@ int purge_surrogate_key(char *surrogate_key, size_t surrogate_key_len, uint32_t 
 
 WASM_IMPORT("fastly_cache", "lookup")
 int cache_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,
-                 fastly_compute_at_edge_types_cache_lookup_options_t *options,
-                 fastly_compute_at_edge_types_cache_handle_t *ret);
+                 fastly_compute_at_edge_cache_lookup_options_t *options,
+                 fastly_compute_at_edge_cache_handle_t *ret);
 
 typedef __attribute__((aligned(8))) struct {
   uint64_t max_age_ns;
@@ -407,25 +407,25 @@ int cache_insert(char *cache_key, size_t cache_key_len, uint32_t options_mask,
 
 WASM_IMPORT("fastly_cache", "transaction_lookup")
 int cache_transaction_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,
-                             fastly_compute_at_edge_types_cache_lookup_options_t *options,
-                             fastly_compute_at_edge_types_cache_handle_t *ret);
+                             fastly_compute_at_edge_cache_lookup_options_t *options,
+                             fastly_compute_at_edge_cache_handle_t *ret);
 
 WASM_IMPORT("fastly_cache", "transaction_insert_and_stream_back")
-int cache_transaction_insert_and_stream_back(
-    fastly_compute_at_edge_types_cache_handle_t handle, uint32_t options_mask,
-    CacheWriteOptions *options, fastly_compute_at_edge_types_body_handle_t *ret_body,
-    fastly_compute_at_edge_types_cache_handle_t *ret_cache);
+int cache_transaction_insert_and_stream_back(fastly_compute_at_edge_cache_handle_t handle,
+                                             uint32_t options_mask, CacheWriteOptions *options,
+                                             fastly_compute_at_edge_types_body_handle_t *ret_body,
+                                             fastly_compute_at_edge_cache_handle_t *ret_cache);
 
 WASM_IMPORT("fastly_cache", "transaction_cancel")
-int cache_transaction_cancel(fastly_compute_at_edge_types_cache_handle_t handle);
+int cache_transaction_cancel(fastly_compute_at_edge_cache_handle_t handle);
 
 WASM_IMPORT("fastly_cache", "get_state")
-int cache_get_state(fastly_compute_at_edge_types_cache_handle_t handle,
-                    fastly_compute_at_edge_types_cache_lookup_state_t *ret);
+int cache_get_state(fastly_compute_at_edge_cache_handle_t handle,
+                    fastly_compute_at_edge_cache_lookup_state_t *ret);
 
 WASM_IMPORT("fastly_cache", "get_body")
-int cache_get_body(fastly_compute_at_edge_types_cache_handle_t handle, uint32_t options_mask,
-                   fastly_compute_at_edge_types_cache_get_body_options_t *options,
+int cache_get_body(fastly_compute_at_edge_cache_handle_t handle, uint32_t options_mask,
+                   fastly_compute_at_edge_cache_get_body_options_t *options,
                    fastly_compute_at_edge_types_body_handle_t *ret);
 
 } // namespace fastly
