@@ -3051,14 +3051,14 @@ bool fastly_compute_at_edge_uap_parse(fastly_world_string_t *user_agent, fastly_
   }
 }
 
-__attribute__((__export_name__("compute-at-edge#serve")))
-int32_t __wasm_export_compute_at_edge_serve(int32_t arg, int32_t arg0) {
-  compute_at_edge_request_t arg1 = (compute_at_edge_request_t) {
+__attribute__((__export_name__("fastly:compute-at-edge/reactor#serve")))
+int32_t __wasm_export_exports_fastly_compute_at_edge_reactor_serve(int32_t arg, int32_t arg0) {
+  fastly_compute_at_edge_reactor_request_t arg1 = (fastly_compute_at_edge_http_types_request_t) {
     (uint32_t) (arg),
     (uint32_t) (arg0),
   };
   fastly_world_result_void_void_t ret;
-  ret.is_err = !compute_at_edge_serve(&arg1);
+  ret.is_err = !exports_fastly_compute_at_edge_reactor_serve(&arg1);
   int32_t result;
   if ((ret).is_err) {
     result = 1;

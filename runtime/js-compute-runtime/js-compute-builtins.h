@@ -113,4 +113,6 @@ void dump_promise_rejection(JSContext *cx, JS::HandleValue reason, JS::HandleObj
 bool print_stack(JSContext *cx, FILE *fp);
 bool print_stack(JSContext *cx, JS::HandleObject stack, FILE *fp);
 
+bool reactor_main(host_api::Request req);
+
 #endif // fastly_sys_h

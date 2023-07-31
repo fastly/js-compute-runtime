@@ -330,6 +330,8 @@ struct CacheOverrideTag final {
   void set_pci();
 };
 
+struct Request;
+
 class HttpReq final : public HttpBase {
 public:
   using Handle = uint32_t;
@@ -347,6 +349,9 @@ public:
 
   static Result<Void> register_dynamic_backend(std::string_view name, std::string_view target,
                                                const BackendConfig &config);
+
+  /// Fetch the downstream request/body pair
+  static Result<Request> downstream_get();
 
   /// Get the downstream ip address.
   static Result<HostBytes> downstream_client_ip_addr();
@@ -440,6 +445,15 @@ struct Response {
 
   Response() = default;
   Response(HttpResp resp, HttpBody body) : resp{resp}, body{body} {}
+};
+
+/// The pair of a request and its body.
+struct Request {
+  HttpReq req;
+  HttpBody body;
+
+  Request() = default;
+  Request(HttpReq req, HttpBody body) : req{req}, body{body} {}
 };
 
 class GeoIp final {

@@ -667,6 +667,16 @@ interface cache {
   get-body: func(handle: handle, options: get-body-options) -> result<body-handle, error>
 }
 
+interface reactor {
+  use http-types.{request}
+
+  /// Serve the given request
+  ///
+  /// response handle not currently returned, because in the case of a streamed response
+  /// send downstream must be fully streamed due to the run to completion semantics.
+  serve: func(req: request) -> result
+}
+
 world fastly-world {
 
   import async-io
@@ -682,15 +692,5 @@ world fastly-world {
   import secret-store
   import uap
 
-  export compute-at-edge: interface {
-    type request-handle = u32
-    type body-handle = u32
-    type request = tuple<request-handle, body-handle>
-
-    /// Serve the given request
-    ///
-    /// response handle not currently returned, because in the case of a streamed response
-    /// send downstream must be fully streamed due to the run to completion semantics.
-    serve: func(req: request) -> result
-  }
+  export reactor
 }

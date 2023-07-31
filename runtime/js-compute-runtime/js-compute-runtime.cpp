@@ -23,7 +23,6 @@
 #include "core/allocator.h"
 #include "core/encode.h"
 #include "core/event_loop.h"
-#include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
 #include "third_party/wizer.h"
@@ -480,7 +479,7 @@ static void wait_for_backends(JSContext *cx, double *total_compute) {
     printf("Done, waited for %fms\n", diff / 1000);
 }
 
-bool compute_at_edge_serve(compute_at_edge_request_t *req) {
+bool reactor_main(host_api::Request req) {
   assert(hasWizeningFinished());
 
   builtins::Performance::timeOrigin.emplace(std::chrono::high_resolution_clock::now());
@@ -501,8 +500,7 @@ bool compute_at_edge_serve(compute_at_edge_request_t *req) {
   js::ResetMathRandomSeed(cx);
 
   HandleObject fetch_event = builtins::FetchEvent::instance();
-  builtins::FetchEvent::init_request(cx, fetch_event, host_api::HttpReq{req->f0},
-                                     host_api::HttpBody{req->f1});
+  builtins::FetchEvent::init_request(cx, fetch_event, req.req, req.body);
 
   dispatch_fetch_event(cx, fetch_event, &total_compute);
 
