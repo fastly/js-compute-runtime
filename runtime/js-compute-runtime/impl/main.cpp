@@ -1,13 +1,16 @@
 #include "host_interface/fastly.h"
+#include "host_interface/host_api.h"
+#include "js-compute-builtins.h"
 
 int main(int argc, const char *argv[]) {
-  fastly_compute_at_edge_http_types_request_t req;
-  if (fastly::req_body_downstream_get(&req.f0, &req.f1) != 0) {
+  host_api::Request req;
+
+  if (fastly::req_body_downstream_get(&req.req.handle, &req.body.handle) != 0) {
     abort();
     return 1;
   }
 
-  compute_at_edge_serve(static_cast<compute_at_edge_request_t *>(static_cast<void *>(&req)));
+  reactor_main(req);
 
   // Note: we deliberately skip shutdown, because it takes quite a while,
   // and serves no purpose for us.

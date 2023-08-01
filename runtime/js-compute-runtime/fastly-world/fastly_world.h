@@ -442,14 +442,7 @@ typedef struct {
   fastly_compute_at_edge_cache_handle_t f1;
 } fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_handle_t;
 
-typedef uint32_t compute_at_edge_request_handle_t;
-
-typedef uint32_t compute_at_edge_body_handle_t;
-
-typedef struct {
-  compute_at_edge_request_handle_t f0;
-  compute_at_edge_body_handle_t f1;
-} compute_at_edge_request_t;
+typedef fastly_compute_at_edge_http_types_request_t fastly_compute_at_edge_reactor_request_t;
 
 // Imported Functions from `fastly:compute-at-edge/async-io`
 // Blocks until one of the given objects is ready for I/O, or the optional timeout expires.
@@ -610,8 +603,8 @@ bool fastly_compute_at_edge_secret_store_plaintext(fastly_compute_at_edge_secret
 // Imported Functions from `fastly:compute-at-edge/uap`
 bool fastly_compute_at_edge_uap_parse(fastly_world_string_t *user_agent, fastly_compute_at_edge_uap_user_agent_t *ret, fastly_compute_at_edge_uap_error_t *err);
 
-// Exported Functions from `compute-at-edge`
-bool compute_at_edge_serve(compute_at_edge_request_t *req);
+// Exported Functions from `fastly:compute-at-edge/reactor`
+bool exports_fastly_compute_at_edge_reactor_serve(fastly_compute_at_edge_reactor_request_t *req);
 
 #ifdef __cplusplus
 }
