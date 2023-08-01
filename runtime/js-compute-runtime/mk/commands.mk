@@ -65,7 +65,7 @@ compile_c = $(call compile_c_impl,$1,$(patsubst $(FSM_SRC)/%.c,$(OBJ_DIR)/%.o,$1
 
 define compile_c_impl
 
-$2: $1 | $(dirname $2)
+$2: $1 | $(shell dirname "$2")
 	$$(call cmd,wasi_cc,$$@)
 
 -include $(patsubst $(FSM_SRC)/%.c,$(OBJ_DIR)/%.d,$1)

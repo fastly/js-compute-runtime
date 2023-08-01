@@ -676,21 +676,3 @@ interface reactor {
   /// send downstream must be fully streamed due to the run to completion semantics.
   serve: func(req: request) -> result
 }
-
-world fastly-world {
-
-  import async-io
-  import cache
-  import dictionary
-  import geo
-  import http-body
-  import http-req
-  import http-resp
-  import log
-  import object-store
-  import purge
-  import secret-store
-  import uap
-
-  export reactor
-}

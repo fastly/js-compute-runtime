@@ -3,7 +3,7 @@
 
 #include "builtins/cache-override.h"
 #include "core/allocator.h"
-#include "fastly-world/fastly_world.h"
+#include "host_interface/component/fastly_world.h"
 #include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"

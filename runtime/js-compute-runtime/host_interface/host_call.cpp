@@ -1,7 +1,7 @@
 
 #include <type_traits>
 
-#include "fastly-world/fastly_world.h"
+#include "host_interface/component/fastly_world.h"
 #include "host_interface/fastly.h"
 #include "host_interface/host_api.h"
 
