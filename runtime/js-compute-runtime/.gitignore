@@ -2,7 +2,7 @@
 /compile_commands.json
 /.cache
 
-!/fastly-world/*.o
+!/host_interface/component/fastly_world.o
 /js-compute-runtime*.wasm
 /build
 /shared

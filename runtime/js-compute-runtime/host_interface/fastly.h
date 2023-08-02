@@ -4,10 +4,11 @@
 extern "C" {
 #endif
 
-#include "fastly-world/fastly_world.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#include "host_interface/component/fastly_world.h"
 
 namespace fastly {
 
