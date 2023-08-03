@@ -7,6 +7,7 @@ export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
   let component = false;
+  let adapter;
   let enableExperimentalHighResolutionTimeMethods = false;
   let customEngineSet = false;
   let wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
@@ -36,6 +37,11 @@ export async function parseInputs(cliInputs) {
       case "--component": {
         component = true;
         wasmEngine = join(__dirname, "../js-compute-runtime-component.wasm");
+        break;
+      }
+      case "--component-adapter": {
+        component = true;
+        adapter = cliInputs.shift();
         break;
       }
       case "--engine-wasm": {
@@ -93,5 +99,5 @@ export async function parseInputs(cliInputs) {
       }
     }
   }
-  return { wasmEngine, component, input, output, enableExperimentalHighResolutionTimeMethods };
+  return { wasmEngine, component, adapter, input, output, enableExperimentalHighResolutionTimeMethods };
 }
