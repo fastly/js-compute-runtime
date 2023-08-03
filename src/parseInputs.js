@@ -16,6 +16,12 @@ export async function parseInputs(cliInputs) {
   let customOutputSet = false;
   let output = join(process.cwd(), "bin/main.wasm");
   let cliInput;
+
+  let useComponent = () => {
+    component = true;
+    wasmEngine = join(__dirname, "../js-compute-runtime-component.wasm");
+  };
+
   // eslint-disable-next-line no-cond-assign
   loop: while ((cliInput = cliInputs.shift())) {
     switch (cliInput) {
@@ -35,12 +41,11 @@ export async function parseInputs(cliInputs) {
         return { help: true };
       }
       case "--component": {
-        component = true;
-        wasmEngine = join(__dirname, "../js-compute-runtime-component.wasm");
+        useComponent();
         break;
       }
       case "--component-adapter": {
-        component = true;
+        useComponent();
         adapter = cliInputs.shift();
         break;
       }
