@@ -10,6 +10,7 @@ const {
   wasmEngine,
   input,
   component,
+  adapter,
   output,
   version,
   help
@@ -30,7 +31,7 @@ if (version) {
   await compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods);
   if (component) {
     const {compileComponent} = await import('./src/component.js');
-    await compileComponent(output);
+    await compileComponent(output, adapter);
   }
   await addSdkMetadataField(output);
 }
