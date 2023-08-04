@@ -340,7 +340,10 @@ $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/host_interface/componen
 
 shared-builtins: shared/builtins.a shared/librust_url.a shared/librust_encoding.a
 
-shared/builtins.a: $(OBJ_DIR)/builtins/shared/*.o $(OBJ_DIR)/builtin.o | shared
+shared/builtins.a: $(OBJ_DIR)/builtins/shared/*.o
+shared/builtins.a: $(OBJ_DIR)/builtin.o
+shared/builtins.a: $(OBJ_DIR)/core/encode.o
+shared/builtins.a: | shared
 	$(call cmd,wasi_ar,$^)
 
 shared/librust_url.a: $(RUST_URL_LIB) | shared
