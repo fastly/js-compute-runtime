@@ -1,6 +1,6 @@
 import { dirname } from "node:path";
 import { spawnSync } from "node:child_process";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { isFile } from "./isFile.js";
 import { isFileOrDoesNotExist } from "./isFileOrDoesNotExist.js";
 import wizer from "@bytecodealliance/wizer";
@@ -8,7 +8,7 @@ import { precompile } from "./precompile.js";
 import { bundle } from "./bundle.js";
 import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
 
-export async function compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods = false) {
+export async function compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods = false, enablePBL = false) {
   try {
     if (!(await isFile(input))) {
       console.error(
@@ -77,9 +77,11 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
     process.exit(1);
   }
 
-  let contents = await bundle(input);
+  // let contents = await bundle(input);
+  // let application = precompile(contents.outputFiles[0].text);
 
-  let application = precompile(contents.outputFiles[0].text);
+  let application = precompile(await readFile(input, { encoding: "utf-8" }));
+  // await writeFile("./bin/app.js", application, "utf-8")
 
   try {
     let wizerProcess = spawnSync(

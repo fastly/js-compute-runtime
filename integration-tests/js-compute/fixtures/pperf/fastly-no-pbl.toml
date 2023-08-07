@@ -1,0 +1,14 @@
+# This file describes a Fastly Compute@Edge package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
+authors = ["jchampion@fastly.com"]
+description = ""
+language = "other"
+manifest_version = 2
+name = "pperf-no-pbl"
+service_id = "wk87RNEaonEYyKmNTYvwr0"
+# name = "pperf-with-pbl"
+# service_id = "TNwPLQKwXnmskhWIvbfqY2"
+
+[scripts]
+  build = "node ../../../../js-compute-runtime-cli.js out.js"
