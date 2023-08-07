@@ -1,0 +1,15 @@
+{
+  "name": "pperf",
+  "version": "1.0.0",
+  "description": "",
+  "main": "out.js",
+  "dependencies": {
+    "esbuild": "^0.18.19"
+  },
+  "scripts": {
+    "build": "esbuild --bundle --minify src/index.js > out.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
