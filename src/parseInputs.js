@@ -9,6 +9,7 @@ export async function parseInputs(cliInputs) {
   let component = false;
   let adapter;
   let enableExperimentalHighResolutionTimeMethods = false;
+  let enablePBL = false;
   let customEngineSet = false;
   let wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
   let customInputSet = false;
@@ -30,6 +31,10 @@ export async function parseInputs(cliInputs) {
       }
       case "--enable-experimental-high-resolution-time-methods": {
         enableExperimentalHighResolutionTimeMethods = true;
+        break;
+      }
+      case "--enable-pbl": {
+        enablePBL = true;
         break;
       }
       case "-V":
@@ -104,5 +109,5 @@ export async function parseInputs(cliInputs) {
       }
     }
   }
-  return { wasmEngine, component, adapter, input, output, enableExperimentalHighResolutionTimeMethods };
+  return { wasmEngine, component, adapter, input, output, enableExperimentalHighResolutionTimeMethods, enablePBL };
 }

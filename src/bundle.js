@@ -46,6 +46,7 @@ export async function bundle(input) {
   return await build({
     entryPoints: [input],
     bundle: true,
+    minify: true,
     write: false,
     tsconfig: undefined,
     plugins: [fastlyPlugin],

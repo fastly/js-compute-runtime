@@ -16,6 +16,7 @@
 #include "js/ContextOptions.h"
 #include "js/Initialization.h"
 #include "js/SourceText.h"
+#include "jsapi.h"
 
 #pragma clang diagnostic pop
 
@@ -120,6 +121,12 @@ bool init_js() {
   }
   if (!js::UseInternalJobQueues(cx) || !JS::InitSelfHostedCode(cx)) {
     return false;
+  }
+
+  bool ENABLE_PBL = std::string(std::getenv("ENABLE_PBL")) == "1";
+  if (ENABLE_PBL) {
+    JS_SetGlobalJitCompilerOption(cx, JSJitCompilerOption::JSJITCOMPILER_PORTABLE_BASELINE_ENABLE, 1);
+    JS_SetGlobalJitCompilerOption(cx, JSJitCompilerOption::JSJITCOMPILER_PORTABLE_BASELINE_WARMUP_THRESHOLD, 0);
   }
 
   // TODO: check if we should set a different creation zone.

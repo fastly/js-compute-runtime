@@ -99,7 +99,8 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
         shell: true,
         encoding: "utf-8",
         env: {
-          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS: enableExperimentalHighResolutionTimeMethods ? '1' : '0'
+          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS: enableExperimentalHighResolutionTimeMethods ? '1' : '0',
+          ENABLE_PBL: enablePBL ? '1' : '0',
         }
       }
     );
