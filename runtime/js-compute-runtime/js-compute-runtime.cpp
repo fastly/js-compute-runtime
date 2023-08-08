@@ -125,8 +125,10 @@ bool init_js() {
 
   bool ENABLE_PBL = std::string(std::getenv("ENABLE_PBL")) == "1";
   if (ENABLE_PBL) {
-    JS_SetGlobalJitCompilerOption(cx, JSJitCompilerOption::JSJITCOMPILER_PORTABLE_BASELINE_ENABLE, 1);
-    JS_SetGlobalJitCompilerOption(cx, JSJitCompilerOption::JSJITCOMPILER_PORTABLE_BASELINE_WARMUP_THRESHOLD, 0);
+    JS_SetGlobalJitCompilerOption(cx, JSJitCompilerOption::JSJITCOMPILER_PORTABLE_BASELINE_ENABLE,
+                                  1);
+    JS_SetGlobalJitCompilerOption(
+        cx, JSJitCompilerOption::JSJITCOMPILER_PORTABLE_BASELINE_WARMUP_THRESHOLD, 0);
   }
 
   // TODO: check if we should set a different creation zone.
