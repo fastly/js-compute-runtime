@@ -112,6 +112,11 @@ typedef uint8_t fastly_compute_at_edge_http_types_tls_version_t;
 #define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_TLS_VERSION_TLS13 3
 
 typedef struct {
+  fastly_world_string_t client_cert;
+  fastly_compute_at_edge_http_types_secret_handle_t client_key;
+} fastly_compute_at_edge_http_types_client_cert_config_t;
+
+typedef struct {
   bool is_some;
   fastly_world_string_t val;
 } fastly_world_option_string_t;
@@ -131,6 +136,11 @@ typedef struct {
   fastly_compute_at_edge_http_types_tls_version_t val;
 } fastly_world_option_fastly_compute_at_edge_http_types_tls_version_t;
 
+typedef struct {
+  bool is_some;
+  fastly_compute_at_edge_http_types_client_cert_config_t val;
+} fastly_world_option_fastly_compute_at_edge_http_types_client_cert_config_t;
+
 // Create a backend for later use
 typedef struct {
   fastly_world_option_string_t host_override;
@@ -145,8 +155,7 @@ typedef struct {
   fastly_world_option_string_t ca_cert;
   fastly_world_option_string_t ciphers;
   fastly_world_option_string_t sni_hostname;
-  fastly_world_option_string_t client_cert;
-  fastly_compute_at_edge_http_types_secret_handle_t client_key;
+  fastly_world_option_fastly_compute_at_edge_http_types_client_cert_config_t client_cert;
 } fastly_compute_at_edge_http_types_dynamic_backend_config_t;
 
 typedef uint16_t fastly_compute_at_edge_http_types_http_status_t;

@@ -91,6 +91,11 @@ interface http-types {
     tls13
   }
 
+  record client-cert-config {
+    client-cert: string,
+    client-key: secret-handle,
+  }
+
   /// Create a backend for later use
   record dynamic-backend-config {
     host-override: option<string>,
@@ -105,8 +110,7 @@ interface http-types {
     ca-cert: option<string>,
     ciphers: option<string>,
     sni-hostname: option<string>,
-    client-cert: option<string>,
-    client-key: secret-handle,
+    client-cert: option<client-cert-config>,
   }
 
   type http-status = u16

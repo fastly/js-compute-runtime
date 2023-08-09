@@ -3014,14 +3014,14 @@ bool fastly_compute_at_edge_http_req_register_dynamic_backend(fastly_world_strin
     *((int8_t*)(ptr + 96)) = 0;
   }
   if (((*config).client_cert).is_some) {
-    const fastly_world_string_t *payload24 = &((*config).client_cert).val;
+    const fastly_compute_at_edge_http_types_client_cert_config_t *payload24 = &((*config).client_cert).val;
     *((int8_t*)(ptr + 108)) = 1;
-    *((int32_t*)(ptr + 116)) = (int32_t) (*payload24).len;
-    *((int32_t*)(ptr + 112)) = (int32_t) (*payload24).ptr;
+    *((int32_t*)(ptr + 116)) = (int32_t) ((*payload24).client_cert).len;
+    *((int32_t*)(ptr + 112)) = (int32_t) ((*payload24).client_cert).ptr;
+    *((int32_t*)(ptr + 120)) = (int32_t) ((*payload24).client_key);
   } else {
     *((int8_t*)(ptr + 108)) = 0;
   }
-  *((int32_t*)(ptr + 120)) = (int32_t) ((*config).client_key);
   int32_t ptr25 = (int32_t) &ret_area;
   __wasm_import_fastly_compute_at_edge_http_req_register_dynamic_backend(ptr, ptr25);
   fastly_world_result_void_fastly_compute_at_edge_http_req_error_t result;
