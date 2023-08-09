@@ -504,8 +504,55 @@ interface secret-store {
 }
 
 /*
- * TODO: Fastly backend
+ * Fastly backend
  */
+interface backend {
+  use types.{error}
+  use http-types.{tls-version}
+
+  exists: func(backend: string) -> result<bool, error>
+
+  enum backend-health {
+    unknown,
+    healthy,
+    unhealthy,
+  }
+
+  is-healthy: func(backend: string) -> result<backend-health, error>
+
+  /// Returns `true` if the backend is a "dynamic" backend.
+  is-dynamic: func(backend: string) -> result<bool, error>
+
+  /// Get the host of this backend.
+  get-host: func(backend: string) -> result<string, error>
+
+  /// Get the "override host" for this backend.
+  ///
+  /// This is used to change the `Host` header sent to the backend. See the
+  /// Fastly documentation oh this topic here: https://docs.fastly.com/en/guides/specifying-an-override-host
+  get-override-host: func(backend: string) -> result<option<string>, error>
+
+  /// Get the remote TCP port of the backend connection for the request.
+  get-port: func(backend: string) -> result<u16, error>
+
+  /// Get the connection timeout of the backend.
+  get-connect-timeout-ms: func(backend: string) -> result<u32, error>
+
+  /// Get the first byte timeout of the backend.
+  get-first-byte-timeout-ms: func(backend: string) -> result<u32, error>
+
+  /// Get the between byte timeout of the backend.
+  get-between-bytes-timeout-ms: func(backend: string) -> result<u32, error>
+
+  /// Returns `true` if the backend is configured to use SSL.
+  is-ssl: func(backend: string) -> result<bool, error>
+
+  /// Get the minimum SSL version this backend will use.
+  get-ssl-min-version: func(backend: string) -> result<tls-version, error>
+
+  /// Get the maximum SSL version this backend will use.
+  get-ssl-max-version: func(backend: string) -> result<tls-version, error>
+}
 
 /*
  * Fastly Async IO
