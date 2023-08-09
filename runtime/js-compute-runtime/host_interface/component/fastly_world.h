@@ -64,6 +64,10 @@ typedef uint8_t fastly_compute_at_edge_types_error_t;
 // resources permitted. For example, creating too many response handles.
 #define FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_LIMIT_EXCEEDED 13
 
+typedef uint32_t fastly_compute_at_edge_types_secret_handle_t;
+
+typedef fastly_compute_at_edge_types_secret_handle_t fastly_compute_at_edge_http_types_secret_handle_t;
+
 typedef uint32_t fastly_compute_at_edge_http_types_body_handle_t;
 
 typedef uint32_t fastly_compute_at_edge_http_types_request_handle_t;
@@ -141,6 +145,8 @@ typedef struct {
   fastly_world_option_string_t ca_cert;
   fastly_world_option_string_t ciphers;
   fastly_world_option_string_t sni_hostname;
+  fastly_world_option_string_t client_cert;
+  fastly_compute_at_edge_http_types_secret_handle_t client_key;
 } fastly_compute_at_edge_http_types_dynamic_backend_config_t;
 
 typedef uint16_t fastly_compute_at_edge_http_types_http_status_t;
@@ -331,9 +337,9 @@ typedef struct {
 
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_secret_store_error_t;
 
-typedef uint32_t fastly_compute_at_edge_secret_store_store_handle_t;
+typedef fastly_compute_at_edge_types_secret_handle_t fastly_compute_at_edge_secret_store_secret_handle_t;
 
-typedef uint32_t fastly_compute_at_edge_secret_store_secret_handle_t;
+typedef uint32_t fastly_compute_at_edge_secret_store_store_handle_t;
 
 typedef struct {
   bool is_some;

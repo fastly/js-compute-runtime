@@ -50,9 +50,13 @@ interface types {
     /// resources permitted. For example, creating too many response handles.
     limit-exceeded
   }
+
+  type secret-handle = u32
 }
 
 interface http-types {
+
+  use types.{secret-handle}
 
   type body-handle = u32
 
@@ -101,6 +105,8 @@ interface http-types {
     ca-cert: option<string>,
     ciphers: option<string>,
     sni-hostname: option<string>,
+    client-cert: option<string>,
+    client-key: secret-handle,
   }
 
   type http-status = u16
@@ -488,11 +494,9 @@ interface object-store {
  */
 interface secret-store {
 
-  use types.{error}
+  use types.{error, secret-handle}
 
   type store-handle = u32
-
-  type secret-handle = u32
 
   open: func(name: string) -> result<store-handle, error>
 
