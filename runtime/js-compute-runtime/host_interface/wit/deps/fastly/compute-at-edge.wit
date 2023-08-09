@@ -52,77 +52,6 @@ interface types {
   }
 }
 
-/*
- * Fastly Log
- */
-interface log {
-
-  use types.{error}
-
-  type handle = u32
-
-  endpoint-get: func(name: string) -> result<handle, error>
-
-  write: func(h: handle, msg: string) -> result<_, error>
-}
-
-/*
- * Fastly Dictionary
- */
-interface dictionary {
-
-  use types.{error}
-
-  type handle = u32
-
-  open: func(name: string) -> result<handle, error>
-
-  get: func(h: handle, key: string) -> result<option<string>, error>
-}
-
-/*
- * Fastly Secret Store
- */
-interface secret-store {
-
-  use types.{error}
-
-  type store-handle = u32
-
-  type secret-handle = u32
-
-  open: func(name: string) -> result<store-handle, error>
-
-  get: func(store: store-handle, key: string) -> result<option<secret-handle>, error>
-
-  plaintext: func(secret: secret-handle) -> result<option<string>, error>
-
-}
-
-/*
- * Fastly KV Store
- */
-interface object-store {
-
-  use types.{error}
-
-  use http-types.{body-handle}
-
-  type fd = u32
-
-  type handle = u32
-
-  open: func(name: string) -> result<handle, error>
-
-  lookup: func(store: handle, key: string) -> result<option<body-handle>, error>
-
-  lookup-as-fd: func(store: handle, key: string) -> result<option<fd>, error>
-
-  // Should object store insert return "inserted" bool?
-  insert: func(store: handle, key: string, body-handle: body-handle) -> result<_, error>
-
-}
-
 interface http-types {
 
   type body-handle = u32
@@ -178,11 +107,28 @@ interface http-types {
 }
 
 /*
+ * Fastly UAP
+ */
+interface uap {
+
+  use types.{error}
+
+  record user-agent {
+    family: string,
+    major: string,
+    minor: string,
+    patch: string
+  }
+
+  parse: func(user-agent: string) -> result<user-agent, error>
+}
+
+/*
  * Fastly HTTP Body
  */
 interface http-body {
-  use types.{error}
 
+  use types.{error}
   use http-types.{body-handle}
 
   enum write-end {
@@ -190,9 +136,9 @@ interface http-body {
     front
   }
 
-  new: func() -> result<body-handle, error>
-
   append: func(dest: body-handle, src: body-handle) -> result<_, error>
+
+  new: func() -> result<body-handle, error>
 
   read: func(h: body-handle, chunk-size: u32) -> result<list<u8>, error>
 
@@ -202,12 +148,25 @@ interface http-body {
 }
 
 /*
+ * Fastly Log
+ */
+interface log {
+
+  use types.{error}
+
+  type handle = u32
+
+  endpoint-get: func(name: string) -> result<handle, error>
+
+  write: func(h: handle, msg: string) -> result<_, error>
+}
+
+/*
  * Fastly HTTP Req
  */
 interface http-req {
 
   use types.{error}
-
   use http-types.{
     body-handle, request-handle, http-version, response, pending-request-handle,
     content-encodings, framing-headers-mode, dynamic-backend-config
@@ -224,6 +183,8 @@ interface http-req {
   cache-override-set: func(h: request-handle, tag: cache-override-tag, ttl: option<u32>, stale-while-revalidate: option<u32>, sk: option<string>) -> result<_, error>
 
   downstream-client-ip-addr: func() -> result<list<u8>, error>
+
+  downstream-client-request-id: func() -> result<string, error>
 
   downstream-client-h2-fingerprint: func() -> result<list<u8>, error>
 
@@ -242,6 +203,10 @@ interface http-req {
   new: func() -> result<request-handle, error>
 
   header-names-get: func(h: request-handle) -> result<list<string>, error>
+
+  original-header-names-get: func() -> result<list<string>, error>
+
+  original-header-count: func() -> result<u32, error>
 
   header-value-get: func(h: request-handle, name: string) -> result<option<string>, error>
 
@@ -281,11 +246,6 @@ interface http-req {
     u32,
     response
   >, error>
-
-  /// Returns whether or not the original client request arrived with a
-  /// Fastly-Key belonging to a user with the rights to purge content on this
-  /// service.
-  key-is-valid: func() -> result<bool, error>
 
   close: func(h: request-handle) -> result<_, error>
 
@@ -344,6 +304,27 @@ interface http-resp {
 
   /// Adjust how this response's framing headers are determined.
   framing-headers-mode-set: func(h: response-handle, mode: framing-headers-mode) -> result<_, error>
+
+  enum keepalive-mode {
+    automatic,
+    no-keepalive,
+  }
+
+  http-keepalive-mode-set: func(h: response-handle, mode: keepalive-mode) -> result<_, error>
+}
+
+/*
+ * Fastly Dictionary
+ */
+interface dictionary {
+
+  use types.{error}
+
+  type handle = u32
+
+  open: func(name: string) -> result<handle, error>
+
+  get: func(h: handle, key: string) -> result<option<string>, error>
 }
 
 /*
@@ -478,20 +459,53 @@ interface geo {
 }
 
 /*
- * Fastly UAP
+ * Fastly KV Store
  */
-interface uap {
+interface object-store {
+
   use types.{error}
 
-  record user-agent {
-    family: string,
-    major: string,
-    minor: string,
-    patch: string
-  }
+  use http-types.{body-handle}
 
-  parse: func(user-agent: string) -> result<user-agent, error>
+  type handle = u32
+  type pending-handle = u32
+
+  open: func(name: string) -> result<handle, error>
+
+  lookup: func(store: handle, key: string) -> result<option<body-handle>, error>
+
+  lookup-async: func(store: handle, key: string) -> result<pending-handle, error>
+
+  pending-lookup-wait: func(handle: pending-handle) -> result<option<body-handle>, error>
+
+  // Should object store insert return "inserted" bool?
+  insert: func(store: handle, key: string, body-handle: body-handle) -> result<_, error>
+
 }
+
+/*
+ * Fastly Secret Store
+ */
+interface secret-store {
+
+  use types.{error}
+
+  type store-handle = u32
+
+  type secret-handle = u32
+
+  open: func(name: string) -> result<store-handle, error>
+
+  get: func(store: store-handle, key: string) -> result<option<secret-handle>, error>
+
+  plaintext: func(secret: secret-handle) -> result<option<string>, error>
+
+  from-bytes: func(bytes: string) -> result<secret-handle, error>
+}
+
+/*
+ * TODO: Fastly backend
+ */
 
 /*
  * Fastly Async IO
@@ -636,6 +650,14 @@ interface cache {
   /// request collapsing, use `lookup` and `insert` instead.
   transaction-lookup: func(key: string, options: lookup-options) -> result<handle, error>
 
+  /// Insert an object into the cache with the given metadata.
+  ///
+  /// Can only be used in if the cache handle state includes the `must-insert-or-update` flag.
+  ///
+  /// The returned handle is to a streaming body that is used for writing the object into
+  /// the cache.
+  transaction-insert: func(handle: handle, options: write-options) -> result<body-handle, error>
+
   /// Insert an object into the cache with the given metadata, and return a readable stream of the
   /// bytes as they are stored.
   ///
@@ -648,6 +670,13 @@ interface cache {
   /// newly cached object to send elsewhere.
   transaction-insert-and-stream-back: func(handle: handle, options: write-options) -> result<tuple<body-handle, handle>, error>
 
+  /// Update the metadata of an object in the cache without changing its data.
+  ///
+  /// Can only be used in if the cache handle state includes both of the flags:
+  /// - `found`
+  /// - `must-insert-or-update`
+  transaction-update: func(handle: handle) -> result<_, error>
+
   /// Cancel an obligation to provide an object to the cache.
   ///
   /// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
@@ -655,7 +684,11 @@ interface cache {
 
   get-state: func(handle: handle) -> result<lookup-state, error>
 
-  /// Gets a range of the found object body, returning the `$none` error if there
+  /// Gets the user metadata of the found object, returning the `optional-none` error if there
+  /// was no found object.
+  get-user-metadata: func(handle: handle) -> result<string, error>
+
+  /// Gets a range of the found object body, returning the `optional-none` error if there
   /// was no found object.
   ///
   /// The returned `body_handle` must be closed before calling this function again on the same
@@ -665,6 +698,26 @@ interface cache {
   /// the body of objects that are past the stale-while-revalidate period will not
   /// be available, even when other metadata is.
   get-body: func(handle: handle, options: get-body-options) -> result<body-handle, error>
+
+  /// Gets the content length of the found object, returning the `$none` error if there
+  /// was no found object, or no content length was provided.
+  get-length: func(handle: handle) -> result<u64, error>
+
+  /// Gets the configured max age of the found object, returning the `$none` error if there
+  /// was no found object.
+  get-max-age-ns: func(handle: handle) -> result<u64, error>
+
+  /// Gets the configured stale-while-revalidate period of the found object, returning the
+  /// `$none` error if there was no found object.
+  get-stale-while-revalidate-ns: func(handle: handle) -> result<u64, error>
+
+  /// Gets the age of the found object, returning the `$none` error if there
+  /// was no found object.
+  get-age-ns: func(handle: handle) -> result<u64, error>
+
+  /// Gets the number of cache hits for the found object, returning the `$none` error if there
+  /// was no found object.
+  get-hits: func(handle: handle) -> result<u64, error>
 }
 
 interface reactor {
