@@ -340,6 +340,16 @@ typedef struct {
   fastly_compute_at_edge_secret_store_secret_handle_t val;
 } fastly_world_option_fastly_compute_at_edge_secret_store_secret_handle_t;
 
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_backend_error_t;
+
+typedef fastly_compute_at_edge_http_types_tls_version_t fastly_compute_at_edge_backend_tls_version_t;
+
+typedef uint8_t fastly_compute_at_edge_backend_backend_health_t;
+
+#define FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNKNOWN 0
+#define FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_HEALTHY 1
+#define FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNHEALTHY 2
+
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_async_io_error_t;
 
 // A handle to an object supporting generic async operations.
@@ -464,6 +474,33 @@ bool fastly_compute_at_edge_async_io_select(fastly_world_list_fastly_compute_at_
 // definition for more details, including what I/O actions are associated with each handle
 // type.
 bool fastly_compute_at_edge_async_io_is_ready(fastly_compute_at_edge_async_io_handle_t handle, bool *ret, fastly_compute_at_edge_async_io_error_t *err);
+
+// Imported Functions from `fastly:compute-at-edge/backend`
+bool fastly_compute_at_edge_backend_exists(fastly_world_string_t *backend, bool *ret, fastly_compute_at_edge_backend_error_t *err);
+bool fastly_compute_at_edge_backend_is_healthy(fastly_world_string_t *backend, fastly_compute_at_edge_backend_backend_health_t *ret, fastly_compute_at_edge_backend_error_t *err);
+// Returns `true` if the backend is a "dynamic" backend.
+bool fastly_compute_at_edge_backend_is_dynamic(fastly_world_string_t *backend, bool *ret, fastly_compute_at_edge_backend_error_t *err);
+// Get the host of this backend.
+bool fastly_compute_at_edge_backend_get_host(fastly_world_string_t *backend, fastly_world_string_t *ret, fastly_compute_at_edge_backend_error_t *err);
+// Get the "override host" for this backend.
+// 
+// This is used to change the `Host` header sent to the backend. See the
+// Fastly documentation oh this topic here: https://docs.fastly.com/en/guides/specifying-an-override-host
+bool fastly_compute_at_edge_backend_get_override_host(fastly_world_string_t *backend, fastly_world_option_string_t *ret, fastly_compute_at_edge_backend_error_t *err);
+// Get the remote TCP port of the backend connection for the request.
+bool fastly_compute_at_edge_backend_get_port(fastly_world_string_t *backend, uint16_t *ret, fastly_compute_at_edge_backend_error_t *err);
+// Get the connection timeout of the backend.
+bool fastly_compute_at_edge_backend_get_connect_timeout_ms(fastly_world_string_t *backend, uint32_t *ret, fastly_compute_at_edge_backend_error_t *err);
+// Get the first byte timeout of the backend.
+bool fastly_compute_at_edge_backend_get_first_byte_timeout_ms(fastly_world_string_t *backend, uint32_t *ret, fastly_compute_at_edge_backend_error_t *err);
+// Get the between byte timeout of the backend.
+bool fastly_compute_at_edge_backend_get_between_bytes_timeout_ms(fastly_world_string_t *backend, uint32_t *ret, fastly_compute_at_edge_backend_error_t *err);
+// Returns `true` if the backend is configured to use SSL.
+bool fastly_compute_at_edge_backend_is_ssl(fastly_world_string_t *backend, bool *ret, fastly_compute_at_edge_backend_error_t *err);
+// Get the minimum SSL version this backend will use.
+bool fastly_compute_at_edge_backend_get_ssl_min_version(fastly_world_string_t *backend, fastly_compute_at_edge_backend_tls_version_t *ret, fastly_compute_at_edge_backend_error_t *err);
+// Get the maximum SSL version this backend will use.
+bool fastly_compute_at_edge_backend_get_ssl_max_version(fastly_world_string_t *backend, fastly_compute_at_edge_backend_tls_version_t *ret, fastly_compute_at_edge_backend_error_t *err);
 
 // Imported Functions from `fastly:compute-at-edge/cache`
 // Performs a non-request-collapsing cache lookup.
