@@ -145,6 +145,10 @@ int req_cache_override_v2_set(fastly_compute_at_edge_http_types_request_handle_t
                               int tag, uint32_t ttl, uint32_t stale_while_revalidate,
                               const char *surrogate_key, size_t surrogate_key_len);
 
+WASM_IMPORT("fastly_http_req", "auto_decompress_response_set")
+int req_auto_decompress_response_set(fastly_compute_at_edge_http_types_request_handle_t req_handle,
+                                     int tag);
+
 /**
  * `octets` must be a 16-byte array.
  * If, after a successful call, `nwritten` == 4, the value in `octets` is an IPv4 address.

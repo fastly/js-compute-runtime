@@ -381,6 +381,22 @@ Result<Void> HttpReq::redirect_to_grip_proxy(std::string_view backend) {
   return res;
 }
 
+Result<Void> HttpReq::auto_decompress_gzip() {
+  Result<Void> res;
+
+  fastly_compute_at_edge_types_error_t err;
+  fastly_compute_at_edge_http_types_content_encodings_t encodings_to_decompress = 0;
+  encodings_to_decompress |= FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_CONTENT_ENCODINGS_GZIP;
+  if (!fastly_compute_at_edge_http_req_auto_decompress_response_set(
+          this->handle, encodings_to_decompress, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
 Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::string_view target,
                                                const BackendConfig &config) {
   Result<Void> res;

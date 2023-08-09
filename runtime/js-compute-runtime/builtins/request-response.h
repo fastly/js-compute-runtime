@@ -130,6 +130,7 @@ public:
     PendingRequest,
     ResponsePromise,
     IsDownstream,
+    AutoDecompressGzip,
     Count,
   };
 
@@ -139,6 +140,7 @@ public:
   static bool set_cache_override(JSContext *cx, JS::HandleObject self,
                                  JS::HandleValue cache_override_val);
   static bool apply_cache_override(JSContext *cx, JS::HandleObject self);
+  static bool apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self);
 
   static host_api::HttpReq request_handle(JSObject *obj);
   static host_api::HttpPendingReq pending_handle(JSObject *obj);

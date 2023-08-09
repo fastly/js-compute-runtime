@@ -1,0 +1,23 @@
+# This file describes a Fastly Compute@Edge package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
+authors = ["me@jakechampion.name"]
+description = ""
+language = "other"
+manifest_version = 2
+name = "request-auto-decompress"
+service_id = ""
+
+[scripts]
+  build = "node ../../../../js-compute-runtime-cli.js"
+
+[local_server]
+  [local_server.backends]
+    [local_server.backends.httpbin]
+      url = "https://httpbin.org/"
+
+[setup]
+  [setup.backends]
+    [setup.backends.httpbin]
+      address = "httpbin.org"
+      port = 443
