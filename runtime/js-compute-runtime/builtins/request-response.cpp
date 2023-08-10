@@ -1143,6 +1143,25 @@ bool Request::set_cache_override(JSContext *cx, JS::HandleObject self,
   return true;
 }
 
+bool Request::apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self) {
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(is_instance(self));
+  auto decompress =
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Request::Slots::AutoDecompressGzip))
+          .toBoolean();
+  if (!decompress) {
+    return true;
+  }
+
+  auto res = Request::request_handle(self).auto_decompress_gzip();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  return true;
+}
+
 /**
  * Apply the CacheOverride to a host-side request handle.
  */
@@ -1632,13 +1651,15 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   JS::RootedValue body_val(cx);
   JS::RootedValue backend_val(cx);
   JS::RootedValue cache_override(cx);
+  JS::RootedValue fastly_val(cx);
   if (init_val.isObject()) {
     JS::RootedObject init(cx, init_val.toObjectOrNull());
     if (!JS_GetProperty(cx, init, "method", &method_val) ||
         !JS_GetProperty(cx, init, "headers", &headers_val) ||
         !JS_GetProperty(cx, init, "body", &body_val) ||
         !JS_GetProperty(cx, init, "backend", &backend_val) ||
-        !JS_GetProperty(cx, init, "cacheOverride", &cache_override)) {
+        !JS_GetProperty(cx, init, "cacheOverride", &cache_override) ||
+        !JS_GetProperty(cx, init, "fastly", &fastly_val)) {
       return nullptr;
     }
   } else if (!init_val.isNullOrUndefined()) {
@@ -1929,6 +1950,24 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     JS::SetReservedSlot(
         request, static_cast<uint32_t>(Slots::CacheOverride),
         JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::CacheOverride)));
+  }
+
+  if (fastly_val.isObject()) {
+    JS::RootedValue decompress_response_val(cx);
+    JS::RootedObject fastly(cx, fastly_val.toObjectOrNull());
+    if (!JS_GetProperty(cx, fastly, "decompressGzip", &decompress_response_val)) {
+      return nullptr;
+    }
+    auto value = JS::ToBoolean(decompress_response_val);
+    JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::AutoDecompressGzip),
+                        JS::BooleanValue(value));
+  } else if (input_request) {
+    JS::SetReservedSlot(
+        request, static_cast<uint32_t>(Slots::AutoDecompressGzip),
+        JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::AutoDecompressGzip)));
+  } else {
+    JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::AutoDecompressGzip),
+                        JS::BooleanValue(false));
   }
 
   return request;

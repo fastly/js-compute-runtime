@@ -680,6 +680,10 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
 
+  if (!builtins::Request::apply_auto_decompress_gzip(cx, request)) {
+    return false;
+  }
+
   bool streaming = false;
   if (!builtins::RequestOrResponse::maybe_stream_body(cx, request, &streaming)) {
     return false;

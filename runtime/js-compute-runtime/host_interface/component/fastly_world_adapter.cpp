@@ -191,6 +191,13 @@ bool fastly_compute_at_edge_http_req_cache_override_set(
       err);
 }
 
+bool fastly_compute_at_edge_http_req_auto_decompress_response_set(
+    fastly_compute_at_edge_http_types_request_handle_t h,
+    fastly_compute_at_edge_http_types_content_encodings_t encodings,
+    fastly_compute_at_edge_types_error_t *err) {
+  return convert_result(fastly::req_auto_decompress_response_set(h, encodings), err);
+}
+
 bool fastly_compute_at_edge_http_req_downstream_client_ip_addr(
     fastly_world_list_u8_t *ret, fastly_compute_at_edge_types_error_t *err) {
   ret->ptr = static_cast<uint8_t *>(cabi_malloc(16, 1));
