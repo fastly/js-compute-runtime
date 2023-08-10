@@ -697,6 +697,16 @@ public:
   static Result<std::optional<HostString>> purge_surrogate_key(std::string_view key);
 };
 
+class Backend final {
+  std::string_view name;
+
+  Backend() = default;
+  explicit Backend(std::string_view name) : name{name} {}
+
+public:
+  static Result<bool> exists(std::string_view name);
+  static Result<bool> isHealthy(std::string_view name);
+};
 } // namespace host_api
 
 #endif

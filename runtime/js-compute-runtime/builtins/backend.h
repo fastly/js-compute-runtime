@@ -47,7 +47,16 @@ public:
   static bool set_host_override(JSContext *cx, JSObject *backend, JS::HandleValue hostOverride_val);
   static bool set_sni_hostname(JSContext *cx, JSObject *backend, JS::HandleValue sniHostname_val);
   static bool set_name(JSContext *cx, JSObject *backend, JS::HandleValue name_val);
+
+  // static methods
+  static bool exists(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool fromName(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool isHealthy(JSContext *cx, unsigned argc, JS::Value *vp);
+
+  // prototype methods
+  static bool toName(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool toString(JSContext *cx, unsigned argc, JS::Value *vp);
+
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static bool init_class(JSContext *cx, JS::HandleObject global);

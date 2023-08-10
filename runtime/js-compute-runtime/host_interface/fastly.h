@@ -37,6 +37,12 @@ namespace fastly {
 #define BACKEND_CONFIG_DONT_POOL (1u << 12)
 #define BACKEND_CONFIG_CLIENT_CERT (1u << 13)
 
+typedef enum BACKEND_HEALTH {
+  UNKNOWN = 0,
+  HEALTHY = 1,
+  UNHEALTHY = 2,
+} BACKEND_HEALTH;
+
 typedef enum TLS {
   VERSION_1 = 0,
   VERSION_1_1 = 1,
@@ -445,6 +451,14 @@ WASM_IMPORT("fastly_cache", "get_body")
 int cache_get_body(fastly_compute_at_edge_cache_handle_t handle, uint32_t options_mask,
                    fastly_compute_at_edge_cache_get_body_options_t *options,
                    fastly_compute_at_edge_http_types_body_handle_t *ret);
+
+// Returns 1 if a backend with this name exists.
+WASM_IMPORT("fastly_backend", "exists")
+int backend_exists(const char *name, size_t name_len, uint32_t *exists_out);
+
+// Returns 1 if a backend is healthy.
+WASM_IMPORT("fastly_backend", "is_healthy")
+int backend_is_healthy(const char *name, size_t name_len, uint32_t *is_healthy_out);
 
 } // namespace fastly
 #ifdef __cplusplus

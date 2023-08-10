@@ -1487,4 +1487,34 @@ const std::optional<std::string> FastlySendError::message() const {
   return "NetworkError when attempting to fetch resource.";
 }
 
+Result<bool> Backend::exists(std::string_view name) {
+  Result<bool> res;
+
+  auto name_str = string_view_to_world_string(name);
+  bool ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_backend_exists(&name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<bool> Backend::isHealthy(std::string_view name) {
+  Result<bool> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_compute_at_edge_backend_backend_health_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_backend_is_healthy(&name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret == FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_HEALTHY);
+  }
+
+  return res;
+}
+
 } // namespace host_api

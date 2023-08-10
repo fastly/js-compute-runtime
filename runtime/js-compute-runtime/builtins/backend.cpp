@@ -806,41 +806,153 @@ JSString *Backend::name(JSContext *cx, JSObject *self) {
 }
 
 bool Backend::toString(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(0)
+  METHOD_HEADER(0);
   JS::RootedString name(cx, JS::GetReservedSlot(self, Backend::Slots::Name).toString());
   args.rval().setString(name);
   return true;
 }
 
-const JSFunctionSpec Backend::static_methods[] = {
-    JS_FS_END,
-};
-
-const JSPropertySpec Backend::static_properties[] = {
-    JS_PS_END,
-};
-
-const JSFunctionSpec Backend::methods[] = {JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
-                                           JS_FS_END};
-
-const JSPropertySpec Backend::properties[] = {JS_PS_END};
-
-bool Backend::set_name(JSContext *cx, JSObject *backend, JS::HandleValue name_val) {
+namespace {
+JSString *parse_and_validate_name(JSContext *cx, JS::HandleValue name_val) {
   if (name_val.isNullOrUndefined()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_NAME_NOT_SET);
-    return false;
+    return nullptr;
   }
   JS::RootedString name(cx, JS::ToString(cx, name_val));
   if (!name) {
-    return false;
+    return nullptr;
   }
   auto length = JS::GetStringLength(name);
   if (length > 254) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_NAME_TOO_LONG);
-    return false;
+    return nullptr;
   }
   if (length == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_NAME_EMPTY);
+    return nullptr;
+  }
+  return name;
+}
+} // namespace
+
+bool Backend::exists(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  JS::RootedObject self(cx, &args.thisv().toObject());
+  if (!args.requireAtLeast(cx, "Backend.exists", 1)) {
+    return false;
+  }
+
+  JS::RootedString name(cx, parse_and_validate_name(cx, args.get(0)));
+  if (!name) {
+    return false;
+  }
+  auto nameChars = core::encode(cx, name);
+  std::string_view name_view = nameChars;
+  auto res = host_api::Backend::exists(name_view);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto exists = res.unwrap();
+  args.rval().setBoolean(exists);
+  return true;
+}
+
+bool Backend::fromName(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  JS::RootedObject self(cx, &args.thisv().toObject());
+  if (!args.requireAtLeast(cx, "Backend.fromName", 1)) {
+    return false;
+  }
+
+  JS::RootedString name(cx, parse_and_validate_name(cx, args.get(0)));
+  if (!name) {
+    return false;
+  }
+  auto nameChars = core::encode(cx, name);
+  std::string_view name_view = nameChars;
+  auto res = host_api::Backend::exists(name_view);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto exists = res.unwrap();
+
+  if (!exists) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_BACKEND_FROMNAME_BACKEND_DOES_NOT_EXIST, nameChars.begin());
+    return false;
+  }
+
+  auto backendInstance = JS_NewObjectWithGivenProto(cx, &Backend::class_, Backend::proto_obj);
+  if (!backendInstance) {
+    return false;
+  }
+  JS::RootedValue backendVal(cx, JS::ObjectValue(*backendInstance));
+  JS::RootedObject backend(cx, backendInstance);
+  if (!backend) {
+    return false;
+  }
+
+  JS::RootedValue nameVal(cx, JS::StringValue(name));
+  if (!Backend::set_name(cx, backend, nameVal)) {
+    return false;
+  }
+
+  args.rval().setObject(*backend);
+  return true;
+}
+
+bool Backend::isHealthy(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  JS::RootedObject self(cx, &args.thisv().toObject());
+  if (!args.requireAtLeast(cx, "Backend.isHealthy", 1)) {
+    return false;
+  }
+
+  JS::RootedString name(cx, parse_and_validate_name(cx, args.get(0)));
+  if (!name) {
+    return false;
+  }
+  auto nameChars = core::encode(cx, name);
+  std::string_view name_view = nameChars;
+  auto res = host_api::Backend::exists(name_view);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto exists = res.unwrap();
+
+  if (!exists) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_BACKEND_IS_HEALTHY_BACKEND_DOES_NOT_EXIST, nameChars.begin());
+    return false;
+  }
+
+  res = host_api::Backend::isHealthy(name_view);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto healthy = res.unwrap();
+
+  args.rval().setBoolean(healthy);
+  return true;
+}
+
+const JSFunctionSpec Backend::static_methods[] = {
+    JS_FN("exists", exists, 1, JSPROP_ENUMERATE), JS_FN("fromName", fromName, 1, JSPROP_ENUMERATE),
+    JS_FN("isHealthy", isHealthy, 1, JSPROP_ENUMERATE), JS_FS_END};
+const JSPropertySpec Backend::static_properties[] = {JS_PS_END};
+const JSFunctionSpec Backend::methods[] = {JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
+                                           JS_FN("toName", toString, 0, JSPROP_ENUMERATE),
+                                           JS_FS_END};
+const JSPropertySpec Backend::properties[] = {JS_PS_END};
+
+bool Backend::set_name(JSContext *cx, JSObject *backend, JS::HandleValue name_val) {
+  MOZ_ASSERT(is_instance(backend));
+  auto name = parse_and_validate_name(cx, name_val);
+  if (!name) {
     return false;
   }
 
@@ -850,6 +962,7 @@ bool Backend::set_name(JSContext *cx, JSObject *backend, JS::HandleValue name_va
 
 bool Backend::set_host_override(JSContext *cx, JSObject *backend,
                                 JS::HandleValue hostOverride_val) {
+  MOZ_ASSERT(is_instance(backend));
   auto hostOverride = JS::ToString(cx, hostOverride_val);
   if (!hostOverride) {
     return false;
@@ -1279,13 +1392,6 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS::SetReservedSlot(
         backend, Backend::Slots::Ciphers,
         JS::StringValue(JS_NewStringCopyN(cx, ciphers_chars.begin(), ciphers_chars.len)));
-    auto ciphersSlot = JS::GetReservedSlot(backend, Backend::Slots::Ciphers);
-    if (!ciphersSlot.isNullOrUndefined()) {
-      JS::RootedString ciphers(cx, ciphersSlot.toString());
-
-      // TODO: what should this be used for?
-      auto ciphersChars = core::encode(cx, ciphers);
-    }
   }
 
   JS::RootedValue sniHostname_val(cx);
