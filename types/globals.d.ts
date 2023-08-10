@@ -1033,6 +1033,9 @@ declare interface RequestInit {
   backend?: string;
   cacheOverride?: import('fastly:cache-override').CacheOverride;
   cacheKey?: string;
+  fastly?: {
+    decompressGzip?: boolean
+  }
 }
 
 /**
