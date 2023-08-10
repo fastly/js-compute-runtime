@@ -1,17 +1,15 @@
 # Changelog
 
 
-## [3.2.0](https://github.com/fastly/js-compute-runtime/compare/v3.1.1...v3.2.0) (2023-08-10)
+## 3.2.0 (2023-08-10)
 
-
-### Features
+### Added
 
 * add ability to automatically decompress gzip responses returned from `fetch` ([#497](https://github.com/fastly/js-compute-runtime/issues/497)) ([e08d060](https://github.com/fastly/js-compute-runtime/commit/e08d060535160b8c934f60f37d8f4a71f412f0c4))
+
+### Changed
+
 * use spidermonkey version 115 ([4a4716d](https://github.com/fastly/js-compute-runtime/commit/4a4716d99fa1e263eae9cf5d7fcc96999519c7fe))
-
-
-### Bug Fixes
-
 * reduce memory usage by caching client getters when they are first called ([87ee0cb](https://github.com/fastly/js-compute-runtime/commit/87ee0cb54edab82c0b2f6b986458d2552a8dbcba))
 * update to latest url crate which passes some more wpt url tests ([f0a42fd](https://github.com/fastly/js-compute-runtime/commit/f0a42fd07821190e1ebf66c95762cb8e26b69e8b))
 
