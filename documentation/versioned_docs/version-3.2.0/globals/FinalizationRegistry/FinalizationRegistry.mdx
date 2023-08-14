@@ -1,0 +1,29 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# FinalizationRegistry()
+
+The **`FinalizationRegistry`** constructor creates a `FinalizationRegistry` object that uses the given callback.
+
+## Syntax
+
+```js
+// Arrow callback function
+new FinalizationRegistry((heldValue) => { /* … */ })
+
+// Callback function
+new FinalizationRegistry(callbackFn)
+
+// Inline callback function
+new FinalizationRegistry(function(heldValue) { /* … */ })
+```
+
+> **Note:** `FinalizationRegistry()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
+
+### Parameters
+
+- `callback`
+  - : The callback function this registry should use.
