@@ -870,8 +870,7 @@ bool Backend::fromName(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   auto nameChars = core::encode(cx, name);
-  std::string_view name_view = nameChars;
-  auto res = host_api::Backend::exists(name_view);
+  auto res = host_api::Backend::exists(nameChars);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
