@@ -934,9 +934,8 @@ bool Backend::isHealthy(JSContext *cx, unsigned argc, JS::Value *vp) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
-  auto healthy = res.unwrap();
 
-  args.rval().setBoolean(healthy);
+  args.rval().setBoolean(res.unwrap());
   return true;
 }
 
