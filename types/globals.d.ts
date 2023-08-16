@@ -263,6 +263,11 @@ declare interface ClientInfo {
    */
   readonly address: string;
   readonly geo: import('fastly:geolocation').Geolocation;
+  readonly tlsJA3MD5: string;
+  readonly tlsCipherOpensslName: string;
+  readonly tlsProtocol: string;
+  readonly tlsClientCertificate: ArrayBuffer;
+  readonly tlsClientHello: ArrayBuffer;
 }
 
 /**

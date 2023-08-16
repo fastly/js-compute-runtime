@@ -208,9 +208,19 @@ import { expectError, expectType } from 'tsd';
   const client = {} as ClientInfo
   expectType<string>(client.address)
   expectType<Geolocation>(client.geo)
+  expectType<string>(client.tlsJA3MD5)
+  expectType<string>(client.tlsCipherOpensslName)
+  expectType<string>(client.tlsProtocol)
+  expectType<ArrayBuffer>(client.tlsClientCertificate)
+  expectType<ArrayBuffer>(client.tlsClientHello)
   // They are readonly properties
   expectError(client.address = '')
   expectError(client.geo = {} as Geolocation)
+  expectError(client.tlsJA3MD5 = '')
+  expectError(client.tlsCipherOpensslName = '')
+  expectError(client.tlsProtocol = '')
+  expectError(client.tlsClientCertificate = '')
+  expectError(client.tlsClientHello = '')
 }
 
 // ConfigStore
