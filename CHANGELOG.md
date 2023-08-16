@@ -1,10 +1,10 @@
 # Changelog
 
 
-## [3.2.1](https://github.com/fastly/js-compute-runtime/compare/v3.2.0...v3.2.1) (2023-08-16)
+## 3.2.1 (2023-08-16)
 
 
-### Bug Fixes
+### Fixed
 
 * Add documentation and type definitions for the new event.client.* fields ([#625](https://github.com/fastly/js-compute-runtime/issues/625)) ([a6f557b](https://github.com/fastly/js-compute-runtime/commit/a6f557ba1b03035869e4c4fb3d9679fb3e28fd1f))
 
