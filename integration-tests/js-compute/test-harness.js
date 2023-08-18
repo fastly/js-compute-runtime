@@ -14,8 +14,8 @@ export let FASTLY_SERVICE_VERSION;
  */
 async function app(event) {
     let res = new Response('Internal Server Error', { status: 500 });
+    const path = (new URL(event.request.url)).pathname
     try {
-        const path = (new URL(event.request.url)).pathname
         console.log(`path: ${path}`)
         FASTLY_SERVICE_VERSION = env('FASTLY_SERVICE_VERSION') || 'local'
         console.log(`FASTLY_SERVICE_VERSION: ${FASTLY_SERVICE_VERSION}`)
@@ -26,7 +26,7 @@ async function app(event) {
             res = fail(`${path} endpoint does not exist`)
         }
     } catch (error) {
-        res = fail(`The routeHandler threw an error: ${error.message || error}` + '\n' + error.stack)
+        res = fail(`The routeHandler threw an error on path ${path}: ${error.message || error}` + '\n' + error.stack)
     } finally {
         res.headers.set('fastly_service_version', FASTLY_SERVICE_VERSION);
     }
