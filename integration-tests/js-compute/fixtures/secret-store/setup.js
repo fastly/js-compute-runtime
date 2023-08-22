@@ -24,7 +24,7 @@ let stores = await (async function() {
         return {data:[]}
     }
 }())
-
+console.log({stores})
 const STORE_ID = stores.data.find(({ name }) => name === 'example-test-secret-store')?.id
 if (!STORE_ID) {
     process.env.STORE_ID = JSON.parse(await zx`fastly secret-store create --quiet --name=example-test-secret-store --json --token $FASTLY_API_TOKEN`).id
