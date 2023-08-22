@@ -15,7 +15,7 @@ service_id = ""
   [local_server.config_stores]
     [local_server.config_stores."aZ1 __ 2"]
       format = "inline-toml"
-    [local_server.dictionaries."aZ1 __ 2".contents]
+    [local_server.config_stores."aZ1 __ 2".contents]
       "twitter" = "https://twitter.com/fastly"
 
 [setup]
