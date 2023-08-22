@@ -96,7 +96,7 @@ for (const fixture of testFixtures) {
             core.endGroup()
             core.startGroup('Build and deploy service')
             await zx`npm i`
-            await $`fastly compute publish -i --quiet --token $FASTLY_API_TOKEN`
+            await $`fastly compute publish -i --quiet --token $FASTLY_API_TOKEN --status-check-off`
             core.endGroup()
 
             // get the public domain of the deployed application
