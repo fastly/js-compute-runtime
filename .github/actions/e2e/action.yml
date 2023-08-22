@@ -8,6 +8,9 @@ inputs:
   fastly-api-token:
     description: 'The Fastly API token to use for interacting with Fastly API'
     required: true
+  fastly-cli-version:
+    description: 'The version of the Fastli CLI app to use during testing'
+    required: true
   github-token:
     description: 'The GitHub token to use for downloading the Fastly CLI'
     required: true
@@ -22,7 +25,7 @@ runs:
       uses: fastly/compute-actions/setup@v4
       with:
         token: ${{ inputs.github-token }}
-        cli_version: '7.0.1'
+        cli_version: ${{ inputs.fastly-cli-version }}
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
