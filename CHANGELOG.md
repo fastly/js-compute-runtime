@@ -1,10 +1,10 @@
 # Changelog
 
 
-## [3.3.0](https://github.com/fastly/js-compute-runtime/compare/v3.2.1...v3.3.0) (2023-08-22)
+## 3.3.0 (2023-08-22)
 
 
-### Features
+### Added
 
 * Add option to enable PBL. ([#628](https://github.com/fastly/js-compute-runtime/issues/628)) ([6ecda6e](https://github.com/fastly/js-compute-runtime/commit/6ecda6e89971f178f623e242d8dd6a8fd25ab63f))
 
