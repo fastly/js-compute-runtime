@@ -6,6 +6,7 @@ import { printHelp } from "./src/printHelp.js";
 import { addSdkMetadataField } from "./src/addSdkMetadataField.js";
 
 const {
+  enablePBL,
   enableExperimentalHighResolutionTimeMethods,
   wasmEngine,
   input,
@@ -28,7 +29,7 @@ if (version) {
   // it could be that the user is using an older version of js-compute-runtime
   // and a newer version does not support the platform they are using.
   const {compileApplicationToWasm} = await import('./src/compileApplicationToWasm.js')
-  await compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods);
+  await compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods, enablePBL);
   if (component) {
     const {compileComponent} = await import('./src/component.js');
     await compileComponent(output, adapter);
