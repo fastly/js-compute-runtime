@@ -8,7 +8,7 @@ import { precompile } from "./precompile.js";
 import { bundle } from "./bundle.js";
 import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
 
-export async function compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods = false) {
+export async function compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods = false, enablePBL = false) {
   try {
     if (!(await isFile(input))) {
       console.error(
@@ -99,7 +99,8 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
         shell: true,
         encoding: "utf-8",
         env: {
-          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS: enableExperimentalHighResolutionTimeMethods ? '1' : '0'
+          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS: enableExperimentalHighResolutionTimeMethods ? '1' : '0',
+          ENABLE_PBL: enablePBL ? '1' : '0',
         }
       }
     );
