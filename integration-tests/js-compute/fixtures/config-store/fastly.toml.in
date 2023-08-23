@@ -12,15 +12,15 @@ service_id = ""
   build = "node ../../../../js-compute-runtime-cli.js"
 
 [local_server]
-  [local_server.dictionaries]
-    [local_server.dictionaries.testconfig]
+  [local_server.config_stores]
+    [local_server.config_stores.testconfig]
       format = "inline-toml"
-    [local_server.dictionaries.testconfig.contents]
+    [local_server.config_stores.testconfig.contents]
       "twitter" = "https://twitter.com/fastly"
 
 [setup]
-  [setup.dictionaries]
-    [setup.dictionaries.testconfig]
-      [setup.dictionaries.testconfig.items]
-        [setup.dictionaries.testconfig.items.twitter]
+  [setup.config_stores]
+    [setup.config_stores.testconfig]
+      [setup.config_stores.testconfig.items]
+        [setup.config_stores.testconfig.items.twitter]
         value = "https://twitter.com/fastly"

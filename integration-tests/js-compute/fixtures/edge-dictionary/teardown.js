@@ -18,7 +18,7 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
 zx.verbose = true;
 let stores = await (async function() {
     try {
-        return JSON.parse(await zx`fastly secret-store list --quiet --json --token $FASTLY_API_TOKEN`)
+        return JSON.parse(await zx`fastly config-store list --quiet --json --token $FASTLY_API_TOKEN`)
     } catch {
         return []
     }
@@ -31,7 +31,7 @@ let links = await (async function() {
     }
 }())
 
-const STORE_ID = stores.find(({ name }) => name === 'example-test-secret-store')?.id
+const STORE_ID = stores.find(({ name }) => name === 'aZ1 __ 2')?.id
 if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;
     let LINK_ID = links.find(({resource_id}) => resource_id == STORE_ID)?.id;
@@ -43,7 +43,7 @@ if (STORE_ID) {
         } catch {}
     }
     try {
-        await zx`fastly secret-store delete --store-id=$STORE_ID  --token $FASTLY_API_TOKEN`
+        await zx`fastly config-store delete --store-id=$STORE_ID  --token $FASTLY_API_TOKEN`
     } catch {}
 }
 

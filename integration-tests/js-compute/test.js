@@ -15,6 +15,12 @@ import TOML from '@iarna/toml'
 const startTime = Date.now();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+async function sleep(seconds) {
+    return new Promise(resolve => {
+        setTimeout(resolve, 1_000 * seconds)
+    })
+}
+
 let testFixtures = argv.slice(2);
 const existingFixtures = await fixturesWithComputeTests();
 if (testFixtures.length === 0) {
@@ -96,7 +102,7 @@ for (const fixture of testFixtures) {
             core.endGroup()
             core.startGroup('Build and deploy service')
             await zx`npm i`
-            await $`fastly compute publish -i --quiet --token $FASTLY_API_TOKEN`
+            await $`fastly compute publish -i --quiet --token $FASTLY_API_TOKEN --status-check-off`
             core.endGroup()
 
             // get the public domain of the deployed application
@@ -107,6 +113,7 @@ for (const fixture of testFixtures) {
             if (existsSync(setupPath)) {
                 core.startGroup('Extra set-up steps for the service')
                 await $`${setupPath}`
+                await sleep(60)
                 core.endGroup()
             }
 

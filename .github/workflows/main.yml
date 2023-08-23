@@ -12,6 +12,7 @@ defaults:
 env:
   viceroy_version: 0.5.1
   wasm-tools_version: 1.0.28
+  fastly-cli_version: 10.3.0
 
 jobs:
 
@@ -269,7 +270,7 @@ jobs:
       uses: fastly/compute-actions/setup@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        cli_version: '7.0.1'
+        cli_version: ${{ env.fastly-cli_version }}
 
     - name: Restore Viceroy from cache
       uses: actions/cache@v3
@@ -413,5 +414,6 @@ jobs:
     - uses: ./.github/actions/e2e
       with:
         fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
+        fastly-cli-version: ${{ env.fastly-cli_version }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
         fixture: ${{ matrix.fixture }}
