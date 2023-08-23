@@ -21,11 +21,11 @@ let stores = await (async function() {
     try {
         return JSON.parse(await zx`fastly config-store list --quiet --json --token $FASTLY_API_TOKEN`)
     } catch {
-        return {data:[]}
+        return []
     }
 }())
 
-const STORE_ID = stores.data?.find(({ name }) => name === 'aZ1 __ 2')?.id
+const STORE_ID = stores.find(({ name }) => name === 'aZ1 __ 2')?.id
 if (!STORE_ID) {
     process.env.STORE_ID = JSON.parse(await zx`fastly config-store create --quiet --name='aZ1 __ 2' --json --token $FASTLY_API_TOKEN`).id
 } else {
