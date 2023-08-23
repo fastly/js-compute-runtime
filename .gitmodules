@@ -1,8 +1,0 @@
-[submodule "runtime/spidermonkey"]
-	path = runtime/spidermonkey
-	url = https://github.com/fastly/spidermonkey-wasi-embedding.git
-	shallow = true
-[submodule "tests/wpt-harness/wpt"]
-	path = tests/wpt-harness/wpt
-	url = https://github.com/web-platform-tests/wpt.git
-	shallow = true
