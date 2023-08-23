@@ -9,7 +9,7 @@ name = "kv-store"
 service_id = ""
 
 [scripts]
-  build = "node ../../../../js-compute-runtime-cli.js"
+  build = "node ../../../../js-compute-runtime-cli.js --enable-pbl"
 
 [local_server]
   # TODO: update this to the kv api when it is ready

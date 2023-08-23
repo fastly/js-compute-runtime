@@ -9,7 +9,7 @@ name = "byte-repeater"
 service_id = ""
 
 [scripts]
-  build = "node ../../../../js-compute-runtime-cli.js"
+  build = "node ../../../../js-compute-runtime-cli.js --enable-pbl"
 
 [local_server]
 
