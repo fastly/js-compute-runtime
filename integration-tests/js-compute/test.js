@@ -15,6 +15,12 @@ import TOML from '@iarna/toml'
 const startTime = Date.now();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+async function sleep(seconds) {
+    return new Promise(resolve => {
+        setTimeout(resolve, 1_000 * seconds)
+    })
+}
+
 let testFixtures = argv.slice(2);
 const existingFixtures = await fixturesWithComputeTests();
 if (testFixtures.length === 0) {
@@ -107,6 +113,7 @@ for (const fixture of testFixtures) {
             if (existsSync(setupPath)) {
                 core.startGroup('Extra set-up steps for the service')
                 await $`${setupPath}`
+                await sleep(60)
                 core.endGroup()
             }
 
