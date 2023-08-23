@@ -33,7 +33,7 @@ if (!STORE_ID) {
 }
 
 try {
-    await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry create --name twitter --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`
+    await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry create --key twitter --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`
 } catch {}
 
 await zx`fastly resource-link create --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`
