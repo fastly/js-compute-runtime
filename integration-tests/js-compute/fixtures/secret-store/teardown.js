@@ -20,7 +20,7 @@ let stores = await (async function() {
     try {
         return JSON.parse(await zx`fastly secret-store list --quiet --json --token $FASTLY_API_TOKEN`)
     } catch {
-        return {data:[]}
+        return []
     }
 }())
 let links = await (async function() {
@@ -31,7 +31,7 @@ let links = await (async function() {
     }
 }())
 
-const STORE_ID = stores.data.find(({ name }) => name === 'example-test-secret-store')?.id
+const STORE_ID = stores.find(({ name }) => name === 'example-test-secret-store')?.id
 if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;
     let LINK_ID = links.find(({resource_id}) => resource_id == STORE_ID)?.id;
