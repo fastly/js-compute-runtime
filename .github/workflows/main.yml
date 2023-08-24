@@ -69,9 +69,7 @@ jobs:
           runtime/spidermonkey/${{ matrix.profile }}
         key: cache-${{ hashFiles(
             'runtime/spidermonkey/build-engine.sh',
-            'runtime/spidermonkey/gecko-revision',
-            'runtime/spidermonkey/object-files.list',
-            'runtime/rust-toolchain.toml'
+            'runtime/spidermonkey/object-files.list'
           ) }}-${{ matrix.profile }}
       if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
