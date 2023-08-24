@@ -3,10 +3,10 @@
 
 
 # The path to the directory containing this Makefile, the
-# //runtime/js-compute-runtime directory.
+# /runtime/js-compute-runtime directory.
 FSM_SRC := $(shell dirname "$(realpath $(firstword $(MAKEFILE_LIST)))")
 
-# The path to the //runtime directory.
+# The path to the /runtime directory.
 ROOT_SRC := $(shell dirname "$(FSM_SRC)")
 
 # The name of the project
@@ -79,17 +79,35 @@ endif
 # The base build directory, where all our build artifacts go.
 BUILD := $(FSM_SRC)/build
 
-# The output directory for the current build mode (relase/debug).
+# The output directory for the current build mode (release/debug).
 OBJ_DIR := $(BUILD)/$(MODE)
 
-# The path to the //runtime/spidermonkey/$(MODE) directory.
-SM_SRC := $(ROOT_SRC)/spidermonkey/$(MODE)
+MOZ_OBJDIR = $(BUILD)/obj-gecko-dev-$(MODE)
+MOZ_OUTDIR = $(BUILD)/gecko-dev-$(MODE)
 
 # The objects we link in from spidermonkey
-SM_OBJ := $(wildcard $(SM_SRC)/lib/*.o)
-SM_OBJ += $(wildcard $(SM_SRC)/lib/*.a)
+GECKO_OBJ := "$(MOZ_OUTDIR)/lib/Unified_cpp_memory_build0.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/Unified_cpp_memory_mozalloc0.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/AutoProfilerLabel.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/ConditionVariable_noop.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/MmapFaultHandler.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/Mutex_noop.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/Printf.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/StackWalk.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/TimeStamp.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/TimeStamp_posix.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/Uptime.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/Decimal.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/lz4.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/lz4frame.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/lz4hc.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/xxhash.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/Unified_cpp_mfbt0.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/Unified_cpp_mfbt1.o"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/libjs_static.a"
+GECKO_OBJ += "$(MOZ_OUTDIR)/lib/libjsrust.a"
 
-# This is required when using spidermonkey headers, as it allows us to enable
+# This is required when using gecko-dev headers, as it allows us to enable
 # the streams library when setting up the js context.
 DEFINES := -DMOZ_JS_STREAMS
 
@@ -107,7 +125,7 @@ CFLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
 
 # Includes for compiling c++
 INCLUDES := -I$(FSM_SRC)
-INCLUDES += -I$(SM_SRC)/include
+INCLUDES += -I$(MOZ_OUTDIR)/include
 INCLUDES += -I$(BUILD)/openssl/include
 
 # Linker flags.
@@ -116,6 +134,13 @@ LD_FLAGS += -lwasi-emulated-signal
 LD_FLAGS += -lwasi-emulated-process-clocks
 LD_FLAGS += -lwasi-emulated-getpid
 LD_FLAGS += -L$(BUILD)/openssl/libx32 -lcrypto
+
+# JS Compute Runtime cpp files
+FSM_CPP := $(wildcard $(FSM_SRC)/*.cpp)
+FSM_CPP += $(wildcard $(FSM_SRC)/builtins/*.cpp)
+FSM_CPP += $(wildcard $(FSM_SRC)/builtins/shared/*.cpp)
+FSM_CPP += $(wildcard $(FSM_SRC)/core/*.cpp)
+FSM_CPP += $(wildcard $(FSM_SRC)/host_interface/*.cpp)
 
 
 # Default targets ##############################################################
@@ -131,6 +156,10 @@ clean:
 	$(call cmd,rm,$(FSM_SRC)/js-compute-runtime-component.wasm)
 	$(call cmd,rmdir,$(BUILD)/release)
 	$(call cmd,rmdir,$(BUILD)/debug)
+	$(call cmd,rmdir,$(BUILD)/gecko-dev-release)
+	$(call cmd,rmdir,$(BUILD)/gecko-dev-debug)
+	$(call cmd,rmdir,$(BUILD)/obj-gecko-dev-release)
+	$(call cmd,rmdir,$(BUILD)/obj-gecko-dev-debug)
 
 # Remove all build artifacts.
 .PHONY: distclean
@@ -148,7 +177,7 @@ format: $(FSM_CPP)
 $(BUILD):
 	$(call cmd,mkdir,$@)
 
-$(OBJ_DIR):
+$(OBJ_DIR): $(BUILD)
 	$(call cmd,mkdir,$@)
 
 $(OBJ_DIR)/impl:
@@ -167,6 +196,9 @@ $(OBJ_DIR)/host_interface:
 	$(call cmd,mkdir,$@)
 
 $(OBJ_DIR)/host_interface/component:
+	$(call cmd,mkdir,$@)
+
+$(BUILD)/gecko-dev-$(MODE):
 	$(call cmd,mkdir,$@)
 
 shared:
@@ -220,6 +252,71 @@ $(BUILD)/openssl/token: $(BUILD)/openssl-$(OPENSSL_VERSION)/token
 		$(MAKE) install_sw
 	$Q touch $@
 
+# gecko-dev build ##############################################################
+
+$(FSM_SRC)/mozconfig-$(MODE):
+	echo "ac_add_options --enable-project=js" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --enable-application=js" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --target=wasm32-unknown-wasi" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --without-system-zlib" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --without-intl-api" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --disable-jit" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --disable-shared-js" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --disable-shared-memory" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --disable-tests" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --disable-clang-plugin" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --enable-jitspew" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --enable-optimize=-O3" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --enable-js-streams" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --enable-portable-baseline-interp" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	echo "ac_add_options --prefix=$(MOZ_OBJDIR)/dist" >> "$(FSM_SRC)/mozconfig-$(MODE)"
+	if [ "$(MODE)" == "debug" ]; then \
+		echo "ac_add_options --enable-debug" >> "$(FSM_SRC)/mozconfig-$(MODE)"; \
+	else \
+		echo "ac_add_options --disable-debug" >> "$(FSM_SRC)/mozconfig-$(MODE)"; \
+	fi
+	if [ "$(uname)" == "Linux" ]; then \
+		echo "ac_add_options --disable-stdcxx-compat" >> "$(FSM_SRC)/mozconfig-$(MODE)"; \
+	else \
+		echo "ac_add_options --host=aarch64-apple-darwin" >> "$(FSM_SRC)/mozconfig-$(MODE)"; \
+	fi
+
+gecko: $(FSM_SRC)/mozconfig-$(MODE)
+	export MOZCONFIG=$(FSM_SRC)/mozconfig-$(MODE) && \
+		MOZ_OBJDIR=$(MOZ_OBJDIR) \
+		AUTOCLOBBER=1 \
+		MOZ_FETCHES_DIR=~/.mozbuild \
+		CC=~/.mozbuild/clang/bin/clang \
+		CXX=~/.mozbuild/clang/bin/clang++ \
+		AR=~/.mozbuild/clang/bin/llvm-ar \
+		python3 "${FSM_SRC}/gecko-dev/mach" \
+		--no-interactive \
+		build
+	rm -rf "$(MOZ_OUTDIR)"
+	mkdir -p "$(MOZ_OUTDIR)/lib"
+	cp -Lr "$(MOZ_OBJDIR)/dist/include" "$(MOZ_OUTDIR)"
+	cp $(MOZ_OBJDIR)/memory/build/Unified_cpp_memory_build0.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/memory/mozalloc/Unified_cpp_memory_mozalloc0.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mozglue/misc/AutoProfilerLabel.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mozglue/misc/ConditionVariable_noop.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mozglue/misc/MmapFaultHandler.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mozglue/misc/Mutex_noop.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mozglue/misc/Printf.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mozglue/misc/StackWalk.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mozglue/misc/TimeStamp.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mozglue/misc/TimeStamp_posix.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mozglue/misc/Uptime.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mozglue/misc/Decimal.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mfbt/lz4.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mfbt/lz4frame.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mfbt/lz4hc.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mfbt/xxhash.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mfbt/Unified_cpp_mfbt0.o "$(MOZ_OUTDIR)/lib"
+	cp $(MOZ_OBJDIR)/mfbt/Unified_cpp_mfbt1.o "$(MOZ_OUTDIR)/lib"
+	cp "$(MOZ_OBJDIR)/js/src/build/libjs_static.a" "$(MOZ_OUTDIR)/lib"
+	cp "$(MOZ_OBJDIR)/wasm32-wasi/${MODE}/libjsrust.a" "$(MOZ_OUTDIR)/lib"
+
+$(GECKO_OBJ): gecko
 
 # rusturl build ################################################################
 
@@ -286,11 +383,6 @@ endif
 
 # Compute runtime shared build #################################################
 
-FSM_CPP := $(wildcard $(FSM_SRC)/*.cpp)
-FSM_CPP += $(wildcard $(FSM_SRC)/builtins/*.cpp)
-FSM_CPP += $(wildcard $(FSM_SRC)/builtins/shared/*.cpp)
-FSM_CPP += $(wildcard $(FSM_SRC)/core/*.cpp)
-FSM_CPP += $(wildcard $(FSM_SRC)/host_interface/*.cpp)
 FSM_OBJ := $(patsubst $(FSM_SRC)/%.cpp,$(OBJ_DIR)/%.o,$(FSM_CPP))
 
 # Build all the above object files
@@ -301,6 +393,10 @@ $(foreach source,$(FSM_CPP),$(eval $(call compile_cxx,$(source))))
 $(eval $(call compile_cxx,$(FSM_SRC)/host_interface/component/fastly_world_adapter.cpp))
 $(eval $(call compile_cxx,$(FSM_SRC)/impl/main.cpp))
 
+$(OBJ_DIR)/host_interface/component/fastly_world_adapter.o: $(GECKO_OBJ)
+$(OBJ_DIR)/impl/main.o: $(GECKO_OBJ)
+$(FSM_OBJ): $(GECKO_OBJ)
+
 # This version of the runtime uses the world adapter in place of the world
 # generated by wit-bindgen, adapting to the currently available host calls on
 # c@e.
@@ -308,7 +404,7 @@ $(eval $(call compile_cxx,$(FSM_SRC)/impl/main.cpp))
 # NOTE: we shadow wasm-opt by adding $(FSM_SRC)/scripts to the path, which
 # includes a script called wasm-opt that immediately exits successfully. See
 # that script for more information about why we do this.
-$(OBJ_DIR)/js-compute-runtime.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
+$(OBJ_DIR)/js-compute-runtime.wasm: $(FSM_OBJ) $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
 $(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/impl/main.o
 $(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/host_interface/component/fastly_world_adapter.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
@@ -321,13 +417,17 @@ $(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/host_interface/component/fastly_w
 $(eval $(call compile_c,$(FSM_SRC)/host_interface/component/fastly_world.c))
 $(eval $(call compile_cxx,$(FSM_SRC)/impl/main_component.cpp))
 
+$(OBJ_DIR)/impl/main_component.o: $(GECKO_OBJ)
+$(FSM_SRC)/host_interface/component/fastly_world_component_type.o: $(GECKO_OBJ)
+$(OBJ_DIR)/host_interface/component/fastly_world.o: $(GECKO_OBJ)
+
 # This version of the runtime uses the code generated by wit-bindgen, to
 # ultimately be run as a component on c@e.
 #
 # NOTE: we shadow wasm-opt by adding $(FSM_SRC)/scripts to the path, which
 # includes a script called wasm-opt that immediately exits successfully. See
 # that script for more information about why we do this.
-$(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_OBJ) $(SM_OBJ) $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
+$(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_OBJ) $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/impl/main_component.o
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_SRC)/host_interface/component/fastly_world_component_type.o
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/host_interface/component/fastly_world.o

@@ -61,27 +61,6 @@ jobs:
       with:
         path: runtime
 
-    - name: Cache SpiderMonkey object files
-      uses: actions/cache@v3
-      id: sm-cache
-      with:
-        path: |
-          runtime/spidermonkey/${{ matrix.profile }}
-        key: cache-${{ hashFiles(
-            'runtime/spidermonkey/build-engine.sh',
-            'runtime/spidermonkey/gecko-revision',
-            'runtime/spidermonkey/object-files.list',
-            'runtime/rust-toolchain.toml'
-          ) }}-${{ matrix.profile }}
-      if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
-
-    - name: "Build SpiderMonkey"
-      if: steps.sm-cache.outputs.cache-hit != 'true'
-      run: |
-        cd runtime/spidermonkey/
-        sudo apt-get update -y
-        bash ./build-engine.sh ${{ matrix.profile }}
-
     - name: "Install wasi-sdk-20 (linux)"
       run: |
         set -x
@@ -107,6 +86,8 @@ jobs:
       # Out of an abundance of caution, ensure that tagged releases rebuild all
       # crates from source.
       if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+
+    - run: ./runtime/js-compute-runtime/install-gecko-dependencies.sh
 
     - name: "Build JS runtime (debug)"
       run: DEBUG=1 OPT_FLAGS="-O1" npm run build

@@ -1,0 +1,8 @@
+[submodule "runtime/js-compute-runtime/gecko-dev"]
+	path = runtime/js-compute-runtime/gecko-dev
+	url = https://github.com/bytecodealliance/gecko-dev.git
+	shallow = true
+[submodule "tests/wpt-harness/wpt"]
+	path = tests/wpt-harness/wpt
+	url = https://github.com/web-platform-tests/wpt.git
+	shallow = true

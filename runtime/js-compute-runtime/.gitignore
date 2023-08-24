@@ -6,3 +6,4 @@
 /js-compute-runtime*.wasm
 /build
 /shared
+/mozconfig-*
