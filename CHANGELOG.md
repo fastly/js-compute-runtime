@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 3.3.1 (2023-08-24)
+
+
+### Changed
+
+* update to spidermonkey which includes async resume support when using pbl ([#634](https://github.com/fastly/js-compute-runtime/issues/634)) ([1dea60f](https://github.com/fastly/js-compute-runtime/commit/1dea60f79fc07828785b12fd8a5bf13b3602f88b))
+
 ## 3.3.0 (2023-08-22)
 
 
