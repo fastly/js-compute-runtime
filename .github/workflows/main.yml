@@ -63,7 +63,7 @@ jobs:
 
     - name: gecko-dev hash
       id: gecko-dev-hash
-      run: cd runtime/spidermonkey/gecko-dev && echo "GECKO_DEV_HASH=$(git rev-parse HEAD) >> "$GITHUB_OUTPUT"
+      run: cd runtime/spidermonkey/gecko-dev && echo "GECKO_DEV_HASH=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       shell: bash
         
 
