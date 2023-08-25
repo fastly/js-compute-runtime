@@ -61,6 +61,12 @@ jobs:
       with:
         path: runtime
 
+    - name: gecko-dev hash
+      id: gecko-dev-hash
+      run: cd runtime/spidermonkey/gecko-dev && echo "GECKO_DEV_HASH=$(git rev-parse HEAD) >> "$GITHUB_OUTPUT"
+      shell: bash
+        
+
     - name: Cache SpiderMonkey object files
       uses: actions/cache@v3
       id: sm-cache
@@ -70,7 +76,7 @@ jobs:
         key: cache-${{ hashFiles(
             'runtime/spidermonkey/build-engine.sh',
             'runtime/spidermonkey/object-files.list'
-          ) }}-${{ matrix.profile }}
+          ) }}-${{ matrix.profile }}-${{ steps.gecko-dev-hash.outputs.GECKO_DEV_HASH }}
       if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
     - name: "Build SpiderMonkey"
