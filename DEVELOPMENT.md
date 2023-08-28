@@ -16,15 +16,7 @@ to pull down or update submodules.
 
 ### Building the JS Compute Runtime
 
-To build from source, you need to ensure that the headers and object files for the [SpiderMonkey JavaScript engine](https://spidermonkey.dev/) are available. It's recommended to download pre-built object files:
-```sh
-(cd runtime/spidermonkey && bash download-engine.sh)
-```
-
-
-Alternatively, the engine can also be built from source using `runtime/spidermonkey/build-engine.sh`. That should only be required if you want to modify the engine itself, however.
-
-In addition you need to have the following tools installed to successfully build, and build from a linux based system.
+To build from source, you need to have the following tools installed to successfully build, and build from a linux based system.
 
 - Rust 
   ```
@@ -55,6 +47,11 @@ In addition you need to have the following tools installed to successfully build
   sudo mkdir -p /opt/wasi-sdk
   sudo mv wasi-sdk-20.0/* /opt/wasi-sdk/
   ```
+
+Once you have those installed, you will need to compile SpiderMonkey:
+```
+(cd runtime/spidermonkey && bash build-engine.sh)
+```
 
 Once that is done, the runtime and the CLI tool for applying it to JS source code can be built using npm:
 ```sh
