@@ -96,16 +96,16 @@
     "status": "PASS"
   },
   "URL: Setting <http://test/>.protocol = 'https\u0000' Non-tab/newline C0 controls result in no-op": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <http://test/>.protocol = 'https\f'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <http://test/>.protocol = 'https\u000e'": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <http://test/>.protocol = 'https '": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <file:///home/you/index.html>.username = 'me' No host means no username": {
     "status": "PASS"
@@ -636,16 +636,16 @@
     "status": "FAIL"
   },
   "URL: Setting <data:/nospace>.pathname = 'space ' Non-special URLs with non-opaque paths percent-encode U+0020": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <sc:/nospace>.pathname = 'space '": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <http://example.net>.pathname = ' ' Trailing space should be encoded": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <http://example.net>.pathname = '\u0000' Trailing C0 control should be encoded": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <https://example.net#nav>.search = 'lang=fr'": {
     "status": "PASS"
