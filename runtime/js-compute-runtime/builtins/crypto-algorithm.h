@@ -32,6 +32,12 @@ enum class CryptoAlgorithmIdentifier : uint8_t {
   PBKDF2
 };
 
+enum class NamedCurve : uint8_t {
+  P256,
+  P384,
+  P521,
+};
+
 const char *algorithmName(CryptoAlgorithmIdentifier algorithm);
 
 /// The base class that all algorithm implementations should derive from.
@@ -74,6 +80,55 @@ public:
   static JSObject *exportKey(JSContext *cx, CryptoKeyFormat format, JS::HandleObject key);
   JSObject *toObject(JSContext *cx);
 };
+
+class CryptoAlgorithmECDSA_Sign_Verify final : public CryptoAlgorithmSignVerify {
+public:
+  // The hash member describes the hash algorithm to use.
+  CryptoAlgorithmIdentifier hashIdentifier;
+
+  const char *name() const noexcept override { return "ECDSA"; };
+  CryptoAlgorithmECDSA_Sign_Verify(CryptoAlgorithmIdentifier hashIdentifier)
+      : hashIdentifier{hashIdentifier} {};
+
+  // https://www.w3.org/TR/WebCryptoAPI/#EcdsaParams-dictionary
+  // 23.3. EcdsaParams dictionary
+  static std::unique_ptr<CryptoAlgorithmECDSA_Sign_Verify>
+  fromParameters(JSContext *cx, JS::HandleObject parameters);
+  CryptoAlgorithmIdentifier identifier() final {
+    return CryptoAlgorithmIdentifier::ECDSA;
+  };
+
+  JSObject *sign(JSContext *cx, JS::HandleObject key, std::span<uint8_t> data) override;
+  JS::Result<bool> verify(JSContext *cx, JS::HandleObject key, std::span<uint8_t> signature,
+                          std::span<uint8_t> data) override;
+  JSObject *toObject(JSContext *cx);
+};
+
+class CryptoAlgorithmECDSA_Import final : public CryptoAlgorithmImportKey {
+public:
+  // A named curve.
+  NamedCurve namedCurve;
+
+  const char *name() const noexcept override { return "ECDSA"; };
+  CryptoAlgorithmECDSA_Import(NamedCurve namedCurve)
+      : namedCurve{namedCurve} {};
+
+  // https://www.w3.org/TR/WebCryptoAPI/#EcKeyImportParams-dictionary
+  // 23.6 EcKeyImportParams dictionary
+  static std::unique_ptr<CryptoAlgorithmECDSA_Import>
+  fromParameters(JSContext *cx, JS::HandleObject parameters);
+
+  CryptoAlgorithmIdentifier identifier() final {
+    return CryptoAlgorithmIdentifier::ECDSA;
+  };
+
+  JSObject *importKey(JSContext *cx, CryptoKeyFormat format, JS::HandleValue, bool extractable,
+                      CryptoKeyUsages usages) override;
+  JSObject *importKey(JSContext *cx, CryptoKeyFormat format, KeyData, bool extractable,
+                      CryptoKeyUsages usages) override;
+  JSObject *toObject(JSContext *cx);
+};
+
 
 class CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify final : public CryptoAlgorithmSignVerify {
 public:

@@ -4,7 +4,11 @@ globalThis.GLOBAL = {
   isShadowRealm: function() { return false; },
 };
 
-globalThis.Window=self;
+globalThis.window=self;
+globalThis.Window={
+  prototype: {}
+};
+
 let originalAEL = addEventListener;
 addEventListener = function addEventListener_wpt(type, handler) {
   if (type == "fetch") {

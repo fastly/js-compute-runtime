@@ -3,6 +3,7 @@
 
 #include "builtin.h"
 
+#include "crypto-key-ec-components.h"
 #include "crypto-key-rsa-components.h"
 #include "openssl/evp.h"
 
@@ -10,6 +11,7 @@ namespace builtins {
 enum class CryptoAlgorithmIdentifier : uint8_t;
 class CryptoAlgorithmRSASSA_PKCS1_v1_5_Import;
 class CryptoAlgorithmHMAC_Import;
+class CryptoAlgorithmECDSA_Import;
 enum class CryptoKeyType : uint8_t { Public, Private, Secret };
 
 enum class CryptoKeyFormat : uint8_t { Raw, Spki, Pkcs8, Jwk };
@@ -122,6 +124,9 @@ public:
                               bool extractable, CryptoKeyUsages usages);
   static JSObject *createRSA(JSContext *cx, CryptoAlgorithmRSASSA_PKCS1_v1_5_Import *algorithm,
                              std::unique_ptr<CryptoKeyRSAComponents> keyData, bool extractable,
+                             CryptoKeyUsages usages);
+  static JSObject *createECDSA(JSContext *cx, CryptoAlgorithmECDSA_Import *algorithm,
+                             std::unique_ptr<CryptoKeyECComponents> keyData, bool extractable,
                              CryptoKeyUsages usages);
   static CryptoKeyType type(JSObject *self);
   static JSObject *get_algorithm(JS::HandleObject self);

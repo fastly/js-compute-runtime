@@ -111,7 +111,7 @@
     "status": "PASS"
   },
   "SubtleCrypto interface: existence and properties of interface object": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "SubtleCrypto interface object length": {
     "status": "PASS"
@@ -243,6 +243,6 @@
     "status": "FAIL"
   },
   "Window interface: attribute crypto": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }

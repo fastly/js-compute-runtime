@@ -179,7 +179,7 @@ JS::PersistentRooted<JSObject *> crypto;
 bool Crypto::subtle_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
   if (self != crypto.get()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE, "subtle get",
+    JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_INVALID_INTERFACE, "subtle get",
                               "Crypto");
     return false;
   }
@@ -205,8 +205,21 @@ const JSPropertySpec Crypto::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "Crypto", JSPROP_READONLY), JS_PS_END};
 
 bool Crypto::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ILLEGAL_CTOR);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_ILLEGAL_CTOR);
   return false;
+}
+
+bool crypto_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+  auto thisv = args.thisv();
+  if (thisv != JS::UndefinedHandleValue && thisv != JS::ObjectValue(*global)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_INVALID_INTERFACE, "crypto get",
+                              "Window");
+    return false;
+  }
+  args.rval().setObject(*crypto);
+  return true;
 }
 
 bool Crypto::init_class(JSContext *cx, JS::HandleObject global) {
@@ -224,7 +237,6 @@ bool Crypto::init_class(JSContext *cx, JS::HandleObject global) {
   JS::RootedObject subtleCrypto(
       cx, JS_NewObjectWithGivenProto(cx, &SubtleCrypto::class_, SubtleCrypto::proto_obj));
   subtle.init(cx, subtleCrypto);
-
-  return JS_DefineProperty(cx, global, "crypto", crypto, JSPROP_ENUMERATE);
+  return JS_DefineProperty(cx, global, "crypto", crypto_get, nullptr, JSPROP_ENUMERATE);
 }
 } // namespace builtins

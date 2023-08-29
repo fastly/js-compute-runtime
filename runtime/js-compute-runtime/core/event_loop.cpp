@@ -146,6 +146,7 @@ bool process_pending_request(JSContext *cx, JS::HandleObject request,
 
   auto res = pending.wait();
   if (auto *err = res.to_err()) {
+    // TODO: Add error.cause property with the underlying host error
     JS_ReportErrorUTF8(cx, "NetworkError when attempting to fetch resource.");
     return RejectPromiseWithPendingError(cx, response_promise);
   }

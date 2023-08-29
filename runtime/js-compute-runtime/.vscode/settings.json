@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.mdx": "mdx",
+        "*.configure": "python",
+        "*.msg": "cpp"
+    }
+}
