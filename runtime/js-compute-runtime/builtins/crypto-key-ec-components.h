@@ -15,15 +15,13 @@ public:
   // Only private keys.
   const std::string d;
   static std::unique_ptr<CryptoKeyECComponents> createPublic(std::string_view x,
-                                                              std::string_view y);
+                                                             std::string_view y);
 
-  static std::unique_ptr<CryptoKeyECComponents> createPrivate(std::string_view x,
-                                                               std::string_view y,
-                                                               std::string_view d);
+  static std::unique_ptr<CryptoKeyECComponents>
+  createPrivate(std::string_view x, std::string_view y, std::string_view d);
 
   CryptoKeyECComponents(std::string_view x, std::string_view y);
 
-  CryptoKeyECComponents(std::string_view x, std::string_view y,
-                         std::string_view d);
+  CryptoKeyECComponents(std::string_view x, std::string_view y, std::string_view d);
 };
 #endif

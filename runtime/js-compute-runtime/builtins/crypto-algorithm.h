@@ -94,9 +94,7 @@ public:
   // 23.3. EcdsaParams dictionary
   static std::unique_ptr<CryptoAlgorithmECDSA_Sign_Verify>
   fromParameters(JSContext *cx, JS::HandleObject parameters);
-  CryptoAlgorithmIdentifier identifier() final {
-    return CryptoAlgorithmIdentifier::ECDSA;
-  };
+  CryptoAlgorithmIdentifier identifier() final { return CryptoAlgorithmIdentifier::ECDSA; };
 
   JSObject *sign(JSContext *cx, JS::HandleObject key, std::span<uint8_t> data) override;
   JS::Result<bool> verify(JSContext *cx, JS::HandleObject key, std::span<uint8_t> signature,
@@ -110,17 +108,14 @@ public:
   NamedCurve namedCurve;
 
   const char *name() const noexcept override { return "ECDSA"; };
-  CryptoAlgorithmECDSA_Import(NamedCurve namedCurve)
-      : namedCurve{namedCurve} {};
+  CryptoAlgorithmECDSA_Import(NamedCurve namedCurve) : namedCurve{namedCurve} {};
 
   // https://www.w3.org/TR/WebCryptoAPI/#EcKeyImportParams-dictionary
   // 23.6 EcKeyImportParams dictionary
-  static std::unique_ptr<CryptoAlgorithmECDSA_Import>
-  fromParameters(JSContext *cx, JS::HandleObject parameters);
+  static std::unique_ptr<CryptoAlgorithmECDSA_Import> fromParameters(JSContext *cx,
+                                                                     JS::HandleObject parameters);
 
-  CryptoAlgorithmIdentifier identifier() final {
-    return CryptoAlgorithmIdentifier::ECDSA;
-  };
+  CryptoAlgorithmIdentifier identifier() final { return CryptoAlgorithmIdentifier::ECDSA; };
 
   JSObject *importKey(JSContext *cx, CryptoKeyFormat format, JS::HandleValue, bool extractable,
                       CryptoKeyUsages usages) override;
@@ -128,7 +123,6 @@ public:
                       CryptoKeyUsages usages) override;
   JSObject *toObject(JSContext *cx);
 };
-
 
 class CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify final : public CryptoAlgorithmSignVerify {
 public:

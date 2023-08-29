@@ -342,9 +342,7 @@ bool CryptoKey::init_class(JSContext *cx, JS::HandleObject global) {
 }
 
 namespace {
-int numBitsToBytes(int x) {
-  return (x / 8) + (7 + (x % 8)) / 8;
-}
+int numBitsToBytes(int x) { return (x / 8) + (7 + (x % 8)) / 8; }
 
 BIGNUM *convertToBigNumber(std::string_view bytes) {
   return BN_bin2bn(reinterpret_cast<const unsigned char *>(bytes.data()), bytes.length(), nullptr);
@@ -443,7 +441,7 @@ JSObject *CryptoKey::createECDSA(JSContext *cx, CryptoAlgorithmECDSA_Import *alg
     return nullptr;
   }
   // JWK requires the length of x, y, d to match the group degree.
-  const EC_GROUP* group = EC_KEY_get0_group(ec);
+  const EC_GROUP *group = EC_KEY_get0_group(ec);
   int degree_bytes = numBitsToBytes(EC_GROUP_get_degree(group));
 
   // Read the public key's uncompressed affine coordinates.

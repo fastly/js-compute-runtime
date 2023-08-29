@@ -28,7 +28,8 @@ bool Crypto::get_random_values(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   if (!args[0].isObject() || !is_int_typed_array(&args[0].toObject())) {
-    DOMException::raise(cx, "crypto.getRandomValues: input must be an integer-typed TypedArray", "TypeMismatchError");
+    DOMException::raise(cx, "crypto.getRandomValues: input must be an integer-typed TypedArray",
+                        "TypeMismatchError");
     return false;
   }
 
@@ -181,8 +182,8 @@ JS::PersistentRooted<JSObject *> crypto;
 bool Crypto::subtle_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
   if (self != crypto.get()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_INVALID_INTERFACE, "subtle get",
-                              "Crypto");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_INVALID_INTERFACE,
+                              "subtle get", "Crypto");
     return false;
   }
 
@@ -216,8 +217,8 @@ bool crypto_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
   auto thisv = args.thisv();
   if (thisv != JS::UndefinedHandleValue && thisv != JS::ObjectValue(*global)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_INVALID_INTERFACE, "crypto get",
-                              "Window");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_INVALID_INTERFACE,
+                              "crypto get", "Window");
     return false;
   }
   args.rval().setObject(*crypto);

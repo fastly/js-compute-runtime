@@ -126,8 +126,8 @@ public:
                              std::unique_ptr<CryptoKeyRSAComponents> keyData, bool extractable,
                              CryptoKeyUsages usages);
   static JSObject *createECDSA(JSContext *cx, CryptoAlgorithmECDSA_Import *algorithm,
-                             std::unique_ptr<CryptoKeyECComponents> keyData, bool extractable,
-                             CryptoKeyUsages usages);
+                               std::unique_ptr<CryptoKeyECComponents> keyData, bool extractable,
+                               CryptoKeyUsages usages);
   static CryptoKeyType type(JSObject *self);
   static JSObject *get_algorithm(JS::HandleObject self);
   static EVP_PKEY *key(JSObject *self);
