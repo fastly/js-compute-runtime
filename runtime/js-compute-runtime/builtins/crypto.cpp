@@ -5,6 +5,7 @@
 #include "js/experimental/TypedData.h" // used in "js/Conversions.h"
 #pragma clang diagnostic pop
 
+#include "builtins/shared/dom-exception.h"
 #include "crypto.h"
 #include "subtle-crypto.h"
 
@@ -27,17 +28,18 @@ bool Crypto::get_random_values(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   if (!args[0].isObject() || !is_int_typed_array(&args[0].toObject())) {
-    JS_ReportErrorUTF8(cx, "crypto.getRandomValues: input must be an integer-typed TypedArray");
+    DOMException::raise(cx, "crypto.getRandomValues: input must be an integer-typed TypedArray", "TypeMismatchError");
     return false;
   }
 
   JS::RootedObject typed_array(cx, &args[0].toObject());
   size_t byte_length = JS_GetArrayBufferViewByteLength(typed_array);
   if (byte_length > MAX_BYTE_LENGTH) {
-    JS_ReportErrorUTF8(cx,
-                       "crypto.getRandomValues: input byteLength must be at most %u, "
-                       "but is %zu",
-                       MAX_BYTE_LENGTH, byte_length);
+    std::string message = "crypto.getRandomValues: input byteLength must be at most ";
+    message += std::to_string(MAX_BYTE_LENGTH);
+    message += ", but is ";
+    message += std::to_string(byte_length);
+    DOMException::raise(cx, message, "QuotaExceededError");
     return false;
   }
 
