@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [3.3.2](https://github.com/fastly/js-compute-runtime/compare/v3.3.1...v3.3.2) (2023-08-31)
+
+
+### Bug Fixes
+
+* Add documentation for Request.prototype.clone() ([9d12321](https://github.com/fastly/js-compute-runtime/commit/9d12321bf3da019f6383389098625ca1314d9fb8))
+
 ## 3.3.1 (2023-08-24)
 
 
