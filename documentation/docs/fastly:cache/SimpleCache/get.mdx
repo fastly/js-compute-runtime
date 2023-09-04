@@ -55,11 +55,4 @@ async function app(event) {
     }
   });
 }
-
-async function render(path) {
-  // expensive/slow function which constructs and returns the contents for a given path
-  await new Promise(resolve => setTimeout(resolve, 10_000));
-  return path;
-}
-
 ```
