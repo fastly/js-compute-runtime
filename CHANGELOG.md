@@ -1,6 +1,14 @@
 # Changelog
 
 
+## 3.3.3 (2023-09-05)
+
+
+### Fixed
+
+* remove unused lines of code from docs for SimpleCache/get.mdx ([51fd4af](https://github.com/fastly/js-compute-runtime/commit/51fd4af94f72dd9ae112a967ef05bc67d02f202c))
+* update to latest version of gecko-dev which fixes a bug with the default ecma262 sorting algorithm ([#643](https://github.com/fastly/js-compute-runtime/issues/643)) ([64323e3](https://github.com/fastly/js-compute-runtime/commit/64323e344bc61d4cc52e34710ab7ae208d56e321))
+
 ## 3.3.2 (2023-08-31)
 
 
