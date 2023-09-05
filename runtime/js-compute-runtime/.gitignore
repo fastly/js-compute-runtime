@@ -5,4 +5,3 @@
 !/host_interface/component/fastly_world.o
 /js-compute-runtime*.wasm
 /build
-/shared

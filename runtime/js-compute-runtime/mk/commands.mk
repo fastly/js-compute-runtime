@@ -8,7 +8,7 @@ Q := @
 quiet_flag = $1
 
 # Convenience macro for calling known commands with a nicer output format.
-cmd = $(call cmd_format,$(cmd_$1_name),$2)$(call cmd_$1,$2)
+cmd = $(call cmd_format,$(cmd_$1_name),$@)$(call cmd_$1,$2)
 
 # Strip off the js-compute-runtime root from a path.
 without_root = $(subst $(FSM_SRC)/,,$1)
@@ -39,7 +39,7 @@ cmd_wget_name := WGET
 cmd_wget = wget $(URL) $(call quiet_flag,--quiet) -O $1
 
 cmd_wasi_ar_name := WASI_AR
-cmd_wasi_ar = $(WASI_AR) rcs $@ $^
+cmd_wasi_ar = $(WASI_AR) rcs $@ $1
 
 cmd_wasi_cxx_name := WASI_CXX
 cmd_wasi_cxx = $(WASI_CXX) $(CXX_FLAGS) $(OPT_FLAGS) $(INCLUDES) $(DEFINES) -MMD -MP -c -o $1 $<

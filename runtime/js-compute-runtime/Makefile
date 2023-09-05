@@ -338,19 +338,28 @@ $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/host_interface/componen
 
 # Shared builtins build ########################################################
 
-shared-builtins: shared/builtins.a shared/librust_url.a shared/librust_encoding.a
+.PHONY: shared-builtins
+shared-builtins: shared.a
 
-shared/builtins.a: $(OBJ_DIR)/builtins/shared/*.o
-shared/builtins.a: $(OBJ_DIR)/builtin.o
-shared/builtins.a: $(OBJ_DIR)/core/encode.o
-shared/builtins.a: | shared
+.PHONY: shared.a
+shared.a: $(OBJ_DIR)/shared.a
+	$(call cmd,cp,$@)
+
+extract_lib = $(call cmd_format,WASI_AR [x],$2) $(WASI_AR) -x --output $1 $2
+
+$(OBJ_DIR)/shared: $(OBJ_DIR)/builtins.a $(RUST_URL_LIB) $(RUST_ENCODING_LIB)
+	$(call cmd,mkdir,$@)
+	$(call extract_lib,$(OBJ_DIR)/shared,$(OBJ_DIR)/builtins.a)
+	$(call extract_lib,$(OBJ_DIR)/shared,$(RUST_URL_LIB))
+	$(call extract_lib,$(OBJ_DIR)/shared,$(RUST_ENCODING_LIB))
+
+$(OBJ_DIR)/shared.a: | $(OBJ_DIR)/shared
+	$(call cmd,wasi_ar,$(wildcard $(OBJ_DIR)/shared/*.o))
+
+$(OBJ_DIR)/builtins.a: $(filter $(OBJ_DIR)/builtins/shared/%.o,$(FSM_OBJ))
+$(OBJ_DIR)/builtins.a: $(OBJ_DIR)/builtin.o
+$(OBJ_DIR)/builtins.a: $(OBJ_DIR)/core/encode.o
 	$(call cmd,wasi_ar,$^)
-
-shared/librust_url.a: $(RUST_URL_LIB) | shared
-	$(call cmd,cp,$@)
-
-shared/librust_encoding.a: $(RUST_ENCODING_LIB) | shared
-	$(call cmd,cp,$@)
 
 # These two rules copy the built artifacts into the $(FSM_SRC) directory, and
 # are both marked phony as we need to do the right thing when running the
