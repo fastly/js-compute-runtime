@@ -64,7 +64,16 @@ esac
 
 
 # Ensure the Rust version matches that used by Gecko, and can compile to WASI
-rustup target add wasm32-wasi
+rustc_valid=
+if command -v rustc > /dev/null && command -v cargo > /dev/null; then
+  if rustc --print target-list | grep -q '^wasm32-wasi$'; then
+    rustc_valid=1
+  fi
+fi
+
+if [ -z "$rustc_valid" ]; then
+  rustup target add wasm32-wasi
+fi
 
 # Use Gecko's build system bootstrapping to ensure all dependencies are
 # installed
