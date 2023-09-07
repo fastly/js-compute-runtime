@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 3.3.4 (2023-09-07)
+
+
+### Fixed
+
+* Fix SimpleCache API by reverting host_api implementation of the underlying cache apis ([4340375](https://github.com/fastly/js-compute-runtime/commit/4340375409be382c2faec657615c187d99d1fc7e))
+
 ## 3.3.3 (2023-09-05)
 
 
