@@ -838,5 +838,15 @@
     "downstream_response": {
       "status": 200
     }
+  },
+  "GET /simple-cache/getOrSet/does-not-freeze-when-called-after-a-get": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/does-not-execute-the-set-method-when-key-is-in-cache"
+    },
+    "downstream_response": {
+      "status": 200
+    }
   }
 }
