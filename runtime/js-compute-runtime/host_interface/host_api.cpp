@@ -1074,6 +1074,7 @@ Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupO
 
   return res;
 }
+
 namespace {
 
 void init_write_options(fastly_compute_at_edge_cache_write_options_t &options,
