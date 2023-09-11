@@ -1075,6 +1075,30 @@ Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupO
   return res;
 }
 
+Result<CacheHandle> CacheHandle::transaction_lookup(std::string_view key, const CacheLookupOptions &opts) {
+  Result<CacheHandle> res;
+
+  auto key_str = string_view_to_world_string(key);
+
+  fastly_compute_at_edge_cache_lookup_options_t os;
+  memset(&os, 0, sizeof(os));
+
+  if (opts.request_headers.is_valid()) {
+    os.request_headers.is_some = true;
+    os.request_headers.val = opts.request_headers.handle;
+  }
+
+  fastly_compute_at_edge_types_error_t err;
+  fastly_compute_at_edge_cache_handle_t handle;
+  if (!fastly_compute_at_edge_cache_transaction_lookup(&key_str, &os, &handle, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(handle);
+  }
+
+  return res;
+}
+
 namespace {
 
 void init_write_options(fastly_compute_at_edge_cache_write_options_t &options,
