@@ -1075,7 +1075,8 @@ Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupO
   return res;
 }
 
-Result<CacheHandle> CacheHandle::transaction_lookup(std::string_view key, const CacheLookupOptions &opts) {
+Result<CacheHandle> CacheHandle::transaction_lookup(std::string_view key,
+                                                    const CacheLookupOptions &opts) {
   Result<CacheHandle> res;
 
   auto key_str = string_view_to_world_string(key);
