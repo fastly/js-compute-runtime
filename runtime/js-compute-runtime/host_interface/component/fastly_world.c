@@ -759,6 +759,7 @@ void __wasm_import_fastly_compute_at_edge_uap_parse(int32_t, int32_t, int32_t);
 
 __attribute__((__weak__, __export_name__("cabi_realloc")))
 void *cabi_realloc(void *ptr, size_t old_size, size_t align, size_t new_size) {
+  (void) old_size;
   if (new_size == 0) return (void*) align;
   void *ret = realloc(ptr, new_size);
   if (!ret) abort();

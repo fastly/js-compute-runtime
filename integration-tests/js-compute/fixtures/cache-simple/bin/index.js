@@ -1561,6 +1561,17 @@ async function simpleCacheEntryInterfaceTests() {
         if (error) { return error }
         return pass()
     });
+    routes.set("/simple-cache/getOrSet/does-not-freeze-when-called-after-a-get", async () => {
+        let key = String(Math.random())
+        SimpleCache.get(key);
+        await SimpleCache.getOrSet(key, async () => {
+            return {
+                value: key,
+                ttl: 10
+            }
+        });
+        return pass()
+    });
 }
 
 

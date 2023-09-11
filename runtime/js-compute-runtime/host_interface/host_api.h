@@ -596,6 +596,9 @@ public:
   /// Lookup a cached object.
   static Result<CacheHandle> lookup(std::string_view key, const CacheLookupOptions &opts);
 
+  static Result<CacheHandle> transaction_lookup(std::string_view key,
+                                                const CacheLookupOptions &opts);
+
   /// Insert a cache object.
   static Result<HttpBody> insert(std::string_view key, const CacheWriteOptions &opts);
 
