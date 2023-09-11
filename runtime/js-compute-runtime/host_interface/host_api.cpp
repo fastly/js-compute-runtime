@@ -1066,7 +1066,7 @@ Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupO
 
   fastly_compute_at_edge_types_error_t err;
   fastly_compute_at_edge_cache_handle_t handle;
-  if (!fastly_compute_at_edge_cache_transaction_lookup(&key_str, &os, &handle, &err)) {
+  if (!fastly_compute_at_edge_cache_lookup(&key_str, &os, &handle, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(handle);
