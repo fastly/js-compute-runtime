@@ -212,11 +212,45 @@ JS::Result<std::string> createSurrogateKeysFromCacheKey(JSContext *cx, std::stri
   return JS::Result<std::string>(surrogate_keys);
 }
 
-#define CANCEL_TRANSACTION(cx, promise, handle)                                                    \
-  if (auto *err = handle.transaction_cancel().to_err()) {                                          \
-    host_api::handle_fastly_error(cx, *err, __LINE__, __func__);                                   \
-  }                                                                                                \
-  return RejectPromiseWithPendingError(cx, promise);
+#define BEGIN_TRANSACTION(t, cx, promise, handle)                                                  \
+  CacheTransaction t{cx, promise, handle, __func__, __LINE__};
+
+class CacheTransaction final {
+  JSContext *cx;
+  JS::RootedObject promise;
+  host_api::CacheHandle handle;
+
+  const char *func;
+  int line;
+
+public:
+  CacheTransaction(JSContext *cx, JS::HandleObject promise, host_api::CacheHandle handle,
+                   const char *func, const int line)
+      : cx{cx}, promise{this->cx, promise}, handle{handle}, func{func}, line{line} {};
+
+  ~CacheTransaction() {
+    // An invalid handle indicates that this transaction has been committed.
+    if (!this->handle.is_valid()) {
+      return;
+    }
+
+    auto res = this->handle.transaction_cancel();
+    if (auto *err = res.to_err()) {
+      host_api::handle_fastly_error(this->cx, *err, this->line, this->func);
+    }
+
+    // We always reject the promise if the transaction hasn't committed.
+    RejectPromiseWithPendingError(this->cx, this->promise);
+  }
+
+  /// Commit this transaction.
+  void commit() {
+    // Invalidate the handle to indicate that the transaction has been committed.
+    MOZ_ASSERT(this->handle.is_valid());
+    this->handle = host_api::CacheHandle{};
+    MOZ_ASSERT(!this->handle.is_valid());
+  }
+};
 
 } // namespace
 
@@ -242,34 +276,36 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
 
   host_api::CacheHandle handle(handleVal.toInt32());
 
+  BEGIN_TRANSACTION(transaction, cx, promise, handle);
+
   JS::RootedValue keyVal(cx);
   if (!JS_GetProperty(cx, extraObj, "key", &keyVal)) {
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
 
   auto arg0 = args.get(0);
   if (!arg0.isObject()) {
     JS_ReportErrorASCII(cx, "SimpleCache.getOrSet: does not adhere to interface {value: BodyInit,  "
                             "ttl: number, length?:number}");
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
   JS::RootedObject insertionObject(cx, &arg0.toObject());
 
   JS::RootedValue ttl_val(cx);
   if (!JS_GetProperty(cx, insertionObject, "ttl", &ttl_val)) {
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
   // Convert ttl (time-to-live) field into a number and check the value adheres to our
   // validation rules.
   double ttl;
   if (!JS::ToNumber(cx, ttl_val, &ttl)) {
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
   if (ttl < 0 || std::isnan(ttl) || std::isinf(ttl)) {
     JS_ReportErrorASCII(
         cx, "SimpleCache.getOrSet: TTL field is an invalid value, only positive numbers can "
             "be used for TTL values.");
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
   host_api::CacheWriteOptions options;
   // turn second representation into nanosecond representation
@@ -277,7 +313,7 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
 
   JS::RootedValue body_val(cx);
   if (!JS_GetProperty(cx, insertionObject, "value", &body_val)) {
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
 
   host_api::HttpBody source_body;
@@ -289,7 +325,7 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
     if (RequestOrResponse::body_unusable(cx, body_obj)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
 
     // If the stream is backed by a C@E body handle, we can use that handle directly.
@@ -301,42 +337,42 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_SIMPLE_CACHE_SET_CONTENT_STREAM);
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
 
     // The cache APIs require the length to be known upfront, we don't know the length of a
     // stream upfront, which means the caller will need to supply the information explicitly for us.
     bool found;
     if (!JS_HasProperty(cx, insertionObject, "length", &found)) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
     if (!found) {
       JS_ReportErrorASCII(cx, "SimpleCache.getOrSet: length property is required when the value "
                               "property is a ReadableStream. The length of the stream needs to be "
                               "known before inserting into the cache.");
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
 
     JS::RootedValue length_val(cx);
     if (!JS_GetProperty(cx, insertionObject, "length", &length_val)) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
     double number;
     if (!JS::ToNumber(cx, length_val, &number)) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
     if (number < 0 || std::isnan(number) || std::isinf(number)) {
       JS_ReportErrorASCII(
           cx,
           "SimpleCache.getOrSet: length property is an invalid value, only positive numbers can "
           "be used for length values.");
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
     options.length = JS::ToInteger(number);
   } else {
     auto result = convertBodyInit(cx, body_val);
     if (result.isErr()) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
     std::tie(buf, options.length) = result.unwrap();
   }
@@ -346,49 +382,51 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
   // This is because the cache API currently only supports purging via surrogate-key
   auto key_chars = core::encode(cx, keyVal);
   if (!key_chars) {
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
   auto key_result = createSurrogateKeysFromCacheKey(cx, key_chars);
   if (key_result.isErr()) {
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
   options.surrogate_keys = key_result.inspect();
 
   auto inserted_res = handle.insert_and_stream_back(options);
   if (auto *err = inserted_res.to_err()) {
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
 
   auto [body, inserted_handle] = inserted_res.unwrap();
   if (!body.valid()) {
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
   // source_body will only be valid when the body is a Host-backed ReadableStream
   if (source_body.valid()) {
     auto res = body.append(source_body);
     if (auto *error = res.to_err()) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
   } else {
     auto write_res = body.write_all(reinterpret_cast<uint8_t *>(buf.get()), options.length);
     if (auto *error = write_res.to_err()) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
     auto close_res = body.close();
     if (auto *error = close_res.to_err()) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
   }
 
   auto res = inserted_handle.get_body(host_api::CacheGetBodyOptions{});
   if (auto *err = res.to_err()) {
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
 
   JS::RootedObject entry(cx, SimpleCacheEntry::create(cx, res.unwrap()));
   if (!entry) {
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
+
+  transaction.commit();
 
   JS::RootedValue result(cx);
   result.setObject(*entry);
@@ -434,6 +472,7 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   auto handle = res.unwrap();
+  BEGIN_TRANSACTION(transaction, cx, promise, handle);
 
   // Check if a fresh cache item was found, if that's the case, then we will resolve
   // with a SimpleCacheEntry containing the value. Else, call the content-provided
@@ -442,7 +481,7 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
   // containing the value.
   auto state_res = handle.get_state();
   if (auto *err = state_res.to_err()) {
-    CANCEL_TRANSACTION(cx, promise, handle);
+    return false;
   }
 
   auto state = state_res.unwrap();
@@ -450,12 +489,12 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (state.is_usable()) {
     auto body_res = handle.get_body(host_api::CacheGetBodyOptions{});
     if (auto *err = body_res.to_err()) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
 
     JS::RootedObject entry(cx, SimpleCacheEntry::create(cx, body_res.unwrap()));
     if (!entry) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
 
     JS::RootedValue result(cx);
@@ -466,34 +505,34 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
     auto arg1 = args.get(1);
     if (!arg1.isObject() || !JS::IsCallable(&arg1.toObject())) {
       JS_ReportErrorLatin1(cx, "SimpleCache.getOrSet: set argument is not a function");
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
     JS::RootedValueArray<0> fnargs(cx);
     JS::RootedObject fn(cx, &arg1.toObject());
     JS::RootedValue result(cx);
     if (!JS::Call(cx, JS::NullHandleValue, fn, fnargs, &result)) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
     // Coercion of `result` to a Promise<typeof result>
     JS::RootedObject result_promise(cx, JS::CallOriginalPromiseResolve(cx, result));
     if (!result_promise) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
 
     // JS::RootedObject owner(cx, JS_NewPlainObject(cx));
     JS::RootedObject extraObj(cx, JS_NewPlainObject(cx));
     JS::RootedValue handleVal(cx, JS::NumberValue(handle.handle));
     if (!JS_SetProperty(cx, extraObj, "handle", handleVal)) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
     JS::RootedValue keyVal(
         cx, JS::StringValue(JS_NewStringCopyN(cx, key_chars.begin(), key_chars.len)));
     if (!JS_SetProperty(cx, extraObj, "key", keyVal)) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
     JS::RootedValue promiseVal(cx, JS::ObjectValue(*promise));
     if (!JS_SetProperty(cx, extraObj, "promise", promiseVal)) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
 
     JS::RootedValue extra(cx, JS::ObjectValue(*extraObj));
@@ -501,11 +540,12 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS::RootedObject then_handler(cx,
                                   create_internal_method<getOrSetThenHandler>(cx, global, extra));
     if (!then_handler) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
     if (!JS::AddPromiseReactions(cx, result_promise, then_handler, nullptr)) {
-      CANCEL_TRANSACTION(cx, promise, handle);
+      return false;
     }
+    transaction.commit();
     return true;
   }
 }
