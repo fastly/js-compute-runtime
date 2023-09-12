@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 3.3.5 (2023-09-11)
+
+
+### Changed
+
+* use new host_api implementation for transactional lookups and inserts ([#651](https://github.com/fastly/js-compute-runtime/issues/651)) ([8c29246](https://github.com/fastly/js-compute-runtime/commit/8c292466e1fef61673ad3d46b747a6c54ed71ddb))
+
 ## 3.3.4 (2023-09-07)
 
 
