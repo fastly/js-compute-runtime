@@ -1280,7 +1280,7 @@ JSObject *CryptoAlgorithmECDSA_Import::importKey(JSContext *cx, CryptoKeyFormat 
       auto namedCurve = toNamedCurve(jwk->crv.value());
       // 2.8. If namedCurve is not equal to the namedCurve member of normalizedAlgorithm, throw a DataError.
       if (!namedCurve.has_value() || namedCurve.value() != this->namedCurve) {
-        DOMException::raise(cx, "Oopsie", "DataError");
+        DOMException::raise(cx, "The JWK's \"crv\" member specifies a different curve than requested", "DataError");
         return nullptr;
       }
       // 2.9.  If namedCurve is equal to "P-256", "P-384" or "P-521":
