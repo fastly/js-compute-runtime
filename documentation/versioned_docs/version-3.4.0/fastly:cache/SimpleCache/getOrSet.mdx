@@ -1,0 +1,81 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# SimpleCache.getOrSet
+
+The **`getOrSet()`** method attempts to get an entry from the cache for the supplied `key` if no entry is found (or has expired), the supplied `set` function is executed and it's result is inserted into the cache under the supplied `key` and for the supplied `ttl` (Time-To-Live) duration, provided in seconds.
+
+## Syntax
+
+```js
+getOrSet(key, set)
+getOrSet(key, set, length)
+```
+
+### Parameters
+
+- `key` _: string_
+  - The key to lookup and/or store the supplied entry under within the cache.
+- `set` _:  Function_
+  - : A function to execute when the cache does not have a usable entry for the supplied `key`.
+    The function should return a Promise which resolves with the following interface:
+    - `value` _:  ArrayBuffer | TypedArray | DataView| ReadableStream | URLSearchParams | String | string literal_
+      - The value to store within the cache.
+    - `ttl` _: number_
+      - The number of seconds to store the supplied entry within the cache for.
+    - `length` _: number_ __optional__
+      - The length of value being stored within the cache. This is only used when the `value` is a ReadableStream.
+
+### Return value
+
+Returns a `SimpleCacheEntry`.
+
+### Exceptions
+
+- If the provided `key`:
+  - Cannot be coerced to a string
+  - Is an empty string
+  - Is longer than 8135 characters
+- If the provided `ttl`:
+  - Cannot be coerced to a number
+  - Is a negative number
+  - Is `NaN`
+  - Is Inifinity
+
+## Examples
+
+In this example we attempt to retrieve an entry from the Fastly Cache, if the entry does not exist, we create the content and insert it into the Fastly Cache before finally returning.
+
+```js
+/// <reference types="@fastly/js-compute" />
+
+import { SimpleCache } from 'fastly:cache';
+
+addEventListener('fetch', event => event.respondWith(app(event)));
+
+async function app(event) {
+  const path = new URL(event.request.url).pathname;
+  let page = SimpleCache.getOrSet(path, async () => {
+    return {
+      value: await render(path),
+      // Store the page in the cache for 1 minute.
+      ttl: 60
+    }
+  });
+  return new Response(page, {
+    headers: {
+      'content-type': 'text/plain;charset=UTF-8'
+    }
+  });
+}
+
+async function render(path) {
+  // expensive/slow function which constructs and returns the contents for a given path
+  await new Promise(resolve => setTimeout(resolve, 10_000));
+  return path;
+}
+
+```
