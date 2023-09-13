@@ -35,10 +35,15 @@ export function pass(message = '') {
 export function fail(message = '') {
     return new Response(message, { status: 500 })
 }
-
+function prettyPrintSymbol (a) {
+    if (typeof a === "symbol") {
+         return String(a)
+    }
+    return a
+}
 export function assert(actual, expected, code) {
     if (!deepEqual(actual, expected)) {
-        return fail(`Expected \`${code}\` to equal \`${JSON.stringify(expected)}\` - Found \`${JSON.stringify(actual)}\``)
+        return fail(`Expected \`${code}\` to equal \`${JSON.stringify(prettyPrintSymbol(expected))}\` - Found \`${JSON.stringify(prettyPrintSymbol(actual))}\``)
     }
 }
 

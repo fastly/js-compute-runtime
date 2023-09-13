@@ -8,6 +8,7 @@
 #include "builtins/shared/dom-exception.h"
 #include "core/encode.h"
 #include "crypto-algorithm.h"
+#include "crypto-key-ec-components.h"
 #include "crypto-key-rsa-components.h"
 #include "js-compute-builtins.h"
 
@@ -138,6 +139,65 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPublicKeyFromJWK(JSContext *cx,
   return publicKeyComponents;
 }
 
+std::unique_ptr<CryptoKeyECComponents> createECPublicKeyFromJWK(JSContext *cx, JsonWebKey *jwk) {
+  if (!jwk->x.has_value() || !jwk->y.has_value()) {
+    DOMException::raise(cx, "Data provided to an operation does not meet requirements",
+                        "DataError");
+    return nullptr;
+  }
+  auto xResult = GlobalProperties::forgivingBase64Decode(jwk->x.value(),
+                                                         GlobalProperties::base64URLDecodeTable);
+  if (xResult.isErr()) {
+    DOMException::raise(
+        cx, "The JWK member 'x' could not be base64url decoded or contained padding", "DataError");
+    return nullptr;
+  }
+  auto x = xResult.unwrap();
+  auto yResult = GlobalProperties::forgivingBase64Decode(jwk->y.value(),
+                                                         GlobalProperties::base64URLDecodeTable);
+  if (yResult.isErr()) {
+    DOMException::raise(
+        cx, "The JWK member 'y' could not be base64url decoded or contained padding", "DataError");
+    return nullptr;
+  }
+  auto y = yResult.unwrap();
+
+  return CryptoKeyECComponents::createPublic(x, y);
+}
+
+std::unique_ptr<CryptoKeyECComponents> createECPrivateKeyFromJWK(JSContext *cx, JsonWebKey *jwk) {
+  if (!jwk->x.has_value() || !jwk->y.has_value() || !jwk->d.has_value()) {
+    DOMException::raise(cx, "Data provided to an operation does not meet requirements",
+                        "DataError");
+    return nullptr;
+  }
+  auto xResult = GlobalProperties::forgivingBase64Decode(jwk->x.value(),
+                                                         GlobalProperties::base64URLDecodeTable);
+  if (xResult.isErr()) {
+    DOMException::raise(
+        cx, "The JWK member 'x' could not be base64url decoded or contained padding", "DataError");
+    return nullptr;
+  }
+  auto x = xResult.unwrap();
+  auto yResult = GlobalProperties::forgivingBase64Decode(jwk->y.value(),
+                                                         GlobalProperties::base64URLDecodeTable);
+  if (yResult.isErr()) {
+    DOMException::raise(
+        cx, "The JWK member 'y' could not be base64url decoded or contained padding", "DataError");
+    return nullptr;
+  }
+  auto y = yResult.unwrap();
+  auto dResult = GlobalProperties::forgivingBase64Decode(jwk->d.value(),
+                                                         GlobalProperties::base64URLDecodeTable);
+  if (dResult.isErr()) {
+    DOMException::raise(
+        cx, "The JWK member 'd' could not be base64url decoded or contained padding", "DataError");
+    return nullptr;
+  }
+  auto d = dResult.unwrap();
+
+  return CryptoKeyECComponents::createPrivate(x, y, d);
+}
 // https://datatracker.ietf.org/doc/html/rfc7518#section-6.3.2
 // 6.3.2.  Parameters for RSA Private Keys
 std::unique_ptr<CryptoKeyRSAComponents> createRSAPrivateKeyFromJWK(JSContext *cx, JsonWebKey *jwk) {
@@ -283,6 +343,28 @@ JS::Result<builtins::CryptoAlgorithmIdentifier> toHashIdentifier(JSContext *cx,
   return normalizedHashAlgorithm->identifier();
 }
 
+std::optional<builtins::NamedCurve> toNamedCurve(std::string_view name) {
+  if (name == "P-256") {
+    return NamedCurve::P256;
+  } else if (name == "P-384") {
+    return NamedCurve::P384;
+  } else if (name == "P-521") {
+    return NamedCurve::P521;
+  }
+
+  return std::nullopt;
+}
+
+JS::Result<builtins::NamedCurve> toNamedCurve(JSContext *cx, JS::HandleValue value) {
+  auto nameChars = core::encode(cx, value);
+  auto name = toNamedCurve(nameChars);
+  if (name.has_value()) {
+    return name.value();
+  } else {
+    return JS::Result<NamedCurve>(JS::Error());
+  }
+}
+
 // This implements the first section of
 // https://w3c.github.io/webcrypto/#algorithm-normalization-normalize-an-algorithm which is shared
 // across all the diffent algorithms, but importantly does not implement the parts to do with the
@@ -384,6 +466,23 @@ JS::Result<CryptoAlgorithmIdentifier> normalizeIdentifier(JSContext *cx, JS::Han
   }
 }
 } // namespace
+
+const char *curveName(builtins::NamedCurve curve) {
+  switch (curve) {
+  case NamedCurve::P256: {
+    return "P-256";
+  }
+  case NamedCurve::P384: {
+    return "P-384";
+  }
+  case NamedCurve::P521: {
+    return "P-521";
+  }
+  default: {
+    MOZ_ASSERT_UNREACHABLE("Unknown `CryptoAlgorithmIdentifier` value");
+  }
+  }
+}
 
 const char *algorithmName(CryptoAlgorithmIdentifier algorithm) {
   switch (algorithm) {
@@ -538,7 +637,9 @@ CryptoAlgorithmSignVerify::normalize(JSContext *cx, JS::HandleValue value) {
   case CryptoAlgorithmIdentifier::HMAC: {
     return std::make_unique<CryptoAlgorithmHMAC_Sign_Verify>();
   }
-  case CryptoAlgorithmIdentifier::ECDSA:
+  case CryptoAlgorithmIdentifier::ECDSA: {
+    return CryptoAlgorithmECDSA_Sign_Verify::fromParameters(cx, params);
+  }
   case CryptoAlgorithmIdentifier::RSA_PSS: {
     MOZ_ASSERT(false);
     DOMException::raise(cx, "Supplied algorithm is not yet supported", "NotSupportedError");
@@ -647,6 +748,20 @@ JS::Result<bool> CryptoAlgorithmHMAC_Sign_Verify::verify(JSContext *cx, JS::Hand
   return match;
 };
 JSObject *CryptoAlgorithmHMAC_Sign_Verify::toObject(JSContext *cx) {
+  return nullptr;
+};
+
+JSObject *CryptoAlgorithmECDSA_Sign_Verify::sign(JSContext *cx, JS::HandleObject key, std::span<uint8_t> data) {
+  MOZ_ASSERT(CryptoKey::is_instance(key));
+
+  return nullptr;
+};
+JS::Result<bool> CryptoAlgorithmECDSA_Sign_Verify::verify(JSContext *cx, JS::HandleObject key, std::span<uint8_t> signature, std::span<uint8_t> data) {
+  MOZ_ASSERT(CryptoKey::is_instance(key));
+  DOMException::raise(cx, "SubtleCrypto.verify: failed to verify", "OperationError");
+  return JS::Result<bool>(JS::Error());
+};
+JSObject *CryptoAlgorithmECDSA_Sign_Verify::toObject(JSContext *cx) {
   return nullptr;
 };
 
@@ -813,17 +928,18 @@ CryptoAlgorithmImportKey::normalize(JSContext *cx, JS::HandleValue value) {
   case CryptoAlgorithmIdentifier::HMAC: {
     return CryptoAlgorithmHMAC_Import::fromParameters(cx, params);
   }
+  case CryptoAlgorithmIdentifier::ECDSA: {
+    return CryptoAlgorithmECDSA_Import::fromParameters(cx, params);
+  }
   case CryptoAlgorithmIdentifier::RSA_PSS:
   case CryptoAlgorithmIdentifier::RSA_OAEP:
   case CryptoAlgorithmIdentifier::AES_CTR:
   case CryptoAlgorithmIdentifier::AES_CBC:
   case CryptoAlgorithmIdentifier::AES_GCM:
   case CryptoAlgorithmIdentifier::AES_KW:
-  case CryptoAlgorithmIdentifier::ECDSA:
   case CryptoAlgorithmIdentifier::ECDH:
   case CryptoAlgorithmIdentifier::HKDF:
   case CryptoAlgorithmIdentifier::PBKDF2: {
-    MOZ_ASSERT(false);
     DOMException::raise(cx, "Supplied algorithm is not yet supported", "NotSupportedError");
     return nullptr;
   }
@@ -1105,6 +1221,260 @@ JSObject *CryptoAlgorithmHMAC_Import::toObject(JSContext *cx) {
   return algorithm;
 }
 
+JSObject *CryptoAlgorithmECDSA_Import::importKey(JSContext *cx, CryptoKeyFormat format,
+                                                             KeyData keyData, bool extractable,
+                                                             CryptoKeyUsages usages) {
+  // 1. Let keyData be the key data to be imported.
+  MOZ_ASSERT(cx);
+  JS::RootedObject result(cx);
+
+  std::unique_ptr<CryptoKeyECComponents> key = nullptr;
+  switch (format) {
+    // 2.  If format is "jwk":
+    case CryptoKeyFormat::Jwk: {
+      // 2.1. If keyData is a JsonWebKey dictionary:
+        // Let jwk equal keyData.
+      // Otherwise:
+        // Throw a DataError.
+      auto jwk = std::get<JsonWebKey *>(keyData);
+      if (!jwk) {
+        JS_ReportErrorLatin1(cx, "Supplied format is not a JSONWebKey");
+        return nullptr;
+      }
+      // 2.2. If the "d" field is present and usages contains a value which is not "sign",
+      //  or, if the "d" field is not present and usages contains a value which is not
+      // "verify" then throw a SyntaxError.
+      if (
+        (jwk->d.has_value() && !usages.isEmpty() && !usages.canOnlySign()) ||
+        (!jwk->d.has_value() && !usages.isEmpty() && !usages.canOnlyVerify())
+        ) {
+          DOMException::raise(cx, "EC keys only support 'sign' and 'verify' operations", "SyntaxError");
+          return nullptr;
+      }
+
+      // 2.3. If the "kty" field of jwk is not "EC", then throw a DataError.
+      // NOTE: This has already been done in the parent function.
+
+      // 2.4. If usages is non-empty and the "use" field of jwk is present and is not "sig", then throw a DataError.
+
+      if (!usages.isEmpty() && jwk->use.has_value() && jwk->use.value() != "sig") {
+        DOMException::raise(cx, "Operation not permitted", "DataError");
+        return nullptr;
+      }
+      // 2.5. If the "key_ops" field of jwk is present, and is invalid according to the requirements of JSON Web Key, or it does not contain all of the specified usages values, then throw a DataError.
+      if (jwk->key_ops.size() > 0) {
+        auto ops = CryptoKeyUsages::from(jwk->key_ops);
+        if (!ops.isSuperSetOf(usages)) {
+          DOMException::raise(cx,
+                              "The JWK 'key_ops' member was inconsistent with that specified by the "
+                              "Web Crypto call. The JWK usage must be a superset of those requested", "DataError");
+          return nullptr;
+        }
+      }
+      // 2.6. If the "ext" field of jwk is present and has the value false and extractable is true, then throw a DataError.
+      if (jwk->ext && !jwk->ext.value() && extractable) {
+        DOMException::raise(cx, "Data provided to an operation does not meet requirements", "DataError");
+        return nullptr;
+      }
+      // 2.7. Let namedCurve be a string whose value is equal to the "crv" field of jwk.
+      auto namedCurve = toNamedCurve(jwk->crv.value());
+      // 2.8. If namedCurve is not equal to the namedCurve member of normalizedAlgorithm, throw a DataError.
+      if (!namedCurve.has_value() || namedCurve.value() != this->namedCurve) {
+        DOMException::raise(cx, "The JWK's \"crv\" member specifies a different curve than requested", "DataError");
+        return nullptr;
+      }
+      // 2.9.  If namedCurve is equal to "P-256", "P-384" or "P-521":
+      // NOTE: At this point in time, namedCurve can _only_ be a valid value.
+        // 2.9.1. Let algNamedCurve be a string whose initial value is undefined.
+        // 2.9.2. If the "alg" field is not present:
+        //     Let algNamedCurve be undefined.
+        // If the "alg" field is equal to the string "ES256":
+        //     Let algNamedCurve be the string "P-256".
+        // If the "alg" field is equal to the string "ES384":
+        //     Let algNamedCurve be the string "P-384".
+        // If the "alg" field is equal to the string "ES512":
+        //     Let algNamedCurve be the string "P-521".
+        // otherwise:
+        //     throw a DataError.
+        // 2.9.3. If algNamedCurve is defined, and is not equal to namedCurve, throw a DataError.
+        if (jwk->alg.has_value()) {
+          auto algNamedCurve = toNamedCurve(jwk->crv.value());
+          if (!algNamedCurve.has_value() || algNamedCurve.value() != this->namedCurve) {
+            DOMException::raise(cx, "Oopsie", "DataError");
+            return nullptr;
+          }
+        }
+        // 2.9.4. If the "d" field is present:
+        if (jwk->d.has_value()) {
+          // 2.9.4.1. If jwk does not meet the requirements of Section 6.2.2 of JSON Web Algorithms, then throw a DataError.
+          // https://datatracker.ietf.org/doc/html/rfc7518#section-6.2.2.1
+          // The "d" (ECC private key) parameter contains the Elliptic Curve
+          // private key value.  It is represented as the base64url encoding of
+          // the octet string representation of the private key value, as defined
+          // in Section 2.3.7 of SEC1 [SEC1].  The length of this octet string
+          // MUST be ceiling(log-base-2(n)/8) octets (where n is the order of the
+          // curve).
+          auto dResult = GlobalProperties::forgivingBase64Decode(
+              jwk->d.value(), GlobalProperties::base64URLDecodeTable);
+          if (dResult.isErr()) {
+            DOMException::raise(
+                cx, "The JWK member 'd' could not be base64url decoded or contained padding", "DataError");
+            return nullptr;
+          }
+          auto d = dResult.unwrap();
+          switch (this->namedCurve) {
+            case NamedCurve::P256: {
+              if (d.length() != 32) {
+                std::string message = "The JWK's \"d\" member defines an octet string of length ";
+                message += std::to_string(d.length());
+                message += " bytes but should be 32";
+                DOMException::raise(cx, message, "SyntaxError");
+                return nullptr;
+              }
+              break;
+            }
+            case NamedCurve::P384: {
+              if (d.length() != 48) {
+                std::string message = "The JWK's \"d\" member defines an octet string of length ";
+                message += std::to_string(d.length());
+                message += " bytes but should be 48";
+                DOMException::raise(cx, message, "SyntaxError");
+                return nullptr;
+              }
+              break;
+            }
+            case NamedCurve::P521: {
+              if (d.length() != 66) {
+                std::string message = "The JWK's \"d\" member defines an octet string of length ";
+                message += std::to_string(d.length());
+                message += " bytes but should be 66";
+                DOMException::raise(cx, message, "SyntaxError");
+                return nullptr;
+              }
+              break;
+            }
+          }
+          // 2.9.4.2. Let key be a new CryptoKey object that represents the Elliptic Curve private key identified by interpreting jwk according to Section 6.2.2 of JSON Web Algorithms.
+          // 2.9.4.3. Set the [[type]] internal slot of Key to "private".
+          key = createECPrivateKeyFromJWK(cx, jwk);
+          if (!key) {
+            return nullptr;
+          }
+        // Otherwise:
+        } else {
+          // 2.9.4.1. If jwk does not meet the requirements of Section 6.2.1 of JSON Web Algorithms, then throw a DataError.
+          // 2.9.4.2. Let key be a new CryptoKey object that represents the Elliptic Curve public key identified by interpreting jwk according to Section 6.2.1 of JSON Web Algorithms.
+          // 2.9.4.3. Set the [[type]] internal slot of Key to "public".
+          key = createECPublicKeyFromJWK(cx, jwk);
+          if (!key) {
+            return nullptr;
+          }
+        }
+      //  Otherwise:
+        // 2.9.1. Perform any key import steps defined by other applicable specifications, passing format, jwk and obtaining key.
+        // 2.9.2. If an error occured or there are no applicable specifications, throw a DataError.
+        // NOTE: We do not implement the above 2 steps as we only support "P-256", "P-384", and "P-521".
+
+      // 2.10. If the key value is not a valid point on the Elliptic Curve identified by the namedCurve member of normalizedAlgorithm throw a DataError.
+      // 2.11. Let algorithm be a new instance of an EcKeyAlgorithm object.
+      // 2.12. Set the name attribute of algorithm to "ECDSA".
+      // 2.13. Set the namedCurve attribute of algorithm to namedCurve.
+      // 2.14. Set the [[algorithm]] internal slot of key to algorithm.
+      return CryptoKey::createECDSA(cx, this, std::move(key), extractable, usages);
+      break;
+    }
+    case CryptoKeyFormat::Pkcs8:
+    case CryptoKeyFormat::Raw:
+    case CryptoKeyFormat::Spki: {
+      MOZ_ASSERT(false);
+      // TODO finish this
+    }
+  }
+  return nullptr;
+}
+
+JSObject *CryptoAlgorithmECDSA_Import::importKey(JSContext *cx, CryptoKeyFormat format, JS::HandleValue key_data, bool extractable,
+                      CryptoKeyUsages usages) {
+  MOZ_ASSERT(cx);
+
+  KeyData data;
+  switch (format) {
+    case CryptoKeyFormat::Jwk: {
+      // This handles step 2.3: If the "kty" field of jwk is not "EC", then throw a DataError.
+      auto jwk = JsonWebKey::parse(cx, key_data, "EC");
+      if (!jwk) {
+        return nullptr;
+      }
+      data = jwk.release();
+      break;
+    }
+    case CryptoKeyFormat::Pkcs8:
+    case CryptoKeyFormat::Raw:
+    case CryptoKeyFormat::Spki: {
+      // TODO finish this
+      DOMException::raise(cx, "Supplied format is not yet supported", "NotSupportedError");
+      return nullptr;
+    }
+  }
+  return this->importKey(cx, format, data, extractable, usages);
+
+}
+JSObject *CryptoAlgorithmECDSA_Import::toObject(JSContext *cx) {
+  // Let algorithm be a new RsaHashedKeyAlgorithm dictionary.
+  JS::RootedObject algorithm(cx, JS_NewPlainObject(cx));
+
+  // Set the name attribute of algorithm to "RSASSA-PKCS1-v1_5"
+  auto alg_name = JS_NewStringCopyZ(cx, this->name());
+  if (!alg_name) {
+    return nullptr;
+  }
+  JS::RootedValue name_val(cx, JS::StringValue(alg_name));
+  if (!JS_SetProperty(cx, algorithm, "name", name_val)) {
+    return nullptr;
+  }
+
+  // Set the hash attribute of algorithm to the hash member of normalizedAlgorithm.
+  JS::RootedObject hash(cx, JS_NewObject(cx, nullptr));
+
+  auto curve_name = JS_NewStringCopyZ(cx, builtins::curveName(this->namedCurve));
+  if (!curve_name) {
+    return nullptr;
+  }
+  JS::RootedValue curve_name_val(cx, JS::StringValue(curve_name));
+  if (!JS_SetProperty(cx, algorithm, "namedCurve", curve_name_val)) {
+    return nullptr;
+  }
+  return algorithm;
+}
+
+std::unique_ptr<CryptoAlgorithmECDSA_Sign_Verify> CryptoAlgorithmECDSA_Sign_Verify::fromParameters(JSContext *cx, JS::HandleObject parameters) {
+  JS::Rooted<JS::Value> hash_val(cx);
+  if (!JS_GetProperty(cx, parameters, "hash", &hash_val)) {
+    return nullptr;
+  }
+  auto hashIdentifier = toHashIdentifier(cx, hash_val);
+  if (hashIdentifier.isErr()) {
+    return nullptr;
+  }
+  return std::make_unique<CryptoAlgorithmECDSA_Sign_Verify>(hashIdentifier.unwrap());
+}
+
+std::unique_ptr<CryptoAlgorithmECDSA_Import> CryptoAlgorithmECDSA_Import::fromParameters(JSContext *cx, JS::HandleObject parameters) {
+  JS::Rooted<JS::Value> namedCurve_val(cx);
+  if (!JS_GetProperty(cx, parameters, "namedCurve", &namedCurve_val)) {
+    return nullptr;
+  }
+
+  // P-256
+  // P-384
+  // P-512
+  auto namedCurve = toNamedCurve(cx, namedCurve_val);
+  if (namedCurve.isErr()) {
+    return nullptr;
+  }
+  return std::make_unique<CryptoAlgorithmECDSA_Import>(namedCurve.unwrap());
+}
+
 std::unique_ptr<CryptoAlgorithmRSASSA_PKCS1_v1_5_Import> CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::fromParameters(JSContext *cx, JS::HandleObject parameters) {
   JS::Rooted<JS::Value> hash_val(cx);
   if (!JS_GetProperty(cx, parameters, "hash", &hash_val)) {
@@ -1137,7 +1507,7 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
     }
 
 
-    // 2.2 If the d field of jwk is present and usages contains an entry which 
+    // 2.2 If the d field of jwk is present and usages contains an entry which
     // is not "sign", or, if the d field of jwk is not present and usages
     // contains an entry which is not "verify" then throw a SyntaxError.
     bool isUsagesAllowed = false;
@@ -1163,7 +1533,7 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
 
     // 2.4. If usages is non-empty and the use field of jwk is present and is
     // not a case-sensitive string match to "sig", then throw a DataError.
-    if (!usages.isEmpty() && jwk->use.has_value() && jwk->use != "sig") {
+    if (!usages.isEmpty() && jwk->use.has_value() && jwk->use.value() != "sig") {
       DOMException::raise(cx, "Operation not permitted", "DataError");
       return nullptr;
     }

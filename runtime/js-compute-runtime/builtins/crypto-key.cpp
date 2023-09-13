@@ -4,6 +4,7 @@
 #include "js-compute-builtins.h"
 #include "openssl/rsa.h"
 #include <iostream>
+#include <openssl/ec.h>
 #include <utility>
 
 namespace builtins {
@@ -341,11 +342,37 @@ bool CryptoKey::init_class(JSContext *cx, JS::HandleObject global) {
 }
 
 namespace {
+int numBitsToBytes(int x) { return (x / 8) + (7 + (x % 8)) / 8; }
+
 BIGNUM *convertToBigNumber(std::string_view bytes) {
   return BN_bin2bn(reinterpret_cast<const unsigned char *>(bytes.data()), bytes.length(), nullptr);
 }
 
+BIGNUM *convertToPaddedBigNumber(std::string_view bytes, size_t expected_length) {
+  if (bytes.length() != expected_length) {
+    return nullptr;
+  }
+
+  return BN_bin2bn(reinterpret_cast<const unsigned char *>(bytes.data()), bytes.length(), nullptr);
+}
+
 int getBigNumberLength(BIGNUM *a) { return BN_num_bytes(a) * 8; }
+
+int curveIdentifier(NamedCurve curve) {
+  switch (curve) {
+  case NamedCurve::P256: {
+    return NID_X9_62_prime256v1;
+  }
+  case NamedCurve::P384: {
+    return NID_secp384r1;
+  }
+  case NamedCurve::P521: {
+    return NID_secp521r1;
+  }
+  }
+  MOZ_ASSERT_UNREACHABLE();
+  return 0;
+}
 } // namespace
 
 JSObject *CryptoKey::createHMAC(JSContext *cx, CryptoAlgorithmHMAC_Import *algorithm,
@@ -371,6 +398,110 @@ JSObject *CryptoKey::createHMAC(JSContext *cx, CryptoAlgorithmHMAC_Import *algor
   JS::SetReservedSlot(instance, Slots::Usages, JS::Int32Value(usages.toInt()));
   JS::SetReservedSlot(instance, Slots::KeyDataLength, JS::Int32Value(data->size()));
   JS::SetReservedSlot(instance, Slots::KeyData, JS::PrivateValue(data.release()->data()));
+  return instance;
+}
+
+JSObject *CryptoKey::createECDSA(JSContext *cx, CryptoAlgorithmECDSA_Import *algorithm,
+                                 std::unique_ptr<CryptoKeyECComponents> keyData, bool extractable,
+                                 CryptoKeyUsages usages) {
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(algorithm);
+  CryptoKeyType keyType;
+  switch (keyData->type) {
+  case CryptoKeyECComponents::Type::Public: {
+    keyType = CryptoKeyType::Public;
+    break;
+  }
+  case CryptoKeyECComponents::Type::Private: {
+    keyType = CryptoKeyType::Private;
+    break;
+  }
+  default: {
+    MOZ_ASSERT_UNREACHABLE("Unknown `CryptoKeyECComponents::Type` value");
+    return nullptr;
+  }
+  }
+
+  // When creating a private key, we require the d information.
+  if (keyType == CryptoKeyType::Private && keyData->d.empty()) {
+    return nullptr;
+  }
+
+  // For both public and private keys, we need the public x and y.
+  if (keyData->x.empty() || keyData->y.empty()) {
+    return nullptr;
+  }
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  auto curve_nid = curveIdentifier(algorithm->namedCurve);
+  auto ec = EC_KEY_new_by_curve_name(curve_nid);
+  if (!ec) {
+    // TODO: Should we create a JS Exception here?
+    return nullptr;
+  }
+  // JWK requires the length of x, y, d to match the group degree.
+  const EC_GROUP *group = EC_KEY_get0_group(ec);
+  int degree_bytes = numBitsToBytes(EC_GROUP_get_degree(group));
+
+  // Read the public key's uncompressed affine coordinates.
+  auto x = convertToPaddedBigNumber(keyData->x, degree_bytes);
+  if (!x) {
+    return nullptr;
+  }
+
+  auto y = convertToPaddedBigNumber(keyData->y, degree_bytes);
+  if (!y) {
+    return nullptr;
+  }
+
+  if (!EC_KEY_set_public_key_affine_coordinates(ec, x, y)) {
+    // TODO: Should we create a JS Exception here?
+    return nullptr;
+  }
+
+  // Extract the "d" parameters.
+  if (!keyData->d.empty()) {
+    auto d = convertToPaddedBigNumber(keyData->d, degree_bytes);
+    if (!d) {
+      return nullptr;
+    }
+
+    if (!EC_KEY_set_private_key(ec, d)) {
+      // TODO: Should we create a JS Exception here?
+      return nullptr;
+    }
+  }
+
+  // Verify the key.
+  if (!EC_KEY_check_key(ec)) {
+    return nullptr;
+  }
+
+  // Wrap the EC_KEY into an EVP_PKEY.
+  EVP_PKEY *pkey = EVP_PKEY_new();
+  if (!pkey || !EVP_PKEY_set1_EC_KEY(pkey, ec)) {
+    return nullptr;
+  }
+#pragma clang diagnostic pop
+
+  //////////////
+  JS::RootedObject instance(
+      cx, JS_NewObjectWithGivenProto(cx, &CryptoKey::class_, CryptoKey::proto_obj));
+  if (!instance) {
+    return nullptr;
+  }
+
+  JS::RootedObject alg(cx, algorithm->toObject(cx));
+  if (!alg) {
+    return nullptr;
+  }
+
+  JS::SetReservedSlot(instance, Slots::Algorithm, JS::ObjectValue(*alg));
+  JS::SetReservedSlot(instance, Slots::Type, JS::Int32Value(static_cast<uint8_t>(keyType)));
+  JS::SetReservedSlot(instance, Slots::Extractable, JS::BooleanValue(extractable));
+  JS::SetReservedSlot(instance, Slots::Usages, JS::Int32Value(usages.toInt()));
+  JS::SetReservedSlot(instance, Slots::Key, JS::PrivateValue(pkey));
   return instance;
 }
 

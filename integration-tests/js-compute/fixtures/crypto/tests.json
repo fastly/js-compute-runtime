@@ -129,182 +129,390 @@
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-missing-e-field": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-e-field": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-missing-e-field"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-e-field"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-e-field-calls-7.1.17-ToString": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-e-field-calls-7.1.17-ToString": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-e-field-calls-7.1.17-ToString"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-e-field-calls-7.1.17-ToString"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-invalid-e-field": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-e-field": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-invalid-e-field"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-e-field"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-missing-kty-field": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-kty-field": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-missing-kty-field"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-kty-field"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-invalid-kty-field": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-kty-field": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-invalid-kty-field"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-kty-field"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-missing-key_ops-field": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-key_ops-field": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-missing-key_ops-field"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-key_ops-field"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-non-sequence-key_ops-field": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-non-sequence-key_ops-field": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-non-sequence-key_ops-field"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-non-sequence-key_ops-field"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-empty-key_ops-field": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-empty-key_ops-field": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-empty-key_ops-field"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-empty-key_ops-field"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-duplicated-key_ops-field": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-duplicated-key_ops-field": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-duplicated-key_ops-field"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-duplicated-key_ops-field"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-invalid-key_ops-field": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-key_ops-field": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-invalid-key_ops-field"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-key_ops-field"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-key_ops-field-calls-7.1.17-ToString": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-key_ops-field-calls-7.1.17-ToString"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-missing-n-field": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-n-field": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-missing-n-field"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-n-field"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-n-field-calls-7.1.17-ToString": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-n-field-calls-7.1.17-ToString": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-n-field-calls-7.1.17-ToString"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-n-field-calls-7.1.17-ToString"
     },
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.importKey/second-parameter-invalid-n-field": {
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-n-field": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.importKey/second-parameter-invalid-n-field"
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-n-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-x-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-x-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-x-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-x-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-x-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-x-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-y-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-y-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-y-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-y-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-y-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-y-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-kty-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-kty-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-kty-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-kty-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-non-sequence-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-non-sequence-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-empty-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-empty-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-duplicated-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-duplicated-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-private/second-parameter-d-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-private/second-parameter-d-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-private/second-parameter-invalid-d-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-private/second-parameter-invalid-d-field"
     },
     "downstream_response": {
       "status": 200,
@@ -448,6 +656,19 @@
     "downstream_request": {
       "method": "GET",
       "pathname": "/crypto.subtle.importKey/JWK-RS256-Public"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/JWK-EC256-Public": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/JWK-EC256-Public"
     },
     "downstream_response": {
       "status": 200,

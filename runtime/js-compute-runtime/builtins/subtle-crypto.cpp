@@ -372,7 +372,7 @@ const JSPropertySpec SubtleCrypto::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "SubtleCrypto", JSPROP_READONLY), JS_PS_END};
 
 bool SubtleCrypto::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorLatin1(cx, "Illegal constructor SubtleCrypto");
+  JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_ILLEGAL_CTOR);
   return false;
 }
 

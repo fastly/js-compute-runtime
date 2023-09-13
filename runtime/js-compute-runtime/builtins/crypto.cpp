@@ -5,6 +5,7 @@
 #include "js/experimental/TypedData.h" // used in "js/Conversions.h"
 #pragma clang diagnostic pop
 
+#include "builtins/shared/dom-exception.h"
 #include "crypto.h"
 #include "subtle-crypto.h"
 
@@ -27,17 +28,19 @@ bool Crypto::get_random_values(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   if (!args[0].isObject() || !is_int_typed_array(&args[0].toObject())) {
-    JS_ReportErrorUTF8(cx, "crypto.getRandomValues: input must be an integer-typed TypedArray");
+    DOMException::raise(cx, "crypto.getRandomValues: input must be an integer-typed TypedArray",
+                        "TypeMismatchError");
     return false;
   }
 
   JS::RootedObject typed_array(cx, &args[0].toObject());
   size_t byte_length = JS_GetArrayBufferViewByteLength(typed_array);
   if (byte_length > MAX_BYTE_LENGTH) {
-    JS_ReportErrorUTF8(cx,
-                       "crypto.getRandomValues: input byteLength must be at most %u, "
-                       "but is %zu",
-                       MAX_BYTE_LENGTH, byte_length);
+    std::string message = "crypto.getRandomValues: input byteLength must be at most ";
+    message += std::to_string(MAX_BYTE_LENGTH);
+    message += ", but is ";
+    message += std::to_string(byte_length);
+    DOMException::raise(cx, message, "QuotaExceededError");
     return false;
   }
 
@@ -179,8 +182,8 @@ JS::PersistentRooted<JSObject *> crypto;
 bool Crypto::subtle_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
   if (self != crypto.get()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE, "subtle get",
-                              "Crypto");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_INVALID_INTERFACE,
+                              "subtle get", "Crypto");
     return false;
   }
 
@@ -205,8 +208,21 @@ const JSPropertySpec Crypto::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "Crypto", JSPROP_READONLY), JS_PS_END};
 
 bool Crypto::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ILLEGAL_CTOR);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_ILLEGAL_CTOR);
   return false;
+}
+
+bool crypto_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+  auto thisv = args.thisv();
+  if (thisv != JS::UndefinedHandleValue && thisv != JS::ObjectValue(*global)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessageBuiltin, nullptr, JSMSG_INVALID_INTERFACE,
+                              "crypto get", "Window");
+    return false;
+  }
+  args.rval().setObject(*crypto);
+  return true;
 }
 
 bool Crypto::init_class(JSContext *cx, JS::HandleObject global) {
@@ -224,7 +240,6 @@ bool Crypto::init_class(JSContext *cx, JS::HandleObject global) {
   JS::RootedObject subtleCrypto(
       cx, JS_NewObjectWithGivenProto(cx, &SubtleCrypto::class_, SubtleCrypto::proto_obj));
   subtle.init(cx, subtleCrypto);
-
-  return JS_DefineProperty(cx, global, "crypto", crypto, JSPROP_ENUMERATE);
+  return JS_DefineProperty(cx, global, "crypto", crypto_get, nullptr, JSPROP_ENUMERATE);
 }
 } // namespace builtins
