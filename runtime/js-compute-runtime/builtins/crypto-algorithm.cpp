@@ -1,5 +1,6 @@
 #include "openssl/rsa.h"
 #include "openssl/sha.h"
+#include <fmt/format.h>
 #include <iostream>
 #include <optional>
 #include <span>
@@ -1325,9 +1326,7 @@ JSObject *CryptoAlgorithmECDSA_Import::importKey(JSContext *cx, CryptoKeyFormat 
           switch (this->namedCurve) {
             case NamedCurve::P256: {
               if (d.length() != 32) {
-                std::string message = "The JWK's \"d\" member defines an octet string of length ";
-                message += std::to_string(d.length());
-                message += " bytes but should be 32";
+                auto message = fmt::format("The JWK's \"d\" member defines an octet string of length {} bytes but should be 32", d.length());
                 DOMException::raise(cx, message, "SyntaxError");
                 return nullptr;
               }
@@ -1335,9 +1334,7 @@ JSObject *CryptoAlgorithmECDSA_Import::importKey(JSContext *cx, CryptoKeyFormat 
             }
             case NamedCurve::P384: {
               if (d.length() != 48) {
-                std::string message = "The JWK's \"d\" member defines an octet string of length ";
-                message += std::to_string(d.length());
-                message += " bytes but should be 48";
+                auto message = fmt::format("The JWK's \"d\" member defines an octet string of length {} bytes but should be 48", d.length());
                 DOMException::raise(cx, message, "SyntaxError");
                 return nullptr;
               }
@@ -1345,9 +1342,7 @@ JSObject *CryptoAlgorithmECDSA_Import::importKey(JSContext *cx, CryptoKeyFormat 
             }
             case NamedCurve::P521: {
               if (d.length() != 66) {
-                std::string message = "The JWK's \"d\" member defines an octet string of length ";
-                message += std::to_string(d.length());
-                message += " bytes but should be 66";
+                auto message = fmt::format("The JWK's \"d\" member defines an octet string of length {} bytes but should be 66", d.length());
                 DOMException::raise(cx, message, "SyntaxError");
                 return nullptr;
               }

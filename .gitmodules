@@ -5,3 +5,6 @@
 [submodule "runtime/spidermonkey/gecko-dev"]
 	path = runtime/spidermonkey/gecko-dev
 	url = https://github.com/bytecodealliance/gecko-dev.git
+[submodule "runtime/js-compute-runtime/third_party/fmt"]
+	path = runtime/js-compute-runtime/third_party/fmt
+	url = https://github.com/fmtlib/fmt
