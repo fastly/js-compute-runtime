@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [3.4.0](https://github.com/fastly/js-compute-runtime/compare/v3.3.5...v3.4.0) (2023-09-13)
+
+
+### Features
+
+* add ability to import ECDSA JWK keys via crypto.subtle.importKey ([#639](https://github.com/fastly/js-compute-runtime/issues/639)) ([c16b001](https://github.com/fastly/js-compute-runtime/commit/c16b001bddc2dc122c26837023ab9c53664adf8a))
+
 ## 3.3.5 (2023-09-11)
 
 
