@@ -107,6 +107,7 @@ CFLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
 
 # Includes for compiling c++
 INCLUDES := -I$(FSM_SRC)
+INCLUDES += -I$(FSM_SRC)/third_party/fmt/include
 INCLUDES += -I$(SM_SRC)/include
 INCLUDES += -I$(BUILD)/openssl/include
 
@@ -167,6 +168,9 @@ $(OBJ_DIR)/host_interface:
 	$(call cmd,mkdir,$@)
 
 $(OBJ_DIR)/host_interface/component:
+	$(call cmd,mkdir,$@)
+
+$(OBJ_DIR)/third_party/fmt/src:
 	$(call cmd,mkdir,$@)
 
 shared:
@@ -291,7 +295,9 @@ FSM_CPP += $(wildcard $(FSM_SRC)/builtins/*.cpp)
 FSM_CPP += $(wildcard $(FSM_SRC)/builtins/shared/*.cpp)
 FSM_CPP += $(wildcard $(FSM_SRC)/core/*.cpp)
 FSM_CPP += $(wildcard $(FSM_SRC)/host_interface/*.cpp)
-FSM_OBJ := $(patsubst $(FSM_SRC)/%.cpp,$(OBJ_DIR)/%.o,$(FSM_CPP))
+FSM_CPP += $(FSM_SRC)/third_party/fmt/src/format.cc
+FSM_OBJ := $(call build_dest,$(call change_cxx_extension,$(FSM_CPP),o))
+
 
 # Build all the above object files
 $(foreach source,$(FSM_CPP),$(eval $(call compile_cxx,$(source))))

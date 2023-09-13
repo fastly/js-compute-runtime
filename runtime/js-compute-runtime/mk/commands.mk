@@ -44,8 +44,12 @@ cmd_wasi_ar = $(WASI_AR) rcs $@ $1
 cmd_wasi_cxx_name := WASI_CXX
 cmd_wasi_cxx = $(WASI_CXX) $(CXX_FLAGS) $(OPT_FLAGS) $(INCLUDES) $(DEFINES) -MMD -MP -c -o $1 $<
 
+change_cxx_extension = $(patsubst %.cc,%.$2,$(1:.cpp=.$2))
+
+build_dest = $(patsubst $(FSM_SRC)/%,$(OBJ_DIR)/%,$1)
+
 # Compile a single c++ source and lazily include the dependency file.
-compile_cxx = $(call compile_cxx_impl,$1,$(patsubst $(FSM_SRC)/%.cpp,$(OBJ_DIR)/%.o,$1))
+compile_cxx = $(call compile_cxx_impl,$1,$(call build_dest,$(patsubst %.cc,%.o,$(1:.cpp=.o))))
 
 define compile_cxx_impl
 
@@ -53,7 +57,7 @@ define compile_cxx_impl
 $2: $1 $(BUILD)/openssl/token | $(shell dirname "$2")
 	$$(call cmd,wasi_cxx,$$@)
 
--include $(patsubst $(FSM_SRC)/%.cpp,$(OBJ_DIR)/%.d,$1)
+-include $(2:.o=.d)
 
 endef
 
@@ -61,13 +65,13 @@ cmd_wasi_cc_name := WASI_CC
 cmd_wasi_cc = $(WASI_CC) $(CFLAGS) $(OPT_FLAGS) $(DEFINES) -MMD -MP -c -o $1 $<
 
 # Compile a single c source and lazily include the dependency file.
-compile_c = $(call compile_c_impl,$1,$(patsubst $(FSM_SRC)/%.c,$(OBJ_DIR)/%.o,$1))
+compile_c = $(call compile_c_impl,$1,$(call build_dest,$(1:.c=.o)))
 
 define compile_c_impl
 
 $2: $1 | $(shell dirname "$2")
 	$$(call cmd,wasi_cc,$$@)
 
--include $(patsubst $(FSM_SRC)/%.c,$(OBJ_DIR)/%.d,$1)
+-include $(2:.o=.d)
 
 endef
