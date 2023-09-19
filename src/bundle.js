@@ -44,6 +44,7 @@ export const allowDynamicBackends = Object.getOwnPropertyDescriptor(globalThis.f
 
 export async function bundle(input) {
   return await build({
+    conditions: ['fastly'],
     entryPoints: [input],
     bundle: true,
     write: false,
