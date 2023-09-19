@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [3.5.0](https://github.com/fastly/js-compute-runtime/compare/v3.4.0...v3.5.0) (2023-09-19)
+
+
+### Features
+
+* implement the "fastly" condition ([#660](https://github.com/fastly/js-compute-runtime/issues/660)) ([db7db46](https://github.com/fastly/js-compute-runtime/commit/db7db46266b022afffd351421f56d5d5f7b98a53))
+
 ## 3.4.0 (2023-09-13)
 
 
