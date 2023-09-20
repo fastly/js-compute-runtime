@@ -1,12 +1,16 @@
 # Changelog
 
 
-## [3.5.0](https://github.com/fastly/js-compute-runtime/compare/v3.4.0...v3.5.0) (2023-09-19)
+## 3.5.0 (2023-09-19)
 
 
-### Features
+### Added
 
 * implement the "fastly" condition ([#660](https://github.com/fastly/js-compute-runtime/issues/660)) ([db7db46](https://github.com/fastly/js-compute-runtime/commit/db7db46266b022afffd351421f56d5d5f7b98a53))
+
+JavaScript dependencies can now target our JavaScript runtime for Fastly Compute explicitly via the recently added “fastly” WinterCG Runtime Key
+This release updates our internal bundling system to include this functionality
+Note: If you are using a custom bundling system for your JavaScript projects and want this functionality, you will need to update/configure your bundling system
 
 ## 3.4.0 (2023-09-13)
 
