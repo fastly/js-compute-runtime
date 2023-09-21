@@ -22,9 +22,6 @@ int numBitsToBytes(int x) { return (x / 8) + (7 + (x % 8)) / 8; }
 std::optional<std::pair<mozilla::UniquePtr<uint8_t[], JS::FreePolicy>, size_t>>
 convertToBytesExpand(JSContext *cx, const BIGNUM *bignum, size_t minimumBufferSize) {
   int length = BN_num_bytes(bignum);
-  if (length < 0) {
-    return std::nullopt;
-  }
 
   size_t bufferSize = std::max<size_t>(length, minimumBufferSize);
   mozilla::UniquePtr<uint8_t[], JS::FreePolicy> bytes{
