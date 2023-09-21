@@ -1195,13 +1195,26 @@
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.verify/correct-signature-jwk": {
+  "GET /crypto.subtle.verify/correct-signature-jwk-rsa": {
     "environments": [
       "viceroy", "c@e"
     ],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/crypto.subtle.verify/correct-signature-jwk"
+      "pathname": "/crypto.subtle.verify/correct-signature-jwk-rsa"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/correct-signature-jwk-ecdsa": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/correct-signature-jwk-ecdsa"
     },
     "downstream_response": {
       "status": 200,
