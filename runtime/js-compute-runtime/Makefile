@@ -195,7 +195,7 @@ $(BUILD)/openssl-$(OPENSSL_VERSION)/token: $(BUILD)/openssl-$(OPENSSL_VERSION).t
 	$Q patch -d $(BUILD)/openssl-$(OPENSSL_VERSION) -p1 < $(FSM_SRC)/third_party/rand.patch
 	$Q touch $@
 
-OPENSSL_OPTS := -static -no-sock -no-asm -no-ui-console -no-egd
+OPENSSL_OPTS := -static -no-sock -no-asm -no-ui-console -no-egd -O3
 OPENSSL_OPTS += -no-afalgeng -no-tests -no-stdio -no-threads
 OPENSSL_OPTS += -D_WASI_EMULATED_SIGNAL
 OPENSSL_OPTS += -D_WASI_EMULATED_PROCESS_CLOCKS
