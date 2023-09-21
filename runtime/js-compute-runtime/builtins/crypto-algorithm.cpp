@@ -889,8 +889,8 @@ JSObject *CryptoAlgorithmECDSA_Sign_Verify::sign(JSContext *cx, JS::HandleObject
   auto rBytesSize = rBytesAndSize.second;
 
   auto sBytesAndSize = convertToBytesExpand(cx, s, keySizeInBytes);
-  auto sBytes = std::move(sBytesAndSize.first.get());
-  auto sBytesSize = std::move(sBytesAndSize.second);
+  auto *sBytes = sBytesAndSize.first.get();
+  auto sBytesSize = sBytesAndSize.second;
 
   auto resultSize = rBytesSize + sBytesSize;
   mozilla::UniquePtr<uint8_t[], JS::FreePolicy> result{
