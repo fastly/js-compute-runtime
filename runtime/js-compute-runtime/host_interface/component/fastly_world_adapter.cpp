@@ -593,8 +593,10 @@ bool fastly_compute_at_edge_http_resp_header_names_get(
     cursor = (uint32_t)next_cursor;
   }
   cabi_free(buf);
-  strs = static_cast<fastly_world_string_t *>(cabi_realloc(
-      strs, str_max * sizeof(fastly_world_string_t), 1, str_cnt * sizeof(fastly_world_string_t)));
+  if (str_cnt != 0) {
+    strs = static_cast<fastly_world_string_t *>(cabi_realloc(
+        strs, str_max * sizeof(fastly_world_string_t), 1, str_cnt * sizeof(fastly_world_string_t)));
+  }
   ret->ptr = strs;
   ret->len = str_cnt;
   return true;
