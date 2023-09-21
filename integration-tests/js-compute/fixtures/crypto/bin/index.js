@@ -1,30 +1,8 @@
 /// <reference path="../../../../../types/index.d.ts" />
 /* eslint-env serviceworker, shared-node-browser, browser */
 
-import { env } from 'fastly:env';
-import { pass, fail, assert, assertThrows, assertRejects, assertResolves } from "../../../assertions.js";
-
-addEventListener("fetch", event => {
-  event.respondWith(app(event));
-});
-/**
- * @param {FetchEvent} event
- * @returns {Response}
- */
-async function app(event) {
-  try {
-    const path = (new URL(event.request.url)).pathname;
-    console.log(`path: ${path}`)
-    console.log(`FASTLY_SERVICE_VERSION: ${env('FASTLY_SERVICE_VERSION')}`)
-    if (routes.has(path)) {
-      const routeHandler = routes.get(path);
-      return await routeHandler();
-    }
-    return fail(`${path} endpoint does not exist`)
-  } catch (error) {
-    return fail(`The routeHandler threw an error: ${error.message}` + '\n' + error.stack)
-  }
-}
+import { pass, assert, assertThrows, assertRejects, assertResolves } from "../../../assertions.js";
+import { routes } from "../../../test-harness.js";
 
 // From https://www.rfc-editor.org/rfc/rfc7517#appendix-A.1
 const publicRsaJsonWebKeyData = {
@@ -92,14 +70,8 @@ const rsaJsonWebKeyAlgorithm = {
 const ecdsaJsonWebKeyAlgorithm = {
   name: "ECDSA",
   namedCurve: "P-256",
-}
-
-const routes = new Map();
-routes.set('/', () => {
-  routes.delete('/');
-  let test_routes = Array.from(routes.keys())
-  return new Response(JSON.stringify(test_routes), { 'headers': { 'content-type': 'application/json' } });
-});
+  hash: {name: "SHA-256"},
+};
 
 let error;
 routes.set("/crypto", async () => {
@@ -1207,13 +1179,24 @@ routes.set("/crypto.subtle", async () => {
   }
   // correct-signature
   {
-    routes.set("/crypto.subtle.verify/correct-signature-jwk", async () => {
+    routes.set("/crypto.subtle.verify/correct-signature-jwk-rsa", async () => {
       const pkey = await crypto.subtle.importKey('jwk', privateRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, privateRsaJsonWebKeyData.ext, privateRsaJsonWebKeyData.key_ops);
       const key = await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, publicRsaJsonWebKeyData.key_ops);
       const enc = new TextEncoder();
       const data = enc.encode('hello world');
       const signature = await crypto.subtle.sign(rsaJsonWebKeyAlgorithm, pkey, data);
       const result = await crypto.subtle.verify(rsaJsonWebKeyAlgorithm, key, signature, data);
+      error = assert(result, true, "result === true");
+      if (error) { return error; }
+      return pass('ok');
+    });
+    routes.set("/crypto.subtle.verify/correct-signature-jwk-ecdsa", async () => {
+      const pkey = await crypto.subtle.importKey('jwk', privateEcdsaJsonWebKeyData, ecdsaJsonWebKeyAlgorithm, privateEcdsaJsonWebKeyData.ext, privateEcdsaJsonWebKeyData.key_ops);
+      const key = await crypto.subtle.importKey('jwk', publicEcdsaJsonWebKeyData, ecdsaJsonWebKeyAlgorithm, publicEcdsaJsonWebKeyData.ext, publicEcdsaJsonWebKeyData.key_ops);
+      const enc = new TextEncoder();
+      const data = enc.encode('hello world');
+      const signature = await crypto.subtle.sign(ecdsaJsonWebKeyAlgorithm, pkey, data);
+      const result = await crypto.subtle.verify(ecdsaJsonWebKeyAlgorithm, key, signature, data);
       error = assert(result, true, "result === true");
       if (error) { return error; }
       return pass('ok');
