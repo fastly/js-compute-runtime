@@ -894,7 +894,7 @@ JSObject *CryptoAlgorithmECDSA_Sign_Verify::sign(JSContext *cx, JS::HandleObject
 
   auto sBytesAndSize = convertToBytesExpand(cx, s, keySizeInBytes);
   if (!sBytesAndSize.has_value()) {}
-  auto sBytes = std::move(sBytesAndSize.value().first);
+  auto *sBytes = sBytesAndSize->first.get();
   auto sBytesSize = sBytesAndSize->second;
 
   auto resultSize = rBytesSize + sBytesSize;
