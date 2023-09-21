@@ -33,8 +33,7 @@ convertToBytesExpand(JSContext *cx, const BIGNUM *bignum, size_t minimumBufferSi
   size_t paddingLength = bufferSize - length;
   if (paddingLength > 0) {
     uint8_t padding = BN_is_negative(bignum) ? 0xFF : 0x00;
-    for (size_t i = 0; i < paddingLength; i++)
-      bytes[i] = padding;
+    std::fill_n(bytes + i, paddingLength, padding);
   }
   BN_bn2bin(bignum, bytes.get() + paddingLength);
   return std::pair<mozilla::UniquePtr<uint8_t[], JS::FreePolicy>, size_t>(std::move(bytes),
