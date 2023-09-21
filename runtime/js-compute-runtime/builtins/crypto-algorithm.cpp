@@ -19,7 +19,7 @@ namespace builtins {
 namespace {
 int numBitsToBytes(int x) { return (x / 8) + (7 + (x % 8)) / 8; }
 
-std::optional<std::pair<mozilla::UniquePtr<uint8_t[], JS::FreePolicy>, size_t>>
+std::pair<mozilla::UniquePtr<uint8_t[], JS::FreePolicy>, size_t>
 convertToBytesExpand(JSContext *cx, const BIGNUM *bignum, size_t minimumBufferSize) {
   int length = BN_num_bytes(bignum);
 
@@ -30,7 +30,7 @@ convertToBytesExpand(JSContext *cx, const BIGNUM *bignum, size_t minimumBufferSi
   size_t paddingLength = bufferSize - length;
   if (paddingLength > 0) {
     uint8_t padding = BN_is_negative(bignum) ? 0xFF : 0x00;
-    std::fill_n(bytes + i, paddingLength, padding);
+    std::fill_n(bytes.get(), paddingLength, padding);
   }
   BN_bn2bin(bignum, bytes.get() + paddingLength);
   return std::pair<mozilla::UniquePtr<uint8_t[], JS::FreePolicy>, size_t>(std::move(bytes),
