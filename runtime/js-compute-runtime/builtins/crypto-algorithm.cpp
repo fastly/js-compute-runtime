@@ -885,23 +885,19 @@ JSObject *CryptoAlgorithmECDSA_Sign_Verify::sign(JSContext *cx, JS::HandleObject
   size_t keySizeInBytes = numBitsToBytes(keySize.unwrap());
 
   auto rBytesAndSize = convertToBytesExpand(cx, r, keySizeInBytes);
-  if (!rBytesAndSize.has_value()) {}
-  auto rBytes = std::move(rBytesAndSize.value().first);
-  auto rBytesSize = std::move(rBytesAndSize.value().second);
+  auto rBytes = std::move(rBytesAndSize.first.get());
+  auto rBytesSize = std::move(rBytesAndSize.second);
 
   auto sBytesAndSize = convertToBytesExpand(cx, s, keySizeInBytes);
-  if (!sBytesAndSize.has_value()) {}
-  auto *sBytes = sBytesAndSize->first.get();
-  auto sBytesSize = sBytesAndSize->second;
+  auto sBytes = std::move(sBytesAndSize.first.get());
+  auto sBytesSize = std::move(sBytesAndSize.second);
 
   auto resultSize = rBytesSize + sBytesSize;
   mozilla::UniquePtr<uint8_t[], JS::FreePolicy> result{
       static_cast<uint8_t *>(JS_malloc(cx, resultSize))};
 
-  std::memcpy(result.get(), rBytes.get(), rBytesSize);
-  std::memcpy(result.get() + rBytesSize, sBytes.get(), sBytesSize);
-  static_cast<void>(rBytes.release());
-  static_cast<void>(sBytes.release());
+  std::memcpy(result.get(), rBytes, rBytesSize);
+  std::memcpy(result.get() + rBytesSize, sBytes, sBytesSize);
 
   // 7. Return the result of creating an ArrayBuffer containing result.
   JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, resultSize, result.get()));
