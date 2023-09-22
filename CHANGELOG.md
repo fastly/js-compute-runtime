@@ -1,10 +1,10 @@
 # Changelog
 
 
-## [3.6.0](https://github.com/fastly/js-compute-runtime/compare/v3.5.0...v3.6.0) (2023-09-22)
+## 3.6.0 (2023-09-22)
 
 
-### Features
+### Added
 
 * add support for ECDSA keys to be used with SubtleCrypto.prototype.sign and SubtleCrypto.prototype.verify ([#667](https://github.com/fastly/js-compute-runtime/issues/667)) ([51bb170](https://github.com/fastly/js-compute-runtime/commit/51bb1703fb81fddac24b152fc7b1e0f32f976de5))
 
