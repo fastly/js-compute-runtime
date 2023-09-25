@@ -64,7 +64,7 @@ else
   CARGO_FLAG := --release
 
   # Strip binaries when making a non-debug build.
-  WASM_STRIP = wasm-opt --strip-debug -o $1 $1
+  WASM_STRIP = $(WASI_SDK)/bin/strip -o $1 $1
 endif
 
 # The path to the wasm-tools executable
