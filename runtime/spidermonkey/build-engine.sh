@@ -23,7 +23,7 @@ ac_add_options --disable-shared-memory
 ac_add_options --disable-tests
 ac_add_options --disable-clang-plugin
 ac_add_options --enable-jitspew
-ac_add_options --enable-optimize=-O3
+ac_add_options --enable-optimize="-O3 -mmultivalue"
 ac_add_options --enable-js-streams
 ac_add_options --enable-portable-baseline-interp
 ac_add_options --prefix=${working_dir}/${objdir}/dist

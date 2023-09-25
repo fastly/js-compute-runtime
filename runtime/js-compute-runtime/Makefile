@@ -98,11 +98,13 @@ CXX_FLAGS := -std=gnu++20 -Wall -Werror -Qunused-arguments
 CXX_FLAGS += -fno-sized-deallocation -fno-aligned-new -mthread-model single
 CXX_FLAGS += -fPIC -fno-rtti -fno-exceptions -fno-math-errno -pipe
 CXX_FLAGS += -fno-omit-frame-pointer -funwind-tables -m32
+CXX_FLAGS += -mmultivalue
 CXX_FLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
 
 # Flags for C compilation
 CFLAGS := -Wall -Werror -Wno-unknown-attributes -Wno-pointer-to-int-cast
 CFLAGS += -Wno-int-to-pointer-cast -m32
+CFLAGS += -mmultivalue
 CFLAGS += --sysroot=$(WASI_SDK)/share/wasi-sysroot
 
 # Includes for compiling c++
@@ -196,6 +198,7 @@ $(BUILD)/openssl-$(OPENSSL_VERSION)/token: $(BUILD)/openssl-$(OPENSSL_VERSION).t
 	$Q touch $@
 
 OPENSSL_OPTS := -static -no-sock -no-asm -no-ui-console -no-egd -O3
+OPENSSL_OPTS += -mmultivalue
 OPENSSL_OPTS += -no-afalgeng -no-tests -no-stdio -no-threads
 OPENSSL_OPTS += -D_WASI_EMULATED_SIGNAL
 OPENSSL_OPTS += -D_WASI_EMULATED_PROCESS_CLOCKS
