@@ -1,0 +1,4797 @@
+{
+  "GET /async-select/hello": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/async-select/hello"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": [
+        ["FooName", "FooValue"],
+        ["BarName", "BarValue"]
+      ],
+      "body": "pong"
+    }
+  },
+  "GET /btoa": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/btoa"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /byob": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/byob"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": ["hey3"]
+    }
+  },
+  "GET /byte-repeater": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/byte-repeater"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": ["11223344", "5566778899001122\n\n"]
+    }
+  },
+  "GET /cache-override/constructor/called-as-regular-function": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-override/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /cache-override/constructor/parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-override/constructor/parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /cache-override/constructor/empty-parameter": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-override/constructor/empty-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /cache-override/constructor/invalid-mode": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-override/constructor/invalid-mode"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /cache-override/constructor/valid-mode": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-override/constructor/valid-mode"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /cache-override/fetch/mode-none": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-override/fetch/mode-none"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /cache-override/fetch/mode-pass": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-override/fetch/mode-pass"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/interface": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-store/constructor/called-as-regular-function": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-store/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/constructor/throws": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/constructor/throws"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/purge/called-as-constructor": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/purge/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/purge/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/purge/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/purge/key-parameter-not-supplied": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/purge/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/purge/key-parameter-empty-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/purge/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/purge/key-parameter-8135-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/purge/key-parameter-8135-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/purge/key-parameter-8136-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/purge/key-parameter-8136-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/purge/options-parameter": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/purge/options-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/purge/returns-undefined": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/purge/returns-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/called-as-constructor": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/tll-parameter-7.1.4-ToNumber": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/tll-parameter-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/no-parameters-supplied": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/no-parameters-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/key-parameter-empty-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/key-parameter-8135-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/key-parameter-8135-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/key-parameter-8136-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/key-parameter-8136-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/ttl-parameter-negative-number": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/ttl-parameter-negative-number"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/ttl-parameter-NaN": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/ttl-parameter-NaN"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/ttl-parameter-Infinity": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/ttl-parameter-Infinity"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-as-undefined": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-as-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-missing-length-parameter": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-missing-length-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-negative-length-parameter": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-negative-length-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-nan-length-parameter": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-nan-length-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-negative-infinity-length-parameter": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-negative-infinity-length-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-positive-infinity-length-parameter": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-positive-infinity-length-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/length-parameter-7.1.4-ToNumber": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/length-parameter-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-empty": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-empty"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream-locked": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream-locked"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-readablestream": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-readablestream"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-URLSearchParams": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-URLSearchParams"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-strings": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-strings"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-buffer": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-buffer"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-arraybuffer": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-arraybuffer"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-typed-arrays": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-typed-arrays"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/value-parameter-dataview": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/value-parameter-dataview"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/set/returns-undefined": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/set/returns-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/called-as-constructor": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-parameter-not-supplied": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-parameter-empty-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-parameter-8135-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-parameter-8135-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-parameter-8136-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-parameter-8136-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-does-not-exist-returns-null": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-does-not-exist-returns-null"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/get/key-exists": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/get/key-exists"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/interface": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/text/valid": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/text/valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/json/valid": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/json/valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/json/invalid": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/json/invalid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/arrayBuffer/valid": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/arrayBuffer/valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/body": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/body"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/bodyUsed": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/bodyUsed"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache-entry/readablestream": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache-entry/readablestream"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/called-as-constructor": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/no-parameters-supplied": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/no-parameters-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/key-parameter-empty-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/key-parameter-8135-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/key-parameter-8135-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/key-parameter-8136-character-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/key-parameter-8136-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/ttl-field-7.1.4-ToNumber": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/ttl-field-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/ttl-field-negative-number": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/ttl-field-negative-number"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/ttl-field-NaN": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/ttl-field-NaN"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/ttl-field-Infinity": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/ttl-field-Infinity"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-as-undefined": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-as-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-readablestream-missing-length-field": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-readablestream-missing-length-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-readablestream-negative-length-field": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-readablestream-negative-length-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-readablestream-nan-length-field": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-readablestream-nan-length-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-readablestream-negative-infinity-length-field": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-readablestream-negative-infinity-length-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-readablestream-positive-infinity-length-field": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-readablestream-positive-infinity-length-field"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/length-field-7.1.4-ToNumber": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/length-field-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-readablestream-empty": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-readablestream-empty"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-readablestream-locked": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-readablestream-locked"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-readablestream": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-readablestream"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-URLSearchParams": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-URLSearchParams"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-strings": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-strings"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-calls-7.1.17-ToString": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-buffer": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-buffer"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-typed-arrays": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-typed-arrays"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/value-field-dataview": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/value-field-dataview"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/returns-SimpleCacheEntry": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/returns-SimpleCacheEntry"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/executes-the-set-method-when-key-not-in-cache": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/executes-the-set-method-when-key-not-in-cache"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/does-not-execute-the-set-method-when-key-is-in-cache": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/does-not-execute-the-set-method-when-key-is-in-cache"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /simple-cache/getOrSet/does-not-freeze-when-called-after-a-get": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/simple-cache/getOrSet/does-not-execute-the-set-method-when-key-is-in-cache"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /client/tlsJA3MD5": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/client/tlsJA3MD5"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /client/tlsClientHello": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/client/tlsClientHello"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /client/tlsClientCertificate": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/client/tlsClientCertificate"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /client/tlsCipherOpensslName": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/client/tlsCipherOpensslName"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /client/tlsProtocol": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/client/tlsProtocol"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /config-store": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/config-store"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /console": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/console"
+    },
+    "downstream_response": {
+      "status": 200
+    },
+    "logs": [
+      "stdout :: Log: Happy birthday Aki and Yuki!",
+      "stdout :: Log: Map: Map(2) { { a: 1, b: { c: 2 } } => 2, [Function foo] => {} }",
+      "stdout :: Log: Set: Set(3) { { a: 1, b: { c: 2 } }, 2, 3 }",
+      "stdout :: Log: Array: [1, 2, 3, [], 5]",
+      "stdout :: Log: Object: { a: 1, b: 2, c: 3, d: [Function d], f: [Getter], g: [Function bar] }",
+      "stdout :: Log: function: [Function]",
+      "stdout :: Log: boolean: true",
+      "stdout :: Log: undefined: undefined",
+      "stdout :: Log: null: null",
+      "stdout :: Log: proxy: { a: 21 }",
+      "stdout :: Log: Infinity: Infinity",
+      "stdout :: Log: NaN: NaN",
+      "stdout :: Log: Symbol: Symbol(\"wow\")",
+      "stdout :: Log: Error: (new Error(\"uh oh\", \"<stdin>\", 40))",
+      "stdout :: Log: Number: 1",
+      "stdout :: Log: Number: 1.111",
+      "stdout :: Log: BigInt: 10n",
+      "stdout :: Log: Date: new Date(1660816667120)",
+      "stdout :: Log: string: cake",
+      "stdout :: Log: RegExp: /magic/",
+      "stdout :: Log: Int8Array: Int8Array [1, 3, 4, 2, 5, 6, -97]",
+      "stdout :: Log: Uint8Array: Uint8Array [1, 3, 4, 2, 5, 6, 159]",
+      "stdout :: Log: Uint8ClampedArray: Uint8ClampedArray [1, 3, 4, 2, 5, 6, 255]",
+      "stdout :: Log: Int16Array: Int16Array [1, 3, 4, 2, 5, 6, -31073]",
+      "stdout :: Log: Uint16Array: Uint16Array [1, 3, 4, 2, 5, 6, 34463]",
+      "stdout :: Log: Int32Array: Int32Array [1, 3, 4, 2, 5, 6, 99999]",
+      "stdout :: Log: Uint32Array: Uint32Array [1, 3, 4, 2, 5, 6, 99999]",
+      "stdout :: Log: Float32Array: Float32Array [1, 3, 4, 2, 5, 6, 99999]",
+      "stdout :: Log: Float64Array: Float64Array [1, 3, 4, 2, 5, 6, 99999]",
+      "stdout :: Log: BigInt64Array: BigInt64Array [1n, 3n, 4n, 2n, 5n, 6n, 99999n]",
+      "stdout :: Log: BigUint64Array: BigUint64Array [1n, 3n, 4n, 2n, 5n, 6n, 99999n]",
+      "stdout :: Log: WeakMap: WeakMap { <items unknown> }",
+      "stdout :: Log: WeakSet: WeakSet { <items unknown> }",
+      "stdout :: Log: Promise: Promise { <pending> }",
+      "stdout :: Log: resolved promise: Promise { 9 }",
+      "stdout :: Log: rejected promise: Promise { <rejected> (new Error(\"oops\", \"<stdin>\", 85)) }",
+      "stdout :: Log: Response: Response { redirected: false, type: \"default\", url: \"\", status: 200, ok: true, statusText: \"\", version: 2, headers: Headers {}, body: ReadableStream { locked: false }, bodyUsed: false }",
+      "stdout :: Log: Request: Request { method: \"POST\", url: \"https://www.fastly.com/\", version: 2, headers: Headers {}, body: null, bodyUsed: false }",
+      "stdout :: Log: ReadableStream: ReadableStream { locked: false }",
+      "stdout :: Log: TransformStream: TransformStream { readable: ReadableStream { locked: false }, writable: WritableStream {} }",
+      "stdout :: Log: WritableStream: WritableStream {}",
+      "stdout :: Log: URL: URL { hash: \"\", host: \"www.test.com:123\", hostname: \"www.test.com\", href: \"https://www.test.com:123/asdf?some&params=val\", origin: \"https://www.test.com:123\", password: \"\", pathname: \"/asdf\", port: \"123\", protocol: \"https:\", search: \"?some&params=val\", searchParams: URLSearchParams {}, username: \"\" }"
+    ]
+  },
+  "GET /crypto": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/length": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/length"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/called-as-constructor": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/called-with-wrong-this": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/called-with-wrong-this"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/called-with-no-arguments": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/called-with-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/first-parameter-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/first-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/first-parameter-non-existant-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/first-parameter-non-existant-format"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/second-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/second-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-e-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-e-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-e-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-e-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-e-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-e-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-kty-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-kty-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-kty-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-kty-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-non-sequence-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-non-sequence-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-empty-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-empty-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-duplicated-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-duplicated-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-n-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-n-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-n-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-n-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-n-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-n-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-x-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-x-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-x-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-x-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-x-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-x-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-y-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-y-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-y-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-y-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-y-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-y-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-kty-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-kty-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-kty-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-kty-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-non-sequence-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-non-sequence-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-empty-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-empty-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-duplicated-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-duplicated-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-key_ops-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-key_ops-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-private/second-parameter-d-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-private/second-parameter-d-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/ecdsa-jwk-private/second-parameter-invalid-d-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/ecdsa-jwk-private/second-parameter-invalid-d-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/third-parameter-undefined": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/third-parameter-undefined"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/third-parameter-name-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/third-parameter-name-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/third-parameter-invalid-name-field": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/third-parameter-invalid-name-field"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/third-parameter-hash-name-field-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/third-parameter-hash-name-field-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/third-parameter-hash-algorithm-does-not-match-json-web-key-hash-algorithm": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/third-parameter-hash-algorithm-does-not-match-json-web-key-hash-algorithm"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/fifth-parameter-undefined": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/fifth-parameter-undefined"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/fifth-parameter-invalid": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/fifth-parameter-invalid"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/fifth-parameter-duplicate-operations": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/fifth-parameter-duplicate-operations"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/fifth-parameter-operations-do-not-match-json-web-key-operations": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/fifth-parameter-operations-do-not-match-json-web-key-operations"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/fifth-parameter-operation-fields-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/fifth-parameter-operation-fields-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/JWK-RS256-Public": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/JWK-RS256-Public"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/JWK-EC256-Public": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/JWK-EC256-Public"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/HMAC": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/HMAC"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/JWK-HS256-Public": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.importKey/JWK-HS256-Public"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest/length": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/length"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest/called-as-constructor": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest/called-with-wrong-this": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/called-with-wrong-this"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest/called-with-no-arguments": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/called-with-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest/first-parameter-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/first-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest/first-parameter-non-existant-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/first-parameter-non-existant-format"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest/second-parameter-undefined": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/second-parameter-undefined"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest/md5": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/md5"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest/sha-1": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/sha-1"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest/sha-256": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/sha-256"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest/sha-384": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/sha-384"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.digest/sha-512": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.digest/sha-512"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.sign": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.sign/length": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/length"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.sign/called-as-constructor": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.sign/called-with-wrong-this": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/called-with-wrong-this"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.sign/called-with-no-arguments": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/called-with-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.sign/first-parameter-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/first-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.sign/first-parameter-non-existant-algorithm": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/first-parameter-non-existant-algorithm"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.sign/second-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/second-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.sign/second-parameter-invalid-usages": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/second-parameter-invalid-usages"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.sign/third-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/third-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.sign/happy-path-jwk": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/happy-path-jwk"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.sign/happy-path-hmac": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.sign/happy-path-hmac"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/length": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/length"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/called-as-constructor": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/called-with-wrong-this": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/called-with-wrong-this"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/called-with-no-arguments": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/called-with-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/first-parameter-calls-7.1.17-ToString": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/first-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/first-parameter-non-existant-algorithm": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/first-parameter-non-existant-algorithm"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/second-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/second-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/second-parameter-invalid-usages": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/second-parameter-invalid-usages"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/third-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/third-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/fourth-parameter-invalid-format": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/fourth-parameter-invalid-format"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/incorrect-signature-jwk": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/incorrect-signature-jwk"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/incorrect-signature-hmac": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/incorrect-signature-hmac"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/correct-signature-jwk-rsa": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/correct-signature-jwk-rsa"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/correct-signature-jwk-ecdsa": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/correct-signature-jwk-ecdsa"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.verify/correct-signature-hmac": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/crypto.subtle.verify/correct-signature-hmac"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /implicit-dynamic-backend/dynamic-backends-disabled": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/implicit-dynamic-backend/dynamic-backends-disabled"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /implicit-dynamic-backend/dynamic-backends-enabled": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/implicit-dynamic-backend/dynamic-backends-enabled"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /implicit-dynamic-backend/dynamic-backends-enabled-called-twice": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/implicit-dynamic-backend/dynamic-backends-enabled-called-twice"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /explicit-dynamic-backend/dynamic-backends-enabled-all-fields": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/explicit-dynamic-backend/dynamic-backends-enabled-all-fields"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /explicit-dynamic-backend/dynamic-backends-enabled-minimal-fields": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/explicit-dynamic-backend/dynamic-backends-enabled-minimal-fields"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/interface": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/interface"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/called-as-regular-function": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/empty-parameter": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/empty-parameter"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-not-an-object": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-not-an-object"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-name-property-null": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-name-property-null"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-name-property-undefined": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-name-property-undefined"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-name-property-too-long": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-name-property-too-long"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-name-property-empty-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-name-property-empty-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-name-property-calls-7.1.17-ToString": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-name-property-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-target-property-null": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-target-property-null"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-target-property-undefined": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-target-property-undefined"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-target-property-empty-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-target-property-empty-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-target-property-calls-7.1.17-ToString": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-target-property-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-target-property-valid-host": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-target-property-valid-host"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-target-property-invalid-host": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-target-property-invalid-host"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-ciphers-property-empty-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-ciphers-property-empty-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-ciphers-property-invalid-cipherlist-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-ciphers-property-invalid-cipherlist-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-supported-by-fastly": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-supported-by-fastly"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-but-not-supported-by-fastly": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-but-not-supported-by-fastly"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-ciphers-property-calls-7.1.17-ToString": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-ciphers-property-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-hostOverride-property-empty-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-hostOverride-property-empty-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-hostOverride-property-calls-7.1.17-ToString": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-hostOverride-property-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-hostOverride-property-valid-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-hostOverride-property-valid-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-connectTimeout-property-negative-number": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-connectTimeout-property-negative-number"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-connectTimeout-property-too-big": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-connectTimeout-property-too-big"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-connectTimeout-property-calls-7.1.4-ToNumber": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-connectTimeout-property-calls-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-connectTimeout-property-valid-number": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-connectTimeout-property-valid-number"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-firstByteTimeout-property-negative-number": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-firstByteTimeout-property-negative-number"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-firstByteTimeout-property-too-big": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-firstByteTimeout-property-too-big"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-firstByteTimeout-property-calls-7.1.4-ToNumber": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-firstByteTimeout-property-calls-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-firstByteTimeout-property-valid-number": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-firstByteTimeout-property-valid-number"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-betweenBytesTimeout-property-negative-number": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-betweenBytesTimeout-property-negative-number"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-betweenBytesTimeout-property-too-big": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-betweenBytesTimeout-property-too-big"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-betweenBytesTimeout-property-calls-7.1.4-ToNumber": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-betweenBytesTimeout-property-calls-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-betweenBytesTimeout-property-valid-number": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-betweenBytesTimeout-property-valid-number"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-useSSL-property-valid-boolean": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-useSSL-property-valid-boolean"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-dontPool-property-valid-boolean": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-dontPool-property-valid-boolean"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-tlsMinVersion-property-nan": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-tlsMinVersion-property-nan"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-tlsMinVersion-property-invalid-number": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-tlsMinVersion-property-invalid-number"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-tlsMinVersion-property-calls-7.1.4-ToNumber": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-tlsMinVersion-property-calls-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-tlsMinVersion-property-valid-number": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-tlsMinVersion-property-valid-number"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-tlsMinVersion-greater-than-tlsMaxVersion": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-tlsMinVersion-greater-than-tlsMaxVersion"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-tlsMaxVersion-property-nan": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-tlsMaxVersion-property-nan"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-tlsMaxVersion-property-invalid-number": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-tlsMaxVersion-property-invalid-number"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-tlsMaxVersion-property-calls-7.1.4-ToNumber": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-tlsMaxVersion-property-calls-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-tlsMaxVersion-property-valid-number": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-tlsMaxVersion-property-valid-number"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-certificateHostname-property-empty-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-certificateHostname-property-empty-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-certificateHostname-property-calls-7.1.17-ToString": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-certificateHostname-property-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-certificateHostname-property-valid-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-certificateHostname-property-valid-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-checkCertificate-property-valid-boolean": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-checkCertificate-property-valid-boolean"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-caCertificate-property-empty-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-caCertificate-property-empty-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-caCertificate-property-calls-7.1.17-ToString": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-caCertificate-property-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-caCertificate-property-valid-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-caCertificate-property-valid-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-sniHostname-property-empty-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-sniHostname-property-empty-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-sniHostname-property-calls-7.1.17-ToString": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-sniHostname-property-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-sniHostname-property-valid-string": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-sniHostname-property-valid-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /dictionary/exposed-as-global": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/exposed-as-global"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/interface": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/constructor/called-as-regular-function": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/constructor/parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/constructor/parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/constructor/empty-parameter": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/constructor/empty-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/constructor/found": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/constructor/found"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/constructor/invalid-name": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/constructor/invalid-name"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/called-as-constructor": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/called-unbound": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-parameter-not-supplied": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-parameter-empty-string": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-parameter-255-character-string": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-parameter-255-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-parameter-256-character-string": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-parameter-256-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-does-not-exist-returns-null": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-does-not-exist-returns-null"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /dictionary/get/key-exists": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/dictionary/get/key-exists"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /env": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/env"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /createFanoutHandoff": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/createFanoutHandoff"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly/now": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly/now"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly/getgeolocationforipaddress/interface": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly/getgeolocationforipaddress/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly/getgeolocationforipaddress/called-as-constructor": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly/getgeolocationforipaddress/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly/getgeolocationforipaddress/parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly/getgeolocationforipaddress/parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly/getgeolocationforipaddress/parameter-not-supplied": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly/getgeolocationforipaddress/parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly/getgeolocationforipaddress/parameter-empty-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly/getgeolocationforipaddress/parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly/getgeolocationforipaddress/parameter-ipv4-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly/getgeolocationforipaddress/parameter-ipv4-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly/getgeolocationforipaddress/parameter-compressed-ipv6-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly/getgeolocationforipaddress/parameter-compressed-ipv6-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly/getgeolocationforipaddress/parameter-shortened-ipv6-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly/getgeolocationforipaddress/parameter-shortened-ipv6-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly/getgeolocationforipaddress/parameter-expanded-ipv6-string": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly/getgeolocationforipaddress/parameter-expanded-ipv6-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly/getgeolocationforipaddress/called-unbound": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly/getgeolocationforipaddress/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fastly:geolocation": {
+    "environments": ["c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fastly:geolocation"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /includeBytes": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/includeBytes"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/exposed-as-global": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/exposed-as-global"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/interface": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/constructor/called-as-regular-function": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/constructor/parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/constructor/parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/constructor/empty-parameter": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/constructor/empty-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/constructor/found-store": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/constructor/found-store"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/constructor/missing-store": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/constructor/missing-store"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/constructor/invalid-name": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/constructor/invalid-name"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/called-as-constructor": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/called-unbound": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/key-parameter-not-supplied": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/key-parameter-empty-string": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/key-parameter-1024-character-string": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/key-parameter-1024-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/key-parameter-1025-character-string": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/key-parameter-1025-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/key-parameter-containing-newline": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/key-parameter-containing-newline"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/key-parameter-containing-carriage-return": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/key-parameter-containing-carriage-return"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/key-parameter-starting-with-well-known-acme-challenge": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/key-parameter-starting-with-well-known-acme-challenge"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/key-parameter-single-dot": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/key-parameter-single-dot"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/key-parameter-double-dot": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/key-parameter-double-dot"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/key-parameter-containing-special-characters": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/key-parameter-containing-special-characters"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-as-undefined": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-as-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-not-supplied": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-readablestream-empty": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-readablestream-empty"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-readablestream-under-30mb": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-readablestream-under-30mb"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-readablestream-over-30mb": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-readablestream-over-30mb"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-readablestream-locked": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-readablestream-locked"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-URLSearchParams": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-URLSearchParams"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-strings": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-strings"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-string-over-30mb": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-string-over-30mb"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-buffer": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-buffer"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-arraybuffer": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-arraybuffer"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-typed-arrays": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-typed-arrays"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/put/value-parameter-dataview": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/put/value-parameter-dataview"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/called-as-constructor": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/called-unbound": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-parameter-not-supplied": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-parameter-empty-string": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-parameter-1024-character-string": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-parameter-1024-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-parameter-1025-character-string": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-parameter-1025-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-parameter-containing-newline": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-parameter-containing-newline"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-parameter-containing-carriage-return": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-parameter-containing-carriage-return"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-parameter-starting-with-well-known-acme-challenge": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-parameter-starting-with-well-known-acme-challenge"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-parameter-single-dot": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-parameter-single-dot"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-parameter-double-dot": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-parameter-double-dot"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-parameter-containing-special-characters": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-parameter-containing-special-characters"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-does-not-exist-returns-null": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-does-not-exist-returns-null"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/key-exists": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/key-exists"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store-entry/interface": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store-entry/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store-entry/text/valid": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store-entry/text/valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store-entry/json/valid": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store-entry/json/valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store-entry/json/invalid": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store-entry/json/invalid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store-entry/arrayBuffer/valid": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store-entry/arrayBuffer/valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store-entry/body": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store-entry/body"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store-entry/bodyUsed": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store-entry/bodyUsed"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /logger": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/logger"
+    },
+    "downstream_response": {
+      "status": 200
+    },
+    "logs": ["ComputeLog :: Hello!"]
+  },
+  "GET /missing-backend": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/missing-backend"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /multiple-set-cookie/response-init": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/multiple-set-cookie/response-init"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": [
+        [
+          "Set-Cookie",
+          "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure"
+        ],
+        [
+          "Set-Cookie",
+          "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
+        ],
+        [
+          "Set-Cookie",
+          "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
+        ],
+        ["Set-Cookie", "test2=2"],
+        ["Set-Cookie", "test3=3"],
+        ["Set-Cookie", "test4=4"],
+        ["Set-Cookie", "test5=5"],
+        ["Set-Cookie", "test6=6"],
+        ["Set-Cookie", "test7=7"],
+        ["Set-Cookie", "test8=8"],
+        ["Set-Cookie", "test9=9"],
+        ["Set-Cookie", "test10=10"],
+        ["Set-Cookie", "test11=11"]
+      ]
+    }
+  },
+  "GET /multiple-set-cookie/response-direct": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/multiple-set-cookie/response-direct"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": [
+        [
+          "Set-Cookie",
+          "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure"
+        ],
+        [
+          "Set-Cookie",
+          "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
+        ],
+        [
+          "Set-Cookie",
+          "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
+        ],
+        ["Set-Cookie", "test2=2"],
+        ["Set-Cookie", "test3=3"],
+        ["Set-Cookie", "test4=4"],
+        ["Set-Cookie", "test5=5"],
+        ["Set-Cookie", "test6=6"],
+        ["Set-Cookie", "test7=7"],
+        ["Set-Cookie", "test8=8"],
+        ["Set-Cookie", "test9=9"],
+        ["Set-Cookie", "test10=10"],
+        ["Set-Cookie", "test11=11"]
+      ]
+    }
+  },
+  "GET /multiple-set-cookie/downstream": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/multiple-set-cookie/downstream"
+    },
+    "downstream_response": {
+      "status": 302,
+      "headers": [
+        [
+          "Set-Cookie",
+          "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure"
+        ],
+        [
+          "Set-Cookie",
+          "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
+        ],
+        [
+          "Set-Cookie",
+          "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
+        ],
+        ["Set-Cookie", "test2=2"],
+        ["Set-Cookie", "test3=3"],
+        ["Set-Cookie", "test4=4"],
+        ["Set-Cookie", "test5=5"],
+        ["Set-Cookie", "test6=6"],
+        ["Set-Cookie", "test7=7"],
+        ["Set-Cookie", "test8=8"],
+        ["Set-Cookie", "test9=9"],
+        ["Set-Cookie", "test10=10"],
+        ["Set-Cookie", "test11=11"]
+      ]
+    }
+  },
+  "GET /Performance/interface": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/Performance/interface"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /globalThis.performance": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/globalThis.performance"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /globalThis.performance/now": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/globalThis.performance/now"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /globalThis.performance/timeOrigin": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/globalThis.performance/timeOrigin"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /request/constructor/fastly/decompressGzip/true": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/constructor/fastly/decompressGzip/true"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/constructor/fastly/decompressGzip/false": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/constructor/fastly/decompressGzip/false"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fetch/requestinit/fastly/decompressGzip/true": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fetch/requestinit/fastly/decompressGzip/true"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /fetch/requestinit/fastly/decompressGzip/false": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fetch/requestinit/fastly/decompressGzip/false"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/setCacheKey/called-as-constructor": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/setCacheKey/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/setCacheKey/called-unbound": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/setCacheKey/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/setCacheKey/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/setCacheKey/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/setCacheKey/key-parameter-not-supplied": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/setCacheKey/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/setCacheKey/key-valid": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/setCacheKey/key-valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/clone/called-as-constructor": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/clone/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/clone/called-unbound": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/clone/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/clone/valid": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/clone/valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /request/clone/invalid": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/clone/invalid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /response/text/guest-backed-stream": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/response/text/guest-backed-stream"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /response/json/guest-backed-stream": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/response/json/guest-backed-stream"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /response/arrayBuffer/guest-backed-stream": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/response/arrayBuffer/guest-backed-stream"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /response/json": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/response/json"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /response/redirect": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/response/redirect"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setInterval/exposed-as-global": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setInterval/exposed-as-global"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setInterval/interface": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setInterval/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setInterval/called-as-constructor-function": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setInterval/called-as-constructor-function"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setInterval/empty-parameter": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setInterval/empty-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setInterval/handler-parameter-not-supplied": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setInterval/handler-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setInterval/handler-parameter-not-callable": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setInterval/handler-parameter-not-callable"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setInterval/timeout-parameter-not-supplied": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setInterval/timeout-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setInterval/timeout-parameter-calls-7.1.4-ToNumber": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setInterval/timeout-parameter-calls-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setInterval/timeout-parameter-negative": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setInterval/timeout-parameter-negative"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setInterval/timeout-parameter-positive": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setInterval/timeout-parameter-positive"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setInterval/returns-integer": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setInterval/returns-integer"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setInterval/called-unbound": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setInterval/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setTimeout/exposed-as-global": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/exposed-as-global"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setTimeout/interface": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setTimeout/called-as-constructor-function": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/called-as-constructor-function"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setTimeout/empty-parameter": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/empty-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setTimeout/handler-parameter-not-supplied": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/handler-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setTimeout/handler-parameter-not-callable": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/handler-parameter-not-callable"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setTimeout/timeout-parameter-not-supplied": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/timeout-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setTimeout/timeout-parameter-calls-7.1.4-ToNumber": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/timeout-parameter-calls-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setTimeout/timeout-parameter-negative": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/timeout-parameter-negative"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setTimeout/timeout-parameter-positive": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/timeout-parameter-positive"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setTimeout/returns-integer": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/returns-integer"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /setTimeout/called-unbound": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearInterval/exposed-as-global": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearInterval/exposed-as-global"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearInterval/interface": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearInterval/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearInterval/called-as-constructor-function": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearInterval/called-as-constructor-function"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearInterval/id-parameter-not-supplied": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearInterval/id-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearInterval/id-parameter-calls-7.1.4-ToNumber": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearInterval/id-parameter-calls-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearInterval/id-parameter-negative": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearInterval/id-parameter-negative"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearInterval/id-parameter-positive": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearInterval/id-parameter-positive"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearInterval/returns-undefined": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearInterval/returns-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearInterval/called-unbound": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearInterval/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearTimeout/exposed-as-global": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearTimeout/exposed-as-global"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearTimeout/interface": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearTimeout/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearTimeout/called-as-constructor-function": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearTimeout/called-as-constructor-function"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearTimeout/id-parameter-not-supplied": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearTimeout/id-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearTimeout/id-parameter-calls-7.1.4-ToNumber": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearTimeout/id-parameter-calls-7.1.4-ToNumber"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearTimeout/id-parameter-negative": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearTimeout/id-parameter-negative"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearTimeout/id-parameter-positive": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearTimeout/id-parameter-positive"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearTimeout/returns-undefined": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearTimeout/returns-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /clearTimeout/called-unbound": {
+    "environments": [
+      "viceroy", "c@e"
+    ],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/clearTimeout/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /urlsearchparams/sort": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/urlsearchparams/sort"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /random": {
+    "environments": ["c@e", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/random"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /error": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/error"
+    },
+    "downstream_response": {
+      "status": 500
+    }
+  },
+  "GET /react-byob": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/react-byob"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": ["<!DOCTYPE html><html><title>My app</title><body><h1>App</h1></body></html><script src=\"/main.js\" async=\"\"></script>"]
+    }
+  },
+  "POST /tee": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "POST",
+      "pathname": "/tee",
+      "headers": [
+        "Content-Type", "application/json"
+      ],
+      "body": "hello world!"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "hello world!"
+    }
+  },
+
+  "GET /tee/error": {
+    "environments": ["viceroy", "c@e"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/tee/error",
+      "headers": [
+          "Content-Type", "application/json"
+      ]
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "Error: TypeError"
+    }
+  }
+}

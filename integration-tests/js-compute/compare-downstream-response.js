@@ -13,13 +13,10 @@ import compareHeaders from './compare-headers.js';
  * @param {import('undici').Dispatcher.ResponseData} actualResponse
  */
 export async function compareDownstreamResponse (configResponse, actualResponse) {
+  let errors = [];
   // Status
   if (configResponse.status != actualResponse.statusCode) {
-    try {
-      let downstreamBodyText = await actualResponse.body.text();
-      console.error({downstreamBodyText})
-    } catch { /* empty */ }
-    throw new Error(`[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.status}`);
+    errors.push(new Error(`[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.status}`));
   }
 
   // Headers
@@ -49,22 +46,26 @@ export async function compareDownstreamResponse (configResponse, actualResponse)
             chunkNumber++;
           }
         } else {
-          throw new Error(`[DownstreamResponse: Body Chunk mismatch] Expected: ${configResponse.body[chunkNumber]} - Got: ${chunkString}`);
+          errors.push(new Error(`[DownstreamResponse: Body Chunk mismatch] Expected: ${configResponse.body[chunkNumber]} - Got: ${chunkString}`));
         }
       }
 
       clearTimeout(downstreamTimeout);
 
       if (chunkNumber !== configResponse.body.length) {
-        throw new Error(`[DownstreamResponse: Body Chunk mismatch] Expected: ${configResponse.body} - Got: (Incomplete stream, Number of chunks returned: ${chunkNumber})`);
+        errors.push(new Error(`[DownstreamResponse: Body Chunk mismatch] Expected: ${configResponse.body} - Got: (Incomplete stream, Number of chunks returned: ${chunkNumber})`));
       }
     } else {
       // Get the text, and check if it matches the test
       let downstreamBodyText = await actualResponse.body.text();
 
       if (downstreamBodyText !== configResponse.body) {
-        throw new Error(`[DownstreamResponse: Body mismatch] Expected: ${configResponse.body} - Got: ${downstreamBodyText}`);
+        errors.push(new Error(`[DownstreamResponse: Body mismatch] Expected: ${configResponse.body} - Got: ${downstreamBodyText}`));
       }
     }
+  }
+
+  if (errors.length) {
+    throw new Error(errors.map(error => error.message).join('\n'))
   }
 }
