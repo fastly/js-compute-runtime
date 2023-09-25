@@ -217,51 +217,6 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [build, ensure_cargo_installs]
-    strategy:
-      fail-fast: false
-      matrix:
-        fixture: 
-          - async-select
-          - btoa
-          - byob
-          - byte-repeater
-          - crypto
-          - config-store
-          - console
-          - dynamic-backend
-          - edge-dictionary
-          - env
-          - error
-          - extend-from-builtins
-          - extend-from-request
-          - fanout
-          - geoip
-          - hello-world
-          - includeBytes
-          - log
-          - missing-backend
-          - multiple-set-cookie
-          - kv-store
-          - random
-          - react-byob
-          - regex
-          - request-cache-key
-          - request-clone
-          - request-downstream
-          - request-headers
-          - request-limits
-          - request-upstream
-          - response
-          - response-headers
-          - response-json
-          - response-redirect
-          - secret-store
-          - status
-          - streaming-close
-          - tee
-          - timers
-          - transform-stream
-          - urlsearchparams
     steps:
     - name: Checkout fastly/js-compute-runtime
       uses: actions/checkout@v3
@@ -301,14 +256,16 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: ${{ matrix.fixture == 'regex' && 'engine-release' || 'engine-debug'  }}
+        name: 'engine-debug'
     - run: yarn install --frozen-lockfile
 
     - name: js-compute Integration Tests Job
       timeout-minutes: 20
       uses: ./.github/actions/compute-sdk-test
       with:
-        fixture: ${{ matrix.fixture }}
+        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
+        fastly-cli-version: ${{ env.fastly-cli_version }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
 
   shellcheck:
@@ -378,38 +335,6 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [build]
-    strategy:
-      fail-fast: false
-      matrix:
-        fixture:
-          - 'async-select'
-          - 'byob'
-          - 'byte-repeater'
-          - 'cache-override'
-          - 'cache-simple'
-          - 'client'
-          - 'crypto'
-          - 'edge-dictionary'
-          - 'error'
-          - 'fanout'
-          - 'geoip'
-          - 'hello-world'
-          - 'multiple-set-cookie'
-          - 'kv-store'
-          - 'react-byob'
-          - 'request-clone'
-          - 'request-headers'
-          - 'request-limits'
-          - 'request-upstream'
-          - 'response'
-          - 'response-headers'
-          - 'response-json'
-          - 'response-redirect'
-          - 'secret-store'
-          - 'status'
-          - 'timers'
-          - 'transform-stream'
-          - 'urlsearchparams'
     steps:
     - uses: actions/checkout@v3
       with:
@@ -420,4 +345,3 @@ jobs:
         fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
         fastly-cli-version: ${{ env.fastly-cli_version }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        fixture: ${{ matrix.fixture }}
