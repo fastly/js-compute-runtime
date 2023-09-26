@@ -10,9 +10,9 @@ defaults:
   run:
     shell: bash
 env:
-  viceroy_version: 0.7.0
+  viceroy_version: 0.8.1
   wasm-tools_version: 1.0.28
-  fastly-cli_version: 10.3.0
+  fastly-cli_version: 10.4.0
 
 jobs:
 
@@ -133,7 +133,7 @@ jobs:
       matrix:
         include:
           - crate: viceroy
-            version: 0.7.0 # Note: workflow-level env vars can't be used in matrix definitions
+            version: 0.8.1 # Note: workflow-level env vars can't be used in matrix definitions
             options: ""
           - crate: wasm-tools
             version: 1.0.28 # Note: workflow-level env vars can't be used in matrix definitions
