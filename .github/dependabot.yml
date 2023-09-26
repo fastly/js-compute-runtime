@@ -9,28 +9,63 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      cargo:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 1
 
   - package-ecosystem: "cargo"
     directory: "/runtime/js-compute-runtime/rust-url"
     schedule:
       interval: "daily"
+    groups:
+      cargo:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 1
+
 
   - package-ecosystem: "npm"
     directory: "/integration-tests/js-compute"
     schedule:
       interval: "daily"
+    groups:
+      npm:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 1
+
 
   - package-ecosystem: "npm"
     directory: ".github/actions/compute-sdk-test"
     schedule:
       interval: "daily"
+    groups:
+      npm:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 1
+
 
   - package-ecosystem: "npm"
     directory: ".github/actions/github-release"
     schedule:
       interval: "daily"
+    groups:
+      npm:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 1
+
 
   - package-ecosystem: "npm"
     directory: "/sdk/js-compute"
     schedule:
       interval: "daily"
+    groups:
+      npm:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 1
+
