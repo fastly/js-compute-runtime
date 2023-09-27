@@ -1,10 +1,10 @@
 # Changelog
 
 
-## [3.6.1](https://github.com/fastly/js-compute-runtime/compare/v3.6.0...v3.6.1) (2023-09-27)
+## 3.6.1 (2023-09-27)
 
 
-### Bug Fixes
+### Fixed
 
 * ensure we throw an error when trying to base64 decode _ via `atob` ([1b2b2f9](https://github.com/fastly/js-compute-runtime/commit/1b2b2f9d807780cf03964a30801644c8bc3b698b))
 
