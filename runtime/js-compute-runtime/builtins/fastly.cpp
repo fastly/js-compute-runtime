@@ -92,7 +92,6 @@ bool Fastly::getLogger(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Fastly::includeBytes(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   INIT_ONLY("fastly.includeBytes");
-  JS::RootedObject self(cx, &args.thisv().toObject());
   if (!args.requireAtLeast(cx, "fastly.includeBytes", 1))
     return false;
 
