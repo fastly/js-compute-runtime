@@ -86,6 +86,91 @@ typedef struct {
   fastly_compute_at_edge_http_types_body_handle_t f1;
 } fastly_compute_at_edge_http_types_response_t;
 
+typedef uint8_t fastly_compute_at_edge_http_types_send_error_detail_tag_t;
+
+// The send-error-detail struct has not been populated.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_UNINITIALIZED 0
+// There was no send error.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_OK 1
+// The system encountered a timeout when trying to find an IP address for the backend
+// hostname.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_DNS_TIMEOUT 2
+// The system encountered a DNS error when trying to find an IP address for the backend
+// hostname. The fields dns-error-rcode and dns-error-info-code may be set in the
+// send-error-detail.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_DNS_ERROR 3
+// The system cannot determine which backend to use, or the specified backend was invalid.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_DESTINATION_NOT_FOUND 4
+// The system considers the backend to be unavailable; e.g., recent attempts to communicate
+// with it may have failed, or a health check may indicate that it is down.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_DESTINATION_UNAVAILABLE 5
+// The system cannot find a route to the next-hop IP address.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_DESTINATION_IP_UNROUTABLE 6
+// The system's connection to the backend was refused.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_CONNECTION_REFUSED 7
+// The system's connection to the backend was closed before a complete response was
+// received.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_CONNECTION_TERMINATED 8
+// The system's attempt to open a connection to the backend timed out.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_CONNECTION_TIMEOUT 9
+// The system is configured to limit the number of connections it has to the backend, and
+// that limit has been exceeded.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_CONNECTION_LIMIT_REACHED 10
+// The system encountered an error when verifying the certificate presented by the backend.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_TLS_CERTIFICATE_ERROR 11
+// The system encountered an error with the backend TLS configuration.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_TLS_CONFIGURATION_ERROR 12
+// The system received an incomplete response to the request from the backend.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_HTTP_INCOMPLETE_RESPONSE 13
+// The system received a response to the request whose header section was considered too
+// large.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_HTTP_RESPONSE_HEADER_SECTION_TOO_LARGE 14
+// The system received a response to the request whose body was considered too large.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_HTTP_RESPONSE_BODY_TOO_LARGE 15
+// The system reached a configured time limit waiting for the complete response.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_HTTP_RESPONSE_TIMEOUT 16
+// The system received a response to the request whose status code or reason phrase was
+// invalid.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_HTTP_RESPONSE_STATUS_INVALID 17
+// The process of negotiating an upgrade of the HTTP version between the system and the
+// backend failed.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_HTTP_UPGRADE_FAILED 18
+// The system encountered an HTTP protocol error when communicating with the backend. This
+// error will only be used when a more specific one is not defined.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_HTTP_PROTOCOL_ERROR 19
+// An invalid cache key was provided for the request.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_HTTP_REQUEST_CACHE_KEY_INVALID 20
+// An invalid URI was provided for the request.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_HTTP_REQUEST_URI_INVALID 21
+// The system encountered an unexpected internal error.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_INTERNAL_ERROR 22
+// The system received a TLS alert from the backend. The field tls-alert-id may be set in
+// the send-error-detail.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_TLS_ALERT_RECEIVED 23
+// The system encountered a TLS error when communicating with the backend, either during
+// the handshake or afterwards.
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_TAG_TLS_PROTOCOL_ERROR 24
+
+// Mask representing which fields are understood by the guest, and which have been set by the host.
+// 
+// When the guest calls hostcalls with a mask, it should set every bit in the mask that corresponds
+// to a defined flag. This signals the host to write only to fields with a set bit, allowing
+// forward compatibility for existing guest programs even after new fields are added to the struct.
+typedef uint8_t fastly_compute_at_edge_http_types_send_error_detail_mask_t;
+
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_MASK_RESERVED (1 << 0)
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_MASK_DNS_ERROR_RCODE (1 << 1)
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_MASK_DNS_ERROR_INFO_CODE (1 << 2)
+#define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_MASK_TLS_ALERT_ID (1 << 3)
+
+typedef struct {
+  fastly_compute_at_edge_http_types_send_error_detail_tag_t tag;
+  fastly_compute_at_edge_http_types_send_error_detail_mask_t mask;
+  uint16_t dns_error_rcode;
+  uint16_t dns_error_info_code;
+  uint8_t tls_alert_id;
+} fastly_compute_at_edge_http_types_send_error_detail_t;
+
 typedef uint8_t fastly_compute_at_edge_http_types_http_version_t;
 
 #define FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_HTTP_VERSION_HTTP09 0
@@ -204,6 +289,8 @@ typedef fastly_compute_at_edge_http_types_content_encodings_t fastly_compute_at_
 typedef fastly_compute_at_edge_http_types_framing_headers_mode_t fastly_compute_at_edge_http_req_framing_headers_mode_t;
 
 typedef fastly_compute_at_edge_http_types_dynamic_backend_config_t fastly_compute_at_edge_http_req_dynamic_backend_config_t;
+
+typedef fastly_compute_at_edge_http_types_send_error_detail_t fastly_compute_at_edge_http_req_send_error_detail_t;
 
 typedef uint8_t fastly_compute_at_edge_http_req_cache_override_tag_t;
 
@@ -633,11 +720,15 @@ bool fastly_compute_at_edge_http_req_uri_set(fastly_compute_at_edge_http_req_req
 bool fastly_compute_at_edge_http_req_version_get(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_http_version_t *ret, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_version_set(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_http_version_t version, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_send(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_body_handle_t b, fastly_world_string_t *backend, fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_error_t *err);
+bool fastly_compute_at_edge_http_req_send_v2(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_send_error_detail_t *s, fastly_compute_at_edge_http_req_body_handle_t b, fastly_world_string_t *backend, fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_send_async(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_body_handle_t b, fastly_world_string_t *backend, fastly_compute_at_edge_http_req_pending_request_handle_t *ret, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_send_async_streaming(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_body_handle_t b, fastly_world_string_t *backend, fastly_compute_at_edge_http_req_pending_request_handle_t *ret, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_pending_req_poll(fastly_compute_at_edge_http_req_pending_request_handle_t h, fastly_world_option_fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_error_t *err);
+bool fastly_compute_at_edge_http_req_pending_req_poll_v2(fastly_compute_at_edge_http_req_pending_request_handle_t h, fastly_compute_at_edge_http_req_send_error_detail_t *s, fastly_world_option_fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_pending_req_wait(fastly_compute_at_edge_http_req_pending_request_handle_t h, fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_error_t *err);
+bool fastly_compute_at_edge_http_req_pending_req_wait_v2(fastly_compute_at_edge_http_req_pending_request_handle_t h, fastly_compute_at_edge_http_req_send_error_detail_t *s, fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_pending_req_select(fastly_world_list_fastly_compute_at_edge_http_req_pending_request_handle_t *h, fastly_world_tuple2_u32_fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_error_t *err);
+bool fastly_compute_at_edge_http_req_pending_req_select_v2(fastly_world_list_fastly_compute_at_edge_http_req_pending_request_handle_t *h, fastly_world_tuple2_u32_fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_send_error_detail_t *err);
 bool fastly_compute_at_edge_http_req_close(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_auto_decompress_response_set(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_content_encodings_t encodings, fastly_compute_at_edge_http_req_error_t *err);
 bool fastly_compute_at_edge_http_req_upgrade_websocket(fastly_world_string_t *backend, fastly_compute_at_edge_http_req_error_t *err);

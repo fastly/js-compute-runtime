@@ -487,6 +487,19 @@ bool fastly_compute_at_edge_http_req_pending_req_wait(
   return convert_result(fastly::req_pending_req_wait(h, &ret->f0, &ret->f1), err);
 }
 
+bool fastly_compute_at_edge_http_req_pending_req_wait_v2(
+    fastly_compute_at_edge_http_req_pending_request_handle_t h,
+    fastly_compute_at_edge_http_req_send_error_detail_t *s,
+    fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_error_t *err) {
+  fastly_compute_at_edge_types_error_t host_err;
+
+  s->mask |= FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_MASK_DNS_ERROR_RCODE;
+  s->mask |= FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_MASK_DNS_ERROR_INFO_CODE;
+  s->mask |= FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_SEND_ERROR_DETAIL_MASK_TLS_ALERT_ID;
+
+  return convert_result(fastly::req_pending_req_wait_v2(h, s, &ret->f0, &ret->f1), &host_err);
+}
+
 bool fastly_compute_at_edge_http_req_register_dynamic_backend(
     fastly_world_string_t *prefix, fastly_world_string_t *target,
     fastly_compute_at_edge_http_types_dynamic_backend_config_t *config,

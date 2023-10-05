@@ -292,13 +292,15 @@ Result<std::optional<Response>> HttpPendingReq::poll() {
   return res;
 }
 
-Result<Response> HttpPendingReq::wait() {
-  Result<Response> res;
+Result<Response, FastlySendError> HttpPendingReq::wait() {
+  Result<Response, FastlySendError> res;
 
-  fastly_compute_at_edge_types_error_t err;
+  fastly_compute_at_edge_http_req_send_error_detail_t s;
+  std::memset(&s, 0, sizeof(s));
+  fastly_compute_at_edge_http_req_error_t err;
   fastly_compute_at_edge_http_types_response_t ret;
-  if (!fastly_compute_at_edge_http_req_pending_req_wait(this->handle, &ret, &err)) {
-    res.emplace_err(err);
+  if (!fastly_compute_at_edge_http_req_pending_req_wait_v2(this->handle, &s, &ret, &err)) {
+    res.emplace_err(FastlySendError(s));
   } else {
     res.emplace(make_response(ret));
   }
@@ -1240,6 +1242,126 @@ Result<std::optional<HostString>> Fastly::purge_surrogate_key(std::string_view k
   }
 
   return res;
+}
+
+const std::optional<std::string> FastlySendError::message() const {
+  switch (this->tag) {
+  /// The send-error-detail struct has not been populated.
+  /// We will our generic error message in this situation.
+  case uninitialized: {
+    return "NetworkError when attempting to fetch resource.";
+  }
+  /// There was no send error.
+  case ok: {
+    return std::nullopt;
+  }
+  /// The system encountered a timeout when trying to find an IP address for the backend
+  /// hostname.
+  case dns_timeout: {
+    return "DNS timeout";
+  }
+  /// The system encountered a DNS error when trying to find an IP address for the backend
+  /// hostname. The fields dns_error_rcode and dns_error_info_code may be set in the
+  /// send_error_detail.
+  case dns_error: {
+    return fmt::format("DNS error (rcode={}, info_code={})", this->dns_error_rcode,
+                       this->dns_error_info_code);
+  }
+  /// The system cannot determine which backend to use, or the specified backend was invalid.
+  case destination_not_found: {
+    return "Destination not found";
+  }
+  /// The system considers the backend to be unavailable; e.g., recent attempts to communicate
+  /// with it may have failed, or a health check may indicate that it is down.
+  case destination_unavailable: {
+    return "Destination unavailable";
+  }
+  /// The system cannot find a route to the next_hop IP address.
+  case destination_ip_unroutable: {
+    return "Destination IP unroutable";
+  }
+  /// The system's connection to the backend was refused.
+  case connection_refused: {
+    return "Connection refused";
+  }
+  /// The system's connection to the backend was closed before a complete response was
+  /// received.
+  case connection_terminated: {
+    return "Connection terminated";
+  }
+  /// The system's attempt to open a connection to the backend timed out.
+  case connection_timeout: {
+    return "Connection timeout";
+  }
+  /// The system is configured to limit the number of connections it has to the backend, and
+  /// that limit has been exceeded.
+  case connection_limit_reached: {
+    return "Connection limit reached";
+  }
+  /// The system encountered an error when verifying the certificate presented by the backend.
+  case tls_certificate_error: {
+    return "TLS certificate error";
+  }
+  /// The system encountered an error with the backend TLS configuration.
+  case tls_configuration_error: {
+    return "TLS configuration error";
+  }
+  /// The system received an incomplete response to the request from the backend.
+  case http_incomplete_response: {
+    return "Incomplete HTTP response";
+  }
+  /// The system received a response to the request whose header section was considered too
+  /// large.
+  case http_response_header_section_too_large: {
+    return "HTTP response header section too large";
+  }
+  /// The system received a response to the request whose body was considered too large.
+  case http_response_body_too_large: {
+    return "HTTP response body too large";
+  }
+  /// The system reached a configured time limit waiting for the complete response.
+  case http_response_timeout: {
+    return "HTTP response timeout";
+  }
+  /// The system received a response to the request whose status code or reason phrase was
+  /// invalid.
+  case http_response_status_invalid: {
+    return "HTTP response status invalid";
+  }
+  /// The process of negotiating an upgrade of the HTTP version between the system and the
+  /// backend failed.
+  case http_upgrade_failed: {
+    return "HTTP upgrade failed";
+  }
+  /// The system encountered an HTTP protocol error when communicating with the backend. This
+  /// error will only be used when a more specific one is not defined.
+  case http_protocol_error: {
+    return "HTTP protocol error";
+  }
+  /// An invalid cache key was provided for the request.
+  case http_request_cache_key_invalid: {
+    return "HTTP request cache key invalid";
+  }
+  /// An invalid URI was provided for the request.
+  case http_request_uri_invalid: {
+    return "HTTP request URI invalid";
+  }
+  /// The system encountered an unexpected internal error.
+  case internal_error: {
+    return "Internal error";
+  }
+  /// The system received a TLS alert from the backend. The field tls_alert_id may be set in
+  /// the send_error_detail.
+  case tls_alert_received: {
+    return fmt::format("TLS alert received (alert_id={})", this->tls_alert_id);
+  }
+  /// The system encountered a TLS error when communicating with the backend, either during
+  /// the handshake or afterwards.
+  case tls_protocol_error: {
+    return "TLS protocol error";
+  }
+  }
+  return "NetworkError when attempting to fetch resource.";
 }
 
 } // namespace host_api

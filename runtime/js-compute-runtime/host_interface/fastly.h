@@ -270,6 +270,13 @@ int req_pending_req_wait(fastly_compute_at_edge_http_types_pending_request_handl
                          fastly_compute_at_edge_http_types_response_handle_t *resp_handle_out,
                          fastly_compute_at_edge_http_types_body_handle_t *resp_body_handle_out);
 
+WASM_IMPORT("fastly_http_req", "pending_req_wait_v2")
+int req_pending_req_wait_v2(
+    fastly_compute_at_edge_http_types_pending_request_handle_t req_handle,
+    fastly_compute_at_edge_http_types_send_error_detail_t *send_error_detail,
+    fastly_compute_at_edge_http_types_response_handle_t *resp_handle_out,
+    fastly_compute_at_edge_http_types_body_handle_t *resp_body_handle_out);
+
 // Module fastly_http_resp
 WASM_IMPORT("fastly_http_resp", "new")
 int resp_new(fastly_compute_at_edge_http_types_response_handle_t *resp_handle_out);

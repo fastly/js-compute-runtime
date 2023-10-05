@@ -1,8 +1,8 @@
 #include "core/event_loop.h"
 #include "builtins/native-stream-source.h"
 #include "builtins/request-response.h"
+#include "builtins/shared/dom-exception.h"
 #include "host_interface/host_api.h"
-
 #include <chrono>
 #include <list>
 #include <memory>
@@ -146,7 +146,8 @@ bool process_pending_request(JSContext *cx, JS::HandleObject request,
 
   auto res = pending.wait();
   if (auto *err = res.to_err()) {
-    JS_ReportErrorUTF8(cx, "NetworkError when attempting to fetch resource.");
+    std::string message = std::move(err->message()).value_or("when attempting to fetch resource.");
+    builtins::DOMException::raise(cx, message, "NetworkError");
     return RejectPromiseWithPendingError(cx, response_promise);
   }
 

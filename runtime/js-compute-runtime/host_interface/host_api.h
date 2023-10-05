@@ -2,6 +2,7 @@
 #define JS_COMPUTE_RUNTIME_HOST_API_H
 
 #include <cstdint>
+#include <fmt/format.h>
 #include <memory>
 #include <optional>
 #include <span>
@@ -12,6 +13,8 @@
 
 #include "core/allocator.h"
 #include "js/TypeDecls.h"
+
+#include "host_interface/fastly.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
@@ -24,7 +27,7 @@ namespace host_api {
 /// A type to signal that a result produces no value.
 struct Void final {};
 
-/// The type of erros returned from the host.
+/// The type of errors returned from the host.
 using FastlyError = uint8_t;
 
 bool error_is_generic(FastlyError e);
@@ -38,13 +41,13 @@ void handle_fastly_error(JSContext *cx, FastlyError err, int line, const char *f
 /// Wrap up a call to handle_fastly_error with the current line and function.
 #define HANDLE_ERROR(cx, err) ::host_api::handle_fastly_error(cx, err, __LINE__, __func__)
 
-template <typename T> class Result final {
+template <typename T, typename E = FastlyError> class Result final {
   /// A private wrapper to distinguish `fastly_compute_at_edge_types_error_t` in the private
   /// variant.
   struct Error {
-    FastlyError value;
+    E value;
 
-    explicit Error(FastlyError value) : value{value} {}
+    explicit Error(E value) : value{value} {}
   };
 
   std::variant<T, Error> result;
@@ -53,7 +56,7 @@ public:
   Result() = default;
 
   /// Explicitly construct an error.
-  static Result err(FastlyError err) {
+  static Result err(E err) {
     Result res;
     res.emplace_err(err);
     return res;
@@ -67,9 +70,7 @@ public:
   }
 
   /// Construct an error in-place.
-  FastlyError &emplace_err(FastlyError err) & {
-    return this->result.template emplace<Error>(err).value;
-  }
+  E &emplace_err(E err) & { return this->result.template emplace<Error>(err).value; }
 
   /// Construct a value of T in-place.
   template <typename... Args> T &emplace(Args &&...args) {
@@ -80,9 +81,7 @@ public:
   bool is_err() const { return std::holds_alternative<Error>(this->result); }
 
   /// Return a pointer to the error value of this result, if the call failed.
-  const FastlyError *to_err() const {
-    return reinterpret_cast<const FastlyError *>(std::get_if<Error>(&this->result));
-  }
+  const E *to_err() const { return reinterpret_cast<const E *>(std::get_if<Error>(&this->result)); }
 
   /// Assume the call was successful, and return a reference to the result.
   T &unwrap() { return std::get<T>(this->result); }
@@ -210,6 +209,194 @@ public:
                                                 uint32_t timeout_ms);
 };
 
+class FastlySendError final {
+  enum detail {
+    /// The send-error-detail struct has not been populated.
+    uninitialized,
+    /// There was no send error.
+    ok,
+    /// The system encountered a timeout when trying to find an IP address for the backend
+    /// hostname.
+    dns_timeout,
+    /// The system encountered a DNS error when trying to find an IP address for the backend
+    /// hostname. The fields dns_error_rcode and dns_error_info_code may be set in the
+    /// send_error_detail.
+    dns_error,
+    /// The system cannot determine which backend to use, or the specified backend was invalid.
+    destination_not_found,
+    /// The system considers the backend to be unavailable; e.g., recent attempts to communicate
+    /// with it may have failed, or a health check may indicate that it is down.
+    destination_unavailable,
+    /// The system cannot find a route to the next_hop IP address.
+    destination_ip_unroutable,
+    /// The system's connection to the backend was refused.
+    connection_refused,
+    /// The system's connection to the backend was closed before a complete response was
+    /// received.
+    connection_terminated,
+    /// The system's attempt to open a connection to the backend timed out.
+    connection_timeout,
+    /// The system is configured to limit the number of connections it has to the backend, and
+    /// that limit has been exceeded.
+    connection_limit_reached,
+    /// The system encountered an error when verifying the certificate presented by the backend.
+    tls_certificate_error,
+    /// The system encountered an error with the backend TLS configuration.
+    tls_configuration_error,
+    /// The system received an incomplete response to the request from the backend.
+    http_incomplete_response,
+    /// The system received a response to the request whose header section was considered too
+    /// large.
+    http_response_header_section_too_large,
+    /// The system received a response to the request whose body was considered too large.
+    http_response_body_too_large,
+    /// The system reached a configured time limit waiting for the complete response.
+    http_response_timeout,
+    /// The system received a response to the request whose status code or reason phrase was
+    /// invalid.
+    http_response_status_invalid,
+    /// The process of negotiating an upgrade of the HTTP version between the system and the
+    /// backend failed.
+    http_upgrade_failed,
+    /// The system encountered an HTTP protocol error when communicating with the backend. This
+    /// error will only be used when a more specific one is not defined.
+    http_protocol_error,
+    /// An invalid cache key was provided for the request.
+    http_request_cache_key_invalid,
+    /// An invalid URI was provided for the request.
+    http_request_uri_invalid,
+    /// The system encountered an unexpected internal error.
+    internal_error,
+    /// The system received a TLS alert from the backend. The field tls_alert_id may be set in
+    /// the send_error_detail.
+    tls_alert_received,
+    /// The system encountered a TLS error when communicating with the backend, either during
+    /// the handshake or afterwards.
+    tls_protocol_error
+  };
+
+public:
+  detail tag;
+  uint16_t dns_error_rcode;
+  uint16_t dns_error_info_code;
+  uint8_t tls_alert_id;
+
+  const std::optional<std::string> message() const;
+
+  FastlySendError(fastly_compute_at_edge_http_req_send_error_detail_t send_error_detail) {
+    switch (send_error_detail.tag) {
+    case 0: {
+      tag = detail::uninitialized;
+      break;
+    }
+    case 1: {
+      tag = detail::ok;
+      break;
+    }
+    case 2: {
+      tag = detail::dns_timeout;
+      break;
+    }
+    case 3: {
+      tag = detail::dns_error;
+      break;
+    }
+    case 4: {
+      tag = detail::destination_not_found;
+      break;
+    }
+    case 5: {
+      tag = detail::destination_unavailable;
+      break;
+    }
+    case 6: {
+      tag = detail::destination_ip_unroutable;
+      break;
+    }
+    case 7: {
+      tag = detail::connection_refused;
+      break;
+    }
+    case 8: {
+      tag = detail::connection_terminated;
+      break;
+    }
+    case 9: {
+      tag = detail::connection_timeout;
+      break;
+    }
+    case 10: {
+      tag = detail::connection_limit_reached;
+      break;
+    }
+    case 11: {
+      tag = detail::tls_certificate_error;
+      break;
+    }
+    case 12: {
+      tag = detail::tls_configuration_error;
+      break;
+    }
+    case 13: {
+      tag = detail::http_incomplete_response;
+      break;
+    }
+    case 14: {
+      tag = detail::http_response_header_section_too_large;
+      break;
+    }
+    case 15: {
+      tag = detail::http_response_body_too_large;
+      break;
+    }
+    case 16: {
+      tag = detail::http_response_timeout;
+      break;
+    }
+    case 17: {
+      tag = detail::http_response_status_invalid;
+      break;
+    }
+    case 18: {
+      tag = detail::http_upgrade_failed;
+      break;
+    }
+    case 19: {
+      tag = detail::http_protocol_error;
+      break;
+    }
+    case 20: {
+      tag = detail::http_request_cache_key_invalid;
+      break;
+    }
+    case 21: {
+      tag = detail::http_request_uri_invalid;
+      break;
+    }
+    case 22: {
+      tag = detail::internal_error;
+      break;
+    }
+    case 23: {
+      tag = detail::tls_alert_received;
+      break;
+    }
+    case 24: {
+      tag = detail::tls_protocol_error;
+      break;
+    }
+    default: {
+      // If we are here, this is either because the host does not provided send error details
+      // Or a new error detail tag exists and we don't yet have it implemented
+      tag = detail::uninitialized;
+    }
+    }
+    dns_error_rcode = send_error_detail.dns_error_rcode;
+    dns_error_info_code = send_error_detail.dns_error_info_code;
+    tls_alert_id = send_error_detail.tls_alert_id;
+  }
+};
+
 /// A convenience wrapper for the host calls involving http bodies.
 class HttpBody final {
 public:
@@ -270,7 +457,7 @@ public:
   Result<std::optional<Response>> poll();
 
   /// Block until the response is ready.
-  Result<Response> wait();
+  Result<Response, FastlySendError> wait();
 
   /// Fetch the AsyncHandle for this pending request.
   AsyncHandle async_handle() const;

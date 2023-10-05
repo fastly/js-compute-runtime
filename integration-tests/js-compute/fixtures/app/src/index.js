@@ -1,3 +1,4 @@
+/// <reference path="../../../../../types/index.d.ts" />
 /* eslint-env serviceworker */
 
 import { routes } from "./routes.js";
@@ -19,6 +20,7 @@ import "./dynamic-backend.js"
 import "./env.js"
 import "./fanout.js"
 import "./fastly-now.js"
+import "./fetch-errors.js"
 import "./geoip.js"
 import "./include-bytes.js"
 import "./kv-store.js"
