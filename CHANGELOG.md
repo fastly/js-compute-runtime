@@ -1,10 +1,10 @@
 # Changelog
 
 
-## [3.6.2](https://github.com/fastly/js-compute-runtime/compare/v3.6.1...v3.6.2) (2023-10-05)
+## 3.6.2 (2023-10-05)
 
 
-### Bug Fixes
+### Fixed
 
 * improve fetch error messages ([58ddb20](https://github.com/fastly/js-compute-runtime/commit/58ddb2012f9bff5ad59fb6420bfa31051109a108))
 
