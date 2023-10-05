@@ -101,6 +101,129 @@ Result<std::optional<uint32_t>> AsyncHandle::select(const std::vector<AsyncHandl
   return res;
 }
 
+namespace {
+
+FastlySendError
+make_fastly_send_error(fastly_compute_at_edge_http_req_send_error_detail_t &send_error_detail) {
+  FastlySendError res;
+
+  switch (send_error_detail.tag) {
+  case 0: {
+    res.tag = FastlySendError::detail::uninitialized;
+    break;
+  }
+  case 1: {
+    res.tag = FastlySendError::detail::ok;
+    break;
+  }
+  case 2: {
+    res.tag = FastlySendError::detail::dns_timeout;
+    break;
+  }
+  case 3: {
+    res.tag = FastlySendError::detail::dns_error;
+    break;
+  }
+  case 4: {
+    res.tag = FastlySendError::detail::destination_not_found;
+    break;
+  }
+  case 5: {
+    res.tag = FastlySendError::detail::destination_unavailable;
+    break;
+  }
+  case 6: {
+    res.tag = FastlySendError::detail::destination_ip_unroutable;
+    break;
+  }
+  case 7: {
+    res.tag = FastlySendError::detail::connection_refused;
+    break;
+  }
+  case 8: {
+    res.tag = FastlySendError::detail::connection_terminated;
+    break;
+  }
+  case 9: {
+    res.tag = FastlySendError::detail::connection_timeout;
+    break;
+  }
+  case 10: {
+    res.tag = FastlySendError::detail::connection_limit_reached;
+    break;
+  }
+  case 11: {
+    res.tag = FastlySendError::detail::tls_certificate_error;
+    break;
+  }
+  case 12: {
+    res.tag = FastlySendError::detail::tls_configuration_error;
+    break;
+  }
+  case 13: {
+    res.tag = FastlySendError::detail::http_incomplete_response;
+    break;
+  }
+  case 14: {
+    res.tag = FastlySendError::detail::http_response_header_section_too_large;
+    break;
+  }
+  case 15: {
+    res.tag = FastlySendError::detail::http_response_body_too_large;
+    break;
+  }
+  case 16: {
+    res.tag = FastlySendError::detail::http_response_timeout;
+    break;
+  }
+  case 17: {
+    res.tag = FastlySendError::detail::http_response_status_invalid;
+    break;
+  }
+  case 18: {
+    res.tag = FastlySendError::detail::http_upgrade_failed;
+    break;
+  }
+  case 19: {
+    res.tag = FastlySendError::detail::http_protocol_error;
+    break;
+  }
+  case 20: {
+    res.tag = FastlySendError::detail::http_request_cache_key_invalid;
+    break;
+  }
+  case 21: {
+    res.tag = FastlySendError::detail::http_request_uri_invalid;
+    break;
+  }
+  case 22: {
+    res.tag = FastlySendError::detail::internal_error;
+    break;
+  }
+  case 23: {
+    res.tag = FastlySendError::detail::tls_alert_received;
+    break;
+  }
+  case 24: {
+    res.tag = FastlySendError::detail::tls_protocol_error;
+    break;
+  }
+  default: {
+    // If we are here, this is either because the host does not provided send error details
+    // Or a new error detail tag exists and we don't yet have it implemented
+    res.tag = FastlySendError::detail::uninitialized;
+  }
+  }
+
+  res.dns_error_rcode = send_error_detail.dns_error_rcode;
+  res.dns_error_info_code = send_error_detail.dns_error_info_code;
+  res.tls_alert_id = send_error_detail.tls_alert_id;
+
+  return res;
+}
+
+} // namespace
+
 Result<HttpBody> HttpBody::make() {
   Result<HttpBody> res;
 
@@ -300,7 +423,7 @@ Result<Response, FastlySendError> HttpPendingReq::wait() {
   fastly_compute_at_edge_http_req_error_t err;
   fastly_compute_at_edge_http_types_response_t ret;
   if (!fastly_compute_at_edge_http_req_pending_req_wait_v2(this->handle, &s, &ret, &err)) {
-    res.emplace_err(FastlySendError(s));
+    res.emplace_err(make_fastly_send_error(s));
   } else {
     res.emplace(make_response(ret));
   }

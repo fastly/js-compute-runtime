@@ -14,8 +14,6 @@
 #include "core/allocator.h"
 #include "js/TypeDecls.h"
 
-#include "host_interface/fastly.h"
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
 #include "js/Utility.h"
@@ -210,6 +208,7 @@ public:
 };
 
 class FastlySendError final {
+public:
   enum detail {
     /// The send-error-detail struct has not been populated.
     uninitialized,
@@ -275,126 +274,12 @@ class FastlySendError final {
     tls_protocol_error
   };
 
-public:
   detail tag;
   uint16_t dns_error_rcode;
   uint16_t dns_error_info_code;
   uint8_t tls_alert_id;
 
   const std::optional<std::string> message() const;
-
-  FastlySendError(fastly_compute_at_edge_http_req_send_error_detail_t send_error_detail) {
-    switch (send_error_detail.tag) {
-    case 0: {
-      tag = detail::uninitialized;
-      break;
-    }
-    case 1: {
-      tag = detail::ok;
-      break;
-    }
-    case 2: {
-      tag = detail::dns_timeout;
-      break;
-    }
-    case 3: {
-      tag = detail::dns_error;
-      break;
-    }
-    case 4: {
-      tag = detail::destination_not_found;
-      break;
-    }
-    case 5: {
-      tag = detail::destination_unavailable;
-      break;
-    }
-    case 6: {
-      tag = detail::destination_ip_unroutable;
-      break;
-    }
-    case 7: {
-      tag = detail::connection_refused;
-      break;
-    }
-    case 8: {
-      tag = detail::connection_terminated;
-      break;
-    }
-    case 9: {
-      tag = detail::connection_timeout;
-      break;
-    }
-    case 10: {
-      tag = detail::connection_limit_reached;
-      break;
-    }
-    case 11: {
-      tag = detail::tls_certificate_error;
-      break;
-    }
-    case 12: {
-      tag = detail::tls_configuration_error;
-      break;
-    }
-    case 13: {
-      tag = detail::http_incomplete_response;
-      break;
-    }
-    case 14: {
-      tag = detail::http_response_header_section_too_large;
-      break;
-    }
-    case 15: {
-      tag = detail::http_response_body_too_large;
-      break;
-    }
-    case 16: {
-      tag = detail::http_response_timeout;
-      break;
-    }
-    case 17: {
-      tag = detail::http_response_status_invalid;
-      break;
-    }
-    case 18: {
-      tag = detail::http_upgrade_failed;
-      break;
-    }
-    case 19: {
-      tag = detail::http_protocol_error;
-      break;
-    }
-    case 20: {
-      tag = detail::http_request_cache_key_invalid;
-      break;
-    }
-    case 21: {
-      tag = detail::http_request_uri_invalid;
-      break;
-    }
-    case 22: {
-      tag = detail::internal_error;
-      break;
-    }
-    case 23: {
-      tag = detail::tls_alert_received;
-      break;
-    }
-    case 24: {
-      tag = detail::tls_protocol_error;
-      break;
-    }
-    default: {
-      // If we are here, this is either because the host does not provided send error details
-      // Or a new error detail tag exists and we don't yet have it implemented
-      tag = detail::uninitialized;
-    }
-    }
-    dns_error_rcode = send_error_detail.dns_error_rcode;
-    dns_error_info_code = send_error_detail.dns_error_info_code;
-    tls_alert_id = send_error_detail.tls_alert_id;
-  }
 };
 
 /// A convenience wrapper for the host calls involving http bodies.
