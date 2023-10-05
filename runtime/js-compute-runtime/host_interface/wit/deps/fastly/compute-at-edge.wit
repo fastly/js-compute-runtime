@@ -66,6 +66,91 @@ interface http-types {
   type request = tuple<request-handle, body-handle>
   type response = tuple<response-handle, body-handle>
 
+  enum send-error-detail-tag {
+    /// The send-error-detail struct has not been populated.
+    uninitialized,
+    /// There was no send error.
+    ok,
+    /// The system encountered a timeout when trying to find an IP address for the backend
+    /// hostname.
+    dns-timeout,
+    /// The system encountered a DNS error when trying to find an IP address for the backend
+    /// hostname. The fields dns-error-rcode and dns-error-info-code may be set in the
+    /// send-error-detail.
+    dns-error,
+    /// The system cannot determine which backend to use, or the specified backend was invalid.
+    destination-not-found,
+    /// The system considers the backend to be unavailable; e.g., recent attempts to communicate
+    /// with it may have failed, or a health check may indicate that it is down.
+    destination-unavailable,
+    /// The system cannot find a route to the next-hop IP address.
+    destination-ip-unroutable,
+    /// The system's connection to the backend was refused.
+    connection-refused,
+    /// The system's connection to the backend was closed before a complete response was
+    /// received.
+    connection-terminated,
+    /// The system's attempt to open a connection to the backend timed out.
+    connection-timeout,
+    /// The system is configured to limit the number of connections it has to the backend, and
+    /// that limit has been exceeded.
+    connection-limit-reached,
+    /// The system encountered an error when verifying the certificate presented by the backend.
+    tls-certificate-error,
+    /// The system encountered an error with the backend TLS configuration.
+    tls-configuration-error,
+    /// The system received an incomplete response to the request from the backend.
+    http-incomplete-response,
+    /// The system received a response to the request whose header section was considered too
+    /// large.
+    http-response-header-section-too-large,
+    /// The system received a response to the request whose body was considered too large.
+    http-response-body-too-large,
+    /// The system reached a configured time limit waiting for the complete response.
+    http-response-timeout,
+    /// The system received a response to the request whose status code or reason phrase was
+    /// invalid.
+    http-response-status-invalid,
+    /// The process of negotiating an upgrade of the HTTP version between the system and the
+    /// backend failed.
+    http-upgrade-failed,
+    /// The system encountered an HTTP protocol error when communicating with the backend. This
+    /// error will only be used when a more specific one is not defined.
+    http-protocol-error,
+    /// An invalid cache key was provided for the request.
+    http-request-cache-key-invalid,
+    /// An invalid URI was provided for the request.
+    http-request-uri-invalid,
+    /// The system encountered an unexpected internal error.
+    internal-error,
+    /// The system received a TLS alert from the backend. The field tls-alert-id may be set in
+    /// the send-error-detail.
+    tls-alert-received,
+    /// The system encountered a TLS error when communicating with the backend, either during
+    /// the handshake or afterwards.
+    tls-protocol-error
+  }
+
+  /// Mask representing which fields are understood by the guest, and which have been set by the host.
+  ///
+  /// When the guest calls hostcalls with a mask, it should set every bit in the mask that corresponds
+  /// to a defined flag. This signals the host to write only to fields with a set bit, allowing
+  /// forward compatibility for existing guest programs even after new fields are added to the struct.
+  flags send-error-detail-mask {
+    reserved,
+    dns-error-rcode,
+    dns-error-info-code,
+    tls-alert-id
+  }
+
+  record send-error-detail {
+    tag: send-error-detail-tag,
+    mask: send-error-detail-mask,
+    dns-error-rcode: u16,
+    dns-error-info-code: u16,
+    tls-alert-id: u8
+  }
+
   enum http-version {
     http09,
     http10,
@@ -179,7 +264,7 @@ interface http-req {
   use types.{error}
   use http-types.{
     body-handle, request-handle, http-version, response, pending-request-handle,
-    content-encodings, framing-headers-mode, dynamic-backend-config
+    content-encodings, framing-headers-mode, dynamic-backend-config, send-error-detail
   }
 
   flags cache-override-tag {
@@ -244,18 +329,27 @@ interface http-req {
 
   send: func(h: request-handle, b: body-handle, backend: string) -> result<response, error>
 
+  send-v2: func(h: request-handle, s: send-error-detail, b: body-handle, backend: string) -> result<response, error>
+
   send-async: func(h: request-handle, b: body-handle, backend: string) -> result<pending-request-handle, error>
 
   send-async-streaming: func(h: request-handle, b: body-handle, backend: string) -> result<pending-request-handle, error>
 
   pending-req-poll: func(h: pending-request-handle) -> result<option<response>, error>
+  pending-req-poll-v2: func(h: pending-request-handle, s: send-error-detail) -> result<option<response>, error>
+
 
   pending-req-wait: func(h: pending-request-handle) -> result<response, error>
+  pending-req-wait-v2: func(h: pending-request-handle, s: send-error-detail) -> result<response, error>
 
   pending-req-select: func(h: list<pending-request-handle>) -> result<tuple<
     u32,
     response
   >, error>
+  pending-req-select-v2: func(h: list<pending-request-handle>) -> result<tuple<
+    u32,
+    response
+  >, send-error-detail>
 
   close: func(h: request-handle) -> result<_, error>
 

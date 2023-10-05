@@ -162,6 +162,14 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
+    fastly_world_tuple2_u32_fastly_compute_at_edge_http_req_response_t ok;
+    fastly_compute_at_edge_http_req_send_error_detail_t err;
+  } val;
+} fastly_world_result_tuple2_u32_fastly_compute_at_edge_http_req_response_fastly_compute_at_edge_http_req_send_error_detail_t;
+
+typedef struct {
+  bool is_err;
+  union {
     fastly_compute_at_edge_http_resp_response_handle_t ok;
     fastly_compute_at_edge_http_resp_error_t err;
   } val;
@@ -634,6 +642,9 @@ void __wasm_import_fastly_compute_at_edge_http_req_version_set(int32_t, int32_t,
 __attribute__((__import_module__("fastly:compute-at-edge/http-req"), __import_name__("send")))
 void __wasm_import_fastly_compute_at_edge_http_req_send(int32_t, int32_t, int32_t, int32_t, int32_t);
 
+__attribute__((__import_module__("fastly:compute-at-edge/http-req"), __import_name__("send-v2")))
+void __wasm_import_fastly_compute_at_edge_http_req_send_v2(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+
 __attribute__((__import_module__("fastly:compute-at-edge/http-req"), __import_name__("send-async")))
 void __wasm_import_fastly_compute_at_edge_http_req_send_async(int32_t, int32_t, int32_t, int32_t, int32_t);
 
@@ -643,11 +654,20 @@ void __wasm_import_fastly_compute_at_edge_http_req_send_async_streaming(int32_t,
 __attribute__((__import_module__("fastly:compute-at-edge/http-req"), __import_name__("pending-req-poll")))
 void __wasm_import_fastly_compute_at_edge_http_req_pending_req_poll(int32_t, int32_t);
 
+__attribute__((__import_module__("fastly:compute-at-edge/http-req"), __import_name__("pending-req-poll-v2")))
+void __wasm_import_fastly_compute_at_edge_http_req_pending_req_poll_v2(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+
 __attribute__((__import_module__("fastly:compute-at-edge/http-req"), __import_name__("pending-req-wait")))
 void __wasm_import_fastly_compute_at_edge_http_req_pending_req_wait(int32_t, int32_t);
 
+__attribute__((__import_module__("fastly:compute-at-edge/http-req"), __import_name__("pending-req-wait-v2")))
+void __wasm_import_fastly_compute_at_edge_http_req_pending_req_wait_v2(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+
 __attribute__((__import_module__("fastly:compute-at-edge/http-req"), __import_name__("pending-req-select")))
 void __wasm_import_fastly_compute_at_edge_http_req_pending_req_select(int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/http-req"), __import_name__("pending-req-select-v2")))
+void __wasm_import_fastly_compute_at_edge_http_req_pending_req_select_v2(int32_t, int32_t, int32_t);
 
 __attribute__((__import_module__("fastly:compute-at-edge/http-req"), __import_name__("close")))
 void __wasm_import_fastly_compute_at_edge_http_req_close(int32_t, int32_t);
@@ -759,7 +779,6 @@ void __wasm_import_fastly_compute_at_edge_uap_parse(int32_t, int32_t, int32_t);
 
 __attribute__((__weak__, __export_name__("cabi_realloc")))
 void *cabi_realloc(void *ptr, size_t old_size, size_t align, size_t new_size) {
-  (void) old_size;
   if (new_size == 0) return (void*) align;
   void *ret = realloc(ptr, new_size);
   if (!ret) abort();
@@ -2606,6 +2625,36 @@ bool fastly_compute_at_edge_http_req_send(fastly_compute_at_edge_http_req_reques
   }
 }
 
+bool fastly_compute_at_edge_http_req_send_v2(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_send_error_detail_t *s, fastly_compute_at_edge_http_req_body_handle_t b, fastly_world_string_t *backend, fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_error_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[12];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_req_send_v2((int32_t) (h), (int32_t) (*s).tag, (*s).mask, (int32_t) ((*s).dns_error_rcode), (int32_t) ((*s).dns_error_info_code), (int32_t) ((*s).tls_alert_id), (int32_t) (b), (int32_t) (*backend).ptr, (int32_t) (*backend).len, ptr);
+  fastly_world_result_fastly_compute_at_edge_http_req_response_fastly_compute_at_edge_http_req_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (fastly_compute_at_edge_http_types_response_t) {
+        (uint32_t) (*((int32_t*) (ptr + 4))),
+        (uint32_t) (*((int32_t*) (ptr + 8))),
+      };
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
 bool fastly_compute_at_edge_http_req_send_async(fastly_compute_at_edge_http_req_request_handle_t h, fastly_compute_at_edge_http_req_body_handle_t b, fastly_world_string_t *backend, fastly_compute_at_edge_http_req_pending_request_handle_t *ret, fastly_compute_at_edge_http_req_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[8];
@@ -2703,11 +2752,84 @@ bool fastly_compute_at_edge_http_req_pending_req_poll(fastly_compute_at_edge_htt
   }
 }
 
+bool fastly_compute_at_edge_http_req_pending_req_poll_v2(fastly_compute_at_edge_http_req_pending_request_handle_t h, fastly_compute_at_edge_http_req_send_error_detail_t *s, fastly_world_option_fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_error_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[16];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_req_pending_req_poll_v2((int32_t) (h), (int32_t) (*s).tag, (*s).mask, (int32_t) ((*s).dns_error_rcode), (int32_t) ((*s).dns_error_info_code), (int32_t) ((*s).tls_alert_id), ptr);
+  fastly_world_result_option_fastly_compute_at_edge_http_req_response_fastly_compute_at_edge_http_req_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      fastly_world_option_fastly_compute_at_edge_http_req_response_t option;
+      switch ((int32_t) (*((uint8_t*) (ptr + 4)))) {
+        case 0: {
+          option.is_some = false;
+          break;
+        }
+        case 1: {
+          option.is_some = true;
+          option.val = (fastly_compute_at_edge_http_types_response_t) {
+            (uint32_t) (*((int32_t*) (ptr + 8))),
+            (uint32_t) (*((int32_t*) (ptr + 12))),
+          };
+          break;
+        }
+      }
+      
+      result.val.ok = option;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
 bool fastly_compute_at_edge_http_req_pending_req_wait(fastly_compute_at_edge_http_req_pending_request_handle_t h, fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_error_t *err) {
   __attribute__((__aligned__(4)))
   uint8_t ret_area[12];
   int32_t ptr = (int32_t) &ret_area;
   __wasm_import_fastly_compute_at_edge_http_req_pending_req_wait((int32_t) (h), ptr);
+  fastly_world_result_fastly_compute_at_edge_http_req_response_fastly_compute_at_edge_http_req_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (fastly_compute_at_edge_http_types_response_t) {
+        (uint32_t) (*((int32_t*) (ptr + 4))),
+        (uint32_t) (*((int32_t*) (ptr + 8))),
+      };
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_req_pending_req_wait_v2(fastly_compute_at_edge_http_req_pending_request_handle_t h, fastly_compute_at_edge_http_req_send_error_detail_t *s, fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_error_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[12];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_req_pending_req_wait_v2((int32_t) (h), (int32_t) (*s).tag, (*s).mask, (int32_t) ((*s).dns_error_rcode), (int32_t) ((*s).dns_error_info_code), (int32_t) ((*s).tls_alert_id), ptr);
   fastly_world_result_fastly_compute_at_edge_http_req_response_fastly_compute_at_edge_http_req_error_t result;
   switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
     case 0: {
@@ -2754,6 +2876,45 @@ bool fastly_compute_at_edge_http_req_pending_req_select(fastly_world_list_fastly
     case 1: {
       result.is_err = true;
       result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_http_req_pending_req_select_v2(fastly_world_list_fastly_compute_at_edge_http_req_pending_request_handle_t *h, fastly_world_tuple2_u32_fastly_compute_at_edge_http_req_response_t *ret, fastly_compute_at_edge_http_req_send_error_detail_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[16];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_http_req_pending_req_select_v2((int32_t) (*h).ptr, (int32_t) (*h).len, ptr);
+  fastly_world_result_tuple2_u32_fastly_compute_at_edge_http_req_response_fastly_compute_at_edge_http_req_send_error_detail_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (fastly_world_tuple2_u32_fastly_compute_at_edge_http_req_response_t) {
+        (uint32_t) (*((int32_t*) (ptr + 4))),
+        (fastly_compute_at_edge_http_types_response_t) {
+          (uint32_t) (*((int32_t*) (ptr + 8))),
+          (uint32_t) (*((int32_t*) (ptr + 12))),
+        },
+      };
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (fastly_compute_at_edge_http_types_send_error_detail_t) {
+        (int32_t) (*((uint8_t*) (ptr + 4))),
+        (int32_t) (*((uint8_t*) (ptr + 5))),
+        (uint16_t) ((int32_t) (*((uint16_t*) (ptr + 6)))),
+        (uint16_t) ((int32_t) (*((uint16_t*) (ptr + 8)))),
+        (uint8_t) ((int32_t) (*((uint8_t*) (ptr + 10)))),
+      };
       break;
     }
   }
