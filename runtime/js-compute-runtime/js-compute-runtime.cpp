@@ -499,7 +499,7 @@ bool reactor_main(host_api::Request req) {
   __wasilibc_initialize_environ();
 
   if (debug_logging_enabled()) {
-    printf("Running JS handleRequest function for C@E service version %s\n",
+    printf("Running JS handleRequest function for Fastly Compute service version %s\n",
            getenv("FASTLY_SERVICE_VERSION"));
     fflush(stdout);
   }

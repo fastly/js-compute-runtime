@@ -143,7 +143,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                 }
             }
         } else  {
-            if (test.environments.includes("c@e")) {
+            if (test.environments.includes("compute")) {
                 return retry(10, expBackoff('60s', '10s'), async () => {
                     let path = test.downstream_request.pathname;
                     let url = `${domain}${path}`

@@ -2,7 +2,7 @@ declare module "fastly:env" {
   /**
    * Function to get the value for the provided environment variable name.
    *
-   * For a list of available environment variables, see the [Fastly Developer Hub for C@E Environment Variables](https://developer.fastly.com/reference/compute/ecp-env/)
+   * For a list of available environment variables, see the [Fastly Developer Hub for Compute Environment Variables](https://developer.fastly.com/reference/compute/ecp-env/)
    * 
    * **Note**: The environment variables can only be retrieved when processing requests, not during build-time initialization.
    *

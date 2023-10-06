@@ -766,7 +766,7 @@ addEventListener("fetch", event => {
 
 #### Object-store support
 
-This release adds support for Fastly [Object-store](https://developer.fastly.com/reference/api/services/resources/kv-store/), which is globally consistent key-value storage accessible across the Fastly Network. This makes it possible for your Compute@Edge application to read and write from Object-stores.
+This release adds support for Fastly [Object-store](https://developer.fastly.com/reference/api/services/resources/kv-store/), which is globally consistent key-value storage accessible across the Fastly Network. This makes it possible for your Fastly Compute application to read and write from Object-stores.
 
 We've added two classes, `ObjectStore`, and `ObjectStoreEntry`. `ObjectStore` is used to interact with a particular Object-store and `ObjectStoreEntry` is a particular value within an Object-store. We've made `ObjectStoreEntry` have a similar API as `Response` to make it simpler to read and write from Object-stores. I.e. `ObjectStoreEntry` has a `body` property which is a `ReadableStream` and has `arrayBuffer`/`json`/`text` methods - just like `Response`.
 
@@ -901,7 +901,7 @@ console.log(request); // outputs `Request: {method: POST, url: https://www.fastl
 ### Added
 
 - Updated the js-compute-runtime to `0.2.2` (Which includes fixes to geoip, a way to get environment variables, improves debugging of exceptions in the request handler, and other updates)
-- Added the `Env` namespace for accessing Fastly C@E environment variables.
+- Added the `Env` namespace for accessing Fastly Compute environment variables.
 
 ## 0.2.0 (2021-08-31)
 
@@ -926,5 +926,5 @@ console.log(request); // outputs `Request: {method: POST, url: https://www.fastl
 ### Added
 
 - Initial Release
-- Includes TypeScript type definitions for Compute@Edge flavored ServiceWorkers APIs
+- Includes TypeScript type definitions for Fastly Compute flavored ServiceWorkers APIs
 - Also includes the `js-compute-runtime` CLI for bundling JavaScript applications
