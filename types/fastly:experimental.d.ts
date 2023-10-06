@@ -12,7 +12,7 @@ declare module "fastly:experimental" {
    */
   export function setDefaultBackend(backend: string): void;
   /**
-   * Causes the Compute@Edge JS runtime environment to log debug information to stdout.
+   * Causes the Fastly Compute JS runtime environment to log debug information to stdout.
    *
    * **Note**: This is mostly for internal debugging purposes and will generate highly unstable
    * output.

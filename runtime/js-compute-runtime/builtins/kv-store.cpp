@@ -269,7 +269,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    // If the body stream is backed by a C@E body handle, we can directly pipe
+    // If the body stream is backed by a Fastly Compute body handle, we can directly pipe
     // that handle into the kv store.
     if (builtins::NativeStreamSource::stream_is_body(cx, body_obj)) {
       JS::RootedObject stream_source(cx,

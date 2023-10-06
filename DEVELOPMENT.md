@@ -1,8 +1,8 @@
-# Fastly Compute@Edge JS Runtime
+# Fastly Compute JS Runtime
 
-The JS Compute Runtime for Fastly's [Compute@Edge platform](https://www.fastly.com/products/edge-compute/serverless) provides the environment JavaScript is executed in when using the [Compute@Edge JavaScript SDK](https://www.npmjs.com/package/@fastly/js-compute).
+The JS Compute Runtime for Fastly's [Compute platform](https://www.fastly.com/products/edge-compute/serverless) provides the environment JavaScript is executed in when using the [Fastly Compute JavaScript SDK](https://www.npmjs.com/package/@fastly/js-compute).
 
-**Note**: If you just want to use JavaScript on the Compute@Edge Platform, we recommend using the JavaScript Starter Kits provided by the Fastly CLI tool. For more information please see the [JavaScript documentation on the Fastly Developer Hub](https://developer.fastly.com/learning/compute/javascript/).
+**Note**: If you just want to use JavaScript on the Fastly Compute Platform, we recommend using the JavaScript Starter Kits provided by the Fastly CLI tool. For more information please see the [JavaScript documentation on the Fastly Developer Hub](https://developer.fastly.com/learning/compute/javascript/).
 
 ## Working with the JS Compute Runtime source
 
@@ -72,6 +72,6 @@ To run an end-to-end test which builds and deploys an application to fastly:
 ## Testing a Dev Release
 :warning:	**You should not use this for production workloads!!!!!!!!**
 
-Dev builds are released before production releases to allow for further testing. These are not released upstream to NPM, however you can acquire them from the [Releases](https://github.com/fastly/js-compute-runtime/releases/) section. Download the runtime for your platform, extract the executable and place it in the /node_modules/@fastly/js-compute/bin/PLATFORM folder of your Compute@Edge project. Then you can use the normal [Fastly CLI](https://github.com/fastly/cli) to build your service. 
+Dev builds are released before production releases to allow for further testing. These are not released upstream to NPM, however you can acquire them from the [Releases](https://github.com/fastly/js-compute-runtime/releases/) section. Download the runtime for your platform, extract the executable and place it in the /node_modules/@fastly/js-compute/bin/PLATFORM folder of your Fastly Compute project. Then you can use the normal [Fastly CLI](https://github.com/fastly/cli) to build your service. 
 
 Please submit an [issue](https://github.com/fastly/js-compute-runtime/issues) if you find any problems during testing.

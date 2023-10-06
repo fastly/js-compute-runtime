@@ -188,7 +188,7 @@ bool RequestOrResponse::move_body_handle(JSContext *cx, JS::HandleObject from,
 
   // Replace the receiving object's body handle with the body stream source's
   // underlying handle.
-  // TODO: Let the host know we'll not use the old handle anymore, once C@E has
+  // TODO: Let the host know we'll not use the old handle anymore, once Fastly Compute has
   // a hostcall for that.
   auto body = body_handle(from);
   JS::SetReservedSlot(to, static_cast<uint32_t>(Slots::Body), JS::Int32Value(body.handle));
@@ -955,7 +955,7 @@ bool RequestOrResponse::maybe_stream_body(JSContext *cx, JS::HandleObject body_o
     return false;
   }
 
-  // If the body stream is backed by a C@E body handle, we can directly pipe
+  // If the body stream is backed by a Fastly Compute body handle, we can directly pipe
   // that handle into the body we're about to send.
   if (builtins::NativeStreamSource::stream_is_body(cx, stream)) {
     // First, move the source's body handle to the target and lock the stream.
@@ -1491,7 +1491,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
  * Create a new Request object, roughly according to
  * https://fetch.spec.whatwg.org/#dom-request
  *
- * "Roughly" because not all aspects of Request handling make sense in C@E.
+ * "Roughly" because not all aspects of Request handling make sense in Fastly Compute.
  * The places where we deviate from the spec are called out inline.
  */
 JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::HandleValue input,
@@ -1929,7 +1929,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   // 41.  Set this’s requests body to `finalBody`.
   // (implicit)
 
-  // Apply the C@E-proprietary `backend` property.
+  // Apply the Fastly Compute-proprietary `backend` property.
   if (!backend_val.isUndefined()) {
     JS::RootedString backend(cx, JS::ToString(cx, backend_val));
     if (!backend) {
@@ -1941,7 +1941,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
                         JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::Backend)));
   }
 
-  // Apply the C@E-proprietary `cacheOverride` property.
+  // Apply the Fastly Compute-proprietary `cacheOverride` property.
   if (!cache_override.isUndefined()) {
     if (!set_cache_override(cx, request, cache_override)) {
       return nullptr;

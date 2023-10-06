@@ -2,13 +2,13 @@
 
 ![npm version](https://img.shields.io/npm/v/@fastly/js-compute) ![npm downloads per month](https://img.shields.io/npm/dm/@fastly/js-compute)
 
-JavaScript SDK and CLI for building JavaScript applications on Fastly's [Compute@Edge](https://www.fastly.com/products/edge-compute/serverless).
+JavaScript SDK and CLI for building JavaScript applications on [Fastly Compute](https://www.fastly.com/products/edge-compute/serverless).
 
 ## Getting Started
 
-We recommend using the [Fastly CLI](https://github.com/fastly/cli) to create, build, and deploy JavaScript Compute@Edge services, as [described on the Fastly Developer Hub](https://developer.fastly.com/learning/compute/).
+We recommend using the [Fastly CLI](https://github.com/fastly/cli) to create, build, and deploy JavaScript Fastly Compute services, as [described on the Fastly Developer Hub](https://developer.fastly.com/learning/compute/).
 
-[Detailed documentation for JavaScript Compute@Edge services](https://developer.fastly.com/learning/compute/javascript/) is also available on Fastly Developer Hub.
+[Detailed documentation for JavaScript Fastly Compute services](https://developer.fastly.com/learning/compute/javascript/) is also available on Fastly Developer Hub.
 
 ## Usage
 

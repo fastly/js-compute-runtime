@@ -31,7 +31,7 @@ declare var onfetch: FetchEventListener;
 /**
  * This is a fetch specific implementation of [addEventListener](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener), and is very similar to [handling FetchEvent from a Service Worker](https://developer.mozilla.org/en-US/docs/Web/API/FetchEvent/request).
  *
- * For Fastly C@E, this will be the entrypoint in handling your downstream request from your client.
+ * For Fastly Compute, this will be the entrypoint in handling your downstream request from your client.
  * @group DOM Events
  */
 declare function addEventListener<K extends keyof EventMap>(type: K, listener: EventListenerMap[K]): void;
@@ -129,7 +129,7 @@ declare class Backend {
 }
 
 /**
- * A Fastly C@E specific implementation of [FetchEvent](https://developer.mozilla.org/en-US/docs/Web/API/FetchEvent/FetchEvent).
+ * A Fastly Compute specific implementation of [FetchEvent](https://developer.mozilla.org/en-US/docs/Web/API/FetchEvent/FetchEvent).
  * @group DOM Events
  */
 declare interface FetchEvent {
@@ -255,7 +255,7 @@ declare var CacheOverride: {
 };
 
 /**
- * Information about the downstream client making the request to the C@E service.
+ * Information about the downstream client making the request to the Fastly Compute service.
  */
 declare interface ClientInfo {
   /**
@@ -697,7 +697,7 @@ declare class TextEncoder {
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder | TextDecoder on MDN}
  *
- * **Note**: On Compute@Edge, TextDecoder only supports UTF-8 bytes as input, and always operates
+ * **Note**: On Fastly Compute, TextDecoder only supports UTF-8 bytes as input, and always operates
  * in non-fatal mode.
  * @group Encoding API
  */
@@ -724,7 +724,7 @@ declare interface Logger {
 }
 
 /**
- * Fastly-specific APIs available to Compute@Edge JS services
+ * Fastly-specific APIs available to Fastly Compute JS services
  * @deprecated
  * @hidden
  */
@@ -754,14 +754,14 @@ declare interface Fastly {
    */
   get defaultBackend(): string;
   /**
-   * Property to access the environment variables for the C@E service.
+   * Property to access the environment variables for the Fastly Compute service.
    * @hidden
    */
   env: {
     /**
      * Function to get the environment variable value, for the provided environment variable name.
      *
-     * For additional references, see the [Fastly Developer Hub for C@E Environment Variables](https://developer.fastly.com/reference/compute/ecp-env/)
+     * For additional references, see the [Fastly Developer Hub for Compute Environment Variables](https://developer.fastly.com/reference/compute/ecp-env/)
      *
      * @param name The name of the environment variable
      * @returns the value of the environemnt variable
@@ -782,7 +782,7 @@ declare interface Fastly {
   getLogger(endpoint: string): Logger;
 
   /**
-   * Causes the Compute@Edge JS runtime environment to log debug information to stdout.
+   * Causes the Fastly Compute JS runtime environment to log debug information to stdout.
    *
    * **Note**: This is mostly for internal debugging purposes and will generate highly unstable
    * output.
@@ -960,7 +960,7 @@ and limitations under the License.
 
 /*!
  * This file is largely a subset of TypeScript's lib.dom.d.ts file, with some
- * C@E-specific additions and modifications. Those modifications are
+ * Fastly Compute-specific additions and modifications. Those modifications are
  * Copyright (c) Fastly Corporation, under the same license as the rest of the file.
  */
 
@@ -1609,7 +1609,7 @@ declare function clearInterval(intervalID?: number): void;
 /**
  * Fetch resources from backends.
  *
- * **Note**: Compute@Edge requires all outgoing requests to go to a predefined
+ * **Note**: Fastly Compute requires all outgoing requests to go to a predefined
  * {@link https://developer.fastly.com/reference/glossary#term-backend | backend}, passed in
  * via the {@link RequestInit.backend | backend} property on the `init` object.
  *
