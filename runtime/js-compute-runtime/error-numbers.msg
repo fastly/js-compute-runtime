@@ -78,7 +78,7 @@ MSG_DEF(JSMSG_SECRET_STORE_NAME_TOO_LONG,                      0, JSEXN_TYPEERR,
 MSG_DEF(JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED,             0, JSEXN_TYPEERR, "Can't use a ReadableStream that's locked or has ever been read from or canceled")
 MSG_DEF(JSMSG_INVALID_CHARACTER_ERROR,                         0, JSEXN_ERR, "String contains an invalid character")
 MSG_DEF(JSMSG_BACKEND_FROMNAME_BACKEND_DOES_NOT_EXIST,         1, JSEXN_ERR, "Backend.fromName: backend named '{0}' does not exist")
-MSG_DEF(JSMSG_BACKEND_IS_HEALTHY_BACKEND_DOES_NOT_EXIST,       1, JSEXN_ERR, "Backend.isHealthy: backend named '{0}' does not exist")
+MSG_DEF(JSMSG_BACKEND_IS_HEALTHY_BACKEND_DOES_NOT_EXIST,       1, JSEXN_ERR, "Backend.health: backend named '{0}' does not exist")
 MSG_DEF(JSMSG_BACKEND_PARAMETER_NOT_OBJECT,                    0, JSEXN_TYPEERR, "Backend constructor: configuration parameter must be an Object")
 MSG_DEF(JSMSG_BACKEND_NAME_NOT_SET,                            0, JSEXN_TYPEERR, "Backend constructor: name can not be null or undefined")
 MSG_DEF(JSMSG_BACKEND_NAME_TOO_LONG,                           0, JSEXN_TYPEERR, "Backend constructor: name can not be more than 254 characters")

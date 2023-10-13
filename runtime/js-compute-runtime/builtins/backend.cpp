@@ -899,10 +899,10 @@ bool Backend::from_name(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool Backend::is_healthy(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Backend::health(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JS::RootedObject self(cx, &args.thisv().toObject());
-  if (!args.requireAtLeast(cx, "Backend.isHealthy", 1)) {
+  if (!args.requireAtLeast(cx, "Backend.health", 1)) {
     return false;
   }
 
@@ -910,32 +910,39 @@ bool Backend::is_healthy(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!name) {
     return false;
   }
-  auto res = host_api::Backend::exists(name);
-  if (auto *err = res.to_err()) {
+  auto exists = host_api::Backend::exists(name);
+  if (auto *err = exists.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
-  auto exists = res.unwrap();
 
-  if (!exists) {
+  if (!exists.unwrap()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_BACKEND_IS_HEALTHY_BACKEND_DOES_NOT_EXIST, name.begin());
     return false;
   }
 
-  res = host_api::Backend::isHealthy(name);
+  auto res = host_api::Backend::health(name);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
 
-  args.rval().setBoolean(res.unwrap());
+  auto health = res.unwrap();
+  if (health.is_healthy()) {
+    args.rval().setString(JS_NewStringCopyZ(cx, "healthy"));
+  } else if (health.is_unhealthy()) {
+    args.rval().setString(JS_NewStringCopyZ(cx, "unhealthy"));
+  } else {
+    args.rval().setString(JS_NewStringCopyZ(cx, "unknown"));
+  }
+
   return true;
 }
 
 const JSFunctionSpec Backend::static_methods[] = {
     JS_FN("exists", exists, 1, JSPROP_ENUMERATE), JS_FN("fromName", from_name, 1, JSPROP_ENUMERATE),
-    JS_FN("isHealthy", is_healthy, 1, JSPROP_ENUMERATE), JS_FS_END};
+    JS_FN("health", health, 1, JSPROP_ENUMERATE), JS_FS_END};
 const JSPropertySpec Backend::static_properties[] = {JS_PS_END};
 const JSFunctionSpec Backend::methods[] = {JS_FN("toString", to_string, 0, JSPROP_ENUMERATE),
                                            JS_FN("toName", to_string, 0, JSPROP_ENUMERATE),

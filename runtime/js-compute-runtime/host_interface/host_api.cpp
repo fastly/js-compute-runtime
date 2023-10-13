@@ -64,6 +64,8 @@ static_assert(std::is_same_v<CacheHandle::Handle, fastly_compute_at_edge_cache_h
 
 static_assert(
     std::is_same_v<typeof(CacheState::state), fastly_compute_at_edge_cache_lookup_state_t>);
+static_assert(
+    std::is_same_v<typeof(BackendHealth::state), fastly_compute_at_edge_backend_backend_health_t>);
 
 Result<bool> AsyncHandle::is_ready() const {
   Result<bool> res;
@@ -1487,6 +1489,18 @@ const std::optional<std::string> FastlySendError::message() const {
   return "NetworkError when attempting to fetch resource.";
 }
 
+bool BackendHealth::is_unknown() const {
+  return this->state & FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNKNOWN;
+}
+
+bool BackendHealth::is_healthy() const {
+  return this->state & FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_HEALTHY;
+}
+
+bool BackendHealth::is_unhealthy() const {
+  return this->state & FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNHEALTHY;
+}
+
 Result<bool> Backend::exists(std::string_view name) {
   Result<bool> res;
 
@@ -1502,8 +1516,8 @@ Result<bool> Backend::exists(std::string_view name) {
   return res;
 }
 
-Result<bool> Backend::isHealthy(std::string_view name) {
-  Result<bool> res;
+Result<BackendHealth> Backend::health(std::string_view name) {
+  Result<BackendHealth> res;
 
   auto name_str = string_view_to_world_string(name);
   fastly_compute_at_edge_backend_backend_health_t ret;
@@ -1511,7 +1525,17 @@ Result<bool> Backend::isHealthy(std::string_view name) {
   if (!fastly_compute_at_edge_backend_is_healthy(&name_str, &ret, &err)) {
     res.emplace_err(err);
   } else {
-    res.emplace(ret == FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_HEALTHY);
+    switch (ret) {
+      case FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNKNOWN:
+      case FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_HEALTHY:
+      case FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNHEALTHY: {
+        res.emplace(BackendHealth(ret));
+        break;
+      }
+      default: {
+        MOZ_ASSERT_UNREACHABLE("Making a BackendHealth from an invalid value");
+      }
+    }
   }
 
   return res;

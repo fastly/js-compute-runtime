@@ -2,7 +2,7 @@ import { Backend } from 'fastly:backend';
 import { CacheOverride } from 'fastly:cache-override';
 import { allowDynamicBackends } from "fastly:experimental";
 import { pass, assert, assertDoesNotThrow, assertThrows, assertRejects, assertResolves } from "./assertions.js";
-import { routes } from "./routes.js";
+import { isRunningLocally, routes } from "./routes.js";
 
 /// The backend name is already in use.
 
@@ -61,7 +61,7 @@ import { routes } from "./routes.js";
 {
   routes.set("/backend/interface", async () => {
     let actual = Reflect.ownKeys(Backend)
-    let expected = ["prototype", "exists", "fromName", "isHealthy", "length", "name"]
+    let expected = ["prototype", "exists", "fromName", "health", "length", "name"]
     let error = assert(actual, expected, `Reflect.ownKeys(Backend)`)
     if (error) { return error }
 
@@ -111,22 +111,22 @@ import { routes } from "./routes.js";
     error = assert(Backend.fromName.name, "fromName", `Backend.fromName.name`)
     if (error) { return error }
 
-    actual = Reflect.getOwnPropertyDescriptor(Backend, 'isHealthy')
+    actual = Reflect.getOwnPropertyDescriptor(Backend, 'health')
     expected = {
-      "value": Backend.isHealthy,
+      "value": Backend.health,
       "writable": true,
       "enumerable": true,
       "configurable": true
     }
-    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Backend, 'isHealthy')`)
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(Backend, 'health')`)
     if (error) { return error }
 
-    error = assert(typeof Backend.isHealthy, 'function', `typeof Backend.isHealthy`)
+    error = assert(typeof Backend.health, 'function', `typeof Backend.health`)
     if (error) { return error }
 
-    error = assert(Backend.isHealthy.length, 1, `Backend.isHealthy.length`)
+    error = assert(Backend.health.length, 1, `Backend.health.length`)
     if (error) { return error }
-    error = assert(Backend.isHealthy.name, "isHealthy", `Backend.isHealthy.name`)
+    error = assert(Backend.health.name, "health", `Backend.health.name`)
     if (error) { return error }
 
     actual = Reflect.getOwnPropertyDescriptor(Backend, 'length')
@@ -1511,24 +1511,24 @@ import { routes } from "./routes.js";
     });
   }
 
-  // isHealthy
+  // health
   {
-    routes.set("/backend/isHealthy/called-as-constructor-function", async () => {
+    routes.set("/backend/health/called-as-constructor-function", async () => {
       let error = assertThrows(() => {
-        new Backend.isHealthy()
-      }, TypeError, `Backend.isHealthy is not a constructor`)
+        new Backend.health()
+      }, TypeError, `Backend.health is not a constructor`)
       if (error) { return error }
       return pass('ok')
     });
-    routes.set("/backend/isHealthy/empty-parameter", async () => {
+    routes.set("/backend/health/empty-parameter", async () => {
       let error = assertThrows(() => {
-        Backend.isHealthy()
-      }, TypeError, `Backend.isHealthy: At least 1 argument required, but only 0 passed`)
+        Backend.health()
+      }, TypeError, `Backend.health: At least 1 argument required, but only 0 passed`)
       if (error) { return error }
       return pass('ok')
     });
     // https://tc39.es/ecma262/#sec-tostring
-    routes.set("/backend/isHealthy/parameter-calls-7.1.17-ToString", async () => {
+    routes.set("/backend/health/parameter-calls-7.1.17-ToString", async () => {
       let sentinel;
       const test = () => {
         sentinel = Symbol();
@@ -1537,7 +1537,7 @@ import { routes } from "./routes.js";
             throw sentinel;
           }
         }
-        Backend.isHealthy(name)
+        Backend.health(name)
       }
       let error = assertThrows(test)
       if (error) { return error }
@@ -1547,34 +1547,41 @@ import { routes } from "./routes.js";
         let error = assert(thrownError, sentinel, 'thrownError === sentinel')
         if (error) { return error }
       }
-      error = assertThrows(() => Backend.isHealthy(Symbol()), TypeError, `can't convert symbol to string`)
+      error = assertThrows(() => Backend.health(Symbol()), TypeError, `can't convert symbol to string`)
       if (error) { return error }
       return pass('ok')
     });
 
-    routes.set("/backend/isHealthy/parameter-invalid", async () => {
+    routes.set("/backend/health/parameter-invalid", async () => {
       // null
-      let error = assertThrows(() => Backend.isHealthy(null), TypeError)
+      let error = assertThrows(() => Backend.health(null), TypeError)
       if (error) { return error }
       // undefined
-      error = assertThrows(() => Backend.isHealthy(undefined), TypeError)
+      error = assertThrows(() => Backend.health(undefined), TypeError)
       if (error) { return error }
       // .length > 254
-      error = assertThrows(() => Backend.isHealthy('a'.repeat(255)), TypeError)
+      error = assertThrows(() => Backend.health('a'.repeat(255)), TypeError)
       if (error) { return error }
       // .length == 0
-      error = assertThrows(() => Backend.isHealthy(''), TypeError)
+      error = assertThrows(() => Backend.health(''), TypeError)
       if (error) { return error }
       return pass('ok')
     });
-    routes.set("/backend/isHealthy/happy-path-backend-exists", async () => {
-      let error = assert(typeof Backend.isHealthy('TheOrigin'), 'boolean', "typeof Backend.isHealthy('TheOrigin')");
+    routes.set("/backend/health/happy-path-backend-exists", async () => {
+      let error = assert(typeof Backend.health('TheOrigin'), 'string', "typeof Backend.health('TheOrigin')");
       if (error) { return error }
+      if (isRunningLocally()) {
+        error = assert(Backend.health('TheOrigin'), 'unknown', "Backend.health('TheOrigin')");
+        if (error) { return error }
+      } else {
+        error = assert(Backend.health('TheOrigin'), 'healthy', "Backend.health('TheOrigin')");
+        if (error) { return error }
+      }
 
       return pass('ok')
     });
-    routes.set("/backend/isHealthy/happy-path-backend-does-not-exist", async () => {
-      let error = assertThrows(() => Backend.isHealthy('meow'), Error, "Backend.isHealthy: backend named 'meow' does not exist")
+    routes.set("/backend/health/happy-path-backend-does-not-exist", async () => {
+      let error = assertThrows(() => Backend.health('meow'), Error, "Backend.health: backend named 'meow' does not exist")
       if (error) { return error }
       return pass('ok')
     });

@@ -2992,6 +2992,72 @@
       "body": "ok"
     }
   },
+  "GET /backend/health/called-as-constructor-function": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/health/called-as-constructor-function"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/health/empty-parameter": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/health/empty-parameter"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/health/parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/health/parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/health/parameter-invalid": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/health/parameter-invalid"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/health/happy-path-backend-exists": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/health/happy-path-backend-exists"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/health/happy-path-backend-does-not-exist": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/health/happy-path-backend-does-not-exist"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
   "GET /dictionary/exposed-as-global": {
     "environments": ["viceroy", "compute"],
     "downstream_request": {
