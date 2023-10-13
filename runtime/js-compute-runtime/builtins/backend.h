@@ -37,7 +37,7 @@ public:
 
   inline static JS::PersistentRootedObject backends;
 
-  static bool isCipherSuiteSupportedByFastly(std::string_view cipherSpec);
+  static bool is_cipher_suite_supported_by_fastly(std::string_view cipherSpec);
   static JSString *name(JSContext *cx, JSObject *self);
   static JS::Result<mozilla::Ok> register_dynamic_backend(JSContext *cx, JS::HandleObject request);
   static JSObject *create(JSContext *cx, JS::HandleObject request);
@@ -50,12 +50,12 @@ public:
 
   // static methods
   static bool exists(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool fromName(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool isHealthy(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool from_name(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool is_healthy(JSContext *cx, unsigned argc, JS::Value *vp);
 
   // prototype methods
-  static bool toName(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool toString(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool to_name(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool to_string(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
