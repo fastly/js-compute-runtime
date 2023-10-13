@@ -70,8 +70,9 @@ public:
   EncryptionLevel level;
   uint16_t strength_bits;
 
-  constexpr Cipher(std::string_view open_ssl_alias, KeyExchange kx, Authentication au, Encryption enc,
-                   MessageDigest mac, Protocol protocol, EncryptionLevel level, int strength_bits)
+  constexpr Cipher(std::string_view open_ssl_alias, KeyExchange kx, Authentication au,
+                   Encryption enc, MessageDigest mac, Protocol protocol, EncryptionLevel level,
+                   int strength_bits)
       : open_ssl_alias(open_ssl_alias), kx(kx), au(au), enc(enc), mac(mac), protocol(protocol),
         level(level), strength_bits(strength_bits) {}
 
@@ -255,12 +256,12 @@ private:
   static constexpr auto ALL = "ALL";
 
   void move_to_end(const AliasMap &aliases, std::vector<Cipher> &ciphers,
-                 std::string_view cipher) const {
+                   std::string_view cipher) const {
     this->move_to_end(ciphers, aliases.at(cipher));
   }
 
   void move_to_end(std::vector<Cipher> &ciphers,
-                 const std::vector<Cipher> &ciphers_to_move_to_end) const {
+                   const std::vector<Cipher> &ciphers_to_move_to_end) const {
     std::stable_partition(ciphers.begin(), ciphers.end(), [&ciphers_to_move_to_end](auto &cipher) {
       return std::find(ciphers_to_move_to_end.begin(), ciphers_to_move_to_end.end(), cipher) ==
              ciphers_to_move_to_end.end();
@@ -739,7 +740,8 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
     backend_config.first_byte_timeout = first_byte_timeout_slot.toInt32();
   }
 
-  auto between_bytes_timeout_slot = JS::GetReservedSlot(backend, Backend::Slots::BetweenBytesTimeout);
+  auto between_bytes_timeout_slot =
+      JS::GetReservedSlot(backend, Backend::Slots::BetweenBytesTimeout);
   if (!between_bytes_timeout_slot.isNullOrUndefined()) {
     backend_config.between_bytes_timeout = between_bytes_timeout_slot.toInt32();
   }
@@ -764,7 +766,8 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
     backend_config.ssl_max_version = host_api::TlsVersion(tls_max_version.toInt32());
   }
 
-  auto certificate_hostname_slot = JS::GetReservedSlot(backend, Backend::Slots::CertificateHostname);
+  auto certificate_hostname_slot =
+      JS::GetReservedSlot(backend, Backend::Slots::CertificateHostname);
   if (!certificate_hostname_slot.isNullOrUndefined()) {
     JS::RootedString certificate_hostname_string(cx, certificate_hostname_slot.toString());
     auto certificate_hostname_chars = core::encode(cx, certificate_hostname_string);
@@ -956,7 +959,8 @@ bool Backend::set_name(JSContext *cx, JSObject *backend, JS::HandleValue name_va
     return false;
   }
 
-  JS::SetReservedSlot(backend, Backend::Slots::Name, JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
+  JS::SetReservedSlot(backend, Backend::Slots::Name,
+                      JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
   return true;
 }
 
@@ -1025,7 +1029,7 @@ bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue targe
   }
 
   std::string_view target_string(reinterpret_cast<char *>(target_string_slice.data),
-                                target_string_slice.len);
+                                 target_string_slice.len);
   auto length = target_string.length();
   if (length == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_EMPTY);

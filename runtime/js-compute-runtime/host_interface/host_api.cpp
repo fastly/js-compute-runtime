@@ -1526,15 +1526,15 @@ Result<BackendHealth> Backend::health(std::string_view name) {
     res.emplace_err(err);
   } else {
     switch (ret) {
-      case FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNKNOWN:
-      case FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_HEALTHY:
-      case FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNHEALTHY: {
-        res.emplace(BackendHealth(ret));
-        break;
-      }
-      default: {
-        MOZ_ASSERT_UNREACHABLE("Making a BackendHealth from an invalid value");
-      }
+    case FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNKNOWN:
+    case FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_HEALTHY:
+    case FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNHEALTHY: {
+      res.emplace(BackendHealth(ret));
+      break;
+    }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("Making a BackendHealth from an invalid value");
+    }
     }
   }
 

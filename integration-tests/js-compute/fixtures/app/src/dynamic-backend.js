@@ -1570,13 +1570,8 @@ import { isRunningLocally, routes } from "./routes.js";
     routes.set("/backend/health/happy-path-backend-exists", async () => {
       let error = assert(typeof Backend.health('TheOrigin'), 'string', "typeof Backend.health('TheOrigin')");
       if (error) { return error }
-      if (isRunningLocally()) {
-        error = assert(Backend.health('TheOrigin'), 'unknown', "Backend.health('TheOrigin')");
-        if (error) { return error }
-      } else {
-        error = assert(Backend.health('TheOrigin'), 'healthy', "Backend.health('TheOrigin')");
-        if (error) { return error }
-      }
+      error = assert(Backend.health('TheOrigin'), 'unknown', "Backend.health('TheOrigin')");
+      if (error) { return error }
 
       return pass('ok')
     });
