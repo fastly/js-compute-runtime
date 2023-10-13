@@ -1048,13 +1048,13 @@ bool fastly_compute_at_edge_backend_exists(fastly_world_string_t *backend, bool 
   return true;
 }
 
-fastly_compute_at_edge_backend_backend_health_t convert_fastly_backend_health(uint32_t version) {
+fastly_compute_at_edge_backend_backend_health_t convert_fastly_backend_health(fastly::BACKEND_HEALTH version) {
   switch (version) {
-  case 0:
+  case fastly::BACKEND_HEALTH::UNKNOWN:
     return FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNKNOWN;
-  case 1:
+  case fastly::BACKEND_HEALTH::HEALTHY:
     return FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_HEALTHY;
-  case 2:
+  case fastly::BACKEND_HEALTH::UNHEALTHY:
     return FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNHEALTHY;
   default:
     return FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNKNOWN;
