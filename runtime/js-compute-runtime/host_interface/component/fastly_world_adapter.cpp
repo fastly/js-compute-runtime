@@ -1048,7 +1048,8 @@ bool fastly_compute_at_edge_backend_exists(fastly_world_string_t *backend, bool 
   return true;
 }
 
-fastly_compute_at_edge_backend_backend_health_t convert_fastly_backend_health(fastly::BACKEND_HEALTH version) {
+fastly_compute_at_edge_backend_backend_health_t
+convert_fastly_backend_health(fastly::BACKEND_HEALTH version) {
   switch (version) {
   case fastly::BACKEND_HEALTH::UNKNOWN:
     return FASTLY_COMPUTE_AT_EDGE_BACKEND_BACKEND_HEALTH_UNKNOWN;
@@ -1064,9 +1065,11 @@ fastly_compute_at_edge_backend_backend_health_t convert_fastly_backend_health(fa
 bool fastly_compute_at_edge_backend_is_healthy(fastly_world_string_t *backend,
                                                fastly_compute_at_edge_backend_backend_health_t *ret,
                                                fastly_compute_at_edge_types_error_t *err) {
-  uint32_t fastly_backend_health;
+  fastly::BACKEND_HEALTH fastly_backend_health;
   if (!convert_result(
-          fastly::backend_is_healthy(backend->ptr, backend->len, &fastly_backend_health), err)) {
+          fastly::backend_is_healthy(backend->ptr, backend->len,
+                                     reinterpret_cast<uint32_t *>(&fastly_backend_health)),
+          err)) {
     return false;
   }
   *ret = convert_fastly_backend_health(fastly_backend_health);

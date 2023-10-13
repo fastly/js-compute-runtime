@@ -813,7 +813,7 @@ bool Backend::to_string(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 namespace {
-JSString *parse_and_validate_name(JSContext *cx, JS::HandleValue name_val) {
+host_api::HostString parse_and_validate_name(JSContext *cx, JS::HandleValue name_val) {
   if (name_val.isNullOrUndefined()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_NAME_NOT_SET);
     return nullptr;
@@ -831,7 +831,7 @@ JSString *parse_and_validate_name(JSContext *cx, JS::HandleValue name_val) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_NAME_EMPTY);
     return nullptr;
   }
-  return name;
+  return core::encode(cx, name);
 }
 } // namespace
 
@@ -842,13 +842,11 @@ bool Backend::exists(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  JS::RootedString name(cx, parse_and_validate_name(cx, args.get(0)));
+  auto name = parse_and_validate_name(cx, args.get(0));
   if (!name) {
     return false;
   }
-  auto name_chars = core::encode(cx, name);
-  std::string_view name_view = name_chars;
-  auto res = host_api::Backend::exists(name_view);
+  auto res = host_api::Backend::exists(name);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -865,12 +863,11 @@ bool Backend::from_name(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  JS::RootedString name(cx, parse_and_validate_name(cx, args.get(0)));
+  auto name = parse_and_validate_name(cx, args.get(0));
   if (!name) {
     return false;
   }
-  auto name_chars = core::encode(cx, name);
-  auto res = host_api::Backend::exists(name_chars);
+  auto res = host_api::Backend::exists(name);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -879,7 +876,7 @@ bool Backend::from_name(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   if (!exists) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_BACKEND_FROMNAME_BACKEND_DOES_NOT_EXIST, name_chars.begin());
+                             JSMSG_BACKEND_FROMNAME_BACKEND_DOES_NOT_EXIST, name.begin());
     return false;
   }
 
@@ -893,7 +890,7 @@ bool Backend::from_name(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  JS::RootedValue name_val(cx, JS::StringValue(name));
+  JS::RootedValue name_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
   if (!Backend::set_name(cx, backend, name_val)) {
     return false;
   }
@@ -909,13 +906,11 @@ bool Backend::is_healthy(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  JS::RootedString name(cx, parse_and_validate_name(cx, args.get(0)));
+  auto name = parse_and_validate_name(cx, args.get(0));
   if (!name) {
     return false;
   }
-  auto name_chars = core::encode(cx, name);
-  std::string_view name_view = name_chars;
-  auto res = host_api::Backend::exists(name_view);
+  auto res = host_api::Backend::exists(name);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -924,11 +919,11 @@ bool Backend::is_healthy(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   if (!exists) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_BACKEND_IS_HEALTHY_BACKEND_DOES_NOT_EXIST, name_chars.begin());
+                             JSMSG_BACKEND_IS_HEALTHY_BACKEND_DOES_NOT_EXIST, name.begin());
     return false;
   }
 
-  res = host_api::Backend::isHealthy(name_view);
+  res = host_api::Backend::isHealthy(name);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -954,7 +949,7 @@ bool Backend::set_name(JSContext *cx, JSObject *backend, JS::HandleValue name_va
     return false;
   }
 
-  JS::SetReservedSlot(backend, Backend::Slots::Name, JS::StringValue(name));
+  JS::SetReservedSlot(backend, Backend::Slots::Name, JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
   return true;
 }
 
