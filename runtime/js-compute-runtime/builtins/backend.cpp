@@ -61,7 +61,7 @@ enum class Protocol : uint8_t {
 
 class Cipher {
 public:
-  std::string_view openSSLAlias;
+  std::string_view open_ssl_alias;
   KeyExchange kx;
   Authentication au;
   Encryption enc;
@@ -70,14 +70,15 @@ public:
   EncryptionLevel level;
   uint16_t strength_bits;
 
-  constexpr Cipher(std::string_view openSSLAlias, KeyExchange kx, Authentication au, Encryption enc,
-                   MessageDigest mac, Protocol protocol, EncryptionLevel level, int strength_bits)
-      : openSSLAlias(openSSLAlias), kx(kx), au(au), enc(enc), mac(mac), protocol(protocol),
+  constexpr Cipher(std::string_view open_ssl_alias, KeyExchange kx, Authentication au,
+                   Encryption enc, MessageDigest mac, Protocol protocol, EncryptionLevel level,
+                   int strength_bits)
+      : open_ssl_alias(open_ssl_alias), kx(kx), au(au), enc(enc), mac(mac), protocol(protocol),
         level(level), strength_bits(strength_bits) {}
 
   // Overload the == operator
   const bool operator==(const Cipher &obj) const {
-    return openSSLAlias == obj.openSSLAlias && kx == obj.kx && au == obj.au && enc == obj.enc &&
+    return open_ssl_alias == obj.open_ssl_alias && kx == obj.kx && au == obj.au && enc == obj.enc &&
            mac == obj.mac && protocol == obj.protocol && level == obj.level &&
            strength_bits == obj.strength_bits;
   }
@@ -254,35 +255,35 @@ private:
   static constexpr auto COMPLEMENTOFDEFAULT = "COMPLEMENTOFDEFAULT";
   static constexpr auto ALL = "ALL";
 
-  void moveToEnd(const AliasMap &aliases, std::vector<Cipher> &ciphers,
-                 std::string_view cipher) const {
-    this->moveToEnd(ciphers, aliases.at(cipher));
+  void move_to_end(const AliasMap &aliases, std::vector<Cipher> &ciphers,
+                   std::string_view cipher) const {
+    this->move_to_end(ciphers, aliases.at(cipher));
   }
 
-  void moveToEnd(std::vector<Cipher> &ciphers,
-                 const std::vector<Cipher> &ciphersToMoveToEnd) const {
-    std::stable_partition(ciphers.begin(), ciphers.end(), [&ciphersToMoveToEnd](auto &cipher) {
-      return std::find(ciphersToMoveToEnd.begin(), ciphersToMoveToEnd.end(), cipher) ==
-             ciphersToMoveToEnd.end();
+  void move_to_end(std::vector<Cipher> &ciphers,
+                   const std::vector<Cipher> &ciphers_to_move_to_end) const {
+    std::stable_partition(ciphers.begin(), ciphers.end(), [&ciphers_to_move_to_end](auto &cipher) {
+      return std::find(ciphers_to_move_to_end.begin(), ciphers_to_move_to_end.end(), cipher) ==
+             ciphers_to_move_to_end.end();
     });
   }
 
   void add(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view alias) const {
-    auto toAdd = aliases.at(alias);
-    ciphers.insert(ciphers.end(), toAdd.begin(), toAdd.end());
+    auto to_add = aliases.at(alias);
+    ciphers.insert(ciphers.end(), to_add.begin(), to_add.end());
   }
 
   void remove(const AliasMap &aliases, std::vector<Cipher> &ciphers, std::string_view alias) const {
-    auto &toRemove = aliases.at(alias);
+    auto &to_remove = aliases.at(alias);
     ciphers.erase(std::remove_if(ciphers.begin(), ciphers.end(),
                                  [&](auto &x) {
-                                   return std::find(toRemove.begin(), toRemove.end(), x) !=
-                                          toRemove.end();
+                                   return std::find(to_remove.begin(), to_remove.end(), x) !=
+                                          to_remove.end();
                                  }),
                   ciphers.end());
   }
 
-  void strengthSort(std::vector<Cipher> &ciphers) const {
+  void strength_sort(std::vector<Cipher> &ciphers) const {
     /*
      * This routine sorts the ciphers with descending strength. The sorting
      * must keep the pre-sorted sequence.
@@ -295,52 +296,52 @@ private:
    * See
    * https://github.com/openssl/openssl/blob/709651c9022e7be7e69cf8a2f6edf2c8722a6a1e/ssl/ssl_ciph.c#L1455
    */
-  void defaultSort(std::vector<Cipher> &ciphers) const {
-    auto byStrength = [](auto &l, auto &r) { return l.strength_bits > r.strength_bits; };
+  void default_sort(std::vector<Cipher> &ciphers) const {
+    auto by_strength = [](auto &l, auto &r) { return l.strength_bits > r.strength_bits; };
     // order all ciphers by strength first
-    std::sort(ciphers.begin(), ciphers.end(), byStrength);
+    std::sort(ciphers.begin(), ciphers.end(), by_strength);
 
     auto it = std::stable_partition(ciphers.begin(), ciphers.end(),
-                                    this->byKeyExchange(KeyExchange::EECDH));
+                                    this->by_key_exchange(KeyExchange::EECDH));
 
     /* AES is our preferred symmetric cipher */
     auto aes = {Encryption::AES128, Encryption::AES128GCM, Encryption::AES256,
                 Encryption::AES256GCM};
 
     /* Now arrange all ciphers by preference: */
-    it = std::stable_partition(it, ciphers.end(), this->byEncryption(aes));
+    it = std::stable_partition(it, ciphers.end(), this->by_encryption(aes));
 
     /* Move ciphers without forward secrecy to the end */;
     std::stable_partition(
         it, ciphers.end(),
-        [compare = this->byKeyExchange(KeyExchange::RSA)](auto &c) { return !compare(c); });
+        [compare = this->by_key_exchange(KeyExchange::RSA)](auto &c) { return !compare(c); });
   }
 
-  std::function<bool(const Cipher &)> byProtocol(Protocol val) const {
+  std::function<bool(const Cipher &)> by_protocol(Protocol val) const {
     return [val](auto &c) { return c.protocol == val; };
   }
 
-  std::function<bool(const Cipher &)> byKeyExchange(KeyExchange val) const {
+  std::function<bool(const Cipher &)> by_key_exchange(KeyExchange val) const {
     return [val](auto &c) { return c.kx == val; };
   }
 
-  std::function<bool(const Cipher &)> byAuthentication(Authentication val) const {
+  std::function<bool(const Cipher &)> by_authentication(Authentication val) const {
     return [val](auto &c) { return c.au == val; };
   }
 
-  std::function<bool(const Cipher &)> byEncryption(std::set<Encryption> vals) const {
+  std::function<bool(const Cipher &)> by_encryption(std::set<Encryption> vals) const {
     return [vals](auto &c) { return vals.find(c.enc) != vals.end(); };
   }
 
-  std::function<bool(const Cipher &)> byEncryption(Encryption val) const {
+  std::function<bool(const Cipher &)> by_encryption(Encryption val) const {
     return [val](auto &c) { return c.enc == val; };
   }
 
-  std::function<bool(const Cipher &)> byEncryptionLevel(EncryptionLevel val) const {
+  std::function<bool(const Cipher &)> by_encryption_level(EncryptionLevel val) const {
     return [val](auto &c) { return c.level == val; };
   }
 
-  std::function<bool(const Cipher &)> byMessageDigest(MessageDigest val) const {
+  std::function<bool(const Cipher &)> by_message_digest(MessageDigest val) const {
     return [val](auto &c) { return c.mac == val; };
   }
 
@@ -374,7 +375,7 @@ private:
     return {left, str.substr(ix)};
   }
 
-  std::vector<std::string_view> splitCipherSuiteString(std::string_view string) const {
+  std::vector<std::string_view> split_cipher_suite_string(std::string_view string) const {
     std::vector<std::string_view> result;
 
     while (!string.empty()) {
@@ -399,16 +400,16 @@ public:
     for (const auto &any : CIPHER) {
       auto &cipher = any.second;
       this->all.push_back(cipher);
-      auto cipherAlias = cipher.openSSLAlias;
-      auto alias = aliases.find(cipherAlias);
+      auto cipher_alias = cipher.open_ssl_alias;
+      auto alias = aliases.find(cipher_alias);
       if (alias != aliases.end()) {
         alias->second.push_back(cipher);
       } else {
         std::vector<Cipher> list;
         list.push_back(cipher);
-        aliases.insert({cipherAlias, list});
+        aliases.insert({cipher_alias, list});
       }
-      aliases.insert({cipher.openSSLAlias, std::vector<Cipher>{cipher}});
+      aliases.insert({cipher.open_ssl_alias, std::vector<Cipher>{cipher}});
     }
 
     // Note: the descriptions of the aliases within the comments are from
@@ -416,35 +417,35 @@ public:
 
     // All cipher suites except the eNULL ciphers (which must be explicitly enabled if needed).
     // As of OpenSSL 1.0.0, the ALL cipher suites are sensibly ordered by default.
-    this->defaultSort(this->all);
+    this->default_sort(this->all);
     aliases.insert({ALL, this->all});
     // "High" encryption cipher suites. This currently means those with key lengths larger than 128
     // bits, and some cipher suites with 128-bit keys.
     std::vector<Cipher> high;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(high),
-                 this->byEncryptionLevel(EncryptionLevel::HIGH));
+                 this->by_encryption_level(EncryptionLevel::HIGH));
     aliases.insert({HIGH, high});
     // "Medium" encryption cipher suites, currently some of those using 128 bit encryption.
     std::vector<Cipher> medium;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(medium),
-                 this->byEncryptionLevel(EncryptionLevel::MEDIUM));
+                 this->by_encryption_level(EncryptionLevel::MEDIUM));
     aliases.insert({MEDIUM, medium});
 
     // Cipher suites using RSA key exchange or authentication. RSA is an alias for kRSA.
     std::vector<Cipher> krsa;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(krsa),
-                 this->byKeyExchange(KeyExchange::RSA));
+                 this->by_key_exchange(KeyExchange::RSA));
     aliases.insert({kRSA, krsa});
     std::vector<Cipher> arsa;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(arsa),
-                 this->byAuthentication(Authentication::RSA));
+                 this->by_authentication(Authentication::RSA));
     aliases.insert({aRSA, arsa});
     aliases.insert({RSA, krsa});
 
     // Cipher suites using ephemeral ECDH key agreement, including anonymous cipher suites.
     std::vector<Cipher> ecdh;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(ecdh),
-                 this->byKeyExchange(KeyExchange::EECDH));
+                 this->by_key_exchange(KeyExchange::EECDH));
     aliases.insert({kEECDH, ecdh});
     aliases.insert({kECDHE, ecdh});
     aliases.insert({ECDH, ecdh});
@@ -459,27 +460,27 @@ public:
     // or TLS, they only affect the list of available cipher suites.
     std::vector<Cipher> tlsv2;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(tlsv2),
-                 this->byProtocol(Protocol::TLSv1_2));
+                 this->by_protocol(Protocol::TLSv1_2));
     aliases.insert({SSL_PROTO_TLSv1_2, tlsv2});
     std::vector<Cipher> tlsv1;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(tlsv1),
-                 this->byProtocol(Protocol::TLSv1));
+                 this->by_protocol(Protocol::TLSv1));
     aliases.insert({SSL_PROTO_TLSv1_0, tlsv1});
     aliases.insert({SSL_PROTO_TLSv1, tlsv1});
     std::vector<Cipher> sslv3;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(sslv3),
-                 this->byProtocol(Protocol::SSLv3));
+                 this->by_protocol(Protocol::SSLv3));
     aliases.insert({SSL_PROTO_SSLv3, sslv3});
 
     // cipher suites using 128 bit AES.
     std::vector<Cipher> aes128;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(aes128),
-                 this->byEncryption({Encryption::AES128, Encryption::AES128GCM}));
+                 this->by_encryption({Encryption::AES128, Encryption::AES128GCM}));
     aliases.insert({AES128, aes128});
     // cipher suites using 256 bit AES.
     std::vector<Cipher> aes256;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(aes256),
-                 this->byEncryption({Encryption::AES256, Encryption::AES256GCM}));
+                 this->by_encryption({Encryption::AES256, Encryption::AES256GCM}));
     aliases.insert({AES256, aes256});
     // cipher suites using either 128 or 256 bit AES.
     auto aes(aes128);
@@ -489,36 +490,36 @@ public:
     // AES in Galois Counter Mode (GCM).
     std::vector<Cipher> aesgcm;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(aesgcm),
-                 this->byEncryption({Encryption::AES128GCM, Encryption::AES256GCM}));
+                 this->by_encryption({Encryption::AES128GCM, Encryption::AES256GCM}));
     aliases.insert({AESGCM, aesgcm});
 
     // Cipher suites using ChaCha20.
     std::vector<Cipher> chacha20;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(chacha20),
-                 this->byEncryption(Encryption::CHACHA20POLY1305));
+                 this->by_encryption(Encryption::CHACHA20POLY1305));
     aliases.insert({CHACHA20, chacha20});
 
     // Cipher suites using triple DES.
     std::vector<Cipher> triple_des;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(triple_des),
-                 this->byEncryption(Encryption::TRIPLE_DES));
+                 this->by_encryption(Encryption::TRIPLE_DES));
     aliases.insert({TRIPLE_DES, triple_des});
 
     // Cipher suites using SHA1.
     std::vector<Cipher> sha1;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(sha1),
-                 this->byMessageDigest(MessageDigest::SHA1));
+                 this->by_message_digest(MessageDigest::SHA1));
     aliases.insert({SHA1, sha1});
     aliases.insert({SHA, sha1});
     // Cipher suites using SHA256.
     std::vector<Cipher> sha256;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(sha256),
-                 this->byMessageDigest(MessageDigest::SHA256));
+                 this->by_message_digest(MessageDigest::SHA256));
     aliases.insert({SHA256, sha256});
     // Cipher suites using SHA384.
     std::vector<Cipher> sha384;
     std::copy_if(this->all.begin(), this->all.end(), std::back_inserter(sha384),
-                 this->byMessageDigest(MessageDigest::SHA384));
+                 this->by_message_digest(MessageDigest::SHA384));
     aliases.insert({SHA384, sha384});
 
     // COMPLEMENTOFDEFAULT:
@@ -526,9 +527,9 @@ public:
     // anonymous ciphers. Note that this rule does not cover eNULL, which is not included by ALL
     // (use COMPLEMENTOFALL if necessary). Note that RC4 based cipher suites are not supported by
     // Fastly and the only supported anonymous ciphers are `ecdh` and `triple_des`.
-    auto complementOfDefault(ecdh);
-    complementOfDefault.insert(complementOfDefault.end(), triple_des.begin(), triple_des.end());
-    aliases.insert({COMPLEMENTOFDEFAULT, complementOfDefault});
+    auto complement_of_default(ecdh);
+    complement_of_default.insert(complement_of_default.end(), triple_des.begin(), triple_des.end());
+    aliases.insert({COMPLEMENTOFDEFAULT, complement_of_default});
 
     // The content of the default list is determined at compile time and normally corresponds to
     // ALL:!COMPLEMENTOFDEFAULT:!eNULL.
@@ -539,9 +540,9 @@ public:
     /**
      * All ciphers by their openssl alias name.
      */
-    auto elements = this->splitCipherSuiteString(expression);
+    auto elements = this->split_cipher_suite_string(expression);
     std::vector<Cipher> ciphers;
-    std::vector<Cipher> removedCiphers;
+    std::vector<Cipher> removed_ciphers;
     for (auto &element : elements) {
 
       if (element.rfind(DELETE, 0) == 0) {
@@ -554,16 +555,16 @@ public:
         auto found = aliases.find(alias);
         if (found != aliases.end()) {
 
-          auto toAdd = found.operator->()->second;
-          removedCiphers.insert(removedCiphers.end(), toAdd.begin(), toAdd.end());
+          auto to_add = found.operator->()->second;
+          removed_ciphers.insert(removed_ciphers.end(), to_add.begin(), to_add.end());
         }
       } else if (element.rfind(TO_END, 0) == 0) {
         auto alias = element.substr(1);
         if (aliases.find(alias) != aliases.end()) {
-          this->moveToEnd(aliases, ciphers, alias);
+          this->move_to_end(aliases, ciphers, alias);
         }
       } else if ("@STRENGTH" == element) {
-        this->strengthSort(ciphers);
+        this->strength_sort(ciphers);
         break;
       } else if (aliases.find(element) != aliases.end()) {
         this->add(aliases, ciphers, element);
@@ -592,11 +593,11 @@ public:
         }
       }
     }
-    // Remove all ciphers from `ciphers` which are contained in `removedCiphers`
+    // Remove all ciphers from `ciphers` which are contained in `removed_ciphers`
     ciphers.erase(std::remove_if(ciphers.begin(), ciphers.end(),
-                                 [&removedCiphers](auto &c) {
-                                   return std::find(removedCiphers.begin(), removedCiphers.end(),
-                                                    c) != removedCiphers.end();
+                                 [&removed_ciphers](auto &c) {
+                                   return std::find(removed_ciphers.begin(), removed_ciphers.end(),
+                                                    c) != removed_ciphers.end();
                                  }),
                   ciphers.end());
     return ciphers;
@@ -616,7 +617,7 @@ std::vector<std::string_view> split(std::string_view string, char delimiter) {
   return result;
 }
 
-bool isValidIP(std::string_view ip) {
+bool is_valid_ip(std::string_view ip) {
   int format = AF_INET;
   if (ip.find(':') != std::string::npos) {
     format = AF_INET6;
@@ -634,13 +635,13 @@ bool isValidIP(std::string_view ip) {
 // A "hostname" must start with a letter or digit -- https://www.rfc-editor.org/rfc/rfc1123#page-13
 // A "hostname" is made up of "labels" delimited by a dot `.`
 // A "label" is between 1 and 63 octets
-bool isValidHost(std::string_view host) {
+bool is_valid_host(std::string_view host) {
   if (host.length() < 1) {
     return false;
   }
-  auto firstCharacter = host.front();
+  auto first_character = host.front();
   // check first character is in the regex [a-zA-Z0-9]
-  if (!std::isalnum(firstCharacter)) {
+  if (!std::isalnum(first_character)) {
     return false;
   }
   // split the hostname from the port
@@ -656,9 +657,9 @@ bool isValidHost(std::string_view host) {
     return false;
   }
 
-  auto lastCharacter = hostname.back();
+  auto last_character = hostname.back();
   // check last character is in the regex [a-zA-Z0-9]
-  if (!std::isalnum(lastCharacter)) {
+  if (!std::isalnum(last_character)) {
     return false;
   }
 
@@ -705,91 +706,93 @@ OpenSSLCipherConfigurationParser cipher_parser;
 
 namespace builtins {
 
-bool Backend::isCipherSuiteSupportedByFastly(std::string_view cipherSpec) {
-  auto ciphers = cipher_parser.parse(cipherSpec);
+bool Backend::is_cipher_suite_supported_by_fastly(std::string_view cipher_spec) {
+  auto ciphers = cipher_parser.parse(cipher_spec);
   return ciphers.size() > 0;
 }
 JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::HandleObject backend) {
   MOZ_ASSERT(is_instance(backend));
 
   JS::RootedString name(cx, JS::GetReservedSlot(backend, Backend::Slots::Name).toString());
-  auto nameChars = core::encode(cx, name);
-  std::string_view name_str = nameChars;
+  auto name_chars = core::encode(cx, name);
+  std::string_view name_str = name_chars;
 
   JS::RootedString target(cx, JS::GetReservedSlot(backend, Backend::Slots::Target).toString());
-  auto targetChars = core::encode(cx, target);
-  std::string_view target_str = targetChars;
+  auto target_chars = core::encode(cx, target);
+  std::string_view target_str = target_chars;
 
   host_api::BackendConfig backend_config;
 
-  auto hostOverrideSlot = JS::GetReservedSlot(backend, Backend::Slots::HostOverride);
-  if (!hostOverrideSlot.isNullOrUndefined()) {
-    JS::RootedString hostOverrideString(cx, hostOverrideSlot.toString());
-    auto hostOverrideChars = core::encode(cx, hostOverrideString);
-    backend_config.host_override.emplace(std::move(hostOverrideChars));
+  auto host_override_slot = JS::GetReservedSlot(backend, Backend::Slots::HostOverride);
+  if (!host_override_slot.isNullOrUndefined()) {
+    JS::RootedString host_override(cx, host_override_slot.toString());
+    auto host_override_chars = core::encode(cx, host_override);
+    backend_config.host_override.emplace(std::move(host_override_chars));
   }
 
-  auto connectTimeoutSlot = JS::GetReservedSlot(backend, Backend::Slots::ConnectTimeout);
-  if (!connectTimeoutSlot.isNullOrUndefined()) {
-    backend_config.connect_timeout = connectTimeoutSlot.toInt32();
+  auto connect_timeout_slot = JS::GetReservedSlot(backend, Backend::Slots::ConnectTimeout);
+  if (!connect_timeout_slot.isNullOrUndefined()) {
+    backend_config.connect_timeout = connect_timeout_slot.toInt32();
   }
 
-  auto firstByteTimeoutSlot = JS::GetReservedSlot(backend, Backend::Slots::FirstByteTimeout);
-  if (!firstByteTimeoutSlot.isNullOrUndefined()) {
-    backend_config.first_byte_timeout = firstByteTimeoutSlot.toInt32();
+  auto first_byte_timeout_slot = JS::GetReservedSlot(backend, Backend::Slots::FirstByteTimeout);
+  if (!first_byte_timeout_slot.isNullOrUndefined()) {
+    backend_config.first_byte_timeout = first_byte_timeout_slot.toInt32();
   }
 
-  auto betweenBytesTimeoutSlot = JS::GetReservedSlot(backend, Backend::Slots::BetweenBytesTimeout);
-  if (!betweenBytesTimeoutSlot.isNullOrUndefined()) {
-    backend_config.between_bytes_timeout = betweenBytesTimeoutSlot.toInt32();
+  auto between_bytes_timeout_slot =
+      JS::GetReservedSlot(backend, Backend::Slots::BetweenBytesTimeout);
+  if (!between_bytes_timeout_slot.isNullOrUndefined()) {
+    backend_config.between_bytes_timeout = between_bytes_timeout_slot.toInt32();
   }
 
-  auto useSslSlot = JS::GetReservedSlot(backend, Backend::Slots::UseSsl);
-  if (!useSslSlot.isNullOrUndefined()) {
-    backend_config.use_ssl = useSslSlot.toBoolean();
+  auto use_ssl_slot = JS::GetReservedSlot(backend, Backend::Slots::UseSsl);
+  if (!use_ssl_slot.isNullOrUndefined()) {
+    backend_config.use_ssl = use_ssl_slot.toBoolean();
   }
 
-  auto dontPoolSlot = JS::GetReservedSlot(backend, Backend::Slots::DontPool);
-  if (!dontPoolSlot.isNullOrUndefined()) {
-    backend_config.dont_pool = dontPoolSlot.toBoolean();
+  auto dont_pool_slot = JS::GetReservedSlot(backend, Backend::Slots::DontPool);
+  if (!dont_pool_slot.isNullOrUndefined()) {
+    backend_config.dont_pool = dont_pool_slot.toBoolean();
   }
 
-  auto tlsMinVersion = JS::GetReservedSlot(backend, Backend::Slots::TlsMinVersion);
-  if (!tlsMinVersion.isNullOrUndefined()) {
-    backend_config.ssl_min_version = host_api::TlsVersion(tlsMinVersion.toInt32());
+  auto tls_min_version = JS::GetReservedSlot(backend, Backend::Slots::TlsMinVersion);
+  if (!tls_min_version.isNullOrUndefined()) {
+    backend_config.ssl_min_version = host_api::TlsVersion(tls_min_version.toInt32());
   }
 
-  auto tlsMaxVersion = JS::GetReservedSlot(backend, Backend::Slots::TlsMaxVersion);
-  if (!tlsMaxVersion.isNullOrUndefined()) {
-    backend_config.ssl_max_version = host_api::TlsVersion(tlsMaxVersion.toInt32());
+  auto tls_max_version = JS::GetReservedSlot(backend, Backend::Slots::TlsMaxVersion);
+  if (!tls_max_version.isNullOrUndefined()) {
+    backend_config.ssl_max_version = host_api::TlsVersion(tls_max_version.toInt32());
   }
 
-  auto certificateHostnameSlot = JS::GetReservedSlot(backend, Backend::Slots::CertificateHostname);
-  if (!certificateHostnameSlot.isNullOrUndefined()) {
-    JS::RootedString certificateHostnameString(cx, certificateHostnameSlot.toString());
-    auto certificateHostnameChars = core::encode(cx, certificateHostnameString);
-    backend_config.cert_hostname.emplace(std::move(certificateHostnameChars));
+  auto certificate_hostname_slot =
+      JS::GetReservedSlot(backend, Backend::Slots::CertificateHostname);
+  if (!certificate_hostname_slot.isNullOrUndefined()) {
+    JS::RootedString certificate_hostname_string(cx, certificate_hostname_slot.toString());
+    auto certificate_hostname_chars = core::encode(cx, certificate_hostname_string);
+    backend_config.cert_hostname.emplace(std::move(certificate_hostname_chars));
   }
 
-  auto caCertificateSlot = JS::GetReservedSlot(backend, Backend::Slots::CaCertificate);
-  if (!caCertificateSlot.isNullOrUndefined()) {
-    JS::RootedString caCertificateString(cx, caCertificateSlot.toString());
-    auto caCertificateChars = core::encode(cx, caCertificateString);
-    backend_config.ca_cert.emplace(std::move(caCertificateChars));
+  auto ca_certificate_slot = JS::GetReservedSlot(backend, Backend::Slots::CaCertificate);
+  if (!ca_certificate_slot.isNullOrUndefined()) {
+    JS::RootedString ca_certificate_string(cx, ca_certificate_slot.toString());
+    auto ca_certificate_chars = core::encode(cx, ca_certificate_string);
+    backend_config.ca_cert.emplace(std::move(ca_certificate_chars));
   }
 
-  auto ciphersSlot = JS::GetReservedSlot(backend, Backend::Slots::Ciphers);
-  if (!ciphersSlot.isNullOrUndefined()) {
-    JS::RootedString ciphersString(cx, ciphersSlot.toString());
-    auto ciphersChars = core::encode(cx, ciphersString);
-    backend_config.ciphers.emplace(std::move(ciphersChars));
+  auto ciphers_slot = JS::GetReservedSlot(backend, Backend::Slots::Ciphers);
+  if (!ciphers_slot.isNullOrUndefined()) {
+    JS::RootedString ciphers_string(cx, ciphers_slot.toString());
+    auto ciphers_chars = core::encode(cx, ciphers_string);
+    backend_config.ciphers.emplace(std::move(ciphers_chars));
   }
 
-  auto sniHostnameSlot = JS::GetReservedSlot(backend, Backend::Slots::SniHostname);
-  if (!sniHostnameSlot.isNullOrUndefined()) {
-    JS::RootedString sniHostnameString(cx, sniHostnameSlot.toString());
-    auto sniHostnameChars = core::encode(cx, sniHostnameString);
-    backend_config.sni_hostname.emplace(std::move(sniHostnameChars));
+  auto sni_hostname_slot = JS::GetReservedSlot(backend, Backend::Slots::SniHostname);
+  if (!sni_hostname_slot.isNullOrUndefined()) {
+    JS::RootedString sni_hostname_string(cx, sni_hostname_slot.toString());
+    auto sni_hostname_chars = core::encode(cx, sni_hostname_string);
+    backend_config.sni_hostname.emplace(std::move(sni_hostname_chars));
   }
 
   auto res = host_api::HttpReq::register_dynamic_backend(name_str, target_str, backend_config);
@@ -805,75 +808,189 @@ JSString *Backend::name(JSContext *cx, JSObject *self) {
   return JS::GetReservedSlot(self, Backend::Slots::Name).toString();
 }
 
-bool Backend::toString(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(0)
+bool Backend::to_string(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
   JS::RootedString name(cx, JS::GetReservedSlot(self, Backend::Slots::Name).toString());
   args.rval().setString(name);
   return true;
 }
 
-const JSFunctionSpec Backend::static_methods[] = {
-    JS_FS_END,
-};
-
-const JSPropertySpec Backend::static_properties[] = {
-    JS_PS_END,
-};
-
-const JSFunctionSpec Backend::methods[] = {JS_FN("toString", toString, 0, JSPROP_ENUMERATE),
-                                           JS_FS_END};
-
-const JSPropertySpec Backend::properties[] = {JS_PS_END};
-
-bool Backend::set_name(JSContext *cx, JSObject *backend, JS::HandleValue name_val) {
+namespace {
+host_api::HostString parse_and_validate_name(JSContext *cx, JS::HandleValue name_val) {
   if (name_val.isNullOrUndefined()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_NAME_NOT_SET);
-    return false;
+    return nullptr;
   }
   JS::RootedString name(cx, JS::ToString(cx, name_val));
   if (!name) {
-    return false;
+    return nullptr;
   }
   auto length = JS::GetStringLength(name);
   if (length > 254) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_NAME_TOO_LONG);
-    return false;
+    return nullptr;
   }
   if (length == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_NAME_EMPTY);
+    return nullptr;
+  }
+  return core::encode(cx, name);
+}
+} // namespace
+
+bool Backend::exists(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  JS::RootedObject self(cx, &args.thisv().toObject());
+  if (!args.requireAtLeast(cx, "Backend.exists", 1)) {
     return false;
   }
 
-  JS::SetReservedSlot(backend, Backend::Slots::Name, JS::StringValue(name));
+  auto name = parse_and_validate_name(cx, args.get(0));
+  if (!name) {
+    return false;
+  }
+  auto res = host_api::Backend::exists(name);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto exists = res.unwrap();
+  args.rval().setBoolean(exists);
+  return true;
+}
+
+bool Backend::from_name(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  JS::RootedObject self(cx, &args.thisv().toObject());
+  if (!args.requireAtLeast(cx, "Backend.fromName", 1)) {
+    return false;
+  }
+
+  auto name = parse_and_validate_name(cx, args.get(0));
+  if (!name) {
+    return false;
+  }
+  auto res = host_api::Backend::exists(name);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto exists = res.unwrap();
+
+  if (!exists) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_BACKEND_FROMNAME_BACKEND_DOES_NOT_EXIST, name.begin());
+    return false;
+  }
+
+  auto backend_instance = JS_NewObjectWithGivenProto(cx, &Backend::class_, Backend::proto_obj);
+  if (!backend_instance) {
+    return false;
+  }
+  JS::RootedValue backend_val(cx, JS::ObjectValue(*backend_instance));
+  JS::RootedObject backend(cx, backend_instance);
+  if (!backend) {
+    return false;
+  }
+
+  JS::RootedValue name_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
+  if (!Backend::set_name(cx, backend, name_val)) {
+    return false;
+  }
+
+  args.rval().setObject(*backend);
+  return true;
+}
+
+bool Backend::health(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  JS::RootedObject self(cx, &args.thisv().toObject());
+  if (!args.requireAtLeast(cx, "Backend.health", 1)) {
+    return false;
+  }
+
+  auto name = parse_and_validate_name(cx, args.get(0));
+  if (!name) {
+    return false;
+  }
+  auto exists = host_api::Backend::exists(name);
+  if (auto *err = exists.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  if (!exists.unwrap()) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_BACKEND_IS_HEALTHY_BACKEND_DOES_NOT_EXIST, name.begin());
+    return false;
+  }
+
+  auto res = host_api::Backend::health(name);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  auto health = res.unwrap();
+  if (health.is_healthy()) {
+    args.rval().setString(JS_NewStringCopyZ(cx, "healthy"));
+  } else if (health.is_unhealthy()) {
+    args.rval().setString(JS_NewStringCopyZ(cx, "unhealthy"));
+  } else {
+    args.rval().setString(JS_NewStringCopyZ(cx, "unknown"));
+  }
+
+  return true;
+}
+
+const JSFunctionSpec Backend::static_methods[] = {
+    JS_FN("exists", exists, 1, JSPROP_ENUMERATE), JS_FN("fromName", from_name, 1, JSPROP_ENUMERATE),
+    JS_FN("health", health, 1, JSPROP_ENUMERATE), JS_FS_END};
+const JSPropertySpec Backend::static_properties[] = {JS_PS_END};
+const JSFunctionSpec Backend::methods[] = {JS_FN("toString", to_string, 0, JSPROP_ENUMERATE),
+                                           JS_FN("toName", to_string, 0, JSPROP_ENUMERATE),
+                                           JS_FS_END};
+const JSPropertySpec Backend::properties[] = {JS_PS_END};
+
+bool Backend::set_name(JSContext *cx, JSObject *backend, JS::HandleValue name_val) {
+  MOZ_ASSERT(is_instance(backend));
+  auto name = parse_and_validate_name(cx, name_val);
+  if (!name) {
+    return false;
+  }
+
+  JS::SetReservedSlot(backend, Backend::Slots::Name,
+                      JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
   return true;
 }
 
 bool Backend::set_host_override(JSContext *cx, JSObject *backend,
-                                JS::HandleValue hostOverride_val) {
-  auto hostOverride = JS::ToString(cx, hostOverride_val);
-  if (!hostOverride) {
+                                JS::HandleValue host_override_val) {
+  MOZ_ASSERT(is_instance(backend));
+  auto host_override = JS::ToString(cx, host_override_val);
+  if (!host_override) {
     return false;
   }
 
-  if (JS_GetStringLength(hostOverride) == 0) {
+  if (JS_GetStringLength(host_override) == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_HOST_OVERRIDE_EMPTY);
     return false;
   }
-  JS::SetReservedSlot(backend, Backend::Slots::HostOverride, JS::StringValue(hostOverride));
+  JS::SetReservedSlot(backend, Backend::Slots::HostOverride, JS::StringValue(host_override));
   return true;
 }
 
-bool Backend::set_sni_hostname(JSContext *cx, JSObject *backend, JS::HandleValue sniHostname_val) {
-  auto sniHostname = JS::ToString(cx, sniHostname_val);
-  if (!sniHostname) {
+bool Backend::set_sni_hostname(JSContext *cx, JSObject *backend, JS::HandleValue sni_hostname_val) {
+  auto sni_hostname = JS::ToString(cx, sni_hostname_val);
+  if (!sni_hostname) {
     return false;
   }
 
-  if (JS_GetStringLength(sniHostname) == 0) {
+  if (JS_GetStringLength(sni_hostname) == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_SNI_HOSTNAME_EMPTY);
     return false;
   }
-  JS::SetReservedSlot(backend, Backend::Slots::SniHostname, JS::StringValue(sniHostname));
+  JS::SetReservedSlot(backend, Backend::Slots::SniHostname, JS::StringValue(sni_hostname));
   return true;
 }
 
@@ -906,33 +1023,33 @@ bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue targe
     return false;
   }
 
-  auto targetStringSlice = core::encode_spec_string(cx, target_val);
-  if (!targetStringSlice.data) {
+  auto target_string_slice = core::encode_spec_string(cx, target_val);
+  if (!target_string_slice.data) {
     return false;
   }
 
-  std::string_view targetString(reinterpret_cast<char *>(targetStringSlice.data),
-                                targetStringSlice.len);
-  auto length = targetString.length();
+  std::string_view target_string(reinterpret_cast<char *>(target_string_slice.data),
+                                 target_string_slice.len);
+  auto length = target_string.length();
   if (length == 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_EMPTY);
     return false;
   }
 
-  if (targetString == "::") {
+  if (target_string == "::") {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_INVALID);
     return false;
   }
-  if (!isValidHost(targetString) && !isValidIP(targetString)) {
+  if (!is_valid_host(target_string) && !is_valid_ip(target_string)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_INVALID);
     return false;
   }
 
-  auto targetStr = JS_NewStringCopyN(cx, targetString.data(), targetString.length());
-  if (!targetStr) {
+  auto target_str = JS_NewStringCopyN(cx, target_string.data(), target_string.length());
+  if (!target_str) {
     return false;
   }
-  JS::RootedValue target(cx, JS::StringValue(targetStr));
+  JS::RootedValue target(cx, JS::StringValue(target_str));
   JS::SetReservedSlot(backend, Backend::Slots::Target, target);
   return true;
 }
@@ -950,37 +1067,37 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
     return nullptr;
   }
   const jsurl::SpecSlice slice = jsurl::host(url);
-  auto nameJSStr = JS_NewStringCopyN(cx, (char *)slice.data, slice.len);
-  if (!nameJSStr) {
+  auto name_js_str = JS_NewStringCopyN(cx, (char *)slice.data, slice.len);
+  if (!name_js_str) {
     return nullptr;
   }
   std::string name_str((char *)slice.data, slice.len);
 
   // Check if we already constructed an implicit dynamic backend for this host.
   bool found;
-  JS::RootedValue alreadyBuiltBackend(cx);
+  JS::RootedValue already_built_backend(cx);
   if (!JS_HasProperty(cx, Backend::backends, name_str.c_str(), &found)) {
     return nullptr;
   }
   if (found) {
-    if (!JS_GetProperty(cx, Backend::backends, name_str.c_str(), &alreadyBuiltBackend)) {
+    if (!JS_GetProperty(cx, Backend::backends, name_str.c_str(), &already_built_backend)) {
       return nullptr;
     }
-    JS::RootedObject backend(cx, &alreadyBuiltBackend.toObject());
+    JS::RootedObject backend(cx, &already_built_backend.toObject());
     return backend;
   }
 
-  auto backendInstance = JS_NewObjectWithGivenProto(cx, &Backend::class_, Backend::proto_obj);
-  if (!backendInstance) {
+  auto backend_instance = JS_NewObjectWithGivenProto(cx, &Backend::class_, Backend::proto_obj);
+  if (!backend_instance) {
     return nullptr;
   }
-  JS::RootedValue backendVal(cx, JS::ObjectValue(*backendInstance));
-  JS::RootedObject backend(cx, backendInstance);
+  JS::RootedValue backend_val(cx, JS::ObjectValue(*backend_instance));
+  JS::RootedObject backend(cx, backend_instance);
   if (!backend) {
     return nullptr;
   }
 
-  JS::RootedValue name(cx, JS::StringValue(nameJSStr));
+  JS::RootedValue name(cx, JS::StringValue(name_js_str));
   if (!Backend::set_name(cx, backend, name)) {
     return nullptr;
   }
@@ -1007,7 +1124,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   if (result.isErr()) {
     return nullptr;
   } else {
-    if (!JS_SetProperty(cx, Backend::backends, name_str.c_str(), backendVal)) {
+    if (!JS_SetProperty(cx, Backend::backends, name_str.c_str(), backend_val)) {
       return nullptr;
     }
     return backend;
@@ -1018,9 +1135,9 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The Backend builtin");
   CTOR_HEADER("Backend", 1);
 
-  auto configurationParameter = args.get(0);
+  auto configuration_parameter = args.get(0);
 
-  if (!configurationParameter.isObject()) {
+  if (!configuration_parameter.isObject()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_PARAMETER_NOT_OBJECT);
     return false;
   }
@@ -1030,7 +1147,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  JS::RootedObject configuration(cx, &configurationParameter.toObject());
+  JS::RootedObject configuration(cx, &configuration_parameter.toObject());
 
   JS::RootedValue name_val(cx);
   if (!JS_GetProperty(cx, configuration, "name", &name_val)) {
@@ -1049,28 +1166,28 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   bool found;
-  JS::RootedValue hostOverride_val(cx);
+  JS::RootedValue host_override_val(cx);
   if (!JS_HasProperty(cx, configuration, "hostOverride", &found)) {
     return false;
   }
   if (found) {
-    if (!JS_GetProperty(cx, configuration, "hostOverride", &hostOverride_val)) {
+    if (!JS_GetProperty(cx, configuration, "hostOverride", &host_override_val)) {
       return false;
     }
-    if (!Backend::set_host_override(cx, backend, hostOverride_val)) {
+    if (!Backend::set_host_override(cx, backend, host_override_val)) {
       return false;
     }
   }
 
-  JS::RootedValue connectTimeout_val(cx);
+  JS::RootedValue connect_timeout_val(cx);
   if (!JS_HasProperty(cx, configuration, "connectTimeout", &found)) {
     return false;
   }
   if (found) {
-    if (!JS_GetProperty(cx, configuration, "connectTimeout", &connectTimeout_val)) {
+    if (!JS_GetProperty(cx, configuration, "connectTimeout", &connect_timeout_val)) {
       return false;
     }
-    if (!Backend::set_timeout_slot(cx, backend, connectTimeout_val, Backend::Slots::ConnectTimeout,
+    if (!Backend::set_timeout_slot(cx, backend, connect_timeout_val, Backend::Slots::ConnectTimeout,
                                    "connectTimeout")) {
       return false;
     }
@@ -1078,15 +1195,15 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   /// Timeouts for backends must be less than 2^32 milliseconds, or
   /// about a month and a half.
-  JS::RootedValue firstByteTimeout_val(cx);
+  JS::RootedValue first_byte_timeout_val(cx);
   if (!JS_HasProperty(cx, configuration, "firstByteTimeout", &found)) {
     return false;
   }
   if (found) {
-    if (!JS_GetProperty(cx, configuration, "firstByteTimeout", &firstByteTimeout_val)) {
+    if (!JS_GetProperty(cx, configuration, "firstByteTimeout", &first_byte_timeout_val)) {
       return false;
     }
-    if (!Backend::set_timeout_slot(cx, backend, firstByteTimeout_val,
+    if (!Backend::set_timeout_slot(cx, backend, first_byte_timeout_val,
                                    Backend::Slots::FirstByteTimeout, "firstByteTimeout")) {
       return false;
     }
@@ -1094,32 +1211,32 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   /// Timeouts for backends must be less than 2^32 milliseconds, or
   /// about a month and a half.
-  JS::RootedValue betweenBytesTimeout_val(cx);
+  JS::RootedValue between_bytes_timeout_val(cx);
   if (!JS_HasProperty(cx, configuration, "betweenBytesTimeout", &found)) {
     return false;
   }
   if (found) {
-    if (!JS_GetProperty(cx, configuration, "betweenBytesTimeout", &betweenBytesTimeout_val)) {
+    if (!JS_GetProperty(cx, configuration, "betweenBytesTimeout", &between_bytes_timeout_val)) {
       return false;
     }
-    if (!Backend::set_timeout_slot(cx, backend, betweenBytesTimeout_val,
+    if (!Backend::set_timeout_slot(cx, backend, between_bytes_timeout_val,
                                    Backend::Slots::BetweenBytesTimeout, "betweenBytesTimeout")) {
       return false;
     }
   }
 
   /// Has to be either: 1; 1.1; 1.2; 1.3;
-  JS::RootedValue tlsMinVersion_val(cx);
-  std::optional<host_api::TlsVersion> tlsMinVersion;
+  JS::RootedValue tls_min_version_val(cx);
+  std::optional<host_api::TlsVersion> tls_min_version;
   if (!JS_HasProperty(cx, configuration, "tlsMinVersion", &found)) {
     return false;
   }
   if (found) {
-    if (!JS_GetProperty(cx, configuration, "tlsMinVersion", &tlsMinVersion_val)) {
+    if (!JS_GetProperty(cx, configuration, "tlsMinVersion", &tls_min_version_val)) {
       return false;
     }
     double version;
-    if (!JS::ToNumber(cx, tlsMinVersion_val, &version)) {
+    if (!JS::ToNumber(cx, tls_min_version_val, &version)) {
       return false;
     }
 
@@ -1129,33 +1246,33 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     if (version == 1.3) {
-      tlsMinVersion = host_api::TlsVersion::version_1_3();
+      tls_min_version = host_api::TlsVersion::version_1_3();
     } else if (version == 1.2) {
-      tlsMinVersion = host_api::TlsVersion::version_1_2();
+      tls_min_version = host_api::TlsVersion::version_1_2();
     } else if (version == 1.1) {
-      tlsMinVersion = host_api::TlsVersion::version_1_1();
+      tls_min_version = host_api::TlsVersion::version_1_1();
     } else if (version == 1) {
-      tlsMinVersion = host_api::TlsVersion::version_1();
+      tls_min_version = host_api::TlsVersion::version_1();
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MIN_INVALID);
       return false;
     }
     JS::SetReservedSlot(backend, Backend::Slots::TlsMinVersion,
-                        JS::Int32Value(tlsMinVersion->value));
+                        JS::Int32Value(tls_min_version->value));
   }
 
   /// Has to be either: 1; 1.1; 1.2; 1.3;
-  JS::RootedValue tlsMaxVersion_val(cx);
-  std::optional<host_api::TlsVersion> tlsMaxVersion;
+  JS::RootedValue tls_max_version_val(cx);
+  std::optional<host_api::TlsVersion> tls_max_version;
   if (!JS_HasProperty(cx, configuration, "tlsMaxVersion", &found)) {
     return false;
   }
   if (found) {
-    if (!JS_GetProperty(cx, configuration, "tlsMaxVersion", &tlsMaxVersion_val)) {
+    if (!JS_GetProperty(cx, configuration, "tlsMaxVersion", &tls_max_version_val)) {
       return false;
     }
     double version;
-    if (!JS::ToNumber(cx, tlsMaxVersion_val, &version)) {
+    if (!JS::ToNumber(cx, tls_max_version_val, &version)) {
       return false;
     }
 
@@ -1165,92 +1282,92 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     if (version == 1.3) {
-      tlsMaxVersion = host_api::TlsVersion::version_1_3();
+      tls_max_version = host_api::TlsVersion::version_1_3();
     } else if (version == 1.2) {
-      tlsMaxVersion = host_api::TlsVersion::version_1_2();
+      tls_max_version = host_api::TlsVersion::version_1_2();
     } else if (version == 1.1) {
-      tlsMaxVersion = host_api::TlsVersion::version_1_1();
+      tls_max_version = host_api::TlsVersion::version_1_1();
     } else if (version == 1) {
-      tlsMaxVersion = host_api::TlsVersion::version_1();
+      tls_max_version = host_api::TlsVersion::version_1();
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MAX_INVALID);
       return false;
     }
     JS::SetReservedSlot(backend, Backend::Slots::TlsMaxVersion,
-                        JS::Int32Value(tlsMaxVersion->value));
+                        JS::Int32Value(tls_max_version->value));
   }
 
-  if (tlsMinVersion.has_value() && tlsMaxVersion.has_value()) {
-    if (tlsMinVersion->value > tlsMaxVersion->value) {
+  if (tls_min_version.has_value() && tls_max_version.has_value()) {
+    if (tls_min_version->value > tls_max_version->value) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BACKEND_TLS_MIN_GREATER_THAN_TLS_MAX);
       return false;
     }
   }
 
-  JS::RootedValue certificateHostname_val(cx);
+  JS::RootedValue certificate_hostname_val(cx);
   if (!JS_HasProperty(cx, configuration, "certificateHostname", &found)) {
     return false;
   }
   if (found) {
-    if (!JS_GetProperty(cx, configuration, "certificateHostname", &certificateHostname_val)) {
+    if (!JS_GetProperty(cx, configuration, "certificateHostname", &certificate_hostname_val)) {
       return false;
     }
-    auto certificateHostname = JS::ToString(cx, certificateHostname_val);
-    if (!certificateHostname) {
+    auto certificate_hostname = JS::ToString(cx, certificate_hostname_val);
+    if (!certificate_hostname) {
       return false;
     }
 
-    if (JS_GetStringLength(certificateHostname) == 0) {
+    if (JS_GetStringLength(certificate_hostname) == 0) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BACKEND_CERTIFICATE_HOSTNAME_EMPTY);
       return false;
     }
     JS::SetReservedSlot(backend, Backend::Slots::CertificateHostname,
-                        JS::StringValue(certificateHostname));
+                        JS::StringValue(certificate_hostname));
   }
 
-  JS::RootedValue useSsl_val(cx);
+  JS::RootedValue use_ssl_val(cx);
   if (!JS_HasProperty(cx, configuration, "useSSL", &found)) {
     return false;
   }
   if (found) {
-    if (!JS_GetProperty(cx, configuration, "useSSL", &useSsl_val)) {
+    if (!JS_GetProperty(cx, configuration, "useSSL", &use_ssl_val)) {
       return false;
     }
-    auto value = JS::ToBoolean(useSsl_val);
+    auto value = JS::ToBoolean(use_ssl_val);
     JS::SetReservedSlot(backend, Backend::Slots::UseSsl, JS::BooleanValue(value));
   }
 
-  JS::RootedValue dontPool_val(cx);
+  JS::RootedValue dont_pool_val(cx);
   if (!JS_HasProperty(cx, configuration, "dontPool", &found)) {
     return false;
   }
   if (found) {
-    if (!JS_GetProperty(cx, configuration, "dontPool", &dontPool_val)) {
+    if (!JS_GetProperty(cx, configuration, "dontPool", &dont_pool_val)) {
       return false;
     }
-    auto value = JS::ToBoolean(dontPool_val);
+    auto value = JS::ToBoolean(dont_pool_val);
     JS::SetReservedSlot(backend, Backend::Slots::DontPool, JS::BooleanValue(value));
   }
 
-  JS::RootedValue caCertificate_val(cx);
+  JS::RootedValue ca_certificate_val(cx);
   if (!JS_HasProperty(cx, configuration, "caCertificate", &found)) {
     return false;
   }
   if (found) {
-    if (!JS_GetProperty(cx, configuration, "caCertificate", &caCertificate_val)) {
+    if (!JS_GetProperty(cx, configuration, "caCertificate", &ca_certificate_val)) {
       return false;
     }
-    auto caCertificate = JS::ToString(cx, caCertificate_val);
-    if (!caCertificate) {
+    auto ca_certificate = JS::ToString(cx, ca_certificate_val);
+    if (!ca_certificate) {
       return false;
     }
-    if (JS_GetStringLength(caCertificate) == 0) {
+    if (JS_GetStringLength(ca_certificate) == 0) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_CA_CERTIFICATE_EMPTY);
       return false;
     }
-    JS::SetReservedSlot(backend, Backend::Slots::CaCertificate, JS::StringValue(caCertificate));
+    JS::SetReservedSlot(backend, Backend::Slots::CaCertificate, JS::StringValue(ca_certificate));
   }
 
   /// Cipher list consisting of one or more cipher strings separated by colons.
@@ -1271,40 +1388,33 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_CIPHERS_EMPTY);
       return false;
     }
-    std::string cipherSpec(ciphers_chars.begin(), ciphers_chars.len);
-    if (!isCipherSuiteSupportedByFastly(cipherSpec)) {
+    std::string cipher_spec(ciphers_chars.begin(), ciphers_chars.len);
+    if (!is_cipher_suite_supported_by_fastly(cipher_spec)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_CIPHERS_NOT_AVALIABLE);
       return false;
     }
     JS::SetReservedSlot(
         backend, Backend::Slots::Ciphers,
         JS::StringValue(JS_NewStringCopyN(cx, ciphers_chars.begin(), ciphers_chars.len)));
-    auto ciphersSlot = JS::GetReservedSlot(backend, Backend::Slots::Ciphers);
-    if (!ciphersSlot.isNullOrUndefined()) {
-      JS::RootedString ciphers(cx, ciphersSlot.toString());
-
-      // TODO: what should this be used for?
-      auto ciphersChars = core::encode(cx, ciphers);
-    }
   }
 
-  JS::RootedValue sniHostname_val(cx);
+  JS::RootedValue sni_hostname_val(cx);
   if (!JS_HasProperty(cx, configuration, "sniHostname", &found)) {
     return false;
   }
   if (found) {
-    if (!JS_GetProperty(cx, configuration, "sniHostname", &sniHostname_val)) {
+    if (!JS_GetProperty(cx, configuration, "sniHostname", &sni_hostname_val)) {
       return false;
     }
-    auto sniHostname = JS::ToString(cx, sniHostname_val);
-    if (!sniHostname) {
+    auto sni_hostname = JS::ToString(cx, sni_hostname_val);
+    if (!sni_hostname) {
       return false;
     }
-    if (JS_GetStringLength(sniHostname) == 0) {
+    if (JS_GetStringLength(sni_hostname) == 0) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_SNI_HOSTNAME_EMPTY);
       return false;
     }
-    JS::SetReservedSlot(backend, Backend::Slots::SniHostname, JS::StringValue(sniHostname));
+    JS::SetReservedSlot(backend, Backend::Slots::SniHostname, JS::StringValue(sni_hostname));
   }
 
   auto result = Backend::register_dynamic_backend(cx, backend);

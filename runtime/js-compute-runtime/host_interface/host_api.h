@@ -697,6 +697,28 @@ public:
   static Result<std::optional<HostString>> purge_surrogate_key(std::string_view key);
 };
 
+struct BackendHealth final {
+public:
+  uint8_t state = 0;
+
+  BackendHealth() = default;
+  BackendHealth(uint8_t state) : state{state} {}
+
+  bool is_unknown() const;
+  bool is_healthy() const;
+  bool is_unhealthy() const;
+};
+
+class Backend final {
+  std::string_view name;
+
+  Backend() = default;
+  explicit Backend(std::string_view name) : name{name} {}
+
+public:
+  static Result<bool> exists(std::string_view name);
+  static Result<BackendHealth> health(std::string_view name);
+};
 } // namespace host_api
 
 #endif
