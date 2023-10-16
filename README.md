@@ -1,8 +1,8 @@
 # @fastly/js-compute
 
-![npm version](https://img.shields.io/npm/v/@fastly/js-compute) ![npm downloads per month](https://img.shields.io/npm/dm/@fastly/js-compute)
-
 JavaScript SDK and CLI for building JavaScript applications on [Fastly Compute](https://www.fastly.com/products/edge-compute/serverless).
+
+![npm version](https://img.shields.io/npm/v/@fastly/js-compute) ![npm downloads per month](https://img.shields.io/npm/dm/@fastly/js-compute)
 
 ## Getting Started
 
