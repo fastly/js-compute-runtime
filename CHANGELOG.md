@@ -1,6 +1,26 @@
 # Changelog
 
 
+## 3.7.0 (2023-10-14)
+
+
+### Added
+
+This release of `@fastly/js-compute` includes 4 new methods to the Backend class, which enable the Fastly Service to retrieve information about any backend, this is particularly useful for checking if the backend is “healthy”. ([#523](https://github.com/fastly/js-compute-runtime/issues/523)) ([08f816a](https://github.com/fastly/js-compute-runtime/commit/08f816ae4465316a2316467338e0d33ffbd20e7a))
+
+The new methods are:
+
+-  Backend.exists(name) - Check whether a backend with the given name exists for the Fastly Service.
+-  Backend.fromName(name) - Check whether a backend with the given name exists for the Fastly Service and if it does, then returns an instance of Backend for the given name.
+-  Backend.health(name) - Returns the health of the backend with the given name.
+-  Backend.prototype.toName() - Return the name for the Backend instance.
+
+
+### Fixed
+
+* bring back support for build-time env vars ([#691](https://github.com/fastly/js-compute-runtime/issues/691)) ([c044ac4](https://github.com/fastly/js-compute-runtime/commit/c044ac4bbbd5629bfc879b7593a0bfa9c5e3cfcb))
+* raise an error during wizening for async functions given to addEventListener ([#689](https://github.com/fastly/js-compute-runtime/issues/689)) ([e6747a2](https://github.com/fastly/js-compute-runtime/commit/e6747a28d70d71bc71da77c9b6e44848b95ea387))
+
 ## 3.6.2 (2023-10-05)
 
 
