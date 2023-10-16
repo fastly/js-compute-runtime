@@ -17,6 +17,7 @@
 #include "js/Initialization.h"
 #include "js/SourceText.h"
 #include "jsapi.h"
+#include "jsfriendapi.h"
 
 #pragma clang diagnostic pop
 
@@ -358,6 +359,23 @@ static bool addEventListener(JSContext *cx, unsigned argc, Value *vp) {
   RootedValue val(cx, args[1]);
   if (!val.isObject() || !JS_ObjectIsFunction(&val.toObject())) {
     fprintf(stderr, "Error: addEventListener: Argument 2 is not a function.\n");
+    exit(1);
+  }
+
+  JS::RootedObject obj(cx, &val.toObject());
+  JS::RootedObject result(cx);
+  if (!JS_GetPrototype(cx, obj, &result)) {
+    return false;
+  }
+  JS::RootedObject asyncproto(cx);
+  if (!JS_GetClassPrototype(cx, JSProtoKey::JSProto_AsyncFunction, &asyncproto)) {
+    return false;
+  }
+
+  if (result == asyncproto) {
+    fprintf(stderr,
+            "Error: addEventListener: Argument 2 should not be async function. Please rewrite this "
+            "to be a synchronous function which returns a Response or a Promise of a Response.\n");
     exit(1);
   }
 
