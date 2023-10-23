@@ -2423,6 +2423,7 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!builtins::Headers::maybe_add(cx, headers, "location", url_str.begin())) {
     return false;
   }
+  JS::SetReservedSlot(headers, static_cast<uint32_t>(builtins::Headers::Slots::Immutable), JS::TrueValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::ObjectValue(*headers));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Redirected), JS::FalseValue());
   // 8. Return responseObject.
