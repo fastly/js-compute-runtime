@@ -366,7 +366,7 @@ JSObject *RequestOrResponse::headers(JSContext *cx, JS::HandleObject obj) {
       return nullptr;
     }
 
-    headers = builtins::Headers::create(cx, headersInstance, mode, obj);
+    headers = builtins::Headers::create(cx, headersInstance, mode, obj, false);
     if (!headers) {
       return nullptr;
     }
@@ -1821,7 +1821,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
       return nullptr;
 
     headers = builtins::Headers::create(
-        cx, headersInstance, builtins::Headers::Mode::ProxyToRequest, request, headers_val);
+        cx, headersInstance, builtins::Headers::Mode::ProxyToRequest, request, headers_val, false);
   } else {
     JS::RootedObject headersInstance(cx, JS_NewObjectWithGivenProto(cx, &builtins::Headers::class_,
                                                                     builtins::Headers::proto_obj));
@@ -2416,7 +2416,7 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
 
   headers = builtins::Headers::create(cx, headersInstance, builtins::Headers::Mode::ProxyToResponse,
-                                      response);
+                                      response, false);
   if (!headers) {
     return false;
   }
@@ -2569,7 +2569,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
 
   headers = builtins::Headers::create(cx, headersInstance, builtins::Headers::Mode::ProxyToResponse,
-                                      response, headers_val);
+                                      response, headers_val, false);
   if (!headers) {
     return false;
   }
@@ -2764,7 +2764,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
 
   headers = builtins::Headers::create(cx, headersInstance, builtins::Headers::Mode::ProxyToResponse,
-                                      response, headers_val);
+                                      response, headers_val, false);
   if (!headers) {
     return false;
   }

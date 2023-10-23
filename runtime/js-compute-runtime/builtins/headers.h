@@ -30,13 +30,16 @@ public:
     Handle,
     Mode,
     HasLazyValues,
+    Immutable,
     Count,
   };
+
+  static bool is_immutable(JS::HandleObject self);
 
   static bool delazify(JSContext *cx, JS::HandleObject headers);
 
   /**
-   * Adds the given header name/value to `self`'s list of headers iff `self`
+   * Adds the given header name/value to `self`'s list of headers if `self`
    * doesn't already contain a header with that name.
    *
    * Assumes that both the name and value are valid and normalized.
@@ -63,11 +66,11 @@ public:
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static JSObject *create(JSContext *cx, JS::HandleObject headers, enum Mode mode,
-                          JS::HandleObject owner, JS::HandleObject init_headers);
+                          JS::HandleObject owner, JS::HandleObject init_headers, bool immutable);
   static JSObject *create(JSContext *cx, JS::HandleObject headers, enum Mode mode,
-                          JS::HandleObject owner, JS::HandleValue initv);
+                          JS::HandleObject owner, JS::HandleValue initv, bool immutable);
   static JSObject *create(JSContext *cx, JS::HandleObject self, enum Mode mode,
-                          JS::HandleObject owner);
+                          JS::HandleObject owner, bool immutable);
 };
 
 } // namespace builtins

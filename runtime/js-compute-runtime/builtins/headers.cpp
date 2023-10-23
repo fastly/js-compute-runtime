@@ -436,6 +436,10 @@ bool ensure_all_header_values_from_handle(JSContext *cx, JS::HandleObject self,
 
 } // namespace
 
+bool Headers::is_immutable(JS::HandleObject self) {
+  return JS::GetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::Immutable)).toBoolean();
+}
+
 bool Headers::append_header_value(JSContext *cx, JS::HandleObject self, JS::HandleValue name,
                                   JS::HandleValue value, const char *fun_name) {
   NORMALIZE_NAME(name, fun_name)
@@ -482,8 +486,8 @@ bool Headers::delazify(JSContext *cx, JS::HandleObject headers) {
 }
 
 JSObject *Headers::create(JSContext *cx, JS::HandleObject self, Headers::Mode mode,
-                          JS::HandleObject owner, JS::HandleObject init_headers) {
-  JS::RootedObject headers(cx, create(cx, self, mode, owner));
+                          JS::HandleObject owner, JS::HandleObject init_headers, bool immutable) {
+  JS::RootedObject headers(cx, create(cx, self, mode, owner, immutable));
   if (!headers) {
     return nullptr;
   }
@@ -536,8 +540,8 @@ JSObject *Headers::create(JSContext *cx, JS::HandleObject self, Headers::Mode mo
 }
 
 JSObject *Headers::create(JSContext *cx, JS::HandleObject self, Headers::Mode mode,
-                          JS::HandleObject owner, JS::HandleValue initv) {
-  JS::RootedObject headers(cx, create(cx, self, mode, owner));
+                          JS::HandleObject owner, JS::HandleValue initv, bool immutable) {
+  JS::RootedObject headers(cx, create(cx, self, mode, owner, immutable));
   if (!headers)
     return nullptr;
 
@@ -568,6 +572,11 @@ bool Headers::set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   NORMALIZE_NAME(args[0], "Headers.set")
   NORMALIZE_VALUE(args[1], "Headers.set")
+
+  if (Headers::is_immutable(self)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE, "Headers.set");
+    return false;
+  }
 
   auto mode = get_mode(self);
   if (mode != Mode::Standalone) {
@@ -608,6 +617,11 @@ bool Headers::has(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Headers::append(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(2)
 
+  if (Headers::is_immutable(self)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE, "Headers.append");
+    return false;
+  }
+
   if (!Headers::append_header_value(cx, self, args[0], args[1], "Headers.append")) {
     return false;
   }
@@ -646,6 +660,11 @@ bool Headers::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER_WITH_NAME(1, "delete")
 
   NORMALIZE_NAME(args[0], "Headers.delete")
+
+  if (Headers::is_immutable(self)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE, "Headers.delete");
+    return false;
+  }
 
   bool has;
   JS::RootedObject map(cx, get_backing_map(self));
@@ -763,7 +782,7 @@ const JSPropertySpec Headers::properties[] = {
 bool Headers::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   CTOR_HEADER("Headers", 0);
   JS::RootedObject headersInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  JS::RootedObject headers(cx, create(cx, headersInstance, Mode::Standalone, nullptr, args.get(0)));
+  JS::RootedObject headers(cx, create(cx, headersInstance, Mode::Standalone, nullptr, args.get(0), false));
   if (!headers) {
     return false;
   }
@@ -787,7 +806,7 @@ bool Headers::init_class(JSContext *cx, JS::HandleObject global) {
 }
 
 JSObject *Headers::create(JSContext *cx, JS::HandleObject self, Headers::Mode mode,
-                          JS::HandleObject owner) {
+                          JS::HandleObject owner, bool immutable) {
   JS_SetReservedSlot(self, static_cast<uint32_t>(Slots::Mode),
                      JS::Int32Value(static_cast<int32_t>(mode)));
   uint32_t handle = UINT32_MAX - 1;
@@ -814,6 +833,7 @@ JSObject *Headers::create(JSContext *cx, JS::HandleObject self, Headers::Mode mo
   }
 
   JS_SetReservedSlot(self, static_cast<uint32_t>(Slots::HasLazyValues), JS::BooleanValue(lazy));
+  JS_SetReservedSlot(self, static_cast<uint32_t>(Slots::Immutable), JS::BooleanValue(immutable));
 
   return self;
 }
