@@ -167,7 +167,7 @@ bool RequestOrResponse::mark_body_used(JSContext *cx, JS::HandleObject obj) {
       // it's a disturbed ReadableStream. To improve error reporting, we clear
       // the current exception and throw a better one.
       JS_ClearPendingException(cx);
-      JS_ReportErrorLatin1(cx, "The ReadableStream body is already locked and can't be consumed");
+      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
       return false;
     }
   }
@@ -258,8 +258,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
 
   if (body_obj && JS::IsReadableStream(body_obj)) {
     if (RequestOrResponse::body_unusable(cx, body_obj)) {
-      JS_ReportErrorLatin1(cx, "Can't use a ReadableStream that's locked or has ever been "
-                               "read from or canceled as a Request or Response body.");
+      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
       return false;
     }
 
@@ -1368,8 +1367,7 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
     body_stream.set(&body1_val.toObject());
     if (RequestOrResponse::body_unusable(cx, body_stream)) {
-      JS_ReportErrorLatin1(cx, "Can't use a ReadableStream that's locked or has ever been "
-                               "read from or canceled as a Request body.");
+      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
       return false;
     }
 
@@ -2651,9 +2649,34 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     if (!status_val.isUndefined() && !JS::ToUint16(cx, status_val, &status)) {
       return false;
     }
+    if (!statusText_val.isUndefined()) {
+      auto status_text_result = GlobalProperties::convertJSValueToByteString(cx, statusText_val);
+      if (status_text_result.isErr()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS_TEXT);
+        return false;
+      }
+      auto status_text = status_text_result.unwrap();
+      auto it = std::find_if(status_text.begin(), status_text.end(), [](unsigned char c) {
+        if (c < 9) {
+          return true;
+        }
+        if (c > 9 && c < 32) {
+          return true;
+        }
+        if (c == 127) {
+          return true;
+        }
+        if (c > 255) {
+          return true;
+        }
+        return false;
+      });
 
-    if (!statusText_val.isUndefined() && !(statusText = JS::ToString(cx, statusText_val))) {
-      return false;
+      if (it != status_text.end()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS_TEXT);
+        return false;
+      }
+      statusText = JS_NewStringCopyZ(cx, status_text.c_str());
     }
 
   } else if (!init_val.isNullOrUndefined()) {
@@ -2665,13 +2688,12 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   // 1.  If `init`["status"] is not in the range 200 to 599, inclusive, then
   // `throw` a ``RangeError``.
   if (status < 200 || status > 599) {
-    JS_ReportErrorLatin1(cx, "Response constructor: invalid status %u", status);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
     return false;
   }
 
   // 2.  If `init`["statusText"] does not match the `reason-phrase` token
-  // production, then `throw` a ``TypeError``. Skipped: the statusText can only
-  // be consumed by the content creating it, so we're lenient about its format.
+  // production, then `throw` a ``TypeError``.
 
   // 3.  Set `this`’s `response` to a new `response`.
   // TODO(performance): consider not creating a host-side representation for responses
@@ -2752,8 +2774,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     //     1.  If `init`["status"] is a `null body status`, then `throw` a
     //     ``TypeError``.
     if (status == 204 || status == 205 || status == 304) {
-      JS_ReportErrorLatin1(cx, "Response constructor: Response body is given "
-                               "with a null body status.");
+      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_RESPONSE_CONSTRUCTOR_BODY_WITH_NULL_BODY_STATUS);
       return false;
     }
 
