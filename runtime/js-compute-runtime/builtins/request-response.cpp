@@ -167,7 +167,8 @@ bool RequestOrResponse::mark_body_used(JSContext *cx, JS::HandleObject obj) {
       // it's a disturbed ReadableStream. To improve error reporting, we clear
       // the current exception and throw a better one.
       JS_ClearPendingException(cx);
-      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
+      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                 JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
       return false;
     }
   }
@@ -258,7 +259,8 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
 
   if (body_obj && JS::IsReadableStream(body_obj)) {
     if (RequestOrResponse::body_unusable(cx, body_obj)) {
-      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
+      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                 JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
       return false;
     }
 
@@ -1367,7 +1369,8 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
     body_stream.set(&body1_val.toObject());
     if (RequestOrResponse::body_unusable(cx, body_stream)) {
-      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
+      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                 JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
       return false;
     }
 
@@ -2423,7 +2426,8 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!builtins::Headers::maybe_add(cx, headers, "location", url_str.begin())) {
     return false;
   }
-  JS::SetReservedSlot(headers, static_cast<uint32_t>(builtins::Headers::Slots::Immutable), JS::TrueValue());
+  JS::SetReservedSlot(headers, static_cast<uint32_t>(builtins::Headers::Slots::Immutable),
+                      JS::TrueValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::ObjectValue(*headers));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Redirected), JS::FalseValue());
   // 8. Return responseObject.
@@ -2653,7 +2657,8 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     if (!statusText_val.isUndefined()) {
       auto status_text_result = GlobalProperties::convertJSValueToByteString(cx, statusText_val);
       if (status_text_result.isErr()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS_TEXT);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS_TEXT);
         return false;
       }
       auto status_text = status_text_result.unwrap();
@@ -2674,7 +2679,8 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       });
 
       if (it != status_text.end()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS_TEXT);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS_TEXT);
         return false;
       }
       statusText = JS_NewStringCopyZ(cx, status_text.c_str());
@@ -2689,7 +2695,8 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   // 1.  If `init`["status"] is not in the range 200 to 599, inclusive, then
   // `throw` a ``RangeError``.
   if (status < 200 || status > 599) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
     return false;
   }
 
@@ -2775,7 +2782,8 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     //     1.  If `init`["status"] is a `null body status`, then `throw` a
     //     ``TypeError``.
     if (status == 204 || status == 205 || status == 304) {
-      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_RESPONSE_CONSTRUCTOR_BODY_WITH_NULL_BODY_STATUS);
+      JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                 JSMSG_RESPONSE_CONSTRUCTOR_BODY_WITH_NULL_BODY_STATUS);
       return false;
     }
 
