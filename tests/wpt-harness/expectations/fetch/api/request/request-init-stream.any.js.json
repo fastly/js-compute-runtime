@@ -3,13 +3,13 @@
     "status": "PASS"
   },
   "Constructing a Request with a stream on which getReader() is called": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Constructing a Request with a stream on which read() is called": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Constructing a Request with a stream on which read() and releaseLock() are called": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Constructing a Request with a Request on which body.getReader() is called": {
     "status": "FAIL"

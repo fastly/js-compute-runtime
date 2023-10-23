@@ -162,19 +162,19 @@
     "status": "FAIL"
   },
   "Check that no-cors request constructor is filtering headers provided as part of request parameter": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Request should get its content-type from the init request": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Request should not get its content-type from the init request if init headers are provided": {
     "status": "PASS"
   },
   "Request should get its content-type from the body if none is provided": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Request should get its content-type from init headers if one is provided": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Testing request header creations with various objects": {
     "status": "PASS"
