@@ -618,7 +618,8 @@ bool Headers::append(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(2)
 
   if (Headers::is_immutable(self)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE, "Headers.append");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE,
+                              "Headers.append");
     return false;
   }
 
@@ -662,7 +663,8 @@ bool Headers::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   NORMALIZE_NAME(args[0], "Headers.delete")
 
   if (Headers::is_immutable(self)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE, "Headers.delete");
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE,
+                              "Headers.delete");
     return false;
   }
 
@@ -782,7 +784,8 @@ const JSPropertySpec Headers::properties[] = {
 bool Headers::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   CTOR_HEADER("Headers", 0);
   JS::RootedObject headersInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  JS::RootedObject headers(cx, create(cx, headersInstance, Mode::Standalone, nullptr, args.get(0), false));
+  JS::RootedObject headers(
+      cx, create(cx, headersInstance, Mode::Standalone, nullptr, args.get(0), false));
   if (!headers) {
     return false;
   }
