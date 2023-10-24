@@ -491,7 +491,7 @@ bool compute_at_edge_serve(compute_at_edge_request_t *req) {
   __wasilibc_initialize_environ();
 
   if (debug_logging_enabled()) {
-    printf("Running JS handleRequest function for C@E service version %s\n",
+    printf("Running JS handleRequest function for Compute service version %s\n",
            getenv("FASTLY_SERVICE_VERSION"));
     fflush(stdout);
   }

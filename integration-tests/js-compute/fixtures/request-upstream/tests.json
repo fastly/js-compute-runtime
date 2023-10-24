@@ -1,6 +1,6 @@
 {
   "POST /hello": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "POST",
       "pathname": "/hello"
@@ -11,7 +11,7 @@
     }
   },
   "GET /hello": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/hello"
@@ -26,7 +26,7 @@
     }
   },
   "HEAD /hello": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "HEAD",
       "pathname": "/hello"

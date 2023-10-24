@@ -33,7 +33,7 @@ const config = {
     require.resolve("@cmfcmf/docusaurus-search-local"),
   ],
   title: '@fastly/js-compute',
-  tagline: 'Javascript SDK and CLI for Fastly Compute@Edge',
+  tagline: 'Javascript SDK and CLI for Fastly Compute',
   url: 'https://js-compute-reference-docs.edgecompute.app',
   baseUrl: '/',
   onBrokenLinks: 'throw',

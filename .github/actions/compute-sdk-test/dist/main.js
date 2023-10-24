@@ -27905,7 +27905,7 @@ const compareHeaders = (configHeaders, wasmModuleHeaders) => {
 ;// CONCATENATED MODULE: ./src/compare-upstream-request.js
 
 
-// Function to compare an upstream request from a wasm module running on aserver (Viceroy, C@E, etc...)
+// Function to compare an upstream request from a wasm module running on aserver (Viceroy, Compute, etc...)
 // With a JSON Request Object in our config. With additional parameters to help our index.js with logging.
 const compareUpstreamRequest = async (configRequest, actualRequest, isDownstreamResponseHandled) => {
 
@@ -27937,7 +27937,7 @@ const compareUpstreamRequest = async (configRequest, actualRequest, isDownstream
 ;// CONCATENATED MODULE: ./src/compare-downstream-response.js
 
 
-// Function to compare a response from a server (Viceroy, C@E, etc...)
+// Function to compare a response from a server (Viceroy, Compute, etc...)
 // With a JSON Response Object in our config
 const compareDownstreamResponse = async (configResponse, actualResponse) => {
 

@@ -1,6 +1,6 @@
 {
   "GET /request-upstream": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/request-upstream",
@@ -38,7 +38,7 @@
     }
   },
   "GET /request-init": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/request-init"
@@ -62,7 +62,7 @@
     }
   },
   "GET /request-direct": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/request-direct"

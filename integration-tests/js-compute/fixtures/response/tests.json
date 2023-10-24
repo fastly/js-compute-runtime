@@ -1,6 +1,6 @@
 {
   "GET /response/text/guest-backed-stream": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/response/text/guest-backed-stream"
@@ -10,7 +10,7 @@
     }
   },
   "GET /response/json/guest-backed-stream": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/response/json/guest-backed-stream"
@@ -20,7 +20,7 @@
     }
   },
   "GET /response/arrayBuffer/guest-backed-stream": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/response/arrayBuffer/guest-backed-stream"

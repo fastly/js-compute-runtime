@@ -1,7 +1,7 @@
 {
   "GET /fastly/getgeolocationforipaddress/interface": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -13,7 +13,7 @@
   },
   "GET /fastly/getgeolocationforipaddress/called-as-constructor": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -25,7 +25,7 @@
   },
   "GET /fastly/getgeolocationforipaddress/parameter-calls-7.1.17-ToString": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -37,7 +37,7 @@
   },
   "GET /fastly/getgeolocationforipaddress/parameter-not-supplied": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -49,7 +49,7 @@
   },
   "GET /fastly/getgeolocationforipaddress/parameter-empty-string": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -61,7 +61,7 @@
   },
   "GET /fastly/getgeolocationforipaddress/parameter-ipv4-string": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -73,7 +73,7 @@
   },
   "GET /fastly/getgeolocationforipaddress/parameter-compressed-ipv6-string": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -85,7 +85,7 @@
   },
   "GET /fastly/getgeolocationforipaddress/parameter-shortened-ipv6-string": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -97,7 +97,7 @@
   },
   "GET /fastly/getgeolocationforipaddress/parameter-expanded-ipv6-string": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -109,7 +109,7 @@
   },
   "GET /fastly/getgeolocationforipaddress/called-unbound": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -121,7 +121,7 @@
   },
   "GET /fastly:geolocation": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",

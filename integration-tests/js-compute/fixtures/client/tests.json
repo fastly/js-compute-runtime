@@ -1,7 +1,7 @@
 {
   "GET /client/tlsJA3MD5": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -14,7 +14,7 @@
   },
   "GET /client/tlsClientHello": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -27,7 +27,7 @@
   },
   "GET /client/tlsClientCertificate": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -40,7 +40,7 @@
   },
   "GET /client/tlsCipherOpensslName": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -53,7 +53,7 @@
   },
   "GET /client/tlsProtocol": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",

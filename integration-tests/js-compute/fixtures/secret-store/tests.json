@@ -1,6 +1,6 @@
 {
   "GET /secret-store/exposed-as-global": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/exposed-as-global"
@@ -10,7 +10,7 @@
     }
   },
   "GET /secret-store/interface": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/interface"
@@ -20,7 +20,7 @@
     }
   },
   "GET /secret-store/constructor/called-as-regular-function": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/constructor/called-as-regular-function"
@@ -30,7 +30,7 @@
     }
   },
   "GET /secret-store/constructor/parameter-calls-7.1.17-ToString": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/constructor/parameter-calls-7.1.17-ToString"
@@ -40,7 +40,7 @@
     }
   },
   "GET /secret-store/constructor/empty-parameter": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/constructor/empty-parameter"
@@ -50,7 +50,7 @@
     }
   },
   "GET /secret-store/constructor/found-store": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/constructor/found-store"
@@ -60,7 +60,7 @@
     }
   },
   "GET /secret-store/constructor/missing-store": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/constructor/missing-store"
@@ -70,7 +70,7 @@
     }
   },
   "GET /secret-store/constructor/invalid-name": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/constructor/invalid-name"
@@ -80,7 +80,7 @@
     }
   },
   "GET /secret-store/get/called-as-constructor": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/get/called-as-constructor"
@@ -90,7 +90,7 @@
     }
   },
   "GET /secret-store/get/called-unbound": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/get/called-unbound"
@@ -100,7 +100,7 @@
     }
   },
   "GET /secret-store/get/key-parameter-calls-7.1.17-ToString": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/get/key-parameter-calls-7.1.17-ToString"
@@ -110,7 +110,7 @@
     }
   },
   "GET /secret-store/get/key-parameter-not-supplied": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/get/key-parameter-not-supplied"
@@ -120,7 +120,7 @@
     }
   },
   "GET /secret-store/get/key-parameter-empty-string": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/get/key-parameter-empty-string"
@@ -130,7 +130,7 @@
     }
   },
   "GET /secret-store/get/key-parameter-255-character-string": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/get/key-parameter-255-character-string"
@@ -140,7 +140,7 @@
     }
   },
   "GET /secret-store/get/key-parameter-256-character-string": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/get/key-parameter-256-character-string"
@@ -150,7 +150,7 @@
     }
   },
   "GET /secret-store/get/key-parameter-invalid-string": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/get/key-parameter-invalid-string"
@@ -160,7 +160,7 @@
     }
   },
   "GET /secret-store/get/key-does-not-exist-returns-null": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/get/key-does-not-exist-returns-null"
@@ -170,7 +170,7 @@
     }
   },
   "GET /secret-store/get/key-exists": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store/get/key-exists"
@@ -180,7 +180,7 @@
     }
   },
   "GET /secret-store-entry/interface": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store-entry/interface"
@@ -190,7 +190,7 @@
     }
   },
   "GET /secret-store-entry/plaintext": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/secret-store-entry/plaintext"

@@ -327,7 +327,7 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
       return false;
     }
 
-    // If the stream is backed by a C@E body handle, we can use that handle directly.
+    // If the stream is backed by a Compute body handle, we can use that handle directly.
     if (builtins::NativeStreamSource::stream_is_body(cx, body_obj)) {
       JS::RootedObject stream_source(cx,
                                      builtins::NativeStreamSource::get_stream_source(cx, body_obj));
@@ -615,7 +615,7 @@ bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    // If the stream is backed by a C@E body handle, we can use that handle directly.
+    // If the stream is backed by a Compute body handle, we can use that handle directly.
     if (builtins::NativeStreamSource::stream_is_body(cx, body_obj)) {
       JS::RootedObject stream_source(cx,
                                      builtins::NativeStreamSource::get_stream_source(cx, body_obj));

@@ -49,7 +49,7 @@ async function fixturesWithComputeTests() {
         if (existsSync(testManifestPath)) {
             const tests = JSON.parse(await readFile(testManifestPath, {encoding:'utf-8'}));
             for (const test of Object.values(tests)) {
-                if (test.environments.includes("c@e")) {
+                if (test.environments.includes("compute")) {
                     fixtures.push(fixtureName)
                     break
                 }
@@ -124,7 +124,7 @@ for (const fixture of testFixtures) {
             core.startGroup('Running tests')
             let counter = 0;
             await Promise.all(Object.entries(tests).map(async ([title, test]) => {
-                if (test.environments.includes("c@e")) {
+                if (test.environments.includes("compute")) {
                     return retry(10, expBackoff('60s', '10s'), async () => {
                         let path = test.downstream_request.pathname;
                         let url = `https://${domain}${path}`

@@ -1,6 +1,6 @@
 {
   "GET /request/clone/called-as-constructor": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/request/clone/called-as-constructor"
@@ -10,7 +10,7 @@
     }
   },
   "GET /request/clone/called-unbound": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/request/clone/called-unbound"
@@ -20,7 +20,7 @@
     }
   },
   "GET /request/clone/valid": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/request/clone/valid"
@@ -30,7 +30,7 @@
     }
   },
   "GET /request/clone/invalid": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/request/clone/invalid"

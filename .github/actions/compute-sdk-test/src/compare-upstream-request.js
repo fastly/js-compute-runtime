@@ -1,6 +1,6 @@
 import compareHeaders from './compare-headers.js';
 
-// Function to compare an upstream request from a wasm module running on aserver (Viceroy, C@E, etc...)
+// Function to compare an upstream request from a wasm module running on a server (Viceroy, Compute, etc...)
 // With a JSON Request Object in our config. With additional parameters to help our index.js with logging.
 const compareUpstreamRequest = async (configRequest, actualRequest, isDownstreamResponseHandled) => {
 

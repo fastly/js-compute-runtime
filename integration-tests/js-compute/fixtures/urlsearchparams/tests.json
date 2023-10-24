@@ -1,6 +1,6 @@
 {
   "GET /urlsearchparams/sort": {
-    "environments": ["c@e", "viceroy"],
+    "environments": ["compute", "viceroy"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/urlsearchparams/sort"

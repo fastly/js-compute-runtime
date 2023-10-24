@@ -1,7 +1,7 @@
 {
   "GET /setInterval/exposed-as-global": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -13,7 +13,7 @@
   },
   "GET /setInterval/interface": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -25,7 +25,7 @@
   },
   "GET /setInterval/called-as-constructor-function": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -37,7 +37,7 @@
   },
   "GET /setInterval/empty-parameter": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -49,7 +49,7 @@
   },
   "GET /setInterval/handler-parameter-not-supplied": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -61,7 +61,7 @@
   },
   "GET /setInterval/handler-parameter-not-callable": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -73,7 +73,7 @@
   },
   "GET /setInterval/timeout-parameter-not-supplied": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -85,7 +85,7 @@
   },
   "GET /setInterval/timeout-parameter-calls-7.1.4-ToNumber": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -97,7 +97,7 @@
   },
   "GET /setInterval/timeout-parameter-negative": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -109,7 +109,7 @@
   },
   "GET /setInterval/timeout-parameter-positive": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -121,7 +121,7 @@
   },
   "GET /setInterval/returns-integer": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -133,7 +133,7 @@
   },
   "GET /setInterval/called-unbound": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -145,7 +145,7 @@
   },
   "GET /setTimeout/exposed-as-global": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -157,7 +157,7 @@
   },
   "GET /setTimeout/interface": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -169,7 +169,7 @@
   },
   "GET /setTimeout/called-as-constructor-function": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -181,7 +181,7 @@
   },
   "GET /setTimeout/empty-parameter": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -193,7 +193,7 @@
   },
   "GET /setTimeout/handler-parameter-not-supplied": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -205,7 +205,7 @@
   },
   "GET /setTimeout/handler-parameter-not-callable": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -217,7 +217,7 @@
   },
   "GET /setTimeout/timeout-parameter-not-supplied": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -229,7 +229,7 @@
   },
   "GET /setTimeout/timeout-parameter-calls-7.1.4-ToNumber": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -241,7 +241,7 @@
   },
   "GET /setTimeout/timeout-parameter-negative": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -253,7 +253,7 @@
   },
   "GET /setTimeout/timeout-parameter-positive": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -265,7 +265,7 @@
   },
   "GET /setTimeout/returns-integer": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -277,7 +277,7 @@
   },
   "GET /setTimeout/called-unbound": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -289,7 +289,7 @@
   },
   "GET /clearInterval/exposed-as-global": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -301,7 +301,7 @@
   },
   "GET /clearInterval/interface": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -313,7 +313,7 @@
   },
   "GET /clearInterval/called-as-constructor-function": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -325,7 +325,7 @@
   },
   "GET /clearInterval/id-parameter-not-supplied": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -337,7 +337,7 @@
   },
   "GET /clearInterval/id-parameter-calls-7.1.4-ToNumber": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -349,7 +349,7 @@
   },
   "GET /clearInterval/id-parameter-negative": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -361,7 +361,7 @@
   },
   "GET /clearInterval/id-parameter-positive": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -373,7 +373,7 @@
   },
   "GET /clearInterval/returns-undefined": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -385,7 +385,7 @@
   },
   "GET /clearInterval/called-unbound": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -397,7 +397,7 @@
   },
   "GET /clearTimeout/exposed-as-global": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -409,7 +409,7 @@
   },
   "GET /clearTimeout/interface": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -421,7 +421,7 @@
   },
   "GET /clearTimeout/called-as-constructor-function": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -433,7 +433,7 @@
   },
   "GET /clearTimeout/id-parameter-not-supplied": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -445,7 +445,7 @@
   },
   "GET /clearTimeout/id-parameter-calls-7.1.4-ToNumber": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -457,7 +457,7 @@
   },
   "GET /clearTimeout/id-parameter-negative": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -469,7 +469,7 @@
   },
   "GET /clearTimeout/id-parameter-positive": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -481,7 +481,7 @@
   },
   "GET /clearTimeout/returns-undefined": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -493,7 +493,7 @@
   },
   "GET /clearTimeout/called-unbound": {
     "environments": [
-      "c@e"
+      "compute"
     ],
     "downstream_request": {
       "method": "GET",

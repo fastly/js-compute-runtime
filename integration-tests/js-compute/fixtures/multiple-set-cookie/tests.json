@@ -1,6 +1,6 @@
 {
   "GET /multiple-set-cookie/response-init": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/multiple-set-cookie/response-init"
@@ -25,7 +25,7 @@
     }
   },
   "GET /multiple-set-cookie/response-direct": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/multiple-set-cookie/response-direct"
@@ -50,7 +50,7 @@
     }
   },
   "GET /multiple-set-cookie/downstream": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/multiple-set-cookie/downstream"

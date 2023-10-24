@@ -1,7 +1,7 @@
 {
   "GET /crypto": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -14,7 +14,7 @@
   },
   "GET /crypto.subtle": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -27,7 +27,7 @@
   },
   "GET /crypto.subtle.importKey": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -40,7 +40,7 @@
   },
   "GET /crypto.subtle.importKey/length": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -53,7 +53,7 @@
   },
   "GET /crypto.subtle.importKey/called-as-constructor": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -66,7 +66,7 @@
   },
   "GET /crypto.subtle.importKey/called-with-wrong-this": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -79,7 +79,7 @@
   },
   "GET /crypto.subtle.importKey/called-with-no-arguments": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -92,7 +92,7 @@
   },
   "GET /crypto.subtle.importKey/first-parameter-calls-7.1.17-ToString": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -105,7 +105,7 @@
   },
   "GET /crypto.subtle.importKey/first-parameter-non-existant-format": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -118,7 +118,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-invalid-format": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -131,7 +131,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-missing-e-field": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -144,7 +144,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-e-field-calls-7.1.17-ToString": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -157,7 +157,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-invalid-e-field": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -170,7 +170,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-missing-kty-field": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -183,7 +183,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-invalid-kty-field": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -196,7 +196,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-missing-key_ops-field": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -209,7 +209,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-non-sequence-key_ops-field": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -222,7 +222,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-empty-key_ops-field": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -235,7 +235,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-duplicated-key_ops-field": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -248,7 +248,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-invalid-key_ops-field": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -261,7 +261,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-key_ops-field-calls-7.1.17-ToString": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -274,7 +274,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-missing-n-field": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -287,7 +287,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-n-field-calls-7.1.17-ToString": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -300,7 +300,7 @@
   },
   "GET /crypto.subtle.importKey/second-parameter-invalid-n-field": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -313,7 +313,7 @@
   },
   "GET /crypto.subtle.importKey/third-parameter-undefined": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -326,7 +326,7 @@
   },
   "GET /crypto.subtle.importKey/third-parameter-name-field-calls-7.1.17-ToString": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -339,7 +339,7 @@
   },
   "GET /crypto.subtle.importKey/third-parameter-invalid-name-field": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -352,7 +352,7 @@
   },
   "GET /crypto.subtle.importKey/third-parameter-hash-name-field-calls-7.1.17-ToString": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -365,7 +365,7 @@
   },
   "GET /crypto.subtle.importKey/third-parameter-hash-algorithm-does-not-match-json-web-key-hash-algorithm": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -378,7 +378,7 @@
   },
   "GET /crypto.subtle.importKey/fifth-parameter-undefined": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -391,7 +391,7 @@
   },
   "GET /crypto.subtle.importKey/fifth-parameter-invalid": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -404,7 +404,7 @@
   },
   "GET /crypto.subtle.importKey/fifth-parameter-duplicate-operations": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -417,7 +417,7 @@
   },
   "GET /crypto.subtle.importKey/fifth-parameter-operations-do-not-match-json-web-key-operations": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -430,7 +430,7 @@
   },
   "GET /crypto.subtle.importKey/fifth-parameter-operation-fields-calls-7.1.17-ToString": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -443,7 +443,7 @@
   },
   "GET /crypto.subtle.importKey/JWK-RS256-Public": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -456,7 +456,7 @@
   },
   "GET /crypto.subtle.importKey/HMAC": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -469,7 +469,7 @@
   },
   "GET /crypto.subtle.importKey/JWK-HS256-Public": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -482,7 +482,7 @@
   },
   "GET /crypto.subtle.digest": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -495,7 +495,7 @@
   },
   "GET /crypto.subtle.digest/length": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -508,7 +508,7 @@
   },
   "GET /crypto.subtle.digest/called-as-constructor": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -521,7 +521,7 @@
   },
   "GET /crypto.subtle.digest/called-with-wrong-this": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -534,7 +534,7 @@
   },
   "GET /crypto.subtle.digest/called-with-no-arguments": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -547,7 +547,7 @@
   },
   "GET /crypto.subtle.digest/first-parameter-calls-7.1.17-ToString": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -560,7 +560,7 @@
   },
   "GET /crypto.subtle.digest/first-parameter-non-existant-format": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -573,7 +573,7 @@
   },
   "GET /crypto.subtle.digest/second-parameter-undefined": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -586,7 +586,7 @@
   },
   "GET /crypto.subtle.digest/md5": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -599,7 +599,7 @@
   },
   "GET /crypto.subtle.digest/sha-1": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -612,7 +612,7 @@
   },
   "GET /crypto.subtle.digest/sha-256": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -625,7 +625,7 @@
   },
   "GET /crypto.subtle.digest/sha-384": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -638,7 +638,7 @@
   },
   "GET /crypto.subtle.digest/sha-512": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -651,7 +651,7 @@
   },
   "GET /crypto.subtle.sign": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -664,7 +664,7 @@
   },
   "GET /crypto.subtle.sign/length": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -677,7 +677,7 @@
   },
   "GET /crypto.subtle.sign/called-as-constructor": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -690,7 +690,7 @@
   },
   "GET /crypto.subtle.sign/called-with-wrong-this": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -703,7 +703,7 @@
   },
   "GET /crypto.subtle.sign/called-with-no-arguments": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -716,7 +716,7 @@
   },
   "GET /crypto.subtle.sign/first-parameter-calls-7.1.17-ToString": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -729,7 +729,7 @@
   },
   "GET /crypto.subtle.sign/first-parameter-non-existant-algorithm": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -742,7 +742,7 @@
   },
   "GET /crypto.subtle.sign/second-parameter-invalid-format": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -755,7 +755,7 @@
   },
   "GET /crypto.subtle.sign/second-parameter-invalid-usages": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -768,7 +768,7 @@
   },
   "GET /crypto.subtle.sign/third-parameter-invalid-format": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -781,7 +781,7 @@
   },
   "GET /crypto.subtle.sign/happy-path-jwk": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -794,7 +794,7 @@
   },
   "GET /crypto.subtle.sign/happy-path-hmac": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -807,7 +807,7 @@
   },
   "GET /crypto.subtle.verify": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -820,7 +820,7 @@
   },
   "GET /crypto.subtle.verify/length": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -833,7 +833,7 @@
   },
   "GET /crypto.subtle.verify/called-as-constructor": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -846,7 +846,7 @@
   },
   "GET /crypto.subtle.verify/called-with-wrong-this": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -859,7 +859,7 @@
   },
   "GET /crypto.subtle.verify/called-with-no-arguments": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -872,7 +872,7 @@
   },
   "GET /crypto.subtle.verify/first-parameter-calls-7.1.17-ToString": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -885,7 +885,7 @@
   },
   "GET /crypto.subtle.verify/first-parameter-non-existant-algorithm": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -898,7 +898,7 @@
   },
   "GET /crypto.subtle.verify/second-parameter-invalid-format": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -911,7 +911,7 @@
   },
   "GET /crypto.subtle.verify/second-parameter-invalid-usages": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -924,7 +924,7 @@
   },
   "GET /crypto.subtle.verify/third-parameter-invalid-format": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -937,7 +937,7 @@
   },
   "GET /crypto.subtle.verify/fourth-parameter-invalid-format": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -950,7 +950,7 @@
   },
   "GET /crypto.subtle.verify/incorrect-signature-jwk": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -963,7 +963,7 @@
   },
   "GET /crypto.subtle.verify/incorrect-signature-hmac": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -976,7 +976,7 @@
   },
   "GET /crypto.subtle.verify/correct-signature-jwk": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",
@@ -989,7 +989,7 @@
   },
   "GET /crypto.subtle.verify/correct-signature-hmac": {
     "environments": [
-      "viceroy", "c@e"
+      "viceroy", "compute"
     ],
     "downstream_request": {
       "method": "GET",

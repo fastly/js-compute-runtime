@@ -1,6 +1,6 @@
 {
   "POST /hello?requests=7": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "POST",
       "pathname": "/hello?requests=7"

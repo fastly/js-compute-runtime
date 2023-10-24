@@ -1,8 +1,8 @@
-# This file describes a Fastly Compute@Edge package. To learn more visit:
+# This file describes a Fastly Compute package. To learn more visit:
 # https://developer.fastly.com/reference/fastly-toml/
 
 authors = [""]
-description = "A minimal boilerplate application to bootstrap JavaScript projects on Compute@Edge"
+description = "A minimal boilerplate application to bootstrap JavaScript projects on Compute"
 language = "other"
 manifest_version = 2
 name = "tee"

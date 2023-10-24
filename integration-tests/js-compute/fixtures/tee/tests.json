@@ -1,6 +1,6 @@
 {
   "POST /": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "POST",
       "pathname": "/tee",
@@ -16,7 +16,7 @@
   },
 
   "GET /error": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/error",

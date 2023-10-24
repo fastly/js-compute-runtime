@@ -1,7 +1,7 @@
 {
   "GET /identity": {
     "environments": [
-      "c@e", "viceroy"
+      "compute", "viceroy"
     ],
     "downstream_request": {
       "method": "GET",
@@ -14,7 +14,7 @@
   },
   "GET /uppercase": {
     "environments": [
-      "c@e", "viceroy"
+      "compute", "viceroy"
     ],
     "downstream_request": {
       "method": "GET",

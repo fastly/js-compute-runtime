@@ -1,7 +1,7 @@
 # Contributing to the JS Compute Runtime
 
 First off thank you for wanting to contribute to making the JS Compute Runtime better! We
-appreciate you taking time to improve the Compute@Edge experience for developers
+appreciate you taking time to improve the Fastly Compute experience for developers
 everywhere. There are many ways you can contribute that include but aren't
 limited to documentation, opening issues, issue triage, and code contributions.
 We'll cover some of the ways you can contribute below, but if you don't see

@@ -1,7 +1,7 @@
 import compareHeaders from './compare-headers.js';
 
 /**
- * Function to compare a response from a server (Viceroy, C@E, etc...)
+ * Function to compare a response from a server (Viceroy, Compute, etc...)
  * With a JSON Response Object in our config
  * @param {{
       "status": number,

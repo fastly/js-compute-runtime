@@ -1,6 +1,6 @@
 {
   "GET /response/redirect": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/response/redirect"

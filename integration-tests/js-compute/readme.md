@@ -1,13 +1,13 @@
 # Writing Integration Tests for JS-Compute-Runtime
 
-- Create a folder within [fixtures](./fixtures) which will contain the test Compute@Edge application
-- Create a javascript or typescript file within the folder with the same name as the folder, this file should contain the test Compute@Edge application.
+- Create a folder within [fixtures](./fixtures) which will contain the test Compute application
+- Create a javascript or typescript file within the folder with the same name as the folder, this file should contain the test Compute application.
 - Create a fastly.toml.in file which contains any backends that the application requires. This file should adhere to the format defined at <https://developer.fastly.com/reference/fastly-toml/>
 - Create a tests.json file which following the format defined below.
 
 ## Fields in tests.json
 
-tests.json is a file containing a JSON Object which contains all the test requests and assertions for the Compute@Edge application being tested.
+tests.json is a file containing a JSON Object which contains all the test requests and assertions for the Compute application being tested.
 
 The keys in the root object are used as the name of the tests.
 
@@ -15,7 +15,7 @@ The keys in the root object are used as the name of the tests.
 An array of strings which states in what environments the test should run.
 Valid strings which can be in the array are:
 - 'viceroy' - This states that the test should run in the Viceroy environment.
-- 'c@e' - This states that the test should run in the Compute@Edge environment.
+- 'compute' - This states that the test should run in the Compute environment.
 
 ### downstream_request
 An Object which determines how the request to the test application should be configured.
@@ -98,7 +98,7 @@ E.G. `["ComputeLog :: Hello!"]` will assert that the application emitted a log-l
 ```json
 {
   "test for GET /example": {
-    "environments": ["viceroy", "c@e"],
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/example",
