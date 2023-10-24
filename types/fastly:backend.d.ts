@@ -243,5 +243,30 @@ declare module 'fastly:backend' {
      * Returns the name of the Backend, which can be used on {@link "globals".RequestInit.backend}
      */
     toString(): string;
+
+    /**
+     * Returns the name associated with the Backend instance.
+     */
+    toName(): string;
+
+    /**
+     * Returns a boolean indicating if a Backend with the given name exists or not.
+     */
+    static exists(name: string): boolean;
+
+    /**
+     * Returns the Backend instance with the given name, if one exists. If one does not exist, an error is thrown.
+     */
+    static fromName(name: string): Backend;
+
+    /**
+     * Returns a string representing the health of the given Backend instance.
+     * Possible values are:
+     * 
+     * "healthy" - The backend's health check has succeeded, indicating the backend is working as expected and should receive requests.
+     * "unhealthy" - The backend's health check has failed, indicating the backend is not working as expected and should not receive requests.
+     * "unknown" - The backend does not have a health check configured.
+     */
+    static health(backend: Backend): "healthy" | "unhealthy" | "unknown"
   }
 }
