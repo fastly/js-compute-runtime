@@ -51,16 +51,16 @@
     "status": "PASS"
   },
   "Request should get its content-type from the init request": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Request should not get its content-type from the init request if init headers are provided": {
     "status": "PASS"
   },
   "Request should get its content-type from the body if none is provided": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Request should get its content-type from init headers if one is provided": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Request with cache mode: only-if-cached and fetch mode: same-origin": {
     "status": "PASS"
