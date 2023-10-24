@@ -1,10 +1,10 @@
 # Changelog
 
 
-## [3.7.1](https://github.com/fastly/js-compute-runtime/compare/v3.7.0...v3.7.1) (2023-10-24)
+## 3.7.1 (2023-10-24)
 
 
-### Bug Fixes
+### Added
 
 * Add type defintions for the recently added Backend methods ([#698](https://github.com/fastly/js-compute-runtime/issues/698)) ([24f1ba7](https://github.com/fastly/js-compute-runtime/commit/24f1ba70e68f35205104eaf583c29d4af9b5039c))
 
