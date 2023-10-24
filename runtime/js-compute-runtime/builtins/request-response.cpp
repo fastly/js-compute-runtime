@@ -1395,7 +1395,7 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
 
   headers = builtins::Headers::create(cx, headersInstance, builtins::Headers::Mode::ProxyToRequest,
-                                      requestInstance, headers_obj);
+                                      requestInstance, headers_obj, false);
 
   if (!headers) {
     return false;
@@ -1832,7 +1832,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
       return nullptr;
 
     headers = builtins::Headers::create(
-        cx, headersInstance, builtins::Headers::Mode::ProxyToRequest, request, input_headers);
+        cx, headersInstance, builtins::Headers::Mode::ProxyToRequest, request, input_headers, false);
   }
 
   if (!headers) {
