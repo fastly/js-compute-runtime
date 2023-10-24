@@ -1831,8 +1831,9 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     if (!headersInstance)
       return nullptr;
 
-    headers = builtins::Headers::create(
-        cx, headersInstance, builtins::Headers::Mode::ProxyToRequest, request, input_headers, false);
+    headers =
+        builtins::Headers::create(cx, headersInstance, builtins::Headers::Mode::ProxyToRequest,
+                                  request, input_headers, false);
   }
 
   if (!headers) {
