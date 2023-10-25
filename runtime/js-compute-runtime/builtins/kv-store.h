@@ -3,6 +3,7 @@
 
 #include "builtin.h"
 #include "builtins/request-response.h"
+#include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
 
 namespace builtins {
@@ -37,6 +38,8 @@ public:
   static constexpr const char *class_name = "KVStore";
   enum class Slots {
     KVStore,
+    PendingLookupPromise,
+    PendingLookupHandle,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -48,6 +51,8 @@ public:
 
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
+  static host_api::ObjectStorePendingLookup pending_lookup_handle(JSObject *self);
+  static bool process_pending_kv_store_lookup(JSContext *cx, JS::HandleObject self);
 };
 
 } // namespace builtins
