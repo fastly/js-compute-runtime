@@ -1,6 +1,14 @@
 # Changelog
 
 
+## [3.7.2](https://github.com/fastly/js-compute-runtime/compare/v3.7.1...v3.7.2) (2023-10-25)
+
+
+### Bug Fixes
+
+* Make Response.redirect headers be immutable ([3527eaf](https://github.com/fastly/js-compute-runtime/commit/3527eaf62266a3cf7ea8ea4020bb5980bb7fa615))
+* return correct error type (TypeError or RangeError instead of Error) in Request and Response methods ([4ea7de7](https://github.com/fastly/js-compute-runtime/commit/4ea7de71301d841fdc99f45a3251f85c61710fd6))
+
 ## 3.7.1 (2023-10-24)
 
 
