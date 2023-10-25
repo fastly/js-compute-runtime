@@ -19,6 +19,7 @@
 #include "builtins/native-stream-source.h"
 #include "builtins/shared/url.h"
 #include "core/encode.h"
+#include "core/event_loop.h"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
 
@@ -182,6 +183,54 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
 
 } // namespace
 
+host_api::ObjectStorePendingLookup KVStore::pending_lookup_handle(JSObject *self) {
+  MOZ_ASSERT(KVStore::is_instance(self));
+  host_api::ObjectStorePendingLookup res;
+
+  JS::Value handle_val =
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PendingLookupHandle));
+  if (handle_val.isInt32()) {
+    res = host_api::ObjectStorePendingLookup(handle_val.toInt32());
+  }
+
+  return res;
+}
+
+bool KVStore::process_pending_kv_store_lookup(JSContext *cx, JS::HandleObject self) {
+  MOZ_ASSERT(KVStore::is_instance(self));
+
+  auto pending_promise_value =
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PendingLookupPromise));
+  MOZ_ASSERT(pending_promise_value.isObject());
+  JS::RootedObject result_promise(cx, &pending_promise_value.toObject());
+
+  auto res = builtins::KVStore::pending_lookup_handle(self).wait();
+
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return RejectPromiseWithPendingError(cx, result_promise);
+  }
+
+  auto ret = res.unwrap();
+
+  // When no entry is found, we are going to resolve the Promise with `null`.
+  if (!ret.has_value()) {
+    JS::RootedValue result(cx);
+    result.setNull();
+    JS::ResolvePromise(cx, result_promise, result);
+  } else {
+    JS::RootedObject entry(cx, KVStoreEntry::create(cx, ret.value()));
+    if (!entry) {
+      return false;
+    }
+    JS::RootedValue result(cx);
+    result.setObject(*entry);
+    JS::ResolvePromise(cx, result_promise, result);
+  }
+
+  return true;
+}
+
 bool KVStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
@@ -195,33 +244,28 @@ bool KVStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
   auto key_chars = core::encode(cx, key);
   if (!key_chars) {
-    return false;
+    return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
   if (!parse_and_validate_key(cx, key_chars.begin(), key_chars.len)) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  auto res = kv_store_handle(self).lookup(key_chars);
+  auto res = kv_store_handle(self).lookup_async(key_chars);
+
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
-    return false;
+    return ReturnPromiseRejectedWithPendingError(cx, args);
   }
-
-  // When no entry is found, we are going to resolve the Promise with `null`.
   auto ret = res.unwrap();
-  if (!ret.has_value()) {
-    JS::RootedValue result(cx);
-    result.setNull();
-    JS::ResolvePromise(cx, result_promise, result);
-  } else {
-    JS::RootedObject entry(cx, KVStoreEntry::create(cx, *ret));
-    if (!entry) {
-      return false;
-    }
-    JS::RootedValue result(cx);
-    result.setObject(*entry);
-    JS::ResolvePromise(cx, result_promise, result);
+
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::PendingLookupHandle),
+                      JS::Int32Value(ret.handle));
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::PendingLookupPromise),
+                      JS::ObjectValue(*result_promise));
+
+  if (!core::EventLoop::queue_async_task(self)) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
   args.rval().setObject(*result_promise);
@@ -241,7 +285,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
   auto key_chars = core::encode(cx, key);
   if (!key_chars) {
-    return false;
+    return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
   if (!parse_and_validate_key(cx, key_chars.begin(), key_chars.len)) {

@@ -1066,6 +1066,21 @@ Result<std::optional<HttpBody>> ObjectStore::lookup(std::string_view name) {
   return res;
 }
 
+Result<AsyncHandle> ObjectStore::lookup_async(std::string_view name) {
+  Result<AsyncHandle> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_compute_at_edge_object_store_pending_handle_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_object_store_lookup_async(this->handle, &name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
 Result<Void> ObjectStore::insert(std::string_view name, HttpBody body) {
   Result<Void> res;
 
@@ -1079,6 +1094,24 @@ Result<Void> ObjectStore::insert(std::string_view name, HttpBody body) {
 
   return res;
 }
+
+Result<std::optional<HttpBody>, FastlyError> ObjectStorePendingLookup::wait() {
+  Result<std::optional<HttpBody>, FastlyError> res;
+
+  fastly_compute_at_edge_types_error_t err;
+  fastly_world_option_fastly_compute_at_edge_object_store_body_handle_t ret;
+  if (!fastly_compute_at_edge_object_store_pending_lookup_wait(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(ret.val);
+  } else {
+    res.emplace(std::nullopt);
+  }
+
+  return res;
+}
+
+AsyncHandle ObjectStorePendingLookup::async_handle() const { return AsyncHandle{this->handle}; }
 
 static_assert(std::is_same_v<Secret::Handle, fastly_compute_at_edge_secret_store_secret_handle_t>);
 static_assert(

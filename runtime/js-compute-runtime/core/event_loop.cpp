@@ -1,4 +1,5 @@
 #include "core/event_loop.h"
+#include "builtins/kv-store.h"
 #include "builtins/native-stream-source.h"
 #include "builtins/request-response.h"
 #include "builtins/shared/dom-exception.h"
@@ -256,6 +257,8 @@ bool EventLoop::process_pending_async_tasks(JSContext *cx) {
     JS::HandleObject pending_obj = (*pending_async_tasks)[i];
     if (builtins::Request::is_instance(pending_obj)) {
       handles.push_back(builtins::Request::pending_handle(pending_obj).async_handle());
+    } else if (builtins::KVStore::is_instance(pending_obj)) {
+      handles.push_back(builtins::KVStore::pending_lookup_handle(pending_obj).async_handle());
     } else {
       MOZ_ASSERT(builtins::NativeStreamSource::is_instance(pending_obj));
       JS::RootedObject owner(cx, builtins::NativeStreamSource::owner(pending_obj));
@@ -295,6 +298,8 @@ bool EventLoop::process_pending_async_tasks(JSContext *cx) {
   JS::HandleObject ready_obj = (*pending_async_tasks)[ready_index];
   if (builtins::Request::is_instance(ready_obj)) {
     ok = process_pending_request(cx, ready_obj, host_api::HttpPendingReq{ready_handle});
+  } else if (builtins::KVStore::is_instance(ready_obj)) {
+    ok = builtins::KVStore::process_pending_kv_store_lookup(cx, ready_obj);
   } else {
     MOZ_ASSERT(builtins::NativeStreamSource::is_instance(ready_obj));
     ok = process_body_read(cx, ready_obj, host_api::HttpBody{ready_handle});

@@ -828,6 +828,28 @@ bool fastly_compute_at_edge_object_store_lookup(
   return ok;
 }
 
+bool fastly_compute_at_edge_object_store_lookup_async(
+    fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key,
+    fastly_compute_at_edge_object_store_pending_handle_t *ret,
+    fastly_compute_at_edge_object_store_error_t *err) {
+  return convert_result(fastly::object_store_get_async(store, key->ptr, key->len, ret), err);
+}
+
+bool fastly_compute_at_edge_object_store_pending_lookup_wait(
+    fastly_compute_at_edge_object_store_pending_handle_t h,
+    fastly_world_option_fastly_compute_at_edge_object_store_body_handle_t *ret,
+    fastly_compute_at_edge_object_store_error_t *err) {
+  ret->val = INVALID_HANDLE;
+  bool ok = convert_result(fastly::object_store_pending_lookup_wait(h, &ret->val), err);
+  if ((!ok && *err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) ||
+      ret->val == INVALID_HANDLE) {
+    ret->is_some = false;
+    return true;
+  }
+  ret->is_some = true;
+  return ok;
+}
+
 bool fastly_compute_at_edge_object_store_insert(
     fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key,
     fastly_compute_at_edge_http_types_body_handle_t body_handle,

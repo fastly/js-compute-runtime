@@ -578,8 +578,28 @@ public:
   static Result<ObjectStore> open(std::string_view name);
 
   Result<std::optional<HttpBody>> lookup(std::string_view name);
+  Result<AsyncHandle> lookup_async(std::string_view name);
 
   Result<Void> insert(std::string_view name, HttpBody body);
+};
+
+class ObjectStorePendingLookup final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  ObjectStorePendingLookup() = default;
+  explicit ObjectStorePendingLookup(Handle handle) : handle{handle} {}
+  explicit ObjectStorePendingLookup(AsyncHandle async) : handle{async.handle} {}
+
+  /// Block until the response is ready.
+  Result<std::optional<HttpBody>, FastlyError> wait();
+
+  /// Fetch the AsyncHandle for this pending request.
+  AsyncHandle async_handle() const;
 };
 
 class Secret final {
