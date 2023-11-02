@@ -58,7 +58,7 @@ async function app(event) {
 
   await files.put('hello', 'world')
 
-  const entry = await files.put('hello')
+  const entry = await files.get('hello')
 
   return new Response(await entry.text())
 }
