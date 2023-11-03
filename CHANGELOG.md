@@ -1,10 +1,10 @@
 # Changelog
 
 
-## [3.7.3](https://github.com/fastly/js-compute-runtime/compare/v3.7.2...v3.7.3) (2023-11-02)
+## 3.7.3 (2023-11-02)
 
 
-### Bug Fixes
+### Fixed
 
 * Make the underlying KVStore.prototype.get implementation be async ([a6a5035](https://github.com/fastly/js-compute-runtime/commit/a6a5035fc932be0e47c7c737bd9060d27c18ab05))
 
