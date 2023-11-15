@@ -239,6 +239,10 @@ WASM_IMPORT("fastly_http_req", "version_set")
 int req_version_set(fastly_compute_at_edge_http_types_request_handle_t req_handle,
                     uint32_t version);
 
+WASM_IMPORT("fastly_http_req", "framing_headers_mode_set")
+int req_framing_headers_mode_set(fastly_compute_at_edge_http_types_request_handle_t req_handle,
+                                 uint32_t mode);
+
 WASM_IMPORT("fastly_http_req", "send")
 int req_send(fastly_compute_at_edge_http_types_request_handle_t req_handle,
              fastly_compute_at_edge_http_types_body_handle_t body_handle, const char *backend,
@@ -329,6 +333,10 @@ int resp_status_get(fastly_compute_at_edge_http_types_response_handle_t resp_han
 WASM_IMPORT("fastly_http_resp", "status_set")
 int resp_status_set(fastly_compute_at_edge_http_types_response_handle_t resp_handle,
                     uint16_t status);
+
+WASM_IMPORT("fastly_http_resp", "framing_headers_mode_set")
+int resp_framing_headers_mode_set(fastly_compute_at_edge_http_types_response_handle_t resp_handle,
+                                  uint32_t mode);
 
 // Module fastly_dictionary
 WASM_IMPORT("fastly_dictionary", "open")
