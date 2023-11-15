@@ -398,6 +398,13 @@ bool fastly_compute_at_edge_http_req_header_values_get(
   return true;
 }
 
+bool fastly_compute_at_edge_http_req_framing_headers_mode_set(
+    fastly_compute_at_edge_http_req_request_handle_t h,
+    fastly_compute_at_edge_http_req_framing_headers_mode_t mode,
+    fastly_compute_at_edge_http_req_error_t *err) {
+  return convert_result(fastly::req_framing_headers_mode_set(h, mode), err);
+}
+
 bool fastly_compute_at_edge_http_req_header_insert(
     fastly_compute_at_edge_http_types_request_handle_t h, fastly_world_string_t *name,
     fastly_world_string_t *value, fastly_compute_at_edge_types_error_t *err) {
@@ -699,6 +706,13 @@ bool fastly_compute_at_edge_http_resp_version_get(
   }
   *ret = convert_http_version(fastly_http_version);
   return true;
+}
+
+bool fastly_compute_at_edge_http_resp_framing_headers_mode_set(
+    fastly_compute_at_edge_http_resp_response_handle_t h,
+    fastly_compute_at_edge_http_resp_framing_headers_mode_t mode,
+    fastly_compute_at_edge_http_resp_error_t *err) {
+  return convert_result(fastly::resp_framing_headers_mode_set(h, mode), err);
 }
 
 bool fastly_compute_at_edge_http_resp_send_downstream(
