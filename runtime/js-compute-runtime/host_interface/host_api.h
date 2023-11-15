@@ -402,6 +402,11 @@ struct CacheOverrideTag final {
   void set_pci();
 };
 
+enum class FramingHeadersMode : uint8_t {
+  Automatic,
+  ManuallyFromHeaders,
+};
+
 struct Request;
 
 class HttpReq final : public HttpBase {
@@ -468,6 +473,9 @@ public:
                               std::optional<uint32_t> stale_while_revalidate,
                               std::optional<std::string_view> surrogate_key);
 
+  /// Set the framing headers mode for this request.
+  Result<Void> set_framing_headers_mode(FramingHeadersMode mode);
+
   bool is_valid() const override;
 
   Result<HttpVersion> get_version() const override;
@@ -500,6 +508,9 @@ public:
 
   /// Immediately begin sending this response to the downstream client.
   Result<Void> send_downstream(HttpBody body, bool streaming);
+
+  /// Set the framing headers mode for this response.
+  Result<Void> set_framing_headers_mode(FramingHeadersMode mode);
 
   bool is_valid() const override;
 

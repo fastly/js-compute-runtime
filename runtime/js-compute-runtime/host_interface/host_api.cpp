@@ -736,6 +736,30 @@ Result<Void> HttpReq::cache_override(CacheOverrideTag tag, std::optional<uint32_
   return res;
 }
 
+Result<Void> HttpReq::set_framing_headers_mode(FramingHeadersMode mode) {
+  Result<Void> res;
+
+  fastly_compute_at_edge_http_req_framing_headers_mode_t m;
+
+  switch (mode) {
+  case FramingHeadersMode::Automatic:
+    m = FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_FRAMING_HEADERS_MODE_AUTOMATIC;
+    break;
+  case FramingHeadersMode::ManuallyFromHeaders:
+    m = FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_FRAMING_HEADERS_MODE_MANUALLY_FROM_HEADERS;
+    break;
+  }
+
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_http_req_framing_headers_mode_set(this->handle, m, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
 Result<HostBytes> HttpReq::downstream_client_ip_addr() {
   Result<HostBytes> res;
 
@@ -911,6 +935,30 @@ Result<Void> HttpResp::send_downstream(HttpBody body, bool streaming) {
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_http_resp_send_downstream(this->handle, body.handle, streaming,
                                                         &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
+Result<Void> HttpResp::set_framing_headers_mode(FramingHeadersMode mode) {
+  Result<Void> res;
+
+  fastly_compute_at_edge_http_resp_framing_headers_mode_t m;
+
+  switch (mode) {
+  case FramingHeadersMode::Automatic:
+    m = FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_FRAMING_HEADERS_MODE_AUTOMATIC;
+    break;
+  case FramingHeadersMode::ManuallyFromHeaders:
+    m = FASTLY_COMPUTE_AT_EDGE_HTTP_TYPES_FRAMING_HEADERS_MODE_MANUALLY_FROM_HEADERS;
+    break;
+  }
+
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_http_resp_framing_headers_mode_set(this->handle, m, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace();

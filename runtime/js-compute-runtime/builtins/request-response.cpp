@@ -1655,14 +1655,26 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   JS::RootedValue fastly_val(cx);
   if (init_val.isObject()) {
     JS::RootedObject init(cx, init_val.toObjectOrNull());
+    JS::RootedValue overrideContentLength(cx);
     if (!JS_GetProperty(cx, init, "method", &method_val) ||
         !JS_GetProperty(cx, init, "headers", &headers_val) ||
         !JS_GetProperty(cx, init, "body", &body_val) ||
         !JS_GetProperty(cx, init, "backend", &backend_val) ||
         !JS_GetProperty(cx, init, "cacheOverride", &cache_override) ||
-        !JS_GetProperty(cx, init, "fastly", &fastly_val)) {
+        !JS_GetProperty(cx, init, "fastly", &fastly_val) ||
+        !JS_GetProperty(cx, init, "overrideContentLength", &overrideContentLength)) {
       return nullptr;
     }
+
+    if (overrideContentLength.isBoolean() && overrideContentLength.toBoolean()) {
+      auto res = request_handle.set_framing_headers_mode(
+          host_api::FramingHeadersMode::ManuallyFromHeaders);
+      if (auto *err = res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        return nullptr;
+      }
+    }
+
   } else if (!init_val.isNullOrUndefined()) {
     JS_ReportErrorLatin1(cx, "Request constructor: |init| parameter can't be converted to "
                              "a dictionary");
@@ -2643,6 +2655,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue statusText_val(cx);
   JS::RootedString statusText(cx, JS_GetEmptyString(cx));
   JS::RootedValue headers_val(cx);
+  host_api::FramingHeadersMode mode{host_api::FramingHeadersMode::Automatic};
 
   if (init_val.isObject()) {
     JS::RootedObject init(cx, init_val.toObjectOrNull());
@@ -2687,6 +2700,16 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       statusText = JS_NewStringCopyZ(cx, status_text.c_str());
     }
 
+    JS::RootedValue overrideContentLength(cx);
+    if (!JS_GetProperty(cx, init, "overrideContentLength", &overrideContentLength)) {
+      return false;
+    }
+
+    // `overrideContentLength: true` indicates that we want to set the framing mode manually.
+    if (overrideContentLength.isBoolean() && overrideContentLength.toBoolean()) {
+      mode = host_api::FramingHeadersMode::ManuallyFromHeaders;
+    }
+
   } else if (!init_val.isNullOrUndefined()) {
     JS_ReportErrorLatin1(cx, "Response constructor: |init| parameter can't be converted to "
                              "a dictionary");
@@ -2727,6 +2750,14 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   auto response_handle = response_handle_res.unwrap();
+  if (mode != host_api::FramingHeadersMode::Automatic) {
+    auto res = response_handle.set_framing_headers_mode(mode);
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+  }
+
   auto body = make_res.unwrap();
   JS::RootedObject responseInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
   JS::RootedObject response(
