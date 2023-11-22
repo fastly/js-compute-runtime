@@ -1621,7 +1621,7 @@ declare function clearInterval(intervalID?: number): void;
  * @param init - An object containing settings to apply to the request
  * @group Fetch API
  */
-declare function fetch(input: RequestInfo, init?: RequestInit): Promise<Response>;
+declare function fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
 
 /**
  * @group Scheduling
