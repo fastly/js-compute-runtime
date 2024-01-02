@@ -1666,7 +1666,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
       return nullptr;
     }
 
-    if (overrideContentLength.isBoolean() && overrideContentLength.toBoolean()) {
+    if (JS::ToBoolean(overrideContentLength)) {
       auto res = request_handle.set_framing_headers_mode(
           host_api::FramingHeadersMode::ManuallyFromHeaders);
       if (auto *err = res.to_err()) {
@@ -2706,7 +2706,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     // `overrideContentLength: true` indicates that we want to set the framing mode manually.
-    if (overrideContentLength.isBoolean() && overrideContentLength.toBoolean()) {
+    if (JS::ToBoolean(overrideContentLength)) {
       mode = host_api::FramingHeadersMode::ManuallyFromHeaders;
     }
 
