@@ -1259,6 +1259,19 @@ bool Request::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
   return RequestOrResponse::bodyAll<result_type>(cx, args, self);
 }
 
+bool Request::backend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+  JS::RootedValue backend(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Backend)));
+  if (backend.isNullOrUndefined()) {
+    args.rval().setString(JS_GetEmptyString(cx));
+  } else {
+    args.rval().set(backend);
+  }
+
+  return true;
+}
+
 bool Request::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   return RequestOrResponse::body_get(cx, args, self, is_downstream(self));
@@ -1312,6 +1325,12 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
                       JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::URL)));
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::IsDownstream)));
+
+  JS::RootedValue backend(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Backend)));
+  if (!backend.isNullOrUndefined()) {
+    JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Backend), backend);
+  }
 
   auto hasBody = RequestOrResponse::has_body(self);
 
@@ -1451,6 +1470,7 @@ const JSPropertySpec Request::properties[] = {
     JS_PSG("url", Request::url_get, JSPROP_ENUMERATE),
     JS_PSG("version", Request::version_get, JSPROP_ENUMERATE),
     JS_PSG("headers", Request::headers_get, JSPROP_ENUMERATE),
+    JS_PSG("backend", Request::backend_get, JSPROP_ENUMERATE),
     JS_PSG("body", Request::body_get, JSPROP_ENUMERATE),
     JS_PSG("bodyUsed", Request::bodyUsed_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Request", JSPROP_READONLY),
