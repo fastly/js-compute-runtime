@@ -1040,7 +1040,8 @@ declare interface RequestInit {
   cacheKey?: string;
   fastly?: {
     decompressGzip?: boolean
-  }
+  },
+  overrideContentLength: boolean
 }
 
 /**
