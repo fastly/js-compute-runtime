@@ -4859,5 +4859,120 @@
       "status": 200,
       "body": "Error: TypeError"
     }
+  },
+
+  "GET /override-content-length/request/init/object-literal/true": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/override-content-length/request/init/object-literal/true"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /override-content-length/request/init/object-literal/false": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/override-content-length/request/init/object-literal/false"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+
+  "GET /override-content-length/request/init/request-instance/true": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/override-content-length/request/init/request-instance/true"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /override-content-length/request/init/request-instance/false": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/override-content-length/request/init/request-instance/false"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+
+  "GET /override-content-length/request/clone/true": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/override-content-length/request/clone/true"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /override-content-length/request/clone/false": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/override-content-length/request/clone/false"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+
+  "GET /override-content-length/fetch/init/object-literal/true": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/override-content-length/fetch/init/object-literal/true"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /override-content-length/fetch/init/object-literal/false": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/override-content-length/fetch/init/object-literal/false"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+
+  "GET /override-content-length/fetch/init/request-instance/true": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/override-content-length/fetch/init/request-instance/true"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /override-content-length/fetch/init/request-instance/false": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/override-content-length/fetch/init/request-instance/false"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
   }
 }
