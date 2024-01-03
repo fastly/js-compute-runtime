@@ -1147,9 +1147,10 @@ bool Request::set_cache_override(JSContext *cx, JS::HandleObject self,
 bool Request::apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(is_instance(self));
-  auto decompress =
-      JS::GetReservedSlot(self, static_cast<uint32_t>(Request::Slots::AutoDecompressGzip))
-          .toBoolean();
+
+  JS::RootedValue decompressGzipSlot(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Request::Slots::AutoDecompressGzip)));
+
+  auto decompress = JS::ToBoolean(decompressGzipSlot);
   if (!decompress) {
     return true;
   }
