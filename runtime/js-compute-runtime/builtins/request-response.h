@@ -106,6 +106,8 @@ class Request final : public BuiltinImpl<Request> {
   template <RequestOrResponse::BodyReadResult result_type>
   static bool bodyAll(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  static bool backend_get(JSContext *cx, unsigned argc, JS::Value *vp);
+
   static bool body_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
