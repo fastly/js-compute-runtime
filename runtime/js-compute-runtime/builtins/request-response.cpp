@@ -1148,7 +1148,8 @@ bool Request::apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(is_instance(self));
 
-  JS::RootedValue decompressGzipSlot(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Request::Slots::AutoDecompressGzip)));
+  JS::RootedValue decompressGzipSlot(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Request::Slots::AutoDecompressGzip)));
 
   auto decompress = JS::ToBoolean(decompressGzipSlot);
   if (!decompress) {
@@ -1261,8 +1262,7 @@ bool Request::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Request::backend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  JS::RootedValue backend(
-      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Backend)));
+  JS::RootedValue backend(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Backend)));
   if (backend.isNullOrUndefined()) {
     args.rval().setString(JS_GetEmptyString(cx));
   } else {
@@ -1326,8 +1326,7 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::IsDownstream)));
 
-  JS::RootedValue backend(
-      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Backend)));
+  JS::RootedValue backend(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Backend)));
   if (!backend.isNullOrUndefined()) {
     JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Backend), backend);
   }
