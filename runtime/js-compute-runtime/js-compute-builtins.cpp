@@ -631,8 +631,9 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   RootedObject requestInstance(
       cx, JS_NewObjectWithGivenProto(cx, &builtins::Request::class_, builtins::Request::proto_obj));
-  if (!requestInstance)
+  if (!requestInstance) {
     return false;
+  }
 
   RootedObject request(cx, builtins::Request::create(cx, requestInstance, args[0], args.get(1)));
   if (!request) {

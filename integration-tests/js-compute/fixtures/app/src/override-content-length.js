@@ -7,66 +7,77 @@ import { routes, isRunningLocally } from "./routes.js";
 let error;
 
 async function requestInitObjectLiteral(overrideContentLength) {
-    let response = await fetch(new Request('https://httpbin.org/headers', {
-        backend: 'httpbin',
+    let request = new Request('https://http-me.glitch.me/anything', {
+        backend: 'httpme',
+        method: 'POST',
+        body: 'meow',
         overrideContentLength,
         headers: {
-            "Content-Length": "1"
+            "content-length": "1"
         }
-    }));
+    });
+    let response = await fetch(request);
     let body = await response.json()
-    return body?.headers?.["Content-Length"];
+    return body?.headers?.["content-length"];
 }
 
 async function requestInitRequestInstance(overrideContentLength) {
-    let request = new Request('https://httpbin.org/headers', {
-        backend: 'httpbin',
+    let request = new Request('https://http-me.glitch.me/anything', {
+        backend: 'httpme',
+        method: 'POST',
+        body: 'meow',
         overrideContentLength,
         headers: {
-            "Content-Length": "1"
+            "content-length": "1"
         }
     });
-    let response = await fetch(new Request('https://httpbin.org/headers', request));
+    let response = await fetch(new Request('https://http-me.glitch.me/anything', request));
     let body = await response.json()
-    return body?.headers?.["Content-Length"];
+    return body?.headers?.["content-length"];
 }
 
 async function requestClone(overrideContentLength) {
-    let request = new Request('https://httpbin.org/headers', {
-        backend: 'httpbin',
+    let request = new Request('https://http-me.glitch.me/anything', {
+        backend: 'httpme',
+        method: 'POST',
+        body: 'meow',
         overrideContentLength,
         headers: {
-            "Content-Length": "1"
+            "content-length": "1"
         }
     });
     let response = await fetch(request.clone());
     let body = await response.json()
-    return body?.headers?.["Content-Length"];
+    return body?.headers?.["content-length"];
 }
 
 async function fetchInitObjectLiteral(overrideContentLength) {
-    let response = await fetch('https://httpbin.org/headers', {
-        backend: 'httpbin',
+    let response = await fetch('https://http-me.glitch.me/anything', {
+        backend: 'httpme',
+        method: 'POST',
+        body: 'meow',
         overrideContentLength,
         headers: {
-            "Content-Length": "1"
+            "content-length": "1"
         }
     });
     let body = await response.json()
-    return body?.headers?.["Content-Length"];
+    return body?.headers?.["content-length"];
 }
 
 async function fetchInitRequestInstance(overrideContentLength) {
-    let request = new Request('https://httpbin.org/headers', {
-        backend: 'httpbin',
+    let request = new Request('https://http-me.glitch.me/anything', {
+        backend: 'httpme',
+        method: 'POST',
+        body: 'meow',
         overrideContentLength,
         headers: {
-            "Content-Length": "1"
+            "content-length": "1"
         }
     });
-    let response = await fetch('https://httpbin.org/headers', request);
+    let response = await fetch('https://http-me.glitch.me/anything', request);
     let body = await response.json()
-    return body?.headers?.["Content-Length"];
+    return body?.headers?.["content-length"];
 }
 
 routes.set("/override-content-length/request/init/object-literal/true", async () => {
@@ -85,7 +96,7 @@ routes.set("/override-content-length/request/init/object-literal/true", async ()
 
 routes.set("/override-content-length/request/init/object-literal/false", async () => {
     let actual = await requestInitObjectLiteral(false);
-    let expected = "0"
+    let expected = "4"
     error = assert(actual, expected, `await requestInitObjectLiteral(false)`)
     if (error) { return error }
 
@@ -108,7 +119,7 @@ routes.set("/override-content-length/request/init/request-instance/true", async 
 
 routes.set("/override-content-length/request/init/request-instance/false", async () => {
     let actual = await requestInitRequestInstance(false);
-    let expected = "0"
+    let expected = "4"
     error = assert(actual, expected, `await requestInitRequestInstance(false)`)
     if (error) { return error }
 
@@ -131,7 +142,7 @@ routes.set("/override-content-length/request/clone/true", async () => {
 
 routes.set("/override-content-length/request/clone/false", async () => {
     let actual = await requestClone(false);
-    let expected = "0"
+    let expected = "4"
     error = assert(actual, expected, `await requestClone(false)`)
     if (error) { return error }
 
@@ -154,7 +165,7 @@ routes.set("/override-content-length/fetch/init/object-literal/true", async () =
 
 routes.set("/override-content-length/fetch/init/object-literal/false", async () => {
     let actual = await fetchInitObjectLiteral(false);
-    let expected = "0"
+    let expected = "4"
     error = assert(actual, expected, `await fetchInitObjectLiteral(false)`)
     if (error) { return error }
 
@@ -177,7 +188,7 @@ routes.set("/override-content-length/fetch/init/request-instance/true", async ()
 
 routes.set("/override-content-length/fetch/init/request-instance/false", async () => {
     let actual = await fetchInitRequestInstance(false);
-    let expected = "0"
+    let expected = "4"
     error = assert(actual, expected, `await fetchInitRequestInstance(false)`)
     if (error) { return error }
 
