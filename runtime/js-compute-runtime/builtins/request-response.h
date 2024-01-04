@@ -127,7 +127,8 @@ public:
     BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
     URL = static_cast<int>(RequestOrResponse::Slots::URL),
-    FramingHeadersManuallyFromHeaders = static_cast<int>(RequestOrResponse::Slots::FramingHeadersManuallyFromHeaders),
+    FramingHeadersManuallyFromHeaders =
+        static_cast<int>(RequestOrResponse::Slots::FramingHeadersManuallyFromHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Count),
     Method,
     CacheOverride,
@@ -198,7 +199,8 @@ public:
     HasBody = static_cast<int>(RequestOrResponse::Slots::HasBody),
     BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
-    FramingHeadersManuallyFromHeaders = static_cast<int>(RequestOrResponse::Slots::FramingHeadersManuallyFromHeaders),
+    FramingHeadersManuallyFromHeaders =
+        static_cast<int>(RequestOrResponse::Slots::FramingHeadersManuallyFromHeaders),
     IsUpstream = static_cast<int>(RequestOrResponse::Slots::Count),
     Status,
     StatusMessage,
