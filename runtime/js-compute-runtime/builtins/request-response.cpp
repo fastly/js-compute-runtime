@@ -1325,7 +1325,20 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
                       JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::URL)));
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::IsDownstream)));
-
+  JS::RootedValue overrideContentLength(
+      cx,
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::FramingHeadersManuallyFromHeaders)));
+  JS::SetReservedSlot(requestInstance,
+                      static_cast<uint32_t>(Slots::FramingHeadersManuallyFromHeaders),
+                      overrideContentLength);
+  if (JS::ToBoolean(overrideContentLength)) {
+    auto res =
+        request_handle.set_framing_headers_mode(host_api::FramingHeadersMode::ManuallyFromHeaders);
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+  }
   JS::RootedValue backend(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Backend)));
   if (!backend.isNullOrUndefined()) {
     JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Backend), backend);
@@ -1998,21 +2011,22 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
 
   if (!hasOverrideContentLength) {
     if (input_request) {
-      overrideContentLength.set(JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::FramingHeadersManuallyFromHeaders)));
+      overrideContentLength.set(JS::GetReservedSlot(
+          input_request, static_cast<uint32_t>(Slots::FramingHeadersManuallyFromHeaders)));
     } else {
       overrideContentLength.setBoolean(false);
     }
   }
   JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::FramingHeadersManuallyFromHeaders),
-                        JS::BooleanValue(JS::ToBoolean(overrideContentLength)));
+                      JS::BooleanValue(JS::ToBoolean(overrideContentLength)));
 
   if (JS::ToBoolean(overrideContentLength)) {
-      auto res = request_handle.set_framing_headers_mode(
-          host_api::FramingHeadersMode::ManuallyFromHeaders);
-      if (auto *err = res.to_err()) {
-        HANDLE_ERROR(cx, *err);
-        return nullptr;
-      }
+    auto res =
+        request_handle.set_framing_headers_mode(host_api::FramingHeadersMode::ManuallyFromHeaders);
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return nullptr;
+    }
   }
 
   return request;
@@ -2686,6 +2700,8 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue statusText_val(cx);
   JS::RootedString statusText(cx, JS_GetEmptyString(cx));
   JS::RootedValue headers_val(cx);
+  bool hasOverrideContentLength;
+  JS::RootedValue overrideContentLength(cx);
   host_api::FramingHeadersMode mode{host_api::FramingHeadersMode::Automatic};
 
   if (init_val.isObject()) {
@@ -2731,14 +2747,9 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       statusText = JS_NewStringCopyZ(cx, status_text.c_str());
     }
 
-    JS::RootedValue overrideContentLength(cx);
-    if (!JS_GetProperty(cx, init, "overrideContentLength", &overrideContentLength)) {
+    if (!JS_HasOwnProperty(cx, init, "overrideContentLength", &hasOverrideContentLength) ||
+        !JS_GetProperty(cx, init, "overrideContentLength", &overrideContentLength)) {
       return false;
-    }
-
-    // `overrideContentLength: true` indicates that we want to set the framing mode manually.
-    if (JS::ToBoolean(overrideContentLength)) {
-      mode = host_api::FramingHeadersMode::ManuallyFromHeaders;
     }
 
   } else if (!init_val.isNullOrUndefined()) {
@@ -2781,13 +2792,6 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   auto response_handle = response_handle_res.unwrap();
-  if (mode != host_api::FramingHeadersMode::Automatic) {
-    auto res = response_handle.set_framing_headers_mode(mode);
-    if (auto *err = res.to_err()) {
-      HANDLE_ERROR(cx, *err);
-      return false;
-    }
-  }
 
   auto body = make_res.unwrap();
   JS::RootedObject responseInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
@@ -2795,6 +2799,30 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       cx, create(cx, responseInstance, response_handle, body, false, false, nullptr));
   if (!response) {
     return false;
+  }
+
+  if (!hasOverrideContentLength) {
+    if (is_instance(init_val)) {
+      overrideContentLength.set(
+          JS::GetReservedSlot(init_val.toObjectOrNull(),
+                              static_cast<uint32_t>(Slots::FramingHeadersManuallyFromHeaders)));
+    } else {
+      overrideContentLength.setBoolean(false);
+    }
+  }
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::FramingHeadersManuallyFromHeaders),
+                      JS::BooleanValue(JS::ToBoolean(overrideContentLength)));
+
+  // `overrideContentLength: true` indicates that we want to set the framing mode manually.
+  if (JS::ToBoolean(overrideContentLength)) {
+    mode = host_api::FramingHeadersMode::ManuallyFromHeaders;
+  }
+  if (mode != host_api::FramingHeadersMode::Automatic) {
+    auto res = response_handle.set_framing_headers_mode(mode);
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
   }
 
   RequestOrResponse::set_url(response, JS_GetEmptyStringValue(cx));
