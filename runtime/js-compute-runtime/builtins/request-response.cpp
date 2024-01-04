@@ -1673,28 +1673,20 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   JS::RootedValue backend_val(cx);
   JS::RootedValue cache_override(cx);
   JS::RootedValue fastly_val(cx);
+  JS::RootedValue overrideContentLength(cx);
+  bool hasOverrideContentLength;
   if (init_val.isObject()) {
     JS::RootedObject init(cx, init_val.toObjectOrNull());
-    JS::RootedValue overrideContentLength(cx);
     if (!JS_GetProperty(cx, init, "method", &method_val) ||
         !JS_GetProperty(cx, init, "headers", &headers_val) ||
         !JS_GetProperty(cx, init, "body", &body_val) ||
         !JS_GetProperty(cx, init, "backend", &backend_val) ||
         !JS_GetProperty(cx, init, "cacheOverride", &cache_override) ||
         !JS_GetProperty(cx, init, "fastly", &fastly_val) ||
+        !JS_HasOwnProperty(cx, init, "overrideContentLength", &hasOverrideContentLength) ||
         !JS_GetProperty(cx, init, "overrideContentLength", &overrideContentLength)) {
       return nullptr;
     }
-
-    if (JS::ToBoolean(overrideContentLength)) {
-      auto res = request_handle.set_framing_headers_mode(
-          host_api::FramingHeadersMode::ManuallyFromHeaders);
-      if (auto *err = res.to_err()) {
-        HANDLE_ERROR(cx, *err);
-        return nullptr;
-      }
-    }
-
   } else if (!init_val.isNullOrUndefined()) {
     JS_ReportErrorLatin1(cx, "Request constructor: |init| parameter can't be converted to "
                              "a dictionary");
@@ -2002,6 +1994,25 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   } else {
     JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::AutoDecompressGzip),
                         JS::BooleanValue(false));
+  }
+
+  if (!hasOverrideContentLength) {
+    if (input_request) {
+      overrideContentLength.set(JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::FramingHeadersManuallyFromHeaders)));
+    } else {
+      overrideContentLength.setBoolean(false);
+    }
+  }
+  JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::FramingHeadersManuallyFromHeaders),
+                        JS::BooleanValue(JS::ToBoolean(overrideContentLength)));
+
+  if (JS::ToBoolean(overrideContentLength)) {
+      auto res = request_handle.set_framing_headers_mode(
+          host_api::FramingHeadersMode::ManuallyFromHeaders);
+      if (auto *err = res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        return nullptr;
+      }
   }
 
   return request;
