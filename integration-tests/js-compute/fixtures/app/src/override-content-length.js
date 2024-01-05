@@ -1,16 +1,17 @@
 /// <reference path="../../../../../types/index.d.ts" />
 /* eslint-env serviceworker */
 
+import { CacheOverride } from "fastly:cache-override";
 import { pass, assert, assertRejects } from "./assertions.js";
 import { routes, isRunningLocally } from "./routes.js";
 
 let error;
 
 async function requestInitObjectLiteral(overrideContentLength) {
-    let request = new Request('https://http-me.glitch.me/anything', {
-        backend: 'httpme',
-        method: 'POST',
-        body: 'meow',
+    let request = new Request("https://http-me.glitch.me/anything", {
+        backend: "httpme",
+        method: "POST",
+        body: "meow",
         overrideContentLength,
         headers: {
             "content-length": "1"
@@ -22,10 +23,10 @@ async function requestInitObjectLiteral(overrideContentLength) {
 }
 
 async function requestClone(overrideContentLength) {
-    let request = new Request('https://http-me.glitch.me/anything', {
-        backend: 'httpme',
-        method: 'POST',
-        body: 'meow',
+    let request = new Request("https://http-me.glitch.me/anything", {
+        backend: "httpme",
+        method: "POST",
+        body: "meow",
         overrideContentLength,
         headers: {
             "content-length": "1"
@@ -37,10 +38,10 @@ async function requestClone(overrideContentLength) {
 }
 
 async function fetchInitObjectLiteral(overrideContentLength) {
-    let response = await fetch('https://http-me.glitch.me/anything', {
-        backend: 'httpme',
-        method: 'POST',
-        body: 'meow',
+    let response = await fetch("https://http-me.glitch.me/anything", {
+        backend: "httpme",
+        method: "POST",
+        body: "meow",
         overrideContentLength,
         headers: {
             "content-length": "1"
@@ -61,7 +62,7 @@ routes.set("/override-content-length/request/init/object-literal/true", async ()
         if (error) { return error }
     }
 
-    return pass('ok')
+    return pass("ok")
 });
 
 routes.set("/override-content-length/request/init/object-literal/false", async () => {
@@ -70,7 +71,7 @@ routes.set("/override-content-length/request/init/object-literal/false", async (
     error = assert(actual, expected, `await requestInitObjectLiteral(false)`)
     if (error) { return error }
 
-    return pass('ok')
+    return pass("ok")
 });
 
 routes.set("/override-content-length/request/clone/true", async () => {
@@ -84,7 +85,7 @@ routes.set("/override-content-length/request/clone/true", async () => {
         if (error) { return error }
     }
 
-    return pass('ok')
+    return pass("ok")
 });
 
 routes.set("/override-content-length/request/clone/false", async () => {
@@ -93,7 +94,7 @@ routes.set("/override-content-length/request/clone/false", async () => {
     error = assert(actual, expected, `await requestClone(false)`)
     if (error) { return error }
 
-    return pass('ok')
+    return pass("ok")
 });
 
 routes.set("/override-content-length/fetch/init/object-literal/true", async () => {
@@ -107,7 +108,7 @@ routes.set("/override-content-length/fetch/init/object-literal/true", async () =
         if (error) { return error }
     }
 
-    return pass('ok')
+    return pass("ok")
 });
 
 routes.set("/override-content-length/fetch/init/object-literal/false", async () => {
@@ -116,27 +117,42 @@ routes.set("/override-content-length/fetch/init/object-literal/false", async () 
     error = assert(actual, expected, `await fetchInitObjectLiteral(false)`)
     if (error) { return error }
 
-    return pass('ok')
+    return pass("ok")
 });
 
 async function responseInitObjectLiteral(overrideContentLength) {
-    let response = new Response('meow', {
+    let response = new Response(new ReadableStream({
+        start(controller) {
+            controller.enqueue(new TextEncoder().encode("meow"));
+            controller.close();
+        },
+    }), {
         overrideContentLength,
         headers: {
-            "transfer-encoding": "chunked"
+            "content-length": "4"
         }
     });
     return response;
 }
 
 async function responseInitresponseInstance(overrideContentLength) {
-    let response = new Response('meow', {
+    let response = new Response(new ReadableStream({
+        start(controller) {
+            controller.enqueue(new TextEncoder().encode("meow"));
+            controller.close();
+        },
+    }), {
         overrideContentLength,
         headers: {
-            "transfer-encoding": "chunked"
+            "content-length": "4"
         }
     });
-    response = new Response('meow', response);
+    response = new Response(new ReadableStream({
+        start(controller) {
+            controller.enqueue(new TextEncoder().encode("meow"));
+            controller.close();
+        },
+    }), response);
     return response;
 }
 
@@ -156,13 +172,31 @@ routes.set("/override-content-length/response/init/response-instance/false", asy
     return responseInitresponseInstance(false);
 });
 
+async function responseInitfetch(overrideContentLength) {
+    const response = await fetch("https://httpbin.org/stream-bytes/11", {
+        backend: "httpbin",
+        overrideContentLength,
+        cacheOverride: new CacheOverride('pass')
+    });
+    response.headers.set("content-length", "11")
+    return response;
+}
+
+routes.set("/override-content-length/response/init/fetch/false", async () => {
+    return responseInitfetch(false);
+});
+
+routes.set("/override-content-length/response/init/fetch/true", async () => {
+    return responseInitfetch(true);
+});
+
 
 // TODO: uncomment when we have an implementation of Response.prototype.clone
 // async function responseClone(overrideContentLength) {
-//     let response = new Response('meow', {
-//         backend: 'httpme',
-//         method: 'POST',
-//         body: 'meow',
+//     let response = new Response("meow", {
+//         backend: "httpme",
+//         method: "POST",
+//         body: "meow",
 //         overrideContentLength,
 //         headers: {
 //             "transfer-encoding": "chunked"
