@@ -4663,7 +4663,7 @@
     "downstream_response": {
       "status": 200,
       "body": "meow",
-      "headers": { "transfer-encoding": "chunked" }
+      "headers": { "content-length": "4" }
     }
   },
 
@@ -4675,8 +4675,7 @@
     },
     "downstream_response": {
       "status": 200,
-      "body": "meow",
-      "headers": {"content-length": "4"}
+      "body": "meow"
     }
   },
 
@@ -4689,7 +4688,7 @@
     "downstream_response": {
       "status": 200,
       "body": "meow",
-      "headers": { "transfer-encoding": "chunked" }
+      "headers": { "content-length": "4" }
     }
   },
 
@@ -4701,8 +4700,30 @@
     },
     "downstream_response": {
       "status": 200,
-      "body": "meow",
-      "headers": {"content-length": "4"}
+      "body": "meow"
+    }
+  },
+
+  "GET /override-content-length/response/init/fetch/false": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/override-content-length/response/init/fetch/false"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+
+  "GET /override-content-length/response/init/fetch/true": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/override-content-length/response/init/fetch/true"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": { "content-length": "11" }
     }
   }
 }
