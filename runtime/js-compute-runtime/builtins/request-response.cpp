@@ -1308,15 +1308,14 @@ bool Request::setManualFramingHeaders(JSContext *cx, unsigned argc, JS::Value *v
   METHOD_HEADER(1)
 
   bool manualFramingHeaders = JS::ToBoolean(args.get(0));
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ManualFramingHeaders), JS::BooleanValue(manualFramingHeaders));
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ManualFramingHeaders),
+                      JS::BooleanValue(manualFramingHeaders));
   auto handle = request_handle(self);
   host_api::Result<host_api::Void> res;
   if (manualFramingHeaders) {
-    res =
-        handle.set_framing_headers_mode(host_api::FramingHeadersMode::ManuallyFromHeaders);
+    res = handle.set_framing_headers_mode(host_api::FramingHeadersMode::ManuallyFromHeaders);
   } else {
-    res =
-        handle.set_framing_headers_mode(host_api::FramingHeadersMode::Automatic);
+    res = handle.set_framing_headers_mode(host_api::FramingHeadersMode::Automatic);
   }
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -1349,10 +1348,8 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::IsDownstream)));
   JS::RootedValue manualFramingHeaders(
-      cx,
-      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ManualFramingHeaders)));
-  JS::SetReservedSlot(requestInstance,
-                      static_cast<uint32_t>(Slots::ManualFramingHeaders),
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ManualFramingHeaders)));
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ManualFramingHeaders),
                       manualFramingHeaders);
   if (JS::ToBoolean(manualFramingHeaders)) {
     auto res =
@@ -2035,8 +2032,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
 
   if (!hasmanualFramingHeaders) {
     if (input_request) {
-      manualFramingHeaders.set(JS::GetReservedSlot(
-          input_request, static_cast<uint32_t>(Slots::ManualFramingHeaders)));
+      manualFramingHeaders.set(
+          JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::ManualFramingHeaders)));
     } else {
       manualFramingHeaders.setBoolean(false);
     }
@@ -2678,7 +2675,8 @@ bool Response::setManualFramingHeaders(JSContext *cx, unsigned argc, JS::Value *
   METHOD_HEADER(1)
 
   bool manualFramingHeaders = JS::ToBoolean(args.get(0));
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ManualFramingHeaders), JS::BooleanValue(manualFramingHeaders));
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ManualFramingHeaders),
+                      JS::BooleanValue(manualFramingHeaders));
   auto handle = response_handle(self);
   host_api::Result<host_api::Void> res;
   if (manualFramingHeaders) {
@@ -2694,7 +2692,6 @@ bool Response::setManualFramingHeaders(JSContext *cx, unsigned argc, JS::Value *
   args.rval().setUndefined();
   return true;
 }
-
 
 const JSFunctionSpec Response::static_methods[] = {
     JS_FN("redirect", redirect, 1, JSPROP_ENUMERATE),
@@ -2850,9 +2847,8 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   if (!hasmanualFramingHeaders) {
     if (is_instance(init_val)) {
-      manualFramingHeaders.set(
-          JS::GetReservedSlot(init_val.toObjectOrNull(),
-                              static_cast<uint32_t>(Slots::ManualFramingHeaders)));
+      manualFramingHeaders.set(JS::GetReservedSlot(
+          init_val.toObjectOrNull(), static_cast<uint32_t>(Slots::ManualFramingHeaders)));
     } else {
       manualFramingHeaders.setBoolean(false);
     }
