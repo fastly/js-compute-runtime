@@ -7,12 +7,12 @@ import { routes, isRunningLocally } from "./routes.js";
 
 let error;
 
-async function requestInitObjectLiteral(overrideContentLength) {
+async function requestInitObjectLiteral(manualFramingHeaders) {
     let request = new Request("https://http-me.glitch.me/anything", {
         backend: "httpme",
         method: "POST",
         body: "meow",
-        overrideContentLength,
+        manualFramingHeaders,
         headers: {
             "content-length": "1"
         }
@@ -22,12 +22,27 @@ async function requestInitObjectLiteral(overrideContentLength) {
     return body?.headers?.["content-length"];
 }
 
-async function requestClone(overrideContentLength) {
+async function requestMethod(manualFramingHeaders) {
     let request = new Request("https://http-me.glitch.me/anything", {
         backend: "httpme",
         method: "POST",
         body: "meow",
-        overrideContentLength,
+        headers: {
+            "content-length": "1"
+        }
+    });
+    request.setManualFramingHeaders(manualFramingHeaders);
+    let response = await fetch(request);
+    let body = await response.json()
+    return body?.headers?.["content-length"];
+}
+
+async function requestClone(manualFramingHeaders) {
+    let request = new Request("https://http-me.glitch.me/anything", {
+        backend: "httpme",
+        method: "POST",
+        body: "meow",
+        manualFramingHeaders,
         headers: {
             "content-length": "1"
         }
@@ -37,12 +52,12 @@ async function requestClone(overrideContentLength) {
     return body?.headers?.["content-length"];
 }
 
-async function fetchInitObjectLiteral(overrideContentLength) {
+async function fetchInitObjectLiteral(manualFramingHeaders) {
     let response = await fetch("https://http-me.glitch.me/anything", {
         backend: "httpme",
         method: "POST",
         body: "meow",
-        overrideContentLength,
+        manualFramingHeaders,
         headers: {
             "content-length": "1"
         }
@@ -69,6 +84,29 @@ routes.set("/override-content-length/request/init/object-literal/false", async (
     let actual = await requestInitObjectLiteral(false);
     let expected = "4"
     error = assert(actual, expected, `await requestInitObjectLiteral(false)`)
+    if (error) { return error }
+
+    return pass("ok")
+});
+
+routes.set("/override-content-length/request/method/object-literal/true", async () => {
+    if (isRunningLocally()) {
+        error = await assertRejects(() => requestMethod(true))
+        if (error) { return error }
+    } else {
+        let actual = await requestMethod(true);
+        let expected = "1"
+        error = assert(actual, expected, `await requestMethod(true)`)
+        if (error) { return error }
+    }
+
+    return pass("ok")
+});
+
+routes.set("/override-content-length/request/method/object-literal/false", async () => {
+    let actual = await requestMethod(false);
+    let expected = "4"
+    error = assert(actual, expected, `await requestMethod(false)`)
     if (error) { return error }
 
     return pass("ok")
@@ -120,14 +158,14 @@ routes.set("/override-content-length/fetch/init/object-literal/false", async () 
     return pass("ok")
 });
 
-async function responseInitObjectLiteral(overrideContentLength) {
+async function responseInitObjectLiteral(manualFramingHeaders) {
     let response = new Response(new ReadableStream({
         start(controller) {
             controller.enqueue(new TextEncoder().encode("meow"));
             controller.close();
         },
     }), {
-        overrideContentLength,
+        manualFramingHeaders,
         headers: {
             "content-length": "4"
         }
@@ -135,14 +173,14 @@ async function responseInitObjectLiteral(overrideContentLength) {
     return response;
 }
 
-async function responseInitresponseInstance(overrideContentLength) {
+async function responseInitresponseInstance(manualFramingHeaders) {
     let response = new Response(new ReadableStream({
         start(controller) {
             controller.enqueue(new TextEncoder().encode("meow"));
             controller.close();
         },
     }), {
-        overrideContentLength,
+        manualFramingHeaders,
         headers: {
             "content-length": "4"
         }
@@ -172,32 +210,33 @@ routes.set("/override-content-length/response/init/response-instance/false", asy
     return responseInitresponseInstance(false);
 });
 
-async function responseInitfetch(overrideContentLength) {
+async function responseMethod(setManualFramingHeaders) {
     const response = await fetch("https://httpbin.org/stream-bytes/11", {
         backend: "httpbin",
-        overrideContentLength,
         cacheOverride: new CacheOverride('pass')
     });
+    response.setManualFramingHeaders(setManualFramingHeaders);
     response.headers.set("content-length", "11")
+    response.headers.delete("transfer-encoding")
     return response;
 }
 
-routes.set("/override-content-length/response/init/fetch/false", async () => {
-    return responseInitfetch(false);
+routes.set("/override-content-length/response/method/false", async () => {
+    return responseMethod(false);
 });
 
-routes.set("/override-content-length/response/init/fetch/true", async () => {
-    return responseInitfetch(true);
+routes.set("/override-content-length/response/method/true", async () => {
+    return responseMethod(true);
 });
 
 
 // TODO: uncomment when we have an implementation of Response.prototype.clone
-// async function responseClone(overrideContentLength) {
+// async function responseClone(setManualFramingHeaders) {
 //     let response = new Response("meow", {
 //         backend: "httpme",
 //         method: "POST",
 //         body: "meow",
-//         overrideContentLength,
+//         setManualFramingHeaders,
 //         headers: {
 //             "transfer-encoding": "chunked"
 //         }
