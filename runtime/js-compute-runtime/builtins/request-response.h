@@ -18,7 +18,7 @@ public:
     BodyUsed,
     Headers,
     URL,
-    FramingHeadersManuallyFromHeaders,
+    ManualFramingHeaders,
     Count,
   };
 
@@ -33,6 +33,7 @@ public:
   static bool move_body_handle(JSContext *cx, JS::HandleObject from, JS::HandleObject to);
   static JS::Value url(JSObject *obj);
   static void set_url(JSObject *obj, JS::Value url);
+  static void set_manual_framing_headers(JSContext *cx, JSObject *obj, JS::HandleValue url);
   static bool body_unusable(JSContext *cx, JS::HandleObject body);
   static bool extract_body(JSContext *cx, JS::HandleObject self, JS::HandleValue body_val);
 
@@ -114,6 +115,7 @@ class Request final : public BuiltinImpl<Request> {
 
   static bool setCacheOverride(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool setCacheKey(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool setManualFramingHeaders(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool clone(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
@@ -127,8 +129,8 @@ public:
     BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
     URL = static_cast<int>(RequestOrResponse::Slots::URL),
-    FramingHeadersManuallyFromHeaders =
-        static_cast<int>(RequestOrResponse::Slots::FramingHeadersManuallyFromHeaders),
+    ManualFramingHeaders =
+        static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Count),
     Method,
     CacheOverride,
@@ -188,6 +190,7 @@ class Response final : public BuiltinImpl<Response> {
 
   static bool redirect(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool json(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool setManualFramingHeaders(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
   static constexpr const char *class_name = "Response";
@@ -199,8 +202,8 @@ public:
     HasBody = static_cast<int>(RequestOrResponse::Slots::HasBody),
     BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
-    FramingHeadersManuallyFromHeaders =
-        static_cast<int>(RequestOrResponse::Slots::FramingHeadersManuallyFromHeaders),
+    ManualFramingHeaders =
+        static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     IsUpstream = static_cast<int>(RequestOrResponse::Slots::Count),
     Status,
     StatusMessage,

@@ -1041,7 +1041,7 @@ declare interface RequestInit {
   fastly?: {
     decompressGzip?: boolean
   },
-  overrideContentLength: boolean
+  manualFramingHeaders?: boolean
 }
 
 /**
@@ -1087,6 +1087,7 @@ interface Request extends Body {
   backend: string;
   setCacheOverride(override: import('fastly:cache-override').CacheOverride): void;
   setCacheKey(key: string): void;
+  setManualFramingHeaders(manual: boolean): void;
 }
 
 /**
@@ -1106,6 +1107,7 @@ declare interface ResponseInit {
   headers?: HeadersInit;
   status?: number;
   statusText?: string;
+  manualFramingHeaders?: boolean;
 }
 
 /**
@@ -1125,6 +1127,7 @@ interface Response extends Body {
   // readonly type: ResponseType;
   readonly url: string;
   // clone(): Response;
+  setManualFramingHeaders(manual: boolean): void;
 }
 
 /**

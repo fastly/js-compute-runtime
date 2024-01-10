@@ -4704,22 +4704,22 @@
     }
   },
 
-  "GET /override-content-length/response/init/fetch/false": {
+  "GET /override-content-length/response/method/false": {
     "environments": ["compute"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/override-content-length/response/init/fetch/false"
+      "pathname": "/override-content-length/response/method/false"
     },
     "downstream_response": {
       "status": 200
     }
   },
 
-  "GET /override-content-length/response/init/fetch/true": {
+  "GET /override-content-length/response/method/true": {
     "environments": ["compute"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/override-content-length/response/init/fetch/true"
+      "pathname": "/override-content-length/response/method/true"
     },
     "downstream_response": {
       "status": 200,
