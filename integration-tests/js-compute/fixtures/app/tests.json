@@ -4725,5 +4725,17 @@
       "status": 200,
       "headers": { "content-length": "11" }
     }
+  },
+
+  "GET /headers/wtf8": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/headers/wtf8"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
   }
 }

@@ -1176,3 +1176,19 @@ bool print_stack(JSContext *cx, FILE *fp) {
     return false;
   return print_stack(cx, stackp, fp);
 }
+
+JS::Result<JS::HandleString> host_string_to_js_string(JSContext *cx, host_api::HostString &str) {
+  JS::RootedString val_str(cx);
+  val_str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(str.ptr.get(), str.len));
+  if (!val_str) {
+    if (JS_IsExceptionPending(cx)) {
+      JS_ClearPendingException(cx);
+    }
+    val_str = JS_NewStringCopyN(cx, str.ptr.get(), str.len);
+    if (!val_str) {
+      return JS::Result<JS::HandleString>(JS::Error());
+    }
+  }
+
+  return JS::Result<JS::HandleString>(val_str);
+}

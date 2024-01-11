@@ -286,12 +286,13 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
     return true;
   }
 
-  JS::RootedString val_str(cx);
   for (auto &str : values.value()) {
-    val_str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(str.ptr.get(), str.len));
-    if (!val_str) {
+    auto val_str_result = host_string_to_js_string(cx, str);
+    if (val_str_result.isErr()) {
       return false;
     }
+
+    auto val_str = val_str_result.unwrap();
 
     value.setString(val_str);
     if (!append_header_value_to_map(cx, self, name, value)) {
