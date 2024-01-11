@@ -1,6 +1,15 @@
 # Changelog
 
 
+## 3.8.0 (2024-01-11)
+
+
+### Added
+
+* Add `manualFramingHeaders` on `RequestInit` and `ResponseInit`, and add `Request.prototype.setManualFramingHeaders` and `Response.prototype.setManualFramingHeaders` ([#705](https://github.com/fastly/js-compute-runtime/pull/705))
+* Add `Request.prototype.backend` getter to return the name of the backend assigned to the request ([9c750e5](https://github.com/fastly/js-compute-runtime/commit/9c750e5697bb02676762225e4fdc7589d23e13d9))
+* Allow URL as input on fetch() on TypeScript typings for compat with Node.js ([#707](https://github.com/fastly/js-compute-runtime/issues/707)) ([4f39943](https://github.com/fastly/js-compute-runtime/commit/4f399434c0959e902df03262dfceefdc16592afe))
+
 ## 3.7.3 (2023-11-02)
 
 
