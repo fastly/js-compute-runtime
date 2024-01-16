@@ -4,8 +4,8 @@
 #include "core/sequence.hpp"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
-
 #include "js/Conversions.h"
+#include <iostream>
 
 namespace builtins {
 
@@ -205,8 +205,9 @@ bool append_header_value_to_map(JSContext *cx, JS::HandleObject self,
                                 JS::MutableHandleValue normalized_value) {
   JS::RootedValue existing(cx);
   JS::RootedObject map(cx, get_backing_map(self));
-  if (!JS::MapGet(cx, map, normalized_name, &existing))
+  if (!JS::MapGet(cx, map, normalized_name, &existing)) {
     return false;
+  }
 
   // Existing value must only be null if we're in the process if applying
   // header values from a handle.
@@ -271,7 +272,6 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
 
   JS::RootedString name_str(cx, name.toString());
   auto name_chars = core::encode(cx, name_str);
-
   auto ret = mode == Headers::Mode::ProxyToRequest
                  ? host_api::HttpReq{handle}.get_header_values(name_chars)
                  : host_api::HttpResp{handle}.get_header_values(name_chars);
@@ -287,12 +287,28 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
   }
 
   for (auto &str : values.value()) {
-    auto val_str_result = host_string_to_js_string(cx, str);
-    if (val_str_result.isErr()) {
+    auto chars = JS::UTF8Chars(reinterpret_cast<char *>(str.ptr.get()), str.len);
+    auto encoding = JS::FindSmallestEncoding(chars);
+
+    JS::RootedString val_str(cx);
+    switch (encoding) {
+    case JS::SmallestEncoding::ASCII: {
+      val_str.set(JS_NewStringCopyN(cx, reinterpret_cast<char *>(str.ptr.get()), str.len));
+      break;
+    }
+    case JS::SmallestEncoding::Latin1: {
+      val_str.set(JS_NewStringCopyUTF8N(
+          cx, JS::UTF8Chars(reinterpret_cast<char *>(str.ptr.get()), str.len)));
+      break;
+    }
+    case JS::SmallestEncoding::UTF16: {
+      val_str.set(JS_NewStringCopyN(cx, reinterpret_cast<char *>(str.ptr.get()), str.len));
+      break;
+    }
+    }
+    if (!val_str) {
       return false;
     }
-
-    auto val_str = val_str_result.unwrap();
 
     value.setString(val_str);
     if (!append_header_value_to_map(cx, self, name, value)) {
@@ -404,29 +420,35 @@ std::vector<std::string_view> splitCookiesString(std::string_view cookiesString)
 
 bool ensure_all_header_values_from_handle(JSContext *cx, JS::HandleObject self,
                                           JS::HandleObject backing_map) {
-  if (!lazy_values(self))
+  if (!lazy_values(self)) {
     return true;
+  }
 
   JS::RootedValue iterable(cx);
-  if (!JS::MapKeys(cx, backing_map, &iterable))
+  if (!JS::MapKeys(cx, backing_map, &iterable)) {
     return false;
+  }
 
   JS::ForOfIterator it(cx);
-  if (!it.init(iterable))
+  if (!it.init(iterable)) {
     return false;
+  }
 
   JS::RootedValue name(cx);
   JS::RootedValue v(cx);
   while (true) {
     bool done;
-    if (!it.next(&name, &done))
+    if (!it.next(&name, &done)) {
       return false;
+    }
 
-    if (done)
+    if (done) {
       break;
+    }
 
-    if (!ensure_value_for_header(cx, self, name, &v))
+    if (!ensure_value_for_header(cx, self, name, &v)) {
       return false;
+    }
   }
 
   JS_SetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::HasLazyValues),
