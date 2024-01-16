@@ -292,13 +292,9 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
 
     JS::RootedString val_str(cx);
     switch (encoding) {
-    case JS::SmallestEncoding::ASCII: {
-      val_str.set(JS_NewStringCopyN(cx, reinterpret_cast<char *>(str.ptr.get()), str.len));
-      break;
-    }
+    case JS::SmallestEncoding::ASCII:
     case JS::SmallestEncoding::Latin1: {
-      val_str.set(JS_NewStringCopyUTF8N(
-          cx, JS::UTF8Chars(reinterpret_cast<char *>(str.ptr.get()), str.len)));
+      val_str.set(JS_NewStringCopyUTF8N(cx, chars));
       break;
     }
     case JS::SmallestEncoding::UTF16: {
