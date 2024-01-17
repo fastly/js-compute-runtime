@@ -4,8 +4,8 @@
 #include "core/sequence.hpp"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
-
 #include "js/Conversions.h"
+#include <iostream>
 
 namespace builtins {
 
@@ -142,10 +142,27 @@ host_api::HostString normalize_header_value(JSContext *cx, JS::MutableHandleValu
     return nullptr;
   }
 
-  auto value = core::encode(cx, value_str);
-  if (!value) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  if (!JS_DeprecatedStringHasLatin1Chars(value_str)) {
+#pragma clang diagnostic pop
+    JS::AutoCheckCannotGC nogc;
+    size_t length;
+    const char16_t *chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, value_str, &length);
+    for (auto i = 0; i < length; i++) {
+      if (chars[i] > 255) {
+        JS_ReportErrorASCII(cx, "header value contains bytes greater than 255");
+        return nullptr;
+      }
+    }
+  }
+
+  host_api::HostString value;
+  value.ptr = JS_EncodeStringToLatin1(cx, value_str);
+  if (!value.ptr) {
     return nullptr;
   }
+  value.len = JS_GetStringLength(value_str);
 
   auto *value_chars = value.begin();
   size_t start = 0;
@@ -205,8 +222,9 @@ bool append_header_value_to_map(JSContext *cx, JS::HandleObject self,
                                 JS::MutableHandleValue normalized_value) {
   JS::RootedValue existing(cx);
   JS::RootedObject map(cx, get_backing_map(self));
-  if (!JS::MapGet(cx, map, normalized_name, &existing))
+  if (!JS::MapGet(cx, map, normalized_name, &existing)) {
     return false;
+  }
 
   // Existing value must only be null if we're in the process if applying
   // header values from a handle.
@@ -271,7 +289,6 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
 
   JS::RootedString name_str(cx, name.toString());
   auto name_chars = core::encode(cx, name_str);
-
   auto ret = mode == Headers::Mode::ProxyToRequest
                  ? host_api::HttpReq{handle}.get_header_values(name_chars)
                  : host_api::HttpResp{handle}.get_header_values(name_chars);
@@ -286,9 +303,9 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
     return true;
   }
 
-  JS::RootedString val_str(cx);
   for (auto &str : values.value()) {
-    val_str = JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(str.ptr.get(), str.len));
+    JS::RootedString val_str(
+        cx, JS_NewStringCopyN(cx, reinterpret_cast<char *>(str.ptr.get()), str.len));
     if (!val_str) {
       return false;
     }
@@ -403,29 +420,35 @@ std::vector<std::string_view> splitCookiesString(std::string_view cookiesString)
 
 bool ensure_all_header_values_from_handle(JSContext *cx, JS::HandleObject self,
                                           JS::HandleObject backing_map) {
-  if (!lazy_values(self))
+  if (!lazy_values(self)) {
     return true;
+  }
 
   JS::RootedValue iterable(cx);
-  if (!JS::MapKeys(cx, backing_map, &iterable))
+  if (!JS::MapKeys(cx, backing_map, &iterable)) {
     return false;
+  }
 
   JS::ForOfIterator it(cx);
-  if (!it.init(iterable))
+  if (!it.init(iterable)) {
     return false;
+  }
 
   JS::RootedValue name(cx);
   JS::RootedValue v(cx);
   while (true) {
     bool done;
-    if (!it.next(&name, &done))
+    if (!it.next(&name, &done)) {
       return false;
+    }
 
-    if (done)
+    if (done) {
       break;
+    }
 
-    if (!ensure_value_for_header(cx, self, name, &v))
+    if (!ensure_value_for_header(cx, self, name, &v)) {
       return false;
+    }
   }
 
   JS_SetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::HasLazyValues),
@@ -458,18 +481,22 @@ bool Headers::append_header_value(JSContext *cx, JS::HandleObject self, JS::Hand
     std::string_view value = value_chars;
     if (name == "set-cookie") {
       for (auto value : splitCookiesString(value)) {
+        std::span<uint8_t> v = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
+                                value.size()};
         auto res = mode == Headers::Mode::ProxyToRequest
-                       ? host_api::HttpReq{handle}.append_header(name, value)
-                       : host_api::HttpResp{handle}.append_header(name, value);
+                       ? host_api::HttpReq{handle}.append_header(name, v)
+                       : host_api::HttpResp{handle}.append_header(name, v);
         if (auto *err = res.to_err()) {
           HANDLE_ERROR(cx, *err);
           return false;
         }
       }
     } else {
+      std::span<uint8_t> v = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
+                              value.size()};
       auto res = mode == Headers::Mode::ProxyToRequest
-                     ? host_api::HttpReq{handle}.append_header(name, value)
-                     : host_api::HttpResp{handle}.append_header(name, value);
+                     ? host_api::HttpReq{handle}.append_header(name, v)
+                     : host_api::HttpResp{handle}.append_header(name, v);
       if (auto *err = res.to_err()) {
         HANDLE_ERROR(cx, *err);
         return false;
@@ -583,8 +610,10 @@ bool Headers::set(JSContext *cx, unsigned argc, JS::Value *vp) {
     auto handle = get_handle(self);
     std::string_view name = name_chars;
     std::string_view val = value_chars;
-    auto res = mode == Mode::ProxyToRequest ? host_api::HttpReq{handle}.insert_header(name, val)
-                                            : host_api::HttpResp{handle}.insert_header(name, val);
+    std::span<uint8_t> v = {reinterpret_cast<uint8_t *>(const_cast<char *>(val.data())),
+                            val.size()};
+    auto res = mode == Mode::ProxyToRequest ? host_api::HttpReq{handle}.insert_header(name, v)
+                                            : host_api::HttpResp{handle}.insert_header(name, v);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;

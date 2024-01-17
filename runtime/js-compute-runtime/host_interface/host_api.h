@@ -135,6 +135,8 @@ struct HostBytes final {
   HostBytes() = default;
   HostBytes(std::nullptr_t) : HostBytes() {}
   HostBytes(std::unique_ptr<uint8_t[]> ptr, size_t len) : ptr{std::move(ptr)}, len{len} {}
+  HostBytes(JS::UniqueChars ptr, size_t len)
+      : ptr{reinterpret_cast<uint8_t *>(ptr.release())}, len{len} {}
 
   HostBytes(const HostBytes &other) = delete;
   HostBytes &operator=(const HostBytes &other) = delete;
@@ -360,10 +362,10 @@ public:
   virtual Result<HttpVersion> get_version() const = 0;
 
   virtual Result<std::vector<HostString>> get_header_names() = 0;
-  virtual Result<std::optional<std::vector<HostString>>>
+  virtual Result<std::optional<std::vector<HostBytes>>>
   get_header_values(std::string_view name) = 0;
-  virtual Result<Void> insert_header(std::string_view name, std::string_view value) = 0;
-  virtual Result<Void> append_header(std::string_view name, std::string_view value) = 0;
+  virtual Result<Void> insert_header(std::string_view name, std::span<uint8_t> value) = 0;
+  virtual Result<Void> append_header(std::string_view name, std::span<uint8_t> value) = 0;
   virtual Result<Void> remove_header(std::string_view name) = 0;
 };
 
@@ -481,9 +483,9 @@ public:
   Result<HttpVersion> get_version() const override;
 
   Result<std::vector<HostString>> get_header_names() override;
-  Result<std::optional<std::vector<HostString>>> get_header_values(std::string_view name) override;
-  Result<Void> insert_header(std::string_view name, std::string_view value) override;
-  Result<Void> append_header(std::string_view name, std::string_view value) override;
+  Result<std::optional<std::vector<HostBytes>>> get_header_values(std::string_view name) override;
+  Result<Void> insert_header(std::string_view name, std::span<uint8_t> value) override;
+  Result<Void> append_header(std::string_view name, std::span<uint8_t> value) override;
   Result<Void> remove_header(std::string_view name) override;
 };
 
@@ -517,9 +519,9 @@ public:
   Result<HttpVersion> get_version() const override;
 
   Result<std::vector<HostString>> get_header_names() override;
-  Result<std::optional<std::vector<HostString>>> get_header_values(std::string_view name) override;
-  Result<Void> insert_header(std::string_view name, std::string_view value) override;
-  Result<Void> append_header(std::string_view name, std::string_view value) override;
+  Result<std::optional<std::vector<HostBytes>>> get_header_values(std::string_view name) override;
+  Result<Void> insert_header(std::string_view name, std::span<uint8_t> value) override;
+  Result<Void> append_header(std::string_view name, std::span<uint8_t> value) override;
   Result<Void> remove_header(std::string_view name) override;
 };
 

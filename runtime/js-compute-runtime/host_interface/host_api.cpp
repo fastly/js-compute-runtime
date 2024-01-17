@@ -27,7 +27,7 @@ fastly_world_string_t string_view_to_world_string(std::string_view str) {
 }
 
 HostString make_host_string(fastly_world_string_t str) {
-  return HostString{JS::UniqueChars{str.ptr}, str.len};
+  return HostString{JS::UniqueChars{reinterpret_cast<char *>(str.ptr)}, str.len};
 }
 
 HostBytes make_host_bytes(fastly_world_list_u8_t str) {
@@ -342,22 +342,22 @@ Result<std::vector<HostString>> generic_get_header_names(auto handle) {
 }
 
 template <auto header_values_get>
-Result<std::optional<std::vector<HostString>>> generic_get_header_values(auto handle,
-                                                                         std::string_view name) {
-  Result<std::optional<std::vector<HostString>>> res;
+Result<std::optional<std::vector<HostBytes>>> generic_get_header_values(auto handle,
+                                                                        std::string_view name) {
+  Result<std::optional<std::vector<HostBytes>>> res;
 
   fastly_world_string_t hdr = string_view_to_world_string(name);
-  fastly_world_option_list_string_t ret;
+  fastly_world_option_list_list_u8_t ret;
   fastly_compute_at_edge_types_error_t err;
   if (!header_values_get(handle, &hdr, &ret, &err)) {
     res.emplace_err(err);
   } else {
 
     if (ret.is_some) {
-      std::vector<HostString> names;
+      std::vector<HostBytes> names;
 
       for (int i = 0; i < ret.val.len; i++) {
-        names.emplace_back(make_host_string(ret.val.ptr[i]));
+        names.emplace_back(make_host_bytes(ret.val.ptr[i]));
       }
 
       // Free the vector of string pointers, but leave the individual strings alone.
@@ -373,11 +373,11 @@ Result<std::optional<std::vector<HostString>>> generic_get_header_values(auto ha
 }
 
 template <auto header_op>
-Result<Void> generic_header_op(auto handle, std::string_view name, std::string_view value) {
+Result<Void> generic_header_op(auto handle, std::string_view name, std::span<uint8_t> value) {
   Result<Void> res;
 
   fastly_world_string_t hdr = string_view_to_world_string(name);
-  fastly_world_string_t val = string_view_to_world_string(value);
+  fastly_world_list_u8_t val = span_to_list_u8(value);
   fastly_compute_at_edge_types_error_t err;
   if (!header_op(handle, &hdr, &val, &err)) {
     res.emplace_err(err);
@@ -869,17 +869,17 @@ Result<std::vector<HostString>> HttpReq::get_header_names() {
   return generic_get_header_names<fastly_compute_at_edge_http_req_header_names_get>(this->handle);
 }
 
-Result<std::optional<std::vector<HostString>>> HttpReq::get_header_values(std::string_view name) {
+Result<std::optional<std::vector<HostBytes>>> HttpReq::get_header_values(std::string_view name) {
   return generic_get_header_values<fastly_compute_at_edge_http_req_header_values_get>(this->handle,
                                                                                       name);
 }
 
-Result<Void> HttpReq::insert_header(std::string_view name, std::string_view value) {
+Result<Void> HttpReq::insert_header(std::string_view name, std::span<uint8_t> value) {
   return generic_header_op<fastly_compute_at_edge_http_req_header_insert>(this->handle, name,
                                                                           value);
 }
 
-Result<Void> HttpReq::append_header(std::string_view name, std::string_view value) {
+Result<Void> HttpReq::append_header(std::string_view name, std::span<uint8_t> value) {
   return generic_header_op<fastly_compute_at_edge_http_req_header_append>(this->handle, name,
                                                                           value);
 }
@@ -987,17 +987,17 @@ Result<std::vector<HostString>> HttpResp::get_header_names() {
   return generic_get_header_names<fastly_compute_at_edge_http_resp_header_names_get>(this->handle);
 }
 
-Result<std::optional<std::vector<HostString>>> HttpResp::get_header_values(std::string_view name) {
+Result<std::optional<std::vector<HostBytes>>> HttpResp::get_header_values(std::string_view name) {
   return generic_get_header_values<fastly_compute_at_edge_http_resp_header_values_get>(this->handle,
                                                                                        name);
 }
 
-Result<Void> HttpResp::insert_header(std::string_view name, std::string_view value) {
+Result<Void> HttpResp::insert_header(std::string_view name, std::span<uint8_t> value) {
   return generic_header_op<fastly_compute_at_edge_http_resp_header_insert>(this->handle, name,
                                                                            value);
 }
 
-Result<Void> HttpResp::append_header(std::string_view name, std::string_view value) {
+Result<Void> HttpResp::append_header(std::string_view name, std::span<uint8_t> value) {
   return generic_header_op<fastly_compute_at_edge_http_resp_header_append>(this->handle, name,
                                                                            value);
 }

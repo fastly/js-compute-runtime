@@ -80,7 +80,7 @@ interface http-types {
     dns-error,
     /// The system cannot determine which backend to use, or the specified backend was invalid.
     destination-not-found,
-    /// The system considers the backend to be unavailable; e.g., recent attempts to communicate
+    /// The system considers the backend to be unavailable e.g., recent attempts to communicate
     /// with it may have failed, or a health check may indicate that it is down.
     destination-unavailable,
     /// The system cannot find a route to the next-hop IP address.
@@ -303,15 +303,15 @@ interface http-req {
 
   original-header-count: func() -> result<u32, error>
 
-  header-value-get: func(h: request-handle, name: string) -> result<option<string>, error>
+  header-value-get: func(h: request-handle, name: string) -> result<option<list<u8>>, error>
 
-  header-values-get: func(h: request-handle, name: string) -> result<option<list<string>>, error>
+  header-values-get: func(h: request-handle, name: string) -> result<option<list<list<u8>>>, error>
 
-  header-values-set: func(h: request-handle, name: string, values: list<string>) -> result<_, error>
+  header-values-set: func(h: request-handle, name: string, values: list<list<u8>>) -> result<_, error>
 
-  header-insert: func(h: request-handle, name: string, value: string) -> result<_, error>
+  header-insert: func(h: request-handle, name: string, value: list<u8>) -> result<_, error>
 
-  header-append: func(h: request-handle, name: string, value: string) -> result<_, error>
+  header-append: func(h: request-handle, name: string, value: list<u8>) -> result<_, error>
 
   header-remove: func(h: request-handle, name: string) -> result<_, error>
 
@@ -384,13 +384,13 @@ interface http-resp {
 
   header-value-get: func(h: response-handle, name: string) -> result<option<string>, error>
 
-  header-values-get: func(h: response-handle, name: string) -> result<option<list<string>>, error>
+  header-values-get: func(h: response-handle, name: string) -> result<option<list<list<u8>>>, error>
 
-  header-values-set: func(h: response-handle, name: string, values: list<string>) -> result<_, error>
+  header-values-set: func(h: response-handle, name: string, values: list<list<u8>>) -> result<_, error>
 
-  header-insert: func(h: response-handle, name: string, value: string) -> result<_, error>
+  header-insert: func(h: response-handle, name: string, value: list<u8>) -> result<_, error>
 
-  header-append: func(h: response-handle, name: string, value: string) -> result<_, error>
+  header-append: func(h: response-handle, name: string, value: list<u8>) -> result<_, error>
 
   header-remove: func(h: response-handle, name: string) -> result<_, error>
 
@@ -730,7 +730,7 @@ interface cache {
   type duration-ns = u64
   type cache-hit-count = u64
 
-  /// Extensible options for cache lookup operations; currently used for both `lookup` and `transaction_lookup`.
+  /// Extensible options for cache lookup operations currently used for both `lookup` and `transaction_lookup`.
   record lookup-options {
     /**
      * A full request handle, but used only for its headers
@@ -744,9 +744,9 @@ interface cache {
   /// - `transaction-insert-and-stream-back`
   /// - `transaction-update`
   ///
-  /// Some options are only allowed for certain of these hostcalls; see `cache-write-options-mask`.
+  /// Some options are only allowed for certain of these hostcalls see `cache-write-options-mask`.
   record write-options {
-    /// this is a required field; there's no flag for it
+    /// this is a required field there's no flag for it
     max-age-ns: duration-ns,
     /// a full request handle, but used only for its headers
     request-headers: request-handle,

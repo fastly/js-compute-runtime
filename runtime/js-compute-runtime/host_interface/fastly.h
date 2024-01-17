@@ -93,11 +93,11 @@ WASM_IMPORT("fastly_http_body", "new")
 int body_new(fastly_compute_at_edge_http_types_body_handle_t *handle_out);
 
 WASM_IMPORT("fastly_http_body", "read")
-int body_read(fastly_compute_at_edge_http_types_body_handle_t body_handle, char *buf,
+int body_read(fastly_compute_at_edge_http_types_body_handle_t body_handle, uint8_t *buf,
               size_t buf_len, size_t *nread);
 
 WASM_IMPORT("fastly_http_body", "write")
-int body_write(fastly_compute_at_edge_http_types_body_handle_t body_handle, const char *buf,
+int body_write(fastly_compute_at_edge_http_types_body_handle_t body_handle, const uint8_t *buf,
                size_t buf_len, BodyWriteEnd end, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_body", "close")
@@ -162,7 +162,7 @@ int req_auto_decompress_response_set(fastly_compute_at_edge_http_types_request_h
  * Otherwise, `nwritten` will be `0`, and no address is available.
  */
 WASM_IMPORT("fastly_http_req", "downstream_client_ip_addr")
-int req_downstream_client_ip_addr_get(char *octets, size_t *nwritten);
+int req_downstream_client_ip_addr_get(uint8_t *octets, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "downstream_tls_cipher_openssl_name")
 int req_downstream_tls_cipher_openssl_name(char *ret, size_t ret_len, size_t *nwritten);
@@ -171,23 +171,24 @@ WASM_IMPORT("fastly_http_req", "downstream_tls_protocol")
 int req_downstream_tls_protocol(char *ret, size_t ret_len, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "downstream_tls_client_hello")
-int req_downstream_tls_client_hello(char *ret, size_t ret_len, size_t *nwritten);
+int req_downstream_tls_client_hello(uint8_t *ret, size_t ret_len, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "downstream_tls_raw_client_certificate")
-int req_downstream_tls_raw_client_certificate(char *ret, size_t ret_len, size_t *nwritten);
+int req_downstream_tls_raw_client_certificate(uint8_t *ret, size_t ret_len, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "downstream_tls_ja3_md5")
-int req_downstream_tls_ja3_md5(char *ret, size_t *nwritten);
+int req_downstream_tls_ja3_md5(uint8_t *ret, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "new")
 int req_new(fastly_compute_at_edge_http_types_request_handle_t *req_handle_out);
 
 WASM_IMPORT("fastly_http_req", "header_names_get")
-int req_header_names_get(fastly_compute_at_edge_http_types_request_handle_t req_handle, char *buf,
-                         size_t buf_len, uint32_t cursor, int64_t *ending_cursor, size_t *nwritten);
+int req_header_names_get(fastly_compute_at_edge_http_types_request_handle_t req_handle,
+                         uint8_t *buf, size_t buf_len, uint32_t cursor, int64_t *ending_cursor,
+                         size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "original_header_names_get")
-int req_original_header_names_get(char *buf, size_t buf_len, uint32_t cursor,
+int req_original_header_names_get(uint8_t *buf, size_t buf_len, uint32_t cursor,
                                   int64_t *ending_cursor, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "original_header_count")
@@ -195,21 +196,21 @@ int req_original_header_count(uint32_t *count);
 
 WASM_IMPORT("fastly_http_req", "header_value_get")
 int req_header_value_get(fastly_compute_at_edge_http_types_request_handle_t req_handle,
-                         const char *name, size_t name_len, char *value, size_t value_max_len,
+                         const char *name, size_t name_len, uint8_t *value, size_t value_max_len,
                          size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "header_values_get")
 int req_header_values_get(fastly_compute_at_edge_http_types_request_handle_t req_handle,
-                          const char *name, size_t name_len, char *buf, size_t buf_len,
+                          const char *name, size_t name_len, uint8_t *buf, size_t buf_len,
                           uint32_t cursor, int64_t *ending_cursor, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "header_insert")
 int req_header_insert(fastly_compute_at_edge_http_types_request_handle_t req_handle,
-                      const char *name, size_t name_len, const char *value, size_t value_len);
+                      const char *name, size_t name_len, const uint8_t *value, size_t value_len);
 
 WASM_IMPORT("fastly_http_req", "header_append")
 int req_header_append(fastly_compute_at_edge_http_types_request_handle_t req_handle,
-                      const char *name, size_t name_len, const char *value, size_t value_len);
+                      const char *name, size_t name_len, const uint8_t *value, size_t value_len);
 
 WASM_IMPORT("fastly_http_req", "header_remove")
 int req_header_remove(fastly_compute_at_edge_http_types_request_handle_t req_handle,
@@ -245,7 +246,7 @@ int req_framing_headers_mode_set(fastly_compute_at_edge_http_types_request_handl
 
 WASM_IMPORT("fastly_http_req", "send")
 int req_send(fastly_compute_at_edge_http_types_request_handle_t req_handle,
-             fastly_compute_at_edge_http_types_body_handle_t body_handle, const char *backend,
+             fastly_compute_at_edge_http_types_body_handle_t body_handle, const uint8_t *backend,
              size_t backend_len,
              fastly_compute_at_edge_http_types_response_handle_t *resp_handle_out,
              fastly_compute_at_edge_http_types_body_handle_t *resp_body_handle_out);
@@ -293,25 +294,26 @@ int resp_new(fastly_compute_at_edge_http_types_response_handle_t *resp_handle_ou
 
 WASM_IMPORT("fastly_http_resp", "header_names_get")
 int resp_header_names_get(fastly_compute_at_edge_http_types_response_handle_t resp_handle,
-                          char *buf, size_t buf_len, uint32_t cursor, int64_t *ending_cursor,
+                          uint8_t *buf, size_t buf_len, uint32_t cursor, int64_t *ending_cursor,
                           size_t *nwritten);
 
 WASM_IMPORT("fastly_http_resp", "header_values_get")
 int resp_header_values_get(fastly_compute_at_edge_http_types_response_handle_t resp_handle,
-                           const char *name, size_t name_len, char *buf, size_t buf_len,
+                           const char *name, size_t name_len, uint8_t *buf, size_t buf_len,
                            uint32_t cursor, int64_t *ending_cursor, size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "header_values_set")
 int req_header_values_set(fastly_compute_at_edge_http_types_request_handle_t req_handle,
-                          const char *name, size_t name_len, const char *values, size_t values_len);
+                          const char *name, size_t name_len, const uint8_t *values,
+                          size_t values_len);
 
 WASM_IMPORT("fastly_http_resp", "header_insert")
 int resp_header_insert(fastly_compute_at_edge_http_types_response_handle_t resp_handle,
-                       const char *name, size_t name_len, const char *value, size_t value_len);
+                       const char *name, size_t name_len, const uint8_t *value, size_t value_len);
 
 WASM_IMPORT("fastly_http_resp", "header_append")
 int resp_header_append(fastly_compute_at_edge_http_types_response_handle_t resp_handle,
-                       const char *name, size_t name_len, const char *value, size_t value_len);
+                       const char *name, size_t name_len, const uint8_t *value, size_t value_len);
 
 WASM_IMPORT("fastly_http_resp", "header_remove")
 int resp_header_remove(fastly_compute_at_edge_http_types_response_handle_t resp_handle,
@@ -385,7 +387,7 @@ int object_store_insert(fastly_compute_at_edge_object_store_handle_t object_stor
                         const char *key, size_t key_len,
                         fastly_compute_at_edge_http_types_body_handle_t body_handle);
 WASM_IMPORT("fastly_geo", "lookup")
-int geo_lookup(const char *addr_octets, size_t addr_len, char *buf, size_t buf_len,
+int geo_lookup(const uint8_t *addr_octets, size_t addr_len, char *buf, size_t buf_len,
                size_t *nwritten);
 
 WASM_IMPORT("wasi_snapshot_preview1", "random_get")
