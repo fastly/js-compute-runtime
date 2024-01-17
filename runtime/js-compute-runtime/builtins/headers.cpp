@@ -142,7 +142,6 @@ host_api::HostString normalize_header_value(JSContext *cx, JS::MutableHandleValu
     return nullptr;
   }
 
-  host_api::HostString value;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
   if (!JS_DeprecatedStringHasLatin1Chars(value_str)) {
@@ -158,6 +157,7 @@ host_api::HostString normalize_header_value(JSContext *cx, JS::MutableHandleValu
     }
   }
 
+  host_api::HostString value;
   value.ptr = JS_EncodeStringToLatin1(cx, value_str);
   if (!value.ptr) {
     return nullptr;
@@ -481,18 +481,22 @@ bool Headers::append_header_value(JSContext *cx, JS::HandleObject self, JS::Hand
     std::string_view value = value_chars;
     if (name == "set-cookie") {
       for (auto value : splitCookiesString(value)) {
+        std::span<uint8_t> v = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
+                                value.size()};
         auto res = mode == Headers::Mode::ProxyToRequest
-                       ? host_api::HttpReq{handle}.append_header(name, value)
-                       : host_api::HttpResp{handle}.append_header(name, value);
+                       ? host_api::HttpReq{handle}.append_header(name, v)
+                       : host_api::HttpResp{handle}.append_header(name, v);
         if (auto *err = res.to_err()) {
           HANDLE_ERROR(cx, *err);
           return false;
         }
       }
     } else {
+      std::span<uint8_t> v = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
+                              value.size()};
       auto res = mode == Headers::Mode::ProxyToRequest
-                     ? host_api::HttpReq{handle}.append_header(name, value)
-                     : host_api::HttpResp{handle}.append_header(name, value);
+                     ? host_api::HttpReq{handle}.append_header(name, v)
+                     : host_api::HttpResp{handle}.append_header(name, v);
       if (auto *err = res.to_err()) {
         HANDLE_ERROR(cx, *err);
         return false;
@@ -606,8 +610,10 @@ bool Headers::set(JSContext *cx, unsigned argc, JS::Value *vp) {
     auto handle = get_handle(self);
     std::string_view name = name_chars;
     std::string_view val = value_chars;
-    auto res = mode == Mode::ProxyToRequest ? host_api::HttpReq{handle}.insert_header(name, val)
-                                            : host_api::HttpResp{handle}.insert_header(name, val);
+    std::span<uint8_t> v = {reinterpret_cast<uint8_t *>(const_cast<char *>(val.data())),
+                            val.size()};
+    auto res = mode == Mode::ProxyToRequest ? host_api::HttpReq{handle}.insert_header(name, v)
+                                            : host_api::HttpResp{handle}.insert_header(name, v);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
