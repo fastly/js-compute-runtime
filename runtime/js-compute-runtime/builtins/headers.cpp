@@ -142,10 +142,27 @@ host_api::HostString normalize_header_value(JSContext *cx, JS::MutableHandleValu
     return nullptr;
   }
 
-  auto value = core::encode(cx, value_str);
-  if (!value) {
+  host_api::HostString value;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  if (!JS_DeprecatedStringHasLatin1Chars(value_str)) {
+#pragma clang diagnostic pop
+    JS::AutoCheckCannotGC nogc;
+    size_t length;
+    const char16_t *chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, value_str, &length);
+    for (auto i = 0; i < length; i++) {
+      if (chars[i] > 255) {
+        JS_ReportErrorASCII(cx, "header value contains bytes greater than 255");
+        return nullptr;
+      }
+    }
+  }
+
+  value.ptr = JS_EncodeStringToLatin1(cx, value_str);
+  if (!value.ptr) {
     return nullptr;
   }
+  value.len = JS_GetStringLength(value_str);
 
   auto *value_chars = value.begin();
   size_t start = 0;
@@ -287,21 +304,8 @@ bool retrieve_value_for_header_from_handle(JSContext *cx, JS::HandleObject self,
   }
 
   for (auto &str : values.value()) {
-    auto chars = JS::UTF8Chars(reinterpret_cast<char *>(str.ptr.get()), str.len);
-    auto encoding = JS::FindSmallestEncoding(chars);
-
-    JS::RootedString val_str(cx);
-    switch (encoding) {
-    case JS::SmallestEncoding::ASCII:
-    case JS::SmallestEncoding::Latin1: {
-      val_str.set(JS_NewStringCopyUTF8N(cx, chars));
-      break;
-    }
-    case JS::SmallestEncoding::UTF16: {
-      val_str.set(JS_NewStringCopyN(cx, reinterpret_cast<char *>(str.ptr.get()), str.len));
-      break;
-    }
-    }
+    JS::RootedString val_str(
+        cx, JS_NewStringCopyN(cx, reinterpret_cast<char *>(str.ptr.get()), str.len));
     if (!val_str) {
       return false;
     }
