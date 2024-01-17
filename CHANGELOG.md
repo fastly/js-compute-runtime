@@ -1,10 +1,10 @@
 # Changelog
 
 
-## [3.8.1](https://github.com/fastly/js-compute-runtime/compare/v3.8.0...v3.8.1) (2024-01-17)
+## 3.8.1 (2024-01-17)
 
 
-### Bug Fixes
+### Fixed
 
 * parse latin-1 encoded field values correctly ([#715](https://github.com/fastly/js-compute-runtime/issues/715)) ([9ebb524](https://github.com/fastly/js-compute-runtime/commit/9ebb524d4eef97ba71ae19ee1c2b1e61f3fd391c))
 
