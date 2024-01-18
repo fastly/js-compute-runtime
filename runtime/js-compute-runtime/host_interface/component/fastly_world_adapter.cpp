@@ -496,17 +496,23 @@ bool fastly_compute_at_edge_http_req_register_dynamic_backend(
     fastly_compute_at_edge_types_error_t *err) {
   uint32_t backend_config_mask = 0;
 
+  if (config->use_ssl.is_some && config->use_ssl.val) {
+    backend_config_mask |= BACKEND_CONFIG_USE_SSL;
+  }
+  if (config->dont_pool.is_some && config->dont_pool.val) {
+    backend_config_mask |= BACKEND_CONFIG_DONT_POOL;
+  }
   if (config->host_override.is_some) {
     backend_config_mask |= BACKEND_CONFIG_HOST_OVERRIDE;
   }
   if (config->connect_timeout.is_some) {
     backend_config_mask |= BACKEND_CONFIG_CONNECT_TIMEOUT;
   }
-  if (config->use_ssl.is_some && config->use_ssl.val) {
-    backend_config_mask |= BACKEND_CONFIG_USE_SSL;
+  if (config->first_byte_timeout.is_some) {
+    backend_config_mask |= BACKEND_CONFIG_FIRST_BYTE_TIMEOUT;
   }
-  if (config->dont_pool.is_some && config->dont_pool.val) {
-    backend_config_mask |= BACKEND_CONFIG_DONT_POOL;
+  if (config->between_bytes_timeout.is_some) {
+    backend_config_mask |= BACKEND_CONFIG_BETWEEN_BYTES_TIMEOUT;
   }
   if (config->ssl_min_version.is_some) {
     backend_config_mask |= BACKEND_CONFIG_SSL_MIN_VERSION;

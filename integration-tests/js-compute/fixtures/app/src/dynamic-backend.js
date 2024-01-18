@@ -1,3 +1,4 @@
+/// <reference path="../../../../../types/index.d.ts" />
 import { Backend } from 'fastly:backend';
 import { CacheOverride } from 'fastly:cache-override';
 import { allowDynamicBackends } from "fastly:experimental";
@@ -5,6 +6,33 @@ import { pass, assert, assertDoesNotThrow, assertThrows, assertRejects, assertRe
 import { isRunningLocally, routes } from "./routes.js";
 
 /// The backend name is already in use.
+
+routes.set("/backend/timeout", async () => {
+    if (isRunningLocally()) {
+      return pass('ok')
+    }
+    allowDynamicBackends(true);
+    let backend = new Backend(
+      {
+        name: 'httpme1',
+        target: 'http-me.glitch.me',
+        hostOverride: "http-me.glitch.me",
+        useSSL: true,
+        dontPool: true,
+        betweenBytesTimeout: 1_000,
+        connectTimeout: 1_000,
+        firstByteTimeout: 1_000
+      }
+    );
+    console.time(`fetch('https://http-me.glitch.me/test?wait=5000'`)
+    let error = await assertRejects(() => fetch('https://http-me.glitch.me/test?wait=5000', {
+      backend,
+      cacheOverride: new CacheOverride("pass"),
+    }));
+    console.timeEnd(`fetch('https://http-me.glitch.me/test?wait=5000'`)
+    if (error) { return error }
+    return pass('ok')
+  });
 
 
 // implicit dynamic backend

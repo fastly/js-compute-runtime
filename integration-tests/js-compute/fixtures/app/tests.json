@@ -2131,6 +2131,17 @@
       "body": "ok"
     }
   },
+  "GET /backend/timeout": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/timeout"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
   "GET /implicit-dynamic-backend/dynamic-backends-disabled": {
     "environments": ["viceroy"],
     "downstream_request": {
