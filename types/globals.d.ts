@@ -1084,7 +1084,7 @@ interface Request extends Body {
   clone(): Request;
 
   // Fastly extensions
-  backend: string;
+  backend?: string;
   setCacheOverride(override: import('fastly:cache-override').CacheOverride): void;
   setCacheKey(key: string): void;
   setManualFramingHeaders(manual: boolean): void;
