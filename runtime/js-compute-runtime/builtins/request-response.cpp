@@ -1263,11 +1263,7 @@ bool Request::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Request::backend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   JS::RootedValue backend(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Backend)));
-  if (backend.isNullOrUndefined()) {
-    args.rval().setString(JS_GetEmptyString(cx));
-  } else {
-    args.rval().set(backend);
-  }
+  args.rval().set(backend);
 
   return true;
 }
