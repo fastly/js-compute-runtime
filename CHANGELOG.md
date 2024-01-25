@@ -3,6 +3,9 @@
 
 ## 3.8.2 (2024-01-25)
 
+
+### Fixed
+
 * ensure we honor first-byte-timeout and between-bytes-timeout for dynamically registered backends ([#719](https://github.com/fastly/js-compute-runtime/issues/719)) ([2851507](https://github.com/fastly/js-compute-runtime/commit/2851507f9ca00a3f272a13c174a2906163f95c40))
 * If request does not have a static backend defined, return `undefined` for the Request.prototype.backend getter ([#722](https://github.com/fastly/js-compute-runtime/issues/722)) ([251c037](https://github.com/fastly/js-compute-runtime/commit/251c037f424ace09e87ec0a47d7579d7b90626a1))
 
