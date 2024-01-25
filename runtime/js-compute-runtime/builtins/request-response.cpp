@@ -1986,7 +1986,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   // (implicit)
 
   // Apply the Fastly Compute-proprietary `backend` property.
-  if (!backend_val.isNullOrUndefined()) {
+  if (!backend_val.isUndefined()) {
     JS::RootedString backend(cx, JS::ToString(cx, backend_val));
     if (!backend) {
       return nullptr;
