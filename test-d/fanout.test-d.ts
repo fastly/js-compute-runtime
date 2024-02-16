@@ -1,4 +1,4 @@
-/// <reference path="../types/fastly:fanout.d.ts" />
+/// <reference path="../types/fanout.d.ts" />
 import { createFanoutHandoff } from "fastly:fanout";
 import { expectType } from 'tsd';
 

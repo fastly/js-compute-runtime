@@ -1,4 +1,4 @@
-/// <reference path="../types/fastly:logger.d.ts" />
+/// <reference path="../types/logger.d.ts" />
 import { Logger } from "fastly:logger";
 import { expectError, expectType } from 'tsd';
 

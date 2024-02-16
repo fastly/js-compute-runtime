@@ -1,4 +1,4 @@
-/// <reference path="../types/fastly:kv-store.d.ts" />
+/// <reference path="../types/kv-store.d.ts" />
 import { KVStore, KVStoreEntry } from "fastly:kv-store";
 import { expectError, expectType } from 'tsd';
 

@@ -1,4 +1,4 @@
-/// <reference path="../types/fastly:backend.d.ts" />
+/// <reference path="../types/backend.d.ts" />
 import { Backend, BackendConfiguration } from "fastly:backend";
 import {expectError, expectType} from 'tsd';
 

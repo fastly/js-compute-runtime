@@ -1,4 +1,4 @@
-/// <reference path="../types/fastly:cache-override.d.ts" />
+/// <reference path="../types/cache-override.d.ts" />
 import { CacheOverride } from "fastly:cache-override";
 import { expectType } from 'tsd';
 

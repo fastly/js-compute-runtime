@@ -1,4 +1,4 @@
-/// <reference path="../types/fastly:config-store.d.ts" />
+/// <reference path="../types/config-store.d.ts" />
 import { ConfigStore } from "fastly:config-store";
 import {expectError, expectType} from 'tsd';
 
