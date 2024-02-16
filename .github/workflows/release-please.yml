@@ -151,6 +151,19 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
+      - name: github package registry publish
+        run: |
+          cat << EOF > .npmrc
+          //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+          @fastly:registry=https://npm.pkg.github.com
+          registry=https://registry.npmjs.org/
+          always-auth=true
+          EOF
+          npm publish
+          rm .npmrc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - run: yarn
         working-directory: ./documentation
 
