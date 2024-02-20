@@ -1,3 +1,5 @@
+/// <reference path="globals.d.ts" />
+
 declare module "fastly:kv-store" {
   /**
    * Class for accessing a [Fastly KV-store](https://developer.fastly.com/reference/api/kv-store/).

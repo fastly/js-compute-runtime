@@ -1,4 +1,4 @@
-/// <reference path="../types/fastly:dictionary.d.ts" />
+/// <reference path="../types/dictionary.d.ts" />
 import { Dictionary } from "fastly:dictionary";
 import {expectError, expectType} from 'tsd';
 

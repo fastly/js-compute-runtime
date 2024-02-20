@@ -1,4 +1,4 @@
-/// <reference path="../types/fastly:geolocation.d.ts" />
+/// <reference path="../types/geolocation.d.ts" />
 import { Geolocation, getGeolocationForIpAddress } from "fastly:geolocation";
 import { expectType } from 'tsd';
 

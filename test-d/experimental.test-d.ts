@@ -1,4 +1,4 @@
-/// <reference path="../types/fastly:experimental.d.ts" />
+/// <reference path="../types/experimental.d.ts" />
 import { setBaseURL, setDefaultBackend, enableDebugLogging, includeBytes, allowDynamicBackends } from "fastly:experimental";
 import { expectType } from 'tsd';
 
