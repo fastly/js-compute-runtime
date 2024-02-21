@@ -1,10 +1,10 @@
 # Changelog
 
 
-## [3.8.3](https://github.com/fastly/js-compute-runtime/compare/v3.8.2...v3.8.3) (2024-02-21)
+## 3.8.3 (2024-02-21)
 
 
-### Bug Fixes
+### Fixed
 
 * do not use colon character in types for windows support ([#726](https://github.com/fastly/js-compute-runtime/issues/726)) ([25bf1a2](https://github.com/fastly/js-compute-runtime/commit/25bf1a2bb40528bf02e0773e6bc624560a12869a))
 
