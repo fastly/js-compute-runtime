@@ -106,6 +106,8 @@ JS::Result<std::string> convertJSValueToByteString(JSContext *cx, JS::Handle<JS:
 JS::Result<std::string> convertJSValueToByteString(JSContext *cx, std::string v);
 } // namespace GlobalProperties
 
+JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
+                                                                JS::HandleValue bodyInit);
 JS::Result<JS::HandleString> host_string_to_js_string(JSContext *cx, host_api::HostString &str);
 bool debug_logging_enabled();
 bool dump_value(JSContext *cx, JS::Value value, FILE *fp);

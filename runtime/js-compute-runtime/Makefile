@@ -404,7 +404,7 @@ compile_commands.json:
 			sep=","; \
 			echo "{ \"directory\": \"$(FSM_SRC)\","; \
 			echo "  \"command\": \"$(WASI_CXX) $(CXX_FLAGS) $(INCLUDES) $(DEFINES)\","; \
-			echo -n "  \"file\": \"$${file}\"}"; \
+			echo "  \"file\": \"$${file}\"}"; \
 		done; \
 		echo; \
 		echo ']' \

@@ -542,6 +542,12 @@ typedef struct {
   bool sensitive_data;
 } fastly_compute_at_edge_cache_write_options_t;
 
+typedef uint8_t fastly_compute_at_edge_cache_get_body_options_mask_t;
+
+#define FASTLY_COMPUTE_AT_EDGE_CACHE_GET_BODY_OPTIONS_MASK_RESERVED (1 << 0)
+#define FASTLY_COMPUTE_AT_EDGE_CACHE_GET_BODY_OPTIONS_MASK_START (1 << 1)
+#define FASTLY_COMPUTE_AT_EDGE_CACHE_GET_BODY_OPTIONS_MASK_END (1 << 2)
+
 typedef struct {
   uint64_t start;
   uint64_t end;
@@ -652,15 +658,21 @@ bool fastly_compute_at_edge_cache_transaction_insert_and_stream_back(fastly_comp
 // Can only be used in if the cache handle state includes both of the flags:
 // - `found`
 // - `must-insert-or-update`
-bool fastly_compute_at_edge_cache_transaction_update(fastly_compute_at_edge_cache_handle_t handle, fastly_compute_at_edge_cache_error_t *err);
+bool fastly_compute_at_edge_cache_transaction_update(fastly_compute_at_edge_cache_handle_t handle, fastly_compute_at_edge_cache_write_options_t *options, fastly_compute_at_edge_cache_error_t *err);
 // Cancel an obligation to provide an object to the cache.
 // 
 // Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
 bool fastly_compute_at_edge_cache_transaction_cancel(fastly_compute_at_edge_cache_handle_t handle, fastly_compute_at_edge_cache_error_t *err);
+// Close an ongoing interaction with the cache.
+// 
+// If the cache handle state includes the `$must_insert_or_update` (and hence no insert or
+// update has been performed), closing the handle cancels any request collapsing, potentially
+// choosing a new waiter to perform the insertion/update.
+bool fastly_compute_at_edge_cache_close(fastly_compute_at_edge_cache_handle_t handle, fastly_compute_at_edge_cache_error_t *err);
 bool fastly_compute_at_edge_cache_get_state(fastly_compute_at_edge_cache_handle_t handle, fastly_compute_at_edge_cache_lookup_state_t *ret, fastly_compute_at_edge_cache_error_t *err);
-// Gets the user metadata of the found object, returning the `optional-none` error if there
+// Gets the user metadata of the found object, returning `none` if there
 // was no found object.
-bool fastly_compute_at_edge_cache_get_user_metadata(fastly_compute_at_edge_cache_handle_t handle, fastly_world_string_t *ret, fastly_compute_at_edge_cache_error_t *err);
+bool fastly_compute_at_edge_cache_get_user_metadata(fastly_compute_at_edge_cache_handle_t handle, fastly_world_list_u8_t *ret, fastly_compute_at_edge_cache_error_t *err);
 // Gets a range of the found object body, returning the `optional-none` error if there
 // was no found object.
 // 
@@ -670,7 +682,7 @@ bool fastly_compute_at_edge_cache_get_user_metadata(fastly_compute_at_edge_cache
 // Note: until the CacheD protocol is adjusted to fully support this functionality,
 // the body of objects that are past the stale-while-revalidate period will not
 // be available, even when other metadata is.
-bool fastly_compute_at_edge_cache_get_body(fastly_compute_at_edge_cache_handle_t handle, fastly_compute_at_edge_cache_get_body_options_t *options, fastly_compute_at_edge_cache_body_handle_t *ret, fastly_compute_at_edge_cache_error_t *err);
+bool fastly_compute_at_edge_cache_get_body(fastly_compute_at_edge_cache_handle_t handle, fastly_compute_at_edge_cache_get_body_options_t *options, fastly_compute_at_edge_cache_get_body_options_mask_t options_mask, fastly_compute_at_edge_cache_body_handle_t *ret, fastly_compute_at_edge_cache_error_t *err);
 // Gets the content length of the found object, returning the `$none` error if there
 // was no found object, or no content length was provided.
 bool fastly_compute_at_edge_cache_get_length(fastly_compute_at_edge_cache_handle_t handle, uint64_t *ret, fastly_compute_at_edge_cache_error_t *err);

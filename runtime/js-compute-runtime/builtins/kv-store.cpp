@@ -339,45 +339,13 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
   } else {
-    mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
-    JS::UniqueChars text;
-    char *buf;
-    size_t length;
-
-    if (body_obj && JS_IsArrayBufferViewObject(body_obj)) {
-      // `maybeNoGC` needs to be populated for the lifetime of `buf` because
-      // short typed arrays have inline data which can move on GC, so assert
-      // that no GC happens. (Which it doesn't, because we're not allocating
-      // before `buf` goes out of scope.)
-      maybeNoGC.emplace(cx);
-      JS::AutoCheckCannotGC &noGC = maybeNoGC.ref();
-      bool is_shared;
-      length = JS_GetArrayBufferViewByteLength(body_obj);
-      buf = (char *)JS_GetArrayBufferViewData(body_obj, &is_shared, noGC);
-    } else if (body_obj && JS::IsArrayBufferObject(body_obj)) {
-      bool is_shared;
-      JS::GetArrayBufferLengthAndData(body_obj, &length, &is_shared, (uint8_t **)&buf);
-    } else if (body_obj && builtins::URLSearchParams::is_instance(body_obj)) {
-      jsurl::SpecSlice slice = builtins::URLSearchParams::serialize(cx, body_obj);
-      buf = (char *)slice.data;
-      length = slice.len;
-    } else {
-      // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-      {
-        auto str = core::encode(cx, body_val);
-        text = std::move(str.ptr);
-        length = str.len;
-      }
-      // 30MB in bytes is the max size allowed for KVStore.
-      if (length > 30 * 1024 * 1024) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_PUT_OVER_30_MB);
-        return ReturnPromiseRejectedWithPendingError(cx, args);
-      }
-      if (!text) {
-        return ReturnPromiseRejectedWithPendingError(cx, args);
-      }
-      buf = text.get();
+    auto result = convertBodyInit(cx, body_val);
+    if (result.isErr()) {
+      return false;
     }
+    size_t length;
+    JS::UniqueChars data;
+    std::tie(data, length) = result.unwrap();
 
     auto make_res = host_api::HttpBody::make();
     if (auto *err = make_res.to_err()) {
@@ -390,13 +358,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    auto write_res = body.write_all(reinterpret_cast<uint8_t *>(buf), length);
-
-    // Ensure that the NoGC is reset, so throwing an error in HANDLE_ERROR
-    // succeeds.
-    if (maybeNoGC.isSome()) {
-      maybeNoGC.reset();
-    }
+    auto write_res = body.write_all_back(reinterpret_cast<uint8_t *>(data.get()), length);
 
     if (auto *err = write_res.to_err()) {
       HANDLE_ERROR(cx, *err);

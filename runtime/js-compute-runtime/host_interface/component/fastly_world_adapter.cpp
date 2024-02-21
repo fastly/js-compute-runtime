@@ -496,23 +496,17 @@ bool fastly_compute_at_edge_http_req_register_dynamic_backend(
     fastly_compute_at_edge_types_error_t *err) {
   uint32_t backend_config_mask = 0;
 
-  if (config->use_ssl.is_some && config->use_ssl.val) {
-    backend_config_mask |= BACKEND_CONFIG_USE_SSL;
-  }
-  if (config->dont_pool.is_some && config->dont_pool.val) {
-    backend_config_mask |= BACKEND_CONFIG_DONT_POOL;
-  }
   if (config->host_override.is_some) {
     backend_config_mask |= BACKEND_CONFIG_HOST_OVERRIDE;
   }
   if (config->connect_timeout.is_some) {
     backend_config_mask |= BACKEND_CONFIG_CONNECT_TIMEOUT;
   }
-  if (config->first_byte_timeout.is_some) {
-    backend_config_mask |= BACKEND_CONFIG_FIRST_BYTE_TIMEOUT;
+  if (config->use_ssl.is_some && config->use_ssl.val) {
+    backend_config_mask |= BACKEND_CONFIG_USE_SSL;
   }
-  if (config->between_bytes_timeout.is_some) {
-    backend_config_mask |= BACKEND_CONFIG_BETWEEN_BYTES_TIMEOUT;
+  if (config->dont_pool.is_some && config->dont_pool.val) {
+    backend_config_mask |= BACKEND_CONFIG_DONT_POOL;
   }
   if (config->ssl_min_version.is_some) {
     backend_config_mask |= BACKEND_CONFIG_SSL_MIN_VERSION;
@@ -913,9 +907,10 @@ bool fastly_compute_at_edge_cache_lookup(fastly_world_string_t *cache_key,
                                          fastly_compute_at_edge_cache_lookup_options_t *options,
                                          fastly_compute_at_edge_cache_handle_t *ret,
                                          fastly_compute_at_edge_types_error_t *err) {
-  // Currently this host-call has been implemented to support the `SimpleCache.get(key)` method,
-  // which does not use any fields from `fastly_compute_at_edge_cache_lookup_options_t`.
   uint8_t options_mask = 0;
+  if (options->request_headers.is_some) {
+    options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS;
+  }
   return convert_result(
       fastly::cache_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret), err);
 }
@@ -976,11 +971,104 @@ bool fastly_compute_at_edge_cache_insert(fastly_world_string_t *cache_key,
   return convert_result(
       fastly::cache_insert(cache_key->ptr, cache_key->len, options_mask, &opts, ret), err);
 }
-bool fastly_compute_at_edge_cache_get_body(fastly_compute_at_edge_cache_handle_t handle,
-                                           fastly_compute_at_edge_cache_get_body_options_t *options,
-                                           fastly_compute_at_edge_http_types_body_handle_t *ret,
-                                           fastly_compute_at_edge_types_error_t *err) {
-  uint32_t options_mask = 0;
+
+bool fastly_compute_at_edge_cache_transaction_insert(
+    fastly_compute_at_edge_cache_handle_t handle,
+    fastly_compute_at_edge_cache_write_options_t *options,
+    fastly_compute_at_edge_cache_body_handle_t *ret, fastly_compute_at_edge_cache_error_t *err) {
+  uint16_t options_mask = 0;
+  fastly::CacheWriteOptions opts;
+  std::memset(&opts, 0, sizeof(opts));
+  opts.max_age_ns = options->max_age_ns;
+
+  if (options->request_headers != INVALID_HANDLE && options->request_headers != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_REQUEST_HEADERS;
+    opts.request_headers = options->request_headers;
+  }
+  if (options->vary_rule.ptr != nullptr) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_VARY_RULE;
+    opts.vary_rule_len = options->vary_rule.len;
+    opts.vary_rule_ptr = reinterpret_cast<uint8_t *>(options->vary_rule.ptr);
+  }
+  if (options->initial_age_ns != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS;
+    opts.initial_age_ns = options->initial_age_ns;
+  }
+  if (options->stale_while_revalidate_ns != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS;
+    opts.stale_while_revalidate_ns = options->stale_while_revalidate_ns;
+  }
+  if (options->surrogate_keys.ptr != nullptr) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS;
+    opts.surrogate_keys_len = options->surrogate_keys.len;
+    opts.surrogate_keys_ptr = reinterpret_cast<uint8_t *>(options->surrogate_keys.ptr);
+  }
+  if (options->length != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_LENGTH;
+    opts.length = options->length;
+  }
+  if (options->user_metadata.ptr != nullptr) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_USER_METADATA;
+    opts.user_metadata_len = options->user_metadata.len;
+    opts.user_metadata_ptr = options->user_metadata.ptr;
+  }
+  if (options->sensitive_data) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA;
+  }
+  return convert_result(fastly::cache_transaction_insert(handle, options_mask, &opts, ret), err);
+}
+
+bool fastly_compute_at_edge_cache_transaction_update(
+    fastly_compute_at_edge_cache_handle_t handle,
+    fastly_compute_at_edge_cache_write_options_t *options,
+    fastly_compute_at_edge_cache_error_t *err) {
+  uint16_t options_mask = 0;
+  fastly::CacheWriteOptions opts;
+  std::memset(&opts, 0, sizeof(opts));
+  opts.max_age_ns = options->max_age_ns;
+
+  if (options->request_headers != INVALID_HANDLE && options->request_headers != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_REQUEST_HEADERS;
+    opts.request_headers = options->request_headers;
+  }
+  if (options->vary_rule.ptr != nullptr) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_VARY_RULE;
+    opts.vary_rule_len = options->vary_rule.len;
+    opts.vary_rule_ptr = reinterpret_cast<uint8_t *>(options->vary_rule.ptr);
+  }
+  if (options->initial_age_ns != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS;
+    opts.initial_age_ns = options->initial_age_ns;
+  }
+  if (options->stale_while_revalidate_ns != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS;
+    opts.stale_while_revalidate_ns = options->stale_while_revalidate_ns;
+  }
+  if (options->surrogate_keys.ptr != nullptr) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS;
+    opts.surrogate_keys_len = options->surrogate_keys.len;
+    opts.surrogate_keys_ptr = reinterpret_cast<uint8_t *>(options->surrogate_keys.ptr);
+  }
+  if (options->length != 0) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_LENGTH;
+    opts.length = options->length;
+  }
+  if (options->user_metadata.ptr != nullptr) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_USER_METADATA;
+    opts.user_metadata_len = options->user_metadata.len;
+    opts.user_metadata_ptr = options->user_metadata.ptr;
+  }
+  if (options->sensitive_data) {
+    options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA;
+  }
+  return convert_result(fastly::cache_transaction_update(handle, options_mask, &opts), err);
+}
+
+bool fastly_compute_at_edge_cache_get_body(
+    fastly_compute_at_edge_cache_handle_t handle,
+    fastly_compute_at_edge_cache_get_body_options_t *options,
+    fastly_compute_at_edge_cache_get_body_options_mask_t options_mask,
+    fastly_compute_at_edge_cache_body_handle_t *ret, fastly_compute_at_edge_cache_error_t *err) {
   bool ok = convert_result(fastly::cache_get_body(handle, options_mask, options, ret), err);
   if (!ok && *err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) {
     *ret = INVALID_HANDLE;
@@ -991,9 +1079,10 @@ bool fastly_compute_at_edge_cache_get_body(fastly_compute_at_edge_cache_handle_t
 bool fastly_compute_at_edge_cache_transaction_lookup(
     fastly_world_string_t *cache_key, fastly_compute_at_edge_cache_lookup_options_t *options,
     fastly_compute_at_edge_cache_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
-  // Currently this host-call has been implemented to support the `SimpleCache.getOrSet` method,
-  // which does not use any fields from `fastly_compute_at_edge_cache_lookup_options_t`.
   uint32_t options_mask = 0;
+  if (options->request_headers.is_some) {
+    options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS;
+  }
   return convert_result(
       fastly::cache_transaction_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret),
       err);
@@ -1058,6 +1147,58 @@ bool fastly_compute_at_edge_cache_get_state(fastly_compute_at_edge_cache_handle_
                                             fastly_compute_at_edge_cache_lookup_state_t *ret,
                                             fastly_compute_at_edge_types_error_t *err) {
   return convert_result(fastly::cache_get_state(handle, ret), err);
+}
+
+/// Cancel an obligation to provide an object to the cache.
+///
+/// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
+bool fastly_compute_at_edge_transaction_cancel(fastly_compute_at_edge_cache_handle_t handle,
+                                               fastly_compute_at_edge_types_error_t *err) {
+  return convert_result(fastly::cache_transaction_cancel(handle), err);
+}
+
+bool fastly_compute_at_edge_cache_close(fastly_compute_at_edge_cache_handle_t handle,
+                                        fastly_compute_at_edge_types_error_t *err) {
+  return true;
+}
+bool fastly_compute_at_edge_cache_get_user_metadata(fastly_compute_at_edge_cache_handle_t handle,
+                                                    fastly_world_list_u8_t *ret,
+                                                    fastly_compute_at_edge_cache_error_t *err) {
+  size_t default_size = 16 * 1024;
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
+  auto status = fastly::cache_get_user_metadata(handle, reinterpret_cast<char *>(ret->ptr),
+                                                default_size, &ret->len);
+  if (status == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BUFFER_LEN) {
+    cabi_realloc(ret->ptr, default_size, 4, ret->len);
+    status = fastly::cache_get_user_metadata(handle, reinterpret_cast<char *>(ret->ptr), ret->len,
+                                             &ret->len);
+  }
+  return convert_result(status, err);
+}
+bool fastly_compute_at_edge_cache_get_length(fastly_compute_at_edge_cache_handle_t handle,
+                                             uint64_t *ret,
+                                             fastly_compute_at_edge_types_error_t *err) {
+  return convert_result(fastly::cache_get_length(handle, ret), err);
+}
+bool fastly_compute_at_edge_cache_get_max_age_ns(fastly_compute_at_edge_cache_handle_t handle,
+                                                 uint64_t *ret,
+                                                 fastly_compute_at_edge_types_error_t *err) {
+  return convert_result(fastly::cache_get_max_age_ns(handle, ret), err);
+}
+bool fastly_compute_at_edge_cache_get_stale_while_revalidate_ns(
+    fastly_compute_at_edge_cache_handle_t handle, uint64_t *ret,
+    fastly_compute_at_edge_types_error_t *err) {
+  return convert_result(fastly::cache_get_stale_while_revalidate_ns(handle, ret), err);
+}
+bool fastly_compute_at_edge_cache_get_age_ns(fastly_compute_at_edge_cache_handle_t handle,
+                                             uint64_t *ret,
+                                             fastly_compute_at_edge_types_error_t *err) {
+  return convert_result(fastly::cache_get_age_ns(handle, ret), err);
+}
+bool fastly_compute_at_edge_cache_get_hits(fastly_compute_at_edge_cache_handle_t handle,
+                                           uint64_t *ret,
+                                           fastly_compute_at_edge_types_error_t *err) {
+  return convert_result(fastly::cache_get_hits(handle, ret), err);
 }
 
 /*
