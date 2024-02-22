@@ -11,3 +11,4 @@
 /// <reference path="logger.d.ts" />
 /// <reference path="kv-store.d.ts" />
 /// <reference path="secret-store.d.ts" />
+/// <reference path="globals.d.ts" />
