@@ -261,7 +261,7 @@ let error;
         }
 
 
-        return pass("passed")
+        return pass("ok")
     });
 }
 
@@ -455,7 +455,7 @@ let error;
             if (error) { return error }
         }
 
-        return pass("passed")
+        return pass("ok")
     });
 
     // CoreCache constructor
@@ -466,12 +466,12 @@ let error;
                 CoreCache()
             }, TypeError, `Illegal constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/constructor/throws", () => {
             error = assertThrows(() => new CoreCache(), TypeError, `Illegal constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 
@@ -483,7 +483,7 @@ let error;
                 new CoreCache.lookup('1')
             }, TypeError, `CoreCache.lookup is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         // https://tc39.es/ecma262/#sec-tostring
         routes.set("/core-cache/lookup/key-parameter-calls-7.1.17-ToString", () => {
@@ -509,21 +509,21 @@ let error;
                 CoreCache.lookup(Symbol())
             }, TypeError, `can't convert symbol to string`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/lookup/key-parameter-not-supplied", () => {
             let error = assertThrows(() => {
                 CoreCache.lookup()
             }, TypeError, `CoreCache.lookup: At least 1 argument required, but only 0 passed`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/lookup/key-parameter-empty-string", () => {
             let error = assertThrows(() => {
                 CoreCache.lookup('')
             }, Error, `CoreCache.lookup: key can not be an empty string`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/lookup/key-parameter-8135-character-string", () => {
             let error = assertDoesNotThrow(() => {
@@ -531,7 +531,7 @@ let error;
                 CoreCache.lookup(key)
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/lookup/key-parameter-8136-character-string", () => {
             let error = assertThrows(() => {
@@ -539,13 +539,13 @@ let error;
                 CoreCache.lookup(key)
             }, Error, `CoreCache.lookup: key is too long, the maximum allowed length is 8135.`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/lookup/key-does-not-exist-returns-null", () => {
             let result = CoreCache.lookup(Math.random())
             error = assert(result, null, `CoreCache.lookup(Math.random()) === null`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/lookup/key-exists", () => {
             let key = 'c'.repeat(8135);
@@ -557,7 +557,7 @@ let error;
             let result = CoreCache.lookup(key);
             error = assert(result instanceof CacheEntry, true, `CoreCache.lookup('cat') instanceof CacheEntry`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
 
         routes.set("/core-cache/lookup/options-parameter-wrong-type", () => {
@@ -565,14 +565,14 @@ let error;
                 CoreCache.lookup('cat', '')
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/lookup/options-parameter-headers-field-wrong-type", () => {
             let error = assertThrows(() => {
                 CoreCache.lookup('cat', { headers: '' })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/lookup/options-parameter-headers-field-undefined", () => {
             let entry;
@@ -581,7 +581,7 @@ let error;
             })
             if (error) { return error }
             error = assert(entry instanceof CacheEntry, true, `CoreCache.lookup('cat', {headers:...}) instanceof CacheEntry`)
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/lookup/options-parameter-headers-field-valid-sequence", () => {
             let entry;
@@ -590,7 +590,7 @@ let error;
             })
             if (error) { return error }
             error = assert(entry instanceof CacheEntry, true, `CoreCache.lookup('cat', {headers:...}) instanceof CacheEntry`)
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/lookup/options-parameter-headers-field-valid-record", () => {
             let entry;
@@ -604,7 +604,7 @@ let error;
             })
             if (error) { return error }
             error = assert(entry instanceof CacheEntry, true, `CoreCache.lookup('cat', {headers:...}) instanceof CacheEntry`)
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/lookup/options-parameter-headers-field-valid-Headers-instance", () => {
             let entry;
@@ -618,7 +618,7 @@ let error;
             })
             if (error) { return error }
             error = assert(entry instanceof CacheEntry, true, `CoreCache.lookup('cat', {headers:...}) instanceof CacheEntry`)
-            return pass("passed")
+            return pass("ok")
         });
     }
 
@@ -629,7 +629,7 @@ let error;
                 new CoreCache.insert('1', { maxAge: 1 })
             }, TypeError, `CoreCache.insert is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         // https://tc39.es/ecma262/#sec-tostring
         routes.set("/core-cache/insert/key-parameter-calls-7.1.17-ToString", () => {
@@ -655,21 +655,21 @@ let error;
                 CoreCache.insert(Symbol(), { maxAge: 1 })
             }, TypeError, `can't convert symbol to string`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/key-parameter-not-supplied", () => {
             let error = assertThrows(() => {
                 CoreCache.insert()
             }, TypeError, `CoreCache.insert: At least 2 arguments required, but only 0 passed`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/key-parameter-empty-string", () => {
             let error = assertThrows(() => {
                 CoreCache.insert('', { maxAge: 1 })
             }, Error, `CoreCache.insert: key can not be an empty string`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/key-parameter-8135-character-string", () => {
             let error = assertDoesNotThrow(() => {
@@ -677,7 +677,7 @@ let error;
                 CoreCache.insert(key, { maxAge: 1 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/key-parameter-8136-character-string", () => {
             let error = assertThrows(() => {
@@ -685,21 +685,21 @@ let error;
                 CoreCache.insert(key, { maxAge: 1 })
             }, Error, `CoreCache.insert: key is too long, the maximum allowed length is 8135.`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-wrong-type", () => {
             let error = assertThrows(() => {
                 CoreCache.insert('cat', '')
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-headers-field-wrong-type", () => {
             let error = assertThrows(() => {
                 CoreCache.insert('cat', { headers: '', maxAge: 1 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-headers-field-undefined", () => {
             let body;
@@ -709,7 +709,7 @@ let error;
             if (error) { return error }
             error = assert(body instanceof FastlyBody, true, `CoreCache.insert('cat', {headers:undefined}) instanceof FastlyBody`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-headers-field-valid-sequence", () => {
             let body;
@@ -719,7 +719,7 @@ let error;
             if (error) { return error }
             error = assert(body instanceof FastlyBody, true, `CoreCache.insert('cat', {headers:undefined}) instanceof FastlyBody`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-headers-field-valid-record", () => {
             let body;
@@ -734,7 +734,7 @@ let error;
             if (error) { return error }
             error = assert(body instanceof FastlyBody, true, `CoreCache.insert('cat', {headers:undefined}) instanceof FastlyBody`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-headers-field-valid-Headers-instance", () => {
             let body;
@@ -749,7 +749,7 @@ let error;
             if (error) { return error }
             error = assert(body instanceof FastlyBody, true, `CoreCache.insert('cat', {headers:undefined}) instanceof FastlyBody`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-maxAge-field-valid-record", () => {
             let body;
@@ -759,7 +759,7 @@ let error;
             if (error) { return error }
             error = assert(body instanceof FastlyBody, true, `CoreCache.insert('cat', {maxAge: 1}) instanceof FastlyBody`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-maxAge-field-NaN", () => {
             let error = assertThrows(() => {
@@ -768,7 +768,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-maxAge-field-postitive-infinity", () => {
             let error = assertThrows(() => {
@@ -777,7 +777,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-maxAge-field-negative-infinity", () => {
             let error = assertThrows(() => {
@@ -786,7 +786,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-maxAge-field-negative-number", () => {
             let error = assertThrows(() => {
@@ -795,7 +795,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-initialAge-field-valid-record", () => {
             let body;
@@ -805,7 +805,7 @@ let error;
             if (error) { return error }
             error = assert(body instanceof FastlyBody, true, `CoreCache.insert('cat', {maxAge: 1,initialAge: 1}) instanceof FastlyBody`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-initialAge-field-NaN", () => {
             let error = assertThrows(() => {
@@ -815,7 +815,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-initialAge-field-postitive-infinity", () => {
             let error = assertThrows(() => {
@@ -825,7 +825,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-initialAge-field-negative-infinity", () => {
             let error = assertThrows(() => {
@@ -835,7 +835,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-initialAge-field-negative-number", () => {
             let error = assertThrows(() => {
@@ -845,7 +845,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-staleWhileRevalidate-field-valid-record", () => {
             let body;
@@ -855,7 +855,7 @@ let error;
             if (error) { return error }
             error = assert(body instanceof FastlyBody, true, `CoreCache.insert('cat', {maxAge: 1,staleWhileRevalidate: 1}) instanceof FastlyBody`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-staleWhileRevalidate-field-NaN", () => {
             let error = assertThrows(() => {
@@ -865,7 +865,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-staleWhileRevalidate-field-postitive-infinity", () => {
             let error = assertThrows(() => {
@@ -875,7 +875,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-staleWhileRevalidate-field-negative-infinity", () => {
             let error = assertThrows(() => {
@@ -885,7 +885,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-staleWhileRevalidate-field-negative-number", () => {
             let error = assertThrows(() => {
@@ -895,7 +895,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-length-field-valid-record", () => {
             let body;
@@ -905,7 +905,7 @@ let error;
             if (error) { return error }
             error = assert(body instanceof FastlyBody, true, `CoreCache.insert('cat', {maxAge: 1,length: 1}) instanceof FastlyBody`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-length-field-NaN", () => {
             let error = assertThrows(() => {
@@ -915,7 +915,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-length-field-postitive-infinity", () => {
             let error = assertThrows(() => {
@@ -925,7 +925,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-length-field-negative-infinity", () => {
             let error = assertThrows(() => {
@@ -935,7 +935,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-length-field-negative-number", () => {
             let error = assertThrows(() => {
@@ -945,7 +945,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-sensitive-field", () => {
             let error = assertDoesNotThrow(() => {
@@ -955,7 +955,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-vary-field", () => {
             let error = assertDoesNotThrow(() => {
@@ -965,7 +965,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-userMetadata-field/arraybuffer/empty", async () => {
             let error = await assertResolves(async () => {
@@ -978,7 +978,7 @@ let error;
                 writer.close();
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-userMetadata-field/arraybuffer/not-empty", async () => {
             let error = await assertResolves(async () => {
@@ -991,7 +991,7 @@ let error;
                 writer.close();
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-userMetadata-field/URLSearchParams", async () => {
             let error = await assertResolves(async () => {
@@ -1006,7 +1006,7 @@ let error;
                 writer.close();
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/insert/options-parameter-userMetadata-field/string", async () => {
             let error = await assertResolves(async () => {
@@ -1019,7 +1019,7 @@ let error;
                 writer.close();
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         // surrogateKeys?: Array<string>,-- empty string? -- toString which throws -- wrong types?
     }
@@ -1031,7 +1031,7 @@ let error;
                 new CoreCache.transactionLookup('1')
             }, TypeError, `CoreCache.transactionLookup is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         // https://tc39.es/ecma262/#sec-tostring
         routes.set("/core-cache/transactionLookup/key-parameter-calls-7.1.17-ToString", () => {
@@ -1057,21 +1057,21 @@ let error;
                 CoreCache.transactionLookup(Symbol())
             }, TypeError, `can't convert symbol to string`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/transactionLookup/key-parameter-not-supplied", () => {
             let error = assertThrows(() => {
                 CoreCache.transactionLookup()
             }, TypeError, `CoreCache.transactionLookup: At least 1 argument required, but only 0 passed`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/transactionLookup/key-parameter-empty-string", () => {
             let error = assertThrows(() => {
                 CoreCache.transactionLookup('')
             }, Error, `CoreCache.transactionLookup: key can not be an empty string`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/transactionLookup/key-parameter-8135-character-string", () => {
             let error = assertDoesNotThrow(() => {
@@ -1079,7 +1079,7 @@ let error;
                 CoreCache.transactionLookup(key)
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/transactionLookup/key-parameter-8136-character-string", () => {
             let error = assertThrows(() => {
@@ -1087,13 +1087,13 @@ let error;
                 CoreCache.transactionLookup(key)
             }, Error, `CoreCache.transactionLookup: key is too long, the maximum allowed length is 8135.`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/transactionLookup/key-does-not-exist", () => {
             let result = CoreCache.transactionLookup(Math.random())
             error = assert(result instanceof CacheEntry, true, `CoreCache.transactionLookup(Math.random()) instanceof CacheEntry`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/transactionLookup/key-exists", () => {
             let writer = CoreCache.insert('cat', {
@@ -1104,7 +1104,7 @@ let error;
             let result = CoreCache.transactionLookup('cat');
             error = assert(result instanceof CacheEntry, true, `CoreCache.transactionLookup('cat') instanceof CacheEntry`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
 
         routes.set("/core-cache/transactionLookup/options-parameter-wrong-type", () => {
@@ -1112,14 +1112,14 @@ let error;
                 CoreCache.transactionLookup('cat', '')
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/transactionLookup/options-parameter-headers-field-wrong-type", () => {
             let error = assertThrows(() => {
                 CoreCache.transactionLookup('cat', { headers: '' })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/transactionLookup/options-parameter-headers-field-undefined", () => {
             let entry;
@@ -1129,7 +1129,7 @@ let error;
             if (error) { return error }
             error = assert(entry instanceof CacheEntry, true, `CoreCache.transactionLookup('cat', {headers:...}) instanceof CacheEntry`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/transactionLookup/options-parameter-headers-field-valid-sequence", () => {
             let entry;
@@ -1139,7 +1139,7 @@ let error;
             if (error) { return error }
             error = assert(entry instanceof CacheEntry, true, `CoreCache.transactionLookup('cat', {headers:...}) instanceof CacheEntry`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/transactionLookup/options-parameter-headers-field-valid-record", () => {
             let entry;
@@ -1154,7 +1154,7 @@ let error;
             if (error) { return error }
             error = assert(entry instanceof CacheEntry, true, `CoreCache.transactionLookup('cat', {headers:...}) instanceof CacheEntry`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/core-cache/transactionLookup/options-parameter-headers-field-valid-Headers-instance", () => {
             let entry;
@@ -1169,7 +1169,7 @@ let error;
             if (error) { return error }
             error = assert(entry instanceof CacheEntry, true, `CoreCache.transactionLookup('cat', {headers:...}) instanceof CacheEntry`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 }
@@ -1550,7 +1550,7 @@ let error;
             if (error) { return error }
         }
 
-        return pass("passed")
+        return pass("ok")
     });
 
     // CacheEntry constructor
@@ -1561,12 +1561,12 @@ let error;
                 CacheEntry()
             }, TypeError, `Illegal constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/constructor/throws", () => {
             error = assertThrows(() => new CacheEntry(), TypeError, `Illegal constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 
@@ -1577,14 +1577,14 @@ let error;
                 new CacheEntry.prototype.close()
             }, TypeError, `CacheEntry.prototype.close is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/close/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.close.call(undefined)
             }, Error, "Method close called on receiver that's not an instance of CacheEntry")
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/close/called-on-instance", () => {
             let key = '/cache-entry/close/called-on-instance' + Math.random()
@@ -1596,7 +1596,7 @@ let error;
             let result = CoreCache.lookup(key).close()
             error = assert(result, undefined, `CoreCache.lookup(key).close()`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 
@@ -1607,14 +1607,14 @@ let error;
                 new CacheEntry.prototype.state()
             }, TypeError, `CacheEntry.prototype.state is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/state/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.state.call(undefined)
             }, Error, "Method state called on receiver that's not an instance of CacheEntry")
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
 
         routes.set("/cache-entry/state/called-on-instance", () => {
@@ -1628,7 +1628,7 @@ let error;
             let result = entry.state()
             error = assert(result instanceof CacheState, true, `CoreCache.lookup(key).state() instanceof CacheState`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 
@@ -1639,14 +1639,14 @@ let error;
                 new CacheEntry.prototype.userMetadata()
             }, TypeError, `CacheEntry.prototype.userMetadata is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/userMetadata/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.userMetadata.call(undefined)
             }, Error, "Method userMetadata called on receiver that's not an instance of CacheEntry")
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/userMetadata/called-on-instance", () => {
             let key = '/cache-entry/userMetadata/called-on-instance' + Math.random()
@@ -1660,7 +1660,7 @@ let error;
             if (error) { return error }
             error = assert(result.byteLength, 0, `CoreCache.lookup(key).userMetadata().byteLength`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/userMetadata/basic", () => {
             let key = '/cache-entry/userMetadata/basic' + Math.random()
@@ -1680,7 +1680,7 @@ let error;
             let result = new TextDecoder().decode(metadata)
             error = assert(result, 'hello world', `new TextDecoder().decode(CoreCache.lookup(key).userMetadata()) === 'hello world'`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
 
     }
@@ -1692,14 +1692,14 @@ let error;
                 new CacheEntry.prototype.body()
             }, TypeError, `CacheEntry.prototype.body is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/body/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.body.call(undefined)
             }, Error, "Method body called on receiver that's not an instance of CacheEntry")
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/body/called-on-instance", async () => {
             let key = '/cache-entry/body/called-on-instance' + Math.random()
@@ -1715,7 +1715,7 @@ let error;
             result = await streamToString(result);
             error = assert(result, 'hello', `await streamToString(CoreCache.lookup(key).body())`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/body/options-start-negative", async () => {
             let key = '/cache-entry/body/options-start-negative' + Math.random()
@@ -1728,7 +1728,7 @@ let error;
                 CoreCache.lookup(key).body({start: -1})
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/body/options-start-NaN", async () => {
             let key = '/cache-entry/body/options-start-NaN' + Math.random()
@@ -1741,7 +1741,7 @@ let error;
                 CoreCache.lookup(key).body({start: NaN})
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/body/options-start-Infinity", async () => {
             let key = '/cache-entry/body/options-start-Infinity' + Math.random()
@@ -1754,7 +1754,7 @@ let error;
                 CoreCache.lookup(key).body({start: Infinity})
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/body/options-start-valid", async () => {
             let key = '/cache-entry/body/options-start-valid' + Math.random()
@@ -1770,7 +1770,7 @@ let error;
             result = await streamToString(result);
             error = assert(result, 'ello', `await streamToString(CoreCache.lookup(key).body())`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/body/options-start-longer-than-body", async () => {
             let key = '/cache-entry/body/options-start-longer-than-body' + Math.random()
@@ -1786,7 +1786,7 @@ let error;
             result = await streamToString(result);
             error = assert(result, 'hello', `await streamToString(CoreCache.lookup(key).body())`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/body/options-end-negative", async () => {
             let key = '/cache-entry/body/options-end-negative' + Math.random()
@@ -1799,7 +1799,7 @@ let error;
                 CoreCache.lookup(key).body({end: -1})
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/body/options-end-NaN", async () => {
             let key = '/cache-entry/body/options-end-NaN' + Math.random()
@@ -1812,7 +1812,7 @@ let error;
                 CoreCache.lookup(key).body({end: NaN})
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/body/options-end-Infinity", async () => {
             let key = '/cache-entry/body/options-end-Infinity' + Math.random()
@@ -1825,7 +1825,7 @@ let error;
                 CoreCache.lookup(key).body({end: Infinity})
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/body/options-end-valid", async () => {
             let key = '/cache-entry/body/options-end-valid' + Math.random()
@@ -1842,7 +1842,7 @@ let error;
             console.log({result})
             error = assert(result, 'e', `await streamToString(CoreCache.lookup(key).body())`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/body/options-end-zero", async () => {
             let key = '/cache-entry/body/options-end-zero' + Math.random()
@@ -1859,7 +1859,7 @@ let error;
             console.log({result})
             error = assert(result, 'hello', `await streamToString(CoreCache.lookup(key).body())`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 
@@ -1870,14 +1870,14 @@ let error;
                 new CacheEntry.prototype.length()
             }, TypeError, `CacheEntry.prototype.length is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/length/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.length.call(undefined)
             }, Error, "Method length called on receiver that's not an instance of CacheEntry")
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/length/called-on-instance", () => {
             let key = '/cache-entry/length/called-on-instance' + Math.random()
@@ -1889,7 +1889,7 @@ let error;
             let result = CoreCache.lookup(key).length()
             error = assert(result, 5, `CoreCache.lookup(key).length()`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         // TODO pass in an entry with unknown length and then call length and check it is null?
         /// The size in bytes of the cached item, if known.
@@ -1905,14 +1905,14 @@ let error;
                 new CacheEntry.prototype.maxAge()
             }, TypeError, `CacheEntry.prototype.maxAge is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/maxAge/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.maxAge.call(undefined)
             }, Error, "Method maxAge called on receiver that's not an instance of CacheEntry")
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/maxAge/called-on-instance", async () => {
             let key = '/cache-entry/maxAge/called-on-instance' + Math.random()
@@ -1924,7 +1924,7 @@ let error;
             let result = CoreCache.lookup(key).maxAge()
             error = assert(result, 60_000, `CoreCache.lookup(key).maxAge()`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 
@@ -1935,14 +1935,14 @@ let error;
                 new CacheEntry.prototype.staleWhileRevalidate()
             }, TypeError, `CacheEntry.prototype.staleWhileRevalidate is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/staleWhileRevalidate/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.staleWhileRevalidate.call(undefined)
             }, Error, "Method staleWhileRevalidate called on receiver that's not an instance of CacheEntry")
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/staleWhileRevalidate/called-on-instance", async () => {
             let key = '/cache-entry/staleWhileRevalidate/called-on-instance' + Math.random()
@@ -1956,7 +1956,7 @@ let error;
             if (error) { return error }
             error = assert(result >= 0, true, `CoreCache.lookup(key).staleWhileRevalidate() >= 0`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 
@@ -1967,14 +1967,14 @@ let error;
                 new CacheEntry.prototype.age()
             }, TypeError, `CacheEntry.prototype.age is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/age/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.age.call(undefined)
             }, Error, "Method age called on receiver that's not an instance of CacheEntry")
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/age/called-on-instance", async () => {
             let key = '/cache-entry/age/called-on-instance' + Math.random()
@@ -1992,7 +1992,7 @@ let error;
             result = CoreCache.lookup(key).age()
             error = assert(result >= 1_000, true, `CoreCache.lookup(key).age() >= 1_000`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 
@@ -2003,14 +2003,14 @@ let error;
                 new CacheEntry.prototype.hits()
             }, TypeError, `CacheEntry.prototype.hits is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/hits/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.hits.call(undefined)
             }, Error, "Method hits called on receiver that's not an instance of CacheEntry")
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/cache-entry/hits/called-on-instance", () => {
             let key = '/cache-entry/hits/called-on-instance' + Math.random()
@@ -2025,7 +2025,7 @@ let error;
             result = CoreCache.lookup(key).hits()
             error = assert(result, 2, `CoreCache.lookup(key).hits()`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 }
@@ -2251,7 +2251,7 @@ let error;
             if (error) { return error }
         }
 
-        return pass("passed")
+        return pass("ok")
     });
 
     // insert(options: TransactionInsertOptions): FastlyBody;
@@ -2262,7 +2262,7 @@ let error;
                 new entry.insert({maxAge: 1})
             }, TypeError, `entry.insert is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/entry-parameter-not-supplied", () => {
             let entry = CoreCache.transactionLookup('1')
@@ -2272,7 +2272,7 @@ let error;
                 entry.insert()
             }, TypeError, `insert: At least 1 argument required, but only 0 passed`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
 
         routes.set("/transaction-cache-entry/insert/options-parameter-maxAge-field-valid-record", () => {
@@ -2284,7 +2284,7 @@ let error;
             if (error) { return error }
             error = assert(body instanceof FastlyBody, true, `entry.insert({maxAge: 1}) instanceof FastlyBody`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-maxAge-field-NaN", () => {
             let error = assertThrows(() => {
@@ -2294,7 +2294,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-maxAge-field-postitive-infinity", () => {
             let error = assertThrows(() => {
@@ -2304,7 +2304,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-maxAge-field-negative-infinity", () => {
             let error = assertThrows(() => {
@@ -2314,7 +2314,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-maxAge-field-negative-number", () => {
             let error = assertThrows(() => {
@@ -2324,7 +2324,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-initialAge-field-valid-record", () => {
             let body;
@@ -2335,7 +2335,7 @@ let error;
             if (error) { return error }
             error = assert(body instanceof FastlyBody, true, `entry.insert({maxAge: 1,initialAge: 1}) instanceof FastlyBody`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-initialAge-field-NaN", () => {
             let error = assertThrows(() => {
@@ -2346,7 +2346,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-initialAge-field-postitive-infinity", () => {
             let error = assertThrows(() => {
@@ -2357,7 +2357,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-initialAge-field-negative-infinity", () => {
             let error = assertThrows(() => {
@@ -2368,7 +2368,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-initialAge-field-negative-number", () => {
             let error = assertThrows(() => {
@@ -2379,7 +2379,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-valid-record", () => {
             let body;
@@ -2390,7 +2390,7 @@ let error;
             if (error) { return error }
             error = assert(body instanceof FastlyBody, true, `entry.insert({maxAge: 1,staleWhileRevalidate: 1}) instanceof FastlyBody`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-NaN", () => {
             let error = assertThrows(() => {
@@ -2401,7 +2401,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-postitive-infinity", () => {
             let error = assertThrows(() => {
@@ -2412,7 +2412,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-negative-infinity", () => {
             let error = assertThrows(() => {
@@ -2423,7 +2423,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-negative-number", () => {
             let error = assertThrows(() => {
@@ -2434,7 +2434,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-length-field-valid-record", () => {
             let body;
@@ -2445,7 +2445,7 @@ let error;
             if (error) { return error }
             error = assert(body instanceof FastlyBody, true, `entry.insert({maxAge: 1,length: 1}) instanceof FastlyBody`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-length-field-NaN", () => {
             let error = assertThrows(() => {
@@ -2456,7 +2456,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-length-field-postitive-infinity", () => {
             let error = assertThrows(() => {
@@ -2467,7 +2467,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-length-field-negative-infinity", () => {
             let error = assertThrows(() => {
@@ -2478,7 +2478,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-length-field-negative-number", () => {
             let error = assertThrows(() => {
@@ -2489,7 +2489,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-sensitive-field", () => {
             let error = assertDoesNotThrow(() => {
@@ -2500,7 +2500,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insert/options-parameter-vary-field", () => {
             let error = assertDoesNotThrow(() => {
@@ -2511,7 +2511,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 
@@ -2524,7 +2524,7 @@ let error;
                 new entry.insertAndStreamBack({maxAge: 1})
             }, TypeError, `entry.insertAndStreamBack is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/entry-parameter-not-supplied", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2533,7 +2533,7 @@ let error;
                 entry.insertAndStreamBack()
             }, TypeError, `insertAndStreamBack: At least 1 argument required, but only 0 passed`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
 
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-valid-record", (event) => {
@@ -2549,7 +2549,7 @@ let error;
             if (error) { return error }
             error = assert(reader instanceof CacheEntry, true, `writer instanceof CacheEntry`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-NaN", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2560,7 +2560,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-postitive-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2571,7 +2571,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-negative-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2582,7 +2582,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-negative-number", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2593,7 +2593,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-valid-record", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2608,7 +2608,7 @@ let error;
             if (error) { return error }
             error = assert(reader instanceof CacheEntry, true, `writer instanceof CacheEntry`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-NaN", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2620,7 +2620,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-postitive-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2632,7 +2632,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-negative-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2644,7 +2644,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-negative-number", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2656,7 +2656,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-valid-record", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2670,7 +2670,7 @@ let error;
             if (error) { return error }
             error = assert(reader instanceof CacheEntry, true, `writer instanceof CacheEntry`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-NaN", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2682,7 +2682,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-postitive-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2694,7 +2694,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-negative-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2706,7 +2706,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-negative-number", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2718,7 +2718,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-valid-record", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2732,7 +2732,7 @@ let error;
             if (error) { return error }
             error = assert(reader instanceof CacheEntry, true, `writer instanceof CacheEntry`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-NaN", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2744,7 +2744,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-postitive-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2756,7 +2756,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-negative-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2768,7 +2768,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-negative-number", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2780,7 +2780,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-sensitive-field", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2792,7 +2792,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
 
         routes.set("/transaction-cache-entry/insertAndStreamBack/write-to-writer-and-read-from-reader", async (event) => {
@@ -2807,7 +2807,7 @@ let error;
             const actual = await new Response(reader.body()).text();
             let error = assert("hello", actual, `actual === "hello"`);
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/insertAndStreamBack/options-parameter-vary-field", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2819,7 +2819,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 
@@ -2832,7 +2832,7 @@ let error;
                 new entry.update({maxAge: 1})
             }, TypeError, `entry.update is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/entry-parameter-not-supplied", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2841,7 +2841,7 @@ let error;
                 entry.update()
             }, TypeError, `update: At least 1 argument required, but only 0 passed`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
 
         routes.set("/transaction-cache-entry/update/options-parameter-maxAge-field-valid-record", (event) => {
@@ -2857,7 +2857,7 @@ let error;
                 entry.update({maxAge: 1})
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-maxAge-field-NaN", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2868,7 +2868,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-maxAge-field-postitive-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2879,7 +2879,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-maxAge-field-negative-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2890,7 +2890,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-maxAge-field-negative-number", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2901,7 +2901,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-initialAge-field-valid-record", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2916,7 +2916,7 @@ let error;
                 entry.update({maxAge: 1,initialAge: 1})
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-initialAge-field-NaN", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2928,7 +2928,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-initialAge-field-postitive-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2940,7 +2940,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-initialAge-field-negative-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2952,7 +2952,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-initialAge-field-negative-number", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2964,7 +2964,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-valid-record", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2979,7 +2979,7 @@ let error;
                 entry.update({maxAge: 1,staleWhileRevalidate: 1})
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-NaN", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -2991,7 +2991,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-postitive-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3003,7 +3003,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-negative-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3015,7 +3015,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-negative-number", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3027,7 +3027,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-length-field-valid-record", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3042,7 +3042,7 @@ let error;
                 entry.update({maxAge: 1,length: 1})
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-length-field-NaN", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3054,7 +3054,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-length-field-postitive-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3066,7 +3066,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-length-field-negative-infinity", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3078,7 +3078,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-length-field-negative-number", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3090,7 +3090,7 @@ let error;
                 })
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/write-to-writer-and-read-from-reader", async (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3109,7 +3109,7 @@ let error;
             entry = CoreCache.transactionLookup(path);
             let error = assert(entry.maxAge(), 60 * 1000, `entry2.maxAge() === 60 * 1000`);
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-vary-field", async (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3127,7 +3127,7 @@ let error;
                 maxAge: 1000,
                 vary: ["animal"]
             });
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/update/options-parameter-userMetadata-field", async (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3144,7 +3144,7 @@ let error;
                 maxAge: 1000,
                 userMetadata: 'hello'
             });
-            return pass("passed")
+            return pass("ok")
         });
         // TODO: tests for options parameter fields
         // surrogateKeys?: Array<string>,-- empty string? -- toString which throws -- wrong types?
@@ -3159,7 +3159,7 @@ let error;
                 new entry.cancel()
             }, TypeError, `entry.cancel is not a constructor`)
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/cancel/called-once", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3168,7 +3168,7 @@ let error;
                 entry.cancel()
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/cancel/makes-entry-cancelled", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3182,7 +3182,7 @@ let error;
                 entry.insert({maxAge: 1})
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
         routes.set("/transaction-cache-entry/cancel/called-twice-throws", (event) => {
             const path = (new URL(event.request.url)).pathname
@@ -3196,7 +3196,7 @@ let error;
                 entry.cancel()
             })
             if (error) { return error }
-            return pass("passed")
+            return pass("ok")
         });
     }
 }
