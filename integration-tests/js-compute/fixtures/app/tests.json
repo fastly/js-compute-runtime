@@ -4748,5 +4748,2096 @@
       "status": 200,
       "body": "ok"
     }
+  },
+
+  "GET /FastlyBody/interface": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/interface"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/interface": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/interface"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/constructor/called-as-regular-function": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/constructor/throws": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/constructor/throws"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/key-parameter-not-supplied": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/key-parameter-empty-string": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/key-parameter-8135-character-string": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/key-parameter-8135-character-string"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/key-parameter-8136-character-string": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/key-parameter-8136-character-string"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/key-does-not-exist-returns-null": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/key-does-not-exist-returns-null"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/key-exists": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/key-exists"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/options-parameter-wrong-type": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/options-parameter-wrong-type"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/options-parameter-headers-field-wrong-type": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/options-parameter-headers-field-wrong-type"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/options-parameter-headers-field-undefined": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/options-parameter-headers-field-undefined"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/options-parameter-headers-field-valid-sequence": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/options-parameter-headers-field-valid-sequence"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/options-parameter-headers-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/options-parameter-headers-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/lookup/options-parameter-headers-field-valid-Headers-instance": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/lookup/options-parameter-headers-field-valid-Headers-instance"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/key-parameter-not-supplied": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/key-parameter-empty-string": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/key-parameter-8135-character-string": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/key-parameter-8135-character-string"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/key-parameter-8136-character-string": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/key-parameter-8136-character-string"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-wrong-type": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-wrong-type"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-headers-field-wrong-type": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-headers-field-wrong-type"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-headers-field-undefined": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-headers-field-undefined"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-headers-field-valid-sequence": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-headers-field-valid-sequence"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-headers-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-headers-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-headers-field-valid-Headers-instance": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-headers-field-valid-Headers-instance"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-maxAge-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-maxAge-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-maxAge-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-maxAge-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-maxAge-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-maxAge-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-maxAge-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-maxAge-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-maxAge-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-maxAge-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-initialAge-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-initialAge-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-initialAge-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-initialAge-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-initialAge-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-initialAge-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-initialAge-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-initialAge-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-initialAge-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-initialAge-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-staleWhileRevalidate-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-staleWhileRevalidate-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-staleWhileRevalidate-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-staleWhileRevalidate-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-staleWhileRevalidate-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-length-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-length-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-length-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-length-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-length-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-length-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-length-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-length-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-length-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-length-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-sensitive-field": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-sensitive-field"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-vary-field": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-vary-field"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-userMetadata-field/arraybuffer/empty": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-userMetadata-field/arraybuffer/empty"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-userMetadata-field/arraybuffer/not-empty": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-userMetadata-field/arraybuffer/not-empty"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-userMetadata-field/URLSearchParams": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-userMetadata-field/URLSearchParams"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/insert/options-parameter-userMetadata-field/string": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/insert/options-parameter-userMetadata-field/string"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/key-parameter-not-supplied": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/key-parameter-empty-string": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/key-parameter-8135-character-string": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/key-parameter-8135-character-string"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/key-parameter-8136-character-string": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/key-parameter-8136-character-string"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/key-does-not-exist": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/key-does-not-exist"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/key-exists": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/key-exists"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/options-parameter-wrong-type": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/options-parameter-wrong-type"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/options-parameter-headers-field-wrong-type": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/options-parameter-headers-field-wrong-type"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/options-parameter-headers-field-undefined": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/options-parameter-headers-field-undefined"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/options-parameter-headers-field-valid-sequence": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/options-parameter-headers-field-valid-sequence"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/options-parameter-headers-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/options-parameter-headers-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /core-cache/transactionLookup/options-parameter-headers-field-valid-Headers-instance": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/core-cache/transactionLookup/options-parameter-headers-field-valid-Headers-instance"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/interface": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/interface"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/constructor/called-as-regular-function": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/constructor/throws": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/constructor/throws"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/close/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/close/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/close/called-unbound": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/close/called-unbound"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/close/called-on-instance": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/close/called-on-instance"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/state/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/state/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/state/called-unbound": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/state/called-unbound"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/state/called-on-instance": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/state/called-on-instance"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/userMetadata/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/userMetadata/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/userMetadata/called-unbound": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/userMetadata/called-unbound"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/userMetadata/called-on-instance": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/userMetadata/called-on-instance"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/userMetadata/basic": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/userMetadata/basic"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/called-unbound": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/called-unbound"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/called-on-instance": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/called-on-instance"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/options-start-negative": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/options-start-negative"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/options-start-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/options-start-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/options-start-Infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/options-start-Infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/options-start-valid": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/options-start-valid"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/options-start-longer-than-body": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/options-start-longer-than-body"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/options-end-negative": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/options-end-negative"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/options-end-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/options-end-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/options-end-Infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/options-end-Infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/options-end-valid": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/options-end-valid"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/body/options-end-zero": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/body/options-end-zero"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/length/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/length/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/length/called-unbound": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/length/called-unbound"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/length/called-on-instance": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/length/called-on-instance"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/maxAge/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/maxAge/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/maxAge/called-unbound": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/maxAge/called-unbound"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/maxAge/called-on-instance": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/maxAge/called-on-instance"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/staleWhileRevalidate/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/staleWhileRevalidate/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/staleWhileRevalidate/called-unbound": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/staleWhileRevalidate/called-unbound"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/staleWhileRevalidate/called-on-instance": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/staleWhileRevalidate/called-on-instance"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/age/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/age/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/age/called-unbound": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/age/called-unbound"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/age/called-on-instance": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/age/called-on-instance"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/hits/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/hits/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/hits/called-unbound": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/hits/called-unbound"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /cache-entry/hits/called-on-instance": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/cache-entry/hits/called-on-instance"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/interface": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/interface"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/entry-parameter-not-supplied": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/entry-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-maxAge-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-maxAge-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-maxAge-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-maxAge-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-maxAge-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-initialAge-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-initialAge-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-initialAge-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-initialAge-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-initialAge-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-length-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-length-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-length-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-length-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-length-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-length-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-length-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-length-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-length-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-length-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-sensitive-field": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-sensitive-field"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-vary-field": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insert/options-parameter-vary-field"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/entry-parameter-not-supplied": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/entry-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-sensitive-field": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-sensitive-field"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/write-to-writer-and-read-from-reader": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/write-to-writer-and-read-from-reader"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-vary-field": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/insertAndStreamBack/options-parameter-vary-field"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/entry-parameter-not-supplied": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/entry-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-maxAge-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-maxAge-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-maxAge-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-maxAge-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-maxAge-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-maxAge-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-maxAge-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-maxAge-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-maxAge-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-maxAge-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-initialAge-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-initialAge-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-initialAge-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-initialAge-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-initialAge-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-initialAge-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-initialAge-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-initialAge-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-initialAge-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-initialAge-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-length-field-valid-record": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-length-field-valid-record"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-length-field-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-length-field-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-length-field-postitive-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-length-field-postitive-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-length-field-negative-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-length-field-negative-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-length-field-negative-number": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-length-field-negative-number"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/write-to-writer-and-read-from-reader": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/write-to-writer-and-read-from-reader"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-vary-field": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-vary-field"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/update/options-parameter-userMetadata-field": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/update/options-parameter-userMetadata-field"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/cancel/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/cancel/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/cancel/called-once": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/cancel/called-once"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/cancel/makes-entry-cancelled": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/cancel/makes-entry-cancelled"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /transaction-cache-entry/cancel/called-twice-throws": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/transaction-cache-entry/cancel/called-twice-throws"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
   }
 }

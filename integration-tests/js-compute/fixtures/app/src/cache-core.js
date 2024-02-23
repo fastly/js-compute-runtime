@@ -3184,7 +3184,7 @@ let error;
             if (error) { return error }
             return pass("passed")
         });
-        routes.set("/transaction-cache-entry/cancel/makes-entry-cancelled", (event) => {
+        routes.set("/transaction-cache-entry/cancel/called-twice-throws", (event) => {
             const path = (new URL(event.request.url)).pathname
             let entry
             let error = assertDoesNotThrow(() => {
