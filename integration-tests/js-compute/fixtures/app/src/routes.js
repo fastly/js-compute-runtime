@@ -11,5 +11,5 @@ routes.set('/', () => {
 })
 
 export function isRunningLocally() {
-    return env('FASTLY_SERVICE_VERSION') === ''
+    return env('FASTLY_SERVICE_VERSION') ===  '' || env('FASTLY_SERVICE_VERSION') === '0'
 }
