@@ -76,8 +76,8 @@ import { isRunningLocally, routes } from "./routes.js";
 {
     routes.set("/cache-override/fetch/mode-none", async () => {
         if (!isRunningLocally()) {
-            const response = await fetch('https://httpbin.org/status/200', {
-                backend: 'httpbin',
+            const response = await fetch('https://http-me.glitch.me/now?status=200', {
+                backend: 'httpme',
                 cacheOverride: new CacheOverride('none')
             })
             let error = assert(response.headers.has('x-cache'), true, `CacheOveride('none'); response.headers.has('x-cache') === true`)
@@ -87,8 +87,8 @@ import { isRunningLocally, routes } from "./routes.js";
     });
     routes.set("/cache-override/fetch/mode-pass", async () => {
         if (!isRunningLocally()) {
-            const response = await fetch('https://httpbin.org/status/200', {
-                backend: 'httpbin',
+            const response = await fetch('https://http-me.glitch.me/now?status=200', {
+                backend: 'httpme',
                 cacheOverride: new CacheOverride('pass')
             })
             let error = assert(response.headers.has('x-cache'), false, `CacheOveride('pass'); response.headers.has('x-cache') === false`)
