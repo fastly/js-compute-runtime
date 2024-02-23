@@ -277,16 +277,49 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
       }
     }
   } else {
-    auto result = convertBodyInit(cx, body_val);
-    if (result.isErr()) {
-      return false;
-    }
+    mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
+    JS::UniqueChars text;
+    char *buf;
     size_t length;
-    JS::UniqueChars data;
-    std::tie(data, length) = result.unwrap();
+
+    if (body_obj && JS_IsArrayBufferViewObject(body_obj)) {
+      // Short typed arrays have inline data which can move on GC, so assert
+      // that no GC happens. (Which it doesn't, because we're not allocating
+      // before `buf` goes out of scope.)
+      maybeNoGC.emplace(cx);
+      JS::AutoCheckCannotGC &noGC = maybeNoGC.ref();
+      bool is_shared;
+      length = JS_GetArrayBufferViewByteLength(body_obj);
+      buf = (char *)JS_GetArrayBufferViewData(body_obj, &is_shared, noGC);
+    } else if (body_obj && JS::IsArrayBufferObject(body_obj)) {
+      bool is_shared;
+      JS::GetArrayBufferLengthAndData(body_obj, &length, &is_shared, (uint8_t **)&buf);
+    } else if (body_obj && builtins::URLSearchParams::is_instance(body_obj)) {
+      auto slice = builtins::URLSearchParams::serialize(cx, body_obj);
+      buf = (char *)slice.data;
+      length = slice.len;
+      content_type = "application/x-www-form-urlencoded;charset=UTF-8";
+    } else {
+      {
+        auto str = core::encode(cx, body_val);
+        text = std::move(str.ptr);
+        length = str.len;
+      }
+
+      if (!text)
+        return false;
+      buf = text.get();
+      content_type = "text/plain;charset=UTF-8";
+    }
 
     host_api::HttpBody body{RequestOrResponse::body_handle(self)};
-    auto write_res = body.write_all_back(reinterpret_cast<uint8_t *>(data.get()), length);
+    auto write_res = body.write_all_back(reinterpret_cast<uint8_t *>(buf), length);
+
+    // Ensure that the NoGC is reset, so throwing an error in HANDLE_ERROR
+    // succeeds.
+    if (maybeNoGC.isSome()) {
+      maybeNoGC.reset();
+    }
 
     if (auto *err = write_res.to_err()) {
       HANDLE_ERROR(cx, *err);
