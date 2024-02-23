@@ -347,6 +347,12 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS::UniqueChars data;
     std::tie(data, length) = result.unwrap();
 
+    // 30MB in bytes is the max size allowed for KVStore.
+    if (length > 30 * 1024 * 1024) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_KV_STORE_PUT_OVER_30_MB);
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+
     auto make_res = host_api::HttpBody::make();
     if (auto *err = make_res.to_err()) {
       HANDLE_ERROR(cx, *err);
