@@ -299,7 +299,8 @@ Result<Void> HttpBody::write_all_front(const uint8_t *ptr, size_t len) const {
 
     auto written = write_res.unwrap();
     ptr += written;
-    len -= std::min(len, static_cast<size_t>(written));
+    MOZ_ASSERT(written <= len);
+    len -= static_cast<size_t>(written);
   }
 
   return Result<Void>::ok();
