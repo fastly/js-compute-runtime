@@ -80,11 +80,7 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionUpdateOptions(JSContext 
   JS::RootedObject options_obj(cx, &options_val.toObject());
 
   JS::RootedValue maxAge_val(cx);
-  if (!JS_GetProperty(cx, options_obj, "maxAge", &maxAge_val)) {
-    return JS::Result<host_api::CacheWriteOptions>(JS::Error());
-  }
-  // maxAge property is required
-  if (maxAge_val.isUndefined()) {
+  if (!JS_GetProperty(cx, options_obj, "maxAge", &maxAge_val) || maxAge_val.isUndefined()) {
     JS_ReportErrorASCII(cx, "maxAge is required");
     return JS::Result<host_api::CacheWriteOptions>(JS::Error());
   }
