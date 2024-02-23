@@ -991,7 +991,7 @@ bool fastly_compute_at_edge_cache_transaction_insert(
     options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_REQUEST_HEADERS;
     opts.request_headers = options->request_headers;
   }
-  if (options->vary_rule.ptr != nullptr) {
+  if (options->vary_rule.len > 0) {
     options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_VARY_RULE;
     opts.vary_rule_len = options->vary_rule.len;
     opts.vary_rule_ptr = reinterpret_cast<uint8_t *>(options->vary_rule.ptr);
