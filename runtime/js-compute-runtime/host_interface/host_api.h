@@ -650,27 +650,6 @@ public:
   Result<std::optional<Secret>> get(std::string_view name);
 };
 
-class Body final {
-public:
-  using Handle = uint32_t;
-
-  Handle handle = UINT32_MAX - 1;
-
-  Body() = default;
-  explicit Body(Handle handle) : handle{handle} {}
-
-  static Result<Body> create();
-
-  static Result<Void> concat(Body dest);
-
-  static Result<HostBytes> read(uint32_t chunkSize);
-
-  static Result<uint32_t> append(HostBytes buf);
-  static Result<uint32_t> prepend(HostBytes buf);
-
-  static Result<Void> close();
-};
-
 class Random final {
 public:
   static Result<HostBytes> get_bytes(size_t num_bytes);
