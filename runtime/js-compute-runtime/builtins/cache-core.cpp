@@ -48,6 +48,9 @@ JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
       }
 
+      // We need to convert the supplied HeadersInit in the `headers` property into a host-backed Request which contains the same headers
+      // builtins::Request::create does exactly that however, it also expects a fully valid URL for the Request.
+      // We don't ever use the Request URL, so we hard-code a valid URL
       JS::RootedValue input(cx, JS::StringValue(JS_NewStringCopyZ(cx, "http://example.com")));
       JS::RootedObject request(cx,
                                builtins::Request::create(cx, requestInstance, input, headers_val));
@@ -333,6 +336,9 @@ JS::Result<host_api::CacheWriteOptions> parseInsertOptions(JSContext *cx,
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
 
+    // We need to convert the supplied HeadersInit in the `headers` property into a host-backed Request which contains the same headers
+      // builtins::Request::create does exactly that however, it also expects a fully valid URL for the Request.
+      // We don't ever use the Request URL, so we hard-code a valid URL
     JS::RootedValue input(cx, JS::StringValue(JS_NewStringCopyZ(cx, "http://example.com")));
     JS::RootedObject request(cx,
                              builtins::Request::create(cx, requestInstance, input, headers_val));
@@ -1115,6 +1121,9 @@ bool CoreCache::transactionLookup(JSContext *cx, unsigned argc, JS::Value *vp) {
         return false;
       }
 
+      // We need to convert the supplied HeadersInit in the `headers` property into a host-backed Request which contains the same headers
+      // builtins::Request::create does exactly that however, it also expects a fully valid URL for the Request.
+      // We don't ever use the Request URL, so we hard-code a valid URL
       JS::RootedValue input(cx, JS::StringValue(JS_NewStringCopyZ(cx, "http://example.com")));
       JS::RootedObject request(cx,
                                builtins::Request::create(cx, requestInstance, input, headers_val));
