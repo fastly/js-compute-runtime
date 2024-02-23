@@ -84,56 +84,6 @@ bool SimpleCacheEntry::init_class(JSContext *cx, JS::HandleObject global) {
 }
 
 namespace {
-// We currently support five types of body inputs:
-// - byte sequence
-// - buffer source
-// - USV strings
-// - URLSearchParams
-// - ReadableStream (Currently only supports Host-backed ReadableStreams)
-// After the other other options are checked explicitly, all other inputs are
-// encoded to a UTF8 string to be treated as a USV string.
-// TODO: Add support for Blob and FormData when we have implemented those classes.
-JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
-                                                                JS::HandleValue bodyInit) {
-  JS::RootedObject bodyObj(cx, bodyInit.isObject() ? &bodyInit.toObject() : nullptr);
-  mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
-  JS::UniqueChars buf;
-  size_t length;
-
-  if (bodyObj && JS_IsArrayBufferViewObject(bodyObj)) {
-    // `maybeNoGC` needs to be populated for the lifetime of `buf` because
-    // short typed arrays have inline data which can move on GC, so assert
-    // that no GC happens. (Which it doesn't, because we're not allocating
-    // before `buf` goes out of scope.)
-    maybeNoGC.emplace(cx);
-    JS::AutoCheckCannotGC &noGC = maybeNoGC.ref();
-    bool is_shared;
-    length = JS_GetArrayBufferViewByteLength(bodyObj);
-    buf = JS::UniqueChars(
-        reinterpret_cast<char *>(JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC)));
-    MOZ_ASSERT(!is_shared);
-  } else if (bodyObj && JS::IsArrayBufferObject(bodyObj)) {
-    bool is_shared;
-    uint8_t *bytes;
-    JS::GetArrayBufferLengthAndData(bodyObj, &length, &is_shared, &bytes);
-    MOZ_ASSERT(!is_shared);
-    buf.reset(reinterpret_cast<char *>(bytes));
-  } else if (bodyObj && builtins::URLSearchParams::is_instance(bodyObj)) {
-    jsurl::SpecSlice slice = builtins::URLSearchParams::serialize(cx, bodyObj);
-    buf = JS::UniqueChars(reinterpret_cast<char *>(const_cast<uint8_t *>(slice.data)));
-    length = slice.len;
-  } else {
-    // Convert into a String following https://tc39.es/ecma262/#sec-tostring
-    auto str = core::encode(cx, bodyInit);
-    if (!str) {
-      return JS::Result<std::tuple<JS::UniqueChars, size_t>>(JS::Error());
-    }
-    buf.reset(str.ptr.release());
-    length = str.len;
-  }
-  return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
-}
-
 // Purging/Deleting a cache item within the Compute SDKs via a hostcall is only
 // possible via surrogate-keys. We add a surrogate key to all the cache entries,
 // which is the sha-256 digest of the cache entries cache-key, converted to
@@ -346,29 +296,25 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
     if (!JS_HasProperty(cx, insertionObject, "length", &found)) {
       return false;
     }
-    if (!found) {
-      JS_ReportErrorASCII(cx, "SimpleCache.getOrSet: length property is required when the value "
-                              "property is a ReadableStream. The length of the stream needs to be "
-                              "known before inserting into the cache.");
-      return false;
-    }
+    if (found) {
 
-    JS::RootedValue length_val(cx);
-    if (!JS_GetProperty(cx, insertionObject, "length", &length_val)) {
-      return false;
+      JS::RootedValue length_val(cx);
+      if (!JS_GetProperty(cx, insertionObject, "length", &length_val)) {
+        return false;
+      }
+      double number;
+      if (!JS::ToNumber(cx, length_val, &number)) {
+        return false;
+      }
+      if (number < 0 || std::isnan(number) || std::isinf(number)) {
+        JS_ReportErrorASCII(
+            cx,
+            "SimpleCache.getOrSet: length property is an invalid value, only positive numbers can "
+            "be used for length values.");
+        return false;
+      }
+      options.length = JS::ToInteger(number);
     }
-    double number;
-    if (!JS::ToNumber(cx, length_val, &number)) {
-      return false;
-    }
-    if (number < 0 || std::isnan(number) || std::isinf(number)) {
-      JS_ReportErrorASCII(
-          cx,
-          "SimpleCache.getOrSet: length property is an invalid value, only positive numbers can "
-          "be used for length values.");
-      return false;
-    }
-    options.length = JS::ToInteger(number);
   } else {
     auto result = convertBodyInit(cx, body_val);
     if (result.isErr()) {
@@ -390,7 +336,7 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
   }
   options.surrogate_keys = key_result.inspect();
 
-  auto inserted_res = handle.insert_and_stream_back(options);
+  auto inserted_res = handle.transaction_insert_and_stream_back(options);
   if (auto *err = inserted_res.to_err()) {
     return false;
   }
@@ -406,7 +352,7 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
       return false;
     }
   } else {
-    auto write_res = body.write_all(reinterpret_cast<uint8_t *>(buf.get()), options.length);
+    auto write_res = body.write_all_back(reinterpret_cast<uint8_t *>(buf.get()), options.length);
     if (auto *error = write_res.to_err()) {
       return false;
     }
@@ -617,27 +563,20 @@ bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    // The cache APIs require the length to be known upfront, we don't know the length of a
-    // stream upfront, which means the caller will need to supply the information explicitly for us.
-    if (!args.hasDefined(3)) {
-      JS_ReportErrorASCII(cx, "SimpleCache.set: length parameter is required when the value "
-                              "parameter is a ReadableStream. The length of the stream needs to be "
-                              "known before inserting into the cache.");
-      return false;
+    if (args.hasDefined(3)) {
+      JS::HandleValue length_val = args.get(3);
+      double number;
+      if (!JS::ToNumber(cx, length_val, &number)) {
+        return false;
+      }
+      if (number < 0 || std::isnan(number) || std::isinf(number)) {
+        JS_ReportErrorASCII(
+            cx, "SimpleCache.set: length parameter is an invalid value, only positive numbers can "
+                "be used for length values.");
+        return false;
+      }
+      options.length = JS::ToInteger(number);
     }
-
-    JS::HandleValue length_val = args.get(3);
-    double number;
-    if (!JS::ToNumber(cx, length_val, &number)) {
-      return false;
-    }
-    if (number < 0 || std::isnan(number) || std::isinf(number)) {
-      JS_ReportErrorASCII(
-          cx, "SimpleCache.set: length parameter is an invalid value, only positive numbers can "
-              "be used for length values.");
-      return false;
-    }
-    options.length = JS::ToInteger(number);
   } else {
     auto result = convertBodyInit(cx, body_val);
     if (result.isErr()) {
@@ -675,7 +614,7 @@ bool SimpleCache::set(JSContext *cx, unsigned argc, JS::Value *vp) {
     args.rval().setUndefined();
     return true;
   } else {
-    auto write_res = body.write_all(reinterpret_cast<uint8_t *>(buf.get()), options.length);
+    auto write_res = body.write_all_back(reinterpret_cast<uint8_t *>(buf.get()), options.length);
     if (auto *err = write_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;

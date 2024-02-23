@@ -36,6 +36,8 @@
 
 #include "builtin.h"
 #include "builtins/backend.h"
+#include "builtins/body.h"
+#include "builtins/cache-core.h"
 #include "builtins/cache-override.h"
 #include "builtins/cache-simple.h"
 #include "builtins/client-info.h"
@@ -1043,6 +1045,21 @@ bool define_fastly_sys(JSContext *cx, HandleObject global, FastlyOptions options
     return false;
   if (!builtins::SecretStoreEntry::init_class(cx, global))
     return false;
+  if (!builtins::FastlyBody::init_class(cx, global)) {
+    return false;
+  }
+  if (!builtins::CacheEntry::init_class(cx, global)) {
+    return false;
+  }
+  if (!builtins::TransactionCacheEntry::init_class(cx, global)) {
+    return false;
+  }
+  if (!builtins::CacheState::init_class(cx, global)) {
+    return false;
+  }
+  if (!builtins::CoreCache::init_class(cx, global)) {
+    return false;
+  }
   if (!builtins::SimpleCache::init_class(cx, global)) {
     return false;
   }
@@ -1175,4 +1192,54 @@ bool print_stack(JSContext *cx, FILE *fp) {
   if (!JS::CaptureCurrentStack(cx, &stackp))
     return false;
   return print_stack(cx, stackp, fp);
+}
+
+// We currently support five types of body inputs:
+// - byte sequence
+// - buffer source
+// - USV strings
+// - URLSearchParams
+// After the other other options are checked explicitly, all other inputs are
+// encoded to a UTF8 string to be treated as a USV string.
+// TODO: Support the other possible inputs to Body.
+JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
+                                                                JS::HandleValue bodyInit) {
+
+  JS::RootedObject bodyObj(cx, bodyInit.isObject() ? &bodyInit.toObject() : nullptr);
+  mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
+  JS::UniqueChars buf;
+  size_t length;
+
+  if (bodyObj && JS_IsArrayBufferViewObject(bodyObj)) {
+    // `maybeNoGC` needs to be populated for the lifetime of `buf` because
+    // short typed arrays have inline data which can move on GC, so assert
+    // that no GC happens. (Which it doesn't, because we're not allocating
+    // before `buf` goes out of scope.)
+    maybeNoGC.emplace(cx);
+    JS::AutoCheckCannotGC &noGC = maybeNoGC.ref();
+    bool is_shared;
+    length = JS_GetArrayBufferViewByteLength(bodyObj);
+    buf = JS::UniqueChars(
+        reinterpret_cast<char *>(JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC)));
+    MOZ_ASSERT(!is_shared);
+  } else if (bodyObj && JS::IsArrayBufferObject(bodyObj)) {
+    bool is_shared;
+    uint8_t *bytes;
+    JS::GetArrayBufferLengthAndData(bodyObj, &length, &is_shared, &bytes);
+    MOZ_ASSERT(!is_shared);
+    buf.reset(reinterpret_cast<char *>(bytes));
+  } else if (bodyObj && builtins::URLSearchParams::is_instance(bodyObj)) {
+    jsurl::SpecSlice slice = builtins::URLSearchParams::serialize(cx, bodyObj);
+    buf = JS::UniqueChars(reinterpret_cast<char *>(const_cast<uint8_t *>(slice.data)));
+    length = slice.len;
+  } else {
+    // Convert into a String following https://tc39.es/ecma262/#sec-tostring
+    auto str = core::encode(cx, bodyInit);
+    buf = std::move(str.ptr);
+    length = str.len;
+    if (!buf) {
+      return JS::Result<std::tuple<JS::UniqueChars, size_t>>(JS::Error());
+    }
+  }
+  return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
 }

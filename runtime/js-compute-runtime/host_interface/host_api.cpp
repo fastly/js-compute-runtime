@@ -254,7 +254,25 @@ Result<HostString> HttpBody::read(uint32_t chunk_size) const {
   return res;
 }
 
-Result<uint32_t> HttpBody::write(const uint8_t *ptr, size_t len) const {
+Result<uint32_t> HttpBody::write_front(const uint8_t *ptr, size_t len) const {
+  Result<uint32_t> res;
+
+  // The write call doesn't mutate the buffer; the cast is just for the generated fastly api.
+  fastly_world_list_u8_t chunk{const_cast<uint8_t *>(ptr), len};
+
+  fastly_compute_at_edge_types_error_t err;
+  uint32_t written;
+  if (!fastly_compute_at_edge_http_body_write(
+          this->handle, &chunk, FASTLY_COMPUTE_AT_EDGE_HTTP_BODY_WRITE_END_FRONT, &written, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(written);
+  }
+
+  return res;
+}
+
+Result<uint32_t> HttpBody::write_back(const uint8_t *ptr, size_t len) const {
   Result<uint32_t> res;
 
   // The write call doesn't mutate the buffer; the cast is just for the generated fastly api.
@@ -272,9 +290,25 @@ Result<uint32_t> HttpBody::write(const uint8_t *ptr, size_t len) const {
   return res;
 }
 
-Result<Void> HttpBody::write_all(const uint8_t *ptr, size_t len) const {
+Result<Void> HttpBody::write_all_front(const uint8_t *ptr, size_t len) const {
   while (len > 0) {
-    auto write_res = this->write(ptr, len);
+    auto write_res = this->write_front(ptr, len);
+    if (auto *err = write_res.to_err()) {
+      return Result<Void>::err(*err);
+    }
+
+    auto written = write_res.unwrap();
+    ptr += written;
+    MOZ_ASSERT(written <= len);
+    len -= static_cast<size_t>(written);
+  }
+
+  return Result<Void>::ok();
+}
+
+Result<Void> HttpBody::write_all_back(const uint8_t *ptr, size_t len) const {
+  while (len > 0) {
+    auto write_res = this->write_back(ptr, len);
     if (auto *err = write_res.to_err()) {
       return Result<Void>::err(*err);
     }
@@ -1315,7 +1349,7 @@ void init_write_options(fastly_compute_at_edge_cache_write_options_t &options,
   memset(&options, 0, sizeof(options));
 
   options.max_age_ns = opts.max_age_ns;
-  options.request_headers = opts.req.handle;
+  options.request_headers = opts.request_headers.handle;
 
   if (opts.vary_rule.empty()) {
     options.vary_rule.ptr = 0;
@@ -1366,8 +1400,41 @@ Result<HttpBody> CacheHandle::insert(std::string_view key, const CacheWriteOptio
   return res;
 }
 
+Result<HttpBody> CacheHandle::transaction_insert(const CacheWriteOptions &opts) {
+  Result<HttpBody> res;
+
+  fastly_compute_at_edge_cache_write_options_t options;
+  init_write_options(options, opts);
+
+  fastly_compute_at_edge_types_error_t err;
+  fastly_compute_at_edge_http_types_body_handle_t ret;
+  if (!fastly_compute_at_edge_cache_transaction_insert(this->handle, &options, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(HttpBody{ret});
+  }
+
+  return res;
+}
+
+Result<Void> CacheHandle::transaction_update(const CacheWriteOptions &opts) {
+  Result<Void> res;
+
+  fastly_compute_at_edge_cache_write_options_t options;
+  init_write_options(options, opts);
+
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_cache_transaction_update(this->handle, &options, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(Void{});
+  }
+
+  return res;
+}
+
 Result<std::tuple<HttpBody, CacheHandle>>
-CacheHandle::insert_and_stream_back(const CacheWriteOptions &opts) {
+CacheHandle::transaction_insert_and_stream_back(const CacheWriteOptions &opts) {
   Result<std::tuple<HttpBody, CacheHandle>> res;
 
   fastly_compute_at_edge_cache_write_options_t options;
@@ -1402,13 +1469,20 @@ Result<Void> CacheHandle::transaction_cancel() {
 Result<HttpBody> CacheHandle::get_body(const CacheGetBodyOptions &opts) {
   Result<HttpBody> res;
 
-  fastly_compute_at_edge_cache_get_body_options_t options{
-      .start = opts.start,
-      .end = opts.end,
-  };
+  fastly_compute_at_edge_cache_get_body_options_t options{};
+  uint32_t options_mask = 0;
+  if (opts.start.has_value()) {
+    options_mask |= FASTLY_COMPUTE_AT_EDGE_CACHE_GET_BODY_OPTIONS_MASK_START;
+    options.start = opts.start.value();
+  }
+  if (opts.end.has_value()) {
+    options_mask |= FASTLY_COMPUTE_AT_EDGE_CACHE_GET_BODY_OPTIONS_MASK_END;
+    options.end = opts.end.value();
+  }
+
   fastly_compute_at_edge_http_types_body_handle_t body;
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_cache_get_body(this->handle, &options, &body, &err)) {
+  if (!fastly_compute_at_edge_cache_get_body(this->handle, &options, options_mask, &body, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(HttpBody{body});
@@ -1426,6 +1500,101 @@ Result<CacheState> CacheHandle::get_state() {
     res.emplace_err(err);
   } else {
     res.emplace(CacheState{state});
+  }
+
+  return res;
+}
+
+Result<Void> CacheHandle::close() {
+
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_cache_close(this->handle, &err)) {
+    return Result<Void>::err(err);
+  }
+
+  return Result<Void>::ok();
+  ;
+}
+
+Result<HostBytes> CacheHandle::get_user_metadata() {
+  Result<HostBytes> res;
+
+  fastly_world_list_u8_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_cache_get_user_metadata(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(make_host_bytes(ret));
+  }
+
+  return res;
+}
+
+Result<uint64_t> CacheHandle::get_length() {
+  Result<uint64_t> res;
+
+  uint64_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_cache_get_length(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<uint64_t> CacheHandle::get_max_age_ns() {
+  Result<uint64_t> res;
+
+  uint64_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_cache_get_max_age_ns(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<uint64_t> CacheHandle::get_stale_while_revalidate_ns() {
+  Result<uint64_t> res;
+
+  uint64_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_cache_get_stale_while_revalidate_ns(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<uint64_t> CacheHandle::get_age_ns() {
+  Result<uint64_t> res;
+
+  uint64_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_cache_get_age_ns(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<uint64_t> CacheHandle::get_hits() {
+  Result<uint64_t> res;
+
+  uint64_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_cache_get_hits(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
   }
 
   return res;

@@ -455,18 +455,34 @@ int cache_transaction_lookup(char *cache_key, size_t cache_key_len, uint32_t opt
                              fastly_compute_at_edge_cache_lookup_options_t *options,
                              fastly_compute_at_edge_cache_handle_t *ret);
 
+WASM_IMPORT("fastly_cache", "transaction_insert")
+int cache_transaction_insert(fastly_compute_at_edge_cache_handle_t handle, uint32_t options_mask,
+                             CacheWriteOptions *options,
+                             fastly_compute_at_edge_http_types_body_handle_t *ret);
+
 WASM_IMPORT("fastly_cache", "transaction_insert_and_stream_back")
 int cache_transaction_insert_and_stream_back(
     fastly_compute_at_edge_cache_handle_t handle, uint32_t options_mask, CacheWriteOptions *options,
     fastly_compute_at_edge_http_types_body_handle_t *ret_body,
     fastly_compute_at_edge_cache_handle_t *ret_cache);
 
+WASM_IMPORT("fastly_cache", "transaction_update")
+int cache_transaction_update(fastly_compute_at_edge_cache_handle_t handle, uint32_t options_mask,
+                             CacheWriteOptions *options);
+
 WASM_IMPORT("fastly_cache", "transaction_cancel")
 int cache_transaction_cancel(fastly_compute_at_edge_cache_handle_t handle);
+
+WASM_IMPORT("fastly_cache", "close")
+int cache_close(fastly_compute_at_edge_cache_handle_t handle);
 
 WASM_IMPORT("fastly_cache", "get_state")
 int cache_get_state(fastly_compute_at_edge_cache_handle_t handle,
                     fastly_compute_at_edge_cache_lookup_state_t *ret);
+
+WASM_IMPORT("fastly_cache", "get_user_metadata")
+int cache_get_user_metadata(fastly_compute_at_edge_cache_handle_t handle, char *buf, size_t buf_len,
+                            size_t *nread);
 
 WASM_IMPORT("fastly_cache", "get_body")
 int cache_get_body(fastly_compute_at_edge_cache_handle_t handle, uint32_t options_mask,
@@ -480,6 +496,22 @@ int backend_exists(const char *name, size_t name_len, uint32_t *exists_out);
 // Returns 1 if a backend is healthy.
 WASM_IMPORT("fastly_backend", "is_healthy")
 int backend_is_healthy(const char *name, size_t name_len, uint32_t *is_healthy_out);
+
+WASM_IMPORT("fastly_cache", "get_length")
+int cache_get_length(fastly_compute_at_edge_cache_handle_t handle, uint64_t *ret);
+
+WASM_IMPORT("fastly_cache", "get_max_age_ns")
+int cache_get_max_age_ns(fastly_compute_at_edge_cache_handle_t handle, uint64_t *ret);
+
+WASM_IMPORT("fastly_cache", "get_stale_while_revalidate_ns")
+int cache_get_stale_while_revalidate_ns(fastly_compute_at_edge_cache_handle_t handle,
+                                        uint64_t *ret);
+
+WASM_IMPORT("fastly_cache", "get_age_ns")
+int cache_get_age_ns(fastly_compute_at_edge_cache_handle_t handle, uint64_t *ret);
+
+WASM_IMPORT("fastly_cache", "get_hits")
+int cache_get_hits(fastly_compute_at_edge_cache_handle_t handle, uint64_t *ret);
 
 } // namespace fastly
 #ifdef __cplusplus

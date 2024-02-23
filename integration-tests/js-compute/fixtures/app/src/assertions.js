@@ -1,5 +1,11 @@
 // Testing/Assertion functions //
 
+export async function sleep(milliseconds) {
+    return new Promise(resolve => {
+        setTimeout(resolve, milliseconds)
+    })
+}
+
 // TODO: Implement ReadableStream getIterator() and [@@asyncIterator]() methods
 export async function streamToString(stream) {
     const decoder = new TextDecoder();
@@ -33,6 +39,7 @@ export function pass(message = '') {
 export function fail(message = '') {
     return new Response(message, { status: 500 })
 }
+
 function prettyPrintSymbol (a) {
     if (typeof a === "symbol") {
          return String(a)

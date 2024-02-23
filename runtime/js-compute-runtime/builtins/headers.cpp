@@ -569,8 +569,9 @@ JSObject *Headers::create(JSContext *cx, JS::HandleObject self, Headers::Mode mo
 JSObject *Headers::create(JSContext *cx, JS::HandleObject self, Headers::Mode mode,
                           JS::HandleObject owner, JS::HandleValue initv, bool immutable) {
   JS::RootedObject headers(cx, create(cx, self, mode, owner, immutable));
-  if (!headers)
+  if (!headers) {
     return nullptr;
+  }
 
   bool consumed = false;
   if (!core::maybe_consume_sequence_or_record<Headers::append_header_value>(cx, initv, headers,

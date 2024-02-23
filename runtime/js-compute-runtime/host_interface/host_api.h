@@ -308,14 +308,23 @@ public:
   /// Read a chunk from this handle.
   Result<HostString> read(uint32_t chunk_size) const;
 
-  /// Write a chunk to this handle.
-  Result<uint32_t> write(const uint8_t *bytes, size_t len) const;
+  /// Write a chunk to the front of this handle.
+  Result<uint32_t> write_front(const uint8_t *bytes, size_t len) const;
 
-  /// Writes the given number of bytes from the given buffer to the given handle.
+  /// Write a chunk to the back of this handle.
+  Result<uint32_t> write_back(const uint8_t *bytes, size_t len) const;
+
+  /// Writes the given number of bytes from the given buffer to the front of the given handle.
   ///
   /// The host doesn't necessarily write all bytes in any particular call to
   /// `write`, so to ensure all bytes are written, we call it in a loop.
-  Result<Void> write_all(const uint8_t *bytes, size_t len) const;
+  Result<Void> write_all_front(const uint8_t *bytes, size_t len) const;
+
+  /// Writes the given number of bytes from the given buffer to the back of the given handle.
+  ///
+  /// The host doesn't necessarily write all bytes in any particular call to
+  /// `write`, so to ensure all bytes are written, we call it in a loop.
+  Result<Void> write_all_back(const uint8_t *bytes, size_t len) const;
 
   /// Append another HttpBody to this one.
   Result<Void> append(HttpBody other) const;
@@ -654,19 +663,19 @@ struct CacheLookupOptions final {
 };
 
 struct CacheGetBodyOptions final {
-  uint64_t start = 0;
-  uint64_t end = 0;
+  std::optional<uint64_t> start;
+  std::optional<uint64_t> end;
 };
 
 struct CacheWriteOptions final {
   uint64_t max_age_ns = 0;
-  HttpReq req;
-  std::string_view vary_rule;
+  HttpReq request_headers;
+  std::string vary_rule;
 
   uint64_t initial_age_ns = 0;
   uint64_t stale_while_revalidate_ns = 0;
 
-  std::string_view surrogate_keys;
+  std::string surrogate_keys;
 
   uint64_t length = 0;
 
@@ -707,8 +716,13 @@ public:
   /// Insert a cache object.
   static Result<HttpBody> insert(std::string_view key, const CacheWriteOptions &opts);
 
+  Result<HttpBody> transaction_insert(const CacheWriteOptions &opts);
+
+  Result<Void> transaction_update(const CacheWriteOptions &opts);
+
   /// Insert this cached object and stream it back.
-  Result<std::tuple<HttpBody, CacheHandle>> insert_and_stream_back(const CacheWriteOptions &opts);
+  Result<std::tuple<HttpBody, CacheHandle>>
+  transaction_insert_and_stream_back(const CacheWriteOptions &opts);
 
   bool is_valid() const { return this->handle != invalid; }
 
@@ -720,6 +734,20 @@ public:
 
   /// Fetch the state for this cache handle.
   Result<CacheState> get_state();
+
+  Result<Void> close();
+
+  Result<HostBytes> get_user_metadata();
+
+  Result<uint64_t> get_length();
+
+  Result<uint64_t> get_max_age_ns();
+
+  Result<uint64_t> get_stale_while_revalidate_ns();
+
+  Result<uint64_t> get_age_ns();
+
+  Result<uint64_t> get_hits();
 };
 
 class Fastly final {

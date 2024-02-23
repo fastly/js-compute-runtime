@@ -765,6 +765,12 @@ interface cache {
     sensitive-data: bool,
   }
 
+  flags get-body-options-mask {
+    reserved,
+    start,
+    end,
+  }
+
   record get-body-options {
     start: u64,
     end: u64,
@@ -824,18 +830,25 @@ interface cache {
   /// Can only be used in if the cache handle state includes both of the flags:
   /// - `found`
   /// - `must-insert-or-update`
-  transaction-update: func(handle: handle) -> result<_, error>
+  transaction-update: func(handle: handle, options: write-options) -> result<_, error>
 
   /// Cancel an obligation to provide an object to the cache.
   ///
   /// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
   transaction-cancel: func(handle: handle) -> result<_, error>
 
+  /// Close an ongoing interaction with the cache.
+  ///
+  /// If the cache handle state includes the `$must_insert_or_update` (and hence no insert or
+  /// update has been performed), closing the handle cancels any request collapsing, potentially
+  /// choosing a new waiter to perform the insertion/update.
+  close: func(handle: handle) -> result<_, error>
+
   get-state: func(handle: handle) -> result<lookup-state, error>
 
-  /// Gets the user metadata of the found object, returning the `optional-none` error if there
+  /// Gets the user metadata of the found object, returning `none` if there
   /// was no found object.
-  get-user-metadata: func(handle: handle) -> result<string, error>
+  get-user-metadata: func(handle: handle) -> result<list<u8>, error>
 
   /// Gets a range of the found object body, returning the `optional-none` error if there
   /// was no found object.
@@ -846,7 +859,7 @@ interface cache {
   /// Note: until the CacheD protocol is adjusted to fully support this functionality,
   /// the body of objects that are past the stale-while-revalidate period will not
   /// be available, even when other metadata is.
-  get-body: func(handle: handle, options: get-body-options) -> result<body-handle, error>
+  get-body: func(handle: handle, options: get-body-options, options-mask: get-body-options-mask) -> result<body-handle, error>
 
   /// Gets the content length of the found object, returning the `$none` error if there
   /// was no found object, or no content length was provided.

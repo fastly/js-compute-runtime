@@ -313,7 +313,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
     }
 
     host_api::HttpBody body{RequestOrResponse::body_handle(self)};
-    auto write_res = body.write_all(reinterpret_cast<uint8_t *>(buf), length);
+    auto write_res = body.write_all_back(reinterpret_cast<uint8_t *>(buf), length);
 
     // Ensure that the NoGC is reset, so throwing an error in HANDLE_ERROR
     // succeeds.
@@ -904,7 +904,7 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     bool is_shared;
     uint8_t *bytes = JS_GetUint8ArrayData(array, &is_shared, nogc);
     size_t length = JS_GetTypedArrayByteLength(array);
-    res = body.write_all(bytes, length);
+    res = body.write_all_back(bytes, length);
   }
 
   // Needs to be outside the nogc block in case we need to create an exception.
@@ -1062,11 +1062,13 @@ bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObj
 }
 
 host_api::HttpReq Request::request_handle(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
   return host_api::HttpReq(
       JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::Request)).toInt32());
 }
 
 host_api::HttpPendingReq Request::pending_handle(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
   host_api::HttpPendingReq res;
 
   JS::Value handle_val =
@@ -1083,16 +1085,19 @@ bool Request::is_downstream(JSObject *obj) {
 }
 
 JSString *Request::backend(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
   auto val = JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Backend));
   return val.isString() ? val.toString() : nullptr;
 }
 
 JSObject *Request::response_promise(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
   return &JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::ResponsePromise))
               .toObject();
 }
 
 JSString *Request::method(JSContext *cx, JS::HandleObject obj) {
+  MOZ_ASSERT(is_instance(obj));
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Method)).toString();
 }
 
@@ -2603,7 +2608,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto stringChars = core::encode(cx, string);
 
   auto write_res =
-      body.write_all(reinterpret_cast<uint8_t *>(stringChars.begin()), stringChars.len);
+      body.write_all_back(reinterpret_cast<uint8_t *>(stringChars.begin()), stringChars.len);
   if (auto *err = write_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
