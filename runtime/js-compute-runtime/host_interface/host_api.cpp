@@ -1622,4 +1622,31 @@ Result<BackendHealth> Backend::health(std::string_view name) {
   return res;
 }
 
+Result<Void> PenaltyBox::add(std::string_view entry, uint32_t timeToLive) {
+  auto name_str = string_view_to_world_string(this->name);
+  auto entry_str = string_view_to_world_string(entry);
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_edge_rate_limiter_penaltybox_add(&name_str, &entry_str, timeToLive, &err)) {
+    return Result<Void>::err(err);
+  }
+
+  return Result<Void>::ok();
+}
+
+Result<bool> PenaltyBox::has(std::string_view entry) {
+  Result<bool> res;
+
+  auto name_str = string_view_to_world_string(this->name);
+  auto entry_str = string_view_to_world_string(entry);
+  bool ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_edge_rate_limiter_penaltybox_has(&name_str, &entry_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
 } // namespace host_api
