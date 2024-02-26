@@ -447,6 +447,29 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
+    bool ok;
+    fastly_compute_at_edge_edge_rate_limiter_error_t err;
+  } val;
+} fastly_world_result_bool_fastly_compute_at_edge_edge_rate_limiter_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    fastly_compute_at_edge_edge_rate_limiter_error_t err;
+  } val;
+} fastly_world_result_void_fastly_compute_at_edge_edge_rate_limiter_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    uint32_t ok;
+    fastly_compute_at_edge_edge_rate_limiter_error_t err;
+  } val;
+} fastly_world_result_u32_fastly_compute_at_edge_edge_rate_limiter_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
   } val;
 } fastly_world_result_void_void_t;
 
@@ -542,6 +565,24 @@ void __wasm_import_fastly_compute_at_edge_dictionary_open(int32_t, int32_t, int3
 
 __attribute__((__import_module__("fastly:compute-at-edge/dictionary"), __import_name__("get")))
 void __wasm_import_fastly_compute_at_edge_dictionary_get(int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/edge-rate-limiter"), __import_name__("check-rate")))
+void __wasm_import_fastly_compute_at_edge_edge_rate_limiter_check_rate(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/edge-rate-limiter"), __import_name__("ratecounter-increment")))
+void __wasm_import_fastly_compute_at_edge_edge_rate_limiter_ratecounter_increment(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/edge-rate-limiter"), __import_name__("ratecounter-lookup-rate")))
+void __wasm_import_fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_rate(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/edge-rate-limiter"), __import_name__("ratecounter-lookup-count")))
+void __wasm_import_fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_count(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/edge-rate-limiter"), __import_name__("penaltybox-add")))
+void __wasm_import_fastly_compute_at_edge_edge_rate_limiter_penaltybox_add(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/edge-rate-limiter"), __import_name__("penaltybox-has")))
+void __wasm_import_fastly_compute_at_edge_edge_rate_limiter_penaltybox_has(int32_t, int32_t, int32_t, int32_t, int32_t);
 
 __attribute__((__import_module__("fastly:compute-at-edge/geo"), __import_name__("lookup")))
 void __wasm_import_fastly_compute_at_edge_geo_lookup(int32_t, int32_t, int32_t);
@@ -1670,6 +1711,164 @@ bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_dictionary_han
     case 1: {
       result.is_err = true;
       result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_edge_rate_limiter_check_rate(fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t delta, uint32_t window, uint32_t limit, fastly_world_string_t *penalty_box_name, uint32_t time_to_live, bool *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_edge_rate_limiter_check_rate((int32_t) (*rate_counter_name).ptr, (int32_t) (*rate_counter_name).len, (int32_t) (*entry).ptr, (int32_t) (*entry).len, (int32_t) (delta), (int32_t) (window), (int32_t) (limit), (int32_t) (*penalty_box_name).ptr, (int32_t) (*penalty_box_name).len, (int32_t) (time_to_live), ptr);
+  fastly_world_result_bool_fastly_compute_at_edge_edge_rate_limiter_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_increment(fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t delta, fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_edge_rate_limiter_ratecounter_increment((int32_t) (*rate_counter_name).ptr, (int32_t) (*rate_counter_name).len, (int32_t) (*entry).ptr, (int32_t) (*entry).len, (int32_t) (delta), ptr);
+  fastly_world_result_void_fastly_compute_at_edge_edge_rate_limiter_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_rate(fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t window, uint32_t *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[8];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_rate((int32_t) (*rate_counter_name).ptr, (int32_t) (*rate_counter_name).len, (int32_t) (*entry).ptr, (int32_t) (*entry).len, (int32_t) (window), ptr);
+  fastly_world_result_u32_fastly_compute_at_edge_edge_rate_limiter_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (uint32_t) (*((int32_t*) (ptr + 4)));
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_count(fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t duration, uint32_t *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[8];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_count((int32_t) (*rate_counter_name).ptr, (int32_t) (*rate_counter_name).len, (int32_t) (*entry).ptr, (int32_t) (*entry).len, (int32_t) (duration), ptr);
+  fastly_world_result_u32_fastly_compute_at_edge_edge_rate_limiter_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (uint32_t) (*((int32_t*) (ptr + 4)));
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_edge_rate_limiter_penaltybox_add(fastly_world_string_t *penalty_box_name, fastly_world_string_t *entry, uint32_t time_to_live, fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_edge_rate_limiter_penaltybox_add((int32_t) (*penalty_box_name).ptr, (int32_t) (*penalty_box_name).len, (int32_t) (*entry).ptr, (int32_t) (*entry).len, (int32_t) (time_to_live), ptr);
+  fastly_world_result_void_fastly_compute_at_edge_edge_rate_limiter_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_edge_rate_limiter_penaltybox_has(fastly_world_string_t *penalty_box_name, fastly_world_string_t *entry, bool *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_edge_rate_limiter_penaltybox_has((int32_t) (*penalty_box_name).ptr, (int32_t) (*penalty_box_name).len, (int32_t) (*entry).ptr, (int32_t) (*entry).len, ptr);
+  fastly_world_result_bool_fastly_compute_at_edge_edge_rate_limiter_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
       break;
     }
   }

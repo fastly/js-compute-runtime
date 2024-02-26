@@ -564,6 +564,8 @@ typedef struct {
   fastly_compute_at_edge_cache_handle_t f1;
 } fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_handle_t;
 
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_edge_rate_limiter_error_t;
+
 typedef fastly_compute_at_edge_http_types_request_t fastly_compute_at_edge_reactor_request_t;
 
 // Imported Functions from `fastly:compute-at-edge/async-io`
@@ -690,6 +692,14 @@ bool fastly_compute_at_edge_cache_get_hits(fastly_compute_at_edge_cache_handle_t
 // Imported Functions from `fastly:compute-at-edge/dictionary`
 bool fastly_compute_at_edge_dictionary_open(fastly_world_string_t *name, fastly_compute_at_edge_dictionary_handle_t *ret, fastly_compute_at_edge_dictionary_error_t *err);
 bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_dictionary_handle_t h, fastly_world_string_t *key, fastly_world_option_string_t *ret, fastly_compute_at_edge_dictionary_error_t *err);
+
+// Imported Functions from `fastly:compute-at-edge/edge-rate-limiter`
+bool fastly_compute_at_edge_edge_rate_limiter_check_rate(fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t delta, uint32_t window, uint32_t limit, fastly_world_string_t *penalty_box_name, uint32_t time_to_live, bool *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err);
+bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_increment(fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t delta, fastly_compute_at_edge_edge_rate_limiter_error_t *err);
+bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_rate(fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t window, uint32_t *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err);
+bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_count(fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t duration, uint32_t *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err);
+bool fastly_compute_at_edge_edge_rate_limiter_penaltybox_add(fastly_world_string_t *penalty_box_name, fastly_world_string_t *entry, uint32_t time_to_live, fastly_compute_at_edge_edge_rate_limiter_error_t *err);
+bool fastly_compute_at_edge_edge_rate_limiter_penaltybox_has(fastly_world_string_t *penalty_box_name, fastly_world_string_t *entry, bool *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err);
 
 // Imported Functions from `fastly:compute-at-edge/geo`
 // JSON string for now
