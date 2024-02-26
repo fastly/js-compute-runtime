@@ -780,6 +780,17 @@ public:
   static Result<bool> exists(std::string_view name);
   static Result<BackendHealth> health(std::string_view name);
 };
+
+class PenaltyBox final {
+  std::string_view name;
+  PenaltyBox() = default;
+  explicit PenaltyBox(std::string_view name) : name{name} {}
+
+public:
+  Result<Void> add(std::string_view entry, uint32_t timeToLive);
+  Result<bool> has(std::string_view entry);
+};
+
 } // namespace host_api
 
 #endif
