@@ -882,6 +882,22 @@ interface cache {
   get-hits: func(handle: handle) -> result<u64, error>
 }
 
+interface edge-rate-limiter {
+  use types.{error}
+
+  check-rate: func(rate-counter-name: string, entry: string, delta: u32, window: u32, limit: u32, penalty-box-name: string, time-to-live: u32) -> result<bool, error>
+
+  ratecounter-increment: func(rate-counter-name: string, entry: string, delta: u32) -> result<_, error>
+
+  ratecounter-lookup-rate: func(rate-counter-name: string, entry: string, window: u32) -> result<u32, error>
+
+  ratecounter-lookup-count: func(rate-counter-name: string, entry: string, duration: u32) -> result<u32, error>
+
+  penaltybox-add: func(penalty-box-name: string, entry: string, time-to-live: u32) -> result<_, error>
+
+  penaltybox-has: func(penalty-box-name: string, entry: string) -> result<bool, error>
+}
+
 interface reactor {
   use http-types.{request}
 
