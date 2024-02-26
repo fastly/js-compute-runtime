@@ -763,6 +763,17 @@ public:
   Result<bool> has(std::string_view entry);
 };
 
+class RateCounter final {
+  std::string_view name;
+  RateCounter() = default;
+  explicit RateCounter(std::string_view name) : name{name} {}
+
+public:
+  Result<Void> increment(std::string_view entry, uint32_t delta);
+  Result<uint32_t> lookupRate(std::string_view entry, uint32_t window);
+  Result<uint32_t> lookupCount(std::string_view entry, uint32_t duration);
+};
+
 } // namespace host_api
 
 #endif
