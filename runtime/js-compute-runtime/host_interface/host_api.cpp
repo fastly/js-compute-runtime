@@ -1626,7 +1626,8 @@ Result<Void> PenaltyBox::add(std::string_view entry, uint32_t timeToLive) {
   auto name_str = string_view_to_world_string(this->name);
   auto entry_str = string_view_to_world_string(entry);
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_edge_rate_limiter_penaltybox_add(&name_str, &entry_str, timeToLive, &err)) {
+  if (!fastly_compute_at_edge_edge_rate_limiter_penaltybox_add(&name_str, &entry_str, timeToLive,
+                                                               &err)) {
     return Result<Void>::err(err);
   }
 
@@ -1653,21 +1654,23 @@ Result<Void> RateCounter::increment(std::string_view entry, uint32_t delta) {
   auto name_str = string_view_to_world_string(this->name);
   auto entry_str = string_view_to_world_string(entry);
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_edge_rate_limiter_ratecounter_increment(&name_str, &entry_str, delta, &err)) {
+  if (!fastly_compute_at_edge_edge_rate_limiter_ratecounter_increment(&name_str, &entry_str, delta,
+                                                                      &err)) {
     return Result<Void>::err(err);
   }
 
   return Result<Void>::ok();
 }
 
-Result<uint32_t> RateCounter::lookupRate(std::string_view entry, uint32_t window) {
+Result<uint32_t> RateCounter::lookup_rate(std::string_view entry, uint32_t window) {
   Result<uint32_t> res;
 
   auto name_str = string_view_to_world_string(this->name);
   auto entry_str = string_view_to_world_string(entry);
   uint32_t ret;
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_rate(&name_str, &entry_str, window, &ret, &err)) {
+  if (!fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_rate(&name_str, &entry_str,
+                                                                        window, &ret, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(ret);
@@ -1676,19 +1679,40 @@ Result<uint32_t> RateCounter::lookupRate(std::string_view entry, uint32_t window
   return res;
 }
 
-Result<uint32_t> RateCounter::lookupCount(std::string_view entry, uint32_t duration) {
+Result<uint32_t> RateCounter::lookup_count(std::string_view entry, uint32_t duration) {
   Result<uint32_t> res;
 
   auto name_str = string_view_to_world_string(this->name);
   auto entry_str = string_view_to_world_string(entry);
   uint32_t ret;
   fastly_compute_at_edge_types_error_t err;
-  if (!fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_count(&name_str, &entry_str, duration, &ret, &err)) {
+  if (!fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_count(&name_str, &entry_str,
+                                                                         duration, &ret, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(ret);
   }
 
+  return res;
+}
+
+Result<bool> EdgeRateLimiter::check_rate(std::string_view rate_counter_name, std::string_view entry,
+                                         uint32_t delta, uint32_t window, uint32_t limit,
+                                         std::string_view penalty_box_name, uint32_t time_to_live) {
+  Result<bool> res;
+
+  auto rate_counter_name_str = string_view_to_world_string(rate_counter_name);
+  auto entry_str = string_view_to_world_string(entry);
+  auto penalty_box_name_str = string_view_to_world_string(penalty_box_name);
+  bool ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_edge_rate_limiter_check_rate(
+          &rate_counter_name_str, &entry_str, delta, window, limit, &penalty_box_name_str,
+          time_to_live, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
   return res;
 }
 
