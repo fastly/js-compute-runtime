@@ -46,6 +46,7 @@
 #include "builtins/crypto.h"
 #include "builtins/decompression-stream.h"
 #include "builtins/dictionary.h"
+#include "builtins/edge-rate-limiter.h"
 #include "builtins/env.h"
 #include "builtins/fastly.h"
 #include "builtins/fetch-event.h"
@@ -1070,6 +1071,15 @@ bool define_fastly_sys(JSContext *cx, HandleObject global, FastlyOptions options
     return false;
   }
   if (!builtins::Performance::create(cx, global)) {
+    return false;
+  }
+  if (!builtins::PenaltyBox::init_class(cx, global)) {
+    return false;
+  }
+  if (!builtins::RateCounter::init_class(cx, global)) {
+    return false;
+  }
+  if (!builtins::EdgeRateLimiter::init_class(cx, global)) {
     return false;
   }
 
