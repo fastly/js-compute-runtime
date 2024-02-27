@@ -7,6 +7,14 @@
 #include <tuple>
 
 namespace builtins {
+
+JSString* PenaltyBox::get_name(JSObject* self) {
+  MOZ_ASSERT(is_instance(self));
+  MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Name).isString());
+
+  return JS::GetReservedSlot(self, Slots::Name).toString();
+}
+
 // add(entry: string, timeToLive: number): void;
 bool PenaltyBox::add(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The PenaltyBox builtin");
@@ -74,8 +82,6 @@ bool PenaltyBox::has(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 const JSFunctionSpec PenaltyBox::static_methods[] = {
-    JS_FN("add", add, 2, JSPROP_ENUMERATE),
-    JS_FN("has", has, 1, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
@@ -83,7 +89,8 @@ const JSPropertySpec PenaltyBox::static_properties[] = {
     JS_PS_END,
 };
 
-const JSFunctionSpec PenaltyBox::methods[] = {JS_FS_END};
+const JSFunctionSpec PenaltyBox::methods[] = {JS_FN("add", add, 2, JSPROP_ENUMERATE),
+                                              JS_FN("has", has, 1, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSPropertySpec PenaltyBox::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "PenaltyBox", JSPROP_READONLY), JS_PS_END};
@@ -114,6 +121,13 @@ bool PenaltyBox::init_class(JSContext *cx, JS::HandleObject global) {
   return BuiltinImpl<PenaltyBox>::init_class_impl(cx, global);
 }
 
+
+JSString* RateCounter::get_name(JSObject* self) {
+  MOZ_ASSERT(is_instance(self));
+  MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Name).isString());
+
+  return JS::GetReservedSlot(self, Slots::Name).toString();
+}
 
 // increment(entry: string, delta: number): void;
 bool RateCounter::increment(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -210,7 +224,8 @@ bool RateCounter::lookupCount(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (duration != 10 || duration != 20 || duration != 30 || duration != 40 || duration != 50 || duration != 60) {
+  if (duration != 10 || duration != 20 || duration != 30 || duration != 40 || duration != 50 ||
+      duration != 60) {
     JS_ReportErrorASCII(cx, "duration parameter must be either: 10, 20, 30, 40, 50, or 60");
     return false;
   }
@@ -236,9 +251,6 @@ bool RateCounter::lookupCount(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 const JSFunctionSpec RateCounter::static_methods[] = {
-    JS_FN("increment", increment, 2, JSPROP_ENUMERATE),
-    JS_FN("lookupRate", lookupRate, 2, JSPROP_ENUMERATE),
-    JS_FN("lookupCount", lookupCount, 2, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
@@ -246,7 +258,10 @@ const JSPropertySpec RateCounter::static_properties[] = {
     JS_PS_END,
 };
 
-const JSFunctionSpec RateCounter::methods[] = {JS_FS_END};
+const JSFunctionSpec RateCounter::methods[] = {
+    JS_FN("increment", increment, 2, JSPROP_ENUMERATE),
+    JS_FN("lookupRate", lookupRate, 2, JSPROP_ENUMERATE),
+    JS_FN("lookupCount", lookupCount, 2, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSPropertySpec RateCounter::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "RateCounter", JSPROP_READONLY), JS_PS_END};
@@ -275,6 +290,129 @@ bool RateCounter::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool RateCounter::init_class(JSContext *cx, JS::HandleObject global) {
   return BuiltinImpl<RateCounter>::init_class_impl(cx, global);
+}
+
+// checkRate(entry: string, delta: number, window: [1, 10, 60], limit: number, timeToLive: number):
+// boolean;
+bool EdgeRateLimiter::checkRate(JSContext *cx, unsigned argc, JS::Value *vp) {
+  REQUEST_HANDLER_ONLY("The EdgeRateLimiter builtin");
+  METHOD_HEADER(5);
+
+  // Convert entry parameter into a string
+  auto entry = core::encode(cx, args.get(0));
+  if (!entry) {
+    return false;
+  }
+
+  // Convert delta parameter into a number
+  double delta;
+  if (!JS::ToNumber(cx, args.get(1), &delta)) {
+    return false;
+  }
+
+  // Convert window parameter into a number
+  double window;
+  if (!JS::ToNumber(cx, args.get(2), &window)) {
+    return false;
+  }
+
+  if (window != 1 || window != 10 || window != 60) {
+    JS_ReportErrorASCII(cx, "window parameter must be either: 1, 10, or 60");
+    return false;
+  }
+
+  // Convert limit parameter into a number
+  double limit;
+  if (!JS::ToNumber(cx, args.get(3), &limit)) {
+    return false;
+  }
+
+  // Convert timeToLive parameter into a number
+  double timeToLive;
+  if (!JS::ToNumber(cx, args.get(4), &timeToLive)) {
+    return false;
+  }
+
+  MOZ_ASSERT(JS::GetReservedSlot(self, Slots::RateCounterName).isString());
+  JS::RootedValue rc_name_val(cx, JS::GetReservedSlot(self, Slots::RateCounterName).toString());
+  auto rc_name = core::encode(cx, rc_name_val);
+  if (!rc_name) {
+    return false;
+  }
+  MOZ_ASSERT(JS::GetReservedSlot(self, Slots::PenaltyBoxName).isString());
+  JS::RootedValue pb_name_val(cx, JS::GetReservedSlot(self, Slots::PenaltyBoxName).toString());
+  auto pb_name = core::encode(cx, pb_name_val);
+  if (!pb_name) {
+    return false;
+  }
+
+  auto res = host_api::EdgeRateLimiter::check_rate(rc_name, entry, delta, window, limit, pb_name, timeToLive);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  args.rval().setBoolean(res.unwrap());
+  return true;
+}
+
+const JSFunctionSpec EdgeRateLimiter::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec EdgeRateLimiter::static_properties[] = {
+    JS_PS_END,
+};
+
+const JSFunctionSpec EdgeRateLimiter::methods[] = {
+    JS_FN("checkRate", checkRate, 5, JSPROP_ENUMERATE), JS_FS_END};
+
+const JSPropertySpec EdgeRateLimiter::properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "EdgeRateLimiter", JSPROP_READONLY), JS_PS_END};
+
+// Open a penalty-box identified by the given name
+// constructor(name: string);
+bool EdgeRateLimiter::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+  REQUEST_HANDLER_ONLY("The EdgeRateLimiter builtin");
+  CTOR_HEADER("EdgeRateLimiter", 2);
+
+  auto rc = args.get(0);
+  if (!RateCounter::is_instance(rc)) {
+    JS_ReportErrorASCII(cx, "rateCounter parameter must be an instance of RateCounter");
+    return false;
+  }
+
+  auto rc_name = RateCounter::get_name(rc.toObjectOrNull());
+  if (!rc_name) {
+    return false;
+  }
+
+  auto pb = args.get(1);
+  if (!PenaltyBox::is_instance(pb)) {
+    JS_ReportErrorASCII(cx, "penaltyBox parameter must be an instance of PenaltyBox");
+    return false;
+  }
+
+  auto pb_name = RateCounter::get_name(pb.toObjectOrNull());
+  if (!pb_name) {
+    return false;
+  }
+
+  JS::RootedObject instance(cx, JS_NewObjectForConstructor(cx, &class_, args));
+  if (!instance) {
+    return false;
+  }
+  JS::SetReservedSlot(instance, static_cast<uint32_t>(Slots::RateCounterName),
+                      JS::StringValue(rc_name));
+
+  JS::SetReservedSlot(instance, static_cast<uint32_t>(Slots::PenaltyBoxName),
+                      JS::StringValue(pb_name));
+  args.rval().setObject(*instance);
+  return true;
+}
+
+bool EdgeRateLimiter::init_class(JSContext *cx, JS::HandleObject global) {
+  return BuiltinImpl<EdgeRateLimiter>::init_class_impl(cx, global);
 }
 
 } // namespace builtins

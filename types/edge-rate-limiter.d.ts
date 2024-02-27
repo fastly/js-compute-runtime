@@ -4,7 +4,7 @@ declare module "fastly:edge-rate-limiter" {
     /**
      * Open a EdgeRateLimiter with the given ratecounter and penaltybox.
      */
-    constructor(ratecounter: RateCounter, penaltybox: PenaltyBox);
+    constructor(rateCounter: RateCounter, penaltyBox: PenaltyBox);
     /**
      * Increment an entry in the rate counter and check if the client has exceeded some average number of requests per second (RPS) over the given window.
      * If the client is over the rps limit for the window, add to the penaltybox for the given timeToLive.
