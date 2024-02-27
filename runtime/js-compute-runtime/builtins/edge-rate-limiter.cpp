@@ -32,6 +32,13 @@ bool PenaltyBox::add(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  if (timeToLive < 0 || std::isnan(timeToLive) || std::isinf(timeToLive)) {
+    JS_ReportErrorASCII(
+        cx, "add: timeToLive parameter is an invalid value, only positive numbers can "
+            "be used for timeToLive values.");
+    return false;
+  }
+
   MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Name).isString());
   JS::RootedString name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
   auto name = core::encode(cx, name_val);
@@ -146,6 +153,13 @@ bool RateCounter::increment(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  if (delta < 0 || std::isnan(delta) || std::isinf(delta)) {
+    JS_ReportErrorASCII(
+        cx, "increment: delta parameter is an invalid value, only positive numbers can "
+            "be used for delta values.");
+    return false;
+  }
+
   MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Name).isString());
   JS::RootedString name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
   auto name = core::encode(cx, name_val);
@@ -168,7 +182,7 @@ bool RateCounter::increment(JSContext *cx, unsigned argc, JS::Value *vp) {
 // lookupRate(entry: string, window: [1, 10, 60]): number;
 bool RateCounter::lookupRate(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The RateCounter builtin");
-  METHOD_HEADER(1);
+  METHOD_HEADER(2);
 
   // Convert entry parameter into a string
   auto entry = core::encode(cx, args.get(0));
@@ -182,8 +196,8 @@ bool RateCounter::lookupRate(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (window != 1 || window != 10 || window != 60) {
-    JS_ReportErrorASCII(cx, "window parameter must be either: 1, 10, or 60");
+  if (window != 1 && window != 10 && window != 60) {
+    JS_ReportErrorASCII(cx, "lookupRate: window parameter must be either: 1, 10, or 60");
     return false;
   }
 
@@ -210,7 +224,7 @@ bool RateCounter::lookupRate(JSContext *cx, unsigned argc, JS::Value *vp) {
 // lookupCount(entry: string, duration: [10, 20, 30, 40, 50, 60]): number;
 bool RateCounter::lookupCount(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The RateCounter builtin");
-  METHOD_HEADER(1);
+  METHOD_HEADER(2);
 
   // Convert entry parameter into a string
   auto entry = core::encode(cx, args.get(0));
@@ -224,9 +238,9 @@ bool RateCounter::lookupCount(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (duration != 10 || duration != 20 || duration != 30 || duration != 40 || duration != 50 ||
+  if (duration != 10 && duration != 20 && duration != 30 && duration != 40 && duration != 50 &&
       duration != 60) {
-    JS_ReportErrorASCII(cx, "duration parameter must be either: 10, 20, 30, 40, 50, or 60");
+    JS_ReportErrorASCII(cx, "lookupCount: duration parameter must be either: 10, 20, 30, 40, 50, or 60");
     return false;
   }
 
@@ -310,14 +324,21 @@ bool EdgeRateLimiter::checkRate(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  if (delta < 0 || std::isnan(delta) || std::isinf(delta)) {
+    JS_ReportErrorASCII(
+        cx, "checkRate: delta parameter is an invalid value, only positive numbers can "
+            "be used for delta values.");
+    return false;
+  }
+
   // Convert window parameter into a number
   double window;
   if (!JS::ToNumber(cx, args.get(2), &window)) {
     return false;
   }
 
-  if (window != 1 || window != 10 || window != 60) {
-    JS_ReportErrorASCII(cx, "window parameter must be either: 1, 10, or 60");
+  if (window != 1 && window != 10 && window != 60) {
+    JS_ReportErrorASCII(cx, "checkRate: window parameter must be either: 1, 10, or 60");
     return false;
   }
 
@@ -327,9 +348,23 @@ bool EdgeRateLimiter::checkRate(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  if (limit < 0 || std::isnan(limit) || std::isinf(limit)) {
+    JS_ReportErrorASCII(
+        cx, "checkRate: limit parameter is an invalid value, only positive numbers can "
+            "be used for limit values.");
+    return false;
+  }
+
   // Convert timeToLive parameter into a number
   double timeToLive;
   if (!JS::ToNumber(cx, args.get(4), &timeToLive)) {
+    return false;
+  }
+
+  if (timeToLive < 0 || std::isnan(timeToLive) || std::isinf(timeToLive)) {
+    JS_ReportErrorASCII(
+        cx, "checkRate: timeToLive parameter is an invalid value, only positive numbers can "
+            "be used for timeToLive values.");
     return false;
   }
 
@@ -378,7 +413,7 @@ bool EdgeRateLimiter::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto rc = args.get(0);
   if (!RateCounter::is_instance(rc)) {
-    JS_ReportErrorASCII(cx, "rateCounter parameter must be an instance of RateCounter");
+    JS_ReportErrorASCII(cx, "EdgeRateLimiter constructor: rateCounter parameter must be an instance of RateCounter");
     return false;
   }
 
@@ -389,7 +424,7 @@ bool EdgeRateLimiter::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto pb = args.get(1);
   if (!PenaltyBox::is_instance(pb)) {
-    JS_ReportErrorASCII(cx, "penaltyBox parameter must be an instance of PenaltyBox");
+    JS_ReportErrorASCII(cx, "EdgeRateLimiter constructor: penaltyBox parameter must be an instance of PenaltyBox");
     return false;
   }
 
