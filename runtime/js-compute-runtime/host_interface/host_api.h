@@ -782,24 +782,31 @@ public:
 };
 
 class PenaltyBox final {
+public:
   std::string_view name;
   PenaltyBox() = default;
   explicit PenaltyBox(std::string_view name) : name{name} {}
 
-public:
-  Result<Void> add(std::string_view entry, uint32_t timeToLive);
+  Result<Void> add(std::string_view entry, uint32_t time_to_live);
   Result<bool> has(std::string_view entry);
 };
 
 class RateCounter final {
+public:
   std::string_view name;
   RateCounter() = default;
   explicit RateCounter(std::string_view name) : name{name} {}
 
-public:
   Result<Void> increment(std::string_view entry, uint32_t delta);
-  Result<uint32_t> lookupRate(std::string_view entry, uint32_t window);
-  Result<uint32_t> lookupCount(std::string_view entry, uint32_t duration);
+  Result<uint32_t> lookup_rate(std::string_view entry, uint32_t window);
+  Result<uint32_t> lookup_count(std::string_view entry, uint32_t duration);
+};
+
+class EdgeRateLimiter final {
+public:
+  static Result<bool> check_rate(std::string_view rate_counter_name, std::string_view entry,
+                                 uint32_t delta, uint32_t window, uint32_t limit,
+                                 std::string_view penalty_box_name, uint32_t time_to_live);
 };
 
 } // namespace host_api
