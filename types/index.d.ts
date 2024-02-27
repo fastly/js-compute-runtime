@@ -4,6 +4,7 @@
 /// <reference path="cache-override.d.ts" />
 /// <reference path="config-store.d.ts" />
 /// <reference path="dictionary.d.ts" />
+/// <reference path="edge-rate-limiter.d.ts" />
 /// <reference path="env.d.ts" />
 /// <reference path="experimental.d.ts" />
 /// <reference path="fanout.d.ts" />
