@@ -33,7 +33,7 @@ bool PenaltyBox::add(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Name).isString());
-  JS::RootedValue name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
+  JS::RootedString name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
   auto name = core::encode(cx, name_val);
   if (!name) {
     return false;
@@ -63,7 +63,7 @@ bool PenaltyBox::has(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Name).isString());
-  JS::RootedValue name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
+  JS::RootedString name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
   auto name = core::encode(cx, name_val);
   if (!name) {
     return false;
@@ -147,7 +147,7 @@ bool RateCounter::increment(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Name).isString());
-  JS::RootedValue name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
+  JS::RootedString name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
   auto name = core::encode(cx, name_val);
   if (!name) {
     return false;
@@ -188,7 +188,7 @@ bool RateCounter::lookupRate(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Name).isString());
-  JS::RootedValue name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
+  JS::RootedString name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
   auto name = core::encode(cx, name_val);
   if (!name) {
     return false;
@@ -231,7 +231,7 @@ bool RateCounter::lookupCount(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Name).isString());
-  JS::RootedValue name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
+  JS::RootedString name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
   auto name = core::encode(cx, name_val);
   if (!name) {
     return false;
@@ -334,13 +334,13 @@ bool EdgeRateLimiter::checkRate(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   MOZ_ASSERT(JS::GetReservedSlot(self, Slots::RateCounterName).isString());
-  JS::RootedValue rc_name_val(cx, JS::GetReservedSlot(self, Slots::RateCounterName).toString());
+  JS::RootedString rc_name_val(cx, JS::GetReservedSlot(self, Slots::RateCounterName).toString());
   auto rc_name = core::encode(cx, rc_name_val);
   if (!rc_name) {
     return false;
   }
   MOZ_ASSERT(JS::GetReservedSlot(self, Slots::PenaltyBoxName).isString());
-  JS::RootedValue pb_name_val(cx, JS::GetReservedSlot(self, Slots::PenaltyBoxName).toString());
+  JS::RootedString pb_name_val(cx, JS::GetReservedSlot(self, Slots::PenaltyBoxName).toString());
   auto pb_name = core::encode(cx, pb_name_val);
   if (!pb_name) {
     return false;
