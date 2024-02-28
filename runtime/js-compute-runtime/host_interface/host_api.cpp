@@ -1873,7 +1873,7 @@ Result<bool> EdgeRateLimiter::check_rate(std::string_view rate_counter_name, std
   auto rate_counter_name_str = string_view_to_world_string(rate_counter_name);
   auto entry_str = string_view_to_world_string(entry);
   auto penalty_box_name_str = string_view_to_world_string(penalty_box_name);
-  bool ret;
+  alignas(4) bool ret;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_edge_rate_limiter_check_rate(
           &rate_counter_name_str, &entry_str, delta, window, limit, &penalty_box_name_str,
