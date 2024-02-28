@@ -1808,7 +1808,7 @@ Result<bool> PenaltyBox::has(std::string_view entry) {
 
   auto name_str = string_view_to_world_string(this->name);
   auto entry_str = string_view_to_world_string(entry);
-  bool ret;
+  alignas(4) bool ret;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_edge_rate_limiter_penaltybox_has(&name_str, &entry_str, &ret, &err)) {
     res.emplace_err(err);
