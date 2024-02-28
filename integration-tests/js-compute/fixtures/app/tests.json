@@ -6839,5 +6839,754 @@
       "body": "ok",
       "status": 200
     }
+  },
+
+  "GET /rate-counter/interface": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/interface"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/constructor/called-as-regular-function": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/constructor/called-as-constructor-no-arguments": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/constructor/called-as-constructor-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/constructor/name-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/constructor/name-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/constructor/happy-path": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/constructor/happy-path"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/increment/called-as-constructor": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/increment/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/increment/entry-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/increment/entry-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/increment/entry-parameter-not-supplied": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/increment/entry-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/increment/delta-parameter-not-supplied": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/increment/delta-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/increment/delta-parameter-negative": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/increment/delta-parameter-negative"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/increment/delta-parameter-infinity": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/increment/delta-parameter-infinity"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/increment/delta-parameter-NaN": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/increment/delta-parameter-NaN"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/increment/returns-undefined": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/increment/returns-undefined"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupRate/called-as-constructor": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupRate/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupRate/entry-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupRate/entry-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupRate/entry-parameter-not-supplied": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupRate/entry-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupRate/window-parameter-not-supplied": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupRate/window-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupRate/window-parameter-negative": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupRate/window-parameter-negative"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupRate/window-parameter-infinity": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupRate/window-parameter-infinity"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupRate/window-parameter-NaN": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupRate/window-parameter-NaN"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupRate/returns-number": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupRate/returns-number"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupCount/called-as-constructor": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupCount/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupCount/entry-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupCount/entry-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupCount/entry-parameter-not-supplied": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupCount/entry-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupCount/duration-parameter-not-supplied": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupCount/duration-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupCount/duration-parameter-negative": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupCount/duration-parameter-negative"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupCount/duration-parameter-infinity": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupCount/duration-parameter-infinity"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupCount/duration-parameter-NaN": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupCount/duration-parameter-NaN"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /rate-counter/lookupCount/returns-number": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/rate-counter/lookupCount/returns-number"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/interface": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/interface"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/constructor/called-as-regular-function": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/constructor/called-as-constructor-no-arguments": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/constructor/called-as-constructor-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/constructor/name-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/constructor/name-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/constructor/happy-path": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/constructor/happy-path"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/has/called-as-constructor": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/has/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/has/entry-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/has/entry-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/has/entry-parameter-not-supplied": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/has/entry-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/has/returns-boolean": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/has/returns-boolean"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/add/called-as-constructor": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/add/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/add/entry-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/add/entry-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/add/entry-parameter-not-supplied": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/add/entry-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/add/timeToLive-parameter-not-supplied": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/add/timeToLive-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/add/timeToLive-parameter-negative": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/add/timeToLive-parameter-negative"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/add/timeToLive-parameter-infinity": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/add/timeToLive-parameter-infinity"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/add/timeToLive-parameter-NaN": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/add/timeToLive-parameter-NaN"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /penalty-box/add/returns-undefined": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/penalty-box/add/returns-undefined"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/interface": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/interface"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/constructor/called-as-regular-function": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/constructor/called-as-constructor-no-arguments": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/constructor/called-as-constructor-no-arguments"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/constructor/rate-counter-not-instance-of-rateCounter": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/constructor/rate-counter-not-instance-of-rateCounter"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/constructor/penalty-box-not-instance-of-penaltyBox": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/constructor/penalty-box-not-instance-of-penaltyBox"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/constructor/happy-path": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/constructor/happy-path"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/called-as-constructor": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/entry-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/entry-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/entry-parameter-not-supplied": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/entry-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/delta-parameter-negative": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/delta-parameter-negative"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/delta-parameter-infinity": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/delta-parameter-infinity"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/delta-parameter-NaN": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/delta-parameter-NaN"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/window-parameter-negative": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/window-parameter-negative"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/window-parameter-infinity": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/window-parameter-infinity"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/window-parameter-NaN": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/window-parameter-NaN"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/limit-parameter-negative": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/limit-parameter-negative"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/limit-parameter-infinity": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/limit-parameter-infinity"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/limit-parameter-NaN": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/limit-parameter-NaN"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/timeToLive-parameter-negative": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/timeToLive-parameter-negative"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/timeToLive-parameter-infinity": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/timeToLive-parameter-infinity"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/timeToLive-parameter-NaN": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/timeToLive-parameter-NaN"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/returns-boolean": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/edge-rate-limiter/checkRate/returns-boolean"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
   }
 }

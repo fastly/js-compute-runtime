@@ -18,6 +18,7 @@ import "./console.js"
 import "./crypto.js"
 import "./dictionary.js"
 import "./dynamic-backend.js"
+import "./edge-rate-limiter.js"
 import "./env.js"
 import "./fanout.js"
 import "./fastly-now.js"
@@ -56,7 +57,7 @@ addEventListener("fetch", event => {
  * @returns {Response}
 */
 async function app(event) {
-    const FASTLY_SERVICE_VERSION = env('FASTLY_SERVICE_VERSION') || 'local'
+    const FASTLY_SERVICE_VERSION = env('FASTLY_SERVICE_VERSION')
     console.log(`FASTLY_SERVICE_VERSION: ${FASTLY_SERVICE_VERSION}`)
     const path = (new URL(event.request.url)).pathname
     console.log(`path: ${path}`)
