@@ -1247,3 +1247,28 @@ bool fastly_compute_at_edge_backend_is_healthy(fastly_world_string_t *backend,
   *ret = convert_fastly_backend_health(fastly_backend_health);
   return true;
 }
+
+bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_increment(
+    fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t delta,
+    fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
+  return convert_result(fastly::ratecounter_increment(rate_counter_name->ptr,
+                                                      rate_counter_name->len, entry->ptr,
+                                                      entry->len, delta),
+                        err);
+}
+
+bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_rate(
+    fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t window,
+    uint32_t *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
+  return convert_result(fastly::ratecounter_lookup_rate(rate_counter_name->ptr, rate_counter_name->len,
+                                           entry->ptr, entry->len, window, ret),
+                        err);
+}
+
+bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_count(
+    fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t duration,
+    uint32_t *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
+  return convert_result(fastly::ratecounter_lookup_count(rate_counter_name->ptr, rate_counter_name->len,
+                                           entry->ptr, entry->len, duration, ret),
+                        err);
+}
