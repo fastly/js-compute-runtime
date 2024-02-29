@@ -1791,4 +1791,50 @@ Result<BackendHealth> Backend::health(std::string_view name) {
   return res;
 }
 
+Result<Void> RateCounter::increment(std::string_view entry, uint32_t delta) {
+  auto name_str = string_view_to_world_string(this->name);
+  auto entry_str = string_view_to_world_string(entry);
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_edge_rate_limiter_ratecounter_increment(&name_str, &entry_str, delta,
+                                                                      &err)) {
+    return Result<Void>::err(err);
+  }
+
+  return Result<Void>::ok();
+}
+
+Result<uint32_t> RateCounter::lookup_rate(std::string_view entry, uint32_t window) {
+  Result<uint32_t> res;
+
+  auto name_str = string_view_to_world_string(this->name);
+  auto entry_str = string_view_to_world_string(entry);
+  uint32_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_rate(&name_str, &entry_str,
+                                                                        window, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<uint32_t> RateCounter::lookup_count(std::string_view entry, uint32_t duration) {
+  Result<uint32_t> res;
+
+  auto name_str = string_view_to_world_string(this->name);
+  auto entry_str = string_view_to_world_string(entry);
+  uint32_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_count(&name_str, &entry_str,
+                                                                         duration, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
 } // namespace host_api
