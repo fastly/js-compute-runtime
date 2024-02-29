@@ -32,10 +32,9 @@ bool PenaltyBox::add(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (timeToLive < 0 || std::isnan(timeToLive) || std::isinf(timeToLive)) {
+  if (std::isnan(timeToLive) || std::isinf(timeToLive) || timeToLive < 1 || timeToLive > 60) {
     JS_ReportErrorASCII(
-        cx, "add: timeToLive parameter is an invalid value, only positive numbers can "
-            "be used for timeToLive values.");
+        cx, "add: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.");
     return false;
   }
 
@@ -361,10 +360,9 @@ bool EdgeRateLimiter::checkRate(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (timeToLive < 0 || std::isnan(timeToLive) || std::isinf(timeToLive)) {
+  if (std::isnan(timeToLive) || std::isinf(timeToLive) || timeToLive < 1 || timeToLive > 60) {
     JS_ReportErrorASCII(
-        cx, "checkRate: timeToLive parameter is an invalid value, only positive numbers can "
-            "be used for timeToLive values.");
+        cx, "checkRate: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.");
     return false;
   }
 
