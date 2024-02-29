@@ -16,6 +16,13 @@ let fastlyPlugin = {
         case 'cache-override': { return { contents: `export const CacheOverride = globalThis.CacheOverride;` } }
         case 'config-store': { return { contents: `export const ConfigStore = globalThis.ConfigStore;` } }
         case 'dictionary': { return { contents: `export const Dictionary = globalThis.Dictionary;` } }
+        case 'edge-rate-limiter': {
+          return {
+            contents: `
+export const RateCounter = globalThis.RateCounter;
+`
+          }
+        }
         case 'env': { return { contents: `export const env = globalThis.fastly.env.get;` } }
         case 'experimental': {
           return {
