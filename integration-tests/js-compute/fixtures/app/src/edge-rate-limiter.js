@@ -844,7 +844,7 @@ let error;
       error = assertThrows(() => {
         let pb = new PenaltyBox("pb");
         pb.add("entry", -1)
-      }, Error, `add: timeToLive parameter is an invalid value, only positive numbers can be used for timeToLive values.`)
+      }, Error, `add: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`)
       if (error) { return error }
       return pass('ok')
     });
@@ -852,7 +852,7 @@ let error;
       error = assertThrows(() => {
         let pb = new PenaltyBox("pb");
         pb.add("entry", Infinity)
-      }, Error, `add: timeToLive parameter is an invalid value, only positive numbers can be used for timeToLive values.`)
+      }, Error, `add: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`)
       if (error) { return error }
       return pass('ok')
     });
@@ -860,7 +860,7 @@ let error;
       error = assertThrows(() => {
         let pb = new PenaltyBox("pb");
         pb.add("entry", NaN)
-      }, Error, `add: timeToLive parameter is an invalid value, only positive numbers can be used for timeToLive values.`)
+      }, Error, `add: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`)
       if (error) { return error }
       return pass('ok')
     });
@@ -1192,7 +1192,7 @@ let error;
       let pb = new PenaltyBox('pb')
       let erl = new EdgeRateLimiter(rc, pb);
         erl.checkRate("entry", 1, 1, 1, -1)
-      }, Error, `checkRate: timeToLive parameter is an invalid value, only positive numbers can be used for timeToLive values.`)
+      }, Error, `checkRate: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`)
       if (error) { return error }
       return pass('ok')
     });
@@ -1202,7 +1202,7 @@ let error;
       let pb = new PenaltyBox('pb')
       let erl = new EdgeRateLimiter(rc, pb);
         erl.checkRate("entry", 1, 1, 1, Infinity)
-      }, Error, `checkRate: timeToLive parameter is an invalid value, only positive numbers can be used for timeToLive values.`)
+      }, Error, `checkRate: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`)
       if (error) { return error }
       return pass('ok')
     });
@@ -1212,7 +1212,7 @@ let error;
       let pb = new PenaltyBox('pb')
       let erl = new EdgeRateLimiter(rc, pb);
         erl.checkRate("entry", 1, 1, 1, NaN)
-      }, Error, `checkRate: timeToLive parameter is an invalid value, only positive numbers can be used for timeToLive values.`)
+      }, Error, `checkRate: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`)
       if (error) { return error }
       return pass('ok')
     });
