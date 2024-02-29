@@ -8,7 +8,7 @@
 
 namespace builtins {
 
-JSString* RateCounter::get_name(JSObject* self) {
+JSString *RateCounter::get_name(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Name).isString());
 
@@ -33,9 +33,9 @@ bool RateCounter::increment(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   if (delta < 0 || std::isnan(delta) || std::isinf(delta)) {
-    JS_ReportErrorASCII(
-        cx, "increment: delta parameter is an invalid value, only positive numbers can "
-            "be used for delta values.");
+    JS_ReportErrorASCII(cx,
+                        "increment: delta parameter is an invalid value, only positive numbers can "
+                        "be used for delta values.");
     return false;
   }
 
@@ -119,7 +119,8 @@ bool RateCounter::lookupCount(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   if (duration != 10 && duration != 20 && duration != 30 && duration != 40 && duration != 50 &&
       duration != 60) {
-    JS_ReportErrorASCII(cx, "lookupCount: duration parameter must be either: 10, 20, 30, 40, 50, or 60");
+    JS_ReportErrorASCII(
+        cx, "lookupCount: duration parameter must be either: 10, 20, 30, 40, 50, or 60");
     return false;
   }
 

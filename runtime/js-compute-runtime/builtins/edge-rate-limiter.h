@@ -13,10 +13,7 @@ class RateCounter final : public BuiltinImpl<RateCounter> {
 
 public:
   static constexpr const char *class_name = "RateCounter";
-  enum Slots {
-    Name,
-    Count
-  };
+  enum Slots { Name, Count };
   static const JSFunctionSpec static_methods[];
   static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
@@ -27,7 +24,7 @@ public:
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
-  static JSString* get_name(JSObject* self);
+  static JSString *get_name(JSObject *self);
 };
 
 } // namespace builtins
