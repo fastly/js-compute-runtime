@@ -781,6 +781,12 @@ public:
   static Result<BackendHealth> health(std::string_view name);
 };
 
+class PenaltyBox final {
+public:
+  static Result<Void> add(std::string_view name, std::string_view entry, uint32_t time_to_live);
+  static Result<bool> has(std::string_view name, std::string_view entry);
+};
+
 class RateCounter final {
 public:
   static Result<Void> increment(std::string_view name, std::string_view entry, uint32_t delta);
