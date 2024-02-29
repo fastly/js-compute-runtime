@@ -20,13 +20,13 @@ declare module "fastly:edge-rate-limiter" {
      * @param entry The entry to lookup
      * @param window The window to lookup alongside the entry, has to be either 1 second, 10 seconds, or 60 seconds
      */
-    lookupRate(entry: string, window: [1, 10, 60]): number;
+    lookupRate(entry: string, window: 1 | 10 | 60): number;
     /**
      * Lookup the current count for entry for a given duration
      * @param entry The entry to lookup
      * @param duration The duration to lookup alongside the entry, has to be either, 10, 20, 30, 40, 50, or 60 seconds.
      */
-    lookupCount(entry: string, duration: [10, 20, 30, 40, 50, 60]): number;
+    lookupCount(entry: string, duration: 10 | 20 | 30 | 40 | 50 | 60): number;
   }
 
 }
