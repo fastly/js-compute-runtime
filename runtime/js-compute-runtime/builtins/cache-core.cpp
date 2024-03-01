@@ -264,7 +264,7 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionUpdateOptions(JSContext 
     JS::UniqueChars data;
     std::tie(data, length) = result.unwrap();
     host_api::HostBytes metadata(std::move(data), length);
-    options.metadata = metadata;
+    options.metadata = std::move(metadata);
   }
 
   return options;
