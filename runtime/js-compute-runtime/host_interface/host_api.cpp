@@ -1803,7 +1803,8 @@ Result<Void> RateCounter::increment(std::string_view name, std::string_view entr
   return Result<Void>::ok();
 }
 
-Result<uint32_t> RateCounter::lookup_rate(std::string_view name, std::string_view entry, uint32_t window) {
+Result<uint32_t> RateCounter::lookup_rate(std::string_view name, std::string_view entry,
+                                          uint32_t window) {
   Result<uint32_t> res;
 
   auto name_str = string_view_to_world_string(name);
@@ -1820,7 +1821,8 @@ Result<uint32_t> RateCounter::lookup_rate(std::string_view name, std::string_vie
   return res;
 }
 
-Result<uint32_t> RateCounter::lookup_count(std::string_view name, std::string_view entry, uint32_t duration) {
+Result<uint32_t> RateCounter::lookup_count(std::string_view name, std::string_view entry,
+                                           uint32_t duration) {
   Result<uint32_t> res;
 
   auto name_str = string_view_to_world_string(name);
