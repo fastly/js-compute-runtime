@@ -98,7 +98,7 @@ const JSPropertySpec PenaltyBox::static_properties[] = {
 };
 
 const JSFunctionSpec PenaltyBox::methods[] = {JS_FN("add", add, 2, JSPROP_ENUMERATE),
-                                              JS_FN("has", has, 1, JSPROP_ENUMERATE), JS_FS_END};
+                                              JS_FN("has", has, 1, JSPROP_ENUMERATE), JS_FS_END,};
 
 const JSPropertySpec PenaltyBox::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "PenaltyBox", JSPROP_READONLY), JS_PS_END};
