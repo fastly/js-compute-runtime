@@ -513,6 +513,31 @@ int cache_get_age_ns(fastly_compute_at_edge_cache_handle_t handle, uint64_t *ret
 WASM_IMPORT("fastly_cache", "get_hits")
 int cache_get_hits(fastly_compute_at_edge_cache_handle_t handle, uint64_t *ret);
 
+WASM_IMPORT("fastly_erl", "check_rate")
+int check_rate(const char *rc, size_t rc_len, const char *entry, size_t entry_len, uint32_t delta,
+               uint32_t window, uint32_t limit, const char *pb, size_t pb_len, uint32_t ttl,
+               bool *blocked_out);
+
+WASM_IMPORT("fastly_erl", "ratecounter_increment")
+int ratecounter_increment(const char *rc, size_t rc_len, const char *entry, size_t entry_len,
+                          uint32_t delta);
+
+WASM_IMPORT("fastly_erl", "ratecounter_lookup_rate")
+int ratecounter_lookup_rate(const char *rc, size_t rc_len, const char *entry, size_t entry_len,
+                            uint32_t window, uint32_t *rate_out);
+
+WASM_IMPORT("fastly_erl", "ratecounter_lookup_count")
+int ratecounter_lookup_count(const char *rc, size_t rc_len, const char *entry, size_t entry_len,
+                             uint32_t duration, uint32_t *count_out);
+
+WASM_IMPORT("fastly_erl", "penaltybox_add")
+int penaltybox_add(const char *pb, size_t pb_len, const char *entry, size_t entry_len,
+                   uint32_t ttl);
+
+WASM_IMPORT("fastly_erl", "penaltybox_has")
+int penaltybox_has(const char *pb, size_t pb_len, const char *entry, size_t entry_len,
+                   bool *has_out);
+
 } // namespace fastly
 #ifdef __cplusplus
 }

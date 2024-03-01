@@ -780,6 +780,16 @@ public:
   static Result<bool> exists(std::string_view name);
   static Result<BackendHealth> health(std::string_view name);
 };
+
+class RateCounter final {
+public:
+  static Result<Void> increment(std::string_view name, std::string_view entry, uint32_t delta);
+  static Result<uint32_t> lookup_rate(std::string_view name, std::string_view entry,
+                                      uint32_t window);
+  static Result<uint32_t> lookup_count(std::string_view name, std::string_view entry,
+                                       uint32_t duration);
+};
+
 } // namespace host_api
 
 #endif
