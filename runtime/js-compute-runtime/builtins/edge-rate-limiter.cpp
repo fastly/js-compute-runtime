@@ -46,9 +46,7 @@ bool RateCounter::increment(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto rc = host_api::RateCounter(name);
-
-  auto res = rc.increment(entry, delta);
+  auto res = host_api::RateCounter(name).rc.increment(entry, delta);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
