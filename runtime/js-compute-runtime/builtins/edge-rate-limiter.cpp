@@ -32,6 +32,8 @@ bool RateCounter::increment(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  // This needs to happen on the happy-path as these all end up being valid uint32_t values that the
+  // host-call accepts
   if (delta < 0 || std::isnan(delta) || std::isinf(delta)) {
     JS_ReportErrorASCII(cx,
                         "increment: delta parameter is an invalid value, only positive numbers can "
@@ -73,11 +75,6 @@ bool RateCounter::lookupRate(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (window != 1 && window != 10 && window != 60) {
-    JS_ReportErrorASCII(cx, "lookupRate: window parameter must be either: 1, 10, or 60");
-    return false;
-  }
-
   MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Name).isString());
   JS::RootedString name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
   auto name = core::encode(cx, name_val);
@@ -87,6 +84,12 @@ bool RateCounter::lookupRate(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto res = host_api::RateCounter::lookup_rate(name, entry, window);
   if (auto *err = res.to_err()) {
+    if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
+      if (window != 1 && window != 10 && window != 60) {
+        JS_ReportErrorASCII(cx, "lookupRate: window parameter must be either: 1, 10, or 60");
+        return false;
+      }
+    }
     HANDLE_ERROR(cx, *err);
     return false;
   }
@@ -113,13 +116,6 @@ bool RateCounter::lookupCount(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (duration != 10 && duration != 20 && duration != 30 && duration != 40 && duration != 50 &&
-      duration != 60) {
-    JS_ReportErrorASCII(
-        cx, "lookupCount: duration parameter must be either: 10, 20, 30, 40, 50, or 60");
-    return false;
-  }
-
   MOZ_ASSERT(JS::GetReservedSlot(self, Slots::Name).isString());
   JS::RootedString name_val(cx, JS::GetReservedSlot(self, Slots::Name).toString());
   auto name = core::encode(cx, name_val);
@@ -129,6 +125,14 @@ bool RateCounter::lookupCount(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto res = host_api::RateCounter::lookup_count(name, entry, duration);
   if (auto *err = res.to_err()) {
+    if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
+      if (duration != 10 && duration != 20 && duration != 30 && duration != 40 && duration != 50 &&
+          duration != 60) {
+        JS_ReportErrorASCII(
+            cx, "lookupCount: duration parameter must be either: 10, 20, 30, 40, 50, or 60");
+        return false;
+      }
+    }
     HANDLE_ERROR(cx, *err);
     return false;
   }
@@ -163,8 +167,6 @@ bool RateCounter::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!name) {
     return false;
   }
-
-  // TODO: Do we want to check if the string is empty?
 
   JS::RootedObject instance(cx, JS_NewObjectForConstructor(cx, &class_, args));
   if (!instance) {
