@@ -783,13 +783,9 @@ public:
 
 class RateCounter final {
 public:
-  std::string_view name;
-  RateCounter() = default;
-  explicit RateCounter(std::string_view name) : name{name} {}
-
-  Result<Void> increment(std::string_view entry, uint32_t delta);
-  Result<uint32_t> lookup_rate(std::string_view entry, uint32_t window);
-  Result<uint32_t> lookup_count(std::string_view entry, uint32_t duration);
+  static Result<Void> increment(std::string_view name, std::string_view entry, uint32_t delta);
+  static Result<uint32_t> lookup_rate(std::string_view name, std::string_view entry, uint32_t window);
+  static Result<uint32_t> lookup_count(std::string_view name, std::string_view entry, uint32_t duration);
 };
 
 } // namespace host_api

@@ -46,7 +46,7 @@ bool RateCounter::increment(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto res = host_api::RateCounter(name).increment(entry, delta);
+  auto res = host_api::RateCounter::increment(name, entry, delta);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -85,7 +85,7 @@ bool RateCounter::lookupRate(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto res = host_api::RateCounter(name).lookup_rate(entry, window);
+  auto res = host_api::RateCounter::lookup_rate(name, entry, window);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -127,7 +127,7 @@ bool RateCounter::lookupCount(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto res = host_api::RateCounter(name).lookup_count(entry, duration);
+  auto res = host_api::RateCounter::lookup_count(name, entry, duration);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
