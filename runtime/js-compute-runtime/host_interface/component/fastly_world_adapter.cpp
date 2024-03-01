@@ -1248,6 +1248,17 @@ bool fastly_compute_at_edge_backend_is_healthy(fastly_world_string_t *backend,
   return true;
 }
 
+bool fastly_compute_at_edge_edge_rate_limiter_check_rate(
+    fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t delta,
+    uint32_t window, uint32_t limit, fastly_world_string_t *penalty_box_name, uint32_t time_to_live,
+    bool *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
+  return convert_result(fastly::check_rate(rate_counter_name->ptr, rate_counter_name->len,
+                                           entry->ptr, entry->len, delta, window, limit,
+                                           penalty_box_name->ptr, penalty_box_name->len,
+                                           time_to_live, ret),
+                        err);
+}
+
 bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_increment(
     fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t delta,
     fastly_compute_at_edge_edge_rate_limiter_error_t *err) {

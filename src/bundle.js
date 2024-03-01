@@ -21,6 +21,7 @@ let fastlyPlugin = {
             contents: `
 export const RateCounter = globalThis.RateCounter;
 export const PenaltyBox = globalThis.PenaltyBox;
+export const EdgeRateLimiter = globalThis.EdgeRateLimiter;
 `
           }
         }
