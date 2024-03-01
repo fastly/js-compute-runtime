@@ -113,7 +113,9 @@ bool PenaltyBox::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  // TODO: Do we want to check if the string is empty?
+  if (name.len == 0) {
+    JS_ReportErrorASCII(cx, "PenaltyBox constructor: name parameter can not be an empty string.");
+  }
 
   JS::RootedObject instance(cx, JS_NewObjectForConstructor(cx, &class_, args));
   if (!instance) {
@@ -287,6 +289,10 @@ bool RateCounter::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto name = core::encode(cx, args.get(0));
   if (!name) {
     return false;
+  }
+
+  if (name.len == 0) {
+    JS_ReportErrorASCII(cx, "RateCounter constructor: name parameter can not be an empty string.");
   }
 
   JS::RootedObject instance(cx, JS_NewObjectForConstructor(cx, &class_, args));
