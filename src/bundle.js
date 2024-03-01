@@ -20,6 +20,7 @@ let fastlyPlugin = {
           return {
             contents: `
 export const RateCounter = globalThis.RateCounter;
+export const PenaltyBox = globalThis.PenaltyBox;
 `
           }
         }

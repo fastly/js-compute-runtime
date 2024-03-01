@@ -1274,3 +1274,19 @@ bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_count(
                                                          entry->len, duration, ret),
                         err);
 }
+
+bool fastly_compute_at_edge_edge_rate_limiter_penaltybox_add(
+    fastly_world_string_t *penalty_box_name, fastly_world_string_t *entry, uint32_t time_to_live,
+    fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
+  return convert_result(fastly::penaltybox_add(penalty_box_name->ptr, penalty_box_name->len,
+                                               entry->ptr, entry->len, time_to_live),
+                        err);
+}
+
+bool fastly_compute_at_edge_edge_rate_limiter_penaltybox_has(
+    fastly_world_string_t *penalty_box_name, fastly_world_string_t *entry, bool *ret,
+    fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
+  return convert_result(fastly::penaltybox_has(penalty_box_name->ptr, penalty_box_name->len,
+                                               entry->ptr, entry->len, ret),
+                        err);
+}

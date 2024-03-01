@@ -2,7 +2,7 @@
 /* eslint-env serviceworker */
 
 import { pass, assert, assertThrows } from "./assertions.js";
-import { RateCounter } from 'fastly:edge-rate-limiter';
+import { RateCounter, PenaltyBox } from 'fastly:edge-rate-limiter';
 import { routes, isRunningLocally } from "./routes.js";
 
 let error;
@@ -525,6 +525,364 @@ let error;
     routes.set("/rate-counter/lookupCount/returns-number", () => {
       let rc = new RateCounter("rc");
       error = assert(typeof rc.lookupCount('meow', 10), "number", `typeof rc.lookupCount('meow', 1)`)
+      if (error) { return error }
+      return pass('ok')
+    });
+  }
+}
+
+// PenaltyBox
+{
+  routes.set("/penalty-box/interface", () => {
+
+    let actual = Reflect.ownKeys(PenaltyBox)
+    let expected = ["prototype", "length", "name"]
+    error = assert(actual, expected, `Reflect.ownKeys(PenaltyBox)`)
+    if (error) { return error }
+
+    // Check the prototype descriptors are correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox, 'prototype')
+      expected = {
+        "value": PenaltyBox.prototype,
+        "writable": false,
+        "enumerable": false,
+        "configurable": false
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox, 'prototype')`)
+      if (error) { return error }
+    }
+
+    // Check the constructor function's defined parameter length is correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox, 'length')
+      expected = {
+        "value": 0,
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox, 'length')`)
+      if (error) { return error }
+    }
+
+    // Check the constructor function's name is correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox, 'name')
+      expected = {
+        "value": "PenaltyBox",
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox, 'name')`)
+      if (error) { return error }
+    }
+
+    // Check the prototype has the correct keys
+    {
+      actual = Reflect.ownKeys(PenaltyBox.prototype)
+      expected = ["constructor", "add", "has", Symbol.toStringTag]
+      error = assert(actual, expected, `Reflect.ownKeys(PenaltyBox.prototype)`)
+      if (error) { return error }
+    }
+
+    // Check the constructor on the prototype is correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, 'constructor')
+      expected = { "writable": true, "enumerable": false, "configurable": true, value: PenaltyBox.prototype.constructor }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, 'constructor')`)
+      if (error) { return error }
+
+      error = assert(typeof PenaltyBox.prototype.constructor, 'function', `typeof PenaltyBox.prototype.constructor`)
+      if (error) { return error }
+
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.constructor, 'length')
+      expected = {
+        "value": 0,
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.constructor, 'length')`)
+      if (error) { return error }
+
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.constructor, 'name')
+      expected = {
+        "value": "PenaltyBox",
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.constructor, 'name')`)
+      if (error) { return error }
+    }
+
+    // Check the Symbol.toStringTag on the prototype is correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, Symbol.toStringTag)
+      expected = { "writable": false, "enumerable": false, "configurable": true, value: "PenaltyBox" }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, [Symbol.toStringTag])`)
+      if (error) { return error }
+
+      error = assert(typeof PenaltyBox.prototype[Symbol.toStringTag], 'string', `typeof PenaltyBox.prototype[Symbol.toStringTag]`)
+      if (error) { return error }
+    }
+
+    // Check the add method has correct descriptors, length and name
+    {
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, 'add')
+      expected = { "writable": true, "enumerable": true, "configurable": true, value: PenaltyBox.prototype.add }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, 'add')`)
+      if (error) { return error }
+
+      error = assert(typeof PenaltyBox.prototype.add, 'function', `typeof PenaltyBox.prototype.add`)
+      if (error) { return error }
+
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.add, 'length')
+      expected = {
+        "value": 2,
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.add, 'length')`)
+      if (error) { return error }
+
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.add, 'name')
+      expected = {
+        "value": "add",
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.add, 'name')`)
+      if (error) { return error }
+    }
+
+    // Check the has method has correct descriptors, length and name
+    {
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, 'has')
+      expected = { "writable": true, "enumerable": true, "configurable": true, value: PenaltyBox.prototype.has }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, 'has')`)
+      if (error) { return error }
+
+      error = assert(typeof PenaltyBox.prototype.has, 'function', `typeof PenaltyBox.prototype.has`)
+      if (error) { return error }
+
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.has, 'length')
+      expected = {
+        "value": 1,
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.has, 'length')`)
+      if (error) { return error }
+
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.has, 'name')
+      expected = {
+        "value": "has",
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.has, 'name')`)
+      if (error) { return error }
+    }
+
+    return pass('ok')
+  });
+
+  // PenaltyBox constructor
+  {
+    routes.set("/penalty-box/constructor/called-as-regular-function", () => {
+      error = assertThrows(() => {
+        PenaltyBox()
+      }, Error, `calling a builtin PenaltyBox constructor without new is forbidden`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/penalty-box/constructor/called-as-constructor-no-arguments", () => {
+      error = assertThrows(() => new PenaltyBox(), Error, `PenaltyBox constructor: At least 1 argument required, but only 0 passed`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    // Ensure we correctly coerce the parameter to a string as according to
+    // https://tc39.es/ecma262/#sec-tostring
+    routes.set("/penalty-box/constructor/name-parameter-calls-7.1.17-ToString", () => {
+      if (!isRunningLocally()) {
+        let sentinel;
+        const test = () => {
+          sentinel = Symbol('sentinel');
+          const name = {
+            toString() {
+              throw sentinel;
+            }
+          }
+          new PenaltyBox(name)
+        }
+        error = assertThrows(test)
+        if (error) { return error }
+        try {
+          test()
+        } catch (thrownError) {
+          error = assert(thrownError, sentinel, 'thrownError === sentinel')
+          if (error) { return error }
+        }
+        error = assertThrows(() => {
+          new PenaltyBox(Symbol())
+        }, Error, `can't convert symbol to string`)
+        if (error) { return error }
+      }
+      return pass('ok')
+    });
+    routes.set("/penalty-box/constructor/happy-path", () => {
+      error = assert(new PenaltyBox("rc") instanceof PenaltyBox, true, `new PenaltyBox("rc") instanceof PenaltyBox`)
+      if (error) { return error }
+      return pass('ok')
+    });
+  }
+
+  // PenaltyBox has method
+  // has(entry: string): boolean;
+  {
+    routes.set("/penalty-box/has/called-as-constructor", () => {
+      error = assertThrows(() => {
+        new PenaltyBox.prototype.has('entry')
+      }, Error, `PenaltyBox.prototype.has is not a constructor`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    // Ensure we correctly coerce the parameter to a string as according to
+    // https://tc39.es/ecma262/#sec-tostring
+    routes.set("/penalty-box/has/entry-parameter-calls-7.1.17-ToString", () => {
+      let sentinel;
+      const test = () => {
+        sentinel = Symbol('sentinel');
+        const entry = {
+          toString() {
+            throw sentinel;
+          }
+        }
+        let pb = new PenaltyBox("pb");
+        pb.has(entry)
+      }
+      error = assertThrows(test)
+      if (error) { return error }
+      try {
+        test()
+      } catch (thrownError) {
+        console.log({ thrownError })
+        error = assert(thrownError, sentinel, 'thrownError === sentinel')
+        if (error) { return error }
+      }
+      error = assertThrows(() => {
+        let pb = new PenaltyBox("pb");
+        pb.has(Symbol())
+      }, Error, `can't convert symbol to string`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/penalty-box/has/entry-parameter-not-supplied", () => {
+      error = assertThrows(() => {
+        let pb = new PenaltyBox("pb");
+        pb.has()
+      }, Error, `has: At least 1 argument required, but only 0 passed`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/penalty-box/has/returns-boolean", () => {
+      let pb = new PenaltyBox("pb");
+      error = assert(pb.has('meow'), false, "pb.has('meow')")
+      if (error) { return error }
+      return pass('ok')
+    });
+  }
+
+  // PenaltyBox add method
+  // add(entry: string, timeToLive: number): void;
+  {
+    routes.set("/penalty-box/add/called-as-constructor", () => {
+      error = assertThrows(() => {
+        new PenaltyBox.prototype.add('entry', 1)
+      }, Error, `PenaltyBox.prototype.add is not a constructor`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    // Ensure we correctly coepbe the parameter to a string as according to
+    // https://tc39.es/ecma262/#sec-tostring
+    routes.set("/penalty-box/add/entry-parameter-calls-7.1.17-ToString", () => {
+      let sentinel;
+      const test = () => {
+        sentinel = Symbol('sentinel');
+        const entry = {
+          toString() {
+            throw sentinel;
+          }
+        }
+        let pb = new PenaltyBox("pb");
+        pb.add(entry, 1)
+      }
+      error = assertThrows(test)
+      if (error) { return error }
+      try {
+        test()
+      } catch (thrownError) {
+        console.log({ thrownError })
+        error = assert(thrownError, sentinel, 'thrownError === sentinel')
+        if (error) { return error }
+      }
+      error = assertThrows(() => {
+        let pb = new PenaltyBox("pb");
+        pb.add(Symbol(), 1)
+      }, Error, `can't convert symbol to string`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/penalty-box/add/entry-parameter-not-supplied", () => {
+      error = assertThrows(() => {
+        let pb = new PenaltyBox("pb");
+        pb.add()
+      }, Error, `add: At least 2 arguments required, but only 0 passed`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/penalty-box/add/timeToLive-parameter-not-supplied", () => {
+      error = assertThrows(() => {
+        let pb = new PenaltyBox("pb");
+        pb.add("entry")
+      }, Error, `add: At least 2 arguments required, but only 1 passed`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/penalty-box/add/timeToLive-parameter-negative", () => {
+      error = assertThrows(() => {
+        let pb = new PenaltyBox("pb");
+        pb.add("entry", -1)
+      }, Error, `add: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/penalty-box/add/timeToLive-parameter-infinity", () => {
+      error = assertThrows(() => {
+        let pb = new PenaltyBox("pb");
+        pb.add("entry", Infinity)
+      }, Error, `add: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/penalty-box/add/timeToLive-parameter-NaN", () => {
+      error = assertThrows(() => {
+        let pb = new PenaltyBox("pb");
+        pb.add("entry", NaN)
+      }, Error, `add: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/penalty-box/add/returns-undefined", () => {
+      let pb = new PenaltyBox("pb");
+      error = assert(pb.add('meow', 1), undefined, `pb.add('meow', 1)`)
       if (error) { return error }
       return pass('ok')
     });
