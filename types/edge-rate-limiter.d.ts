@@ -16,7 +16,7 @@ declare module "fastly:edge-rate-limiter" {
      * @param limit The requests-per-second limit
      * @param timeToLive In minutes, how long the entry should be added into the penalty-box
      */
-    checkRate(entry: string, delta: number, window: [1, 10, 60], limit: number, timeToLive: number): boolean;
+    checkRate(entry: string, delta: number, window: 1 | 10 | 60, limit: number, timeToLive: number): boolean;
   }
 
   /**
