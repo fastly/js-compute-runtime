@@ -2,7 +2,7 @@
 /* eslint-env serviceworker */
 
 import { pass, assert, assertThrows } from "./assertions.js";
-import { RateCounter, PenaltyBox } from 'fastly:edge-rate-limiter';
+import { RateCounter, PenaltyBox, EdgeRateLimiter } from 'fastly:edge-rate-limiter';
 import { routes, isRunningLocally } from "./routes.js";
 
 let error;
@@ -883,6 +883,360 @@ let error;
     routes.set("/penalty-box/add/returns-undefined", () => {
       let pb = new PenaltyBox("pb");
       error = assert(pb.add('meow', 1), undefined, `pb.add('meow', 1)`)
+      if (error) { return error }
+      return pass('ok')
+    });
+  }
+}
+
+// EdgeRateLimiter
+{
+  routes.set("/edge-rate-limiter/interface", () => {
+
+    let actual = Reflect.ownKeys(EdgeRateLimiter)
+    let expected = ["prototype", "length", "name"]
+    error = assert(actual, expected, `Reflect.ownKeys(EdgeRateLimiter)`)
+    if (error) { return error }
+
+    // Check the prototype descriptors are correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, 'prototype')
+      expected = {
+        "value": EdgeRateLimiter.prototype,
+        "writable": false,
+        "enumerable": false,
+        "configurable": false
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, 'prototype')`)
+      if (error) { return error }
+    }
+
+    // Check the constructor function's defined parameter length is correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, 'length')
+      expected = {
+        "value": 0,
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, 'length')`)
+      if (error) { return error }
+    }
+
+    // Check the constructor function's name is correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, 'name')
+      expected = {
+        "value": "EdgeRateLimiter",
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, 'name')`)
+      if (error) { return error }
+    }
+
+    // Check the prototype has the correct keys
+    {
+      actual = Reflect.ownKeys(EdgeRateLimiter.prototype)
+      expected = ["constructor", "checkRate", Symbol.toStringTag]
+      error = assert(actual, expected, `Reflect.ownKeys(EdgeRateLimiter.prototype)`)
+      if (error) { return error }
+    }
+
+    // Check the constructor on the prototype is correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype, 'constructor')
+      expected = { "writable": true, "enumerable": false, "configurable": true, value: EdgeRateLimiter.prototype.constructor }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype, 'constructor')`)
+      if (error) { return error }
+
+      error = assert(typeof EdgeRateLimiter.prototype.constructor, 'function', `typeof EdgeRateLimiter.prototype.constructor`)
+      if (error) { return error }
+
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype.constructor, 'length')
+      expected = {
+        "value": 0,
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype.constructor, 'length')`)
+      if (error) { return error }
+
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype.constructor, 'name')
+      expected = {
+        "value": "EdgeRateLimiter",
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype.constructor, 'name')`)
+      if (error) { return error }
+    }
+
+    // Check the Symbol.toStringTag on the prototype is correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype, Symbol.toStringTag)
+      expected = { "writable": false, "enumerable": false, "configurable": true, value: "EdgeRateLimiter" }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype, [Symbol.toStringTag])`)
+      if (error) { return error }
+
+      error = assert(typeof EdgeRateLimiter.prototype[Symbol.toStringTag], 'string', `typeof EdgeRateLimiter.prototype[Symbol.toStringTag]`)
+      if (error) { return error }
+    }
+
+    // Check the checkRate method has correct descriptors, length and name
+    {
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype, 'checkRate')
+      expected = { "writable": true, "enumerable": true, "configurable": true, value: EdgeRateLimiter.prototype.checkRate }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype, 'checkRate')`)
+      if (error) { return error }
+
+      error = assert(typeof EdgeRateLimiter.prototype.checkRate, 'function', `typeof EdgeRateLimiter.prototype.checkRate`)
+      if (error) { return error }
+
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype.checkRate, 'length')
+      expected = {
+        "value": 5,
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype.checkRate, 'length')`)
+      if (error) { return error }
+
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype.checkRate, 'name')
+      expected = {
+        "value": "checkRate",
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+      }
+      error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype.checkRate, 'name')`)
+      if (error) { return error }
+    }
+
+    return pass('ok')
+  });
+
+  // EdgeRateLimiter constructor
+  {
+    routes.set("/edge-rate-limiter/constructor/called-as-regular-function", () => {
+      error = assertThrows(() => {
+        EdgeRateLimiter()
+      }, Error, `calling a builtin EdgeRateLimiter constructor without new is forbidden`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/constructor/called-as-constructor-no-arguments", () => {
+      error = assertThrows(() => new EdgeRateLimiter(), Error, `EdgeRateLimiter constructor: At least 2 arguments required, but only 0 passed`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    // Ensure we correctly coerce the parameter to a string as according to
+    // https://tc39.es/ecma262/#sec-tostring
+    routes.set("/edge-rate-limiter/constructor/rate-counter-not-instance-of-rateCounter", () => {
+      error = assertThrows(() => {
+        new EdgeRateLimiter(true, true)
+      }, Error, `EdgeRateLimiter constructor: rateCounter parameter must be an instance of RateCounter`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/constructor/penalty-box-not-instance-of-penaltyBox", () => {
+      error = assertThrows(() => {
+        new EdgeRateLimiter(new RateCounter('rc'), true)
+      }, Error, `EdgeRateLimiter constructor: penaltyBox parameter must be an instance of PenaltyBox`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/constructor/happy-path", () => {
+      error = assert(new EdgeRateLimiter(new RateCounter("rc"), new PenaltyBox('pb')) instanceof EdgeRateLimiter, true, `new EdgeRateLimiter(new RateCounter("rc"), new PenaltyBox('pb')) instanceof EdgeRateLimiter`)
+      if (error) { return error }
+      return pass('ok')
+    });
+  }
+
+  // EdgeRateLimiter checkRate method
+  // checkRate(entry: string, delta: number, window: [1, 10, 60], limit: number, timeToLive: number): boolean;
+  {
+    routes.set("/edge-rate-limiter/checkRate/called-as-constructor", () => {
+      error = assertThrows(() => {
+        new EdgeRateLimiter.prototype.checkRate('entry')
+      }, Error, `EdgeRateLimiter.prototype.checkRate is not a constructor`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    // Ensure we correctly coerce the parameter to a string as according to
+    // https://tc39.es/ecma262/#sec-tostring
+    routes.set("/edge-rate-limiter/checkRate/entry-parameter-calls-7.1.17-ToString", () => {
+      let sentinel;
+      const test = () => {
+        sentinel = Symbol('sentinel');
+        const entry = {
+          toString() {
+            throw sentinel;
+          }
+        }
+        let rc = new RateCounter('rc')
+        let pb = new PenaltyBox('pb')
+        let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate(entry, 1, 1, 1, 1)
+      }
+      error = assertThrows(test)
+      if (error) { return error }
+      try {
+        test()
+      } catch (thrownError) {
+        console.log({ thrownError })
+        error = assert(thrownError, sentinel, 'thrownError === sentinel')
+        if (error) { return error }
+      }
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+        let pb = new PenaltyBox('pb')
+        let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate(Symbol(), 1, 1, 1, 1)
+      }, Error, `can't convert symbol to string`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/entry-parameter-not-supplied", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+        let pb = new PenaltyBox('pb')
+        let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate()
+      }, Error, `checkRate: At least 5 arguments required, but only 0 passed`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/delta-parameter-negative", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate("entry", -1, 1, 1, 1)
+      }, Error, `checkRate: delta parameter is an invalid value, only positive numbers can be used for delta values.`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/delta-parameter-infinity", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate("entry", Infinity, 1, 1, 1)
+      }, Error, `checkRate: delta parameter is an invalid value, only positive numbers can be used for delta values.`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/delta-parameter-NaN", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate("entry", NaN, 1, 1, 1)
+      }, Error, `checkRate: delta parameter is an invalid value, only positive numbers can be used for delta values.`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/window-parameter-negative", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate("entry", 1, -1, 1, 1)
+      }, Error, `checkRate: window parameter must be either: 1, 10, or 60`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/window-parameter-infinity", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate("entry", 1, Infinity, 1, 1)
+      }, Error, `checkRate: window parameter must be either: 1, 10, or 60`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/window-parameter-NaN", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate("entry", 1, NaN, 1, 1)
+      }, Error, `checkRate: window parameter must be either: 1, 10, or 60`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/limit-parameter-negative", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate("entry", 1, 1, -1, 1)
+      }, Error, `checkRate: limit parameter is an invalid value, only positive numbers can be used for limit values.`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/limit-parameter-infinity", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate("entry", 1, 1, Infinity, 1)
+      }, Error, `checkRate: limit parameter is an invalid value, only positive numbers can be used for limit values.`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/limit-parameter-NaN", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate("entry", 1, 1, NaN, 1)
+      }, Error, `checkRate: limit parameter is an invalid value, only positive numbers can be used for limit values.`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/timeToLive-parameter-negative", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate("entry", 1, 1, 1, -1)
+      }, Error, `checkRate: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/timeToLive-parameter-infinity", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate("entry", 1, 1, 1, Infinity)
+      }, Error, `checkRate: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/timeToLive-parameter-NaN", () => {
+      error = assertThrows(() => {
+        let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+        erl.checkRate("entry", 1, 1, 1, NaN)
+      }, Error, `checkRate: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`)
+      if (error) { return error }
+      return pass('ok')
+    });
+    routes.set("/edge-rate-limiter/checkRate/returns-boolean", () => {
+      let rc = new RateCounter('rc')
+      let pb = new PenaltyBox('pb')
+      let erl = new EdgeRateLimiter(rc, pb);
+      error = assert(erl.checkRate('woof', 1, 10, 100, 5), false, "erl.checkRate('meow', 1, 10, 100, 5)")
       if (error) { return error }
       return pass('ok')
     });

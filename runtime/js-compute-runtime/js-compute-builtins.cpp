@@ -1079,6 +1079,9 @@ bool define_fastly_sys(JSContext *cx, HandleObject global, FastlyOptions options
   if (!builtins::RateCounter::init_class(cx, global)) {
     return false;
   }
+  if (!builtins::EdgeRateLimiter::init_class(cx, global)) {
+    return false;
+  }
 
   core::EventLoop::init(cx);
 

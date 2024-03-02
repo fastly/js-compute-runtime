@@ -796,6 +796,13 @@ public:
                                        uint32_t duration);
 };
 
+class EdgeRateLimiter final {
+public:
+  static Result<bool> check_rate(std::string_view rate_counter_name, std::string_view entry,
+                                 uint32_t delta, uint32_t window, uint32_t limit,
+                                 std::string_view penalty_box_name, uint32_t time_to_live);
+};
+
 } // namespace host_api
 
 #endif

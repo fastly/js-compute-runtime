@@ -1,5 +1,24 @@
 declare module "fastly:edge-rate-limiter" {
 
+  export class EdgeRateLimiter {
+    /**
+     * Open a EdgeRateLimiter with the given ratecounter and penalty-box.
+     */
+    constructor(rateCounter: RateCounter, penaltyBox: PenaltyBox);
+    /**
+     * Increment an entry in the rate counter and check if the entry has exceeded some average number of requests-per-second (RPS) over the given window.
+     * If the entry is over the RPS limit for the window, add to the penalty-box for the given timeToLive.
+     *
+     * Valid `timeToLive` is 1 minute to 60 minutes and `timeToLive` value is truncated to the nearest minute.
+     * @param entry The name of the entry to increment and check
+     * @param delta The amount to increment the `entry` by
+     * @param window The time period to check across, has to be either 1 second, 10 seconds, or 60 seconds
+     * @param limit The requests-per-second limit
+     * @param timeToLive In minutes, how long the entry should be added into the penalty-box
+     */
+    checkRate(entry: string, delta: number, window: 1 | 10 | 60, limit: number, timeToLive: number): boolean;
+  }
+
   /**
    * A penalty-box that can be used with the EdgeRateLimiter or standalone for adding and checking if some entry is in the dataset.
    */
