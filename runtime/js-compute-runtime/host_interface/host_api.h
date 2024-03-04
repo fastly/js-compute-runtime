@@ -803,6 +803,11 @@ public:
                                  std::string_view penalty_box_name, uint32_t time_to_live);
 };
 
+class DeviceDetection final {
+public:
+  static Result<HostString> lookup(std::string_view user_agent);
+};
+
 } // namespace host_api
 
 #endif

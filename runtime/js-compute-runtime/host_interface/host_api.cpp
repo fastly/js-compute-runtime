@@ -1886,4 +1886,18 @@ Result<bool> EdgeRateLimiter::check_rate(std::string_view rate_counter_name, std
   return res;
 }
 
+Result<HostString> DeviceDetection::lookup(std::string_view user_agent) {
+  Result<HostString> res;
+
+  auto user_agent_str = string_view_to_world_string(user_agent);
+  fastly_compute_at_edge_types_error_t err;
+  fastly_world_string_t ret;
+  if (!fastly_compute_at_edge_device_detection_lookup(&user_agent_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(JS::UniqueChars(reinterpret_cast<char *>(ret.ptr)), ret.len);
+  }
+  return res;
+}
+
 } // namespace host_api
