@@ -538,6 +538,10 @@ WASM_IMPORT("fastly_erl", "penaltybox_has")
 int penaltybox_has(const char *pb, size_t pb_len, const char *entry, size_t entry_len,
                    bool *has_out);
 
+WASM_IMPORT("fastly_device_detection", "lookup")
+int device_detection_lookup(const char *user_agent, size_t user_agent_len, const char *buf, size_t buf_len,
+                   size_t *nwritten);
+
 } // namespace fastly
 #ifdef __cplusplus
 }
