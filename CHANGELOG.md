@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [3.9.1](https://github.com/fastly/js-compute-runtime/compare/v3.9.0...v3.9.1) (2024-03-04)
+
+
+### Bug Fixes
+
+* ensure we associate correct memory for the user_metadata attached to a cache item ([#734](https://github.com/fastly/js-compute-runtime/issues/734)) ([550c4f5](https://github.com/fastly/js-compute-runtime/commit/550c4f5502e710f0b7cf11d0132270bcc91e7235))
+
 ## 3.9.0 (2024-03-02)
 
 
