@@ -470,6 +470,14 @@ typedef struct {
 typedef struct {
   bool is_err;
   union {
+    fastly_world_string_t ok;
+    fastly_compute_at_edge_device_detection_error_t err;
+  } val;
+} fastly_world_result_string_fastly_compute_at_edge_device_detection_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
   } val;
 } fastly_world_result_void_void_t;
 
@@ -562,6 +570,9 @@ void __wasm_import_fastly_compute_at_edge_cache_get_age_ns(int32_t, int32_t);
 
 __attribute__((__import_module__("fastly:compute-at-edge/cache"), __import_name__("get-hits")))
 void __wasm_import_fastly_compute_at_edge_cache_get_hits(int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/device-detection"), __import_name__("lookup")))
+void __wasm_import_fastly_compute_at_edge_device_detection_lookup(int32_t, int32_t, int32_t);
 
 __attribute__((__import_module__("fastly:compute-at-edge/dictionary"), __import_name__("open")))
 void __wasm_import_fastly_compute_at_edge_dictionary_open(int32_t, int32_t, int32_t);
@@ -1672,6 +1683,33 @@ bool fastly_compute_at_edge_cache_get_hits(fastly_compute_at_edge_cache_handle_t
     case 1: {
       result.is_err = true;
       result.val.err = (int32_t) (*((uint8_t*) (ptr + 8)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_device_detection_lookup(fastly_world_string_t *user_agent, fastly_world_string_t *ret, fastly_compute_at_edge_device_detection_error_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[12];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_device_detection_lookup((int32_t) (*user_agent).ptr, (int32_t) (*user_agent).len, ptr);
+  fastly_world_result_string_fastly_compute_at_edge_device_detection_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (fastly_world_string_t) { (char*)(*((int32_t*) (ptr + 4))), (size_t)(*((int32_t*) (ptr + 8))) };
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
       break;
     }
   }

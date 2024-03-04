@@ -572,6 +572,8 @@ typedef struct {
 
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_edge_rate_limiter_error_t;
 
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_device_detection_error_t;
+
 typedef fastly_compute_at_edge_http_types_request_t fastly_compute_at_edge_reactor_request_t;
 
 // Imported Functions from `fastly:compute-at-edge/async-io`
@@ -700,6 +702,9 @@ bool fastly_compute_at_edge_cache_get_age_ns(fastly_compute_at_edge_cache_handle
 // Gets the number of cache hits for the found object, returning the `$none` error if there
 // was no found object.
 bool fastly_compute_at_edge_cache_get_hits(fastly_compute_at_edge_cache_handle_t handle, uint64_t *ret, fastly_compute_at_edge_cache_error_t *err);
+
+// Imported Functions from `fastly:compute-at-edge/device-detection`
+bool fastly_compute_at_edge_device_detection_lookup(fastly_world_string_t *user_agent, fastly_world_string_t *ret, fastly_compute_at_edge_device_detection_error_t *err);
 
 // Imported Functions from `fastly:compute-at-edge/dictionary`
 bool fastly_compute_at_edge_dictionary_open(fastly_world_string_t *name, fastly_compute_at_edge_dictionary_handle_t *ret, fastly_compute_at_edge_dictionary_error_t *err);
