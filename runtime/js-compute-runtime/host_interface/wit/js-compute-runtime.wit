@@ -5,6 +5,7 @@ world fastly-world {
   import fastly:compute-at-edge/async-io
   import fastly:compute-at-edge/backend
   import fastly:compute-at-edge/cache
+  import fastly:compute-at-edge/device-detection
   import fastly:compute-at-edge/dictionary
   import fastly:compute-at-edge/edge-rate-limiter
   import fastly:compute-at-edge/geo
