@@ -1370,7 +1370,7 @@ void init_write_options(fastly_compute_at_edge_cache_write_options_t &options,
 
   options.length = opts.length;
 
-  if (opts.metadata.empty()) {
+  if (!opts.metadata.len || !opts.metadata.ptr) {
     options.user_metadata.ptr = 0;
     options.user_metadata.len = 0;
   } else {
