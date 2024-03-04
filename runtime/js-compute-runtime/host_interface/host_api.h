@@ -679,7 +679,7 @@ struct CacheWriteOptions final {
 
   uint64_t length = 0;
 
-  std::span<uint8_t> metadata;
+  HostBytes metadata;
 
   bool sensitive = false;
 };
