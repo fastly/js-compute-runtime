@@ -209,7 +209,7 @@ declare module "fastly:cache" {
     /**
      * Retrieves the cached item as a `ReadableStream`.
      *
-     * Only one stream can be active at a time for a given Found. An error will be thrown if a stream is already active for this CacheEntry.
+     * Only one stream can be active at a time for a given `CacheEntry`. An error will be thrown if a stream is already active for this CacheEntry.
      *
      * @param options Optional property used to request a range of bytes within the cached item.
      */
@@ -240,7 +240,7 @@ declare module "fastly:cache" {
     /**
      * Determines the number of cache hits to this cached item.
      *
-     * Note: Note: this hit count only reflects the view of the server that supplied the cached item. Due to clustering, this count may vary between potentially many servers within the data center where the item is cached. See the [clustering documentation](https://developer.fastly.com/learning/vcl/clustering/) for details, though note that the exact caching architecture of Compute is different from VCL services.
+     * Note: this hit count only reflects the view of the server that supplied the cached item. Due to clustering, this count may vary between potentially many servers within the data center where the item is cached. See the [clustering documentation](https://developer.fastly.com/learning/vcl/clustering/) for details, though note that the exact caching architecture of Compute is different from VCL services.
      */
     hits(): number;
   }

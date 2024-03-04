@@ -1,6 +1,21 @@
 # Changelog
 
 
+## 3.9.0 (2024-03-02)
+
+
+### Added
+
+* Add a EdgeRateLimiter JavaScript Class which enables edge-rate-limiting by utilising a RateCounter and a PenaltyBox instance ([#732](https://github.com/fastly/js-compute-runtime/issues/732)) ([4e81fc7](https://github.com/fastly/js-compute-runtime/commit/4e81fc7dbec33a5a90743e389642e0ced5294ff1))
+* Add a PenaltyBox JavaScript Class which can be used standalone for adding and checking if an entry is in the penalty-box ([#731](https://github.com/fastly/js-compute-runtime/issues/731)) ([bfe1e15](https://github.com/fastly/js-compute-runtime/commit/bfe1e15460cb2aa0da3cfa356fbf23d38f5af5ba))
+* Add a RateCounter JavaScript Class which can be used standalone for counting and rate calculations ([#730](https://github.com/fastly/js-compute-runtime/issues/730)) ([0f6036f](https://github.com/fastly/js-compute-runtime/commit/0f6036f02f497345df01dbce731eb502fd406d27))
+* implement and expose JavaScript classes for Fastly's Compute Core Cache feature set ([#566](https://github.com/fastly/js-compute-runtime/issues/566)) ([94f4038](https://github.com/fastly/js-compute-runtime/commit/94f4038df7ca2bfd8beef964865eb7f900b1bc04))
+
+
+### Fixed
+
+* disable the portable-baseline-tier for async functions for now ([#733](https://github.com/fastly/js-compute-runtime/issues/733)) ([4928243](https://github.com/fastly/js-compute-runtime/commit/4928243a380adfb6073a909e41ab7eb4c0d569b4))
+
 ## 3.8.3 (2024-02-21)
 
 
