@@ -143,7 +143,7 @@ routes.set("/device/interface", () => {
         if (error) { return error }
     }
 
-    return pass()
+    return pass('ok')
 });
 
 // Device constructor
@@ -154,12 +154,12 @@ routes.set("/device/interface", () => {
             Device()
         }, TypeError, `Illegal constructor`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
     });
     routes.set("/device/constructor/throws", () => {
         error = assertThrows(() => new Device(), TypeError, `Illegal constructor`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
     });
 }
 
@@ -171,7 +171,7 @@ routes.set("/device/interface", () => {
             new Device.lookup('1')
         }, TypeError, `Device.lookup is not a constructor`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
     });
     // https://tc39.es/ecma262/#sec-tostring
     routes.set("/device/lookup/useragent-parameter-calls-7.1.17-ToString", () => {
@@ -197,27 +197,27 @@ routes.set("/device/interface", () => {
             Device.lookup(Symbol())
         }, TypeError, `can't convert symbol to string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
     });
     routes.set("/device/lookup/useragent-parameter-not-supplied", () => {
         let error = assertThrows(() => {
             Device.lookup()
         }, TypeError, `Device.lookup: At least 1 argument required, but only 0 passed`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
     });
     routes.set("/device/lookup/useragent-parameter-empty-string", () => {
         let error = assertThrows(() => {
             Device.lookup('')
         }, Error, `Device.lookup: useragent parameter can not be an empty string`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
     });
     routes.set("/device/lookup/useragent-does-not-exist-returns-null", () => {
         let result = Device.lookup(Math.random())
         error = assert(result, null, `Device.lookup(Math.random()) === null`)
         if (error) { return error }
-        return pass()
+        return pass('ok')
     });
     routes.set("/device/lookup/useragent-exists-all-fields-identified", () => {
         let useragent = "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0 FBAN/FBIOS;FBAV/8.0.0.28.18;FBBV/1665515;FBDV/iPhone4,1;FBMD/iPhone;FBSN/iPhone OS;FBSV/7.0.4;FBSS/2; FBCR/Telekom.de;FBID/phone;FBLC/de_DE;FBOP/5";
@@ -259,7 +259,7 @@ routes.set("/device/interface", () => {
         error = assert(device.isTouchscreen, true, `device.isTouchscreen`)
         if (error) { return error }
 
-        return pass()
+        return pass('ok')
     });
     routes.set("/device/lookup/useragent-exists-some-fields-identified", () => {
         let useragent = "ghosts-app/1.0.2.1 (ASUSTeK COMPUTER INC.; X550CC; Windows 8 (X86); en)";
@@ -301,12 +301,10 @@ routes.set("/device/interface", () => {
         error = assert(device.isTouchscreen, null, `device.isTouchscreen`)
         if (error) { return error }
 
-        console.log({device})
-
         error = assert(JSON.stringify(device), "{\"name\":\"Asus TeK\",\"brand\":\"Asus\",\"model\":\"TeK\",\"hardwareType\":null,\"isDesktop\":null,\"isGameConsole\":null,\"isMediaPlayer\":null,\"isMobile\":null,\"isSmartTV\":null,\"isTablet\":null,\"isTouchscreen\":null}", `JSON.stringify(device)`)
         if (error) { return error }
 
-        return pass()
+        return pass('ok')
     });
 }
 
