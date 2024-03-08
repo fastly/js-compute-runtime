@@ -45,6 +45,7 @@
 #include "builtins/config-store.h"
 #include "builtins/crypto.h"
 #include "builtins/decompression-stream.h"
+#include "builtins/device.h"
 #include "builtins/dictionary.h"
 #include "builtins/edge-rate-limiter.h"
 #include "builtins/env.h"
@@ -1080,6 +1081,9 @@ bool define_fastly_sys(JSContext *cx, HandleObject global, FastlyOptions options
     return false;
   }
   if (!builtins::EdgeRateLimiter::init_class(cx, global)) {
+    return false;
+  }
+  if (!builtins::Device::init_class(cx, global)) {
     return false;
   }
 

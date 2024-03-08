@@ -16,6 +16,7 @@ let fastlyPlugin = {
         case 'cache-override': { return { contents: `export const CacheOverride = globalThis.CacheOverride;` } }
         case 'config-store': { return { contents: `export const ConfigStore = globalThis.ConfigStore;` } }
         case 'dictionary': { return { contents: `export const Dictionary = globalThis.Dictionary;` } }
+        case 'device': { return { contents: `export const Device = globalThis.Device;` } }
         case 'edge-rate-limiter': {
           return {
             contents: `
