@@ -11,6 +11,8 @@
 #include <js/experimental/TypedData.h>
 #pragma clang diagnostic pop
 
+#include "builtins/device.h"
+
 namespace {
 using FpMilliseconds = std::chrono::duration<float, std::chrono::milliseconds::period>;
 auto count_map = std::map<std::string, size_t>{};
@@ -355,6 +357,15 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
       return mozilla::Ok();
     }
     default: {
+      if (builtins::Device::is_instance(obj)) {
+        JS::RootedString result(cx, builtins::Device::ToSource(cx, obj));
+        auto msg = core::encode(cx, result);
+        if (!msg) {
+          return JS::Result<mozilla::Ok>(JS::Error());
+        }
+        sourceOut += "Device " + std::string(msg.begin(), msg.len);
+        return mozilla::Ok();
+      }
       std::string sourceString;
       if (JS::IsWeakMapObject(obj)) {
         sourceOut += "WeakMap { <items unknown> }";

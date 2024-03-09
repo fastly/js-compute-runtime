@@ -123,8 +123,9 @@ export function deepEqual(a, b) {
         }
         return false;
     }
+
     // Case: `a` is of type 'object'
-    if (typeB !== 'object') {
+    if (b === null || typeB !== 'object') {
         return false;
     }
     if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) {

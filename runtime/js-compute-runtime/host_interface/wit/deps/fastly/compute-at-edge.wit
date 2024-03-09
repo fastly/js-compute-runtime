@@ -898,6 +898,13 @@ interface edge-rate-limiter {
   penaltybox-has: func(penalty-box-name: string, entry: string) -> result<bool, error>
 }
 
+interface device-detection {
+  use types.{error}
+
+  lookup: func(user-agent: string) -> result<string, error>
+}
+
+
 interface reactor {
   use http-types.{request}
 

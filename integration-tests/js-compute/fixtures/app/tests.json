@@ -7588,5 +7588,116 @@
       "status": 200,
       "body": "ok"
     }
+  },
+
+  "GET /device/interface": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/device/interface"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /device/constructor/called-as-regular-function": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/device/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /device/constructor/throws": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/device/constructor/throws"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /device/lookup/called-as-constructor": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/device/lookup/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /device/lookup/useragent-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/device/lookup/useragent-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /device/lookup/useragent-parameter-not-supplied": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/device/lookup/useragent-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /device/lookup/useragent-parameter-empty-string": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/device/lookup/useragent-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /device/lookup/useragent-does-not-exist-returns-null": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/device/lookup/useragent-does-not-exist-returns-null"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /device/lookup/useragent-exists-all-fields-identified": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/device/lookup/useragent-exists-all-fields-identified"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /device/lookup/useragent-exists-some-fields-identified": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/device/lookup/useragent-exists-some-fields-identified"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
   }
 }
