@@ -1,6 +1,18 @@
 # Changelog
 
 
+## 3.10.0 (2024-03-09)
+
+
+### Added
+
+* add fastly:device module which allows applications to detect a device based on a user-agent ([#738](https://github.com/fastly/js-compute-runtime/issues/738)) ([5274fd5](https://github.com/fastly/js-compute-runtime/commit/5274fd5280d80b276e6f13d4acbdefc435af6c57))
+
+
+### Fixed
+
+* correct title for the CoreCache.transactionLookup documentation page ([9892d90](https://github.com/fastly/js-compute-runtime/commit/9892d9074d9a1bd25b9b5db28c12a940f2aac028))
+
 ## 3.9.1 (2024-03-04)
 
 
