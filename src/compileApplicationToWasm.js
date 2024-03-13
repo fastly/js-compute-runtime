@@ -5,6 +5,7 @@ import { isFile } from "./isFile.js";
 import { isFileOrDoesNotExist } from "./isFileOrDoesNotExist.js";
 import wizer from "@bytecodealliance/wizer";
 import { precompile } from "./precompile.js";
+import { enableTopLevelAwait } from "./enableTopLevelAwait.js";
 import { bundle } from "./bundle.js";
 import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
 
@@ -80,6 +81,7 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
   let contents = await bundle(input);
 
   let application = precompile(contents.outputFiles[0].text);
+  application = enableTopLevelAwait(application);
 
   try {
     let wizerProcess = spawnSync(

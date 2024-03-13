@@ -19,7 +19,7 @@ export function precompile(source, filename = "<input>") {
 
   const ast = parse(source, {
     ecmaVersion: "latest",
-    sourceType: "script",
+    sourceType: "module",
   });
 
   const precompileCalls = [];
