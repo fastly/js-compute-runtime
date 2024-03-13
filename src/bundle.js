@@ -62,13 +62,13 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
   },
 }
 
-export async function bundle(input) {
+export async function bundle(input, enableExperimentalTopLevelAwait = false) {
   return await build({
     conditions: ['fastly'],
     entryPoints: [input],
     bundle: true,
     write: false,
-    format: 'esm',
+    format: enableExperimentalTopLevelAwait ? 'esm' : 'iife',
     tsconfig: undefined,
     plugins: [fastlyPlugin],
   })

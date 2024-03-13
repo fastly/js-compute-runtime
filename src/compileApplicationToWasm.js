@@ -9,7 +9,7 @@ import { enableTopLevelAwait } from "./enableTopLevelAwait.js";
 import { bundle } from "./bundle.js";
 import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
 
-export async function compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods = false, enablePBL = false) {
+export async function compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods = false, enablePBL = false, enableExperimentalTopLevelAwait = false) {
   try {
     if (!(await isFile(input))) {
       console.error(
@@ -78,10 +78,12 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
     process.exit(1);
   }
 
-  let contents = await bundle(input);
+  let contents = await bundle(input, enableExperimentalTopLevelAwait);
 
-  let application = precompile(contents.outputFiles[0].text);
-  application = enableTopLevelAwait(application);
+  let application = precompile(contents.outputFiles[0].text, undefined, enableExperimentalTopLevelAwait);
+  if (enableExperimentalTopLevelAwait) {
+    application = enableTopLevelAwait(application);
+  }
 
   try {
     let wizerProcess = spawnSync(
