@@ -1,15 +1,15 @@
 # Changelog
 
 
-## [3.11.0](https://github.com/fastly/js-compute-runtime/compare/v3.10.0...v3.11.0) (2024-03-14)
+## 3.11.0 (2024-03-14)
 
 
-### Features
+### Added
 
 * add new flag --experimental-enable-top-level-await ([#742](https://github.com/fastly/js-compute-runtime/issues/742)) ([437a20d](https://github.com/fastly/js-compute-runtime/commit/437a20d5f970c00d382673dbf223149b5b20ed37))
 
 
-### Bug Fixes
+### Fixed
 
 * correct type definition of Headers.prototype.values() to indicate it returns an IterableIterator&lt;string&gt; ([#740](https://github.com/fastly/js-compute-runtime/issues/740)) ([8959e79](https://github.com/fastly/js-compute-runtime/commit/8959e79a9a7856b0ecc74b33264042c54ac8f867))
 
