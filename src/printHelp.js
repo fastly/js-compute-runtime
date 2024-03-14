@@ -13,6 +13,7 @@ FLAGS:
 OPTIONS:
     --engine-wasm <engine-wasm>                             The JS engine Wasm file path
     --enable-experimental-high-resolution-time-methods      Enable experimental high-resolution fastly.now() method
+    --enable-experimental-top-level-await                   Enable experimental top level await
 
 ARGS:
     <input>     The input JS script's file path [default: bin/index.js]
