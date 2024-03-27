@@ -130,7 +130,8 @@ JSObject *digest(JSContext *cx, std::span<uint8_t> data, const EVP_MD *algorithm
   }
   // 3. Return a new ArrayBuffer containing result.
   JS::RootedObject array_buffer(cx);
-  array_buffer.set(JS::NewArrayBufferWithContents(cx, size, buf.get(), JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
+  array_buffer.set(JS::NewArrayBufferWithContents(
+      cx, size, buf.get(), JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
   if (!array_buffer) {
     JS_ReportOutOfMemory(cx);
     return nullptr;

@@ -3,8 +3,8 @@
 #include <chrono>
 #include <map>
 
-#include <js/Array.h>
 #include "mozilla/Try.h"
+#include <js/Array.h>
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
 #pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
@@ -288,7 +288,7 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
     if (JS_ObjectIsFunction(obj)) {
       sourceOut += "[Function";
       std::string source;
-      JS::Rooted<JSFunction*> fun(cx, JS_ValueToFunction(cx, val));
+      JS::Rooted<JSFunction *> fun(cx, JS_ValueToFunction(cx, val));
       if (fun) {
         JS::RootedString name(cx);
         if (!JS_GetFunctionId(cx, fun, &name)) {
