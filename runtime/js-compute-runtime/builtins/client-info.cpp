@@ -187,7 +187,7 @@ bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *v
     }
 
     auto hello = std::move(res.unwrap());
-    buffer.set(JS::NewArrayBufferWithContents(cx, hello.len, hello.ptr.get()));
+    buffer.set(JS::NewArrayBufferWithContents(cx, hello.len, hello.ptr.get(), JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
     if (!buffer) {
       // We can be here if the array buffer was too large -- if that was the case then a
       // JSMSG_BAD_ARRAY_LENGTH will have been created.
@@ -216,7 +216,7 @@ bool ClientInfo::tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Va
     }
     auto cert = std::move(res.unwrap());
 
-    buffer.set(JS::NewArrayBufferWithContents(cx, cert.len, cert.ptr.get()));
+    buffer.set(JS::NewArrayBufferWithContents(cx, cert.len, cert.ptr.get(), JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
     if (!buffer) {
       // We can be here if the array buffer was too large -- if that was the case then a
       // JSMSG_BAD_ARRAY_LENGTH will have been created.

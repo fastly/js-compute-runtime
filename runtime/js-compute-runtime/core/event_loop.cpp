@@ -206,7 +206,7 @@ bool process_body_read(JSContext *cx, JS::HandleObject streamSource, host_api::H
   // We don't release control of chunk's data until after we've checked that the array buffer
   // allocation has been successful, as that ensures that the return path frees chunk automatically
   // when necessary.
-  JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, chunk.len, chunk.ptr.get()));
+  JS::RootedObject buffer(cx, JS::NewArrayBufferWithContents(cx, chunk.len, chunk.ptr.get(), JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
   if (!buffer) {
     return error_stream_controller_with_pending_exception(cx, controller);
   }

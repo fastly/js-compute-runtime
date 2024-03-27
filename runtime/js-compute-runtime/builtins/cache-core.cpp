@@ -517,7 +517,7 @@ bool CacheEntry::userMetadata(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto metadata = std::move(res.unwrap());
   JS::RootedObject array_buffer(cx);
-  array_buffer.set(JS::NewArrayBufferWithContents(cx, metadata.len, metadata.ptr.get()));
+  array_buffer.set(JS::NewArrayBufferWithContents(cx, metadata.len, metadata.ptr.get(), JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
   if (!array_buffer) {
     JS_ReportOutOfMemory(cx);
     return false;

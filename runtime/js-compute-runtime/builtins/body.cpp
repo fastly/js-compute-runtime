@@ -65,7 +65,7 @@ bool FastlyBody::read(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto &chunk = result.unwrap();
   JS::UniqueChars buffer = std::move(chunk.ptr);
   JS::RootedObject array_buffer(cx);
-  array_buffer.set(JS::NewArrayBufferWithContents(cx, chunk.len, buffer.get()));
+  array_buffer.set(JS::NewArrayBufferWithContents(cx, chunk.len, buffer.get(), JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
   if (!array_buffer) {
     JS_ReportOutOfMemory(cx);
     return false;

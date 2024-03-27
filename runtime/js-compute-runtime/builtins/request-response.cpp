@@ -388,7 +388,7 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
   JS::RootedValue result(cx);
 
   if constexpr (result_type == RequestOrResponse::BodyReadResult::ArrayBuffer) {
-    JS::RootedObject array_buffer(cx, JS::NewArrayBufferWithContents(cx, len, buf.get()));
+    JS::RootedObject array_buffer(cx, JS::NewArrayBufferWithContents(cx, len, buf.get(), JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
     if (!array_buffer) {
       return RejectPromiseWithPendingError(cx, result_promise);
     }
