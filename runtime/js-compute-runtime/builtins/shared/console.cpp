@@ -3,6 +3,7 @@
 #include <chrono>
 #include <map>
 
+#include "mozilla/Try.h"
 #include <js/Array.h>
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
@@ -287,10 +288,16 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
     if (JS_ObjectIsFunction(obj)) {
       sourceOut += "[Function";
       std::string source;
-      auto id = JS_GetFunctionId(JS_ValueToFunction(cx, val));
-      if (id) {
+      JS::Rooted<JSFunction *> fun(cx, JS_ValueToFunction(cx, val));
+      if (fun) {
+        JS::RootedString name(cx);
+        if (!JS_GetFunctionId(cx, fun, &name)) {
+          return JS::Result<mozilla::Ok>(JS::Error());
+        }
+        if (!name) {
+          name = JS_AtomizeAndPinString(cx, "");
+        }
         sourceOut += " ";
-        JS::RootedString name(cx, id);
         auto msg = core::encode(cx, name);
         if (!msg) {
           return JS::Result<mozilla::Ok>(JS::Error());

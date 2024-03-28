@@ -16,6 +16,7 @@
 #include "js/ArrayBuffer.h"
 #include "js/Conversions.h"
 #include "mozilla/Result.h"
+#include "mozilla/Try.h"
 
 // TODO: remove these once the warnings are fixed
 #pragma clang diagnostic push
