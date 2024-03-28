@@ -7,6 +7,41 @@
 ### Changed
 
 * update to SpiderMonkey 123.0.1 ([#744](https://github.com/fastly/js-compute-runtime/issues/744)) ([32bf617](https://github.com/fastly/js-compute-runtime/commit/32bf61707f1133d4a2656913d726d66523398fb1))
+  This update brings with it the below changes:
+    - Performance improvements for `JSON.stringify()`
+    - An optimisation for `Object.keys()` to take advantage of cached for-in iterators if available.
+    - Optimisations for `Object.assign()`
+    - RegExp `v` flag support
+    - Improved JSON parsing to help avoid garbage collection time when parsing very large files
+    - The `String.prototype.isWellFormed()` and `String.prototype.toWellFormed()` methods respectively can be used to check if a string contains well-formed Unicode text (i.e. contains no lone surrogates) and sanitise an ill-formed string to well-formed Unicode text.
+    - The `Object.groupBy()` and `Map.groupBy()` static methods for grouping the elements of an iterable are now supported
+    - `Date.parse()` now accepts several additional date formats:
+      - Year > 9999 for `YYYY-MMM-DD` format (e.g. `19999-Jan-01`)
+      - `MMM-DD-YYYY` (e.g. `Jan-01-1970`)
+      - Milliseconds for non-ISO date formats (e.g. `Jan 1 1970 10:00:00.050`)
+      - Day of week at the beginning of formats which were being rejected, such as:
+        - `Wed, 1970-01-01`
+        - `Wed, 1970-Jan-01`
+      - The day of week does not need to be correct, or a day of week at all; for example, `foo 1970-01-01` works.
+      - Numeric dashed dates which do not meet the formal ISO standard are now accepted, including:
+        - `"01-12-1999"` (month first)
+        - `"1999-1-5"` (single-digit month or day)
+        - `"10000-01-12"` (year > 9999)
+        - `"99-01-05"` or `"01-05-99"` (2-digit year, year must be >31 if it comes first)
+        - `"1999-01-05 10:00:00"` (space between date and time).
+        These dates will be parsed with behavior typical of other non-ISO dates, such as local time zone and month rollover (April 31 rolls over to May 1 since April 31 doesn’t exist).
+      - Requirements for characters directly following numbers have been loosened to accept new formats, including:
+        - `"DDMonYYYY"`
+        - `"Mon.DD.YYYY"`
+        - `"DD.Mon.YYYY"`
+        - `"YYYY.MM.DD"`
+        - `"Mon DD YYYY hh:mmXm"` (`am`/`pm` directly following time)
+      - Timezone `'Z'` is now accepted for non-ISO formats (e.g. `Jan 1 1970 10:00Z`)
+    - Other `Date.parse()` fixes:
+      - `YYYY-M-DD` and `YYYY-MM-D` are no longer assumed GMT as an ISO date `YYYY-MM-DD` would be.
+      - Milliseconds for all formats are truncated after 3 digits, rather than being rounded.
+    - The `Promise.withResolvers()` static method is now supported. This exposes the `resolve` and `reject` callback functions in the same scope as the returned `Promise`, allowing code that resolves or rejects the promise to be defined after its construction.
+    - The `ArrayBuffer.prototype.transfer()` and `ArrayBuffer.prototype.transferToFixedLength()` methods can now be used to transfer ownership of memory from one ArrayBuffer to another. After transfer, the original buffer is detached from its original memory and hence unusable; the state can be checked using `ArrayBuffer.prototype.detached`.
 
 ## 3.11.0 (2024-03-14)
 
