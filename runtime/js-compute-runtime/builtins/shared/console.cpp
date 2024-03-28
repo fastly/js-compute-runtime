@@ -294,6 +294,9 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
         if (!JS_GetFunctionId(cx, fun, &name)) {
           return JS::Result<mozilla::Ok>(JS::Error());
         }
+        if (!name) {
+          name = JS_AtomizeAndPinString(cx, "");
+        }
         sourceOut += " ";
         auto msg = core::encode(cx, name);
         if (!msg) {
