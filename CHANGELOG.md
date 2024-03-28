@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [3.12.0](https://github.com/fastly/js-compute-runtime/compare/v3.11.0...v3.12.0) (2024-03-28)
+
+
+### Features
+
+* update to gecko-dev 123.0.1 ([#744](https://github.com/fastly/js-compute-runtime/issues/744)) ([32bf617](https://github.com/fastly/js-compute-runtime/commit/32bf61707f1133d4a2656913d726d66523398fb1))
+
 ## 3.11.0 (2024-03-14)
 
 
