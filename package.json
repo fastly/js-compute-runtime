@@ -3,7 +3,7 @@
   "version": "3.12.0",
   "engines": {
     "node": "16 - 20",
-    "npm": "^8 || ^9"
+    "npm": "^8 || ^9 || ^10"
   },
   "license": "Apache-2.0",
   "main": "js-compute-runtime-cli.js",
