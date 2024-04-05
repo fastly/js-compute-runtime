@@ -1,10 +1,10 @@
 # Changelog
 
 
-## [3.12.1](https://github.com/fastly/js-compute-runtime/compare/v3.12.0...v3.12.1) (2024-04-05)
+## 3.12.1 (2024-04-05)
 
 
-### Bug Fixes
+### Changed
 
 * declare support for npm 10 ([#747](https://github.com/fastly/js-compute-runtime/issues/747)) ([1365ee9](https://github.com/fastly/js-compute-runtime/commit/1365ee9b1aa4e830677c840ea43df55bbf19d660))
 
