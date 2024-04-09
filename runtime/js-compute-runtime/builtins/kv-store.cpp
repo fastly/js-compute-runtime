@@ -183,6 +183,89 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
 
 } // namespace
 
+bool KVStore::has_pending_delete_handle(JSObject *self) {
+  MOZ_ASSERT(KVStore::is_instance(self));
+
+  JS::Value handle_val =
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PendingDeleteHandle));
+  return handle_val.isInt32() &&
+         handle_val.toInt32() != host_api::ObjectStorePendingDelete::invalid;
+}
+
+host_api::ObjectStorePendingDelete KVStore::pending_delete_handle(JSObject *self) {
+  MOZ_ASSERT(KVStore::is_instance(self));
+  host_api::ObjectStorePendingDelete res;
+
+  JS::Value handle_val =
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PendingDeleteHandle));
+  if (handle_val.isInt32()) {
+    res = host_api::ObjectStorePendingDelete(handle_val.toInt32());
+  }
+
+  return res;
+}
+
+bool KVStore::process_pending_kv_store_delete(JSContext *cx, JS::HandleObject self) {
+  MOZ_ASSERT(KVStore::is_instance(self));
+
+  auto pending_promise_value =
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PendingDeletePromise));
+  MOZ_ASSERT(pending_promise_value.isObject());
+  JS::RootedObject result_promise(cx, &pending_promise_value.toObject());
+
+  auto res = builtins::KVStore::pending_delete_handle(self).wait();
+
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return RejectPromiseWithPendingError(cx, result_promise);
+  }
+
+  JS::ResolvePromise(cx, result_promise, JS::UndefinedHandleValue);
+
+  return true;
+}
+
+bool KVStore::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER_WITH_NAME(1, "delete");
+
+  JS::RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!result_promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  JS::RootedValue key(cx, args.get(0));
+
+  // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
+  auto key_chars = core::encode(cx, key);
+  if (!key_chars) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  if (!parse_and_validate_key(cx, key_chars.begin(), key_chars.len)) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  auto res = kv_store_handle(self).delete_async(key_chars);
+
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  auto ret = res.unwrap();
+
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::PendingDeleteHandle),
+                      JS::Int32Value(ret.handle));
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::PendingDeletePromise),
+                      JS::ObjectValue(*result_promise));
+
+  if (!core::EventLoop::queue_async_task(self)) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  args.rval().setObject(*result_promise);
+  return true;
+}
+
 host_api::ObjectStorePendingLookup KVStore::pending_lookup_handle(JSObject *self) {
   MOZ_ASSERT(KVStore::is_instance(self));
   host_api::ObjectStorePendingLookup res;
@@ -399,6 +482,7 @@ const JSPropertySpec KVStore::static_properties[] = {
 };
 
 const JSFunctionSpec KVStore::methods[] = {
+    JS_FN("delete", delete_, 1, JSPROP_ENUMERATE),
     JS_FN("get", get, 1, JSPROP_ENUMERATE),
     JS_FN("put", put, 1, JSPROP_ENUMERATE),
     JS_FS_END,
