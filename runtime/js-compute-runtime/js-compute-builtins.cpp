@@ -718,7 +718,9 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   // If the request body is streamed, we need to wait for streaming to complete before marking the
   // request as pending.
   if (!streaming) {
-    if (!core::EventLoop::queue_async_task(request))
+    auto task = core::AsyncTask::create(cx, pending_handle.handle, request, response_promise,
+                                        builtins::RequestOrResponse::process_pending_request);
+    if (!core::EventLoop::queue_async_task(task))
       return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 

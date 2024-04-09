@@ -1,12 +1,7 @@
 #include "core/event_loop.h"
-#include "builtins/kv-store.h"
-#include "builtins/native-stream-source.h"
-#include "builtins/request-response.h"
-#include "builtins/shared/dom-exception.h"
 #include "host_interface/host_api.h"
 #include <chrono>
 #include <list>
-#include <memory>
 #include <vector>
 
 namespace core {
@@ -139,99 +134,47 @@ public:
 JS::PersistentRooted<js::UniquePtr<ScheduledTimers>> timers;
 
 JS::PersistentRootedObjectVector *pending_async_tasks;
-
-bool process_pending_request(JSContext *cx, JS::HandleObject request,
-                             host_api::HttpPendingReq pending) {
-
-  JS::RootedObject response_promise(cx, builtins::Request::response_promise(request));
-
-  auto res = pending.wait();
-  if (auto *err = res.to_err()) {
-    std::string message = std::move(err->message()).value_or("when attempting to fetch resource.");
-    builtins::DOMException::raise(cx, message, "NetworkError");
-    return RejectPromiseWithPendingError(cx, response_promise);
-  }
-
-  auto [response_handle, body] = res.unwrap();
-  JS::RootedObject response_instance(cx, JS_NewObjectWithGivenProto(cx, &builtins::Response::class_,
-                                                                    builtins::Response::proto_obj));
-  if (!response_instance) {
-    return false;
-  }
-
-  bool is_upstream = true;
-  bool is_grip_upgrade = false;
-  JS::RootedObject response(cx,
-                            builtins::Response::create(cx, response_instance, response_handle, body,
-                                                       is_upstream, is_grip_upgrade, nullptr));
-  if (!response) {
-    return false;
-  }
-
-  builtins::RequestOrResponse::set_url(response, builtins::RequestOrResponse::url(request));
-  JS::RootedValue response_val(cx, JS::ObjectValue(*response));
-  return JS::ResolvePromise(cx, response_promise, response_val);
-}
-
-bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObject controller) {
-  JS::RootedValue exn(cx);
-  if (!JS_GetPendingException(cx, &exn))
-    return false;
-  JS_ClearPendingException(cx);
-
-  JS::RootedValueArray<1> args(cx);
-  args[0].set(exn);
-  JS::RootedValue r(cx);
-  return JS::Call(cx, controller, "error", args, &r);
-}
-
-constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
-
-bool process_body_read(JSContext *cx, JS::HandleObject streamSource, host_api::HttpBody body) {
-  JS::RootedObject owner(cx, builtins::NativeStreamSource::owner(streamSource));
-  JS::RootedObject controller(cx, builtins::NativeStreamSource::controller(streamSource));
-
-  auto read_res = body.read(HANDLE_READ_CHUNK_SIZE);
-  if (auto *err = read_res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return error_stream_controller_with_pending_exception(cx, controller);
-  }
-
-  auto &chunk = read_res.unwrap();
-  if (chunk.len == 0) {
-    JS::RootedValue r(cx);
-    return JS::Call(cx, controller, "close", JS::HandleValueArray::empty(), &r);
-  }
-
-  // We don't release control of chunk's data until after we've checked that the array buffer
-  // allocation has been successful, as that ensures that the return path frees chunk automatically
-  // when necessary.
-  JS::RootedObject buffer(
-      cx, JS::NewArrayBufferWithContents(cx, chunk.len, chunk.ptr.get(),
-                                         JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
-  if (!buffer) {
-    return error_stream_controller_with_pending_exception(cx, controller);
-  }
-
-  // At this point `buffer` has taken full ownership of the chunk's data.
-  std::ignore = chunk.ptr.release();
-
-  JS::RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, chunk.len));
-  if (!byte_array) {
-    return false;
-  }
-
-  JS::RootedValueArray<1> enqueue_args(cx);
-  enqueue_args[0].setObject(*byte_array);
-  JS::RootedValue r(cx);
-  if (!JS::Call(cx, controller, "enqueue", enqueue_args, &r)) {
-    return error_stream_controller_with_pending_exception(cx, controller);
-  }
-
-  return true;
-}
-
 } // namespace
+
+JSObject *AsyncTask::create(JSContext *cx, uint32_t handle, JS::HandleObject context,
+                            JS::HandleObject promise, ProcessAsyncTask *process) {
+  auto instance = JS_NewObjectWithGivenProto(cx, &class_, proto_obj);
+  if (!instance) {
+    return nullptr;
+  }
+  JS::SetReservedSlot(instance, static_cast<int32_t>(Slots::Handle), JS::Int32Value(handle));
+  JS::SetReservedSlot(instance, static_cast<int32_t>(Slots::Context), JS::ObjectValue(*context));
+  JS::SetReservedSlot(instance, static_cast<int32_t>(Slots::Process),
+                      JS::PrivateValue((void *)process));
+  if (promise) {
+    JS::SetReservedSlot(instance, static_cast<int32_t>(Slots::Promise), JS::ObjectValue(*promise));
+  } else {
+    JS::SetReservedSlot(instance, static_cast<int32_t>(Slots::Promise), JS::NullValue());
+  }
+
+  return instance;
+}
+
+uint32_t AsyncTask::get_handle(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+  auto result = JS::GetReservedSlot(self, static_cast<int32_t>(Slots::Handle)).toInt32();
+  return result;
+}
+JSObject *AsyncTask::get_context(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+  auto result = JS::GetReservedSlot(self, static_cast<int32_t>(Slots::Context)).toObjectOrNull();
+  return result;
+}
+JSObject *AsyncTask::get_promise(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+  auto result = JS::GetReservedSlot(self, static_cast<int32_t>(Slots::Promise)).toObjectOrNull();
+  return result;
+}
+ProcessAsyncTask *AsyncTask::get_process(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+  auto result = JS::GetReservedSlot(self, static_cast<int32_t>(Slots::Process)).toPrivate();
+  return (ProcessAsyncTask *)(result);
+}
 
 bool EventLoop::process_pending_async_tasks(JSContext *cx) {
   MOZ_ASSERT(has_pending_async_tasks());
@@ -256,20 +199,9 @@ bool EventLoop::process_pending_async_tasks(JSContext *cx) {
   handles.reserve(count);
 
   for (size_t i = 0; i < count; i++) {
-    JS::HandleObject pending_obj = (*pending_async_tasks)[i];
-    if (builtins::Request::is_instance(pending_obj)) {
-      handles.push_back(builtins::Request::pending_handle(pending_obj).async_handle());
-    } else if (builtins::KVStore::is_instance(pending_obj)) {
-      if (builtins::KVStore::has_pending_delete_handle(pending_obj)) {
-        handles.push_back(builtins::KVStore::pending_delete_handle(pending_obj).async_handle());
-      } else {
-        handles.push_back(builtins::KVStore::pending_lookup_handle(pending_obj).async_handle());
-      }
-    } else {
-      MOZ_ASSERT(builtins::NativeStreamSource::is_instance(pending_obj));
-      JS::RootedObject owner(cx, builtins::NativeStreamSource::owner(pending_obj));
-      handles.push_back(builtins::RequestOrResponse::body_handle(owner).async_handle());
-    }
+    auto pending_obj = (*pending_async_tasks)[i];
+    fprintf(stderr, "oooh %i\n", AsyncTask::get_handle(pending_obj));
+    handles.push_back(host_api::AsyncHandle(AsyncTask::get_handle(pending_obj)));
   }
 
   auto res = host_api::AsyncHandle::select(handles, timeout);
@@ -292,36 +224,25 @@ bool EventLoop::process_pending_async_tasks(JSContext *cx) {
   // out after the call to `select`. If the timeout was non-zero and handles was empty, the timeout
   // would expire and we would exit through the path that runs the first timer.
   auto ready_index = ret.value();
-  auto ready_handle = handles[ready_index];
 
 #ifdef DEBUG
+  auto ready_handle = handles[ready_index];
   auto is_ready = ready_handle.is_ready();
   MOZ_ASSERT(!is_ready.is_err());
   MOZ_ASSERT(is_ready.unwrap());
 #endif
 
   bool ok;
-  JS::HandleObject ready_obj = (*pending_async_tasks)[ready_index];
-  if (builtins::Request::is_instance(ready_obj)) {
-    ok = process_pending_request(cx, ready_obj, host_api::HttpPendingReq{ready_handle});
-  } else if (builtins::KVStore::is_instance(ready_obj)) {
-    if (builtins::KVStore::has_pending_delete_handle(ready_obj)) {
-      ok = builtins::KVStore::process_pending_kv_store_delete(cx, ready_obj);
-    } else {
-      ok = builtins::KVStore::process_pending_kv_store_lookup(cx, ready_obj);
-    }
-  } else {
-    MOZ_ASSERT(builtins::NativeStreamSource::is_instance(ready_obj));
-    ok = process_body_read(cx, ready_obj, host_api::HttpBody{ready_handle});
-  }
+  auto ready_obj = (*pending_async_tasks)[ready_index];
+  JS::RootedObject context(cx, AsyncTask::get_context(ready_obj));
+  JS::RootedObject promise(cx, AsyncTask::get_promise(ready_obj));
+  ok = (*AsyncTask::get_process(ready_obj))(cx, AsyncTask::get_handle(ready_obj), context, promise);
 
-  pending_async_tasks->erase(const_cast<JSObject **>(ready_obj.address()));
+  pending_async_tasks->erase(ready_obj.address());
   return ok;
 }
 
-bool EventLoop::queue_async_task(JS::HandleObject task) {
-  return pending_async_tasks->append(task);
-}
+bool EventLoop::queue_async_task(JSObject *task) { return pending_async_tasks->append(task); }
 
 uint32_t EventLoop::add_timer(JS::HandleObject callback, uint32_t delay,
                               JS::HandleValueVector arguments, bool repeat) {

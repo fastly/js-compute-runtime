@@ -1,11 +1,11 @@
 #include "builtins/request-response.h"
-
 #include "builtins/cache-override.h"
 #include "builtins/client-info.h"
 #include "builtins/fastly.h"
 #include "builtins/fetch-event.h"
 #include "builtins/kv-store.h"
 #include "builtins/native-stream-source.h"
+#include "builtins/shared/dom-exception.h"
 #include "builtins/shared/url.h"
 #include "builtins/transform-stream.h"
 #include "core/encode.h"
@@ -29,7 +29,67 @@
 namespace builtins {
 
 namespace {
+bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObject controller) {
+  JS::RootedValue exn(cx);
+  if (!JS_GetPendingException(cx, &exn))
+    return false;
+  JS_ClearPendingException(cx);
+
+  JS::RootedValueArray<1> args(cx);
+  args[0].set(exn);
+  JS::RootedValue r(cx);
+  return JS::Call(cx, controller, "error", args, &r);
+}
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
+
+bool process_body_read(JSContext *cx, int32_t handle, JS::HandleObject context,
+                       JS::HandleObject promise) {
+  MOZ_ASSERT(context);
+  JS::RootedObject streamSource(cx, context);
+  MOZ_ASSERT(builtins::NativeStreamSource::is_instance(streamSource));
+  host_api::HttpBody body(handle);
+  JS::RootedObject owner(cx, builtins::NativeStreamSource::owner(streamSource));
+  JS::RootedObject controller(cx, builtins::NativeStreamSource::controller(streamSource));
+
+  auto read_res = body.read(HANDLE_READ_CHUNK_SIZE);
+  if (auto *err = read_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return error_stream_controller_with_pending_exception(cx, controller);
+  }
+
+  auto &chunk = read_res.unwrap();
+  if (chunk.len == 0) {
+    JS::RootedValue r(cx);
+    return JS::Call(cx, controller, "close", JS::HandleValueArray::empty(), &r);
+  }
+
+  // We don't release control of chunk's data until after we've checked that the array buffer
+  // allocation has been successful, as that ensures that the return path frees chunk automatically
+  // when necessary.
+  JS::RootedObject buffer(
+      cx, JS::NewArrayBufferWithContents(cx, chunk.len, chunk.ptr.get(),
+                                         JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
+  if (!buffer) {
+    return error_stream_controller_with_pending_exception(cx, controller);
+  }
+
+  // At this point `buffer` has taken full ownership of the chunk's data.
+  std::ignore = chunk.ptr.release();
+
+  JS::RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, chunk.len));
+  if (!byte_array) {
+    return false;
+  }
+
+  JS::RootedValueArray<1> enqueue_args(cx);
+  enqueue_args[0].setObject(*byte_array);
+  JS::RootedValue r(cx);
+  if (!JS::Call(cx, controller, "enqueue", enqueue_args, &r)) {
+    return error_stream_controller_with_pending_exception(cx, controller);
+  }
+
+  return true;
+}
 
 // https://fetch.spec.whatwg.org/#concept-method-normalize
 // Returns `true` if the method name was normalized, `false` otherwise.
@@ -119,6 +179,39 @@ bool enqueue_internal_method(JSContext *cx, JS::HandleObject receiver,
 }
 
 } // namespace
+
+bool RequestOrResponse::process_pending_request(JSContext *cx, int32_t handle,
+                                                JS::HandleObject context,
+                                                JS::HandleObject promise) {
+  MOZ_ASSERT(builtins::Request::is_instance(context));
+  host_api::HttpPendingReq pending(handle);
+  auto res = pending.wait();
+  if (auto *err = res.to_err()) {
+    std::string message = std::move(err->message()).value_or("when attempting to fetch resource.");
+    builtins::DOMException::raise(cx, message, "NetworkError");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  auto [response_handle, body] = res.unwrap();
+  JS::RootedObject response_instance(cx, JS_NewObjectWithGivenProto(cx, &builtins::Response::class_,
+                                                                    builtins::Response::proto_obj));
+  if (!response_instance) {
+    return false;
+  }
+
+  bool is_upstream = true;
+  bool is_grip_upgrade = false;
+  JS::RootedObject response(cx,
+                            builtins::Response::create(cx, response_instance, response_handle, body,
+                                                       is_upstream, is_grip_upgrade, nullptr));
+  if (!response) {
+    return false;
+  }
+
+  builtins::RequestOrResponse::set_url(response, builtins::RequestOrResponse::url(context));
+  JS::RootedValue response_val(cx, JS::ObjectValue(*response));
+  return JS::ResolvePromise(cx, promise, response_val);
+}
 
 bool RequestOrResponse::is_instance(JSObject *obj) {
   return Request::is_instance(obj) || Response::is_instance(obj) || KVStoreEntry::is_instance(obj);
@@ -814,8 +907,15 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
   // (This deadlock happens in automated tests, but admittedly might not happen
   // in real usage.)
 
-  if (!core::EventLoop::queue_async_task(source))
+  JS::RootedObject self(cx, &args.thisv().toObject());
+  JS::RootedObject owner(cx, builtins::NativeStreamSource::owner(self));
+  auto task = core::AsyncTask::create(
+      cx, builtins::RequestOrResponse::body_handle(owner).async_handle().handle, source, nullptr,
+      process_body_read);
+
+  if (!core::EventLoop::queue_async_task(task)) {
     return false;
+  }
 
   args.rval().setUndefined();
   return true;
@@ -862,7 +962,12 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     }
 
     if (Request::is_instance(body_owner)) {
-      if (!core::EventLoop::queue_async_task(body_owner)) {
+      JS::RootedObject promise(cx, Request::response_promise(body_owner));
+      auto task = core::AsyncTask::create(
+          cx, builtins::Request::pending_handle(body_owner).async_handle().handle, body_owner,
+          promise, RequestOrResponse::process_pending_request);
+
+      if (!core::EventLoop::queue_async_task(task)) {
         return false;
       }
     }

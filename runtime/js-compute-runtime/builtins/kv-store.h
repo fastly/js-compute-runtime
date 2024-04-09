@@ -39,10 +39,6 @@ public:
   static constexpr const char *class_name = "KVStore";
   enum class Slots {
     KVStore,
-    PendingLookupPromise,
-    PendingLookupHandle,
-    PendingDeletePromise,
-    PendingDeleteHandle,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -54,11 +50,10 @@ public:
 
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-  static host_api::ObjectStorePendingLookup pending_lookup_handle(JSObject *self);
-  static bool process_pending_kv_store_lookup(JSContext *cx, JS::HandleObject self);
-  static host_api::ObjectStorePendingDelete pending_delete_handle(JSObject *self);
-  static bool process_pending_kv_store_delete(JSContext *cx, JS::HandleObject self);
-  static bool has_pending_delete_handle(JSObject *self);
+  static bool process_pending_kv_store_lookup(JSContext *cx, int32_t handle,
+                                              JS::HandleObject context, JS::HandleObject promise);
+  static bool process_pending_kv_store_delete(JSContext *cx, int32_t handle,
+                                              JS::HandleObject context, JS::HandleObject promise);
 };
 
 } // namespace builtins
