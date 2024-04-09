@@ -1163,6 +1163,21 @@ Result<AsyncHandle> ObjectStore::lookup_async(std::string_view name) {
   return res;
 }
 
+Result<AsyncHandle> ObjectStore::delete_async(std::string_view name) {
+  Result<AsyncHandle> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_compute_at_edge_object_store_pending_handle_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_object_store_delete_async(this->handle, &name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
 Result<Void> ObjectStore::insert(std::string_view name, HttpBody body) {
   Result<Void> res;
 
@@ -1194,6 +1209,21 @@ Result<std::optional<HttpBody>, FastlyError> ObjectStorePendingLookup::wait() {
 }
 
 AsyncHandle ObjectStorePendingLookup::async_handle() const { return AsyncHandle{this->handle}; }
+
+Result<Void> ObjectStorePendingDelete::wait() {
+  Result<Void> res;
+
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_object_store_pending_delete_wait(this->handle, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(Void{});
+  }
+
+  return res;
+}
+
+AsyncHandle ObjectStorePendingDelete::async_handle() const { return AsyncHandle{this->handle}; }
 
 static_assert(std::is_same_v<Secret::Handle, fastly_compute_at_edge_secret_store_secret_handle_t>);
 static_assert(

@@ -601,6 +601,7 @@ public:
 
   Result<std::optional<HttpBody>> lookup(std::string_view name);
   Result<AsyncHandle> lookup_async(std::string_view name);
+  Result<AsyncHandle> delete_async(std::string_view name);
 
   Result<Void> insert(std::string_view name, HttpBody body);
 };
@@ -619,6 +620,25 @@ public:
 
   /// Block until the response is ready.
   Result<std::optional<HttpBody>, FastlyError> wait();
+
+  /// Fetch the AsyncHandle for this pending request.
+  AsyncHandle async_handle() const;
+};
+
+class ObjectStorePendingDelete final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  ObjectStorePendingDelete() = default;
+  explicit ObjectStorePendingDelete(Handle handle) : handle{handle} {}
+  explicit ObjectStorePendingDelete(AsyncHandle async) : handle{async.handle} {}
+
+  /// Block until the response is ready.
+  Result<Void> wait();
 
   /// Fetch the AsyncHandle for this pending request.
   AsyncHandle async_handle() const;
