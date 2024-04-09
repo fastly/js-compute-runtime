@@ -31,6 +31,7 @@ public:
 };
 
 class KVStore final : public BuiltinImpl<KVStore> {
+  static bool delete_(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool put(JSContext *cx, unsigned argc, JS::Value *vp);
 
@@ -40,6 +41,8 @@ public:
     KVStore,
     PendingLookupPromise,
     PendingLookupHandle,
+    PendingDeletePromise,
+    PendingDeleteHandle,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -53,6 +56,9 @@ public:
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static host_api::ObjectStorePendingLookup pending_lookup_handle(JSObject *self);
   static bool process_pending_kv_store_lookup(JSContext *cx, JS::HandleObject self);
+  static host_api::ObjectStorePendingDelete pending_delete_handle(JSObject *self);
+  static bool process_pending_kv_store_delete(JSContext *cx, JS::HandleObject self);
+  static bool has_pending_delete_handle(JSObject *self);
 };
 
 } // namespace builtins

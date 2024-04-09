@@ -260,7 +260,11 @@ bool EventLoop::process_pending_async_tasks(JSContext *cx) {
     if (builtins::Request::is_instance(pending_obj)) {
       handles.push_back(builtins::Request::pending_handle(pending_obj).async_handle());
     } else if (builtins::KVStore::is_instance(pending_obj)) {
-      handles.push_back(builtins::KVStore::pending_lookup_handle(pending_obj).async_handle());
+      if (builtins::KVStore::has_pending_delete_handle(pending_obj)) {
+        handles.push_back(builtins::KVStore::pending_delete_handle(pending_obj).async_handle());
+      } else {
+        handles.push_back(builtins::KVStore::pending_lookup_handle(pending_obj).async_handle());
+      }
     } else {
       MOZ_ASSERT(builtins::NativeStreamSource::is_instance(pending_obj));
       JS::RootedObject owner(cx, builtins::NativeStreamSource::owner(pending_obj));
@@ -301,7 +305,11 @@ bool EventLoop::process_pending_async_tasks(JSContext *cx) {
   if (builtins::Request::is_instance(ready_obj)) {
     ok = process_pending_request(cx, ready_obj, host_api::HttpPendingReq{ready_handle});
   } else if (builtins::KVStore::is_instance(ready_obj)) {
-    ok = builtins::KVStore::process_pending_kv_store_lookup(cx, ready_obj);
+    if (builtins::KVStore::has_pending_delete_handle(ready_obj)) {
+      ok = builtins::KVStore::process_pending_kv_store_delete(cx, ready_obj);
+    } else {
+      ok = builtins::KVStore::process_pending_kv_store_lookup(cx, ready_obj);
+    }
   } else {
     MOZ_ASSERT(builtins::NativeStreamSource::is_instance(ready_obj));
     ok = process_body_read(cx, ready_obj, host_api::HttpBody{ready_handle});
