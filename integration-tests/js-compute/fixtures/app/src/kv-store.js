@@ -617,10 +617,7 @@ import { routes } from "./routes.js";
         });
         routes.set("/kv-store/delete/key-does-not-exist-returns-undefined", async () => {
             let store = createValidStore()
-            let result = store.delete(Math.random())
-            let error = assert(result instanceof Promise, true, `store.delete(Math.random()) instanceof Promise`)
-            if (error) { return error }
-            error = assert(await result, undefined, `await store.delete(Math.random())`)
+            let error = await assertRejects(() => store.delete(Math.random()), "KVStore.prototype.delete: can not delete key which does not exist")
             if (error) { return error }
             return pass()
         });
@@ -633,6 +630,45 @@ import { routes } from "./routes.js";
             if (error) { return error }
             result = await result
             error = assert(result, undefined, `(await store.delete(key) === undefined)`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/delete-key-twice", async () => {
+            let store = createValidStore()
+            let key = `key-exists-${Math.random()}`;
+            await store.put(key, 'hello')
+            let result = store.delete(key)
+            let error = assert(result instanceof Promise, true, `store.delete(key) instanceof Promise`)
+            if (error) { return error }
+            result = await result
+            error = assert(result, undefined, `(await store.delete(key) === undefined)`)
+            if (error) { return error }
+            error = await assertRejects(() => store.delete(key), "KVStore.prototype.delete: can not delete key which does not exist")
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/multiple-deletes-at-once", async () => {
+            let store = createValidStore()
+            let key1 = `key-exists-${Math.random()}`;
+            await store.put(key1, '1hello1')
+            let key2 = `key-exists-${Math.random()}`;
+            await store.put(key2, '2hello2')
+            let key3 = `key-exists-${Math.random()}`;
+            await store.put(key3, '3hello3')
+            let key4 = `key-exists-${Math.random()}`;
+            await store.put(key4, '4hello4')
+            let key5 = `key-exists-${Math.random()}`;
+            await store.put(key5, '5hello5')
+            let error = await assertResolves(() => {
+                return Promise.all([
+                    store.delete(key1),
+                    store.delete(key2),
+                    store.delete(key3),
+                    store.delete(key4),
+                    store.delete(key5),
+                ]);
+            });
+
             if (error) { return error }
             return pass()
         });
