@@ -39,6 +39,16 @@ declare module "fastly:kv-store" {
      */
     constructor(name: string);
     /**
+     * Delete the value associated with the key `key` in the KV Store.
+     * @param key The key to retrieve from within the KV Store. A key cannot:
+     * - Be any of the strings "", ".", or ".."
+     * - Start with the string ".well-known/acme-challenge/""
+     * - Contain any of the characters "#?*[]\n\r"
+     * - Be longer than 1024 characters
+     */
+    delete(key: string): Promise<undefined>;
+
+    /**
      * Gets the value associated with the key `key` in the KV Store.
      * When the key is present, a resolved Promise containing an KVStoreEntry will be returned which contains the associated value.
      * When the key is absent, a resolved Promise containing null is returned.
