@@ -382,6 +382,15 @@ WASM_IMPORT("fastly_object_store", "pending_lookup_wait")
 int object_store_pending_lookup_wait(fastly_compute_at_edge_object_store_pending_handle_t handle,
                                      fastly_compute_at_edge_http_types_body_handle_t *handle_out);
 
+WASM_IMPORT("fastly_object_store", "delete_async")
+int object_store_delete_async(
+    fastly_compute_at_edge_object_store_handle_t object_store_handle, const char *key,
+    size_t key_len,
+    fastly_compute_at_edge_object_store_pending_handle_t *pending_object_store_lookup_handle_out);
+
+WASM_IMPORT("fastly_object_store", "pending_delete_wait")
+int object_store_pending_delete_wait(fastly_compute_at_edge_object_store_pending_handle_t handle);
+
 WASM_IMPORT("fastly_object_store", "insert")
 int object_store_insert(fastly_compute_at_edge_object_store_handle_t object_store_handle,
                         const char *key, size_t key_len,
