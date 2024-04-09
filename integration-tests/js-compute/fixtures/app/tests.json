@@ -3678,11 +3678,21 @@
       "status": 200
     }
   },
-  "GET /kv-store/delete/multiple-lookups-at-once": {
+  "GET /kv-store/delete/delete-key-twice": {
     "environments": ["compute", "viceroy"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/kv-store/delete/multiple-lookups-at-once"
+      "pathname": "/kv-store/delete/delete-key-twice"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/multiple-deletes-at-once": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/multiple-deletes-at-once"
     },
     "downstream_response": {
       "status": 200
