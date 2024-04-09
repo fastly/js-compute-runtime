@@ -833,6 +833,38 @@ import { routes } from "./routes.js";
             if (error) { return error }
             return pass()
         });
+
+        routes.set("/kv-store/get/multiple-lookups-at-once", async () => {
+            let store = createValidStore()
+            let key1 = `key-exists-${Math.random()}`;
+            await store.put(key1, '1hello1')
+            let key2 = `key-exists-${Math.random()}`;
+            await store.put(key2, '2hello2')
+            let key3 = `key-exists-${Math.random()}`;
+            await store.put(key3, '3hello3')
+            let key4 = `key-exists-${Math.random()}`;
+            await store.put(key4, '4hello4')
+            let key5 = `key-exists-${Math.random()}`;
+            await store.put(key5, '5hello5')
+            let results = await Promise.all([
+                store.get(key1),
+                store.get(key2),
+                store.get(key3),
+                store.get(key4),
+                store.get(key5),
+            ]);
+            let error = assert(await results[0].text(), '1hello1', `await results[0].text()`)
+            if (error) { return error }
+            error = assert(await results[1].text(), '2hello2', `await results[1].text()`)
+            if (error) { return error }
+            error = assert(await results[2].text(), '3hello3', `await results[2].text()`)
+            if (error) { return error }
+            error = assert(await results[3].text(), '4hello4', `await results[3].text()`)
+            if (error) { return error }
+            error = assert(await results[4].text(), '5hello5', `await results[4].text()`)
+            if (error) { return error }
+            return pass()
+        });
     }
 }
 

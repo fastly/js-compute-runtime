@@ -183,44 +183,17 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
 
 } // namespace
 
-bool KVStore::has_pending_delete_handle(JSObject *self) {
-  MOZ_ASSERT(KVStore::is_instance(self));
+bool KVStore::process_pending_kv_store_delete(JSContext *cx, int32_t handle,
+                                              JS::HandleObject context, JS::HandleObject promise) {
+  host_api::ObjectStorePendingDelete pending_lookup(handle);
 
-  JS::Value handle_val =
-      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PendingDeleteHandle));
-  return handle_val.isInt32() &&
-         handle_val.toInt32() != host_api::ObjectStorePendingDelete::invalid;
-}
-
-host_api::ObjectStorePendingDelete KVStore::pending_delete_handle(JSObject *self) {
-  MOZ_ASSERT(KVStore::is_instance(self));
-  host_api::ObjectStorePendingDelete res;
-
-  JS::Value handle_val =
-      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PendingDeleteHandle));
-  if (handle_val.isInt32()) {
-    res = host_api::ObjectStorePendingDelete(handle_val.toInt32());
-  }
-
-  return res;
-}
-
-bool KVStore::process_pending_kv_store_delete(JSContext *cx, JS::HandleObject self) {
-  MOZ_ASSERT(KVStore::is_instance(self));
-
-  auto pending_promise_value =
-      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PendingDeletePromise));
-  MOZ_ASSERT(pending_promise_value.isObject());
-  JS::RootedObject result_promise(cx, &pending_promise_value.toObject());
-
-  auto res = builtins::KVStore::pending_delete_handle(self).wait();
-
+  auto res = pending_lookup.wait();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
-    return RejectPromiseWithPendingError(cx, result_promise);
+    return RejectPromiseWithPendingError(cx, promise);
   }
 
-  JS::ResolvePromise(cx, result_promise, JS::UndefinedHandleValue);
+  JS::ResolvePromise(cx, promise, JS::UndefinedHandleValue);
 
   return true;
 }
@@ -253,12 +226,10 @@ bool KVStore::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto ret = res.unwrap();
 
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::PendingDeleteHandle),
-                      JS::Int32Value(ret.handle));
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::PendingDeletePromise),
-                      JS::ObjectValue(*result_promise));
+  auto task = core::AsyncTask::create(cx, ret.handle, self, result_promise,
+                                      KVStore::process_pending_kv_store_delete);
 
-  if (!core::EventLoop::queue_async_task(self)) {
+  if (!core::EventLoop::queue_async_task(task)) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
@@ -266,32 +237,15 @@ bool KVStore::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-host_api::ObjectStorePendingLookup KVStore::pending_lookup_handle(JSObject *self) {
-  MOZ_ASSERT(KVStore::is_instance(self));
-  host_api::ObjectStorePendingLookup res;
+bool KVStore::process_pending_kv_store_lookup(JSContext *cx, int32_t handle,
+                                              JS::HandleObject context, JS::HandleObject promise) {
+  host_api::ObjectStorePendingLookup pending_lookup(handle);
 
-  JS::Value handle_val =
-      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PendingLookupHandle));
-  if (handle_val.isInt32()) {
-    res = host_api::ObjectStorePendingLookup(handle_val.toInt32());
-  }
-
-  return res;
-}
-
-bool KVStore::process_pending_kv_store_lookup(JSContext *cx, JS::HandleObject self) {
-  MOZ_ASSERT(KVStore::is_instance(self));
-
-  auto pending_promise_value =
-      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PendingLookupPromise));
-  MOZ_ASSERT(pending_promise_value.isObject());
-  JS::RootedObject result_promise(cx, &pending_promise_value.toObject());
-
-  auto res = builtins::KVStore::pending_lookup_handle(self).wait();
+  auto res = pending_lookup.wait();
 
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
-    return RejectPromiseWithPendingError(cx, result_promise);
+    return RejectPromiseWithPendingError(cx, promise);
   }
 
   auto ret = res.unwrap();
@@ -300,7 +254,7 @@ bool KVStore::process_pending_kv_store_lookup(JSContext *cx, JS::HandleObject se
   if (!ret.has_value()) {
     JS::RootedValue result(cx);
     result.setNull();
-    JS::ResolvePromise(cx, result_promise, result);
+    JS::ResolvePromise(cx, promise, result);
   } else {
     JS::RootedObject entry(cx, KVStoreEntry::create(cx, ret.value()));
     if (!entry) {
@@ -308,7 +262,7 @@ bool KVStore::process_pending_kv_store_lookup(JSContext *cx, JS::HandleObject se
     }
     JS::RootedValue result(cx);
     result.setObject(*entry);
-    JS::ResolvePromise(cx, result_promise, result);
+    JS::ResolvePromise(cx, promise, result);
   }
 
   return true;
@@ -342,12 +296,10 @@ bool KVStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto ret = res.unwrap();
 
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::PendingLookupHandle),
-                      JS::Int32Value(ret.handle));
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::PendingLookupPromise),
-                      JS::ObjectValue(*result_promise));
+  auto task = core::AsyncTask::create(cx, ret.handle, self, result_promise,
+                                      KVStore::process_pending_kv_store_lookup);
 
-  if (!core::EventLoop::queue_async_task(self)) {
+  if (!core::EventLoop::queue_async_task(std::move(task))) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
