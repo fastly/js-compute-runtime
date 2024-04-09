@@ -582,6 +582,10 @@ interface object-store {
 
   pending-lookup-wait: func(handle: pending-handle) -> result<option<body-handle>, error>
 
+  delete-async: func(store: handle, key: string) -> result<pending-handle, error>
+
+  pending-delete-wait: func(handle: pending-handle) -> result<_, error>
+
   // Should object store insert return "inserted" bool?
   insert: func(store: handle, key: string, body-handle: body-handle) -> result<_, error>
 
