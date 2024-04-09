@@ -95,6 +95,7 @@ import { routes } from "./routes.js";
             return pass()
         });
     }
+
     // KVStore put method
     {
 
@@ -485,6 +486,158 @@ import { routes } from "./routes.js";
         });
     }
 
+    // KVStore delete method
+    {
+        routes.set("/kv-store/delete/called-as-constructor", async () => {
+            let error = assertThrows(() => {
+                new KVStore.prototype.delete('1')
+            }, TypeError, `KVStore.prototype.delete is not a constructor`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/called-unbound", async () => {
+            let error = await assertRejects(async () => {
+                await KVStore.prototype.delete.call(undefined, '1')
+            }, TypeError, "Method delete called on receiver that's not an instance of KVStore")
+            if (error) { return error }
+            return pass()
+        });
+        // https://tc39.es/ecma262/#sec-tostring
+        routes.set("/kv-store/delete/key-parameter-calls-7.1.17-ToString", async () => {
+            let sentinel;
+            const test = async () => {
+                sentinel = Symbol();
+                const key = {
+                    toString() {
+                        throw sentinel;
+                    }
+                }
+                const store = createValidStore()
+                await store.delete(key)
+            }
+            let error = await assertRejects(test)
+            if (error) { return error }
+            try {
+                await test()
+            } catch (thrownError) {
+                let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+                if (error) { return error }
+            }
+            error = await assertRejects(async () => {
+                const store = createValidStore()
+                await store.delete(Symbol())
+            }, TypeError, `can't convert symbol to string`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/key-parameter-not-supplied", async () => {
+            let error = await assertRejects(async () => {
+                const store = createValidStore()
+                await store.delete()
+            }, TypeError, `delete: At least 1 argument required, but only 0 passed`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/key-parameter-empty-string", async () => {
+            let error = await assertRejects(async () => {
+                const store = createValidStore()
+                await store.delete('')
+            }, TypeError, `KVStore key can not be an empty string`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/key-parameter-1024-character-string", async () => {
+            let error = await assertResolves(async () => {
+                const store = createValidStore()
+                const key = 'a'.repeat(1024)
+                await store.delete(key)
+            })
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/key-parameter-1025-character-string", async () => {
+            let error = await assertRejects(async () => {
+                const store = createValidStore()
+                const key = 'a'.repeat(1025)
+                await store.delete(key)
+            }, TypeError, `KVStore key can not be more than 1024 characters`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/key-parameter-containing-newline", async () => {
+            let error = await assertRejects(async () => {
+                let store = createValidStore()
+                await store.delete('\n')
+            }, TypeError, `KVStore key can not contain newline character`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/key-parameter-containing-carriage-return", async () => {
+            let error = await assertRejects(async () => {
+                let store = createValidStore()
+                await store.delete('\r')
+            }, TypeError, `KVStore key can not contain carriage return character`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/key-parameter-starting-with-well-known-acme-challenge", async () => {
+            let error = await assertRejects(async () => {
+                let store = createValidStore()
+                await store.delete('.well-known/acme-challenge/')
+            }, TypeError, `KVStore key can not start with .well-known/acme-challenge/`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/key-parameter-single-dot", async () => {
+            let error = await assertRejects(async () => {
+                let store = createValidStore()
+                await store.delete('.')
+            }, TypeError, `KVStore key can not be '.' or '..'`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/key-parameter-double-dot", async () => {
+            let error = await assertRejects(async () => {
+                let store = createValidStore()
+                await store.delete('..')
+            }, TypeError, `KVStore key can not be '.' or '..'`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/key-parameter-containing-special-characters", async () => {
+            const specialCharacters = ['[', ']', '*', '?', '#'];
+            for (const character of specialCharacters) {
+                let error = await assertRejects(async () => {
+                    let store = createValidStore()
+                    await store.delete(character)
+                }, TypeError, `KVStore key can not contain ${character} character`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+        routes.set("/kv-store/delete/key-does-not-exist-returns-undefined", async () => {
+            let store = createValidStore()
+            let result = store.delete(Math.random())
+            let error = assert(result instanceof Promise, true, `store.delete(Math.random()) instanceof Promise`)
+            if (error) { return error }
+            error = assert(await result, undefined, `await store.delete(Math.random())`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/kv-store/delete/key-exists", async () => {
+            let store = createValidStore()
+            let key = `key-exists-${Math.random()}`;
+            await store.put(key, 'hello')
+            let result = store.delete(key)
+            let error = assert(result instanceof Promise, true, `store.delete(key) instanceof Promise`)
+            if (error) { return error }
+            result = await result
+            error = assert(result, undefined, `(await store.delete(key) === undefined)`)
+            if (error) { return error }
+            return pass()
+        });
+    }
+
     // KVStore get method
     {
         routes.set("/kv-store/get/called-as-constructor", async () => {
@@ -646,6 +799,7 @@ import { routes } from "./routes.js";
         });
     }
 }
+
 // KVStoreEntry
 {
     routes.set("/kv-store-entry/interface", async () => {
@@ -931,13 +1085,18 @@ async function kvStoreInterfaceTests() {
     if (error) { return error }
 
     actual = Reflect.ownKeys(KVStore.prototype)
-    expected = ["constructor", "get", "put"]
+    expected = ["constructor", "delete", "get", "put"]
     error = assert(actual, expected, `Reflect.ownKeys(KVStore.prototype)`)
     if (error) { return error }
 
     actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'constructor')
     expected = { "writable": true, "enumerable": false, "configurable": true, value: KVStore.prototype.constructor }
     error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'constructor')`)
+    if (error) { return error }
+
+    actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'delete')
+    expected = { "writable": true, "enumerable": true, "configurable": true, value: KVStore.prototype.delete }
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'delete')`)
     if (error) { return error }
 
     actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'get')
@@ -951,6 +1110,8 @@ async function kvStoreInterfaceTests() {
     if (error) { return error }
 
     error = assert(typeof KVStore.prototype.constructor, 'function', `typeof KVStore.prototype.constructor`)
+    if (error) { return error }
+    error = assert(typeof KVStore.prototype.delete, 'function', `typeof KVStore.prototype.delete`)
     if (error) { return error }
     error = assert(typeof KVStore.prototype.get, 'function', `typeof KVStore.prototype.get`)
     if (error) { return error }
@@ -975,6 +1136,26 @@ async function kvStoreInterfaceTests() {
         "configurable": true
     }
     error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype.constructor, 'name')`)
+    if (error) { return error }
+
+    actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype.delete, 'length')
+    expected = {
+        "value": 1,
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+    }
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype.delete, 'length')`)
+    if (error) { return error }
+
+    actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype.delete, 'name')
+    expected = {
+        "value": "delete",
+        "writable": false,
+        "enumerable": false,
+        "configurable": true
+    }
+    error = assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore.prototype.delete, 'name')`)
     if (error) { return error }
 
     actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype.get, 'length')
