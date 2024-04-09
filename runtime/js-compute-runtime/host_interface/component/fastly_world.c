@@ -811,6 +811,12 @@ void __wasm_import_fastly_compute_at_edge_object_store_lookup_async(int32_t, int
 __attribute__((__import_module__("fastly:compute-at-edge/object-store"), __import_name__("pending-lookup-wait")))
 void __wasm_import_fastly_compute_at_edge_object_store_pending_lookup_wait(int32_t, int32_t);
 
+__attribute__((__import_module__("fastly:compute-at-edge/object-store"), __import_name__("delete-async")))
+void __wasm_import_fastly_compute_at_edge_object_store_delete_async(int32_t, int32_t, int32_t, int32_t);
+
+__attribute__((__import_module__("fastly:compute-at-edge/object-store"), __import_name__("pending-delete-wait")))
+void __wasm_import_fastly_compute_at_edge_object_store_pending_delete_wait(int32_t, int32_t);
+
 __attribute__((__import_module__("fastly:compute-at-edge/object-store"), __import_name__("insert")))
 void __wasm_import_fastly_compute_at_edge_object_store_insert(int32_t, int32_t, int32_t, int32_t, int32_t);
 
@@ -4087,6 +4093,58 @@ bool fastly_compute_at_edge_object_store_pending_lookup_wait(fastly_compute_at_e
   }
   if (!result.is_err) {
     *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_object_store_delete_async(fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key, fastly_compute_at_edge_object_store_pending_handle_t *ret, fastly_compute_at_edge_object_store_error_t *err) {
+  __attribute__((__aligned__(4)))
+  uint8_t ret_area[8];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_object_store_delete_async((int32_t) (store), (int32_t) (*key).ptr, (int32_t) (*key).len, ptr);
+  fastly_world_result_fastly_compute_at_edge_object_store_pending_handle_fastly_compute_at_edge_object_store_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      result.val.ok = (uint32_t) (*((int32_t*) (ptr + 4)));
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 4)));
+      break;
+    }
+  }
+  if (!result.is_err) {
+    *ret = result.val.ok;
+    return 1;
+  } else {
+    *err = result.val.err;
+    return 0;
+  }
+}
+
+bool fastly_compute_at_edge_object_store_pending_delete_wait(fastly_compute_at_edge_object_store_pending_handle_t handle, fastly_compute_at_edge_object_store_error_t *err) {
+  __attribute__((__aligned__(1)))
+  uint8_t ret_area[2];
+  int32_t ptr = (int32_t) &ret_area;
+  __wasm_import_fastly_compute_at_edge_object_store_pending_delete_wait((int32_t) (handle), ptr);
+  fastly_world_result_void_fastly_compute_at_edge_object_store_error_t result;
+  switch ((int32_t) (*((uint8_t*) (ptr + 0)))) {
+    case 0: {
+      result.is_err = false;
+      break;
+    }
+    case 1: {
+      result.is_err = true;
+      result.val.err = (int32_t) (*((uint8_t*) (ptr + 1)));
+      break;
+    }
+  }
+  if (!result.is_err) {
     return 1;
   } else {
     *err = result.val.err;
