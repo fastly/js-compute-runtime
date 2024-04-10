@@ -3528,6 +3528,166 @@
       "status": 200
     }
   },
+  "GET /kv-store/delete/called-as-constructor": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/called-unbound": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-parameter-not-supplied": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-parameter-empty-string": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-parameter-1024-character-string": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-parameter-1024-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-parameter-1025-character-string": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-parameter-1025-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-parameter-containing-newline": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-parameter-containing-newline"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-parameter-containing-carriage-return": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-parameter-containing-carriage-return"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-parameter-starting-with-well-known-acme-challenge": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-parameter-starting-with-well-known-acme-challenge"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-parameter-single-dot": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-parameter-single-dot"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-parameter-double-dot": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-parameter-double-dot"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-parameter-containing-special-characters": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-parameter-containing-special-characters"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-does-not-exist-returns-undefined": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-does-not-exist-returns-undefined"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/key-exists": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/key-exists"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/delete/multiple-lookups-at-once": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/delete/multiple-lookups-at-once"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
   "GET /kv-store/get/called-as-constructor": {
     "environments": ["compute", "viceroy"],
     "downstream_request": {
@@ -3673,6 +3833,16 @@
     "downstream_request": {
       "method": "GET",
       "pathname": "/kv-store/get/key-exists"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /kv-store/get/multiple-lookups-at-once": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/kv-store/get/multiple-lookups-at-once"
     },
     "downstream_response": {
       "status": 200
