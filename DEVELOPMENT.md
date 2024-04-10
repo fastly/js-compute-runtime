@@ -16,7 +16,9 @@ to pull down or update submodules.
 
 ### Building the JS Compute Runtime
 
-To build from source, you need to have the following tools installed to successfully build, and build from a linux based system.
+To build from source, you need to have the following tools installed to successfully build, depending on your system.
+
+#### Linux
 
 - Rust 
   ```
@@ -50,6 +52,65 @@ To build from source, you need to have the following tools installed to successf
 
 Once you have those installed, you will need to compile SpiderMonkey:
 ```
+(cd runtime/spidermonkey && bash build-engine.sh)
+```
+
+Once that is done, the runtime and the CLI tool for applying it to JS source code can be built using npm:
+```sh
+npm run build
+```
+
+#### macOS (Apple silicon)
+
+- Build tools
+  ```sh
+  # First, install Xcode from the Mac App Store. Then:
+  sudo xcode-select --switch /Applications/Xcode.app
+  sudo xcodebuild -license
+  ```
+- Homebrew
+  ```sh
+  # From homebrew.sh
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  ```
+- wget
+  ```sh
+  brew install wget
+  ```
+- binaryen
+  ```sh
+  brew install binaryen
+  ```
+- Python 3.11 (Spidermonkey build requires a version before 3.12)
+  ```sh
+  brew install python@3.11
+  ``` 
+- Rust
+  ```sh
+  curl -so rust.sh https://sh.rustup.rs && sh rust.sh -y
+  # then, restart shell or run:
+  source $HOME/.cargo/env
+  ```
+- rust target wasm32-wasi
+  ```sh
+  rustup target add wasm32-wasi
+  ```
+- [cbindgen](https://github.com/eqrion/cbindgen#quick-start)
+  ```sh
+  cargo install cbindgen
+  ```
+- [wasi-sdk, version 20](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-20),
+  with alternate [install instructions](https://github.com/WebAssembly/wasi-sdk#install)
+  ```sh
+  curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-macos.tar.gz
+  tar xf wasi-sdk-20.0-macos.tar.gz
+  sudo mkdir -p /opt/wasi-sdk
+  sudo mv wasi-sdk-20.0/* /opt/wasi-sdk/
+  ```
+
+Once you have those installed, you will need to compile SpiderMonkey:
+```sh
+export PATH="/opt/homebrew/opt/python@3.11/libexec/bin:$PATH"
 (cd runtime/spidermonkey && bash build-engine.sh)
 ```
 
