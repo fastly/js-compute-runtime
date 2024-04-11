@@ -14,7 +14,7 @@ routes.set("/console", () => {
     console.log('Set:',arg)
     arg = [1, 2, 3, [], 5]
     console.log('Array:',arg)
-    arg = { a: 1, b: 2, c: 3, d(){}, get f(){return 1}, g: function bar() {} }
+    arg = { a: 1, b: 2, c: 3, d(){}, get f(){return 1}, g: function bar() {}, h: Array.from }
     console.log('Object:',arg)
     arg = function () { }
     console.log('function:',arg)
