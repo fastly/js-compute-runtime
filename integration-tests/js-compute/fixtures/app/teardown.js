@@ -59,9 +59,10 @@ async function removeKVStore() {
             Accept: "application/json",
             "Fastly-Key": FASTLY_API_TOKEN
         }
-    })
+    }).then(res => res.json())
 
-    let STORE_ID = (await stores.json()).data.find(({ name }) => name === 'example-test-kv-store')?.id
+
+    let STORE_ID = stores.data.find(({ name }) => name === 'example-test-kv-store')?.id
     if (STORE_ID) {
         await fetch(`https://api.fastly.com/resources/stores/object/${STORE_ID}`, {
             method: 'DELETE',

@@ -12,7 +12,7 @@ defaults:
 env:
   viceroy_version: 0.9.4
   wasm-tools_version: 1.0.28
-  fastly-cli_version: 10.4.0
+  fastly-cli_version: 10.8.10
 
 jobs:
 
