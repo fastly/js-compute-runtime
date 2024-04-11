@@ -201,14 +201,17 @@ for (const result of results) {
         failed.push(result.reason)
     }
 }
+core.endGroup()
 
 if (failed.length) {
     process.exitCode = 1;
-    console.log(white, `\nFailed tests:\n`, white);
-}
+    core.startGroup('Failed tests')
 
-for (const result of failed) {
-    console.log(red, cross, result, white);
+    for (const result of failed) {
+        console.log(red, cross, result, white);
+    }
+
+    core.endGroup()
 }
 
 
@@ -218,7 +221,6 @@ if (!local && failed.length) {
         core.notice(`You can debug the service on ${domain}`)
     }
 }
-core.endGroup()
 
 if (!local && !failed.length) {
     const teardownPath = join(fixturePath, 'teardown.js')
