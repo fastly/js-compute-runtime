@@ -286,19 +286,16 @@ JS::Result<mozilla::Ok> ToSource(JSContext *cx, std::string &sourceOut, JS::Hand
     JS::RootedObject obj(cx, &val.toObject());
 
     if (JS_ObjectIsFunction(obj)) {
-      sourceOut += "[Function";
+      sourceOut += "[";
       std::string source;
       JS::Rooted<JSFunction *> fun(cx, JS_ValueToFunction(cx, val));
       if (fun) {
-        JS::RootedString name(cx);
-        if (!JS_GetFunctionId(cx, fun, &name)) {
+        JS::RootedString result(cx, JS_DecompileFunction(cx, fun));
+        if (!result) {
           return JS::Result<mozilla::Ok>(JS::Error());
         }
-        if (!name) {
-          name = JS_AtomizeAndPinString(cx, "");
-        }
         sourceOut += " ";
-        auto msg = core::encode(cx, name);
+        auto msg = core::encode(cx, result);
         if (!msg) {
           return JS::Result<mozilla::Ok>(JS::Error());
         }
