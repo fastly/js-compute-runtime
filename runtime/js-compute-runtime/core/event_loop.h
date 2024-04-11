@@ -16,6 +16,8 @@ namespace core {
 typedef bool ProcessAsyncTask(JSContext *cx, int32_t handle, JS::HandleObject context,
                               JS::HandleObject promise);
 
+// AsyncTask is a JSObject so that we can store other JSObjects inside it, and once the AsyncTask has completed and is erased from the async task queues then the JSObjects it contains will be available to be garbage collected.
+// Another approach we can take is to have two queues, one contains the JSObjects for GC and another for plain data
 class AsyncTask final : public builtins::BuiltinNoConstructor<AsyncTask> {
 public:
   static constexpr const char *class_name = "AsyncTask";
