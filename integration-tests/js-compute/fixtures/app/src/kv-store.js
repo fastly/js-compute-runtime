@@ -1,7 +1,7 @@
 /* globals KVStoreEntry */
 import { pass, assert, assertThrows, assertRejects, assertResolves } from "./assertions.js";
 import { KVStore } from "fastly:kv-store";
-import { routes } from "./routes.js";
+import { routes, isRunningLocally } from "./routes.js";
 // KVStore
 {
     routes.set("/kv-store/exposed-as-global", async () => {
@@ -616,8 +616,11 @@ import { routes } from "./routes.js";
             return pass()
         });
         routes.set("/kv-store/delete/key-does-not-exist-returns-undefined", async () => {
+            if (isRunningLocally()) {
+                return pass()
+            }
             let store = createValidStore()
-            let error = await assertRejects(() => store.delete(Math.random()), "KVStore.prototype.delete: can not delete key which does not exist")
+            let error = await assertRejects(() => store.delete(Math.random()), TypeError, "KVStore.prototype.delete: can not delete key which does not exist")
             if (error) { return error }
             return pass()
         });
@@ -634,6 +637,9 @@ import { routes } from "./routes.js";
             return pass()
         });
         routes.set("/kv-store/delete/delete-key-twice", async () => {
+            if (isRunningLocally()) {
+                return pass()
+            }
             let store = createValidStore()
             let key = `key-exists-${Math.random()}`;
             await store.put(key, 'hello')
@@ -643,7 +649,7 @@ import { routes } from "./routes.js";
             result = await result
             error = assert(result, undefined, `(await store.delete(key) === undefined)`)
             if (error) { return error }
-            error = await assertRejects(() => store.delete(key), "KVStore.prototype.delete: can not delete key which does not exist")
+            error = await assertRejects(() => store.delete(key), TypeError, "KVStore.prototype.delete: can not delete key which does not exist")
             if (error) { return error }
             return pass()
         });

@@ -185,16 +185,20 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
 
 bool KVStore::process_pending_kv_store_delete(JSContext *cx, int32_t handle,
                                               JS::HandleObject context, JS::HandleObject promise) {
-  host_api::ObjectStorePendingDelete pending_lookup(handle);
+  host_api::ObjectStorePendingDelete pending_delete(handle);
 
-  auto res = pending_lookup.wait();
+  auto res = pending_delete.wait();
   if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
+    if (host_api::error_is_invalid_argument(*err)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_KV_STORE_DELETE_KEY_DOES_NOT_EXIST);
+    } else {
+      HANDLE_ERROR(cx, *err);
+    }
     return RejectPromiseWithPendingError(cx, promise);
   }
 
   JS::ResolvePromise(cx, promise, JS::UndefinedHandleValue);
-
   return true;
 }
 
