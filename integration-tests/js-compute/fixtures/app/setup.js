@@ -52,7 +52,7 @@ async function setupKVStore() {
         }
     }())
 
-    const STORE_ID = stores.Data.find(({ Name }) => Name === 'example-test-kv-store')?.ID
+    const STORE_ID = stores.Data.find(({ Name }) => Name === 'example-test-kv-store')?.StoreID
     if (!STORE_ID) {
         process.env.STORE_ID = JSON.parse(await zx`fastly kv-store create --quiet --name='example-test-kv-store' --json --token $FASTLY_API_TOKEN`).id
     } else {
