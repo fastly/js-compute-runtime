@@ -1287,28 +1287,6 @@ routes.set("/backend/timeout", async () => {
       });
     }
 
-    // checkCertificate property
-    {
-      routes.set("/backend/constructor/parameter-checkCertificate-property-valid-boolean", async () => {
-        const types = [{}, [], Symbol(), 1, "2"];
-        for (const type of types) {
-          let error = assertDoesNotThrow(() => {
-            new Backend({ name: 'checkCertificate-property-valid-boolean' + String(type), target: 'a', checkCertificate: type })
-          })
-          if (error) { return error }
-        }
-        let error = assertDoesNotThrow(() => {
-          new Backend({ name: 'checkCertificate-property-valid-boolean-true', target: 'a', checkCertificate: true })
-        })
-        if (error) { return error }
-        error = assertDoesNotThrow(() => {
-          new Backend({ name: 'checkCertificate-property-valid-boolean-false', target: 'a', checkCertificate: false })
-        })
-        if (error) { return error }
-        return pass('ok')
-      });
-    }
-
     // caCertificate property
     {
       routes.set("/backend/constructor/parameter-caCertificate-property-empty-string", async () => {

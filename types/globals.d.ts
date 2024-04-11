@@ -91,11 +91,6 @@ declare interface BackendConfiguration {
    */
   certificateHostname?: string,
   /**
-   * Whether or not to validate the server certificate.
-   * Highly recommended to enable this if `useSSL` is set to `true`.
-   */
-  checkCertificate?: boolean,
-  /**
    * The CA certificate to use when checking the validity of the backend.
    */
   caCertificate?: string,

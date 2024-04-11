@@ -97,7 +97,6 @@ import { expectError, expectType } from 'tsd';
   expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', tlsMinVersion: 1.2,}))
   expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', tlsMaxVersion: 1.2,}))
   expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', certificateHostname: 'example.com',}))
-  expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', checkCertificate: false,}))
   expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', caCertificate: '',}))
   expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', ciphers: 'DEFAULT',}))
   expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com',  sniHostname: 'example.com',}))

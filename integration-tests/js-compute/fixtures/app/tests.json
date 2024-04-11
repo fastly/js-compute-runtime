@@ -2736,17 +2736,6 @@
       "body": "ok"
     }
   },
-  "GET /backend/constructor/parameter-checkCertificate-property-valid-boolean": {
-    "environments": ["viceroy"],
-    "downstream_request": {
-      "method": "GET",
-      "pathname": "/backend/constructor/parameter-checkCertificate-property-valid-boolean"
-    },
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
   "GET /backend/constructor/parameter-caCertificate-property-empty-string": {
     "environments": ["viceroy"],
     "downstream_request": {
