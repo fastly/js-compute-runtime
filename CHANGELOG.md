@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 3.13.1 (2024-04-12)
+
+
+### Fixed
+
+* remove debugging message which got commited ([4219a0a](https://github.com/fastly/js-compute-runtime/commit/4219a0ac87d68d9a9fc57aaea43994a867f5dd0e))
+
 ## 3.13.0 (2024-04-11)
 
 
