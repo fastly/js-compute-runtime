@@ -200,7 +200,6 @@ bool EventLoop::process_pending_async_tasks(JSContext *cx) {
 
   for (size_t i = 0; i < count; i++) {
     auto pending_obj = (*pending_async_tasks)[i];
-    fprintf(stderr, "oooh %i\n", AsyncTask::get_handle(pending_obj));
     handles.push_back(host_api::AsyncHandle(AsyncTask::get_handle(pending_obj)));
   }
 
