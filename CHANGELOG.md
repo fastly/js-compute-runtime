@@ -1,6 +1,26 @@
 # Changelog
 
 
+## 3.13.0 (2024-04-11)
+
+
+### Added
+
+* Add KVStore.prototype.delete method ([578d858](https://github.com/fastly/js-compute-runtime/commit/578d858b6678c27116ead213f58d2f4fe80f1355))
+
+### Changed
+* Update to SpiderMonkey 124.0.2 ([e32632e](https://github.com/fastly/js-compute-runtime/commit/e32632e16ba822770dd9b0637185f7266a7952e2))
+    This release includes:
+		- An optimization for functions that only use `arguments.length` to avoid allocating the `arguments` object.
+		- An optimization for `Object.HasOwn` which for small numbers of atoms just unrolls the loop.
+
+
+### Fixed
+
+* Correct type definition for the global BackendConfiguration type - there is no `checkCertificate` field ([62fd0ea](https://github.com/fastly/js-compute-runtime/commit/62fd0ea36e6aefd4a3cb281a09716a901f111485))
+* Improve our console.log output for functions ([9a97fc1](https://github.com/fastly/js-compute-runtime/commit/9a97fc1352926ecad8377d72eca1e18e28aa2173))
+* Refactor our async task implementation to be a generic AsyncTask class instead of separate implementations for each async operation ([68dfec7](https://github.com/fastly/js-compute-runtime/commit/68dfec75a0c9c583dc4be39a17cbbf9b70ff8b40))
+
 ## 3.12.1 (2024-04-05)
 
 
