@@ -10,6 +10,7 @@ export async function parseInputs(cliInputs) {
   let adapter;
   let enableExperimentalHighResolutionTimeMethods = false;
   let enableExperimentalTopLevelAwait = false;
+  let starlingMonkey = false;
   let enablePBL = false;
   let customEngineSet = false;
   let wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
@@ -23,6 +24,11 @@ export async function parseInputs(cliInputs) {
     component = true;
     wasmEngine = join(__dirname, "../js-compute-runtime-component.wasm");
   };
+  let useStarlingMonkey = () => {
+    starlingMonkey = true;
+    wasmEngine = wasmEngine = join(__dirname, "../starling.wasm");
+  };
+  useStarlingMonkey();
 
   // eslint-disable-next-line no-cond-assign
   loop: while ((cliInput = cliInputs.shift())) {
@@ -49,6 +55,10 @@ export async function parseInputs(cliInputs) {
       case "-h":
       case "--help": {
         return { help: true };
+      }
+      case "--starling-monkey": {
+        useStarlingMonkey();
+        break;
       }
       case "--component": {
         useComponent();
@@ -114,5 +124,15 @@ export async function parseInputs(cliInputs) {
       }
     }
   }
-  return { wasmEngine, component, adapter, input, output, enableExperimentalHighResolutionTimeMethods, enablePBL, enableExperimentalTopLevelAwait };
+  return {
+    adapter,
+    component,
+    enableExperimentalHighResolutionTimeMethods,
+    enableExperimentalTopLevelAwait,
+    enablePBL,
+    input,
+    output,
+    starlingMonkey,
+    wasmEngine,
+  };
 }

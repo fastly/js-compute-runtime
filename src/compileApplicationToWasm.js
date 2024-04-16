@@ -1,4 +1,4 @@
-import { dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { mkdir, readFile } from "node:fs/promises";
 import { isFile } from "./isFile.js";
@@ -9,7 +9,15 @@ import { enableTopLevelAwait } from "./enableTopLevelAwait.js";
 import { bundle } from "./bundle.js";
 import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
 
-export async function compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods = false, enablePBL = false, enableExperimentalTopLevelAwait = false) {
+export async function compileApplicationToWasm(
+  input,
+  output,
+  wasmEngine,
+  enableExperimentalHighResolutionTimeMethods = false,
+  enablePBL = false,
+  enableExperimentalTopLevelAwait = false,
+  starlingMonkey = false
+) {
   try {
     if (!(await isFile(input))) {
       console.error(
@@ -78,11 +86,20 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
     process.exit(1);
   }
 
-  let contents = await bundle(input, enableExperimentalTopLevelAwait);
+  let wizerInput;
+  if (!starlingMonkey) {
+    let contents = await bundle(input, enableExperimentalTopLevelAwait);
 
-  let application = precompile(contents.outputFiles[0].text, undefined, enableExperimentalTopLevelAwait);
-  if (enableExperimentalTopLevelAwait) {
-    application = enableTopLevelAwait(application);
+    wizerInput = precompile(
+      contents.outputFiles[0].text,
+      undefined,
+      enableExperimentalTopLevelAwait
+    );
+    if (enableExperimentalTopLevelAwait) {
+      wizerInput = enableTopLevelAwait(wizerInput);
+    }
+  } else {
+    wizerInput = resolve(input);
   }
 
   try {
@@ -91,7 +108,7 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
       [
         "--inherit-env=true",
         "--allow-wasi",
-        `--dir=.`,
+        `--dir=${resolve('/')}`,
         `--wasm-bulk-memory=true`,
         "-r _start=wizer.resume",
         `-o=${output}`,
@@ -99,14 +116,15 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
       ],
       {
         stdio: [null, process.stdout, process.stderr],
-        input: application,
+        input: wizerInput,
         shell: true,
         encoding: "utf-8",
         env: {
-          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS: enableExperimentalHighResolutionTimeMethods ? '1' : '0',
-          ENABLE_PBL: enablePBL ? '1' : '0',
-          ...process.env
-        }
+          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
+            enableExperimentalHighResolutionTimeMethods ? "1" : "0",
+          ENABLE_PBL: enablePBL ? "1" : "0",
+          ...process.env,
+        },
       }
     );
     if (wizerProcess.status !== 0) {
@@ -114,7 +132,10 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
     }
     process.exitCode = wizerProcess.status;
   } catch (error) {
-    console.error(`Error: Failed to compile JavaScript to Wasm: `, error.message);
+    console.error(
+      `Error: Failed to compile JavaScript to Wasm: `,
+      error.message
+    );
     process.exit(1);
   }
 }

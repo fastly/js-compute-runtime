@@ -32,6 +32,8 @@
     "test:types": "tsd",
     "build": "make -j8 -C runtime/js-compute-runtime && cp runtime/js-compute-runtime/*.wasm .",
     "build:debug": "DEBUG=true make -j8 -C runtime/js-compute-runtime && cp runtime/js-compute-runtime/*.wasm .",
+    "build:next": "./runtime/fastly/build-release.sh",
+    "build:next:debug": "./runtime/fastly/build-debug.sh",
     "check-changelog": "cae-release-notes-format-checker CHANGELOG.md"
   },
   "devDependencies": {
