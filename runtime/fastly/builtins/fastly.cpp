@@ -25,7 +25,7 @@ bool debug_logging_enabled() {
 
 namespace fastly::fastly {
 
-const JSErrorFormatString *GetErrorMessage(void *userRef, unsigned errorNumber) {
+const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNumber) {
   if (errorNumber > 0 && errorNumber < JSErrNum_Limit) {
     return &fastly_ErrorFormatString[errorNumber];
   }

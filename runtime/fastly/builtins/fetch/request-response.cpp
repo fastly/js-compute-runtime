@@ -32,6 +32,20 @@ using builtins::web::base64::convertJSValueToByteString;
 using fastly::fetch_event::FetchEvent;
 using fastly::fastly::FastlyGetErrorMessage;
 
+namespace builtins::web::streams {
+
+JSObject *NativeStreamSource::stream(JSObject *self) {
+  return fastly::fetch::RequestOrResponse::body_stream(owner(self));
+}
+
+bool NativeStreamSource::stream_is_body(JSContext *cx, JS::HandleObject stream) {
+  JSObject *stream_source = get_stream_source(cx, stream);
+  return NativeStreamSource::is_instance(stream_source) &&
+         fastly::fetch::RequestOrResponse::is_instance(owner(stream_source));
+}
+
+} // builtins::web::streams
+
 namespace fastly::fetch {
 
 namespace {
@@ -1273,15 +1287,17 @@ bool Request::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-// bool Request::setCacheOverride(JSContext *cx, unsigned argc, JS::Value *vp) {
-//   METHOD_HEADER(1)
+bool Request::setCacheOverride(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
 
-//   if (!set_cache_override(cx, self, args[0]))
-//     return false;
+  fprintf(stderr, "setCacheOverride TODO");
+  abort();
+  // if (!set_cache_override(cx, self, args[0]))
+  //   return false;
 
-//   args.rval().setUndefined();
-//   return true;
-// }
+  args.rval().setUndefined();
+  return true;
+}
 
 bool Request::setCacheKey(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
@@ -1528,7 +1544,6 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
                       JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::BooleanValue(is_downstream));
-
   return requestInstance;
 }
 
@@ -2983,6 +2998,15 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
 
 bool install(api::Engine *engine) {
   ENGINE = engine;
+  if (!Request::init_class(ENGINE->cx(), ENGINE->global())) {
+    return false;
+  }
+  if (!Response::init_class(ENGINE->cx(), ENGINE->global())) {
+    return false;
+  }
+  if (!Headers::init_class(ENGINE->cx(), ENGINE->global())) {
+    return false;
+  }
   return true;
 }
 

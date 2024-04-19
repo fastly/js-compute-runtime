@@ -487,6 +487,8 @@ api::FastlyResult<Response, FastlySendError> HttpPendingReq::wait() {
   return res;
 }
 
+FastlyAsyncTask HttpPendingReq::async_handle() const { return FastlyAsyncTask{this->handle}; }
+
 void CacheOverrideTag::set_pass() {
   this->value |= FASTLY_COMPUTE_AT_EDGE_HTTP_REQ_CACHE_OVERRIDE_TAG_PASS;
 }

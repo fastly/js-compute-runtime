@@ -1,5 +1,5 @@
 #include "fetch-event.h"
-#include "fetch/request-response.h"
+#include "./fetch/request-response.h"
 #include "../../StarlingMonkey/builtins/web/url.h"
 #include "../../StarlingMonkey/builtins/web/worker-location.h"
 #include "encode.h"
@@ -99,13 +99,13 @@ void dispatch_fetch_event(HandleObject event, double *total_compute) {
     printf("Request handler took %fms\n", diff / 1000);
 }
 
-// JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {
-//   JS::RootedObject requestInstance(
-//       cx, JS_NewObjectWithGivenProto(cx, &Request::class_, Request::proto_obj));
-//   if (!requestInstance)
-//     return nullptr;
-//   return Request::create(cx, requestInstance, nullptr);
-// }
+JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {
+  JS::RootedObject requestInstance(
+      cx, JS_NewObjectWithGivenProto(cx, &Request::class_, Request::proto_obj));
+  if (!requestInstance)
+    return nullptr;
+  return Request::create(cx, requestInstance, host_api::HttpReq{}, host_api::HttpBody{}, true);
+}
 
 bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::HttpReq req,
                               host_api::HttpBody body) {
@@ -512,16 +512,16 @@ JSObject *FetchEvent::create(JSContext *cx) {
   if (!self)
     return nullptr;
 
-  // JS::RootedObject request(cx, prepare_downstream_request(cx));
-  // if (!request)
-    // return nullptr;
+  JS::RootedObject request(cx, prepare_downstream_request(cx));
+  if (!request)
+    return nullptr;
 
   JS::RootedObject dec_count_handler(cx,
                                      create_internal_method<dec_pending_promise_count>(cx, self));
   if (!dec_count_handler)
     return nullptr;
 
-  // JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::Request), JS::ObjectValue(*request));
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::Request), JS::ObjectValue(*request));
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::Dispatch), JS::FalseValue());
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::State),
                       JS::Int32Value((int)State::unhandled));
@@ -530,7 +530,6 @@ JSObject *FetchEvent::create(JSContext *cx) {
                       JS::ObjectValue(*dec_count_handler));
 
   INSTANCE.init(cx, self);
-  self = INSTANCE;
   return self;
 }
 
