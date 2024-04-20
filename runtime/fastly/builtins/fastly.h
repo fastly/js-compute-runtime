@@ -54,10 +54,10 @@ public:
   static bool env_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool baseURL_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool baseURL_set(JSContext *cx, unsigned argc, JS::Value *vp);
-  // static bool defaultBackend_get(JSContext *cx, unsigned argc, JS::Value *vp);
-  // static bool defaultBackend_set(JSContext *cx, unsigned argc, JS::Value *vp);
-  // static bool allowDynamicBackends_get(JSContext *cx, unsigned argc, JS::Value *vp);
-  // static bool allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool defaultBackend_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool defaultBackend_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool allowDynamicBackends_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 
 } // namespace fastly::fastly

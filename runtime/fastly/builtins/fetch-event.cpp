@@ -16,6 +16,9 @@ using namespace std::literals::string_view_literals;
 using builtins::web::url::URL;
 using builtins::web::worker_location::WorkerLocation;
 using fastly::fastly::Fastly;
+using fastly::fetch::Response;
+using fastly::fetch::RequestOrResponse;
+using fastly::fetch::Headers;
 
 namespace fastly::fetch_event {
 
@@ -277,95 +280,87 @@ namespace {
 //   return true;
 // }
 
-// bool start_response(JSContext *cx, JS::HandleObject response_obj, bool streaming) {
-//   auto generic_response = Response::response_handle(response_obj);
-//   host_api::HttpResp* response;
+bool start_response(JSContext *cx, JS::HandleObject response_obj, bool streaming) {
+  auto response = Response::response_handle(response_obj);
+  auto body = RequestOrResponse::body_handle(response_obj);
 
-//   if (generic_response->is_incoming()) {
-//     auto incoming_response = static_cast<host_api::HttpIncomingResponse *>(generic_response);
-//     auto status = incoming_response->status();
-//     MOZ_RELEASE_ASSERT(!status.is_err(), "Incoming response must have a status code");
-//     auto headers = new host_api::HttpHeaders(*incoming_response->headers().unwrap());
-//     response = host_api::HttpResp::make(status.unwrap(), headers);
-//     auto *source_body = incoming_response->body().unwrap();
-//     auto *dest_body = response->body().unwrap();
-
-//     auto res = dest_body->append(ENGINE, source_body);
-//     if (auto *err = res.to_err()) {
-//       HANDLE_ERROR(cx, *err);
-//       return false;
-//     }
-//     MOZ_RELEASE_ASSERT(RequestOrResponse::mark_body_used(cx, response_obj));
-//   } else {
-//     response = static_cast<host_api::HttpResp *>(generic_response);
-//   }
-
-//   if (streaming && response->has_body()) {
-//     STREAMING_BODY = response->body().unwrap();
-//   }
-
-//   return send_response(response, FetchEvent::instance(),
-//                        streaming ? FetchEvent::State::responseStreaming
-//                                  : FetchEvent::State::responseDone);
-// }
+  auto res = response.send_downstream(body, streaming);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  return true;
+}
 
 // Steps in this function refer to the spec at
 // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
-// bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::HandleValue extra,
-//                                    JS::CallArgs args) {
-//   // Step 10.1
-//   // Note: the `then` handler is only invoked after all Promise resolution has
-//   // happened. (Even if there were multiple Promises to unwrap first.) That
-//   // means that at this point we're guaranteed to have the final value instead
-//   // of a Promise wrapping it, so either the value is a Response, or we have to
-//   // bail.
-//   if (!Response::is_instance(args.get(0))) {
-//     JS_ReportErrorUTF8(cx, "FetchEvent#respondWith must be called with a Response "
-//                            "object or a Promise resolving to a Response object as "
-//                            "the first argument");
-//     JS::RootedObject rejection(cx, PromiseRejectedWithPendingError(cx));
-//     if (!rejection)
-//       return false;
-//     args.rval().setObject(*rejection);
-//     return FetchEvent::respondWithError(cx, event);
-//   }
+bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::HandleValue extra,
+                                   JS::CallArgs args) {
+  // Step 10.1
+  // Note: the `then` handler is only invoked after all Promise resolution has
+  // happened. (Even if there were multiple Promises to unwrap first.) That
+  // means that at this point we're guaranteed to have the final value instead
+  // of a Promise wrapping it, so either the value is a Response, or we have to
+  // bail.
+  if (!Response::is_instance(args.get(0))) {
+    JS_ReportErrorUTF8(cx, "FetchEvent#respondWith must be called with a Response "
+                           "object or a Promise resolving to a Response object as "
+                           "the first argument");
+    JS::RootedObject rejection(cx, PromiseRejectedWithPendingError(cx));
+    if (!rejection)
+      return false;
+    args.rval().setObject(*rejection);
+    return FetchEvent::respondWithError(cx, event);
+  }
 
-//   // Step 10.2 (very roughly: the way we handle responses and their bodies is
-//   // very different.)
-//   JS::RootedObject response_obj(cx, &args[0].toObject());
+  // Step 10.2 (very roughly: the way we handle responses and their bodies is
+  // very different.)
+  JS::RootedObject response_obj(cx, &args[0].toObject());
 
-//   // Ensure that all headers are stored client-side, so we retain access to them
-//   // after sending the response off.
-//   // TODO(TS): restore proper headers handling
-//   // if (Response::is_upstream(response_obj)) {
-//   //   JS::RootedObject headers(cx);
-//   //   headers =
-//   //       RequestOrResponse::headers<Headers::Mode::ProxyToResponse>(cx, response_obj);
-//   //   if (!Headers::delazify(cx, headers))
-//   //     return false;
-//   // }
+  // Ensure that all headers are stored client-side, so we retain access to them
+  // after sending the response off.
+  if (Response::is_upstream(response_obj)) {
+    JS::RootedObject headers(cx);
+    headers =
+        RequestOrResponse::headers<Headers::Mode::ProxyToResponse>(cx, response_obj);
+    if (!Headers::delazify(cx, headers))
+      return false;
+  }
 
-//   bool streaming = false;
-//   if (!RequestOrResponse::maybe_stream_body(cx, response_obj, &streaming)) {
-//     return false;
-//   }
+  bool streaming = false;
+  if (Response::is_grip_upgrade(response_obj)) {
+    std::string backend(Response::grip_backend(response_obj));
 
-//   return start_response(cx, response_obj, streaming);
-// }
+    auto res = host_api::HttpReq::redirect_to_grip_proxy(backend);
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+    return true;
+  }
+
+  if (!RequestOrResponse::maybe_stream_body(cx, response_obj, &streaming)) {
+    return false;
+  }
+
+  FetchEvent::set_state(event, streaming ? FetchEvent::State::responseStreaming
+                                         : FetchEvent::State::responseDone);
+  return start_response(cx, response_obj, streaming);
+}
 
 // Steps in this function refer to the spec at
 // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
-// bool response_promise_catch_handler(JSContext *cx, JS::HandleObject event,
-//                                     JS::HandleValue promise_val, JS::CallArgs args) {
-//   JS::RootedObject promise(cx, &promise_val.toObject());
+bool response_promise_catch_handler(JSContext *cx, JS::HandleObject event,
+                                    JS::HandleValue promise_val, JS::CallArgs args) {
+  JS::RootedObject promise(cx, &promise_val.toObject());
 
-//   fprintf(stderr, "Error while running request handler: ");
-//   ENGINE->dump_promise_rejection(args.get(0), promise, stderr);
+  fprintf(stderr, "Error while running request handler: ");
+  ENGINE->dump_promise_rejection(args.get(0), promise, stderr);
 
-//   // TODO: verify that this is the right behavior.
-//   // Steps 9.1-2
-//   return FetchEvent::respondWithError(cx, event);
-// }
+  // TODO: verify that this is the right behavior.
+  // Steps 9.1-2
+  return FetchEvent::respondWithError(cx, event);
+}
 
 } // namespace
 
@@ -375,50 +370,51 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   // Coercion of argument `r` to a Promise<Response>
-  // JS::RootedObject response_promise(cx, JS::CallOriginalPromiseResolve(cx, args.get(0)));
-  // if (!response_promise)
-  //   return false;
+  JS::RootedObject response_promise(cx, JS::CallOriginalPromiseResolve(cx, args.get(0)));
+  if (!response_promise)
+    return false;
 
   // // Step 2
-  // if (!is_dispatching(self)) {
-  //   JS_ReportErrorUTF8(cx, "FetchEvent#respondWith must be called synchronously from "
-  //                          "within a FetchEvent handler");
-  //   return false;
-  // }
+  if (!is_dispatching(self)) {
+    JS_ReportErrorUTF8(cx, "FetchEvent#respondWith must be called synchronously from "
+                           "within a FetchEvent handler");
+    return false;
+  }
 
   // // Step 3
-  // if (state(self) != State::unhandled) {
-  //   JS_ReportErrorUTF8(cx, "FetchEvent#respondWith can't be called twice on the same event");
-  //   return false;
-  // }
+  if (state(self) != State::unhandled) {
+    JS_ReportErrorUTF8(cx, "FetchEvent#respondWith can't be called twice on the same event");
+    return false;
+  }
 
   // // Step 4
-  // add_pending_promise(cx, self, response_promise);
+  add_pending_promise(cx, self, response_promise);
 
   // // Steps 5-7 (very roughly)
-  // set_state(self, State::waitToRespond);
+  set_state(self, State::waitToRespond);
 
   // // Step 9 (continued in `response_promise_catch_handler` above)
-  // JS::RootedObject catch_handler(cx);
-  // JS::RootedValue extra(cx, JS::ObjectValue(*response_promise));
-  // catch_handler = create_internal_method<response_promise_catch_handler>(cx, self, extra);
-  // if (!catch_handler)
-  //   return false;
+  JS::RootedObject catch_handler(cx);
+  JS::RootedValue extra(cx, JS::ObjectValue(*response_promise));
+  catch_handler = create_internal_method<response_promise_catch_handler>(cx, self, extra);
+  if (!catch_handler)
+    return false;
 
   // // Step 10 (continued in `response_promise_then_handler` above)
-  // JS::RootedObject then_handler(cx);
-  // then_handler = create_internal_method<response_promise_then_handler>(cx, self);
-  // if (!then_handler)
-  //   return false;
+  JS::RootedObject then_handler(cx);
+  then_handler = create_internal_method<response_promise_then_handler>(cx, self);
+  if (!then_handler)
+    return false;
 
-  // if (!JS::AddPromiseReactions(cx, response_promise, then_handler, catch_handler))
-  //   return false;
+  if (!JS::AddPromiseReactions(cx, response_promise, then_handler, catch_handler))
+    return false;
 
-  // args.rval().setUndefined();
+  args.rval().setUndefined();
   return true;
 }
 
 bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
+  abort();
   MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
   set_state(self, State::responsedWithError);
 

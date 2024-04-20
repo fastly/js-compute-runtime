@@ -6,6 +6,7 @@
 #include "../../../StarlingMonkey/builtins/web/worker-location.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "../fastly.h"
+#include "fetch.h"
 #include "../fetch-event.h"
 #include "extension-api.h"
 
@@ -49,8 +50,6 @@ bool NativeStreamSource::stream_is_body(JSContext *cx, JS::HandleObject stream) 
 namespace fastly::fetch {
 
 namespace {
-
-api::Engine *ENGINE;
 
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
 
@@ -1080,6 +1079,25 @@ bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObj
 
   args.rval().setObjectOrNull(body_stream);
   return true;
+}
+
+host_api::HttpReq Request::request_handle(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  return host_api::HttpReq(
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::Request)).toInt32());
+}
+
+host_api::HttpPendingReq Request::pending_handle(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  host_api::HttpPendingReq res;
+
+  JS::Value handle_val =
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::PendingRequest));
+  if (handle_val.isInt32()) {
+    res = host_api::HttpPendingReq(handle_val.toInt32());
+  }
+
+  return res;
 }
 
 bool Request::is_downstream(JSObject *obj) {
@@ -2394,12 +2412,6 @@ bool Response::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return RequestOrResponse::body_get(cx, args, self, true);
 }
 
-host_api::HttpReq Request::request_handle(JSObject *obj) {
-  MOZ_ASSERT(is_instance(obj));
-  return host_api::HttpReq(
-      JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::Request)).toInt32());
-}
-
 bool Response::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   args.rval().setBoolean(RequestOrResponse::body_used(self));
@@ -2994,20 +3006,6 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::GripBackend),
                       JS::PrivateValue(std::move(backend.release())));
   return response;
-}
-
-bool install(api::Engine *engine) {
-  ENGINE = engine;
-  if (!Request::init_class(ENGINE->cx(), ENGINE->global())) {
-    return false;
-  }
-  if (!Response::init_class(ENGINE->cx(), ENGINE->global())) {
-    return false;
-  }
-  if (!Headers::init_class(ENGINE->cx(), ENGINE->global())) {
-    return false;
-  }
-  return true;
 }
 
 } // namespace fastly::fetch

@@ -51,7 +51,7 @@ bool enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp) {
 JS::PersistentRooted<JSObject *> Fastly::env;
 JS::PersistentRooted<JSObject *> Fastly::baseURL;
 JS::PersistentRooted<JSString *> Fastly::defaultBackend;
-bool allowDynamicBackends = false;
+bool Fastly::allowDynamicBackends = false;
 
 
 bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -267,42 +267,42 @@ bool Fastly::baseURL_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-// bool Fastly::defaultBackend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
-//   JS::CallArgs args = CallArgsFromVp(argc, vp);
-//   args.rval().setString(defaultBackend);
-//   return true;
-// }
+bool Fastly::defaultBackend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setString(defaultBackend);
+  return true;
+}
 
-// bool Fastly::defaultBackend_set(JSContext *cx, unsigned argc, JS::Value *vp) {
-//   JS::CallArgs args = CallArgsFromVp(argc, vp);
-//   JS::RootedString backend(cx, JS::ToString(cx, args.get(0)));
-//   if (!backend)
-//     return false;
+bool Fastly::defaultBackend_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  JS::RootedString backend(cx, JS::ToString(cx, args.get(0)));
+  if (!backend)
+    return false;
 
-//   defaultBackend = backend;
-//   args.rval().setUndefined();
-//   return true;
-// }
+  defaultBackend = backend;
+  args.rval().setUndefined();
+  return true;
+}
 
-// bool Fastly::allowDynamicBackends_get(JSContext *cx, unsigned argc, JS::Value *vp) {
-//   JS::CallArgs args = CallArgsFromVp(argc, vp);
-//   args.rval().setBoolean(allowDynamicBackends);
-//   return true;
-// }
+bool Fastly::allowDynamicBackends_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(allowDynamicBackends);
+  return true;
+}
 
-// bool Fastly::allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *vp) {
-//   JS::CallArgs args = CallArgsFromVp(argc, vp);
-//   allowDynamicBackends = JS::ToBoolean(args.get(0));
-//   args.rval().setUndefined();
-//   return true;
-// }
+bool Fastly::allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  allowDynamicBackends = JS::ToBoolean(args.get(0));
+  args.rval().setUndefined();
+  return true;
+}
 
 const JSPropertySpec Fastly::properties[] = {
     JS_PSG("env", env_get, JSPROP_ENUMERATE),
     JS_PSGS("baseURL", baseURL_get, baseURL_set, JSPROP_ENUMERATE),
-    // JS_PSGS("defaultBackend", defaultBackend_get, defaultBackend_set, JSPROP_ENUMERATE),
-    // JS_PSGS("allowDynamicBackends", allowDynamicBackends_get, allowDynamicBackends_set,
-            // JSPROP_ENUMERATE),
+    JS_PSGS("defaultBackend", defaultBackend_get, defaultBackend_set, JSPROP_ENUMERATE),
+    JS_PSGS("allowDynamicBackends", allowDynamicBackends_get, allowDynamicBackends_set,
+            JSPROP_ENUMERATE),
     JS_PS_END};
 
 bool install(api::Engine *engine) {

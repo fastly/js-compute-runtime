@@ -1,9 +1,9 @@
 /// <reference path="../../../../../types/index.d.ts" />
 /* eslint-env serviceworker */
 
-// import { routes } from "./routes.js";
-// import { env } from 'fastly:env';
-// import { fail } from "./assertions.js";
+import { routes } from "./routes.js";
+import { env } from 'fastly:env';
+import { fail } from "./assertions.js";
 
 import "./async-select.js"
 // import "./btoa.js"

@@ -48,19 +48,18 @@ void handle_incoming(host_api::Request req) {
     fflush(stdout);
   }
 
-  bool success = ENGINE->run_event_loop();
-
-  if (JS_IsExceptionPending(ENGINE->cx())) {
-    ENGINE->dump_pending_exception("evaluating code");
+  if (!ENGINE->run_event_loop()) {
+    if (JS_IsExceptionPending(ENGINE->cx())) {
+      ENGINE->dump_pending_exception("evaluating code");
+    }
     if (!FetchEvent::response_started(fetch_event)) {
       FetchEvent::respondWithError(ENGINE->cx(), fetch_event);
     }
     return;
   }
 
-  if (!success) {
-    fprintf(stderr, "Internal error");
-    return;
+  if (JS_IsExceptionPending(ENGINE->cx())) {
+    ENGINE->dump_pending_exception("evaluating code");
   }
 
   if (ENGINE->debug_logging_enabled() && ENGINE->has_pending_async_tasks()) {
