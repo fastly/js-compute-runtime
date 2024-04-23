@@ -1,24 +1,24 @@
 #include "fetch-event.h"
-#include "./fetch/request-response.h"
 #include "../../StarlingMonkey/builtins/web/url.h"
 #include "../../StarlingMonkey/builtins/web/worker-location.h"
-#include "encode.h"
 #include "../host-api/fastly.h"
 #include "../host-api/host_api_fastly.h"
+#include "./fetch/request-response.h"
+#include "encode.h"
 #include "fastly.h"
 
 #include <iostream>
 #include <memory>
 
-using std::chrono::system_clock;
 using std::chrono::microseconds;
+using std::chrono::system_clock;
 using namespace std::literals::string_view_literals;
 using builtins::web::url::URL;
 using builtins::web::worker_location::WorkerLocation;
 using fastly::fastly::Fastly;
-using fastly::fetch::Response;
-using fastly::fetch::RequestOrResponse;
 using fastly::fetch::Headers;
+using fastly::fetch::RequestOrResponse;
+using fastly::fetch::Response;
 
 namespace fastly::fetch_event {
 
@@ -165,8 +165,7 @@ bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::Ht
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::URL), JS::StringValue(url));
 
   // Set the URL for `globalThis.location` to the client request's URL.
-  JS::RootedObject url_instance(
-      cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
+  JS::RootedObject url_instance(cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
   if (!url_instance) {
     return false;
   }
@@ -181,13 +180,11 @@ bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::Ht
   // Note that this only happens if baseURL hasn't already been set to another
   // value explicitly.
   if (!Fastly::baseURL.get()) {
-    JS::RootedObject url_instance(
-        cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
+    JS::RootedObject url_instance(cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
     if (!url_instance)
       return false;
 
-    Fastly::baseURL = URL::create(
-        cx, url_instance, URL::origin(cx, WorkerLocation::url));
+    Fastly::baseURL = URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
     if (!Fastly::baseURL)
       return false;
   }
@@ -227,7 +224,8 @@ bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::Ht
 //   // that are not GET or HEAD as having a body, which might just be 0-length.
 //   // It's not entirely clear what else we even could do here though.
 //   if (!is_get && !is_head) {
-//     JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::HasBody), JS::TrueValue());
+//     JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::HasBody),
+//     JS::TrueValue());
 //   }
 
 //   auto uri_str = req->url();
@@ -321,8 +319,7 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   // after sending the response off.
   if (Response::is_upstream(response_obj)) {
     JS::RootedObject headers(cx);
-    headers =
-        RequestOrResponse::headers<Headers::Mode::ProxyToResponse>(cx, response_obj);
+    headers = RequestOrResponse::headers<Headers::Mode::ProxyToResponse>(cx, response_obj);
     if (!Headers::delazify(cx, headers))
       return false;
   }

@@ -9,8 +9,8 @@
 #pragma clang diagnostic pop
 
 #include "../../../StarlingMonkey/runtime/allocator.h"
-#include "fastly_world.h"
 #include "../fastly.h"
+#include "fastly_world.h"
 
 // Ensure that all the things we want to use the hostcall buffer for actually
 // fit into the buffer.

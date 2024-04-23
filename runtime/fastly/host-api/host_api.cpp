@@ -61,57 +61,50 @@ Response make_response(fastly_compute_at_edge_http_types_response_t &resp) {
 } // namespace
 
 // --- <StarlingMonkey HOST API> ---
-  Result<HostBytes> Random::get_bytes(size_t num_bytes) {
-    Result<HostBytes> res;
+Result<HostBytes> Random::get_bytes(size_t num_bytes) {
+  Result<HostBytes> res;
 
-    auto ret = HostBytes::with_capacity(num_bytes);
-    auto err =
-        fastly::random_get(reinterpret_cast<uint32_t>(static_cast<void *>(ret.begin())), num_bytes);
-    if (err != 0) {
-      res.emplace_err(err);
-    } else {
-      res.emplace(std::move(ret));
-    }
-
-    return res;
+  auto ret = HostBytes::with_capacity(num_bytes);
+  auto err =
+      fastly::random_get(reinterpret_cast<uint32_t>(static_cast<void *>(ret.begin())), num_bytes);
+  if (err != 0) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(std::move(ret));
   }
 
-  Result<uint32_t> Random::get_u32() {
-    Result<uint32_t> res;
+  return res;
+}
 
-    uint32_t storage;
-    auto err = fastly::random_get(reinterpret_cast<uint32_t>(static_cast<void *>(&storage)),
-                                  sizeof(storage));
-    if (err != 0) {
-      res.emplace_err(err);
-    } else {
-      res.emplace(storage);
-    }
+Result<uint32_t> Random::get_u32() {
+  Result<uint32_t> res;
 
-    return res;
+  uint32_t storage;
+  auto err = fastly::random_get(reinterpret_cast<uint32_t>(static_cast<void *>(&storage)),
+                                sizeof(storage));
+  if (err != 0) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(storage);
   }
 
-  uint64_t MonotonicClock::now() {
-    return 0;
-  }
+  return res;
+}
 
-  uint64_t MonotonicClock::resolution() {
-    return 1000000;
-  }
+uint64_t MonotonicClock::now() { return 0; }
 
-  int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) {
-    return 0;
-  }
+uint64_t MonotonicClock::resolution() { return 1000000; }
 
-  void MonotonicClock::unsubscribe(const int32_t handle_id) {
-  }
+int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) { return 0; }
+
+void MonotonicClock::unsubscribe(const int32_t handle_id) {}
 
 // --- </StarlingMonkey Host API> ---
 
 // The host interface makes the assumption regularly that uint32_t is sufficient space to store a
 // pointer.
 static_assert(sizeof(uint32_t) == sizeof(void *));
-  
+
 static_assert(std::is_same_v<HttpVersion, fastly_compute_at_edge_http_types_http_version_t>);
 static_assert(std::is_same_v<typeof(CacheOverrideTag::value),
                              fastly_compute_at_edge_http_req_cache_override_tag_t>);
@@ -1213,7 +1206,9 @@ Result<std::optional<HttpBody>> ObjectStorePendingLookup::wait() {
   return res;
 }
 
-FastlyAsyncTask ObjectStorePendingLookup::async_handle() const { return FastlyAsyncTask{this->handle}; }
+FastlyAsyncTask ObjectStorePendingLookup::async_handle() const {
+  return FastlyAsyncTask{this->handle};
+}
 
 Result<std::optional<HostString>> Secret::plaintext() const {
   Result<std::optional<HostString>> res;
@@ -1625,8 +1620,9 @@ const std::optional<std::string> FastlySendError::message() const {
   /// hostname. The fields dns_error_rcode and dns_error_info_code may be set in the
   /// send_error_detail.
   case dns_error: {
-    return "DNS error (rcode={}, info_code={})"/*, this->dns_error_rcode,
-                       this->dns_error_info_code*/;
+    return "DNS error (rcode={}, info_code={})" /*, this->dns_error_rcode,
+                        this->dns_error_info_code*/
+        ;
   }
   /// The system cannot determine which backend to use, or the specified backend was invalid.
   case destination_not_found: {
@@ -1714,7 +1710,7 @@ const std::optional<std::string> FastlySendError::message() const {
   /// The system received a TLS alert from the backend. The field tls_alert_id may be set in
   /// the send_error_detail.
   case tls_alert_received: {
-    return /*fmt::format(*/"TLS alert received (alert_id={})"/*, this->tls_alert_id)*/;
+    return /*fmt::format(*/ "TLS alert received (alert_id={})" /*, this->tls_alert_id)*/;
   }
   /// The system encountered a TLS error when communicating with the backend, either during
   /// the handshake or afterwards.

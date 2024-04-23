@@ -232,6 +232,6 @@ public:
   static void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code);
 };
 
-} // namespace fastly::request_response
+} // namespace fastly::fetch
 
 #endif

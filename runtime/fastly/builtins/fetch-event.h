@@ -1,10 +1,10 @@
 #ifndef FASTLY_FETCH_EVENT_H
 #define FASTLY_FETCH_EVENT_H
 
+#include "../host-api/host_api_fastly.h"
 #include "builtin.h"
 #include "extension-api.h"
 #include "host_api.h"
-#include "../host-api/host_api_fastly.h"
 
 using builtins::BuiltinNoConstructor;
 
@@ -75,6 +75,6 @@ public:
 
 bool install(api::Engine *engine);
 
-} // namespace builtins::web::fetch::fetch_event
+} // namespace fastly::fetch_event
 
 #endif

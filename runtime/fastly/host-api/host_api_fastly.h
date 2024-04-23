@@ -26,16 +26,16 @@ struct JSErrorFormatString;
 namespace fastly {
 
 enum FastlyAPIError {
-  #define MSG_DEF(name, count, exception, format) name,
-  #include "./error_numbers.msg"
-  #undef MSG_DEF
+#define MSG_DEF(name, count, exception, format) name,
+#include "./error_numbers.msg"
+#undef MSG_DEF
   JSErrNum_Limit
 };
 
 const JSErrorFormatString fastly_ErrorFormatString[JSErrNum_Limit] = {
-  #define MSG_DEF(name, count, exception, format) {#name, format, count, exception},
-  #include "./error_numbers.msg"
-  #undef MSG_DEF
+#define MSG_DEF(name, count, exception, format) {#name, format, count, exception},
+#include "./error_numbers.msg"
+#undef MSG_DEF
 };
 
 } // namespace fastly

@@ -6,9 +6,9 @@
 #include "../../../StarlingMonkey/builtins/web/worker-location.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "../fastly.h"
-#include "fetch.h"
 #include "../fetch-event.h"
 #include "extension-api.h"
+#include "fetch.h"
 
 #include "js/Array.h"
 #include "js/ArrayBuffer.h"
@@ -24,14 +24,14 @@
 #include "js/experimental/TypedData.h"
 #pragma clang diagnostic pop
 
+using builtins::web::base64::convertJSValueToByteString;
 using builtins::web::streams::NativeStreamSource;
 using builtins::web::streams::TransformStream;
 using builtins::web::url::URL;
 using builtins::web::url::URLSearchParams;
 using builtins::web::worker_location::WorkerLocation;
-using builtins::web::base64::convertJSValueToByteString;
-using fastly::fetch_event::FetchEvent;
 using fastly::fastly::FastlyGetErrorMessage;
+using fastly::fetch_event::FetchEvent;
 
 namespace builtins::web::streams {
 
@@ -45,7 +45,7 @@ bool NativeStreamSource::stream_is_body(JSContext *cx, JS::HandleObject stream) 
          fastly::fetch::RequestOrResponse::is_instance(owner(stream_source));
 }
 
-} // builtins::web::streams
+} // namespace builtins::web::streams
 
 namespace fastly::fetch {
 
@@ -589,7 +589,8 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
   // The read operation can return anything since this stream comes from the guest
   // If it is not a UInt8Array -- reject with a TypeError
   if (!val.isObject() || !JS_IsUint8Array(&val.toObject())) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_RESPONSE_VALUE_NOT_UINT8ARRAY);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_RESPONSE_VALUE_NOT_UINT8ARRAY);
     JS::RootedObject result_promise(cx);
     result_promise =
         &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise)).toObject();
@@ -2434,7 +2435,8 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedObject parsedURL(cx, URL::create(cx, urlInstance, url, WorkerLocation::url));
   // 2. If parsedURL is failure, then throw a TypeError.
   if (!parsedURL) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_RESPONSE_REDIRECT_INVALID_URI);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_RESPONSE_REDIRECT_INVALID_URI);
     return false;
   }
   JS::RootedValue url_val(cx, JS::ObjectValue(*parsedURL));
@@ -2454,7 +2456,8 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
   }
   if (status != 301 && status != 302 && status != 303 && status != 307 && status != 308) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_RESPONSE_REDIRECT_INVALID_STATUS);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_RESPONSE_REDIRECT_INVALID_STATUS);
     return false;
   }
   // 4. Let responseObject be the result of creating a Response object, given a new response,
@@ -2558,7 +2561,8 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   if (!callbackCalled) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_RESPONSE_JSON_INVALID_VALUE);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_RESPONSE_JSON_INVALID_VALUE);
     return false;
   }
   // 2. Let body be the result of extracting bytes.

@@ -1,13 +1,13 @@
 #ifndef FASTLY_FASTLY_H
 #define FASTLY_FASTLY_H
 
+#include "../../StarlingMonkey/builtins/web/url.h"
+#include "../host-api/host_api_fastly.h"
+#include "./fetch/request-response.h"
 #include "builtin.h"
 #include "extension-api.h"
-#include "host_api.h"
-#include "../host-api/host_api_fastly.h"
 #include "fastly.h"
-#include "./fetch/request-response.h"
-#include "../../StarlingMonkey/builtins/web/url.h"
+#include "host_api.h"
 
 using namespace builtins;
 

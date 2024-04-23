@@ -17,11 +17,11 @@
 #include "js/experimental/TypedData.h"
 #pragma clang diagnostic pop
 
+#include "../host-api/host_api_fastly.h"
+#include "./fetch/request-response.h"
 #include "backend.h"
 #include "builtin.h"
 #include "encode.h"
-#include "../host-api/host_api_fastly.h"
-#include "./fetch/request-response.h"
 
 using fastly::fetch::RequestOrResponse;
 

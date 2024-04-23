@@ -3,6 +3,6 @@
 
 namespace fastly::fetch {
 namespace {
-  api::Engine *ENGINE;
+api::Engine *ENGINE;
 }
 } // namespace fastly::fetch

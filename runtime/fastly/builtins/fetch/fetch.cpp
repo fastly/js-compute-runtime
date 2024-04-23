@@ -1,15 +1,15 @@
-#include "./request-response.h"
-#include "./headers.h"
-#include "../fetch-event.h"
-#include "../fastly.h"
-#include "encode.h"
-#include "extension-api.h"
 #include "fetch.h"
 #include "../backend.h"
+#include "../fastly.h"
+#include "../fetch-event.h"
+#include "./headers.h"
+#include "./request-response.h"
+#include "encode.h"
+#include "extension-api.h"
 
-using fastly::fetch::Request;
-using fastly::fastly::Fastly;
 using fastly::backend::Backend;
+using fastly::fastly::Fastly;
+using fastly::fetch::Request;
 
 namespace fastly::fetch {
 

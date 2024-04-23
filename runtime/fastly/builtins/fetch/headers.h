@@ -75,6 +75,6 @@ public:
                           JS::HandleObject owner, bool immutable);
 };
 
-} // namespace builtins
+} // namespace fastly::fetch
 
 #endif

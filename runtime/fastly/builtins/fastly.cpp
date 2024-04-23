@@ -4,11 +4,11 @@
 #pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
 #include "js/experimental/TypedData.h" // used in "js/Conversions.h"
 #pragma clang diagnostic pop
-#include "encode.h"
 #include "../../StarlingMonkey/builtins/web/url.h"
+#include "encode.h"
+#include "fastly.h"
 #include "js/Conversions.h"
 #include "js/JSON.h"
-#include "fastly.h"
 
 using builtins::web::url::URL;
 using fastly::fastly::Fastly;
@@ -19,9 +19,7 @@ bool DEBUG_LOGGING_ENABLED = false;
 
 } // namespace
 
-bool debug_logging_enabled() {
-  return DEBUG_LOGGING_ENABLED;
-}
+bool debug_logging_enabled() { return DEBUG_LOGGING_ENABLED; }
 
 namespace fastly::fastly {
 
@@ -52,7 +50,6 @@ JS::PersistentRooted<JSObject *> Fastly::env;
 JS::PersistentRooted<JSObject *> Fastly::baseURL;
 JS::PersistentRooted<JSString *> Fastly::defaultBackend;
 bool Fastly::allowDynamicBackends = false;
-
 
 bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -180,8 +177,8 @@ JSObject *Env::create(JSContext *cx) {
 
 //   auto request_value = args.get(0);
 //   if (!Request::is_instance(request_value)) {
-//     JS_ReportErrorUTF8(cx, "createFanoutHandoff: request parameter must be an instance of Request");
-//     return false;
+//     JS_ReportErrorUTF8(cx, "createFanoutHandoff: request parameter must be an instance of
+//     Request"); return false;
 //   }
 
 //   auto response_handle = host_api::HttpResp::make();
@@ -195,7 +192,8 @@ JSObject *Env::create(JSContext *cx) {
 //     return false;
 //   }
 
-//   JS::RootedObject response_instance(cx, JS_NewObjectWithGivenProto(cx, &builtins::Response::class_,
+//   JS::RootedObject response_instance(cx, JS_NewObjectWithGivenProto(cx,
+//   &builtins::Response::class_,
 //                                                                     builtins::Response::proto_obj));
 //   if (!response_instance) {
 //     return false;
@@ -331,7 +329,6 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-
   Fastly::baseURL.init(ENGINE->cx());
   Fastly::defaultBackend.init(ENGINE->cx());
 
@@ -352,7 +349,8 @@ bool install(api::Engine *engine) {
       // options.getExperimentalHighResolutionTimeMethodsEnabled() ? nowfn : end,
       end};
 
-  return JS_DefineFunctions(ENGINE->cx(), fastly, methods) && JS_DefineProperties(ENGINE->cx(), fastly, Fastly::properties);
+  return JS_DefineFunctions(ENGINE->cx(), fastly, methods) &&
+         JS_DefineProperties(ENGINE->cx(), fastly, Fastly::properties);
 }
 
 } // namespace fastly::fastly

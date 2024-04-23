@@ -1,8 +1,8 @@
 #include "./headers.h"
-#include "./request-response.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "../../../StarlingMonkey/runtime/sequence.hpp"
 #include "../../host-api/host_api_fastly.h"
+#include "./request-response.h"
 #include "js/Conversions.h"
 #include <iostream>
 

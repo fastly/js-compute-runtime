@@ -1,17 +1,16 @@
+#include "./builtins/fetch-event.h"
+#include "./host-api/fastly.h"
+#include "./host-api/host_api_fastly.h"
 #include "extension-api.h"
 #include "host_api.h"
-#include "./host-api/host_api_fastly.h"
-#include "./host-api/fastly.h"
-#include "./builtins/fetch-event.h"
 #include <wasi/libc-environ.h>
 
+using fastly::fetch_event::FetchEvent;
 using std::chrono::duration_cast;
 using std::chrono::microseconds;
 using std::chrono::system_clock;
-using fastly::fetch_event::FetchEvent;
 
-namespace fastly::runtime
-{
+namespace fastly::runtime {
 
 api::Engine *ENGINE;
 
@@ -30,7 +29,7 @@ void handle_incoming(host_api::Request req) {
 
   if (ENGINE->debug_logging_enabled()) {
     printf("Running JS handleRequest function for Fastly Compute service version %s\n",
-          getenv("FASTLY_SERVICE_VERSION"));
+           getenv("FASTLY_SERVICE_VERSION"));
     fflush(stdout);
   }
 
@@ -84,12 +83,12 @@ void handle_incoming(host_api::Request req) {
   double diff = duration_cast<microseconds>(end - start).count();
   if (ENGINE->debug_logging_enabled()) {
     printf("Done. Total request processing time: %fms. Total compute time: %fms\n", diff / 1000,
-          total_compute / 1000);
+           total_compute / 1000);
   }
   return;
 }
 
-} // namespace fastly
+} // namespace fastly::runtime
 
 // Fastly uses main to then pull the backend request
 int main(int argc, const char *argv[]) {
