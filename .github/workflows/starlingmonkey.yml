@@ -1,4 +1,4 @@
-name: CI
+name: StarlingMonkey
 concurrency:
   group: ${{ github.head_ref }}-${{ github.workflow}}
   cancel-in-progress: true
