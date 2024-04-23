@@ -1,13 +1,17 @@
 {
-  "GET /btoa": {
-    "environments": ["viceroy"],
+  "GET /async-select/hello": {
+    "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
-      "pathname": "/btoa"
+      "pathname": "/async-select/hello"
     },
     "downstream_response": {
       "status": 200,
-      "body": "ok"
+      "headers": [
+        ["FooName", "FooValue"],
+        ["BarName", "BarValue"]
+      ],
+      "body": "pong"
     }
   },
   "GET /btoa": {

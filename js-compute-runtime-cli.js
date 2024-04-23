@@ -38,7 +38,7 @@ if (version) {
     output,
     wasmEngine,
     enableExperimentalHighResolutionTimeMethods,
-    false,
+    enablePBL,
     enableExperimentalTopLevelAwait,
     starlingMonkey
   );

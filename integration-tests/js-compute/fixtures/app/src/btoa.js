@@ -737,7 +737,7 @@ routes.set('/btoa', () => {
     if (error) { return error; }
     error = assertThrows(() => atob("--"))
     if (error) { return error; }
-    error = assertThrows(() => atob("__"))
+    error = assertThrows(() => atob("--"))
     if (error) { return error; }
   }
 

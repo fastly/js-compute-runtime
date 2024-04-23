@@ -22,13 +22,18 @@ export async function parseInputs(cliInputs) {
 
   let useComponent = () => {
     component = true;
+    if (starlingMonkey) {
+      noStarlingMonkeyComponent();
+    }
     wasmEngine = join(__dirname, "../js-compute-runtime-component.wasm");
   };
   let useStarlingMonkey = () => {
     starlingMonkey = true;
+    if (component) {
+      noStarlingMonkeyComponent();
+    }
     wasmEngine = wasmEngine = join(__dirname, "../starling.wasm");
   };
-  useStarlingMonkey();
 
   // eslint-disable-next-line no-cond-assign
   loop: while ((cliInput = cliInputs.shift())) {
@@ -56,7 +61,7 @@ export async function parseInputs(cliInputs) {
       case "--help": {
         return { help: true };
       }
-      case "--starling-monkey": {
+      case "--starlingmonkey": {
         useStarlingMonkey();
         break;
       }
@@ -135,4 +140,9 @@ export async function parseInputs(cliInputs) {
     starlingMonkey,
     wasmEngine,
   };
+}
+
+function noStarlingMonkeyComponent () {
+  console.error('StarlingMonkey does not yet support a component build');
+  process.exit(1);
 }

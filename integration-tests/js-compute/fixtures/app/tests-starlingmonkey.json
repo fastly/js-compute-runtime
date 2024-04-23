@@ -1,0 +1,13 @@
+{
+  "GET /btoa": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/btoa"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  }
+}
