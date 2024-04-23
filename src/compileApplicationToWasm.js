@@ -108,7 +108,7 @@ export async function compileApplicationToWasm(
       [
         "--inherit-env=true",
         "--allow-wasi",
-        `--dir=${resolve('/')}`,
+        `--dir=${starlingMonkey ? resolve('/') : '.'}`,
         `--wasm-bulk-memory=true`,
         "-r _start=wizer.resume",
         `-o=${output}`,

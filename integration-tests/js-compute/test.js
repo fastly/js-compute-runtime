@@ -117,12 +117,12 @@ if (starlingmonkey) {
     const { default: testsStarlingMonkey } = await import(join(fixturePath, 'tests-starlingmonkey.json'), { assert: { type: 'json' } });
     const testCnt = Object.keys(tests).length;
     const starlingTestCnt = Object.keys(testsStarlingMonkey).length;
-    core.summary.addRaw(`
+    await core.summary.addRaw(`
 \`\`\`mermaid
 pie title StarlingMonkey 🐦🐵 Test Status 🚀🚀
     "Remaining Tests" : ${testCnt - starlingTestCnt}
     "StarlingMonkey Tests" : ${starlingTestCnt}
-\`\`\``, true);
+\`\`\``, true).write();
     tests = testsStarlingMonkey;
 }
 
