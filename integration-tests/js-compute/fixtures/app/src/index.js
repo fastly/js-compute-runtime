@@ -5,8 +5,8 @@ import { routes } from "./routes.js";
 import { env } from 'fastly:env';
 import { fail } from "./assertions.js";
 
-import "./async-select.js"
-// import "./btoa.js"
+// import "./async-select.js"
+import "./btoa.js"
 // import "./byob.js"
 // import "./byte-repeater.js"
 // import "./cache-override.js"
