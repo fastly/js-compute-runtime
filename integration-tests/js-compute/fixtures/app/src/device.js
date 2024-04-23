@@ -5,6 +5,8 @@ import { pass, assert, assertThrows } from "./assertions.js";
 import * as device from 'fastly:device';
 import { routes } from "./routes.js";
 
+{
+
 const { Device } = device;
 
 let error;
@@ -310,3 +312,4 @@ routes.set("/device/interface", () => {
     });
 }
 
+}

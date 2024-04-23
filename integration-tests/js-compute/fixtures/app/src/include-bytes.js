@@ -2,6 +2,7 @@ import { routes } from "./routes.js";
 import { assert, pass, fail } from "./assertions.js";
 import * as experimental from "fastly:experimental";
 
+{
 const { includeBytes } = experimental;
 
 let message, err
@@ -19,3 +20,5 @@ routes.set("/includeBytes", () => {
   if (error) { return error; }
   return pass();
 });
+
+}

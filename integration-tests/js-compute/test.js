@@ -115,7 +115,7 @@ if (starlingmonkey) {
     const { default: testsStarlingMonkey } = await import(join(fixturePath, 'tests-starlingmonkey.json'), { assert: { type: 'json' } });
     const testCnt = Object.keys(tests).length;
     const starlingTestCnt = testsStarlingMonkey.length;
-    if (!local) {
+    if (process.env.GITHUB_ACTIONS) {
         await core.summary
         .addHeading('StarlingMonkey Progress')
         .addRaw(`

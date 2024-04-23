@@ -5,6 +5,8 @@ import { pass, assert, assertThrows } from "./assertions.js";
 import * as edgeRateLimiter from 'fastly:edge-rate-limiter';
 import { routes, isRunningLocally } from "./routes.js";
 
+{
+
 const { RateCounter, PenaltyBox, EdgeRateLimiter } = edgeRateLimiter;
 
 let error;
@@ -1243,4 +1245,6 @@ let error;
       return pass('ok')
     });
   }
+}
+
 }

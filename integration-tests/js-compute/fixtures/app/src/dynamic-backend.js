@@ -5,6 +5,8 @@ import * as experimental from "fastly:experimental";
 import { pass, assert, assertDoesNotThrow, assertThrows, assertRejects, assertResolves } from "./assertions.js";
 import { isRunningLocally, routes } from "./routes.js";
 
+{
+
 const { Backend } = backend;
 const { CacheOverride } = cacheOverride;
 const { allowDynamicBackends } = experimental;
@@ -1625,4 +1627,6 @@ function createValidFastlyBackend() {
       dontPool: true,
     }
   );
+}
+
 }
