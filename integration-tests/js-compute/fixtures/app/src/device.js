@@ -5,10 +5,6 @@ import { pass, assert, assertThrows } from "./assertions.js";
 import * as device from 'fastly:device';
 import { routes } from "./routes.js";
 
-{
-
-const { Device } = device;
-
 let error;
 routes.set("/device/interface", () => {
     let actual = Reflect.ownKeys(Device)
@@ -310,6 +306,4 @@ routes.set("/device/interface", () => {
 
         return pass('ok')
     });
-}
-
 }

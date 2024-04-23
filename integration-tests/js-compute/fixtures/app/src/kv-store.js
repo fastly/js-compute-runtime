@@ -1,10 +1,7 @@
 /* globals KVStoreEntry */
 import { pass, assert, assertThrows, assertRejects, assertResolves } from "./assertions.js";
-import * as kvStore from "fastly:kv-store";
+import { KVStore } from "fastly:kv-store";
 import { routes, isRunningLocally } from "./routes.js";
-
-{
-const { KVStore } = kvStore;
 
 // KVStore
 {
@@ -1307,6 +1304,4 @@ async function streamToString(stream) {
         }
         string += decoder.decode(value)
     }
-}
-
 }

@@ -1,10 +1,7 @@
 /* eslint-env serviceworker */
 
-import * as dictionary from 'fastly:dictionary'
+import { Dictionary } from 'fastly:dictionary'
 import { routes } from "./routes.js";
-
-{
-const { Dictionary } = dictionary;
 
 // Dictionary
 {
@@ -424,6 +421,4 @@ function deepEqual(a, b) {
     }
   }
   return typeA === typeB;
-}
-
 }

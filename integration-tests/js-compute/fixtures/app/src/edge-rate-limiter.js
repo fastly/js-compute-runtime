@@ -2,12 +2,8 @@
 /* eslint-env serviceworker */
 
 import { pass, assert, assertThrows } from "./assertions.js";
-import * as edgeRateLimiter from 'fastly:edge-rate-limiter';
+import { RateCounter, PenaltyBox, EdgeRateLimiter } from 'fastly:edge-rate-limiter';
 import { routes, isRunningLocally } from "./routes.js";
-
-{
-
-const { RateCounter, PenaltyBox, EdgeRateLimiter } = edgeRateLimiter;
 
 let error;
 // RateCounter
@@ -1245,6 +1241,4 @@ let error;
       return pass('ok')
     });
   }
-}
-
 }
