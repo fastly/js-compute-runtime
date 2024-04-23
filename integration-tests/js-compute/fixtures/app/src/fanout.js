@@ -1,6 +1,7 @@
 import { pass, assert, assertDoesNotThrow, assertThrows } from "./assertions.js";
 import { routes } from "./routes.js";
-import { createFanoutHandoff } from "fastly:fanout";
+import * as fanout from "fastly:fanout";
+const { createFanoutHandoff } = fanout;
 
 let error;
 routes.set("/createFanoutHandoff", () => {

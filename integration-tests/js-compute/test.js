@@ -68,11 +68,9 @@ await copyFile(join(fixturePath, 'fastly.toml.in'), join(fixturePath, 'fastly.to
 const config = TOML.parse(await readFile(join(fixturePath, 'fastly.toml'), 'utf-8'))
 config.name = serviceName;
 if (starlingmonkey) {
-    const buildArgs = config.scripts.build.split(' ');
-    buildArgs.pop();
-    buildArgs.push('--starlingmonkey');
-    buildArgs.push('src/index-starlingmonkey.js')
-    config.scripts.build = buildArgs.join(' ');
+    const buildArgs = config.scripts.build.split(' ')
+    buildArgs.splice(-1, null, '--starlingmonkey')
+    config.scripts.build = buildArgs.join(' ')
 }
 await writeFile(join(fixturePath, 'fastly.toml'), TOML.stringify(config), 'utf-8')
 if (!local) {
@@ -116,17 +114,19 @@ let { default: tests } = await import(join(fixturePath, 'tests.json'), { assert:
 if (starlingmonkey) {
     const { default: testsStarlingMonkey } = await import(join(fixturePath, 'tests-starlingmonkey.json'), { assert: { type: 'json' } });
     const testCnt = Object.keys(tests).length;
-    const starlingTestCnt = Object.keys(testsStarlingMonkey).length;
-    await core.summary
-    .addHeading('StarlingMonkey Progress')
-    .addRaw(`
+    const starlingTestCnt = testsStarlingMonkey.length;
+    if (!local) {
+        await core.summary
+        .addHeading('StarlingMonkey Progress')
+        .addRaw(`
 \`\`\`mermaid
 pie showData
     title 🐦🐵 Test Progress 🚀🚀
     "Remaining Tests" : ${testCnt - starlingTestCnt}
     "StarlingMonkey Tests" : ${starlingTestCnt}
 \`\`\``, true).write();
-    tests = testsStarlingMonkey;
+    }
+    tests = Object.fromEntries(Object.entries(tests).filter(([key]) => testsStarlingMonkey.includes(key)));
 }
 
 core.startGroup('Running tests')

@@ -328,6 +328,49 @@ bool install(api::Engine *engine) {
   if (!ENGINE->define_builtin_import("fastly:env", env_builtin_val)) {
     return false;
   }
+  // TODO: these are just placeholders for now
+  if (!ENGINE->define_builtin_import("fastly:backend", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:body", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:cache", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:cache-override", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:config-store", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:device", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:dictionary", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:edge-rate-limiter", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:experimental", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:fanout", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:geolocation", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:kv-store", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:logger", env_builtin_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:secret-store", env_builtin_val)) {
+    return false;
+  }
 
   Fastly::baseURL.init(ENGINE->cx());
   Fastly::defaultBackend.init(ENGINE->cx());

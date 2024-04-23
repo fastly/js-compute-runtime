@@ -2,8 +2,10 @@
 /* eslint-env serviceworker */
 
 import { pass, assert, assertThrows } from "./assertions.js";
-import { Device } from 'fastly:device';
+import * as device from 'fastly:device';
 import { routes } from "./routes.js";
+
+const { Device } = device;
 
 let error;
 routes.set("/device/interface", () => {

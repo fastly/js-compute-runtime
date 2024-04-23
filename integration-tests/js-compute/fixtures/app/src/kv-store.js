@@ -1,7 +1,8 @@
 /* globals KVStoreEntry */
 import { pass, assert, assertThrows, assertRejects, assertResolves } from "./assertions.js";
-import { KVStore } from "fastly:kv-store";
+import * as kvStore from "fastly:kv-store";
 import { routes, isRunningLocally } from "./routes.js";
+const { KVStore } = kvStore;
 // KVStore
 {
     routes.set("/kv-store/exposed-as-global", async () => {

@@ -1,7 +1,9 @@
 /* eslint-env serviceworker */
 
-import { Dictionary } from 'fastly:dictionary'
+import * as dictionary from 'fastly:dictionary'
 import { routes } from "./routes.js";
+
+const { Dictionary } = dictionary;
 
 // Dictionary
 {
