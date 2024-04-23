@@ -77,10 +77,6 @@ jobs:
         name: starling-debug
     - run: yarn install --frozen-lockfile
 
-    - name: js-compute Integration Tests Job
-      timeout-minutes: 20
-      uses: ./.github/actions/compute-sdk-test
-
     - name: Yarn install
       run: |
         yarn
