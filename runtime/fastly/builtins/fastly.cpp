@@ -328,7 +328,7 @@ bool install(api::Engine *engine) {
   if (!ENGINE->define_builtin_import("fastly:env", env_builtin_val)) {
     return false;
   }
-  // TODO: these are just placeholders for now
+  // TODO: these are just placeholder shapes for now
   RootedObject backend_backend(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
   RootedValue backend_backend_val(ENGINE->cx(), JS::ObjectValue(*backend_backend));
   if (!JS_SetProperty(ENGINE->cx(), backend_backend, "Backend", backend_backend_val)) {
@@ -379,10 +379,20 @@ bool install(api::Engine *engine) {
   if (!ENGINE->define_builtin_import("fastly:edge-rate-limiter", edge_rate_limiter_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:experimental", env_builtin_val)) {
+  RootedObject experimental(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
+  RootedValue experimental_val(ENGINE->cx(), JS::ObjectValue(*experimental));
+  if (!JS_SetProperty(ENGINE->cx(), experimental, "includeBytes", experimental_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:fanout", env_builtin_val)) {
+  if (!ENGINE->define_builtin_import("fastly:experimental", experimental_val)) {
+    return false;
+  }
+  RootedObject fanout(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
+  RootedValue fanout_val(ENGINE->cx(), JS::ObjectValue(*fanout));
+  if (!JS_SetProperty(ENGINE->cx(), fanout, "createFanoutHandoff", fanout_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:fanout", fanout_val)) {
     return false;
   }
   if (!ENGINE->define_builtin_import("fastly:geolocation", env_builtin_val)) {
