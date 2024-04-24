@@ -198,6 +198,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
 }
 core.endGroup()
 
+console.log('Test results')
 core.startGroup('Test results')
 let passed = 0;
 const failed = [];

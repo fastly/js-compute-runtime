@@ -2,7 +2,7 @@
 /* eslint-env serviceworker */
 
 import { pass, assert, assertThrows } from "./assertions.js";
-import * as device from 'fastly:device';
+import { Device } from 'fastly:device';
 import { routes } from "./routes.js";
 
 let error;

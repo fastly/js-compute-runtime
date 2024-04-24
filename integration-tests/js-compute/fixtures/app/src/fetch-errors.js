@@ -1,10 +1,9 @@
 /// <reference path="../../../../../types/index.d.ts" />
 import { pass, assertRejects } from "./assertions.js";
 import { routes } from "./routes.js";
-import * as backend from "fastly:backend";
+import { Backend } from "fastly:backend";
 import * as experimental from "fastly:experimental";
 
-const { Backend } = backend;
 const { allowDynamicBackends } = experimental;
 
 routes.set('/fetch-errors', async () => {
