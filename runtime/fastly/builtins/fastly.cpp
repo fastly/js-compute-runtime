@@ -340,7 +340,21 @@ bool install(api::Engine *engine) {
   if (!ENGINE->define_builtin_import("fastly:body", env_builtin_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:cache", env_builtin_val)) {
+  RootedObject cache(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
+  RootedValue cache_val(ENGINE->cx(), JS::ObjectValue(*cache));
+  if (!JS_SetProperty(ENGINE->cx(), cache, "CoreCache", cache_val)) {
+    return false;
+  }
+  if (!JS_SetProperty(ENGINE->cx(), cache, "CacheEntry", cache_val)) {
+    return false;
+  }
+  if (!JS_SetProperty(ENGINE->cx(), cache, "CacheEntry", cache_val)) {
+    return false;
+  }
+  if (!JS_SetProperty(ENGINE->cx(), cache, "SimpleCache", cache_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_import("fastly:cache", cache_val)) {
     return false;
   }
   if (!ENGINE->define_builtin_import("fastly:cache-override", env_builtin_val)) {
