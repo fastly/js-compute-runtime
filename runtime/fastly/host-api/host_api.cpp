@@ -21,7 +21,7 @@ std::vector<size_t> api::AsyncTask::poll(std::vector<api::AsyncTask *> *tasks) {
   if (!fastly_compute_at_edge_async_io_select(&hs, 0, &ret, &err)) {
     abort();
   } else if (ret.is_some) {
-    return std::vector<size_t> { ret.val };
+    return std::vector<size_t>{ret.val};
   } else {
     abort();
   }
