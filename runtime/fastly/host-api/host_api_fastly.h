@@ -94,7 +94,8 @@ class FastlyAsyncTask final : public AsyncTask {
 public:
   explicit FastlyAsyncTask() {}
   explicit FastlyAsyncTask(FastlyHandle handle) {
-    if (static_cast<int32_t>(handle) < 0) abort();
+    if (static_cast<int32_t>(handle) < 0)
+      abort();
     handle_ = static_cast<int32_t>(handle);
   }
 
