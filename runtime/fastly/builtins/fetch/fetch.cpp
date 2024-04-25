@@ -37,8 +37,6 @@ public:
 
   [[nodiscard]] bool cancel(api::Engine *engine) override { return false; }
 
-  bool ready() override { return true; }
-
   void trace(JSTracer *trc) override {
     TraceEdge(trc, &request_, "Fetch request");
     TraceEdge(trc, &promise_, "Fetch promise");

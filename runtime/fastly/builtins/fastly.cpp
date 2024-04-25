@@ -325,7 +325,7 @@ bool install(api::Engine *engine) {
     return false;
   }
   RootedValue env_builtin_val(ENGINE->cx(), JS::ObjectValue(*env_builtin));
-  if (!ENGINE->define_builtin_import("fastly:env", env_builtin_val)) {
+  if (!ENGINE->define_builtin_module("fastly:env", env_builtin_val)) {
     return false;
   }
   // TODO: these are just placeholder shapes for now
@@ -334,10 +334,10 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(ENGINE->cx(), backend_backend, "Backend", backend_backend_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:backend", backend_backend_val)) {
+  if (!ENGINE->define_builtin_module("fastly:backend", backend_backend_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:body", env_builtin_val)) {
+  if (!ENGINE->define_builtin_module("fastly:body", env_builtin_val)) {
     return false;
   }
   RootedObject cache(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
@@ -354,13 +354,13 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(ENGINE->cx(), cache, "SimpleCache", cache_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:cache", cache_val)) {
+  if (!ENGINE->define_builtin_module("fastly:cache", cache_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:cache-override", env_builtin_val)) {
+  if (!ENGINE->define_builtin_module("fastly:cache-override", env_builtin_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:config-store", env_builtin_val)) {
+  if (!ENGINE->define_builtin_module("fastly:config-store", env_builtin_val)) {
     return false;
   }
   RootedObject device_device(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
@@ -368,7 +368,7 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(ENGINE->cx(), device_device, "Device", device_device_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:device", device_device_val)) {
+  if (!ENGINE->define_builtin_module("fastly:device", device_device_val)) {
     return false;
   }
   RootedObject dictionary(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
@@ -376,7 +376,7 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(ENGINE->cx(), dictionary, "Dictionary", dictionary_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:dictionary", dictionary_val)) {
+  if (!ENGINE->define_builtin_module("fastly:dictionary", dictionary_val)) {
     return false;
   }
   RootedObject edge_rate_limiter(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
@@ -390,7 +390,7 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(ENGINE->cx(), edge_rate_limiter, "EdgeRateLimiter", edge_rate_limiter_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:edge-rate-limiter", edge_rate_limiter_val)) {
+  if (!ENGINE->define_builtin_module("fastly:edge-rate-limiter", edge_rate_limiter_val)) {
     return false;
   }
   RootedObject experimental(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
@@ -398,7 +398,7 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(ENGINE->cx(), experimental, "includeBytes", experimental_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:experimental", experimental_val)) {
+  if (!ENGINE->define_builtin_module("fastly:experimental", experimental_val)) {
     return false;
   }
   RootedObject fanout(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
@@ -406,10 +406,10 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(ENGINE->cx(), fanout, "createFanoutHandoff", fanout_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:fanout", fanout_val)) {
+  if (!ENGINE->define_builtin_module("fastly:fanout", fanout_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:geolocation", env_builtin_val)) {
+  if (!ENGINE->define_builtin_module("fastly:geolocation", env_builtin_val)) {
     return false;
   }
   RootedObject kv_store(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
@@ -417,13 +417,13 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(ENGINE->cx(), kv_store, "KVStore", kv_store_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:kv-store", kv_store_val)) {
+  if (!ENGINE->define_builtin_module("fastly:kv-store", kv_store_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:logger", env_builtin_val)) {
+  if (!ENGINE->define_builtin_module("fastly:logger", env_builtin_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_import("fastly:secret-store", env_builtin_val)) {
+  if (!ENGINE->define_builtin_module("fastly:secret-store", env_builtin_val)) {
     return false;
   }
 

@@ -47,19 +47,7 @@ void handle_incoming(host_api::Request req) {
     fflush(stdout);
   }
 
-  bool success = ENGINE->process_jobs();
-  if (success) {
-    while (FetchEvent::is_active(fetch_event) && ENGINE->has_pending_async_tasks()) {
-      if (!ENGINE->process_async_tasks()) {
-        success = false;
-        break;
-      }
-      if (!ENGINE->process_jobs()) {
-        success = false;
-        break;
-      }
-    }
-  }
+  bool success = ENGINE->run_event_loop();
 
   if (JS_IsExceptionPending(ENGINE->cx())) {
     ENGINE->dump_pending_exception("evaluating code");

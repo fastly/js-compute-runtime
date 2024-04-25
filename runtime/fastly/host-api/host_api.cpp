@@ -8,7 +8,7 @@
 
 using host_api::Result;
 
-size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
+std::vector<size_t> api::AsyncTask::poll(std::vector<api::AsyncTask *> *tasks) {
   size_t tasks_len = tasks->size();
   fastly_compute_at_edge_async_io_handle_t *handles =
       new fastly_compute_at_edge_async_io_handle_t[tasks_len];
@@ -21,7 +21,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
   if (!fastly_compute_at_edge_async_io_select(&hs, 0, &ret, &err)) {
     abort();
   } else if (ret.is_some) {
-    return ret.val;
+    return std::vector<size_t> { ret.val };
   } else {
     abort();
   }

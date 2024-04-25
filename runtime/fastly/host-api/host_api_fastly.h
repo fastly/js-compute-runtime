@@ -106,8 +106,6 @@ public:
     return true;
   }
 
-  bool ready() override { return true; }
-
   FastlyHandle handle() { return handle_; }
 
   void trace(JSTracer *trc) override {
