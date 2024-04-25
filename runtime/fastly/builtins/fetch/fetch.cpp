@@ -13,6 +13,38 @@ using fastly::fetch::Request;
 
 namespace fastly::fetch {
 
+class FetchTask final : public api::AsyncTask {
+  Heap<JSObject *> request_;
+  Heap<JSObject *> promise_;
+
+public:
+  explicit FetchTask(FastlyHandle handle, JS::HandleObject request, JS::HandleObject promise)
+      : request_(request), promise_(promise) {
+    if (static_cast<int32_t>(handle) < 0)
+      abort();
+    handle_ = static_cast<int32_t>(handle);
+  }
+
+  [[nodiscard]] bool run(api::Engine *engine) override {
+
+    JSContext *cx = engine->cx();
+
+    const RootedObject request(cx, request_);
+    const RootedObject promise(cx, promise_);
+
+    return RequestOrResponse::process_pending_request(cx, handle_, request, promise);
+  }
+
+  [[nodiscard]] bool cancel(api::Engine *engine) override { return false; }
+
+  bool ready() override { return true; }
+
+  void trace(JSTracer *trc) override {
+    TraceEdge(trc, &request_, "Fetch request");
+    TraceEdge(trc, &promise_, "Fetch promise");
+  }
+};
+
 // TODO: throw in all Request methods/getters that rely on host calls once a
 // request has been sent. The host won't let us act on them anymore anyway.
 /**
@@ -112,7 +144,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   // If the request body is streamed, we need to wait for streaming to complete before marking the
   // request as pending.
   if (!streaming) {
-    ENGINE->queue_async_task(new FastlyAsyncTask(Request::pending_handle(request).async_handle()));
+    ENGINE->queue_async_task(new FetchTask(pending_handle.handle, request, response_promise));
   }
 
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::PendingRequest),

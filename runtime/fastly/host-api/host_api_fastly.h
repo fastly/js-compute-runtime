@@ -88,10 +88,15 @@ public:
   T &unwrap() { return std::get<T>(this->result); }
 };
 
+// Note: Placeholder ONLY for now
+// TODO: REMOVE WHEN ALL TASKS ARE IMPLEMENTED
 class FastlyAsyncTask final : public AsyncTask {
 public:
   explicit FastlyAsyncTask() {}
-  explicit FastlyAsyncTask(FastlyHandle handle) { handle_ = static_cast<int32_t>(handle); }
+  explicit FastlyAsyncTask(FastlyHandle handle) {
+    if (static_cast<int32_t>(handle) < 0) abort();
+    handle_ = static_cast<int32_t>(handle);
+  }
 
   [[nodiscard]] bool run(Engine *engine) override { return true; }
 

@@ -1,4 +1,5 @@
 [
+  "GET /async-select/hello",
   "GET /btoa",
   "GET /byob",
   "GET /client/tlsJA3MD5",

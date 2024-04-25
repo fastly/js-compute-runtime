@@ -411,7 +411,6 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
-  abort();
   MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
   set_state(self, State::responsedWithError);
 

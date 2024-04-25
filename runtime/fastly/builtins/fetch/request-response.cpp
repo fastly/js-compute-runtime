@@ -2,6 +2,7 @@
 #include "../../../StarlingMonkey/builtins/web/base64.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../../../StarlingMonkey/builtins/web/streams/transform-stream.h"
+#include "../../../StarlingMonkey/builtins/web/dom-exception.h"
 #include "../../../StarlingMonkey/builtins/web/url.h"
 #include "../../../StarlingMonkey/builtins/web/worker-location.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
@@ -24,6 +25,7 @@
 #include "js/experimental/TypedData.h"
 #pragma clang diagnostic pop
 
+using builtins::web::dom_exception::DOMException;
 using builtins::web::base64::convertJSValueToByteString;
 using builtins::web::streams::NativeStreamSource;
 using builtins::web::streams::TransformStream;
@@ -143,6 +145,39 @@ host_api::HttpPendingReq pending_handle(JSObject *obj) {
 }
 
 } // namespace
+
+bool RequestOrResponse::process_pending_request(JSContext *cx, int32_t handle,
+                                                JS::HandleObject context,
+                                                JS::HandleObject promise) {
+  MOZ_ASSERT(Request::is_instance(context));
+  host_api::HttpPendingReq pending(handle);
+  auto res = pending.wait();
+  if (auto *err = res.to_err()) {
+    std::string message = std::move(err->message()).value_or("when attempting to fetch resource.");
+    DOMException::raise(cx, message, "NetworkError");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  auto [response_handle, body] = res.unwrap();
+  JS::RootedObject response_instance(cx, JS_NewObjectWithGivenProto(cx, &Response::class_,
+                                                                    Response::proto_obj));
+  if (!response_instance) {
+    return false;
+  }
+
+  bool is_upstream = true;
+  bool is_grip_upgrade = false;
+  JS::RootedObject response(cx,
+                            Response::create(cx, response_instance, response_handle, body,
+                                                       is_upstream, is_grip_upgrade, nullptr));
+  if (!response) {
+    return false;
+  }
+
+  RequestOrResponse::set_url(response, RequestOrResponse::url(context));
+  JS::RootedValue response_val(cx, JS::ObjectValue(*response));
+  return JS::ResolvePromise(cx, promise, response_val);
+}
 
 bool RequestOrResponse::is_instance(JSObject *obj) {
   return Request::is_instance(obj) ||

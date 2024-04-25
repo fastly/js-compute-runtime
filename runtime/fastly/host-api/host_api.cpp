@@ -9,23 +9,22 @@
 using host_api::Result;
 
 size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
-  // Result<std::optional<uint32_t>> res;
-
-  // static_assert(sizeof(FastlyAsyncTask) == sizeof(fastly_compute_at_edge_async_io_handle_t));
-  // fastly_world_list_fastly_compute_at_edge_async_io_handle_t hs{
-  //     .ptr = reinterpret_cast<fastly_compute_at_edge_async_io_handle_t *>(
-  //         const_cast<FastlyAsyncTask *>(tasks->data())),
-  //     .len = tasks->size()};
-  // fastly_world_option_u32_t ret;
-  // fastly_compute_at_edge_types_error_t err;
-  // if (!fastly_compute_at_edge_async_io_select(&hs, 300000, &ret, &err)) {
-  //   abort();
-  // } else if (ret.is_some) {
-  //   return ret.val;
-  // } else {
-  //   abort();
-  // }
-  return 0;
+  size_t tasks_len = tasks->size();
+  fastly_compute_at_edge_async_io_handle_t *handles =
+      new fastly_compute_at_edge_async_io_handle_t[tasks_len];
+  for (int i = 0; i < tasks_len; i++) {
+    handles[i] = tasks->at(i)->id();
+  }
+  fastly_world_list_fastly_compute_at_edge_async_io_handle_t hs{.ptr = handles, .len = tasks_len};
+  fastly_world_option_u32_t ret;
+  fastly_compute_at_edge_types_error_t err = 0;
+  if (!fastly_compute_at_edge_async_io_select(&hs, 0, &ret, &err)) {
+    abort();
+  } else if (ret.is_some) {
+    return ret.val;
+  } else {
+    abort();
+  }
 }
 
 namespace host_api {
