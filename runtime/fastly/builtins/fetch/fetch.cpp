@@ -13,6 +13,8 @@ using fastly::fetch::Request;
 
 namespace fastly::fetch {
 
+api::Engine *ENGINE;
+
 class FetchTask final : public api::AsyncTask {
   Heap<JSObject *> request_;
   Heap<JSObject *> promise_;
