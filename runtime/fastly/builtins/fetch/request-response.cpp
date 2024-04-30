@@ -1184,6 +1184,7 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
   return true;
 }
 
+// TODO(GB): reimplement
 // bool Request::set_cache_override(JSContext *cx, JS::HandleObject self,
 //                                  JS::HandleValue cache_override_val) {
 //   MOZ_ASSERT(is_instance(self));
@@ -1225,6 +1226,7 @@ bool Request::apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self) {
   return true;
 }
 
+// TODO(GB): reimplement
 /**
  * Apply the CacheOverride to a host-side request handle.
  */
@@ -1343,6 +1345,7 @@ bool Request::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Request::setCacheOverride(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
+  // TODO(GB): reimplement
   fprintf(stderr, "setCacheOverride TODO");
   abort();
   // if (!set_cache_override(cx, self, args[0]))
@@ -1525,6 +1528,7 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue cache_override(
       cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::CacheOverride)));
   if (!cache_override.isNullOrUndefined()) {
+    // TODO(GB): reimplement
     // if (!set_cache_override(cx, requestInstance, cache_override)) {
     //   return false;
     // }
@@ -2055,6 +2059,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
                         JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::Backend)));
   }
 
+  // TODO(GB): reimplement
   // Apply the Fastly Compute-proprietary `cacheOverride` property.
   /*if (!cache_override.isUndefined()) {
     if (!set_cache_override(cx, request, cache_override)) {

@@ -20,6 +20,7 @@ bool install(api::Engine *engine) {
 }
 
 void handle_incoming(host_api::Request req) {
+  // TODO(GB): reimplement
   // builtins::Performance::timeOrigin.emplace(std::chrono::high_resolution_clock::now());
 
   double total_compute = 0;
@@ -51,10 +52,8 @@ void handle_incoming(host_api::Request req) {
 
   if (JS_IsExceptionPending(ENGINE->cx())) {
     ENGINE->dump_pending_exception("evaluating code");
-  }
-
-  if (!success) {
-    fprintf(stderr, "internal error");
+  } else if (!success) {
+    abort();
   }
 
   if (ENGINE->debug_logging_enabled() && ENGINE->has_pending_async_tasks()) {
@@ -64,16 +63,11 @@ void handle_incoming(host_api::Request req) {
     return;
   }
 
-  // Respond with status `500` if <del>any promise rejections were left unhandled
-  // and</del> no response was ever sent.
+  // Respond with status `500` if no response was ever sent.
   if (!FetchEvent::response_started(fetch_event)) {
     FetchEvent::respondWithError(ENGINE->cx(), fetch_event);
     return;
   }
-
-  // if (STREAMING_BODY && STREAMING_BODY->valid()) {
-  //   STREAMING_BODY->close();
-  // }
 
   auto end = system_clock::now();
   double diff = duration_cast<microseconds>(end - start).count();

@@ -1,18 +1,36 @@
-#include "builtins/fetch-event.h"
-#include "builtins/client-info.h"
-#include "builtins/fastly.h"
-#include "builtins/request-response.h"
-#include "builtins/shared/url.h"
-#include "builtins/worker-location.h"
-#include "host_interface/host_api.h"
+#include "fetch-event.h"
+#include "../../StarlingMonkey/builtins/web/url.h"
+#include "../../StarlingMonkey/builtins/web/worker-location.h"
+#include "../host-api/fastly.h"
+#include "../host-api/host_api_fastly.h"
+#include "./fetch/request-response.h"
+#include "encode.h"
+#include "fastly.h"
 
+#include <iostream>
+#include <memory>
+
+using std::chrono::microseconds;
+using std::chrono::system_clock;
 using namespace std::literals::string_view_literals;
+using builtins::web::url::URL;
+using builtins::web::worker_location::WorkerLocation;
+using fastly::fastly::Fastly;
+using fastly::fetch::Headers;
+using fastly::fetch::RequestOrResponse;
+using fastly::fetch::Response;
 
-namespace builtins {
+namespace fastly::fetch_event {
 
 namespace {
 
-JS::PersistentRooted<JSObject *> INSTANCE;
+api::Engine *ENGINE;
+
+PersistentRooted<JSObject *> INSTANCE;
+JS::PersistentRootedObjectVector *FETCH_HANDLERS;
+
+// host_api::HttpResp::ResponseOutparam RESPONSE_OUT;
+// host_api::HttpOutgoingBody *STREAMING_BODY;
 
 void inc_pending_promise_count(JSObject *self) {
   MOZ_ASSERT(FetchEvent::is_instance(self));
@@ -32,6 +50,8 @@ void dec_pending_promise_count(JSObject *self) {
           .toInt32();
   MOZ_ASSERT(count > 0);
   count--;
+  if (count == 0)
+    ENGINE->decr_event_loop_interest();
   JS::SetReservedSlot(self, static_cast<uint32_t>(FetchEvent::Slots::PendingPromiseCount),
                       JS::Int32Value(count));
 }
@@ -71,6 +91,38 @@ bool FetchEvent::client_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+void dispatch_fetch_event(HandleObject event, double *total_compute) {
+  MOZ_ASSERT(FetchEvent::is_instance(event));
+  ENGINE->incr_event_loop_interest();
+  auto pre_handler = system_clock::now();
+
+  RootedValue result(ENGINE->cx());
+  RootedValue event_val(ENGINE->cx(), JS::ObjectValue(*event));
+  HandleValueArray argsv = HandleValueArray(event_val);
+  RootedValue handler(ENGINE->cx());
+  RootedValue rval(ENGINE->cx());
+
+  FetchEvent::start_dispatching(event);
+
+  for (size_t i = 0; i < FETCH_HANDLERS->length(); i++) {
+    handler.setObject(*(*FETCH_HANDLERS)[i]);
+    if (!JS_CallFunctionValue(ENGINE->cx(), ENGINE->global(), handler, argsv, &rval)) {
+      ENGINE->dump_pending_exception("dispatching FetchEvent\n");
+      break;
+    }
+    if (FetchEvent::state(event) != FetchEvent::State::unhandled) {
+      break;
+    }
+  }
+
+  FetchEvent::stop_dispatching(event);
+
+  double diff = duration_cast<microseconds>(system_clock::now() - pre_handler).count();
+  *total_compute += diff;
+  if (ENGINE->debug_logging_enabled())
+    printf("Request handler took %fms\n", diff / 1000);
+}
+
 JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {
   JS::RootedObject requestInstance(
       cx, JS_NewObjectWithGivenProto(cx, &Request::class_, Request::proto_obj));
@@ -79,8 +131,11 @@ JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {
   return Request::create(cx, requestInstance, host_api::HttpReq{}, host_api::HttpBody{}, true);
 }
 
-bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request,
-                                         host_api::HttpReq req, host_api::HttpBody body) {
+bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::HttpReq req,
+                              host_api::HttpBody body) {
+  JS::RootedObject request(
+      cx, &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)).toObject());
+
   MOZ_ASSERT(!Request::request_handle(request).is_valid());
 
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Request),
@@ -131,30 +186,27 @@ bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::URL), JS::StringValue(url));
 
   // Set the URL for `globalThis.location` to the client request's URL.
-  JS::RootedObject url_instance(
-      cx, JS_NewObjectWithGivenProto(cx, &builtins::URL::class_, builtins::URL::proto_obj));
+  JS::RootedObject url_instance(cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
   if (!url_instance) {
     return false;
   }
 
   jsurl::SpecString spec(reinterpret_cast<uint8_t *>(uri_str.ptr.get()), uri_str.len, uri_str.len);
-  builtins::WorkerLocation::url = builtins::URL::create(cx, url_instance, spec);
-  if (!builtins::WorkerLocation::url) {
+  WorkerLocation::url = URL::create(cx, url_instance, spec);
+  if (!WorkerLocation::url) {
     return false;
   }
 
   // Set `fastly.baseURL` to the origin of the client request's URL.
   // Note that this only happens if baseURL hasn't already been set to another
   // value explicitly.
-  if (!builtins::Fastly::baseURL.get()) {
-    JS::RootedObject url_instance(
-        cx, JS_NewObjectWithGivenProto(cx, &builtins::URL::class_, builtins::URL::proto_obj));
+  if (!Fastly::baseURL.get()) {
+    JS::RootedObject url_instance(cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
     if (!url_instance)
       return false;
 
-    builtins::Fastly::baseURL = builtins::URL::create(
-        cx, url_instance, builtins::URL::origin(cx, builtins::WorkerLocation::url));
-    if (!builtins::Fastly::baseURL)
+    Fastly::baseURL = URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
+    if (!Fastly::baseURL)
       return false;
   }
 
@@ -211,9 +263,8 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   // after sending the response off.
   if (Response::is_upstream(response_obj)) {
     JS::RootedObject headers(cx);
-    headers =
-        RequestOrResponse::headers<builtins::Headers::Mode::ProxyToResponse>(cx, response_obj);
-    if (!builtins::Headers::delazify(cx, headers))
+    headers = RequestOrResponse::headers<Headers::Mode::ProxyToResponse>(cx, response_obj);
+    if (!Headers::delazify(cx, headers))
       return false;
   }
 
@@ -245,7 +296,7 @@ bool response_promise_catch_handler(JSContext *cx, JS::HandleObject event,
   JS::RootedObject promise(cx, &promise_val.toObject());
 
   fprintf(stderr, "Error while running request handler: ");
-  dump_promise_rejection(cx, args.get(0), promise, stderr);
+  ENGINE->dump_promise_rejection(args.get(0), promise, stderr);
 
   // TODO: verify that this is the right behavior.
   // Steps 9.1-2
@@ -419,13 +470,10 @@ JSObject *FetchEvent::create(JSContext *cx) {
   return self;
 }
 
-JS::HandleObject FetchEvent::instance() { return INSTANCE; }
-
-bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::HttpReq req,
-                              host_api::HttpBody body) {
-  JS::RootedObject request(
-      cx, &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)).toObject());
-  return init_downstream_request(cx, request, req, body);
+JS::HandleObject FetchEvent::instance() {
+  MOZ_ASSERT(INSTANCE);
+  MOZ_ASSERT(is_instance(INSTANCE));
+  return INSTANCE;
 }
 
 bool FetchEvent::is_active(JSObject *self) {
@@ -472,4 +520,51 @@ bool FetchEvent::response_started(JSObject *self) {
   return current_state != State::unhandled && current_state != State::waitToRespond;
 }
 
-} // namespace builtins
+static bool addEventListener(JSContext *cx, unsigned argc, Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "addEventListener", 2)) {
+    return false;
+  }
+
+  auto event_chars = core::encode(cx, args[0]);
+  if (!event_chars) {
+    return false;
+  }
+
+  if (strncmp(event_chars.begin(), "fetch", event_chars.len)) {
+    fprintf(stderr,
+            "Error: addEventListener only supports the event 'fetch' right now, "
+            "but got event '%s'\n",
+            event_chars.begin());
+    exit(1);
+  }
+
+  RootedValue val(cx, args[1]);
+  if (!val.isObject() || !JS_ObjectIsFunction(&val.toObject())) {
+    fprintf(stderr, "Error: addEventListener: Argument 2 is not a function.\n");
+    exit(1);
+  }
+
+  return FETCH_HANDLERS->append(&val.toObject());
+}
+
+bool install(api::Engine *engine) {
+  ENGINE = engine;
+  FETCH_HANDLERS = new JS::PersistentRootedObjectVector(engine->cx());
+
+  if (!JS_DefineFunction(engine->cx(), engine->global(), "addEventListener", addEventListener, 2,
+                         0)) {
+    MOZ_RELEASE_ASSERT(false);
+  }
+
+  if (!FetchEvent::init_class(engine->cx(), engine->global()))
+    return false;
+
+  if (!FetchEvent::create(engine->cx())) {
+    MOZ_RELEASE_ASSERT(false);
+  }
+
+  return true;
+}
+
+} // namespace fastly::fetch_event

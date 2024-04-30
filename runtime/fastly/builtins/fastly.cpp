@@ -87,6 +87,7 @@ JSObject *Env::create(JSContext *cx) {
   return env;
 }
 
+// TODO(GB): reimplement
 // bool Fastly::getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value *vp) {
 //   JS::CallArgs args = CallArgsFromVp(argc, vp);
 //   REQUEST_HANDLER_ONLY("fastly.getGeolocationForIpAddress");
@@ -104,6 +105,7 @@ JSObject *Env::create(JSContext *cx) {
 //   return JS_ParseJSON(cx, geo_info_str, args.rval());
 // }
 
+// TODO(GB): reimplement
 // // TODO(performance): consider allowing logger creation during initialization, but then throw
 // // when trying to log.
 // // https://github.com/fastly/js-compute-runtime/issues/225
@@ -127,6 +129,7 @@ JSObject *Env::create(JSContext *cx) {
 //   return true;
 // }
 
+// TODO(GB): reimplement
 // bool Fastly::includeBytes(JSContext *cx, unsigned argc, JS::Value *vp) {
 //   JS::CallArgs args = CallArgsFromVp(argc, vp);
 //   INIT_ONLY("fastly.includeBytes");
@@ -168,6 +171,7 @@ JSObject *Env::create(JSContext *cx) {
 //   return true;
 // }
 
+// TODO(GB): reimplement
 // bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
 //   JS::CallArgs args = CallArgsFromVp(argc, vp);
 //   REQUEST_HANDLER_ONLY("createFanoutHandoff");
@@ -231,6 +235,7 @@ JSObject *Env::create(JSContext *cx) {
 //   return true;
 // }
 
+// TODO(GB): reimplement
 // bool Fastly::now(JSContext *cx, unsigned argc, JS::Value *vp) {
 //   JS::CallArgs args = CallArgsFromVp(argc, vp);
 //   args.rval().setNumber(JS_Now());
@@ -328,7 +333,7 @@ bool install(api::Engine *engine) {
   if (!ENGINE->define_builtin_module("fastly:env", env_builtin_val)) {
     return false;
   }
-  // TODO: these are just placeholder shapes for now
+  // TODO(GB): these are just placeholder shapes for now
   RootedObject backend_backend(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
   RootedValue backend_backend_val(ENGINE->cx(), JS::ObjectValue(*backend_backend));
   if (!JS_SetProperty(ENGINE->cx(), backend_backend, "Backend", backend_backend_val)) {
@@ -438,8 +443,10 @@ bool install(api::Engine *engine) {
   JSFunctionSpec end = JS_FS_END;
 
   const JSFunctionSpec methods[] = {
+      // TODO(GB): reimplement
       // JS_FN("dump", dump, 1, 0),
       JS_FN("enableDebugLogging", enableDebugLogging, 1, JSPROP_ENUMERATE),
+      // TODO(GB): reimplement
       // JS_FN("getGeolocationForIpAddress", getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
       // JS_FN("getLogger", getLogger, 1, JSPROP_ENUMERATE),
       // JS_FN("includeBytes", includeBytes, 1, JSPROP_ENUMERATE),

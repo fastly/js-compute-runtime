@@ -32,6 +32,7 @@ const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNu
 
 class Fastly : public BuiltinNoConstructor<Fastly> {
 private:
+  // TODO(GB): reimplement
   // static bool log(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
@@ -44,6 +45,7 @@ public:
 
   static const JSPropertySpec properties[];
 
+  // TODO(GB): reimplement
   // static bool createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp);
   // static bool now(JSContext *cx, unsigned argc, JS::Value *vp);
   // static bool dump(JSContext *cx, unsigned argc, JS::Value *vp);

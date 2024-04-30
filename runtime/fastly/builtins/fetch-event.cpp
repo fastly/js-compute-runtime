@@ -73,6 +73,25 @@ bool add_pending_promise(JSContext *cx, JS::HandleObject self, JS::HandleObject 
 
 } // namespace
 
+// TODO(GB): ClientInfo
+// bool FetchEvent::client_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+//   METHOD_HEADER(0)
+
+//   JS::RootedValue clientInfo(cx,
+//                              JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ClientInfo)));
+
+//   if (clientInfo.isUndefined()) {
+//     JS::RootedObject obj(cx, ClientInfo::create(cx));
+//     if (!obj)
+//       return false;
+//     clientInfo.setObject(*obj);
+//     JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ClientInfo), clientInfo);
+//   }
+
+//   args.rval().set(clientInfo);
+//   return true;
+// }
+
 void dispatch_fetch_event(HandleObject event, double *total_compute) {
   MOZ_ASSERT(FetchEvent::is_instance(event));
   ENGINE->incr_event_loop_interest();
@@ -195,68 +214,6 @@ bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::Ht
   return true;
 }
 
-// bool FetchEvent::init_incoming_request(JSContext *cx, JS::HandleObject self,
-//                                        host_api::HttpIncomingRequest *req) {
-//   JS::RootedObject request(
-//       cx, &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)).toObject());
-
-//   MOZ_ASSERT(!Request::request_handle(request));
-
-//   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Request),
-//                       JS::PrivateValue(req));
-
-//   // Set the method.
-//   auto res = req->method();
-//   MOZ_ASSERT(!res.is_err(), "TODO: proper error handling");
-//   auto method_str = res.unwrap();
-//   bool is_get = method_str == "GET";
-//   bool is_head = !is_get && method_str == "HEAD";
-
-//   if (!is_get) {
-//     JS::RootedString method(cx, JS_NewStringCopyN(cx, method_str.cbegin(), method_str.length()));
-//     if (!method) {
-//       return false;
-//     }
-
-//     JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Method),
-//                         JS::StringValue(method));
-//   }
-
-//   // Set whether we have a body depending on the method.
-//   // TODO: verify if that's right. I.e. whether we should treat all requests
-//   // that are not GET or HEAD as having a body, which might just be 0-length.
-//   // It's not entirely clear what else we even could do here though.
-//   if (!is_get && !is_head) {
-//     JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::HasBody),
-//     JS::TrueValue());
-//   }
-
-//   auto uri_str = req->url();
-//   JS::RootedString url(cx, JS_NewStringCopyN(cx, uri_str.data(), uri_str.size()));
-//   if (!url) {
-//     return false;
-//   }
-//   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::URL), JS::StringValue(url));
-
-//   // Set the URL for `globalThis.location` to the client request's URL.
-//   JS::RootedObject url_instance(
-//       cx, JS_NewObjectWithGivenProto(cx, &url::URL::class_, url::URL::proto_obj));
-//   if (!url_instance) {
-//     return false;
-//   }
-
-//   auto uri_bytes = new uint8_t[uri_str.size() + 1];
-//   std::copy(uri_str.begin(), uri_str.end(), uri_bytes);
-//   jsurl::SpecString spec(uri_bytes, uri_str.size(), uri_str.size());
-
-//   worker_location::WorkerLocation::url = url::URL::create(cx, url_instance, spec);
-//   if (!worker_location::WorkerLocation::url) {
-//     return false;
-//   }
-
-//   return true;
-// }
-
 bool FetchEvent::request_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
@@ -265,21 +222,6 @@ bool FetchEvent::request_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 namespace {
-
-// bool send_response(host_api::HttpResp *response, JS::HandleObject self,
-//                    FetchEvent::State new_state) {
-//   MOZ_ASSERT(FetchEvent::state(self) == FetchEvent::State::unhandled ||
-//              FetchEvent::state(self) == FetchEvent::State::waitToRespond);
-//   auto result = response->send(RESPONSE_OUT);
-//   FetchEvent::set_state(self, new_state);
-
-//   if (auto *err = result.to_err()) {
-//     HANDLE_ERROR(ENGINE->cx(), *err);
-//     return false;
-//   }
-
-//   return true;
-// }
 
 bool start_response(JSContext *cx, JS::HandleObject response_obj, bool streaming) {
   auto response = Response::response_handle(response_obj);
@@ -374,33 +316,33 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!response_promise)
     return false;
 
-  // // Step 2
+  // Step 2
   if (!is_dispatching(self)) {
     JS_ReportErrorUTF8(cx, "FetchEvent#respondWith must be called synchronously from "
                            "within a FetchEvent handler");
     return false;
   }
 
-  // // Step 3
+  // Step 3
   if (state(self) != State::unhandled) {
     JS_ReportErrorUTF8(cx, "FetchEvent#respondWith can't be called twice on the same event");
     return false;
   }
 
-  // // Step 4
+  // Step 4
   add_pending_promise(cx, self, response_promise);
 
-  // // Steps 5-7 (very roughly)
+  // Steps 5-7 (very roughly)
   set_state(self, State::waitToRespond);
 
-  // // Step 9 (continued in `response_promise_catch_handler` above)
+  // Step 9 (continued in `response_promise_catch_handler` above)
   JS::RootedObject catch_handler(cx);
   JS::RootedValue extra(cx, JS::ObjectValue(*response_promise));
   catch_handler = create_internal_method<response_promise_catch_handler>(cx, self, extra);
   if (!catch_handler)
     return false;
 
-  // // Step 10 (continued in `response_promise_then_handler` above)
+  // Step 10 (continued in `response_promise_then_handler` above)
   JS::RootedObject then_handler(cx);
   then_handler = create_internal_method<response_promise_then_handler>(cx, self);
   if (!then_handler)
@@ -498,6 +440,8 @@ const JSFunctionSpec FetchEvent::methods[] = {
 };
 
 const JSPropertySpec FetchEvent::properties[] = {
+    // TODO(GB): Client Info
+    // JS_PSG("client", client_get, JSPROP_ENUMERATE),
     JS_PSG("request", request_get, JSPROP_ENUMERATE),
     JS_PS_END,
 };
@@ -622,34 +566,7 @@ bool install(api::Engine *engine) {
     MOZ_RELEASE_ASSERT(false);
   }
 
-  // TODO(TS): restore validation
-  // if (FETCH_HANDLERS->length() == 0) {
-  //   RootedValue val(engine->cx());
-  //   if (!JS_GetProperty(engine->cx(), engine->global(), "onfetch", &val) || !val.isObject()
-  //       || !JS_ObjectIsFunction(&val.toObject())) {
-  //     // The error message only mentions `addEventListener`, even though we also
-  //     // support an `onfetch` top-level function as an alternative. We're
-  //     // treating the latter as undocumented functionality for the time being.
-  //     fprintf(
-  //         stderr,
-  //         "Error: no `fetch` event handler registered during initialization. "
-  //         "Make sure to call `addEventListener('fetch', your_handler)`.\n");
-  //     exit(1);
-  //   }
-  //   if (!FETCH_HANDLERS->append(&val.toObject())) {
-  //     engine->abort("Adding onfetch as a fetch event handler");
-  //   }
-  // }
-
   return true;
 }
 
 } // namespace fastly::fetch_event
-
-// #define S_TO_NS(s) ((s) * 1000000000)
-// static int64_t now_ns() {
-//   timespec now{};
-//   clock_gettime(CLOCK_MONOTONIC, &now);
-//   return S_TO_NS(now.tv_sec) + now.tv_nsec;
-// }
-// using namespace fastly::fetch_event;
