@@ -78,7 +78,8 @@ bool add_pending_promise(JSContext *cx, JS::HandleObject self, JS::HandleObject 
 //   METHOD_HEADER(0)
 
 //   JS::RootedValue clientInfo(cx,
-//                              JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ClientInfo)));
+//                              JS::GetReservedSlot(self,
+//                              static_cast<uint32_t>(Slots::ClientInfo)));
 
 //   if (clientInfo.isUndefined()) {
 //     JS::RootedObject obj(cx, ClientInfo::create(cx));
