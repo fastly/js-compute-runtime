@@ -26,6 +26,9 @@
     "README.md",
     "CHANGELOG.md"
   ],
+  "ignore": [
+    "starling.wasm"
+  ],
   "scripts": {
     "test": "npm run test:types && npm run test:cli",
     "test:cli": "brittle --bail integration-tests/cli/**.test.js",
