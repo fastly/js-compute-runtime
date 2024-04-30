@@ -51,7 +51,7 @@ void dec_pending_promise_count(JSObject *self) {
   MOZ_ASSERT(count > 0);
   count--;
   if (count == 0)
-    ENGINE->decr_event_loop_lifetime();
+    ENGINE->decr_event_loop_interest();
   JS::SetReservedSlot(self, static_cast<uint32_t>(FetchEvent::Slots::PendingPromiseCount),
                       JS::Int32Value(count));
 }
@@ -75,7 +75,7 @@ bool add_pending_promise(JSContext *cx, JS::HandleObject self, JS::HandleObject 
 
 void dispatch_fetch_event(HandleObject event, double *total_compute) {
   MOZ_ASSERT(FetchEvent::is_instance(event));
-  ENGINE->incr_event_loop_lifetime();
+  ENGINE->incr_event_loop_interest();
   auto pre_handler = system_clock::now();
 
   RootedValue result(ENGINE->cx());

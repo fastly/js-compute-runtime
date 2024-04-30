@@ -109,10 +109,10 @@ await retry(10, expBackoff('60s', '30s'), async () => {
 })
 core.endGroup()
 
-let { default: tests } = await import(join(fixturePath, 'tests.json'), { assert: { type: 'json' } });
+let { default: tests } = await import(join(fixturePath, 'tests.json'), { with: { type: 'json' } });
 
 if (starlingmonkey) {
-    const { default: testsStarlingMonkey } = await import(join(fixturePath, 'tests-starlingmonkey.json'), { assert: { type: 'json' } });
+    const { default: testsStarlingMonkey } = await import(join(fixturePath, 'tests-starlingmonkey.json'), { with: { type: 'json' } });
     const testCnt = Object.keys(tests).length;
     const starlingTestCnt = testsStarlingMonkey.length;
     if (process.env.GITHUB_ACTIONS) {
