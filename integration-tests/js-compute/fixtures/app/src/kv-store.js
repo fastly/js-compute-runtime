@@ -276,6 +276,7 @@ import { routes, isRunningLocally } from "./routes.js";
             return pass()
         });
         routes.set("/kv-store/put/request-body", async ({ request }) => {
+            const store = createValidStore()
             let result = store.put('readablestream-req', request.body)
             let error = assert(result instanceof Promise, true, `store.put('readablestream-req', request.body) instanceof Promise`)
             if (error) { return error }
