@@ -103,7 +103,7 @@ await retry(10, expBackoff('60s', '30s'), async () => {
 })
 core.endGroup()
 
-const { default: tests } = await import(join(fixturePath, 'tests.json'), { assert: { type: 'json' } });
+const { default: tests } = await import(join(fixturePath, 'tests.json'), { with: { type: 'json' } });
 
 core.startGroup('Running tests')
 function chunks(arr, size) {
