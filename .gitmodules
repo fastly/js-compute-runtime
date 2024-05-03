@@ -8,3 +8,6 @@
 [submodule "runtime/js-compute-runtime/third_party/fmt"]
 	path = runtime/js-compute-runtime/third_party/fmt
 	url = https://github.com/fmtlib/fmt
+[submodule "runtime/StarlingMonkey"]
+	path = runtime/StarlingMonkey
+	url = git@github.com:bytecodealliance/StarlingMonkey

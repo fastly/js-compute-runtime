@@ -2,8 +2,11 @@
 /* eslint-env serviceworker */
 
 import { pass, assert, assertDoesNotThrow, assertThrows, assertRejects, iteratableToStream, streamToString, assertResolves } from "./assertions.js";
-import { SimpleCache, SimpleCacheEntry } from 'fastly:cache';
+import { SimpleCache } from 'fastly:cache';
+import * as fastlyCache from 'fastly:cache';
 import { routes, isRunningLocally } from "./routes.js";
+
+const { SimpleCacheEntry } = fastlyCache;
 
 let error;
 routes.set("/simple-cache/interface", () => {

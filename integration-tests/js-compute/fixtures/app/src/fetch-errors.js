@@ -2,7 +2,9 @@
 import { pass, assertRejects } from "./assertions.js";
 import { routes } from "./routes.js";
 import { Backend } from "fastly:backend";
-import { allowDynamicBackends } from "fastly:experimental";
+import * as experimental from "fastly:experimental";
+
+const { allowDynamicBackends } = experimental;
 
 routes.set('/fetch-errors', async () => {
   allowDynamicBackends(true)

@@ -1,9 +1,11 @@
 /// <reference path="../../../../../types/index.d.ts" />
 /* eslint-env serviceworker */
 
-import { CacheOverride } from "fastly:cache-override";
+import * as cacheOverride from "fastly:cache-override";
 import { pass, assert, assertRejects } from "./assertions.js";
 import { routes, isRunningLocally } from "./routes.js";
+
+const { CacheOverride } = cacheOverride;
 
 let error;
 

@@ -16,7 +16,7 @@ export async function compareDownstreamResponse (configResponse, actualResponse)
   let errors = [];
   // Status
   if (configResponse.status != actualResponse.statusCode) {
-    errors.push(new Error(`[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.status}`));
+    errors.push(new Error(`[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.statusCode}`));
   }
 
   // Headers

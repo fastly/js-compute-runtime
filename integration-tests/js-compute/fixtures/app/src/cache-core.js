@@ -3,8 +3,12 @@
 
 import { pass, assert, assertDoesNotThrow, assertThrows, sleep, streamToString, assertResolves } from "./assertions.js";
 import { routes } from "./routes.js";
-import { CoreCache, CacheEntry, CacheState, TransactionCacheEntry } from 'fastly:cache';
-import { FastlyBody } from "fastly:body";
+import { CoreCache, CacheEntry } from 'fastly:cache';
+import * as fastlyCache from 'fastly:cache';
+import * as fastlyBody from "fastly:body";
+
+const { CacheState, TransactionCacheEntry } = fastlyCache;
+const { FastlyBody } = fastlyBody;
 
 let error;
 

@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join, isAbsolute } from "node:path";
+import { existsSync } from "node:fs";
 import { unknownArgument } from "./unknownArgument.js";
 import { tooManyEngines } from "./tooManyEngines.js";
 
@@ -10,6 +11,7 @@ export async function parseInputs(cliInputs) {
   let adapter;
   let enableExperimentalHighResolutionTimeMethods = false;
   let enableExperimentalTopLevelAwait = false;
+  let starlingMonkey = false;
   let enablePBL = false;
   let customEngineSet = false;
   let wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
@@ -21,7 +23,22 @@ export async function parseInputs(cliInputs) {
 
   let useComponent = () => {
     component = true;
+    if (starlingMonkey) {
+      noStarlingMonkeyComponent();
+    }
     wasmEngine = join(__dirname, "../js-compute-runtime-component.wasm");
+  };
+  let useStarlingMonkey = () => {
+    starlingMonkey = true;
+    if (component) {
+      noStarlingMonkeyComponent();
+    }
+    wasmEngine = wasmEngine = join(__dirname, "../starling.wasm");
+    // StarlingMonkey is not enabled for published releases yet
+    // so if the binary does not exist, throw an error for end users
+    if (!existsSync(wasmEngine)) {
+      starlingMonkeyUnreleased();
+    }
   };
 
   // eslint-disable-next-line no-cond-assign
@@ -49,6 +66,10 @@ export async function parseInputs(cliInputs) {
       case "-h":
       case "--help": {
         return { help: true };
+      }
+      case "--starlingmonkey": {
+        useStarlingMonkey();
+        break;
       }
       case "--component": {
         useComponent();
@@ -114,5 +135,26 @@ export async function parseInputs(cliInputs) {
       }
     }
   }
-  return { wasmEngine, component, adapter, input, output, enableExperimentalHighResolutionTimeMethods, enablePBL, enableExperimentalTopLevelAwait };
+  return {
+    adapter,
+    component,
+    enableExperimentalHighResolutionTimeMethods,
+    enableExperimentalTopLevelAwait,
+    enablePBL,
+    input,
+    output,
+    starlingMonkey,
+    wasmEngine,
+  };
+}
+
+function noStarlingMonkeyComponent () {
+  console.error('StarlingMonkey does not yet support a component build');
+  process.exit(1);
+}
+
+function starlingMonkeyUnreleased () {
+  console.error('No StarlingMonkey engine found. This engine is not yet released and the `--starlingmonkey` flag is only for development builds.');
+  console.error('To use and test this engine, clone and build directly from source at https://github.com/fastly/js-compute-runtime.');
+  process.exit(1);
 }

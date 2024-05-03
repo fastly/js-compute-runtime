@@ -3,6 +3,8 @@
 /integration-tests/**/fixtures/**/fastly.toml
 /integration-tests/**/fixtures/**/*.wasm
 
+/runtime/fastly/build-*/
+
 /compute-js/
 node_modules/
 .DS_Store
@@ -13,6 +15,7 @@ node_modules/
 # compiler_flags
 /js-compute-runtime.wasm
 /js-compute-runtime-component.wasm
+/starling.wasm
 /runtime/js-compute-runtime/obj
 tests/wpt-harness/wpt-test-runner.js
 wpt-runtime.wasm

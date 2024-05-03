@@ -2,6 +2,7 @@
 import { pass, assert, assertThrows, assertRejects, assertResolves } from "./assertions.js";
 import { KVStore } from "fastly:kv-store";
 import { routes, isRunningLocally } from "./routes.js";
+
 // KVStore
 {
     routes.set("/kv-store/exposed-as-global", async () => {

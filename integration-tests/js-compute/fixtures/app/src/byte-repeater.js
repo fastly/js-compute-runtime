@@ -1,7 +1,9 @@
 /* eslint-env serviceworker */
 
-import { CacheOverride } from 'fastly:cache-override';
+import * as cacheOverride from 'fastly:cache-override';
 import { routes } from "./routes";
+
+const { CacheOverride } = cacheOverride;
 
 routes.set('/byte-repeater', () => {
     let headers = new Headers();

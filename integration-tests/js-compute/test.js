@@ -35,7 +35,8 @@ async function sleep(seconds) {
 
 let args = argv.slice(2);
 
-const local = args[0] === '--local';
+const local = args.includes('--local');
+const starlingmonkey = args.includes('--starlingmonkey');
 
 async function $(...args) {
     return await retry(10, () => zx(...args))
@@ -66,6 +67,11 @@ await cd(fixturePath);
 await copyFile(join(fixturePath, 'fastly.toml.in'), join(fixturePath, 'fastly.toml'))
 const config = TOML.parse(await readFile(join(fixturePath, 'fastly.toml'), 'utf-8'))
 config.name = serviceName;
+if (starlingmonkey) {
+    const buildArgs = config.scripts.build.split(' ')
+    buildArgs.splice(-1, null, '--starlingmonkey')
+    config.scripts.build = buildArgs.join(' ')
+}
 await writeFile(join(fixturePath, 'fastly.toml'), TOML.stringify(config), 'utf-8')
 if (!local) {
     core.startGroup('Delete service if already exists')
@@ -103,7 +109,25 @@ await retry(10, expBackoff('60s', '30s'), async () => {
 })
 core.endGroup()
 
-const { default: tests } = await import(join(fixturePath, 'tests.json'), { with: { type: 'json' } });
+let { default: tests } = await import(join(fixturePath, 'tests.json'), { with: { type: 'json' } });
+
+if (starlingmonkey) {
+    const { default: testsStarlingMonkey } = await import(join(fixturePath, 'tests-starlingmonkey.json'), { with: { type: 'json' } });
+    const testCnt = Object.keys(tests).length;
+    const starlingTestCnt = testsStarlingMonkey.length;
+    if (process.env.GITHUB_ACTIONS) {
+        await core.summary
+        .addHeading('StarlingMonkey Progress')
+        .addRaw(`
+\`\`\`mermaid
+pie showData
+    title 🐦🐵 Test Progress 🚀🚀
+    "Remaining Tests" : ${testCnt - starlingTestCnt}
+    "StarlingMonkey Tests" : ${starlingTestCnt}
+\`\`\``, true).write();
+    }
+    tests = Object.fromEntries(Object.entries(tests).filter(([key]) => testsStarlingMonkey.includes(key)));
+}
 
 core.startGroup('Running tests')
 function chunks(arr, size) {

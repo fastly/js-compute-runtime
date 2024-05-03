@@ -1,9 +1,14 @@
 /// <reference path="../../../../../types/index.d.ts" />
 import { Backend } from 'fastly:backend';
-import { CacheOverride } from 'fastly:cache-override';
-import { allowDynamicBackends } from "fastly:experimental";
+import * as cacheOverride from 'fastly:cache-override';
+import * as experimental from "fastly:experimental";
 import { pass, assert, assertDoesNotThrow, assertThrows, assertRejects, assertResolves } from "./assertions.js";
 import { isRunningLocally, routes } from "./routes.js";
+
+{
+
+const { CacheOverride } = cacheOverride;
+const { allowDynamicBackends } = experimental;
 
 /// The backend name is already in use.
 
@@ -1621,4 +1626,6 @@ function createValidFastlyBackend() {
       dontPool: true,
     }
   );
+}
+
 }

@@ -307,4 +307,3 @@ routes.set("/device/interface", () => {
         return pass('ok')
     });
 }
-

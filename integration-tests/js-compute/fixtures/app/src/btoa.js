@@ -737,9 +737,16 @@ routes.set('/btoa', () => {
     if (error) { return error; }
     error = assertThrows(() => atob("--"))
     if (error) { return error; }
-    error = assertThrows(() => atob("__"))
-    if (error) { return error; }
   }
 
   return pass('ok')
+});
+
+routes.set('/btoa-doubleunderscore', () => {
+  let error;
+  
+  error = assertThrows(() => atob("__"))
+  if (error) { return error; }
+
+  return pass('ok');
 });
