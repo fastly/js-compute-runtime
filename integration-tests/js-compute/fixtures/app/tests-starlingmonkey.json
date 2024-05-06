@@ -164,5 +164,17 @@
   "GET /clearTimeout/called-unbound",
   "GET /urlsearchparams/sort",
   "GET /random",
-  "GET /error"
+  "GET /error",
+  "GET /override-content-length/request/init/object-literal/true",
+  "GET /override-content-length/request/init/object-literal/false",
+  "GET /override-content-length/request/clone/true",
+  "GET /override-content-length/request/clone/false",
+  "GET /override-content-length/fetch/init/object-literal/true",
+  "GET /override-content-length/fetch/init/object-literal/false",
+  "GET /override-content-length/response/init/object-literal/true",
+  "GET /override-content-length/response/init/object-literal/false",
+  "GET /override-content-length/response/init/response-instance/true",
+  "GET /override-content-length/response/init/response-instance/false",
+  "GET /override-content-length/response/method/false",
+  "GET /override-content-length/response/method/true"
 ]
