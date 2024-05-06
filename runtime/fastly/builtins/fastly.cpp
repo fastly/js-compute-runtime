@@ -348,16 +348,20 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(ENGINE->cx(), experimental, "includeBytes", experimental_val)) {
     return false;
   }
-  auto set_default_backend = JS_NewFunction(ENGINE->cx(), &Fastly::defaultBackend_set, 1, 0, "setDefaultBackend");
+  auto set_default_backend =
+      JS_NewFunction(ENGINE->cx(), &Fastly::defaultBackend_set, 1, 0, "setDefaultBackend");
   RootedObject set_default_backend_obj(ENGINE->cx(), JS_GetFunctionObject(set_default_backend));
   RootedValue set_default_backend_val(ENGINE->cx(), ObjectValue(*set_default_backend_obj));
   if (!JS_SetProperty(ENGINE->cx(), experimental, "setDefaultBackend", set_default_backend_val)) {
     return false;
   }
-  auto allow_dynamic_backends = JS_NewFunction(ENGINE->cx(), &Fastly::allowDynamicBackends_set, 1, 0, "allowDynamicBackends");
-  RootedObject allow_dynamic_backends_obj(ENGINE->cx(), JS_GetFunctionObject(allow_dynamic_backends));
+  auto allow_dynamic_backends =
+      JS_NewFunction(ENGINE->cx(), &Fastly::allowDynamicBackends_set, 1, 0, "allowDynamicBackends");
+  RootedObject allow_dynamic_backends_obj(ENGINE->cx(),
+                                          JS_GetFunctionObject(allow_dynamic_backends));
   RootedValue allow_dynamic_backends_val(ENGINE->cx(), ObjectValue(*allow_dynamic_backends_obj));
-  if (!JS_SetProperty(ENGINE->cx(), experimental, "allowDynamicBackends", allow_dynamic_backends_val)) {
+  if (!JS_SetProperty(ENGINE->cx(), experimental, "allowDynamicBackends",
+                      allow_dynamic_backends_val)) {
     return false;
   }
   if (!ENGINE->define_builtin_module("fastly:experimental", experimental_val)) {
