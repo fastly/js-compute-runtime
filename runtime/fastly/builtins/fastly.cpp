@@ -320,13 +320,20 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  // Define builtin modules
-  RootedValue envGet(ENGINE->cx());
-  if (!JS_GetProperty(ENGINE->cx(), Fastly::env, "get", &envGet)) {
+  Fastly::baseURL.init(ENGINE->cx());
+  Fastly::defaultBackend.init(ENGINE->cx());
+
+  if (!JS_DefineProperty(ENGINE->cx(), ENGINE->global(), "fastly", fastly, 0)) {
+    return false;
+  }
+
+  // fastly:env
+  RootedValue env_get(ENGINE->cx());
+  if (!JS_GetProperty(ENGINE->cx(), Fastly::env, "get", &env_get)) {
     return false;
   }
   RootedObject env_builtin(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
-  if (!JS_SetProperty(ENGINE->cx(), env_builtin, "env", envGet)) {
+  if (!JS_SetProperty(ENGINE->cx(), env_builtin, "env", env_get)) {
     return false;
   }
   RootedValue env_builtin_val(ENGINE->cx(), JS::ObjectValue(*env_builtin));
@@ -334,15 +341,30 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  // TODO(GB): these are just placeholder shapes for now
-  RootedObject backend_backend(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
-  RootedValue backend_backend_val(ENGINE->cx(), JS::ObjectValue(*backend_backend));
-  if (!JS_SetProperty(ENGINE->cx(), backend_backend, "Backend", backend_backend_val)) {
+  // fastly:experimental
+  RootedObject experimental(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
+  RootedValue experimental_val(ENGINE->cx(), JS::ObjectValue(*experimental));
+  // TODO(GB): implement includeBytes
+  if (!JS_SetProperty(ENGINE->cx(), experimental, "includeBytes", experimental_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_module("fastly:backend", backend_backend_val)) {
+  auto set_default_backend = JS_NewFunction(ENGINE->cx(), &Fastly::defaultBackend_set, 1, 0, "setDefaultBackend");
+  RootedObject set_default_backend_obj(ENGINE->cx(), JS_GetFunctionObject(set_default_backend));
+  RootedValue set_default_backend_val(ENGINE->cx(), ObjectValue(*set_default_backend_obj));
+  if (!JS_SetProperty(ENGINE->cx(), experimental, "setDefaultBackend", set_default_backend_val)) {
     return false;
   }
+  auto allow_dynamic_backends = JS_NewFunction(ENGINE->cx(), &Fastly::allowDynamicBackends_set, 1, 0, "allowDynamicBackends");
+  RootedObject allow_dynamic_backends_obj(ENGINE->cx(), JS_GetFunctionObject(allow_dynamic_backends));
+  RootedValue allow_dynamic_backends_val(ENGINE->cx(), ObjectValue(*allow_dynamic_backends_obj));
+  if (!JS_SetProperty(ENGINE->cx(), experimental, "allowDynamicBackends", allow_dynamic_backends_val)) {
+    return false;
+  }
+  if (!ENGINE->define_builtin_module("fastly:experimental", experimental_val)) {
+    return false;
+  }
+
+  // TODO(GB): all of the following builtin modules are just placeholder shapes for now
   if (!ENGINE->define_builtin_module("fastly:body", env_builtin_val)) {
     return false;
   }
@@ -396,14 +418,6 @@ bool install(api::Engine *engine) {
   if (!ENGINE->define_builtin_module("fastly:edge-rate-limiter", edge_rate_limiter_val)) {
     return false;
   }
-  RootedObject experimental(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
-  RootedValue experimental_val(ENGINE->cx(), JS::ObjectValue(*experimental));
-  if (!JS_SetProperty(ENGINE->cx(), experimental, "includeBytes", experimental_val)) {
-    return false;
-  }
-  if (!ENGINE->define_builtin_module("fastly:experimental", experimental_val)) {
-    return false;
-  }
   RootedObject fanout(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
   RootedValue fanout_val(ENGINE->cx(), JS::ObjectValue(*fanout));
   if (!JS_SetProperty(ENGINE->cx(), fanout, "createFanoutHandoff", fanout_val)) {
@@ -427,13 +441,6 @@ bool install(api::Engine *engine) {
     return false;
   }
   if (!ENGINE->define_builtin_module("fastly:secret-store", env_builtin_val)) {
-    return false;
-  }
-
-  Fastly::baseURL.init(ENGINE->cx());
-  Fastly::defaultBackend.init(ENGINE->cx());
-
-  if (!JS_DefineProperty(ENGINE->cx(), ENGINE->global(), "fastly", fastly, 0)) {
     return false;
   }
 

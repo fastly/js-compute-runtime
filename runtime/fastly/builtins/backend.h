@@ -60,8 +60,6 @@ public:
   static bool to_string(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-
-  static bool init_class(JSContext *cx, JS::HandleObject global);
 };
 
 } // namespace fastly::backend

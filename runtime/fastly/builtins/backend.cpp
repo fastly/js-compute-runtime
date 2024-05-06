@@ -30,12 +30,6 @@ using fastly::fetch::RequestOrResponse;
 
 namespace fastly::backend {
 
-namespace {
-
-api::Engine *ENGINE;
-
-} // namespace
-
 enum class Authentication : uint8_t {
   RSA,
 };
@@ -1441,18 +1435,25 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool Backend::init_class(JSContext *cx, JS::HandleObject global) {
-  JS::RootedObject backends(cx, JS_NewPlainObject(cx));
+bool install(api::Engine *engine) {
+  JS::RootedObject backends(engine->cx(), JS_NewPlainObject(engine->cx()));
   if (!backends) {
     return false;
   }
-  Backend::backends.init(cx, backends);
-  return BuiltinImpl<Backend>::init_class_impl(cx, global);
-}
+  Backend::backends.init(engine->cx(), backends);
+  if (!BuiltinImpl<Backend>::init_class_impl(engine->cx(), engine->global())) {
+    return false;
+  }
 
-bool install(api::Engine *engine) {
-  ENGINE = engine;
-  if (!Backend::init_class(ENGINE->cx(), ENGINE->global())) {
+  RootedObject backend_obj(engine->cx(),
+                           JS_GetConstructor(engine->cx(), BuiltinImpl<Backend>::proto_obj));
+  RootedValue backend_val(engine->cx(), ObjectValue(*backend_obj));
+  RootedObject backend_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  if (!JS_SetProperty(engine->cx(), backend_ns, "Backend", backend_val)) {
+    return false;
+  }
+  RootedValue backend_ns_val(engine->cx(), JS::ObjectValue(*backend_ns));
+  if (!engine->define_builtin_module("fastly:backend", backend_ns_val)) {
     return false;
   }
   return true;
