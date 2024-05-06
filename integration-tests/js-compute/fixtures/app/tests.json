@@ -25,17 +25,6 @@
       "body": "ok"
     }
   },
-  "GET /btoa-doubleunderscore": {
-    "environments": ["viceroy"],
-    "downstream_request": {
-      "method": "GET",
-      "pathname": "/btoa-doubleunderscore"
-    },
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
   "GET /byob": {
     "environments": ["viceroy", "compute"],
     "downstream_request": {

@@ -333,6 +333,7 @@ bool install(api::Engine *engine) {
   if (!ENGINE->define_builtin_module("fastly:env", env_builtin_val)) {
     return false;
   }
+
   // TODO(GB): these are just placeholder shapes for now
   RootedObject backend_backend(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
   RootedValue backend_backend_val(ENGINE->cx(), JS::ObjectValue(*backend_backend));
@@ -360,9 +361,6 @@ bool install(api::Engine *engine) {
     return false;
   }
   if (!ENGINE->define_builtin_module("fastly:cache", cache_val)) {
-    return false;
-  }
-  if (!ENGINE->define_builtin_module("fastly:cache-override", env_builtin_val)) {
     return false;
   }
   if (!ENGINE->define_builtin_module("fastly:config-store", env_builtin_val)) {
