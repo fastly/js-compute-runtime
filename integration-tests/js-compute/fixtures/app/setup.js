@@ -69,7 +69,7 @@ async function setupSecretStore() {
             return []
         }
     }())
-    const STORE_ID = stores.find(({ name }) => name === 'example-test-secret-store')?.id
+    const STORE_ID = stores?.find(({ name }) => name === 'example-test-secret-store')?.id
     if (!STORE_ID) {
         process.env.STORE_ID = JSON.parse(await zx`fastly secret-store create --quiet --name=example-test-secret-store --json --token $FASTLY_API_TOKEN`).id
     } else {
