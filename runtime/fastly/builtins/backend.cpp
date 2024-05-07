@@ -22,16 +22,13 @@
 #include "backend.h"
 #include "builtin.h"
 #include "encode.h"
+#include "fastly.h"
+
+using fastly::fastly::FastlyGetErrorMessage;
 
 using fastly::fetch::RequestOrResponse;
 
 namespace fastly::backend {
-
-namespace {
-
-api::Engine *ENGINE;
-
-} // namespace
 
 enum class Authentication : uint8_t {
   RSA,
@@ -826,7 +823,7 @@ bool Backend::to_string(JSContext *cx, unsigned argc, JS::Value *vp) {
 namespace {
 host_api::HostString parse_and_validate_name(JSContext *cx, JS::HandleValue name_val) {
   if (name_val.isNullOrUndefined()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_NAME_NOT_SET);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_NAME_NOT_SET);
     return nullptr;
   }
   JS::RootedString name(cx, JS::ToString(cx, name_val));
@@ -835,11 +832,11 @@ host_api::HostString parse_and_validate_name(JSContext *cx, JS::HandleValue name
   }
   auto length = JS::GetStringLength(name);
   if (length > 254) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_NAME_TOO_LONG);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_NAME_TOO_LONG);
     return nullptr;
   }
   if (length == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_NAME_EMPTY);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_NAME_EMPTY);
     return nullptr;
   }
   return core::encode(cx, name);
@@ -886,7 +883,7 @@ bool Backend::from_name(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto exists = res.unwrap();
 
   if (!exists) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+    JS_ReportErrorNumberUTF8(cx, FastlyGetErrorMessage, nullptr,
                              JSMSG_BACKEND_FROMNAME_BACKEND_DOES_NOT_EXIST, name.begin());
     return false;
   }
@@ -928,7 +925,7 @@ bool Backend::health(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   if (!exists.unwrap()) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+    JS_ReportErrorNumberUTF8(cx, FastlyGetErrorMessage, nullptr,
                              JSMSG_BACKEND_IS_HEALTHY_BACKEND_DOES_NOT_EXIST, name.begin());
     return false;
   }
@@ -981,7 +978,8 @@ bool Backend::set_host_override(JSContext *cx, JSObject *backend,
   }
 
   if (JS_GetStringLength(host_override) == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_HOST_OVERRIDE_EMPTY);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_BACKEND_HOST_OVERRIDE_EMPTY);
     return false;
   }
   JS::SetReservedSlot(backend, Backend::Slots::HostOverride, JS::StringValue(host_override));
@@ -995,7 +993,7 @@ bool Backend::set_sni_hostname(JSContext *cx, JSObject *backend, JS::HandleValue
   }
 
   if (JS_GetStringLength(sni_hostname) == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_SNI_HOSTNAME_EMPTY);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_SNI_HOSTNAME_EMPTY);
     return false;
   }
   JS::SetReservedSlot(backend, Backend::Slots::SniHostname, JS::StringValue(sni_hostname));
@@ -1012,12 +1010,12 @@ bool Backend::set_timeout_slot(JSContext *cx, JSObject *backend, JS::HandleValue
   }
   int64_t timeout = std::round(native_value);
   if (timeout < 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_NEGATIVE,
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_NEGATIVE,
                               property_name.c_str());
     return false;
   }
   if (timeout >= std::pow(2, 32)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_TOO_BIG,
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_TOO_BIG,
                               property_name.c_str());
     return false;
   }
@@ -1027,7 +1025,7 @@ bool Backend::set_timeout_slot(JSContext *cx, JSObject *backend, JS::HandleValue
 
 bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue target_val) {
   if (target_val.isNullOrUndefined()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_NOT_SET);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_NOT_SET);
     return false;
   }
 
@@ -1040,16 +1038,16 @@ bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue targe
                                  target_string_slice.len);
   auto length = target_string.length();
   if (length == 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_EMPTY);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_EMPTY);
     return false;
   }
 
   if (target_string == "::") {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_INVALID);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_INVALID);
     return false;
   }
   if (!is_valid_host(target_string) && !is_valid_ip(target_string)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_INVALID);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_INVALID);
     return false;
   }
 
@@ -1146,7 +1144,8 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto configuration_parameter = args.get(0);
 
   if (!configuration_parameter.isObject()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_PARAMETER_NOT_OBJECT);
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_BACKEND_PARAMETER_NOT_OBJECT);
     return false;
   }
 
@@ -1249,7 +1248,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     if (std::isnan(version)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MIN_INVALID);
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MIN_INVALID);
       return false;
     }
 
@@ -1262,7 +1261,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     } else if (version == 1) {
       tls_min_version = host_api::TlsVersion::version_1();
     } else {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MIN_INVALID);
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MIN_INVALID);
       return false;
     }
     JS::SetReservedSlot(backend, Backend::Slots::TlsMinVersion,
@@ -1285,7 +1284,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     if (std::isnan(version)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MAX_INVALID);
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MAX_INVALID);
       return false;
     }
 
@@ -1298,7 +1297,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     } else if (version == 1) {
       tls_max_version = host_api::TlsVersion::version_1();
     } else {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MAX_INVALID);
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MAX_INVALID);
       return false;
     }
     JS::SetReservedSlot(backend, Backend::Slots::TlsMaxVersion,
@@ -1307,7 +1306,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   if (tls_min_version.has_value() && tls_max_version.has_value()) {
     if (tls_min_version->value > tls_max_version->value) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                 JSMSG_BACKEND_TLS_MIN_GREATER_THAN_TLS_MAX);
       return false;
     }
@@ -1327,7 +1326,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     if (JS_GetStringLength(certificate_hostname) == 0) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                 JSMSG_BACKEND_CERTIFICATE_HOSTNAME_EMPTY);
       return false;
     }
@@ -1372,7 +1371,8 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
     if (JS_GetStringLength(ca_certificate) == 0) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_CA_CERTIFICATE_EMPTY);
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CA_CERTIFICATE_EMPTY);
       return false;
     }
     JS::SetReservedSlot(backend, Backend::Slots::CaCertificate, JS::StringValue(ca_certificate));
@@ -1393,12 +1393,13 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
     if (ciphers_chars.size() == 0) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_CIPHERS_EMPTY);
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_CIPHERS_EMPTY);
       return false;
     }
     std::string cipher_spec(ciphers_chars.begin(), ciphers_chars.len);
     if (!is_cipher_suite_supported_by_fastly(cipher_spec)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_CIPHERS_NOT_AVALIABLE);
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CIPHERS_NOT_AVALIABLE);
       return false;
     }
     JS::SetReservedSlot(
@@ -1419,7 +1420,8 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
     if (JS_GetStringLength(sni_hostname) == 0) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BACKEND_SNI_HOSTNAME_EMPTY);
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_SNI_HOSTNAME_EMPTY);
       return false;
     }
     JS::SetReservedSlot(backend, Backend::Slots::SniHostname, JS::StringValue(sni_hostname));
@@ -1433,18 +1435,25 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool Backend::init_class(JSContext *cx, JS::HandleObject global) {
-  JS::RootedObject backends(cx, JS_NewPlainObject(cx));
+bool install(api::Engine *engine) {
+  JS::RootedObject backends(engine->cx(), JS_NewPlainObject(engine->cx()));
   if (!backends) {
     return false;
   }
-  Backend::backends.init(cx, backends);
-  return BuiltinImpl<Backend>::init_class_impl(cx, global);
-}
+  Backend::backends.init(engine->cx(), backends);
+  if (!BuiltinImpl<Backend>::init_class_impl(engine->cx(), engine->global())) {
+    return false;
+  }
 
-bool install(api::Engine *engine) {
-  ENGINE = engine;
-  if (!Backend::init_class(ENGINE->cx(), ENGINE->global())) {
+  RootedObject backend_obj(engine->cx(),
+                           JS_GetConstructor(engine->cx(), BuiltinImpl<Backend>::proto_obj));
+  RootedValue backend_val(engine->cx(), ObjectValue(*backend_obj));
+  RootedObject backend_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  if (!JS_SetProperty(engine->cx(), backend_ns, "Backend", backend_val)) {
+    return false;
+  }
+  RootedValue backend_ns_val(engine->cx(), JS::ObjectValue(*backend_ns));
+  if (!engine->define_builtin_module("fastly:backend", backend_ns_val)) {
     return false;
   }
   return true;

@@ -6,6 +6,7 @@
 #include "../../../StarlingMonkey/builtins/web/url.h"
 #include "../../../StarlingMonkey/builtins/web/worker-location.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
+#include "../cache-override.h"
 #include "../fastly.h"
 #include "../fetch-event.h"
 #include "extension-api.h"
@@ -32,6 +33,7 @@ using builtins::web::streams::TransformStream;
 using builtins::web::url::URL;
 using builtins::web::url::URLSearchParams;
 using builtins::web::worker_location::WorkerLocation;
+using fastly::cache_override::CacheOverride;
 using fastly::fastly::FastlyGetErrorMessage;
 using fastly::fetch_event::FetchEvent;
 
@@ -1186,26 +1188,25 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
   return true;
 }
 
-// TODO(GB): reimplement
-// bool Request::set_cache_override(JSContext *cx, JS::HandleObject self,
-//                                  JS::HandleValue cache_override_val) {
-//   MOZ_ASSERT(is_instance(self));
-//   if (!builtins::CacheOverride::is_instance(cache_override_val)) {
-//     JS_ReportErrorUTF8(cx, "Value passed in as cacheOverride must be an "
-//                            "instance of CacheOverride");
-//     return false;
-//   }
+bool Request::set_cache_override(JSContext *cx, JS::HandleObject self,
+                                 JS::HandleValue cache_override_val) {
+  MOZ_ASSERT(is_instance(self));
+  if (!CacheOverride::is_instance(cache_override_val)) {
+    JS_ReportErrorUTF8(cx, "Value passed in as cacheOverride must be an "
+                           "instance of CacheOverride");
+    return false;
+  }
 
-//   JS::RootedObject input(cx, &cache_override_val.toObject());
-//   JSObject *override = builtins::CacheOverride::clone(cx, input);
-//   if (!override) {
-//     return false;
-//   }
+  JS::RootedObject input(cx, &cache_override_val.toObject());
+  JSObject *override = CacheOverride::clone(cx, input);
+  if (!override) {
+    return false;
+  }
 
-//   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::CacheOverride),
-//                       JS::ObjectValue(*override));
-//   return true;
-// }
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::CacheOverride),
+                      JS::ObjectValue(*override));
+  return true;
+}
 
 bool Request::apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self) {
   MOZ_ASSERT(cx);
@@ -1228,54 +1229,52 @@ bool Request::apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self) {
   return true;
 }
 
-// TODO(GB): reimplement
 /**
  * Apply the CacheOverride to a host-side request handle.
  */
-// bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
-//   MOZ_ASSERT(is_instance(self));
-//   JS::RootedObject override(
-//       cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Request::Slots::CacheOverride))
-//               .toObjectOrNull());
-//   if (!override) {
-//     return true;
-//   }
+bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
+  MOZ_ASSERT(is_instance(self));
+  JS::RootedObject override(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Request::Slots::CacheOverride))
+              .toObjectOrNull());
+  if (!override) {
+    return true;
+  }
 
-//   std::optional<uint32_t> ttl;
-//   JS::RootedValue val(cx, builtins::CacheOverride::ttl(override));
-//   if (!val.isUndefined()) {
-//     ttl = val.toInt32();
-//   }
+  std::optional<uint32_t> ttl;
+  JS::RootedValue val(cx, CacheOverride::ttl(override));
+  if (!val.isUndefined()) {
+    ttl = val.toInt32();
+  }
 
-//   std::optional<uint32_t> stale_while_revalidate;
-//   val = builtins::CacheOverride::swr(override);
-//   if (!val.isUndefined()) {
-//     stale_while_revalidate = val.toInt32();
-//   }
+  std::optional<uint32_t> stale_while_revalidate;
+  val = CacheOverride::swr(override);
+  if (!val.isUndefined()) {
+    stale_while_revalidate = val.toInt32();
+  }
 
-//   host_api::HostString sk_chars;
-//   std::optional<std::string_view> surrogate_key;
-//   val = builtins::CacheOverride::surrogate_key(override);
-//   if (!val.isUndefined()) {
-//     sk_chars = core::encode(cx, val);
-//     if (!sk_chars) {
-//       return false;
-//     }
+  host_api::HostString sk_chars;
+  std::optional<std::string_view> surrogate_key;
+  val = CacheOverride::surrogate_key(override);
+  if (!val.isUndefined()) {
+    sk_chars = core::encode(cx, val);
+    if (!sk_chars) {
+      return false;
+    }
 
-//     surrogate_key.emplace(sk_chars);
-//   }
+    surrogate_key.emplace(sk_chars);
+  }
 
-//   auto tag = builtins::CacheOverride::abi_tag(override);
-//   auto res =
-//       Request::request_handle(self).cache_override(tag, ttl, stale_while_revalidate,
-//       surrogate_key);
-//   if (auto *err = res.to_err()) {
-//     HANDLE_ERROR(cx, *err);
-//     return false;
-//   }
+  auto tag = CacheOverride::abi_tag(override);
+  auto res =
+      Request::request_handle(self).cache_override(tag, ttl, stale_while_revalidate, surrogate_key);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
 
-//   return true;
-// }
+  return true;
+}
 
 bool Request::method_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
@@ -1347,11 +1346,8 @@ bool Request::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Request::setCacheOverride(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
-  // TODO(GB): reimplement
-  fprintf(stderr, "setCacheOverride TODO");
-  abort();
-  // if (!set_cache_override(cx, self, args[0]))
-  //   return false;
+  if (!set_cache_override(cx, self, args[0]))
+    return false;
 
   args.rval().setUndefined();
   return true;
@@ -1530,10 +1526,9 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedValue cache_override(
       cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::CacheOverride)));
   if (!cache_override.isNullOrUndefined()) {
-    // TODO(GB): reimplement
-    // if (!set_cache_override(cx, requestInstance, cache_override)) {
-    //   return false;
-    // }
+    if (!set_cache_override(cx, requestInstance, cache_override)) {
+      return false;
+    }
   } else {
     JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::CacheOverride),
                         cache_override);
@@ -2063,14 +2058,12 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
                         JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::Backend)));
   }
 
-  // TODO(GB): reimplement
   // Apply the Fastly Compute-proprietary `cacheOverride` property.
-  /*if (!cache_override.isUndefined()) {
+  if (!cache_override.isUndefined()) {
     if (!set_cache_override(cx, request, cache_override)) {
       return nullptr;
     }
-  } else*/
-  if (input_request) {
+  } else if (input_request) {
     JS::SetReservedSlot(
         request, static_cast<uint32_t>(Slots::CacheOverride),
         JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::CacheOverride)));

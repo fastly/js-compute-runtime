@@ -11,6 +11,8 @@ using fastly::backend::Backend;
 using fastly::fastly::Fastly;
 using fastly::fetch::Request;
 
+using fastly::fastly::FastlyGetErrorMessage;
+
 namespace fastly::fetch {
 
 api::Engine *ENGINE;
@@ -130,7 +132,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
     if (auto *err = res.to_err()) {
       if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+        JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                   JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST, backend_chars.ptr.get());
       } else {
         HANDLE_ERROR(cx, *err);

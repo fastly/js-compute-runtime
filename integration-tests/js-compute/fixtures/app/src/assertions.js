@@ -87,7 +87,7 @@ export function assertThrows(func, errorClass, errorMessage) {
     } catch (error) {
         if (errorClass) {
             if ((error instanceof errorClass) === false) {
-                return fail(`Expected \`${func.toString()}\` to throw instance of \`${errorClass.name}\` - Found instance of \`${error.name}\``)
+                return fail(`Expected \`${func.toString()}\` to throw instance of \`${errorClass.name}\` - Found instance of \`${error.name}\`: ${error.message}\n${error.stack}`)
             }
         }
 

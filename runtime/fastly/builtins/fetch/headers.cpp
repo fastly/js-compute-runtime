@@ -2,9 +2,12 @@
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "../../../StarlingMonkey/runtime/sequence.hpp"
 #include "../../host-api/host_api_fastly.h"
+#include "../fastly.h"
 #include "./request-response.h"
 #include "js/Conversions.h"
 #include <iostream>
+
+using fastly::fastly::FastlyGetErrorMessage;
 
 namespace fastly::fetch {
 
@@ -601,7 +604,8 @@ bool Headers::set(JSContext *cx, unsigned argc, JS::Value *vp) {
   NORMALIZE_VALUE(args[1], "Headers.set")
 
   if (Headers::is_immutable(self)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE, "Headers.set");
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE,
+                              "Headers.set");
     return false;
   }
 
@@ -647,7 +651,7 @@ bool Headers::append(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(2)
 
   if (Headers::is_immutable(self)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE,
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE,
                               "Headers.append");
     return false;
   }
@@ -692,7 +696,7 @@ bool Headers::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   NORMALIZE_NAME(args[0], "Headers.delete")
 
   if (Headers::is_immutable(self)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE,
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_HEADERS_IMMUTABLE,
                               "Headers.delete");
     return false;
   }
