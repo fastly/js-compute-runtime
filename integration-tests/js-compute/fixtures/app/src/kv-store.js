@@ -276,6 +276,15 @@ import { routes, isRunningLocally } from "./routes.js";
             if (error) { return error }
             return pass()
         });
+        routes.set("/kv-store/put/request-body", async ({ request }) => {
+            const store = createValidStore()
+            let result = store.put('readablestream-req', request.body)
+            let error = assert(result instanceof Promise, true, `store.put('readablestream-req', request.body) instanceof Promise`)
+            if (error) { return error }
+            error = assert(await result, undefined, `await store.put('readablestream-req', request.body)`)
+            if (error) { return error }
+            return pass()
+        });
         routes.set("/kv-store/put/value-parameter-readablestream-over-30mb", async () => {
             // TODO: remove this when streams are supported
             let error = await assertRejects(async () => {
