@@ -1762,6 +1762,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   JS::RootedValue body_val(cx);
   JS::RootedValue backend_val(cx);
   JS::RootedValue cache_override(cx);
+  JS::RootedValue cache_key(cx);
   JS::RootedValue fastly_val(cx);
   JS::RootedValue manualFramingHeaders(cx);
   bool hasmanualFramingHeaders;
@@ -1772,6 +1773,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
         !JS_GetProperty(cx, init, "body", &body_val) ||
         !JS_GetProperty(cx, init, "backend", &backend_val) ||
         !JS_GetProperty(cx, init, "cacheOverride", &cache_override) ||
+        !JS_GetProperty(cx, init, "cacheKey", &cache_key) ||
         !JS_GetProperty(cx, init, "fastly", &fastly_val) ||
         !JS_HasOwnProperty(cx, init, "manualFramingHeaders", &hasmanualFramingHeaders) ||
         !JS_GetProperty(cx, init, "manualFramingHeaders", &manualFramingHeaders)) {
@@ -2065,6 +2067,14 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     JS::SetReservedSlot(
         request, static_cast<uint32_t>(Slots::CacheOverride),
         JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::CacheOverride)));
+  }
+
+  // Apply the Fastly Compute-proprietary `cacheKey` property.
+  // (in the input_request case, the header will be copied across normally)
+  if (!cache_key.isUndefined()) {
+    if (!set_cache_key(cx, request, cache_key)) {
+      return nullptr;
+    }
   }
 
   if (fastly_val.isObject()) {
