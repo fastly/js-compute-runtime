@@ -751,6 +751,7 @@ declare interface Fastly {
   /**
    * Property to access the environment variables for the Fastly Compute service.
    * @hidden
+   * @experimental
    */
   env: {
     /**
@@ -765,6 +766,12 @@ declare interface Fastly {
      */
     get(name: string): string;
   };
+
+  /**
+   * Internal version string for the JS runtime build.
+   * @hidden
+   */
+  version: string,
 
   /**
    * Creates a new {@linkcode Logger} instance for the given

@@ -13,6 +13,8 @@ using namespace builtins;
 
 namespace fastly::fastly {
 
+#define RUNTIME_VERSION "starlingmonkey-dev"
+
 class Env : public BuiltinNoConstructor<Env> {
 private:
   static bool env_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -53,6 +55,7 @@ public:
   // static bool getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value *vp);
   // static bool getLogger(JSContext *cx, unsigned argc, JS::Value *vp);
   // static bool includeBytes(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool version_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool env_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool baseURL_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool baseURL_set(JSContext *cx, unsigned argc, JS::Value *vp);

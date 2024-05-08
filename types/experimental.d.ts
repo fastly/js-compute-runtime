@@ -5,6 +5,13 @@
  */
 declare module "fastly:experimental" {
   /**
+   * Internal version string for the JS runtime engine build.
+   * 
+   * @experimental
+   * @hidden
+   */
+  export const version: string;
+  /**
    * @experimental
    * @hidden
    */

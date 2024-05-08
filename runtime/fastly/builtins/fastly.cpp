@@ -51,6 +51,13 @@ JS::PersistentRooted<JSObject *> Fastly::baseURL;
 JS::PersistentRooted<JSString *> Fastly::defaultBackend;
 bool Fastly::allowDynamicBackends = false;
 
+bool Fastly::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  JS::RootedString version_str(cx, JS_NewStringCopyN(cx, RUNTIME_VERSION, strlen(RUNTIME_VERSION)));
+  args.rval().setString(version_str);
+  return true;
+}
+
 bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "fastly.env.get", 1))
@@ -306,6 +313,7 @@ const JSPropertySpec Fastly::properties[] = {
     JS_PSGS("defaultBackend", defaultBackend_get, defaultBackend_set, JSPROP_ENUMERATE),
     JS_PSGS("allowDynamicBackends", allowDynamicBackends_get, allowDynamicBackends_set,
             JSPROP_ENUMERATE),
+    JS_PSG("version", version_get, JSPROP_ENUMERATE),
     JS_PS_END};
 
 bool install(api::Engine *engine) {
@@ -362,6 +370,12 @@ bool install(api::Engine *engine) {
   RootedValue allow_dynamic_backends_val(ENGINE->cx(), ObjectValue(*allow_dynamic_backends_obj));
   if (!JS_SetProperty(ENGINE->cx(), experimental, "allowDynamicBackends",
                       allow_dynamic_backends_val)) {
+    return false;
+  }
+  auto version_get = JS_NewFunction(ENGINE->cx(), &Fastly::version_get, 0, 0, "version");
+  RootedObject version_get_obj(ENGINE->cx(), JS_GetFunctionObject(version_get));
+  RootedValue version_get_val(ENGINE->cx(), ObjectValue(*version_get_obj));
+  if (!JS_SetProperty(ENGINE->cx(), experimental, "version", version_get_val)) {
     return false;
   }
   if (!ENGINE->define_builtin_module("fastly:experimental", experimental_val)) {

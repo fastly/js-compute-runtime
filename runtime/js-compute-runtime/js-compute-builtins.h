@@ -32,6 +32,8 @@ const JSErrorFormatString js_ErrorFormatString[JSErrNum_Limit] = {
 
 #include "host_interface/host_api.h"
 
+#define RUNTIME_VERSION "3.13.2-dev"
+
 const JSErrorFormatString *GetErrorMessage(void *userRef, unsigned errorNumber);
 
 JSObject *PromiseRejectedWithPendingError(JSContext *cx);
