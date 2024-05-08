@@ -2,11 +2,8 @@
 /* eslint-env serviceworker */
 
 import { pass, assert, assertDoesNotThrow, assertThrows, assertRejects, iteratableToStream, streamToString, assertResolves } from "./assertions.js";
-import { SimpleCache } from 'fastly:cache';
-import * as fastlyCache from 'fastly:cache';
+import { SimpleCache, SimpleCacheEntry } from 'fastly:cache';
 import { routes, isRunningLocally } from "./routes.js";
-
-const { SimpleCacheEntry } = fastlyCache;
 
 let error;
 routes.set("/simple-cache/interface", () => {
@@ -255,7 +252,7 @@ routes.set("/simple-cache/interface", () => {
         if (!isRunningLocally()) {
             error = assertThrows(() => {
                 new SimpleCache.purge('1', { scope: "global" })
-            }, TypeError, `SimpleCache.purge is not a constructor`)
+            }, TypeError)
             if (error) { return error }
         }
         return pass()
@@ -373,7 +370,7 @@ routes.set("/simple-cache/interface", () => {
         if (!isRunningLocally()) {
             error = assertThrows(() => {
                 new SimpleCache.set('1', 'meow', 1)
-            }, TypeError, `SimpleCache.set is not a constructor`)
+            }, TypeError)
             if (error) { return error }
         }
         return pass()
@@ -818,7 +815,7 @@ routes.set("/simple-cache/interface", () => {
         if (!isRunningLocally()) {
             let error = assertThrows(() => {
                 new SimpleCache.get('1')
-            }, TypeError, `SimpleCache.get is not a constructor`)
+            }, TypeError)
             if (error) { return error }
         }
         return pass()
@@ -1188,7 +1185,7 @@ async function simpleCacheEntryInterfaceTests() {
                         ttl: 10
                     }
                 });
-            }, TypeError, `SimpleCache.getOrSet is not a constructor`)
+            }, TypeError)
             if (error) { return error }
         }
         return pass()

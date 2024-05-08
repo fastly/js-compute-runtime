@@ -11,6 +11,7 @@
 #include "js/JSON.h"
 
 using builtins::web::url::URL;
+using builtins::web::url::URLSearchParams;
 using fastly::fastly::Fastly;
 
 namespace {
@@ -379,25 +380,44 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  // TODO(GB): all of the following builtin modules are just placeholder shapes for now
-  if (!engine->define_builtin_module("fastly:body", env_builtin_val)) {
-    return false;
-  }
+  // fastly:cache
+  // TODO(GB): move this into core-cache when that is ported
   RootedObject cache(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   RootedValue cache_val(engine->cx(), JS::ObjectValue(*cache));
+  // TODO(GB): Implement core cache (placeholders used for now)
   if (!JS_SetProperty(engine->cx(), cache, "CoreCache", cache_val)) {
     return false;
   }
   if (!JS_SetProperty(engine->cx(), cache, "CacheEntry", cache_val)) {
     return false;
   }
-  if (!JS_SetProperty(engine->cx(), cache, "CacheEntry", cache_val)) {
+  if (!JS_SetProperty(engine->cx(), cache, "CacheState", cache_val)) {
     return false;
   }
-  if (!JS_SetProperty(engine->cx(), cache, "SimpleCache", cache_val)) {
+  if (!JS_SetProperty(engine->cx(), cache, "TransactionCacheEntry", cache_val)) {
+    return false;
+  }
+  RootedValue simple_cache_val(engine->cx());
+  if (!JS_GetProperty(engine->cx(), engine->global(), "SimpleCache", &simple_cache_val)) {
+    return false;
+  }
+  if (!JS_SetProperty(engine->cx(), cache, "SimpleCache", simple_cache_val)) {
+    return false;
+  }
+  RootedValue simple_cache_entry_val(engine->cx());
+  if (!JS_GetProperty(engine->cx(), engine->global(), "SimpleCacheEntry",
+                      &simple_cache_entry_val)) {
+    return false;
+  }
+  if (!JS_SetProperty(engine->cx(), cache, "SimpleCacheEntry", simple_cache_entry_val)) {
     return false;
   }
   if (!engine->define_builtin_module("fastly:cache", cache_val)) {
+    return false;
+  }
+
+  // TODO(GB): all of the following builtin modules are just placeholder shapes for now
+  if (!engine->define_builtin_module("fastly:body", env_builtin_val)) {
     return false;
   }
   if (!engine->define_builtin_module("fastly:config-store", env_builtin_val)) {
@@ -476,6 +496,57 @@ bool install(api::Engine *engine) {
 
   return JS_DefineFunctions(engine->cx(), fastly, methods) &&
          JS_DefineProperties(engine->cx(), fastly, Fastly::properties);
+}
+
+// We currently support five types of body inputs:
+// - byte sequence
+// - buffer source
+// - USV strings
+// - URLSearchParams
+// After the other other options are checked explicitly, all other inputs are
+// encoded to a UTF8 string to be treated as a USV string.
+// TODO: Support the other possible inputs to Body.
+JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
+                                                                JS::HandleValue bodyInit) {
+  JS::RootedObject bodyObj(cx, bodyInit.isObject() ? &bodyInit.toObject() : nullptr);
+  JS::UniqueChars buf;
+  size_t length;
+
+  if (bodyObj && JS_IsArrayBufferViewObject(bodyObj)) {
+    // `maybeNoGC` needs to be populated for the lifetime of `buf` because
+    // short typed arrays have inline data which can move on GC, so assert
+    // that no GC happens. (Which it doesn't, because we're not allocating
+    // before `buf` goes out of scope.)
+    JS::AutoCheckCannotGC noGC;
+    bool is_shared;
+    length = JS_GetArrayBufferViewByteLength(bodyObj);
+    buf = JS::UniqueChars(
+        reinterpret_cast<char *>(JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC)));
+    MOZ_ASSERT(!is_shared);
+    return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
+  } else if (bodyObj && JS::IsArrayBufferObject(bodyObj)) {
+    bool is_shared;
+    uint8_t *bytes;
+    JS::GetArrayBufferLengthAndData(bodyObj, &length, &is_shared, &bytes);
+    MOZ_ASSERT(!is_shared);
+    buf.reset(reinterpret_cast<char *>(bytes));
+    return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
+  } else if (bodyObj && URLSearchParams::is_instance(bodyObj)) {
+    jsurl::SpecSlice slice = URLSearchParams::serialize(cx, bodyObj);
+    buf = JS::UniqueChars(reinterpret_cast<char *>(const_cast<uint8_t *>(slice.data)));
+    length = slice.len;
+    return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
+  } else {
+    // Convert into a String following https://tc39.es/ecma262/#sec-tostring
+    auto str = core::encode(cx, bodyInit);
+    buf = std::move(str.ptr);
+    length = str.len;
+    if (!buf) {
+      return JS::Result<std::tuple<JS::UniqueChars, size_t>>(JS::Error());
+    }
+    return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
+  }
+  abort();
 }
 
 } // namespace fastly::fastly

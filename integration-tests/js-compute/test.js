@@ -58,7 +58,7 @@ zx.verbose = true;
 const branchName = (await zx`git branch --show-current`).stdout.trim().replace(/[^a-zA-Z0-9_-]/g, '_')
 
 const fixture = 'app';
-const serviceName = `${fixture}--${branchName}`
+const serviceName = `${fixture}--${branchName}${starlingmonkey ? '--sm' : ''}`
 let domain;
 const fixturePath = join(__dirname, 'fixtures', fixture)
 let localServer;
@@ -91,7 +91,7 @@ if (!local) {
     const setupPath = join(fixturePath, 'setup.js')
     if (existsSync(setupPath)) {
         core.startGroup('Extra set-up steps for the service')
-        await zx`${setupPath}${starlingmonkey ? ' --starlingmonkey' : ''}`
+        await zx`node ${setupPath} ${serviceName} ${starlingmonkey ? '--starlingmonkey' : ''}`
         await sleep(60)
         core.endGroup()
     }

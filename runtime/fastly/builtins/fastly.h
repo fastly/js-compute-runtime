@@ -65,6 +65,9 @@ public:
   static bool allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 
+JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
+                                                                JS::HandleValue bodyInit);
+
 } // namespace fastly::fastly
 
 #endif
