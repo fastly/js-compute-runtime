@@ -768,10 +768,10 @@ declare interface Fastly {
   };
 
   /**
-   * Internal version string for the JS runtime build.
+   * JavaScript SDK version string for the JS runtime build.
    * @hidden
    */
-  version: string,
+  sdkVersion: string,
 
   /**
    * Creates a new {@linkcode Logger} instance for the given

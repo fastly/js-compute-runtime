@@ -311,7 +311,7 @@ const JSPropertySpec Fastly::properties[] = {
     JS_PSGS("defaultBackend", defaultBackend_get, defaultBackend_set, JSPROP_ENUMERATE),
     JS_PSGS("allowDynamicBackends", allowDynamicBackends_get, allowDynamicBackends_set,
             JSPROP_ENUMERATE),
-    JS_PSG("version", version_get, JSPROP_ENUMERATE),
+    JS_PSG("sdkVersion", version_get, JSPROP_ENUMERATE),
     JS_PS_END};
 
 bool install(api::Engine *engine) {
@@ -372,7 +372,7 @@ bool install(api::Engine *engine) {
   RootedString version_str(
       engine->cx(), JS_NewStringCopyN(engine->cx(), RUNTIME_VERSION, strlen(RUNTIME_VERSION)));
   RootedValue version_str_val(engine->cx(), StringValue(version_str));
-  if (!JS_SetProperty(engine->cx(), experimental, "version", version_str_val)) {
+  if (!JS_SetProperty(engine->cx(), experimental, "sdkVersion", version_str_val)) {
     return false;
   }
   if (!engine->define_builtin_module("fastly:experimental", experimental_val)) {

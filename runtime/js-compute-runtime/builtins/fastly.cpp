@@ -269,7 +269,7 @@ const JSPropertySpec Fastly::properties[] = {
     JS_PSGS("defaultBackend", defaultBackend_get, defaultBackend_set, JSPROP_ENUMERATE),
     JS_PSGS("allowDynamicBackends", allowDynamicBackends_get, allowDynamicBackends_set,
             JSPROP_ENUMERATE),
-    JS_PSG("version", version_get, JSPROP_ENUMERATE),
+    JS_PSG("sdkVersion", version_get, JSPROP_ENUMERATE),
     JS_PS_END};
 
 bool Fastly::create(JSContext *cx, JS::HandleObject global, FastlyOptions options) {
