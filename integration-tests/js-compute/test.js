@@ -91,7 +91,7 @@ if (!local) {
     const setupPath = join(fixturePath, 'setup.js')
     if (existsSync(setupPath)) {
         core.startGroup('Extra set-up steps for the service')
-        await zx`${setupPath}`
+        await zx`${setupPath}${starlingmonkey ? ' --starlingmonkey' : ''}`
         await sleep(60)
         core.endGroup()
     }

@@ -204,6 +204,13 @@ bool Fastly::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Fastly::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  JS::RootedString version_str(cx, JS_NewStringCopyN(cx, RUNTIME_VERSION, strlen(RUNTIME_VERSION)));
+  args.rval().setString(version_str);
+  return true;
+}
+
 bool Fastly::baseURL_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setObjectOrNull(baseURL);
@@ -262,6 +269,7 @@ const JSPropertySpec Fastly::properties[] = {
     JS_PSGS("defaultBackend", defaultBackend_get, defaultBackend_set, JSPROP_ENUMERATE),
     JS_PSGS("allowDynamicBackends", allowDynamicBackends_get, allowDynamicBackends_set,
             JSPROP_ENUMERATE),
+    JS_PSG("sdkVersion", version_get, JSPROP_ENUMERATE),
     JS_PS_END};
 
 bool Fastly::create(JSContext *cx, JS::HandleObject global, FastlyOptions options) {

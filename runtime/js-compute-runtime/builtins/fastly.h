@@ -31,6 +31,7 @@ public:
   static bool getLogger(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool includeBytes(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool env_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool version_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool baseURL_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool baseURL_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool defaultBackend_get(JSContext *cx, unsigned argc, JS::Value *vp);

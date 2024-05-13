@@ -33,8 +33,6 @@ const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNu
 
 namespace {
 
-api::Engine *ENGINE;
-
 bool enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, __func__, 1))
@@ -50,6 +48,13 @@ JS::PersistentRooted<JSObject *> Fastly::env;
 JS::PersistentRooted<JSObject *> Fastly::baseURL;
 JS::PersistentRooted<JSString *> Fastly::defaultBackend;
 bool Fastly::allowDynamicBackends = false;
+
+bool Fastly::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  JS::RootedString version_str(cx, JS_NewStringCopyN(cx, RUNTIME_VERSION, strlen(RUNTIME_VERSION)));
+  args.rval().setString(version_str);
+  return true;
+}
 
 bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -306,145 +311,151 @@ const JSPropertySpec Fastly::properties[] = {
     JS_PSGS("defaultBackend", defaultBackend_get, defaultBackend_set, JSPROP_ENUMERATE),
     JS_PSGS("allowDynamicBackends", allowDynamicBackends_get, allowDynamicBackends_set,
             JSPROP_ENUMERATE),
+    JS_PSG("sdkVersion", version_get, JSPROP_ENUMERATE),
     JS_PS_END};
 
 bool install(api::Engine *engine) {
-  ENGINE = engine;
-  JS::RootedObject fastly(ENGINE->cx(), JS_NewPlainObject(ENGINE->cx()));
+  JS::RootedObject fastly(engine->cx(), JS_NewPlainObject(engine->cx()));
   if (!fastly) {
     return false;
   }
 
-  Fastly::env.init(ENGINE->cx(), Env::create(ENGINE->cx()));
+  Fastly::env.init(engine->cx(), Env::create(engine->cx()));
   if (!Fastly::env) {
     return false;
   }
 
-  Fastly::baseURL.init(ENGINE->cx());
-  Fastly::defaultBackend.init(ENGINE->cx());
+  Fastly::baseURL.init(engine->cx());
+  Fastly::defaultBackend.init(engine->cx());
 
-  if (!JS_DefineProperty(ENGINE->cx(), ENGINE->global(), "fastly", fastly, 0)) {
+  if (!JS_DefineProperty(engine->cx(), engine->global(), "fastly", fastly, 0)) {
     return false;
   }
 
   // fastly:env
-  RootedValue env_get(ENGINE->cx());
-  if (!JS_GetProperty(ENGINE->cx(), Fastly::env, "get", &env_get)) {
+  RootedValue env_get(engine->cx());
+  if (!JS_GetProperty(engine->cx(), Fastly::env, "get", &env_get)) {
     return false;
   }
-  RootedObject env_builtin(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
-  if (!JS_SetProperty(ENGINE->cx(), env_builtin, "env", env_get)) {
+  RootedObject env_builtin(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  if (!JS_SetProperty(engine->cx(), env_builtin, "env", env_get)) {
     return false;
   }
-  RootedValue env_builtin_val(ENGINE->cx(), JS::ObjectValue(*env_builtin));
-  if (!ENGINE->define_builtin_module("fastly:env", env_builtin_val)) {
+  RootedValue env_builtin_val(engine->cx(), JS::ObjectValue(*env_builtin));
+  if (!engine->define_builtin_module("fastly:env", env_builtin_val)) {
     return false;
   }
 
   // fastly:experimental
-  RootedObject experimental(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
-  RootedValue experimental_val(ENGINE->cx(), JS::ObjectValue(*experimental));
+  RootedObject experimental(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue experimental_val(engine->cx(), JS::ObjectValue(*experimental));
   // TODO(GB): implement includeBytes
-  if (!JS_SetProperty(ENGINE->cx(), experimental, "includeBytes", experimental_val)) {
+  if (!JS_SetProperty(engine->cx(), experimental, "includeBytes", experimental_val)) {
     return false;
   }
   auto set_default_backend =
-      JS_NewFunction(ENGINE->cx(), &Fastly::defaultBackend_set, 1, 0, "setDefaultBackend");
-  RootedObject set_default_backend_obj(ENGINE->cx(), JS_GetFunctionObject(set_default_backend));
-  RootedValue set_default_backend_val(ENGINE->cx(), ObjectValue(*set_default_backend_obj));
-  if (!JS_SetProperty(ENGINE->cx(), experimental, "setDefaultBackend", set_default_backend_val)) {
+      JS_NewFunction(engine->cx(), &Fastly::defaultBackend_set, 1, 0, "setDefaultBackend");
+  RootedObject set_default_backend_obj(engine->cx(), JS_GetFunctionObject(set_default_backend));
+  RootedValue set_default_backend_val(engine->cx(), ObjectValue(*set_default_backend_obj));
+  if (!JS_SetProperty(engine->cx(), experimental, "setDefaultBackend", set_default_backend_val)) {
     return false;
   }
   auto allow_dynamic_backends =
-      JS_NewFunction(ENGINE->cx(), &Fastly::allowDynamicBackends_set, 1, 0, "allowDynamicBackends");
-  RootedObject allow_dynamic_backends_obj(ENGINE->cx(),
+      JS_NewFunction(engine->cx(), &Fastly::allowDynamicBackends_set, 1, 0, "allowDynamicBackends");
+  RootedObject allow_dynamic_backends_obj(engine->cx(),
                                           JS_GetFunctionObject(allow_dynamic_backends));
-  RootedValue allow_dynamic_backends_val(ENGINE->cx(), ObjectValue(*allow_dynamic_backends_obj));
-  if (!JS_SetProperty(ENGINE->cx(), experimental, "allowDynamicBackends",
+  RootedValue allow_dynamic_backends_val(engine->cx(), ObjectValue(*allow_dynamic_backends_obj));
+  if (!JS_SetProperty(engine->cx(), experimental, "allowDynamicBackends",
                       allow_dynamic_backends_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_module("fastly:experimental", experimental_val)) {
+  RootedString version_str(
+      engine->cx(), JS_NewStringCopyN(engine->cx(), RUNTIME_VERSION, strlen(RUNTIME_VERSION)));
+  RootedValue version_str_val(engine->cx(), StringValue(version_str));
+  if (!JS_SetProperty(engine->cx(), experimental, "sdkVersion", version_str_val)) {
+    return false;
+  }
+  if (!engine->define_builtin_module("fastly:experimental", experimental_val)) {
     return false;
   }
 
   // TODO(GB): all of the following builtin modules are just placeholder shapes for now
-  if (!ENGINE->define_builtin_module("fastly:body", env_builtin_val)) {
+  if (!engine->define_builtin_module("fastly:body", env_builtin_val)) {
     return false;
   }
-  RootedObject cache(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
-  RootedValue cache_val(ENGINE->cx(), JS::ObjectValue(*cache));
-  if (!JS_SetProperty(ENGINE->cx(), cache, "CoreCache", cache_val)) {
+  RootedObject cache(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue cache_val(engine->cx(), JS::ObjectValue(*cache));
+  if (!JS_SetProperty(engine->cx(), cache, "CoreCache", cache_val)) {
     return false;
   }
-  if (!JS_SetProperty(ENGINE->cx(), cache, "CacheEntry", cache_val)) {
+  if (!JS_SetProperty(engine->cx(), cache, "CacheEntry", cache_val)) {
     return false;
   }
-  if (!JS_SetProperty(ENGINE->cx(), cache, "CacheEntry", cache_val)) {
+  if (!JS_SetProperty(engine->cx(), cache, "CacheEntry", cache_val)) {
     return false;
   }
-  if (!JS_SetProperty(ENGINE->cx(), cache, "SimpleCache", cache_val)) {
+  if (!JS_SetProperty(engine->cx(), cache, "SimpleCache", cache_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_module("fastly:cache", cache_val)) {
+  if (!engine->define_builtin_module("fastly:cache", cache_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_module("fastly:config-store", env_builtin_val)) {
+  if (!engine->define_builtin_module("fastly:config-store", env_builtin_val)) {
     return false;
   }
-  RootedObject device_device(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
-  RootedValue device_device_val(ENGINE->cx(), JS::ObjectValue(*device_device));
-  if (!JS_SetProperty(ENGINE->cx(), device_device, "Device", device_device_val)) {
+  RootedObject device_device(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue device_device_val(engine->cx(), JS::ObjectValue(*device_device));
+  if (!JS_SetProperty(engine->cx(), device_device, "Device", device_device_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_module("fastly:device", device_device_val)) {
+  if (!engine->define_builtin_module("fastly:device", device_device_val)) {
     return false;
   }
-  RootedObject dictionary(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
-  RootedValue dictionary_val(ENGINE->cx(), JS::ObjectValue(*dictionary));
-  if (!JS_SetProperty(ENGINE->cx(), dictionary, "Dictionary", dictionary_val)) {
+  RootedObject dictionary(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue dictionary_val(engine->cx(), JS::ObjectValue(*dictionary));
+  if (!JS_SetProperty(engine->cx(), dictionary, "Dictionary", dictionary_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_module("fastly:dictionary", dictionary_val)) {
+  if (!engine->define_builtin_module("fastly:dictionary", dictionary_val)) {
     return false;
   }
-  RootedObject edge_rate_limiter(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
-  RootedValue edge_rate_limiter_val(ENGINE->cx(), JS::ObjectValue(*edge_rate_limiter));
-  if (!JS_SetProperty(ENGINE->cx(), edge_rate_limiter, "RateCounter", edge_rate_limiter_val)) {
+  RootedObject edge_rate_limiter(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue edge_rate_limiter_val(engine->cx(), JS::ObjectValue(*edge_rate_limiter));
+  if (!JS_SetProperty(engine->cx(), edge_rate_limiter, "RateCounter", edge_rate_limiter_val)) {
     return false;
   }
-  if (!JS_SetProperty(ENGINE->cx(), edge_rate_limiter, "PenaltyBox", edge_rate_limiter_val)) {
+  if (!JS_SetProperty(engine->cx(), edge_rate_limiter, "PenaltyBox", edge_rate_limiter_val)) {
     return false;
   }
-  if (!JS_SetProperty(ENGINE->cx(), edge_rate_limiter, "EdgeRateLimiter", edge_rate_limiter_val)) {
+  if (!JS_SetProperty(engine->cx(), edge_rate_limiter, "EdgeRateLimiter", edge_rate_limiter_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_module("fastly:edge-rate-limiter", edge_rate_limiter_val)) {
+  if (!engine->define_builtin_module("fastly:edge-rate-limiter", edge_rate_limiter_val)) {
     return false;
   }
-  RootedObject fanout(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
-  RootedValue fanout_val(ENGINE->cx(), JS::ObjectValue(*fanout));
-  if (!JS_SetProperty(ENGINE->cx(), fanout, "createFanoutHandoff", fanout_val)) {
+  RootedObject fanout(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue fanout_val(engine->cx(), JS::ObjectValue(*fanout));
+  if (!JS_SetProperty(engine->cx(), fanout, "createFanoutHandoff", fanout_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_module("fastly:fanout", fanout_val)) {
+  if (!engine->define_builtin_module("fastly:fanout", fanout_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_module("fastly:geolocation", env_builtin_val)) {
+  if (!engine->define_builtin_module("fastly:geolocation", env_builtin_val)) {
     return false;
   }
-  RootedObject kv_store(ENGINE->cx(), JS_NewObject(ENGINE->cx(), nullptr));
-  RootedValue kv_store_val(ENGINE->cx(), JS::ObjectValue(*kv_store));
-  if (!JS_SetProperty(ENGINE->cx(), kv_store, "KVStore", kv_store_val)) {
+  RootedObject kv_store(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue kv_store_val(engine->cx(), JS::ObjectValue(*kv_store));
+  if (!JS_SetProperty(engine->cx(), kv_store, "KVStore", kv_store_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_module("fastly:kv-store", kv_store_val)) {
+  if (!engine->define_builtin_module("fastly:kv-store", kv_store_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_module("fastly:logger", env_builtin_val)) {
+  if (!engine->define_builtin_module("fastly:logger", env_builtin_val)) {
     return false;
   }
-  if (!ENGINE->define_builtin_module("fastly:secret-store", env_builtin_val)) {
+  if (!engine->define_builtin_module("fastly:secret-store", env_builtin_val)) {
     return false;
   }
 
@@ -463,8 +474,8 @@ bool install(api::Engine *engine) {
       // options.getExperimentalHighResolutionTimeMethodsEnabled() ? nowfn : end,
       end};
 
-  return JS_DefineFunctions(ENGINE->cx(), fastly, methods) &&
-         JS_DefineProperties(ENGINE->cx(), fastly, Fastly::properties);
+  return JS_DefineFunctions(engine->cx(), fastly, methods) &&
+         JS_DefineProperties(engine->cx(), fastly, Fastly::properties);
 }
 
 } // namespace fastly::fastly

@@ -177,6 +177,7 @@
   "GET /backend/health/happy-path-backend-exists",
   "GET /backend/health/happy-path-backend-does-not-exist",
   "GET /env",
+  "GET /fastly/version",
   "GET /multiple-set-cookie/response-init",
   "GET /multiple-set-cookie/response-direct",
   "GET /request/clone/called-as-constructor",

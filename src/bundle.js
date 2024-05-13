@@ -35,6 +35,7 @@ export const enableDebugLogging = globalThis.fastly.enableDebugLogging;
 export const setBaseURL = Object.getOwnPropertyDescriptor(globalThis.fastly, 'baseURL').set;
 export const setDefaultBackend = Object.getOwnPropertyDescriptor(globalThis.fastly, 'defaultBackend').set;
 export const allowDynamicBackends = Object.getOwnPropertyDescriptor(globalThis.fastly, 'allowDynamicBackends').set;
+export const sdkVersion = globalThis.fastly.sdkVersion;
 `
           }
         }
