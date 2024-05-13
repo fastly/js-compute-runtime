@@ -1,5 +1,5 @@
-#ifndef JS_COMPUTE_RUNTIME_HOST_API_H
-#define JS_COMPUTE_RUNTIME_HOST_API_H
+#ifndef FASTLY_HOST_API_H
+#define FASTLY_HOST_API_H
 
 #include <cstdint>
 #include <memory>
@@ -22,6 +22,15 @@
 
 typedef uint32_t FastlyHandle;
 struct JSErrorFormatString;
+
+namespace host_api {
+void handle_api_error(JSContext *cx, uint8_t err, int line, const char *func);
+bool error_is_generic(APIError e);
+bool error_is_invalid_argument(APIError e);
+bool error_is_optional_none(APIError e);
+bool error_is_bad_handle(APIError e);
+void handle_fastly_error(JSContext *cx, APIError err, int line, const char *func);
+} // namespace host_api
 
 namespace fastly {
 

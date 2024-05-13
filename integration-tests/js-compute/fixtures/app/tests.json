@@ -588,7 +588,7 @@
     }
   },
   "GET /simple-cache-entry/interface": {
-    "environments": ["compute"],
+    "environments": ["compute", "viceroy"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/simple-cache-entry/interface"

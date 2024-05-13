@@ -7,6 +7,7 @@
 #include "../../../StarlingMonkey/builtins/web/worker-location.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "../cache-override.h"
+#include "../cache-simple.h"
 #include "../fastly.h"
 #include "../fetch-event.h"
 #include "extension-api.h"
@@ -34,6 +35,7 @@ using builtins::web::url::URL;
 using builtins::web::url::URLSearchParams;
 using builtins::web::worker_location::WorkerLocation;
 using fastly::cache_override::CacheOverride;
+using fastly::cache_simple::SimpleCacheEntry;
 using fastly::fastly::FastlyGetErrorMessage;
 using fastly::fetch_event::FetchEvent;
 
@@ -133,19 +135,6 @@ ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
 //       JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::Request)).toInt32());
 // }
 
-host_api::HttpPendingReq pending_handle(JSObject *obj) {
-  MOZ_ASSERT(Request::is_instance(obj));
-  host_api::HttpPendingReq res;
-
-  JS::Value handle_val =
-      JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::PendingRequest));
-  if (handle_val.isInt32()) {
-    res = host_api::HttpPendingReq(handle_val.toInt32());
-  }
-
-  return res;
-}
-
 } // namespace
 
 bool RequestOrResponse::process_pending_request(JSContext *cx, int32_t handle,
@@ -181,8 +170,8 @@ bool RequestOrResponse::process_pending_request(JSContext *cx, int32_t handle,
 }
 
 bool RequestOrResponse::is_instance(JSObject *obj) {
-  return Request::is_instance(obj) ||
-         Response::is_instance(obj) /* || KVStoreEntry::is_instance(obj)*/;
+  return Request::is_instance(obj) || Response::is_instance(obj) ||
+         SimpleCacheEntry::is_instance(obj);
 }
 
 uint32_t RequestOrResponse::handle(JSObject *obj) {
@@ -874,7 +863,12 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
   //
   // (This deadlock happens in automated tests, but admittedly might not happen
   // in real usage.)
-  ENGINE->queue_async_task(new FastlyAsyncTask(pending_handle(source).async_handle()));
+
+  JS::RootedObject self(cx, &args.thisv().toObject());
+  JS::RootedObject owner(cx, NativeStreamSource::owner(self));
+
+  ENGINE->queue_async_task(
+      new FastlyAsyncTask(RequestOrResponse::body_handle(owner).async_handle()));
 
   args.rval().setUndefined();
   return true;

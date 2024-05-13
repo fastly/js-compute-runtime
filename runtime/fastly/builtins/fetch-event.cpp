@@ -29,9 +29,6 @@ api::Engine *ENGINE;
 PersistentRooted<JSObject *> INSTANCE;
 JS::PersistentRootedObjectVector *FETCH_HANDLERS;
 
-// host_api::HttpResp::ResponseOutparam RESPONSE_OUT;
-// host_api::HttpOutgoingBody *STREAMING_BODY;
-
 void inc_pending_promise_count(JSObject *self) {
   MOZ_ASSERT(FetchEvent::is_instance(self));
   auto count =

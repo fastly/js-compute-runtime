@@ -36,6 +36,9 @@ jobs:
   sdktest:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [viceroy, compute]
     needs: [build]
     steps:
     - name: Checkout fastly/js-compute-runtime
@@ -52,7 +55,9 @@ jobs:
         cli_version: ${{ env.fastly-cli_version }}
 
     - name: Restore Viceroy from cache
+      if: ${{ matrix.platform == 'viceroy' }}
       uses: actions/cache@v3
+      id: viceroy
       with:
         path: "/home/runner/.cargo/bin/viceroy"
         key: crate-cache-viceroy-${{ env.viceroy_version }}
@@ -64,12 +69,9 @@ jobs:
         path: "/home/runner/.cargo/bin/wasm-tools"
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
 
-    - name: "Check wasm-tools has been restored"
-      if: steps.wasm-tools.outputs.cache-hit != 'true'
-      run: |
-        echo "wasm-tools was not restored from the cache"
-        echo "bailing out from the build early"
-        exit 1
+    - name: "Check caches have been restored"
+      if: steps.wasm-tools.outputs.cache-hit != 'true' || matrix.platform == 'viceory' && steps.viceroy.outputs.cache-hit != 'true'
+      run: echo "Unable to restore from the cache, bailing." && exit 1
 
     - name: Download Engine
       uses: actions/download-artifact@v3
@@ -78,11 +80,8 @@ jobs:
     - run: yarn install --frozen-lockfile
 
     - name: Yarn install
-      run: |
-        yarn
-        cd ./integration-tests/js-compute
-        yarn
+      run: yarn && cd ./integration-tests/js-compute && yarn
 
-    - run: |
-        cd ./integration-tests/js-compute
-        FASTLY_API_TOKEN=${{ secrets.FASTLY_API_TOKEN }} ./test.js --starlingmonkey --local
+    - run: node integration-tests/js-compute/test.js --starlingmonkey ${{ matrix.platform == 'viceroy' && '--local' || '' }}
+      env:
+        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}

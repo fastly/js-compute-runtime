@@ -1,5 +1,5 @@
-#ifndef JS_COMPUTE_RUNTIME_CACHE_OVERRIDE_H
-#define JS_COMPUTE_RUNTIME_CACHE_OVERRIDE_H
+#ifndef FASTLY_CACHE_OVERRIDE_H
+#define FASTLY_CACHE_OVERRIDE_H
 
 #include "../host-api/host_api_fastly.h"
 #include "builtin.h"
