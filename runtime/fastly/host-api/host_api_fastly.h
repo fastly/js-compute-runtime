@@ -97,8 +97,9 @@ public:
   T &unwrap() { return std::get<T>(this->result); }
 };
 
-// Note: Placeholder ONLY for now
-// TODO: REMOVE WHEN ALL TASKS ARE IMPLEMENTED
+typedef bool ProcessAsyncTask(FastlyHandle handle, JS::HandleObject context,
+                              JS::HandleObject promise);
+
 class FastlyAsyncTask final : public AsyncTask {
 public:
   explicit FastlyAsyncTask() {}
@@ -107,11 +108,24 @@ public:
       abort();
     handle_ = static_cast<int32_t>(handle);
   }
+  FastlyAsyncTask(uint32_t handle, JS::HandleObject context, JS::HandleObject promise,
+                  ProcessAsyncTask *process) {
+    if (static_cast<int32_t>(handle) < 0)
+      abort();
+    handle_ = static_cast<int32_t>(handle);
+    context_.set(context);
+    if (promise) {
+      promise_.set(JS::ObjectValue(*promise));
+    } else {
+      promise_.setNull();
+    }
+    process_steps_ = process;
+  }
 
   [[nodiscard]] bool run(Engine *engine) override { return true; }
 
   [[nodiscard]] bool cancel(Engine *engine) override {
-    MOZ_ASSERT_UNREACHABLE("BodyAppendTask's semantics don't allow for cancellation");
+    MOZ_ASSERT_UNREACHABLE("Fastly semantics don't allow for cancellation");
     return true;
   }
 
@@ -120,6 +134,10 @@ public:
   void trace(JSTracer *trc) override {
     // Nothing to trace.
   }
+
+  JS::PersistentRootedObject context_;
+  JS::PersistentRootedValue promise_;
+  ProcessAsyncTask *process_steps_;
 };
 
 } // namespace api
@@ -134,6 +152,8 @@ using api::FastlyAsyncTask;
 using fastly::fetch::Request;
 
 namespace host_api {
+
+JSString *get_geo_info(JSContext *cx, JS::HandleString address_str);
 
 bool error_is_generic(APIError e);
 bool error_is_invalid_argument(APIError e);
@@ -515,7 +535,8 @@ public:
   static Result<ObjectStore> open(std::string_view name);
 
   Result<std::optional<HttpBody>> lookup(std::string_view name);
-  Result<FastlyAsyncTask> lookup_async(std::string_view name);
+  Result<FastlyHandle> lookup_async(std::string_view name);
+  Result<FastlyHandle> delete_async(std::string_view name);
 
   Result<Void> insert(std::string_view name, HttpBody body);
 };
@@ -531,14 +552,33 @@ public:
   explicit ObjectStorePendingLookup(FastlyAsyncTask async) : handle{async.handle()} {}
 
   /// Block until the response is ready.
-  Result<std::optional<HttpBody>> wait();
+  api::FastlyResult<std::optional<HttpBody>, fastly::FastlyAPIError> wait();
 
-  /// Fetch the FastlyAsyncTask for this pending request.
-  FastlyAsyncTask async_handle() const;
+  /// Fetch the FastlyHandle for this pending request.
+  FastlyHandle async_handle() const;
+};
+
+class ObjectStorePendingDelete final {
+public:
+  static constexpr FastlyHandle invalid = UINT32_MAX - 1;
+
+  FastlyHandle handle = invalid;
+
+  ObjectStorePendingDelete() = default;
+  explicit ObjectStorePendingDelete(FastlyHandle handle) : handle{handle} {}
+  explicit ObjectStorePendingDelete(FastlyAsyncTask async) : handle{async.handle()} {}
+
+  /// Block until the response is ready.
+  Result<Void> wait();
+
+  /// Fetch the FastlyHandle for this pending request.
+  FastlyHandle async_handle() const;
 };
 
 class Secret final {
 public:
+  using FastlyHandle = uint32_t;
+
   FastlyHandle handle = UINT32_MAX - 1;
 
   Secret() = default;
@@ -549,6 +589,8 @@ public:
 
 class SecretStore final {
 public:
+  using FastlyHandle = uint32_t;
+
   FastlyHandle handle = UINT32_MAX - 1;
 
   SecretStore() = default;

@@ -10,6 +10,36 @@ using builtins::BuiltinNoConstructor;
 
 namespace fastly::fetch_event {
 
+class ClientInfo final : public BuiltinNoConstructor<ClientInfo> {
+  static bool address_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool geo_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Value *vp);
+
+public:
+  static constexpr const char *class_name = "FetchEvent";
+
+  enum class Slots {
+    Address,
+    GeoInfo,
+    Cipher,
+    Protocol,
+    ClientHello,
+    JA3,
+    ClientCert,
+    Count,
+  };
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
+  static const JSFunctionSpec methods[];
+  static const JSPropertySpec properties[];
+
+  static JSObject *create(JSContext *cx);
+};
+
 void dispatch_fetch_event(HandleObject event, double *total_compute);
 
 class FetchEvent final : public BuiltinNoConstructor<FetchEvent> {

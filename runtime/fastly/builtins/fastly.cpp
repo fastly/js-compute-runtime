@@ -93,23 +93,22 @@ JSObject *Env::create(JSContext *cx) {
   return env;
 }
 
-// TODO(GB): reimplement
-// bool Fastly::getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value *vp) {
-//   JS::CallArgs args = CallArgsFromVp(argc, vp);
-//   REQUEST_HANDLER_ONLY("fastly.getGeolocationForIpAddress");
-//   if (!args.requireAtLeast(cx, "fastly.getGeolocationForIpAddress", 1))
-//     return false;
+bool Fastly::getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  REQUEST_HANDLER_ONLY("fastly.getGeolocationForIpAddress");
+  if (!args.requireAtLeast(cx, "fastly.getGeolocationForIpAddress", 1))
+    return false;
 
-//   JS::RootedString address_str(cx, JS::ToString(cx, args[0]));
-//   if (!address_str)
-//     return false;
+  JS::RootedString address_str(cx, JS::ToString(cx, args[0]));
+  if (!address_str)
+    return false;
 
-//   JS::RootedString geo_info_str(cx, core::get_geo_info(cx, address_str));
-//   if (!geo_info_str)
-//     return false;
+  JS::RootedString geo_info_str(cx, host_api::get_geo_info(cx, address_str));
+  if (!geo_info_str)
+    return false;
 
-//   return JS_ParseJSON(cx, geo_info_str, args.rval());
-// }
+  return JS_ParseJSON(cx, geo_info_str, args.rval());
+}
 
 // TODO(GB): reimplement
 // // TODO(performance): consider allowing logger creation during initialization, but then throw
@@ -135,47 +134,46 @@ JSObject *Env::create(JSContext *cx) {
 //   return true;
 // }
 
-// TODO(GB): reimplement
-// bool Fastly::includeBytes(JSContext *cx, unsigned argc, JS::Value *vp) {
-//   JS::CallArgs args = CallArgsFromVp(argc, vp);
-//   INIT_ONLY("fastly.includeBytes");
-//   if (!args.requireAtLeast(cx, "fastly.includeBytes", 1))
-//     return false;
+bool Fastly::includeBytes(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  INIT_ONLY("fastly.includeBytes");
+  if (!args.requireAtLeast(cx, "fastly.includeBytes", 1))
+    return false;
 
-//   auto path = core::encode(cx, args[0]);
-//   if (!path) {
-//     return false;
-//   }
+  auto path = core::encode(cx, args[0]);
+  if (!path) {
+    return false;
+  }
 
-//   FILE *fp = fopen(path.begin(), "r");
-//   if (!fp) {
-//     JS_ReportErrorUTF8(cx, "Error opening file %s", path.begin());
-//     return false;
-//   }
+  FILE *fp = fopen(path.begin(), "r");
+  if (!fp) {
+    JS_ReportErrorUTF8(cx, "Error opening file %s", path.begin());
+    return false;
+  }
 
-//   fseek(fp, 0L, SEEK_END);
-//   size_t size = ftell(fp);
-//   rewind(fp);
-//   JS::RootedObject typed_array(cx, JS_NewUint8Array(cx, size));
-//   if (!typed_array)
-//     return false;
+  fseek(fp, 0L, SEEK_END);
+  size_t size = ftell(fp);
+  rewind(fp);
+  JS::RootedObject typed_array(cx, JS_NewUint8Array(cx, size));
+  if (!typed_array)
+    return false;
 
-//   size_t read_bytes;
-//   {
-//     JS::AutoCheckCannotGC noGC(cx);
-//     bool is_shared;
-//     void *buffer = JS_GetArrayBufferViewData(typed_array, &is_shared, noGC);
-//     read_bytes = fread(buffer, 1, size, fp);
-//   }
+  size_t read_bytes;
+  {
+    JS::AutoCheckCannotGC noGC(cx);
+    bool is_shared;
+    void *buffer = JS_GetArrayBufferViewData(typed_array, &is_shared, noGC);
+    read_bytes = fread(buffer, 1, size, fp);
+  }
 
-//   if (read_bytes != size) {
-//     JS_ReportErrorUTF8(cx, "Failed to read contents of file %s", path.begin());
-//     return false;
-//   }
+  if (read_bytes != size) {
+    JS_ReportErrorUTF8(cx, "Failed to read contents of file %s", path.begin());
+    return false;
+  }
 
-//   args.rval().setObject(*typed_array);
-//   return true;
-// }
+  args.rval().setObject(*typed_array);
+  return true;
+}
 
 // TODO(GB): reimplement
 // bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -241,12 +239,11 @@ JSObject *Env::create(JSContext *cx) {
 //   return true;
 // }
 
-// TODO(GB): reimplement
-// bool Fastly::now(JSContext *cx, unsigned argc, JS::Value *vp) {
-//   JS::CallArgs args = CallArgsFromVp(argc, vp);
-//   args.rval().setNumber(JS_Now());
-//   return true;
-// }
+bool Fastly::now(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setNumber(JS_Now());
+  return true;
+}
 
 bool Fastly::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -316,6 +313,9 @@ const JSPropertySpec Fastly::properties[] = {
     JS_PS_END};
 
 bool install(api::Engine *engine) {
+  bool ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS =
+      std::string(std::getenv("ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS")) == "1";
+
   JS::RootedObject fastly(engine->cx(), JS_NewPlainObject(engine->cx()));
   if (!fastly) {
     return false;
@@ -350,7 +350,6 @@ bool install(api::Engine *engine) {
   // fastly:experimental
   RootedObject experimental(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   RootedValue experimental_val(engine->cx(), JS::ObjectValue(*experimental));
-  // TODO(GB): implement includeBytes
   if (!JS_SetProperty(engine->cx(), experimental, "includeBytes", experimental_val)) {
     return false;
   }
@@ -464,14 +463,6 @@ bool install(api::Engine *engine) {
   if (!engine->define_builtin_module("fastly:geolocation", env_builtin_val)) {
     return false;
   }
-  RootedObject kv_store(engine->cx(), JS_NewObject(engine->cx(), nullptr));
-  RootedValue kv_store_val(engine->cx(), JS::ObjectValue(*kv_store));
-  if (!JS_SetProperty(engine->cx(), kv_store, "KVStore", kv_store_val)) {
-    return false;
-  }
-  if (!engine->define_builtin_module("fastly:kv-store", kv_store_val)) {
-    return false;
-  }
   if (!engine->define_builtin_module("fastly:logger", env_builtin_val)) {
     return false;
   }
@@ -479,20 +470,20 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  // JSFunctionSpec nowfn = JS_FN("now", now, 0, JSPROP_ENUMERATE);
+  JSFunctionSpec nowfn = JS_FN("now", Fastly::now, 0, JSPROP_ENUMERATE);
   JSFunctionSpec end = JS_FS_END;
 
   const JSFunctionSpec methods[] = {
       // TODO(GB): reimplement
       // JS_FN("dump", dump, 1, 0),
       JS_FN("enableDebugLogging", enableDebugLogging, 1, JSPROP_ENUMERATE),
+      JS_FN("getGeolocationForIpAddress", Fastly::getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
       // TODO(GB): reimplement
-      // JS_FN("getGeolocationForIpAddress", getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
       // JS_FN("getLogger", getLogger, 1, JSPROP_ENUMERATE),
-      // JS_FN("includeBytes", includeBytes, 1, JSPROP_ENUMERATE),
+      JS_FN("includeBytes", Fastly::includeBytes, 1, JSPROP_ENUMERATE),
+      // TODO(GB): reimplement
       // JS_FN("createFanoutHandoff", createFanoutHandoff, 2, JSPROP_ENUMERATE),
-      // options.getExperimentalHighResolutionTimeMethodsEnabled() ? nowfn : end,
-      end};
+      ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS ? nowfn : end, end};
 
   return JS_DefineFunctions(engine->cx(), fastly, methods) &&
          JS_DefineProperties(engine->cx(), fastly, Fastly::properties);
