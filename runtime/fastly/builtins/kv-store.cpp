@@ -164,8 +164,8 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
       character = '#';
       break;
     }
-    JS_ReportErrorNumberUTF8(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_KEY_INVALID_CHARACTER,
-                             character.c_str());
+    JS_ReportErrorNumberUTF8(cx, FastlyGetErrorMessage, nullptr,
+                             JSMSG_KV_STORE_KEY_INVALID_CHARACTER, character.c_str());
     return false;
   }
   auto acme_challenge = ".well-known/acme-challenge/";
@@ -369,7 +369,8 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
       return true;
     } else {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_PUT_CONTENT_STREAM);
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_KV_STORE_PUT_CONTENT_STREAM);
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
   } else {
