@@ -231,8 +231,8 @@ bool KVStore::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto handle = res.unwrap();
 
-  auto task =
-      new FastlyAsyncTask(handle, self, result_promise, KVStore::process_pending_kv_store_delete);
+  auto task = new FastlyAsyncTask(handle, ENGINE->cx(), self, result_promise,
+                                  KVStore::process_pending_kv_store_delete);
 
   ENGINE->queue_async_task(task);
 
@@ -299,8 +299,8 @@ bool KVStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto handle = res.unwrap();
 
-  auto task =
-      new FastlyAsyncTask(handle, self, result_promise, KVStore::process_pending_kv_store_lookup);
+  auto task = new FastlyAsyncTask(handle, ENGINE->cx(), self, result_promise,
+                                  KVStore::process_pending_kv_store_lookup);
   ENGINE->queue_async_task(task);
 
   args.rval().setObject(*result_promise);
@@ -343,7 +343,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   if (body_obj && JS::IsReadableStream(body_obj)) {
     if (RequestOrResponse::body_unusable(cx, body_obj)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                 JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }

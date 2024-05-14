@@ -108,12 +108,13 @@ public:
       abort();
     handle_ = static_cast<int32_t>(handle);
   }
-  FastlyAsyncTask(uint32_t handle, JS::HandleObject context, JS::HandleObject promise,
-                  ProcessAsyncTask *process) {
+  FastlyAsyncTask(uint32_t handle, JSContext *cx, JS::HandleObject context,
+                  JS::HandleObject promise, ProcessAsyncTask *process) {
     if (static_cast<int32_t>(handle) < 0)
       abort();
     handle_ = static_cast<int32_t>(handle);
-    context_.set(context);
+    context_.init(cx, context);
+    promise_.init(cx);
     if (promise) {
       promise_.set(JS::ObjectValue(*promise));
     } else {
@@ -122,7 +123,15 @@ public:
     process_steps_ = process;
   }
 
-  [[nodiscard]] bool run(Engine *engine) override { return true; }
+  [[nodiscard]] bool run(Engine *engine) override {
+    if (process_steps_) {
+      RootedObject promise_obj(engine->cx(), promise_.toObjectOrNull());
+      if (!process_steps_(handle_, context_, promise_obj)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   [[nodiscard]] bool cancel(Engine *engine) override {
     MOZ_ASSERT_UNREACHABLE("Fastly semantics don't allow for cancellation");
@@ -137,7 +146,7 @@ public:
 
   JS::PersistentRootedObject context_;
   JS::PersistentRootedValue promise_;
-  ProcessAsyncTask *process_steps_;
+  ProcessAsyncTask *process_steps_ = nullptr;
 };
 
 } // namespace api
