@@ -1,4 +1,5 @@
 #include "fetch-event.h"
+#include "../../StarlingMonkey/builtins/web/performance.h"
 #include "../../StarlingMonkey/builtins/web/url.h"
 #include "../../StarlingMonkey/builtins/web/worker-location.h"
 #include "../host-api/fastly.h"
@@ -172,6 +173,7 @@ bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::V
 }
 
 bool ClientInfo::tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  fprintf(stderr, "tlsJA3MD5");
   METHOD_HEADER(0);
 
   JS::RootedString result(cx, ja3(self));
@@ -410,6 +412,10 @@ JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {
 
 bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::HttpReq req,
                               host_api::HttpBody body) {
+
+  builtins::web::performance::Performance::timeOrigin.emplace(
+      std::chrono::high_resolution_clock::now());
+
   JS::RootedObject request(
       cx, &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)).toObject());
 
