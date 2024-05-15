@@ -847,6 +847,10 @@ bool install(api::Engine *engine) {
     MOZ_RELEASE_ASSERT(false);
   }
 
+  if (!ClientInfo::init_class(engine->cx(), engine->global())) {
+    return false;
+  }
+
   return true;
 }
 

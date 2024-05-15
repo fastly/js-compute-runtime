@@ -407,7 +407,8 @@ bool install(api::Engine *engine) {
   }
   RootedObject geo_builtin(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   RootedValue geo_builtin_val(engine->cx(), JS::ObjectValue(*geo_builtin));
-  if (!JS_SetProperty(engine->cx(), experimental, "getGeolocationForIpAddress", geo_builtin_val)) {
+  if (!JS_SetProperty(engine->cx(), geo_builtin, "getGeolocationForIpAddress",
+                      get_geolocation_for_ip_address_val)) {
     return false;
   }
   if (!engine->define_builtin_module("fastly:geolocation", geo_builtin_val)) {
