@@ -333,6 +333,26 @@ bool install(api::Engine *engine) {
     return false;
   }
 
+  JSFunctionSpec nowfn = JS_FN("now", Fastly::now, 0, JSPROP_ENUMERATE);
+  JSFunctionSpec end = JS_FS_END;
+
+  const JSFunctionSpec methods[] = {
+      // TODO(GB): reimplement
+      // JS_FN("dump", dump, 1, 0),
+      JS_FN("enableDebugLogging", enableDebugLogging, 1, JSPROP_ENUMERATE),
+      JS_FN("getGeolocationForIpAddress", Fastly::getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
+      // TODO(GB): reimplement
+      // JS_FN("getLogger", getLogger, 1, JSPROP_ENUMERATE),
+      JS_FN("includeBytes", Fastly::includeBytes, 1, JSPROP_ENUMERATE),
+      // TODO(GB): reimplement
+      // JS_FN("createFanoutHandoff", createFanoutHandoff, 2, JSPROP_ENUMERATE),
+      ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS ? nowfn : end, end};
+
+  if (!JS_DefineFunctions(engine->cx(), fastly, methods) ||
+      !JS_DefineProperties(engine->cx(), fastly, Fastly::properties)) {
+    return false;
+  }
+
   // fastly:env
   RootedValue env_get(engine->cx());
   if (!JS_GetProperty(engine->cx(), Fastly::env, "get", &env_get)) {
@@ -376,6 +396,21 @@ bool install(api::Engine *engine) {
     return false;
   }
   if (!engine->define_builtin_module("fastly:experimental", experimental_val)) {
+    return false;
+  }
+
+  // fastly:geo
+  RootedValue get_geolocation_for_ip_address_val(engine->cx());
+  if (!JS_GetProperty(engine->cx(), fastly, "getGeolocationForIpAddress",
+                      &get_geolocation_for_ip_address_val)) {
+    return false;
+  }
+  RootedObject geo_builtin(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue geo_builtin_val(engine->cx(), JS::ObjectValue(*geo_builtin));
+  if (!JS_SetProperty(engine->cx(), experimental, "getGeolocationForIpAddress", geo_builtin_val)) {
+    return false;
+  }
+  if (!engine->define_builtin_module("fastly:geolocation", geo_builtin_val)) {
     return false;
   }
 
@@ -460,9 +495,6 @@ bool install(api::Engine *engine) {
   if (!engine->define_builtin_module("fastly:fanout", fanout_val)) {
     return false;
   }
-  if (!engine->define_builtin_module("fastly:geolocation", env_builtin_val)) {
-    return false;
-  }
   if (!engine->define_builtin_module("fastly:logger", env_builtin_val)) {
     return false;
   }
@@ -470,23 +502,7 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  JSFunctionSpec nowfn = JS_FN("now", Fastly::now, 0, JSPROP_ENUMERATE);
-  JSFunctionSpec end = JS_FS_END;
-
-  const JSFunctionSpec methods[] = {
-      // TODO(GB): reimplement
-      // JS_FN("dump", dump, 1, 0),
-      JS_FN("enableDebugLogging", enableDebugLogging, 1, JSPROP_ENUMERATE),
-      JS_FN("getGeolocationForIpAddress", Fastly::getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
-      // TODO(GB): reimplement
-      // JS_FN("getLogger", getLogger, 1, JSPROP_ENUMERATE),
-      JS_FN("includeBytes", Fastly::includeBytes, 1, JSPROP_ENUMERATE),
-      // TODO(GB): reimplement
-      // JS_FN("createFanoutHandoff", createFanoutHandoff, 2, JSPROP_ENUMERATE),
-      ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS ? nowfn : end, end};
-
-  return JS_DefineFunctions(engine->cx(), fastly, methods) &&
-         JS_DefineProperties(engine->cx(), fastly, Fastly::properties);
+  return true;
 }
 
 // We currently support five types of body inputs:

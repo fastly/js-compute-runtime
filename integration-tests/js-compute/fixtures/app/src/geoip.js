@@ -1,10 +1,8 @@
 /* eslint-env serviceworker */
 /* global fastly */
 import { pass, assert, assertThrows } from "./assertions.js";
-import * as geolocation from 'fastly:geolocation';
+import { getGeolocationForIpAddress } from 'fastly:geolocation';
 import { isRunningLocally, routes } from "./routes.js";
-
-const { getGeolocationForIpAddress } = geolocation;
 
 routes.set("/fastly/getgeolocationforipaddress/interface", async function () {
   let actual = Reflect.getOwnPropertyDescriptor(fastly, 'getGeolocationForIpAddress')
