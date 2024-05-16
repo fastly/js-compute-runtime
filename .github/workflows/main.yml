@@ -36,7 +36,7 @@ jobs:
       with:
         cache: 'yarn'
     - run: cd documentation && yarn install
-    - run: yarn build
+    - run: cd documentation && yarn build
 
   build:
     name: Build
