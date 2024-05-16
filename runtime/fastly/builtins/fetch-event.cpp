@@ -1,4 +1,5 @@
 #include "fetch-event.h"
+#include "../../StarlingMonkey/builtins/web/performance.h"
 #include "../../StarlingMonkey/builtins/web/url.h"
 #include "../../StarlingMonkey/builtins/web/worker-location.h"
 #include "../host-api/fastly.h"
@@ -6,6 +7,10 @@
 #include "./fetch/request-response.h"
 #include "encode.h"
 #include "fastly.h"
+#include "host_api.h"
+#include "js/JSON.h"
+#include "openssl/evp.h"
+#include <arpa/inet.h>
 
 #include <iostream>
 #include <memory>
@@ -21,6 +26,282 @@ using fastly::fetch::RequestOrResponse;
 using fastly::fetch::Response;
 
 namespace fastly::fetch_event {
+
+namespace {
+
+JSString *address(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::Address));
+  return val.isString() ? val.toString() : nullptr;
+}
+
+JSString *geo_info(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::GeoInfo));
+  return val.isString() ? val.toString() : nullptr;
+}
+
+JSString *cipher(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::Cipher));
+  return val.isString() ? val.toString() : nullptr;
+}
+JSString *ja3(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::JA3));
+  return val.isString() ? val.toString() : nullptr;
+}
+JSObject *clientHello(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::ClientHello));
+  return val.isObject() ? val.toObjectOrNull() : nullptr;
+}
+JSObject *clientCert(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::ClientCert));
+  return val.isObject() ? val.toObjectOrNull() : nullptr;
+}
+JSString *protocol(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::Protocol));
+  return val.isString() ? val.toString() : nullptr;
+}
+
+static JSString *retrieve_address(JSContext *cx, JS::HandleObject self) {
+  auto res = host_api::HttpReq::downstream_client_ip_addr();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return nullptr;
+  }
+
+  auto octets = std::move(res.unwrap());
+  char address_chars[INET6_ADDRSTRLEN];
+  int addr_family = 0;
+  socklen_t size = 0;
+
+  switch (octets.len) {
+  case 0: {
+    // No address to be had, leave `address` as a nullptr.
+    break;
+  }
+  case 4: {
+    addr_family = AF_INET;
+    size = INET_ADDRSTRLEN;
+    break;
+  }
+  case 16: {
+    addr_family = AF_INET6;
+    size = INET6_ADDRSTRLEN;
+    break;
+  }
+  }
+
+  JS::RootedString address(cx);
+  if (octets.len > 0) {
+    // TODO: do we need to do error handling here, or can we depend on the
+    // host giving us a valid address?
+    inet_ntop(addr_family, octets.begin(), address_chars, size);
+    address = JS_NewStringCopyZ(cx, address_chars);
+    if (!address) {
+      return nullptr;
+    }
+  }
+
+  JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::Address),
+                      JS::StringValue(address));
+  return address;
+}
+
+JSString *retrieve_geo_info(JSContext *cx, JS::HandleObject self) {
+  JS::RootedString address_str(cx, address(self));
+  if (!address_str) {
+    address_str = retrieve_address(cx, self);
+    if (!address_str)
+      return nullptr;
+  }
+
+  JS::RootedString geo(cx, host_api::get_geo_info(cx, address_str));
+  if (!geo)
+    return nullptr;
+
+  JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::GeoInfo),
+                      JS::StringValue(geo));
+  return geo;
+}
+
+} // namespace
+
+bool ClientInfo::address_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString address_str(cx, address(self));
+  if (!address_str) {
+    address_str = retrieve_address(cx, self);
+    if (!address_str)
+      return false;
+  }
+
+  args.rval().setString(address_str);
+  return true;
+}
+
+bool ClientInfo::geo_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  JS::RootedString geo_info_str(cx, geo_info(self));
+  if (!geo_info_str) {
+    geo_info_str = retrieve_geo_info(cx, self);
+    if (!geo_info_str)
+      return false;
+  }
+
+  return JS_ParseJSON(cx, geo_info_str, args.rval());
+}
+
+bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, cipher(self));
+  if (!result) {
+    auto res = host_api::HttpReq::http_req_downstream_tls_cipher_openssl_name();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    auto cipher = std::move(res.unwrap());
+    result.set(JS_NewStringCopyN(cx, cipher.ptr.get(), cipher.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::Cipher),
+                        JS::StringValue(result));
+  }
+
+  args.rval().setString(result);
+  return true;
+}
+
+bool ClientInfo::tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, ja3(self));
+  if (!result) {
+    auto res = host_api::HttpReq::http_req_downstream_tls_ja3_md5();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    auto ja3 = std::move(res.unwrap());
+    JS::UniqueChars hex{OPENSSL_buf2hexstr(ja3.ptr.get(), ja3.len)};
+    std::string ja3hex{hex.get(), std::remove(hex.get(), hex.get() + strlen(hex.get()), ':')};
+
+    result.set(JS_NewStringCopyN(cx, ja3hex.c_str(), ja3hex.length()));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::JA3),
+                        JS::StringValue(result));
+  }
+  args.rval().setString(result);
+  return true;
+}
+
+bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedObject buffer(cx, clientHello(self));
+  if (!buffer) {
+    auto res = host_api::HttpReq::http_req_downstream_tls_client_hello();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    auto hello = std::move(res.unwrap());
+    buffer.set(JS::NewArrayBufferWithContents(cx, hello.len, hello.ptr.get(),
+                                              JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
+    if (!buffer) {
+      // We can be here if the array buffer was too large -- if that was the case then a
+      // JSMSG_BAD_ARRAY_LENGTH will have been created.
+      return false;
+    }
+
+    // `hello` is now owned by `buffer`
+    static_cast<void>(hello.ptr.release());
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::ClientHello),
+                        JS::ObjectValue(*buffer));
+  }
+
+  args.rval().setObject(*buffer);
+  return true;
+}
+
+bool ClientInfo::tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedObject buffer(cx, clientCert(self));
+  if (!buffer) {
+    auto res = host_api::HttpReq::http_req_downstream_tls_raw_client_certificate();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+    auto cert = std::move(res.unwrap());
+
+    buffer.set(JS::NewArrayBufferWithContents(cx, cert.len, cert.ptr.get(),
+                                              JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
+    if (!buffer) {
+      // We can be here if the array buffer was too large -- if that was the case then a
+      // JSMSG_BAD_ARRAY_LENGTH will have been created.
+      return false;
+    }
+
+    // `cert` is now owned by `buffer`
+    static_cast<void>(cert.ptr.release());
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::ClientCert),
+                        JS::ObjectValue(*buffer));
+  }
+
+  args.rval().setObject(*buffer);
+  return true;
+}
+
+bool ClientInfo::tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, protocol(self));
+  if (!result) {
+    auto res = host_api::HttpReq::http_req_downstream_tls_protocol();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    auto protocol = std::move(res.unwrap());
+    result.set(JS_NewStringCopyN(cx, protocol.ptr.get(), protocol.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::Protocol),
+                        JS::StringValue(result));
+  }
+
+  args.rval().setString(result);
+  return true;
+}
+
+const JSFunctionSpec ClientInfo::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec ClientInfo::static_properties[] = {
+    JS_PS_END,
+};
+
+const JSFunctionSpec ClientInfo::methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec ClientInfo::properties[] = {
+    JS_PSG("address", address_get, JSPROP_ENUMERATE),
+    JS_PSG("geo", geo_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsCipherOpensslName", tls_cipher_openssl_name_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsProtocol", tls_protocol_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsJA3MD5", tls_ja3_md5_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsClientCertificate", tls_client_certificate_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsClientHello", tls_client_hello_get, JSPROP_ENUMERATE),
+    JS_PS_END,
+};
+
+JSObject *ClientInfo::create(JSContext *cx) {
+  return JS_NewObjectWithGivenProto(cx, &class_, proto_obj);
+}
 
 namespace {
 
@@ -70,25 +351,23 @@ bool add_pending_promise(JSContext *cx, JS::HandleObject self, JS::HandleObject 
 
 } // namespace
 
-// TODO(GB): ClientInfo
-// bool FetchEvent::client_get(JSContext *cx, unsigned argc, JS::Value *vp) {
-//   METHOD_HEADER(0)
+bool FetchEvent::client_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
 
-//   JS::RootedValue clientInfo(cx,
-//                              JS::GetReservedSlot(self,
-//                              static_cast<uint32_t>(Slots::ClientInfo)));
+  JS::RootedValue clientInfo(cx,
+                             JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ClientInfo)));
 
-//   if (clientInfo.isUndefined()) {
-//     JS::RootedObject obj(cx, ClientInfo::create(cx));
-//     if (!obj)
-//       return false;
-//     clientInfo.setObject(*obj);
-//     JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ClientInfo), clientInfo);
-//   }
+  if (clientInfo.isUndefined()) {
+    JS::RootedObject obj(cx, ClientInfo::create(cx));
+    if (!obj)
+      return false;
+    clientInfo.setObject(*obj);
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ClientInfo), clientInfo);
+  }
 
-//   args.rval().set(clientInfo);
-//   return true;
-// }
+  args.rval().set(clientInfo);
+  return true;
+}
 
 void dispatch_fetch_event(HandleObject event, double *total_compute) {
   MOZ_ASSERT(FetchEvent::is_instance(event));
@@ -132,6 +411,10 @@ JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {
 
 bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::HttpReq req,
                               host_api::HttpBody body) {
+
+  builtins::web::performance::Performance::timeOrigin.emplace(
+      std::chrono::high_resolution_clock::now());
+
   JS::RootedObject request(
       cx, &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)).toObject());
 
@@ -438,8 +721,7 @@ const JSFunctionSpec FetchEvent::methods[] = {
 };
 
 const JSPropertySpec FetchEvent::properties[] = {
-    // TODO(GB): Client Info
-    // JS_PSG("client", client_get, JSPROP_ENUMERATE),
+    JS_PSG("client", client_get, JSPROP_ENUMERATE),
     JS_PSG("request", request_get, JSPROP_ENUMERATE),
     JS_PS_END,
 };
@@ -562,6 +844,10 @@ bool install(api::Engine *engine) {
 
   if (!FetchEvent::create(engine->cx())) {
     MOZ_RELEASE_ASSERT(false);
+  }
+
+  if (!ClientInfo::init_class(engine->cx(), engine->global())) {
+    return false;
   }
 
   return true;

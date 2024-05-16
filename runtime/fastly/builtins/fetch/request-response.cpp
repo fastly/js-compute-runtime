@@ -10,6 +10,7 @@
 #include "../cache-simple.h"
 #include "../fastly.h"
 #include "../fetch-event.h"
+#include "../kv-store.h"
 #include "extension-api.h"
 #include "fetch.h"
 
@@ -38,6 +39,7 @@ using fastly::cache_override::CacheOverride;
 using fastly::cache_simple::SimpleCacheEntry;
 using fastly::fastly::FastlyGetErrorMessage;
 using fastly::fetch_event::FetchEvent;
+using fastly::kv_store::KVStoreEntry;
 
 namespace builtins::web::streams {
 
@@ -171,7 +173,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx, int32_t handle,
 
 bool RequestOrResponse::is_instance(JSObject *obj) {
   return Request::is_instance(obj) || Response::is_instance(obj) ||
-         SimpleCacheEntry::is_instance(obj);
+         SimpleCacheEntry::is_instance(obj) || KVStoreEntry::is_instance(obj);
 }
 
 uint32_t RequestOrResponse::handle(JSObject *obj) {

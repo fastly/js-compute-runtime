@@ -49,12 +49,14 @@ public:
 
   // TODO(GB): reimplement
   // static bool createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp);
-  // static bool now(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool now(JSContext *cx, unsigned argc, JS::Value *vp);
+  // TODO(GB): reimplement
   // static bool dump(JSContext *cx, unsigned argc, JS::Value *vp);
   // static bool enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp);
-  // static bool getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value *vp);
+  // TODO(GB): reimplement
   // static bool getLogger(JSContext *cx, unsigned argc, JS::Value *vp);
-  // static bool includeBytes(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool includeBytes(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool version_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool env_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool baseURL_get(JSContext *cx, unsigned argc, JS::Value *vp);

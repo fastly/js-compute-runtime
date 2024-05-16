@@ -2,10 +2,16 @@
 #include <type_traits>
 
 #include "../../StarlingMonkey/runtime/allocator.h"
+#include "../../StarlingMonkey/runtime/encode.h"
 #include "./component/fastly_world.h"
 #include "./fastly.h"
 #include "./host_api_fastly.h"
 
+#include <algorithm>
+#include <arpa/inet.h>
+
+using api::FastlyResult;
+using fastly::FastlyAPIError;
 using host_api::Result;
 
 size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
@@ -237,6 +243,42 @@ make_fastly_send_error(fastly_compute_at_edge_http_req_send_error_detail_t &send
 }
 
 } // namespace
+
+JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
+  auto address = core::encode(cx, address_str);
+  if (!address) {
+    return nullptr;
+  }
+
+  // TODO: Remove all of this and rely on the host for validation as the hostcall only takes one
+  // user-supplied parameter
+  int format = AF_INET;
+  size_t octets_len = 4;
+  if (std::find(address.begin(), address.end(), ':') != address.end()) {
+    format = AF_INET6;
+    octets_len = 16;
+  }
+
+  uint8_t octets[sizeof(struct in6_addr)];
+  if (inet_pton(format, address.begin(), octets) != 1) {
+    // While get_geo_info can be invoked through FetchEvent#client.geo, too,
+    // that path can't result in an invalid address here, so we can be more
+    // specific in the error message.
+    // TODO: Make a TypeError
+    JS_ReportErrorLatin1(cx, "Invalid address passed to fastly.getGeolocationForIpAddress");
+    return nullptr;
+  }
+
+  auto res = host_api::GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return nullptr;
+  }
+
+  auto ret = std::move(res.unwrap());
+
+  return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.ptr.release(), ret.len));
+}
 
 Result<HttpBody> HttpBody::make() {
   Result<HttpBody> res;
@@ -1160,13 +1202,28 @@ Result<std::optional<HttpBody>> ObjectStore::lookup(std::string_view name) {
   return res;
 }
 
-Result<FastlyAsyncTask> ObjectStore::lookup_async(std::string_view name) {
-  Result<FastlyAsyncTask> res;
+Result<FastlyHandle> ObjectStore::lookup_async(std::string_view name) {
+  Result<FastlyHandle> res;
 
   auto name_str = string_view_to_world_string(name);
   fastly_compute_at_edge_object_store_pending_handle_t ret;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_object_store_lookup_async(this->handle, &name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<FastlyHandle> ObjectStore::delete_async(std::string_view name) {
+  Result<FastlyHandle> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_compute_at_edge_object_store_pending_handle_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_object_store_delete_async(this->handle, &name_str, &ret, &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(ret);
@@ -1189,13 +1246,13 @@ Result<Void> ObjectStore::insert(std::string_view name, HttpBody body) {
   return res;
 }
 
-Result<std::optional<HttpBody>> ObjectStorePendingLookup::wait() {
-  Result<std::optional<HttpBody>> res;
+FastlyResult<std::optional<HttpBody>, FastlyAPIError> ObjectStorePendingLookup::wait() {
+  FastlyResult<std::optional<HttpBody>, FastlyAPIError> res;
 
   fastly_compute_at_edge_types_error_t err;
   fastly_world_option_fastly_compute_at_edge_object_store_body_handle_t ret;
   if (!fastly_compute_at_edge_object_store_pending_lookup_wait(this->handle, &ret, &err)) {
-    res.emplace_err(err);
+    res.emplace_err(static_cast<FastlyAPIError>(err));
   } else if (ret.is_some) {
     res.emplace(ret.val);
   } else {
@@ -1205,9 +1262,25 @@ Result<std::optional<HttpBody>> ObjectStorePendingLookup::wait() {
   return res;
 }
 
-FastlyAsyncTask ObjectStorePendingLookup::async_handle() const {
-  return FastlyAsyncTask{this->handle};
+FastlyHandle ObjectStorePendingLookup::async_handle() const { return FastlyHandle{this->handle}; }
+
+Result<Void> ObjectStorePendingDelete::wait() {
+  Result<Void> res;
+
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_object_store_pending_delete_wait(this->handle, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(Void{});
+  }
+
+  return res;
 }
+
+FastlyHandle ObjectStorePendingDelete::async_handle() const { return FastlyHandle{this->handle}; }
+
+static_assert(std::is_same_v<FastlyHandle, fastly_compute_at_edge_secret_store_secret_handle_t>);
+static_assert(std::is_same_v<FastlyHandle, fastly_compute_at_edge_secret_store_store_handle_t>);
 
 Result<std::optional<HostString>> Secret::plaintext() const {
   Result<std::optional<HostString>> res;
@@ -1618,6 +1691,7 @@ const std::optional<std::string> FastlySendError::message() const {
   /// The system encountered a DNS error when trying to find an IP address for the backend
   /// hostname. The fields dns_error_rcode and dns_error_info_code may be set in the
   /// send_error_detail.
+  // TODO(GB): reenable DNS error codes
   case dns_error: {
     return "DNS error (rcode={}, info_code={})" /*, this->dns_error_rcode,
                         this->dns_error_info_code*/
