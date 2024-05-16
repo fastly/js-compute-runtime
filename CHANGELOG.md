@@ -1,6 +1,18 @@
 # Changelog
 
 
+## [3.14.0](https://github.com/fastly/js-compute-runtime/compare/v3.13.1...v3.14.0) (2024-05-16)
+
+
+### Features
+
+* fastly.sdkVersion implementation ([#776](https://github.com/fastly/js-compute-runtime/issues/776)) ([3eb5a8f](https://github.com/fastly/js-compute-runtime/commit/3eb5a8ff9aaad279dc17deee1c2e8760fea28a49))
+
+
+### Bug Fixes
+
+* support cacheKey in Request init ([#770](https://github.com/fastly/js-compute-runtime/issues/770)) ([b64b22e](https://github.com/fastly/js-compute-runtime/commit/b64b22e988d8e3ca20c42c13f6cb89be871a5d61))
+
 ## [3.13.1](https://github.com/fastly/js-compute-runtime/compare/v3.13.0...v3.13.1) (2024-04-12)
 
 
