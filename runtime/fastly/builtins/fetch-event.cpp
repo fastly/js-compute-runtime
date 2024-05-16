@@ -173,7 +173,6 @@ bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::V
 }
 
 bool ClientInfo::tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp) {
-  fprintf(stderr, "tlsJA3MD5");
   METHOD_HEADER(0);
 
   JS::RootedString result(cx, ja3(self));
