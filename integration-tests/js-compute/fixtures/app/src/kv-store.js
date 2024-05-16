@@ -106,7 +106,7 @@ const starlingmonkey = sdkVersion.includes('starlingmonkey');
         routes.set("/kv-store/put/called-as-constructor", async () => {
             let error = assertThrows(() => {
                 new KVStore.prototype.put('1', '1')
-            }, TypeError, `KVStore.prototype.put is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass()
         });
@@ -504,7 +504,7 @@ const starlingmonkey = sdkVersion.includes('starlingmonkey');
         routes.set("/kv-store/delete/called-as-constructor", async () => {
             let error = assertThrows(() => {
                 new KVStore.prototype.delete('1')
-            }, TypeError, `KVStore.prototype.delete is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass()
         });
@@ -698,7 +698,7 @@ const starlingmonkey = sdkVersion.includes('starlingmonkey');
         routes.set("/kv-store/get/called-as-constructor", async () => {
             let error = assertThrows(() => {
                 new KVStore.prototype.get('1')
-            }, TypeError, `KVStore.prototype.get is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass()
         });

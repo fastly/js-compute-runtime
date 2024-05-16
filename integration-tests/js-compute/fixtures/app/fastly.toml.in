@@ -93,6 +93,10 @@ service_id = ""
       key = "placeholder"
       data = 'placholder'
 
+    [[local_server.kv_stores.example-test-kv-store-sm]]
+      key = "placeholder"
+      data = 'placholder'
+
   [local_server.secret_stores]
     [[local_server.secret_stores.example-test-secret-store]]
       key = "first"

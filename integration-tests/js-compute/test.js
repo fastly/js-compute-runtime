@@ -122,8 +122,8 @@ if (starlingmonkey) {
 \`\`\`mermaid
 pie showData
     title 🐦🐵 Test Progress 🚀🚀
-    "Remaining Tests" : ${testCnt - starlingTestCnt}
     "StarlingMonkey Tests" : ${starlingTestCnt}
+    "Remaining Tests" : ${testCnt - starlingTestCnt}
 \`\`\``, true).write();
     }
     tests = Object.fromEntries(Object.entries(tests).filter(([key]) => testsStarlingMonkey.includes(key)));

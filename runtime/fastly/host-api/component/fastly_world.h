@@ -1077,6 +1077,13 @@ bool fastly_compute_at_edge_object_store_pending_lookup_wait(
     fastly_compute_at_edge_object_store_pending_handle_t handle,
     fastly_world_option_fastly_compute_at_edge_object_store_body_handle_t *ret,
     fastly_compute_at_edge_object_store_error_t *err);
+bool fastly_compute_at_edge_object_store_delete_async(
+    fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key,
+    fastly_compute_at_edge_object_store_pending_handle_t *ret,
+    fastly_compute_at_edge_object_store_error_t *err);
+bool fastly_compute_at_edge_object_store_pending_delete_wait(
+    fastly_compute_at_edge_object_store_pending_handle_t handle,
+    fastly_compute_at_edge_object_store_error_t *err);
 bool fastly_compute_at_edge_object_store_insert(
     fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key,
     fastly_compute_at_edge_object_store_body_handle_t body_handle,
