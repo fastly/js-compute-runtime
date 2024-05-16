@@ -110,7 +110,7 @@ public:
   }
   FastlyAsyncTask(uint32_t handle, JSContext *cx, JS::HandleObject context,
                   JS::HandleObject promise, ProcessAsyncTask *process) {
-    if (static_cast<int32_t>(handle) < 0)
+    if (static_cast<int32_t>(handle) == INVALID_POLLABLE_HANDLE)
       abort();
     handle_ = static_cast<int32_t>(handle);
     context_.init(cx, context);
