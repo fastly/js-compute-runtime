@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [3.14.1](https://github.com/fastly/js-compute-runtime/compare/v3.14.0...v3.14.1) (2024-05-17)
+
+
+### Bug Fixes
+
+* fix documentation build ([#781](https://github.com/fastly/js-compute-runtime/issues/781)) ([864864e](https://github.com/fastly/js-compute-runtime/commit/864864e05ca3cf286f049d2c692401e708008052))
+
 ## [3.14.0](https://github.com/fastly/js-compute-runtime/compare/v3.13.1...v3.14.0) (2024-05-16)
 
 
