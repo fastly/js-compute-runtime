@@ -27,6 +27,17 @@ jobs:
     - run: yarn install --immutable
     - run: npm run check-changelog
 
+  check-docusaurus:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        cache: 'yarn'
+    - run: cd documentation && yarn install
+    - run: cd documentation && yarn build
+
   build:
     name: Build
     needs: [ensure_cargo_installs]
