@@ -22,7 +22,7 @@ jobs:
           bump-patch-for-minor-pre-major: true
           draft: false
           prerelease: false
-          token: ${{ secrets.JS_COMPUTE_RUNTIME_GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
 
   update-lock-and-docs:
@@ -36,7 +36,7 @@ jobs:
           submodules: true
           ref: release-please--branches--main--components--js-compute
           fetch-depth: 2
-          token: ${{ secrets.JS_COMPUTE_RUNTIME_GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
