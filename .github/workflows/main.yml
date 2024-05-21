@@ -25,7 +25,7 @@ jobs:
       with:
         cache: 'yarn'
     - run: yarn install --immutable
-    - run: npm run check-changelog
+    - run: npm run format-changelog
 
   check-docusaurus:
     if: github.ref != 'refs/heads/main'
