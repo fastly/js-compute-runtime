@@ -48,9 +48,7 @@ try {
 }
 
 function getAst(markdownString) {
-  const tree = unified()
-    .use(remarkParse)
-    .parse(markdownString);
+  const tree = unified().use(remarkParse).parse(markdownString);
   return tree;
 }
 
@@ -94,7 +92,8 @@ function format(ast, path) {
         ) {
           const link = item.children[0];
           item.children = [item.children[1]];
-          item.children[0].value = link.children[0].value + item.children[0].value;
+          item.children[0].value =
+            link.children[0].value + item.children[0].value;
           changed = true;
         } else if (item.children.length !== 1) {
           console.log(
@@ -189,6 +188,19 @@ function format(ast, path) {
       // checks on all ### headings
       if (item.type === "heading" && item.depth === 3) {
         // check it only uses one of the fixed options for change types
+        if (item.children.length === 1 && item.children[0].type === "text") {
+          const val = item.children[0].value;
+          if (val.toLowerCase().endsWith("breaking changes")) {
+            item.children[0].value = "Changed";
+            changed = true;
+          } else if (val.includes("Bug Fixes")) {
+            item.children[0].value = "Fixed";
+            changed = true;
+          } else if (val.includes("Features")) {
+            item.children[0].value = "Added";
+            changed = true;
+          }
+        }
         if (
           item.children.length !== 1 ||
           item.children[0].type !== "text" ||
@@ -226,10 +238,10 @@ function format(ast, path) {
 
     if (changed) {
       // ...work around convoluted API...
-      const wat = { data () {} };
+      const wat = { data() {} };
       remarkStringify.call(wat);
       const output = wat.compiler(ast);
-      writeFileSync(path, output, 'utf8');
+      writeFileSync(path, `# Changelog\n\n${output}`, "utf8");
     }
 
     return { correct: true, changed };
