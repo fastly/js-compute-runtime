@@ -54,6 +54,8 @@ jobs:
       - run: npm run build:files
         working-directory: ./documentation/app
 
+      - run: npm run format-changelog
+
       - name: Committing and push changes
         run: |
           git config user.name "${GITHUB_ACTOR}"

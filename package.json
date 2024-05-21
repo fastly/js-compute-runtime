@@ -33,16 +33,18 @@
     "build:debug": "DEBUG=true make -j8 -C runtime/js-compute-runtime && cp runtime/js-compute-runtime/*.wasm .",
     "build:starlingmonkey": "./runtime/fastly/build-release.sh",
     "build:starlingmonkey:debug": "./runtime/fastly/build-debug.sh",
-    "check-changelog": "cae-release-notes-format-checker CHANGELOG.md"
+    "format-changelog": "node ci/format-changelog.js CHANGELOG.md"
   },
   "devDependencies": {
     "@jakechampion/cli-testing-library": "^1.0.0",
     "brittle": "^3.2.1",
-    "cae-release-notes-format-checker": "^1.0.2",
     "eslint": "^8.40.0",
     "get-bin-path": "^9.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
     "tsd": "^0.28.1",
-    "typescript": "^5.0"
+    "typescript": "^5.0",
+    "unified": "^11.0.0"
   },
   "dependencies": {
     "@bytecodealliance/jco": "^0.10.0",
