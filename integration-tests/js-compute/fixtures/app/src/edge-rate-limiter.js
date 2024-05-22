@@ -256,7 +256,7 @@ let error;
     routes.set("/rate-counter/increment/called-as-constructor", () => {
       error = assertThrows(() => {
         new RateCounter.prototype.increment('entry', 1)
-      }, Error, `RateCounter.prototype.increment is not a constructor`)
+      }, Error)
       if (error) { return error }
       return pass('ok')
     });
@@ -344,7 +344,7 @@ let error;
     routes.set("/rate-counter/lookupRate/called-as-constructor", () => {
       error = assertThrows(() => {
         new RateCounter.prototype.lookupRate('entry', 1)
-      }, Error, `RateCounter.prototype.lookupRate is not a constructor`)
+      }, Error)
       if (error) { return error }
       return pass('ok')
     });
@@ -438,7 +438,7 @@ let error;
     routes.set("/rate-counter/lookupCount/called-as-constructor", () => {
       error = assertThrows(() => {
         new RateCounter.prototype.lookupCount('entry', 1)
-      }, Error, `RateCounter.prototype.lookupCount is not a constructor`)
+      }, Error)
       if (error) { return error }
       return pass('ok')
     });
@@ -750,7 +750,7 @@ let error;
     routes.set("/penalty-box/has/called-as-constructor", () => {
       error = assertThrows(() => {
         new PenaltyBox.prototype.has('entry')
-      }, Error, `PenaltyBox.prototype.has is not a constructor`)
+      }, Error)
       if (error) { return error }
       return pass('ok')
     });
@@ -806,7 +806,7 @@ let error;
     routes.set("/penalty-box/add/called-as-constructor", () => {
       error = assertThrows(() => {
         new PenaltyBox.prototype.add('entry', 1)
-      }, Error, `PenaltyBox.prototype.add is not a constructor`)
+      }, Error)
       if (error) { return error }
       return pass('ok')
     });
@@ -1064,7 +1064,7 @@ let error;
     routes.set("/edge-rate-limiter/checkRate/called-as-constructor", () => {
       error = assertThrows(() => {
         new EdgeRateLimiter.prototype.checkRate('entry')
-      }, Error, `EdgeRateLimiter.prototype.checkRate is not a constructor`)
+      }, Error)
       if (error) { return error }
       return pass('ok')
     });

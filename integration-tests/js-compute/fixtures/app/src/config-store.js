@@ -1,9 +1,7 @@
 /* eslint-env serviceworker */
 import { pass, assert } from "./assertions.js";
-import * as configStore from 'fastly:config-store'
+import { ConfigStore } from 'fastly:config-store'
 import { routes } from "./routes.js";
-
-const { ConfigStore } = configStore;
 
 routes.set("/config-store", () => {
   let config = new ConfigStore("testconfig");

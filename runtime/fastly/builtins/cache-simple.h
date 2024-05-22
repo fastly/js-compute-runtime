@@ -26,7 +26,6 @@ public:
 
   static const unsigned ctor_length = 0;
 
-  static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static JSObject *create(JSContext *cx, host_api::HttpBody body_handle);
 };

@@ -1,13 +1,13 @@
-#ifndef JS_COMPUTE_RUNTIME_KV_STORE_H
-#define JS_COMPUTE_RUNTIME_KV_STORE_H
+#ifndef FASTLY_KV_STORE_H
+#define FASTLY_KV_STORE_H
 
 #include "../host-api/host_api_fastly.h"
 #include "./fetch/request-response.h"
 #include "builtin.h"
 
-using fastly::fetch::RequestOrResponse;
-
 namespace fastly::kv_store {
+
+using fetch::RequestOrResponse;
 
 class KVStoreEntry final : public BuiltinImpl<KVStoreEntry> {
   template <RequestOrResponse::BodyReadResult result_type>
@@ -49,7 +49,6 @@ public:
 
   static const unsigned ctor_length = 1;
 
-  static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool process_pending_kv_store_lookup(FastlyHandle handle, JS::HandleObject context,
                                               JS::HandleObject promise);
