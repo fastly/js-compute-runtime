@@ -110,9 +110,9 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   if (!response_promise)
     return ReturnPromiseRejectedWithPendingError(cx, args);
 
-  // if (!Request::apply_cache_override(cx, request)) {
-  //   return false;
-  // }
+  if (!Request::apply_cache_override(cx, request)) {
+    return false;
+  }
 
   if (!Request::apply_auto_decompress_gzip(cx, request)) {
     return false;
