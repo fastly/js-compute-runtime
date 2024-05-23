@@ -8,6 +8,7 @@
   "GET /cache-override/constructor/invalid-mode",
   "GET /cache-override/constructor/valid-mode",
   "GET /cache-override/fetch/mode-none",
+  "GET /cache-override/fetch/mode-pass",
   "GET /simple-cache/interface",
   "GET /simple-store/constructor/called-as-regular-function",
   "GET /simple-cache/constructor/throws",
