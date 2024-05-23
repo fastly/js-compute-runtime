@@ -11,9 +11,11 @@
 #include "openssl/evp.h"
 #include <tuple>
 
+using builtins::BuiltinImpl;
 using builtins::web::streams::NativeStreamSource;
 using fastly::fastly::convertBodyInit;
 using fastly::fastly::FastlyGetErrorMessage;
+using fastly::fetch::RequestOrResponse;
 
 namespace fastly::cache_simple {
 

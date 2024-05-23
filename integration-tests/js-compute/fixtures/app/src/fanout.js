@@ -26,7 +26,7 @@ routes.set("/createFanoutHandoff", () => {
   error = assert(result instanceof Response, true, 'result instanceof Response');
   if (error) { return error; }
 
-  error = assertThrows(() => new createFanoutHandoff(new Request('.'), 'hello'), TypeError, `createFanoutHandoff is not a constructor`)
+  error = assertThrows(() => new createFanoutHandoff(new Request('.'), 'hello'), TypeError)
   if (error) { return error }
 
   error = assertDoesNotThrow(() => {

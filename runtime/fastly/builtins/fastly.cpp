@@ -5,18 +5,25 @@
 #include "js/experimental/TypedData.h" // used in "js/Conversions.h"
 #pragma clang diagnostic pop
 #include "../../StarlingMonkey/builtins/web/url.h"
+#include "./fetch/request-response.h"
 #include "encode.h"
 #include "fastly.h"
 #include "js/Conversions.h"
 #include "js/JSON.h"
+#include "logger.h"
 
 using builtins::web::url::URL;
 using builtins::web::url::URLSearchParams;
 using fastly::fastly::Fastly;
+using fastly::fetch::RequestOrResponse;
+using fastly::fetch::Response;
+using fastly::logger::Logger;
 
 namespace {
 
 bool DEBUG_LOGGING_ENABLED = false;
+
+api::Engine *ENGINE;
 
 } // namespace
 
@@ -32,65 +39,29 @@ const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNu
   return nullptr;
 }
 
-namespace {
+JS::PersistentRooted<JSObject *> Fastly::env;
+JS::PersistentRooted<JSObject *> Fastly::baseURL;
+JS::PersistentRooted<JSString *> Fastly::defaultBackend;
+bool Fastly::allowDynamicBackends = false;
 
-bool enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Fastly::dump(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, __func__, 1))
+    return false;
+
+  ENGINE->dump_value(args[0], stdout);
+
+  args.rval().setUndefined();
+  return true;
+}
+
+bool Fastly::enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, __func__, 1))
     return false;
   DEBUG_LOGGING_ENABLED = JS::ToBoolean(args[0]);
   args.rval().setUndefined();
   return true;
-}
-
-} // namespace
-
-JS::PersistentRooted<JSObject *> Fastly::env;
-JS::PersistentRooted<JSObject *> Fastly::baseURL;
-JS::PersistentRooted<JSString *> Fastly::defaultBackend;
-bool Fastly::allowDynamicBackends = false;
-
-bool Fastly::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS::CallArgs args = CallArgsFromVp(argc, vp);
-  JS::RootedString version_str(cx, JS_NewStringCopyN(cx, RUNTIME_VERSION, strlen(RUNTIME_VERSION)));
-  args.rval().setString(version_str);
-  return true;
-}
-
-bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS::CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "fastly.env.get", 1))
-    return false;
-
-  auto var_name_chars = core::encode(cx, args[0]);
-  if (!var_name_chars) {
-    return false;
-  }
-  JS::RootedString env_var(cx, JS_NewStringCopyZ(cx, getenv(var_name_chars.begin())));
-  if (!env_var)
-    return false;
-
-  args.rval().setString(env_var);
-  return true;
-}
-
-const JSFunctionSpec Env::static_methods[] = {
-    JS_FS_END,
-};
-
-const JSPropertySpec Env::static_properties[] = {
-    JS_PS_END,
-};
-
-const JSFunctionSpec Env::methods[] = {JS_FN("get", env_get, 1, JSPROP_ENUMERATE), JS_FS_END};
-
-const JSPropertySpec Env::properties[] = {JS_PS_END};
-
-JSObject *Env::create(JSContext *cx) {
-  JS::RootedObject env(cx, JS_NewPlainObject(cx));
-  if (!env || !JS_DefineFunctions(cx, env, methods))
-    return nullptr;
-  return env;
 }
 
 bool Fastly::getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -110,29 +81,28 @@ bool Fastly::getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value 
   return JS_ParseJSON(cx, geo_info_str, args.rval());
 }
 
-// TODO(GB): reimplement
-// // TODO(performance): consider allowing logger creation during initialization, but then throw
-// // when trying to log.
-// // https://github.com/fastly/js-compute-runtime/issues/225
-// bool Fastly::getLogger(JSContext *cx, unsigned argc, JS::Value *vp) {
-//   JS::CallArgs args = CallArgsFromVp(argc, vp);
-//   REQUEST_HANDLER_ONLY("fastly.getLogger");
-//   JS::RootedObject self(cx, &args.thisv().toObject());
-//   if (!args.requireAtLeast(cx, "fastly.getLogger", 1))
-//     return false;
+// TODO(performance): consider allowing logger creation during initialization, but then throw
+// when trying to log.
+// https://github.com/fastly/js-compute-runtime/issues/225
+bool Fastly::getLogger(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  REQUEST_HANDLER_ONLY("fastly.getLogger");
+  JS::RootedObject self(cx, &args.thisv().toObject());
+  if (!args.requireAtLeast(cx, "fastly.getLogger", 1))
+    return false;
 
-//   auto name = core::encode(cx, args[0]);
-//   if (!name)
-//     return false;
+  auto name = core::encode(cx, args[0]);
+  if (!name)
+    return false;
 
-//   JS::RootedObject logger(cx, builtins::Logger::create(cx, name.begin()));
-//   if (!logger) {
-//     return false;
-//   }
+  JS::RootedObject logger(cx, Logger::create(cx, name.begin()));
+  if (!logger) {
+    return false;
+  }
 
-//   args.rval().setObject(*logger);
-//   return true;
-// }
+  args.rval().setObject(*logger);
+  return true;
+}
 
 bool Fastly::includeBytes(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -175,69 +145,65 @@ bool Fastly::includeBytes(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-// TODO(GB): reimplement
-// bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
-//   JS::CallArgs args = CallArgsFromVp(argc, vp);
-//   REQUEST_HANDLER_ONLY("createFanoutHandoff");
-//   if (!args.requireAtLeast(cx, "createFanoutHandoff", 2)) {
-//     return false;
-//   }
+bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  REQUEST_HANDLER_ONLY("createFanoutHandoff");
+  if (!args.requireAtLeast(cx, "createFanoutHandoff", 2)) {
+    return false;
+  }
 
-//   auto request_value = args.get(0);
-//   if (!Request::is_instance(request_value)) {
-//     JS_ReportErrorUTF8(cx, "createFanoutHandoff: request parameter must be an instance of
-//     Request"); return false;
-//   }
+  auto request_value = args.get(0);
+  if (!Request::is_instance(request_value)) {
+    JS_ReportErrorUTF8(cx, "createFanoutHandoff: request parameter must be an instance of Request");
+    return false;
+  }
 
-//   auto response_handle = host_api::HttpResp::make();
-//   if (auto *err = response_handle.to_err()) {
-//     HANDLE_ERROR(cx, *err);
-//     return false;
-//   }
-//   auto body_handle = host_api::HttpBody::make();
-//   if (auto *err = body_handle.to_err()) {
-//     HANDLE_ERROR(cx, *err);
-//     return false;
-//   }
+  auto response_handle = host_api::HttpResp::make();
+  if (auto *err = response_handle.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto body_handle = host_api::HttpBody::make();
+  if (auto *err = body_handle.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
 
-//   JS::RootedObject response_instance(cx, JS_NewObjectWithGivenProto(cx,
-//   &builtins::Response::class_,
-//                                                                     builtins::Response::proto_obj));
-//   if (!response_instance) {
-//     return false;
-//   }
+  JS::RootedObject response_instance(
+      cx, JS_NewObjectWithGivenProto(cx, &Response::class_, Response::proto_obj));
+  if (!response_instance) {
+    return false;
+  }
 
-//   auto backend_value = args.get(1);
-//   auto backend_chars = core::encode(cx, backend_value);
-//   if (!backend_chars) {
-//     return false;
-//   }
-//   if (backend_chars.len == 0) {
-//     JS_ReportErrorUTF8(cx, "createFanoutHandoff: Backend parameter can not be an empty string");
-//     return false;
-//   }
+  auto backend_value = args.get(1);
+  auto backend_chars = core::encode(cx, backend_value);
+  if (!backend_chars) {
+    return false;
+  }
+  if (backend_chars.len == 0) {
+    JS_ReportErrorUTF8(cx, "createFanoutHandoff: Backend parameter can not be an empty string");
+    return false;
+  }
 
-//   if (backend_chars.len > 254) {
-//     JS_ReportErrorUTF8(cx, "createFanoutHandoff: name can not be more than 254 characters");
-//     return false;
-//   }
+  if (backend_chars.len > 254) {
+    JS_ReportErrorUTF8(cx, "createFanoutHandoff: name can not be more than 254 characters");
+    return false;
+  }
 
-//   bool is_upstream = true;
-//   bool is_grip_upgrade = true;
-//   JS::RootedObject response(
-//       cx, builtins::Response::create(cx, response_instance, response_handle.unwrap(),
-//                                      body_handle.unwrap(), is_upstream, is_grip_upgrade,
-//                                      std::move(backend_chars.ptr)));
-//   if (!response) {
-//     return false;
-//   }
+  bool is_upstream = true;
+  bool is_grip_upgrade = true;
+  JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle.unwrap(),
+                                                 body_handle.unwrap(), is_upstream, is_grip_upgrade,
+                                                 std::move(backend_chars.ptr)));
+  if (!response) {
+    return false;
+  }
 
-//   builtins::RequestOrResponse::set_url(response,
-//                                        builtins::RequestOrResponse::url(&request_value.toObject()));
-//   args.rval().setObject(*response);
+  RequestOrResponse::set_url(response, RequestOrResponse::url(&request_value.toObject()));
+  args.rval().setObject(*response);
 
-//   return true;
-// }
+  return true;
+}
 
 bool Fastly::now(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -248,6 +214,49 @@ bool Fastly::now(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Fastly::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setObject(*env);
+  return true;
+}
+
+bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "fastly.env.get", 1))
+    return false;
+
+  auto var_name_chars = core::encode(cx, args[0]);
+  if (!var_name_chars) {
+    return false;
+  }
+  JS::RootedString env_var(cx, JS_NewStringCopyZ(cx, getenv(var_name_chars.begin())));
+  if (!env_var)
+    return false;
+
+  args.rval().setString(env_var);
+  return true;
+}
+
+const JSFunctionSpec Env::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec Env::static_properties[] = {
+    JS_PS_END,
+};
+
+const JSFunctionSpec Env::methods[] = {JS_FN("get", env_get, 1, JSPROP_ENUMERATE), JS_FS_END};
+
+const JSPropertySpec Env::properties[] = {JS_PS_END};
+
+JSObject *Env::create(JSContext *cx) {
+  JS::RootedObject env(cx, JS_NewPlainObject(cx));
+  if (!env || !JS_DefineFunctions(cx, env, methods))
+    return nullptr;
+  return env;
+}
+
+bool Fastly::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  JS::RootedString version_str(cx, JS_NewStringCopyN(cx, RUNTIME_VERSION, strlen(RUNTIME_VERSION)));
+  args.rval().setString(version_str);
   return true;
 }
 
@@ -313,6 +322,8 @@ const JSPropertySpec Fastly::properties[] = {
     JS_PS_END};
 
 bool install(api::Engine *engine) {
+  ENGINE = engine;
+
   bool ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS =
       std::string(std::getenv("ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS")) == "1";
 
@@ -337,16 +348,14 @@ bool install(api::Engine *engine) {
   JSFunctionSpec end = JS_FS_END;
 
   const JSFunctionSpec methods[] = {
-      // TODO(GB): reimplement
-      // JS_FN("dump", dump, 1, 0),
-      JS_FN("enableDebugLogging", enableDebugLogging, 1, JSPROP_ENUMERATE),
+      JS_FN("dump", Fastly::dump, 1, 0),
+      JS_FN("enableDebugLogging", Fastly::enableDebugLogging, 1, JSPROP_ENUMERATE),
       JS_FN("getGeolocationForIpAddress", Fastly::getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
-      // TODO(GB): reimplement
-      // JS_FN("getLogger", getLogger, 1, JSPROP_ENUMERATE),
+      JS_FN("getLogger", Fastly::getLogger, 1, JSPROP_ENUMERATE),
       JS_FN("includeBytes", Fastly::includeBytes, 1, JSPROP_ENUMERATE),
-      // TODO(GB): reimplement
-      // JS_FN("createFanoutHandoff", createFanoutHandoff, 2, JSPROP_ENUMERATE),
-      ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS ? nowfn : end, end};
+      JS_FN("createFanoutHandoff", Fastly::createFanoutHandoff, 2, JSPROP_ENUMERATE),
+      ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS ? nowfn : end,
+      end};
 
   if (!JS_DefineFunctions(engine->cx(), fastly, methods) ||
       !JS_DefineProperties(engine->cx(), fastly, Fastly::properties)) {
@@ -370,7 +379,11 @@ bool install(api::Engine *engine) {
   // fastly:experimental
   RootedObject experimental(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   RootedValue experimental_val(engine->cx(), JS::ObjectValue(*experimental));
-  if (!JS_SetProperty(engine->cx(), experimental, "includeBytes", experimental_val)) {
+  RootedValue include_bytes_val(engine->cx());
+  if (!JS_GetProperty(engine->cx(), fastly, "includeBytes", &include_bytes_val)) {
+    return false;
+  }
+  if (!JS_SetProperty(engine->cx(), experimental, "includeBytes", include_bytes_val)) {
     return false;
   }
   auto set_default_backend =
@@ -414,92 +427,17 @@ bool install(api::Engine *engine) {
   if (!engine->define_builtin_module("fastly:geolocation", geo_builtin_val)) {
     return false;
   }
-
-  // fastly:cache
-  // TODO(GB): move this into core-cache when that is ported
-  RootedObject cache(engine->cx(), JS_NewObject(engine->cx(), nullptr));
-  RootedValue cache_val(engine->cx(), JS::ObjectValue(*cache));
-  // TODO(GB): Implement core cache (placeholders used for now)
-  if (!JS_SetProperty(engine->cx(), cache, "CoreCache", cache_val)) {
-    return false;
-  }
-  if (!JS_SetProperty(engine->cx(), cache, "CacheEntry", cache_val)) {
-    return false;
-  }
-  if (!JS_SetProperty(engine->cx(), cache, "CacheState", cache_val)) {
-    return false;
-  }
-  if (!JS_SetProperty(engine->cx(), cache, "TransactionCacheEntry", cache_val)) {
-    return false;
-  }
-  RootedValue simple_cache_val(engine->cx());
-  if (!JS_GetProperty(engine->cx(), engine->global(), "SimpleCache", &simple_cache_val)) {
-    return false;
-  }
-  if (!JS_SetProperty(engine->cx(), cache, "SimpleCache", simple_cache_val)) {
-    return false;
-  }
-  RootedValue simple_cache_entry_val(engine->cx());
-  if (!JS_GetProperty(engine->cx(), engine->global(), "SimpleCacheEntry",
-                      &simple_cache_entry_val)) {
-    return false;
-  }
-  if (!JS_SetProperty(engine->cx(), cache, "SimpleCacheEntry", simple_cache_entry_val)) {
-    return false;
-  }
-  if (!engine->define_builtin_module("fastly:cache", cache_val)) {
-    return false;
-  }
-
-  // TODO(GB): all of the following builtin modules are just placeholder shapes for now
-  if (!engine->define_builtin_module("fastly:body", env_builtin_val)) {
-    return false;
-  }
-  if (!engine->define_builtin_module("fastly:config-store", env_builtin_val)) {
-    return false;
-  }
-  RootedObject device_device(engine->cx(), JS_NewObject(engine->cx(), nullptr));
-  RootedValue device_device_val(engine->cx(), JS::ObjectValue(*device_device));
-  if (!JS_SetProperty(engine->cx(), device_device, "Device", device_device_val)) {
-    return false;
-  }
-  if (!engine->define_builtin_module("fastly:device", device_device_val)) {
-    return false;
-  }
-  RootedObject dictionary(engine->cx(), JS_NewObject(engine->cx(), nullptr));
-  RootedValue dictionary_val(engine->cx(), JS::ObjectValue(*dictionary));
-  if (!JS_SetProperty(engine->cx(), dictionary, "Dictionary", dictionary_val)) {
-    return false;
-  }
-  if (!engine->define_builtin_module("fastly:dictionary", dictionary_val)) {
-    return false;
-  }
-  RootedObject edge_rate_limiter(engine->cx(), JS_NewObject(engine->cx(), nullptr));
-  RootedValue edge_rate_limiter_val(engine->cx(), JS::ObjectValue(*edge_rate_limiter));
-  if (!JS_SetProperty(engine->cx(), edge_rate_limiter, "RateCounter", edge_rate_limiter_val)) {
-    return false;
-  }
-  if (!JS_SetProperty(engine->cx(), edge_rate_limiter, "PenaltyBox", edge_rate_limiter_val)) {
-    return false;
-  }
-  if (!JS_SetProperty(engine->cx(), edge_rate_limiter, "EdgeRateLimiter", edge_rate_limiter_val)) {
-    return false;
-  }
-  if (!engine->define_builtin_module("fastly:edge-rate-limiter", edge_rate_limiter_val)) {
-    return false;
-  }
+  // fastly:fanout
   RootedObject fanout(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   RootedValue fanout_val(engine->cx(), JS::ObjectValue(*fanout));
-  if (!JS_SetProperty(engine->cx(), fanout, "createFanoutHandoff", fanout_val)) {
+  RootedValue create_fanout_handoff_val(engine->cx());
+  if (!JS_GetProperty(engine->cx(), fastly, "createFanoutHandoff", &create_fanout_handoff_val)) {
+    return false;
+  }
+  if (!JS_SetProperty(engine->cx(), fanout, "createFanoutHandoff", create_fanout_handoff_val)) {
     return false;
   }
   if (!engine->define_builtin_module("fastly:fanout", fanout_val)) {
-    return false;
-  }
-  if (!engine->define_builtin_module("fastly:logger", env_builtin_val)) {
-    return false;
-  }
-  if (!engine->define_builtin_module("fastly:secret-store", env_builtin_val)) {
     return false;
   }
 

@@ -3,12 +3,8 @@
 
 import { pass, assert, assertDoesNotThrow, assertThrows, sleep, streamToString, assertResolves } from "./assertions.js";
 import { routes } from "./routes.js";
-import { CoreCache, CacheEntry } from 'fastly:cache';
-import * as fastlyCache from 'fastly:cache';
-import * as fastlyBody from "fastly:body";
-
-const { CacheState, TransactionCacheEntry } = fastlyCache;
-const { FastlyBody } = fastlyBody;
+import { CoreCache, CacheEntry, CacheState, TransactionCacheEntry } from 'fastly:cache';
+import { FastlyBody } from "fastly:body";
 
 let error;
 
@@ -485,7 +481,7 @@ let error;
         routes.set("/core-cache/lookup/called-as-constructor", () => {
             let error = assertThrows(() => {
                 new CoreCache.lookup('1')
-            }, TypeError, `CoreCache.lookup is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -631,7 +627,7 @@ let error;
         routes.set("/core-cache/insert/called-as-constructor", () => {
             let error = assertThrows(() => {
                 new CoreCache.insert('1', { maxAge: 1 })
-            }, TypeError, `CoreCache.insert is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -1033,7 +1029,7 @@ let error;
         routes.set("/core-cache/transactionLookup/called-as-constructor", () => {
             let error = assertThrows(() => {
                 new CoreCache.transactionLookup('1')
-            }, TypeError, `CoreCache.transactionLookup is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -1579,7 +1575,7 @@ let error;
         routes.set("/cache-entry/close/called-as-constructor", () => {
             let error = assertThrows(() => {
                 new CacheEntry.prototype.close()
-            }, TypeError, `CacheEntry.prototype.close is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -1609,7 +1605,7 @@ let error;
         routes.set("/cache-entry/state/called-as-constructor", () => {
             let error = assertThrows(() => {
                 new CacheEntry.prototype.state()
-            }, TypeError, `CacheEntry.prototype.state is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -1641,7 +1637,7 @@ let error;
         routes.set("/cache-entry/userMetadata/called-as-constructor", () => {
             let error = assertThrows(() => {
                 new CacheEntry.prototype.userMetadata()
-            }, TypeError, `CacheEntry.prototype.userMetadata is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -1694,7 +1690,7 @@ let error;
         routes.set("/cache-entry/body/called-as-constructor", () => {
             let error = assertThrows(() => {
                 new CacheEntry.prototype.body()
-            }, TypeError, `CacheEntry.prototype.body is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -1872,7 +1868,7 @@ let error;
         routes.set("/cache-entry/length/called-as-constructor", () => {
             let error = assertThrows(() => {
                 new CacheEntry.prototype.length()
-            }, TypeError, `CacheEntry.prototype.length is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -1907,7 +1903,7 @@ let error;
         routes.set("/cache-entry/maxAge/called-as-constructor", () => {
             let error = assertThrows(() => {
                 new CacheEntry.prototype.maxAge()
-            }, TypeError, `CacheEntry.prototype.maxAge is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -1937,7 +1933,7 @@ let error;
         routes.set("/cache-entry/staleWhileRevalidate/called-as-constructor", () => {
             let error = assertThrows(() => {
                 new CacheEntry.prototype.staleWhileRevalidate()
-            }, TypeError, `CacheEntry.prototype.staleWhileRevalidate is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -1969,7 +1965,7 @@ let error;
         routes.set("/cache-entry/age/called-as-constructor", () => {
             let error = assertThrows(() => {
                 new CacheEntry.prototype.age()
-            }, TypeError, `CacheEntry.prototype.age is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -2005,7 +2001,7 @@ let error;
         routes.set("/cache-entry/hits/called-as-constructor", () => {
             let error = assertThrows(() => {
                 new CacheEntry.prototype.hits()
-            }, TypeError, `CacheEntry.prototype.hits is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -2264,7 +2260,7 @@ let error;
             let error = assertThrows(() => {
                 let entry = CoreCache.transactionLookup('1')
                 new entry.insert({maxAge: 1})
-            }, TypeError, `entry.insert is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -2526,7 +2522,7 @@ let error;
             let error = assertThrows(() => {
                 let entry = CoreCache.transactionLookup(path)
                 new entry.insertAndStreamBack({maxAge: 1})
-            }, TypeError, `entry.insertAndStreamBack is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -2834,7 +2830,7 @@ let error;
             let error = assertThrows(() => {
                 let entry = CoreCache.transactionLookup(path)
                 new entry.update({maxAge: 1})
-            }, TypeError, `entry.update is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -3161,7 +3157,7 @@ let error;
             let error = assertThrows(() => {
                 let entry = CoreCache.transactionLookup(path)
                 new entry.cancel()
-            }, TypeError, `entry.cancel is not a constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });

@@ -12,6 +12,7 @@
 #include "fastly.h"
 #include "host_api.h"
 
+using builtins::BuiltinImpl;
 using fastly::fastly::FastlyGetErrorMessage;
 
 namespace fastly::cache_override {

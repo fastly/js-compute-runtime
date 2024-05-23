@@ -1,10 +1,8 @@
 /* eslint-env serviceworker */
-import * as secretStore from 'fastly:secret-store'
+import { SecretStore, SecretStoreEntry } from 'fastly:secret-store'
 import { pass, assert, assertThrows, assertRejects } from "./assertions.js";
 import { routes } from "./routes.js";
 import fc from './fast-check.js';
-
-const { SecretStore, SecretStoreEntry } = secretStore;
 
 // SecretStore
 {

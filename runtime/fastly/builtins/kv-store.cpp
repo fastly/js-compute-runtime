@@ -22,9 +22,11 @@
 #include "builtin.h"
 #include "kv-store.h"
 
+using builtins::BuiltinImpl;
 using builtins::web::streams::NativeStreamSource;
 using fastly::fastly::convertBodyInit;
 using fastly::fastly::FastlyGetErrorMessage;
+using fastly::fetch::RequestOrResponse;
 
 namespace fastly::kv_store {
 
@@ -233,7 +235,6 @@ bool KVStore::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto task = new FastlyAsyncTask(handle, ENGINE->cx(), self, result_promise,
                                   KVStore::process_pending_kv_store_delete);
-
   ENGINE->queue_async_task(task);
 
   args.rval().setObject(*result_promise);

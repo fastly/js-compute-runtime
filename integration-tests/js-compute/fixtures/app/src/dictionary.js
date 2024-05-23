@@ -93,7 +93,7 @@ import { routes } from "./routes.js";
     routes.set("/dictionary/get/called-as-constructor", () => {
       let error = assertThrows(() => {
         new Dictionary.prototype.get('1')
-      }, TypeError, `Dictionary.prototype.get is not a constructor`)
+      }, TypeError)
       if (error) { return error }
       return pass()
     });

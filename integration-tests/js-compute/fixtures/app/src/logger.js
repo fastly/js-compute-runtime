@@ -1,7 +1,5 @@
-import * as logger from "fastly:logger";
+import { Logger } from "fastly:logger";
 import { routes, isRunningLocally } from "./routes";
-
-const { Logger } = logger;
 
 routes.set("/logger", () => {
   if (isRunningLocally()) {

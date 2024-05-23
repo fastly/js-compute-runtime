@@ -1,16 +1,14 @@
-#ifndef JS_COMPUTE_RUNTIME_KV_STORE_H
-#define JS_COMPUTE_RUNTIME_KV_STORE_H
+#ifndef FASTLY_KV_STORE_H
+#define FASTLY_KV_STORE_H
 
 #include "../host-api/host_api_fastly.h"
 #include "./fetch/request-response.h"
 #include "builtin.h"
 
-using fastly::fetch::RequestOrResponse;
-
 namespace fastly::kv_store {
 
-class KVStoreEntry final : public BuiltinImpl<KVStoreEntry> {
-  template <RequestOrResponse::BodyReadResult result_type>
+class KVStoreEntry final : public builtins::BuiltinImpl<KVStoreEntry> {
+  template <fetch::RequestOrResponse::BodyReadResult result_type>
   static bool bodyAll(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool body_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -18,7 +16,7 @@ class KVStoreEntry final : public BuiltinImpl<KVStoreEntry> {
 public:
   static constexpr const char *class_name = "KVStoreEntry";
 
-  using Slots = RequestOrResponse::Slots;
+  using Slots = fetch::RequestOrResponse::Slots;
   static const JSFunctionSpec static_methods[];
   static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
@@ -31,7 +29,7 @@ public:
   static JSObject *create(JSContext *cx, host_api::HttpBody body_handle);
 };
 
-class KVStore final : public BuiltinImpl<KVStore> {
+class KVStore final : public builtins::BuiltinImpl<KVStore> {
   static bool delete_(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool put(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -49,7 +47,6 @@ public:
 
   static const unsigned ctor_length = 1;
 
-  static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool process_pending_kv_store_lookup(FastlyHandle handle, JS::HandleObject context,
                                               JS::HandleObject promise);

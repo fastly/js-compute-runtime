@@ -6,11 +6,9 @@
 #include "extension-api.h"
 #include "host_api.h"
 
-using builtins::BuiltinNoConstructor;
-
 namespace fastly::fetch_event {
 
-class ClientInfo final : public BuiltinNoConstructor<ClientInfo> {
+class ClientInfo final : public builtins::BuiltinNoConstructor<ClientInfo> {
   static bool address_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool geo_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -42,7 +40,7 @@ public:
 
 void dispatch_fetch_event(HandleObject event, double *total_compute);
 
-class FetchEvent final : public BuiltinNoConstructor<FetchEvent> {
+class FetchEvent final : public builtins::BuiltinNoConstructor<FetchEvent> {
   static bool respondWith(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool client_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool request_get(JSContext *cx, unsigned argc, JS::Value *vp);

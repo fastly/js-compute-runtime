@@ -1,6 +1,8 @@
-import { dirname, resolve } from "node:path";
+import { dirname, resolve, sep, normalize } from "node:path";
+import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, mkdtemp, writeFile } from "node:fs/promises";
+import { rmSync } from "node:fs";
 import { isFile } from "./isFile.js";
 import { isFileOrDoesNotExist } from "./isFileOrDoesNotExist.js";
 import wizer from "@bytecodealliance/wizer";
@@ -8,6 +10,10 @@ import { precompile } from "./precompile.js";
 import { enableTopLevelAwait } from "./enableTopLevelAwait.js";
 import { bundle } from "./bundle.js";
 import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
+
+async function getTmpDir () {
+  return await mkdtemp(normalize(tmpdir() + sep));
+}
 
 export async function compileApplicationToWasm(
   input,
@@ -86,20 +92,27 @@ export async function compileApplicationToWasm(
     process.exit(1);
   }
 
-  let wizerInput;
-  if (!starlingMonkey) {
-    let contents = await bundle(input, enableExperimentalTopLevelAwait);
+  let wizerInput, cleanup = () => {};
 
-    wizerInput = precompile(
-      contents.outputFiles[0].text,
-      undefined,
-      enableExperimentalTopLevelAwait
-    );
-    if (enableExperimentalTopLevelAwait) {
-      wizerInput = enableTopLevelAwait(wizerInput);
-    }
-  } else {
-    wizerInput = resolve(input);
+  let contents = await bundle(input, enableExperimentalTopLevelAwait);
+  wizerInput = precompile(
+    contents.outputFiles[0].text,
+    undefined,
+    enableExperimentalTopLevelAwait
+  );
+  if (enableExperimentalTopLevelAwait && !starlingMonkey) {
+    wizerInput = enableTopLevelAwait(wizerInput);
+  }
+
+  // for StarlingMonkey, we need to write to a tmpdir
+  if (starlingMonkey) {
+    const tmpDir = await getTmpDir();
+    const outPath = resolve(tmpDir, 'input.js');
+    await writeFile(outPath, wizerInput);
+    wizerInput = outPath;
+    cleanup = () => {
+      rmSync(tmpDir, { recursive: true });
+    };
   }
 
   try {
@@ -108,7 +121,8 @@ export async function compileApplicationToWasm(
       [
         "--inherit-env=true",
         "--allow-wasi",
-        `--dir=${starlingMonkey ? resolve('/') : '.'}`,
+        "--dir=.",
+        ...starlingMonkey ? [`--dir=${dirname(wizerInput)}`] : [],
         `--wasm-bulk-memory=true`,
         "-r _start=wizer.resume",
         `-o=${output}`,
@@ -137,5 +151,7 @@ export async function compileApplicationToWasm(
       error.message
     );
     process.exit(1);
+  } finally {
+    cleanup();
   }
 }

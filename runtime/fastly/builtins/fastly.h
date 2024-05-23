@@ -9,13 +9,11 @@
 #include "fastly.h"
 #include "host_api.h"
 
-using namespace builtins;
-
 namespace fastly::fastly {
 
 #define RUNTIME_VERSION "starlingmonkey-dev"
 
-class Env : public BuiltinNoConstructor<Env> {
+class Env : public builtins::BuiltinNoConstructor<Env> {
 private:
   static bool env_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
@@ -32,10 +30,9 @@ public:
 
 const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNumber);
 
-class Fastly : public BuiltinNoConstructor<Fastly> {
+class Fastly : public builtins::BuiltinNoConstructor<Fastly> {
 private:
-  // TODO(GB): reimplement
-  // static bool log(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool log(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
   static constexpr const char *class_name = "Fastly";
@@ -47,15 +44,12 @@ public:
 
   static const JSPropertySpec properties[];
 
-  // TODO(GB): reimplement
-  // static bool createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool now(JSContext *cx, unsigned argc, JS::Value *vp);
-  // TODO(GB): reimplement
-  // static bool dump(JSContext *cx, unsigned argc, JS::Value *vp);
-  // static bool enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool dump(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value *vp);
-  // TODO(GB): reimplement
-  // static bool getLogger(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool getLogger(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool includeBytes(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool version_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool env_get(JSContext *cx, unsigned argc, JS::Value *vp);

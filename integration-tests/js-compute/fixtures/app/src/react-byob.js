@@ -2106,11 +2106,12 @@ routes.set("/react-byob", async () => {
     });
 
   function App() {
-    return q("html", {
-      children: [q("title", {
+    const qq = typeof jsx !== 'undefined' ? jsx : q;
+    return qq("html", {
+      children: [qq("title", {
         children: "My app"
-      }), q("body", {
-        children: q("h1", {
+      }), qq("body", {
+        children: qq("h1", {
           children: "App"
         })
       })]

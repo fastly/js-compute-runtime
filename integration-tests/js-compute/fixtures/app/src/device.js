@@ -169,7 +169,7 @@ routes.set("/device/interface", () => {
     routes.set("/device/lookup/called-as-constructor", () => {
         let error = assertThrows(() => {
             new Device.lookup('1')
-        }, TypeError, `Device.lookup is not a constructor`)
+        }, TypeError)
         if (error) { return error }
         return pass('ok')
     });

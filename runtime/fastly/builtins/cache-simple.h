@@ -5,12 +5,10 @@
 #include "./fetch/request-response.h"
 #include "builtin.h"
 
-using fastly::fetch::RequestOrResponse;
-
 namespace fastly::cache_simple {
 
-class SimpleCacheEntry final : public BuiltinImpl<SimpleCacheEntry> {
-  template <RequestOrResponse::BodyReadResult result_type>
+class SimpleCacheEntry final : public builtins::BuiltinImpl<SimpleCacheEntry> {
+  template <fetch::RequestOrResponse::BodyReadResult result_type>
   static bool bodyAll(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool body_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -18,7 +16,7 @@ class SimpleCacheEntry final : public BuiltinImpl<SimpleCacheEntry> {
 public:
   static constexpr const char *class_name = "SimpleCacheEntry";
 
-  using Slots = RequestOrResponse::Slots;
+  using Slots = fetch::RequestOrResponse::Slots;
   static const JSFunctionSpec static_methods[];
   static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
@@ -26,12 +24,11 @@ public:
 
   static const unsigned ctor_length = 0;
 
-  static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static JSObject *create(JSContext *cx, host_api::HttpBody body_handle);
 };
 
-class SimpleCache : public BuiltinImpl<SimpleCache> {
+class SimpleCache : public builtins::BuiltinImpl<SimpleCache> {
 private:
 public:
   static constexpr const char *class_name = "SimpleCache";
