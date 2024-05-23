@@ -20,6 +20,7 @@ public:
   static JS::PersistentRooted<JSObject *> baseURL;
   static JS::PersistentRooted<JSString *> defaultBackend;
   static bool allowDynamicBackends;
+  static host_api::BackendConfig defaultDynamicBackendConfig;
 
   static const JSPropertySpec properties[];
 

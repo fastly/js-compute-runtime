@@ -25,6 +25,7 @@
 #include "fastly.h"
 
 using builtins::BuiltinImpl;
+using fastly::fastly::Fastly;
 using fastly::fastly::FastlyGetErrorMessage;
 using fastly::fetch::RequestOrResponse;
 
@@ -1125,6 +1126,31 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   }
 
   JS::SetReservedSlot(backend, Backend::Slots::DontPool, JS::BooleanValue(false));
+
+  if (Fastly::defaultDynamicBackendConfig.connect_timeout.has_value()) {
+    JS::RootedValue connect_timeout_val(
+        cx, JS::NumberValue(Fastly::defaultDynamicBackendConfig.connect_timeout.value()));
+    if (!Backend::set_timeout_slot(cx, backend, connect_timeout_val, Backend::Slots::ConnectTimeout,
+                                   "connectTimeout")) {
+      return nullptr;
+    }
+  }
+  if (Fastly::defaultDynamicBackendConfig.between_bytes_timeout.has_value()) {
+    JS::RootedValue between_bytes_timeout_val(
+        cx, JS::NumberValue(Fastly::defaultDynamicBackendConfig.between_bytes_timeout.value()));
+    if (!Backend::set_timeout_slot(cx, backend, between_bytes_timeout_val,
+                                   Backend::Slots::BetweenBytesTimeout, "betweenBytesTimeout")) {
+      return nullptr;
+    }
+  }
+  if (Fastly::defaultDynamicBackendConfig.first_byte_timeout.has_value()) {
+    JS::RootedValue first_byte_timeout_val(
+        cx, JS::NumberValue(Fastly::defaultDynamicBackendConfig.first_byte_timeout.value()));
+    if (!Backend::set_timeout_slot(cx, backend, first_byte_timeout_val,
+                                   Backend::Slots::FirstByteTimeout, "firstByteTimeout")) {
+      return nullptr;
+    }
+  }
 
   auto result = Backend::register_dynamic_backend(cx, backend);
   if (result.isErr()) {
