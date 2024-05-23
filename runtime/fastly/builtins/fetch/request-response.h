@@ -100,7 +100,7 @@ public:
                        bool create_if_undefined);
 };
 
-class Request final : public BuiltinImpl<Request> {
+class Request final : public builtins::BuiltinImpl<Request> {
   static bool method_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool headers_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool url_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -172,7 +172,7 @@ public:
   static JSObject *create_instance(JSContext *cx);
 };
 
-class Response final : public BuiltinImpl<Response> {
+class Response final : public builtins::BuiltinImpl<Response> {
   static bool waitUntil(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool ok_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool status_get(JSContext *cx, unsigned argc, JS::Value *vp);

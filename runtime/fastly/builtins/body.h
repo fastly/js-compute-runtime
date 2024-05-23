@@ -6,9 +6,7 @@
 
 namespace fastly::body {
 
-using builtins::BuiltinImpl;
-
-class FastlyBody final : public BuiltinImpl<FastlyBody> {
+class FastlyBody final : public builtins::BuiltinImpl<FastlyBody> {
   static bool concat(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool read(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool append(JSContext *cx, unsigned argc, JS::Value *vp);

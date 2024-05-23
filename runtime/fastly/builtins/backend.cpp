@@ -24,8 +24,8 @@
 #include "encode.h"
 #include "fastly.h"
 
+using builtins::BuiltinImpl;
 using fastly::fastly::FastlyGetErrorMessage;
-
 using fastly::fetch::RequestOrResponse;
 
 namespace fastly::backend {

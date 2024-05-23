@@ -4,11 +4,9 @@
 #include "builtin.h"
 #include "extension-api.h"
 
-using builtins::BuiltinImpl;
-
 namespace fastly::logger {
 
-class Logger : public BuiltinImpl<Logger> {
+class Logger : public builtins::BuiltinImpl<Logger> {
 private:
   static bool log(JSContext *cx, unsigned argc, JS::Value *vp);
 

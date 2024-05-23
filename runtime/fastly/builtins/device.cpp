@@ -4,6 +4,8 @@
 #include "builtin.h"
 #include "js/JSON.h"
 
+using builtins::BuiltinImpl;
+
 namespace fastly::device {
 
 namespace {

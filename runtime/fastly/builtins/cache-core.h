@@ -5,9 +5,6 @@
 #include "builtin.h"
 #include "extension-api.h"
 
-using builtins::BuiltinImpl;
-using fastly::fetch::RequestOrResponse;
-
 namespace fastly::cache_core {
 
 // export class CacheState {
@@ -16,7 +13,7 @@ namespace fastly::cache_core {
 //   stale(): boolean;
 //   mustInsertOrUpdate(): boolean;
 // }
-class CacheState : public BuiltinImpl<CacheState> {
+class CacheState : public builtins::BuiltinImpl<CacheState> {
   static constexpr const uint8_t found_flag = 1 << 0;
   static constexpr const uint8_t usable_flag = 1 << 1;
   static constexpr const uint8_t stale_flag = 1 << 2;
@@ -48,7 +45,7 @@ public:
   static JSObject *create(JSContext *cx, uint32_t handle);
 };
 
-class CacheEntry : public BuiltinImpl<CacheEntry> {
+class CacheEntry : public builtins::BuiltinImpl<CacheEntry> {
   // cache-close: func(handle: cache-handle) -> result<_, error>
   // close(): void;
   static bool close(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -89,11 +86,11 @@ public:
   static constexpr const char *class_name = "CacheEntry";
   static const int ctor_length = 0;
   enum Slots {
-    Body = static_cast<int>(RequestOrResponse::Slots::Body),
-    BodyStream = static_cast<int>(RequestOrResponse::Slots::BodyStream),
-    HasBody = static_cast<int>(RequestOrResponse::Slots::HasBody),
-    BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
-    Handle = static_cast<int>(RequestOrResponse::Slots::Count),
+    Body = static_cast<int>(fetch::RequestOrResponse::Slots::Body),
+    BodyStream = static_cast<int>(fetch::RequestOrResponse::Slots::BodyStream),
+    HasBody = static_cast<int>(fetch::RequestOrResponse::Slots::HasBody),
+    BodyUsed = static_cast<int>(fetch::RequestOrResponse::Slots::BodyUsed),
+    Handle = static_cast<int>(fetch::RequestOrResponse::Slots::Count),
     Count
   };
 
@@ -110,7 +107,7 @@ public:
   static JSObject *create(JSContext *cx, uint32_t handle);
 };
 
-class TransactionCacheEntry : public BuiltinImpl<TransactionCacheEntry> {
+class TransactionCacheEntry : public builtins::BuiltinImpl<TransactionCacheEntry> {
 
   static bool insert(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool insertAndStreamBack(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -138,7 +135,7 @@ public:
   static JSObject *create(JSContext *cx, uint32_t handle);
 };
 
-class CoreCache : public BuiltinImpl<CoreCache> {
+class CoreCache : public builtins::BuiltinImpl<CoreCache> {
   // cache-lookup: func(cache-key: string, options: cache-lookup-options) -> result<cache-handle,
   // error> static lookup(key: string, options?: LookupOptions): CacheEntry | null;
   static bool lookup(JSContext *cx, unsigned argc, JS::Value *vp);

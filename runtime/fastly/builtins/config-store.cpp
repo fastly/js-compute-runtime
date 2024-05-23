@@ -3,6 +3,7 @@
 #include "../host-api/host_api_fastly.h"
 #include "fastly.h"
 
+using builtins::BuiltinImpl;
 using fastly::fastly::FastlyGetErrorMessage;
 
 namespace fastly::config_store {

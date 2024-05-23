@@ -9,13 +9,11 @@
 #include "fastly.h"
 #include "host_api.h"
 
-using namespace builtins;
-
 namespace fastly::fastly {
 
 #define RUNTIME_VERSION "starlingmonkey-dev"
 
-class Env : public BuiltinNoConstructor<Env> {
+class Env : public builtins::BuiltinNoConstructor<Env> {
 private:
   static bool env_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
@@ -32,7 +30,7 @@ public:
 
 const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNumber);
 
-class Fastly : public BuiltinNoConstructor<Fastly> {
+class Fastly : public builtins::BuiltinNoConstructor<Fastly> {
 private:
   static bool log(JSContext *cx, unsigned argc, JS::Value *vp);
 

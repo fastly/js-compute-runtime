@@ -292,6 +292,7 @@
   "GET /fastly/getgeolocationforipaddress/parameter-expanded-ipv6-string",
   "GET /fastly/getgeolocationforipaddress/called-unbound",
   "GET /fastly:geolocation",
+  "GET /includeBytes",
   "GET /kv-store/exposed-as-global",
   "GET /kv-store/interface",
   "GET /kv-store/constructor/called-as-regular-function",

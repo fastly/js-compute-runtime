@@ -10,11 +10,13 @@
 #include "js/Stream.h"
 #include <iostream>
 
+using builtins::BuiltinImpl;
 using builtins::web::streams::NativeStreamSource;
 using fastly::body::FastlyBody;
 using fastly::fastly::convertBodyInit;
 using fastly::fetch::Headers;
 using fastly::fetch::Request;
+using fastly::fetch::RequestOrResponse;
 
 namespace fastly::cache_core {
 

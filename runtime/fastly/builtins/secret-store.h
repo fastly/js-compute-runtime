@@ -5,11 +5,9 @@
 #include "builtin.h"
 #include "extension-api.h"
 
-using builtins::BuiltinImpl;
-
 namespace fastly::secret_store {
 
-class SecretStoreEntry : public BuiltinImpl<SecretStoreEntry> {
+class SecretStoreEntry : public builtins::BuiltinImpl<SecretStoreEntry> {
 private:
 public:
   static constexpr const char *class_name = "SecretStoreEntry";
@@ -27,7 +25,7 @@ public:
   static JSObject *create(JSContext *cx, host_api::Secret handle);
 };
 
-class SecretStore : public BuiltinImpl<SecretStore> {
+class SecretStore : public builtins::BuiltinImpl<SecretStore> {
 private:
 public:
   static constexpr const char *class_name = "SecretStore";

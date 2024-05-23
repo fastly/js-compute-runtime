@@ -4,11 +4,9 @@
 #include "builtin.h"
 #include "extension-api.h"
 
-using builtins::BuiltinImpl;
-
 namespace fastly::device {
 
-class Device : public BuiltinImpl<Device> {
+class Device : public builtins::BuiltinImpl<Device> {
 private:
 public:
   static constexpr const char *class_name = "Device";

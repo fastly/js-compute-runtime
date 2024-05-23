@@ -5,11 +5,9 @@
 #include "builtin.h"
 #include "extension-api.h"
 
-using builtins::BuiltinImpl;
-
 namespace fastly::dictionary {
 
-class Dictionary : public BuiltinImpl<Dictionary> {
+class Dictionary : public builtins::BuiltinImpl<Dictionary> {
 private:
 public:
   static constexpr const char *class_name = "Dictionary";

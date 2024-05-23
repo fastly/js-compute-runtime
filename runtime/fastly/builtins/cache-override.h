@@ -4,11 +4,9 @@
 #include "../host-api/host_api_fastly.h"
 #include "builtin.h"
 
-using builtins::BuiltinImpl;
-
 namespace fastly::cache_override {
 
-class CacheOverride : public BuiltinImpl<CacheOverride> {
+class CacheOverride : public builtins::BuiltinImpl<CacheOverride> {
 private:
 public:
   static constexpr const char *class_name = "CacheOverride";

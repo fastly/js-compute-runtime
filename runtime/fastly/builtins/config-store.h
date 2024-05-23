@@ -5,11 +5,9 @@
 #include "builtin.h"
 #include "extension-api.h"
 
-using builtins::BuiltinImpl;
-
 namespace fastly::config_store {
 
-class ConfigStore : public BuiltinImpl<ConfigStore> {
+class ConfigStore : public builtins::BuiltinImpl<ConfigStore> {
 private:
 public:
   static constexpr const char *class_name = "ConfigStore";
