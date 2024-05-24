@@ -53,4 +53,9 @@ declare module "fastly:experimental" {
    * @experimental
    */
   export function allowDynamicBackends(enabled: boolean): void;
+  export function allowDynamicBackends(defaultConfig: {
+    connectTimeout?: number;
+    firstByteTimeout?: number;
+    betweenBytesTimeout?: number;
+  }): void;
 }
