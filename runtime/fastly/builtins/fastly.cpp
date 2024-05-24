@@ -43,9 +43,7 @@ JS::PersistentRooted<JSObject *> Fastly::env;
 JS::PersistentRooted<JSObject *> Fastly::baseURL;
 JS::PersistentRooted<JSString *> Fastly::defaultBackend;
 bool Fastly::allowDynamicBackends = false;
-host_api::BackendConfig Fastly::defaultDynamicBackendConfig = host_api::BackendConfig{
-    std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
-    std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt};
+host_api::BackendConfig Fastly::defaultDynamicBackendConfig;
 
 bool Fastly::dump(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
