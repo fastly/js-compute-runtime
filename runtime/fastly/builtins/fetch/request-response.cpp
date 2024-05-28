@@ -58,8 +58,68 @@ bool NativeStreamSource::stream_is_body(JSContext *cx, JS::HandleObject stream) 
 namespace fastly::fetch {
 
 namespace {
+bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObject controller) {
+  JS::RootedValue exn(cx);
+  if (!JS_GetPendingException(cx, &exn))
+    return false;
+  JS_ClearPendingException(cx);
+
+  JS::RootedValueArray<1> args(cx);
+  args[0].set(exn);
+  JS::RootedValue r(cx);
+  return JS::Call(cx, controller, "error", args, &r);
+}
 
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
+
+bool process_body_read(JSContext *cx, FastlyHandle handle, JS::HandleObject context,
+                       JS::HandleObject promise) {
+  MOZ_ASSERT(context);
+  JS::RootedObject streamSource(cx, context);
+  MOZ_ASSERT(NativeStreamSource::is_instance(streamSource));
+  host_api::HttpBody body(handle);
+  JS::RootedObject owner(cx, NativeStreamSource::owner(streamSource));
+  JS::RootedObject controller(cx, NativeStreamSource::controller(streamSource));
+
+  auto read_res = body.read(HANDLE_READ_CHUNK_SIZE);
+  if (auto *err = read_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return error_stream_controller_with_pending_exception(cx, controller);
+  }
+
+  auto &chunk = read_res.unwrap();
+  if (chunk.len == 0) {
+    JS::RootedValue r(cx);
+    return JS::Call(cx, controller, "close", JS::HandleValueArray::empty(), &r);
+  }
+
+  // We don't release control of chunk's data until after we've checked that the array buffer
+  // allocation has been successful, as that ensures that the return path frees chunk automatically
+  // when necessary.
+  JS::RootedObject buffer(
+      cx, JS::NewArrayBufferWithContents(cx, chunk.len, chunk.ptr.get(),
+                                         JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
+  if (!buffer) {
+    return error_stream_controller_with_pending_exception(cx, controller);
+  }
+
+  // At this point `buffer` has taken full ownership of the chunk's data.
+  std::ignore = chunk.ptr.release();
+
+  JS::RootedObject byte_array(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, chunk.len));
+  if (!byte_array) {
+    return false;
+  }
+
+  JS::RootedValueArray<1> enqueue_args(cx);
+  enqueue_args[0].setObject(*byte_array);
+  JS::RootedValue r(cx);
+  if (!JS::Call(cx, controller, "enqueue", enqueue_args, &r)) {
+    return error_stream_controller_with_pending_exception(cx, controller);
+  }
+
+  return true;
+}
 
 // https://fetch.spec.whatwg.org/#concept-method-normalize
 // Returns `true` if the method name was normalized, `false` otherwise.
@@ -131,15 +191,9 @@ ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
   return {std::move(buf), bytes_read};
 }
 
-// host_api::HttpReq request_handle(JSObject *obj) {
-//   MOZ_ASSERT(Request::is_instance(obj));
-//   return host_api::HttpReq(
-//       JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::Request)).toInt32());
-// }
-
 } // namespace
 
-bool RequestOrResponse::process_pending_request(JSContext *cx, int32_t handle,
+bool RequestOrResponse::process_pending_request(JSContext *cx, FastlyHandle handle,
                                                 JS::HandleObject context,
                                                 JS::HandleObject promise) {
   MOZ_ASSERT(Request::is_instance(context));
@@ -869,8 +923,8 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
   JS::RootedObject self(cx, &args.thisv().toObject());
   JS::RootedObject owner(cx, NativeStreamSource::owner(self));
 
-  ENGINE->queue_async_task(
-      new FastlyAsyncTask(RequestOrResponse::body_handle(owner).async_handle()));
+  ENGINE->queue_async_task(new FastlyAsyncTask(RequestOrResponse::body_handle(owner).async_handle(),
+                                               source, nullptr, process_body_read));
 
   args.rval().setUndefined();
   return true;
@@ -907,6 +961,7 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     // certain that if we have a response here, we can advance the FetchState to
     // `responseDone`.
     if (Response::is_instance(body_owner)) {
+      ENGINE->decr_event_loop_interest();
       FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
     }
 
@@ -917,7 +972,9 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     }
 
     if (Request::is_instance(body_owner)) {
-      ENGINE->queue_async_task(new FastlyAsyncTask(body.async_handle()));
+      JS::RootedObject promise(cx, Request::response_promise(body_owner));
+      ENGINE->queue_async_task(
+          new FastlyAsyncTask(body.async_handle(), body_owner, promise, process_pending_request));
     }
 
     return true;
@@ -993,6 +1050,7 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
   // `responseDone` is the right state: `responsedWithError` is for when sending
   // a response at all failed.)
   if (Response::is_instance(body_owner)) {
+    ENGINE->decr_event_loop_interest();
     FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
   }
   return true;

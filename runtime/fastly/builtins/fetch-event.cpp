@@ -315,6 +315,9 @@ void inc_pending_promise_count(JSObject *self) {
   auto count =
       JS::GetReservedSlot(self, static_cast<uint32_t>(FetchEvent::Slots::PendingPromiseCount))
           .toInt32();
+  if (count == 0) {
+    ENGINE->incr_event_loop_interest();
+  }
   count++;
   MOZ_ASSERT(count > 0);
   JS::SetReservedSlot(self, static_cast<uint32_t>(FetchEvent::Slots::PendingPromiseCount),
@@ -328,8 +331,9 @@ void dec_pending_promise_count(JSObject *self) {
           .toInt32();
   MOZ_ASSERT(count > 0);
   count--;
-  if (count == 0)
+  if (count == 0) {
     ENGINE->decr_event_loop_interest();
+  }
   JS::SetReservedSlot(self, static_cast<uint32_t>(FetchEvent::Slots::PendingPromiseCount),
                       JS::Int32Value(count));
 }
@@ -371,7 +375,6 @@ bool FetchEvent::client_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 void dispatch_fetch_event(HandleObject event, double *total_compute) {
   MOZ_ASSERT(FetchEvent::is_instance(event));
-  ENGINE->incr_event_loop_interest();
   auto pre_handler = system_clock::now();
 
   RootedValue result(ENGINE->cx());
@@ -566,6 +569,9 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
     return false;
   }
 
+  if (streaming) {
+    ENGINE->incr_event_loop_interest();
+  }
   FetchEvent::set_state(event, streaming ? FetchEvent::State::responseStreaming
                                          : FetchEvent::State::responseDone);
   return start_response(cx, response_obj, streaming);
@@ -776,11 +782,13 @@ bool FetchEvent::is_dispatching(JSObject *self) {
 
 void FetchEvent::start_dispatching(JSObject *self) {
   MOZ_ASSERT(!is_dispatching(self));
+  ENGINE->incr_event_loop_interest();
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::Dispatch), JS::TrueValue());
 }
 
 void FetchEvent::stop_dispatching(JSObject *self) {
   MOZ_ASSERT(is_dispatching(self));
+  ENGINE->decr_event_loop_interest();
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::Dispatch), JS::FalseValue());
 }
 
