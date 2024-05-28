@@ -453,7 +453,6 @@
   "GET /random",
   "GET /error",
   "GET /react-byob",
-  "POST /tee",
   "GET /tee/error",
   "GET /override-content-length/request/init/object-literal/true",
   "GET /override-content-length/request/init/object-literal/false",
