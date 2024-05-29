@@ -2,6 +2,7 @@
   "GET /async-select/hello",
   "GET /btoa",
   "GET /byob",
+  "GET /byte-repeater",
   "GET /cache-override/constructor/called-as-regular-function",
   "GET /cache-override/constructor/parameter-calls-7.1.17-ToString",
   "GET /cache-override/constructor/empty-parameter",
