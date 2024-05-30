@@ -186,22 +186,22 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
 
 } // namespace
 
-bool KVStore::process_pending_kv_store_delete(FastlyHandle handle, JS::HandleObject context,
-                                              JS::HandleObject promise) {
+bool KVStore::process_pending_kv_store_delete(JSContext *cx, FastlyHandle handle,
+                                              JS::HandleObject context, JS::HandleObject promise) {
   host_api::ObjectStorePendingDelete pending_delete(handle);
 
   auto res = pending_delete.wait();
   if (auto *err = res.to_err()) {
     if (host_api::error_is_invalid_argument(*err)) {
-      JS_ReportErrorNumberASCII(ENGINE->cx(), FastlyGetErrorMessage, nullptr,
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                 JSMSG_KV_STORE_DELETE_KEY_DOES_NOT_EXIST);
     } else {
-      HANDLE_ERROR(ENGINE->cx(), *err);
+      HANDLE_ERROR(cx, *err);
     }
-    return RejectPromiseWithPendingError(ENGINE->cx(), promise);
+    return RejectPromiseWithPendingError(cx, promise);
   }
 
-  JS::ResolvePromise(ENGINE->cx(), promise, JS::UndefinedHandleValue);
+  JS::ResolvePromise(cx, promise, JS::UndefinedHandleValue);
   return true;
 }
 
@@ -233,40 +233,39 @@ bool KVStore::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto handle = res.unwrap();
 
-  auto task = new FastlyAsyncTask(handle, ENGINE->cx(), self, result_promise,
-                                  KVStore::process_pending_kv_store_delete);
-  ENGINE->queue_async_task(task);
+  ENGINE->queue_async_task(
+      new FastlyAsyncTask(handle, self, result_promise, KVStore::process_pending_kv_store_delete));
 
   args.rval().setObject(*result_promise);
   return true;
 }
 
-bool KVStore::process_pending_kv_store_lookup(FastlyHandle handle, JS::HandleObject context,
-                                              JS::HandleObject promise) {
+bool KVStore::process_pending_kv_store_lookup(JSContext *cx, FastlyHandle handle,
+                                              JS::HandleObject context, JS::HandleObject promise) {
   host_api::ObjectStorePendingLookup pending_lookup(handle);
 
   auto res = pending_lookup.wait();
 
   if (auto *err = res.to_err()) {
-    HANDLE_ERROR(ENGINE->cx(), *err);
-    return RejectPromiseWithPendingError(ENGINE->cx(), promise);
+    HANDLE_ERROR(cx, *err);
+    return RejectPromiseWithPendingError(cx, promise);
   }
 
   auto ret = res.unwrap();
 
   // When no entry is found, we are going to resolve the Promise with `null`.
   if (!ret.has_value()) {
-    JS::RootedValue result(ENGINE->cx());
+    JS::RootedValue result(cx);
     result.setNull();
-    JS::ResolvePromise(ENGINE->cx(), promise, result);
+    JS::ResolvePromise(cx, promise, result);
   } else {
-    JS::RootedObject entry(ENGINE->cx(), KVStoreEntry::create(ENGINE->cx(), ret.value()));
+    JS::RootedObject entry(cx, KVStoreEntry::create(cx, ret.value()));
     if (!entry) {
       return false;
     }
-    JS::RootedValue result(ENGINE->cx());
+    JS::RootedValue result(cx);
     result.setObject(*entry);
-    JS::ResolvePromise(ENGINE->cx(), promise, result);
+    JS::ResolvePromise(cx, promise, result);
   }
 
   return true;
@@ -300,8 +299,8 @@ bool KVStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto handle = res.unwrap();
 
-  auto task = new FastlyAsyncTask(handle, ENGINE->cx(), self, result_promise,
-                                  KVStore::process_pending_kv_store_lookup);
+  auto task =
+      new FastlyAsyncTask(handle, self, result_promise, KVStore::process_pending_kv_store_lookup);
   ENGINE->queue_async_task(task);
 
   args.rval().setObject(*result_promise);

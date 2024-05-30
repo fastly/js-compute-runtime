@@ -97,36 +97,26 @@ public:
   T &unwrap() { return std::get<T>(this->result); }
 };
 
-typedef bool ProcessAsyncTask(FastlyHandle handle, JS::HandleObject context,
+typedef bool ProcessAsyncTask(JSContext *cx, FastlyHandle handle, JS::HandleObject context,
                               JS::HandleObject promise);
 
 class FastlyAsyncTask final : public AsyncTask {
 public:
-  explicit FastlyAsyncTask() {}
-  explicit FastlyAsyncTask(FastlyHandle handle) {
-    if (static_cast<int32_t>(handle) < 0)
-      abort();
-    handle_ = static_cast<int32_t>(handle);
-  }
-  FastlyAsyncTask(uint32_t handle, JSContext *cx, JS::HandleObject context,
-                  JS::HandleObject promise, ProcessAsyncTask *process) {
+  FastlyAsyncTask(uint32_t handle, JS::HandleObject context, JS::HandleObject promise,
+                  ProcessAsyncTask *process) {
     if (static_cast<int32_t>(handle) == INVALID_POLLABLE_HANDLE)
       abort();
     handle_ = static_cast<int32_t>(handle);
-    context_.init(cx, context);
-    promise_.init(cx);
-    if (promise) {
-      promise_.set(JS::ObjectValue(*promise));
-    } else {
-      promise_.setNull();
-    }
+    context_ = Heap<JSObject *>(context);
+    promise_ = Heap<JSObject *>(promise);
     process_steps_ = process;
   }
 
   [[nodiscard]] bool run(Engine *engine) override {
     if (process_steps_) {
-      RootedObject promise_obj(engine->cx(), promise_.toObjectOrNull());
-      if (!process_steps_(handle_, context_, promise_obj)) {
+      RootedObject promise(engine->cx(), promise_);
+      RootedObject context(engine->cx(), context_);
+      if (!process_steps_(engine->cx(), handle_, context, promise)) {
         return false;
       }
     }
@@ -135,17 +125,18 @@ public:
 
   [[nodiscard]] bool cancel(Engine *engine) override {
     MOZ_ASSERT_UNREACHABLE("Fastly semantics don't allow for cancellation");
-    return true;
+    return false;
   }
 
   FastlyHandle handle() { return handle_; }
 
   void trace(JSTracer *trc) override {
-    // Nothing to trace.
+    TraceEdge(trc, &context_, "Async task context");
+    TraceEdge(trc, &promise_, "Async task promise");
   }
 
-  JS::PersistentRootedObject context_;
-  JS::PersistentRootedValue promise_;
+  Heap<JSObject *> context_;
+  Heap<JSObject *> promise_;
   ProcessAsyncTask *process_steps_ = nullptr;
 };
 
@@ -290,7 +281,7 @@ public:
   /// Close this handle, and reset internal state to invalid.
   Result<Void> close();
 
-  FastlyAsyncTask async_handle() const;
+  FastlyHandle async_handle() const;
 };
 
 struct Response;
@@ -312,7 +303,7 @@ public:
   api::FastlyResult<Response, FastlySendError> wait();
 
   /// Fetch the FastlyAsyncTask for this pending request.
-  FastlyAsyncTask async_handle() const;
+  FastlyHandle async_handle() const;
 };
 
 using HttpVersion = uint8_t;

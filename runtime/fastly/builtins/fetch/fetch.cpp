@@ -30,7 +30,6 @@ public:
   }
 
   [[nodiscard]] bool run(api::Engine *engine) override {
-
     JSContext *cx = engine->cx();
 
     const RootedObject request(cx, request_);

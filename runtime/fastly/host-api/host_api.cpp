@@ -401,7 +401,7 @@ Result<Void> HttpBody::close() {
   return res;
 }
 
-FastlyAsyncTask HttpBody::async_handle() const { return FastlyAsyncTask{this->handle}; }
+FastlyHandle HttpBody::async_handle() const { return FastlyHandle{this->handle}; }
 
 namespace {
 
@@ -521,7 +521,7 @@ api::FastlyResult<Response, FastlySendError> HttpPendingReq::wait() {
   return res;
 }
 
-FastlyAsyncTask HttpPendingReq::async_handle() const { return FastlyAsyncTask{this->handle}; }
+FastlyHandle HttpPendingReq::async_handle() const { return FastlyHandle{this->handle}; }
 
 void CacheOverrideTag::set_pass() {
   this->value |= FASTLY_COMPUTE_AT_EDGE_HTTP_REQ_CACHE_OVERRIDE_TAG_PASS;

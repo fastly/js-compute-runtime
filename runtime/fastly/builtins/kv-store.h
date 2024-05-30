@@ -48,10 +48,10 @@ public:
   static const unsigned ctor_length = 1;
 
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool process_pending_kv_store_lookup(FastlyHandle handle, JS::HandleObject context,
-                                              JS::HandleObject promise);
-  static bool process_pending_kv_store_delete(FastlyHandle handle, JS::HandleObject context,
-                                              JS::HandleObject promise);
+  static bool process_pending_kv_store_lookup(JSContext *cx, FastlyHandle handle,
+                                              JS::HandleObject context, JS::HandleObject promise);
+  static bool process_pending_kv_store_delete(JSContext *cx, FastlyHandle handle,
+                                              JS::HandleObject context, JS::HandleObject promise);
 };
 
 } // namespace fastly::kv_store
