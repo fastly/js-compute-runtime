@@ -117,6 +117,226 @@
       "status": 200
     }
   },
+  "GET /secret-store/exposed-as-global": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/exposed-as-global"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/interface": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/constructor/called-as-regular-function": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/constructor/parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/constructor/parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/constructor/empty-parameter": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/constructor/empty-parameter"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/constructor/found-store": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/constructor/found-store"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/constructor/missing-store": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/constructor/missing-store"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/constructor/invalid-name": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/constructor/invalid-name"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/get/called-as-constructor": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/get/called-as-constructor"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/get/called-unbound": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/get/called-unbound"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/get/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/get/key-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/get/key-parameter-not-supplied": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/get/key-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/get/key-parameter-empty-string": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/get/key-parameter-empty-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/get/key-parameter-255-character-string": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/get/key-parameter-255-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/get/key-parameter-256-character-string": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/get/key-parameter-256-character-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/get/key-parameter-invalid-string": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/get/key-parameter-invalid-string"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/get/key-does-not-exist-returns-null": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/get/key-does-not-exist-returns-null"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/get/key-exists": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/get/key-exists"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/from-bytes/invalid": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/from-bytes/invalid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store/from-bytes/valid": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store/from-bytes/valid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store-entry/interface": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store-entry/interface"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /secret-store-entry/plaintext": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/secret-store-entry/plaintext"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
   "GET /simple-cache/interface": {
     "environments": ["viceroy", "compute"],
     "downstream_request": {
@@ -2796,6 +3016,83 @@
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/constructor/parameter-sniHostname-property-valid-string"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-clientCertificate-property-invalid": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-clientCertificate-property-invalid"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-clientCertificate-certificate-property-missing": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-clientCertificate-certificate-property-missing"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-clientCertificate-certificate-property-invalid": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-clientCertificate-certificate-property-invalid"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-clientCertificate-key-property-missing": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-clientCertificate-key-property-missing"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-clientCertificate-key-property-invalid": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-clientCertificate-key-property-invalid"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-clientCertificate-key-property-fake": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-clientCertificate-key-property-fake"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/constructor/parameter-clientCertificate-valid": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/constructor/parameter-clientCertificate-valid"
     },
     "downstream_response": {
       "status": 200,

@@ -8,7 +8,7 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
-#include "host_interface/component/fastly_world.h"
+#include "./component/fastly_world.h"
 
 namespace fastly {
 
@@ -66,6 +66,9 @@ typedef struct DynamicBackendConfig {
   uint32_t ciphers_len;
   const char *sni_hostname;
   uint32_t sni_hostname_len;
+  const char *client_certificate;
+  uint32_t client_certificate_len;
+  fastly_compute_at_edge_secret_store_secret_handle_t client_key;
 } DynamicBackendConfig;
 
 #define INVALID_HANDLE (UINT32_MAX - 1)
@@ -362,6 +365,11 @@ int secret_store_get(fastly_compute_at_edge_secret_store_store_handle_t dict_han
 WASM_IMPORT("fastly_secret_store", "plaintext")
 int secret_store_plaintext(fastly_compute_at_edge_secret_store_secret_handle_t secret_handle,
                            char *buf, size_t buf_len, size_t *nwritten);
+
+WASM_IMPORT("fastly_secret_store", "from_bytes")
+int secret_store_from_bytes(
+    char *buf, size_t buf_len,
+    fastly_compute_at_edge_secret_store_secret_handle_t *opt_secret_handle_out);
 
 // Module fastly_object_store
 WASM_IMPORT("fastly_object_store", "open")

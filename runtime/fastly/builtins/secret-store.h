@@ -19,6 +19,7 @@ public:
   static const JSPropertySpec properties[];
 
   static bool plaintext(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool rawbytes(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static host_api::Secret secret_handle(JSObject *obj);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -37,6 +38,7 @@ public:
   static const JSPropertySpec properties[];
 
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool from_bytes(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static host_api::SecretStore secret_store_handle(JSObject *obj);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
