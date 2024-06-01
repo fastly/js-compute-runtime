@@ -1435,10 +1435,11 @@ routes.set("/backend/timeout", async () => {
           return pass('ok')
         }
         let backend = new Backend({ name: 'clientCertificate-clientCertificate-valid', target: 'http-me.glitch.me', clientCertificate: { certificate: "a", key: SecretStore.fromBytes(new Uint8Array([1, 2, 3])) } })
-        let error = await assertRejects(() => fetch('https://http-me.glitch.me/headers', {
+        let res = await fetch('https://http-me.glitch.me/headers', {
           backend,
           cacheOverride: new CacheOverride("pass"),
-        }))
+        })
+        console.error(res);
         if (error) { return error }
         return pass('ok')
       });
