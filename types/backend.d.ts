@@ -1,4 +1,4 @@
-import { SecretStoreEntry } from "fastly:secret-store";
+/// <reference path="../types/secret-store.d.ts" />
 
 declare module 'fastly:backend' {
   interface BackendConfiguration {
@@ -116,7 +116,7 @@ declare module 'fastly:backend' {
      */
     clientCertificate?: {
       certificate: string,
-      key: SecretStoreEntry,
+      key: import('fastly:secret-store').SecretStoreEntry,
     }
   }
 

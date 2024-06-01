@@ -1434,9 +1434,11 @@ routes.set("/backend/timeout", async () => {
         if (isRunningLocally()) {
           return pass('ok')
         }
-        let error = assertThrows(() => {
-          new Backend({ name: 'clientCertificate-clientCertificate-valid', target: 'http-me.glitch.me', clientCertificate: { certificate: "a", key: SecretStore.fromBytes(new Uint8Array([1, 2, 3])) } })
-        }, Error, 'register_dynamic_backend: Unsupported operation error. This error is thrown when some operation cannot be performed, because it is not supported.\n');
+        let backend = new Backend({ name: 'clientCertificate-clientCertificate-valid', target: 'http-me.glitch.me', clientCertificate: { certificate: "a", key: SecretStore.fromBytes(new Uint8Array([1, 2, 3])) } })
+        let error = await assertRejects(() => fetch('https://http-me.glitch.me/headers', {
+          backend,
+          cacheOverride: new CacheOverride("pass"),
+        }))
         if (error) { return error }
         return pass('ok')
       });
