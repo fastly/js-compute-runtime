@@ -1440,7 +1440,6 @@ routes.set("/backend/timeout", async () => {
           cacheOverride: new CacheOverride("pass"),
         })
         console.error(res);
-        if (error) { return error }
         return pass('ok')
       });
     }
