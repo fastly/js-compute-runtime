@@ -336,6 +336,11 @@ struct TlsVersion {
   static TlsVersion version_1_3();
 };
 
+struct ClientCert {
+  HostString cert;
+  FastlyHandle key;
+};
+
 struct BackendConfig {
   std::optional<HostString> host_override;
   std::optional<uint32_t> connect_timeout;
@@ -349,6 +354,7 @@ struct BackendConfig {
   std::optional<HostString> ca_cert;
   std::optional<HostString> ciphers;
   std::optional<HostString> sni_hostname;
+  std::optional<ClientCert> client_cert;
 };
 
 struct CacheOverrideTag final {
@@ -584,7 +590,7 @@ public:
   Secret() = default;
   explicit Secret(FastlyHandle handle) : handle{handle} {}
 
-  Result<std::optional<HostString>> plaintext() const;
+  Result<std::optional<HostBytes>> plaintext() const;
 };
 
 class SecretStore final {
@@ -599,6 +605,7 @@ public:
   static Result<SecretStore> open(std::string_view name);
 
   Result<std::optional<Secret>> get(std::string_view name);
+  static Result<Secret> from_bytes(uint8_t *bytes, size_t len);
 };
 
 struct CacheLookupOptions final {

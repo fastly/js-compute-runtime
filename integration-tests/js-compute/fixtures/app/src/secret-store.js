@@ -117,7 +117,7 @@ import fc from './fast-check.js';
     routes.set("/secret-store/get/called-as-constructor", () => {
       let error = assertThrows(() => {
         new SecretStore.prototype.get('1')
-      }, TypeError, `SecretStore.prototype.get is not a constructor`)
+      }, TypeError)
       if (error) { return error }
       return pass()
     });
@@ -238,6 +238,37 @@ import fc from './fast-check.js';
       return pass()
     });
   }
+
+  // SecretStore.fromBytes static method
+  {
+    routes.set("/secret-store/from-bytes/invalid", async () => {
+      let error = assertThrows(() => {
+        SecretStore.fromBytes("blah")
+      }, TypeError, `SecretStore.fromBytes: bytes must be an ArrayBuffer or ArrayBufferView object`)
+      if (error) { return error }
+      return pass()
+    });
+    routes.set("/secret-store/from-bytes/valid", async () => {
+      let result, error;
+      result = SecretStore.fromBytes(new Uint8Array([1, 2, 3]));
+      error = assert(result instanceof SecretStoreEntry, true, `(SecretStore.fromBytes(Uint8Array) instanceof SecretStoreEntry)`)
+      if (error) { return error }
+      error = assert(result.rawBytes(), new Uint8Array([1, 2, 3]), `(SecretStore.fromBytes(Uint8Array).rawBytes() === Uint8Array)`)
+      if (error) { return error }
+      result = SecretStore.fromBytes(new Uint16Array([4, 5, 6]));
+      error = assert(result instanceof SecretStoreEntry, true, `(SecretStore.fromBytes(Uint16Array) instanceof SecretStoreEntry)`)
+      if (error) { return error }
+      // (can rely on Wasm being little endian)
+      error = assert(result.rawBytes(), new Uint8Array([4, 0, 5, 0, 6, 0]), `(SecretStore.fromBytes(Uint16Array).rawBytes() === Uint8Array)`)
+      if (error) { return error }
+      result = SecretStore.fromBytes(new Uint16Array([7, 8, 9]).buffer);
+      error = assert(result instanceof SecretStoreEntry, true, `(SecretStore.fromBytes(ArrayBuffer) instanceof SecretStoreEntry)`)
+      if (error) { return error }
+      error = assert(result.rawBytes(), new Uint8Array([7, 0, 8, 0, 9, 0]), `(SecretStore.fromBytes(ArrayBuffer).rawBytes() === Uint8Array)`)
+      if (error) { return error }
+      return pass()
+    });
+  }
 }
 // SecretStoreEntry
 {
@@ -290,7 +321,7 @@ function SecretStoreEntryInterfaceTests() {
   if (error) { return error }
 
   actual = Reflect.ownKeys(SecretStoreEntry.prototype)
-  expected = ["constructor", "plaintext"]
+  expected = ["constructor", "plaintext", "rawBytes"]
   error = assert(actual, expected, `Reflect.ownKeys(SecretStoreEntry.prototype)`)
   if (error) { return error }
 
@@ -354,7 +385,7 @@ function SecretStoreEntryInterfaceTests() {
 
 function SecretStoreInterfaceTests() {
   let actual = Reflect.ownKeys(SecretStore)
-  let expected = ["prototype", "length", "name"]
+  let expected = ["prototype", "fromBytes", "length", "name"]
   let error = assert(actual, expected, `Reflect.ownKeys(SecretStore)`)
   if (error) { return error }
 

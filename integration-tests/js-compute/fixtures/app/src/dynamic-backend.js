@@ -278,7 +278,6 @@ routes.set("/backend/timeout", async () => {
 
   // constructor
   {
-
     routes.set("/backend/constructor/called-as-regular-function", async () => {
       let error = assertThrows(() => {
         Backend()
@@ -1383,6 +1382,64 @@ routes.set("/backend/timeout", async () => {
           new Backend({ name: 'sniHostname-property-valid-string', target: 'a', sniHostname: "www.fastly.com" })
         })
         if (error) { return error }
+        return pass('ok')
+      });
+    }
+
+    // clientCertificate property
+    {
+      routes.set("/backend/constructor/parameter-clientCertificate-property-invalid", async () => {
+        let error = assertThrows(() => {
+          new Backend({ name: 'clientCertificate-clientCertificate-property-invalid', target: 'a', clientCertificate: "" })
+        }, TypeError, `Backend constructor: clientCertificate must be an object containing 'certificate' and 'key' properties`)
+        if (error) { return error }
+        return pass('ok')
+      });
+      routes.set("/backend/constructor/parameter-clientCertificate-certificate-property-missing", async () => {
+        let error = assertThrows(() => {
+          new Backend({ name: 'clientCertificate-clientCertificate-certificate-property-missing', target: 'a', clientCertificate: {} })
+        }, TypeError, `Backend constructor: clientCertificate 'certificate' must be a certificate string`)
+        if (error) { return error }
+        return pass('ok')
+      });
+      routes.set("/backend/constructor/parameter-clientCertificate-certificate-property-invalid", async () => {
+        let error = assertThrows(() => {
+          new Backend({ name: 'clientCertificate-clientCertificate-certificate-property-invalid', target: 'a', clientCertificate: { certificate: "" } })
+        }, TypeError, `Backend constructor: clientCertificate 'certificate' can not be an empty string`)
+        if (error) { return error }
+        return pass('ok')
+      });
+      routes.set("/backend/constructor/parameter-clientCertificate-key-property-missing", async () => {
+        let error = assertThrows(() => {
+          new Backend({ name: 'clientCertificate-clientCertificate-key-property-missing', target: 'a', clientCertificate: { certificate: "a" } })
+        }, TypeError, `Backend constructor: clientCertificate 'key' must be a SecretStoreEntry instance`)
+        if (error) { return error }
+        return pass('ok')
+      });
+      routes.set("/backend/constructor/parameter-clientCertificate-key-property-invalid", async () => {
+        let error = assertThrows(() => {
+          new Backend({ name: 'clientCertificate-clientCertificate-key-property-invalid', target: 'a', clientCertificate: { certificate: "a", key: "" } })
+        }, TypeError, `Backend constructor: clientCertificate 'key' must be a SecretStoreEntry instance`)
+        if (error) { return error }
+        return pass('ok')
+      });
+      routes.set("/backend/constructor/parameter-clientCertificate-key-property-fake", async () => {
+        let error = assertThrows(() => {
+          new Backend({ name: 'clientCertificate-clientCertificate-key-property-fake', target: 'a', clientCertificate: { certificate: "a", key: Object.create(SecretStoreEntry.prototype) } })
+        }, TypeError, `Backend constructor: clientCertificate 'key' must be a SecretStoreEntry instance`)
+        if (error) { return error }
+        return pass('ok')
+      });
+      routes.set("/backend/constructor/parameter-clientCertificate-valid", async () => {
+        if (isRunningLocally()) {
+          return pass('ok')
+        }
+        let backend = new Backend({ name: 'clientCertificate-clientCertificate-valid', target: 'http-me.glitch.me', clientCertificate: { certificate: "a", key: SecretStore.fromBytes(new Uint8Array([1, 2, 3])) } })
+        let res = await fetch('https://http-me.glitch.me/headers', {
+          backend,
+          cacheOverride: new CacheOverride("pass"),
+        })
+        console.error(res);
         return pass('ok')
       });
     }

@@ -1,3 +1,5 @@
+/// <reference path="../types/secret-store.d.ts" />
+
 declare module 'fastly:backend' {
   interface BackendConfiguration {
     /**
@@ -107,6 +109,15 @@ declare module 'fastly:backend' {
      * @throws {TypeError} Throws a TypeError if the value is an empty string.
      */
     sniHostname?: string;
+    /**
+     * Set the client certificate to be provided to the server during the initial TLS handshake.
+     * 
+     * @throws {TypeError} Throws a TypeError if the value is not an object of the correct type.
+     */
+    clientCertificate?: {
+      certificate: string,
+      key: import('fastly:secret-store').SecretStoreEntry,
+    }
   }
 
   /**

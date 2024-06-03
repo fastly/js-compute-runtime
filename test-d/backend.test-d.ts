@@ -1,5 +1,5 @@
 /// <reference path="../types/backend.d.ts" />
-import { Backend, BackendConfiguration } from "fastly:backend";
+import { Backend } from "fastly:backend";
 import {expectError, expectType} from 'tsd';
 
 // Backend
@@ -20,7 +20,7 @@ import {expectError, expectType} from 'tsd';
     expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', certificateHostname: 'example.com',}))
     expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', caCertificate: '',}))
     expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', ciphers: 'DEFAULT',}))
-    expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com',  sniHostname: 'example.com',}))
+    expectType<Backend>(new Backend({name: 'eu', target: 'www.example.com', sniHostname: 'example.com',}))
     const backend = new Backend({name: 'eu', target: 'www.example.com'})
     expectType<string>(backend.toString())
 }

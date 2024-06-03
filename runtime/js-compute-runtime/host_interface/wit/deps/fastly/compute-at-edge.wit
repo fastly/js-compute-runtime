@@ -1,4 +1,4 @@
-package fastly:compute-at-edge
+package fastly:compute-at-edge;
 
 interface types {
   // TODO: split this up into function-specific error enums
@@ -51,20 +51,20 @@ interface types {
     limit-exceeded
   }
 
-  type secret-handle = u32
+  type secret-handle = u32;
 }
 
 interface http-types {
 
-  use types.{secret-handle}
+  use types.{secret-handle};
 
-  type body-handle = u32
+  type body-handle = u32;
 
-  type request-handle = u32
-  type pending-request-handle = u32
-  type response-handle = u32
-  type request = tuple<request-handle, body-handle>
-  type response = tuple<response-handle, body-handle>
+  type request-handle = u32;
+  type pending-request-handle = u32;
+  type response-handle = u32;
+  type request = tuple<request-handle, body-handle>;
+  type response = tuple<response-handle, body-handle>;
 
   enum send-error-detail-tag {
     /// The send-error-detail struct has not been populated.
@@ -198,7 +198,7 @@ interface http-types {
     client-cert: option<client-cert-config>,
   }
 
-  type http-status = u16
+  type http-status = u16;
 }
 
 /*
@@ -206,7 +206,7 @@ interface http-types {
  */
 interface uap {
 
-  use types.{error}
+  use types.{error};
 
   record user-agent {
     family: string,
@@ -215,7 +215,7 @@ interface uap {
     patch: string
   }
 
-  parse: func(user-agent: string) -> result<user-agent, error>
+  parse: func(user-agent: string) -> result<user-agent, error>;
 }
 
 /*
@@ -223,23 +223,23 @@ interface uap {
  */
 interface http-body {
 
-  use types.{error}
-  use http-types.{body-handle}
+  use types.{error};
+  use http-types.{body-handle};
 
   enum write-end {
     back,
     front
   }
 
-  append: func(dest: body-handle, src: body-handle) -> result<_, error>
+  append: func(dest: body-handle, src: body-handle) -> result<_, error>;
 
-  new: func() -> result<body-handle, error>
+  new: func() -> result<body-handle, error>;
 
-  read: func(h: body-handle, chunk-size: u32) -> result<list<u8>, error>
+  read: func(h: body-handle, chunk-size: u32) -> result<list<u8>, error>;
 
-  write: func(h: body-handle, buf: list<u8>, end: write-end) -> result<u32, error>
+  write: func(h: body-handle, buf: list<u8>, end: write-end) -> result<u32, error>;
 
-  close: func(h: body-handle) -> result<_, error>
+  close: func(h: body-handle) -> result<_, error>;
 }
 
 /*
@@ -247,13 +247,13 @@ interface http-body {
  */
 interface log {
 
-  use types.{error}
+  use types.{error};
 
-  type handle = u32
+  type handle = u32;
 
-  endpoint-get: func(name: string) -> result<handle, error>
+  endpoint-get: func(name: string) -> result<handle, error>;
 
-  write: func(h: handle, msg: string) -> result<_, error>
+  write: func(h: handle, msg: string) -> result<_, error>;
 }
 
 /*
@@ -261,11 +261,11 @@ interface log {
  */
 interface http-req {
 
-  use types.{error}
+  use types.{error};
   use http-types.{
     body-handle, request-handle, http-version, response, pending-request-handle,
     content-encodings, framing-headers-mode, dynamic-backend-config, send-error-detail
-  }
+  };
 
   flags cache-override-tag {
       /// Do not cache the response to this request, regardless of the origin response's headers.
@@ -275,95 +275,95 @@ interface http-req {
       pci,
   }
 
-  cache-override-set: func(h: request-handle, tag: cache-override-tag, ttl: option<u32>, stale-while-revalidate: option<u32>, sk: option<string>) -> result<_, error>
+  cache-override-set: func(h: request-handle, tag: cache-override-tag, ttl: option<u32>, stale-while-revalidate: option<u32>, sk: option<string>) -> result<_, error>;
 
-  downstream-client-ip-addr: func() -> result<list<u8>, error>
+  downstream-client-ip-addr: func() -> result<list<u8>, error>;
 
-  downstream-client-request-id: func() -> result<string, error>
+  downstream-client-request-id: func() -> result<string, error>;
 
-  downstream-client-h2-fingerprint: func() -> result<list<u8>, error>
+  downstream-client-h2-fingerprint: func() -> result<list<u8>, error>;
 
-  downstream-tls-cipher-openssl-name: func() -> result<string, error>
+  downstream-tls-cipher-openssl-name: func() -> result<string, error>;
 
-  downstream-tls-protocol: func() -> result<string, error>
+  downstream-tls-protocol: func() -> result<string, error>;
 
-  downstream-tls-client-hello: func() -> result<list<u8>, error>
+  downstream-tls-client-hello: func() -> result<list<u8>, error>;
 
-  downstream-tls-raw-client-certificate: func() -> result<list<u8>, error>
+  downstream-tls-raw-client-certificate: func() -> result<list<u8>, error>;
 
-  downstream-tls-client-cert-verify-result: func() -> result<_, error>
+  downstream-tls-client-cert-verify-result: func() -> result<_, error>;
 
-  downstream-tls-ja3-md5: func() -> result<list<u8>, error>
+  downstream-tls-ja3-md5: func() -> result<list<u8>, error>;
 
-  new: func() -> result<request-handle, error>
+  new: func() -> result<request-handle, error>;
 
-  header-names-get: func(h: request-handle) -> result<list<string>, error>
+  header-names-get: func(h: request-handle) -> result<list<string>, error>;
 
-  original-header-names-get: func() -> result<list<string>, error>
+  original-header-names-get: func() -> result<list<string>, error>;
 
-  original-header-count: func() -> result<u32, error>
+  original-header-count: func() -> result<u32, error>;
 
-  header-value-get: func(h: request-handle, name: string) -> result<option<list<u8>>, error>
+  header-value-get: func(h: request-handle, name: string) -> result<option<list<u8>>, error>;
 
-  header-values-get: func(h: request-handle, name: string) -> result<option<list<list<u8>>>, error>
+  header-values-get: func(h: request-handle, name: string) -> result<option<list<list<u8>>>, error>;
 
-  header-values-set: func(h: request-handle, name: string, values: list<list<u8>>) -> result<_, error>
+  header-values-set: func(h: request-handle, name: string, values: list<list<u8>>) -> result<_, error>;
 
-  header-insert: func(h: request-handle, name: string, value: list<u8>) -> result<_, error>
+  header-insert: func(h: request-handle, name: string, value: list<u8>) -> result<_, error>;
 
-  header-append: func(h: request-handle, name: string, value: list<u8>) -> result<_, error>
+  header-append: func(h: request-handle, name: string, value: list<u8>) -> result<_, error>;
 
-  header-remove: func(h: request-handle, name: string) -> result<_, error>
+  header-remove: func(h: request-handle, name: string) -> result<_, error>;
 
-  method-get: func(h: request-handle) -> result<string, error>
+  method-get: func(h: request-handle) -> result<string, error>;
 
-  method-set: func(h: request-handle, method: string) -> result<_, error>
+  method-set: func(h: request-handle, method: string) -> result<_, error>;
 
-  uri-get: func(h: request-handle) -> result<string, error>
+  uri-get: func(h: request-handle) -> result<string, error>;
 
-  uri-set: func(h: request-handle, uri: string) -> result<_, error>
+  uri-set: func(h: request-handle, uri: string) -> result<_, error>;
 
-  version-get: func(h: request-handle) -> result<http-version, error>
+  version-get: func(h: request-handle) -> result<http-version, error>;
 
-  version-set: func(h: request-handle, version: http-version) -> result<_, error>
+  version-set: func(h: request-handle, version: http-version) -> result<_, error>;
 
-  send: func(h: request-handle, b: body-handle, backend: string) -> result<response, error>
+  send: func(h: request-handle, b: body-handle, backend: string) -> result<response, error>;
 
-  send-v2: func(h: request-handle, s: send-error-detail, b: body-handle, backend: string) -> result<response, error>
+  send-v2: func(h: request-handle, s: send-error-detail, b: body-handle, backend: string) -> result<response, error>;
 
-  send-async: func(h: request-handle, b: body-handle, backend: string) -> result<pending-request-handle, error>
+  send-async: func(h: request-handle, b: body-handle, backend: string) -> result<pending-request-handle, error>;
 
-  send-async-streaming: func(h: request-handle, b: body-handle, backend: string) -> result<pending-request-handle, error>
+  send-async-streaming: func(h: request-handle, b: body-handle, backend: string) -> result<pending-request-handle, error>;
 
-  pending-req-poll: func(h: pending-request-handle) -> result<option<response>, error>
-  pending-req-poll-v2: func(h: pending-request-handle, s: send-error-detail) -> result<option<response>, error>
+  pending-req-poll: func(h: pending-request-handle) -> result<option<response>, error>;
+  pending-req-poll-v2: func(h: pending-request-handle, s: send-error-detail) -> result<option<response>, error>;
 
 
-  pending-req-wait: func(h: pending-request-handle) -> result<response, error>
-  pending-req-wait-v2: func(h: pending-request-handle, s: send-error-detail) -> result<response, error>
+  pending-req-wait: func(h: pending-request-handle) -> result<response, error>;
+  pending-req-wait-v2: func(h: pending-request-handle, s: send-error-detail) -> result<response, error>;
 
   pending-req-select: func(h: list<pending-request-handle>) -> result<tuple<
     u32,
     response
-  >, error>
+  >, error>;
   pending-req-select-v2: func(h: list<pending-request-handle>) -> result<tuple<
     u32,
     response
-  >, send-error-detail>
+  >, send-error-detail>;
 
-  close: func(h: request-handle) -> result<_, error>
+  close: func(h: request-handle) -> result<_, error>;
 
-  auto-decompress-response-set: func(h: request-handle, encodings: content-encodings) -> result<_, error>
+  auto-decompress-response-set: func(h: request-handle, encodings: content-encodings) -> result<_, error>;
 
-  upgrade-websocket: func(backend: string) -> result<_, error>
+  upgrade-websocket: func(backend: string) -> result<_, error>;
 
-  redirect-to-websocket-proxy: func(backend: string) -> result<_, error>
+  redirect-to-websocket-proxy: func(backend: string) -> result<_, error>;
 
-  redirect-to-grip-proxy: func(backend: string) -> result<_, error>
+  redirect-to-grip-proxy: func(backend: string) -> result<_, error>;
 
-  framing-headers-mode-set: func(h: request-handle, mode: framing-headers-mode) -> result<_, error>
+  framing-headers-mode-set: func(h: request-handle, mode: framing-headers-mode) -> result<_, error>;
 
-  register-dynamic-backend: func(prefix: string, target: string, config: dynamic-backend-config) -> result<_, error>
+  register-dynamic-backend: func(prefix: string, target: string, config: dynamic-backend-config) -> result<_, error>;
 
 }
 
@@ -371,50 +371,50 @@ interface http-req {
  * Fastly HTTP Resp
  */
 interface http-resp {
-  use types.{error}
+  use types.{error};
 
   use http-types.{
     response-handle, body-handle, http-version, http-status,
     framing-headers-mode
-  }
+  };
 
-  new: func() -> result<response-handle, error>
+  new: func() -> result<response-handle, error>;
 
-  header-names-get: func(h: response-handle) -> result<list<string>, error>
+  header-names-get: func(h: response-handle) -> result<list<string>, error>;
 
-  header-value-get: func(h: response-handle, name: string) -> result<option<string>, error>
+  header-value-get: func(h: response-handle, name: string) -> result<option<string>, error>;
 
-  header-values-get: func(h: response-handle, name: string) -> result<option<list<list<u8>>>, error>
+  header-values-get: func(h: response-handle, name: string) -> result<option<list<list<u8>>>, error>;
 
-  header-values-set: func(h: response-handle, name: string, values: list<list<u8>>) -> result<_, error>
+  header-values-set: func(h: response-handle, name: string, values: list<list<u8>>) -> result<_, error>;
 
-  header-insert: func(h: response-handle, name: string, value: list<u8>) -> result<_, error>
+  header-insert: func(h: response-handle, name: string, value: list<u8>) -> result<_, error>;
 
-  header-append: func(h: response-handle, name: string, value: list<u8>) -> result<_, error>
+  header-append: func(h: response-handle, name: string, value: list<u8>) -> result<_, error>;
 
-  header-remove: func(h: response-handle, name: string) -> result<_, error>
+  header-remove: func(h: response-handle, name: string) -> result<_, error>;
 
-  version-get: func(h: response-handle) -> result<http-version, error>
+  version-get: func(h: response-handle) -> result<http-version, error>;
 
-  version-set: func(h: response-handle, version: http-version) -> result<_, error>
+  version-set: func(h: response-handle, version: http-version) -> result<_, error>;
 
-  send-downstream: func(h: response-handle, b: body-handle, streaming: bool) -> result<_, error>
+  send-downstream: func(h: response-handle, b: body-handle, streaming: bool) -> result<_, error>;
 
-  status-get: func(h: response-handle) -> result<http-status, error>
+  status-get: func(h: response-handle) -> result<http-status, error>;
 
-  status-set: func(h: response-handle, status: http-status) -> result<_, error>
+  status-set: func(h: response-handle, status: http-status) -> result<_, error>;
 
-  close: func(h: response-handle) -> result<_, error>
+  close: func(h: response-handle) -> result<_, error>;
 
   /// Adjust how this response's framing headers are determined.
-  framing-headers-mode-set: func(h: response-handle, mode: framing-headers-mode) -> result<_, error>
+  framing-headers-mode-set: func(h: response-handle, mode: framing-headers-mode) -> result<_, error>;
 
   enum keepalive-mode {
     automatic,
     no-keepalive,
   }
 
-  http-keepalive-mode-set: func(h: response-handle, mode: keepalive-mode) -> result<_, error>
+  http-keepalive-mode-set: func(h: response-handle, mode: keepalive-mode) -> result<_, error>;
 }
 
 /*
@@ -422,20 +422,20 @@ interface http-resp {
  */
 interface dictionary {
 
-  use types.{error}
+  use types.{error};
 
-  type handle = u32
+  type handle = u32;
 
-  open: func(name: string) -> result<handle, error>
+  open: func(name: string) -> result<handle, error>;
 
-  get: func(h: handle, key: string) -> result<option<string>, error>
+  get: func(h: handle, key: string) -> result<option<string>, error>;
 }
 
 /*
  * Fastly Geo
  */
 interface geo {
-  use types.{error}
+  use types.{error};
 
   record geo-data {
     /**
@@ -559,7 +559,7 @@ interface geo {
   }
 
   /// JSON string for now
-  lookup: func(addr-octets: list<u8>) -> result<string, error>
+  lookup: func(addr-octets: list<u8>) -> result<string, error>;
 }
 
 /*
@@ -567,27 +567,27 @@ interface geo {
  */
 interface object-store {
 
-  use types.{error}
+  use types.{error};
 
-  use http-types.{body-handle}
+  use http-types.{body-handle};
 
-  type handle = u32
-  type pending-handle = u32
+  type handle = u32;
+  type pending-handle = u32;
 
-  open: func(name: string) -> result<handle, error>
+  open: func(name: string) -> result<handle, error>;
 
-  lookup: func(store: handle, key: string) -> result<option<body-handle>, error>
+  lookup: func(store: handle, key: string) -> result<option<body-handle>, error>;
 
-  lookup-async: func(store: handle, key: string) -> result<pending-handle, error>
+  lookup-async: func(store: handle, key: string) -> result<pending-handle, error>;
 
-  pending-lookup-wait: func(handle: pending-handle) -> result<option<body-handle>, error>
+  pending-lookup-wait: func(handle: pending-handle) -> result<option<body-handle>, error>;
 
-  delete-async: func(store: handle, key: string) -> result<pending-handle, error>
+  delete-async: func(store: handle, key: string) -> result<pending-handle, error>;
 
-  pending-delete-wait: func(handle: pending-handle) -> result<_, error>
+  pending-delete-wait: func(handle: pending-handle) -> result<_, error>;
 
   // Should object store insert return "inserted" bool?
-  insert: func(store: handle, key: string, body-handle: body-handle) -> result<_, error>
+  insert: func(store: handle, key: string, body-handle: body-handle) -> result<_, error>;
 
 }
 
@@ -596,27 +596,27 @@ interface object-store {
  */
 interface secret-store {
 
-  use types.{error, secret-handle}
+  use types.{error, secret-handle};
 
-  type store-handle = u32
+  type store-handle = u32;
 
-  open: func(name: string) -> result<store-handle, error>
+  open: func(name: string) -> result<store-handle, error>;
 
-  get: func(store: store-handle, key: string) -> result<option<secret-handle>, error>
+  get: func(store: store-handle, key: string) -> result<option<secret-handle>, error>;
 
-  plaintext: func(secret: secret-handle) -> result<option<string>, error>
+  plaintext: func(secret: secret-handle) -> result<option<list<u8>>, error>;
 
-  from-bytes: func(bytes: string) -> result<secret-handle, error>
+  from-bytes: func(bytes: list<u8>) -> result<secret-handle, error>;
 }
 
 /*
  * Fastly backend
  */
 interface backend {
-  use types.{error}
-  use http-types.{tls-version}
+  use types.{error};
+  use http-types.{tls-version};
 
-  exists: func(backend: string) -> result<bool, error>
+  exists: func(backend: string) -> result<bool, error>;
 
   enum backend-health {
     unknown,
@@ -624,47 +624,47 @@ interface backend {
     unhealthy,
   }
 
-  is-healthy: func(backend: string) -> result<backend-health, error>
+  is-healthy: func(backend: string) -> result<backend-health, error>;
 
   /// Returns `true` if the backend is a "dynamic" backend.
-  is-dynamic: func(backend: string) -> result<bool, error>
+  is-dynamic: func(backend: string) -> result<bool, error>;
 
   /// Get the host of this backend.
-  get-host: func(backend: string) -> result<string, error>
+  get-host: func(backend: string) -> result<string, error>;
 
   /// Get the "override host" for this backend.
   ///
   /// This is used to change the `Host` header sent to the backend. See the
   /// Fastly documentation oh this topic here: https://docs.fastly.com/en/guides/specifying-an-override-host
-  get-override-host: func(backend: string) -> result<option<string>, error>
+  get-override-host: func(backend: string) -> result<option<string>, error>;
 
   /// Get the remote TCP port of the backend connection for the request.
-  get-port: func(backend: string) -> result<u16, error>
+  get-port: func(backend: string) -> result<u16, error>;
 
   /// Get the connection timeout of the backend.
-  get-connect-timeout-ms: func(backend: string) -> result<u32, error>
+  get-connect-timeout-ms: func(backend: string) -> result<u32, error>;
 
   /// Get the first byte timeout of the backend.
-  get-first-byte-timeout-ms: func(backend: string) -> result<u32, error>
+  get-first-byte-timeout-ms: func(backend: string) -> result<u32, error>;
 
   /// Get the between byte timeout of the backend.
-  get-between-bytes-timeout-ms: func(backend: string) -> result<u32, error>
+  get-between-bytes-timeout-ms: func(backend: string) -> result<u32, error>;
 
   /// Returns `true` if the backend is configured to use SSL.
-  is-ssl: func(backend: string) -> result<bool, error>
+  is-ssl: func(backend: string) -> result<bool, error>;
 
   /// Get the minimum SSL version this backend will use.
-  get-ssl-min-version: func(backend: string) -> result<tls-version, error>
+  get-ssl-min-version: func(backend: string) -> result<tls-version, error>;
 
   /// Get the maximum SSL version this backend will use.
-  get-ssl-max-version: func(backend: string) -> result<tls-version, error>
+  get-ssl-max-version: func(backend: string) -> result<tls-version, error>;
 }
 
 /*
  * Fastly Async IO
  */
 interface async-io {
-  use types.{error}
+  use types.{error};
 
   /// A handle to an object supporting generic async operations.
   /// Can be either a `BodyHandle` or a `PendingRequestHandle`.
@@ -677,7 +677,7 @@ interface async-io {
   ///
   /// For writing bytes, note that there is a large host-side buffer that bytes can eagerly be written
   /// into, even before the origin itself consumes that data.
-  type handle = u32
+  type handle = u32;
 
   /// Blocks until one of the given objects is ready for I/O, or the optional timeout expires.
   ///
@@ -689,7 +689,7 @@ interface async-io {
   ///
   /// Returns the _index_ (not handle!) of the first object that is ready, or
   /// none if the timeout expires before any objects are ready for I/O.
-  select: func(hs: list<handle>, timeout-ms: u32) -> result<option<u32>, error>
+  select: func(hs: list<handle>, timeout-ms: u32) -> result<option<u32>, error>;
 
   /// Returns 1 if the given async item is "ready" for its associated I/O action, 0 otherwise.
   ///
@@ -698,7 +698,7 @@ interface async-io {
   /// Valid object handles includes bodies and pending requests. See the `async_item_handle`
   /// definition for more details, including what I/O actions are associated with each handle
   /// type.
-  is-ready: func(handle: handle) -> result<bool, error>
+  is-ready: func(handle: handle) -> result<bool, error>;
 }
 
 /*
@@ -706,7 +706,7 @@ interface async-io {
  */
 interface purge {
 
-  use types.{error}
+  use types.{error};
 
   flags options-mask {
     soft-purge,
@@ -717,7 +717,7 @@ interface purge {
    * A surrogate key can be a max of 1024 characters.
    * A surrogate key must contain only printable ASCII characters (those between `0x21` and `0x7E`, inclusive).
    */
-  surrogate-key: func(surrogate-keys: string, purge-options: options-mask) -> result<option<string>, error>
+  surrogate-key: func(surrogate-keys: string, purge-options: options-mask) -> result<option<string>, error>;
 }
 
 /*
@@ -725,14 +725,14 @@ interface purge {
  */
 interface cache {
 
-  use types.{error}
-  use http-types.{body-handle, request-handle}
+  use types.{error};
+  use http-types.{body-handle, request-handle};
 
   /// The outcome of a cache lookup (either bare or as part of a cache transaction)
-  type handle = u32
-  type object-length = u64
-  type duration-ns = u64
-  type cache-hit-count = u64
+  type handle = u32;
+  type object-length = u64;
+  type duration-ns = u64;
+  type cache-hit-count = u64;
 
   /// Extensible options for cache lookup operations currently used for both `lookup` and `transaction_lookup`.
   record lookup-options {
@@ -795,19 +795,19 @@ interface cache {
   /// Performs a non-request-collapsing cache lookup.
   ///
   /// Returns a result without waiting for any request collapsing that may be ongoing.
-  lookup: func(key: string, options: lookup-options) -> result<handle, error>
+  lookup: func(key: string, options: lookup-options) -> result<handle, error>;
 
   /// Performs a non-request-collapsing cache insertion (or update).
   ///
   /// The returned handle is to a streaming body that is used for writing the object into
   /// the cache.
-  insert: func(key: string, options: write-options) -> result<body-handle, error>
+  insert: func(key: string, options: write-options) -> result<body-handle, error>;
 
   /// The entrypoint to the request-collapsing cache transaction API.
   ///
   /// This operation always participates in request collapsing and may return stale objects. To bypass
   /// request collapsing, use `lookup` and `insert` instead.
-  transaction-lookup: func(key: string, options: lookup-options) -> result<handle, error>
+  transaction-lookup: func(key: string, options: lookup-options) -> result<handle, error>;
 
   /// Insert an object into the cache with the given metadata.
   ///
@@ -815,7 +815,7 @@ interface cache {
   ///
   /// The returned handle is to a streaming body that is used for writing the object into
   /// the cache.
-  transaction-insert: func(handle: handle, options: write-options) -> result<body-handle, error>
+  transaction-insert: func(handle: handle, options: write-options) -> result<body-handle, error>;
 
   /// Insert an object into the cache with the given metadata, and return a readable stream of the
   /// bytes as they are stored.
@@ -827,32 +827,32 @@ interface cache {
   /// The returned body handle is to a streaming body that is used for writing the object _into_
   /// the cache. The returned cache handle provides a separate transaction for reading out the
   /// newly cached object to send elsewhere.
-  transaction-insert-and-stream-back: func(handle: handle, options: write-options) -> result<tuple<body-handle, handle>, error>
+  transaction-insert-and-stream-back: func(handle: handle, options: write-options) -> result<tuple<body-handle, handle>, error>;
 
   /// Update the metadata of an object in the cache without changing its data.
   ///
   /// Can only be used in if the cache handle state includes both of the flags:
   /// - `found`
   /// - `must-insert-or-update`
-  transaction-update: func(handle: handle, options: write-options) -> result<_, error>
+  transaction-update: func(handle: handle, options: write-options) -> result<_, error>;
 
   /// Cancel an obligation to provide an object to the cache.
   ///
   /// Useful if there is an error before streaming is possible, e.g. if a backend is unreachable.
-  transaction-cancel: func(handle: handle) -> result<_, error>
+  transaction-cancel: func(handle: handle) -> result<_, error>;
 
   /// Close an ongoing interaction with the cache.
   ///
   /// If the cache handle state includes the `$must_insert_or_update` (and hence no insert or
   /// update has been performed), closing the handle cancels any request collapsing, potentially
   /// choosing a new waiter to perform the insertion/update.
-  close: func(handle: handle) -> result<_, error>
+  close: func(handle: handle) -> result<_, error>;
 
-  get-state: func(handle: handle) -> result<lookup-state, error>
+  get-state: func(handle: handle) -> result<lookup-state, error>;
 
   /// Gets the user metadata of the found object, returning `none` if there
   /// was no found object.
-  get-user-metadata: func(handle: handle) -> result<list<u8>, error>
+  get-user-metadata: func(handle: handle) -> result<list<u8>, error>;
 
   /// Gets a range of the found object body, returning the `optional-none` error if there
   /// was no found object.
@@ -863,58 +863,58 @@ interface cache {
   /// Note: until the CacheD protocol is adjusted to fully support this functionality,
   /// the body of objects that are past the stale-while-revalidate period will not
   /// be available, even when other metadata is.
-  get-body: func(handle: handle, options: get-body-options, options-mask: get-body-options-mask) -> result<body-handle, error>
+  get-body: func(handle: handle, options: get-body-options, options-mask: get-body-options-mask) -> result<body-handle, error>;
 
   /// Gets the content length of the found object, returning the `$none` error if there
   /// was no found object, or no content length was provided.
-  get-length: func(handle: handle) -> result<u64, error>
+  get-length: func(handle: handle) -> result<u64, error>;
 
   /// Gets the configured max age of the found object, returning the `$none` error if there
   /// was no found object.
-  get-max-age-ns: func(handle: handle) -> result<u64, error>
+  get-max-age-ns: func(handle: handle) -> result<u64, error>;
 
   /// Gets the configured stale-while-revalidate period of the found object, returning the
   /// `$none` error if there was no found object.
-  get-stale-while-revalidate-ns: func(handle: handle) -> result<u64, error>
+  get-stale-while-revalidate-ns: func(handle: handle) -> result<u64, error>;
 
   /// Gets the age of the found object, returning the `$none` error if there
   /// was no found object.
-  get-age-ns: func(handle: handle) -> result<u64, error>
+  get-age-ns: func(handle: handle) -> result<u64, error>;
 
   /// Gets the number of cache hits for the found object, returning the `$none` error if there
   /// was no found object.
-  get-hits: func(handle: handle) -> result<u64, error>
+  get-hits: func(handle: handle) -> result<u64, error>;
 }
 
 interface edge-rate-limiter {
-  use types.{error}
+  use types.{error};
 
-  check-rate: func(rate-counter-name: string, entry: string, delta: u32, window: u32, limit: u32, penalty-box-name: string, time-to-live: u32) -> result<bool, error>
+  check-rate: func(rate-counter-name: string, entry: string, delta: u32, window: u32, limit: u32, penalty-box-name: string, time-to-live: u32) -> result<bool, error>;
 
-  ratecounter-increment: func(rate-counter-name: string, entry: string, delta: u32) -> result<_, error>
+  ratecounter-increment: func(rate-counter-name: string, entry: string, delta: u32) -> result<_, error>;
 
-  ratecounter-lookup-rate: func(rate-counter-name: string, entry: string, window: u32) -> result<u32, error>
+  ratecounter-lookup-rate: func(rate-counter-name: string, entry: string, window: u32) -> result<u32, error>;
 
-  ratecounter-lookup-count: func(rate-counter-name: string, entry: string, duration: u32) -> result<u32, error>
+  ratecounter-lookup-count: func(rate-counter-name: string, entry: string, duration: u32) -> result<u32, error>;
 
-  penaltybox-add: func(penalty-box-name: string, entry: string, time-to-live: u32) -> result<_, error>
+  penaltybox-add: func(penalty-box-name: string, entry: string, time-to-live: u32) -> result<_, error>;
 
-  penaltybox-has: func(penalty-box-name: string, entry: string) -> result<bool, error>
+  penaltybox-has: func(penalty-box-name: string, entry: string) -> result<bool, error>;
 }
 
 interface device-detection {
-  use types.{error}
+  use types.{error};
 
-  lookup: func(user-agent: string) -> result<string, error>
+  lookup: func(user-agent: string) -> result<string, error>;
 }
 
 
 interface reactor {
-  use http-types.{request}
+  use http-types.{request};
 
   /// Serve the given request
   ///
   /// response handle not currently returned, because in the case of a streamed response
   /// send downstream must be fully streamed due to the run to completion semantics.
-  serve: func(req: request) -> result
+  serve: func(req: request) -> result;
 }

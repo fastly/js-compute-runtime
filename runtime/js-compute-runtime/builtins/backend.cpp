@@ -17,6 +17,7 @@
 #include "js/experimental/TypedData.h"
 #pragma clang diagnostic pop
 
+#include "./secret-store.h"
 #include "builtins/backend.h"
 #include "builtins/request-response.h"
 #include "core/encode.h"
@@ -796,6 +797,18 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
     backend_config.sni_hostname.emplace(std::move(sni_hostname_chars));
   }
 
+  auto client_cert_slot = JS::GetReservedSlot(backend, Backend::Slots::ClientCert);
+  if (!client_cert_slot.isNullOrUndefined()) {
+    JS::RootedString client_cert_string(cx, client_cert_slot.toString());
+    auto client_cert_chars = core::encode(cx, client_cert_string);
+
+    auto client_cert_key_slot = JS::GetReservedSlot(backend, Backend::Slots::ClientCertKey);
+
+    backend_config.client_cert =
+        host_api::ClientCert{.cert = std::move(client_cert_chars),
+                             .key = host_api::Secret(client_cert_key_slot.toInt32())};
+  }
+
   auto res = host_api::HttpReq::register_dynamic_backend(name_str, target_str, backend_config);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -992,6 +1005,34 @@ bool Backend::set_sni_hostname(JSContext *cx, JSObject *backend, JS::HandleValue
     return false;
   }
   JS::SetReservedSlot(backend, Backend::Slots::SniHostname, JS::StringValue(sni_hostname));
+  return true;
+}
+
+bool Backend::set_client_cert(JSContext *cx, JSObject *backend, JS::HandleValue client_cert_val) {
+  auto client_cert = JS::ToString(cx, client_cert_val);
+  if (!client_cert) {
+    return false;
+  }
+
+  if (JS_GetStringLength(client_cert) == 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BACKEND_CLIENT_CERTIFICATE_CERTIFICATE_EMPTY);
+    return false;
+  }
+  JS::SetReservedSlot(backend, Backend::Slots::ClientCert, JS::StringValue(client_cert));
+  return true;
+}
+
+bool Backend::set_client_cert_key(JSContext *cx, JSObject *backend,
+                                  JS::HandleValue client_cert_key_val) {
+  if (!SecretStoreEntry::is_instance(client_cert_key_val)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BACKEND_CLIENT_CERTIFICATE_KEY_INVALID);
+    return false;
+  }
+  JS::RootedObject client_cert_key_obj(cx, &client_cert_key_val.toObject());
+  JS::SetReservedSlot(backend, Backend::Slots::ClientCertKey,
+                      JS::Int32Value(SecretStoreEntry::secret_handle(client_cert_key_obj).handle));
   return true;
 }
 
@@ -1441,6 +1482,54 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
     JS::SetReservedSlot(backend, Backend::Slots::SniHostname, JS::StringValue(sni_hostname));
+  }
+
+  JS::RootedValue client_cert_val(cx);
+  if (!JS_HasProperty(cx, configuration, "clientCertificate", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "clientCertificate", &client_cert_val)) {
+      return false;
+    }
+    if (!client_cert_val.isObject()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CLIENT_CERTIFICATE_NOT_OBJECT);
+      return false;
+    }
+    JS::RootedObject client_cert_obj(cx, &client_cert_val.toObject());
+
+    JS::RootedValue client_cert_cert_val(cx);
+    if (!JS_HasProperty(cx, client_cert_obj, "certificate", &found)) {
+      return false;
+    }
+    if (!found) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CLIENT_CERTIFICATE_NO_CERTIFICATE);
+      return false;
+    }
+    if (!JS_GetProperty(cx, client_cert_obj, "certificate", &client_cert_cert_val)) {
+      return false;
+    }
+    if (!Backend::set_client_cert(cx, backend, client_cert_cert_val)) {
+      return false;
+    }
+
+    JS::RootedValue client_cert_key_val(cx);
+    if (!JS_HasProperty(cx, client_cert_obj, "key", &found)) {
+      return false;
+    }
+    if (!found) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CLIENT_CERTIFICATE_KEY_INVALID);
+      return false;
+    }
+    if (!JS_GetProperty(cx, client_cert_obj, "key", &client_cert_key_val)) {
+      return false;
+    }
+    if (!Backend::set_client_cert_key(cx, backend, client_cert_key_val)) {
+      return false;
+    }
   }
 
   auto result = Backend::register_dynamic_backend(cx, backend);

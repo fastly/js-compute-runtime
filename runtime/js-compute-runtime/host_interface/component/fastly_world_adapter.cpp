@@ -8,9 +8,9 @@
 #include "jsapi.h"
 #pragma clang diagnostic pop
 
-#include "core/allocator.h"
+#include "../../../StarlingMonkey/runtime/allocator.h"
+#include "../fastly.h"
 #include "fastly_world.h"
-#include "host_interface/fastly.h"
 
 // Ensure that all the things we want to use the hostcall buffer for actually
 // fit into the buffer.
@@ -129,14 +129,16 @@ bool fastly_compute_at_edge_http_body_close(fastly_compute_at_edge_http_types_bo
 bool fastly_compute_at_edge_log_endpoint_get(fastly_world_string_t *name,
                                              fastly_compute_at_edge_log_handle_t *ret,
                                              fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::log_endpoint_get(name->ptr, name->len, ret), err);
+  return convert_result(
+      fastly::log_endpoint_get(reinterpret_cast<char *>(name->ptr), name->len, ret), err);
 }
 
 bool fastly_compute_at_edge_log_write(fastly_compute_at_edge_log_handle_t h,
                                       fastly_world_string_t *msg,
                                       fastly_compute_at_edge_types_error_t *err) {
   size_t nwritten = 0;
-  return convert_result(fastly::log_write(h, msg->ptr, msg->len, &nwritten), err);
+  return convert_result(
+      fastly::log_write(h, reinterpret_cast<char *>(msg->ptr), msg->len, &nwritten), err);
 }
 
 bool fastly_http_req_body_downstream_get(fastly_compute_at_edge_http_types_request_t *ret,
@@ -146,7 +148,9 @@ bool fastly_http_req_body_downstream_get(fastly_compute_at_edge_http_types_reque
 
 bool fastly_compute_at_edge_http_req_redirect_to_grip_proxy(
     fastly_world_string_t *backend, fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::req_redirect_to_grip_proxy(backend->ptr, backend->len), err);
+  return convert_result(
+      fastly::req_redirect_to_grip_proxy(reinterpret_cast<char *>(backend->ptr), backend->len),
+      err);
 }
 
 int convert_tag(fastly_compute_at_edge_http_req_cache_override_tag_t tag) {
@@ -181,8 +185,8 @@ bool fastly_compute_at_edge_http_req_cache_override_set(
   return convert_result(
       fastly::req_cache_override_v2_set(
           h, convert_tag(tag), maybe_ttl == NULL ? 0 : *maybe_ttl,
-          maybe_stale_while_revalidate == NULL ? 0 : *maybe_stale_while_revalidate, sk_str.ptr,
-          sk_str.len),
+          maybe_stale_while_revalidate == NULL ? 0 : *maybe_stale_while_revalidate,
+          reinterpret_cast<char *>(sk_str.ptr), sk_str.len),
       err);
 }
 
@@ -202,11 +206,13 @@ bool fastly_compute_at_edge_http_req_downstream_client_ip_addr(
 bool fastly_compute_at_edge_http_req_downstream_tls_cipher_openssl_name(
     fastly_world_string_t *ret, fastly_compute_at_edge_types_error_t *err) {
   auto default_size = 128;
-  ret->ptr = static_cast<char *>(cabi_malloc(default_size, 4));
-  auto status = fastly::req_downstream_tls_cipher_openssl_name(ret->ptr, default_size, &ret->len);
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
+  auto status = fastly::req_downstream_tls_cipher_openssl_name(reinterpret_cast<char *>(ret->ptr),
+                                                               default_size, &ret->len);
   if (status == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BUFFER_LEN) {
     cabi_realloc(ret->ptr, default_size, 4, ret->len);
-    status = fastly::req_downstream_tls_cipher_openssl_name(ret->ptr, ret->len, &ret->len);
+    status = fastly::req_downstream_tls_cipher_openssl_name(reinterpret_cast<char *>(ret->ptr),
+                                                            ret->len, &ret->len);
   }
   return convert_result(status, err);
 }
@@ -214,11 +220,13 @@ bool fastly_compute_at_edge_http_req_downstream_tls_cipher_openssl_name(
 bool fastly_compute_at_edge_http_req_downstream_tls_protocol(
     fastly_world_string_t *ret, fastly_compute_at_edge_types_error_t *err) {
   auto default_size = 32;
-  ret->ptr = static_cast<char *>(cabi_malloc(default_size, 4));
-  auto status = fastly::req_downstream_tls_protocol(ret->ptr, default_size, &ret->len);
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
+  auto status = fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret->ptr),
+                                                    default_size, &ret->len);
   if (status == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BUFFER_LEN) {
     cabi_realloc(ret->ptr, default_size, 4, ret->len);
-    status = fastly::req_downstream_tls_protocol(ret->ptr, ret->len, &ret->len);
+    status = fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret->ptr), ret->len,
+                                                 &ret->len);
   }
   return convert_result(status, err);
 }
@@ -320,7 +328,7 @@ bool fastly_compute_at_edge_http_req_header_names_get(
   auto *next = ret->ptr;
   for (auto &chunk : header_names) {
     next->len = chunk.length;
-    next->ptr = chunk.buffer.release();
+    next->ptr = reinterpret_cast<uint8_t *>(chunk.buffer.release());
     ++next;
   }
 
@@ -339,8 +347,9 @@ bool fastly_compute_at_edge_http_req_header_values_get(
     while (true) {
       int64_t ending_cursor = 0;
       size_t length = 0;
-      auto res = fastly::req_header_values_get(h, name->ptr, name->len, buffer.get(),
-                                               HEADER_MAX_LEN, cursor, &ending_cursor, &length);
+      auto res = fastly::req_header_values_get(h, reinterpret_cast<char *>(name->ptr), name->len,
+                                               buffer.get(), HEADER_MAX_LEN, cursor, &ending_cursor,
+                                               &length);
       if (!convert_result(res, err)) {
         return false;
       }
@@ -394,52 +403,60 @@ bool fastly_compute_at_edge_http_req_framing_headers_mode_set(
 bool fastly_compute_at_edge_http_req_header_insert(
     fastly_compute_at_edge_http_types_request_handle_t h, fastly_world_string_t *name,
     fastly_world_list_u8_t *value, fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::req_header_insert(h, name->ptr, name->len, value->ptr, value->len),
+  return convert_result(fastly::req_header_insert(h, reinterpret_cast<char *>(name->ptr), name->len,
+                                                  value->ptr, value->len),
                         err);
 }
 
 bool fastly_compute_at_edge_http_req_header_append(
     fastly_compute_at_edge_http_types_request_handle_t h, fastly_world_string_t *name,
     fastly_world_list_u8_t *value, fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::req_header_append(h, name->ptr, name->len, value->ptr, value->len),
+  return convert_result(fastly::req_header_append(h, reinterpret_cast<char *>(name->ptr), name->len,
+                                                  value->ptr, value->len),
                         err);
 }
 
 bool fastly_compute_at_edge_http_req_header_remove(
     fastly_compute_at_edge_http_types_request_handle_t h, fastly_world_string_t *name,
     fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::req_header_remove(h, name->ptr, name->len), err);
+  return convert_result(
+      fastly::req_header_remove(h, reinterpret_cast<char *>(name->ptr), name->len), err);
 }
 
 bool fastly_compute_at_edge_http_req_method_get(
     fastly_compute_at_edge_http_types_request_handle_t h, fastly_world_string_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
-  ret->ptr = static_cast<char *>(cabi_malloc(METHOD_MAX_LEN, 1));
-  return convert_result(fastly::req_method_get(h, ret->ptr, METHOD_MAX_LEN, &ret->len), err);
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(METHOD_MAX_LEN, 1));
+  return convert_result(
+      fastly::req_method_get(h, reinterpret_cast<char *>(ret->ptr), METHOD_MAX_LEN, &ret->len),
+      err);
 }
 
 bool fastly_compute_at_edge_http_req_method_set(
     fastly_compute_at_edge_http_types_request_handle_t h, fastly_world_string_t *method,
     fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::req_method_set(h, method->ptr, method->len), err);
+  return convert_result(
+      fastly::req_method_set(h, reinterpret_cast<char *>(method->ptr), method->len), err);
 }
 
 bool fastly_compute_at_edge_http_req_uri_get(fastly_compute_at_edge_http_types_request_handle_t h,
                                              fastly_world_string_t *ret,
                                              fastly_compute_at_edge_types_error_t *err) {
-  ret->ptr = static_cast<char *>(cabi_malloc(URI_MAX_LEN, 1));
-  if (!convert_result(fastly::req_uri_get(h, ret->ptr, URI_MAX_LEN, &ret->len), err)) {
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(URI_MAX_LEN, 1));
+  if (!convert_result(
+          fastly::req_uri_get(h, reinterpret_cast<char *>(ret->ptr), URI_MAX_LEN, &ret->len),
+          err)) {
     cabi_free(ret->ptr);
     return false;
   }
-  ret->ptr = static_cast<char *>(cabi_realloc(ret->ptr, URI_MAX_LEN, 1, ret->len));
+  ret->ptr = static_cast<uint8_t *>(cabi_realloc(ret->ptr, URI_MAX_LEN, 1, ret->len));
   return true;
 }
 
 bool fastly_compute_at_edge_http_req_uri_set(fastly_compute_at_edge_http_types_request_handle_t h,
                                              fastly_world_string_t *uri,
                                              fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::req_uri_set(h, uri->ptr, uri->len), err);
+  return convert_result(fastly::req_uri_set(h, reinterpret_cast<char *>(uri->ptr), uri->len), err);
 }
 
 bool fastly_compute_at_edge_http_req_version_get(
@@ -459,7 +476,8 @@ bool fastly_compute_at_edge_http_req_send_async(
     fastly_compute_at_edge_http_types_body_handle_t b, fastly_world_string_t *backend,
     fastly_compute_at_edge_http_types_pending_request_handle_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::req_send_async(h, b, backend->ptr, backend->len, ret), err);
+  return convert_result(
+      fastly::req_send_async(h, b, reinterpret_cast<char *>(backend->ptr), backend->len, ret), err);
 }
 
 bool fastly_compute_at_edge_http_req_send_async_streaming(
@@ -467,7 +485,8 @@ bool fastly_compute_at_edge_http_req_send_async_streaming(
     fastly_compute_at_edge_http_types_body_handle_t b, fastly_world_string_t *backend,
     fastly_compute_at_edge_http_types_pending_request_handle_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::req_send_async_streaming(h, b, backend->ptr, backend->len, ret),
+  return convert_result(fastly::req_send_async_streaming(
+                            h, b, reinterpret_cast<char *>(backend->ptr), backend->len, ret),
                         err);
 }
 
@@ -532,27 +551,33 @@ bool fastly_compute_at_edge_http_req_register_dynamic_backend(
   if (config->sni_hostname.is_some) {
     backend_config_mask |= BACKEND_CONFIG_SNI_HOSTNAME;
   }
+  if (config->client_cert.is_some) {
+    backend_config_mask |= BACKEND_CONFIG_CLIENT_CERT;
+  }
   fastly::DynamicBackendConfig backend_configuration{
-      .host_override = config->host_override.val.ptr,
+      .host_override = reinterpret_cast<char *>(config->host_override.val.ptr),
       .host_override_len = config->host_override.val.len,
       .connect_timeout_ms = config->connect_timeout.val,
       .first_byte_timeout_ms = config->first_byte_timeout.val,
       .between_bytes_timeout_ms = config->between_bytes_timeout.val,
       .ssl_min_version = config->ssl_min_version.val,
       .ssl_max_version = config->ssl_max_version.val,
-      .cert_hostname = config->cert_hostname.val.ptr,
+      .cert_hostname = reinterpret_cast<char *>(config->cert_hostname.val.ptr),
       .cert_hostname_len = config->cert_hostname.val.len,
-      .ca_cert = config->ca_cert.val.ptr,
+      .ca_cert = reinterpret_cast<char *>(config->ca_cert.val.ptr),
       .ca_cert_len = config->ca_cert.val.len,
-      .ciphers = config->ciphers.val.ptr,
+      .ciphers = reinterpret_cast<char *>(config->ciphers.val.ptr),
       .ciphers_len = config->ciphers.val.len,
-      .sni_hostname = config->sni_hostname.val.ptr,
+      .sni_hostname = reinterpret_cast<char *>(config->sni_hostname.val.ptr),
       .sni_hostname_len = config->sni_hostname.val.len,
-  };
-  return convert_result(fastly::req_register_dynamic_backend(prefix->ptr, prefix->len, target->ptr,
-                                                             target->len, backend_config_mask,
-                                                             &backend_configuration),
-                        err);
+      .client_certificate = reinterpret_cast<char *>(config->client_cert.val.client_cert.ptr),
+      .client_certificate_len = config->client_cert.val.client_cert.len,
+      .client_key = config->client_cert.val.client_key};
+  return convert_result(
+      fastly::req_register_dynamic_backend(reinterpret_cast<char *>(prefix->ptr), prefix->len,
+                                           reinterpret_cast<char *>(target->ptr), target->len,
+                                           backend_config_mask, &backend_configuration),
+      err);
 }
 
 bool fastly_compute_at_edge_http_resp_new(fastly_compute_at_edge_http_types_response_handle_t *ret,
@@ -591,7 +616,7 @@ bool fastly_compute_at_edge_http_resp_header_names_get(
                          (str_max + LIST_ALLOC_SIZE) * sizeof(fastly_world_string_t)));
         str_max += LIST_ALLOC_SIZE;
       }
-      strs[str_cnt].ptr = static_cast<char *>(cabi_malloc(i - offset + 1, 1));
+      strs[str_cnt].ptr = static_cast<uint8_t *>(cabi_malloc(i - offset + 1, 1));
       strs[str_cnt].len = i - offset;
       memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
       offset = i + 1;
@@ -623,8 +648,9 @@ bool fastly_compute_at_edge_http_resp_header_values_get(
   uint32_t cursor = 0;
   int64_t next_cursor = 0;
   while (true) {
-    if (!convert_result(fastly::resp_header_values_get(h, name->ptr, name->len, buf, HEADER_MAX_LEN,
-                                                       cursor, &next_cursor, &nwritten),
+    if (!convert_result(fastly::resp_header_values_get(h, reinterpret_cast<char *>(name->ptr),
+                                                       name->len, buf, HEADER_MAX_LEN, cursor,
+                                                       &next_cursor, &nwritten),
                         err)) {
       cabi_free(buf);
       return false;
@@ -669,21 +695,24 @@ bool fastly_compute_at_edge_http_resp_header_values_get(
 bool fastly_compute_at_edge_http_resp_header_insert(
     fastly_compute_at_edge_http_types_response_handle_t h, fastly_world_string_t *name,
     fastly_world_list_u8_t *value, fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::resp_header_insert(h, name->ptr, name->len, value->ptr, value->len),
+  return convert_result(fastly::resp_header_insert(h, reinterpret_cast<char *>(name->ptr),
+                                                   name->len, value->ptr, value->len),
                         err);
 }
 
 bool fastly_compute_at_edge_http_resp_header_append(
     fastly_compute_at_edge_http_types_response_handle_t h, fastly_world_string_t *name,
     fastly_world_list_u8_t *value, fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::resp_header_append(h, name->ptr, name->len, value->ptr, value->len),
+  return convert_result(fastly::resp_header_append(h, reinterpret_cast<char *>(name->ptr),
+                                                   name->len, value->ptr, value->len),
                         err);
 }
 
 bool fastly_compute_at_edge_http_resp_header_remove(
     fastly_compute_at_edge_http_types_response_handle_t h, fastly_world_string_t *name,
     fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::resp_header_remove(h, name->ptr, name->len), err);
+  return convert_result(
+      fastly::resp_header_remove(h, reinterpret_cast<char *>(name->ptr), name->len), err);
 }
 
 bool fastly_compute_at_edge_http_resp_version_get(
@@ -729,15 +758,17 @@ bool fastly_compute_at_edge_http_resp_status_set(
 bool fastly_compute_at_edge_dictionary_open(fastly_world_string_t *name,
                                             fastly_compute_at_edge_dictionary_handle_t *ret,
                                             fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::dictionary_open(name->ptr, name->len, ret), err);
+  return convert_result(
+      fastly::dictionary_open(reinterpret_cast<char *>(name->ptr), name->len, ret), err);
 }
 
 bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_dictionary_handle_t h,
                                            fastly_world_string_t *key,
                                            fastly_world_option_string_t *ret,
                                            fastly_compute_at_edge_types_error_t *err) {
-  ret->val.ptr = static_cast<char *>(cabi_malloc(DICTIONARY_ENTRY_MAX_LEN, 1));
-  if (!convert_result(fastly::dictionary_get(h, key->ptr, key->len, ret->val.ptr,
+  ret->val.ptr = static_cast<uint8_t *>(cabi_malloc(DICTIONARY_ENTRY_MAX_LEN, 1));
+  if (!convert_result(fastly::dictionary_get(h, reinterpret_cast<char *>(key->ptr), key->len,
+                                             reinterpret_cast<char *>(ret->val.ptr),
                                              DICTIONARY_ENTRY_MAX_LEN, &ret->val.len),
                       err)) {
     if (*err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) {
@@ -750,22 +781,24 @@ bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_dictionary_han
   }
   ret->is_some = true;
   ret->val.ptr =
-      static_cast<char *>(cabi_realloc(ret->val.ptr, DICTIONARY_ENTRY_MAX_LEN, 1, ret->val.len));
+      static_cast<uint8_t *>(cabi_realloc(ret->val.ptr, DICTIONARY_ENTRY_MAX_LEN, 1, ret->val.len));
   return true;
 }
 
 bool fastly_compute_at_edge_secret_store_open(
     fastly_world_string_t *name, fastly_compute_at_edge_secret_store_store_handle_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::secret_store_open(name->ptr, name->len, ret), err);
+  return convert_result(
+      fastly::secret_store_open(reinterpret_cast<char *>(name->ptr), name->len, ret), err);
 }
 
 bool fastly_compute_at_edge_secret_store_get(
     fastly_compute_at_edge_secret_store_store_handle_t store, fastly_world_string_t *key,
-    fastly_world_option_fastly_compute_at_edge_secret_store_secret_handle_t *ret,
-    fastly_compute_at_edge_types_error_t *err) {
+    fastly_world_option_secret_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
   ret->val = INVALID_HANDLE;
-  bool ok = convert_result(fastly::secret_store_get(store, key->ptr, key->len, &ret->val), err);
+  bool ok = convert_result(
+      fastly::secret_store_get(store, reinterpret_cast<char *>(key->ptr), key->len, &ret->val),
+      err);
   if ((!ok && *err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) ||
       ret->val == INVALID_HANDLE) {
     ret->is_some = false;
@@ -776,12 +809,12 @@ bool fastly_compute_at_edge_secret_store_get(
 }
 
 bool fastly_compute_at_edge_secret_store_plaintext(
-    fastly_compute_at_edge_secret_store_secret_handle_t h, fastly_world_option_string_t *ret,
-    fastly_compute_at_edge_types_error_t *err) {
-  ret->val.ptr = static_cast<char *>(JS_malloc(CONTEXT, DICTIONARY_ENTRY_MAX_LEN));
-  if (!convert_result(
-          fastly::secret_store_plaintext(h, ret->val.ptr, DICTIONARY_ENTRY_MAX_LEN, &ret->val.len),
-          err)) {
+    fastly_compute_at_edge_secret_store_secret_handle_t h, fastly_world_option_list_u8_t *ret,
+    fastly_compute_at_edge_secret_store_error_t *err) {
+  ret->val.ptr = static_cast<uint8_t *>(JS_malloc(CONTEXT, DICTIONARY_ENTRY_MAX_LEN));
+  if (!convert_result(fastly::secret_store_plaintext(h, reinterpret_cast<char *>(ret->val.ptr),
+                                                     DICTIONARY_ENTRY_MAX_LEN, &ret->val.len),
+                      err)) {
     if (*err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) {
       ret->is_some = false;
       return true;
@@ -791,37 +824,53 @@ bool fastly_compute_at_edge_secret_store_plaintext(
     }
   }
   ret->is_some = true;
-  ret->val.ptr = static_cast<char *>(
+  ret->val.ptr = static_cast<uint8_t *>(
       JS_realloc(CONTEXT, ret->val.ptr, DICTIONARY_ENTRY_MAX_LEN, ret->val.len));
+  return true;
+}
+
+bool fastly_compute_at_edge_secret_store_from_bytes(
+    fastly_world_list_u8_t *bytes, fastly_compute_at_edge_secret_store_secret_handle_t *ret,
+    fastly_compute_at_edge_secret_store_error_t *err) {
+  *ret = INVALID_HANDLE;
+  bool ok = convert_result(
+      fastly::secret_store_from_bytes(reinterpret_cast<char *>(bytes->ptr), bytes->len, ret), err);
+  if (!ok || *ret == INVALID_HANDLE) {
+    return false;
+  }
   return true;
 }
 
 bool fastly_compute_at_edge_geo_lookup(fastly_world_list_u8_t *addr_octets,
                                        fastly_world_string_t *ret,
                                        fastly_compute_at_edge_types_error_t *err) {
-  ret->ptr = static_cast<char *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
-  if (!convert_result(fastly::geo_lookup(addr_octets->ptr, addr_octets->len, ret->ptr,
-                                         HOSTCALL_BUFFER_LEN, &ret->len),
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
+  if (!convert_result(fastly::geo_lookup(addr_octets->ptr, addr_octets->len,
+                                         reinterpret_cast<char *>(ret->ptr), HOSTCALL_BUFFER_LEN,
+                                         &ret->len),
                       err)) {
     cabi_free(ret->ptr);
     return false;
   }
-  ret->ptr = static_cast<char *>(cabi_realloc(ret->ptr, HOSTCALL_BUFFER_LEN, 1, ret->len));
+  ret->ptr = static_cast<uint8_t *>(cabi_realloc(ret->ptr, HOSTCALL_BUFFER_LEN, 1, ret->len));
   return true;
 }
 
 bool fastly_compute_at_edge_object_store_open(fastly_world_string_t *name,
                                               fastly_compute_at_edge_object_store_handle_t *ret,
                                               fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::object_store_open(name->ptr, name->len, ret), err);
+  return convert_result(
+      fastly::object_store_open(reinterpret_cast<char *>(name->ptr), name->len, ret), err);
 }
 
-bool fastly_compute_at_edge_object_store_lookup(
-    fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key,
-    fastly_world_option_fastly_compute_at_edge_object_store_body_handle_t *ret,
-    fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_object_store_lookup(fastly_compute_at_edge_object_store_handle_t store,
+                                                fastly_world_string_t *key,
+                                                fastly_world_option_body_handle_t *ret,
+                                                fastly_compute_at_edge_types_error_t *err) {
   ret->val = INVALID_HANDLE;
-  bool ok = convert_result(fastly::object_store_get(store, key->ptr, key->len, &ret->val), err);
+  bool ok = convert_result(
+      fastly::object_store_get(store, reinterpret_cast<char *>(key->ptr), key->len, &ret->val),
+      err);
   if ((!ok && *err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) ||
       ret->val == INVALID_HANDLE) {
     ret->is_some = false;
@@ -835,12 +884,13 @@ bool fastly_compute_at_edge_object_store_lookup_async(
     fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key,
     fastly_compute_at_edge_object_store_pending_handle_t *ret,
     fastly_compute_at_edge_object_store_error_t *err) {
-  return convert_result(fastly::object_store_get_async(store, key->ptr, key->len, ret), err);
+  return convert_result(
+      fastly::object_store_get_async(store, reinterpret_cast<char *>(key->ptr), key->len, ret),
+      err);
 }
 
 bool fastly_compute_at_edge_object_store_pending_lookup_wait(
-    fastly_compute_at_edge_object_store_pending_handle_t h,
-    fastly_world_option_fastly_compute_at_edge_object_store_body_handle_t *ret,
+    fastly_compute_at_edge_object_store_pending_handle_t h, fastly_world_option_body_handle_t *ret,
     fastly_compute_at_edge_object_store_error_t *err) {
   ret->val = INVALID_HANDLE;
   bool ok = convert_result(fastly::object_store_pending_lookup_wait(h, &ret->val), err);
@@ -857,7 +907,9 @@ bool fastly_compute_at_edge_object_store_delete_async(
     fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key,
     fastly_compute_at_edge_object_store_pending_handle_t *ret,
     fastly_compute_at_edge_object_store_error_t *err) {
-  return convert_result(fastly::object_store_delete_async(store, key->ptr, key->len, ret), err);
+  return convert_result(
+      fastly::object_store_delete_async(store, reinterpret_cast<char *>(key->ptr), key->len, ret),
+      err);
 }
 
 bool fastly_compute_at_edge_object_store_pending_delete_wait(
@@ -870,12 +922,14 @@ bool fastly_compute_at_edge_object_store_insert(
     fastly_compute_at_edge_object_store_handle_t store, fastly_world_string_t *key,
     fastly_compute_at_edge_http_types_body_handle_t body_handle,
     fastly_compute_at_edge_types_error_t *err) {
-  return convert_result(fastly::object_store_insert(store, key->ptr, key->len, body_handle), err);
+  return convert_result(
+      fastly::object_store_insert(store, reinterpret_cast<char *>(key->ptr), key->len, body_handle),
+      err);
 }
 
-bool fastly_compute_at_edge_async_io_select(
-    fastly_world_list_fastly_compute_at_edge_async_io_handle_t *hs, uint32_t timeout_ms,
-    fastly_world_option_u32_t *ret, fastly_compute_at_edge_types_error_t *err) {
+bool fastly_compute_at_edge_async_io_select(fastly_world_list_handle_t *hs, uint32_t timeout_ms,
+                                            fastly_world_option_u32_t *ret,
+                                            fastly_compute_at_edge_types_error_t *err) {
   if (!convert_result(fastly::async_select(hs->ptr, hs->len, timeout_ms, &ret->val), err)) {
     if (*err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) {
       ret->is_some = false;
@@ -914,9 +968,9 @@ bool fastly_compute_at_edge_purge_surrogate_key(
 
   ret->is_some = false;
 
-  return convert_result(
-      fastly::purge_surrogate_key(surrogate_key->ptr, surrogate_key->len, options_mask, &options),
-      err);
+  return convert_result(fastly::purge_surrogate_key(reinterpret_cast<char *>(surrogate_key->ptr),
+                                                    surrogate_key->len, options_mask, &options),
+                        err);
 }
 
 #define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_RESERVED (1 << 0)
@@ -930,8 +984,9 @@ bool fastly_compute_at_edge_cache_lookup(fastly_world_string_t *cache_key,
   if (options->request_headers.is_some) {
     options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS;
   }
-  return convert_result(
-      fastly::cache_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret), err);
+  return convert_result(fastly::cache_lookup(reinterpret_cast<char *>(cache_key->ptr),
+                                             cache_key->len, options_mask, options, ret),
+                        err);
 }
 
 #define FASTLY_CACHE_WRITE_OPTIONS_MASK_RESERVED (1 << 0)
@@ -987,8 +1042,9 @@ bool fastly_compute_at_edge_cache_insert(fastly_world_string_t *cache_key,
   if (options->sensitive_data) {
     options_mask |= FASTLY_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA;
   }
-  return convert_result(
-      fastly::cache_insert(cache_key->ptr, cache_key->len, options_mask, &opts, ret), err);
+  return convert_result(fastly::cache_insert(reinterpret_cast<char *>(cache_key->ptr),
+                                             cache_key->len, options_mask, &opts, ret),
+                        err);
 }
 
 bool fastly_compute_at_edge_cache_transaction_insert(
@@ -1102,16 +1158,15 @@ bool fastly_compute_at_edge_cache_transaction_lookup(
   if (options->request_headers.is_some) {
     options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS;
   }
-  return convert_result(
-      fastly::cache_transaction_lookup(cache_key->ptr, cache_key->len, options_mask, options, ret),
-      err);
+  return convert_result(fastly::cache_transaction_lookup(reinterpret_cast<char *>(cache_key->ptr),
+                                                         cache_key->len, options_mask, options,
+                                                         ret),
+                        err);
 }
 bool fastly_compute_at_edge_cache_transaction_insert_and_stream_back(
     fastly_compute_at_edge_cache_handle_t handle,
     fastly_compute_at_edge_cache_write_options_t *options,
-    fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_handle_t
-        *ret,
-    fastly_compute_at_edge_types_error_t *err) {
+    fastly_world_tuple2_body_handle_handle_t *ret, fastly_compute_at_edge_types_error_t *err) {
   uint16_t options_mask = 0;
   fastly::CacheWriteOptions opts;
   std::memset(&opts, 0, sizeof(opts));
@@ -1226,7 +1281,9 @@ bool fastly_compute_at_edge_cache_get_hits(fastly_compute_at_edge_cache_handle_t
 bool fastly_compute_at_edge_backend_exists(fastly_world_string_t *backend, bool *ret,
                                            fastly_compute_at_edge_types_error_t *err) {
   uint32_t ret_int;
-  if (!convert_result(fastly::backend_exists(backend->ptr, backend->len, &ret_int), err)) {
+  if (!convert_result(
+          fastly::backend_exists(reinterpret_cast<char *>(backend->ptr), backend->len, &ret_int),
+          err)) {
     return false;
   }
   *ret = (bool)ret_int;
@@ -1252,7 +1309,7 @@ bool fastly_compute_at_edge_backend_is_healthy(fastly_world_string_t *backend,
                                                fastly_compute_at_edge_types_error_t *err) {
   fastly::BACKEND_HEALTH fastly_backend_health;
   if (!convert_result(
-          fastly::backend_is_healthy(backend->ptr, backend->len,
+          fastly::backend_is_healthy(reinterpret_cast<char *>(backend->ptr), backend->len,
                                      reinterpret_cast<uint32_t *>(&fastly_backend_health)),
           err)) {
     return false;
@@ -1265,67 +1322,75 @@ bool fastly_compute_at_edge_edge_rate_limiter_check_rate(
     fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t delta,
     uint32_t window, uint32_t limit, fastly_world_string_t *penalty_box_name, uint32_t time_to_live,
     bool *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
-  return convert_result(fastly::check_rate(rate_counter_name->ptr, rate_counter_name->len,
-                                           entry->ptr, entry->len, delta, window, limit,
-                                           penalty_box_name->ptr, penalty_box_name->len,
-                                           time_to_live, ret),
-                        err);
+  return convert_result(
+      fastly::check_rate(reinterpret_cast<char *>(rate_counter_name->ptr), rate_counter_name->len,
+                         reinterpret_cast<char *>(entry->ptr), entry->len, delta, window, limit,
+                         reinterpret_cast<char *>(penalty_box_name->ptr), penalty_box_name->len,
+                         time_to_live, ret),
+      err);
 }
 
 bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_increment(
     fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t delta,
     fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
-  return convert_result(fastly::ratecounter_increment(rate_counter_name->ptr,
-                                                      rate_counter_name->len, entry->ptr,
-                                                      entry->len, delta),
-                        err);
+  return convert_result(
+      fastly::ratecounter_increment(reinterpret_cast<char *>(rate_counter_name->ptr),
+                                    rate_counter_name->len, reinterpret_cast<char *>(entry->ptr),
+                                    entry->len, delta),
+      err);
 }
 
 bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_rate(
     fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t window,
     uint32_t *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
-  return convert_result(fastly::ratecounter_lookup_rate(rate_counter_name->ptr,
-                                                        rate_counter_name->len, entry->ptr,
-                                                        entry->len, window, ret),
-                        err);
+  return convert_result(
+      fastly::ratecounter_lookup_rate(reinterpret_cast<char *>(rate_counter_name->ptr),
+                                      rate_counter_name->len, reinterpret_cast<char *>(entry->ptr),
+                                      entry->len, window, ret),
+      err);
 }
 
 bool fastly_compute_at_edge_edge_rate_limiter_ratecounter_lookup_count(
     fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t duration,
     uint32_t *ret, fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
-  return convert_result(fastly::ratecounter_lookup_count(rate_counter_name->ptr,
-                                                         rate_counter_name->len, entry->ptr,
-                                                         entry->len, duration, ret),
-                        err);
+  return convert_result(
+      fastly::ratecounter_lookup_count(reinterpret_cast<char *>(rate_counter_name->ptr),
+                                       rate_counter_name->len, reinterpret_cast<char *>(entry->ptr),
+                                       entry->len, duration, ret),
+      err);
 }
 
 bool fastly_compute_at_edge_edge_rate_limiter_penaltybox_add(
     fastly_world_string_t *penalty_box_name, fastly_world_string_t *entry, uint32_t time_to_live,
     fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
-  return convert_result(fastly::penaltybox_add(penalty_box_name->ptr, penalty_box_name->len,
-                                               entry->ptr, entry->len, time_to_live),
-                        err);
+  return convert_result(
+      fastly::penaltybox_add(reinterpret_cast<char *>(penalty_box_name->ptr), penalty_box_name->len,
+                             reinterpret_cast<char *>(entry->ptr), entry->len, time_to_live),
+      err);
 }
 
 bool fastly_compute_at_edge_edge_rate_limiter_penaltybox_has(
     fastly_world_string_t *penalty_box_name, fastly_world_string_t *entry, bool *ret,
     fastly_compute_at_edge_edge_rate_limiter_error_t *err) {
-  return convert_result(fastly::penaltybox_has(penalty_box_name->ptr, penalty_box_name->len,
-                                               entry->ptr, entry->len, ret),
-                        err);
+  return convert_result(
+      fastly::penaltybox_has(reinterpret_cast<char *>(penalty_box_name->ptr), penalty_box_name->len,
+                             reinterpret_cast<char *>(entry->ptr), entry->len, ret),
+      err);
 }
 
 bool fastly_compute_at_edge_device_detection_lookup(
     fastly_world_string_t *user_agent, fastly_world_string_t *ret,
     fastly_compute_at_edge_device_detection_error_t *err) {
   auto default_size = 1024;
-  ret->ptr = static_cast<char *>(cabi_malloc(default_size, 4));
-  auto status = fastly::device_detection_lookup(user_agent->ptr, user_agent->len, ret->ptr,
-                                                default_size, &ret->len);
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
+  auto status =
+      fastly::device_detection_lookup(reinterpret_cast<char *>(user_agent->ptr), user_agent->len,
+                                      reinterpret_cast<char *>(ret->ptr), default_size, &ret->len);
   if (status == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BUFFER_LEN) {
     cabi_realloc(ret->ptr, default_size, 4, ret->len);
-    status = fastly::device_detection_lookup(user_agent->ptr, user_agent->len, ret->ptr, ret->len,
-                                             &ret->len);
+    status =
+        fastly::device_detection_lookup(reinterpret_cast<char *>(user_agent->ptr), user_agent->len,
+                                        reinterpret_cast<char *>(ret->ptr), ret->len, &ret->len);
   }
   return convert_result(status, err);
 }

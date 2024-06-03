@@ -389,6 +389,39 @@ struct TlsVersion {
   static TlsVersion version_1_3();
 };
 
+class Secret final {
+public:
+  using Handle = uint32_t;
+
+  Handle handle = UINT32_MAX - 1;
+
+  Secret() = default;
+  explicit Secret(Handle handle) : handle{handle} {}
+
+  Result<std::optional<HostBytes>> plaintext() const;
+};
+
+class SecretStore final {
+public:
+  using Handle = uint32_t;
+
+  Handle handle = UINT32_MAX - 1;
+
+  SecretStore() = default;
+  explicit SecretStore(Handle handle) : handle{handle} {}
+
+  static Result<SecretStore> open(std::string_view name);
+
+  Result<std::optional<Secret>> get(std::string_view name);
+
+  static Result<Secret> from_bytes(uint8_t *bytes, size_t len);
+};
+
+struct ClientCert {
+  HostString cert;
+  Secret key;
+};
+
 struct BackendConfig {
   std::optional<HostString> host_override;
   std::optional<uint32_t> connect_timeout;
@@ -402,6 +435,7 @@ struct BackendConfig {
   std::optional<HostString> ca_cert;
   std::optional<HostString> ciphers;
   std::optional<HostString> sni_hostname;
+  std::optional<ClientCert> client_cert;
 };
 
 struct CacheOverrideTag final {
@@ -642,32 +676,6 @@ public:
 
   /// Fetch the AsyncHandle for this pending request.
   AsyncHandle async_handle() const;
-};
-
-class Secret final {
-public:
-  using Handle = uint32_t;
-
-  Handle handle = UINT32_MAX - 1;
-
-  Secret() = default;
-  explicit Secret(Handle handle) : handle{handle} {}
-
-  Result<std::optional<HostString>> plaintext() const;
-};
-
-class SecretStore final {
-public:
-  using Handle = uint32_t;
-
-  Handle handle = UINT32_MAX - 1;
-
-  SecretStore() = default;
-  explicit SecretStore(Handle handle) : handle{handle} {}
-
-  static Result<SecretStore> open(std::string_view name);
-
-  Result<std::optional<Secret>> get(std::string_view name);
 };
 
 class Random final {

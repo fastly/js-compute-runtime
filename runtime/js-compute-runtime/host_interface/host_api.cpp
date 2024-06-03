@@ -21,7 +21,7 @@ fastly_world_list_u8_t span_to_list_u8(std::span<uint8_t> span) {
 
 fastly_world_string_t string_view_to_world_string(std::string_view str) {
   return {
-      .ptr = const_cast<char *>(str.data()),
+      .ptr = const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(str.data())),
       .len = str.size(),
   };
 }
@@ -86,10 +86,9 @@ Result<std::optional<uint32_t>> AsyncHandle::select(const std::vector<AsyncHandl
   Result<std::optional<uint32_t>> res;
 
   static_assert(sizeof(AsyncHandle) == sizeof(fastly_compute_at_edge_async_io_handle_t));
-  fastly_world_list_fastly_compute_at_edge_async_io_handle_t hs{
-      .ptr = reinterpret_cast<fastly_compute_at_edge_async_io_handle_t *>(
-          const_cast<AsyncHandle *>(handles.data())),
-      .len = handles.size()};
+  fastly_world_list_handle_t hs{.ptr = reinterpret_cast<fastly_compute_at_edge_async_io_handle_t *>(
+                                    const_cast<AsyncHandle *>(handles.data())),
+                                .len = handles.size()};
   fastly_world_option_u32_t ret;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_async_io_select(&hs, timeout_ms, &ret, &err)) {
@@ -439,7 +438,7 @@ Result<std::optional<Response>> HttpPendingReq::poll() {
   Result<std::optional<Response>> res;
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_world_option_fastly_compute_at_edge_http_req_response_t ret;
+  fastly_world_option_response_t ret;
   if (!fastly_compute_at_edge_http_req_pending_req_poll(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else if (ret.is_some) {
@@ -623,6 +622,12 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
   if (auto &val = config.sni_hostname) {
     backend_config.sni_hostname.is_some = true;
     backend_config.sni_hostname.val = string_view_to_world_string(*val);
+  }
+
+  if (auto &val = config.client_cert) {
+    backend_config.client_cert.is_some = true;
+    backend_config.client_cert.val.client_cert = string_view_to_world_string(val->cert);
+    backend_config.client_cert.val.client_key = val->key.handle;
   }
 
   auto name_str = string_view_to_world_string(name);
@@ -1135,7 +1140,7 @@ Result<std::optional<HttpBody>> ObjectStore::lookup(std::string_view name) {
   Result<std::optional<HttpBody>> res;
 
   auto name_str = string_view_to_world_string(name);
-  fastly_world_option_fastly_compute_at_edge_object_store_body_handle_t ret;
+  fastly_world_option_body_handle_t ret;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_object_store_lookup(this->handle, &name_str, &ret, &err)) {
     res.emplace_err(err);
@@ -1196,7 +1201,7 @@ Result<std::optional<HttpBody>, FastlyError> ObjectStorePendingLookup::wait() {
   Result<std::optional<HttpBody>, FastlyError> res;
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_world_option_fastly_compute_at_edge_object_store_body_handle_t ret;
+  fastly_world_option_body_handle_t ret;
   if (!fastly_compute_at_edge_object_store_pending_lookup_wait(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else if (ret.is_some) {
@@ -1229,15 +1234,15 @@ static_assert(std::is_same_v<Secret::Handle, fastly_compute_at_edge_secret_store
 static_assert(
     std::is_same_v<SecretStore::Handle, fastly_compute_at_edge_secret_store_store_handle_t>);
 
-Result<std::optional<HostString>> Secret::plaintext() const {
-  Result<std::optional<HostString>> res;
+Result<std::optional<HostBytes>> Secret::plaintext() const {
+  Result<std::optional<HostBytes>> res;
 
-  fastly_world_option_string_t ret;
+  fastly_world_option_list_u8_t ret;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_secret_store_plaintext(this->handle, &ret, &err)) {
     res.emplace_err(err);
   } else if (ret.is_some) {
-    res.emplace(make_host_string(ret.val));
+    res.emplace(make_host_bytes(ret.val));
   } else {
     res.emplace(std::nullopt);
   }
@@ -1264,7 +1269,7 @@ Result<std::optional<Secret>> SecretStore::get(std::string_view name) {
   Result<std::optional<Secret>> res;
 
   auto name_str = string_view_to_world_string(name);
-  fastly_world_option_fastly_compute_at_edge_secret_store_secret_handle_t ret;
+  fastly_world_option_secret_handle_t ret;
   fastly_compute_at_edge_types_error_t err;
   if (!fastly_compute_at_edge_secret_store_get(this->handle, &name_str, &ret, &err)) {
     res.emplace_err(err);
@@ -1302,6 +1307,21 @@ Result<uint32_t> Random::get_u32() {
     res.emplace_err(err);
   } else {
     res.emplace(storage);
+  }
+
+  return res;
+}
+
+Result<Secret> SecretStore::from_bytes(uint8_t *bytes, size_t len) {
+  Result<Secret> res;
+
+  fastly_world_list_u8_t bytes_list{const_cast<uint8_t *>(bytes), len};
+  fastly_compute_at_edge_secret_store_secret_handle_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_secret_store_from_bytes(&bytes_list, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
   }
 
   return res;
@@ -1471,8 +1491,7 @@ CacheHandle::transaction_insert_and_stream_back(const CacheWriteOptions &opts) {
   init_write_options(options, opts);
 
   fastly_compute_at_edge_types_error_t err;
-  fastly_world_tuple2_fastly_compute_at_edge_cache_body_handle_fastly_compute_at_edge_cache_handle_t
-      ret;
+  fastly_world_tuple2_body_handle_handle_t ret;
   if (!fastly_compute_at_edge_cache_transaction_insert_and_stream_back(this->handle, &options, &ret,
                                                                        &err)) {
     res.emplace_err(err);

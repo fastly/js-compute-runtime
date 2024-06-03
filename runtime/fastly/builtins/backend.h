@@ -26,6 +26,8 @@ public:
     Ciphers,
     SniHostname,
     DontPool,
+    ClientCert,
+    ClientCertKey,
     Count
   };
 
@@ -47,6 +49,9 @@ public:
   static bool set_host_override(JSContext *cx, JSObject *backend, JS::HandleValue hostOverride_val);
   static bool set_sni_hostname(JSContext *cx, JSObject *backend, JS::HandleValue sniHostname_val);
   static bool set_name(JSContext *cx, JSObject *backend, JS::HandleValue name_val);
+  static bool set_client_cert(JSContext *cx, JSObject *backend, JS::HandleValue client_cert_val);
+  static bool set_client_cert_key(JSContext *cx, JSObject *backend,
+                                  JS::HandleValue client_cert_key_val);
 
   // static methods
   static bool exists(JSContext *cx, unsigned argc, JS::Value *vp);

@@ -28,12 +28,47 @@ bool SecretStoreEntry::plaintext(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret->begin(), ret->size())));
+  JS::RootedString text(
+      cx,
+      JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(reinterpret_cast<char *>(ret->ptr.get()), ret->len)));
   if (!text) {
     return false;
   }
 
   args.rval().setString(text);
+  return true;
+}
+
+bool SecretStoreEntry::raw_bytes(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  // Ensure that we throw an exception for all unexpected host errors.
+  auto res = SecretStoreEntry::secret_handle(self).plaintext();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  auto ret = std::move(res.unwrap());
+  if (!ret.has_value()) {
+    return false;
+  }
+
+  JS::RootedObject array_buffer(
+      cx, JS::NewArrayBufferWithContents(cx, ret->len, ret->ptr.get(),
+                                         JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
+  if (!array_buffer) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // `array_buffer` now owns `metadata`
+  static_cast<void>(ret->ptr.release());
+
+  JS::RootedObject uint8_array(cx, JS_NewUint8ArrayWithBuffer(cx, array_buffer, 0, ret->len));
+
+  args.rval().setObject(*uint8_array);
+
   return true;
 }
 
@@ -46,7 +81,8 @@ const JSPropertySpec SecretStoreEntry::static_properties[] = {
 };
 
 const JSFunctionSpec SecretStoreEntry::methods[] = {
-    JS_FN("plaintext", plaintext, 0, JSPROP_ENUMERATE), JS_FS_END};
+    JS_FN("plaintext", plaintext, 0, JSPROP_ENUMERATE),
+    JS_FN("rawBytes", raw_bytes, 0, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSPropertySpec SecretStoreEntry::properties[] = {JS_PS_END};
 
@@ -136,7 +172,63 @@ bool SecretStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool SecretStore::from_bytes(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "SecretStore.fromBytes", 1)) {
+    return false;
+  }
+  auto bytes = args.get(0);
+  if (!bytes.isObject()) {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_SECRET_STORE_FROM_BYTES_INVALID_BUFFER);
+    return false;
+  }
+
+  JS::RootedObject bytes_obj(cx, &bytes.toObject());
+
+  if (!JS::IsArrayBufferObject(bytes_obj) && !JS_IsArrayBufferViewObject(bytes_obj)) {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_SECRET_STORE_FROM_BYTES_INVALID_BUFFER);
+    return false;
+  }
+
+  mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
+  uint8_t *buf;
+  size_t length;
+  if (JS_IsArrayBufferViewObject(bytes_obj)) {
+    JS::AutoCheckCannotGC noGC;
+    bool is_shared;
+    length = JS_GetArrayBufferViewByteLength(bytes_obj);
+    buf = (uint8_t *)JS_GetArrayBufferViewData(bytes_obj, &is_shared, noGC);
+    MOZ_ASSERT(!is_shared);
+  } else if (JS::IsArrayBufferObject(bytes_obj)) {
+    bool is_shared;
+    JS::GetArrayBufferLengthAndData(bytes_obj, &length, &is_shared, (uint8_t **)&buf);
+  } else {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_SECRET_STORE_FROM_BYTES_INVALID_BUFFER);
+    return false;
+  }
+
+  JS::RootedObject entry(
+      cx, JS_NewObjectWithGivenProto(cx, &SecretStoreEntry::class_, SecretStoreEntry::proto_obj));
+  if (!entry) {
+    return false;
+  }
+
+  auto res = host_api::SecretStore::from_bytes(buf, length);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  JS::SetReservedSlot(entry, Slots::Handle, JS::Int32Value(res.unwrap().handle));
+  args.rval().setObject(*entry);
+  return true;
+}
+
 const JSFunctionSpec SecretStore::static_methods[] = {
+    JS_FN("fromBytes", from_bytes, 1, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
