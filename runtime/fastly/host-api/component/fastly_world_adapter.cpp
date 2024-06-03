@@ -24,7 +24,6 @@ static_assert(URI_MAX_LEN < HOSTCALL_BUFFER_LEN);
 static bool convert_result(int res, fastly_compute_at_edge_types_error_t *err) {
   if (res == 0)
     return true;
-  fprintf(stderr, "HOST ERROR %d", res);
   switch (res) {
   case 1:
     *err = FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_GENERIC_ERROR;
