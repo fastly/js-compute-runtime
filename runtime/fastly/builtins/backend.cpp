@@ -777,6 +777,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
   auto certificate_hostname_slot =
       JS::GetReservedSlot(backend, Backend::Slots::CertificateHostname);
   if (!certificate_hostname_slot.isNullOrUndefined()) {
+    MOZ_ASSERT(certificate_hostname_slot.isString());
     JS::RootedString certificate_hostname_string(cx, certificate_hostname_slot.toString());
     auto certificate_hostname_chars = core::encode(cx, certificate_hostname_string);
     backend_config.cert_hostname.emplace(std::move(certificate_hostname_chars));
@@ -784,6 +785,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
 
   auto ca_certificate_slot = JS::GetReservedSlot(backend, Backend::Slots::CaCertificate);
   if (!ca_certificate_slot.isNullOrUndefined()) {
+    MOZ_ASSERT(ca_certificate_slot.isString());
     JS::RootedString ca_certificate_string(cx, ca_certificate_slot.toString());
     auto ca_certificate_chars = core::encode(cx, ca_certificate_string);
     backend_config.ca_cert.emplace(std::move(ca_certificate_chars));
@@ -791,6 +793,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
 
   auto ciphers_slot = JS::GetReservedSlot(backend, Backend::Slots::Ciphers);
   if (!ciphers_slot.isNullOrUndefined()) {
+    MOZ_ASSERT(ciphers_slot.isString());
     JS::RootedString ciphers_string(cx, ciphers_slot.toString());
     auto ciphers_chars = core::encode(cx, ciphers_string);
     backend_config.ciphers.emplace(std::move(ciphers_chars));
@@ -798,6 +801,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
 
   auto sni_hostname_slot = JS::GetReservedSlot(backend, Backend::Slots::SniHostname);
   if (!sni_hostname_slot.isNullOrUndefined()) {
+    MOZ_ASSERT(sni_hostname_slot.isString());
     JS::RootedString sni_hostname_string(cx, sni_hostname_slot.toString());
     auto sni_hostname_chars = core::encode(cx, sni_hostname_string);
     backend_config.sni_hostname.emplace(std::move(sni_hostname_chars));
@@ -805,6 +809,7 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
 
   auto client_cert_slot = JS::GetReservedSlot(backend, Backend::Slots::ClientCert);
   if (!client_cert_slot.isNullOrUndefined()) {
+    MOZ_ASSERT(client_cert_slot.isString());
     JS::RootedString client_cert_string(cx, client_cert_slot.toString());
     auto client_cert_chars = core::encode(cx, client_cert_string);
 
