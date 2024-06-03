@@ -35,7 +35,7 @@ bool SecretStoreEntry::plaintext(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool SecretStoreEntry::rawbytes(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool SecretStoreEntry::raw_bytes(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   // Ensure that we throw an exception for all unexpected host errors.
@@ -78,7 +78,7 @@ const JSPropertySpec SecretStoreEntry::static_properties[] = {
 
 const JSFunctionSpec SecretStoreEntry::methods[] = {
     JS_FN("plaintext", plaintext, 0, JSPROP_ENUMERATE),
-    JS_FN("rawbytes", rawbytes, 0, JSPROP_ENUMERATE), JS_FS_END};
+    JS_FN("rawBytes", raw_bytes, 0, JSPROP_ENUMERATE), JS_FS_END};
 
 const JSPropertySpec SecretStoreEntry::properties[] = {JS_PS_END};
 

@@ -253,18 +253,18 @@ import fc from './fast-check.js';
       result = SecretStore.fromBytes(new Uint8Array([1, 2, 3]));
       error = assert(result instanceof SecretStoreEntry, true, `(SecretStore.fromBytes(Uint8Array) instanceof SecretStoreEntry)`)
       if (error) { return error }
-      error = assert(result.rawbytes(), new Uint8Array([1, 2, 3]), `(SecretStore.fromBytes(Uint8Array).rawbytes() === Uint8Array)`)
+      error = assert(result.rawBytes(), new Uint8Array([1, 2, 3]), `(SecretStore.fromBytes(Uint8Array).rawBytes() === Uint8Array)`)
       if (error) { return error }
       result = SecretStore.fromBytes(new Uint16Array([4, 5, 6]));
       error = assert(result instanceof SecretStoreEntry, true, `(SecretStore.fromBytes(Uint16Array) instanceof SecretStoreEntry)`)
       if (error) { return error }
       // (can rely on Wasm being little endian)
-      error = assert(result.rawbytes(), new Uint8Array([4, 0, 5, 0, 6, 0]), `(SecretStore.fromBytes(Uint16Array).rawbytes() === Uint8Array)`)
+      error = assert(result.rawBytes(), new Uint8Array([4, 0, 5, 0, 6, 0]), `(SecretStore.fromBytes(Uint16Array).rawBytes() === Uint8Array)`)
       if (error) { return error }
       result = SecretStore.fromBytes(new Uint16Array([7, 8, 9]).buffer);
       error = assert(result instanceof SecretStoreEntry, true, `(SecretStore.fromBytes(ArrayBuffer) instanceof SecretStoreEntry)`)
       if (error) { return error }
-      error = assert(result.rawbytes(), new Uint8Array([7, 0, 8, 0, 9, 0]), `(SecretStore.fromBytes(ArrayBuffer).rawbytes() === Uint8Array)`)
+      error = assert(result.rawBytes(), new Uint8Array([7, 0, 8, 0, 9, 0]), `(SecretStore.fromBytes(ArrayBuffer).rawBytes() === Uint8Array)`)
       if (error) { return error }
       return pass()
     });
@@ -321,7 +321,7 @@ function SecretStoreEntryInterfaceTests() {
   if (error) { return error }
 
   actual = Reflect.ownKeys(SecretStoreEntry.prototype)
-  expected = ["constructor", "plaintext", "rawbytes"]
+  expected = ["constructor", "plaintext", "rawBytes"]
   error = assert(actual, expected, `Reflect.ownKeys(SecretStoreEntry.prototype)`)
   if (error) { return error }
 
