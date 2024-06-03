@@ -39,6 +39,6 @@ declare module "fastly:secret-store" {
      *       always avoid using this method when possible, instead passing
      *       the secret directly.
      */
-    rawbytes(): Uint8Array;
+    rawBytes(): Uint8Array;
   }
 }
