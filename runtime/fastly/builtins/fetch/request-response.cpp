@@ -6,6 +6,7 @@
 #include "../../../StarlingMonkey/builtins/web/url.h"
 #include "../../../StarlingMonkey/builtins/web/worker-location.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
+#include "../cache-core.h"
 #include "../cache-override.h"
 #include "../cache-simple.h"
 #include "../fastly.h"
@@ -35,6 +36,7 @@ using builtins::web::streams::TransformStream;
 using builtins::web::url::URL;
 using builtins::web::url::URLSearchParams;
 using builtins::web::worker_location::WorkerLocation;
+using fastly::cache_core::CacheEntry;
 using fastly::cache_override::CacheOverride;
 using fastly::cache_simple::SimpleCacheEntry;
 using fastly::fastly::FastlyGetErrorMessage;
@@ -227,7 +229,8 @@ bool RequestOrResponse::process_pending_request(JSContext *cx, FastlyHandle hand
 
 bool RequestOrResponse::is_instance(JSObject *obj) {
   return Request::is_instance(obj) || Response::is_instance(obj) ||
-         SimpleCacheEntry::is_instance(obj) || KVStoreEntry::is_instance(obj);
+         SimpleCacheEntry::is_instance(obj) || KVStoreEntry::is_instance(obj) ||
+         CacheEntry::is_instance(obj);
 }
 
 uint32_t RequestOrResponse::handle(JSObject *obj) {
@@ -974,7 +977,8 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     if (Request::is_instance(body_owner)) {
       JS::RootedObject promise(cx, Request::response_promise(body_owner));
       ENGINE->queue_async_task(
-          new FastlyAsyncTask(body.async_handle(), body_owner, promise, process_pending_request));
+          new FastlyAsyncTask(Request::pending_handle(body_owner).async_handle(), body_owner,
+                              promise, process_pending_request));
     }
 
     return true;

@@ -28,7 +28,6 @@ routes.set("/tee", async function (event) {
 
 routes.set("/tee/error", async function (event) {
   const req = event.request;
-  console.log(req.method);
   let res = fetch('/post', {
     method: "POST",
     body: new ReadableStream({
@@ -43,7 +42,6 @@ routes.set("/tee/error", async function (event) {
   return res
     .then(() => new Response("Error wasn't raised"))
     .catch((err) => {
-      console.log(err.toString());
       return new Response(err.toString());
     });
 });
