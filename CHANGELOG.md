@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.15.0 (2024-06-03)
+
+### Added
+
+* dynamic backends clientCertificate with SecretStore fromBytes, rawbytes ([#796](https://github.com/fastly/js-compute-runtime/issues/796)) ([7d2b7b7](https://github.com/fastly/js-compute-runtime/commit/7d2b7b781ed808d9bcf1fe9584aa31f788b980a2))
+* support default timeout configurations for dynamic backends ([#792](https://github.com/fastly/js-compute-runtime/issues/792)) ([4dfa8d7](https://github.com/fastly/js-compute-runtime/commit/4dfa8d76aeb4364ed5267ed22de0b9a891781589))
+
 ## 3.14.2 (2024-05-21)
 
 ### Fixed
