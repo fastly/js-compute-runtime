@@ -112,21 +112,8 @@ core.endGroup()
 let { default: tests } = await import(join(fixturePath, 'tests.json'), { with: { type: 'json' } });
 
 if (starlingmonkey) {
-    const { default: testsStarlingMonkey } = await import(join(fixturePath, 'tests-starlingmonkey.json'), { with: { type: 'json' } });
-    const testCnt = Object.keys(tests).length;
-    const starlingTestCnt = testsStarlingMonkey.length;
-    if (process.env.GITHUB_ACTIONS) {
-        await core.summary
-        .addHeading('StarlingMonkey Progress')
-        .addRaw(`
-\`\`\`mermaid
-pie showData
-    title 🐦🐵 Test Progress 🚀🚀
-    "StarlingMonkey Tests" : ${starlingTestCnt}
-    "Remaining Tests" : ${testCnt - starlingTestCnt}
-\`\`\``, true).write();
-    }
-    tests = Object.fromEntries(Object.entries(tests).filter(([key]) => testsStarlingMonkey.includes(key)));
+    const { default: testsSkipStarlingMonkey } = await import(join(fixturePath, 'tests-skip-starlingmonkey.json'), { with: { type: 'json' } });
+    tests = Object.fromEntries(Object.entries(tests).filter(([key]) => !testsSkipStarlingMonkey.includes(key)));
 }
 
 core.startGroup('Running tests')
