@@ -1437,6 +1437,7 @@ Result<HttpBody> CacheHandle::insert(std::string_view key, const CacheWriteOptio
 
   fastly_compute_at_edge_cache_write_options_t options;
   init_write_options(options, opts);
+  fprintf(stdout, "MAX AGE %d", options.max_age_ns);
 
   fastly_compute_at_edge_types_error_t err;
   fastly_compute_at_edge_http_types_body_handle_t ret;

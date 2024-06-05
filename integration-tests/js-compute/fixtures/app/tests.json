@@ -4834,6 +4834,17 @@
       "status": 200
     }
   },
+  "GET /setTimeout/200-ms": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/200-ms"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": ["START\nEND\n"]
+    }
+  },
   "GET /clearInterval/exposed-as-global": {
     "environments": ["viceroy", "compute"],
     "downstream_request": {

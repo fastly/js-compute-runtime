@@ -100,7 +100,7 @@ if (!local) {
     domain = "http://127.0.0.1:7676"
 }
 
-core.startGroup('Check service is up and running')
+core.startGroup(`Check service is up and running on ${domain}`)
 await retry(10, expBackoff('60s', '30s'), async () => {
     const response = await request(domain)
     if (response.statusCode !== 200) {

@@ -1,4 +1,3 @@
 [
-  "GET /cache-entry/age/called-on-instance",
   "GET /transaction-cache-entry/insertAndStreamBack/write-to-writer-and-read-from-reader"
 ]

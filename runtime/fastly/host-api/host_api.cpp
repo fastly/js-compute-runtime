@@ -12,24 +12,80 @@
 
 using api::FastlyResult;
 using fastly::FastlyAPIError;
+using host_api::MonotonicClock;
 using host_api::Result;
+
+#define NEVER_HANDLE 0xFFFFFFFE
 
 size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
   size_t tasks_len = tasks->size();
   fastly_compute_at_edge_async_io_handle_t *handles =
       new fastly_compute_at_edge_async_io_handle_t[tasks_len];
-  for (int i = 0; i < tasks_len; i++) {
-    handles[i] = tasks->at(i)->id();
+  uint64_t now = 0;
+  size_t task_idx = 0;
+  uint64_t soonest_deadline = 0;
+  size_t soonest_deadline_idx = -1;
+  for (size_t idx = 0; idx < tasks_len; ++idx) {
+    auto task = tasks->at(idx);
+    uint64_t deadline = task->deadline();
+    // Select for completed task deadlines before performing the task select host call.
+    if (deadline > 0) {
+      MOZ_ASSERT(task->id() == NEVER_HANDLE);
+      if (now == 0) {
+        now = MonotonicClock::now();
+        MOZ_ASSERT(now > 0);
+      }
+      if (deadline <= now) {
+        return idx;
+      }
+      if (soonest_deadline == 0 || deadline < soonest_deadline) {
+        soonest_deadline = deadline;
+        soonest_deadline_idx = idx;
+      }
+    } else {
+      uint32_t handle = task->id();
+      // Timer task handles are skipped and never passed to the host.
+      MOZ_ASSERT(handle != NEVER_HANDLE);
+      handles[task_idx] = handle;
+      task_idx++;
+    }
   }
-  fastly_world_list_handle_t hs{.ptr = handles, .len = tasks_len};
+
+  // When there are no async tasks, we have no choice to poll on time but to busy-loop.
+  if (task_idx == 0) {
+    MOZ_ASSERT(soonest_deadline > 0);
+    while (true) {
+      if (soonest_deadline <= MonotonicClock::now()) {
+        break;
+      }
+    }
+    return soonest_deadline_idx;
+  }
+  fastly_world_list_handle_t hs{.ptr = handles, .len = task_idx};
   fastly_world_option_u32_t ret;
   fastly_compute_at_edge_types_error_t err = 0;
-  if (!fastly_compute_at_edge_async_io_select(&hs, 0, &ret, &err)) {
+  if (!fastly_compute_at_edge_async_io_select(&hs, (soonest_deadline - now) / 1000000, &ret,
+                                              &err)) {
     abort();
   } else if (ret.is_some) {
-    return ret.val;
-  } else {
+    // The host index will be the index in the list of tasks with the timer tasks filtered out.
+    // We thus need to offset the host index by any timer tasks appearing before the nth
+    // non-timer task..
+    task_idx = 0;
+    for (size_t idx = 0; idx < tasks_len; ++idx) {
+      if (tasks->at(idx)->id() != NEVER_HANDLE) {
+        if (ret.val == task_idx) {
+          return idx;
+        }
+        task_idx++;
+      }
+    }
     abort();
+  } else {
+    // No value case means a timeout, which means soonest_deadline_idx is set.
+    MOZ_ASSERT(soonest_deadline > 0);
+    MOZ_ASSERT(soonest_deadline_idx != -1);
+    return soonest_deadline_idx;
   }
 }
 
@@ -96,11 +152,15 @@ Result<uint32_t> Random::get_u32() {
   return res;
 }
 
-uint64_t MonotonicClock::now() { return 0; }
+uint64_t MonotonicClock::now() {
+  auto time_now = std::chrono::system_clock::now();
+  auto epoch_duration_ns = std::chrono::nanoseconds(time_now.time_since_epoch());
+  return epoch_duration_ns.count();
+}
 
 uint64_t MonotonicClock::resolution() { return 1000000; }
 
-int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) { return 0; }
+int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) { return NEVER_HANDLE; }
 
 void MonotonicClock::unsubscribe(const int32_t handle_id) {}
 
