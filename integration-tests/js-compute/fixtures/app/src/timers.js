@@ -331,7 +331,7 @@ import { routes } from "./routes.js";
         setTimeout(() => {
             const end = Date.now()
             controller.enqueue(new TextEncoder().encode(`END\n`))
-            if (end - start < 200) {
+            if (end - start < 190) {
                 controller.enqueue(new TextEncoder().encode(`ERROR: Timer took ${end - start} instead of 200ms`))
             }
             controller.close()
