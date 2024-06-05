@@ -19,6 +19,9 @@ using host_api::Result;
 
 #define NEVER_HANDLE 0xFFFFFFFE
 
+#define MILLISECS_IN_NANOSECS 1000000
+#define SECS_IN_NANOSECS 1000000000
+
 size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
   size_t tasks_len = tasks->size();
   std::vector<fastly_compute_at_edge_async_io_handle_t> handles;
@@ -27,7 +30,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
   uint64_t soonest_deadline = 0;
   size_t soonest_deadline_idx = -1;
   for (size_t idx = 0; idx < tasks_len; ++idx) {
-    auto task = tasks->at(idx);
+    auto *task = tasks->at(idx);
     uint64_t deadline = task->deadline();
     // Select for completed task deadlines before performing the task select host call.
     if (deadline > 0) {
@@ -56,8 +59,8 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
     MOZ_ASSERT(soonest_deadline > 0);
     while (soonest_deadline > now) {
       uint64_t duration = soonest_deadline - now;
-      timespec req{.tv_sec = static_cast<time_t>(duration / 1000000000),
-                   .tv_nsec = static_cast<long>(duration % 1000000000)};
+      timespec req{.tv_sec = static_cast<time_t>(duration / SECS_IN_NANOSECS),
+                   .tv_nsec = static_cast<long>(duration % SECS_IN_NANOSECS)};
       timespec rem;
       nanosleep(&req, &rem);
       now = MonotonicClock::now();
@@ -68,8 +71,8 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
   fastly_world_list_handle_t hs{.ptr = handles.data(), .len = handles.size()};
   fastly_world_option_u32_t ret;
   fastly_compute_at_edge_types_error_t err = 0;
-  if (!fastly_compute_at_edge_async_io_select(&hs, (soonest_deadline - now) / 1000000, &ret,
-                                              &err)) {
+  if (!fastly_compute_at_edge_async_io_select(&hs, (soonest_deadline - now) / MILLISECS_IN_NANOSECS,
+                                              &ret, &err)) {
     abort();
   } else if (ret.is_some) {
     // The host index will be the index in the list of tasks with the timer tasks filtered out.
