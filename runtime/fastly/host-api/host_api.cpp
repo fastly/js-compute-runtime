@@ -70,7 +70,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
   } else if (ret.is_some) {
     // The host index will be the index in the list of tasks with the timer tasks filtered out.
     // We thus need to offset the host index by any timer tasks appearing before the nth
-    // non-timer task..
+    // non-timer task.
     task_idx = 0;
     for (size_t idx = 0; idx < tasks_len; ++idx) {
       if (tasks->at(idx)->id() != NEVER_HANDLE) {
@@ -85,6 +85,12 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
     // No value case means a timeout, which means soonest_deadline_idx is set.
     MOZ_ASSERT(soonest_deadline > 0);
     MOZ_ASSERT(soonest_deadline_idx != -1);
+    // Verify that the task definitely is definitely ready from a time perspective, and if not
+    // repeat the entire routine as we cannot progress a timer before it's actually ready.
+    now = MonotonicClock::now();
+    if (soonest_deadline > now) {
+      return api::AsyncTask::select(tasks);
+    }
     return soonest_deadline_idx;
   }
 }
@@ -152,13 +158,9 @@ Result<uint32_t> Random::get_u32() {
   return res;
 }
 
-uint64_t MonotonicClock::now() {
-  auto time_now = std::chrono::system_clock::now();
-  auto epoch_duration_ns = std::chrono::nanoseconds(time_now.time_since_epoch());
-  return epoch_duration_ns.count();
-}
+uint64_t MonotonicClock::now() { return JS_Now() * 1000; }
 
-uint64_t MonotonicClock::resolution() { return 1000000; }
+uint64_t MonotonicClock::resolution() { return 1000; }
 
 int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) { return NEVER_HANDLE; }
 
