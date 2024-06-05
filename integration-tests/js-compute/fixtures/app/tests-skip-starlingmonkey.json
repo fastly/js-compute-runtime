@@ -1,4 +1,4 @@
 [
-  "/cache-entry/age/called-on-instance",
-  "/transaction-cache-entry/insertAndStreamBack/write-to-writer-and-read-from-reader"
+  "GET /cache-entry/age/called-on-instance",
+  "GET /transaction-cache-entry/insertAndStreamBack/write-to-writer-and-read-from-reader"
 ]
