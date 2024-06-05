@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <arpa/inet.h>
 
+#include <time.h>
+
 using api::FastlyResult;
 using fastly::FastlyAPIError;
 using host_api::MonotonicClock;
@@ -19,10 +21,9 @@ using host_api::Result;
 
 size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
   size_t tasks_len = tasks->size();
-  fastly_compute_at_edge_async_io_handle_t *handles =
-      new fastly_compute_at_edge_async_io_handle_t[tasks_len];
+  std::vector<fastly_compute_at_edge_async_io_handle_t> handles;
+  handles.reserve(tasks_len);
   uint64_t now = 0;
-  size_t task_idx = 0;
   uint64_t soonest_deadline = 0;
   size_t soonest_deadline_idx = -1;
   for (size_t idx = 0; idx < tasks_len; ++idx) {
@@ -46,22 +47,25 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
       uint32_t handle = task->id();
       // Timer task handles are skipped and never passed to the host.
       MOZ_ASSERT(handle != NEVER_HANDLE);
-      handles[task_idx] = handle;
-      task_idx++;
+      handles.push_back(handle);
     }
   }
 
-  // When there are no async tasks, we have no choice to poll on time but to busy-loop.
-  if (task_idx == 0) {
+  // When there are no async tasks, sleep until the deadline
+  if (handles.size() == 0) {
     MOZ_ASSERT(soonest_deadline > 0);
-    while (true) {
-      if (soonest_deadline <= MonotonicClock::now()) {
-        break;
-      }
+    while (soonest_deadline > now) {
+      uint64_t duration = soonest_deadline - now;
+      timespec req{.tv_sec = static_cast<time_t>(duration / 1000000000),
+                   .tv_nsec = static_cast<long>(duration % 1000000000)};
+      timespec rem;
+      nanosleep(&req, &rem);
+      now = MonotonicClock::now();
     }
     return soonest_deadline_idx;
   }
-  fastly_world_list_handle_t hs{.ptr = handles, .len = task_idx};
+
+  fastly_world_list_handle_t hs{.ptr = handles.data(), .len = handles.size()};
   fastly_world_option_u32_t ret;
   fastly_compute_at_edge_types_error_t err = 0;
   if (!fastly_compute_at_edge_async_io_select(&hs, (soonest_deadline - now) / 1000000, &ret,
@@ -71,7 +75,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
     // The host index will be the index in the list of tasks with the timer tasks filtered out.
     // We thus need to offset the host index by any timer tasks appearing before the nth
     // non-timer task.
-    task_idx = 0;
+    size_t task_idx = 0;
     for (size_t idx = 0; idx < tasks_len; ++idx) {
       if (tasks->at(idx)->id() != NEVER_HANDLE) {
         if (ret.val == task_idx) {
