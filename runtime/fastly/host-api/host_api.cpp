@@ -22,6 +22,17 @@ using host_api::Result;
 #define MILLISECS_IN_NANOSECS 1000000
 #define SECS_IN_NANOSECS 1000000000
 
+void sleep_until(uint64_t time_ns, uint64_t now) {
+  while (time_ns > now) {
+    uint64_t duration = time_ns - now;
+    timespec req{.tv_sec = static_cast<time_t>(duration / SECS_IN_NANOSECS),
+                 .tv_nsec = static_cast<long>(duration % SECS_IN_NANOSECS)};
+    timespec rem;
+    nanosleep(&req, &rem);
+    now = MonotonicClock::now();
+  }
+}
+
 size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
   size_t tasks_len = tasks->size();
   std::vector<fastly_compute_at_edge_async_io_handle_t> handles;
@@ -57,14 +68,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
   // When there are no async tasks, sleep until the deadline
   if (handles.size() == 0) {
     MOZ_ASSERT(soonest_deadline > 0);
-    while (soonest_deadline > now) {
-      uint64_t duration = soonest_deadline - now;
-      timespec req{.tv_sec = static_cast<time_t>(duration / SECS_IN_NANOSECS),
-                   .tv_nsec = static_cast<long>(duration % SECS_IN_NANOSECS)};
-      timespec rem;
-      nanosleep(&req, &rem);
-      now = MonotonicClock::now();
-    }
+    sleep_until(soonest_deadline, now);
     return soonest_deadline_idx;
   }
 
@@ -92,11 +96,11 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
     // No value case means a timeout, which means soonest_deadline_idx is set.
     MOZ_ASSERT(soonest_deadline > 0);
     MOZ_ASSERT(soonest_deadline_idx != -1);
-    // Verify that the task definitely is definitely ready from a time perspective, and if not
-    // repeat the entire routine as we cannot progress a timer before it's actually ready.
+    // Verify that the task definitely is definitely ready from a time perspective, and if not add
+    // an extra sleep.
     now = MonotonicClock::now();
     if (soonest_deadline > now) {
-      return api::AsyncTask::select(tasks);
+      sleep_until(soonest_deadline, now);
     }
     return soonest_deadline_idx;
   }
