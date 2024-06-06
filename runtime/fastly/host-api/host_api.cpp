@@ -75,34 +75,37 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
   fastly_world_list_handle_t hs{.ptr = handles.data(), .len = handles.size()};
   fastly_world_option_u32_t ret;
   fastly_compute_at_edge_types_error_t err = 0;
-  if (!fastly_compute_at_edge_async_io_select(&hs, (soonest_deadline - now) / MILLISECS_IN_NANOSECS,
-                                              &ret, &err)) {
-    abort();
-  } else if (ret.is_some) {
-    // The host index will be the index in the list of tasks with the timer tasks filtered out.
-    // We thus need to offset the host index by any timer tasks appearing before the nth
-    // non-timer task.
-    size_t task_idx = 0;
-    for (size_t idx = 0; idx < tasks_len; ++idx) {
-      if (tasks->at(idx)->id() != NEVER_HANDLE) {
-        if (ret.val == task_idx) {
-          return idx;
+
+  while (true) {
+    if (!fastly_compute_at_edge_async_io_select(
+            &hs, (soonest_deadline - now) / MILLISECS_IN_NANOSECS, &ret, &err)) {
+      abort();
+    } else if (ret.is_some) {
+      // The host index will be the index in the list of tasks with the timer tasks filtered out.
+      // We thus need to offset the host index by any timer tasks appearing before the nth
+      // non-timer task.
+      size_t task_idx = 0;
+      for (size_t idx = 0; idx < tasks_len; ++idx) {
+        if (tasks->at(idx)->id() != NEVER_HANDLE) {
+          if (ret.val == task_idx) {
+            return idx;
+          }
+          task_idx++;
         }
-        task_idx++;
       }
+      abort();
+    } else {
+      // No value case means a timeout, which means soonest_deadline_idx is set.
+      MOZ_ASSERT(soonest_deadline > 0);
+      MOZ_ASSERT(soonest_deadline_idx != -1);
+      // Verify that the task definitely is ready from a time perspective, and if not loop the host
+      // call again.
+      now = MonotonicClock::now();
+      if (soonest_deadline > now) {
+        continue;
+      }
+      return soonest_deadline_idx;
     }
-    abort();
-  } else {
-    // No value case means a timeout, which means soonest_deadline_idx is set.
-    MOZ_ASSERT(soonest_deadline > 0);
-    MOZ_ASSERT(soonest_deadline_idx != -1);
-    // Verify that the task definitely is definitely ready from a time perspective, and if not add
-    // an extra sleep.
-    now = MonotonicClock::now();
-    if (soonest_deadline > now) {
-      sleep_until(soonest_deadline, now);
-    }
-    return soonest_deadline_idx;
   }
 }
 
