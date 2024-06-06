@@ -326,6 +326,24 @@ import { routes } from "./routes.js";
         if (error) { return error }
         return pass()
     });
+    routes.set("/setTimeout/200-ms", async () => {
+        let controller, start
+        setTimeout(() => {
+            const end = Date.now()
+            controller.enqueue(new TextEncoder().encode(`END\n`))
+            if (end - start < 190) {
+                controller.enqueue(new TextEncoder().encode(`ERROR: Timer took ${end - start} instead of 200ms`))
+            }
+            controller.close()
+        }, 200);
+        return new Response(new ReadableStream({
+            start(_controller) {
+                controller = _controller
+                start = Date.now()
+                controller.enqueue(new TextEncoder().encode(`START\n`))
+            }
+        }))
+    });
 }
 
 // clearInterval

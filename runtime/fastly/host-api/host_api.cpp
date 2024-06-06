@@ -10,26 +10,102 @@
 #include <algorithm>
 #include <arpa/inet.h>
 
+#include <time.h>
+
 using api::FastlyResult;
 using fastly::FastlyAPIError;
+using host_api::MonotonicClock;
 using host_api::Result;
+
+#define NEVER_HANDLE 0xFFFFFFFE
+
+#define MILLISECS_IN_NANOSECS 1000000
+#define SECS_IN_NANOSECS 1000000000
+
+void sleep_until(uint64_t time_ns, uint64_t now) {
+  while (time_ns > now) {
+    uint64_t duration = time_ns - now;
+    timespec req{.tv_sec = static_cast<time_t>(duration / SECS_IN_NANOSECS),
+                 .tv_nsec = static_cast<long>(duration % SECS_IN_NANOSECS)};
+    timespec rem;
+    nanosleep(&req, &rem);
+    now = MonotonicClock::now();
+  }
+}
 
 size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
   size_t tasks_len = tasks->size();
-  fastly_compute_at_edge_async_io_handle_t *handles =
-      new fastly_compute_at_edge_async_io_handle_t[tasks_len];
-  for (int i = 0; i < tasks_len; i++) {
-    handles[i] = tasks->at(i)->id();
+  std::vector<fastly_compute_at_edge_async_io_handle_t> handles;
+  handles.reserve(tasks_len);
+  uint64_t now = 0;
+  uint64_t soonest_deadline = 0;
+  size_t soonest_deadline_idx = -1;
+  for (size_t idx = 0; idx < tasks_len; ++idx) {
+    auto *task = tasks->at(idx);
+    uint64_t deadline = task->deadline();
+    // Select for completed task deadlines before performing the task select host call.
+    if (deadline > 0) {
+      MOZ_ASSERT(task->id() == NEVER_HANDLE);
+      if (now == 0) {
+        now = MonotonicClock::now();
+        MOZ_ASSERT(now > 0);
+      }
+      if (deadline <= now) {
+        return idx;
+      }
+      if (soonest_deadline == 0 || deadline < soonest_deadline) {
+        soonest_deadline = deadline;
+        soonest_deadline_idx = idx;
+      }
+    } else {
+      uint32_t handle = task->id();
+      // Timer task handles are skipped and never passed to the host.
+      MOZ_ASSERT(handle != NEVER_HANDLE);
+      handles.push_back(handle);
+    }
   }
-  fastly_world_list_handle_t hs{.ptr = handles, .len = tasks_len};
+
+  // When there are no async tasks, sleep until the deadline
+  if (handles.size() == 0) {
+    MOZ_ASSERT(soonest_deadline > 0);
+    sleep_until(soonest_deadline, now);
+    return soonest_deadline_idx;
+  }
+
+  fastly_world_list_handle_t hs{.ptr = handles.data(), .len = handles.size()};
   fastly_world_option_u32_t ret;
   fastly_compute_at_edge_types_error_t err = 0;
-  if (!fastly_compute_at_edge_async_io_select(&hs, 0, &ret, &err)) {
-    abort();
-  } else if (ret.is_some) {
-    return ret.val;
-  } else {
-    abort();
+
+  while (true) {
+    if (!fastly_compute_at_edge_async_io_select(
+            &hs, (soonest_deadline - now) / MILLISECS_IN_NANOSECS, &ret, &err)) {
+      abort();
+    } else if (ret.is_some) {
+      // The host index will be the index in the list of tasks with the timer tasks filtered out.
+      // We thus need to offset the host index by any timer tasks appearing before the nth
+      // non-timer task.
+      size_t task_idx = 0;
+      for (size_t idx = 0; idx < tasks_len; ++idx) {
+        if (tasks->at(idx)->id() != NEVER_HANDLE) {
+          if (ret.val == task_idx) {
+            return idx;
+          }
+          task_idx++;
+        }
+      }
+      abort();
+    } else {
+      // No value case means a timeout, which means soonest_deadline_idx is set.
+      MOZ_ASSERT(soonest_deadline > 0);
+      MOZ_ASSERT(soonest_deadline_idx != -1);
+      // Verify that the task definitely is ready from a time perspective, and if not loop the host
+      // call again.
+      now = MonotonicClock::now();
+      if (soonest_deadline > now) {
+        continue;
+      }
+      return soonest_deadline_idx;
+    }
   }
 }
 
@@ -96,11 +172,11 @@ Result<uint32_t> Random::get_u32() {
   return res;
 }
 
-uint64_t MonotonicClock::now() { return 0; }
+uint64_t MonotonicClock::now() { return JS_Now() * 1000; }
 
-uint64_t MonotonicClock::resolution() { return 1000000; }
+uint64_t MonotonicClock::resolution() { return 1000; }
 
-int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) { return 0; }
+int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) { return NEVER_HANDLE; }
 
 void MonotonicClock::unsubscribe(const int32_t handle_id) {}
 

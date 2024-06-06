@@ -1990,7 +1990,7 @@ let error;
             if (error) { return error }
             await sleep(1000);
             result = CoreCache.lookup(key).age()
-            error = assert(result >= 1_000, true, `CoreCache.lookup(key).age() >= 1_000`)
+            error = assert(result >= 1_000, true, `CoreCache.lookup(key).age() >= 1_000 (${result})`)
             if (error) { return error }
             return pass("ok")
         });
@@ -2805,7 +2805,7 @@ let error;
             writer.append("hello");
             writer.close();
             const actual = await new Response(reader.body()).text();
-            let error = assert("hello", actual, `actual === "hello"`);
+            let error = assert(actual, "hello", `actual === "hello"`);
             if (error) { return error }
             return pass("ok")
         });
