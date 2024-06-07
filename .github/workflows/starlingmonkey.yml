@@ -27,10 +27,10 @@ jobs:
         rustup toolchain install 1.77.1
         rustup target add wasm32-wasi --toolchain 1.77.1
     - name: Build
-      run: npm run build:starlingmonkey:debug
+      run: npm run build:starlingmonkey
     - uses: actions/upload-artifact@v3
       with:
-        name: starling-debug
+        name: starling-release
         path: starling.wasm
 
   sdktest:
@@ -76,7 +76,7 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: starling-debug
+        name: starling-release
     - run: yarn install --frozen-lockfile
 
     - name: Yarn install

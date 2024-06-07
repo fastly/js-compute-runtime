@@ -53,6 +53,11 @@ void handle_incoming(host_api::Request req) {
   if (JS_IsExceptionPending(ENGINE->cx())) {
     ENGINE->dump_pending_exception("evaluating code");
   } else if (!success) {
+    if (ENGINE->has_pending_async_tasks()) {
+      fprintf(stderr, "Event loop terminated with async tasks pending. "
+                    "Use FetchEvent#waitUntil to extend the service's lifetime "
+                    "if needed.\n");
+    }
     abort();
   }
 

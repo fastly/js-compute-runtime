@@ -37,6 +37,7 @@ let args = argv.slice(2);
 
 const local = args.includes('--local');
 const starlingmonkey = args.includes('--starlingmonkey');
+const filter = args.filter(arg => !arg.startsWith('--'));
 
 async function $(...args) {
     return await retry(10, () => zx(...args))
@@ -111,11 +112,6 @@ core.endGroup()
 
 let { default: tests } = await import(join(fixturePath, 'tests.json'), { with: { type: 'json' } });
 
-if (starlingmonkey) {
-    const { default: testsSkipStarlingMonkey } = await import(join(fixturePath, 'tests-skip-starlingmonkey.json'), { with: { type: 'json' } });
-    tests = Object.fromEntries(Object.entries(tests).filter(([key]) => !testsSkipStarlingMonkey.includes(key)));
-}
-
 core.startGroup('Running tests')
 function chunks(arr, size) {
     const output = [];
@@ -128,6 +124,14 @@ function chunks(arr, size) {
 let results = [];
 for (const chunk of chunks(Object.entries(tests), 100)) {
     results.push(...await Promise.allSettled(chunk.map(async ([title, test]) => {
+        // basic test filtering
+        if (!title.includes(filter)) {
+            return {
+                title,
+                test,
+                skipped: true
+            };
+        }
         if (local) {
             if (test.environments.includes("viceroy")) {
                 let path = test.downstream_request.pathname;
@@ -142,6 +146,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                     await compareDownstreamResponse(test.downstream_response, response);
                     return {
                         title,
+                        test,
                         skipped: false
                     };
                 } catch (error) {
@@ -150,6 +155,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
             } else {
                 return {
                     title,
+                    test,
                     skipped: true
                 }
             }
@@ -168,6 +174,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                         await compareDownstreamResponse(test.downstream_response, response);
                         return {
                             title,
+                            test,
                             skipped: false
                         };
                     } catch (error) {
@@ -177,6 +184,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
             } else {
                 return {
                     title,
+                    test,
                     skipped: true
                 }
             }
@@ -191,6 +199,7 @@ let passed = 0;
 const failed = [];
 const green = '\u001b[32m';
 const red = '\u001b[31m';
+const reset = '\u001b[0m';
 const white = '\u001b[39m';
 const info = '\u2139';
 const tick = '\u2714';
@@ -199,16 +208,20 @@ for (const result of results) {
     if (result.status === 'fulfilled') {
         passed += 1;
         if (result.value.skipped) {
-            if (local) {
-                console.log(white, info, `Skipped as test marked to only run on Fastly Compute: ${result.value.title}`, white);
+            if (!result.value.title.includes(filter)) {
+                console.log(white, info, `Skipped by test filter: ${result.value.title}`, reset);
+            } else if (local && !result.value.test.environments.includes("viceroy")) {
+                console.log(white, info, `Skipped as test marked to only run on Fastly Compute: ${result.value.title}`, reset);
+            } else if (!local && !result.value.test.environments.includes("compute")) {
+                console.log(white, info, `Skipped as test marked to only run on local server: ${result.value.title}`, reset);
             } else {
-                console.log(white, info, `Skipped as test marked to only run on local server: ${result.value.title}`, white);
+                console.log(white, info, `Skipped due to no environments set: ${result.value.title}`, reset);
             }
         } else {
-            console.log(green, tick, result.value.title, white);
+            console.log(green, tick, result.value.title, reset);
         }
     } else {
-        console.log(red, cross, result.reason, white);
+        console.log(red, cross, result.reason, reset);
         failed.push(result.reason)
     }
 }
@@ -219,7 +232,7 @@ if (failed.length) {
     core.startGroup('Failed tests')
 
     for (const result of failed) {
-        console.log(red, cross, result, white);
+        console.log(red, cross, result, reset);
     }
 
     core.endGroup()
