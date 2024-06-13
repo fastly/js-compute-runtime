@@ -106,10 +106,9 @@ void handle_fastly_error(JSContext *cx, FastlyError err, int line, const char *f
     break;
   case FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_LIMIT_EXCEEDED:
     JS_ReportErrorUTF8(cx,
-                       "%s: Limit exceeded error. This error will be thrown when an attempt"
-                       "to allocate a resource has exceeded the maximum number of resources"
-                       "permitted. For example, creating too many response handles."
-                       "\n",
+                       "%s: Limit exceeded error. This error will be thrown when an attempt "
+                       "to allocate a resource has exceeded the maximum number of resources "
+                       "permitted. For example, creating too many response handles.\n",
                        func);
     break;
   default:
