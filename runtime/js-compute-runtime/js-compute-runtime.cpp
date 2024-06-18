@@ -113,6 +113,10 @@ static void rejection_tracker(JSContext *cx, bool mutedErrors, JS::HandleObject 
   }
 }
 
+static void oom_callback(JSContext *cx, void *data) {
+  fprintf(stderr, "Critical Error: out of memory");
+}
+
 bool init_js() {
   JS_Init();
 
@@ -151,6 +155,7 @@ bool init_js() {
   }
 
   JS::SetPromiseRejectionTrackerCallback(cx, rejection_tracker);
+  JS::SetOutOfMemoryCallback(cx, oom_callback, nullptr);
 
   CONTEXT = cx;
   GLOBAL.init(cx, global);

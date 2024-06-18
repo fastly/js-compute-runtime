@@ -25,6 +25,10 @@ bool DEBUG_LOGGING_ENABLED = false;
 
 api::Engine *ENGINE;
 
+static void oom_callback(JSContext *cx, void *data) {
+  fprintf(stderr, "Critical Error: out of memory");
+}
+
 } // namespace
 
 bool debug_logging_enabled() { return DEBUG_LOGGING_ENABLED; }
@@ -356,6 +360,8 @@ bool install(api::Engine *engine) {
 
   bool ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS =
       std::string(std::getenv("ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS")) == "1";
+
+  JS::SetOutOfMemoryCallback(engine->cx(), oom_callback, nullptr);
 
   JS::RootedObject fastly(engine->cx(), JS_NewPlainObject(engine->cx()));
   if (!fastly) {
