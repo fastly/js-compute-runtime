@@ -27,6 +27,7 @@ api::Engine *ENGINE;
 
 static void oom_callback(JSContext *cx, void *data) {
   fprintf(stderr, "Critical Error: out of memory");
+  fflush(stderr);
 }
 
 } // namespace

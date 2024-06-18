@@ -115,6 +115,7 @@ static void rejection_tracker(JSContext *cx, bool mutedErrors, JS::HandleObject 
 
 static void oom_callback(JSContext *cx, void *data) {
   fprintf(stderr, "Critical Error: out of memory");
+  fflush(stderr);
 }
 
 bool init_js() {
