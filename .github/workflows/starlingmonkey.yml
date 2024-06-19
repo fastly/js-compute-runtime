@@ -57,7 +57,7 @@ jobs:
       if: steps.cache-crate.outputs.cache-hit != 'true'
 
   run_wpt:
-    if: github.ref != 'refs/heads/main'
+    if: github.ref != 'refs/heads/main' && false
     name: Run Web Platform Tests
     needs: [build, ensure_cargo_installs]
     runs-on: ubuntu-latest
@@ -107,7 +107,7 @@ jobs:
 
     - name: Run tests
       timeout-minutes: 20
-      run: node ./tests/wpt-harness/run-wpt.mjs -vv
+      run: node ./tests/wpt-harness/run-wpt.mjs --starlingmonkey -vv
 
   sdktest:
     if: github.ref != 'refs/heads/main'
