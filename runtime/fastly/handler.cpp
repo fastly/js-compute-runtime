@@ -55,8 +55,8 @@ void handle_incoming(host_api::Request req) {
   } else if (!success) {
     if (ENGINE->has_pending_async_tasks()) {
       fprintf(stderr, "Event loop terminated with async tasks pending. "
-                    "Use FetchEvent#waitUntil to extend the service's lifetime "
-                    "if needed.\n");
+                      "Use FetchEvent#waitUntil to extend the service's lifetime "
+                      "if needed.\n");
     }
     abort();
   }
