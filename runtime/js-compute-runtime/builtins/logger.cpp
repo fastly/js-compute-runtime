@@ -7,17 +7,17 @@ namespace builtins {
 bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
-  JS::RootedString endpoint_name(cx, JS::GetReservedSlot(self, Slots::EndpointName).toString());
-  auto endpoint_name_str = core::encode(cx, endpoint_name);
-  if (!endpoint_name_str) {
-    return false;
-  }
-
   JS::RootedValue endpoint_id(cx, JS::GetReservedSlot(self, Slots::Endpoint));
 
   // If the endpoint has not yet been loaded up, do it now, throwing any endpoint error for the
   // first log.
   if (endpoint_id.isNull()) {
+    JS::RootedString endpoint_name(cx, JS::GetReservedSlot(self, Slots::EndpointName).toString());
+    auto endpoint_name_str = core::encode(cx, endpoint_name);
+    if (!endpoint_name_str) {
+      return false;
+    }
+
     auto res = host_api::LogEndpoint::get(
         std::string_view{endpoint_name_str.ptr.get(), endpoint_name_str.len});
     if (auto *err = res.to_err()) {
@@ -37,9 +37,6 @@ bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!msg) {
     return false;
   }
-
-  fprintf(stdout, "Log[%s]: %s\n", endpoint_name_str.ptr.get(), msg.ptr.get());
-  fflush(stdout);
 
   auto res = endpoint.write(msg);
   if (auto *err = res.to_err()) {
@@ -74,7 +71,6 @@ JSObject *Logger::create(JSContext *cx, JS::HandleValue endpoint_name) {
 }
 
 bool Logger::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  REQUEST_HANDLER_ONLY("The Logger builtin");
   CTOR_HEADER("Logger", 1);
   auto logger = Logger::create(cx, args[0]);
   args.rval().setObject(*logger);
