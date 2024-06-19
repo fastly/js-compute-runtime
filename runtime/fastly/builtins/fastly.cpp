@@ -26,7 +26,7 @@ bool DEBUG_LOGGING_ENABLED = false;
 api::Engine *ENGINE;
 
 static void oom_callback(JSContext *cx, void *data) {
-  fprintf(stderr, "Critical Error: out of memory");
+  fprintf(stderr, "Critical Error: out of memory\n");
   fflush(stderr);
 }
 

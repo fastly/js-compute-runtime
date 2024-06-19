@@ -97,7 +97,7 @@ static void rejection_tracker(JSContext *cx, bool mutedErrors, JS::HandleObject 
       // Note: we unconditionally print these, since they almost always indicate
       // serious bugs.
       fprintf(stderr, "Adding an unhandled rejected promise to the promise "
-                      "rejection tracker failed");
+                      "rejection tracker failed\n");
     }
     return;
   }
@@ -107,14 +107,14 @@ static void rejection_tracker(JSContext *cx, bool mutedErrors, JS::HandleObject 
       // Note: we unconditionally print these, since they almost always indicate
       // serious bugs.
       fprintf(stderr, "Removing an handled rejected promise from the promise "
-                      "rejection tracker failed");
+                      "rejection tracker failed\n");
     }
   }
   }
 }
 
 static void oom_callback(JSContext *cx, void *data) {
-  fprintf(stderr, "Critical Error: out of memory");
+  fprintf(stderr, "Critical Error: out of memory\n");
   fflush(stderr);
 }
 
