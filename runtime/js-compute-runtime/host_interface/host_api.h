@@ -622,6 +622,20 @@ public:
   Result<std::optional<HostString>> get(std::string_view name);
 };
 
+class ConfigStore final {
+public:
+  using Handle = uint32_t;
+
+  Handle handle = UINT32_MAX - 1;
+
+  ConfigStore() = default;
+  explicit ConfigStore(Handle handle) : handle{handle} {}
+
+  static Result<ConfigStore> open(std::string_view name);
+
+  Result<std::optional<HostString>> get(std::string_view name);
+};
+
 class ObjectStore final {
 public:
   using Handle = uint32_t;
