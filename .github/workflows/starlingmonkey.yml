@@ -57,7 +57,7 @@ jobs:
       if: steps.cache-crate.outputs.cache-hit != 'true'
 
   run_wpt:
-    if: github.ref != 'refs/heads/main' && false
+    if: github.ref != 'refs/heads/main'
     name: Run Web Platform Tests
     needs: [build, ensure_cargo_installs]
     runs-on: ubuntu-latest

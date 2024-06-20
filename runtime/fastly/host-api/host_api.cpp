@@ -1819,11 +1819,13 @@ const std::optional<std::string> FastlySendError::message() const {
   /// The system encountered a DNS error when trying to find an IP address for the backend
   /// hostname. The fields dns_error_rcode and dns_error_info_code may be set in the
   /// send_error_detail.
-  // TODO(GB): reenable DNS error codes
   case dns_error: {
-    return "DNS error (rcode={}, info_code={})" /*, this->dns_error_rcode,
-                        this->dns_error_info_code*/
-        ;
+    // allocate maximum len of error message
+    char *buf = (char *)malloc(34 + 10 + 1);
+    int written = sprintf(buf, "DNS error (rcode=%d, info_code=%d)", this->dns_error_rcode,
+                          this->dns_error_info_code);
+    MOZ_ASSERT(written > 34);
+    return std::string(buf, written);
   }
   /// The system cannot determine which backend to use, or the specified backend was invalid.
   case destination_not_found: {
