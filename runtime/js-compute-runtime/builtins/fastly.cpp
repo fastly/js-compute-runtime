@@ -67,9 +67,6 @@ bool Fastly::getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value 
   return JS_ParseJSON(cx, geo_info_str, args.rval());
 }
 
-// TODO(performance): consider allowing logger creation during initialization, but then throw
-// when trying to log.
-// https://github.com/fastly/js-compute-runtime/issues/225
 bool Fastly::getLogger(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   REQUEST_HANDLER_ONLY("fastly.getLogger");
@@ -77,11 +74,7 @@ bool Fastly::getLogger(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!args.requireAtLeast(cx, "fastly.getLogger", 1))
     return false;
 
-  auto name = core::encode(cx, args[0]);
-  if (!name)
-    return false;
-
-  JS::RootedObject logger(cx, builtins::Logger::create(cx, name.begin()));
+  JS::RootedObject logger(cx, builtins::Logger::create(cx, args[0]));
   if (!logger) {
     return false;
   }

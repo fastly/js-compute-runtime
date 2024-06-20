@@ -97,11 +97,7 @@ bool Fastly::getLogger(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!args.requireAtLeast(cx, "fastly.getLogger", 1))
     return false;
 
-  auto name = core::encode(cx, args[0]);
-  if (!name)
-    return false;
-
-  JS::RootedObject logger(cx, Logger::create(cx, name.begin()));
+  JS::RootedObject logger(cx, Logger::create(cx, args[0]));
   if (!logger) {
     return false;
   }

@@ -14,13 +14,13 @@ public:
   static constexpr const char *class_name = "Logger";
   static const int ctor_length = 1;
 
-  enum Slots { Endpoint, Count };
+  enum Slots { Endpoint, EndpointName, Count };
   static const JSFunctionSpec static_methods[];
   static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
-  static JSObject *create(JSContext *cx, const char *name);
+  static JSObject *create(JSContext *cx, JS::HandleValue endpoint_name);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 
