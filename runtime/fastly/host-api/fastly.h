@@ -352,6 +352,15 @@ WASM_IMPORT("fastly_dictionary", "get")
 int dictionary_get(fastly_compute_at_edge_dictionary_handle_t dict_handle, const char *key,
                    size_t key_len, char *value, size_t value_max_len, size_t *nwritten);
 
+// Module fastly_config_store
+WASM_IMPORT("fastly_config_store", "open")
+int config_store_open(const char *name, size_t name_len,
+                      fastly_compute_at_edge_config_store_handle_t *dict_handle_out);
+
+WASM_IMPORT("fastly_config_store", "get")
+int config_store_get(fastly_compute_at_edge_config_store_handle_t dict_handle, const char *key,
+                     size_t key_len, char *value, size_t value_max_len, size_t *nwritten);
+
 // Module fastly_secret_store
 WASM_IMPORT("fastly_secret_store", "open")
 int secret_store_open(const char *name, size_t name_len,

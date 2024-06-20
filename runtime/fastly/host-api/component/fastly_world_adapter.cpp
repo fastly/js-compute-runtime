@@ -785,6 +785,36 @@ bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_dictionary_han
   return true;
 }
 
+bool fastly_compute_at_edge_config_store_open(fastly_world_string_t *name,
+                                              fastly_compute_at_edge_config_store_handle_t *ret,
+                                              fastly_compute_at_edge_types_error_t *err) {
+  return convert_result(
+      fastly::config_store_open(reinterpret_cast<char *>(name->ptr), name->len, ret), err);
+}
+
+bool fastly_compute_at_edge_config_store_get(fastly_compute_at_edge_config_store_handle_t h,
+                                             fastly_world_string_t *key,
+                                             fastly_world_option_string_t *ret,
+                                             fastly_compute_at_edge_types_error_t *err) {
+  ret->val.ptr = static_cast<uint8_t *>(cabi_malloc(CONFIG_STORE_ENTRY_MAX_LEN, 1));
+  if (!convert_result(fastly::config_store_get(h, reinterpret_cast<char *>(key->ptr), key->len,
+                                               reinterpret_cast<char *>(ret->val.ptr),
+                                               CONFIG_STORE_ENTRY_MAX_LEN, &ret->val.len),
+                      err)) {
+    if (*err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) {
+      ret->is_some = false;
+      return true;
+    } else {
+      cabi_free(ret->val.ptr);
+      return false;
+    }
+  }
+  ret->is_some = true;
+  ret->val.ptr = static_cast<uint8_t *>(
+      cabi_realloc(ret->val.ptr, CONFIG_STORE_ENTRY_MAX_LEN, 1, ret->val.len));
+  return true;
+}
+
 bool fastly_compute_at_edge_secret_store_open(
     fastly_world_string_t *name, fastly_compute_at_edge_secret_store_store_handle_t *ret,
     fastly_compute_at_edge_types_error_t *err) {
