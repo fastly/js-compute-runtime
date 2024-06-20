@@ -228,9 +228,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx, FastlyHandle hand
 }
 
 bool RequestOrResponse::is_instance(JSObject *obj) {
-  return Request::is_instance(obj) || Response::is_instance(obj) ||
-         SimpleCacheEntry::is_instance(obj) || KVStoreEntry::is_instance(obj) ||
-         CacheEntry::is_instance(obj);
+  return Request::is_instance(obj) || Response::is_instance(obj) || KVStoreEntry::is_instance(obj);
 }
 
 uint32_t RequestOrResponse::handle(JSObject *obj) {

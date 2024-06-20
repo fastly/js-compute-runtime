@@ -548,7 +548,6 @@ bool CacheEntry::body(JSContext *cx, unsigned argc, JS::Value *vp) {
   // options parameter is optional
   // options is meant to be an object with an optional `start` and `end` fields, both which can be
   // Numbers.
-  dump_value(cx, options_val, stdout);
   if (!options_val.isUndefined()) {
     if (!options_val.isObject()) {
       JS_ReportErrorASCII(cx, "options argument must be an object");
