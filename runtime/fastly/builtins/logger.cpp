@@ -9,7 +9,31 @@ namespace fastly::logger {
 bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
-  host_api::LogEndpoint endpoint(JS::GetReservedSlot(self, Logger::Slots::Endpoint).toInt32());
+  JS::RootedValue endpoint_id(cx, JS::GetReservedSlot(self, Slots::Endpoint));
+
+  // If the endpoint has not yet been loaded up, do it now, throwing any endpoint error for the
+  // first log.
+  if (endpoint_id.isNull()) {
+    JS::RootedString endpoint_name(cx, JS::GetReservedSlot(self, Slots::EndpointName).toString());
+    auto endpoint_name_str = core::encode(cx, endpoint_name);
+    if (!endpoint_name_str) {
+      return false;
+    }
+
+    auto res = host_api::LogEndpoint::get(
+        std::string_view{endpoint_name_str.ptr.get(), endpoint_name_str.len});
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    endpoint_id.set(JS::Int32Value(res.unwrap().handle));
+    JS::SetReservedSlot(self, Slots::Endpoint, endpoint_id);
+
+    MOZ_ASSERT(endpoint_id.isInt32());
+  }
+
+  host_api::LogEndpoint endpoint(endpoint_id.toInt32());
 
   auto msg = core::encode(cx, args.get(0));
   if (!msg) {
@@ -38,36 +62,19 @@ const JSFunctionSpec Logger::methods[] = {JS_FN("log", log, 1, JSPROP_ENUMERATE)
 
 const JSPropertySpec Logger::properties[] = {JS_PS_END};
 
-JSObject *Logger::create(JSContext *cx, const char *name) {
+JSObject *Logger::create(JSContext *cx, JS::HandleValue endpoint_name) {
   JS::RootedObject logger(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!logger) {
     return nullptr;
   }
-
-  auto res = host_api::LogEndpoint::get(std::string_view{name, strlen(name)});
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return nullptr;
-  }
-
-  JS::SetReservedSlot(logger, Slots::Endpoint, JS::Int32Value(res.unwrap().handle));
-
+  JS::SetReservedSlot(logger, Slots::Endpoint, JS::NullValue());
+  JS::SetReservedSlot(logger, Slots::EndpointName, endpoint_name);
   return logger;
 }
 
 bool Logger::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  REQUEST_HANDLER_ONLY("The Logger builtin");
   CTOR_HEADER("Logger", 1);
-
-  auto name = core::encode(cx, args[0]);
-  auto handle_res = host_api::LogEndpoint::get(name);
-  if (auto *err = handle_res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
-  }
-
-  JS::RootedObject logger(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  JS::SetReservedSlot(logger, Slots::Endpoint, JS::Int32Value(handle_res.unwrap().handle));
+  auto logger = Logger::create(cx, args[0]);
   args.rval().setObject(*logger);
   return true;
 }
