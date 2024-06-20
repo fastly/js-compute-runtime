@@ -115,6 +115,9 @@ Options:`);
 
 function applyConfig(argv) {
   for (let entry of argv.slice(2)) {
+    if (entry === '--starlingmonkey') {
+      continue;
+    }
     if (entry[0] != "-") {
       config.tests.pattern = entry;
       continue;
