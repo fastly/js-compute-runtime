@@ -28,7 +28,7 @@ routes.set("/backend/timeout", async () => {
   let error = await assertRejects(() => fetch('https://http-me.glitch.me/test?wait=5000', {
     backend,
     cacheOverride: new CacheOverride("pass"),
-  }));
+  }), DOMException, 'HTTP response timeout');
   console.timeEnd(`fetch('https://http-me.glitch.me/test?wait=5000'`)
   if (error) { return error }
   return pass('ok')
@@ -62,14 +62,15 @@ routes.set("/backend/timeout", async () => {
     if (isRunningLocally()) {
       return pass('ok');
     }
+    allowDynamicBackends(true)
     allowDynamicBackends({
-      betweenBytesTimeout: 1_000,
-      connectTimeout: 1_000,
-      firstByteTimeout: 1_000
+      betweenBytesTimeout: 3_000,
+      connectTimeout: 3_000,
+      firstByteTimeout: 3_000
     });
-    console.time(`fetch('https://http-me.glitch.me/test?wait=5000'`)
-    let error = await assertRejects(() => fetch('https://http-me.glitch.me/test?wait=5000'));
-    console.timeEnd(`fetch('https://http-me.glitch.me/test?wait=5000'`)
+    let error = await assertResolves(() => fetch('https://http-me.glitch.me/test?wait=2000'))
+    if (error) { return error }
+    error = await assertRejects(() => fetch('https://http-me.glitch.me/test?wait=5000'), DOMException, 'HTTP response timeout');
     if (error) { return error }
     return pass('ok')
   });
