@@ -40,22 +40,12 @@ struct SpecString {
       cap(cap)
   {}
 
-
-  /// Conversion to a `jsurl::SpecString`.
-  operator const std::string_view() const {
-    return std::string_view(reinterpret_cast<char *>(this->data), this->len);
-  }
 };
 
 /// This type exists to transfer &str-likes over FFI.
 struct SpecSlice {
   const uint8_t *data;
   size_t len;
-
-  SpecSlice()
-    : data(nullptr),
-      len(0)
-  {}
 
   SpecSlice(const uint8_t *const& data,
             size_t const& len)
@@ -69,12 +59,6 @@ struct JSSearchParam {
   SpecSlice name;
   SpecSlice value;
   bool done;
-
-  JSSearchParam()
-    : name(SpecSlice()),
-      value(SpecSlice()),
-      done(false)
-  {}
 
   JSSearchParam(SpecSlice const& name,
                 SpecSlice const& value,
@@ -108,10 +92,6 @@ extern "C" {
 JSUrl *new_jsurl(const SpecString *spec);
 
 JSUrl *new_jsurl_with_base(const SpecString *spec, const JSUrl *base);
-
-SpecSlice authority(const JSUrl *url);
-
-SpecSlice path_with_query(const JSUrl *url);
 
 SpecSlice hash(const JSUrl *url);
 
