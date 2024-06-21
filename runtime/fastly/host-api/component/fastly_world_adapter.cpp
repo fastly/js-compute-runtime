@@ -210,7 +210,7 @@ bool fastly_compute_at_edge_http_req_downstream_tls_cipher_openssl_name(
   auto status = fastly::req_downstream_tls_cipher_openssl_name(reinterpret_cast<char *>(ret->ptr),
                                                                default_size, &ret->len);
   if (status == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BUFFER_LEN) {
-    cabi_realloc(ret->ptr, default_size, 4, ret->len);
+    ret->ptr = static_cast<uint8_t *>(cabi_realloc(ret->ptr, default_size, 4, ret->len));
     status = fastly::req_downstream_tls_cipher_openssl_name(reinterpret_cast<char *>(ret->ptr),
                                                             ret->len, &ret->len);
   }
@@ -224,7 +224,7 @@ bool fastly_compute_at_edge_http_req_downstream_tls_protocol(
   auto status = fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret->ptr),
                                                     default_size, &ret->len);
   if (status == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BUFFER_LEN) {
-    cabi_realloc(ret->ptr, default_size, 4, ret->len);
+    ret->ptr = static_cast<uint8_t *>(cabi_realloc(ret->ptr, default_size, 4, ret->len));
     status = fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret->ptr), ret->len,
                                                  &ret->len);
   }
@@ -238,7 +238,7 @@ bool fastly_compute_at_edge_http_req_downstream_tls_raw_client_certificate(
   auto status =
       fastly::req_downstream_tls_raw_client_certificate(ret->ptr, default_size, &ret->len);
   if (status == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BUFFER_LEN) {
-    cabi_realloc(ret->ptr, default_size, 4, ret->len);
+    ret->ptr = static_cast<uint8_t *>(cabi_realloc(ret->ptr, default_size, 4, ret->len));
     status = fastly::req_downstream_tls_raw_client_certificate(ret->ptr, ret->len, &ret->len);
   }
   return convert_result(status, err);
@@ -250,7 +250,7 @@ bool fastly_compute_at_edge_http_req_downstream_tls_ja3_md5(
   ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
   auto status = fastly::req_downstream_tls_ja3_md5(ret->ptr, &ret->len);
   if (status == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BUFFER_LEN) {
-    cabi_realloc(ret->ptr, default_size, 4, ret->len);
+    ret->ptr = static_cast<uint8_t *>(cabi_realloc(ret->ptr, default_size, 4, ret->len));
     status = fastly::req_downstream_tls_ja3_md5(ret->ptr, &ret->len);
   }
   return convert_result(status, err);
@@ -261,7 +261,7 @@ bool fastly_compute_at_edge_http_req_downstream_tls_client_hello(
   ret->ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
   auto status = fastly::req_downstream_tls_client_hello(ret->ptr, default_size, &ret->len);
   if (status == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BUFFER_LEN) {
-    cabi_realloc(ret->ptr, default_size, 4, ret->len);
+    ret->ptr = static_cast<uint8_t *>(cabi_realloc(ret->ptr, default_size, 4, ret->len));
     status = fastly::req_downstream_tls_client_hello(ret->ptr, ret->len, &ret->len);
   }
   return convert_result(status, err);
@@ -1243,7 +1243,7 @@ bool fastly_compute_at_edge_cache_get_user_metadata(fastly_compute_at_edge_cache
   auto status = fastly::cache_get_user_metadata(handle, reinterpret_cast<char *>(ret->ptr),
                                                 default_size, &ret->len);
   if (status == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BUFFER_LEN) {
-    cabi_realloc(ret->ptr, default_size, 4, ret->len);
+    ret->ptr = static_cast<uint8_t *>(cabi_realloc(ret->ptr, default_size, 4, ret->len));
     status = fastly::cache_get_user_metadata(handle, reinterpret_cast<char *>(ret->ptr), ret->len,
                                              &ret->len);
   }
@@ -1387,7 +1387,7 @@ bool fastly_compute_at_edge_device_detection_lookup(
       fastly::device_detection_lookup(reinterpret_cast<char *>(user_agent->ptr), user_agent->len,
                                       reinterpret_cast<char *>(ret->ptr), default_size, &ret->len);
   if (status == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_BUFFER_LEN) {
-    cabi_realloc(ret->ptr, default_size, 4, ret->len);
+    ret->ptr = static_cast<uint8_t *>(cabi_realloc(ret->ptr, default_size, 4, ret->len));
     status =
         fastly::device_detection_lookup(reinterpret_cast<char *>(user_agent->ptr), user_agent->len,
                                         reinterpret_cast<char *>(ret->ptr), ret->len, &ret->len);
