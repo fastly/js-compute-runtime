@@ -23,7 +23,7 @@ bool URLSearchParamsIterator::next(JSContext *cx, unsigned argc, JS::Value *vp) 
   if (!result)
     return false;
 
-  jsurl::JSSearchParam param{jsurl::SpecSlice(nullptr, 0), jsurl::SpecSlice(nullptr, 0), false};
+  jsurl::JSSearchParam param{};
   jsurl::params_at(params, index, &param);
 
   if (param.done) {
@@ -380,7 +380,7 @@ bool URLSearchParams::forEach(JSContext *cx, unsigned argc, JS::Value *vp) {
   bool URLSearchParams::name(JSContext *cx, unsigned argc, JS::Value *vp) {                        \
     METHOD_HEADER(0)                                                                               \
                                                                                                    \
-    JS::RootedObject iter(cx, builtins::URLSearchParamsIterator::create(cx, self, type));          \
+    JS::RootedObject iter(cx, URLSearchParamsIterator::create(cx, self, type));                    \
     if (!iter)                                                                                     \
       return false;                                                                                \
     args.rval().setObject(*iter);                                                                  \
@@ -539,9 +539,13 @@ const JSPropertySpec URL::properties[] = {
     JS_PS_END,
 };
 
+const jsurl::JSUrl *URL::url(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+  return static_cast<const jsurl::JSUrl *>(JS::GetReservedSlot(self, Url).toPrivate());
+}
+
 jsurl::SpecString URL::origin(JSContext *cx, JS::HandleObject self) {
-  auto *url = static_cast<const jsurl::JSUrl *>(JS::GetReservedSlot(self, Slots::Url).toPrivate());
-  return jsurl::origin(url);
+  return jsurl::origin(url(self));
 }
 
 bool URL::origin(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
@@ -563,13 +567,15 @@ bool URL::searchParams_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::Value params_val = JS::GetReservedSlot(self, Slots::Params);
   JS::RootedObject params(cx);
   if (params_val.isNullOrUndefined()) {
-    auto *url = static_cast<jsurl::JSUrl *>(JS::GetReservedSlot(self, Slots::Url).toPrivate());
     JS::RootedObject url_search_params_instance(
-        cx, JS_NewObjectWithGivenProto(cx, &builtins::URLSearchParams::class_,
-                                       builtins::URLSearchParams::proto_obj));
+        cx, JS_NewObjectWithGivenProto(cx, &URLSearchParams::class_, URLSearchParams::proto_obj));
     if (!url_search_params_instance)
       return false;
-    params = builtins::URLSearchParams::create(cx, url_search_params_instance, url);
+
+    // The const-cast here is okay because we while normally callers of URL::url mustn't mutate
+    // the returned object, URLSearchParams is intended to.
+    params = URLSearchParams::create(cx, url_search_params_instance,
+                                     const_cast<jsurl::JSUrl *>(url(self)));
     if (!params)
       return false;
     JS::SetReservedSlot(self, Slots::Params, JS::ObjectValue(*params));
@@ -635,9 +641,10 @@ JSObject *URL::create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_
 
 JSObject *URL::create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
                       JS::HandleObject base_obj) {
-  MOZ_RELEASE_ASSERT(is_instance(base_obj));
-  const auto *base =
-      static_cast<jsurl::JSUrl *>(JS::GetReservedSlot(base_obj, Slots::Url).toPrivate());
+  jsurl::JSUrl* base = nullptr;
+  if (is_instance(base_obj)) {
+    base = static_cast<jsurl::JSUrl *>(JS::GetReservedSlot(base_obj, Slots::Url).toPrivate());
+  }
 
   return create(cx, self, url_val, base);
 }

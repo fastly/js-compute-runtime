@@ -564,7 +564,7 @@
     "status": "PASS"
   },
   "URL: Setting <foo://somehost/some/path>.pathname = '' Non-special URLs can have their paths erased": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URL: Setting <foo:///some/path>.pathname = '' Non-special URLs with an empty host can have their paths erased": {
     "status": "FAIL"
