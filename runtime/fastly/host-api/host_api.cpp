@@ -33,15 +33,15 @@ void sleep_until(uint64_t time_ns, uint64_t now) {
   }
 }
 
-size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
-  size_t tasks_len = tasks->size();
+size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
+  size_t tasks_len = tasks.size();
   std::vector<fastly_compute_at_edge_async_io_handle_t> handles;
   handles.reserve(tasks_len);
   uint64_t now = 0;
   uint64_t soonest_deadline = 0;
   size_t soonest_deadline_idx = -1;
   for (size_t idx = 0; idx < tasks_len; ++idx) {
-    auto *task = tasks->at(idx);
+    auto *task = tasks.at(idx);
     uint64_t deadline = task->deadline();
     // Select for completed task deadlines before performing the task select host call.
     if (deadline > 0) {
@@ -86,7 +86,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
       // non-timer task.
       size_t task_idx = 0;
       for (size_t idx = 0; idx < tasks_len; ++idx) {
-        if (tasks->at(idx)->id() != NEVER_HANDLE) {
+        if (tasks.at(idx)->id() != NEVER_HANDLE) {
           if (ret.val == task_idx) {
             return idx;
           }
