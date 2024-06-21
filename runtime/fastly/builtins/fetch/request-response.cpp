@@ -2879,9 +2879,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
     if (!statusText_val.isUndefined()) {
-      auto statusText_str = core::encode(cx, statusText_val);
-      std::string s(statusText_str.ptr.get(), statusText_str.len);
-      auto status_text_result = convertJSValueToByteString(cx, s);
+      auto status_text_result = convertJSValueToByteString(cx, statusText_val);
       if (status_text_result.isErr()) {
         JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                   JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS_TEXT);
