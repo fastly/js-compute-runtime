@@ -641,7 +641,7 @@ JSObject *URL::create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_
 
 JSObject *URL::create(JSContext *cx, JS::HandleObject self, JS::HandleValue url_val,
                       JS::HandleObject base_obj) {
-  jsurl::JSUrl* base = nullptr;
+  jsurl::JSUrl *base = nullptr;
   if (is_instance(base_obj)) {
     base = static_cast<jsurl::JSUrl *>(JS::GetReservedSlot(base_obj, Slots::Url).toPrivate());
   }
