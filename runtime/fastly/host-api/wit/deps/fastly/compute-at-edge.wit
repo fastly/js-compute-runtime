@@ -432,6 +432,20 @@ interface dictionary {
 }
 
 /*
+ * Fastly Config Store
+ */
+interface config-store {
+
+  use types.{error};
+
+  type handle = u32;
+
+  open: func(name: string) -> result<handle, error>;
+
+  get: func(h: handle, key: string) -> result<option<string>, error>;
+}
+
+/*
  * Fastly Geo
  */
 interface geo {
