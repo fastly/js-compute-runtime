@@ -1121,6 +1121,38 @@ Result<std::optional<HostString>> Dict::get(std::string_view name) {
   return res;
 }
 
+Result<ConfigStore> ConfigStore::open(std::string_view name) {
+  Result<ConfigStore> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_compute_at_edge_config_store_handle_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_config_store_open(&name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<std::optional<HostString>> ConfigStore::get(std::string_view name) {
+  Result<std::optional<HostString>> res;
+
+  auto name_str = string_view_to_world_string(name);
+  fastly_world_option_string_t ret;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_config_store_get(this->handle, &name_str, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(make_host_string(ret.val));
+  } else {
+    res.emplace(std::nullopt);
+  }
+
+  return res;
+}
+
 Result<ObjectStore> ObjectStore::open(std::string_view name) {
   Result<ObjectStore> res;
 

@@ -8,9 +8,9 @@ using fastly::fastly::FastlyGetErrorMessage;
 
 namespace fastly::config_store {
 
-host_api::Dict ConfigStore::config_store_handle(JSObject *obj) {
+host_api::ConfigStore ConfigStore::config_store_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, ConfigStore::Slots::Handle);
-  return host_api::Dict(val.toInt32());
+  return host_api::ConfigStore(val.toInt32());
 }
 
 bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -18,7 +18,7 @@ bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto key = core::encode(cx, args[0]);
   // If the converted string has a length of 0 then we throw an Error
-  // because Dictionary keys have to be at-least 1 character.
+  // because config-store keys have to be at-least 1 character.
   if (!key || key.len == 0) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_CONFIG_STORE_KEY_EMPTY);
     return false;
@@ -73,14 +73,14 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto name = core::encode(cx, args[0]);
 
   // If the converted string has a length of 0 then we throw an Error
-  // because Dictionary names have to be at-least 1 character.
+  // because config-store names have to be at-least 1 character.
   if (!name) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_CONFIG_STORE_NAME_EMPTY);
     return false;
   }
 
   // If the converted string has a length of more than 255 then we throw an Error
-  // because Dictionary names have to be less than 255 characters.
+  // because config-store names have to be less than 255 characters.
   if (name.size() > 255) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_CONFIG_STORE_NAME_TOO_LONG);
     return false;
@@ -105,7 +105,7 @@ bool ConfigStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   JS::RootedObject config_store(cx, JS_NewObjectForConstructor(cx, &class_, args));
-  auto open_res = host_api::Dict::open(name);
+  auto open_res = host_api::ConfigStore::open(name);
   if (auto *err = open_res.to_err()) {
     if (host_api::error_is_bad_handle(*err)) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,

@@ -522,6 +522,26 @@ typedef struct {
   } val;
 } fastly_compute_at_edge_dictionary_result_option_string_error_t;
 
+typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_config_store_error_t;
+
+typedef uint32_t fastly_compute_at_edge_config_store_handle_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    fastly_compute_at_edge_config_store_handle_t ok;
+    fastly_compute_at_edge_config_store_error_t err;
+  } val;
+} fastly_compute_at_edge_config_store_result_handle_error_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    fastly_world_option_string_t ok;
+    fastly_compute_at_edge_config_store_error_t err;
+  } val;
+} fastly_compute_at_edge_config_store_result_option_string_error_t;
+
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_edge_rate_limiter_error_t;
 
 typedef struct {
@@ -1296,6 +1316,15 @@ extern bool fastly_compute_at_edge_dictionary_get(fastly_compute_at_edge_diction
                                                   fastly_world_option_string_t *ret,
                                                   fastly_compute_at_edge_dictionary_error_t *err);
 
+// Imported Functions from `fastly:compute-at-edge/config-store`
+extern bool
+fastly_compute_at_edge_config_store_open(fastly_world_string_t *name,
+                                         fastly_compute_at_edge_config_store_handle_t *ret,
+                                         fastly_compute_at_edge_config_store_error_t *err);
+extern bool fastly_compute_at_edge_config_store_get(
+    fastly_compute_at_edge_config_store_handle_t h, fastly_world_string_t *key,
+    fastly_world_option_string_t *ret, fastly_compute_at_edge_config_store_error_t *err);
+
 // Imported Functions from `fastly:compute-at-edge/edge-rate-limiter`
 extern bool fastly_compute_at_edge_edge_rate_limiter_check_rate(
     fastly_world_string_t *rate_counter_name, fastly_world_string_t *entry, uint32_t delta,
@@ -1599,7 +1628,7 @@ fastly_compute_at_edge_secret_store_open(fastly_world_string_t *name,
 extern bool fastly_compute_at_edge_secret_store_get(
     fastly_compute_at_edge_secret_store_store_handle_t store, fastly_world_string_t *key,
     fastly_world_option_secret_handle_t *ret, fastly_compute_at_edge_secret_store_error_t *err);
-bool fastly_compute_at_edge_secret_store_plaintext(
+extern bool fastly_compute_at_edge_secret_store_plaintext(
     fastly_compute_at_edge_secret_store_secret_handle_t secret, fastly_world_option_list_u8_t *ret,
     fastly_compute_at_edge_secret_store_error_t *err);
 extern bool fastly_compute_at_edge_secret_store_from_bytes(
