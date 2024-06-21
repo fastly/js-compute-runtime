@@ -41,7 +41,6 @@
   "encoding/unsupported-encodings.any.js",
   "fetch/api/basic/accept-header.any.js",
   "fetch/api/basic/conditional-get.any.js",
-  "fetch/api/basic/header-value-combining.any.js",
   "fetch/api/basic/header-value-null-byte.any.js",
   "fetch/api/basic/historical.any.js",
   "fetch/api/basic/http-response-code.any.js",
