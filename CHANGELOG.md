@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.16.0 (2024-06-21)
+
+### Added
+
+* add out-of-memory callback with stderr log ([#805](https://github.com/fastly/js-compute-runtime/issues/805)) ([a1bd16c](https://github.com/fastly/js-compute-runtime/commit/a1bd16c06924ea1748846d2b8159b9b2939ae61d))
+* Allow early logger initialization ([#804](https://github.com/fastly/js-compute-runtime/issues/804)) ([514d014](https://github.com/fastly/js-compute-runtime/commit/514d0145ba88de3a7114e957457a7f9570e17019))
+
+### Fixed
+
+* Fix string formatting for limit-exceeded errors ([#802](https://github.com/fastly/js-compute-runtime/issues/802)) ([56f5214](https://github.com/fastly/js-compute-runtime/commit/56f5214ad9f431845f6b06cb92e0b98169ceffbe))
+* Fix uses of cabi\_realloc that were discarding their results ([#811](https://github.com/fastly/js-compute-runtime/issues/811)) ([4e16641](https://github.com/fastly/js-compute-runtime/commit/4e16641ef4e159c4a11b500ac861b8fa8d9ff5d3))
+
 ## 3.15.0 (2024-06-03)
 
 ### Added
