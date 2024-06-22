@@ -197,6 +197,7 @@
   "WebCryptoAPI/sign_verify/hmac.https.any.js",
   "html/webappapis/structured-clone/structured-clone.any.js",
   "html/webappapis/timers/clearinterval-from-callback.any.js",
+  "html/webappapis/timers/cleartimeout-clearinterval.any.js",
   "html/webappapis/timers/evil-spec-example.any.js",
   "html/webappapis/timers/missing-timeout-setinterval.any.js",
   "html/webappapis/timers/negative-setinterval.any.js",
