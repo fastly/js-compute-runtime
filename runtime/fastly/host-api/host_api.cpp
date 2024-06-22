@@ -1822,8 +1822,8 @@ const std::optional<std::string> FastlySendError::message() const {
   case dns_error: {
     // allocate maximum len of error message
     char buf[34 + 10 + 1];
-    int written = snprintf(buf, sizeof(buf), "DNS error (rcode=%d, info_code=%d)", this->dns_error_rcode,
-                          this->dns_error_info_code);
+    int written = snprintf(buf, sizeof(buf), "DNS error (rcode=%d, info_code=%d)",
+                           this->dns_error_rcode, this->dns_error_info_code);
     MOZ_ASSERT(written > 34);
     return std::string(buf, written);
   }
