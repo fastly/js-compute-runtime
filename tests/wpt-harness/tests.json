@@ -113,6 +113,7 @@
   "fetch/api/response/response-stream-disturbed-by-pipe.any.js",
   "fetch/api/response/response-stream-with-broken-then.any.js",
   "fetch/api/basic/text-utf8.any.js",
+  "hr-time/basic.any.js",
   "hr-time/idlharness.any.js",
   "hr-time/monotonic-clock.any.js",
   "html/webappapis/atob/base64.any.js",
