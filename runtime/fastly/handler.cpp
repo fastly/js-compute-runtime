@@ -1,3 +1,4 @@
+#include "../StarlingMonkey/builtins/web/performance.h"
 #include "./builtins/fetch-event.h"
 #include "./host-api/fastly.h"
 #include "./host-api/host_api_fastly.h"
@@ -14,14 +15,16 @@ namespace fastly::runtime {
 
 api::Engine *ENGINE;
 
+// Install corresponds to Wizer time, so we configure the engine here
 bool install(api::Engine *engine) {
   ENGINE = engine;
+  engine->enable_module_mode(false);
   return true;
 }
 
 void handle_incoming(host_api::Request req) {
-  // TODO(GB): reimplement
-  // builtins::Performance::timeOrigin.emplace(std::chrono::high_resolution_clock::now());
+  builtins::web::performance::Performance::timeOrigin.emplace(
+      std::chrono::high_resolution_clock::now());
 
   double total_compute = 0;
   auto start = system_clock::now();

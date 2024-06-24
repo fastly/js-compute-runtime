@@ -33,15 +33,15 @@ void sleep_until(uint64_t time_ns, uint64_t now) {
   }
 }
 
-size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
-  size_t tasks_len = tasks->size();
+size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
+  size_t tasks_len = tasks.size();
   std::vector<fastly_compute_at_edge_async_io_handle_t> handles;
   handles.reserve(tasks_len);
   uint64_t now = 0;
   uint64_t soonest_deadline = 0;
   size_t soonest_deadline_idx = -1;
   for (size_t idx = 0; idx < tasks_len; ++idx) {
-    auto *task = tasks->at(idx);
+    auto *task = tasks.at(idx);
     uint64_t deadline = task->deadline();
     // Select for completed task deadlines before performing the task select host call.
     if (deadline > 0) {
@@ -86,7 +86,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> *tasks) {
       // non-timer task.
       size_t task_idx = 0;
       for (size_t idx = 0; idx < tasks_len; ++idx) {
-        if (tasks->at(idx)->id() != NEVER_HANDLE) {
+        if (tasks.at(idx)->id() != NEVER_HANDLE) {
           if (ret.val == task_idx) {
             return idx;
           }
@@ -1819,11 +1819,13 @@ const std::optional<std::string> FastlySendError::message() const {
   /// The system encountered a DNS error when trying to find an IP address for the backend
   /// hostname. The fields dns_error_rcode and dns_error_info_code may be set in the
   /// send_error_detail.
-  // TODO(GB): reenable DNS error codes
   case dns_error: {
-    return "DNS error (rcode={}, info_code={})" /*, this->dns_error_rcode,
-                        this->dns_error_info_code*/
-        ;
+    // allocate maximum len of error message
+    char buf[34 + 10 + 1];
+    int written = snprintf(buf, sizeof(buf), "DNS error (rcode=%d, info_code=%d)",
+                           this->dns_error_rcode, this->dns_error_info_code);
+    MOZ_ASSERT(written > 34);
+    return std::string(buf, written);
   }
   /// The system cannot determine which backend to use, or the specified backend was invalid.
   case destination_not_found: {
