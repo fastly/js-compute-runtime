@@ -4,13 +4,17 @@
 #include <optional>
 #include <string>
 
+// TODO(GB) remove once https://github.com/bytecodealliance/StarlingMonkey/pull/75 lands
+// clang-format off
+#include "builtin.h"
+// clang-format on
+#include "../../../StarlingMonkey/builtins/web/fetch/fetch-errors.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../../../StarlingMonkey/builtins/web/url.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "../host-api/host_api_fastly.h"
 #include "./fetch/request-response.h"
 #include "body.h"
-#include "builtin.h"
 #include "fastly.h"
 #include "js/Stream.h"
 
@@ -103,9 +107,7 @@ bool FastlyBody::append(JSContext *cx, unsigned argc, JS::Value *vp) {
   // by using the ReadableStream's handle directly.
   if (data_obj && JS::IsReadableStream(data_obj)) {
     if (RequestOrResponse::body_unusable(cx, data_obj)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
-      return false;
+      api::throw_error(cx, FetchErrors::BodyStreamUnusable);
     }
 
     // If the stream is backed by a C@E body handle, we can use that handle directly.
@@ -162,9 +164,7 @@ bool FastlyBody::prepend(JSContext *cx, unsigned argc, JS::Value *vp) {
   // by using the ReadableStream's handle directly.
   if (data_obj && JS::IsReadableStream(data_obj)) {
     if (RequestOrResponse::body_unusable(cx, data_obj)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
-      return false;
+      return api::throw_error(cx, FetchErrors::BodyStreamUnusable);
     }
 
     // If the stream is backed by a C@E body handle, we can use that handle directly.
@@ -205,7 +205,7 @@ bool FastlyBody::prepend(JSContext *cx, unsigned argc, JS::Value *vp) {
       args.rval().setUndefined();
       return true;
     } else {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                 JSMSG_SIMPLE_CACHE_SET_CONTENT_STREAM);
       return false;
     }

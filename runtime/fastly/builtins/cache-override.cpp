@@ -108,9 +108,7 @@ host_api::CacheOverrideTag CacheOverride::abi_tag(JSObject *self) {
 
 bool CacheOverride::mode_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
   if (self == proto_obj) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE,
-                              "mode get", "CacheOverride");
-    return false;
+    return api::throw_error(cx, api::Errors::WrongReceiver, "mode get", "CacheOverride");
   }
   const char *mode_chars;
   switch (CacheOverride::mode(self)) {
@@ -147,9 +145,7 @@ bool CacheOverride::ensure_override(JSContext *cx, JS::HandleObject self, const 
 bool CacheOverride::mode_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                              JS::MutableHandleValue rval) {
   if (self == proto_obj) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE,
-                              "mode set", "CacheOverride");
-    return false;
+    return api::throw_error(cx, api::Errors::WrongReceiver, "mode get", "CacheOverride");
   }
 
   auto mode_chars = core::encode(cx, val);
@@ -176,9 +172,7 @@ bool CacheOverride::mode_set(JSContext *cx, JS::HandleObject self, JS::HandleVal
 
 bool CacheOverride::ttl_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
   if (self == proto_obj) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE,
-                              "ttl get", "CacheOverride");
-    return false;
+    return api::throw_error(cx, api::Errors::WrongReceiver, "ttl get", "CacheOverride");
   }
   rval.set(CacheOverride::ttl(self));
   return true;
@@ -187,9 +181,7 @@ bool CacheOverride::ttl_get(JSContext *cx, JS::HandleObject self, JS::MutableHan
 bool CacheOverride::ttl_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                             JS::MutableHandleValue rval) {
   if (self == proto_obj) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE,
-                              "ttl set", "CacheOverride");
-    return false;
+    return api::throw_error(cx, api::Errors::WrongReceiver, "ttl set", "CacheOverride");
   }
   if (!CacheOverride::ensure_override(cx, self, "a TTL"))
     return false;
@@ -209,9 +201,7 @@ bool CacheOverride::ttl_set(JSContext *cx, JS::HandleObject self, JS::HandleValu
 
 bool CacheOverride::swr_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
   if (self == proto_obj) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE,
-                              "swr get", "CacheOverride");
-    return false;
+    return api::throw_error(cx, api::Errors::WrongReceiver, "swr get", "CacheOverride");
   }
   rval.set(CacheOverride::swr(self));
   return true;
@@ -220,9 +210,7 @@ bool CacheOverride::swr_get(JSContext *cx, JS::HandleObject self, JS::MutableHan
 bool CacheOverride::swr_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                             JS::MutableHandleValue rval) {
   if (self == proto_obj) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE,
-                              "swr set", "CacheOverride");
-    return false;
+    return api::throw_error(cx, api::Errors::WrongReceiver, "swr set", "CacheOverride");
   }
   if (!CacheOverride::ensure_override(cx, self, "SWR"))
     return false;
@@ -243,9 +231,7 @@ bool CacheOverride::swr_set(JSContext *cx, JS::HandleObject self, JS::HandleValu
 bool CacheOverride::surrogate_key_get(JSContext *cx, JS::HandleObject self,
                                       JS::MutableHandleValue rval) {
   if (self == proto_obj) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE,
-                              "surrogate_key get", "CacheOverride");
-    return false;
+    return api::throw_error(cx, api::Errors::WrongReceiver, "surrogate_key get", "CacheOverride");
   }
   rval.set(CacheOverride::surrogate_key(self));
   return true;
@@ -254,9 +240,7 @@ bool CacheOverride::surrogate_key_get(JSContext *cx, JS::HandleObject self,
 bool CacheOverride::surrogate_key_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                                       JS::MutableHandleValue rval) {
   if (self == proto_obj) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE,
-                              "surrogate_key set", "CacheOverride");
-    return false;
+    return api::throw_error(cx, api::Errors::WrongReceiver, "surrogate_key set", "CacheOverride");
   }
   if (!CacheOverride::ensure_override(cx, self, "a surrogate key"))
     return false;
@@ -276,9 +260,7 @@ bool CacheOverride::surrogate_key_set(JSContext *cx, JS::HandleObject self, JS::
 
 bool CacheOverride::pci_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
   if (self == proto_obj) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE,
-                              "pci get", "CacheOverride");
-    return false;
+    return api::throw_error(cx, api::Errors::WrongReceiver, "pci get", "CacheOverride");
   }
   rval.set(CacheOverride::pci(self));
   return true;
@@ -287,9 +269,7 @@ bool CacheOverride::pci_get(JSContext *cx, JS::HandleObject self, JS::MutableHan
 bool CacheOverride::pci_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                             JS::MutableHandleValue rval) {
   if (self == proto_obj) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_INTERFACE,
-                              "pci set", "CacheOverride");
-    return false;
+    return api::throw_error(cx, api::Errors::WrongReceiver, "pci set", "CacheOverride");
   }
   if (!CacheOverride::ensure_override(cx, self, "PCI"))
     return false;

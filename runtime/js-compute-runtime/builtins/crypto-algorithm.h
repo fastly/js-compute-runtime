@@ -71,7 +71,7 @@ public:
 class CryptoAlgorithmHMAC_Sign_Verify final : public CryptoAlgorithmSignVerify {
 public:
   const char *name() const noexcept override { return "HMAC"; };
-  CryptoAlgorithmHMAC_Sign_Verify(){};
+  CryptoAlgorithmHMAC_Sign_Verify() {};
   CryptoAlgorithmIdentifier identifier() final { return CryptoAlgorithmIdentifier::HMAC; };
 
   JSObject *sign(JSContext *cx, JS::HandleObject key, std::span<uint8_t> data) override;
@@ -127,7 +127,7 @@ public:
 class CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify final : public CryptoAlgorithmSignVerify {
 public:
   const char *name() const noexcept override { return "RSASSA-PKCS1-v1_5"; };
-  CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify(){};
+  CryptoAlgorithmRSASSA_PKCS1_v1_5_Sign_Verify() {};
   CryptoAlgorithmIdentifier identifier() final {
     return CryptoAlgorithmIdentifier::RSASSA_PKCS1_v1_5;
   };

@@ -7,7 +7,7 @@
 
 namespace fastly::cache_simple {
 
-class SimpleCacheEntry final : public builtins::BuiltinImpl<SimpleCacheEntry> {
+class SimpleCacheEntry final : public builtins::BuiltinNoConstructor<SimpleCacheEntry> {
   template <fetch::RequestOrResponse::BodyReadResult result_type>
   static bool bodyAll(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool body_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -24,11 +24,10 @@ public:
 
   static const unsigned ctor_length = 0;
 
-  static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static JSObject *create(JSContext *cx, host_api::HttpBody body_handle);
 };
 
-class SimpleCache : public builtins::BuiltinImpl<SimpleCache> {
+class SimpleCache : public builtins::BuiltinNoConstructor<SimpleCache> {
 private:
 public:
   static constexpr const char *class_name = "SimpleCache";
@@ -48,8 +47,6 @@ public:
 
   static bool getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS::HandleValue extra,
                                   JS::CallArgs args);
-
-  static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 
 } // namespace fastly::cache_simple

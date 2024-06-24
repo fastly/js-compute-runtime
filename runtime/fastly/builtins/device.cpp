@@ -4,7 +4,7 @@
 #include "builtin.h"
 #include "js/JSON.h"
 
-using builtins::BuiltinImpl;
+using builtins::BuiltinNoConstructor;
 
 namespace fastly::device {
 
@@ -541,11 +541,6 @@ const JSPropertySpec Device::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "Device", JSPROP_READONLY),
     JS_PS_END};
 
-bool Device::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ILLEGAL_CTOR);
-  return false;
-}
-
 JSObject *Device::create(JSContext *cx, JS::HandleObject device_info) {
   JS::RootedObject instance(cx, JS_NewObjectWithGivenProto(cx, &Device::class_, Device::proto_obj));
 
@@ -561,7 +556,7 @@ JSObject *Device::create(JSContext *cx, JS::HandleObject device_info) {
 }
 
 bool install(api::Engine *engine) {
-  if (!BuiltinImpl<Device>::init_class_impl(engine->cx(), engine->global())) {
+  if (!BuiltinNoConstructor<Device>::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
 

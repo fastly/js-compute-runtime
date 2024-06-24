@@ -13,7 +13,7 @@ namespace fastly::cache_core {
 //   stale(): boolean;
 //   mustInsertOrUpdate(): boolean;
 // }
-class CacheState : public builtins::BuiltinImpl<CacheState> {
+class CacheState : public builtins::BuiltinNoConstructor<CacheState> {
   static constexpr const uint8_t found_flag = 1 << 0;
   static constexpr const uint8_t usable_flag = 1 << 1;
   static constexpr const uint8_t stale_flag = 1 << 2;
@@ -41,11 +41,10 @@ public:
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
-  static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static JSObject *create(JSContext *cx, uint32_t handle);
 };
 
-class CacheEntry : public builtins::BuiltinImpl<CacheEntry> {
+class CacheEntry : public builtins::BuiltinNoConstructor<CacheEntry> {
   // cache-close: func(handle: cache-handle) -> result<_, error>
   // close(): void;
   static bool close(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -103,11 +102,10 @@ public:
   static bool is_instance(JS::Value val);
   static host_api::CacheHandle get_cache_handle(JSObject *self);
 
-  static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static JSObject *create(JSContext *cx, uint32_t handle);
 };
 
-class TransactionCacheEntry : public builtins::BuiltinImpl<TransactionCacheEntry> {
+class TransactionCacheEntry : public builtins::BuiltinNoConstructor<TransactionCacheEntry> {
 
   static bool insert(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool insertAndStreamBack(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -131,11 +129,10 @@ public:
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
-  static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static JSObject *create(JSContext *cx, uint32_t handle);
 };
 
-class CoreCache : public builtins::BuiltinImpl<CoreCache> {
+class CoreCache : public builtins::BuiltinNoConstructor<CoreCache> {
   // cache-lookup: func(cache-key: string, options: cache-lookup-options) -> result<cache-handle,
   // error> static lookup(key: string, options?: LookupOptions): CacheEntry | null;
   static bool lookup(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -158,8 +155,6 @@ public:
   static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
-
-  static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 
 } // namespace fastly::cache_core
