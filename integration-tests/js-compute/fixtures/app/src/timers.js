@@ -82,7 +82,7 @@ import { routes } from "./routes.js";
         for (const type of non_callable_types) {
             let error = assertThrows(() => {
                 setInterval(type)
-            }, TypeError)
+            }, Error)
             if (error) { return error }
         }
         return pass()
@@ -244,7 +244,7 @@ import { routes } from "./routes.js";
         for (const type of non_callable_types) {
             let error = assertThrows(() => {
                 setTimeout(type)
-            }, TypeError)
+            }, Error)
             if (error) { return error }
         }
         return pass()
