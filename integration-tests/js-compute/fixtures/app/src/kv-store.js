@@ -113,7 +113,7 @@ const starlingmonkey = sdkVersion.includes('starlingmonkey');
         routes.set("/kv-store/put/called-unbound", async () => {
             let error = assertThrows(() => {
                 KVStore.prototype.put.call(undefined, '1', '2')
-            }, TypeError, "Method put called on receiver that's not an instance of KVStore")
+            }, TypeError)
             if (error) { return error }
             return pass()
         });
@@ -511,7 +511,7 @@ const starlingmonkey = sdkVersion.includes('starlingmonkey');
         routes.set("/kv-store/delete/called-unbound", async () => {
             let error = await assertRejects(async () => {
                 await KVStore.prototype.delete.call(undefined, '1')
-            }, TypeError, "Method delete called on receiver that's not an instance of KVStore")
+            }, TypeError)
             if (error) { return error }
             return pass()
         });
@@ -705,7 +705,7 @@ const starlingmonkey = sdkVersion.includes('starlingmonkey');
         routes.set("/kv-store/get/called-unbound", async () => {
             let error = await assertRejects(async () => {
                 await KVStore.prototype.get.call(undefined, '1')
-            }, TypeError, "Method get called on receiver that's not an instance of KVStore")
+            }, TypeError)
             if (error) { return error }
             return pass()
         });

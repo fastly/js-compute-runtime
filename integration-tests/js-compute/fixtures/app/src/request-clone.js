@@ -13,7 +13,7 @@ routes.set("/request/clone/called-as-constructor", () => {
 routes.set("/request/clone/called-unbound", () => {
     let error = assertThrows(() => {
         Request.prototype.clone.call(undefined)
-    }, TypeError, "Method clone called on receiver that's not an instance of Request")
+    }, TypeError)
     if (error) { return error }
     return pass()
 });

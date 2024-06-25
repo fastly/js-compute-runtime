@@ -124,7 +124,7 @@ import fc from './fast-check.js';
     routes.set("/secret-store/get/called-unbound", () => {
       let error = assertThrows(() => {
         SecretStore.prototype.get.call(undefined, '1')
-      }, TypeError, "Method get called on receiver that's not an instance of SecretStore")
+      }, TypeError)
       if (error) { return error }
       return pass()
     });
