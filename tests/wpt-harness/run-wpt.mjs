@@ -119,6 +119,10 @@ function applyConfig(argv) {
       config.tests.pattern = entry;
       continue;
     }
+    if (entry === '--starlingmonkey') {
+      config.tests.expectations = relativePath("expectations-sm");
+      continue;
+    }
     let [arg, val] = entry.split("=");
     let result = undefined;
     let parser = ArgParsers[arg];
