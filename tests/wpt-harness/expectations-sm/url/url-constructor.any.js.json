@@ -516,7 +516,7 @@
     "status": "PASS"
   },
   "Parsing: <http://user:pass@/> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <http://%25DOMAIN:foobar@foodomain.com/> without base": {
     "status": "PASS"
@@ -1449,19 +1449,19 @@
     "status": "PASS"
   },
   "Parsing: <http://foo.bar/baz?qux#foo\bbar> without base": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Parsing: <http://foo.bar/baz?qux#foo\"bar> without base": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Parsing: <http://foo.bar/baz?qux#foo<bar> without base": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Parsing: <http://foo.bar/baz?qux#foo>bar> without base": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Parsing: <http://foo.bar/baz?qux#foo`bar> without base": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Parsing: <http://1.2.3.4/> against <http://other.com/>": {
     "status": "PASS"
@@ -1569,7 +1569,7 @@
     "status": "FAIL"
   },
   "Parsing: </> against <file://h/a/b>": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <//d:> against <file:///C:/a/b>": {
     "status": "PASS"
@@ -1752,7 +1752,7 @@
     "status": "PASS"
   },
   "Parsing: <\\\\\\.\\Y:> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <file:///y:> without base": {
     "status": "PASS"
@@ -1767,7 +1767,7 @@
     "status": "PASS"
   },
   "Parsing: <\\\\\\.\\y:> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <file://localhost//a//../..//foo> without base": {
     "status": "FAIL"
