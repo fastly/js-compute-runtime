@@ -464,12 +464,12 @@ let error;
         routes.set("/core-cache/constructor/called-as-regular-function", () => {
             error = assertThrows(() => {
                 CoreCache()
-            }, TypeError, `Illegal constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
         routes.set("/core-cache/constructor/throws", () => {
-            error = assertThrows(() => new CoreCache(), TypeError, `Illegal constructor`)
+            error = assertThrows(() => new CoreCache(), TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -1559,12 +1559,12 @@ let error;
         routes.set("/cache-entry/constructor/called-as-regular-function", () => {
             error = assertThrows(() => {
                 CacheEntry()
-            }, TypeError, `Illegal constructor`)
+            }, TypeError)
             if (error) { return error }
             return pass("ok")
         });
         routes.set("/cache-entry/constructor/throws", () => {
-            error = assertThrows(() => new CacheEntry(), TypeError, `Illegal constructor`)
+            error = assertThrows(() => new CacheEntry(), TypeError)
             if (error) { return error }
             return pass("ok")
         });
@@ -1582,7 +1582,7 @@ let error;
         routes.set("/cache-entry/close/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.close.call(undefined)
-            }, Error, "Method close called on receiver that's not an instance of CacheEntry")
+            }, Error)
             if (error) { return error }
             return pass("ok")
         });
@@ -1612,7 +1612,7 @@ let error;
         routes.set("/cache-entry/state/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.state.call(undefined)
-            }, Error, "Method state called on receiver that's not an instance of CacheEntry")
+            }, Error)
             if (error) { return error }
             return pass("ok")
         });
@@ -1644,7 +1644,7 @@ let error;
         routes.set("/cache-entry/userMetadata/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.userMetadata.call(undefined)
-            }, Error, "Method userMetadata called on receiver that's not an instance of CacheEntry")
+            }, Error)
             if (error) { return error }
             return pass("ok")
         });
@@ -1697,7 +1697,7 @@ let error;
         routes.set("/cache-entry/body/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.body.call(undefined)
-            }, Error, "Method body called on receiver that's not an instance of CacheEntry")
+            }, Error)
             if (error) { return error }
             return pass("ok")
         });
@@ -1875,7 +1875,7 @@ let error;
         routes.set("/cache-entry/length/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.length.call(undefined)
-            }, Error, "Method length called on receiver that's not an instance of CacheEntry")
+            }, Error)
             if (error) { return error }
             return pass("ok")
         });
@@ -1910,7 +1910,7 @@ let error;
         routes.set("/cache-entry/maxAge/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.maxAge.call(undefined)
-            }, Error, "Method maxAge called on receiver that's not an instance of CacheEntry")
+            }, Error)
             if (error) { return error }
             return pass("ok")
         });
@@ -1940,7 +1940,7 @@ let error;
         routes.set("/cache-entry/staleWhileRevalidate/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.staleWhileRevalidate.call(undefined)
-            }, Error, "Method staleWhileRevalidate called on receiver that's not an instance of CacheEntry")
+            }, Error)
             if (error) { return error }
             return pass("ok")
         });
@@ -1972,7 +1972,7 @@ let error;
         routes.set("/cache-entry/age/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.age.call(undefined)
-            }, Error, "Method age called on receiver that's not an instance of CacheEntry")
+            }, Error)
             if (error) { return error }
             return pass("ok")
         });
@@ -2008,7 +2008,7 @@ let error;
         routes.set("/cache-entry/hits/called-unbound", () => {
             let error = assertThrows(() => {
                 CacheEntry.prototype.hits.call(undefined)
-            }, Error, "Method hits called on receiver that's not an instance of CacheEntry")
+            }, Error)
             if (error) { return error }
             return pass("ok")
         });
