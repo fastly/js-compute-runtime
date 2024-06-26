@@ -21,6 +21,7 @@ export async function parseInputs(cliInputs) {
   let cliInput;
 
   let useStarlingMonkey = () => {
+    console.log(`Building with the experimental StarlingMonkey engine`);
     starlingMonkey = true;
     if (component) {
       noStarlingMonkeyComponent();
