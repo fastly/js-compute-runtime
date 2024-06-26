@@ -12,8 +12,6 @@ const {
   starlingMonkey,
   wasmEngine,
   input,
-  component,
-  adapter,
   output,
   version,
   help,
@@ -42,9 +40,5 @@ if (version) {
     enableExperimentalTopLevelAwait,
     starlingMonkey
   );
-  if (component) {
-    const { compileComponent } = await import("./src/component.js");
-    await compileComponent(output, adapter);
-  }
   await addSdkMetadataField(output);
 }

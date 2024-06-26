@@ -32,7 +32,7 @@
     "test:wpt": "tests/wpt-harness/build-wpt-runtime.sh && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:types": "tsd",
     "build": "make -j8 -C runtime/js-compute-runtime && cp runtime/js-compute-runtime/js-compute-runtime.wasm .",
-    "build:debug": "DEBUG=true make -j8 -C runtime/js-compute-runtime && cp runtime/js-compute-runtime/*.wasm .",
+    "build:debug": "DEBUG=true make -j8 -C runtime/js-compute-runtime && cp runtime/js-compute-runtime/js-compute-runtime.wasm .",
     "build:starlingmonkey": "./runtime/fastly/build-release.sh",
     "build:starlingmonkey:debug": "./runtime/fastly/build-debug.sh",
     "format-changelog": "node ci/format-changelog.js CHANGELOG.md"
@@ -49,7 +49,6 @@
     "unified": "^11.0.0"
   },
   "dependencies": {
-    "@bytecodealliance/jco": "^1.2.4",
     "@bytecodealliance/wizer": "^3.0.1",
     "acorn": "^8.8.2",
     "acorn-walk": "^8.2.0",

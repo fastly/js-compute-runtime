@@ -6,8 +6,6 @@ import { tooManyEngines } from "./tooManyEngines.js";
 export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
-  let component = false;
-  let adapter;
   let enableExperimentalHighResolutionTimeMethods = false;
   let enableExperimentalTopLevelAwait = false;
   let starlingMonkey = false;
@@ -57,11 +55,6 @@ export async function parseInputs(cliInputs) {
       }
       case "--starlingmonkey": {
         useStarlingMonkey();
-        break;
-      }
-      case "--component-adapter": {
-        component = true;
-        adapter = cliInputs.shift();
         break;
       }
       case "--engine-wasm": {
@@ -120,8 +113,6 @@ export async function parseInputs(cliInputs) {
     }
   }
   return {
-    adapter,
-    component,
     enableExperimentalHighResolutionTimeMethods,
     enableExperimentalTopLevelAwait,
     enablePBL,
