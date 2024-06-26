@@ -123,7 +123,6 @@ LD_FLAGS += -L$(BUILD)/openssl/libx32 -lcrypto
 
 .PHONY: all
 all: $(FSM_SRC)/js-compute-runtime.wasm
-all: $(FSM_SRC)/js-compute-runtime-component.wasm
 
 # Remove just the build artifacts for the current runtime build.
 .PHONY: clean
@@ -378,10 +377,6 @@ $(OBJ_DIR)/builtins.a: $(OBJ_DIR)/core/encode.o
 
 .PHONY: $(FSM_SRC)/js-compute-runtime.wasm
 $(FSM_SRC)/js-compute-runtime.wasm: $(OBJ_DIR)/js-compute-runtime.wasm
-	$(call cmd,cp,$@)
-
-.PHONY: $(FSM_SRC)/js-compute-runtime-component.wasm
-$(FSM_SRC)/js-compute-runtime-component.wasm: $(OBJ_DIR)/js-compute-runtime-component.wasm
 	$(call cmd,cp,$@)
 
 

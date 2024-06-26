@@ -149,6 +149,8 @@ jobs:
 
       - run: yarn build
 
+      - run: yarn build:starlingmonkey
+
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
