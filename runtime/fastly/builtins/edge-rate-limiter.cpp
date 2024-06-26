@@ -458,13 +458,13 @@ bool EdgeRateLimiter::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool install(api::Engine *engine) {
-  if (!BuiltinImpl<PenaltyBox>::init_class_impl(engine->cx(), engine->global())) {
+  if (!PenaltyBox::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
-  if (!BuiltinImpl<EdgeRateLimiter>::init_class_impl(engine->cx(), engine->global())) {
+  if (!EdgeRateLimiter::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
-  if (!BuiltinImpl<RateCounter>::init_class_impl(engine->cx(), engine->global())) {
+  if (!RateCounter::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
 

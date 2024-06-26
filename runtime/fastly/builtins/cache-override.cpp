@@ -372,7 +372,7 @@ JSObject *CacheOverride::clone(JSContext *cx, JS::HandleObject self) {
 }
 
 bool install(api::Engine *engine) {
-  if (!BuiltinImpl<CacheOverride>::init_class_impl(engine->cx(), engine->global())) {
+  if (!CacheOverride::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
   RootedObject cache_override(engine->cx(), JS_NewObject(engine->cx(), nullptr));

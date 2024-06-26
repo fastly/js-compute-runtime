@@ -556,7 +556,7 @@ JSObject *Device::create(JSContext *cx, JS::HandleObject device_info) {
 }
 
 bool install(api::Engine *engine) {
-  if (!BuiltinNoConstructor<Device>::init_class_impl(engine->cx(), engine->global())) {
+  if (!Device::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
 

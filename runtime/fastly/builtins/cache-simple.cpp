@@ -766,10 +766,10 @@ const JSPropertySpec SimpleCache::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "SimpleCache", JSPROP_READONLY), JS_PS_END};
 
 bool install(api::Engine *engine) {
-  if (!BuiltinNoConstructor<SimpleCacheEntry>::init_class_impl(engine->cx(), engine->global())) {
+  if (!SimpleCacheEntry::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
-  if (!BuiltinNoConstructor<SimpleCache>::init_class_impl(engine->cx(), engine->global())) {
+  if (!SimpleCache::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
   return true;

@@ -1551,7 +1551,7 @@ bool install(api::Engine *engine) {
     return false;
   }
   Backend::backends.init(engine->cx(), backends);
-  if (!BuiltinImpl<Backend>::init_class_impl(engine->cx(), engine->global())) {
+  if (!Backend::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
 

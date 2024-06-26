@@ -298,10 +298,10 @@ bool SecretStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool install(api::Engine *engine) {
-  if (!BuiltinImpl<SecretStoreEntry>::init_class_impl(engine->cx(), engine->global())) {
+  if (!SecretStoreEntry::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
-  if (!BuiltinImpl<SecretStore>::init_class_impl(engine->cx(), engine->global())) {
+  if (!SecretStore::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
 

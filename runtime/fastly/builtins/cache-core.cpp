@@ -1128,21 +1128,20 @@ const JSPropertySpec CoreCache::properties[] = {
 
 bool install(api::Engine *engine) {
   ENGINE = engine;
-  if (!BuiltinNoConstructor<CoreCache>::init_class_impl(engine->cx(), engine->global())) {
+  if (!CoreCache::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
-  if (!BuiltinNoConstructor<CacheEntry>::init_class_impl(engine->cx(), engine->global())) {
+  if (!CacheEntry::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
   JS::RootedObject proto(engine->cx(), CacheEntry::proto_obj);
   if (!proto) {
     return false;
   }
-  if (!BuiltinNoConstructor<TransactionCacheEntry>::init_class_impl(engine->cx(), engine->global(),
-                                                                    proto)) {
+  if (!TransactionCacheEntry::init_class_impl(engine->cx(), engine->global(), proto)) {
     return false;
   }
-  if (!BuiltinNoConstructor<CacheState>::init_class_impl(engine->cx(), engine->global())) {
+  if (!CacheState::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
 
