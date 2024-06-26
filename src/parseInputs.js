@@ -21,9 +21,6 @@ export async function parseInputs(cliInputs) {
   let useStarlingMonkey = () => {
     console.log(`Building with the experimental StarlingMonkey engine`);
     starlingMonkey = true;
-    if (component) {
-      noStarlingMonkeyComponent();
-    }
     wasmEngine = wasmEngine = join(__dirname, "../starling.wasm");
   };
 
