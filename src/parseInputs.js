@@ -1,14 +1,11 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join, isAbsolute } from "node:path";
-import { existsSync } from "node:fs";
 import { unknownArgument } from "./unknownArgument.js";
 import { tooManyEngines } from "./tooManyEngines.js";
 
 export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
-  let component = false;
-  let adapter;
   let enableExperimentalHighResolutionTimeMethods = false;
   let enableExperimentalTopLevelAwait = false;
   let starlingMonkey = false;
@@ -21,24 +18,10 @@ export async function parseInputs(cliInputs) {
   let output = join(process.cwd(), "bin/main.wasm");
   let cliInput;
 
-  let useComponent = () => {
-    component = true;
-    if (starlingMonkey) {
-      noStarlingMonkeyComponent();
-    }
-    wasmEngine = join(__dirname, "../js-compute-runtime-component.wasm");
-  };
   let useStarlingMonkey = () => {
+    console.log(`Building with the experimental StarlingMonkey engine`);
     starlingMonkey = true;
-    if (component) {
-      noStarlingMonkeyComponent();
-    }
     wasmEngine = wasmEngine = join(__dirname, "../starling.wasm");
-    // StarlingMonkey is not enabled for published releases yet
-    // so if the binary does not exist, throw an error for end users
-    if (!existsSync(wasmEngine)) {
-      starlingMonkeyUnreleased();
-    }
   };
 
   // eslint-disable-next-line no-cond-assign
@@ -69,15 +52,6 @@ export async function parseInputs(cliInputs) {
       }
       case "--starlingmonkey": {
         useStarlingMonkey();
-        break;
-      }
-      case "--component": {
-        useComponent();
-        break;
-      }
-      case "--component-adapter": {
-        useComponent();
-        adapter = cliInputs.shift();
         break;
       }
       case "--engine-wasm": {
@@ -136,8 +110,6 @@ export async function parseInputs(cliInputs) {
     }
   }
   return {
-    adapter,
-    component,
     enableExperimentalHighResolutionTimeMethods,
     enableExperimentalTopLevelAwait,
     enablePBL,
@@ -146,15 +118,4 @@ export async function parseInputs(cliInputs) {
     starlingMonkey,
     wasmEngine,
   };
-}
-
-function noStarlingMonkeyComponent () {
-  console.error('StarlingMonkey does not yet support a component build');
-  process.exit(1);
-}
-
-function starlingMonkeyUnreleased () {
-  console.error('No StarlingMonkey engine found. This engine is not yet released and the `--starlingmonkey` flag is only for development builds.');
-  console.error('To use and test this engine, clone and build directly from source at https://github.com/fastly/js-compute-runtime.');
-  process.exit(1);
 }
