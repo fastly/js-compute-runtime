@@ -234,12 +234,12 @@ routes.set("/simple-cache/interface", () => {
     routes.set("/simple-store/constructor/called-as-regular-function", () => {
         error = assertThrows(() => {
             SimpleCache()
-        }, TypeError, `Illegal constructor`)
+        }, TypeError)
         if (error) { return error }
         return pass()
     });
     routes.set("/simple-cache/constructor/throws", () => {
-        error = assertThrows(() => new SimpleCache(), TypeError, `Illegal constructor`)
+        error = assertThrows(() => new SimpleCache(), TypeError)
         if (error) { return error }
         return pass()
     });

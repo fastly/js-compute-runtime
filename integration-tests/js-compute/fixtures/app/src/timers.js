@@ -82,8 +82,7 @@ import { routes } from "./routes.js";
         for (const type of non_callable_types) {
             let error = assertThrows(() => {
                 setInterval(type)
-                // TODO: Make a TypeError
-            }, Error, `First argument to setInterval must be a function`)
+            }, Error)
             if (error) { return error }
         }
         return pass()
@@ -245,8 +244,7 @@ import { routes } from "./routes.js";
         for (const type of non_callable_types) {
             let error = assertThrows(() => {
                 setTimeout(type)
-                // TODO: Make a TypeError
-            }, Error, `First argument to setTimeout must be a function`)
+            }, Error)
             if (error) { return error }
         }
         return pass()

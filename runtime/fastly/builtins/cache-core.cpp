@@ -10,7 +10,6 @@
 #include "js/Stream.h"
 #include <iostream>
 
-using builtins::BuiltinImpl;
 using builtins::web::streams::NativeStreamSource;
 using fastly::body::FastlyBody;
 using fastly::fastly::convertBodyInit;
@@ -418,13 +417,6 @@ const JSFunctionSpec CacheState::methods[] = {
 const JSPropertySpec CacheState::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "CacheState", JSPROP_READONLY), JS_PS_END};
 
-// We don't expose the ability for JavaScript programs to instantiate a CacheState instance directly
-// using the CacheState Constructor
-bool CacheState::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ILLEGAL_CTOR);
-  return false;
-}
-
 JSObject *CacheState::create(JSContext *cx, uint32_t state) {
   JS::RootedObject instance(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!instance) {
@@ -771,13 +763,6 @@ const JSFunctionSpec CacheEntry::methods[] = {
 const JSPropertySpec CacheEntry::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "CacheEntry", JSPROP_READONLY), JS_PS_END};
 
-// We don't expose the ability for JavaScript programs to instantiate a CacheEntry instance directly
-// using the CacheEntry Constructor
-bool CacheEntry::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ILLEGAL_CTOR);
-  return false;
-}
-
 JSObject *CacheEntry::create(JSContext *cx, uint32_t handle) {
   JS::RootedObject instance(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!instance) {
@@ -928,13 +913,6 @@ const JSFunctionSpec TransactionCacheEntry::methods[] = {
 
 const JSPropertySpec TransactionCacheEntry::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "TransactionCacheEntry", JSPROP_READONLY), JS_PS_END};
-
-// We don't expose the ability for JavaScript programs to instantiate a TransactionCacheEntry
-// instance directly using the TransactionCacheEntry Constructor
-bool TransactionCacheEntry::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ILLEGAL_CTOR);
-  return false;
-}
 
 JSObject *TransactionCacheEntry::create(JSContext *cx, uint32_t handle) {
   JS::RootedObject instance(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
@@ -1147,29 +1125,22 @@ const JSFunctionSpec CoreCache::methods[] = {JS_FS_END};
 const JSPropertySpec CoreCache::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "CoreCache", JSPROP_READONLY), JS_PS_END};
 
-// We don't expose the ability for JavaScript programs to instantiate a CoreCache instance directly
-// using the CoreCache Constructor
-bool CoreCache::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ILLEGAL_CTOR);
-  return false;
-}
-
 bool install(api::Engine *engine) {
   ENGINE = engine;
-  if (!BuiltinImpl<CoreCache>::init_class_impl(engine->cx(), engine->global())) {
+  if (!CoreCache::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
-  if (!BuiltinImpl<CacheEntry>::init_class_impl(engine->cx(), engine->global())) {
+  if (!CacheEntry::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
   JS::RootedObject proto(engine->cx(), CacheEntry::proto_obj);
   if (!proto) {
     return false;
   }
-  if (!BuiltinImpl<TransactionCacheEntry>::init_class_impl(engine->cx(), engine->global(), proto)) {
+  if (!TransactionCacheEntry::init_class_impl(engine->cx(), engine->global(), proto)) {
     return false;
   }
-  if (!BuiltinImpl<CacheState>::init_class_impl(engine->cx(), engine->global())) {
+  if (!CacheState::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
 

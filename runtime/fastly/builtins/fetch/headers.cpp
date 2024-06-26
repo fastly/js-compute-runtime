@@ -582,7 +582,7 @@ JSObject *Headers::create(JSContext *cx, JS::HandleObject self, Headers::Mode mo
   }
 
   if (!consumed) {
-    core::report_sequence_or_record_arg_error(cx, "Headers", "");
+    api::throw_error(cx, api::Errors::InvalidSequence, "Headers", "");
     return nullptr;
   }
 

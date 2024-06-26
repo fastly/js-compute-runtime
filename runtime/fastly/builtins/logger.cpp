@@ -2,8 +2,6 @@
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "../host-api/host_api_fastly.h"
 
-using builtins::BuiltinImpl;
-
 namespace fastly::logger {
 
 bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -80,7 +78,7 @@ bool Logger::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool install(api::Engine *engine) {
-  if (!BuiltinImpl<Logger>::init_class_impl(engine->cx(), engine->global())) {
+  if (!Logger::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
 

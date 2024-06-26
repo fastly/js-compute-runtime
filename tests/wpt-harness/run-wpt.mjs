@@ -86,6 +86,10 @@ const ArgParsers = {
     help: "Skip tests that take a long time, in particular in debug builds of the runtime",
     cmd: () => { config.skipSlowTests = true; }
   },
+  "--starlingmonkey": {
+    help: "Run the StarlingMonkey expectations",
+    cmd: () => { config.tests.expectations = relativePath("expectations-sm"); }
+  },
   "-v": {
     help: "Verbose output",
     cmd: () => { config.logLevel = LogLevel.Verbose; }

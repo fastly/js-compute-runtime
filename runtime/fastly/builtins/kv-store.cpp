@@ -22,7 +22,6 @@
 #include "builtin.h"
 #include "kv-store.h"
 
-using builtins::BuiltinImpl;
 using builtins::web::streams::NativeStreamSource;
 using fastly::fastly::convertBodyInit;
 using fastly::fastly::FastlyGetErrorMessage;
@@ -502,10 +501,10 @@ bool KVStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool install(api::Engine *engine) {
   ENGINE = engine;
-  if (!BuiltinImpl<KVStore>::init_class_impl(engine->cx(), engine->global())) {
+  if (!KVStore::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
-  if (!BuiltinImpl<KVStoreEntry>::init_class_impl(engine->cx(), engine->global())) {
+  if (!KVStoreEntry::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
   RootedValue kv_store_val(engine->cx());

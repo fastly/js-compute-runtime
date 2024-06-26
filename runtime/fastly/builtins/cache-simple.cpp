@@ -11,7 +11,7 @@
 #include "openssl/evp.h"
 #include <tuple>
 
-using builtins::BuiltinImpl;
+using builtins::BuiltinNoConstructor;
 using builtins::web::streams::NativeStreamSource;
 using fastly::fastly::convertBodyInit;
 using fastly::fastly::FastlyGetErrorMessage;
@@ -64,11 +64,6 @@ const JSPropertySpec SimpleCacheEntry::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "SimpleCacheEntry", JSPROP_READONLY),
     JS_PS_END,
 };
-
-bool SimpleCacheEntry::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorUTF8(cx, "SimpleCacheEntry can't be instantiated directly");
-  return false;
-}
 
 JSObject *SimpleCacheEntry::create(JSContext *cx, host_api::HttpBody body_handle) {
   JS::RootedObject SimpleCacheEntry(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
@@ -770,16 +765,11 @@ const JSFunctionSpec SimpleCache::methods[] = {JS_FS_END};
 const JSPropertySpec SimpleCache::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "SimpleCache", JSPROP_READONLY), JS_PS_END};
 
-bool SimpleCache::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ILLEGAL_CTOR);
-  return false;
-}
-
 bool install(api::Engine *engine) {
-  if (!BuiltinImpl<SimpleCacheEntry>::init_class_impl(engine->cx(), engine->global())) {
+  if (!SimpleCacheEntry::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
-  if (!BuiltinImpl<SimpleCache>::init_class_impl(engine->cx(), engine->global())) {
+  if (!SimpleCache::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
   return true;

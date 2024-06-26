@@ -3,7 +3,6 @@
 #include "../host-api/host_api_fastly.h"
 #include "fastly.h"
 
-using builtins::BuiltinImpl;
 using fastly::fastly::FastlyGetErrorMessage;
 
 namespace fastly::dictionary {
@@ -140,7 +139,7 @@ bool Dictionary::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool install(api::Engine *engine) {
-  if (!BuiltinImpl<Dictionary>::init_class_impl(engine->cx(), engine->global())) {
+  if (!Dictionary::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
 

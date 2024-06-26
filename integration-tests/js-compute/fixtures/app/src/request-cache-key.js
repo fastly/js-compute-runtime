@@ -14,7 +14,7 @@ import { routes } from "./routes.js";
     routes.set("/request/setCacheKey/called-unbound", () => {
         let error = assertThrows(() => {
             Request.prototype.setCacheKey.call(undefined, '1', '2')
-        }, TypeError, "Method setCacheKey called on receiver that's not an instance of Request")
+        }, TypeError)
         if (error) { return error }
         return pass()
     });

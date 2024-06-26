@@ -29,7 +29,7 @@
 #include "js/experimental/TypedData.h"
 #pragma clang diagnostic pop
 
-using builtins::web::base64::convertJSValueToByteString;
+using builtins::web::base64::valueToJSByteString;
 using builtins::web::dom_exception::DOMException;
 using builtins::web::streams::NativeStreamSource;
 using builtins::web::streams::TransformStream;
@@ -2879,7 +2879,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
     if (!statusText_val.isUndefined()) {
-      auto status_text_result = convertJSValueToByteString(cx, statusText_val);
+      auto status_text_result = valueToJSByteString(cx, statusText_val);
       if (status_text_result.isErr()) {
         JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                   JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS_TEXT);

@@ -152,12 +152,12 @@ routes.set("/device/interface", () => {
     routes.set("/device/constructor/called-as-regular-function", () => {
         error = assertThrows(() => {
             Device()
-        }, TypeError, `Illegal constructor`)
+        }, TypeError)
         if (error) { return error }
         return pass('ok')
     });
     routes.set("/device/constructor/throws", () => {
-        error = assertThrows(() => new Device(), TypeError, `Illegal constructor`)
+        error = assertThrows(() => new Device(), TypeError)
         if (error) { return error }
         return pass('ok')
     });

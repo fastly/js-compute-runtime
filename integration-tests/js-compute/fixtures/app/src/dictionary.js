@@ -100,7 +100,7 @@ import { routes } from "./routes.js";
     routes.set("/dictionary/get/called-unbound", () => {
       let error = assertThrows(() => {
         Dictionary.prototype.get.call(undefined, '1')
-      }, TypeError, "Method get called on receiver that's not an instance of Dictionary")
+      }, TypeError)
       if (error) { return error }
       return pass()
     });

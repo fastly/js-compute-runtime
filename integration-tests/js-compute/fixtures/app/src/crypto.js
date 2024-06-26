@@ -114,7 +114,7 @@ routes.set("/crypto.subtle", async () => {
   routes.set("/crypto.subtle.importKey/called-with-wrong-this", async () => {
     error = await assertRejects(async () => {
       await crypto.subtle.importKey.call(undefined, 'jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, publicRsaJsonWebKeyData.key_ops)
-    }, TypeError, "Method SubtleCrypto.importKey called on receiver that's not an instance of SubtleCrypto")
+    }, TypeError)
     if (error) { return error; }
     return pass('ok');
   });
@@ -151,7 +151,7 @@ routes.set("/crypto.subtle", async () => {
     routes.set("/crypto.subtle.importKey/first-parameter-non-existant-format", async () => {
       let error = await assertRejects(async () => {
         await crypto.subtle.importKey('jake', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, publicRsaJsonWebKeyData.key_ops)
-      }, Error, "Provided format parameter is not supported. Supported formats are: 'spki', 'pkcs8', 'jwk', and 'raw'")
+      }, Error)
       if (error) { return error; }
       return pass('ok');
     });
@@ -162,7 +162,7 @@ routes.set("/crypto.subtle", async () => {
     routes.set("/crypto.subtle.importKey/second-parameter-invalid-format", async () => {
       let error = await assertRejects(async () => {
         await crypto.subtle.importKey('jwk', Symbol(), rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, publicRsaJsonWebKeyData.key_ops)
-      }, Error, "The provided value is not of type JsonWebKey")
+      }, Error)
       if (error) { return error; }
       return pass('ok');
     });
@@ -172,7 +172,7 @@ routes.set("/crypto.subtle", async () => {
         let error = await assertRejects(async () => {
           delete publicRsaJsonWebKeyData.e;
           await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, publicRsaJsonWebKeyData.key_ops)
-        }, DOMException, "Data provided to an operation does not meet requirements")
+        }, DOMException)
         if (error) { return error; }
         return pass('ok');
       });
@@ -209,7 +209,7 @@ routes.set("/crypto.subtle", async () => {
         let error = await assertRejects(async () => {
           delete publicRsaJsonWebKeyData.kty;
           await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, publicRsaJsonWebKeyData.key_ops)
-        }, Error, "The required JWK member 'kty' was missing")
+        }, Error)
         if (error) { return error; }
         return pass('ok');
       });
@@ -217,7 +217,7 @@ routes.set("/crypto.subtle", async () => {
         let error = await assertRejects(async () => {
           publicRsaJsonWebKeyData.kty = "jake";
           await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, publicRsaJsonWebKeyData.key_ops)
-        }, Error, "The JWK 'kty' member was not 'RSA'")
+        }, Error)
         if (error) { return error; }
         return pass('ok');
       });
@@ -235,7 +235,7 @@ routes.set("/crypto.subtle", async () => {
           const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
           publicRsaJsonWebKeyData.key_ops = "jake";
           await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, key_ops)
-        }, Error, "Failed to read the 'key_ops' property from 'JsonWebKey': The provided value cannot be converted to a sequence")
+        }, Error)
         if (error) { return error; }
         return pass('ok');
       });
@@ -254,7 +254,7 @@ routes.set("/crypto.subtle", async () => {
           const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
           publicRsaJsonWebKeyData.key_ops = ["sign", "sign"];
           await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, key_ops)
-        }, Error, "The 'key_ops' member of the JWK dictionary contains duplicate usages")
+        }, Error)
         if (error) { return error; }
         return pass('ok');
       });
@@ -263,7 +263,7 @@ routes.set("/crypto.subtle", async () => {
           const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
           publicRsaJsonWebKeyData.key_ops = ["sign", "jake"];
           await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, key_ops)
-        }, TypeError, "Invalid keyUsages argument")
+        }, Error)
         if (error) { return error; }
         return pass('ok');
       });
@@ -414,7 +414,7 @@ routes.set("/crypto.subtle", async () => {
         let error = await assertRejects(async () => {
           delete publicEcdsaJsonWebKeyData.kty;
           await crypto.subtle.importKey('jwk', publicEcdsaJsonWebKeyData, ecdsaJsonWebKeyAlgorithm, publicEcdsaJsonWebKeyData.ext, publicEcdsaJsonWebKeyData.key_ops)
-        }, Error, "The required JWK member 'kty' was missing")
+        }, Error)
         if (error) { return error; }
         return pass('ok');
       });
@@ -422,7 +422,7 @@ routes.set("/crypto.subtle", async () => {
         let error = await assertRejects(async () => {
           publicEcdsaJsonWebKeyData.kty = "jake";
           await crypto.subtle.importKey('jwk', publicEcdsaJsonWebKeyData, ecdsaJsonWebKeyAlgorithm, publicEcdsaJsonWebKeyData.ext, publicEcdsaJsonWebKeyData.key_ops)
-        }, Error, "The JWK 'kty' member was not 'EC'")
+        }, Error)
         if (error) { return error; }
         return pass('ok');
       });
@@ -440,7 +440,7 @@ routes.set("/crypto.subtle", async () => {
           const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
           publicEcdsaJsonWebKeyData.key_ops = "jake";
           await crypto.subtle.importKey('jwk', publicEcdsaJsonWebKeyData, ecdsaJsonWebKeyAlgorithm, publicEcdsaJsonWebKeyData.ext, key_ops)
-        }, Error, "Failed to read the 'key_ops' property from 'JsonWebKey': The provided value cannot be converted to a sequence")
+        }, Error)
         if (error) { return error; }
         return pass('ok');
       });
@@ -459,7 +459,7 @@ routes.set("/crypto.subtle", async () => {
           const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
           publicEcdsaJsonWebKeyData.key_ops = ["sign", "sign"];
           await crypto.subtle.importKey('jwk', publicEcdsaJsonWebKeyData, ecdsaJsonWebKeyAlgorithm, publicEcdsaJsonWebKeyData.ext, key_ops)
-        }, Error, "The 'key_ops' member of the JWK dictionary contains duplicate usages")
+        }, Error)
         if (error) { return error; }
         return pass('ok');
       });
@@ -468,7 +468,7 @@ routes.set("/crypto.subtle", async () => {
           const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
           publicEcdsaJsonWebKeyData.key_ops = ["sign", "jake"];
           await crypto.subtle.importKey('jwk', publicEcdsaJsonWebKeyData, ecdsaJsonWebKeyAlgorithm, publicEcdsaJsonWebKeyData.ext, key_ops)
-        }, TypeError, "Invalid keyUsages argument")
+        }, Error)
         if (error) { return error; }
         return pass('ok');
       });
@@ -566,7 +566,7 @@ routes.set("/crypto.subtle", async () => {
       let error = await assertRejects(async () => {
         rsaJsonWebKeyAlgorithm.name = "`~!@#@#$Q%^%&^*";
         await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, publicRsaJsonWebKeyData.key_ops)
-      }, Error, "Algorithm: Unrecognized name")
+      }, Error)
       if (error) { return error; }
       return pass('ok');
     });
@@ -605,14 +605,14 @@ routes.set("/crypto.subtle", async () => {
     routes.set("/crypto.subtle.importKey/fifth-parameter-undefined", async () => {
       let error = await assertRejects(async () => {
         await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, undefined)
-      }, Error, "The provided value cannot be converted to a sequence")
+      }, Error)
       if (error) { return error; }
       return pass('ok');
     });
     routes.set("/crypto.subtle.importKey/fifth-parameter-invalid", async () => {
       let error = await assertRejects(async () => {
         await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, ["jake"])
-      }, Error, "SubtleCrypto.importKey: Invalid keyUsages argument")
+      }, Error)
       if (error) { return error; }
       return pass('ok');
     });
@@ -787,7 +787,7 @@ routes.set("/crypto.subtle", async () => {
   routes.set("/crypto.subtle.digest/called-with-wrong-this", async () => {
     error = await assertRejects(async () => {
       await crypto.subtle.digest.call(undefined)
-    }, TypeError, "Method SubtleCrypto.digest called on receiver that's not an instance of SubtleCrypto")
+    }, TypeError)
     if (error) { return error; }
     return pass('ok')
   });
@@ -835,7 +835,7 @@ routes.set("/crypto.subtle", async () => {
     routes.set("/crypto.subtle.digest/second-parameter-undefined", async () => {
       let error = await assertRejects(async () => {
         await crypto.subtle.digest("sha-1", undefined);
-      }, Error, "SubtleCrypto.digest: data must be of type ArrayBuffer or ArrayBufferView but got \"\"");
+      }, Error);
       if (error) { return error; }
       return pass('ok');
     });
@@ -912,7 +912,7 @@ routes.set("/crypto.subtle", async () => {
   routes.set("/crypto.subtle.sign/called-with-wrong-this", async () => {
     error = await assertRejects(async () => {
       await crypto.subtle.sign.call(undefined, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData, data)
-    }, TypeError, "Method SubtleCrypto.sign called on receiver that's not an instance of SubtleCrypto")
+    }, TypeError)
     if (error) { return error; }
     return pass('ok');
   });
@@ -961,7 +961,7 @@ routes.set("/crypto.subtle", async () => {
     routes.set("/crypto.subtle.sign/second-parameter-invalid-format", async () => {
       let error = await assertRejects(async () => {
         await crypto.subtle.sign(rsaJsonWebKeyAlgorithm, "jake", data)
-      }, Error, "parameter 2 is not of type 'CryptoKey'")
+      }, Error)
       if (error) { return error; }
       return pass('ok');
     });
@@ -980,7 +980,7 @@ routes.set("/crypto.subtle", async () => {
       let error = await assertRejects(async () => {
         const key = await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, publicRsaJsonWebKeyData.key_ops);
         await crypto.subtle.sign(rsaJsonWebKeyAlgorithm, key, undefined)
-      }, Error, "SubtleCrypto.sign: data must be of type ArrayBuffer or ArrayBufferView but got \"\"")
+      }, Error)
       if (error) { return error; }
       return pass('ok');
     });
@@ -1060,7 +1060,7 @@ routes.set("/crypto.subtle", async () => {
     error = await assertRejects(async () => {
       const key = await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, publicRsaJsonWebKeyData.key_ops);
       await crypto.subtle.verify.call(undefined, rsaJsonWebKeyAlgorithm, key, new Uint8Array, new Uint8Array)
-    }, TypeError, "Method SubtleCrypto.verify called on receiver that's not an instance of SubtleCrypto")
+    }, TypeError)
     if (error) { return error; }
     return pass('ok');
   });
@@ -1109,7 +1109,7 @@ routes.set("/crypto.subtle", async () => {
     routes.set("/crypto.subtle.verify/second-parameter-invalid-format", async () => {
       let error = await assertRejects(async () => {
         await crypto.subtle.verify(rsaJsonWebKeyAlgorithm, "jake", new Uint8Array, new Uint8Array)
-      }, Error, "parameter 2 is not of type 'CryptoKey'")
+      }, Error)
       if (error) { return error; }
       return pass('ok');
     });
@@ -1128,7 +1128,7 @@ routes.set("/crypto.subtle", async () => {
       let error = await assertRejects(async () => {
         const key = await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, publicRsaJsonWebKeyData.key_ops);
         await crypto.subtle.verify(rsaJsonWebKeyAlgorithm, key, undefined, new Uint8Array());
-      }, Error, "SubtleCrypto.verify: signature (argument 3) must be of type ArrayBuffer or ArrayBufferView but got \"\"")
+      }, Error)
       if (error) { return error; }
       return pass('ok');
     });
@@ -1139,7 +1139,7 @@ routes.set("/crypto.subtle", async () => {
       let error = await assertRejects(async () => {
         const key = await crypto.subtle.importKey('jwk', publicRsaJsonWebKeyData, rsaJsonWebKeyAlgorithm, publicRsaJsonWebKeyData.ext, publicRsaJsonWebKeyData.key_ops);
         await crypto.subtle.verify(rsaJsonWebKeyAlgorithm, key, new Uint8Array(), undefined);
-      }, Error, "SubtleCrypto.verify: data (argument 4) must be of type ArrayBuffer or ArrayBufferView but got \"\"")
+      }, Error)
       if (error) { return error; }
       return pass('ok');
     });

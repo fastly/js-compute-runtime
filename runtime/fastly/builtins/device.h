@@ -6,7 +6,7 @@
 
 namespace fastly::device {
 
-class Device : public builtins::BuiltinImpl<Device> {
+class Device : public builtins::BuiltinNoConstructor<Device> {
 private:
 public:
   static constexpr const char *class_name = "Device";
@@ -49,7 +49,6 @@ public:
 
   static bool lookup(JSContext *cx, unsigned argc, JS::Value *vp);
 
-  static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static JSObject *create(JSContext *cx, JS::HandleObject deviceInfo);
 
   static JSString *ToSource(JSContext *cx, JS::HandleObject self);
