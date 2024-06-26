@@ -10,7 +10,6 @@
 #include "js/Stream.h"
 #include <iostream>
 
-using builtins::BuiltinNoConstructor;
 using builtins::web::streams::NativeStreamSource;
 using fastly::body::FastlyBody;
 using fastly::fastly::convertBodyInit;

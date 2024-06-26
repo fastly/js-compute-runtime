@@ -22,7 +22,6 @@
 #include "builtin.h"
 #include "kv-store.h"
 
-using builtins::BuiltinImpl;
 using builtins::web::streams::NativeStreamSource;
 using fastly::fastly::convertBodyInit;
 using fastly::fastly::FastlyGetErrorMessage;

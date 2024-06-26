@@ -2,8 +2,6 @@
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "../host-api/host_api_fastly.h"
 
-using builtins::BuiltinImpl;
-
 namespace fastly::logger {
 
 bool Logger::log(JSContext *cx, unsigned argc, JS::Value *vp) {

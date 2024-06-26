@@ -5,8 +5,6 @@
 #include "js/Result.h"
 #include <tuple>
 
-using builtins::BuiltinImpl;
-
 namespace fastly::edge_rate_limiter {
 
 JSString *PenaltyBox::get_name(JSObject *self) {
