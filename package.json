@@ -49,6 +49,7 @@
     "unified": "^11.0.0"
   },
   "dependencies": {
+    "@bytecodealliance/jco": "^1.2.4",
     "@bytecodealliance/wizer": "^3.0.1",
     "acorn": "^8.8.2",
     "acorn-walk": "^8.2.0",
