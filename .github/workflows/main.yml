@@ -368,6 +368,9 @@ jobs:
   starlingmonkey-build:
     name: StarlingMonkey Build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        profile: [debug, release]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -377,10 +380,14 @@ jobs:
         rustup toolchain install 1.77.1
         rustup target add wasm32-wasi --toolchain 1.77.1
     - name: Build
+      if: ${{ matrix.profile == 'release' }}
       run: npm run build:starlingmonkey
+    - name: Build
+      if: ${{ matrix.profile == 'debug' }}
+      run: npm run build:starlingmonkey:debug
     - uses: actions/upload-artifact@v3
       with:
-        name: starling-release
+        name: starling-${{ matrix.profile }}
         path: starling.wasm
 
   starlingmonkey-run_wpt:
