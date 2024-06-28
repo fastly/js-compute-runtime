@@ -927,6 +927,36 @@ Result<Void> HttpReq::remove_header(std::string_view name) {
   return generic_header_remove<fastly_compute_at_edge_http_req_header_remove>(this->handle, name);
 }
 
+Result<std::optional<HostBytes>> HttpResp::get_ip() const {
+  Result<std::optional<HostBytes>> res;
+
+  fastly_compute_at_edge_types_error_t err;
+  fastly_world_option_list_u8_t ret;
+  if (!fastly_compute_at_edge_http_resp_ip_get(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(make_host_bytes(ret.val));
+  } else {
+    res.emplace(std::nullopt);
+  }
+  return res;
+}
+
+Result<std::optional<uint16_t>> HttpResp::get_port() const {
+  Result<std::optional<uint16_t>> res;
+
+  fastly_compute_at_edge_types_error_t err;
+  fastly_world_option_u16_t ret;
+  if (!fastly_compute_at_edge_http_resp_port_get(this->handle, &ret, &err)) {
+    res.emplace_err(err);
+  } else if (ret.is_some) {
+    res.emplace(ret.val);
+  } else {
+    res.emplace(std::nullopt);
+  }
+  return res;
+}
+
 Result<HttpResp> HttpResp::make() {
   Result<HttpResp> res;
 

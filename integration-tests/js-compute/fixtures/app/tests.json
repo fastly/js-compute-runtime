@@ -3165,6 +3165,28 @@
       "body": "ok"
     }
   },
+  "GET /backend/port-ip-defined": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/port-ip-defined"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /backend/port-ip-cached": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/port-ip-cached"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
   "GET /dictionary/exposed-as-global": {
     "environments": ["viceroy", "compute"],
     "downstream_request": {
@@ -4589,6 +4611,16 @@
     "downstream_request": {
       "method": "GET",
       "pathname": "/response/redirect"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /response/ip-port-undefined": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/response/ip-port-undefined"
     },
     "downstream_response": {
       "status": 200

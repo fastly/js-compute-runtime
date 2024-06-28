@@ -474,6 +474,11 @@ public:
 
   Result<HttpVersion> get_version() const override;
 
+  /// Get the IP address associated with the response
+  Result<std::optional<HostBytes>> get_ip() const;
+  /// Get the port associated with the response
+  Result<std::optional<uint16_t>> get_port() const;
+
   Result<std::vector<HostString>> get_header_names() override;
   Result<std::optional<std::vector<HostBytes>>> get_header_values(std::string_view name) override;
   Result<Void> insert_header(std::string_view name, std::span<uint8_t> value) override;

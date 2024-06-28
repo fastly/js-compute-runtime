@@ -183,7 +183,7 @@ public:
 
     auto res = this->handle.transaction_cancel();
     if (auto *err = res.to_err()) {
-      host_api::handle_fastly_error(this->cx, *err, this->line, this->func);
+      host_api::handle_api_error(this->cx, *err, this->line, this->func);
     }
 
     // We always reject the promise if the transaction hasn't committed.

@@ -1659,6 +1659,24 @@ routes.set("/backend/timeout", async () => {
       return pass('ok')
     });
   }
+
+  // ip & port
+  routes.set("/backend/port-ip-defined", async () => {
+    allowDynamicBackends(true);
+    const res = await fetch('https://http-me.glitch.me/headers', {
+      cacheOverride: new CacheOverride("pass")
+    })
+    assert(res.port > 0)
+    assert(res.ip.split('.').length > 1 || res.ip.split(':').length > 1)
+    return pass('ok')
+  });
+  routes.set("/backend/port-ip-cached", async () => {
+    allowDynamicBackends(true);
+    const res = await fetch('https://http-me.glitch.me/headers')
+    assert(res.port, undefined)
+    assert(res.ip, undefined)
+    return pass('ok')
+  });
 }
 
 function createValidHttpMeBackend() {

@@ -322,6 +322,14 @@ WASM_IMPORT("fastly_http_resp", "header_remove")
 int resp_header_remove(fastly_compute_at_edge_http_types_response_handle_t resp_handle,
                        const char *name, size_t name_len);
 
+WASM_IMPORT("fastly_http_resp", "get_addr_dest_ip")
+int resp_ip_get(fastly_compute_at_edge_http_types_response_handle_t resp_handle, uint8_t *ip_out,
+                size_t *nwritten);
+
+WASM_IMPORT("fastly_http_resp", "get_addr_dest_port")
+int resp_port_get(fastly_compute_at_edge_http_types_response_handle_t resp_handle,
+                  uint16_t *port_out);
+
 WASM_IMPORT("fastly_http_resp", "version_get")
 int resp_version_get(fastly_compute_at_edge_http_types_response_handle_t resp_handle,
                      uint32_t *version_out);

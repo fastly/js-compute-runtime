@@ -566,6 +566,11 @@ public:
   Result<Void> insert_header(std::string_view name, std::span<uint8_t> value) override;
   Result<Void> append_header(std::string_view name, std::span<uint8_t> value) override;
   Result<Void> remove_header(std::string_view name) override;
+
+  /// Get the IP address associated with the response
+  Result<std::optional<HostBytes>> get_ip() const;
+  /// Get the port associated with the request
+  Result<std::optional<uint16_t>> get_port() const;
 };
 
 /// The pair of a response and its body.

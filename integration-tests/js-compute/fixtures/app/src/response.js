@@ -1,7 +1,7 @@
 /* eslint-env serviceworker */
 
 import { routes } from "./routes.js";
-import { pass, assert } from "./assertions.js";
+import { pass, assert, assertThrows } from "./assertions.js";
 
 routes.set("/response/text/guest-backed-stream", async () => {
     let contents = new Array(10).fill(new Uint8Array(500).fill(65))
@@ -33,6 +33,14 @@ routes.set("/response/arrayBuffer/guest-backed-stream", async () => {
     let json = await res.arrayBuffer()
 
     let error = assert(json, contents.buffer, `await res.json() === contents.buffer`)
+    if (error) { return error }
+    return pass()
+})
+routes.set("/response/ip-port-undefined", async () => {
+    let res = new Response()
+    let error = assert(res.ip, undefined)
+    if (error) { return error }
+    error = assert(res.port, undefined)
     if (error) { return error }
     return pass()
 })
