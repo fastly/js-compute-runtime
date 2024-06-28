@@ -444,6 +444,10 @@ jobs:
     strategy:
       matrix:
         platform: [viceroy, compute]
+        profile: [debug, release]
+        exclude:
+          - platform: compute
+            profile: release
     needs: [starlingmonkey-build]
     steps:
     - name: Checkout fastly/js-compute-runtime
@@ -481,7 +485,7 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: starling-release
+        name: starling-${{ matrix.profile }}
     - run: yarn install --frozen-lockfile
 
     - name: Yarn install
