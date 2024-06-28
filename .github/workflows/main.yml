@@ -166,9 +166,7 @@ jobs:
     name: Run Web Platform Tests
     strategy:
       matrix:
-        include:
-          - profile: debug
-          - profile: release
+        profile: [debug, release]
     needs: [build, ensure_cargo_installs]
     runs-on: ubuntu-latest
     steps:
@@ -228,6 +226,9 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [build, ensure_cargo_installs]
+    strategy:
+      matrix:
+        profile: [debug, release]
     steps:
     - name: Checkout fastly/js-compute-runtime
       uses: actions/checkout@v3
@@ -262,12 +263,10 @@ jobs:
         echo "bailing out from the build early"
         exit 1
 
-    # https://github.com/fastly/js-compute-runtime/issues/361
-    # TODO: Use engine-debug on all apps once we upgrade to FF 109
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: 'engine-debug'
+        name: 'engine-${{ matrix.profile }}'
     - run: yarn install --frozen-lockfile
 
     - name: js-compute Integration Tests Job
@@ -350,9 +349,6 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [build]
-    strategy:
-      matrix:
-        profile: [debug, release]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -363,7 +359,6 @@ jobs:
         fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
         fastly-cli-version: ${{ env.fastly-cli_version }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        engine: 'engine-${{ matrix.profile }}'
 
   starlingmonkey-build:
     name: StarlingMonkey Build
@@ -449,7 +444,6 @@ jobs:
     strategy:
       matrix:
         platform: [viceroy, compute]
-        profile: [debug, release]
     needs: [starlingmonkey-build]
     steps:
     - name: Checkout fastly/js-compute-runtime
@@ -487,7 +481,7 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: starling-${{ matrix.profile }}
+        name: starling-release
     - run: yarn install --frozen-lockfile
 
     - name: Yarn install
