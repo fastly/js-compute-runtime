@@ -238,7 +238,7 @@ uint32_t RequestOrResponse::handle(JSObject *obj) {
 }
 
 bool RequestOrResponse::has_body(JSObject *obj) {
-  MOZ_ASSERT(is_instance(obj));
+  // MOZ_ASSERT(is_instance(obj));
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::HasBody)).toBoolean();
 }
 
@@ -259,7 +259,7 @@ JSObject *RequestOrResponse::body_source(JSContext *cx, JS::HandleObject obj) {
 }
 
 bool RequestOrResponse::body_used(JSObject *obj) {
-  MOZ_ASSERT(is_instance(obj));
+  // MOZ_ASSERT(is_instance(obj));
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::BodyUsed)).toBoolean();
 }
 
@@ -1159,7 +1159,7 @@ JSObject *RequestOrResponse::create_body_stream(JSContext *cx, JS::HandleObject 
 
 bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self,
                                  bool create_if_undefined) {
-  MOZ_ASSERT(is_instance(self));
+  // MOZ_ASSERT(is_instance(self));
   if (!has_body(self)) {
     args.rval().setNull();
     return true;

@@ -14,6 +14,9 @@ inputs:
   github-token:
     description: 'The GitHub token to use for downloading the Fastly CLI'
     required: true
+  engine:
+    description: 'The engine to test'
+    required: true
 
 runs:
   using: "composite"
@@ -29,7 +32,7 @@ runs:
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: engine-release
+        name: ${{ inputs.engine }}
     - run: yarn
       shell: bash
     - run: cd ./integration-tests/js-compute && yarn
