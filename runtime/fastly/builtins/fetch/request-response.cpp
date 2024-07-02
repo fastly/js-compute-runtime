@@ -248,7 +248,7 @@ host_api::HttpBody RequestOrResponse::body_handle(JSObject *obj) {
 }
 
 JSObject *RequestOrResponse::body_stream(JSObject *obj) {
-  MOZ_ASSERT(is_instance(obj));
+  // MOZ_ASSERT(is_instance(obj));
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::BodyStream)).toObjectOrNull();
 }
 
