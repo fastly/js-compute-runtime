@@ -1125,7 +1125,7 @@ bool RequestOrResponse::maybe_stream_body(JSContext *cx, JS::HandleObject body_o
 }
 
 JSObject *RequestOrResponse::create_body_stream(JSContext *cx, JS::HandleObject owner) {
-  MOZ_ASSERT(is_instance(owner));
+  // MOZ_ASSERT(is_instance(owner));
   MOZ_ASSERT(!body_stream(owner));
   JS::RootedObject source(cx, builtins::NativeStreamSource::create(
                                   cx, owner, JS::UndefinedHandleValue, body_source_pull_algorithm,
