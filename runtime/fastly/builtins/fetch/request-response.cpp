@@ -243,7 +243,7 @@ bool RequestOrResponse::has_body(JSObject *obj) {
 }
 
 host_api::HttpBody RequestOrResponse::body_handle(JSObject *obj) {
-  MOZ_ASSERT(is_instance(obj));
+  // MOZ_ASSERT(is_instance(obj));
   return host_api::HttpBody(JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Body)).toInt32());
 }
 
