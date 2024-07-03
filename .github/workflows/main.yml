@@ -166,9 +166,7 @@ jobs:
     name: Run Web Platform Tests
     strategy:
       matrix:
-        include:
-          - profile: debug
-          - profile: release
+        profile: [debug, release]
     needs: [build, ensure_cargo_installs]
     runs-on: ubuntu-latest
     steps:
@@ -228,6 +226,9 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [build, ensure_cargo_installs]
+    strategy:
+      matrix:
+        profile: [debug, release]
     steps:
     - name: Checkout fastly/js-compute-runtime
       uses: actions/checkout@v3
@@ -262,12 +263,10 @@ jobs:
         echo "bailing out from the build early"
         exit 1
 
-    # https://github.com/fastly/js-compute-runtime/issues/361
-    # TODO: Use engine-debug on all apps once we upgrade to FF 109
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: 'engine-debug'
+        name: 'engine-${{ matrix.profile }}'
     - run: yarn install --frozen-lockfile
 
     - name: js-compute Integration Tests Job
@@ -364,6 +363,9 @@ jobs:
   starlingmonkey-build:
     name: StarlingMonkey Build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        profile: [debug, release]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -373,10 +375,14 @@ jobs:
         rustup toolchain install 1.77.1
         rustup target add wasm32-wasi --toolchain 1.77.1
     - name: Build
+      if: ${{ matrix.profile == 'release' }}
       run: npm run build:starlingmonkey
+    - name: Build
+      if: ${{ matrix.profile == 'debug' }}
+      run: npm run build:starlingmonkey:debug
     - uses: actions/upload-artifact@v3
       with:
-        name: starling-release
+        name: starling-${{ matrix.profile }}
         path: starling.wasm
 
   starlingmonkey-run_wpt:
@@ -438,6 +444,10 @@ jobs:
     strategy:
       matrix:
         platform: [viceroy, compute]
+        profile: [debug, release]
+        exclude:
+          - platform: compute
+            profile: release
     needs: [starlingmonkey-build]
     steps:
     - name: Checkout fastly/js-compute-runtime
@@ -475,7 +485,7 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: starling-release
+        name: starling-${{ matrix.profile }}
     - run: yarn install --frozen-lockfile
 
     - name: Yarn install

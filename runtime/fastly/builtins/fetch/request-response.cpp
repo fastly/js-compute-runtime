@@ -238,17 +238,14 @@ uint32_t RequestOrResponse::handle(JSObject *obj) {
 }
 
 bool RequestOrResponse::has_body(JSObject *obj) {
-  MOZ_ASSERT(is_instance(obj));
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::HasBody)).toBoolean();
 }
 
 host_api::HttpBody RequestOrResponse::body_handle(JSObject *obj) {
-  MOZ_ASSERT(is_instance(obj));
   return host_api::HttpBody(JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Body)).toInt32());
 }
 
 JSObject *RequestOrResponse::body_stream(JSObject *obj) {
-  MOZ_ASSERT(is_instance(obj));
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::BodyStream)).toObjectOrNull();
 }
 
@@ -259,7 +256,6 @@ JSObject *RequestOrResponse::body_source(JSContext *cx, JS::HandleObject obj) {
 }
 
 bool RequestOrResponse::body_used(JSObject *obj) {
-  MOZ_ASSERT(is_instance(obj));
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::BodyUsed)).toBoolean();
 }
 
@@ -1133,7 +1129,6 @@ bool RequestOrResponse::maybe_stream_body(JSContext *cx, JS::HandleObject body_o
 }
 
 JSObject *RequestOrResponse::create_body_stream(JSContext *cx, JS::HandleObject owner) {
-  MOZ_ASSERT(is_instance(owner));
   MOZ_ASSERT(!body_stream(owner));
   JS::RootedObject source(cx, NativeStreamSource::create(cx, owner, JS::UndefinedHandleValue,
                                                          body_source_pull_algorithm,
@@ -1159,7 +1154,6 @@ JSObject *RequestOrResponse::create_body_stream(JSContext *cx, JS::HandleObject 
 
 bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self,
                                  bool create_if_undefined) {
-  MOZ_ASSERT(is_instance(self));
   if (!has_body(self)) {
     args.rval().setNull();
     return true;
@@ -3072,10 +3066,6 @@ bool Response::init_class(JSContext *cx, JS::HandleObject global) {
 JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                            host_api::HttpResp response_handle, host_api::HttpBody body_handle,
                            bool is_upstream, bool is_grip, JS::UniqueChars backend) {
-  // MOZ_ASSERT(cx);
-  // MOZ_ASSERT(is_instance(response));
-  // MOZ_ASSERT(response_handle);
-  // MOZ_ASSERT(body_handle);
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Response),
                       JS::Int32Value(response_handle.handle));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::NullValue());
