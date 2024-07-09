@@ -6,7 +6,7 @@ export function containsSyntaxErrors(input) {
         `"${process.execPath}"`,
         [
             "--check",
-            input,
+            `"${input}"`,
         ],
         {
             stdio: [null, null, null],

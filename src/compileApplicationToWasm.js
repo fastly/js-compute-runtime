@@ -117,7 +117,7 @@ export async function compileApplicationToWasm(
 
   try {
     let wizerProcess = spawnSync(
-      wizer,
+      `"${wizer}"`,
       [
         "--inherit-env=true",
         "--allow-wasi",
@@ -125,8 +125,8 @@ export async function compileApplicationToWasm(
         ...starlingMonkey ? [`--dir=${dirname(wizerInput)}`] : [],
         `--wasm-bulk-memory=true`,
         "-r _start=wizer.resume",
-        `-o=${output}`,
-        wasmEngine,
+        `-o="${output}"`,
+        `"${wasmEngine}"`,
       ],
       {
         stdio: [null, process.stdout, process.stderr],
