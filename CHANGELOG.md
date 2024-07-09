@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.16.1 (2024-07-09)
+
+### Fixed
+
+* CLI to allow commands/args in spawnSync() to contain whitespace ([#821](https://github.com/fastly/js-compute-runtime/issues/821)) ([68d77fb](https://github.com/fastly/js-compute-runtime/commit/68d77fbff9f695f53b30ee63d53b41fd8db87424))
+* debug build & tests ([#818](https://github.com/fastly/js-compute-runtime/issues/818)) ([3d9a8da](https://github.com/fastly/js-compute-runtime/commit/3d9a8da2898fffa6b43d005eba3342df4ff67036))
+
 ## 3.16.0 (2024-06-21)
 
 ### Added
