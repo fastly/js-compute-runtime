@@ -20,7 +20,7 @@ To build from source, you need to have the following tools installed to successf
 
 #### Linux
 
-- Rust 
+- Rust
   ```
   curl -so rust.sh https://sh.rustup.rs && sh rust.sh -y
   restart shell or run source $HOME/.cargo/env
@@ -57,7 +57,7 @@ Once you have those installed, you will need to compile SpiderMonkey:
 
 Once that is done, the runtime and the CLI tool for applying it to JS source code can be built using npm:
 ```sh
-npm run build
+npm run build && npm run build:starlingmonkey
 ```
 
 #### macOS (Apple silicon)
@@ -116,7 +116,7 @@ export PATH="/opt/homebrew/opt/python@3.11/libexec/bin:$PATH"
 
 Once that is done, the runtime and the CLI tool for applying it to JS source code can be built using npm:
 ```sh
-npm run build
+npm run build && npm run build:starlingmonkey
 ```
 
 ## Testing
