@@ -2,9 +2,8 @@
 
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { cd, $ as zx, } from 'zx'
+import { cd, $ as zx, retry, expBackoff } from 'zx'
 import { request } from 'undici'
-import { retry, expBackoff } from 'zx/experimental'
 import { compareDownstreamResponse } from "./compare-downstream-response.js";
 import { argv } from "node:process";
 import { existsSync } from "node:fs";

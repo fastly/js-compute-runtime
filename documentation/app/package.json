@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "devDependencies": {
-    "@fastly/js-compute": "^1",
+    "@fastly/js-compute": "^3",
     "@jakechampion/c-at-e-file-server-cli": "^0.0.2-main"
   },
   "type": "module",
