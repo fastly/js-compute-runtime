@@ -1,9 +1,9 @@
 # Changelog
 
-## [3.16.2](https://github.com/fastly/js-compute-runtime/compare/v3.16.1...v3.16.2) (2024-07-10)
+## 3.16.2 (2024-07-10)
 
 
-### Bug Fixes
+### Fixed
 
 * use same rust version that StarlingMonkey uses so that we can publish ([#823](https://github.com/fastly/js-compute-runtime/issues/823)) ([f0d9ab0](https://github.com/fastly/js-compute-runtime/commit/f0d9ab07ed5a5470322a3b457cc91e308e3e289f))
 
