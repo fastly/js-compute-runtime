@@ -38,6 +38,8 @@ WIT_BINDGEN ?= $(shell which wit-bindgen)
 # Default optimization flgs for clang/clang++.
 OPT_FLAGS ?= -O2
 
+RUNTIME_VERSION ?= $(shell npm pkg get version --json | jq -r)
+
 # Command helpers for making nice build output.
 include mk/commands.mk
 
@@ -92,6 +94,7 @@ SM_OBJ += $(wildcard $(SM_SRC)/lib/*.a)
 # This is required when using spidermonkey headers, as it allows us to enable
 # the streams library when setting up the js context.
 DEFINES := -DMOZ_JS_STREAMS
+DEFINES += -DRUNTIME_VERSION='"$(RUNTIME_VERSION)"'
 
 # Flags for c++ compilation
 CXX_FLAGS := -std=gnu++20 -Wall -Werror -Qunused-arguments
