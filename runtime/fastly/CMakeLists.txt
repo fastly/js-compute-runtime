@@ -19,4 +19,6 @@ add_builtin(fastly::fetch SRC builtins/fetch/fetch.cpp builtins/fetch/request-re
 add_builtin(fastly::cache_override SRC builtins/cache-override.cpp)
 add_builtin(fastly::fetch_event SRC builtins/fetch-event.cpp DEPENDENCIES OpenSSL)
 
+add_compile_definitions(PUBLIC RUNTIME_VERSION=${RUNTIME_VERSION})
+
 project(FastlyJS)
