@@ -11,8 +11,6 @@
 
 namespace fastly::fastly {
 
-#define RUNTIME_VERSION "starlingmonkey-dev"
-
 class Env : public builtins::BuiltinNoConstructor<Env> {
 private:
   static bool env_get(JSContext *cx, unsigned argc, JS::Value *vp);
