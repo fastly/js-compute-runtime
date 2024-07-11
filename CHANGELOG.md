@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.17.0](https://github.com/fastly/js-compute-runtime/compare/v3.16.2...v3.17.0) (2024-07-11)
+
+
+### Features
+
+* Include in the wasm metadata whether we are using StarlingMonkey and/or PBL ([#828](https://github.com/fastly/js-compute-runtime/issues/828)) ([00b971b](https://github.com/fastly/js-compute-runtime/commit/00b971b857e9c35a08e6fc5c0a84fb3c3bc7984e))
+
+
+### Bug Fixes
+
+* keep sdkVersion property always up-to-date with the correct version of the SDK ([#829](https://github.com/fastly/js-compute-runtime/issues/829)) ([ae42634](https://github.com/fastly/js-compute-runtime/commit/ae4263418a52dfb62fe240584314948072ff30e7))
+
 ## 3.16.2 (2024-07-10)
 
 
