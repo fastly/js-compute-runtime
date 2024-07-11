@@ -40,5 +40,5 @@ if (version) {
     enableExperimentalTopLevelAwait,
     starlingMonkey
   );
-  await addSdkMetadataField(output);
+  await addSdkMetadataField(output, enablePBL, starlingMonkey);
 }
