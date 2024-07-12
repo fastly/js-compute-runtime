@@ -72,7 +72,7 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 ```js
 /// <reference types="@fastly/js-compute" />
 import { Logger } from "fastly:logger";
-let logger = new Logger("splunk");
+const logger = new Logger("splunk");
 async function app (event) {
   logger.log(JSON.stringify({
     method: event.request.method,
