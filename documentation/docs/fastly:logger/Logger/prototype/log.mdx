@@ -12,6 +12,8 @@ import {Fiddle} from '@site/src/components/fiddle';
 
 Sends the given message, converted to a string, to this Logger instance's endpoint.
 
+**Note**: Can only be used when processing requests, not during build-time initialization.
+
 ## Syntax
 
 ```js
@@ -41,12 +43,12 @@ In this example we have a create a logger named `"splunk"` and logs the incoming
     "https://http-me.glitch.me"
   ],
   "src": {
-    "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",
+    "deps": "{\n  \"@fastly/js-compute\": \"^3\"\n}",
     "main": `
 /// <reference types="@fastly/js-compute" />
 import { Logger } from "fastly:logger";
+let logger = new Logger("splunk");
 async function app (event) {
-  let logger = new Logger("splunk");
   logger.log(JSON.stringify({
     method: event.request.method,
     url: event.request.url
