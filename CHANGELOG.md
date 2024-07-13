@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.17.2](https://github.com/fastly/js-compute-runtime/compare/v3.17.1...v3.17.2) (2024-07-13)
+
+
+### Bug Fixes
+
+* add documentation for the sdkVersion property ([29361ad](https://github.com/fastly/js-compute-runtime/commit/29361ad65965a7a36cb2ced434af7898844dcab7))
+* correct the documentation for the fastly:logger module ([#834](https://github.com/fastly/js-compute-runtime/issues/834)) ([2790cb9](https://github.com/fastly/js-compute-runtime/commit/2790cb93f5f298b021f46b9030d0e6e795003a51))
+
 ## 3.17.1 (2024-07-11)
 
 ### Fixed
