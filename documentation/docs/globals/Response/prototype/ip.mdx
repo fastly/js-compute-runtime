@@ -1,0 +1,25 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Response.ip
+
+The **`ip`** getter of the `Response` interface returns the IP address associated with the request, as either an IPv6 or IPv4 string.
+
+In the case where no IP address is available (say the response is cached, or was manually created), `undefined` will be returned.
+
+To ensure an origin request with an IP, pass a [`CacheOverride`](../../../fastly:cache-override/CacheOverride/CacheOverride.mdx) value.
+
+## Syntax
+
+```js
+const res = await fetch(url);
+res.ip;
+```
+
+### Return value
+
+`undefined` or `string`.
+
