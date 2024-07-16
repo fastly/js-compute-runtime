@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.17.3](https://github.com/fastly/js-compute-runtime/compare/v3.17.2...v3.17.3) (2024-07-16)
+
+
+### Bug Fixes
+
+* Remove accidentally commited debug messages which write to stderr ([#838](https://github.com/fastly/js-compute-runtime/issues/838)) ([040ea8b](https://github.com/fastly/js-compute-runtime/commit/040ea8be352884c3536ac7e786663b4596617e6e))
+
 ## 3.17.2 (2024-07-13)
 
 ### Fixed
