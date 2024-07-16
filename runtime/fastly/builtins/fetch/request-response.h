@@ -188,6 +188,9 @@ class Response final : public builtins::BuiltinImpl<Response> {
   static bool body_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  static bool ip_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool port_get(JSContext *cx, unsigned argc, JS::Value *vp);
+
   static bool redirect(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool json(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool setManualFramingHeaders(JSContext *cx, unsigned argc, JS::Value *vp);

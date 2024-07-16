@@ -343,6 +343,14 @@ WASM_IMPORT("fastly_http_resp", "framing_headers_mode_set")
 int resp_framing_headers_mode_set(fastly_compute_at_edge_http_types_response_handle_t resp_handle,
                                   uint32_t mode);
 
+WASM_IMPORT("fastly_http_resp", "get_addr_dest_ip")
+int resp_ip_get(fastly_compute_at_edge_http_types_response_handle_t resp_handle, uint8_t *ip_out,
+                size_t *nwritten);
+
+WASM_IMPORT("fastly_http_resp", "get_addr_dest_port")
+int resp_port_get(fastly_compute_at_edge_http_types_response_handle_t resp_handle,
+                  uint16_t *port_out);
+
 // Module fastly_dictionary
 WASM_IMPORT("fastly_dictionary", "open")
 int dictionary_open(const char *name, size_t name_len,

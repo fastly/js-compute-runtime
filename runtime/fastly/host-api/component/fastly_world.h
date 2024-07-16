@@ -964,6 +964,27 @@ typedef struct {
   } val;
 } fastly_compute_at_edge_http_resp_result_http_status_error_t;
 
+typedef struct {
+  bool is_err;
+  union {
+    fastly_world_option_list_u8_t ok;
+    fastly_compute_at_edge_http_resp_error_t err;
+  } val;
+} fastly_compute_at_edge_http_resp_result_option_list_u8_error_t;
+
+typedef struct {
+  bool is_some;
+  uint16_t val;
+} fastly_world_option_u16_t;
+
+typedef struct {
+  bool is_err;
+  union {
+    fastly_world_option_u16_t ok;
+    fastly_compute_at_edge_http_resp_error_t err;
+  } val;
+} fastly_compute_at_edge_http_resp_result_option_u16_error_t;
+
 typedef fastly_compute_at_edge_types_error_t fastly_compute_at_edge_log_error_t;
 
 typedef uint32_t fastly_compute_at_edge_log_handle_t;
@@ -1563,6 +1584,14 @@ fastly_compute_at_edge_http_resp_status_set(fastly_compute_at_edge_http_resp_res
 extern bool
 fastly_compute_at_edge_http_resp_close(fastly_compute_at_edge_http_resp_response_handle_t h,
                                        fastly_compute_at_edge_http_resp_error_t *err);
+extern bool
+fastly_compute_at_edge_http_resp_ip_get(fastly_compute_at_edge_http_resp_response_handle_t h,
+                                        fastly_world_option_list_u8_t *ret,
+                                        fastly_compute_at_edge_http_resp_error_t *err);
+extern bool
+fastly_compute_at_edge_http_resp_port_get(fastly_compute_at_edge_http_resp_response_handle_t h,
+                                          fastly_world_option_u16_t *ret,
+                                          fastly_compute_at_edge_http_resp_error_t *err);
 // Adjust how this response's framing headers are determined.
 extern bool fastly_compute_at_edge_http_resp_framing_headers_mode_set(
     fastly_compute_at_edge_http_resp_response_handle_t h,

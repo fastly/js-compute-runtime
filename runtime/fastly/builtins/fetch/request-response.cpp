@@ -22,6 +22,7 @@
 #include "js/Stream.h"
 #include "picosha2.h"
 #include <algorithm>
+#include <arpa/inet.h>
 #include <vector>
 
 #pragma clang diagnostic push
@@ -2513,6 +2514,73 @@ bool Response::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Response::ip_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  // non-upstream responses always have undefined IP
+  if (!Response::is_upstream(self)) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  auto handle = response_handle(self);
+  auto res = handle.get_ip();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  auto ret = std::move(res.unwrap());
+  if (!ret.has_value()) {
+    args.rval().setUndefined();
+    return true;
+  }
+  if (ret->len == 4) {
+    char *out = (char *)malloc(INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, ret->ptr.get(), out, 16);
+    JS::RootedString text(
+        cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(out, strnlen(out, INET_ADDRSTRLEN))));
+    if (!text) {
+      return false;
+    }
+    args.rval().setString(text);
+  } else {
+    MOZ_ASSERT(ret->len == 16);
+    char *out = (char *)malloc(INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, ret->ptr.get(), out, 16);
+    JS::RootedString text(
+        cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(out, strnlen(out, INET6_ADDRSTRLEN))));
+    if (!text) {
+      return false;
+    }
+    args.rval().setString(text);
+  }
+  return true;
+}
+
+bool Response::port_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  // non-upstream responses always have undefined port
+  if (!Response::is_upstream(self)) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  auto handle = response_handle(self);
+  auto res = handle.get_port();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  if (!res.unwrap().has_value()) {
+    args.rval().setUndefined();
+  } else {
+    args.rval().setInt32(res.unwrap().value());
+  }
+  return true;
+}
+
 // https://fetch.spec.whatwg.org/#dom-response-redirect
 // [NewObject] static Response redirect(USVString url, optional unsigned short status = 302);
 bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -2836,6 +2904,8 @@ const JSPropertySpec Response::properties[] = {
     JS_PSG("headers", headers_get, JSPROP_ENUMERATE),
     JS_PSG("body", body_get, JSPROP_ENUMERATE),
     JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
+    JS_PSG("ip", ip_get, JSPROP_ENUMERATE),
+    JS_PSG("port", port_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Response", JSPROP_READONLY),
     JS_PS_END,
 };

@@ -1128,6 +1128,20 @@ interface Response extends Body {
   readonly statusText: string;
   // readonly type: ResponseType;
   readonly url: string;
+  /**
+   * Fastly-specific property - obtain the IP address used for the request
+   * 
+   * Undefined for user-created responses and when the response is returned from the cache.
+   * Set cacheOverride: new CacheOverride("pass") to ensure a value.
+   */
+  readonly ip: string | undefined;
+  /**
+   * Fastly-specific property - Obtain the port used for the request
+   * 
+   * Undefined for user-created responses and when the response is returned from the cache.
+   * Set cacheOverride: new CacheOverride("pass") to ensure a value.
+   */
+  readonly port: number | undefined;
   // clone(): Response;
   setManualFramingHeaders(manual: boolean): void;
 }

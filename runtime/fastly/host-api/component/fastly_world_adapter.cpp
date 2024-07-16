@@ -755,6 +755,38 @@ bool fastly_compute_at_edge_http_resp_status_set(
   return convert_result(fastly::resp_status_set(h, status), err);
 }
 
+bool fastly_compute_at_edge_http_resp_ip_get(fastly_compute_at_edge_http_resp_response_handle_t h,
+                                             fastly_world_option_list_u8_t *ret,
+                                             fastly_compute_at_edge_http_resp_error_t *err) {
+  ret->val.ptr = static_cast<uint8_t *>(cabi_malloc(16, 1));
+  if (!convert_result(fastly::resp_ip_get(h, ret->val.ptr, &ret->val.len), err)) {
+    if (*err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) {
+      ret->is_some = false;
+      return true;
+    } else {
+      cabi_free(ret->val.ptr);
+      return false;
+    }
+  }
+  ret->is_some = true;
+  return true;
+}
+
+bool fastly_compute_at_edge_http_resp_port_get(fastly_compute_at_edge_http_resp_response_handle_t h,
+                                               fastly_world_option_u16_t *ret,
+                                               fastly_compute_at_edge_http_resp_error_t *err) {
+  if (!convert_result(fastly::resp_port_get(h, &ret->val), err)) {
+    if (*err == FASTLY_COMPUTE_AT_EDGE_TYPES_ERROR_OPTIONAL_NONE) {
+      ret->is_some = false;
+      return true;
+    } else {
+      return false;
+    }
+  }
+  ret->is_some = true;
+  return true;
+}
+
 bool fastly_compute_at_edge_dictionary_open(fastly_world_string_t *name,
                                             fastly_compute_at_edge_dictionary_handle_t *ret,
                                             fastly_compute_at_edge_types_error_t *err) {

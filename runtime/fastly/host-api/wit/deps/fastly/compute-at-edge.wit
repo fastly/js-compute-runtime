@@ -406,6 +406,10 @@ interface http-resp {
 
   close: func(h: response-handle) -> result<_, error>;
 
+  ip-get: func(h: response-handle) -> result<option<list<u8>>, error>;
+
+  port-get: func(h: response-handle) -> result<option<u16>, error>;
+
   /// Adjust how this response's framing headers are determined.
   framing-headers-mode-set: func(h: response-handle, mode: framing-headers-mode) -> result<_, error>;
 

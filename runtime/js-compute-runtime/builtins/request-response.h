@@ -193,6 +193,9 @@ class Response final : public BuiltinImpl<Response> {
   static bool json(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool setManualFramingHeaders(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  static bool ip_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool port_get(JSContext *cx, unsigned argc, JS::Value *vp);
+
 public:
   static constexpr const char *class_name = "Response";
 
