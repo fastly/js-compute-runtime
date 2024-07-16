@@ -12,14 +12,6 @@ In the case where no IP address is available (say the response is cached, or was
 
 To ensure an origin request with an IP, pass a [`CacheOverride`](../../../fastly:cache-override/CacheOverride/CacheOverride.mdx) value.
 
-## Syntax
-
-```js
-const res = await fetch(url);
-res.ip;
-```
-
-### Return value
+## Value
 
 `undefined` or `string`.
-
