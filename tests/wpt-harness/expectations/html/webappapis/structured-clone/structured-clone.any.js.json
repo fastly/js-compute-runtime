@@ -342,7 +342,7 @@
     "status": "PASS"
   },
   "Serializing a non-serializable platform object fails": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "An object whose interface is deleted from the global must still deserialize": {
     "status": "FAIL"
