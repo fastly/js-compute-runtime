@@ -1221,58 +1221,41 @@ bool print_stack(JSContext *cx, FILE *fp) {
 // TODO: Support the other possible inputs to Body.
 JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
                                                                 JS::HandleValue bodyInit) {
-  fprintf(stderr, "a");
   JS::RootedObject bodyObj(cx, bodyInit.isObject() ? &bodyInit.toObject() : nullptr);
-  fprintf(stderr, "b");
   mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
   JS::UniqueChars buf;
   size_t length;
 
   if (bodyObj && JS_IsArrayBufferViewObject(bodyObj)) {
-    fprintf(stderr, "ca");
     // `maybeNoGC` needs to be populated for the lifetime of `buf` because
     // short typed arrays have inline data which can move on GC, so assert
     // that no GC happens. (Which it doesn't, because we're not allocating
     // before `buf` goes out of scope.)
     maybeNoGC.emplace(cx);
     JS::AutoCheckCannotGC &noGC = maybeNoGC.ref();
-    fprintf(stderr, "da");
     bool is_shared;
     length = JS_GetArrayBufferViewByteLength(bodyObj);
-    fprintf(stderr, "ea");
     buf = JS::UniqueChars(
         reinterpret_cast<char *>(JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC)));
-    fprintf(stderr, "fa");
     MOZ_ASSERT(!is_shared);
   } else if (bodyObj && JS::IsArrayBufferObject(bodyObj)) {
-    fprintf(stderr, "cb");
     bool is_shared;
     uint8_t *bytes;
     JS::GetArrayBufferLengthAndData(bodyObj, &length, &is_shared, &bytes);
-    fprintf(stderr, "db");
     MOZ_ASSERT(!is_shared);
     buf.reset(reinterpret_cast<char *>(bytes));
-    fprintf(stderr, "eb");
   } else if (bodyObj && builtins::URLSearchParams::is_instance(bodyObj)) {
-    fprintf(stderr, "dc");
     jsurl::SpecSlice slice = builtins::URLSearchParams::serialize(cx, bodyObj);
-    fprintf(stderr, "ec");
     buf = JS::UniqueChars(reinterpret_cast<char *>(const_cast<uint8_t *>(slice.data)));
-    fprintf(stderr, "fc");
     length = slice.len;
   } else {
-    fprintf(stderr, "dd");
     // Convert into a String following https://tc39.es/ecma262/#sec-tostring
     auto str = core::encode(cx, bodyInit);
-    fprintf(stderr, "ed");
     buf = std::move(str.ptr);
-    fprintf(stderr, "fd");
     length = str.len;
     if (!buf) {
-      fprintf(stderr, "gd");
       return JS::Result<std::tuple<JS::UniqueChars, size_t>>(JS::Error());
     }
   }
-  fprintf(stderr, "h");
   return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
 }
