@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.18.0](https://github.com/fastly/js-compute-runtime/compare/v3.17.3...v3.18.0) (2024-07-16)
+
+
+### Features
+
+* support for Response.prototype.ip and port via get_addr_dest_ip & get_addr_dest_port ([#817](https://github.com/fastly/js-compute-runtime/issues/817)) ([391b3d8](https://github.com/fastly/js-compute-runtime/commit/391b3d8386defe5e1b4ce3c1fb70347a9f0802ca))
+* Update to SpiderMonkey v127.0.2 ([#826](https://github.com/fastly/js-compute-runtime/issues/826)) ([5341f67](https://github.com/fastly/js-compute-runtime/commit/5341f674fe0da5ac5057d3415f59ac807d2f96f7))
+
 ## 3.17.3 (2024-07-16)
 
 ### Fixed
