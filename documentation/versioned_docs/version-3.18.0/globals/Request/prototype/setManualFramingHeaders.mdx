@@ -4,13 +4,13 @@ hide_table_of_contents: false
 pagination_next: null
 pagination_prev: null
 ---
-# Response.setManualFramingHeaders()
+# Request.setManualFramingHeaders()
 
-The **`setManualFramingHeaders()`** method of the `Response` interface controls how the framing headers should be determined.
+The **`setManualFramingHeaders()`** method of the `Request` interface controls how the framing headers should be determined.
 
-By default the framing headers are set to "automatic" mode, which means they are created based on the body of the associated Response instance.
+By default the framing headers are set to "automatic" mode, which means they are created based on the body of the associated Request instance.
 In "automatic" mode, a `Content-Length` is used when the size of the body can be determined before it is sent.
-Responses sent in streaming mode, where headers are sent immediately but the content of the body is streamed later, will receive a `Transfer-Encoding: chunked` to accommodate the dynamic generation of the body.
+Requests sent in streaming mode, where headers are sent immediately but the content of the body is streamed later, will receive a `Transfer-Encoding: chunked` to accommodate the dynamic generation of the body.
 In "manual" mode, any `Content-Length` or `Transfer-Encoding` headers will be honored.
 You must ensure that those headers have correct values permitted by the [HTTP/1.1 specification](https://datatracker.ietf.org/doc/html/rfc7230#section-3.3.1).
 If the provided headers are not permitted by the specification, the headers will revert to "automatic" mode and a diagnostic message will be logged about what was wrong.
