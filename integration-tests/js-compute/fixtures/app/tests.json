@@ -4301,15 +4301,7 @@
       "headers": [
         [
           "Set-Cookie",
-          "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure"
-        ],
-        [
-          "Set-Cookie",
-          "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
-        ],
-        [
-          "Set-Cookie",
-          "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
+          "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure, test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT, test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
         ],
         ["Set-Cookie", "test2=2"],
         ["Set-Cookie", "test3=3"],
@@ -4335,15 +4327,7 @@
       "headers": [
         [
           "Set-Cookie",
-          "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure"
-        ],
-        [
-          "Set-Cookie",
-          "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
-        ],
-        [
-          "Set-Cookie",
-          "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
+          "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure, test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT, test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
         ],
         ["Set-Cookie", "test2=2"],
         ["Set-Cookie", "test3=3"],
@@ -5288,6 +5272,20 @@
     "downstream_response": {
       "status": 200,
       "body": "ok"
+    }
+  },
+
+  "GET /headers/construct": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/headers/construct"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "foo": "bar"
+      }
     }
   },
 

@@ -13,8 +13,6 @@
 
 using api::FastlyResult;
 using fastly::FastlyAPIError;
-using host_api::MonotonicClock;
-using host_api::Result;
 
 #define NEVER_HANDLE 0xFFFFFFFE
 
@@ -80,7 +78,7 @@ void sleep_until(uint64_t time_ns, uint64_t now) {
                  .tv_nsec = static_cast<long>(duration % SECS_IN_NANOSECS)};
     timespec rem;
     nanosleep(&req, &rem);
-    now = MonotonicClock::now();
+    now = host_api::MonotonicClock::now();
   }
 }
 
@@ -98,7 +96,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
     if (deadline > 0) {
       MOZ_ASSERT(task->id() == NEVER_HANDLE);
       if (now == 0) {
-        now = MonotonicClock::now();
+        now = host_api::MonotonicClock::now();
         MOZ_ASSERT(now > 0);
       }
       if (deadline <= now) {
@@ -160,7 +158,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
       MOZ_ASSERT(soonest_deadline_idx != -1);
       // Verify that the task definitely is ready from a time perspective, and if not loop the host
       // call again.
-      now = MonotonicClock::now();
+      now = host_api::MonotonicClock::now();
       if (soonest_deadline > now) {
         err = 0;
         continue;
@@ -194,12 +192,197 @@ HostString make_host_string(fastly::fastly_world_string str) {
   return HostString{JS::UniqueChars{reinterpret_cast<char *>(str.ptr)}, str.len};
 }
 
+HostString make_host_string(fastly::fastly_world_list_u8 str) {
+  return HostString{JS::UniqueChars{reinterpret_cast<char *>(str.ptr)}, str.len};
+}
+
 HostBytes make_host_bytes(fastly::fastly_world_list_u8 str) {
   return HostBytes{std::unique_ptr<uint8_t[]>{str.ptr}, str.len};
 }
 
 Response make_response(fastly::fastly_host_http_response &resp) {
   return Response{HttpResp{resp.f0}, HttpBody{resp.f1}};
+}
+
+template <auto header_names_get>
+Result<std::vector<HostString>> generic_get_header_names(auto handle) {
+  Result<std::vector<HostString>> res;
+
+  fastly::fastly_world_list_string ret;
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string *strs = static_cast<fastly::fastly_world_string *>(
+      cabi_malloc(LIST_ALLOC_SIZE * sizeof(fastly::fastly_world_string), 1));
+  size_t str_max = LIST_ALLOC_SIZE;
+  size_t str_cnt = 0;
+  size_t nwritten;
+  uint8_t *buf = static_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
+  uint32_t cursor = 0;
+  int64_t next_cursor = 0;
+  while (true) {
+    if (!convert_result(
+            header_names_get(handle, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten), &err)) {
+      cabi_free(buf);
+      res.emplace_err(err);
+      return res;
+    }
+    if (nwritten == 0) {
+      break;
+    }
+    uint32_t offset = 0;
+    for (size_t i = 0; i < nwritten; i++) {
+      if (buf[i] != '\0')
+        continue;
+      if (str_cnt == str_max) {
+        strs = static_cast<fastly::fastly_world_string *>(
+            cabi_realloc(strs, str_max * sizeof(fastly::fastly_world_string), 1,
+                         (str_max + LIST_ALLOC_SIZE) * sizeof(fastly::fastly_world_string)));
+        str_max += LIST_ALLOC_SIZE;
+      }
+      strs[str_cnt].ptr = static_cast<uint8_t *>(cabi_malloc(i - offset + 1, 1));
+      strs[str_cnt].len = i - offset;
+      memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
+      offset = i + 1;
+      str_cnt++;
+    }
+    if (next_cursor < 0)
+      break;
+    cursor = (uint32_t)next_cursor;
+  }
+  cabi_free(buf);
+  if (str_cnt != 0) {
+    strs = static_cast<fastly::fastly_world_string *>(
+        cabi_realloc(strs, str_max * sizeof(fastly::fastly_world_string), 1,
+                     str_cnt * sizeof(fastly::fastly_world_string)));
+  }
+  ret.ptr = strs;
+  ret.len = str_cnt;
+  std::vector<HostString> names;
+
+  for (int i = 0; i < ret.len; i++) {
+    names.emplace_back(make_host_string(ret.ptr[i]));
+  }
+
+  // Free the vector of string pointers, but leave the individual strings alone.
+  cabi_free(ret.ptr);
+
+  res.emplace(std::move(names));
+
+  return res;
+}
+
+struct Chunk {
+  JS::UniqueChars buffer;
+  size_t length;
+
+  static Chunk make(std::string_view data) {
+    Chunk res{JS::UniqueChars{static_cast<char *>(cabi_malloc(data.size(), 1))}, data.size()};
+    std::copy(data.begin(), data.end(), res.buffer.get());
+    return res;
+  }
+};
+
+template <auto header_values_get>
+Result<std::optional<std::vector<HostString>>> generic_get_header_values(auto handle,
+                                                                         std::string_view name) {
+  Result<std::optional<std::vector<HostString>>> res;
+
+  fastly::fastly_world_string hdr = string_view_to_world_string(name);
+  fastly::fastly_world_option_list_list_u8 ret;
+  fastly::fastly_host_error err;
+  std::vector<Chunk> header_values;
+  JS::UniqueLatin1Chars buffer(static_cast<unsigned char *>(cabi_malloc(HEADER_MAX_LEN, 1)));
+  uint32_t cursor = 0;
+  while (true) {
+    int64_t ending_cursor = 0;
+    size_t length = 0;
+    if (!convert_result(header_values_get(handle, reinterpret_cast<char *>(hdr.ptr), hdr.len,
+                                          buffer.get(), HEADER_MAX_LEN, cursor, &ending_cursor,
+                                          &length),
+                        &err)) {
+      res.emplace_err(err);
+      return res;
+    }
+
+    if (length == 0) {
+      break;
+    }
+
+    std::string_view result{reinterpret_cast<char *>(buffer.get()), length};
+    while (!result.empty()) {
+      auto end = result.find('\0');
+      header_values.emplace_back(Chunk::make(result.substr(0, end)));
+      if (end == result.npos) {
+        break;
+      }
+
+      result = result.substr(end + 1);
+    }
+
+    if (ending_cursor < 0) {
+      break;
+    }
+  }
+
+  if (header_values.empty()) {
+    ret.is_some = false;
+  } else {
+    ret.is_some = true;
+    ret.val.len = header_values.size();
+    ret.val.ptr = static_cast<fastly::fastly_world_list_u8 *>(
+        cabi_malloc(header_values.size() * sizeof(fastly::fastly_world_list_u8),
+                    alignof(fastly::fastly_world_list_u8)));
+    auto *next = ret.val.ptr;
+    for (auto &chunk : header_values) {
+      next->len = chunk.length;
+      next->ptr = reinterpret_cast<uint8_t *>(chunk.buffer.release());
+      ++next;
+    }
+  }
+
+  if (ret.is_some) {
+    std::vector<HostString> names;
+
+    for (int i = 0; i < ret.val.len; i++) {
+      names.emplace_back(make_host_string(ret.val.ptr[i]));
+    }
+
+    // Free the vector of string pointers, but leave the individual strings alone.
+    cabi_free(ret.val.ptr);
+
+    res.emplace(std::move(names));
+  } else {
+    res.emplace(std::nullopt);
+  }
+
+  return res;
+}
+
+template <auto header_op>
+Result<Void> generic_header_op(auto handle, std::string_view name, std::span<uint8_t> value) {
+  Result<Void> res;
+
+  fastly::fastly_world_string hdr = string_view_to_world_string(name);
+  fastly::fastly_world_list_u8 val = span_to_list_u8(value);
+  fastly::fastly_host_error err;
+  if (!convert_result(
+          header_op(handle, reinterpret_cast<char *>(hdr.ptr), hdr.len, val.ptr, val.len), &err)) {
+    res.emplace_err(err);
+  }
+
+  return res;
+}
+
+template <auto remove_header>
+Result<Void> generic_header_remove(auto handle, std::string_view name) {
+  Result<Void> res;
+
+  fastly::fastly_world_string hdr = string_view_to_world_string(name);
+  fastly::fastly_host_error err;
+  if (!convert_result(remove_header(handle, reinterpret_cast<char *>(hdr.ptr), hdr.len), &err)) {
+    res.emplace_err(err);
+  }
+
+  return res;
 }
 
 } // namespace
@@ -242,6 +425,182 @@ uint64_t MonotonicClock::resolution() { return 1000; }
 int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) { return NEVER_HANDLE; }
 
 void MonotonicClock::unsubscribe(const int32_t handle_id) {}
+
+// HttpHeaders and HttpHeadersReadOnly extend Resource.
+// Resource provdes handle_state_ which is a HandleState
+// which gets to be fully host-defined.
+Resource::~Resource() {
+  if (handle_state_ != nullptr) {
+    handle_state_ = nullptr;
+  }
+};
+
+// Fastly handle state is currently just a wrapper around
+// an arbitrary fastly handle, along with a bit indicating
+// if it is a request or response.
+class HandleState {
+protected:
+  api::FastlyAsyncTask::Handle handle_;
+  bool is_req_;
+
+public:
+  explicit HandleState(api::FastlyAsyncTask::Handle handle, bool is_request) {
+    handle_ = handle;
+    is_req_ = is_request;
+  }
+  api::FastlyAsyncTask::Handle handle() { return handle_; }
+  bool is_req() { return is_req_; }
+  bool valid() const { return true; }
+};
+
+// TODO(guybedford): Ensure this actually clones, or ban it entirely.
+HttpHeaders *HttpHeadersReadOnly::clone() {
+  // MOZ_ASSERT_UNREACHABLE();
+  return new HttpHeaders(*this);
+}
+
+const std::vector<const char *> forbidden_request_headers = {};
+const std::vector<const char *> forbidden_response_headers = {};
+
+const std::vector<const char *> &HttpHeaders::get_forbidden_request_headers() {
+  return forbidden_request_headers;
+}
+const std::vector<const char *> &HttpHeaders::get_forbidden_response_headers() {
+  return forbidden_response_headers;
+}
+
+Result<vector<tuple<HostString, HostString>>> HttpHeadersReadOnly::entries() const {
+  Result<vector<tuple<HostString, HostString>>> res;
+
+  Result<std::vector<HostString>> names_res;
+  if (this->handle_state_.get()->is_req()) {
+    names_res =
+        generic_get_header_names<fastly::req_header_names_get>(this->handle_state_.get()->handle());
+  } else {
+    names_res = generic_get_header_names<fastly::resp_header_names_get>(
+        this->handle_state_.get()->handle());
+  }
+  if (const auto err = names_res.to_err()) {
+    return Result<vector<tuple<HostString, HostString>>>::err(*err);
+  }
+
+  vector<tuple<HostString, HostString>> entries_vec;
+  for (auto &name : names_res.unwrap()) {
+    auto values_res = get(name);
+    if (auto err = values_res.to_err()) {
+      return Result<vector<tuple<HostString, HostString>>>::err(*err);
+    }
+    auto &values = values_res.unwrap();
+    if (!values.has_value()) {
+      // original js-compute-runtime also skipped here, but should this be an error or empty entry?
+      continue;
+    }
+    auto last_val = &(*values.value().end());
+    for (auto &value : values.value()) {
+      if (&value == last_val) {
+        entries_vec.emplace_back(std::move(name), std::move(value));
+      } else {
+        std::string_view host_name_view(name);
+        entries_vec.emplace_back(host_api::HostString(host_name_view), std::move(value));
+      }
+    }
+  }
+
+  res.emplace(std::move(entries_vec));
+  return res;
+}
+
+Result<optional<vector<HostString>>> HttpHeadersReadOnly::get(string_view name) const {
+  Result<optional<vector<HostString>>> res;
+  if (this->handle_state_.get()->is_req()) {
+    return generic_get_header_values<fastly::req_header_values_get>(
+        this->handle_state_.get()->handle(), name);
+  } else {
+    return generic_get_header_values<fastly::resp_header_values_get>(
+        this->handle_state_.get()->handle(), name);
+  }
+}
+
+Result<bool> HttpHeadersReadOnly::has(string_view name) const {
+  auto get_res = get(name);
+  if (const auto err = get_res.to_err()) {
+    return Result<bool>::err(*err);
+  }
+  return Result<bool>::ok(get_res.unwrap().has_value());
+}
+
+HttpHeaders::HttpHeaders(std::unique_ptr<HandleState> state)
+    : HttpHeadersReadOnly(std::move(state)) {}
+
+HttpHeaders::HttpHeaders() { handle_state_ = nullptr; }
+
+// TODO(guybedford): ensure this actually clones, or ban it entirely?
+HttpHeaders::HttpHeaders(const HttpHeadersReadOnly &headers) : HttpHeadersReadOnly(nullptr) {
+  auto handle_state =
+      new HandleState(headers.handle_state_.get()->handle(), headers.handle_state_.get()->is_req());
+  this->handle_state_ = std::unique_ptr<HandleState>(handle_state);
+}
+
+// This is only used by the HttpHeaders subclass, and immediately assigns the state after.
+HttpHeadersReadOnly::HttpHeadersReadOnly() { handle_state_ = nullptr; }
+HttpHeadersReadOnly::HttpHeadersReadOnly(std::unique_ptr<HandleState> state) {
+  handle_state_ = std::move(state);
+}
+
+// This call corresponds to a state transition in switch_mode from Mode::ContentOnly to
+// Mode::CachedInContent in StarlingMonkey, which occurs when cloning a headers object, which we do
+// not call.
+//
+// That is, we have:
+// - Desynchronize from host: Mode::CachedInContent -> Mode::ContentOnly (create local mutations)
+// - Resynchronize to host  : Mode::ContentOnly -> Mode::CachedInContent (commit local mutations)
+//
+// With these state transitions permitted arbitrarily.
+//
+// Fastly's headers implementation ties headers to request and response handles, as opposed to
+// being able to exist as free handles for headers. We therefore avoid the headers cloning operation
+// Mode::ContentOnly -> Mode::CachedInContent transition and as a result this FromEntries function
+// is never called.
+//
+// Instead we use a separate RequestOrResponse::commit_headers() implementation for fetch requests
+// and fetch-event responses, leaving the former Mode::ContentOnly as the cached value to achieve
+// the exact same result.
+Result<HttpHeaders *> HttpHeaders::FromEntries(vector<tuple<HostString, HostString>> &entries) {
+  MOZ_RELEASE_ASSERT(false);
+}
+
+Result<Void> HttpHeaders::remove(string_view name) {
+  if (this->handle_state_.get()->is_req()) {
+    return generic_header_remove<fastly::req_header_remove>(this->handle_state_.get()->handle(),
+                                                            name);
+  } else {
+    return generic_header_remove<fastly::resp_header_remove>(this->handle_state_.get()->handle(),
+                                                             name);
+  }
+}
+
+Result<Void> HttpHeaders::set(string_view name, string_view value) {
+  std::span<uint8_t> value_span = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
+                                   value.size()};
+  if (this->handle_state_.get()->is_req()) {
+    return generic_header_op<fastly::req_header_insert>(this->handle_state_.get()->handle(), name,
+                                                        value_span);
+  } else {
+    return generic_header_op<fastly::resp_header_insert>(this->handle_state_.get()->handle(), name,
+                                                         value_span);
+  }
+}
+Result<Void> HttpHeaders::append(string_view name, string_view value) {
+  std::span<uint8_t> value_span = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
+                                   value.size()};
+  if (this->handle_state_.get()->is_req()) {
+    return generic_header_op<fastly::req_header_append>(this->handle_state_.get()->handle(), name,
+                                                        value_span);
+  } else {
+    return generic_header_op<fastly::resp_header_append>(this->handle_state_.get()->handle(), name,
+                                                         value_span);
+  }
+}
 
 // --- </StarlingMonkey Host API> ---
 
@@ -397,7 +756,7 @@ JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
     return nullptr;
   }
 
-  auto res = host_api::GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
+  auto res = GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return nullptr;
@@ -540,191 +899,6 @@ Result<Void> HttpBody::close() {
 FastlyAsyncTask::Handle HttpBody::async_handle() const {
   return FastlyAsyncTask::Handle{this->handle};
 }
-
-namespace {
-
-template <auto header_names_get>
-Result<std::vector<HostString>> generic_get_header_names(auto handle) {
-  Result<std::vector<HostString>> res;
-
-  fastly::fastly_world_list_string ret;
-  fastly::fastly_host_error err;
-  fastly::fastly_world_string *strs = static_cast<fastly::fastly_world_string *>(
-      cabi_malloc(LIST_ALLOC_SIZE * sizeof(fastly::fastly_world_string), 1));
-  size_t str_max = LIST_ALLOC_SIZE;
-  size_t str_cnt = 0;
-  size_t nwritten;
-  uint8_t *buf = static_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
-  uint32_t cursor = 0;
-  int64_t next_cursor = 0;
-  while (true) {
-    if (!convert_result(
-            header_names_get(handle, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten), &err)) {
-      cabi_free(buf);
-      res.emplace_err(err);
-      return res;
-    }
-    if (nwritten == 0) {
-      break;
-    }
-    uint32_t offset = 0;
-    for (size_t i = 0; i < nwritten; i++) {
-      if (buf[i] != '\0')
-        continue;
-      if (str_cnt == str_max) {
-        strs = static_cast<fastly::fastly_world_string *>(
-            cabi_realloc(strs, str_max * sizeof(fastly::fastly_world_string), 1,
-                         (str_max + LIST_ALLOC_SIZE) * sizeof(fastly::fastly_world_string)));
-        str_max += LIST_ALLOC_SIZE;
-      }
-      strs[str_cnt].ptr = static_cast<uint8_t *>(cabi_malloc(i - offset + 1, 1));
-      strs[str_cnt].len = i - offset;
-      memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
-      offset = i + 1;
-      str_cnt++;
-    }
-    if (next_cursor < 0)
-      break;
-    cursor = (uint32_t)next_cursor;
-  }
-  cabi_free(buf);
-  if (str_cnt != 0) {
-    strs = static_cast<fastly::fastly_world_string *>(
-        cabi_realloc(strs, str_max * sizeof(fastly::fastly_world_string), 1,
-                     str_cnt * sizeof(fastly::fastly_world_string)));
-  }
-  ret.ptr = strs;
-  ret.len = str_cnt;
-  std::vector<HostString> names;
-
-  for (int i = 0; i < ret.len; i++) {
-    names.emplace_back(make_host_string(ret.ptr[i]));
-  }
-
-  // Free the vector of string pointers, but leave the individual strings alone.
-  cabi_free(ret.ptr);
-
-  res.emplace(std::move(names));
-
-  return res;
-}
-
-struct Chunk {
-  JS::UniqueChars buffer;
-  size_t length;
-
-  static Chunk make(std::string_view data) {
-    Chunk res{JS::UniqueChars{static_cast<char *>(cabi_malloc(data.size(), 1))}, data.size()};
-    std::copy(data.begin(), data.end(), res.buffer.get());
-    return res;
-  }
-};
-
-template <auto header_values_get>
-Result<std::optional<std::vector<HostBytes>>> generic_get_header_values(auto handle,
-                                                                        std::string_view name) {
-  Result<std::optional<std::vector<HostBytes>>> res;
-
-  fastly::fastly_world_string hdr = string_view_to_world_string(name);
-  fastly::fastly_world_option_list_list_u8 ret;
-  fastly::fastly_host_error err;
-  std::vector<Chunk> header_values;
-  JS::UniqueLatin1Chars buffer(static_cast<unsigned char *>(cabi_malloc(HEADER_MAX_LEN, 1)));
-  uint32_t cursor = 0;
-  while (true) {
-    int64_t ending_cursor = 0;
-    size_t length = 0;
-    if (!convert_result(header_values_get(handle, reinterpret_cast<char *>(hdr.ptr), hdr.len,
-                                          buffer.get(), HEADER_MAX_LEN, cursor, &ending_cursor,
-                                          &length),
-                        &err)) {
-      res.emplace_err(err);
-      return res;
-    }
-
-    if (length == 0) {
-      break;
-    }
-
-    std::string_view result{reinterpret_cast<char *>(buffer.get()), length};
-    while (!result.empty()) {
-      auto end = result.find('\0');
-      header_values.emplace_back(Chunk::make(result.substr(0, end)));
-      if (end == result.npos) {
-        break;
-      }
-
-      result = result.substr(end + 1);
-    }
-
-    if (ending_cursor < 0) {
-      break;
-    }
-  }
-
-  if (header_values.empty()) {
-    ret.is_some = false;
-  } else {
-    ret.is_some = true;
-    ret.val.len = header_values.size();
-    ret.val.ptr = static_cast<fastly::fastly_world_list_u8 *>(
-        cabi_malloc(header_values.size() * sizeof(fastly::fastly_world_list_u8),
-                    alignof(fastly::fastly_world_list_u8)));
-    auto *next = ret.val.ptr;
-    for (auto &chunk : header_values) {
-      next->len = chunk.length;
-      next->ptr = reinterpret_cast<uint8_t *>(chunk.buffer.release());
-      ++next;
-    }
-  }
-
-  if (ret.is_some) {
-    std::vector<HostBytes> names;
-
-    for (int i = 0; i < ret.val.len; i++) {
-      names.emplace_back(make_host_bytes(ret.val.ptr[i]));
-    }
-
-    // Free the vector of string pointers, but leave the individual strings alone.
-    cabi_free(ret.val.ptr);
-
-    res.emplace(std::move(names));
-  } else {
-    res.emplace(std::nullopt);
-  }
-
-  return res;
-}
-
-template <auto header_op>
-Result<Void> generic_header_op(auto handle, std::string_view name, std::span<uint8_t> value) {
-  Result<Void> res;
-
-  fastly::fastly_world_string hdr = string_view_to_world_string(name);
-  fastly::fastly_world_list_u8 val = span_to_list_u8(value);
-  fastly::fastly_host_error err;
-  if (!convert_result(
-          header_op(handle, reinterpret_cast<char *>(hdr.ptr), hdr.len, val.ptr, val.len), &err)) {
-    res.emplace_err(err);
-  }
-
-  return res;
-}
-
-template <auto remove_header>
-Result<Void> generic_header_remove(auto handle, std::string_view name) {
-  Result<Void> res;
-
-  fastly::fastly_world_string hdr = string_view_to_world_string(name);
-  fastly::fastly_host_error err;
-  if (!convert_result(remove_header(handle, reinterpret_cast<char *>(hdr.ptr), hdr.len), &err)) {
-    res.emplace_err(err);
-  }
-
-  return res;
-}
-
-} // namespace
 
 FastlyResult<Response, FastlySendError> HttpPendingReq::wait() {
   FastlyResult<Response, FastlySendError> res;
@@ -1241,25 +1415,11 @@ Result<HttpVersion> HttpReq::get_version() const {
   return res;
 }
 
-Result<std::vector<HostString>> HttpReq::get_header_names() {
-  return generic_get_header_names<fastly::req_header_names_get>(this->handle);
+HttpHeadersReadOnly *HttpReq::headers() {
+  return new HttpHeadersReadOnly(std::unique_ptr<HandleState>(new HandleState(this->handle, true)));
 }
 
-Result<std::optional<std::vector<HostBytes>>> HttpReq::get_header_values(std::string_view name) {
-  return generic_get_header_values<fastly::req_header_values_get>(this->handle, name);
-}
-
-Result<Void> HttpReq::insert_header(std::string_view name, std::span<uint8_t> value) {
-  return generic_header_op<fastly::req_header_insert>(this->handle, name, value);
-}
-
-Result<Void> HttpReq::append_header(std::string_view name, std::span<uint8_t> value) {
-  return generic_header_op<fastly::req_header_append>(this->handle, name, value);
-}
-
-Result<Void> HttpReq::remove_header(std::string_view name) {
-  return generic_header_remove<fastly::req_header_remove>(this->handle, name);
-}
+HttpHeaders *HttpReq::headers_writable() { return headers()->clone(); }
 
 Result<HttpResp> HttpResp::make() {
   Result<HttpResp> res;
@@ -1346,25 +1506,12 @@ Result<HttpVersion> HttpResp::get_version() const {
   return res;
 }
 
-Result<std::vector<HostString>> HttpResp::get_header_names() {
-  return generic_get_header_names<fastly::resp_header_names_get>(this->handle);
+HttpHeadersReadOnly *HttpResp::headers() {
+  return new HttpHeadersReadOnly(
+      std::unique_ptr<HandleState>(new HandleState(this->handle, false)));
 }
 
-Result<std::optional<std::vector<HostBytes>>> HttpResp::get_header_values(std::string_view name) {
-  return generic_get_header_values<fastly::resp_header_values_get>(this->handle, name);
-}
-
-Result<Void> HttpResp::insert_header(std::string_view name, std::span<uint8_t> value) {
-  return generic_header_op<fastly::resp_header_insert>(this->handle, name, value);
-}
-
-Result<Void> HttpResp::append_header(std::string_view name, std::span<uint8_t> value) {
-  return generic_header_op<fastly::resp_header_append>(this->handle, name, value);
-}
-
-Result<Void> HttpResp::remove_header(std::string_view name) {
-  return generic_header_remove<fastly::resp_header_remove>(this->handle, name);
-}
+HttpHeaders *HttpResp::headers_writable() { return headers()->clone(); }
 
 Result<std::optional<HostBytes>> HttpResp::get_ip() const {
   Result<std::optional<HostBytes>> res;

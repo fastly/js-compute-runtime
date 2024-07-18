@@ -15,7 +15,7 @@ add_builtin(fastly::dictionary SRC builtins/dictionary.cpp)
 add_builtin(fastly::edge_rate_limiter SRC builtins/edge-rate-limiter.cpp)
 add_builtin(fastly::config_store SRC builtins/config-store.cpp)
 add_builtin(fastly::secret_store SRC builtins/secret-store.cpp)
-add_builtin(fastly::fetch SRC builtins/fetch/fetch.cpp builtins/fetch/request-response.cpp builtins/fetch/headers.cpp)
+add_builtin(fastly::fetch SRC builtins/fetch/fetch.cpp builtins/fetch/request-response.cpp builtins/fetch/request-response.cpp ../StarlingMonkey/builtins/web/fetch/headers.cpp)
 add_builtin(fastly::cache_override SRC builtins/cache-override.cpp)
 add_builtin(fastly::fetch_event SRC builtins/fetch-event.cpp DEPENDENCIES OpenSSL)
 
