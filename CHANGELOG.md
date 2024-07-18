@@ -1,9 +1,8 @@
 # Changelog
 
-## [3.18.1](https://github.com/fastly/js-compute-runtime/compare/v3.18.0...v3.18.1) (2024-07-18)
+## 3.18.1 (2024-07-18)
 
-
-### Bug Fixes
+### Fixed
 
 * add type definitions of Performance APIs ([#841](https://github.com/fastly/js-compute-runtime/issues/841)) ([fd95aae](https://github.com/fastly/js-compute-runtime/commit/fd95aaecc5a264860845740a3b60d4a7aa75c578))
 
