@@ -5281,6 +5281,20 @@
     }
   },
 
+  "GET /headers/construct": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/headers/construct"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "foo": "bar"
+      }
+    }
+  },
+
   "GET /FastlyBody/interface": {
     "environments": ["compute"],
     "downstream_request": {

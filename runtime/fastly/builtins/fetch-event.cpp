@@ -18,10 +18,10 @@
 using std::chrono::microseconds;
 using std::chrono::system_clock;
 using namespace std::literals::string_view_literals;
+using builtins::web::fetch::Headers;
 using builtins::web::url::URL;
 using builtins::web::worker_location::WorkerLocation;
 using fastly::fastly::Fastly;
-using fastly::fetch::Headers;
 using fastly::fetch::RequestOrResponse;
 using fastly::fetch::Response;
 
@@ -566,6 +566,10 @@ bool start_response(JSContext *cx, JS::HandleObject response_obj, bool streaming
   auto response = Response::response_handle(response_obj);
   auto body = RequestOrResponse::body_handle(response_obj);
 
+  // write all the headers
+  if (!RequestOrResponse::commit_headers(cx, response_obj))
+    return false;
+
   auto res = response.send_downstream(body, streaming);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -599,12 +603,12 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   // very different.)
   JS::RootedObject response_obj(cx, &args[0].toObject());
 
-  // Ensure that all headers are stored client-side, so we retain access to them
-  // after sending the response off.
   if (Response::is_upstream(response_obj)) {
-    JS::RootedObject headers(cx);
-    headers = RequestOrResponse::headers<Headers::Mode::ProxyToResponse>(cx, response_obj);
-    if (!Headers::delazify(cx, headers))
+    // For host headers, ensure that all headers are stored client-side, so we retain access to them
+    // after sending the response off.
+    JS::RootedObject headers(cx, Response::headers(cx, response_obj));
+    // Calling entries() transitions to Mode::CachedInContent since this is in Mode::HostHeaders.
+    if (!Headers::get_entries(cx, headers))
       return false;
   }
 

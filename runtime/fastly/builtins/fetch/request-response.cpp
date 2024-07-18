@@ -32,6 +32,22 @@
 
 using builtins::web::base64::valueToJSByteString;
 using builtins::web::dom_exception::DOMException;
+
+// We use the StarlingMonkey Headers implementation, despite it supporting features that we do
+// not - specifically the ability to construct headers unassociated with requests and responses.
+//
+// StarlingMonkey only relies on this property for one state transition - the one from ContentOnly
+// to CachedInContent. And this state transition is only called from the `handle_clone()` function.
+//
+// We therefore never use handle_clone() and support the same functionality by implementing a new
+// Request::commit_headers and Response::commit_headers for committing ContentOnly headers into
+// a given Request or Response headers handle.
+//
+// Further, to verify we never call the ContentOnly to CachedInContent state transition, we
+// implement its host API call of host_api::HttpHeaders::FromEntries as a release unreachable
+// assert.
+using builtins::web::fetch::Headers;
+
 using builtins::web::streams::NativeStreamSource;
 using builtins::web::streams::TransformStream;
 using builtins::web::url::URL;
@@ -436,7 +452,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
   if (content_type) {
     JS::RootedObject headers(
         cx, &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Headers)).toObject());
-    if (!Headers::maybe_add(cx, headers, "content-type", content_type)) {
+    if (!Headers::set_if_undefined(cx, headers, "content-type", content_type)) {
       return false;
     }
   }
@@ -462,18 +478,16 @@ bool RequestOrResponse::append_body(JSContext *cx, JS::HandleObject self, JS::Ha
   return true;
 }
 
-template <Headers::Mode mode>
-JSObject *RequestOrResponse::headers(JSContext *cx, JS::HandleObject obj) {
-  JSObject *headers = maybe_headers(obj);
+JSObject *Request::headers(JSContext *cx, JS::HandleObject obj) {
+  JSObject *headers = RequestOrResponse::maybe_headers(obj);
   if (!headers) {
-    JS::RootedObject headersInstance(
-        cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
-
-    if (!headersInstance) {
-      return nullptr;
+    MOZ_ASSERT(is_instance(obj));
+    if (is_downstream(obj)) {
+      headers =
+          Headers::create(cx, request_handle(obj).headers(), host_api::HttpHeadersGuard::Request);
+    } else {
+      headers = Headers::create(cx, host_api::HttpHeadersGuard::Request);
     }
-
-    headers = Headers::create(cx, headersInstance, mode, obj, false);
     if (!headers) {
       return nullptr;
     }
@@ -482,6 +496,104 @@ JSObject *RequestOrResponse::headers(JSContext *cx, JS::HandleObject obj) {
   }
 
   return headers;
+}
+
+JSObject *Response::headers(JSContext *cx, JS::HandleObject obj) {
+  JSObject *headers = RequestOrResponse::maybe_headers(obj);
+  if (!headers) {
+    MOZ_ASSERT(is_instance(obj));
+    if (is_upstream(obj)) {
+      headers =
+          Headers::create(cx, response_handle(obj).headers(), host_api::HttpHeadersGuard::Response);
+    } else {
+      headers = Headers::create(cx, host_api::HttpHeadersGuard::Response);
+    }
+    if (!headers) {
+      return nullptr;
+    }
+
+    JS_SetReservedSlot(obj, static_cast<uint32_t>(Slots::Headers), JS::ObjectValue(*headers));
+  }
+
+  return headers;
+}
+
+// Headers are committed when making the request or response.
+// We ensure the headers are in the ContentOnly or CachedInContent state for
+// future reads and mutations, and then copy them into a new handle created for the
+// request or response being sent.
+bool RequestOrResponse::commit_headers(JSContext *cx, HandleObject self) {
+  JS::RootedObject headers(cx, RequestOrResponse::maybe_headers(self));
+  if (!headers) {
+    return true;
+  }
+  Headers::Mode headers_mode = Headers::mode(headers);
+  MOZ_ASSERT(headers_mode == Headers::Mode::ContentOnly ||
+             headers_mode == Headers::Mode::CachedInContent ||
+             headers_mode == Headers::Mode::Uninitialized);
+  RootedObject entries(cx, Headers::get_entries(cx, headers));
+  if (!entries) {
+    return false;
+  }
+  RootedValue iterable(cx);
+  if (!JS::MapEntries(cx, entries, &iterable)) {
+    return false;
+  }
+  JS::ForOfIterator it(cx);
+  if (!it.init(iterable)) {
+    return false;
+  }
+
+  using host_api::HostString;
+
+  // Host headers handle to write into
+  host_api::HttpHeaders *headers_handle;
+  if (Request::is_instance(self)) {
+    headers_handle = Request::request_handle(self).headers_writable();
+  } else {
+    MOZ_ASSERT(Response::is_instance(self));
+    headers_handle = Response::response_handle(self).headers_writable();
+  }
+
+  RootedValue entry_val(cx);
+  RootedObject entry(cx);
+  RootedValue name_val(cx);
+  RootedString name_str(cx);
+  RootedValue value_val(cx);
+  RootedString value_str(cx);
+  while (true) {
+    bool done;
+    if (!it.next(&entry_val, &done)) {
+      return false;
+    }
+
+    if (done) {
+      break;
+    }
+
+    entry = &entry_val.toObject();
+    JS_GetElement(cx, entry, 0, &name_val);
+    JS_GetElement(cx, entry, 1, &value_val);
+    name_str = name_val.toString();
+    value_str = value_val.toString();
+
+    auto name = core::encode(cx, name_str);
+    if (!name.ptr) {
+      return false;
+    }
+
+    auto value = core::encode(cx, value_str);
+    if (!value.ptr) {
+      return false;
+    }
+
+    auto res = headers_handle->append(std::move(name), std::move(value));
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+  }
+  return true;
 }
 
 template <RequestOrResponse::BodyReadResult result_type>
@@ -1225,7 +1337,7 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
   std::transform(hex_str.begin(), hex_str.end(), hex_str.begin(),
                  [](unsigned char c) { return std::toupper(c); });
 
-  JSObject *headers = RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, self);
+  JSObject *headers = Request::headers(cx, self);
   if (!headers) {
     return false;
   }
@@ -1363,7 +1475,7 @@ bool Request::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Request::headers_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  JSObject *headers = RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, self);
+  JSObject *headers = Request::headers(cx, self);
   if (!headers)
     return false;
 
@@ -1548,19 +1660,10 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(true));
   }
 
-  JS::RootedObject headers(cx);
-  JS::RootedObject headers_obj(cx,
-                               RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, self));
-  if (!headers_obj) {
+  JS::RootedObject headers(cx, Request::headers(cx, self));
+  if (!headers) {
     return false;
   }
-  JS::RootedObject headersInstance(
-      cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
-  if (!headersInstance)
-    return false;
-
-  headers = Headers::create(cx, headersInstance, Headers::Mode::ProxyToRequest, requestInstance,
-                            headers_obj, false);
 
   if (!headers) {
     return false;
@@ -1686,7 +1789,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   bool method_needs_normalization = false;
 
   JS::RootedObject input_request(cx);
-  JS::RootedObject input_headers(cx);
+  JS::RootedValue input_headers(cx);
   bool input_has_body = false;
 
   // 1.  Let `request` be null.
@@ -1733,10 +1836,11 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
 
     // header list: A copy of `request`’s header list.
     // Note: copying the headers is postponed, see step 32 below.
-    input_headers = RequestOrResponse::headers<Headers::Mode::ProxyToRequest>(cx, input_request);
-    if (!input_headers) {
+    JSObject *headers_obj = Request::headers(cx, input_request);
+    if (!headers_obj) {
       return nullptr;
     }
+    input_headers = JS::ObjectValue(*headers_obj);
 
     // The following properties aren't applicable:
     // unsafe-request flag: Set.
@@ -1987,21 +2091,9 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   // empty one.
   JS::RootedObject headers(cx);
   if (!headers_val.isUndefined()) {
-    JS::RootedObject headersInstance(
-        cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
-    if (!headersInstance)
-      return nullptr;
-
-    headers = Headers::create(cx, headersInstance, Headers::Mode::ProxyToRequest, request,
-                              headers_val, false);
+    headers = Headers::create(cx, headers_val, host_api::HttpHeadersGuard::Request);
   } else {
-    JS::RootedObject headersInstance(
-        cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
-    if (!headersInstance)
-      return nullptr;
-
-    headers = Headers::create(cx, headersInstance, Headers::Mode::ProxyToRequest, request,
-                              input_headers, false);
+    headers = Headers::create(cx, input_headers, host_api::HttpHeadersGuard::Request);
   }
 
   if (!headers) {
@@ -2491,7 +2583,7 @@ bool Response::redirected_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::headers_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  JSObject *headers = RequestOrResponse::headers<Headers::Mode::ProxyToResponse>(cx, self);
+  JSObject *headers = Response::headers(cx, self);
   if (!headers)
     return false;
 
@@ -2662,20 +2754,13 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
                       JS::StringValue(JS_GetEmptyString(cx)));
   // 6. Let value be parsedURL, serialized and isomorphic encoded.
   // 7. Append (`Location`, value) to responseObject’s response’s header list.
-  JS::RootedObject headers(cx);
-  JS::RootedObject headersInstance(
-      cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
-  if (!headersInstance)
-    return false;
-
-  headers = Headers::create(cx, headersInstance, Headers::Mode::ProxyToResponse, response, false);
+  JS::RootedObject headers(cx, Headers::create(cx, host_api::HttpHeadersGuard::Response));
   if (!headers) {
     return false;
   }
-  if (!Headers::maybe_add(cx, headers, "location", url_str.begin())) {
+  if (!Headers::set_if_undefined(cx, headers, "location", url_str.begin())) {
     return false;
   }
-  JS::SetReservedSlot(headers, static_cast<uint32_t>(Headers::Slots::Immutable), JS::TrueValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::ObjectValue(*headers));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Redirected), JS::FalseValue());
   // 8. Return responseObject.
@@ -2816,19 +2901,13 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // If `init`["headers"] `exists`, then `fill` `this`’s `headers` with
   // `init`["headers"].
-  JS::RootedObject headers(cx);
-  JS::RootedObject headersInstance(
-      cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
-  if (!headersInstance)
-    return false;
-
-  headers = Headers::create(cx, headersInstance, Headers::Mode::ProxyToResponse, response,
-                            headers_val, false);
+  JS::RootedObject headers(cx,
+                           Headers::create(cx, headers_val, host_api::HttpHeadersGuard::Response));
   if (!headers) {
     return false;
   }
   // 4. Perform initialize a response given responseObject, init, and (body, "application/json").
-  if (!Headers::maybe_add(cx, headers, "content-type", "application/json")) {
+  if (!Headers::set_if_undefined(cx, headers, "content-type", "application/json")) {
     return false;
   }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::ObjectValue(*headers));
@@ -3071,6 +3150,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // 7.  If `init`["headers"] `exists`, then `fill` `this`’s `headers` with
   // `init`["headers"].
+<<<<<<< HEAD
   JS::RootedObject headers(cx);
   JS::RootedObject headersInstance(
       cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
@@ -3080,6 +3160,10 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   headers = Headers::create(cx, headersInstance, Headers::Mode::ProxyToResponse, response,
                             headers_val, false);
+=======
+  JS::RootedObject headers(cx,
+                           Headers::create(cx, headers_val, host_api::HttpHeadersGuard::Response));
+>>>>>>> e9594215 (Share StarlingMonkey headers implementation)
   if (!headers) {
     return false;
   }

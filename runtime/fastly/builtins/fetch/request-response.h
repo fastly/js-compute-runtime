@@ -1,8 +1,10 @@
 #ifndef FASTLY_REQUEST_RESPONSE
 #define FASTLY_REQUEST_RESPONSE
 
+#include "../../../StarlingMonkey/builtins/web/fetch/headers.h"
 #include "../../host-api/host_api_fastly.h"
-#include "headers.h"
+
+using builtins::web::fetch::Headers;
 
 namespace fastly::fetch {
 
@@ -45,9 +47,10 @@ public:
   static JSObject *maybe_headers(JSObject *obj);
 
   /**
-   * Returns the RequestOrResponse's Headers, reifying it if necessary.
+   * For Requests and Responses in Mode::ContentOnly, creates a new HostOnly headers
+   * object and commits the headers map values.
    */
-  template <Headers::Mode mode> static JSObject *headers(JSContext *cx, JS::HandleObject obj);
+  static bool commit_headers(JSContext *cx, JS::HandleObject self);
 
   static bool append_body(JSContext *cx, JS::HandleObject self, JS::HandleObject source);
 
@@ -141,6 +144,11 @@ public:
     Count,
   };
 
+  /**
+   * Returns the RequestOrResponse's Headers, reifying it if necessary.
+   */
+  static JSObject *headers(JSContext *cx, JS::HandleObject obj);
+
   static JSObject *response_promise(JSObject *obj);
   static JSString *method(JSContext *cx, JS::HandleObject obj);
   static bool set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValue cache_key_val);
@@ -227,6 +235,11 @@ public:
   static JSObject *create(JSContext *cx, JS::HandleObject response,
                           host_api::HttpResp response_handle, host_api::HttpBody body_handle,
                           bool is_upstream, bool is_grip_upgrade, JS::UniqueChars backend);
+
+  /**
+   * Returns the RequestOrResponse's Headers, reifying it if necessary.
+   */
+  static JSObject *headers(JSContext *cx, JS::HandleObject obj);
 
   static host_api::HttpResp response_handle(JSObject *obj);
   static bool is_upstream(JSObject *obj);

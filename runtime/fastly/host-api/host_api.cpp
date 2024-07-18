@@ -8,13 +8,12 @@
 
 #include <algorithm>
 #include <arpa/inet.h>
+#include <list>
 
 #include <time.h>
 
 using api::FastlyResult;
 using fastly::FastlyAPIError;
-using host_api::MonotonicClock;
-using host_api::Result;
 
 #define NEVER_HANDLE 0xFFFFFFFE
 
@@ -80,7 +79,7 @@ void sleep_until(uint64_t time_ns, uint64_t now) {
                  .tv_nsec = static_cast<long>(duration % SECS_IN_NANOSECS)};
     timespec rem;
     nanosleep(&req, &rem);
-    now = MonotonicClock::now();
+    now = host_api::MonotonicClock::now();
   }
 }
 
@@ -98,7 +97,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
     if (deadline > 0) {
       MOZ_ASSERT(task->id() == NEVER_HANDLE);
       if (now == 0) {
-        now = MonotonicClock::now();
+        now = host_api::MonotonicClock::now();
         MOZ_ASSERT(now > 0);
       }
       if (deadline <= now) {
@@ -157,7 +156,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
       MOZ_ASSERT(soonest_deadline_idx != -1);
       // Verify that the task definitely is ready from a time perspective, and if not loop the host
       // call again.
-      now = MonotonicClock::now();
+      now = host_api::MonotonicClock::now();
       if (soonest_deadline > now) {
         continue;
       }
@@ -188,6 +187,10 @@ HostString make_host_string(fastly::fastly_world_string str) {
   return HostString{JS::UniqueChars{reinterpret_cast<char *>(str.ptr)}, str.len};
 }
 
+HostString make_host_string(fastly::fastly_world_list_u8 str) {
+  return HostString{JS::UniqueChars{reinterpret_cast<char *>(str.ptr)}, str.len};
+}
+
 HostBytes make_host_bytes(fastly::fastly_world_list_u8 str) {
   return HostBytes{std::unique_ptr<uint8_t[]>{str.ptr}, str.len};
 }
@@ -195,347 +198,6 @@ HostBytes make_host_bytes(fastly::fastly_world_list_u8 str) {
 Response make_response(fastly::fastly_host_http_response &resp) {
   return Response{HttpResp{resp.f0}, HttpBody{resp.f1}};
 }
-
-} // namespace
-
-// --- <StarlingMonkey HOST API> ---
-Result<HostBytes> Random::get_bytes(size_t num_bytes) {
-  Result<HostBytes> res;
-
-  auto ret = HostBytes::with_capacity(num_bytes);
-  auto err =
-      fastly::random_get(reinterpret_cast<uint32_t>(static_cast<void *>(ret.begin())), num_bytes);
-  if (err != 0) {
-    res.emplace_err(err);
-  } else {
-    res.emplace(std::move(ret));
-  }
-
-  return res;
-}
-
-Result<uint32_t> Random::get_u32() {
-  Result<uint32_t> res;
-
-  uint32_t storage;
-  auto err = fastly::random_get(reinterpret_cast<uint32_t>(static_cast<void *>(&storage)),
-                                sizeof(storage));
-  if (err != 0) {
-    res.emplace_err(err);
-  } else {
-    res.emplace(storage);
-  }
-
-  return res;
-}
-
-uint64_t MonotonicClock::now() { return JS_Now() * 1000; }
-
-uint64_t MonotonicClock::resolution() { return 1000; }
-
-int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) { return NEVER_HANDLE; }
-
-void MonotonicClock::unsubscribe(const int32_t handle_id) {}
-
-// --- </StarlingMonkey Host API> ---
-
-// The host interface makes the assumption regularly that uint32_t is sufficient space to store a
-// pointer.
-static_assert(sizeof(uint32_t) == sizeof(void *));
-
-namespace {
-
-FastlySendError
-make_fastly_send_error(fastly::fastly_host_http_send_error_detail &send_error_detail) {
-  FastlySendError res;
-
-  switch (send_error_detail.tag) {
-  case 0: {
-    res.tag = FastlySendError::detail::uninitialized;
-    break;
-  }
-  case 1: {
-    res.tag = FastlySendError::detail::ok;
-    break;
-  }
-  case 2: {
-    res.tag = FastlySendError::detail::dns_timeout;
-    break;
-  }
-  case 3: {
-    res.tag = FastlySendError::detail::dns_error;
-    break;
-  }
-  case 4: {
-    res.tag = FastlySendError::detail::destination_not_found;
-    break;
-  }
-  case 5: {
-    res.tag = FastlySendError::detail::destination_unavailable;
-    break;
-  }
-  case 6: {
-    res.tag = FastlySendError::detail::destination_ip_unroutable;
-    break;
-  }
-  case 7: {
-    res.tag = FastlySendError::detail::connection_refused;
-    break;
-  }
-  case 8: {
-    res.tag = FastlySendError::detail::connection_terminated;
-    break;
-  }
-  case 9: {
-    res.tag = FastlySendError::detail::connection_timeout;
-    break;
-  }
-  case 10: {
-    res.tag = FastlySendError::detail::connection_limit_reached;
-    break;
-  }
-  case 11: {
-    res.tag = FastlySendError::detail::tls_certificate_error;
-    break;
-  }
-  case 12: {
-    res.tag = FastlySendError::detail::tls_configuration_error;
-    break;
-  }
-  case 13: {
-    res.tag = FastlySendError::detail::http_incomplete_response;
-    break;
-  }
-  case 14: {
-    res.tag = FastlySendError::detail::http_response_header_section_too_large;
-    break;
-  }
-  case 15: {
-    res.tag = FastlySendError::detail::http_response_body_too_large;
-    break;
-  }
-  case 16: {
-    res.tag = FastlySendError::detail::http_response_timeout;
-    break;
-  }
-  case 17: {
-    res.tag = FastlySendError::detail::http_response_status_invalid;
-    break;
-  }
-  case 18: {
-    res.tag = FastlySendError::detail::http_upgrade_failed;
-    break;
-  }
-  case 19: {
-    res.tag = FastlySendError::detail::http_protocol_error;
-    break;
-  }
-  case 20: {
-    res.tag = FastlySendError::detail::http_request_cache_key_invalid;
-    break;
-  }
-  case 21: {
-    res.tag = FastlySendError::detail::http_request_uri_invalid;
-    break;
-  }
-  case 22: {
-    res.tag = FastlySendError::detail::internal_error;
-    break;
-  }
-  case 23: {
-    res.tag = FastlySendError::detail::tls_alert_received;
-    break;
-  }
-  case 24: {
-    res.tag = FastlySendError::detail::tls_protocol_error;
-    break;
-  }
-  default: {
-    // If we are here, this is either because the host does not provided send error details
-    // Or a new error detail tag exists and we don't yet have it implemented
-    res.tag = FastlySendError::detail::uninitialized;
-  }
-  }
-
-  res.dns_error_rcode = send_error_detail.dns_error_rcode;
-  res.dns_error_info_code = send_error_detail.dns_error_info_code;
-  res.tls_alert_id = send_error_detail.tls_alert_id;
-
-  return res;
-}
-
-} // namespace
-
-JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
-  auto address = core::encode(cx, address_str);
-  if (!address) {
-    return nullptr;
-  }
-
-  // TODO: Remove all of this and rely on the host for validation as the hostcall only takes one
-  // user-supplied parameter
-  int format = AF_INET;
-  size_t octets_len = 4;
-  if (std::find(address.begin(), address.end(), ':') != address.end()) {
-    format = AF_INET6;
-    octets_len = 16;
-  }
-
-  uint8_t octets[sizeof(struct in6_addr)];
-  if (inet_pton(format, address.begin(), octets) != 1) {
-    // While get_geo_info can be invoked through FetchEvent#client.geo, too,
-    // that path can't result in an invalid address here, so we can be more
-    // specific in the error message.
-    // TODO: Make a TypeError
-    JS_ReportErrorLatin1(cx, "Invalid address passed to fastly.getGeolocationForIpAddress");
-    return nullptr;
-  }
-
-  auto res = host_api::GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return nullptr;
-  }
-
-  auto ret = std::move(res.unwrap());
-
-  return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.ptr.release(), ret.len));
-}
-
-Result<HttpBody> HttpBody::make() {
-  Result<HttpBody> res;
-
-  HttpBody::Handle handle;
-  fastly::fastly_host_error err;
-  if (!convert_result(fastly::body_new(&handle), &err)) {
-    res.emplace_err(err);
-  } else {
-    res.emplace(handle);
-  }
-
-  return res;
-}
-
-Result<HostString> HttpBody::read(uint32_t chunk_size) const {
-  Result<HostString> res;
-
-  fastly::fastly_world_list_u8 ret;
-  ret.ptr = static_cast<uint8_t *>(cabi_malloc(chunk_size, 1));
-  fastly::fastly_host_error err;
-  if (!convert_result(
-          fastly::body_read(this->handle, ret.ptr, static_cast<size_t>(chunk_size), &ret.len),
-          &err)) {
-    res.emplace_err(err);
-  } else {
-    res.emplace(JS::UniqueChars(reinterpret_cast<char *>(ret.ptr)), ret.len);
-  }
-
-  return res;
-}
-
-Result<uint32_t> HttpBody::write_front(const uint8_t *ptr, size_t len) const {
-  Result<uint32_t> res;
-
-  // The write call doesn't mutate the buffer; the cast is just for the generated fastly api.
-  fastly::fastly_world_list_u8 chunk{const_cast<uint8_t *>(ptr), len};
-
-  fastly::fastly_host_error err;
-  uint32_t written;
-
-  if (!convert_result(fastly::body_write(this->handle, chunk.ptr, chunk.len,
-                                         fastly::BodyWriteEnd::BodyWriteEndFront,
-                                         reinterpret_cast<size_t *>(&written)),
-                      &err)) {
-    res.emplace_err(err);
-  } else {
-    res.emplace(written);
-  }
-
-  return res;
-}
-
-Result<uint32_t> HttpBody::write_back(const uint8_t *ptr, size_t len) const {
-  Result<uint32_t> res;
-
-  // The write call doesn't mutate the buffer; the cast is just for the generated fastly api.
-  fastly::fastly_world_list_u8 chunk{const_cast<uint8_t *>(ptr), len};
-
-  fastly::fastly_host_error err;
-  uint32_t written;
-  if (!convert_result(fastly::body_write(this->handle, chunk.ptr, chunk.len,
-                                         fastly::BodyWriteEnd::BodyWriteEndBack,
-                                         reinterpret_cast<size_t *>(&written)),
-                      &err)) {
-    res.emplace_err(err);
-  } else {
-    res.emplace(written);
-  }
-
-  return res;
-}
-
-Result<Void> HttpBody::write_all_front(const uint8_t *ptr, size_t len) const {
-  while (len > 0) {
-    auto write_res = this->write_front(ptr, len);
-    if (auto *err = write_res.to_err()) {
-      return Result<Void>::err(*err);
-    }
-
-    auto written = write_res.unwrap();
-    ptr += written;
-    MOZ_ASSERT(written <= len);
-    len -= static_cast<size_t>(written);
-  }
-
-  return Result<Void>::ok();
-}
-
-Result<Void> HttpBody::write_all_back(const uint8_t *ptr, size_t len) const {
-  while (len > 0) {
-    auto write_res = this->write_back(ptr, len);
-    if (auto *err = write_res.to_err()) {
-      return Result<Void>::err(*err);
-    }
-
-    auto written = write_res.unwrap();
-    ptr += written;
-    len -= std::min(len, static_cast<size_t>(written));
-  }
-
-  return Result<Void>::ok();
-}
-
-Result<Void> HttpBody::append(HttpBody other) const {
-  Result<Void> res;
-
-  fastly::fastly_host_error err;
-  if (!convert_result(fastly::body_append(this->handle, other.handle), &err)) {
-    res.emplace_err(err);
-  } else {
-    res.emplace();
-  }
-
-  return res;
-}
-
-Result<Void> HttpBody::close() {
-  Result<Void> res;
-
-  fastly::fastly_host_error err;
-  if (!convert_result(fastly::body_close(this->handle), &err)) {
-    res.emplace_err(err);
-  } else {
-    res.emplace();
-  }
-
-  return res;
-}
-
-FastlyAsyncTask::Handle HttpBody::async_handle() const {
-  return FastlyAsyncTask::Handle{this->handle};
-}
-
-namespace {
 
 template <auto header_names_get>
 Result<std::vector<HostString>> generic_get_header_names(auto handle) {
@@ -720,8 +382,508 @@ Result<Void> generic_header_remove(auto handle, std::string_view name) {
 
 } // namespace
 
-FastlyResult<Response, FastlySendError> HttpPendingReq::wait() {
-  FastlyResult<Response, FastlySendError> res;
+// --- <StarlingMonkey HOST API> ---
+Result<HostBytes> Random::get_bytes(size_t num_bytes) {
+  Result<HostBytes> res;
+
+  auto ret = HostBytes::with_capacity(num_bytes);
+  auto err =
+      fastly::random_get(reinterpret_cast<uint32_t>(static_cast<void *>(ret.begin())), num_bytes);
+  if (err != 0) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(std::move(ret));
+  }
+
+  return res;
+}
+
+Result<uint32_t> Random::get_u32() {
+  Result<uint32_t> res;
+
+  uint32_t storage;
+  auto err = fastly::random_get(reinterpret_cast<uint32_t>(static_cast<void *>(&storage)),
+                                sizeof(storage));
+  if (err != 0) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(storage);
+  }
+
+  return res;
+}
+
+uint64_t MonotonicClock::now() { return JS_Now() * 1000; }
+
+uint64_t MonotonicClock::resolution() { return 1000; }
+
+int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) { return NEVER_HANDLE; }
+
+void MonotonicClock::unsubscribe(const int32_t handle_id) {}
+
+// HttpHeaders and HttpHeadersReadOnly extend Resource.
+// Resource provdes handle_state_ which is a HandleState
+// which gets to be fully host-defined.
+Resource::~Resource() {
+  if (handle_state_ != nullptr) {
+    handle_state_ = nullptr;
+  }
+};
+
+// Fastly handle state is currently just a wrapper around
+// an arbitrary fastly handle, along with a bit indicating
+// if it is a request or response.
+class HandleState {
+protected:
+  FastlyHandle handle_;
+  bool is_req_;
+
+public:
+  explicit HandleState(FastlyHandle handle, bool is_request) {
+    handle_ = handle;
+    is_req_ = is_request;
+  }
+  FastlyHandle handle() { return handle_; }
+  bool is_req() { return is_req_; }
+  bool valid() const { return true; }
+};
+
+HttpHeaders *HttpHeadersReadOnly::clone(HttpHeadersGuard guard) {
+  return new HttpHeaders(guard, *this);
+}
+
+Result<vector<tuple<HostString, HostString>>> HttpHeadersReadOnly::entries() const {
+  Result<vector<tuple<HostString, HostString>>> res;
+
+  Result<std::vector<HostString>> names_res;
+  if (this->handle_state_.get()->is_req()) {
+    names_res = generic_get_header_names<fastly_compute_at_edge_http_req_header_names_get>(
+        this->handle_state_.get()->handle());
+  } else {
+    names_res = generic_get_header_names<fastly_compute_at_edge_http_req_header_names_get>(
+        this->handle_state_.get()->handle());
+  }
+  if (const auto err = names_res.to_err()) {
+    return Result<vector<tuple<HostString, HostString>>>::err(*err);
+  }
+
+  vector<tuple<HostString, HostString>> entries_vec;
+  for (auto &name : names_res.unwrap()) {
+    auto values_res = get(name);
+    if (auto err = values_res.to_err()) {
+      return Result<vector<tuple<HostString, HostString>>>::err(*err);
+    }
+    auto &values = values_res.unwrap();
+    if (!values.has_value()) {
+      // original js-compute-runtime also skipped here, but should this be an error or empty entry?
+      continue;
+    }
+    for (auto &value : values.value()) {
+      entries_vec.emplace_back(std::move(name), std::move(value));
+    }
+  }
+
+  res.emplace(std::move(entries_vec));
+  return res;
+}
+
+Result<optional<vector<HostString>>> HttpHeadersReadOnly::get(string_view name) const {
+  Result<optional<vector<HostString>>> res;
+  if (this->handle_state_.get()->is_req()) {
+    return generic_get_header_values<fastly_compute_at_edge_http_req_header_values_get>(
+        this->handle_state_.get()->handle(), name);
+  } else {
+    return generic_get_header_values<fastly_compute_at_edge_http_resp_header_values_get>(
+        this->handle_state_.get()->handle(), name);
+  }
+}
+
+Result<bool> HttpHeadersReadOnly::has(string_view name) const {
+  auto get_res = get(name);
+  if (const auto err = get_res.to_err()) {
+    return Result<bool>::err(*err);
+  }
+  return Result<bool>::ok(get_res.unwrap().has_value());
+}
+
+HttpHeaders::HttpHeaders(HttpHeadersGuard guard, std::unique_ptr<HandleState> state)
+    : HttpHeadersReadOnly(std::move(state)), guard_(guard) {}
+
+HttpHeaders::HttpHeaders(HttpHeadersGuard guard) : guard_(guard) { handle_state_ = nullptr; }
+
+HttpHeaders::HttpHeaders(HttpHeadersGuard guard, const HttpHeadersReadOnly &headers)
+    : HttpHeadersReadOnly(nullptr), guard_(guard) {
+  auto handle_state =
+      new HandleState(headers.handle_state_.get()->handle(), headers.handle_state_.get()->is_req());
+  this->handle_state_ = std::unique_ptr<HandleState>(handle_state);
+}
+
+// This is only used by the HttpHeaders subclass, and immediately assigns the state after.
+HttpHeadersReadOnly::HttpHeadersReadOnly() { handle_state_ = nullptr; }
+HttpHeadersReadOnly::HttpHeadersReadOnly(std::unique_ptr<HandleState> state) {
+  handle_state_ = std::move(state);
+}
+
+// This can be used to implement guest forbidden headers per
+// https://fetch.spec.whatwg.org/#forbidden-request-header.
+bool HttpHeaders::check_guard(HttpHeadersGuard guard, string_view header_name) { return true; }
+
+// This call corresponds to a state transition in switch_mode from Mode::ContentOnly to
+// Mode::CachedInContent in StarlingMonkey, which occurs when cloning a headers object, which we do
+// not call.
+//
+// That is, we have:
+// - Desynchronize from host: Mode::CachedInContent -> Mode::ContentOnly (create local mutations)
+// - Resynchronize to host  : Mode::ContentOnly -> Mode::CachedInContent (commit local mutations)
+//
+// With these state transitions permitted arbitrarily.
+//
+// Fastly's headers implementation ties headers to request and response handles, as opposed to
+// being able to exist as free handles for headers. We therefore avoid the headers cloning operation
+// Mode::ContentOnly -> Mode::CachedInContent transition and as a result this FromEntries function
+// is never called.
+//
+// Instead we use a separate RequestOrResponse::commit_headers() implementation for fetch requests
+// and fetch-event responses, leaving the former Mode::ContentOnly as the cached value to achieve
+// the exact same result.
+Result<HttpHeaders *> HttpHeaders::FromEntries(HttpHeadersGuard guard,
+                                               vector<tuple<HostString, HostString>> &entries) {
+  MOZ_RELEASE_ASSERT(false);
+}
+
+Result<Void> HttpHeaders::remove(string_view name) {
+  if (this->handle_state_.get()->is_req()) {
+    return generic_header_remove<fastly_compute_at_edge_http_req_header_remove>(
+        this->handle_state_.get()->handle(), name);
+  } else {
+    return generic_header_remove<fastly_compute_at_edge_http_resp_header_remove>(
+        this->handle_state_.get()->handle(), name);
+  }
+}
+
+Result<Void> HttpHeaders::set(string_view name, string_view value) {
+  std::span<uint8_t> value_span = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
+                                   value.size()};
+  if (this->handle_state_.get()->is_req()) {
+    return generic_header_op<fastly_compute_at_edge_http_req_header_insert>(
+        this->handle_state_.get()->handle(), name, value_span);
+  } else {
+    return generic_header_op<fastly_compute_at_edge_http_resp_header_insert>(
+        this->handle_state_.get()->handle(), name, value_span);
+  }
+}
+Result<Void> HttpHeaders::append(string_view name, string_view value) {
+  std::span<uint8_t> value_span = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
+                                   value.size()};
+  if (this->handle_state_.get()->is_req()) {
+    return generic_header_op<fastly_compute_at_edge_http_req_header_append>(
+        this->handle_state_.get()->handle(), name, value_span);
+  } else {
+    return generic_header_op<fastly_compute_at_edge_http_resp_header_append>(
+        this->handle_state_.get()->handle(), name, value_span);
+  }
+}
+
+// --- </StarlingMonkey Host API> ---
+
+// The host interface makes the assumption regularly that uint32_t is sufficient space to store a
+// pointer.
+static_assert(sizeof(uint32_t) == sizeof(void *));
+
+namespace {
+
+FastlySendError
+make_fastly_send_error(fastly::fastly_host_http_send_error_detail &send_error_detail) {
+  FastlySendError res;
+
+  switch (send_error_detail.tag) {
+  case 0: {
+    res.tag = FastlySendError::detail::uninitialized;
+    break;
+  }
+  case 1: {
+    res.tag = FastlySendError::detail::ok;
+    break;
+  }
+  case 2: {
+    res.tag = FastlySendError::detail::dns_timeout;
+    break;
+  }
+  case 3: {
+    res.tag = FastlySendError::detail::dns_error;
+    break;
+  }
+  case 4: {
+    res.tag = FastlySendError::detail::destination_not_found;
+    break;
+  }
+  case 5: {
+    res.tag = FastlySendError::detail::destination_unavailable;
+    break;
+  }
+  case 6: {
+    res.tag = FastlySendError::detail::destination_ip_unroutable;
+    break;
+  }
+  case 7: {
+    res.tag = FastlySendError::detail::connection_refused;
+    break;
+  }
+  case 8: {
+    res.tag = FastlySendError::detail::connection_terminated;
+    break;
+  }
+  case 9: {
+    res.tag = FastlySendError::detail::connection_timeout;
+    break;
+  }
+  case 10: {
+    res.tag = FastlySendError::detail::connection_limit_reached;
+    break;
+  }
+  case 11: {
+    res.tag = FastlySendError::detail::tls_certificate_error;
+    break;
+  }
+  case 12: {
+    res.tag = FastlySendError::detail::tls_configuration_error;
+    break;
+  }
+  case 13: {
+    res.tag = FastlySendError::detail::http_incomplete_response;
+    break;
+  }
+  case 14: {
+    res.tag = FastlySendError::detail::http_response_header_section_too_large;
+    break;
+  }
+  case 15: {
+    res.tag = FastlySendError::detail::http_response_body_too_large;
+    break;
+  }
+  case 16: {
+    res.tag = FastlySendError::detail::http_response_timeout;
+    break;
+  }
+  case 17: {
+    res.tag = FastlySendError::detail::http_response_status_invalid;
+    break;
+  }
+  case 18: {
+    res.tag = FastlySendError::detail::http_upgrade_failed;
+    break;
+  }
+  case 19: {
+    res.tag = FastlySendError::detail::http_protocol_error;
+    break;
+  }
+  case 20: {
+    res.tag = FastlySendError::detail::http_request_cache_key_invalid;
+    break;
+  }
+  case 21: {
+    res.tag = FastlySendError::detail::http_request_uri_invalid;
+    break;
+  }
+  case 22: {
+    res.tag = FastlySendError::detail::internal_error;
+    break;
+  }
+  case 23: {
+    res.tag = FastlySendError::detail::tls_alert_received;
+    break;
+  }
+  case 24: {
+    res.tag = FastlySendError::detail::tls_protocol_error;
+    break;
+  }
+  default: {
+    // If we are here, this is either because the host does not provided send error details
+    // Or a new error detail tag exists and we don't yet have it implemented
+    res.tag = FastlySendError::detail::uninitialized;
+  }
+  }
+
+  res.dns_error_rcode = send_error_detail.dns_error_rcode;
+  res.dns_error_info_code = send_error_detail.dns_error_info_code;
+  res.tls_alert_id = send_error_detail.tls_alert_id;
+
+  return res;
+}
+
+} // namespace
+
+JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
+  auto address = core::encode(cx, address_str);
+  if (!address) {
+    return nullptr;
+  }
+
+  // TODO: Remove all of this and rely on the host for validation as the hostcall only takes one
+  // user-supplied parameter
+  int format = AF_INET;
+  size_t octets_len = 4;
+  if (std::find(address.begin(), address.end(), ':') != address.end()) {
+    format = AF_INET6;
+    octets_len = 16;
+  }
+
+  uint8_t octets[sizeof(struct in6_addr)];
+  if (inet_pton(format, address.begin(), octets) != 1) {
+    // While get_geo_info can be invoked through FetchEvent#client.geo, too,
+    // that path can't result in an invalid address here, so we can be more
+    // specific in the error message.
+    // TODO: Make a TypeError
+    JS_ReportErrorLatin1(cx, "Invalid address passed to fastly.getGeolocationForIpAddress");
+    return nullptr;
+  }
+
+  auto res = GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return nullptr;
+  }
+
+  auto ret = std::move(res.unwrap());
+
+  return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.ptr.release(), ret.len));
+}
+
+Result<HttpBody> HttpBody::make() {
+  Result<HttpBody> res;
+
+  HttpBody::Handle handle;
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::body_new(&handle), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(handle);
+  }
+
+  return res;
+}
+
+Result<HostString> HttpBody::read(uint32_t chunk_size) const {
+  Result<HostString> res;
+
+  fastly::fastly_world_list_u8 ret;
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(chunk_size, 1));
+  fastly::fastly_host_error err;
+  if (!convert_result(
+          fastly::body_read(this->handle, ret.ptr, static_cast<size_t>(chunk_size), &ret.len),
+          &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(JS::UniqueChars(reinterpret_cast<char *>(ret.ptr)), ret.len);
+  }
+
+  return res;
+}
+
+Result<uint32_t> HttpBody::write_front(const uint8_t *ptr, size_t len) const {
+  Result<uint32_t> res;
+
+  // The write call doesn't mutate the buffer; the cast is just for the generated fastly api.
+  fastly::fastly_world_list_u8 chunk{const_cast<uint8_t *>(ptr), len};
+
+  fastly::fastly_host_error err;
+  uint32_t written;
+
+  if (!convert_result(fastly::body_write(this->handle, chunk.ptr, chunk.len,
+                                         fastly::BodyWriteEnd::BodyWriteEndFront,
+                                         reinterpret_cast<size_t *>(&written)),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(written);
+  }
+
+  return res;
+}
+
+Result<uint32_t> HttpBody::write_back(const uint8_t *ptr, size_t len) const {
+  Result<uint32_t> res;
+
+  // The write call doesn't mutate the buffer; the cast is just for the generated fastly api.
+  fastly::fastly_world_list_u8 chunk{const_cast<uint8_t *>(ptr), len};
+
+  fastly::fastly_host_error err;
+  uint32_t written;
+  if (!convert_result(fastly::body_write(this->handle, chunk.ptr, chunk.len,
+                                         fastly::BodyWriteEnd::BodyWriteEndBack,
+                                         reinterpret_cast<size_t *>(&written)),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(written);
+  }
+
+  return res;
+}
+
+Result<Void> HttpBody::write_all_front(const uint8_t *ptr, size_t len) const {
+  while (len > 0) {
+    auto write_res = this->write_front(ptr, len);
+    if (auto *err = write_res.to_err()) {
+      return Result<Void>::err(*err);
+    }
+
+    auto written = write_res.unwrap();
+    ptr += written;
+    MOZ_ASSERT(written <= len);
+    len -= static_cast<size_t>(written);
+  }
+
+  return Result<Void>::ok();
+}
+
+Result<Void> HttpBody::write_all_back(const uint8_t *ptr, size_t len) const {
+  while (len > 0) {
+    auto write_res = this->write_back(ptr, len);
+    if (auto *err = write_res.to_err()) {
+      return Result<Void>::err(*err);
+    }
+
+    auto written = write_res.unwrap();
+    ptr += written;
+    len -= std::min(len, static_cast<size_t>(written));
+  }
+
+  return Result<Void>::ok();
+}
+
+Result<Void> HttpBody::append(HttpBody other) const {
+  Result<Void> res;
+
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::body_append(this->handle, other.handle), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
+Result<Void> HttpBody::close() {
+  Result<Void> res;
+
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::body_close(this->handle), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
+FastlyAsyncTask::Handle HttpBody::async_handle() const {
+  return FastlyAsyncTask::Handle{this->handle};
+}
+
+Result<std::optional<Response>> HttpPendingReq::poll() {
+  Result<std::optional<Response>> res;
 
   fastly::fastly_host_http_send_error_detail s;
   std::memset(&s, 0, sizeof(s));
@@ -1235,25 +1397,11 @@ Result<HttpVersion> HttpReq::get_version() const {
   return res;
 }
 
-Result<std::vector<HostString>> HttpReq::get_header_names() {
-  return generic_get_header_names<fastly::req_header_names_get>(this->handle);
+HttpHeadersReadOnly *HttpReq::headers() {
+  return new HttpHeadersReadOnly(std::unique_ptr<HandleState>(new HandleState(this->handle, true)));
 }
 
-Result<std::optional<std::vector<HostBytes>>> HttpReq::get_header_values(std::string_view name) {
-  return generic_get_header_values<fastly::req_header_values_get>(this->handle, name);
-}
-
-Result<Void> HttpReq::insert_header(std::string_view name, std::span<uint8_t> value) {
-  return generic_header_op<fastly::req_header_insert>(this->handle, name, value);
-}
-
-Result<Void> HttpReq::append_header(std::string_view name, std::span<uint8_t> value) {
-  return generic_header_op<fastly::req_header_append>(this->handle, name, value);
-}
-
-Result<Void> HttpReq::remove_header(std::string_view name) {
-  return generic_header_remove<fastly::req_header_remove>(this->handle, name);
-}
+HttpHeaders *HttpReq::headers_writable() { return headers()->clone(HttpHeadersGuard::Request); }
 
 Result<HttpResp> HttpResp::make() {
   Result<HttpResp> res;
@@ -1340,25 +1488,12 @@ Result<HttpVersion> HttpResp::get_version() const {
   return res;
 }
 
-Result<std::vector<HostString>> HttpResp::get_header_names() {
-  return generic_get_header_names<fastly::resp_header_names_get>(this->handle);
+HttpHeadersReadOnly *HttpResp::headers() {
+  return new HttpHeadersReadOnly(
+      std::unique_ptr<HandleState>(new HandleState(this->handle, false)));
 }
 
-Result<std::optional<std::vector<HostBytes>>> HttpResp::get_header_values(std::string_view name) {
-  return generic_get_header_values<fastly::resp_header_values_get>(this->handle, name);
-}
-
-Result<Void> HttpResp::insert_header(std::string_view name, std::span<uint8_t> value) {
-  return generic_header_op<fastly::resp_header_insert>(this->handle, name, value);
-}
-
-Result<Void> HttpResp::append_header(std::string_view name, std::span<uint8_t> value) {
-  return generic_header_op<fastly::resp_header_append>(this->handle, name, value);
-}
-
-Result<Void> HttpResp::remove_header(std::string_view name) {
-  return generic_header_remove<fastly::resp_header_remove>(this->handle, name);
-}
+HttpHeaders *HttpResp::headers_writable() { return headers()->clone(HttpHeadersGuard::Response); }
 
 Result<std::optional<HostBytes>> HttpResp::get_ip() const {
   Result<std::optional<HostBytes>> res;
