@@ -16,7 +16,6 @@ ac_add_options --enable-project=js
 ac_add_options --enable-application=js
 ac_add_options --target=wasm32-unknown-wasi
 ac_add_options --without-system-zlib
-ac_add_options --without-intl-api
 ac_add_options --disable-jit
 ac_add_options --disable-shared-js
 ac_add_options --disable-shared-memory
@@ -50,6 +49,7 @@ esac
 case "$mode" in
   release)
     echo "ac_add_options --disable-debug" >> "$mozconfig"
+    echo "ac_add_options --disable-debug-symbols" >> "$mozconfig"
     ;;
 
   debug)
