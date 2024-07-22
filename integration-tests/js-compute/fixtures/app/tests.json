@@ -4367,28 +4367,17 @@
     "downstream_response": {
       "status": 302,
       "headers": [
-        [
-          "Set-Cookie",
-          "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure"
-        ],
-        [
-          "Set-Cookie",
-          "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
-        ],
-        [
-          "Set-Cookie",
-          "test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
-        ],
-        ["Set-Cookie", "test2=2"],
-        ["Set-Cookie", "test3=3"],
-        ["Set-Cookie", "test4=4"],
-        ["Set-Cookie", "test5=5"],
-        ["Set-Cookie", "test6=6"],
-        ["Set-Cookie", "test7=7"],
-        ["Set-Cookie", "test8=8"],
-        ["Set-Cookie", "test9=9"],
-        ["Set-Cookie", "test10=10"],
-        ["Set-Cookie", "test11=11"]
+        ["Set-Cookie", "1=1; Path=/"],
+        ["Set-Cookie", "2=2; Path=/"],
+        ["Set-Cookie", "3=3; Path=/"],
+        ["Set-Cookie", "4=4; Path=/"],
+        ["Set-Cookie", "5=5; Path=/"],
+        ["Set-Cookie", "6=6; Path=/"],
+        ["Set-Cookie", "7=7; Path=/"],
+        ["Set-Cookie", "8=8; Path=/"],
+        ["Set-Cookie", "9=9; Path=/"],
+        ["Set-Cookie", "10=10; Path=/"],
+        ["Set-Cookie", "11=11; Path=/"]
       ]
     }
   },
