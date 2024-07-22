@@ -8,7 +8,6 @@
  * }} wasmModuleHeaders
  * @returns
  */
-import { strictEqual } from "node:assert";
 
 const compareHeaders = (configHeaders, wasmModuleHeaders) => {
   if (!configHeaders) {
