@@ -1,35 +1,69 @@
 /**
- * 
+ *
  * @param {[
-        [string, string]
-      ]} configHeaders
+ *   [string, string | string[]]
+ * ] | Record<string, string | string[]>} configHeaders
  * @param {Headers | {
-        [string]: string
-      }} wasmModuleHeaders
+ *   [string]: string
+ * }} wasmModuleHeaders
  * @returns
  */
-const compareHeaders = (configHeaders, wasmModuleHeaders) => {
+import { strictEqual } from "node:assert";
 
+const compareHeaders = (configHeaders, wasmModuleHeaders) => {
   if (!configHeaders) {
     return;
   }
 
-  for (const [configHeaderKey, configHeaderValue] of Object.entries(configHeaders)) {
-    let wasmModuleHeaderValue = wasmModuleHeaders[configHeaderKey.toLowerCase()]
-    if (wasmModuleHeaderValue === null) {
-      throw new Error(`[Header Key mismatch] Expected: ${configHeaderKey} - Got: ${null}`);
-    } else if (Array.isArray(configHeaderValue)) {
-      if (Array.isArray(configHeaderValue)) {
-        for (let value of configHeaderValue) {
-          if (!configHeaderValue.includes(value)) {
-            throw new Error(`[Header mismatch] Missing header named "${configHeaderKey}" with value "${value}"`);
-          }
-        }
+  // convert an array of entries into an object of arrays for easier asserting
+  if (Array.isArray(configHeaders)) {
+    const combinedHeaders = Object.create(null);
+    for (const [key, val] of configHeaders) {
+      if (!Object.hasOwnProperty.call(combinedHeaders, key)) {
+        combinedHeaders[key] = val;
       } else {
-        throw new Error(`[Header mismatch] Expected multiple headers with named "${configHeaderKey}" but got only one`);
+        if (Array.isArray(combinedHeaders[key])) {
+          if (Array.isArray(val)) {
+            combinedHeaders[key] = combinedHeaders[key].concat(val);
+          } else {
+            combinedHeaders[key].push(val);
+          }
+        } else {
+          combinedHeaders[key] = [
+            combinedHeaders[key],
+            ...(Array.isArray(val) ? val : [val]),
+          ];
+        }
       }
-    } else if (wasmModuleHeaderValue !== configHeaderValue) {
-      throw new Error(`[Header Value mismatch] Expected: ${configHeaderValue} - Got: ${wasmModuleHeaderValue}`);
+    }
+    configHeaders = combinedHeaders;
+  }
+
+  for (let [configHeaderKey, configHeaderValue] of Object.entries(
+    configHeaders
+  )) {
+    let wasmModuleHeaderValue =
+      wasmModuleHeaders[configHeaderKey.toLowerCase()];
+    if (Array.isArray(configHeaderValue) && configHeaderValue.length === 1) {
+      configHeaderValue = configHeaderValue[0];
+    }
+    if (Array.isArray(configHeaderValue)) {
+      if (!Array.isArray(wasmModuleHeaderValue)) {
+        throw new Error(`[Header Value mismatch] Expected multiple headers for '${configHeaderKey}', but ony got one.`);
+      }
+      if (configHeaderValue.length !== wasmModuleHeaderValue.length) {
+        throw new Error(`[Header Value mismatch] Expected ${configHeaderValue.length} headers for '${configHeaderKey}', but got ${wasmModuleHeaderValue.length}.`);
+      }
+      for (const [idx, configValue] of configHeaderValue.entries()) {
+        if (wasmModuleHeaderValue[idx] !== configValue) {
+          throw new Error(`[Header Value mismatch] Expected '${configValue}' for header item ${idx} of '${configHeaderKey}', but got '${wasmModuleHeaderValue[idx]}'.`);
+        }
+      }
+    }
+    else if (wasmModuleHeaderValue !== configHeaderValue) {
+      throw new Error(
+        `[Header Value mismatch] Expected: '${configHeaderKey}: ${configHeaderValue}' (${configHeaderValue.length}), got '${configHeaderKey}: ${wasmModuleHeaderValue}' (${wasmModuleHeaderValue.length})`
+      );
     }
   }
 };

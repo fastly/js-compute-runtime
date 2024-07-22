@@ -149,7 +149,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                         skipped: false
                     };
                 } catch (error) {
-                    throw new Error(`${title} ${error.message}`);
+                    throw new Error(`${title} ${error.message}`, { cause: error });
                 }
             } else {
                 return {
