@@ -1846,3 +1846,43 @@ type KeyFormat =
   // | "spki";
 type KeyType = "private" | "public" | "secret";
 type KeyUsage = "decrypt" | "deriveBits" | "deriveKey" | "encrypt" | "sign" | "unwrapKey" | "verify" | "wrapKey";
+
+/**
+ * EventTarget is a DOM interface implemented by objects that can receive events and may have listeners for them.
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/EventTarget)
+ * @group DOM Events
+ */
+interface EventTarget {
+  //addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: AddEventListenerOptions | boolean): void;
+  //dispatchEvent(event: Event): boolean;
+  //removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void;
+}
+
+/**
+ * Provides access to performance-related information for the current page. It's part of the High Resolution Time API, but is enhanced by the Performance Timeline API, the Navigation Timing API, the User Timing API, and the Resource Timing API.
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Performance)
+ * @group Performance APIs
+ */
+interface Performance extends EventTarget {
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Performance/timeOrigin) */
+  readonly timeOrigin: DOMHighResTimeStamp;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Performance/now) */
+  now(): DOMHighResTimeStamp;
+}
+
+/**
+ * @group Performance APIs
+ */
+declare var Performance: {
+  prototype: Performance;
+  new(): Performance;
+};
+
+/**
+ * @group Performance APIs
+ */
+declare var performance: Performance;
+
+type DOMHighResTimeStamp = number;
