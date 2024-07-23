@@ -89,7 +89,17 @@ export async function compileApplicationToWasm(
 
   let wizerInput, cleanup = () => {};
 
-  let contents = await bundle(input, enableExperimentalTopLevelAwait);
+  let contents;
+  try {
+    contents = await bundle(input, enableExperimentalTopLevelAwait);
+  } catch (error) {
+    console.error(
+      `Error:`,
+      error.message
+    );
+    process.exit(1);
+  }
+
   wizerInput = precompile(
     contents.outputFiles[0].text,
     undefined,
