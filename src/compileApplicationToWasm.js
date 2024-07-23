@@ -9,7 +9,6 @@ import wizer from "@bytecodealliance/wizer";
 import { precompile } from "./precompile.js";
 import { enableTopLevelAwait } from "./enableTopLevelAwait.js";
 import { bundle } from "./bundle.js";
-import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
 
 async function getTmpDir () {
   return await mkdtemp(normalize(tmpdir() + sep));
@@ -85,10 +84,6 @@ export async function compileApplicationToWasm(
       `Error: Failed to check whether the \`output\` (${output}) is a file path`,
       error.message
     );
-    process.exit(1);
-  }
-
-  if (containsSyntaxErrors(input)) {
     process.exit(1);
   }
 
