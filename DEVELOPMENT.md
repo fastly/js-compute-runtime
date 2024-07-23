@@ -21,9 +21,10 @@ To build from source, you need to have the following tools installed to successf
 #### Linux
 
 - Rust
-  ```
+  ```sh
   curl -so rust.sh https://sh.rustup.rs && sh rust.sh -y
-  restart shell or run source $HOME/.cargo/env
+  # then, restart shell or run:
+  source $HOME/.cargo/env
   ```
 - Build tools
   ```sh
