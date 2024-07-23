@@ -13,6 +13,6 @@ test('should return non-zero exit code', async function (t) {
     const { code, stdout, stderr } = await execute(process.execPath, cli);
 
     t.alike(stdout, []);
-    t.alike(stderr, ['Error: The `input` path points to a non-existant file: {{base}}/bin/index.js']);
+    t.alike(stderr, ['Error: The `input` path points to a non-existent file: {{base}}/bin/index.js']);
     t.is(code, 1);
 });

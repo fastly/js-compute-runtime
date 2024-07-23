@@ -14,6 +14,6 @@ test('should return non-zero exit code', async function (t) {
     const { code, stdout, stderr } = await execute(process.execPath, `${cli} --engine-wasm ${path}/engine.wasm`);
 
     t.alike(stdout, []);
-    t.alike(stderr, ['Error: The `wasmEngine` path points to a non-existant file: {{base}}/engine.wasm']);
+    t.alike(stderr, ['Error: The `wasmEngine` path points to a non-existent file: {{base}}/engine.wasm']);
     t.is(code, 1);
 });
