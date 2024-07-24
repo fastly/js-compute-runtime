@@ -9,7 +9,6 @@ import wizer from "@bytecodealliance/wizer";
 import { precompile } from "./precompile.js";
 import { enableTopLevelAwait } from "./enableTopLevelAwait.js";
 import { bundle } from "./bundle.js";
-import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
 
 async function getTmpDir () {
   return await mkdtemp(normalize(tmpdir() + sep));
@@ -88,13 +87,19 @@ export async function compileApplicationToWasm(
     process.exit(1);
   }
 
-  if (containsSyntaxErrors(input)) {
+  let wizerInput, cleanup = () => {};
+
+  let contents;
+  try {
+    contents = await bundle(input, enableExperimentalTopLevelAwait);
+  } catch (error) {
+    console.error(
+      `Error:`,
+      error.message
+    );
     process.exit(1);
   }
 
-  let wizerInput, cleanup = () => {};
-
-  let contents = await bundle(input, enableExperimentalTopLevelAwait);
   wizerInput = precompile(
     contents.outputFiles[0].text,
     undefined,

@@ -13,10 +13,12 @@ test('should return non-zero exit code on syntax errors', async function (t) {
     const { code, stdout, stderr } = await execute(process.execPath, cli);
     t.alike(stdout, []);
     t.alike(stderr, [
-        '{{base}}/bin/index.js:4',
-        '"hello";@',
-        '^',
-        'SyntaxError: Invalid or unexpected token'
+        '✘ [ERROR] Expected identifier but found end of file',
+        'bin/index.js:4:9:',
+        '4 │ "hello";@',
+        '╵          ^',
+        'Error: Build failed with 1 error:',
+        'bin/index.js:4:9: ERROR: Expected identifier but found end of file',
     ]);
 
     t.is(code, 1);
