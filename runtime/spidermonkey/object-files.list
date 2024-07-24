@@ -6,6 +6,7 @@ mozglue/misc/MmapFaultHandler.o
 mozglue/misc/Mutex_noop.o
 mozglue/misc/Printf.o
 mozglue/misc/StackWalk.o
+mozglue/misc/SIMD.o
 mozglue/misc/TimeStamp.o
 mozglue/misc/TimeStamp_posix.o
 mozglue/misc/Uptime.o
