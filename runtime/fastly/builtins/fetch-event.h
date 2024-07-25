@@ -18,7 +18,7 @@ class ClientInfo final : public builtins::BuiltinNoConstructor<ClientInfo> {
   static bool tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
-  static constexpr const char *class_name = "FetchEvent";
+  static constexpr const char *class_name = "ClientInfo";
 
   enum class Slots {
     Address,
