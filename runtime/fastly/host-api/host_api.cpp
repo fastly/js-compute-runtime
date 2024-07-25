@@ -944,6 +944,20 @@ Result<HostBytes> HttpReq::downstream_client_ip_addr() {
   return res;
 }
 
+Result<HostBytes> HttpReq::downstream_server_ip_addr() {
+  Result<HostBytes> res;
+
+  fastly_world_list_u8_t octets;
+  fastly_compute_at_edge_types_error_t err;
+  if (!fastly_compute_at_edge_http_req_downstream_server_ip_addr(&octets, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(make_host_bytes(octets));
+  }
+
+  return res;
+}
+
 // http-req-downstream-tls-cipher-openssl-name: func() -> result<string, error>
 Result<HostString> HttpReq::http_req_downstream_tls_cipher_openssl_name() {
   Result<HostString> res;

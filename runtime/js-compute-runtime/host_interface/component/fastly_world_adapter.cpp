@@ -203,6 +203,12 @@ bool fastly_compute_at_edge_http_req_downstream_client_ip_addr(
   return convert_result(fastly::req_downstream_client_ip_addr_get(ret->ptr, &ret->len), err);
 }
 
+bool fastly_compute_at_edge_http_req_downstream_server_ip_addr(
+    fastly_world_list_u8_t *ret, fastly_compute_at_edge_http_req_error_t *err) {
+  ret->ptr = static_cast<uint8_t *>(cabi_malloc(16, 1));
+  return convert_result(fastly::req_downstream_server_ip_addr_get(ret->ptr, &ret->len), err);
+}
+
 bool fastly_compute_at_edge_http_req_downstream_tls_cipher_openssl_name(
     fastly_world_string_t *ret, fastly_compute_at_edge_types_error_t *err) {
   auto default_size = 128;

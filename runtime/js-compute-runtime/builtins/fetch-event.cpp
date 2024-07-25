@@ -2,6 +2,7 @@
 #include "builtins/client-info.h"
 #include "builtins/fastly.h"
 #include "builtins/request-response.h"
+#include "builtins/server-info.h"
 #include "builtins/shared/url.h"
 #include "builtins/worker-location.h"
 #include "host_interface/host_api.h"
@@ -68,6 +69,24 @@ bool FetchEvent::client_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   args.rval().set(clientInfo);
+  return true;
+}
+
+bool FetchEvent::server_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  JS::RootedValue serverInfo(cx,
+                             JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ServerInfo)));
+
+  if (serverInfo.isUndefined()) {
+    JS::RootedObject obj(cx, ServerInfo::create(cx));
+    if (!obj)
+      return false;
+    serverInfo.setObject(*obj);
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ServerInfo), serverInfo);
+  }
+
+  args.rval().set(serverInfo);
   return true;
 }
 
@@ -390,6 +409,7 @@ const JSFunctionSpec FetchEvent::methods[] = {
 const JSPropertySpec FetchEvent::properties[] = {
     JS_PSG("client", client_get, JSPROP_ENUMERATE),
     JS_PSG("request", request_get, JSPROP_ENUMERATE),
+    JS_PSG("server", server_get, JSPROP_ENUMERATE),
     JS_PS_END,
 };
 

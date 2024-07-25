@@ -29,6 +29,10 @@ It provides the [`event.respondWith()`](./prototype/respondWith.mdx) method, whi
         - : An ArrayBuffer containing the raw client certificate in the mutual TLS handshake message. It is in PEM format. Returns an empty ArrayBuffer if this is not mTLS or available.
     - `FetchEvent.client.tlsClientHello` _**readonly**_
         - : An ArrayBuffer containing the raw bytes sent by the client in the TLS ClientHello message.
+- `FetchEvent.server` _**readonly**_
+    - : Information about the server receiving the request for the Fastly Compute service.
+    - `FetchEvent.server.address` _**readonly**_
+        - : A string representation of the IPv4 or IPv6 address of the server which received the request.
 
 ## Instance methods
 

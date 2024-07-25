@@ -132,6 +132,11 @@ declare interface FetchEvent {
    * Information about the downstream client that made the request
    */
   readonly client: ClientInfo;
+
+  /**
+   * Information about the server which received the request.
+   */
+  readonly server: ServerInfo;
   /**
    * The downstream request that came from the client
    */
@@ -263,6 +268,16 @@ declare interface ClientInfo {
   readonly tlsProtocol: string;
   readonly tlsClientCertificate: ArrayBuffer;
   readonly tlsClientHello: ArrayBuffer;
+}
+
+/**
+ * Information about the server receiving the request for the Fastly Compute service.
+ */
+declare interface ServerInfo {
+  /**
+   * A string representation of the IPv4 or IPv6 address of the server which received the request.
+   */
+  readonly address: string;
 }
 
 /**

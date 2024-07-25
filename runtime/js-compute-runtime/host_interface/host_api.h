@@ -478,6 +478,8 @@ public:
   /// Get the downstream ip address.
   static Result<HostBytes> downstream_client_ip_addr();
 
+  static Result<HostBytes> downstream_server_ip_addr();
+
   static Result<HostString> http_req_downstream_tls_cipher_openssl_name();
 
   static Result<HostString> http_req_downstream_tls_protocol();

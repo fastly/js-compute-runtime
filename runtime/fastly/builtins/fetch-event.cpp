@@ -29,7 +29,7 @@ namespace fastly::fetch_event {
 
 namespace {
 
-JSString *address(JSObject *obj) {
+JSString *client_address(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::Address));
   return val.isString() ? val.toString() : nullptr;
 }
@@ -60,14 +60,7 @@ JSString *protocol(JSObject *obj) {
   return val.isString() ? val.toString() : nullptr;
 }
 
-static JSString *retrieve_address(JSContext *cx, JS::HandleObject self) {
-  auto res = host_api::HttpReq::downstream_client_ip_addr();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return nullptr;
-  }
-
-  auto octets = std::move(res.unwrap());
+static JSString *ip_octets_to_js_string(JSContext *cx, host_api::HostBytes octets) {
   char address_chars[INET6_ADDRSTRLEN];
   int addr_family = 0;
   socklen_t size = 0;
@@ -100,15 +93,30 @@ static JSString *retrieve_address(JSContext *cx, JS::HandleObject self) {
     }
   }
 
+  return address;
+}
+
+static JSString *retrieve_client_address(JSContext *cx, JS::HandleObject self) {
+  auto res = host_api::HttpReq::downstream_client_ip_addr();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return nullptr;
+  }
+
+  JS::RootedString address(cx, ip_octets_to_js_string(cx, std::move(res.unwrap())));
+  if (!address) {
+    return nullptr;
+  }
+
   JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::Address),
                       JS::StringValue(address));
   return address;
 }
 
 JSString *retrieve_geo_info(JSContext *cx, JS::HandleObject self) {
-  JS::RootedString address_str(cx, address(self));
+  JS::RootedString address_str(cx, client_address(self));
   if (!address_str) {
-    address_str = retrieve_address(cx, self);
+    address_str = retrieve_client_address(cx, self);
     if (!address_str)
       return nullptr;
   }
@@ -127,9 +135,9 @@ JSString *retrieve_geo_info(JSContext *cx, JS::HandleObject self) {
 bool ClientInfo::address_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  JS::RootedString address_str(cx, address(self));
+  JS::RootedString address_str(cx, client_address(self));
   if (!address_str) {
-    address_str = retrieve_address(cx, self);
+    address_str = retrieve_client_address(cx, self);
     if (!address_str)
       return false;
   }
@@ -305,6 +313,67 @@ JSObject *ClientInfo::create(JSContext *cx) {
 
 namespace {
 
+JSString *server_address(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ServerInfo::Slots::Address));
+  return val.isString() ? val.toString() : nullptr;
+}
+
+static JSString *retrieve_server_address(JSContext *cx, JS::HandleObject self) {
+  auto res = host_api::HttpReq::downstream_server_ip_addr();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return nullptr;
+  }
+
+  JS::RootedString address(cx, ip_octets_to_js_string(cx, std::move(res.unwrap())));
+  if (!address) {
+    return nullptr;
+  }
+
+  JS::SetReservedSlot(self, static_cast<uint32_t>(ServerInfo::Slots::Address),
+                      JS::StringValue(address));
+  return address;
+}
+
+} // namespace
+
+bool ServerInfo::address_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString address_str(cx, server_address(self));
+  if (!address_str) {
+    address_str = retrieve_server_address(cx, self);
+    if (!address_str)
+      return false;
+  }
+
+  args.rval().setString(address_str);
+  return true;
+}
+
+const JSFunctionSpec ServerInfo::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec ServerInfo::static_properties[] = {
+    JS_PS_END,
+};
+
+const JSFunctionSpec ServerInfo::methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec ServerInfo::properties[] = {
+    JS_PSG("address", address_get, JSPROP_ENUMERATE),
+    JS_PS_END,
+};
+
+JSObject *ServerInfo::create(JSContext *cx) {
+  return JS_NewObjectWithGivenProto(cx, &class_, proto_obj);
+}
+
+namespace {
+
 api::Engine *ENGINE;
 
 PersistentRooted<JSObject *> INSTANCE;
@@ -370,6 +439,25 @@ bool FetchEvent::client_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   args.rval().set(clientInfo);
+  return true;
+}
+
+bool FetchEvent::server_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  JS::RootedValue serverInfo(cx,
+                             JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ServerInfo)));
+
+  if (serverInfo.isUndefined()) {
+    JS::RootedObject obj(cx, ServerInfo::create(cx));
+    if (!obj) {
+      return false;
+    }
+    serverInfo.setObject(*obj);
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ServerInfo), serverInfo);
+  }
+
+  args.rval().set(serverInfo);
   return true;
 }
 
@@ -729,6 +817,7 @@ const JSFunctionSpec FetchEvent::methods[] = {
 const JSPropertySpec FetchEvent::properties[] = {
     JS_PSG("client", client_get, JSPROP_ENUMERATE),
     JS_PSG("request", request_get, JSPROP_ENUMERATE),
+    JS_PSG("server", server_get, JSPROP_ENUMERATE),
     JS_PS_END,
 };
 
@@ -855,6 +944,10 @@ bool install(api::Engine *engine) {
   }
 
   if (!ClientInfo::init_class(engine->cx(), engine->global())) {
+    return false;
+  }
+
+  if (!ServerInfo::init_class(engine->cx(), engine->global())) {
     return false;
   }
 

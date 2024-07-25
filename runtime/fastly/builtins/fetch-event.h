@@ -38,12 +38,31 @@ public:
   static JSObject *create(JSContext *cx);
 };
 
+class ServerInfo final : public builtins::BuiltinNoConstructor<ServerInfo> {
+  static bool address_get(JSContext *cx, unsigned argc, JS::Value *vp);
+
+public:
+  static constexpr const char *class_name = "ServerInfo";
+
+  enum class Slots {
+    Address,
+    Count,
+  };
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
+  static const JSFunctionSpec methods[];
+  static const JSPropertySpec properties[];
+
+  static JSObject *create(JSContext *cx);
+};
+
 void dispatch_fetch_event(HandleObject event, double *total_compute);
 
 class FetchEvent final : public builtins::BuiltinNoConstructor<FetchEvent> {
   static bool respondWith(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool client_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool request_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool server_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool waitUntil(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
@@ -64,6 +83,7 @@ public:
     PendingPromiseCount,
     DecPendingPromiseCountFunc,
     ClientInfo,
+    ServerInfo,
     Count
   };
 

@@ -59,6 +59,7 @@
 #include "builtins/native-stream-source.h"
 #include "builtins/request-response.h"
 #include "builtins/secret-store.h"
+#include "builtins/server-info.h"
 #include "builtins/shared/console.h"
 #include "builtins/shared/dom-exception.h"
 #include "builtins/shared/performance.h"
@@ -1023,6 +1024,8 @@ bool define_fastly_sys(JSContext *cx, HandleObject global, FastlyOptions options
   if (!builtins::Headers::init_class(cx, global))
     return false;
   if (!builtins::ClientInfo::init_class(cx, global))
+    return false;
+  if (!builtins::ServerInfo::init_class(cx, global))
     return false;
   if (!builtins::FetchEvent::init_class(cx, global))
     return false;
