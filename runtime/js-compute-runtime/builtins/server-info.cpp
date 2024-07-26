@@ -9,11 +9,6 @@ namespace builtins {
 
 namespace {
 
-JSString *address(JSObject *obj) {
-  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ServerInfo::Slots::Address));
-  return val.isString() ? val.toString() : nullptr;
-}
-
 static JSString *retrieve_address(JSContext *cx, JS::HandleObject self) {
   auto res = host_api::HttpReq::downstream_server_ip_addr();
   if (auto *err = res.to_err()) {
@@ -66,11 +61,15 @@ static JSString *retrieve_address(JSContext *cx, JS::HandleObject self) {
 bool ServerInfo::address_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  JS::RootedString address_str(cx, address(self));
-  if (!address_str) {
+  JS::RootedString address_str(cx);
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ServerInfo::Slots::Address));
+  if (val.isString()) {
+    address_str = val.toString();
+  } else {
     address_str = retrieve_address(cx, self);
-    if (!address_str)
+    if (!address_str) {
       return false;
+    }
   }
 
   args.rval().setString(address_str);
