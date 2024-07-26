@@ -4,7 +4,7 @@ import { $ as zx } from 'zx'
 import { argv } from 'node:process'
 
 const serviceName = argv[2]
-const starlingmonkey = argv.slice(2).includes('--starlingmonkey');
+const starlingmonkey = !argv.slice(2).includes('--disable-starlingmonkey');
 
 const startTime = Date.now();
 

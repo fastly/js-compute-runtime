@@ -207,7 +207,7 @@ jobs:
 
     - name: Build WPT runtime
       run: |
-        bash ./tests/wpt-harness/build-wpt-runtime.sh
+        bash ./tests/wpt-harness/build-wpt-runtime.sh --disable-starlingmonkey
 
     - name: Prepare WPT hosts
       run: |
@@ -427,7 +427,7 @@ jobs:
     - run: yarn install --frozen-lockfile
 
     - name: Build WPT runtime
-      run: tests/wpt-harness/build-wpt-runtime.sh --starlingmonkey
+      run: tests/wpt-harness/build-wpt-runtime.sh
 
     - name: Prepare WPT hosts
       run: |
@@ -491,6 +491,6 @@ jobs:
     - name: Yarn install
       run: yarn && cd ./integration-tests/js-compute && yarn
 
-    - run: node integration-tests/js-compute/test.js --starlingmonkey ${{ matrix.platform == 'viceroy' && '--local' || '' }}
+    - run: node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}

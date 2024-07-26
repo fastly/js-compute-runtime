@@ -28,7 +28,7 @@
   "scripts": {
     "test": "npm run test:types && npm run test:cli",
     "test:cli": "brittle --bail integration-tests/cli/**.test.js",
-    "test:integration": "node ./integration-tests/js-compute/test.js",
+    "test:integration": "node ./integration-tests/js-compute/test.js --disable-starlingmonkey",
     "test:wpt": "tests/wpt-harness/build-wpt-runtime.sh && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:types": "tsd",
     "build": "make -j8 -C runtime/js-compute-runtime && cp runtime/js-compute-runtime/js-compute-runtime.wasm .",
