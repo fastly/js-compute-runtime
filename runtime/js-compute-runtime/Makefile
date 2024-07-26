@@ -38,7 +38,7 @@ WIT_BINDGEN ?= $(shell which wit-bindgen)
 # Default optimization flgs for clang/clang++.
 OPT_FLAGS ?= -O2
 
-RUNTIME_VERSION ?= $(shell npm pkg get version --json | jq -r)
+RUNTIME_VERSION ?= "$(shell npm pkg get version --json | jq -r)-legacy"
 
 # Command helpers for making nice build output.
 include mk/commands.mk
