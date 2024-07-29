@@ -11,6 +11,7 @@
 #include "js/Conversions.h"
 #include "js/JSON.h"
 #include "logger.h"
+#include <arpa/inet.h>
 
 using builtins::web::url::URL;
 using builtins::web::url::URLSearchParams;

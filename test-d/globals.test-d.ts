@@ -159,6 +159,7 @@ import { expectError, expectType } from 'tsd';
 {
   const event = {} as FetchEvent
   expectType<ClientInfo>(event.client)
+  expectType<ServerInfo>(event.server)
   expectType<Request>(event.request)
   expectType<(response: Response | PromiseLike<Response>) => void>(event.respondWith)
   expectType<(promise: Promise<any>) => void>(event.waitUntil)
@@ -220,6 +221,14 @@ import { expectError, expectType } from 'tsd';
   expectError(client.tlsProtocol = '')
   expectError(client.tlsClientCertificate = '')
   expectError(client.tlsClientHello = '')
+}
+
+// ServerInfo
+{
+  const server = {} as ServerInfo
+  expectType<string>(server.address)
+  // They are readonly properties
+  expectError(server.address = '')
 }
 
 // ConfigStore

@@ -167,6 +167,9 @@ int req_auto_decompress_response_set(fastly_compute_at_edge_http_types_request_h
 WASM_IMPORT("fastly_http_req", "downstream_client_ip_addr")
 int req_downstream_client_ip_addr_get(uint8_t *octets, size_t *nwritten);
 
+WASM_IMPORT("fastly_http_req", "downstream_server_ip_addr")
+int req_downstream_server_ip_addr_get(uint8_t *octets, size_t *nwritten);
+
 WASM_IMPORT("fastly_http_req", "downstream_tls_cipher_openssl_name")
 int req_downstream_tls_cipher_openssl_name(char *ret, size_t ret_len, size_t *nwritten);
 

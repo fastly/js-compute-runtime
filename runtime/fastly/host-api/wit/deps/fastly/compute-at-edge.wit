@@ -279,6 +279,8 @@ interface http-req {
 
   downstream-client-ip-addr: func() -> result<list<u8>, error>;
 
+  downstream-server-ip-addr: func() -> result<list<u8>, error>;
+
   downstream-client-request-id: func() -> result<string, error>;
 
   downstream-client-h2-fingerprint: func() -> result<list<u8>, error>;
