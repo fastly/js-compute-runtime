@@ -4,7 +4,7 @@ import { KVStore } from "fastly:kv-store";
 import { sdkVersion } from "fastly:experimental";
 import { routes, isRunningLocally } from "./routes.js";
 
-const starlingmonkey = sdkVersion.includes('starlingmonkey');
+const starlingmonkey = !sdkVersion.includes('legacy');
 
 // KVStore
 {
