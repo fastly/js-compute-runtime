@@ -36,6 +36,7 @@
     "build:debug": "DEBUG=true make -j8 -C runtime/js-compute-runtime && cp runtime/js-compute-runtime/js-compute-runtime.wasm .",
     "build:starlingmonkey": "./runtime/fastly/build-release.sh",
     "build:starlingmonkey:debug": "./runtime/fastly/build-debug.sh",
+    "build:starlingmonkey:debug:test": "npm run build:starlingmonkey:debug && ./integration-tests/js-compute/test.js --starlingmonkey --local",
     "format-changelog": "node ci/format-changelog.js CHANGELOG.md"
   },
   "devDependencies": {

@@ -185,7 +185,8 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
 
 } // namespace
 
-bool KVStore::process_pending_kv_store_delete(JSContext *cx, FastlyHandle handle,
+bool KVStore::process_pending_kv_store_delete(JSContext *cx,
+                                              host_api::ObjectStorePendingDelete::Handle handle,
                                               JS::HandleObject context, JS::HandleObject promise) {
   host_api::ObjectStorePendingDelete pending_delete(handle);
 
@@ -239,7 +240,8 @@ bool KVStore::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool KVStore::process_pending_kv_store_lookup(JSContext *cx, FastlyHandle handle,
+bool KVStore::process_pending_kv_store_lookup(JSContext *cx,
+                                              host_api::ObjectStorePendingLookup::Handle handle,
                                               JS::HandleObject context, JS::HandleObject promise) {
   host_api::ObjectStorePendingLookup pending_lookup(handle);
 

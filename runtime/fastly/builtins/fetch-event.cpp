@@ -454,7 +454,9 @@ void dispatch_fetch_event(HandleObject event, double *total_compute) {
   dispatch_fetch_event(event);
   double diff = duration_cast<microseconds>(system_clock::now() - pre_handler).count();
   *total_compute += diff;
-  printf("Request handler took %fms\n", diff / 1000);
+  if (ENGINE->debug_logging_enabled()) {
+    printf("Request handler took %fms\n", diff / 1000);
+  }
 }
 
 JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {

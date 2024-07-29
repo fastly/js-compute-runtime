@@ -75,7 +75,7 @@ bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObj
 
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
 
-bool process_body_read(JSContext *cx, FastlyHandle handle, JS::HandleObject context,
+bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::HandleObject context,
                        JS::HandleObject promise) {
   MOZ_ASSERT(context);
   JS::RootedObject streamSource(cx, context);
@@ -196,7 +196,8 @@ ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
 
 } // namespace
 
-bool RequestOrResponse::process_pending_request(JSContext *cx, FastlyHandle handle,
+bool RequestOrResponse::process_pending_request(JSContext *cx,
+                                                host_api::HttpPendingReq::Handle handle,
                                                 JS::HandleObject context,
                                                 JS::HandleObject promise) {
   MOZ_ASSERT(Request::is_instance(context));
@@ -409,8 +410,9 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
         length = str.len;
       }
 
-      if (!text)
+      if (!text) {
         return false;
+      }
       buf = text.get();
       content_type = "text/plain;charset=UTF-8";
     }
@@ -3072,8 +3074,9 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedObject headers(cx);
   JS::RootedObject headersInstance(
       cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
-  if (!headersInstance)
+  if (!headersInstance) {
     return false;
+  }
 
   headers = Headers::create(cx, headersInstance, Headers::Mode::ProxyToResponse, response,
                             headers_val, false);

@@ -139,7 +139,6 @@ jobs:
         name: engine-${{ matrix.profile }}
         path: |
           js-compute-runtime.wasm
-          js-compute-runtime-component.wasm
 
   ensure_cargo_installs:
     name: Ensure that all required "cargo install" commands are run, or we have a cache hit

@@ -14,14 +14,12 @@ node_modules/
 /rusturl/
 # compiler_flags
 /js-compute-runtime.wasm
-/js-compute-runtime-component.wasm
 /starling.wasm
 /runtime/js-compute-runtime/obj
 tests/wpt-harness/wpt-test-runner.js
 wpt-runtime.wasm
 docs-app/bin/main.wasm
 docs-app/pkg/*.tar.gz
-runtime/js-compute-runtime/fastly-world/fastly_world_component_type.o
 
 *.a
 yarn-error.log
