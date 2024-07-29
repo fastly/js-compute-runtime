@@ -6,6 +6,7 @@
 #include "../../../StarlingMonkey/builtins/web/url.h"
 #include "../../../StarlingMonkey/builtins/web/worker-location.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
+#include "../../common/ip_octets_to_js_string.h"
 #include "../cache-core.h"
 #include "../cache-override.h"
 #include "../cache-simple.h"
@@ -22,7 +23,6 @@
 #include "js/Stream.h"
 #include "picosha2.h"
 #include <algorithm>
-#include <arpa/inet.h>
 #include <vector>
 
 #pragma clang diagnostic push
@@ -2535,26 +2535,13 @@ bool Response::ip_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     args.rval().setUndefined();
     return true;
   }
-  if (ret->len == 4) {
-    char *out = (char *)malloc(INET_ADDRSTRLEN);
-    inet_ntop(AF_INET, ret->ptr.get(), out, 16);
-    JS::RootedString text(
-        cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(out, strnlen(out, INET_ADDRSTRLEN))));
-    if (!text) {
-      return false;
-    }
-    args.rval().setString(text);
-  } else {
-    MOZ_ASSERT(ret->len == 16);
-    char *out = (char *)malloc(INET6_ADDRSTRLEN);
-    inet_ntop(AF_INET6, ret->ptr.get(), out, 16);
-    JS::RootedString text(
-        cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(out, strnlen(out, INET6_ADDRSTRLEN))));
-    if (!text) {
-      return false;
-    }
-    args.rval().setString(text);
+
+  JS::RootedString address(cx, common::ip_octets_to_js_string(cx, std::move(*ret)));
+  if (!address) {
+    return false;
   }
+  args.rval().setString(address);
+
   return true;
 }
 

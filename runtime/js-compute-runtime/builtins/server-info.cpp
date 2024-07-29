@@ -62,7 +62,7 @@ bool ServerInfo::address_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
   JS::RootedString address_str(cx);
-  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ServerInfo::Slots::Address));
+  JS::Value val = JS::GetReservedSlot(self, static_cast<uint32_t>(ServerInfo::Slots::Address));
   if (val.isString()) {
     address_str = val.toString();
   } else {

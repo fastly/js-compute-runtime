@@ -2,6 +2,7 @@
 #include "../../StarlingMonkey/builtins/web/performance.h"
 #include "../../StarlingMonkey/builtins/web/url.h"
 #include "../../StarlingMonkey/builtins/web/worker-location.h"
+#include "../common/ip_octets_to_js_string.h"
 #include "../host-api/fastly.h"
 #include "../host-api/host_api_fastly.h"
 #include "./fetch/request-response.h"
@@ -10,7 +11,6 @@
 #include "host_api.h"
 #include "js/JSON.h"
 #include "openssl/evp.h"
-#include <arpa/inet.h>
 
 #include <iostream>
 #include <memory>
@@ -60,42 +60,6 @@ JSString *protocol(JSObject *obj) {
   return val.isString() ? val.toString() : nullptr;
 }
 
-static JSString *ip_octets_to_js_string(JSContext *cx, host_api::HostBytes octets) {
-  char address_chars[INET6_ADDRSTRLEN];
-  int addr_family = 0;
-  socklen_t size = 0;
-
-  switch (octets.len) {
-  case 0: {
-    // No address to be had, leave `address` as a nullptr.
-    break;
-  }
-  case 4: {
-    addr_family = AF_INET;
-    size = INET_ADDRSTRLEN;
-    break;
-  }
-  case 16: {
-    addr_family = AF_INET6;
-    size = INET6_ADDRSTRLEN;
-    break;
-  }
-  }
-
-  JS::RootedString address(cx);
-  if (octets.len > 0) {
-    // TODO: do we need to do error handling here, or can we depend on the
-    // host giving us a valid address?
-    inet_ntop(addr_family, octets.begin(), address_chars, size);
-    address = JS_NewStringCopyZ(cx, address_chars);
-    if (!address) {
-      return nullptr;
-    }
-  }
-
-  return address;
-}
-
 static JSString *retrieve_client_address(JSContext *cx, JS::HandleObject self) {
   auto res = host_api::HttpReq::downstream_client_ip_addr();
   if (auto *err = res.to_err()) {
@@ -103,7 +67,7 @@ static JSString *retrieve_client_address(JSContext *cx, JS::HandleObject self) {
     return nullptr;
   }
 
-  JS::RootedString address(cx, ip_octets_to_js_string(cx, std::move(res.unwrap())));
+  JS::RootedString address(cx, common::ip_octets_to_js_string(cx, std::move(res.unwrap())));
   if (!address) {
     return nullptr;
   }
@@ -325,7 +289,7 @@ static JSString *retrieve_server_address(JSContext *cx, JS::HandleObject self) {
     return nullptr;
   }
 
-  JS::RootedString address(cx, ip_octets_to_js_string(cx, std::move(res.unwrap())));
+  JS::RootedString address(cx, common::ip_octets_to_js_string(cx, std::move(res.unwrap())));
   if (!address) {
     return nullptr;
   }
