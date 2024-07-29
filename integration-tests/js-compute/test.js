@@ -35,7 +35,7 @@ async function sleep(seconds) {
 let args = argv.slice(2);
 
 const local = args.includes('--local');
-const starlingmonkey = args.includes('--starlingmonkey');
+const starlingmonkey = !args.includes('--disable-starlingmonkey');
 const filter = args.filter(arg => !arg.startsWith('--'));
 
 async function $(...args) {
@@ -67,9 +67,9 @@ await cd(fixturePath);
 await copyFile(join(fixturePath, 'fastly.toml.in'), join(fixturePath, 'fastly.toml'))
 const config = TOML.parse(await readFile(join(fixturePath, 'fastly.toml'), 'utf-8'))
 config.name = serviceName;
-if (starlingmonkey) {
+if (!starlingmonkey) {
     const buildArgs = config.scripts.build.split(' ')
-    buildArgs.splice(-1, null, '--starlingmonkey')
+    buildArgs.splice(-1, null, '--disable-starlingmonkey')
     config.scripts.build = buildArgs.join(' ')
 }
 await writeFile(join(fixturePath, 'fastly.toml'), TOML.stringify(config), 'utf-8')
@@ -91,7 +91,7 @@ if (!local) {
     const setupPath = join(fixturePath, 'setup.js')
     if (existsSync(setupPath)) {
         core.startGroup('Extra set-up steps for the service')
-        await zx`node ${setupPath} ${serviceName} ${starlingmonkey ? '--starlingmonkey' : ''}`
+        await zx`node ${setupPath} ${serviceName} ${starlingmonkey ? '' : '--disable-starlingmonkey'}`
         await sleep(60)
         core.endGroup()
     }

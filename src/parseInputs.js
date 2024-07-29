@@ -8,21 +8,15 @@ export async function parseInputs(cliInputs) {
 
   let enableExperimentalHighResolutionTimeMethods = false;
   let enableExperimentalTopLevelAwait = false;
-  let starlingMonkey = false;
+  let starlingMonkey = true;
   let enablePBL = false;
   let customEngineSet = false;
-  let wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
+  let wasmEngine = join(__dirname, "../starling.wasm");
   let customInputSet = false;
   let input = join(process.cwd(), "bin/index.js");
   let customOutputSet = false;
   let output = join(process.cwd(), "bin/main.wasm");
   let cliInput;
-
-  let useStarlingMonkey = () => {
-    console.log(`Building with the experimental StarlingMonkey engine`);
-    starlingMonkey = true;
-    wasmEngine = wasmEngine = join(__dirname, "../starling.wasm");
-  };
 
   // eslint-disable-next-line no-cond-assign
   loop: while ((cliInput = cliInputs.shift())) {
@@ -51,7 +45,12 @@ export async function parseInputs(cliInputs) {
         return { help: true };
       }
       case "--starlingmonkey": {
-        useStarlingMonkey();
+        break;
+      }
+      case "--disable-starlingmonkey": {
+        starlingMonkey = false;
+        wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
+        console.log('Building with the js-compute-runtime.wasm engine');
         break;
       }
       case "--engine-wasm": {
