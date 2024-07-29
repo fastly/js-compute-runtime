@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.19.0](https://github.com/fastly/js-compute-runtime/compare/v3.18.1...v3.19.0) (2024-07-29)
+
+
+### Features
+
+* Add FetchEvent.server object which contains information about the server which received the incoming HTTP request from the client. ([#855](https://github.com/fastly/js-compute-runtime/issues/855)) ([538ed9c](https://github.com/fastly/js-compute-runtime/commit/538ed9c436105caf4bf906355fcf110752870b2b))
+* use StarlingMonkey by default, --disable-starlingmonkey flag ([#861](https://github.com/fastly/js-compute-runtime/issues/861)) ([475cdf9](https://github.com/fastly/js-compute-runtime/commit/475cdf910d5690d74ff96dccd14dfefc209ea944))
+
+
+### Bug Fixes
+
+* Correct Class name for the ClientInfo class ([#854](https://github.com/fastly/js-compute-runtime/issues/854)) ([efb5694](https://github.com/fastly/js-compute-runtime/commit/efb569475a285bdeb2dcc1346d718eb26be4fed9))
+* correct spelling in CLI error message ([#849](https://github.com/fastly/js-compute-runtime/issues/849)) ([38b558c](https://github.com/fastly/js-compute-runtime/commit/38b558c3ad7c6871243823a207485ba9cc6282dd))
+
 ## 3.18.1 (2024-07-18)
 
 ### Fixed
