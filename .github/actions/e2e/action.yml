@@ -34,7 +34,7 @@ runs:
       shell: bash
     - run: cd ./integration-tests/js-compute && yarn
       shell: bash
-    - run: cd ./integration-tests/js-compute && ./test.js
+    - run: cd ./integration-tests/js-compute && ./test.js --disable-starlingmonkey
       shell: bash
       env: # Or as an environment variable
         FASTLY_API_TOKEN: ${{ inputs.fastly-api-token }}

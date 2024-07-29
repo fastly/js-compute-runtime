@@ -14,10 +14,10 @@ test('should create wasm file and return zero exit code for StarlingMonkey', asy
     
     t.is(await exists('./bin/main.wasm'), false)
 
-    const { code, stdout, stderr } = await execute(process.execPath, cli + ' --starlingmonkey');
+    const { code, stdout, stderr } = await execute(process.execPath, cli + ' --disable-starlingmonkey');
 
     t.is(await exists('./bin/main.wasm'), true)
-    t.alike(stdout, ['Building with the experimental StarlingMonkey engine']);
+    t.alike(stdout, ['Building with the js-compute-runtime.wasm engine']);
     t.alike(stderr, []);
     t.is(code, 0);
 });
