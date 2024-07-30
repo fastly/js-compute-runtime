@@ -58,7 +58,7 @@ zx.verbose = true;
 const branchName = (await zx`git branch --show-current`).stdout.trim().replace(/[^a-zA-Z0-9_-]/g, '_')
 
 const fixture = 'app';
-const serviceName = `${fixture}--${branchName}${starlingmonkey ? '--sm' : ''}`
+const serviceName = `${fixture}--${branchName}${starlingmonkey ? '--sm' : ''}${process.env.SUFFIX_STRING || ''}`
 let domain;
 const fixturePath = join(__dirname, 'fixtures', fixture)
 let localServer;
