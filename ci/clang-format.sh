@@ -48,7 +48,7 @@ for file in $(git ls-files | grep '\.\(cpp\|h\)$'); do
   fi
 
   formatted="${file}.formatted"
-  clang-format "$file" > "$formatted"
+  /opt/wasi-sdk/bin/clang-format "$file" > "$formatted"
   if ! cmp -s "$file" "$formatted"; then
     if [ -z "$fix" ]; then
       rm "$formatted"
