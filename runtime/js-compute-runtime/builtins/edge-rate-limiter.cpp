@@ -446,7 +446,7 @@ bool EdgeRateLimiter::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto pb_name = RateCounter::get_name(pb.toObjectOrNull());
+  auto pb_name = PenaltyBox::get_name(pb.toObjectOrNull());
   if (!pb_name) {
     return false;
   }
