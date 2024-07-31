@@ -28,14 +28,15 @@ void CacheOverride::set_mode(JSObject *self, CacheOverride::CacheOverrideMode mo
 
 JS::Value CacheOverride::ttl(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
-  if (CacheOverride::mode(self) != CacheOverride::CacheOverrideMode::Override)
+  if (CacheOverride::mode(self) != CacheOverride::CacheOverrideMode::Override) {
     return JS::UndefinedValue();
+  }
   return JS::GetReservedSlot(self, Slots::TTL);
 }
 
 void CacheOverride::set_ttl(JSObject *self, uint32_t ttl) {
   MOZ_ASSERT(is_instance(self));
-  MOZ_RELEASE_ASSERT(mode(self) == CacheOverride::CacheOverrideMode::Override);
+  MOZ_ASSERT(mode(self) == CacheOverride::CacheOverrideMode::Override);
   JS::SetReservedSlot(self, CacheOverride::Slots::TTL, JS::Int32Value((int32_t)ttl));
 }
 
@@ -48,7 +49,7 @@ JS::Value CacheOverride::swr(JSObject *self) {
 
 void CacheOverride::set_swr(JSObject *self, uint32_t swr) {
   MOZ_ASSERT(is_instance(self));
-  MOZ_RELEASE_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
+  MOZ_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
   JS::SetReservedSlot(self, CacheOverride::Slots::SWR, JS::Int32Value((int32_t)swr));
 }
 
@@ -61,7 +62,7 @@ JS::Value CacheOverride::surrogate_key(JSObject *self) {
 
 void CacheOverride::set_surrogate_key(JSObject *self, JSString *key) {
   MOZ_ASSERT(is_instance(self));
-  MOZ_RELEASE_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
+  MOZ_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
   JS::SetReservedSlot(self, CacheOverride::Slots::SurrogateKey, JS::StringValue(key));
 }
 
@@ -74,7 +75,7 @@ JS::Value CacheOverride::pci(JSObject *self) {
 
 void CacheOverride::set_pci(JSObject *self, bool pci) {
   MOZ_ASSERT(is_instance(self));
-  MOZ_RELEASE_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
+  MOZ_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
   JS::SetReservedSlot(self, CacheOverride::Slots::PCI, JS::BooleanValue(pci));
 }
 
