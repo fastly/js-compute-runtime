@@ -19,8 +19,8 @@ public:
     TransformInput, // JS::Value to be used by TransformAlgorithm, e.g. a
                     // JSFunction to call.
     FlushAlgorithm,
-    FlushInput, // JS::Value to be used by FlushAlgorithm, e.g. a JSFunction to
-                // call.
+    FlushInput,     // JS::Value to be used by FlushAlgorithm, e.g. a JSFunction to
+                    // call.
     Count
   };
 

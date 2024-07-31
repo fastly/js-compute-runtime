@@ -314,8 +314,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: "Install wasi-sdk-20 (linux)"
+      run: |
+        set -x
+        curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
+        tar xf wasi-sdk-20.0-linux.tar.gz
+        sudo mkdir -p /opt/wasi-sdk
+        sudo mv wasi-sdk-20.0/* /opt/wasi-sdk/
+        ls /opt/wasi-sdk/
     - run: |
-        clang-format --version
+        /opt/wasi-sdk/bin/clang-format --version
         ci/clang-format.sh
     - run: |
         ci/rustfmt.sh
