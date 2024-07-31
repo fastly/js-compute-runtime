@@ -2,7 +2,7 @@ import test from 'brittle';
 import { getBinPath } from 'get-bin-path'
 import { prepareEnvironment } from '@jakechampion/cli-testing-library';
 
-const cli = await getBinPath()
+const cli = await getBinPath({name:"js-compute"})
 
 test('should return non-zero exit code', async function (t) {
     const { execute, cleanup, makeDir, writeFile} = await prepareEnvironment();

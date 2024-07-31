@@ -1,10 +1,12 @@
+import { basename } from "node:path";
+import { argv } from "node:process";
 import { printVersion } from "./printVersion.js";
 
 export async function printHelp() {
   await printVersion();
   console.log(`
 USAGE:
-    js-compute-runtime [FLAGS] [OPTIONS] [ARGS]
+    ${basename(argv[1])} [FLAGS] [OPTIONS] [ARGS]
 
 FLAGS:
     -h, --help                                              Prints help information

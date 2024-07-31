@@ -10,6 +10,7 @@
     "url": "https://github.com/fastly/js-compute-runtime"
   },
   "bin": {
+    "js-compute": "js-compute-runtime-cli.js",
     "js-compute-runtime": "js-compute-runtime-cli.js"
   },
   "files": [
