@@ -127,7 +127,7 @@ bool process_body_read(JSContext *cx, FastlyHandle handle, JS::HandleObject cont
 // https://fetch.spec.whatwg.org/#concept-method-normalize
 // Returns `true` if the method name was normalized, `false` otherwise.
 bool normalize_http_method(char *method) {
-  static const char *names[6] = {"DELETE", "GET", "HEAD", "OPTIONS", "POST", "PUT"};
+  static const char *names[6] = {"GET", "HEAD", "OPTIONS", "POST", "PUT", "DELETE"};
 
   for (size_t i = 0; i < 6; i++) {
     auto name = names[i];
