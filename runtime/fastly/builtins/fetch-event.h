@@ -56,6 +56,7 @@ public:
   static JSObject *create(JSContext *cx);
 };
 
+void dispatch_fetch_event(HandleObject event);
 void dispatch_fetch_event(HandleObject event, double *total_compute);
 
 class FetchEvent final : public builtins::BuiltinNoConstructor<FetchEvent> {

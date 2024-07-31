@@ -27,7 +27,10 @@ void handle_incoming(host_api::Request req) {
       std::chrono::high_resolution_clock::now());
 
   double total_compute = 0;
-  auto start = system_clock::now();
+  std::chrono::system_clock::time_point start;
+  if (ENGINE->debug_logging_enabled()) {
+    start = system_clock::now();
+  }
 
   __wasilibc_initialize_environ();
 
@@ -43,7 +46,11 @@ void handle_incoming(host_api::Request req) {
     return;
   }
 
-  fastly::fetch_event::dispatch_fetch_event(fetch_event, &total_compute);
+  if (ENGINE->debug_logging_enabled()) {
+    fastly::fetch_event::dispatch_fetch_event(fetch_event, &total_compute);
+  } else {
+    fastly::fetch_event::dispatch_fetch_event(fetch_event);
+  }
 
   // Loop until no more resolved promises or backend requests are pending.
   if (ENGINE->debug_logging_enabled()) {
@@ -77,9 +84,9 @@ void handle_incoming(host_api::Request req) {
     return;
   }
 
-  auto end = system_clock::now();
-  double diff = duration_cast<microseconds>(end - start).count();
   if (ENGINE->debug_logging_enabled()) {
+    auto end = system_clock::now();
+    double diff = duration_cast<microseconds>(end - start).count();
     printf("Done. Total request processing time: %fms. Total compute time: %fms\n", diff / 1000,
            total_compute / 1000);
   }

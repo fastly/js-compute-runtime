@@ -425,10 +425,8 @@ bool FetchEvent::server_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-void dispatch_fetch_event(HandleObject event, double *total_compute) {
+void dispatch_fetch_event(HandleObject event) {
   MOZ_ASSERT(FetchEvent::is_instance(event));
-  auto pre_handler = system_clock::now();
-
   RootedValue result(ENGINE->cx());
   RootedValue event_val(ENGINE->cx(), JS::ObjectValue(*event));
   HandleValueArray argsv = HandleValueArray(event_val);
@@ -449,11 +447,14 @@ void dispatch_fetch_event(HandleObject event, double *total_compute) {
   }
 
   FetchEvent::stop_dispatching(event);
+}
 
+void dispatch_fetch_event(HandleObject event, double *total_compute) {
+  auto pre_handler = system_clock::now();
+  dispatch_fetch_event(event);
   double diff = duration_cast<microseconds>(system_clock::now() - pre_handler).count();
   *total_compute += diff;
-  if (ENGINE->debug_logging_enabled())
-    printf("Request handler took %fms\n", diff / 1000);
+  printf("Request handler took %fms\n", diff / 1000);
 }
 
 JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {
