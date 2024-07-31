@@ -1,7 +1,4 @@
 name: CI
-concurrency:
-  group: ${{ github.head_ref }}-${{ github.workflow}}
-  cancel-in-progress: true
 on:
   pull_request:
   push:
@@ -17,6 +14,9 @@ env:
 jobs:
 
   check-changelog:
+    concurrency:
+      group: ${{ github.head_ref }}-${{ github.workflow}}
+      cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
@@ -28,6 +28,9 @@ jobs:
     - run: npm run format-changelog
 
   check-docusaurus:
+    concurrency:
+      group: ${{ github.head_ref }}-${{ github.workflow}}
+      cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
@@ -162,6 +165,9 @@ jobs:
       if: steps.cache-crate.outputs.cache-hit != 'true'
 
   run_wpt:
+    concurrency:
+      group: ${{ github.head_ref }}-${{ github.workflow}}
+      cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     name: Run Web Platform Tests
     strategy:
@@ -223,6 +229,9 @@ jobs:
   # Consumes all published artifacts from all the previous build steps, and runs
   # the integration tests for the linux build.
   sdktest:
+    concurrency:
+      group: ${{ github.head_ref }}-${{ github.workflow}}
+      cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [build, ensure_cargo_installs]
@@ -279,6 +288,9 @@ jobs:
 
 
   shellcheck:
+    concurrency:
+      group: ${{ github.head_ref }}-${{ github.workflow}}
+      cancel-in-progress: true
     env:
       SHELLCHECK_VERSION: v0.8.0
     runs-on: ubuntu-latest
@@ -310,6 +322,9 @@ jobs:
       run: ci/shellcheck.sh
 
   format:
+    concurrency:
+      group: ${{ github.head_ref }}-${{ github.workflow}}
+      cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
@@ -329,6 +344,9 @@ jobs:
         ci/rustfmt.sh
 
   test-npm-package:
+    concurrency:
+      group: ${{ github.head_ref }}-${{ github.workflow}}
+      cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [build, starlingmonkey-build]
@@ -354,6 +372,9 @@ jobs:
     - run: npm test
 
   e2e:
+    concurrency:
+      group: ${{ github.head_ref }}-${{ github.workflow}}
+      cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [build]
@@ -394,8 +415,10 @@ jobs:
         path: starling.wasm
 
   starlingmonkey-run_wpt:
+    concurrency:
+      group: ${{ github.head_ref }}-${{ github.workflow}}
+      cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
-    name: Run Web Platform Tests
     needs: [starlingmonkey-build, ensure_cargo_installs]
     runs-on: ubuntu-latest
     steps:
@@ -447,6 +470,9 @@ jobs:
       run: node ./tests/wpt-harness/run-wpt.mjs --starlingmonkey -vv
 
   starlingmonkey-sdktest:
+    concurrency:
+      group: ${{ github.head_ref }}-${{ github.workflow}}
+      cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     strategy:
