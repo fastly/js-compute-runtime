@@ -15,7 +15,7 @@ jobs:
 
   check-changelog:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}
+      group: ${{ github.head_ref }}-${{ github.workflow}}-check-changelog
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -29,7 +29,7 @@ jobs:
 
   check-docusaurus:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}
+      group: ${{ github.head_ref }}-${{ github.workflow}}-check-docusaurus
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -166,7 +166,7 @@ jobs:
 
   run_wpt:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}
+      group: ${{ github.head_ref }}-${{ github.workflow}}-run_wpt
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     name: Run Web Platform Tests
@@ -230,7 +230,7 @@ jobs:
   # the integration tests for the linux build.
   sdktest:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}
+      group: ${{ github.head_ref }}-${{ github.workflow}}-sdktest
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -289,7 +289,7 @@ jobs:
 
   shellcheck:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}
+      group: ${{ github.head_ref }}-${{ github.workflow}}-shellcheck
       cancel-in-progress: true
     env:
       SHELLCHECK_VERSION: v0.8.0
@@ -323,7 +323,7 @@ jobs:
 
   format:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}
+      group: ${{ github.head_ref }}-${{ github.workflow}}-format
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -345,7 +345,7 @@ jobs:
 
   test-npm-package:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}
+      group: ${{ github.head_ref }}-${{ github.workflow}}-test-npm-package
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -373,7 +373,7 @@ jobs:
 
   e2e:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}
+      group: ${{ github.head_ref }}-${{ github.workflow}}-e2e
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -416,7 +416,7 @@ jobs:
 
   starlingmonkey-run_wpt:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}
+      group: ${{ github.head_ref }}-${{ github.workflow}}-starlingmonkey-run_wpt
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     name: Run Web Platform Tests (starlingmonkey)
@@ -472,7 +472,7 @@ jobs:
 
   starlingmonkey-sdktest:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}
+      group: ${{ github.head_ref }}-${{ github.workflow}}-starlingmonkey-sdktest
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
