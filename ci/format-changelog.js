@@ -216,6 +216,9 @@ function format(ast, path) {
 
         if (item.children[0].value === 'Performance Improvements') {
           if (i + 1 < content.length && (content[i + 1].type !== 'list' || content[i + 2].type !== 'heading')) {
+            console.log(
+              `${path}:${item.children[0].position.start.line}:${item.children[0].position.start.column}`
+            );
             return {
               correct: false,
               reason: `Performance improvements section must be a single list to fix it`,
@@ -260,6 +263,9 @@ function format(ast, path) {
             "Security",
           ].includes(item.children[0].value)
         ) {
+          console.log(
+            `${path}:${item.children[0].position.start.line}:${item.children[0].position.start.column}`
+          );
           return {
             correct: false,
             reason: `Level 3 headings should only be one of 'Added', 'Changed', 'Deprecated', 'Removed', 'Fixed', 'Security'`,
