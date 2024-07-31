@@ -59,14 +59,14 @@ ifneq ($(DEBUG),false)
   CARGO_FLAG :=
   OPT_FLAGS += -DDEBUG -DJS_DEBUG -g
 
-  # Define an empty WASM_STRIP macro when making a debug build
+  # Define an empty WASM_OPT macro when making a debug build
   WASM_STRIP =
 else
   MODE := release
   CARGO_FLAG := --release
 
   # Strip binaries when making a non-debug build.
-  WASM_STRIP = wasm-opt --strip-debug -o $1 $1
+  WASM_OPT = wasm-opt -O3 --strip-debug -o $1 $1
 endif
 
 # The path to the wasm-tools executable
@@ -321,7 +321,7 @@ $(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/impl/main.o
 $(OBJ_DIR)/js-compute-runtime.wasm: $(OBJ_DIR)/host_interface/component/fastly_world_adapter.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
-	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
+	$(call cmd_format,WASM_OPT,$@) $(call WASM_OPT,$@)
 	$(call cmd_format,WASM_METADATA,$@) $(call WASM_METADATA,$@)
 
 # Compute runtime component build ##############################################
@@ -341,7 +341,7 @@ $(OBJ_DIR)/js-compute-runtime-component.wasm: $(FSM_SRC)/host_interface/componen
 $(OBJ_DIR)/js-compute-runtime-component.wasm: $(OBJ_DIR)/host_interface/component/fastly_world.o
 	$(call cmd_format,WASI_LD,$@) PATH="$(FSM_SRC)/scripts:$$PATH" \
 	$(WASI_CXX) $(LD_FLAGS) $(OPENSSL_LIBS) -o $@ $^
-	$(call cmd_format,WASM_STRIP,$@) $(call WASM_STRIP,$@)
+	$(call cmd_format,WASM_OPT,$@) $(call WASM_OPT,$@)
 	$(call cmd_format,WASM_METADATA,$@) $(call WASM_METADATA,$@)
 
 # Shared builtins build ########################################################
