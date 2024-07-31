@@ -460,6 +460,9 @@ jobs:
     steps:
     - name: Checkout fastly/js-compute-runtime
       uses: actions/checkout@v3
+      with:
+        submodules: false
+        ref: ${{ github.head_ref || github.ref_name }}
     - uses: actions/setup-node@v3
       with:
         node-version: 'lts/*'
@@ -499,6 +502,6 @@ jobs:
     - name: Yarn install
       run: yarn && cd ./integration-tests/js-compute && yarn
 
-    - run: node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }}
+    - run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
