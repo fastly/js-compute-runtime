@@ -166,7 +166,7 @@ jobs:
 
   run_wpt:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}-run_wpt
+      group: ${{ github.head_ref }}-${{ github.workflow}}-run_wpt-${{matrix.profile}}
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     name: Run Web Platform Tests
@@ -230,7 +230,7 @@ jobs:
   # the integration tests for the linux build.
   sdktest:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}-sdktest
+      group: ${{ github.head_ref }}-${{ github.workflow}}-sdktest-${{matrix.profile}}
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -345,7 +345,7 @@ jobs:
 
   test-npm-package:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}-test-npm-package
+      group: ${{ github.head_ref }}-${{ github.workflow}}-test-npm-package-${{matrix.node-version}}
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -472,7 +472,7 @@ jobs:
 
   starlingmonkey-sdktest:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}-starlingmonkey-sdktest
+      group: ${{ github.head_ref }}-${{ github.workflow}}-starlingmonkey-sdktest-${{matrix.profile}}-${{matrix.platform}}
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
