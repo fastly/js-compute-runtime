@@ -78,10 +78,12 @@ function format(ast, path) {
       };
     }
 
+    let changedIdx = -1;
     for (let i = 0; i < content.length; i++) {
       // checks on all ## headings
       const item = content[i];
       if (item.type === "heading" && item.depth === 2) {
+        changedIdx = -1;
         // check correct amount of text is at heading 2
         if (
           item.children.length === 2 &&
@@ -201,10 +203,58 @@ function format(ast, path) {
             changed = true;
           }
         }
-        if (
-          item.children.length !== 1 ||
-          item.children[0].type !== "text" ||
-          ![
+
+        if (item.children.length !== 1 || item.children[0].type !== "text") {
+          console.log(
+            `${path}:${item.children[0].position.start.line}:${item.children[0].position.start.column}`
+          );
+          return {
+            correct: false,
+            reason: `Level 3 headings should only be text`,
+          };
+        }
+
+        if (item.children[0].value === 'Performance Improvements') {
+          if (i + 1 < content.length && (content[i + 1].type !== 'list' || content[i + 2].type !== 'heading')) {
+            console.log(
+              `${path}:${item.children[0].position.start.line}:${item.children[0].position.start.column}`
+            );
+            return {
+              correct: false,
+              reason: `Performance improvements section must be a single list to fix it`,
+            };
+          }
+
+          if (changedIdx === -1) {
+            for (let j = i + 1; j < content.length; j++) {
+              const curItem = content[j];
+              if (curItem.type === 'heading') {
+                if (curItem.depth < 3)
+                  break;
+                if (curItem.depth === 3 && curItem.children.length === 1 &&
+                    curItem.children[0].type === 'text' && curItem.children[0].value === 'Changed') {
+                  changedIdx = j;
+                  break;
+                }
+              }
+            }
+          }
+
+          if (changedIdx !== -1) {
+            // Merge it into any already-seen changed section
+            const toMerge = content[i + 1];
+            content.splice(i, 2);
+            content.splice(changedIdx + 1, 0, toMerge);
+            changed = true;
+          } else {
+            // Otherwise rename to Changed
+            item.children[0].value = 'Changed';
+            changed = true;
+          }
+          continue;
+        }
+
+        if (![
             "Added",
             "Changed",
             "Deprecated",
@@ -222,6 +272,9 @@ function format(ast, path) {
           };
         }
 
+        if (item.children[0].value === 'Changed')
+          changedIdx = i;
+
         // check that there is something other than a heading following it, which we have to presume describes the change
         if (!content[i + 1] || content[i + 1].type === "heading") {
           console.log(
@@ -230,7 +283,7 @@ function format(ast, path) {
           return {
             correct: false,
             reason:
-              "Level 3 headings must be followed by something other than the next heading - you should use text to describe the change",
+              "Level 3 headings must be followed by something other than a heading to describe the change",
           };
         }
       }
