@@ -419,7 +419,7 @@ jobs:
       group: ${{ github.head_ref }}-${{ github.workflow}}
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
-	name: Run Web Platform Tests (starlingmonkey)
+    name: Run Web Platform Tests (starlingmonkey)
     needs: [starlingmonkey-build, ensure_cargo_installs]
     runs-on: ubuntu-latest
     steps:
