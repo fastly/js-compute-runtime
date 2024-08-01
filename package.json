@@ -36,6 +36,7 @@
     "build:debug": "DEBUG=true make -j8 -C runtime/js-compute-runtime && cp runtime/js-compute-runtime/js-compute-runtime.wasm .",
     "build:starlingmonkey": "./runtime/fastly/build-release.sh",
     "build:starlingmonkey:debug": "./runtime/fastly/build-debug.sh",
+    "build:starlingmonkey:weval": "./runtime/fastly/build-release-weval.sh",
     "format-changelog": "node ci/format-changelog.js CHANGELOG.md"
   },
   "devDependencies": {
@@ -52,6 +53,7 @@
   "dependencies": {
     "@bytecodealliance/jco": "^1.3.1",
     "@bytecodealliance/wizer": "^3.0.1",
+    "@cfallin/weval": "^0.2.7",
     "acorn": "^8.12.1",
     "acorn-walk": "^8.3.3",
     "esbuild": "^0.23.0",

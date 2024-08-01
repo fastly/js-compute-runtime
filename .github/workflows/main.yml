@@ -394,7 +394,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        profile: [debug, release]
+        profile: [debug, release, weval]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -409,10 +409,18 @@ jobs:
     - name: Build
       if: ${{ matrix.profile == 'debug' }}
       run: npm run build:starlingmonkey:debug
+    - name: Build
+      if: ${{ matrix.profile == 'weval' }}
+      run: npm run build:starlingmonkey:weval
     - uses: actions/upload-artifact@v3
       with:
         name: starling-${{ matrix.profile }}
         path: starling.wasm
+    - uses: actions/upload-artifact@v3
+      if: ${{ matrix.profile == 'weval' }}
+      with:
+        name: starling-${{ matrix.profile }}-ic-cache
+        path: starling-ics.wevalcache
 
   starlingmonkey-run_wpt:
     concurrency:

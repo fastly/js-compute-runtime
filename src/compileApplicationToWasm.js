@@ -6,6 +6,7 @@ import { rmSync } from "node:fs";
 import { isFile } from "./isFile.js";
 import { isFileOrDoesNotExist } from "./isFileOrDoesNotExist.js";
 import wizer from "@bytecodealliance/wizer";
+import weval from "@cfallin/weval";
 import { precompile } from "./precompile.js";
 import { enableTopLevelAwait } from "./enableTopLevelAwait.js";
 import { bundle } from "./bundle.js";
@@ -21,7 +22,9 @@ export async function compileApplicationToWasm(
   enableExperimentalHighResolutionTimeMethods = false,
   enablePBL = false,
   enableExperimentalTopLevelAwait = false,
-  starlingMonkey = false
+  starlingMonkey = false,
+  enableAOT = false,
+  aotCache = '',
 ) {
   try {
     if (!(await isFile(input))) {
@@ -121,35 +124,68 @@ export async function compileApplicationToWasm(
   }
 
   try {
-    let wizerProcess = spawnSync(
-      `"${wizer}"`,
-      [
-        "--inherit-env=true",
-        "--allow-wasi",
-        "--dir=.",
-        ...starlingMonkey ? [`--dir=${dirname(wizerInput)}`] : [],
-        `--wasm-bulk-memory=true`,
-        "-r _start=wizer.resume",
-        `-o="${output}"`,
-        `"${wasmEngine}"`,
-      ],
-      {
-        stdio: [null, process.stdout, process.stderr],
-        input: wizerInput,
-        shell: true,
-        encoding: "utf-8",
-        env: {
-          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
-            enableExperimentalHighResolutionTimeMethods ? "1" : "0",
-          ENABLE_PBL: enablePBL ? "1" : "0",
-          ...process.env,
-        },
+    if (enableAOT) {
+      const wevalBin = await weval();
+
+      let wevalProcess = spawnSync(
+        `"${wevalBin}"`,
+        [
+          "weval",
+          ...aotCache ? [`--cache-ro ${aotCache}`] : [],
+          "--dir .",
+          ...starlingMonkey ? [`--dir ${dirname(wizerInput)}`] : [],
+          "-w",
+          `-i "${wasmEngine}"`,
+          `-o "${output}"`,
+        ],
+        {
+          stdio: [null, process.stdout, process.stderr],
+          input: wizerInput,
+          shell: true,
+          encoding: "utf-8",
+          env: {
+            ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
+              enableExperimentalHighResolutionTimeMethods ? "1" : "0",
+            ENABLE_PBL: enablePBL ? "1" : "0",
+            ...process.env,
+          },
+        }
+      );
+      if (wevalProcess.status !== 0) {
+        throw new Error(`Weval initialization failure`);
       }
-    );
-    if (wizerProcess.status !== 0) {
-      throw new Error(`Wizer initialization failure`);
+      process.exitCode = wevalProcess.status;
+    } else {
+      let wizerProcess = spawnSync(
+        `"${wizer}"`,
+        [
+          "--inherit-env=true",
+          "--allow-wasi",
+          "--dir=.",
+          ...starlingMonkey ? [`--dir=${dirname(wizerInput)}`] : [],
+          `--wasm-bulk-memory=true`,
+          "-r _start=wizer.resume",
+          `-o="${output}"`,
+          `"${wasmEngine}"`,
+        ],
+        {
+          stdio: [null, process.stdout, process.stderr],
+          input: wizerInput,
+          shell: true,
+          encoding: "utf-8",
+          env: {
+            ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
+              enableExperimentalHighResolutionTimeMethods ? "1" : "0",
+            ENABLE_PBL: enablePBL ? "1" : "0",
+            ...process.env,
+          },
+        }
+      );
+      if (wizerProcess.status !== 0) {
+        throw new Error(`Wizer initialization failure`);
+      }
+      process.exitCode = wizerProcess.status;
     }
-    process.exitCode = wizerProcess.status;
   } catch (error) {
     console.error(
       `Error: Failed to compile JavaScript to Wasm: `,

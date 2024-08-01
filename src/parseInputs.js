@@ -10,8 +10,10 @@ export async function parseInputs(cliInputs) {
   let enableExperimentalTopLevelAwait = false;
   let starlingMonkey = true;
   let enablePBL = false;
+  let enableAOT = false;
   let customEngineSet = false;
   let wasmEngine = join(__dirname, "../starling.wasm");
+  let aotCache = join(__dirname, "../starling-ics.wevalcache");
   let customInputSet = false;
   let input = join(process.cwd(), "bin/index.js");
   let customOutputSet = false;
@@ -34,6 +36,10 @@ export async function parseInputs(cliInputs) {
       }
       case "--enable-pbl": {
         enablePBL = true;
+        break;
+      }
+      case "--enable-experimental-aot": {
+        enableAOT = true;
         break;
       }
       case "-V":
@@ -63,6 +69,14 @@ export async function parseInputs(cliInputs) {
           wasmEngine = value;
         } else {
           wasmEngine = join(process.cwd(), value);
+        }
+        break;
+      }
+      case "--aot-cache": {
+        if (isAbsolute(value)) {
+          aotCache = value;
+        } else {
+          aotCache = join(process.cwd(), value);
         }
         break;
       }
@@ -108,10 +122,22 @@ export async function parseInputs(cliInputs) {
       }
     }
   }
+
+  if (!starlingMonkey && enableAOT) {
+    // enableAOT requires StarlingMonkey.
+    console.log("AOT option is not compatible with pre-StarlingMonkey engine; please use StarlingMonkey.");
+    process.exit(1);
+  }
+  if (!customEngineSet && enableAOT) {
+      wasmEngine = join(__dirname, "../starling-weval.wasm");
+  }
+
   return {
     enableExperimentalHighResolutionTimeMethods,
     enableExperimentalTopLevelAwait,
     enablePBL,
+    enableAOT,
+    aotCache,
     input,
     output,
     starlingMonkey,
