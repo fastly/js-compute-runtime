@@ -124,5 +124,7 @@ MSG_DEF(JSMSG_TEXT_DECODER_OPTIONS_NOT_DICTIONARY,             0, JSEXN_TYPEERR,
 MSG_DEF(JSMSG_TEXT_DECODER_DECODE_OPTIONS_NOT_DICTIONARY,      0, JSEXN_TYPEERR, "TextDecoder.decode: options argument can't be converted to a dictionary.")
 MSG_DEF(JSMSG_TEXT_ENCODER_ENCODEINTO_INVALID_ARRAY,           0, JSEXN_TYPEERR, "TextEncoder.encodeInto: Argument 2 does not implement interface Uint8Array.")
 MSG_DEF(JSMSG_SIMPLE_CACHE_SET_CONTENT_STREAM,                 0, JSEXN_TYPEERR, "Content-provided streams are not yet supported for streaming into SimpleCache")
+MSG_DEF(JSMSG_BODY_APPEND_CONTENT_STREAM,                      0, JSEXN_TYPEERR, "Content-provided streams are not yet supported for appending onto a FastlyBody")
+MSG_DEF(JSMSG_BODY_PREPEND_CONTENT_STREAM,                     0, JSEXN_TYPEERR, "Content-provided streams are not yet supported for prepending onto a FastlyBody")
 MSG_DEF(JSMSG_HEADERS_IMMUTABLE,                               1, JSEXN_TYPEERR, "{0}: Headers are immutable and cannot be modified")
 //clang-format on

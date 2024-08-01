@@ -325,7 +325,7 @@ let error;
                 body.append(stream)
             }, TypeError, `Content-provided streams are not yet supported for appending onto a FastlyBody`)
             if (error) { return error }
-            return pass()
+            return pass("ok")
         });
         routes.set("/FastlyBody/append/data-parameter-readablestream-host-backed", async () => {
             const res = await fetch('https://compute-sdk-test-backend.edgecompute.app/', {
@@ -335,7 +335,7 @@ let error;
             let result = body.append(res.body)
             error = assert(result, undefined, `body.append(res.body)`)
             if (error) { return error }
-            return pass()
+            return pass("ok")
         });
         // - URLSearchParams
         routes.set("/FastlyBody/append/data-parameter-URLSearchParams", () => {
@@ -349,7 +349,7 @@ let error;
                 error = assert(result, undefined, `await body.append(searchParams)`)
                 if (error) { return error }
             }
-            return pass()
+            return pass("ok")
         });
         // - USV strings
         routes.set("/FastlyBody/append/data-parameter-strings", () => {
@@ -368,7 +368,7 @@ let error;
                 error = assert(result, undefined, `body.append(string)`)
                 if (error) { return error }
             }
-            return pass()
+            return pass("ok")
         });
         // https://tc39.es/ecma262/#sec-tostring
         routes.set("/FastlyBody/append/data-parameter-calls-7.1.17-ToString", () => {
@@ -396,7 +396,7 @@ let error;
                 body.append(Symbol())
             }, TypeError, `can't convert symbol to string`)
             if (error) { return error }
-            return pass()
+            return pass("ok")
         });
 
         // - buffer source
@@ -421,7 +421,7 @@ let error;
                 error = assert(result, undefined, `body.append(typedArray.buffer)`)
                 if (error) { return error }
             }
-            return pass()
+            return pass("ok")
         });
         routes.set("/FastlyBody/append/data-parameter-arraybuffer", () => {
             const typedArrayConstructors = [
@@ -444,7 +444,7 @@ let error;
                 error = assert(result, undefined, `body.append(typedArray.buffer)`)
                 if (error) { return error }
             }
-            return pass()
+            return pass("ok")
         });
         routes.set("/FastlyBody/append/data-parameter-typed-arrays", () => {
             const typedArrayConstructors = [
@@ -467,7 +467,7 @@ let error;
                 error = assert(result, undefined, `body.append(typedArray)`)
                 if (error) { return error }
             }
-            return pass()
+            return pass("ok")
         });
         routes.set("/FastlyBody/append/data-parameter-dataview", () => {
             const typedArrayConstructors = [
@@ -491,7 +491,7 @@ let error;
                 error = assert(result, undefined, `body.append(typedArray)`)
                 if (error) { return error }
             }
-            return pass()
+            return pass("ok")
         });
     }
     // prepend(data: BodyInit): void;
@@ -528,7 +528,7 @@ let error;
                 body.prepend(stream)
             }, TypeError, `Content-provided streams are not yet supported for prepending onto a FastlyBody`)
             if (error) { return error }
-            return pass()
+            return pass("ok")
         });
         routes.set("/FastlyBody/prepend/data-parameter-readablestream-host-backed", async () => {
             const res = await fetch('https://compute-sdk-test-backend.edgecompute.app/', {
@@ -538,7 +538,7 @@ let error;
             let result = body.prepend(res.body)
             error = assert(result, undefined, `body.prepend(res.body)`)
             if (error) { return error }
-            return pass()
+            return pass("ok")
         });
         routes.set("/FastlyBody/prepend/data-parameter-readablestream-locked", () => {
             const stream = iteratableToStream([])
@@ -549,7 +549,7 @@ let error;
                 body.prepend(stream)
             }, TypeError, `Can't use a ReadableStream that's locked or has ever been read from or canceled`)
             if (error) { return error }
-            return pass()
+            return pass("ok")
         });
 
         // - URLSearchParams
@@ -564,7 +564,7 @@ let error;
                 error = assert(result, undefined, `await body.prepend(searchParams)`)
                 if (error) { return error }
             }
-            return pass()
+            return pass("ok")
         });
         // - USV strings
         routes.set("/FastlyBody/prepend/data-parameter-strings", () => {
@@ -583,7 +583,7 @@ let error;
                 error = assert(result, undefined, `body.prepend(string)`)
                 if (error) { return error }
             }
-            return pass()
+            return pass("ok")
         });
         // https://tc39.es/ecma262/#sec-tostring
         routes.set("/FastlyBody/prepend/data-parameter-calls-7.1.17-ToString", () => {
@@ -611,7 +611,7 @@ let error;
                 body.prepend(Symbol())
             }, TypeError, `can't convert symbol to string`)
             if (error) { return error }
-            return pass()
+            return pass("ok")
         });
 
         // - buffer source
@@ -636,7 +636,7 @@ let error;
                 error = assert(result, undefined, `body.prepend(typedArray.buffer)`)
                 if (error) { return error }
             }
-            return pass()
+            return pass("ok")
         });
         routes.set("/FastlyBody/prepend/data-parameter-arraybuffer", () => {
             const typedArrayConstructors = [
@@ -659,7 +659,7 @@ let error;
                 error = assert(result, undefined, `body.prepend(typedArray.buffer)`)
                 if (error) { return error }
             }
-            return pass()
+            return pass("ok")
         });
         routes.set("/FastlyBody/prepend/data-parameter-typed-arrays", () => {
             const typedArrayConstructors = [
@@ -682,7 +682,7 @@ let error;
                 error = assert(result, undefined, `body.prepend(typedArray)`)
                 if (error) { return error }
             }
-            return pass()
+            return pass("ok")
         });
         routes.set("/FastlyBody/prepend/data-parameter-dataview", () => {
             const typedArrayConstructors = [
@@ -706,7 +706,7 @@ let error;
                 error = assert(result, undefined, `body.prepend(typedArray)`)
                 if (error) { return error }
             }
-            return pass()
+            return pass("ok")
         });
     }
     // concat(dest: FastlyBody): void;

@@ -48,12 +48,17 @@ bool FastlyBody::read(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!JS::ToNumber(cx, args.get(0), &chunkSize_val)) {
     return false;
   }
-  uint32_t chunkSize = std::round(chunkSize_val);
-  if (chunkSize < 0) {
+  if (chunkSize_val < 0) {
     JS_ReportErrorUTF8(cx,
                        "FastlyBody.read: The `chunkSize` argument has to be a positive integer.");
     return false;
   }
+  if (chunkSize_val < 0 || std::isnan(chunkSize_val) || std::isinf(chunkSize_val)) {
+    JS_ReportErrorASCII(cx, "chunkSize parameter is an invalid value, only positive numbers can be "
+                            "used for chunkSize.");
+    return false;
+  }
+  uint32_t chunkSize = std::round(chunkSize_val);
 
   auto body = host_body(self);
   auto result = body.read(chunkSize);
@@ -119,8 +124,7 @@ bool FastlyBody::append(JSContext *cx, unsigned argc, JS::Value *vp) {
       args.rval().setUndefined();
       return true;
     } else {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_SIMPLE_CACHE_SET_CONTENT_STREAM);
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BODY_APPEND_CONTENT_STREAM);
       return false;
     }
   } else {
@@ -200,8 +204,7 @@ bool FastlyBody::prepend(JSContext *cx, unsigned argc, JS::Value *vp) {
       args.rval().setUndefined();
       return true;
     } else {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_SIMPLE_CACHE_SET_CONTENT_STREAM);
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BODY_PREPEND_CONTENT_STREAM);
       return false;
     }
   } else {
