@@ -403,6 +403,8 @@ jobs:
       run: |
         rustup toolchain install 1.77.1
         rustup target add wasm32-wasi --toolchain 1.77.1
+    - name: Install Wasm Tools
+      run: cargo binstall wasm-tools -y
     - name: Build
       if: ${{ matrix.profile == 'release' }}
       run: npm run build:starlingmonkey
