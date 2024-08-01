@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
+import { basename, dirname, join } from "node:path";
+import { argv } from "node:process";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export async function printVersion() {
@@ -8,5 +9,5 @@ export async function printVersion() {
     encoding: "utf-8",
   });
   const version = JSON.parse(packageJson).version;
-  console.log(`js-compute-runtime ${version}`);
+  console.log(`${basename(argv[1])} ${version}`);
 }

@@ -11,20 +11,20 @@ const packageJson = readFileSync(join(__dirname, "../../package.json"), {
 });
 const version = JSON.parse(packageJson).version;
 
-const cli = await getBinPath()
+const cli = await getBinPath({name:"js-compute"})
 
 test('--help should return help on stdout and zero exit code', async function (t) {
     const { execute, cleanup } = await prepareEnvironment();
     t.teardown(async function () {
         await cleanup();
     });
-    const { code, stdout, stderr } = await execute(process.execPath, `${cli} --help`);
+    const { code, stdout, stderr } = await execute(cli, `--help`);
 
     t.is(code, 0);
     t.alike(stdout, [
-        `js-compute-runtime ${version}`,
+        `js-compute-runtime-cli.js ${version}`,
         'USAGE:',
-        'js-compute-runtime [FLAGS] [OPTIONS] [ARGS]',
+        'js-compute-runtime-cli.js [FLAGS] [OPTIONS] [ARGS]',
         'FLAGS:',
         '-h, --help                                              Prints help information',
         '-V, --version                                           Prints version information',
@@ -44,13 +44,13 @@ test('-h should return help on stdout and zero exit code', async function (t) {
     t.teardown(async function () {
         await cleanup();
     });
-    const { code, stdout, stderr } = await execute(process.execPath, `${cli} -h`);
+    const { code, stdout, stderr } = await execute(cli, `-h`);
     
     t.is(code, 0);
     t.alike(stdout, [
-        `js-compute-runtime ${version}`,
+        `js-compute-runtime-cli.js ${version}`,
         'USAGE:',
-        'js-compute-runtime [FLAGS] [OPTIONS] [ARGS]',
+        'js-compute-runtime-cli.js [FLAGS] [OPTIONS] [ARGS]',
         'FLAGS:',
         '-h, --help                                              Prints help information',
         '-V, --version                                           Prints version information',
