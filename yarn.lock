@@ -208,6 +208,11 @@
   resolved "https://registry.npmjs.org/@napi-rs/lzma-linux-x64-gnu/-/lzma-linux-x64-gnu-1.3.1.tgz"
   integrity sha512-riB+Xg72NfH8Kcpq07omshVu0QsLW0v2bhywBNYxvA+t2dGGWSIEN1U/zazUXys+IEA6pBQKqLVseurWE6Cl8g==
 
+"@napi-rs/lzma-linux-x64-musl@1.3.1":
+  version "1.3.1"
+  resolved "https://registry.npmjs.org/@napi-rs/lzma-linux-x64-musl/-/lzma-linux-x64-musl-1.3.1.tgz"
+  integrity sha512-JXLgJFwoeysxdSg7rdVYP8wrliCQVJlU5JcLYjRVSCL4P0mQTjnYi7R7VdaOkDACw/Fvlji7oIJXt0KiaDTcOw==
+
 "@napi-rs/lzma@^1.1.2":
   version "1.3.1"
   resolved "https://registry.npmjs.org/@napi-rs/lzma/-/lzma-1.3.1.tgz"

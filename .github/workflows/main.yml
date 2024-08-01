@@ -488,9 +488,12 @@ jobs:
       matrix:
         platform: [viceroy, compute]
         profile: [debug, release]
+        compile: [aot, no]
         exclude:
           - platform: compute
             profile: release
+          - profile: debug
+            compile: aot
     needs: [starlingmonkey-build]
     steps:
     - name: Checkout fastly/js-compute-runtime
@@ -537,6 +540,6 @@ jobs:
     - name: Yarn install
       run: yarn && cd ./integration-tests/js-compute && yarn
 
-    - run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }}
+    - run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.compile == 'aot' && '--aot' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
