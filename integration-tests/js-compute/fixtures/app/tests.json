@@ -5089,6 +5089,17 @@
       ]
     }
   },
+  "GET /hono": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/hono"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": ["Compute SDK Test Backend"]
+    }
+  },
   "POST /tee": {
     "environments": ["viceroy", "compute"],
     "downstream_request": {
