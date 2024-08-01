@@ -6,6 +6,17 @@ import { routes } from "./routes.js";
 import { CoreCache, CacheEntry, CacheState, TransactionCacheEntry } from 'fastly:cache';
 import { FastlyBody } from "fastly:body";
 
+function iteratableToStream(iterable) {
+    return new ReadableStream({
+        async pull(controller) {
+            for await (const value of iterable) {
+                controller.enqueue(value);
+            }
+            controller.close();
+        }
+    });
+}
+
 let error;
 
 // FastlyBody
@@ -263,6 +274,581 @@ let error;
 
         return pass("ok")
     });
+
+    // constructor
+    {
+
+        routes.set("/FastlyBody/constructor/called-as-regular-function", () => {
+            error = assertThrows(() => {
+                FastlyBody()
+            }, TypeError)
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/constructor/called-as-constructor", () => {
+            error = assertDoesNotThrow(() => new FastlyBody())
+            if (error) { return error }
+            return pass("ok")
+        });
+    }
+    // append(data: BodyInit): void;
+    {
+        routes.set("/FastlyBody/append/called-as-constructor", () => {
+            let error = assertThrows(() => {
+                new FastlyBody.append('1')
+            }, TypeError)
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/append/data-parameter-not-supplied", () => {
+            let error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.append()
+            }, TypeError, `append: At least 1 argument required, but only 0 passed`)
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/append/data-parameter-wrong-type", () => {
+            let error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.append(Symbol())
+            })
+            if (error) { return error }
+            return pass("ok")
+        });
+        // - ReadableStream
+        routes.set("/FastlyBody/append/data-parameter-readablestream-guest-backed", () => {
+            // TODO: update this when streams are supported
+            let error = assertThrows(() => {
+                const stream = iteratableToStream([])
+                const body = new FastlyBody()
+                body.append(stream)
+            }, TypeError, `Content-provided streams are not yet supported for appending onto a FastlyBody`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/FastlyBody/append/data-parameter-readablestream-host-backed", async () => {
+            const res = await fetch('https://compute-sdk-test-backend.edgecompute.app/', {
+                backend: "TheOrigin",
+            })
+            const body = new FastlyBody()
+            let result = body.append(res.body)
+            error = assert(result, undefined, `body.append(res.body)`)
+            if (error) { return error }
+            return pass()
+        });
+        // - URLSearchParams
+        routes.set("/FastlyBody/append/data-parameter-URLSearchParams", () => {
+            const items = [
+                new URLSearchParams,
+                new URLSearchParams({ a: 'b', c: 'd' }),
+            ];
+            const body = new FastlyBody()
+            for (const searchParams of items) {
+                let result = body.append(searchParams)
+                error = assert(result, undefined, `await body.append(searchParams)`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+        // - USV strings
+        routes.set("/FastlyBody/append/data-parameter-strings", () => {
+            const strings = [
+                // empty
+                '',
+                // lone surrogate
+                '\uD800',
+                // surrogate pair
+                '𠈓',
+                String('carrot'),
+            ];
+            const body = new FastlyBody()
+            for (const string of strings) {
+                let result = body.append(string)
+                error = assert(result, undefined, `body.append(string)`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+        // https://tc39.es/ecma262/#sec-tostring
+        routes.set("/FastlyBody/append/data-parameter-calls-7.1.17-ToString", () => {
+            let sentinel;
+            const test = () => {
+                sentinel = Symbol();
+                const value = {
+                    toString() {
+                        throw sentinel;
+                    }
+                }
+                const body = new FastlyBody()
+                body.append(value)
+            }
+            let error = assertThrows(test)
+            if (error) { return error }
+            try {
+                test()
+            } catch (thrownError) {
+                let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+                if (error) { return error }
+            }
+            error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.append(Symbol())
+            }, TypeError, `can't convert symbol to string`)
+            if (error) { return error }
+            return pass()
+        });
+
+        // - buffer source
+        routes.set("/FastlyBody/append/data-parameter-buffer", () => {
+            const typedArrayConstructors = [
+                Int8Array,
+                Int16Array,
+                Int32Array,
+                Float32Array,
+                Float64Array,
+                BigInt64Array,
+                Uint8Array,
+                Uint8ClampedArray,
+                Uint16Array,
+                Uint32Array,
+                BigUint64Array,
+            ];
+            const body = new FastlyBody()
+            for (const constructor of typedArrayConstructors) {
+                const typedArray = new constructor(8);
+                let result = body.append(typedArray.buffer)
+                error = assert(result, undefined, `body.append(typedArray.buffer)`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+        routes.set("/FastlyBody/append/data-parameter-arraybuffer", () => {
+            const typedArrayConstructors = [
+                Int8Array,
+                Int16Array,
+                Int32Array,
+                Float32Array,
+                Float64Array,
+                BigInt64Array,
+                Uint8Array,
+                Uint8ClampedArray,
+                Uint16Array,
+                Uint32Array,
+                BigUint64Array,
+            ];
+            const body = new FastlyBody()
+            for (const constructor of typedArrayConstructors) {
+                const typedArray = new constructor(8);
+                let result = body.append(typedArray.buffer)
+                error = assert(result, undefined, `body.append(typedArray.buffer)`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+        routes.set("/FastlyBody/append/data-parameter-typed-arrays", () => {
+            const typedArrayConstructors = [
+                Int8Array,
+                Int16Array,
+                Int32Array,
+                Float32Array,
+                Float64Array,
+                BigInt64Array,
+                Uint8Array,
+                Uint8ClampedArray,
+                Uint16Array,
+                Uint32Array,
+                BigUint64Array,
+            ];
+            const body = new FastlyBody()
+            for (const constructor of typedArrayConstructors) {
+                const typedArray = new constructor(8);
+                let result = body.append(typedArray)
+                error = assert(result, undefined, `body.append(typedArray)`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+        routes.set("/FastlyBody/append/data-parameter-dataview", () => {
+            const typedArrayConstructors = [
+                Int8Array,
+                Uint8Array,
+                Uint8ClampedArray,
+                Int16Array,
+                Uint16Array,
+                Int32Array,
+                Uint32Array,
+                Float32Array,
+                Float64Array,
+                BigInt64Array,
+                BigUint64Array,
+            ];
+            const body = new FastlyBody()
+            for (const constructor of typedArrayConstructors) {
+                const typedArray = new constructor(8);
+                const view = new DataView(typedArray.buffer);
+                let result = body.append(view)
+                error = assert(result, undefined, `body.append(typedArray)`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+    }
+    // prepend(data: BodyInit): void;
+    {
+        routes.set("/FastlyBody/prepend/called-as-constructor", () => {
+            let error = assertThrows(() => {
+                new FastlyBody.prepend('1')
+            }, TypeError)
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/prepend/data-parameter-not-supplied", () => {
+            let error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.prepend()
+            }, TypeError, `prepend: At least 1 argument required, but only 0 passed`)
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/prepend/data-parameter-wrong-type", () => {
+            let error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.prepend(Symbol())
+            })
+            if (error) { return error }
+            return pass("ok")
+        });
+        // - ReadableStream
+        routes.set("/FastlyBody/prepend/data-parameter-readablestream-guest-backed", () => {
+            // TODO: update this when streams are supported
+            let error = assertThrows(() => {
+                const stream = iteratableToStream([])
+                const body = new FastlyBody()
+                body.prepend(stream)
+            }, TypeError, `Content-provided streams are not yet supported for prepending onto a FastlyBody`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/FastlyBody/prepend/data-parameter-readablestream-host-backed", async () => {
+            const res = await fetch('https://compute-sdk-test-backend.edgecompute.app/', {
+                backend: "TheOrigin",
+            })
+            const body = new FastlyBody()
+            let result = body.prepend(res.body)
+            error = assert(result, undefined, `body.prepend(res.body)`)
+            if (error) { return error }
+            return pass()
+        });
+        routes.set("/FastlyBody/prepend/data-parameter-readablestream-locked", () => {
+            const stream = iteratableToStream([])
+            // getReader() causes the stream to become locked
+            stream.getReader()
+            const body = new FastlyBody()
+            let error = assertThrows(() => {
+                body.prepend(stream)
+            }, TypeError, `Can't use a ReadableStream that's locked or has ever been read from or canceled`)
+            if (error) { return error }
+            return pass()
+        });
+
+        // - URLSearchParams
+        routes.set("/FastlyBody/prepend/data-parameter-URLSearchParams", () => {
+            const items = [
+                new URLSearchParams,
+                new URLSearchParams({ a: 'b', c: 'd' }),
+            ];
+            const body = new FastlyBody()
+            for (const searchParams of items) {
+                let result = body.prepend(searchParams)
+                error = assert(result, undefined, `await body.prepend(searchParams)`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+        // - USV strings
+        routes.set("/FastlyBody/prepend/data-parameter-strings", () => {
+            const strings = [
+                // empty
+                '',
+                // lone surrogate
+                '\uD800',
+                // surrogate pair
+                '𠈓',
+                String('carrot'),
+            ];
+            const body = new FastlyBody()
+            for (const string of strings) {
+                let result = body.prepend(string)
+                error = assert(result, undefined, `body.prepend(string)`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+        // https://tc39.es/ecma262/#sec-tostring
+        routes.set("/FastlyBody/prepend/data-parameter-calls-7.1.17-ToString", () => {
+            let sentinel;
+            const test = () => {
+                sentinel = Symbol();
+                const value = {
+                    toString() {
+                        throw sentinel;
+                    }
+                }
+                const body = new FastlyBody()
+                body.prepend(value)
+            }
+            let error = assertThrows(test)
+            if (error) { return error }
+            try {
+                test()
+            } catch (thrownError) {
+                let error = assert(thrownError, sentinel, 'thrownError === sentinel')
+                if (error) { return error }
+            }
+            error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.prepend(Symbol())
+            }, TypeError, `can't convert symbol to string`)
+            if (error) { return error }
+            return pass()
+        });
+
+        // - buffer source
+        routes.set("/FastlyBody/prepend/data-parameter-buffer", () => {
+            const typedArrayConstructors = [
+                Int8Array,
+                Int16Array,
+                Int32Array,
+                Float32Array,
+                Float64Array,
+                BigInt64Array,
+                Uint8Array,
+                Uint8ClampedArray,
+                Uint16Array,
+                Uint32Array,
+                BigUint64Array,
+            ];
+            const body = new FastlyBody()
+            for (const constructor of typedArrayConstructors) {
+                const typedArray = new constructor(8);
+                let result = body.prepend(typedArray.buffer)
+                error = assert(result, undefined, `body.prepend(typedArray.buffer)`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+        routes.set("/FastlyBody/prepend/data-parameter-arraybuffer", () => {
+            const typedArrayConstructors = [
+                Int8Array,
+                Int16Array,
+                Int32Array,
+                Float32Array,
+                Float64Array,
+                BigInt64Array,
+                Uint8Array,
+                Uint8ClampedArray,
+                Uint16Array,
+                Uint32Array,
+                BigUint64Array,
+            ];
+            const body = new FastlyBody()
+            for (const constructor of typedArrayConstructors) {
+                const typedArray = new constructor(8);
+                let result = body.prepend(typedArray.buffer)
+                error = assert(result, undefined, `body.prepend(typedArray.buffer)`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+        routes.set("/FastlyBody/prepend/data-parameter-typed-arrays", () => {
+            const typedArrayConstructors = [
+                Int8Array,
+                Int16Array,
+                Int32Array,
+                Float32Array,
+                Float64Array,
+                BigInt64Array,
+                Uint8Array,
+                Uint8ClampedArray,
+                Uint16Array,
+                Uint32Array,
+                BigUint64Array,
+            ];
+            const body = new FastlyBody()
+            for (const constructor of typedArrayConstructors) {
+                const typedArray = new constructor(8);
+                let result = body.prepend(typedArray)
+                error = assert(result, undefined, `body.prepend(typedArray)`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+        routes.set("/FastlyBody/prepend/data-parameter-dataview", () => {
+            const typedArrayConstructors = [
+                Int8Array,
+                Uint8Array,
+                Uint8ClampedArray,
+                Int16Array,
+                Uint16Array,
+                Int32Array,
+                Uint32Array,
+                Float32Array,
+                Float64Array,
+                BigInt64Array,
+                BigUint64Array,
+            ];
+            const body = new FastlyBody()
+            for (const constructor of typedArrayConstructors) {
+                const typedArray = new constructor(8);
+                const view = new DataView(typedArray.buffer);
+                let result = body.prepend(view)
+                error = assert(result, undefined, `body.prepend(typedArray)`)
+                if (error) { return error }
+            }
+            return pass()
+        });
+    }
+    // concat(dest: FastlyBody): void;
+    {
+        routes.set("/FastlyBody/concat/called-as-constructor", () => {
+            let error = assertThrows(() => {
+                new FastlyBody.concat(new FastlyBody())
+            }, TypeError)
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/concat/dest-parameter-not-supplied", () => {
+            let error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.concat()
+            }, TypeError, `concat: At least 1 argument required, but only 0 passed`)
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/concat/dest-parameter-wrong-type", () => {
+            let error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.concat('hello')
+            })
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/concat/concat-same-fastlybody-twice", () => {
+            let error = assertThrows(() => {
+                const body = new FastlyBody()
+                const body2 = new FastlyBody()
+                body.concat(body2)
+                body.concat(body2)
+            })
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/concat/happy-path", () => {
+            let error = assertDoesNotThrow(() => {
+                const body = new FastlyBody()
+                body.concat(new FastlyBody())
+            })
+            if (error) { return error }
+            return pass("ok")
+        });
+    }
+    // read(chunkSize: number): ArrayBuffer;
+    {
+        routes.set("/FastlyBody/read/called-as-constructor", () => {
+            let error = assertThrows(() => {
+                new FastlyBody.read(1)
+            }, TypeError)
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/read/chunkSize-parameter-not-supplied", () => {
+            let error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.read()
+            }, TypeError, `read: At least 1 argument required, but only 0 passed`)
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/read/chunkSize-parameter-wrong-type", () => {
+            let error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.read(Symbol())
+            })
+            if (error) { return error }
+            return pass("ok")
+        });
+        // negative
+        routes.set("/FastlyBody/read/chunkSize-parameter-negative", () => {
+            let error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.append('hello world')
+                body.read(-1)
+            })
+            if (error) { return error }
+            return pass("ok")
+        });
+        // infinity
+        routes.set("/FastlyBody/read/chunkSize-parameter-infinity", () => {
+            let error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.append('hello world')
+                body.read(Infinity)
+            })
+            if (error) { return error }
+            return pass("ok")
+        });
+        // NaN
+        routes.set("/FastlyBody/read/chunkSize-parameter-NaN", () => {
+            let error = assertThrows(() => {
+                const body = new FastlyBody()
+                body.append('hello world')
+                body.read(NaN)
+            })
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/read/happy-path", () => {
+            const body = new FastlyBody()
+            body.append('world')
+            body.prepend('hello ')
+            const body2 = new FastlyBody()
+            body2.append('!')
+            body.concat(body2)
+            const decoder = new TextDecoder()
+            let result = decoder.decode(body.read(1))
+            let error = assert(result, 'h', `body.read(1)`)
+            if (error) { return error }
+            result = decoder.decode(body.read(1));
+            error = assert(result, 'e', `body.read(1)`)
+            if (error) { return error }
+            return pass("ok")
+        });
+    }
+    // close(): void;
+    {
+        routes.set("/FastlyBody/close/called-as-constructor", () => {
+            let error = assertThrows(() => {
+                new CoreCache.lookup('1')
+            }, TypeError)
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/close/called-once", () => {
+            let error = assertThrows(() => {
+                CoreCache.lookup()
+            }, TypeError, `CoreCache.lookup: At least 1 argument required, but only 0 passed`)
+            if (error) { return error }
+            return pass("ok")
+        });
+        routes.set("/FastlyBody/close/called-twice", () => {
+            let error = assertThrows(() => {
+                CoreCache.lookup('cat', { headers: '' })
+            })
+            if (error) { return error }
+            return pass("ok")
+        });
+    }
 }
 
 // CoreCache
