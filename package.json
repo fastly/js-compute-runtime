@@ -17,6 +17,7 @@
     "types",
     "js-compute-runtime-cli.js",
     "*.wasm",
+    "starling-ics.wevalcache",
     "src",
     "index.d.ts",
     "package.json",
