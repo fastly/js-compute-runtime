@@ -137,6 +137,7 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: engine-${{ matrix.profile }}
+        if-no-files-found: error
         path: |
           js-compute-runtime.wasm
           js-compute-runtime-component.wasm
@@ -417,6 +418,7 @@ jobs:
       run: npm run build:starlingmonkey:debug
     - uses: actions/upload-artifact@v3
       with:
+        if-no-files-found: error
         name: starling-${{ matrix.profile }}
         path: starling.wasm
 
