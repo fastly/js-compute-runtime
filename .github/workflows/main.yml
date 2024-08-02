@@ -420,7 +420,7 @@ jobs:
       with:
         if-no-files-found: error
         name: starling-${{ matrix.profile }}
-        path: starling.wasm
+        path: starling${{ matrix.profile == 'debug' && '.debug.wasm' || '.wasm' }}
 
   starlingmonkey-run_wpt:
     concurrency:
