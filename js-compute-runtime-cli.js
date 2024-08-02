@@ -7,6 +7,8 @@ import { addSdkMetadataField } from "./src/addSdkMetadataField.js";
 
 const {
   enablePBL,
+  enableAOT,
+  aotCache,
   enableExperimentalHighResolutionTimeMethods,
   enableExperimentalTopLevelAwait,
   starlingMonkey,
@@ -38,7 +40,9 @@ if (version) {
     enableExperimentalHighResolutionTimeMethods,
     enablePBL,
     enableExperimentalTopLevelAwait,
-    starlingMonkey
+    starlingMonkey,
+    enableAOT,
+    aotCache,
   );
   await addSdkMetadataField(output, enablePBL, starlingMonkey);
 }
