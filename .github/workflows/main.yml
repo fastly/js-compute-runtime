@@ -423,7 +423,7 @@ jobs:
       with:
         if-no-files-found: error
         name: starling-${{ matrix.profile }}
-        path: starling${{ matrix.profile == 'debug' && '.debug.wasm' || '.wasm' }}
+        path: starling${{ matrix.profile == 'debug' && '.debug.wasm' || (matrix.profile == 'weval' && '-weval.wasm' || '.wasm') }}
     - uses: actions/upload-artifact@v3
       if: ${{ matrix.profile == 'weval' }}
       with:
