@@ -137,6 +137,7 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: engine-${{ matrix.profile }}
+        if-no-files-found: error
         path: |
           js-compute-runtime.wasm
           js-compute-runtime-component.wasm
@@ -403,6 +404,12 @@ jobs:
       run: |
         rustup toolchain install 1.77.1
         rustup target add wasm32-wasi --toolchain 1.77.1
+    - name: Restore wasm-tools from cache
+      uses: actions/cache@v3
+      id: wasm-tools
+      with:
+        path: "/home/runner/.cargo/bin/wasm-tools"
+        key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
     - name: Build
       if: ${{ matrix.profile == 'release' }}
       run: npm run build:starlingmonkey
@@ -411,8 +418,9 @@ jobs:
       run: npm run build:starlingmonkey:debug
     - uses: actions/upload-artifact@v3
       with:
+        if-no-files-found: error
         name: starling-${{ matrix.profile }}
-        path: starling.wasm
+        path: starling${{ matrix.profile == 'debug' && '.debug.wasm' || '.wasm' }}
 
   starlingmonkey-run_wpt:
     concurrency:
@@ -529,6 +537,6 @@ jobs:
     - name: Yarn install
       run: yarn && cd ./integration-tests/js-compute && yarn
 
-    - run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }}
+    - run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'debug' && '--debug-build' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
