@@ -68,10 +68,10 @@
     "@bytecodealliance/wizer-linux-x64" "3.0.1"
     "@bytecodealliance/wizer-win32-x64" "3.0.1"
 
-"@cfallin/weval@^0.2.7":
-  version "0.2.7"
-  resolved "https://registry.npmjs.org/@cfallin/weval/-/weval-0.2.7.tgz"
-  integrity sha512-mIdXw5TcHRC33V4T8m6ca1u2sP5EtBvEMCOxGL3o5qd2LkRL3F2kt6EGIYH/RRw6tFPnZz7IrgwCRGoAnf7XPQ==
+"@cfallin/weval@^0.2.9":
+  version "0.2.9"
+  resolved "https://registry.npmjs.org/@cfallin/weval/-/weval-0.2.9.tgz"
+  integrity sha512-CkR43gdDYwS6U2T39agFWWgM7m061jr4WvgVoJHV5K20w3ES2bCl3w8gdXZNvk3l+LYbdSiOfx2wUDOjIeOPVQ==
   dependencies:
     "@napi-rs/lzma" "^1.1.2"
     decompress "^4.2.1"
