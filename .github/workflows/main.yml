@@ -499,6 +499,8 @@ jobs:
         exclude:
           - platform: compute
             profile: release
+          - platform: compute
+            profile: weval
     needs: [starlingmonkey-build]
     steps:
     - name: Checkout fastly/js-compute-runtime
