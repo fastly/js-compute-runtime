@@ -14,6 +14,7 @@ node_modules/
 /rusturl/
 # compiler_flags
 /js-compute-runtime.wasm
+/starling.debug.wasm
 /starling.wasm
 /runtime/js-compute-runtime/obj
 tests/wpt-harness/wpt-test-runner.js
