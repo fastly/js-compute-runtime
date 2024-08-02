@@ -16,7 +16,9 @@
   "files": [
     "types",
     "js-compute-runtime-cli.js",
-    "*.wasm",
+    "starling.wasm",
+    "starling-weval.wasm",
+    "js-compute-runtime.wasm",
     "starling-ics.wevalcache",
     "src",
     "index.d.ts",
@@ -25,12 +27,12 @@
     "CHANGELOG.md"
   ],
   "ignore": [
-    "starling.wasm"
+    "starling.debug.wasm"
   ],
   "scripts": {
     "test": "npm run test:types && npm run test:cli",
     "test:cli": "brittle --bail integration-tests/cli/**.test.js",
-    "test:integration": "node ./integration-tests/js-compute/test.js --disable-starlingmonkey",
+    "test:integration": "node ./integration-tests/js-compute/test.js",
     "test:wpt": "tests/wpt-harness/build-wpt-runtime.sh && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:types": "tsd",
     "build": "make -j8 -C runtime/js-compute-runtime && cp runtime/js-compute-runtime/js-compute-runtime.wasm .",
@@ -38,6 +40,7 @@
     "build:starlingmonkey": "./runtime/fastly/build-release.sh",
     "build:starlingmonkey:debug": "./runtime/fastly/build-debug.sh",
     "build:starlingmonkey:weval": "./runtime/fastly/build-release-weval.sh",
+    "build:starlingmonkey:debug:info": "./runtime/fastly/build-debug.sh --keep-debug-info",
     "format-changelog": "node ci/format-changelog.js CHANGELOG.md"
   },
   "devDependencies": {

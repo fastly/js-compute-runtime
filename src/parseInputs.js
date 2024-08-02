@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, isAbsolute } from "node:path";
 import { unknownArgument } from "./unknownArgument.js";
 import { tooManyEngines } from "./tooManyEngines.js";
+import { existsSync } from "node:fs";
 
 export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -51,6 +52,16 @@ export async function parseInputs(cliInputs) {
         return { help: true };
       }
       case "--starlingmonkey": {
+        break;
+      }
+      case "--debug-build": {
+        starlingMonkey = true;
+        wasmEngine = join(__dirname, "../starling.debug.wasm");
+        if (!existsSync(wasmEngine)) {
+          console.error('Debug builds are not currently available for published releases');
+          process.exit(1);
+        }
+        console.log('Building with the debug engine');
         break;
       }
       case "--disable-starlingmonkey": {
