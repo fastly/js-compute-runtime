@@ -495,13 +495,10 @@ jobs:
     strategy:
       matrix:
         platform: [viceroy, compute]
-        profile: [debug, release]
-        compile: [aot, no]
+        profile: [debug, release, weval]
         exclude:
           - platform: compute
             profile: release
-          - profile: debug
-            compile: aot
     needs: [starlingmonkey-build]
     steps:
     - name: Checkout fastly/js-compute-runtime
@@ -543,11 +540,17 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: starling-${{ matrix.profile }}
+    - name: Download Engine (AOT weval cache)
+      uses: actions/download-artifact@v3
+      if: ${{ matrix.profile == 'weval'}}
+      with:
+        name: starling-${{ matrix.profile }}-ic-cache
+
     - run: yarn install --frozen-lockfile
 
     - name: Yarn install
       run: yarn && cd ./integration-tests/js-compute && yarn
 
-    - run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.compile == 'aot' && '--aot' || '' }} ${{ matrix.profile == 'debug' && '--debug-build' || '' }}
+    - run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }} ${{ matrix.profile == 'debug' && '--debug-build' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
