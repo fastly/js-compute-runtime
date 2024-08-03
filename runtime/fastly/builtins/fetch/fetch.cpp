@@ -22,7 +22,8 @@ class FetchTask final : public api::AsyncTask {
   Heap<JSObject *> promise_;
 
 public:
-  explicit FetchTask(FastlyHandle handle, JS::HandleObject request, JS::HandleObject promise)
+  explicit FetchTask(host_api::HttpPendingReq::Handle handle, JS::HandleObject request,
+                     JS::HandleObject promise)
       : request_(request), promise_(promise) {
     if (static_cast<int32_t>(handle) < 0)
       abort();

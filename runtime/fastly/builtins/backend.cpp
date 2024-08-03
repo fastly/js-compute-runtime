@@ -815,8 +815,9 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
 
     auto client_cert_key_slot = JS::GetReservedSlot(backend, Backend::Slots::ClientCertKey);
 
-    backend_config.client_cert = host_api::ClientCert{
-        .cert = std::move(client_cert_chars), .key = (FastlyHandle)client_cert_key_slot.toInt32()};
+    backend_config.client_cert =
+        host_api::ClientCert{.cert = std::move(client_cert_chars),
+                             .key = (host_api::CertKey)client_cert_key_slot.toInt32()};
   }
 
   auto res = host_api::HttpReq::register_dynamic_backend(name_str, target_str, backend_config);

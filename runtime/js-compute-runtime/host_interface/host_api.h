@@ -26,22 +26,20 @@ namespace host_api {
 struct Void final {};
 
 /// The type of errors returned from the host.
-using FastlyError = uint8_t;
+using APIError = uint8_t;
 
-bool error_is_generic(FastlyError e);
-bool error_is_invalid_argument(FastlyError e);
-bool error_is_optional_none(FastlyError e);
-bool error_is_bad_handle(FastlyError e);
+bool error_is_generic(APIError e);
+bool error_is_invalid_argument(APIError e);
+bool error_is_optional_none(APIError e);
+bool error_is_bad_handle(APIError e);
 
 /// Generate an error in the JSContext.
-void handle_fastly_error(JSContext *cx, FastlyError err, int line, const char *func);
+void handle_api_error(JSContext *cx, APIError err, int line, const char *func);
 
-/// Wrap up a call to handle_fastly_error with the current line and function.
-#define HANDLE_ERROR(cx, err) ::host_api::handle_fastly_error(cx, err, __LINE__, __func__)
+/// Wrap up a call to handle_api_error with the current line and function.
+#define HANDLE_ERROR(cx, err) ::host_api::handle_api_error(cx, err, __LINE__, __func__)
 
-template <typename T, typename E = FastlyError> class Result final {
-  /// A private wrapper to distinguish `fastly_compute_at_edge_types_error_t` in the private
-  /// variant.
+template <typename T, typename E = APIError> class Result final {
   struct Error {
     E value;
 
@@ -291,8 +289,6 @@ public:
 
   static constexpr Handle invalid = UINT32_MAX - 1;
 
-  /// The handle to use when making host calls, initialized to the special invalid value used by
-  /// executed.
   Handle handle = invalid;
 
   HttpBody() = default;
@@ -349,9 +345,6 @@ public:
   explicit HttpPendingReq(Handle handle) : handle{handle} {}
   explicit HttpPendingReq(AsyncHandle async) : handle{async.handle} {}
 
-  /// Poll for the response to this request.
-  Result<std::optional<Response>> poll();
-
   /// Block until the response is ready.
   Result<Response, FastlySendError> wait();
 
@@ -383,6 +376,7 @@ struct TlsVersion {
 
   explicit TlsVersion(uint8_t raw);
 
+  uint8_t get_version() const;
   static TlsVersion version_1();
   static TlsVersion version_1_1();
   static TlsVersion version_1_2();
@@ -393,7 +387,9 @@ class Secret final {
 public:
   using Handle = uint32_t;
 
-  Handle handle = UINT32_MAX - 1;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   Secret() = default;
   explicit Secret(Handle handle) : handle{handle} {}
@@ -405,7 +401,9 @@ class SecretStore final {
 public:
   using Handle = uint32_t;
 
-  Handle handle = UINT32_MAX - 1;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   SecretStore() = default;
   explicit SecretStore(Handle handle) : handle{handle} {}
@@ -605,7 +603,9 @@ class LogEndpoint final {
 public:
   using Handle = uint32_t;
 
-  Handle handle = UINT32_MAX - 1;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   LogEndpoint() = default;
   explicit LogEndpoint(Handle handle) : handle{handle} {}
@@ -619,7 +619,9 @@ class Dict final {
 public:
   using Handle = uint32_t;
 
-  Handle handle = UINT32_MAX - 1;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   Dict() = default;
   explicit Dict(Handle handle) : handle{handle} {}
@@ -633,7 +635,9 @@ class ConfigStore final {
 public:
   using Handle = uint32_t;
 
-  Handle handle = UINT32_MAX - 1;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   ConfigStore() = default;
   explicit ConfigStore(Handle handle) : handle{handle} {}
@@ -647,7 +651,9 @@ class ObjectStore final {
 public:
   using Handle = uint32_t;
 
-  Handle handle = UINT32_MAX - 1;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   ObjectStore() = default;
   explicit ObjectStore(Handle handle) : handle{handle} {}
@@ -674,7 +680,7 @@ public:
   explicit ObjectStorePendingLookup(AsyncHandle async) : handle{async.handle} {}
 
   /// Block until the response is ready.
-  Result<std::optional<HttpBody>, FastlyError> wait();
+  Result<std::optional<HttpBody>, APIError> wait();
 
   /// Fetch the AsyncHandle for this pending request.
   AsyncHandle async_handle() const;

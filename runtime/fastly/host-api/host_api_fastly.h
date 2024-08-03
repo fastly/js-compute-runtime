@@ -20,7 +20,6 @@
 #include "jsapi.h"
 #pragma clang diagnostic pop
 
-typedef uint32_t FastlyHandle;
 struct JSErrorFormatString;
 
 namespace host_api {
@@ -52,8 +51,6 @@ const JSErrorFormatString fastly_ErrorFormatString[JSErrNum_Limit] = {
 namespace api {
 
 template <typename T, typename E> class FastlyResult final {
-  /// A private wrapper to distinguish `fastly_compute_at_edge_types_error_t` in the private
-  /// variant.
   struct Error {
     E value;
 
@@ -97,12 +94,16 @@ public:
   T &unwrap() { return std::get<T>(this->result); }
 };
 
-typedef bool ProcessAsyncTask(JSContext *cx, FastlyHandle handle, JS::HandleObject context,
+typedef bool ProcessAsyncTask(JSContext *cx, uint32_t handle, JS::HandleObject context,
                               JS::HandleObject promise);
 
 class FastlyAsyncTask final : public AsyncTask {
 public:
-  FastlyAsyncTask(uint32_t handle, JS::HandleObject context, JS::HandleObject promise,
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  FastlyAsyncTask(Handle handle, JS::HandleObject context, JS::HandleObject promise,
                   ProcessAsyncTask *process) {
     if (static_cast<int32_t>(handle) == INVALID_POLLABLE_HANDLE)
       abort();
@@ -128,7 +129,7 @@ public:
     return false;
   }
 
-  FastlyHandle handle() { return handle_; }
+  Handle handle() { return handle_; }
 
   void trace(JSTracer *trc) override {
     TraceEdge(trc, &context_, "Async task context");
@@ -238,14 +239,14 @@ public:
 /// A convenience wrapper for the host calls involving http bodies.
 class HttpBody final {
 public:
-  static constexpr FastlyHandle invalid = UINT32_MAX - 1;
+  using Handle = uint32_t;
 
-  /// The handle to use when making host calls, initialized to the special invalid value used by
-  /// executed.
-  FastlyHandle handle = invalid;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   HttpBody() = default;
-  explicit HttpBody(FastlyHandle handle) : handle{handle} {}
+  explicit HttpBody(Handle handle) : handle{handle} {}
   explicit HttpBody(FastlyAsyncTask async) : handle{async.handle()} {}
 
   /// Returns true when this body handle is valid.
@@ -281,19 +282,21 @@ public:
   /// Close this handle, and reset internal state to invalid.
   Result<Void> close();
 
-  FastlyHandle async_handle() const;
+  FastlyAsyncTask::Handle async_handle() const;
 };
 
 struct Response;
 
 class HttpPendingReq final {
 public:
-  static constexpr FastlyHandle invalid = UINT32_MAX - 1;
+  using Handle = uint32_t;
 
-  FastlyHandle handle = invalid;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   HttpPendingReq() = default;
-  explicit HttpPendingReq(FastlyHandle handle) : handle{handle} {}
+  explicit HttpPendingReq(Handle handle) : handle{handle} {}
   explicit HttpPendingReq(FastlyAsyncTask async) : handle{async.handle()} {}
 
   /// Poll for the response to this request.
@@ -303,7 +306,7 @@ public:
   api::FastlyResult<Response, FastlySendError> wait();
 
   /// Fetch the FastlyAsyncTask for this pending request.
-  FastlyHandle async_handle() const;
+  FastlyAsyncTask::Handle async_handle() const;
 };
 
 using HttpVersion = uint8_t;
@@ -330,15 +333,18 @@ struct TlsVersion {
 
   explicit TlsVersion(uint8_t raw);
 
+  uint8_t get_version() const;
   static TlsVersion version_1();
   static TlsVersion version_1_1();
   static TlsVersion version_1_2();
   static TlsVersion version_1_3();
 };
 
+typedef uint32_t CertKey;
+
 struct ClientCert {
   HostString cert;
-  FastlyHandle key;
+  CertKey key;
 };
 
 struct BackendConfig {
@@ -373,12 +379,14 @@ enum class FramingHeadersMode : uint8_t {
 
 class HttpReq final : public HttpBase {
 public:
-  static constexpr FastlyHandle invalid = UINT32_MAX - 1;
+  using Handle = uint32_t;
 
-  FastlyHandle handle = invalid;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   HttpReq() = default;
-  explicit HttpReq(FastlyHandle handle) : handle{handle} {}
+  explicit HttpReq(Handle handle) : handle{handle} {}
 
   static Result<HttpReq> make();
 
@@ -451,12 +459,14 @@ public:
 
 class HttpResp final : public HttpBase {
 public:
-  static constexpr FastlyHandle invalid = UINT32_MAX - 1;
+  using Handle = uint32_t;
 
-  FastlyHandle handle = invalid;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   HttpResp() = default;
-  explicit HttpResp(FastlyHandle handle) : handle{handle} {}
+  explicit HttpResp(Handle handle) : handle{handle} {}
 
   static Result<HttpResp> make();
 
@@ -516,10 +526,14 @@ public:
 
 class LogEndpoint final {
 public:
-  FastlyHandle handle = UINT32_MAX - 1;
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   LogEndpoint() = default;
-  explicit LogEndpoint(FastlyHandle handle) : handle{handle} {}
+  explicit LogEndpoint(Handle handle) : handle{handle} {}
 
   static Result<LogEndpoint> get(std::string_view name);
 
@@ -528,10 +542,14 @@ public:
 
 class Dict final {
 public:
-  FastlyHandle handle = UINT32_MAX - 1;
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   Dict() = default;
-  explicit Dict(FastlyHandle handle) : handle{handle} {}
+  explicit Dict(Handle handle) : handle{handle} {}
 
   static Result<Dict> open(std::string_view name);
 
@@ -540,86 +558,102 @@ public:
 
 class ConfigStore final {
 public:
-  FastlyHandle handle = UINT32_MAX - 1;
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   ConfigStore() = default;
-  explicit ConfigStore(FastlyHandle handle) : handle{handle} {}
+  explicit ConfigStore(Handle handle) : handle{handle} {}
 
   static Result<ConfigStore> open(std::string_view name);
 
   Result<std::optional<HostString>> get(std::string_view name);
 };
 
-class ObjectStore final {
-public:
-  FastlyHandle handle = UINT32_MAX - 1;
-
-  ObjectStore() = default;
-  explicit ObjectStore(FastlyHandle handle) : handle{handle} {}
-
-  static Result<ObjectStore> open(std::string_view name);
-
-  Result<std::optional<HttpBody>> lookup(std::string_view name);
-  Result<FastlyHandle> lookup_async(std::string_view name);
-  Result<FastlyHandle> delete_async(std::string_view name);
-
-  Result<Void> insert(std::string_view name, HttpBody body);
-};
-
 class ObjectStorePendingLookup final {
 public:
-  static constexpr FastlyHandle invalid = UINT32_MAX - 1;
+  using Handle = uint32_t;
 
-  FastlyHandle handle = invalid;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   ObjectStorePendingLookup() = default;
-  explicit ObjectStorePendingLookup(FastlyHandle handle) : handle{handle} {}
+  explicit ObjectStorePendingLookup(Handle handle) : handle{handle} {}
   explicit ObjectStorePendingLookup(FastlyAsyncTask async) : handle{async.handle()} {}
 
   /// Block until the response is ready.
   api::FastlyResult<std::optional<HttpBody>, fastly::FastlyAPIError> wait();
 
-  /// Fetch the FastlyHandle for this pending request.
-  FastlyHandle async_handle() const;
+  /// Fetch the handle for this pending request.
+  FastlyAsyncTask::Handle async_handle() const;
 };
 
 class ObjectStorePendingDelete final {
 public:
-  static constexpr FastlyHandle invalid = UINT32_MAX - 1;
+  using Handle = uint32_t;
 
-  FastlyHandle handle = invalid;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   ObjectStorePendingDelete() = default;
-  explicit ObjectStorePendingDelete(FastlyHandle handle) : handle{handle} {}
+  explicit ObjectStorePendingDelete(Handle handle) : handle{handle} {}
   explicit ObjectStorePendingDelete(FastlyAsyncTask async) : handle{async.handle()} {}
 
   /// Block until the response is ready.
   Result<Void> wait();
 
-  /// Fetch the FastlyHandle for this pending request.
-  FastlyHandle async_handle() const;
+  /// Fetch the handle for this pending request.
+  FastlyAsyncTask::Handle async_handle() const;
+};
+
+class ObjectStore final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  ObjectStore() = default;
+  explicit ObjectStore(Handle handle) : handle{handle} {}
+
+  static Result<ObjectStore> open(std::string_view name);
+
+  Result<std::optional<HttpBody>> lookup(std::string_view name);
+  Result<ObjectStorePendingLookup::Handle> lookup_async(std::string_view name);
+  Result<ObjectStorePendingDelete::Handle> delete_async(std::string_view name);
+
+  Result<Void> insert(std::string_view name, HttpBody body);
 };
 
 class Secret final {
 public:
-  using FastlyHandle = uint32_t;
+  using Handle = uint32_t;
 
-  FastlyHandle handle = UINT32_MAX - 1;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   Secret() = default;
-  explicit Secret(FastlyHandle handle) : handle{handle} {}
+  explicit Secret(Handle handle) : handle{handle} {}
 
   Result<std::optional<HostBytes>> plaintext() const;
 };
 
 class SecretStore final {
 public:
-  using FastlyHandle = uint32_t;
+  using Handle = uint32_t;
 
-  FastlyHandle handle = UINT32_MAX - 1;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   SecretStore() = default;
-  explicit SecretStore(FastlyHandle handle) : handle{handle} {}
+  explicit SecretStore(Handle handle) : handle{handle} {}
 
   static Result<SecretStore> open(std::string_view name);
 
@@ -668,12 +702,14 @@ struct CacheState final {
 
 class CacheHandle final {
 public:
-  static constexpr FastlyHandle invalid = UINT32_MAX - 1;
+  using Handle = uint32_t;
 
-  FastlyHandle handle = invalid;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
 
   CacheHandle() = default;
-  explicit CacheHandle(FastlyHandle handle) : handle{handle} {}
+  explicit CacheHandle(Handle handle) : handle{handle} {}
 
   /// Lookup a cached object.
   static Result<CacheHandle> lookup(std::string_view key, const CacheLookupOptions &opts);

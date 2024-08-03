@@ -48,9 +48,11 @@ public:
   static const unsigned ctor_length = 1;
 
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool process_pending_kv_store_lookup(JSContext *cx, FastlyHandle handle,
+  static bool process_pending_kv_store_lookup(JSContext *cx,
+                                              host_api::ObjectStorePendingLookup::Handle handle,
                                               JS::HandleObject context, JS::HandleObject promise);
-  static bool process_pending_kv_store_delete(JSContext *cx, FastlyHandle handle,
+  static bool process_pending_kv_store_delete(JSContext *cx,
+                                              host_api::ObjectStorePendingDelete::Handle handle,
                                               JS::HandleObject context, JS::HandleObject promise);
 };
 

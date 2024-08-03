@@ -35,8 +35,8 @@ public:
   static void set_manual_framing_headers(JSContext *cx, JSObject *obj, JS::HandleValue url);
   static bool body_unusable(JSContext *cx, JS::HandleObject body);
   static bool extract_body(JSContext *cx, JS::HandleObject self, JS::HandleValue body_val);
-  static bool process_pending_request(JSContext *cx, FastlyHandle handle, JS::HandleObject context,
-                                      JS::HandleObject promise);
+  static bool process_pending_request(JSContext *cx, host_api::HttpPendingReq::Handle handle,
+                                      JS::HandleObject context, JS::HandleObject promise);
 
   /**
    * Returns the RequestOrResponse's Headers if it has been reified, nullptr if
