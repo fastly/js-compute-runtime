@@ -394,7 +394,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        profile: [debug, release]
+        profile: [debug, release, weval]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -415,11 +415,19 @@ jobs:
     - name: Build
       if: ${{ matrix.profile == 'debug' }}
       run: npm run build:starlingmonkey:debug
+    - name: Build
+      if: ${{ matrix.profile == 'weval' }}
+      run: npm run build:starlingmonkey:weval
     - uses: actions/upload-artifact@v3
       with:
         if-no-files-found: error
         name: starling-${{ matrix.profile }}
-        path: starling${{ matrix.profile == 'debug' && '.debug.wasm' || '.wasm' }}
+        path: starling${{ matrix.profile == 'debug' && '.debug.wasm' || (matrix.profile == 'weval' && '-weval.wasm' || '.wasm') }}
+    - uses: actions/upload-artifact@v3
+      if: ${{ matrix.profile == 'weval' }}
+      with:
+        name: starling-${{ matrix.profile }}-ic-cache
+        path: starling-ics.wevalcache
 
   starlingmonkey-run_wpt:
     concurrency:
@@ -486,10 +494,12 @@ jobs:
     strategy:
       matrix:
         platform: [viceroy, compute]
-        profile: [debug, release]
+        profile: [debug, release, weval]
         exclude:
           - platform: compute
             profile: release
+          - platform: compute
+            profile: weval
     needs: [starlingmonkey-build]
     steps:
     - name: Checkout fastly/js-compute-runtime
@@ -531,11 +541,17 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: starling-${{ matrix.profile }}
+    - name: Download Engine (AOT weval cache)
+      uses: actions/download-artifact@v3
+      if: ${{ matrix.profile == 'weval'}}
+      with:
+        name: starling-${{ matrix.profile }}-ic-cache
+
     - run: yarn install --frozen-lockfile
 
     - name: Yarn install
       run: yarn && cd ./integration-tests/js-compute && yarn
 
-    - run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'debug' && '--debug-build' || '' }}
+    - run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }} ${{ matrix.profile == 'debug' && '--debug-build' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
