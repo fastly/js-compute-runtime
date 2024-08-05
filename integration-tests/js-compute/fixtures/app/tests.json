@@ -5292,6 +5292,468 @@
       "status": 200
     }
   },
+  "GET /FastlyBody/constructor/called-as-regular-function": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/constructor/called-as-regular-function"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/constructor/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/constructor/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/append/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/data-parameter-not-supplied": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/append/data-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/data-parameter-wrong-type": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/append/data-parameter-wrong-type"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/data-parameter-readablestream-guest-backed": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/append/data-parameter-readablestream-guest-backed"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/data-parameter-readablestream-host-backed": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/append/data-parameter-readablestream-host-backed"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/data-parameter-URLSearchParams": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/append/data-parameter-URLSearchParams"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/data-parameter-strings": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/append/data-parameter-strings"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/data-parameter-calls-7.1.17-ToString": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/append/data-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/data-parameter-buffer": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/append/data-parameter-buffer"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/data-parameter-arraybuffer": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/append/data-parameter-arraybuffer"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/data-parameter-typed-arrays": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/append/data-parameter-typed-arrays"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/data-parameter-dataview": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/append/data-parameter-dataview"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/data-parameter-not-supplied": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/data-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/data-parameter-wrong-type": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/data-parameter-wrong-type"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/data-parameter-readablestream-guest-backed": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/data-parameter-readablestream-guest-backed"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/data-parameter-readablestream-host-backed": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/data-parameter-readablestream-host-backed"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/data-parameter-readablestream-locked": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/data-parameter-readablestream-locked"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/data-parameter-URLSearchParams": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/data-parameter-URLSearchParams"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/data-parameter-strings": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/data-parameter-strings"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/data-parameter-calls-7.1.17-ToString": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/data-parameter-calls-7.1.17-ToString"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/data-parameter-buffer": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/data-parameter-buffer"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/data-parameter-arraybuffer": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/data-parameter-arraybuffer"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/data-parameter-typed-arrays": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/data-parameter-typed-arrays"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/prepend/data-parameter-dataview": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/prepend/data-parameter-dataview"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/concat/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/concat/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/concat/dest-parameter-not-supplied": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/concat/dest-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/concat/dest-parameter-wrong-type": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/concat/dest-parameter-wrong-type"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/concat/concat-same-fastlybody-twice": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/concat/concat-same-fastlybody-twice"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/concat/happy-path": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/concat/happy-path"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/read/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/read/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/read/chunkSize-parameter-not-supplied": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/read/chunkSize-parameter-not-supplied"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/read/chunkSize-parameter-wrong-type": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/read/chunkSize-parameter-wrong-type"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/read/chunkSize-parameter-negative": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/read/chunkSize-parameter-negative"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/read/chunkSize-parameter-infinity": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/read/chunkSize-parameter-infinity"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/read/chunkSize-parameter-NaN": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/read/chunkSize-parameter-NaN"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/read/happy-path": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/read/happy-path"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/close/called-as-constructor": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/close/called-as-constructor"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/close/called-once": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/close/called-once"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/close/called-twice": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/FastlyBody/close/called-twice"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
   "GET /core-cache/interface": {
     "environments": ["compute"],
     "downstream_request": {
