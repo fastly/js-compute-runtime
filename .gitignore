@@ -1,6 +1,5 @@
 # Integration Tests build output
 /integration-tests/**/fixtures/**/*.tar.gz
-/integration-tests/**/fixtures/**/fastly.toml
 /integration-tests/**/fixtures/**/*.wasm
 
 /runtime/fastly/build-*/

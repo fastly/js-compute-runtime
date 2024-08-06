@@ -7,9 +7,7 @@ import { isFile } from "./isFile.js";
 import { isFileOrDoesNotExist } from "./isFileOrDoesNotExist.js";
 import wizer from "@bytecodealliance/wizer";
 import weval from "@cfallin/weval";
-import { precompile } from "./precompile.js";
 import { enableTopLevelAwait } from "./enableTopLevelAwait.js";
-import { bundle } from "./bundle.js";
 
 async function getTmpDir () {
   return await mkdtemp(normalize(tmpdir() + sep));
@@ -92,22 +90,7 @@ export async function compileApplicationToWasm(
 
   let wizerInput, cleanup = () => {};
 
-  let contents;
-  try {
-    contents = await bundle(input, enableExperimentalTopLevelAwait);
-  } catch (error) {
-    console.error(
-      `Error:`,
-      error.message
-    );
-    process.exit(1);
-  }
-
-  wizerInput = precompile(
-    contents.outputFiles[0].text,
-    undefined,
-    enableExperimentalTopLevelAwait
-  );
+  wizerInput = await readFile(input, { encoding: "utf-8" })
   if (enableExperimentalTopLevelAwait && !starlingMonkey) {
     wizerInput = enableTopLevelAwait(wizerInput);
   }
