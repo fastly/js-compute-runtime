@@ -327,11 +327,11 @@ JS::Result<host_api::CacheWriteOptions> parseInsertOptions(JSContext *cx,
   if (!headers_val.isUndefined()) {
     JS::RootedObject request_opts(cx, JS_NewPlainObject(cx));
     if (!JS_SetProperty(cx, request_opts, "headers", headers_val)) {
-      return JS::Result<host_api::CacheLookupOptions>(JS::Error());
+      return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
     JS::RootedObject requestInstance(cx, Request::create_instance(cx));
     if (!requestInstance) {
-      return JS::Result<host_api::CacheLookupOptions>(JS::Error());
+      return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
     // We need to convert the supplied HeadersInit in the `headers` property into a host-backed
     // Request which contains the same headers builtins::Request::create does exactly that however,
