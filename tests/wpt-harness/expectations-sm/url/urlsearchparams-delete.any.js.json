@@ -19,5 +19,8 @@
   },
   "Two-argument delete()": {
     "status": "FAIL"
+  },
+  "Two-argument delete() respects undefined as second arg": {
+    "status": "FAIL"
   }
 }

@@ -161,6 +161,12 @@
   "Parsing: <http:\\\\a\\b:c\\d@foo.com\\> against <http://example.org/foo/bar>": {
     "status": "PASS"
   },
+  "Parsing: <http://a:b@c\\> without base": {
+    "status": "PASS"
+  },
+  "Parsing: <ws://a@b\\c> without base": {
+    "status": "PASS"
+  },
   "Parsing: <foo:/> against <http://example.org/foo/bar>": {
     "status": "PASS"
   },
@@ -384,6 +390,21 @@
     "status": "PASS"
   },
   "Parsing: <file:test> against <file:///tmp/mock/path>": {
+    "status": "PASS"
+  },
+  "Parsing: <file:///w|m> without base": {
+    "status": "PASS"
+  },
+  "Parsing: <file:///w||m> without base": {
+    "status": "PASS"
+  },
+  "Parsing: <file:///w|/m> without base": {
+    "status": "FAIL"
+  },
+  "Parsing: <file:C|/m/> without base": {
+    "status": "PASS"
+  },
+  "Parsing: <file:C||/m/> without base": {
     "status": "PASS"
   },
   "Parsing: <http://example.com/././foo> without base": {
@@ -776,6 +797,12 @@
   "Parsing: <file:a> against <http://www.example.com/test>": {
     "status": "PASS"
   },
+  "Parsing: <file:.> without base": {
+    "status": "PASS"
+  },
+  "Parsing: <file:.> against <http://www.example.com/test>": {
+    "status": "PASS"
+  },
   "Parsing: <http://ExAmPlE.CoM> against <http://other.com/>": {
     "status": "PASS"
   },
@@ -1095,9 +1122,6 @@
     "status": "PASS"
   },
   "Parsing: <wow:￿> without base": {
-    "status": "PASS"
-  },
-  "Parsing: <http://example.com/U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿?U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿> without base": {
     "status": "PASS"
   },
   "Parsing: <sc://a\u0000b/> without base": {
@@ -2460,6 +2484,42 @@
     "status": "PASS"
   },
   "Parsing: <west://x:0> without base": {
+    "status": "PASS"
+  },
+  "Parsing: <///test> against <http://example.org/>": {
+    "status": "FAIL"
+  },
+  "Parsing: <///\\//\\//test> against <http://example.org/>": {
+    "status": "FAIL"
+  },
+  "Parsing: <///example.org/path> against <http://example.org/>": {
+    "status": "FAIL"
+  },
+  "Parsing: <///example.org/../path> against <http://example.org/>": {
+    "status": "FAIL"
+  },
+  "Parsing: <///example.org/../../> against <http://example.org/>": {
+    "status": "FAIL"
+  },
+  "Parsing: <///example.org/../path/../../> against <http://example.org/>": {
+    "status": "FAIL"
+  },
+  "Parsing: <///example.org/../path/../../path> against <http://example.org/>": {
+    "status": "FAIL"
+  },
+  "Parsing: </\\/\\//example.org/../path> against <http://example.org/>": {
+    "status": "PASS"
+  },
+  "Parsing: <///abcdef/../> against <file:///>": {
+    "status": "PASS"
+  },
+  "Parsing: </\\//\\/a/../> against <file:///>": {
+    "status": "FAIL"
+  },
+  "Parsing: <//a/../> against <file:///>": {
+    "status": "PASS"
+  },
+  "Parsing: <http://example.com/U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿?U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿> without base": {
     "status": "PASS"
   }
 }
