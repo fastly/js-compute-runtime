@@ -309,11 +309,11 @@ JS::Result<host_api::CacheWriteOptions> parseInsertOptions(JSContext *cx,
   if (!headers_val.isUndefined()) {
     JS::RootedObject request_opts(cx, JS_NewPlainObject(cx));
     if (!JS_SetProperty(cx, request_opts, "headers", headers_val)) {
-      return JS::Result<host_api::CacheLookupOptions>(JS::Error());
+      return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
     JS::RootedObject requestInstance(cx, Request::create_instance(cx));
     if (!requestInstance) {
-      return JS::Result<host_api::CacheLookupOptions>(JS::Error());
+      return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
     JS::RootedValue request_opts_val(cx, JS::ObjectValue(*request_opts));
     // We need to convert the supplied HeadersInit in the `headers` property into a host-backed
