@@ -485,6 +485,66 @@ jobs:
       timeout-minutes: 20
       run: node ./tests/wpt-harness/run-wpt.mjs --starlingmonkey -vv
 
+  starlingmonkey-run_wpt-weval:
+    concurrency:
+      group: ${{ github.head_ref }}-${{ github.workflow}}-starlingmonkey-run_wpt-weval
+      cancel-in-progress: true
+    if: github.ref != 'refs/heads/main'
+    name: Run Web Platform Tests (starlingmonkey weval)
+    needs: [starlingmonkey-build, ensure_cargo_installs]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 20
+        cache: 'yarn'
+
+    - name: Download Engine
+      uses: actions/download-artifact@v3
+      with:
+        name: starling-weval
+    - name: Download Engine Weval Cache
+      uses: actions/download-artifact@v3
+      with:
+        name: starling-weval-ic-cache
+
+    - name: Restore Viceroy from cache
+      uses: actions/cache@v3
+      with:
+        path: "/home/runner/.cargo/bin/viceroy"
+        key: crate-cache-viceroy-${{ env.viceroy_version }}
+    
+    - name: Restore wasm-tools from cache
+      uses: actions/cache@v3
+      id: wasm-tools
+      with:
+        path: "/home/runner/.cargo/bin/wasm-tools"
+        key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
+    
+    - name: "Check wasm-tools has been restored"
+      if: steps.wasm-tools.outputs.cache-hit != 'true'
+      run: |
+        echo "wasm-tools was not restored from the cache"
+        echo "bailing out from the build early"
+        exit 1
+    
+    - run: yarn install --frozen-lockfile
+
+    - name: Build WPT runtime
+      run: tests/wpt-harness/build-wpt-runtime.sh --enable-experimental-aot
+
+    - name: Prepare WPT hosts
+      run: |
+        cd tests/wpt-harness/wpt
+        ./wpt make-hosts-file | sudo tee -a /etc/hosts
+
+    - name: Run tests
+      timeout-minutes: 20
+      run: node ./tests/wpt-harness/run-wpt.mjs --starlingmonkey -vv
+
   starlingmonkey-sdktest:
     concurrency:
       group: ${{ github.head_ref }}-${{ github.workflow}}-starlingmonkey-sdktest-${{matrix.profile}}-${{matrix.platform}}
