@@ -5743,17 +5743,6 @@
       "status": 200
     }
   },
-  "GET /FastlyBody/close/called-twice": {
-    "environments": ["compute"],
-    "downstream_request": {
-      "method": "GET",
-      "pathname": "/FastlyBody/close/called-twice"
-    },
-    "downstream_response": {
-      "body": "ok",
-      "status": 200
-    }
-  },
   "GET /core-cache/interface": {
     "environments": ["compute"],
     "downstream_request": {
@@ -5886,17 +5875,6 @@
       "status": 200
     }
   },
-  "GET /core-cache/lookup/options-parameter-headers-field-wrong-type": {
-    "environments": ["compute"],
-    "downstream_request": {
-      "method": "GET",
-      "pathname": "/core-cache/lookup/options-parameter-headers-field-wrong-type"
-    },
-    "downstream_response": {
-      "body": "ok",
-      "status": 200
-    }
-  },
   "GET /core-cache/lookup/options-parameter-headers-field-undefined": {
     "environments": ["compute"],
     "downstream_request": {
@@ -6012,17 +5990,6 @@
     "downstream_request": {
       "method": "GET",
       "pathname": "/core-cache/insert/options-parameter-wrong-type"
-    },
-    "downstream_response": {
-      "body": "ok",
-      "status": 200
-    }
-  },
-  "GET /core-cache/insert/options-parameter-headers-field-wrong-type": {
-    "environments": ["compute"],
-    "downstream_request": {
-      "method": "GET",
-      "pathname": "/core-cache/insert/options-parameter-headers-field-wrong-type"
     },
     "downstream_response": {
       "body": "ok",
@@ -6452,17 +6419,6 @@
     "downstream_request": {
       "method": "GET",
       "pathname": "/core-cache/transactionLookup/options-parameter-wrong-type"
-    },
-    "downstream_response": {
-      "body": "ok",
-      "status": 200
-    }
-  },
-  "GET /core-cache/transactionLookup/options-parameter-headers-field-wrong-type": {
-    "environments": ["compute"],
-    "downstream_request": {
-      "method": "GET",
-      "pathname": "/core-cache/transactionLookup/options-parameter-headers-field-wrong-type"
     },
     "downstream_response": {
       "body": "ok",

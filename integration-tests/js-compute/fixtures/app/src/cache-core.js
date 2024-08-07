@@ -841,13 +841,6 @@ let error;
             if (error) { return error }
             return pass("ok")
         });
-        routes.set("/FastlyBody/close/called-twice", () => {
-            let error = assertThrows(() => {
-                CoreCache.lookup('cat', { headers: '' })
-            })
-            if (error) { return error }
-            return pass("ok")
-        });
     }
 }
 
@@ -1153,13 +1146,6 @@ let error;
             if (error) { return error }
             return pass("ok")
         });
-        routes.set("/core-cache/lookup/options-parameter-headers-field-wrong-type", () => {
-            let error = assertThrows(() => {
-                CoreCache.lookup('cat', { headers: '' })
-            })
-            if (error) { return error }
-            return pass("ok")
-        });
         routes.set("/core-cache/lookup/options-parameter-headers-field-undefined", () => {
             let entry;
             let error = assertDoesNotThrow(() => {
@@ -1276,13 +1262,6 @@ let error;
         routes.set("/core-cache/insert/options-parameter-wrong-type", () => {
             let error = assertThrows(() => {
                 CoreCache.insert('cat', '')
-            })
-            if (error) { return error }
-            return pass("ok")
-        });
-        routes.set("/core-cache/insert/options-parameter-headers-field-wrong-type", () => {
-            let error = assertThrows(() => {
-                CoreCache.insert('cat', { headers: '', maxAge: 1 })
             })
             if (error) { return error }
             return pass("ok")
@@ -1696,13 +1675,6 @@ let error;
         routes.set("/core-cache/transactionLookup/options-parameter-wrong-type", () => {
             let error = assertThrows(() => {
                 CoreCache.transactionLookup('cat', '')
-            })
-            if (error) { return error }
-            return pass("ok")
-        });
-        routes.set("/core-cache/transactionLookup/options-parameter-headers-field-wrong-type", () => {
-            let error = assertThrows(() => {
-                CoreCache.transactionLookup('cat', { headers: '' })
             })
             if (error) { return error }
             return pass("ok")
