@@ -7,6 +7,7 @@
 #include "../../../StarlingMonkey/builtins/web/worker-location.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "../../common/ip_octets_to_js_string.h"
+#include "../../common/normalize_http_method.h"
 #include "../cache-core.h"
 #include "../cache-override.h"
 #include "../cache-simple.h"
@@ -122,28 +123,6 @@ bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::Han
   }
 
   return true;
-}
-
-// https://fetch.spec.whatwg.org/#concept-method-normalize
-// Returns `true` if the method name was normalized, `false` otherwise.
-bool normalize_http_method(char *method) {
-  static const char *names[6] = {"GET", "HEAD", "OPTIONS", "POST", "PUT", "DELETE"};
-
-  for (size_t i = 0; i < 6; i++) {
-    auto name = names[i];
-    if (strcasecmp(method, name) == 0) {
-      if (strcmp(method, name) == 0) {
-        return false;
-      }
-
-      // Note: Safe because `strcasecmp` returning 0 above guarantees
-      // same-length strings.
-      strcpy(method, name);
-      return true;
-    }
-  }
-
-  return false;
 }
 
 struct ReadResult {
@@ -1926,7 +1905,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     }
 
     if (method_needs_normalization) {
-      if (normalize_http_method(method.begin())) {
+      if (common::normalize_http_method(method.begin(), method.len)) {
         // Replace the JS string with the normalized name.
         method_str = JS_NewStringCopyN(cx, method.begin(), method.len);
         if (!method_str) {
