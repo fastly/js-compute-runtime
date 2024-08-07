@@ -8966,5 +8966,16 @@
       "status": 200,
       "body": "heLLo"
     }
+  },
+  "!#$%&*+-.^_`|~1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "!#$%&*+-.^_`|~1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "!#$%&*+-.^_`|~1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    }
   }
 }
