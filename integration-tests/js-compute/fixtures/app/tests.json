@@ -8735,5 +8735,236 @@
       "status": 200,
       "body": "ok"
     }
+  },
+  "GET /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "GET"
+    }
+  },
+  "get /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "get",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "get"
+    }
+  },
+  "GeT /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GeT",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "GeT"
+    }
+  },
+  "HEAD /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "HEAD",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "HEAD"
+    }
+  },
+  "head /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "head",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "head"
+    }
+  },
+  "HeAd /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "HeAd",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "HeAd"
+    }
+  },
+  "OPTIONS /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "OPTIONS",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "OPTIONS"
+    }
+  },
+  "OPTioNS /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "OPTioNS",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "OPTIONS"
+    }
+  },
+  "options /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "options",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "OPTIONS"
+    }
+  },
+  "POST /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "POST",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "POST"
+    }
+  },
+  "post /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "post",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "POST"
+    }
+  },
+  "PosT /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "PosT",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "POST"
+    }
+  },
+  "PUT /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "PUT",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "PUT"
+    }
+  },
+  "put /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "put",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "PUT"
+    }
+  },
+  "Put /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "Put",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "PUT"
+    }
+  },
+  "DELETE /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "DELETE",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "DELETE"
+    }
+  },
+  "DeLeTe /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "DeLeTe",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "DELETE"
+    }
+  },
+  "delete /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "delete",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "DELETE"
+    }
+  },
+  "HELLO /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "HELLO",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "HELLO"
+    }
+  },
+  "hello /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "hello",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "hello"
+    }
+  },
+  "heLLo /request/method": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "heLLo",
+      "pathname": "/request/method"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "heLLo"
+    }
   }
 }
