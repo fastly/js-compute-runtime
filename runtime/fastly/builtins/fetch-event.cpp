@@ -467,6 +467,47 @@ JSObject *FetchEvent::prepare_downstream_request(JSContext *cx) {
   return Request::create(cx, requestInstance, host_api::HttpReq{}, host_api::HttpBody{}, true);
 }
 
+inline char *uppercase(char *str, size_t length) {
+  char *up = reinterpret_cast<char *>(malloc(length + 1));
+  int i = 0;
+  while (i < length) {
+    auto ch = str[i];
+    if (ch >= 'a' && ch <= 'z') {
+      [[likely]] up[i] = ch & ~0x20;
+    } else {
+      [[unlikely]] up[i] = ch;
+    }
+    i++;
+  }
+  up[i] = '\0';
+  return up;
+}
+
+// https://fetch.spec.whatwg.org/#concept-method-normalize
+// To normalize a method, if it is a byte-case-insensitive match for `DELETE`, `GET`, `HEAD`,
+// `OPTIONS`, `POST`, or `PUT`, byte-uppercase it. Returns `true` if the method name was normalized,
+// `false` otherwise.
+bool normalize_http_method(char* method, size_t length) {
+  auto m = std::string_view(method, length);
+  // It's quite likely the method is already uppercased,
+  // so let's check it first before we create a copy of the method to uppercase it.
+  // These have been order by most likely to occur.
+  if (m == "GET"sv || m == "HEAD"sv || m == "OPTIONS"sv ||
+      m == "POST"sv || m == "PUT"sv || m == "DELETE"sv) {
+    [[likely]] return false;
+  } else {
+    auto umethod = uppercase(method, length);
+    if (strcmp(umethod, "GET") == 0 || strcmp(umethod, "HEAD") == 0 ||
+        strcmp(umethod, "OPTIONS") == 0 || strcmp(umethod, "POST") == 0 ||
+        strcmp(umethod, "PUT") == 0 || strcmp(umethod, "DELETE") == 0) {
+      strcpy(method, umethod);
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+
 bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::HttpReq req,
                               host_api::HttpBody body) {
 
@@ -495,7 +536,8 @@ bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::Ht
   bool is_head = method_str == "HEAD"sv;
 
   if (!is_get) {
-    JS::RootedString method(cx, JS_NewStringCopyN(cx, method_str.ptr.release(), method_str.len));
+    std::ignore = normalize_http_method(method_str.begin(), method_str.size());
+    JS::RootedString method(cx, JS_NewStringCopyN(cx, method_str.begin(), method_str.len));
     if (!method) {
       return false;
     }
