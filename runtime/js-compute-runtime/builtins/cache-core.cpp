@@ -31,31 +31,23 @@ JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
     }
     // headers property is optional
     if (!headers_val.isUndefined()) {
-      JS::RootedObject headersInstance(
-          cx,
-          JS_NewObjectWithGivenProto(cx, &builtins::Headers::class_, builtins::Headers::proto_obj));
-      if (!headersInstance) {
+      JS::RootedObject request_opts(cx, JS_NewPlainObject(cx));
+      if (!JS_SetProperty(cx, request_opts, "headers", headers_val)) {
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
       }
-      auto headers = builtins::Headers::create(
-          cx, headersInstance, builtins::Headers::Mode::Standalone, nullptr, headers_val, true);
-      if (!headers) {
-        return JS::Result<host_api::CacheLookupOptions>(JS::Error());
-      }
-      JS::RootedValue headers_val(cx, JS::ObjectValue(*headers));
       JS::RootedObject requestInstance(cx, Request::create_instance(cx));
       if (!requestInstance) {
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
       }
 
       // We need to convert the supplied HeadersInit in the `headers` property into a host-backed
-      // Request which contains the same headers builtins::Request::create does exactly that
+      // Request which contains the same headers Request::create does exactly that
       // however, it also expects a fully valid URL for the Request. We don't ever use the Request
       // URL, so we hard-code a valid URL
       JS::RootedValue input(cx, JS::StringValue(JS_NewStringCopyZ(cx, "http://example.com")));
-      JS::RootedObject request(cx,
-                               builtins::Request::create(cx, requestInstance, input, headers_val));
-      options.request_headers = host_api::HttpReq(builtins::Request::request_handle(request));
+      JS::RootedObject request(
+          cx, Request::create(cx, requestInstance, input, ObjectValue(*request_opts)));
+      options.request_headers = host_api::HttpReq(Request::request_handle(request));
     }
   }
   return options;
@@ -1083,51 +1075,11 @@ bool CoreCache::transactionLookup(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  host_api::CacheLookupOptions options;
-  auto options_val = args.get(1);
-  // options parameter is optional
-  // options is meant to be an object with an optional headers field,
-  // the headers field can be:
-  // Headers | string[][] | Record<string, string>;
-  if (!options_val.isUndefined()) {
-    if (!options_val.isObject()) {
-      JS_ReportErrorASCII(cx, "options argument must be an object");
-      return false;
-    }
-    JS::RootedObject options_obj(cx, &options_val.toObject());
-    JS::RootedValue headers_val(cx);
-    if (!JS_GetProperty(cx, options_obj, "headers", &headers_val)) {
-      return false;
-    }
-    // headers property is optional
-    if (!headers_val.isUndefined()) {
-      JS::RootedObject headersInstance(
-          cx,
-          JS_NewObjectWithGivenProto(cx, &builtins::Headers::class_, builtins::Headers::proto_obj));
-      if (!headersInstance) {
-        return false;
-      }
-      auto headers = builtins::Headers::create(
-          cx, headersInstance, builtins::Headers::Mode::Standalone, nullptr, headers_val, true);
-      if (!headers) {
-        return false;
-      }
-      JS::RootedValue headers_val(cx, JS::ObjectValue(*headers));
-      JS::RootedObject requestInstance(cx, Request::create_instance(cx));
-      if (!requestInstance) {
-        return false;
-      }
-
-      // We need to convert the supplied HeadersInit in the `headers` property into a host-backed
-      // Request which contains the same headers builtins::Request::create does exactly that
-      // however, it also expects a fully valid URL for the Request. We don't ever use the Request
-      // URL, so we hard-code a valid URL
-      JS::RootedValue input(cx, JS::StringValue(JS_NewStringCopyZ(cx, "http://example.com")));
-      JS::RootedObject request(cx,
-                               builtins::Request::create(cx, requestInstance, input, headers_val));
-      options.request_headers = host_api::HttpReq(builtins::Request::request_handle(request));
-    }
+  auto options_result = parseLookupOptions(cx, args.get(1));
+  if (options_result.isErr()) {
+    return false;
   }
+  auto options = options_result.unwrap();
 
   auto res = host_api::CacheHandle::transaction_lookup(key, options);
   if (auto *err = res.to_err()) {
