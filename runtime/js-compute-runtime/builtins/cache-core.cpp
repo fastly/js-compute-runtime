@@ -31,6 +31,12 @@ JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
     }
     // headers property is optional
     if (!headers_val.isUndefined()) {
+      if (!headers_val.isObject()) {
+        JS_ReportErrorASCII(
+            cx, "Failed to construct Headers object. If defined, the first argument must be either "
+                "a [ ['name', 'value'], ... ] sequence, or a { 'name' : 'value', ... } record.");
+        return JS::Result<host_api::CacheLookupOptions>(JS::Error());
+      }
       JS::RootedObject request_opts(cx, JS_NewPlainObject(cx));
       if (!JS_SetProperty(cx, request_opts, "headers", headers_val)) {
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
@@ -307,6 +313,12 @@ JS::Result<host_api::CacheWriteOptions> parseInsertOptions(JSContext *cx,
   }
   // headers property is optional
   if (!headers_val.isUndefined()) {
+    if (!headers_val.isObject()) {
+      JS_ReportErrorASCII(
+          cx, "Failed to construct Headers object. If defined, the first argument must be either "
+              "a [ ['name', 'value'], ... ] sequence, or a { 'name' : 'value', ... } record.");
+      return JS::Result<host_api::CacheWriteOptions>(JS::Error());
+    }
     JS::RootedObject request_opts(cx, JS_NewPlainObject(cx));
     if (!JS_SetProperty(cx, request_opts, "headers", headers_val)) {
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
