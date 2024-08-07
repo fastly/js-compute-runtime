@@ -39,7 +39,7 @@ JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
       if (!requestInstance) {
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
       }
-      JS::RootedValue request_opts_val(cx, ObjectValue(*request_opts));
+      JS::RootedValue request_opts_val(cx, JS::ObjectValue(*request_opts));
       // We need to convert the supplied HeadersInit in the `headers` property into a host-backed
       // Request which contains the same headers Request::create does exactly that
       // however, it also expects a fully valid URL for the Request. We don't ever use the Request
@@ -315,7 +315,7 @@ JS::Result<host_api::CacheWriteOptions> parseInsertOptions(JSContext *cx,
     if (!requestInstance) {
       return JS::Result<host_api::CacheLookupOptions>(JS::Error());
     }
-    JS::RootedValue request_opts_val(cx, ObjectValue(*request_opts));
+    JS::RootedValue request_opts_val(cx, JS::ObjectValue(*request_opts));
     // We need to convert the supplied HeadersInit in the `headers` property into a host-backed
     // Request which contains the same headers builtins::Request::create does exactly that however,
     // it also expects a fully valid URL for the Request. We don't ever use the Request URL, so we
