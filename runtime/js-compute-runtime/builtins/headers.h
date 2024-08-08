@@ -2,8 +2,36 @@
 #define BUILTINS_HEADERS_H
 
 #include "builtin.h"
-
+#include "host_interface/host_api.h"
 namespace builtins {
+
+const char VALID_NAME_CHARS[128] = {
+    0, 0, 0, 0, 0, 0, 0, 0, //   0
+    0, 0, 0, 0, 0, 0, 0, 0, //   8
+    0, 0, 0, 0, 0, 0, 0, 0, //  16
+    0, 0, 0, 0, 0, 0, 0, 0, //  24
+
+    0, 1, 0, 1, 1, 1, 1, 1, //  32
+    0, 0, 1, 1, 0, 1, 1, 0, //  40
+    1, 1, 1, 1, 1, 1, 1, 1, //  48
+    1, 1, 0, 0, 0, 0, 0, 0, //  56
+
+    0, 1, 1, 1, 1, 1, 1, 1, //  64
+    1, 1, 1, 1, 1, 1, 1, 1, //  72
+    1, 1, 1, 1, 1, 1, 1, 1, //  80
+    1, 1, 1, 0, 0, 0, 1, 1, //  88
+
+    1, 1, 1, 1, 1, 1, 1, 1, //  96
+    1, 1, 1, 1, 1, 1, 1, 1, // 104
+    1, 1, 1, 1, 1, 1, 1, 1, // 112
+    1, 1, 1, 0, 1, 0, 1, 0  // 120
+};
+
+host_api::HostString normalize_header_name(JSContext *cx, JS::MutableHandleValue name_val,
+                                           const char *fun_name);
+
+host_api::HostString normalize_header_value(JSContext *cx, JS::MutableHandleValue value_val,
+                                            const char *fun_name);
 
 class Headers final : public BuiltinImpl<Headers> {
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);

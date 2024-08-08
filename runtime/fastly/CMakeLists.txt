@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.27)
 
 include("../StarlingMonkey/cmake/add_as_subproject.cmake")
 
-add_builtin(fastly::runtime SRC handler.cpp common/ip_octets_to_js_string.cpp)
+add_builtin(fastly::runtime SRC handler.cpp common/ip_octets_to_js_string.cpp common/headers-normalization.cpp)
 add_builtin(fastly::cache_simple SRC builtins/cache-simple.cpp DEPENDENCIES OpenSSL)
 add_builtin(fastly::fastly SRC builtins/fastly.cpp)
 add_builtin(fastly::backend SRC builtins/backend.cpp)
