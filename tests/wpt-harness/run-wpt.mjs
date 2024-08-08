@@ -220,7 +220,7 @@ async function run() {
 
     if (config.tests.updateExpectations) {
       console.log(`Expectations updated: ${expectationsUpdated}`);
-    } else if (stats.unexpectedFail + stats.unexpectedPass != 0 || unexpectedFailure) {
+    } else if (stats.unexpectedFail + stats.unexpectedPass + stats.missing != 0 || unexpectedFailure) {
       process.exitCode = 1;
     }
   }
