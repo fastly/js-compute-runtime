@@ -1,9 +1,9 @@
 {
   "Create headers giving an array having one string as init argument": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Create headers giving an array having three strings as init argument": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Create headers giving bad header name as init argument": {
     "status": "FAIL"
