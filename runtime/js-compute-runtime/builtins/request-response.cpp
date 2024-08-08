@@ -10,6 +10,7 @@
 #include "builtins/transform-stream.h"
 #include "core/encode.h"
 #include "core/event_loop.h"
+#include "core/normalize_http_method.h"
 #include "host_interface/host_api.h"
 #include "third_party/picosha2.h"
 
@@ -92,28 +93,6 @@ bool process_body_read(JSContext *cx, int32_t handle, JS::HandleObject context,
   return true;
 }
 
-// https://fetch.spec.whatwg.org/#concept-method-normalize
-// Returns `true` if the method name was normalized, `false` otherwise.
-bool normalize_http_method(char *method) {
-  static const char *names[6] = {"DELETE", "GET", "HEAD", "OPTIONS", "POST", "PUT"};
-
-  for (size_t i = 0; i < 6; i++) {
-    auto name = names[i];
-    if (strcasecmp(method, name) == 0) {
-      if (strcmp(method, name) == 0) {
-        return false;
-      }
-
-      // Note: Safe because `strcasecmp` returning 0 above guarantees
-      // same-length strings.
-      strcpy(method, name);
-      return true;
-    }
-  }
-
-  return false;
-}
-
 struct ReadResult {
   JS::UniqueChars buffer;
   size_t length;
@@ -146,7 +125,8 @@ ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
     auto &chunk = chunks.back();
     buf = std::move(chunk.ptr);
   } else {
-    // If there wasn't exactly one chunk read, we'll need to allocate a buffer to store the results.
+    // If there wasn't exactly one chunk read, we'll need to allocate a buffer to store the
+    // results.
     buf.reset(static_cast<char *>(JS_string_malloc(cx, bytes_read)));
     if (!buf) {
       JS_ReportOutOfMemory(cx);
@@ -1923,7 +1903,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     }
 
     if (method_needs_normalization) {
-      if (normalize_http_method(method.begin())) {
+      if (fastly::common::normalize_http_method(method.begin(), method.len)) {
         // Replace the JS string with the normalized name.
         method_str = JS_NewStringCopyN(cx, method.begin(), method.len);
         if (!method_str) {

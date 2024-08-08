@@ -5,6 +5,7 @@
 #include "builtins/server-info.h"
 #include "builtins/shared/url.h"
 #include "builtins/worker-location.h"
+#include "core/normalize_http_method.h"
 #include "host_interface/host_api.h"
 
 using namespace std::literals::string_view_literals;
@@ -119,6 +120,7 @@ bool FetchEvent::init_downstream_request(JSContext *cx, JS::HandleObject request
   bool is_head = method_str == "HEAD"sv;
 
   if (!is_get) {
+    std::ignore = fastly::common::normalize_http_method(method_str.begin(), method_str.len);
     JS::RootedString method(cx, JS_NewStringCopyN(cx, method_str.ptr.release(), method_str.len));
     if (!method) {
       return false;

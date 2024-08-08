@@ -3,6 +3,7 @@
 #include "../../StarlingMonkey/builtins/web/url.h"
 #include "../../StarlingMonkey/builtins/web/worker-location.h"
 #include "../common/ip_octets_to_js_string.h"
+#include "../common/normalize_http_method.h"
 #include "../host-api/fastly.h"
 #include "../host-api/host_api_fastly.h"
 #include "./fetch/request-response.h"
@@ -495,7 +496,8 @@ bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::Ht
   bool is_head = method_str == "HEAD"sv;
 
   if (!is_get) {
-    JS::RootedString method(cx, JS_NewStringCopyN(cx, method_str.ptr.release(), method_str.len));
+    std::ignore = common::normalize_http_method(method_str.begin(), method_str.size());
+    JS::RootedString method(cx, JS_NewStringCopyN(cx, method_str.begin(), method_str.len));
     if (!method) {
       return false;
     }
