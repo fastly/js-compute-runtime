@@ -141,8 +141,7 @@ bool init_js() {
   JS::RealmOptions options;
   options.creationOptions().setStreamsEnabled(true);
 
-  JS::DisableIncrementalGC(cx);
-  // JS_SetGCParameter(cx, JSGC_MAX_EMPTY_CHUNK_COUNT, 1);
+  JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, false);
 
   RootedObject global(
       cx, JS_NewGlobalObject(cx, &global_class, nullptr, JS::FireOnNewGlobalHook, options));
