@@ -452,7 +452,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
   if (content_type) {
     JS::RootedObject headers(
         cx, &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Headers)).toObject());
-    if (!Headers::set_if_undefined(cx, headers, "content-type", content_type)) {
+    if (!Headers::set_valid_if_undefined(cx, headers, "content-type", content_type)) {
       return false;
     }
   }
@@ -483,10 +483,9 @@ JSObject *Request::headers(JSContext *cx, JS::HandleObject obj) {
   if (!headers) {
     MOZ_ASSERT(is_instance(obj));
     if (is_downstream(obj)) {
-      headers =
-          Headers::create(cx, request_handle(obj).headers(), host_api::HttpHeadersGuard::Request);
+      headers = Headers::create(cx, request_handle(obj).headers(), Headers::HeadersGuard::Request);
     } else {
-      headers = Headers::create(cx, host_api::HttpHeadersGuard::Request);
+      headers = Headers::create(cx, Headers::HeadersGuard::Request);
     }
     if (!headers) {
       return nullptr;
@@ -504,9 +503,9 @@ JSObject *Response::headers(JSContext *cx, JS::HandleObject obj) {
     MOZ_ASSERT(is_instance(obj));
     if (is_upstream(obj)) {
       headers =
-          Headers::create(cx, response_handle(obj).headers(), host_api::HttpHeadersGuard::Response);
+          Headers::create(cx, response_handle(obj).headers(), Headers::HeadersGuard::Response);
     } else {
-      headers = Headers::create(cx, host_api::HttpHeadersGuard::Response);
+      headers = Headers::create(cx, Headers::HeadersGuard::Response);
     }
     if (!headers) {
       return nullptr;
@@ -531,18 +530,8 @@ bool RequestOrResponse::commit_headers(JSContext *cx, HandleObject self) {
   MOZ_ASSERT(headers_mode == Headers::Mode::ContentOnly ||
              headers_mode == Headers::Mode::CachedInContent ||
              headers_mode == Headers::Mode::Uninitialized);
-  RootedObject entries(cx, Headers::get_entries(cx, headers));
-  if (!entries) {
-    return false;
-  }
-  RootedValue iterable(cx);
-  if (!JS::MapEntries(cx, entries, &iterable)) {
-    return false;
-  }
-  JS::ForOfIterator it(cx);
-  if (!it.init(iterable)) {
-    return false;
-  }
+  Headers::HeadersList *list = Headers::get_list(cx, headers);
+  MOZ_ASSERT(list);
 
   using host_api::HostString;
 
@@ -555,38 +544,8 @@ bool RequestOrResponse::commit_headers(JSContext *cx, HandleObject self) {
     headers_handle = Response::response_handle(self).headers_writable();
   }
 
-  RootedValue entry_val(cx);
-  RootedObject entry(cx);
-  RootedValue name_val(cx);
-  RootedString name_str(cx);
-  RootedValue value_val(cx);
-  RootedString value_str(cx);
-  while (true) {
-    bool done;
-    if (!it.next(&entry_val, &done)) {
-      return false;
-    }
-
-    if (done) {
-      break;
-    }
-
-    entry = &entry_val.toObject();
-    JS_GetElement(cx, entry, 0, &name_val);
-    JS_GetElement(cx, entry, 1, &value_val);
-    name_str = name_val.toString();
-    value_str = value_val.toString();
-
-    auto name = core::encode(cx, name_str);
-    if (!name.ptr) {
-      return false;
-    }
-
-    auto value = core::encode(cx, value_str);
-    if (!value.ptr) {
-      return false;
-    }
-
+  for (const auto &tuple : *list) {
+    const auto &[name, value] = tuple;
     auto res = headers_handle->append(std::move(name), std::move(value));
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
@@ -1342,10 +1301,9 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
     return false;
   }
   JS::RootedObject headers_val(cx, headers);
-  JS::RootedValue name_val(cx, JS::StringValue(JS_NewStringCopyN(cx, "fastly-xqd-cache-key", 20)));
   JS::RootedValue value_val(
       cx, JS::StringValue(JS_NewStringCopyN(cx, hex_str.c_str(), hex_str.length())));
-  if (!Headers::append_header_value(cx, headers_val, name_val, value_val,
+  if (!Headers::append_valid_header(cx, headers_val, "fastly-xqd-cache-key", value_val,
                                     "Request.prototype.setCacheKey")) {
     return false;
   }
@@ -2091,9 +2049,9 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   // empty one.
   JS::RootedObject headers(cx);
   if (!headers_val.isUndefined()) {
-    headers = Headers::create(cx, headers_val, host_api::HttpHeadersGuard::Request);
+    headers = Headers::create(cx, headers_val, Headers::HeadersGuard::Request);
   } else {
-    headers = Headers::create(cx, input_headers, host_api::HttpHeadersGuard::Request);
+    headers = Headers::create(cx, input_headers, Headers::HeadersGuard::Request);
   }
 
   if (!headers) {
@@ -2754,11 +2712,11 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
                       JS::StringValue(JS_GetEmptyString(cx)));
   // 6. Let value be parsedURL, serialized and isomorphic encoded.
   // 7. Append (`Location`, value) to responseObject’s response’s header list.
-  JS::RootedObject headers(cx, Headers::create(cx, host_api::HttpHeadersGuard::Response));
+  JS::RootedObject headers(cx, Headers::create(cx, Headers::HeadersGuard::Response));
   if (!headers) {
     return false;
   }
-  if (!Headers::set_if_undefined(cx, headers, "location", url_str.begin())) {
+  if (!Headers::set_valid_if_undefined(cx, headers, "location", url_str.begin())) {
     return false;
   }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::ObjectValue(*headers));
@@ -2901,13 +2859,12 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // If `init`["headers"] `exists`, then `fill` `this`’s `headers` with
   // `init`["headers"].
-  JS::RootedObject headers(cx,
-                           Headers::create(cx, headers_val, host_api::HttpHeadersGuard::Response));
+  JS::RootedObject headers(cx, Headers::create(cx, headers_val, Headers::HeadersGuard::Response));
   if (!headers) {
     return false;
   }
   // 4. Perform initialize a response given responseObject, init, and (body, "application/json").
-  if (!Headers::set_if_undefined(cx, headers, "content-type", "application/json")) {
+  if (!Headers::set_valid_if_undefined(cx, headers, "content-type", "application/json")) {
     return false;
   }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::ObjectValue(*headers));
@@ -3150,20 +3107,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // 7.  If `init`["headers"] `exists`, then `fill` `this`’s `headers` with
   // `init`["headers"].
-<<<<<<< HEAD
-  JS::RootedObject headers(cx);
-  JS::RootedObject headersInstance(
-      cx, JS_NewObjectWithGivenProto(cx, &Headers::class_, Headers::proto_obj));
-  if (!headersInstance) {
-    return false;
-  }
-
-  headers = Headers::create(cx, headersInstance, Headers::Mode::ProxyToResponse, response,
-                            headers_val, false);
-=======
-  JS::RootedObject headers(cx,
-                           Headers::create(cx, headers_val, host_api::HttpHeadersGuard::Response));
->>>>>>> e9594215 (Share StarlingMonkey headers implementation)
+  JS::RootedObject headers(cx, Headers::create(cx, headers_val, Headers::HeadersGuard::Response));
   if (!headers) {
     return false;
   }

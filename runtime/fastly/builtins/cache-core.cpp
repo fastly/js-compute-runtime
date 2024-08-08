@@ -17,6 +17,8 @@ using fastly::fastly::convertBodyInit;
 using fastly::fetch::Request;
 using fastly::fetch::RequestOrResponse;
 
+using builtins::web::fetch::Headers;
+
 namespace fastly::cache_core {
 
 namespace {

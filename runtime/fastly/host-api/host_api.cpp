@@ -277,9 +277,9 @@ struct Chunk {
 };
 
 template <auto header_values_get>
-Result<std::optional<std::vector<HostBytes>>> generic_get_header_values(auto handle,
-                                                                        std::string_view name) {
-  Result<std::optional<std::vector<HostBytes>>> res;
+Result<std::optional<std::vector<HostString>>> generic_get_header_values(auto handle,
+                                                                         std::string_view name) {
+  Result<std::optional<std::vector<HostString>>> res;
 
   fastly::fastly_world_string hdr = string_view_to_world_string(name);
   fastly::fastly_world_option_list_list_u8 ret;
@@ -335,10 +335,10 @@ Result<std::optional<std::vector<HostBytes>>> generic_get_header_values(auto han
   }
 
   if (ret.is_some) {
-    std::vector<HostBytes> names;
+    std::vector<HostString> names;
 
     for (int i = 0; i < ret.val.len; i++) {
-      names.emplace_back(make_host_bytes(ret.val.ptr[i]));
+      names.emplace_back(make_host_string(ret.val.ptr[i]));
     }
 
     // Free the vector of string pointers, but leave the individual strings alone.
@@ -435,33 +435,34 @@ Resource::~Resource() {
 // if it is a request or response.
 class HandleState {
 protected:
-  FastlyHandle handle_;
+  api::FastlyAsyncTask::Handle handle_;
   bool is_req_;
 
 public:
-  explicit HandleState(FastlyHandle handle, bool is_request) {
+  explicit HandleState(api::FastlyAsyncTask::Handle handle, bool is_request) {
     handle_ = handle;
     is_req_ = is_request;
   }
-  FastlyHandle handle() { return handle_; }
+  api::FastlyAsyncTask::Handle handle() { return handle_; }
   bool is_req() { return is_req_; }
   bool valid() const { return true; }
 };
 
-HttpHeaders *HttpHeadersReadOnly::clone(HttpHeadersGuard guard) {
-  return new HttpHeaders(guard, *this);
-}
+HttpHeaders *HttpHeadersReadOnly::clone() { return new HttpHeaders(*this); }
+
+std::vector<string_view> HttpHeaders::get_forbidden_request_headers() { return {}; }
+std::vector<string_view> HttpHeaders::get_forbidden_response_headers() { return {}; }
 
 Result<vector<tuple<HostString, HostString>>> HttpHeadersReadOnly::entries() const {
   Result<vector<tuple<HostString, HostString>>> res;
 
   Result<std::vector<HostString>> names_res;
   if (this->handle_state_.get()->is_req()) {
-    names_res = generic_get_header_names<fastly_compute_at_edge_http_req_header_names_get>(
-        this->handle_state_.get()->handle());
+    names_res =
+        generic_get_header_names<fastly::req_header_names_get>(this->handle_state_.get()->handle());
   } else {
-    names_res = generic_get_header_names<fastly_compute_at_edge_http_req_header_names_get>(
-        this->handle_state_.get()->handle());
+    names_res =
+        generic_get_header_names<fastly::req_header_names_get>(this->handle_state_.get()->handle());
   }
   if (const auto err = names_res.to_err()) {
     return Result<vector<tuple<HostString, HostString>>>::err(*err);
@@ -490,10 +491,10 @@ Result<vector<tuple<HostString, HostString>>> HttpHeadersReadOnly::entries() con
 Result<optional<vector<HostString>>> HttpHeadersReadOnly::get(string_view name) const {
   Result<optional<vector<HostString>>> res;
   if (this->handle_state_.get()->is_req()) {
-    return generic_get_header_values<fastly_compute_at_edge_http_req_header_values_get>(
+    return generic_get_header_values<fastly::req_header_values_get>(
         this->handle_state_.get()->handle(), name);
   } else {
-    return generic_get_header_values<fastly_compute_at_edge_http_resp_header_values_get>(
+    return generic_get_header_values<fastly::req_header_values_get>(
         this->handle_state_.get()->handle(), name);
   }
 }
@@ -506,13 +507,12 @@ Result<bool> HttpHeadersReadOnly::has(string_view name) const {
   return Result<bool>::ok(get_res.unwrap().has_value());
 }
 
-HttpHeaders::HttpHeaders(HttpHeadersGuard guard, std::unique_ptr<HandleState> state)
-    : HttpHeadersReadOnly(std::move(state)), guard_(guard) {}
+HttpHeaders::HttpHeaders(std::unique_ptr<HandleState> state)
+    : HttpHeadersReadOnly(std::move(state)) {}
 
-HttpHeaders::HttpHeaders(HttpHeadersGuard guard) : guard_(guard) { handle_state_ = nullptr; }
+HttpHeaders::HttpHeaders() { handle_state_ = nullptr; }
 
-HttpHeaders::HttpHeaders(HttpHeadersGuard guard, const HttpHeadersReadOnly &headers)
-    : HttpHeadersReadOnly(nullptr), guard_(guard) {
+HttpHeaders::HttpHeaders(const HttpHeadersReadOnly &headers) : HttpHeadersReadOnly(nullptr) {
   auto handle_state =
       new HandleState(headers.handle_state_.get()->handle(), headers.handle_state_.get()->is_req());
   this->handle_state_ = std::unique_ptr<HandleState>(handle_state);
@@ -523,10 +523,6 @@ HttpHeadersReadOnly::HttpHeadersReadOnly() { handle_state_ = nullptr; }
 HttpHeadersReadOnly::HttpHeadersReadOnly(std::unique_ptr<HandleState> state) {
   handle_state_ = std::move(state);
 }
-
-// This can be used to implement guest forbidden headers per
-// https://fetch.spec.whatwg.org/#forbidden-request-header.
-bool HttpHeaders::check_guard(HttpHeadersGuard guard, string_view header_name) { return true; }
 
 // This call corresponds to a state transition in switch_mode from Mode::ContentOnly to
 // Mode::CachedInContent in StarlingMonkey, which occurs when cloning a headers object, which we do
@@ -546,18 +542,17 @@ bool HttpHeaders::check_guard(HttpHeadersGuard guard, string_view header_name) {
 // Instead we use a separate RequestOrResponse::commit_headers() implementation for fetch requests
 // and fetch-event responses, leaving the former Mode::ContentOnly as the cached value to achieve
 // the exact same result.
-Result<HttpHeaders *> HttpHeaders::FromEntries(HttpHeadersGuard guard,
-                                               vector<tuple<HostString, HostString>> &entries) {
+Result<HttpHeaders *> HttpHeaders::FromEntries(vector<tuple<HostString, HostString>> &entries) {
   MOZ_RELEASE_ASSERT(false);
 }
 
 Result<Void> HttpHeaders::remove(string_view name) {
   if (this->handle_state_.get()->is_req()) {
-    return generic_header_remove<fastly_compute_at_edge_http_req_header_remove>(
-        this->handle_state_.get()->handle(), name);
+    return generic_header_remove<fastly::req_header_remove>(this->handle_state_.get()->handle(),
+                                                            name);
   } else {
-    return generic_header_remove<fastly_compute_at_edge_http_resp_header_remove>(
-        this->handle_state_.get()->handle(), name);
+    return generic_header_remove<fastly::resp_header_remove>(this->handle_state_.get()->handle(),
+                                                             name);
   }
 }
 
@@ -565,22 +560,22 @@ Result<Void> HttpHeaders::set(string_view name, string_view value) {
   std::span<uint8_t> value_span = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
                                    value.size()};
   if (this->handle_state_.get()->is_req()) {
-    return generic_header_op<fastly_compute_at_edge_http_req_header_insert>(
-        this->handle_state_.get()->handle(), name, value_span);
+    return generic_header_op<fastly::req_header_insert>(this->handle_state_.get()->handle(), name,
+                                                        value_span);
   } else {
-    return generic_header_op<fastly_compute_at_edge_http_resp_header_insert>(
-        this->handle_state_.get()->handle(), name, value_span);
+    return generic_header_op<fastly::resp_header_insert>(this->handle_state_.get()->handle(), name,
+                                                         value_span);
   }
 }
 Result<Void> HttpHeaders::append(string_view name, string_view value) {
   std::span<uint8_t> value_span = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
                                    value.size()};
   if (this->handle_state_.get()->is_req()) {
-    return generic_header_op<fastly_compute_at_edge_http_req_header_append>(
-        this->handle_state_.get()->handle(), name, value_span);
+    return generic_header_op<fastly::req_header_append>(this->handle_state_.get()->handle(), name,
+                                                        value_span);
   } else {
-    return generic_header_op<fastly_compute_at_edge_http_resp_header_append>(
-        this->handle_state_.get()->handle(), name, value_span);
+    return generic_header_op<fastly::resp_header_append>(this->handle_state_.get()->handle(), name,
+                                                         value_span);
   }
 }
 
@@ -882,8 +877,8 @@ FastlyAsyncTask::Handle HttpBody::async_handle() const {
   return FastlyAsyncTask::Handle{this->handle};
 }
 
-Result<std::optional<Response>> HttpPendingReq::poll() {
-  Result<std::optional<Response>> res;
+FastlyResult<Response, FastlySendError> HttpPendingReq::wait() {
+  FastlyResult<Response, FastlySendError> res;
 
   fastly::fastly_host_http_send_error_detail s;
   std::memset(&s, 0, sizeof(s));
@@ -1401,7 +1396,7 @@ HttpHeadersReadOnly *HttpReq::headers() {
   return new HttpHeadersReadOnly(std::unique_ptr<HandleState>(new HandleState(this->handle, true)));
 }
 
-HttpHeaders *HttpReq::headers_writable() { return headers()->clone(HttpHeadersGuard::Request); }
+HttpHeaders *HttpReq::headers_writable() { return headers()->clone(); }
 
 Result<HttpResp> HttpResp::make() {
   Result<HttpResp> res;
@@ -1493,7 +1488,7 @@ HttpHeadersReadOnly *HttpResp::headers() {
       std::unique_ptr<HandleState>(new HandleState(this->handle, false)));
 }
 
-HttpHeaders *HttpResp::headers_writable() { return headers()->clone(HttpHeadersGuard::Response); }
+HttpHeaders *HttpResp::headers_writable() { return headers()->clone(); }
 
 Result<std::optional<HostBytes>> HttpResp::get_ip() const {
   Result<std::optional<HostBytes>> res;

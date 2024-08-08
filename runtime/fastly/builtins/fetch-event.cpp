@@ -604,11 +604,9 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   JS::RootedObject response_obj(cx, &args[0].toObject());
 
   if (Response::is_upstream(response_obj)) {
-    // For host headers, ensure that all headers are stored client-side, so we retain access to them
-    // after sending the response off.
     JS::RootedObject headers(cx, Response::headers(cx, response_obj));
-    // Calling entries() transitions to Mode::CachedInContent since this is in Mode::HostHeaders.
-    if (!Headers::get_entries(cx, headers))
+    // Calling get_list() transitions to Mode::ContentOnly or Mode::CachedInContent.
+    if (!Headers::get_list(cx, headers))
       return false;
   }
 
