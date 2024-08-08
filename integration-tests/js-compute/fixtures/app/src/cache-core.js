@@ -3786,3 +3786,145 @@ let error;
         });
     }
 }
+
+{
+
+    routes.set("/core-cache/transaction-lookup-transaction-insert-vary-works", async () => {
+        const key = `/core-cache/vary-works-${Date.now()}`
+        const animal = 'animal'
+        let entry = CoreCache.transactionLookup(key, {
+            headers: {
+                [animal]: 'cat'
+            }
+        })
+        let error = assert(entry.state().found(), false, `entry.state().found() === false`)
+        if (error) { return error }
+        let writer = entry.insert({
+            maxAge: 60_000 * 60,
+            vary: [animal],
+            headers: {
+                [animal]: 'cat'
+            }
+        })
+
+        writer.append('cat')
+        writer.close()
+        entry.close()
+        await sleep(1_000);
+
+        entry = CoreCache.transactionLookup(key, {
+            headers: {
+                [animal]: 'cat'
+            }
+        })
+        error = assert(entry.state().found(), true, `entry.state().found() === true`)
+        if (error) { return error }
+
+        error = assert(await streamToString(entry.body()), 'cat', `await streamToString(CoreCache.lookup(key).body())`)
+        if (error) { return error }
+        entry.close()
+
+        entry = CoreCache.transactionLookup(key, {
+            headers: {
+                [animal]: 'dog'
+            }
+        })
+        error = assert(entry.state().found(), false, `entry.state().found() == false`)
+        if (error) { return error }
+
+        writer = entry.insert({
+            maxAge: 60_000 * 60,
+            vary: [animal],
+            headers: {
+                [animal]: 'dog'
+            }
+        })
+
+        writer.append('dog')
+        writer.close()
+        entry.close()
+        await sleep(1_000);
+
+        entry = CoreCache.transactionLookup(key, {
+            headers: {
+                [animal]: 'dog'
+            }
+        })
+        error = assert(entry.state().found(), true, `entry.state().found() === true`)
+        if (error) { return error }
+
+        error = assert(await streamToString(entry.body()), 'dog', `await streamToString(CoreCache.lookup(key).body())`)
+        if (error) { return error }
+        entry.close()
+
+        return pass("ok")
+    });
+
+    routes.set("/core-cache/lookup-insert-vary-works", async () => {
+        const key = `/core-cache/vary-works-${Date.now()}`
+        const animal = 'animal'
+        let entry = CoreCache.lookup(key, {
+            headers: {
+                [animal]: 'cat'
+            }
+        })
+        let error = assert(entry, null, `entry == null`)
+        if (error) { return error }
+        let writer = CoreCache.insert(key, {
+            maxAge: 60_000 * 60,
+            vary: [animal],
+            headers: {
+                [animal]: 'cat'
+            }
+        })
+
+        writer.append('cat')
+        writer.close()
+        await sleep(1_000);
+
+        entry = CoreCache.lookup(key, {
+            headers: {
+                [animal]: 'cat'
+            }
+        })
+        error = assert(entry.state().found(), true, `entry.state().found() === true`)
+        if (error) { return error }
+
+        error = assert(await streamToString(entry.body()), 'cat', `await streamToString(CoreCache.lookup(key).body())`)
+        if (error) { return error }
+        entry.close()
+
+        entry = CoreCache.lookup(key, {
+            headers: {
+                [animal]: 'dog'
+            }
+        })
+        error = assert(entry, null, `entry == null`)
+        if (error) { return error }
+
+        writer = CoreCache.insert(key, {
+            maxAge: 60_000 * 60,
+            vary: [animal],
+            headers: {
+                [animal]: 'dog'
+            }
+        })
+
+        writer.append('dog')
+        writer.close()
+        await sleep(1_000);
+
+        entry = CoreCache.lookup(key, {
+            headers: {
+                [animal]: 'dog'
+            }
+        })
+        error = assert(entry.state().found(), true, `entry.state().found() === true`)
+        if (error) { return error }
+
+        error = assert(await streamToString(entry.body()), 'dog', `await streamToString(CoreCache.lookup(key).body())`)
+        if (error) { return error }
+
+        return pass("ok")
+    });
+}
