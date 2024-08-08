@@ -3,6 +3,7 @@
 #include "builtin.h"
 #include "builtins/native-stream-source.h"
 #include "core/encode.h"
+#include "headers.h"
 #include "host_interface/host_api.h"
 #include "js-compute-builtins.h"
 #include "js/Stream.h"
@@ -12,13 +13,181 @@ namespace builtins {
 
 namespace {
 
+JS::Result<host_api::HttpReq> extractHeadersIntoReq(JSContext *cx, JS::HandleValue headers_val,
+                                                    const char *fun_name) {
+  if (!headers_val.isObject()) {
+    JS_ReportErrorASCII(cx, "headers field must be an object");
+    return JS::Result<host_api::HttpReq>(JS::Error());
+  }
+
+  host_api::Result<host_api::HttpReq> reqres = host_api::HttpReq::make();
+  if (reqres.is_err()) {
+    return JS::Result<host_api::HttpReq>(JS::Error());
+  }
+  host_api::HttpReq req = reqres.unwrap();
+
+  JS::RootedValue key(cx);
+  JS::RootedValue value(cx);
+
+  // First, try consuming args[0] as a sequence<sequence<Value>>.
+  JS::ForOfIterator it(cx);
+  if (!it.init(headers_val, JS::ForOfIterator::AllowNonIterable)) {
+    return JS::Result<host_api::HttpReq>(JS::Error());
+  }
+
+  // Note: this currently doesn't treat strings as iterable even though they
+  // are. We don't have any constructors that want to iterate over strings, and
+  // this makes things a lot easier.
+  if (headers_val.isObject() && it.valueIsIterable()) {
+    JS::RootedValue entry(cx);
+
+    while (true) {
+      bool done;
+      if (!it.next(&entry, &done)) {
+        return JS::Result<host_api::HttpReq>(JS::Error());
+      }
+
+      if (done)
+        break;
+
+      if (!entry.isObject()) {
+        JS_ReportErrorASCII(
+            cx, "Failed to construct Headers object. If defined, the first argument must be either "
+                "a [ ['name', 'value'], ... ] sequence, or a { 'name' : 'value', ... } record.");
+        return JS::Result<host_api::HttpReq>(JS::Error());
+      }
+
+      JS::ForOfIterator entr_iter(cx);
+      if (!entr_iter.init(entry, JS::ForOfIterator::AllowNonIterable)) {
+        return JS::Result<host_api::HttpReq>(JS::Error());
+      }
+
+      if (!entr_iter.valueIsIterable()) {
+        JS_ReportErrorASCII(
+            cx, "Failed to construct Headers object. If defined, the first argument must be either "
+                "a [ ['name', 'value'], ... ] sequence, or a { 'name' : 'value', ... } record.");
+        return JS::Result<host_api::HttpReq>(JS::Error());
+      }
+
+      {
+        bool done;
+
+        // Extract key.
+        if (!entr_iter.next(&key, &done)) {
+          return JS::Result<host_api::HttpReq>(JS::Error());
+        }
+        if (done) {
+          JS_ReportErrorASCII(cx, "Failed to construct Headers object. If defined, the first "
+                                  "argument must be either a [ ['name', 'value'], ... ] "
+                                  "sequence, or a { 'name' : 'value', ... } record.");
+          return JS::Result<host_api::HttpReq>(JS::Error());
+        }
+
+        // Extract value.
+        if (!entr_iter.next(&value, &done)) {
+          return JS::Result<host_api::HttpReq>(JS::Error());
+        }
+        if (done) {
+          JS_ReportErrorASCII(cx, "Failed to construct Headers object. If defined, the first "
+                                  "argument must be either a [ ['name', 'value'], ... ] "
+                                  "sequence, or a { 'name' : 'value', ... } record.");
+          return JS::Result<host_api::HttpReq>(JS::Error());
+        }
+
+        // Ensure that there aren't any further entries.
+        if (!entr_iter.next(&entry, &done)) {
+          return JS::Result<host_api::HttpReq>(JS::Error());
+        }
+        if (!done) {
+          JS_ReportErrorASCII(cx, "Failed to construct Headers object. If defined, the first "
+                                  "argument must be either a [ ['name', 'value'], ... ] "
+                                  "sequence, or a { 'name' : 'value', ... } record.");
+          return JS::Result<host_api::HttpReq>(JS::Error());
+        }
+
+        JS::RootedValue normalized_name(cx, key);
+        auto name_chars = builtins::normalize_header_name(cx, &normalized_name, fun_name);
+        if (!name_chars) {
+          return JS::Result<host_api::HttpReq>(JS::Error());
+        }
+        JS::RootedValue normalized_value(cx, value);
+        auto value_chars = builtins::normalize_header_value(cx, &normalized_value, fun_name);
+        if (!value_chars) {
+          return JS::Result<host_api::HttpReq>(JS::Error());
+        }
+
+        std::string_view name = name_chars;
+        std::string_view value = value_chars;
+        std::span<uint8_t> v = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
+                                value.size()};
+
+        host_api::Result<host_api::Void> result = req.append_header(name, v);
+        if (result.is_err()) {
+          HANDLE_ERROR(cx, *result.to_err());
+          return JS::Result<host_api::HttpReq>(JS::Error());
+        }
+      }
+    }
+  } else if (headers_val.isObject()) {
+    // init isn't an iterator, so if it's an object, it must be a record to be
+    // valid input.
+    JS::RootedObject init(cx, &headers_val.toObject());
+    JS::RootedIdVector ids(cx);
+    if (!js::GetPropertyKeys(cx, init, JSITER_OWNONLY | JSITER_SYMBOLS, &ids)) {
+      return JS::Result<host_api::HttpReq>(JS::Error());
+    }
+
+    JS::RootedId curId(cx);
+    for (size_t i = 0; i < ids.length(); ++i) {
+      curId = ids[i];
+      key = js::IdToValue(curId);
+
+      if (!JS_GetPropertyById(cx, init, curId, &value)) {
+        return JS::Result<host_api::HttpReq>(JS::Error());
+      }
+
+      JS::RootedValue normalized_name(cx, key);
+      auto name_chars = builtins::normalize_header_name(cx, &normalized_name, "");
+      if (!name_chars) {
+        return JS::Result<host_api::HttpReq>(JS::Error());
+      }
+      JS::RootedValue normalized_value(cx, value);
+      auto value_chars = builtins::normalize_header_value(cx, &normalized_value, "");
+      if (!value_chars) {
+        return JS::Result<host_api::HttpReq>(JS::Error());
+      }
+
+      std::string_view name = name_chars;
+      std::string_view value = value_chars;
+      std::span<uint8_t> v = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
+                              value.size()};
+
+      host_api::Result<host_api::Void> result = req.append_header(name, v);
+      if (result.is_err()) {
+        HANDLE_ERROR(cx, *result.to_err());
+        return JS::Result<host_api::HttpReq>(JS::Error());
+      }
+    }
+  } else {
+    JS_ReportErrorASCII(
+        cx, "Failed to construct Headers object. If defined, the first argument must be either a [ "
+            "['name', 'value'], ... ] sequence, or a { 'name' : 'value', ... } record.");
+    return JS::Result<host_api::HttpReq>(JS::Error());
+  }
+  return req;
+}
+
 // The JavaScript LookupOptions parameter we are parsing should have the below interface:
 // interface LookupOptions {
 //   headers?: HeadersInit;
 // }
-JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
-                                                            JS::HandleValue options_val) {
+JS::Result<host_api::CacheLookupOptions>
+parseLookupOptions(JSContext *cx, JS::HandleValue options_val, const char *fun_name) {
   host_api::CacheLookupOptions options;
+  // options parameter is optional
+  // options is meant to be an object with an optional headers field,
+  // the headers field can be:
+  // Headers | string[][] | Record<string, string>;
   if (!options_val.isUndefined()) {
     if (!options_val.isObject()) {
       JS_ReportErrorASCII(cx, "options argument must be an object");
@@ -31,28 +200,12 @@ JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
     }
     // headers property is optional
     if (!headers_val.isUndefined()) {
-      if (!headers_val.isObject()) {
-        JS_ReportErrorASCII(
-            cx, "Failed to construct Headers object. If defined, the first argument must be either "
-                "a [ ['name', 'value'], ... ] sequence, or a { 'name' : 'value', ... } record.");
+      auto reqres = extractHeadersIntoReq(cx, headers_val, fun_name);
+      if (reqres.isErr()) {
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
       }
-      JS::RootedObject request_opts(cx, JS_NewPlainObject(cx));
-      if (!JS_SetProperty(cx, request_opts, "headers", headers_val)) {
-        return JS::Result<host_api::CacheLookupOptions>(JS::Error());
-      }
-      JS::RootedObject requestInstance(cx, Request::create_instance(cx));
-      if (!requestInstance) {
-        return JS::Result<host_api::CacheLookupOptions>(JS::Error());
-      }
-      JS::RootedValue request_opts_val(cx, JS::ObjectValue(*request_opts));
-      // We need to convert the supplied HeadersInit in the `headers` property into a host-backed
-      // Request which contains the same headers Request::create does exactly that
-      // however, it also expects a fully valid URL for the Request. We don't ever use the Request
-      // URL, so we hard-code a valid URL
-      JS::RootedValue input(cx, JS::StringValue(JS_NewStringCopyZ(cx, "http://example.com")));
-      JS::RootedObject request(cx, Request::create(cx, requestInstance, input, request_opts_val));
-      options.request_headers = host_api::HttpReq(Request::request_handle(request));
+      auto req = reqres.unwrap();
+      options.request_headers = req;
     }
   }
   return options;
@@ -295,12 +448,12 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionInsertOptions(JSContext 
   return options;
 }
 
-// The JavaScript TransactionInsertOptions parameter we are parsing should have the below interface:
-// interface InsertOptions extends TransactionInsertOptions {
+// The JavaScript InsertOptions parameter we are parsing should have the below
+// interface: interface InsertOptions extends TransactionInsertOptions {
 //   headers?: HeadersInit,
 // }
-JS::Result<host_api::CacheWriteOptions> parseInsertOptions(JSContext *cx,
-                                                           JS::HandleValue options_val) {
+JS::Result<host_api::CacheWriteOptions>
+parseInsertOptions(JSContext *cx, JS::HandleValue options_val, const char *fun_name) {
   auto options_res = parseTransactionInsertOptions(cx, options_val);
   if (options_res.isErr()) {
     return JS::Result<host_api::CacheWriteOptions>(JS::Error());
@@ -313,29 +466,12 @@ JS::Result<host_api::CacheWriteOptions> parseInsertOptions(JSContext *cx,
   }
   // headers property is optional
   if (!headers_val.isUndefined()) {
-    if (!headers_val.isObject()) {
-      JS_ReportErrorASCII(
-          cx, "Failed to construct Headers object. If defined, the first argument must be either "
-              "a [ ['name', 'value'], ... ] sequence, or a { 'name' : 'value', ... } record.");
+    auto reqres = extractHeadersIntoReq(cx, headers_val, fun_name);
+    if (reqres.isErr()) {
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
-    JS::RootedObject request_opts(cx, JS_NewPlainObject(cx));
-    if (!JS_SetProperty(cx, request_opts, "headers", headers_val)) {
-      return JS::Result<host_api::CacheWriteOptions>(JS::Error());
-    }
-    JS::RootedObject requestInstance(cx, Request::create_instance(cx));
-    if (!requestInstance) {
-      return JS::Result<host_api::CacheWriteOptions>(JS::Error());
-    }
-    JS::RootedValue request_opts_val(cx, JS::ObjectValue(*request_opts));
-    // We need to convert the supplied HeadersInit in the `headers` property into a host-backed
-    // Request which contains the same headers builtins::Request::create does exactly that however,
-    // it also expects a fully valid URL for the Request. We don't ever use the Request URL, so we
-    // hard-code a valid URL
-    JS::RootedValue input(cx, JS::StringValue(JS_NewStringCopyZ(cx, "http://example.com")));
-    JS::RootedObject request(
-        cx, builtins::Request::create(cx, requestInstance, input, request_opts_val));
-    options.request_headers = host_api::HttpReq(builtins::Request::request_handle(request));
+    auto req = reqres.unwrap();
+    options.request_headers = req;
   }
   return options;
 }
@@ -978,7 +1114,7 @@ bool CoreCache::lookup(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto options_result = parseLookupOptions(cx, args.get(1));
+  auto options_result = parseLookupOptions(cx, args.get(1), "CoreCache.lookup");
   if (options_result.isErr()) {
     return false;
   }
@@ -1032,7 +1168,7 @@ bool CoreCache::insert(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto options_res = parseInsertOptions(cx, args.get(1));
+  auto options_res = parseInsertOptions(cx, args.get(1), "CoreCache.insert");
   if (options_res.isErr()) {
     return false;
   }
@@ -1079,7 +1215,7 @@ bool CoreCache::transactionLookup(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto options_result = parseLookupOptions(cx, args.get(1));
+  auto options_result = parseLookupOptions(cx, args.get(1), "CoreCache.transactionLookup");
   if (options_result.isErr()) {
     return false;
   }

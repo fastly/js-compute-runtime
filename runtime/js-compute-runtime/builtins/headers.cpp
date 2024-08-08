@@ -9,36 +9,12 @@
 
 namespace builtins {
 
-namespace {
-
 #define HEADERS_ITERATION_METHOD(argc)                                                             \
   METHOD_HEADER(argc)                                                                              \
   JS::RootedObject backing_map(cx, get_backing_map(self));                                         \
   if (!ensure_all_header_values_from_handle(cx, self, backing_map)) {                              \
     return false;                                                                                  \
   }
-
-const char VALID_NAME_CHARS[128] = {
-    0, 0, 0, 0, 0, 0, 0, 0, //   0
-    0, 0, 0, 0, 0, 0, 0, 0, //   8
-    0, 0, 0, 0, 0, 0, 0, 0, //  16
-    0, 0, 0, 0, 0, 0, 0, 0, //  24
-
-    0, 1, 0, 1, 1, 1, 1, 1, //  32
-    0, 0, 1, 1, 0, 1, 1, 0, //  40
-    1, 1, 1, 1, 1, 1, 1, 1, //  48
-    1, 1, 0, 0, 0, 0, 0, 0, //  56
-
-    0, 1, 1, 1, 1, 1, 1, 1, //  64
-    1, 1, 1, 1, 1, 1, 1, 1, //  72
-    1, 1, 1, 1, 1, 1, 1, 1, //  80
-    1, 1, 1, 0, 0, 0, 1, 1, //  88
-
-    1, 1, 1, 1, 1, 1, 1, 1, //  96
-    1, 1, 1, 1, 1, 1, 1, 1, // 104
-    1, 1, 1, 1, 1, 1, 1, 1, // 112
-    1, 1, 1, 0, 1, 0, 1, 0  // 120
-};
 
 #define NORMALIZE_NAME(name, fun_name)                                                             \
   JS::RootedValue normalized_name(cx, name);                                                       \
@@ -53,29 +29,6 @@ const char VALID_NAME_CHARS[128] = {
   if (!value_chars) {                                                                              \
     return false;                                                                                  \
   }
-
-JSObject *get_backing_map(JSObject *self) {
-  MOZ_ASSERT(Headers::is_instance(self));
-  return &JS::GetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::BackingMap)).toObject();
-}
-
-Headers::Mode get_mode(JSObject *self) {
-  MOZ_ASSERT(Headers::is_instance(self));
-  return static_cast<Headers::Mode>(
-      JS::GetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::Mode)).toInt32());
-}
-
-bool lazy_values(JSObject *self) {
-  MOZ_ASSERT(Headers::is_instance(self));
-  return JS::GetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::HasLazyValues))
-      .toBoolean();
-}
-
-uint32_t get_handle(JSObject *self) {
-  MOZ_ASSERT(Headers::is_instance(self));
-  return static_cast<uint32_t>(
-      JS::GetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::Handle)).toInt32());
-}
 
 /**
  * Validates and normalizes the given header name, by
@@ -209,6 +162,31 @@ host_api::HostString normalize_header_value(JSContext *cx, JS::MutableHandleValu
   value_val.setString(value_str);
 
   return value;
+}
+
+namespace {
+
+JSObject *get_backing_map(JSObject *self) {
+  MOZ_ASSERT(Headers::is_instance(self));
+  return &JS::GetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::BackingMap)).toObject();
+}
+
+Headers::Mode get_mode(JSObject *self) {
+  MOZ_ASSERT(Headers::is_instance(self));
+  return static_cast<Headers::Mode>(
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::Mode)).toInt32());
+}
+
+bool lazy_values(JSObject *self) {
+  MOZ_ASSERT(Headers::is_instance(self));
+  return JS::GetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::HasLazyValues))
+      .toBoolean();
+}
+
+uint32_t get_handle(JSObject *self) {
+  MOZ_ASSERT(Headers::is_instance(self));
+  return static_cast<uint32_t>(
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Headers::Slots::Handle)).toInt32());
 }
 
 JS::PersistentRooted<JSString *> comma;
