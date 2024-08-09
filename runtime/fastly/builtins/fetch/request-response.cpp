@@ -526,10 +526,9 @@ bool RequestOrResponse::commit_headers(JSContext *cx, HandleObject self) {
   if (!headers) {
     return true;
   }
-  Headers::Mode headers_mode = Headers::mode(headers);
-  MOZ_ASSERT(headers_mode == Headers::Mode::ContentOnly ||
-             headers_mode == Headers::Mode::CachedInContent ||
-             headers_mode == Headers::Mode::Uninitialized);
+  MOZ_ASSERT(Headers::mode(headers) == Headers::Mode::ContentOnly ||
+             Headers::mode(headers) == Headers::Mode::CachedInContent ||
+             Headers::mode(headers) == Headers::Mode::Uninitialized);
   Headers::HeadersList *list = Headers::get_list(cx, headers);
   MOZ_ASSERT(list);
 

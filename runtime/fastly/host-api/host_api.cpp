@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <arpa/inet.h>
-#include <list>
 
 #include <time.h>
 
