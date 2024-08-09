@@ -1,8 +1,8 @@
 #include "cache-core.h"
+#include "../../../StarlingMonkey/builtins/web/fetch/headers.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "../host-api/host_api_fastly.h"
-#include "./fetch/headers.h"
 #include "body.h"
 #include "builtin.h"
 #include "fastly.h"
@@ -10,12 +10,14 @@
 #include "js/Stream.h"
 #include <iostream>
 
+using builtins::web::fetch::Headers;
 using builtins::web::streams::NativeStreamSource;
 using fastly::body::FastlyBody;
 using fastly::fastly::convertBodyInit;
-using fastly::fetch::Headers;
 using fastly::fetch::Request;
 using fastly::fetch::RequestOrResponse;
+
+using builtins::web::fetch::Headers;
 
 namespace fastly::cache_core {
 
