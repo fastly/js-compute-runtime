@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.20.0 (2024-08-08)
+
+### Added
+
+* Add new CLI name of `js-compute` which matches the published package name `@fastly/js-compute` ([#869](https://github.com/fastly/js-compute-runtime/issues/869)) ([60d1d20](https://github.com/fastly/js-compute-runtime/commit/60d1d2067d846aa15a76820e666004cf56d1df99))
+
+### Fixed
+
+* core-cache headers case ([#889](https://github.com/fastly/js-compute-runtime/issues/889)) ([3f2db5c](https://github.com/fastly/js-compute-runtime/commit/3f2db5c466151efddf1731c6be080c2a2875a43d))
+* ensure we throw an error if FastlyBody.prototype.read is called with a value which is not coercible to a finite positive integer ([#877](https://github.com/fastly/js-compute-runtime/issues/877)) ([1633e02](https://github.com/fastly/js-compute-runtime/commit/1633e025d92be3a1f8b0616685b48e27dc913841))
+* perf: Use wasm-opt -O3 when making a release build ([#870](https://github.com/fastly/js-compute-runtime/issues/870)) ([dd91fa5](https://github.com/fastly/js-compute-runtime/commit/dd91fa506b74487b70dc5bec510e89de95e1c569))
+* When constructing an EdgeRateLimiter, retrieve the PenaltyBox instance's name using PenaltyBox::get\_name ([#866](https://github.com/fastly/js-compute-runtime/issues/866)) ([9222f1d](https://github.com/fastly/js-compute-runtime/commit/9222f1d16a9c17b080be575affffbb83c461dd81))
+
+### Changed
+
+* only time the fetch event when debug logging is enabled ([#873](https://github.com/fastly/js-compute-runtime/issues/873)) ([e4ddf8a](https://github.com/fastly/js-compute-runtime/commit/e4ddf8ac3c78bea753e8d9418715d1e703e7e7bc))
+* re-order the http methods so the most often requested is first and the least requested is last ([#874](https://github.com/fastly/js-compute-runtime/issues/874)) ([6af7626](https://github.com/fastly/js-compute-runtime/commit/6af7626085af62a14520f14f69a0e64a515fd5ef))
+* Use MOZ\_ASSERT instead of MOZ\_RELEASE\_ASSERT as these methods are already guarded correctly where they are being called ([#876](https://github.com/fastly/js-compute-runtime/issues/876)) ([f089616](https://github.com/fastly/js-compute-runtime/commit/f089616e8febc783cc96363f5ce65fc6f1acafb1))
+
 ## 3.19.0 (2024-07-29)
 
 ### Added
