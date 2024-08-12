@@ -206,6 +206,9 @@
   "Request on bad port 4045 should throw TypeError.": {
     "status": "FAIL"
   },
+  "Request on bad port 4190 should throw TypeError.": {
+    "status": "FAIL"
+  },
   "Request on bad port 5060 should throw TypeError.": {
     "status": "FAIL"
   },
@@ -231,6 +234,9 @@
     "status": "FAIL"
   },
   "Request on bad port 6669 should throw TypeError.": {
+    "status": "FAIL"
+  },
+  "Request on bad port 6679 should throw TypeError.": {
     "status": "FAIL"
   },
   "Request on bad port 6697 should throw TypeError.": {
