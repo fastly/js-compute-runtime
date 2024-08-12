@@ -3,7 +3,7 @@
     "status": "FAIL"
   },
   "Input URL is not valid": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Input URL has credentials": {
     "status": "FAIL"

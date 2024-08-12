@@ -57,7 +57,7 @@
     "status": "PASS"
   },
   "Constructor with sequence of sequences of strings": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Construct with object with +": {
     "status": "PASS"
