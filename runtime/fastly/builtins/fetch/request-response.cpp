@@ -520,8 +520,9 @@ bool RequestOrResponse::commit_headers(JSContext *cx, HandleObject self) {
   }
 
   for (const auto &tuple : *list) {
-    const auto &[name, value] = tuple;
-    auto res = headers_handle->append(std::move(name), std::move(value));
+    const std::string_view name = std::get<0>(tuple);
+    const std::string_view value = std::get<1>(tuple);
+    auto res = headers_handle->append(name, value);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;

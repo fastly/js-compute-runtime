@@ -175,7 +175,7 @@ bool install(api::Engine *engine) {
   if (!Response::init_class(ENGINE->cx(), ENGINE->global())) {
     return false;
   }
-  if (!Headers::init_class(ENGINE->cx(), ENGINE->global())) {
+  if (!builtins::web::fetch::Headers::init_class(ENGINE->cx(), ENGINE->global())) {
     return false;
   }
   return true;

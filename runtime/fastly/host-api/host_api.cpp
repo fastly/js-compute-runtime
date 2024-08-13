@@ -238,9 +238,10 @@ Result<std::vector<HostString>> generic_get_header_names(auto handle) {
                          (str_max + LIST_ALLOC_SIZE) * sizeof(fastly::fastly_world_string)));
         str_max += LIST_ALLOC_SIZE;
       }
-      strs[str_cnt].ptr = static_cast<uint8_t *>(cabi_malloc(i - offset + 1, 1));
-      strs[str_cnt].len = i - offset;
-      memcpy(strs[str_cnt].ptr, buf + offset, i - offset + 1);
+      size_t len = i - offset;
+      strs[str_cnt].ptr = static_cast<uint8_t *>(cabi_malloc(len, 1));
+      strs[str_cnt].len = len;
+      memcpy(strs[str_cnt].ptr, buf + offset, len);
       offset = i + 1;
       str_cnt++;
     }
@@ -486,7 +487,7 @@ Result<vector<tuple<HostString, HostString>>> HttpHeadersReadOnly::entries() con
 
   vector<tuple<HostString, HostString>> entries_vec;
   for (auto &name : names_res.unwrap()) {
-    auto values_res = get(name);
+    auto values_res = HttpHeadersReadOnly::get(name);
     if (auto err = values_res.to_err()) {
       return Result<vector<tuple<HostString, HostString>>>::err(*err);
     }
