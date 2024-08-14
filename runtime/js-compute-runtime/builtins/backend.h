@@ -39,7 +39,6 @@ public:
 
   inline static JS::PersistentRootedObject backends;
 
-  static bool is_cipher_suite_supported_by_fastly(std::string_view cipherSpec);
   static JSString *name(JSContext *cx, JSObject *self);
   static JS::Result<mozilla::Ok> register_dynamic_backend(JSContext *cx, JS::HandleObject request);
   static JSObject *create(JSContext *cx, JS::HandleObject request);
