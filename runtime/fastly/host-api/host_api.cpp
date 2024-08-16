@@ -128,15 +128,15 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
 
   while (true) {
     MOZ_ASSERT(soonest_deadline == 0 || soonest_deadline > now);
-    uint32_t timeout = soonest_deadline > 0 (soonest_deadline - now) / MILLISECS_IN_NANOSECS : 0;
+    uint32_t timeout = soonest_deadline > 0(soonest_deadline - now) / MILLISECS_IN_NANOSECS : 0;
     if (!convert_result(fastly::async_select(handles.data(), handles.size(), timeout, &ret),
                         &err)) {
       if (host_api::error_is_bad_handle(err)) {
-        fprintf(stderr, "Critical Error: A bad handle was provided to async_select.\n");
+        fprintf(stderr, "Critical Error: An invalid handle was provided to async_select.\n");
       } else {
         fprintf(stderr, "Critical Error: An unknown error occurred in async_select.\n");
       }
-      MOZ_ASSERT_UNREACHABLE();
+      abort();
     }
 
     // The result is only valid if the timeout didn't expire.
@@ -153,7 +153,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
           task_idx++;
         }
       }
-      MOZ_ASSERT_UNREACHABLE();
+      abort();
     } else if (soonest_deadline > 0) {
       MOZ_ASSERT(soonest_deadline > now);
       MOZ_ASSERT(soonest_deadline_idx != -1);
@@ -166,7 +166,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
       }
       return soonest_deadline_idx;
     } else {
-      MOZ_ASSERT_UNREACHABLE();
+      abort();
     }
   }
 }
