@@ -961,7 +961,7 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     // certain that if we have a response here, we can advance the FetchState to
     // `responseDone`.
     if (Response::is_instance(body_owner)) {
-      ENGINE->decr_event_loop_interest();
+      ENGINE->exit_event_loop();
       FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
     }
 
@@ -1051,7 +1051,7 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
   // `responseDone` is the right state: `responsedWithError` is for when sending
   // a response at all failed.)
   if (Response::is_instance(body_owner)) {
-    ENGINE->decr_event_loop_interest();
+    ENGINE->exit_event_loop();
     FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
   }
   return true;
@@ -1061,6 +1061,10 @@ bool RequestOrResponse::maybe_stream_body(JSContext *cx, JS::HandleObject body_o
                                           bool *requires_streaming) {
   JS::RootedObject stream(cx, RequestOrResponse::body_stream(body_owner));
   if (!stream) {
+    if (Response::is_instance(body_owner)) {
+      // no need for further work once we've completed the response
+      ENGINE->exit_event_loop();
+    }
     return true;
   }
 
