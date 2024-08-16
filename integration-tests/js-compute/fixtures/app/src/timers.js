@@ -367,9 +367,7 @@ import { routes } from "./routes.js";
         console.error('SECOND')
         error = assert(secondValue.status, 504, 'should get second value timeout')
         if (error) { return error }
-        const pass = pass()
-        console.error('NO MORE TICKS');
-        return pass
+        return pass()
     });
 }
 
