@@ -1,8 +1,0 @@
-{
-  "Clear timeout with clearInterval": {
-    "status": "PASS"
-  },
-  "Clear interval with clearTimeout": {
-    "status": "PASS"
-  }
-}

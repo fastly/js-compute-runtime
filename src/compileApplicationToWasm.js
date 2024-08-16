@@ -8,7 +8,6 @@ import { isFileOrDoesNotExist } from "./isFileOrDoesNotExist.js";
 import wizer from "@bytecodealliance/wizer";
 import weval from "@cfallin/weval";
 import { precompile } from "./precompile.js";
-import { enableTopLevelAwait } from "./enableTopLevelAwait.js";
 import { bundle } from "./bundle.js";
 
 async function getTmpDir () {
@@ -22,7 +21,6 @@ export async function compileApplicationToWasm(
   enableExperimentalHighResolutionTimeMethods = false,
   enablePBL = false,
   enableExperimentalTopLevelAwait = false,
-  starlingMonkey = false,
   enableAOT = false,
   aotCache = '',
 ) {
@@ -108,20 +106,15 @@ export async function compileApplicationToWasm(
     undefined,
     enableExperimentalTopLevelAwait
   );
-  if (enableExperimentalTopLevelAwait && !starlingMonkey) {
-    wizerInput = enableTopLevelAwait(wizerInput);
-  }
 
-  // for StarlingMonkey, we need to write to a tmpdir
-  if (starlingMonkey) {
-    const tmpDir = await getTmpDir();
-    const outPath = resolve(tmpDir, 'input.js');
-    await writeFile(outPath, wizerInput);
-    wizerInput = outPath;
-    cleanup = () => {
-      rmSync(tmpDir, { recursive: true });
-    };
-  }
+  // for StarlingMonkey, we need to write to a tmpdir pending streaming source hooks or similar
+  const tmpDir = await getTmpDir();
+  const outPath = resolve(tmpDir, 'input.js');
+  await writeFile(outPath, wizerInput);
+  wizerInput = outPath;
+  cleanup = () => {
+    rmSync(tmpDir, { recursive: true });
+  };
 
   try {
     if (enableAOT) {
@@ -133,7 +126,7 @@ export async function compileApplicationToWasm(
           "weval",
           ...aotCache ? [`--cache-ro ${aotCache}`] : [],
           "--dir .",
-          ...starlingMonkey ? [`--dir ${dirname(wizerInput)}`] : [],
+          `--dir ${dirname(wizerInput)}`,
           "-w",
           `-i "${wasmEngine}"`,
           `-o "${output}"`,
@@ -162,7 +155,7 @@ export async function compileApplicationToWasm(
           "--inherit-env=true",
           "--allow-wasi",
           "--dir=.",
-          ...starlingMonkey ? [`--dir=${dirname(wizerInput)}`] : [],
+          `--dir=${dirname(wizerInput)}`,
           `--wasm-bulk-memory=true`,
           "-r _start=wizer.resume",
           `-o="${output}"`,
