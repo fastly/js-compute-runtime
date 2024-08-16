@@ -148,7 +148,7 @@ host_api::HostString normalize_header_value(JSContext *cx, JS::MutableHandleValu
   if (!JS::StringHasLatin1Chars(value_str)) {
     bool has_err = false;
     // First ensure string is linear and not a rope or atom.
-    JSLinearString* lstr = JS_EnsureLinearString(cx, value_str);
+    JSLinearString *lstr = JS_EnsureLinearString(cx, value_str);
     if (!lstr) {
       return nullptr;
     }
