@@ -41,106 +41,6 @@ jobs:
     - run: cd documentation && yarn install
     - run: cd documentation && yarn build
 
-  build:
-    name: Build
-    needs: [ensure_cargo_installs]
-    strategy:
-      matrix:
-        profile: [debug, release]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
-
-    - uses: ./.github/actions/cache-crates
-      with:
-        lockfiles: 'runtime/js-compute-runtime/**/Cargo.lock'
-    
-    - name: Restore wasm-tools from cache
-      uses: actions/cache@v3
-      id: wasm-tools
-      with:
-        path: "/home/runner/.cargo/bin/wasm-tools"
-        key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
-    
-    - name: "Check wasm-tools has been restored"
-      if: steps.wasm-tools.outputs.cache-hit != 'true'
-      run: |
-        echo "wasm-tools was not restored from the cache"
-        echo "bailing out from the build early"
-        exit 1
-
-    - uses: ./.github/actions/install-rust
-      with:
-        path: runtime
-
-    - name: gecko-dev hash
-      id: gecko-dev-hash
-      run: cd runtime/spidermonkey/gecko-dev && echo "GECKO_DEV_HASH=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      shell: bash
-        
-
-    - name: Cache SpiderMonkey object files
-      uses: actions/cache@v3
-      id: sm-cache
-      with:
-        path: |
-          runtime/spidermonkey/${{ matrix.profile }}
-        key: cache-${{ hashFiles(
-            'runtime/spidermonkey/build-engine.sh',
-            'runtime/spidermonkey/object-files.list'
-          ) }}-${{ matrix.profile }}-${{ steps.gecko-dev-hash.outputs.GECKO_DEV_HASH }}
-      if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
-
-    - name: "Build SpiderMonkey"
-      if: steps.sm-cache.outputs.cache-hit != 'true'
-      run: |
-        cd runtime/spidermonkey/
-        sudo apt-get update -y
-        bash ./build-engine.sh ${{ matrix.profile }}
-
-    - name: "Install wasi-sdk-20 (linux)"
-      run: |
-        set -x
-        curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
-        tar xf wasi-sdk-20.0-linux.tar.gz
-        sudo mkdir -p /opt/wasi-sdk
-        sudo mv wasi-sdk-20.0/* /opt/wasi-sdk/
-
-    - name: "Install Binaryen (linux)"
-      run: |
-        set -x
-        export BINARYEN_VERSION=105
-        curl -sS -L "https://github.com/WebAssembly/binaryen/releases/download/version_${BINARYEN_VERSION}/binaryen-version_${BINARYEN_VERSION}-x86_64-linux.tar.gz" | tar xzf - &&
-        echo "$PWD/binaryen-version_${BINARYEN_VERSION}/bin" >> $GITHUB_PATH
-
-    - name: Cache built Rust dependencies
-      uses: actions/cache@v3
-      with:
-        path: runtime/js-compute-runtime/rusturl
-        key: engine-cargo-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('runtime/rust-toolchain.toml', 'runtime/js-compute-runtime/**/Cargo.lock') }}
-        # We trust cargo to only reuse valid parts of the cache when dependencies change.
-        restore-keys: engine-cargo-${{ runner.os }}-${{ runner.arch }}-
-      # Out of an abundance of caution, ensure that tagged releases rebuild all
-      # crates from source.
-      if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
-
-    - name: "Build JS runtime (debug)"
-      run: DEBUG=1 OPT_FLAGS="-O1" npm run build
-      if: matrix.profile == 'debug'
-
-    - name: "Build JS runtime (release)"
-      run: npm run build
-      if: matrix.profile == 'release'
-
-    - uses: actions/upload-artifact@v3
-      with:
-        name: engine-${{ matrix.profile }}
-        if-no-files-found: error
-        path: |
-          js-compute-runtime.wasm
-
   ensure_cargo_installs:
     name: Ensure that all required "cargo install" commands are run, or we have a cache hit
     strategy:
@@ -163,129 +63,6 @@ jobs:
     - name: Install ${{ matrix.crate }} ${{ matrix.version }}
       run: cargo install ${{ matrix.crate }} ${{ matrix.options }} --version ${{ matrix.version }}
       if: steps.cache-crate.outputs.cache-hit != 'true'
-
-  run_wpt:
-    concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}-run_wpt-${{matrix.profile}}
-      cancel-in-progress: true
-    if: github.ref != 'refs/heads/main'
-    name: Run Web Platform Tests
-    strategy:
-      matrix:
-        profile: [debug, release]
-    needs: [build, ensure_cargo_installs]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 20
-        cache: 'yarn'
-
-    - name: Download Engine
-      uses: actions/download-artifact@v3
-      with:
-        name: engine-${{ matrix.profile }}
-
-    - name: Restore Viceroy from cache
-      uses: actions/cache@v3
-      with:
-        path: "/home/runner/.cargo/bin/viceroy"
-        key: crate-cache-viceroy-${{ env.viceroy_version }}
-    
-    - name: Restore wasm-tools from cache
-      uses: actions/cache@v3
-      id: wasm-tools
-      with:
-        path: "/home/runner/.cargo/bin/wasm-tools"
-        key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
-    
-    - name: "Check wasm-tools has been restored"
-      if: steps.wasm-tools.outputs.cache-hit != 'true'
-      run: |
-        echo "wasm-tools was not restored from the cache"
-        echo "bailing out from the build early"
-        exit 1
-    
-    - run: yarn install --frozen-lockfile
-
-    - name: Build WPT runtime
-      run: |
-        bash ./tests/wpt-harness/build-wpt-runtime.sh --disable-starlingmonkey
-
-    - name: Prepare WPT hosts
-      run: |
-        cd tests/wpt-harness/wpt
-        ./wpt make-hosts-file | sudo tee -a /etc/hosts
-
-    - name: Run tests
-      timeout-minutes: 20
-      run: |
-        # Skip slow tests when testing the debug runtime.
-        node ./tests/wpt-harness/run-wpt.mjs -vv $(((${{ matrix.profile }} == "debug")) && echo "--skip-slow-tests")
-
-  # Consumes all published artifacts from all the previous build steps, and runs
-  # the integration tests for the linux build.
-  sdktest:
-    concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}-sdktest-${{matrix.profile}}
-      cancel-in-progress: true
-    if: github.ref != 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs: [build, ensure_cargo_installs]
-    strategy:
-      matrix:
-        profile: [debug, release]
-    steps:
-    - name: Checkout fastly/js-compute-runtime
-      uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 20
-        cache: 'yarn'
-
-    - name: Set up Fastly CLI
-      uses: fastly/compute-actions/setup@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        cli_version: ${{ env.fastly-cli_version }}
-
-    - name: Restore Viceroy from cache
-      uses: actions/cache@v3
-      with:
-        path: "/home/runner/.cargo/bin/viceroy"
-        key: crate-cache-viceroy-${{ env.viceroy_version }}
-    
-    - name: Restore wasm-tools from cache
-      uses: actions/cache@v3
-      id: wasm-tools
-      with:
-        path: "/home/runner/.cargo/bin/wasm-tools"
-        key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
-
-    - name: "Check wasm-tools has been restored"
-      if: steps.wasm-tools.outputs.cache-hit != 'true'
-      run: |
-        echo "wasm-tools was not restored from the cache"
-        echo "bailing out from the build early"
-        exit 1
-
-    - name: Download Engine
-      uses: actions/download-artifact@v3
-      with:
-        name: 'engine-${{ matrix.profile }}'
-    - run: yarn install --frozen-lockfile
-
-    - name: js-compute Integration Tests Job
-      timeout-minutes: 20
-      uses: ./.github/actions/compute-sdk-test
-      with:
-        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
-        fastly-cli-version: ${{ env.fastly-cli_version }}
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-
 
   shellcheck:
     concurrency:
@@ -349,7 +126,7 @@ jobs:
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [build, starlingmonkey-build]
+    needs: [build]
     strategy:
       matrix:
         node-version: [18, 20]
@@ -362,35 +139,17 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: engine-release
+        name: fastly-release
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: starling-release
+        name: fastly-debug
     - run: yarn
       shell: bash
     - run: npm test
 
-  e2e:
-    concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}-e2e
-      cancel-in-progress: true
-    if: github.ref != 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: false
-        ref: ${{ github.head_ref || github.ref_name }}
-    - uses: ./.github/actions/e2e
-      with:
-        fastly-api-token: ${{ secrets.FASTLY_API_TOKEN }}
-        fastly-cli-version: ${{ env.fastly-cli_version }}
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-
-  starlingmonkey-build:
-    name: StarlingMonkey Build
+  build:
+    name: Build
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -411,31 +170,31 @@ jobs:
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
     - name: Build
       if: ${{ matrix.profile == 'release' }}
-      run: npm run build:starlingmonkey
+      run: npm run build
     - name: Build
       if: ${{ matrix.profile == 'debug' }}
-      run: npm run build:starlingmonkey:debug
+      run: npm run build:debug
     - name: Build
       if: ${{ matrix.profile == 'weval' }}
-      run: npm run build:starlingmonkey:weval
+      run: npm run build:weval
     - uses: actions/upload-artifact@v3
       with:
         if-no-files-found: error
-        name: starling-${{ matrix.profile }}
-        path: starling${{ matrix.profile == 'debug' && '.debug.wasm' || (matrix.profile == 'weval' && '-weval.wasm' || '.wasm') }}
+        name: fastly-${{ matrix.profile }}
+        path: fastly${{ matrix.profile == 'debug' && '.debug.wasm' || (matrix.profile == 'weval' && '-weval.wasm' || '.wasm') }}
     - uses: actions/upload-artifact@v3
       if: ${{ matrix.profile == 'weval' }}
       with:
-        name: starling-${{ matrix.profile }}-ic-cache
-        path: starling-ics.wevalcache
+        name: fastly-${{ matrix.profile }}-ic-cache
+        path: fastly-ics.wevalcache
 
-  starlingmonkey-run_wpt:
-    concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}-starlingmonkey-run_wpt
-      cancel-in-progress: true
+  run_wpt:
+    strategy:
+      matrix:
+        profile: [debug, release, weval]
     if: github.ref != 'refs/heads/main'
-    name: Run Web Platform Tests (starlingmonkey)
-    needs: [starlingmonkey-build, ensure_cargo_installs]
+    name: Run Web Platform Tests
+    needs: [build, ensure_cargo_installs]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -449,123 +208,13 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: starling-release
+        name: fastly-${{ matrix.profile }}
 
-    - name: Restore Viceroy from cache
-      uses: actions/cache@v3
-      with:
-        path: "/home/runner/.cargo/bin/viceroy"
-        key: crate-cache-viceroy-${{ env.viceroy_version }}
-    
-    - name: Restore wasm-tools from cache
-      uses: actions/cache@v3
-      id: wasm-tools
-      with:
-        path: "/home/runner/.cargo/bin/wasm-tools"
-        key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
-    
-    - name: "Check wasm-tools has been restored"
-      if: steps.wasm-tools.outputs.cache-hit != 'true'
-      run: |
-        echo "wasm-tools was not restored from the cache"
-        echo "bailing out from the build early"
-        exit 1
-    
-    - run: yarn install --frozen-lockfile
-
-    - name: Build WPT runtime
-      run: tests/wpt-harness/build-wpt-runtime.sh
-
-    - name: Prepare WPT hosts
-      run: |
-        cd tests/wpt-harness/wpt
-        ./wpt make-hosts-file | sudo tee -a /etc/hosts
-
-    - name: Run tests
-      timeout-minutes: 20
-      run: node ./tests/wpt-harness/run-wpt.mjs --starlingmonkey -vv
-
-  starlingmonkey-run_wpt-debug:
-    concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}-starlingmonkey-run_wpt-debug
-      cancel-in-progress: true
-    if: github.ref != 'refs/heads/main'
-    name: Run Web Platform Tests (starlingmonkey)
-    needs: [starlingmonkey-build, ensure_cargo_installs]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 20
-        cache: 'yarn'
-
-    - name: Download Engine
-      uses: actions/download-artifact@v3
-      with:
-        name: starling-debug
-
-    - name: Restore Viceroy from cache
-      uses: actions/cache@v3
-      with:
-        path: "/home/runner/.cargo/bin/viceroy"
-        key: crate-cache-viceroy-${{ env.viceroy_version }}
-    
-    - name: Restore wasm-tools from cache
-      uses: actions/cache@v3
-      id: wasm-tools
-      with:
-        path: "/home/runner/.cargo/bin/wasm-tools"
-        key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
-    
-    - name: "Check wasm-tools has been restored"
-      if: steps.wasm-tools.outputs.cache-hit != 'true'
-      run: |
-        echo "wasm-tools was not restored from the cache"
-        echo "bailing out from the build early"
-        exit 1
-    
-    - run: yarn install --frozen-lockfile
-
-    - name: Build WPT runtime
-      run: tests/wpt-harness/build-wpt-runtime.sh --debug-build
-
-    - name: Prepare WPT hosts
-      run: |
-        cd tests/wpt-harness/wpt
-        ./wpt make-hosts-file | sudo tee -a /etc/hosts
-
-    - name: Run tests
-      timeout-minutes: 20
-      run: node ./tests/wpt-harness/run-wpt.mjs --starlingmonkey -vv
-
-  starlingmonkey-run_wpt-weval:
-    concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}-starlingmonkey-run_wpt-weval
-      cancel-in-progress: true
-    if: github.ref != 'refs/heads/main'
-    name: Run Web Platform Tests (starlingmonkey weval)
-    needs: [starlingmonkey-build, ensure_cargo_installs]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 20
-        cache: 'yarn'
-
-    - name: Download Engine
-      uses: actions/download-artifact@v3
-      with:
-        name: starling-weval
     - name: Download Engine Weval Cache
+      if: matrix.profile == 'weval'
       uses: actions/download-artifact@v3
       with:
-        name: starling-weval-ic-cache
+        name: fastly-weval-ic-cache
 
     - name: Restore Viceroy from cache
       uses: actions/cache@v3
@@ -590,7 +239,7 @@ jobs:
     - run: yarn install --frozen-lockfile
 
     - name: Build WPT runtime
-      run: tests/wpt-harness/build-wpt-runtime.sh --enable-experimental-aot
+      run: tests/wpt-harness/build-wpt-runtime.sh ${{matrix.profile == 'weval' && '--enable-experimental-aot' || matrix.profile == 'debug' && '--debug-build' || ''}}
 
     - name: Prepare WPT hosts
       run: |
@@ -599,11 +248,11 @@ jobs:
 
     - name: Run tests
       timeout-minutes: 20
-      run: node ./tests/wpt-harness/run-wpt.mjs --starlingmonkey -vv
+      run: node ./tests/wpt-harness/run-wpt.mjs -vv
 
-  starlingmonkey-sdktest:
+  sdktest:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}-starlingmonkey-sdktest-${{matrix.profile}}-${{matrix.platform}}
+      group: ${{ github.head_ref }}-${{ github.workflow}}-sdktest-${{matrix.profile}}-${{matrix.platform}}
       cancel-in-progress: true
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -616,7 +265,7 @@ jobs:
             profile: release
           - platform: compute
             profile: weval
-    needs: [starlingmonkey-build]
+    needs: [build]
     steps:
     - name: Checkout fastly/js-compute-runtime
       uses: actions/checkout@v3
@@ -656,12 +305,12 @@ jobs:
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
-        name: starling-${{ matrix.profile }}
+        name: fastly-${{ matrix.profile }}
     - name: Download Engine (AOT weval cache)
       uses: actions/download-artifact@v3
       if: ${{ matrix.profile == 'weval'}}
       with:
-        name: starling-${{ matrix.profile }}-ic-cache
+        name: fastly-${{ matrix.profile }}-ic-cache
 
     - run: yarn install --frozen-lockfile
 

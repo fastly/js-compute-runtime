@@ -4,7 +4,6 @@ import { $ as zx } from 'zx'
 import { argv } from 'node:process'
 
 const serviceName = argv[2]
-const starlingmonkey = !argv.slice(2).includes('--disable-starlingmonkey');
 
 const startTime = Date.now();
 
@@ -67,11 +66,11 @@ async function setupKVStore() {
         }
     }())
 
-    const existing = stores.Data.find(({ Name }) => Name === `example-test-kv-store${starlingmonkey ? '-sm' : ''}`);
+    const existing = stores.Data.find(({ Name }) => Name === `example-test-kv-store`);
     // For somereason the StarlingMonkey version of this contains "ID" instead of "StoreID"
     const STORE_ID = existing?.StoreID || existing?.ID;
     if (!STORE_ID) {
-        process.env.STORE_ID = JSON.parse(await zx`fastly kv-store create --quiet --name='example-test-kv-store${starlingmonkey ? '-sm' : ''}' --json --token $FASTLY_API_TOKEN`).id
+        process.env.STORE_ID = JSON.parse(await zx`fastly kv-store create --quiet --name='example-test-kv-store' --json --token $FASTLY_API_TOKEN`).id
     } else {
         process.env.STORE_ID = STORE_ID;
     }

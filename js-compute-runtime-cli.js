@@ -11,7 +11,6 @@ const {
   aotCache,
   enableExperimentalHighResolutionTimeMethods,
   enableExperimentalTopLevelAwait,
-  starlingMonkey,
   wasmEngine,
   input,
   output,
@@ -40,9 +39,8 @@ if (version) {
     enableExperimentalHighResolutionTimeMethods,
     enablePBL,
     enableExperimentalTopLevelAwait,
-    starlingMonkey,
     enableAOT,
     aotCache,
   );
-  await addSdkMetadataField(output, enablePBL, starlingMonkey);
+  await addSdkMetadataField(output, enablePBL);
 }

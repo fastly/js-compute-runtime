@@ -2,12 +2,6 @@
 	path = tests/wpt-harness/wpt
 	url = https://github.com/web-platform-tests/wpt.git
 	shallow = true
-[submodule "runtime/spidermonkey/gecko-dev"]
-	path = runtime/spidermonkey/gecko-dev
-	url = https://github.com/bytecodealliance/gecko-dev.git
-[submodule "runtime/js-compute-runtime/third_party/fmt"]
-	path = runtime/js-compute-runtime/third_party/fmt
-	url = https://github.com/fmtlib/fmt
 [submodule "runtime/StarlingMonkey"]
 	path = runtime/StarlingMonkey
 	url = git@github.com:bytecodealliance/StarlingMonkey
