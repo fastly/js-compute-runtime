@@ -1,7 +1,0 @@
-# clangd state
-/compile_commands.json
-/.cache
-
-!/host_interface/component/fastly_world.o
-/js-compute-runtime*.wasm
-/build

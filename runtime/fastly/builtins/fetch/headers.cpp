@@ -1,6 +1,7 @@
 #include "./headers.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "../../../StarlingMonkey/runtime/sequence.hpp"
+#include "../../common/sequence.hpp"
 #include "../../host-api/host_api_fastly.h"
 #include "../fastly.h"
 #include "./request-response.h"
@@ -144,18 +145,29 @@ host_api::HostString normalize_header_value(JSContext *cx, JS::MutableHandleValu
     return nullptr;
   }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  if (!JS_DeprecatedStringHasLatin1Chars(value_str)) {
-#pragma clang diagnostic pop
-    JS::AutoCheckCannotGC nogc;
-    size_t length;
-    const char16_t *chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, value_str, &length);
-    for (auto i = 0; i < length; i++) {
-      if (chars[i] > 255) {
-        JS_ReportErrorASCII(cx, "header value contains bytes greater than 255");
-        return nullptr;
+  if (!JS::StringHasLatin1Chars(value_str)) {
+    bool has_err = false;
+    // First ensure string is linear and not a rope or atom.
+    JSLinearString *lstr = JS_EnsureLinearString(cx, value_str);
+    if (!lstr) {
+      return nullptr;
+    }
+    {
+      JS::AutoCheckCannotGC nogc;
+      size_t length;
+      const char16_t *chars = JS_GetTwoByteStringCharsAndLength(cx, nogc, value_str, &length);
+      MOZ_ASSERT(chars);
+      for (auto i = 0; i < length; i++) {
+        if (chars[i] > 255) {
+          has_err = true;
+          break;
+        }
       }
+    }
+    // Error must be reported outside of GC guard
+    if (has_err) {
+      JS_ReportErrorASCII(cx, "header value contains bytes greater than 255");
+      return nullptr;
     }
   }
 
@@ -576,8 +588,8 @@ JSObject *Headers::create(JSContext *cx, JS::HandleObject self, Headers::Mode mo
   }
 
   bool consumed = false;
-  if (!core::maybe_consume_sequence_or_record<Headers::append_header_value>(cx, initv, headers,
-                                                                            &consumed, "Headers")) {
+  if (!common::maybe_consume_sequence_or_record<Headers::append_header_value>(
+          cx, initv, headers, &consumed, "Headers")) {
     return nullptr;
   }
 

@@ -1,8 +1,0 @@
-{
-  "Fatal flag, non-streaming cases": {
-    "status": "PASS"
-  },
-  "Fatal flag, streaming cases": {
-    "status": "PASS"
-  }
-}

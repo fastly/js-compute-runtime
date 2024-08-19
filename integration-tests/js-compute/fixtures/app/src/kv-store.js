@@ -1,10 +1,7 @@
 /* globals KVStoreEntry */
 import { pass, assert, assertThrows, assertRejects, assertResolves } from "./assertions.js";
 import { KVStore } from "fastly:kv-store";
-import { sdkVersion } from "fastly:experimental";
 import { routes, isRunningLocally } from "./routes.js";
-
-const starlingmonkey = !sdkVersion.includes('legacy');
 
 // KVStore
 {
@@ -1289,7 +1286,7 @@ async function kvStoreInterfaceTests() {
 }
 
 function createValidStore() {
-    return new KVStore(`example-test-kv-store${starlingmonkey ? '-sm' : ''}`)
+    return new KVStore('example-test-kv-store')
 }
 
 function iteratableToStream(iterable) {

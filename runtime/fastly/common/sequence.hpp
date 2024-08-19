@@ -1,5 +1,5 @@
-#ifndef JS_COMPUTE_RUNTIME_SEQUENCE_HPP
-#define JS_COMPUTE_RUNTIME_SEQUENCE_HPP
+#ifndef FASTLY_SEQUENCE_HPP
+#define FASTLY_SEQUENCE_HPP
 
 // TODO: remove these once the warnings are fixed
 #pragma clang diagnostic push
@@ -9,7 +9,7 @@
 #include "js/ForOfIterator.h"
 #pragma clang diagnostic pop
 
-namespace core {
+namespace fastly::common {
 
 inline bool report_sequence_or_record_arg_error(JSContext *cx, const char *name,
                                                 const char *alt_text) {

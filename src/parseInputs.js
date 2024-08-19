@@ -9,12 +9,11 @@ export async function parseInputs(cliInputs) {
 
   let enableExperimentalHighResolutionTimeMethods = false;
   let enableExperimentalTopLevelAwait = false;
-  let starlingMonkey = true;
   let enablePBL = false;
   let enableAOT = false;
   let customEngineSet = false;
-  let wasmEngine = join(__dirname, "../starling.wasm");
-  let aotCache = join(__dirname, "../starling-ics.wevalcache");
+  let wasmEngine = join(__dirname, "../fastly.wasm");
+  let aotCache = join(__dirname, "../fastly-ics.wevalcache");
   let customInputSet = false;
   let input = join(process.cwd(), "bin/index.js");
   let customOutputSet = false;
@@ -55,8 +54,7 @@ export async function parseInputs(cliInputs) {
         break;
       }
       case "--debug-build": {
-        starlingMonkey = true;
-        wasmEngine = join(__dirname, "../starling.debug.wasm");
+        wasmEngine = join(__dirname, "../fastly.debug.wasm");
         if (!existsSync(wasmEngine)) {
           console.error('Debug builds are not currently available for published releases');
           process.exit(1);
@@ -65,10 +63,8 @@ export async function parseInputs(cliInputs) {
         break;
       }
       case "--disable-starlingmonkey": {
-        starlingMonkey = false;
-        wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
-        console.log('Building with the js-compute-runtime.wasm engine');
-        break;
+        console.error('The legacy js-compute-runtime.wasm engine requires an older version of the JS SDK');
+        process.exit(1);
       }
       case "--engine-wasm": {
         if (customEngineSet) {
@@ -134,13 +130,8 @@ export async function parseInputs(cliInputs) {
     }
   }
 
-  if (!starlingMonkey && enableAOT) {
-    // enableAOT requires StarlingMonkey.
-    console.log("AOT option is not compatible with pre-StarlingMonkey engine; please use StarlingMonkey.");
-    process.exit(1);
-  }
   if (!customEngineSet && enableAOT) {
-      wasmEngine = join(__dirname, "../starling-weval.wasm");
+      wasmEngine = join(__dirname, "../fastly-weval.wasm");
   }
 
   return {
@@ -151,7 +142,6 @@ export async function parseInputs(cliInputs) {
     aotCache,
     input,
     output,
-    starlingMonkey,
     wasmEngine,
   };
 }

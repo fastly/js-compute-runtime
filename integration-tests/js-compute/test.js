@@ -35,7 +35,6 @@ async function sleep(seconds) {
 let args = argv.slice(2);
 
 const local = args.includes('--local');
-const starlingmonkey = !args.includes('--disable-starlingmonkey');
 const aot = args.includes("--aot");
 const debugBuild = args.includes('--debug-build');
 const filter = args.filter(arg => !arg.startsWith('--'));
@@ -60,7 +59,7 @@ zx.verbose = true;
 const branchName = (await zx`git branch --show-current`).stdout.trim().replace(/[^a-zA-Z0-9_-]/g, '_')
 
 const fixture = 'app';
-const serviceName = `${fixture}--${branchName}${starlingmonkey ? '--sm' : ''}${aot ? '--aot' : ''}${process.env.SUFFIX_STRING || ''}`
+const serviceName = `${fixture}--${branchName}${aot ? '--aot' : ''}${process.env.SUFFIX_STRING || ''}`
 let domain;
 const fixturePath = join(__dirname, 'fixtures', fixture)
 let localServer;
@@ -69,11 +68,6 @@ await cd(fixturePath);
 await copyFile(join(fixturePath, 'fastly.toml.in'), join(fixturePath, 'fastly.toml'))
 const config = TOML.parse(await readFile(join(fixturePath, 'fastly.toml'), 'utf-8'))
 config.name = serviceName;
-if (!starlingmonkey) {
-    const buildArgs = config.scripts.build.split(' ')
-    buildArgs.splice(-1, null, '--disable-starlingmonkey')
-    config.scripts.build = buildArgs.join(' ')
-}
 if (aot) {
     const buildArgs = config.scripts.build.split(' ');
     buildArgs.splice(-1, null, '--enable-experimental-aot');
@@ -103,7 +97,7 @@ if (!local) {
     const setupPath = join(fixturePath, 'setup.js')
     if (existsSync(setupPath)) {
         core.startGroup('Extra set-up steps for the service')
-        await zx`node ${setupPath} ${serviceName} ${starlingmonkey ? '' : '--disable-starlingmonkey'}`
+        await zx`node ${setupPath} ${serviceName}`
         await sleep(60)
         core.endGroup()
     }
