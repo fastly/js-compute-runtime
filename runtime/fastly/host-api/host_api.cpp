@@ -118,7 +118,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
 
   // When there are no async tasks, sleep until the deadline
   if (handles.size() == 0) {
-    MOZ_ASSERT(soonest_deadline > 0);
+    MOZ_ASSERT(soonest_deadline > now);
     sleep_until(soonest_deadline, now);
     return soonest_deadline_idx;
   }
@@ -127,13 +127,17 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
   fastly::fastly_host_error err = 0;
 
   while (true) {
-    if (!convert_result(fastly::async_select(handles.data(), handles.size(),
-                                             (soonest_deadline - now) / MILLISECS_IN_NANOSECS,
-                                             &ret),
+    MOZ_ASSERT(soonest_deadline == 0 || soonest_deadline > now);
+    // timeout value of 0 means no timeout for async_select
+    uint32_t timeout = soonest_deadline > 0 ? (soonest_deadline - now) / MILLISECS_IN_NANOSECS : 0;
+    if (!convert_result(fastly::async_select(handles.data(), handles.size(), timeout, &ret),
                         &err)) {
-      if (host_api::error_is_optional_none(err)) {
-        abort();
+      if (host_api::error_is_bad_handle(err)) {
+        fprintf(stderr, "Critical Error: An invalid handle was provided to async_select.\n");
+      } else {
+        fprintf(stderr, "Critical Error: An unknown error occurred in async_select.\n");
       }
+      abort();
     }
 
     // The result is only valid if the timeout didn't expire.
@@ -151,17 +155,19 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
         }
       }
       abort();
-    } else {
-      // No value case means a timeout, which means soonest_deadline_idx is set.
-      MOZ_ASSERT(soonest_deadline > 0);
+    } else if (soonest_deadline > 0) {
+      MOZ_ASSERT(soonest_deadline > now);
       MOZ_ASSERT(soonest_deadline_idx != -1);
       // Verify that the task definitely is ready from a time perspective, and if not loop the host
       // call again.
       now = MonotonicClock::now();
       if (soonest_deadline > now) {
+        err = 0;
         continue;
       }
       return soonest_deadline_idx;
+    } else {
+      abort();
     }
   }
 }

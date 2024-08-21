@@ -4866,6 +4866,16 @@
       "body": ["START\nEND\n"]
     }
   },
+  "GET /setTimeout/fetch-timeout": {
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/setTimeout/fetch-timeout"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
   "GET /clearInterval/exposed-as-global": {
     "environments": ["viceroy", "compute"],
     "downstream_request": {

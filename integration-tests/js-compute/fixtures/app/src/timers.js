@@ -342,6 +342,30 @@ import { routes } from "./routes.js";
             }
         }))
     });
+    routes.set('/setTimeout/fetch-timeout', async () => {
+        let timedOut = false
+        const first = fetch('https://httpbin.org/delay/1', {
+            backend: 'httpbin'
+        })
+        const second = Promise.race([
+            fetch('https://httpbin.org/delay/1', {
+                backend: 'httpbin'
+            }),
+            new Promise(resolve => setTimeout(resolve, 5)).then(() => {
+                timedOut = true
+                return { status: 504, errors: 'timeout' }
+            })
+        ])
+        const firstValue = await first
+        let error = assert(timedOut, true, 'should have timed out')
+        if (error) { return error }
+        error = assert(firstValue.status, 200, 'should get first value')
+        if (error) { return error }
+        const secondValue = await second
+        error = assert(secondValue.status, 504, 'should get second value timeout')
+        if (error) { return error }
+        return pass()
+    });
 }
 
 // clearInterval
