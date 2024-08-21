@@ -352,19 +352,16 @@ import { routes } from "./routes.js";
                 backend: 'httpbin'
             }),
             new Promise(resolve => setTimeout(resolve, 5)).then(() => {
-                console.error('TIMEOUT');
                 timedOut = true
                 return { status: 504, errors: 'timeout' }
             })
         ])
         const firstValue = await first
-        console.error('FIRST')
         let error = assert(timedOut, true, 'should have timed out')
         if (error) { return error }
         error = assert(firstValue.status, 200, 'should get first value')
         if (error) { return error }
         const secondValue = await second
-        console.error('SECOND')
         error = assert(secondValue.status, 504, 'should get second value timeout')
         if (error) { return error }
         return pass()
