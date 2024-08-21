@@ -128,6 +128,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
 
   while (true) {
     MOZ_ASSERT(soonest_deadline == 0 || soonest_deadline > now);
+    // timeout value of 0 means no timeout for async_select
     uint32_t timeout = soonest_deadline > 0 ? (soonest_deadline - now) / MILLISECS_IN_NANOSECS : 0;
     if (!convert_result(fastly::async_select(handles.data(), handles.size(), timeout, &ret),
                         &err)) {
