@@ -260,11 +260,6 @@ jobs:
       matrix:
         platform: [viceroy, compute]
         profile: [debug, release, weval]
-        exclude:
-          - platform: compute
-            profile: release
-          - platform: compute
-            profile: weval
     needs: [build]
     steps:
     - name: Checkout fastly/js-compute-runtime
