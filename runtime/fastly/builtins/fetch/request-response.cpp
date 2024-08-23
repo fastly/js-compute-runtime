@@ -502,9 +502,11 @@ bool RequestOrResponse::commit_headers(JSContext *cx, HandleObject self) {
   if (!headers) {
     return true;
   }
+  if (Headers::mode(headers) == Headers::Mode::Uninitialized) {
+    return true;
+  }
   MOZ_ASSERT(Headers::mode(headers) == Headers::Mode::ContentOnly ||
-             Headers::mode(headers) == Headers::Mode::CachedInContent ||
-             Headers::mode(headers) == Headers::Mode::Uninitialized);
+             Headers::mode(headers) == Headers::Mode::CachedInContent);
   Headers::HeadersList *list = Headers::get_list(cx, headers);
   MOZ_ASSERT(list);
 
@@ -519,14 +521,10 @@ bool RequestOrResponse::commit_headers(JSContext *cx, HandleObject self) {
     headers_handle = Response::response_handle(self).headers_writable();
   }
 
-  for (const auto &tuple : *list) {
-    const std::string_view name = std::get<0>(tuple);
-    const std::string_view value = std::get<1>(tuple);
-    auto res = headers_handle->append(name, value);
-    if (auto *err = res.to_err()) {
-      HANDLE_ERROR(cx, *err);
-      return false;
-    }
+  auto res = host_api::write_headers(headers_handle, list);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
   }
   return true;
 }

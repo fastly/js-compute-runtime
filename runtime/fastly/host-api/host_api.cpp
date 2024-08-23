@@ -570,6 +570,21 @@ Result<HttpHeaders *> HttpHeaders::FromEntries(vector<tuple<HostString, HostStri
   MOZ_RELEASE_ASSERT(false);
 }
 
+// Instead, we use write_headers to write into an existing headers object.
+Result<Void>
+write_headers(HttpHeaders *headers,
+              std::vector<std::tuple<host_api::HostString, host_api::HostString>> *list) {
+  for (const auto &tuple : *list) {
+    const std::string_view name = std::get<0>(tuple);
+    const std::string_view value = std::get<1>(tuple);
+    auto res = headers->append(name, value);
+    if (res.is_err()) {
+      return res;
+    }
+  }
+  return Result<Void>::ok();
+}
+
 Result<Void> HttpHeaders::remove(string_view name) {
   if (this->handle_state_.get()->is_req()) {
     return generic_header_remove<fastly::req_header_remove>(this->handle_state_.get()->handle(),

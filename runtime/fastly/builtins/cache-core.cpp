@@ -54,24 +54,30 @@ JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
                 "a [ ['name', 'value'], ... ] sequence, or a { 'name' : 'value', ... } record.");
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
       }
-      JS::RootedObject request_opts(cx, JS_NewPlainObject(cx));
-      if (!JS_SetProperty(cx, request_opts, "headers", headers_val)) {
+
+      auto request_handle_res = host_api::HttpReq::make();
+      if (auto *err = request_handle_res.to_err()) {
+        HANDLE_ERROR(cx, *err);
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
       }
-      JS::RootedObject requestInstance(cx, Request::create_instance(cx));
-      if (!requestInstance) {
+      auto request_handle = request_handle_res.unwrap();
+
+      JS::RootedObject headers(cx,
+                               Headers::create(cx, headers_val, Headers::HeadersGuard::Request));
+      if (!headers) {
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
       }
-
-      JS::RootedValue request_opts_val(cx, ObjectValue(*request_opts));
-
-      // We need to convert the supplied HeadersInit in the `headers` property into a host-backed
-      // Request which contains the same headers Request::create does exactly that
-      // however, it also expects a fully valid URL for the Request. We don't ever use the Request
-      // URL, so we hard-code a valid URL
-      JS::RootedValue input(cx, JS::StringValue(JS_NewStringCopyZ(cx, "http://example.com")));
-      JS::RootedObject request(cx, Request::create(cx, requestInstance, input, request_opts_val));
-      options.request_headers = host_api::HttpReq(Request::request_handle(request));
+      if (Headers::mode(headers) == Headers::Mode::Uninitialized) {
+        return options;
+      }
+      MOZ_ASSERT(Headers::mode(headers) == Headers::Mode::ContentOnly);
+      Headers::HeadersList *headers_list = Headers::get_list(cx, headers);
+      MOZ_ASSERT(headers_list);
+      auto res = host_api::write_headers(request_handle.headers_writable(), headers_list);
+      if (auto *err = res.to_err()) {
+        return JS::Result<host_api::CacheLookupOptions>(JS::Error());
+      }
+      options.request_headers = host_api::HttpReq(request_handle);
     }
   }
   return options;
@@ -339,23 +345,29 @@ JS::Result<host_api::CacheWriteOptions> parseInsertOptions(JSContext *cx,
               "a [ ['name', 'value'], ... ] sequence, or a { 'name' : 'value', ... } record.");
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
-    JS::RootedObject request_opts(cx, JS_NewPlainObject(cx));
-    if (!JS_SetProperty(cx, request_opts, "headers", headers_val)) {
-      return JS::Result<host_api::CacheWriteOptions>(JS::Error());
-    }
-    JS::RootedObject requestInstance(cx, Request::create_instance(cx));
-    if (!requestInstance) {
-      return JS::Result<host_api::CacheWriteOptions>(JS::Error());
-    }
-    JS::RootedValue request_opts_val(cx, ObjectValue(*request_opts));
 
-    // We need to convert the supplied HeadersInit in the `headers` property into a host-backed
-    // Request which contains the same headers Request::create does exactly that however,
-    // it also expects a fully valid URL for the Request. We don't ever use the Request URL, so we
-    // hard-code a valid URL
-    JS::RootedValue input(cx, JS::StringValue(JS_NewStringCopyZ(cx, "http://example.com")));
-    JS::RootedObject request(cx, Request::create(cx, requestInstance, input, request_opts_val));
-    options.request_headers = host_api::HttpReq(Request::request_handle(request));
+    auto request_handle_res = host_api::HttpReq::make();
+    if (auto *err = request_handle_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return JS::Result<host_api::CacheWriteOptions>(JS::Error());
+    }
+    auto request_handle = request_handle_res.unwrap();
+
+    JS::RootedObject headers(cx, Headers::create(cx, headers_val, Headers::HeadersGuard::Request));
+    if (!headers) {
+      return JS::Result<host_api::CacheWriteOptions>(JS::Error());
+    }
+    if (Headers::mode(headers) == Headers::Mode::Uninitialized) {
+      return options;
+    }
+    MOZ_ASSERT(Headers::mode(headers) == Headers::Mode::ContentOnly);
+    Headers::HeadersList *headers_list = Headers::get_list(cx, headers);
+    MOZ_ASSERT(headers_list);
+    auto res = host_api::write_headers(request_handle.headers_writable(), headers_list);
+    if (auto *err = res.to_err()) {
+      return JS::Result<host_api::CacheWriteOptions>(JS::Error());
+    }
+    options.request_headers = host_api::HttpReq(request_handle);
   }
   return options;
 }
