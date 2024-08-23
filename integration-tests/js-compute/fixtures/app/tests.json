@@ -5274,7 +5274,6 @@
       "body": "ok"
     }
   },
-
   "GET /headers/construct": {
     "environments": ["compute", "viceroy"],
     "downstream_request": {
@@ -5286,6 +5285,42 @@
       "headers": {
         "foo": "bar"
       }
+    }
+  },
+  "GET /headers/from-response/set": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/headers/from-response/set"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": [
+        ["cuStom", "test"]
+      ]
+    }
+  },
+  "GET /headers/from-response/delete-invalid": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/headers/from-response/delete-invalid"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
+  "GET /headers/from-response/set-delete": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/headers/from-response/set-delete"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": [
+        ["cuStom", "test"]
+      ]
     }
   },
 

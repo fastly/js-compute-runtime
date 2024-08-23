@@ -502,15 +502,13 @@ bool RequestOrResponse::commit_headers(JSContext *cx, HandleObject self) {
   if (!headers) {
     return true;
   }
-  if (Headers::mode(headers) == Headers::Mode::Uninitialized) {
+  if (Headers::mode(headers) == Headers::Mode::Uninitialized ||
+      Headers::mode(headers) == Headers::Mode::CachedInContent) {
     return true;
   }
-  MOZ_ASSERT(Headers::mode(headers) == Headers::Mode::ContentOnly ||
-             Headers::mode(headers) == Headers::Mode::CachedInContent);
+  MOZ_ASSERT(Headers::mode(headers) == Headers::Mode::ContentOnly);
   Headers::HeadersList *list = Headers::get_list(cx, headers);
   MOZ_ASSERT(list);
-
-  using host_api::HostString;
 
   // Host headers handle to write into
   host_api::HttpHeaders *headers_handle;

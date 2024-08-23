@@ -380,6 +380,9 @@ Result<Void> generic_header_remove(auto handle, std::string_view name) {
   fastly::fastly_world_string hdr = string_view_to_world_string(name);
   fastly::fastly_host_error err;
   if (!convert_result(remove_header(handle, reinterpret_cast<char *>(hdr.ptr), hdr.len), &err)) {
+    if (host_api::error_is_invalid_argument(err)) {
+      return Result<Void>::ok();
+    }
     res.emplace_err(err);
   }
 
@@ -454,11 +457,7 @@ public:
   bool valid() const { return true; }
 };
 
-// TODO(guybedford): Ensure this actually clones, or ban it entirely.
-HttpHeaders *HttpHeadersReadOnly::clone() {
-  // MOZ_ASSERT_UNREACHABLE();
-  return new HttpHeaders(*this);
-}
+HttpHeaders *HttpHeadersReadOnly::clone() { return new HttpHeaders(*this); }
 
 const std::vector<const char *> forbidden_request_headers = {};
 const std::vector<const char *> forbidden_response_headers = {};

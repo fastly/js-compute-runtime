@@ -61,7 +61,7 @@ const compareHeaders = (configHeaders, wasmModuleHeaders) => {
     }
     else if (wasmModuleHeaderValue !== configHeaderValue) {
       throw new Error(
-        `[Header Value mismatch] Expected: '${configHeaderKey}: ${configHeaderValue}' (${configHeaderValue.length}), got '${configHeaderKey}: ${wasmModuleHeaderValue}' (${wasmModuleHeaderValue.length})`
+        `[Header Value mismatch] Expected: '${configHeaderKey}: ${configHeaderValue}' (${configHeaderValue.length}), got '${configHeaderKey}: ${wasmModuleHeaderValue}' (${wasmModuleHeaderValue?.length})`
       );
     }
   }
