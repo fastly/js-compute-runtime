@@ -215,7 +215,7 @@ async function responseMethod(setManualFramingHeaders) {
         backend: "httpbin",
         cacheOverride: new CacheOverride('pass')
     });
-    // response.setManualFramingHeaders(setManualFramingHeaders);
+    response.setManualFramingHeaders(setManualFramingHeaders);
     response.headers.set("content-length", "11")
     response.headers.delete("transfer-encoding")
     return response;
