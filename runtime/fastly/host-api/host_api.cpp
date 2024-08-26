@@ -222,6 +222,7 @@ Result<std::vector<HostString>> generic_get_header_names(auto handle) {
     if (!convert_result(
             header_names_get(handle, buf, HEADER_MAX_LEN, cursor, &next_cursor, &nwritten), &err)) {
       cabi_free(buf);
+      cabi_free(strs);
       res.emplace_err(err);
       return res;
     }
@@ -803,6 +804,7 @@ Result<HostString> HttpBody::read(uint32_t chunk_size) const {
   if (!convert_result(
           fastly::body_read(this->handle, ret.ptr, static_cast<size_t>(chunk_size), &ret.len),
           &err)) {
+    cabi_free(ret.ptr);
     res.emplace_err(err);
   } else {
     res.emplace(JS::UniqueChars(reinterpret_cast<char *>(ret.ptr)), ret.len);
@@ -1534,10 +1536,10 @@ Result<std::optional<HostBytes>> HttpResp::get_ip() const {
 
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(16, 1));
   if (!convert_result(fastly::resp_ip_get(this->handle, ret.ptr, &ret.len), &err)) {
+    cabi_free(ret.ptr);
     if (error_is_optional_none(err)) {
       res.emplace(std::nullopt);
     } else {
-      cabi_free(ret.ptr);
       res.emplace_err(err);
     }
   } else {
@@ -1690,11 +1692,11 @@ Result<std::optional<HostString>> ConfigStore::get(std::string_view name) {
                                                name_str.len, reinterpret_cast<char *>(ret.ptr),
                                                CONFIG_STORE_ENTRY_MAX_LEN, &ret.len),
                       &err)) {
+    cabi_free(ret.ptr);
     if (error_is_optional_none(err)) {
       res.emplace(std::nullopt);
     } else {
       res.emplace_err(err);
-      cabi_free(ret.ptr);
     }
   } else {
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, CONFIG_STORE_ENTRY_MAX_LEN, 1, ret.len));
@@ -2340,6 +2342,7 @@ Result<HostBytes> CacheHandle::get_user_metadata() {
   }
 
   if (!convert_result(status, &err)) {
+    cabi_free(ret.ptr);
     res.emplace_err(err);
   } else {
     res.emplace(make_host_bytes(ret));
@@ -2762,6 +2765,7 @@ Result<HostString> DeviceDetection::lookup(std::string_view user_agent) {
   }
 
   if (!convert_result(status, &err)) {
+    cabi_free(ret.ptr);
     res.emplace_err(err);
   } else {
     res.emplace(make_host_string(ret));
