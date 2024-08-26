@@ -9,7 +9,7 @@ name = "js-test-app"
 service_id = ""
 
 [scripts]
-  build = "node ../../../../js-compute-runtime-cli.js --enable-pbl --enable-experimental-high-resolution-time-methods src/index.js"
+  build = "node ../../../../js-compute-runtime-cli.js --enable-experimental-high-resolution-time-methods src/index.js"
 
 [local_server]
 

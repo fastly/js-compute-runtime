@@ -6,7 +6,6 @@ import { printHelp } from "./src/printHelp.js";
 import { addSdkMetadataField } from "./src/addSdkMetadataField.js";
 
 const {
-  enablePBL,
   enableAOT,
   aotCache,
   enableExperimentalHighResolutionTimeMethods,
@@ -37,10 +36,9 @@ if (version) {
     output,
     wasmEngine,
     enableExperimentalHighResolutionTimeMethods,
-    enablePBL,
     enableExperimentalTopLevelAwait,
     enableAOT,
     aotCache,
   );
-  await addSdkMetadataField(output, enablePBL);
+  await addSdkMetadataField(output, enableAOT);
 }

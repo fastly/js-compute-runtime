@@ -19,7 +19,6 @@ export async function compileApplicationToWasm(
   output,
   wasmEngine,
   enableExperimentalHighResolutionTimeMethods = false,
-  enablePBL = false,
   enableExperimentalTopLevelAwait = false,
   enableAOT = false,
   aotCache = '',
@@ -139,7 +138,6 @@ export async function compileApplicationToWasm(
           env: {
             ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
               enableExperimentalHighResolutionTimeMethods ? "1" : "0",
-            ENABLE_PBL: enablePBL ? "1" : "0",
             ...process.env,
           },
         }
@@ -169,7 +167,6 @@ export async function compileApplicationToWasm(
           env: {
             ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
               enableExperimentalHighResolutionTimeMethods ? "1" : "0",
-            ENABLE_PBL: enablePBL ? "1" : "0",
             ...process.env,
           },
         }
