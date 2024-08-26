@@ -2,7 +2,6 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, isAbsolute } from "node:path";
 import { unknownArgument } from "./unknownArgument.js";
 import { tooManyEngines } from "./tooManyEngines.js";
-import { existsSync } from "node:fs";
 
 export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -50,10 +49,6 @@ export async function parseInputs(cliInputs) {
       }
       case "--debug-build": {
         wasmEngine = join(__dirname, "../fastly.debug.wasm");
-        if (!existsSync(wasmEngine)) {
-          console.error('Debug builds are not currently available for published releases');
-          process.exit(1);
-        }
         console.log('Building with the debug engine');
         break;
       }
@@ -126,7 +121,7 @@ export async function parseInputs(cliInputs) {
   }
 
   if (!customEngineSet && enableAOT) {
-      wasmEngine = join(__dirname, "../fastly-weval.wasm");
+    wasmEngine = join(__dirname, "../fastly-weval.wasm");
   }
 
   return {

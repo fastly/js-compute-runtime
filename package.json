@@ -17,6 +17,7 @@
     "types",
     "js-compute-runtime-cli.js",
     "fastly.wasm",
+    "fastly.debug.wasm",
     "fastly-weval.wasm",
     "starling-ics.wevalcache",
     "src",
@@ -24,9 +25,6 @@
     "package.json",
     "README.md",
     "CHANGELOG.md"
-  ],
-  "ignore": [
-    "starling.debug.wasm"
   ],
   "scripts": {
     "test": "npm run test:types && npm run test:cli",
