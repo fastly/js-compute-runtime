@@ -1,8 +1,8 @@
 #include "fetch.h"
+#include "../../../StarlingMonkey/builtins/web/fetch/headers.h"
 #include "../backend.h"
 #include "../fastly.h"
 #include "../fetch-event.h"
-#include "./headers.h"
 #include "./request-response.h"
 #include "encode.h"
 #include "extension-api.h"
@@ -71,6 +71,10 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   RootedObject request(cx, Request::create(cx, requestInstance, args[0], args.get(1)));
   if (!request) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  if (!RequestOrResponse::commit_headers(cx, request)) {
+    return false;
   }
 
   RootedString backend(cx, Request::backend(request));
@@ -171,7 +175,7 @@ bool install(api::Engine *engine) {
   if (!Response::init_class(ENGINE->cx(), ENGINE->global())) {
     return false;
   }
-  if (!Headers::init_class(ENGINE->cx(), ENGINE->global())) {
+  if (!builtins::web::fetch::Headers::init_class(ENGINE->cx(), ENGINE->global())) {
     return false;
   }
   return true;

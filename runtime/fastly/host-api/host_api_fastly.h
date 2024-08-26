@@ -154,6 +154,10 @@ using fastly::fetch::Request;
 
 namespace host_api {
 
+Result<Void>
+write_headers(HttpHeaders *headers,
+              std::vector<std::tuple<host_api::HostString, host_api::HostString>> &list);
+
 JSString *get_geo_info(JSContext *cx, JS::HandleString address_str);
 
 bool error_is_generic(APIError e);
@@ -320,12 +324,8 @@ public:
   /// Get the http version used for this request.
   virtual Result<HttpVersion> get_version() const = 0;
 
-  virtual Result<std::vector<HostString>> get_header_names() = 0;
-  virtual Result<std::optional<std::vector<HostBytes>>>
-  get_header_values(std::string_view name) = 0;
-  virtual Result<Void> insert_header(std::string_view name, std::span<uint8_t> value) = 0;
-  virtual Result<Void> append_header(std::string_view name, std::span<uint8_t> value) = 0;
-  virtual Result<Void> remove_header(std::string_view name) = 0;
+  virtual HttpHeadersReadOnly *headers() = 0;
+  virtual HttpHeaders *headers_writable() = 0;
 };
 
 struct TlsVersion {
@@ -450,11 +450,8 @@ public:
 
   Result<HttpVersion> get_version() const override;
 
-  Result<std::vector<HostString>> get_header_names() override;
-  Result<std::optional<std::vector<HostBytes>>> get_header_values(std::string_view name) override;
-  Result<Void> insert_header(std::string_view name, std::span<uint8_t> value) override;
-  Result<Void> append_header(std::string_view name, std::span<uint8_t> value) override;
-  Result<Void> remove_header(std::string_view name) override;
+  HttpHeadersReadOnly *headers() override;
+  HttpHeaders *headers_writable() override;
 };
 
 class HttpResp final : public HttpBase {
@@ -491,11 +488,8 @@ public:
   /// Get the port associated with the response
   Result<std::optional<uint16_t>> get_port() const;
 
-  Result<std::vector<HostString>> get_header_names() override;
-  Result<std::optional<std::vector<HostBytes>>> get_header_values(std::string_view name) override;
-  Result<Void> insert_header(std::string_view name, std::span<uint8_t> value) override;
-  Result<Void> append_header(std::string_view name, std::span<uint8_t> value) override;
-  Result<Void> remove_header(std::string_view name) override;
+  HttpHeadersReadOnly *headers() override;
+  HttpHeaders *headers_writable() override;
 };
 
 /// The pair of a response and its body.

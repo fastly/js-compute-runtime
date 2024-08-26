@@ -1,4 +1,4 @@
-#include "headers.h"
+#include "../../../StarlingMonkey/builtins/web/fetch/headers.h"
 #include "request-response.h"
 
 namespace fastly::fetch {
