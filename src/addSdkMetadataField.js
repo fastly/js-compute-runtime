@@ -4,15 +4,15 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export async function addSdkMetadataField(wasmPath, usingPBL) {
+export async function addSdkMetadataField(wasmPath, usingAOT) {
   const packageJson = await readFile(join(__dirname, "../package.json"), {
     encoding: "utf-8",
   });
 
   let { name, version } = JSON.parse(packageJson);
 
-  if (usingPBL) {
-    name += ' (StarlingMonkey with PBL)'
+  if (usingAOT) {
+    name += ' (StarlingMonkey with Weval)'
   } else {
     name += ' (StarlingMonkey)'
   }

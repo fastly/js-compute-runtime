@@ -9,7 +9,6 @@ export async function parseInputs(cliInputs) {
 
   let enableExperimentalHighResolutionTimeMethods = false;
   let enableExperimentalTopLevelAwait = false;
-  let enablePBL = false;
   let enableAOT = false;
   let customEngineSet = false;
   let wasmEngine = join(__dirname, "../fastly.wasm");
@@ -32,10 +31,6 @@ export async function parseInputs(cliInputs) {
       }
       case "--enable-experimental-top-level-await": {
         enableExperimentalTopLevelAwait = true;
-        break;
-      }
-      case "--enable-pbl": {
-        enablePBL = true;
         break;
       }
       case "--enable-experimental-aot": {
@@ -137,7 +132,6 @@ export async function parseInputs(cliInputs) {
   return {
     enableExperimentalHighResolutionTimeMethods,
     enableExperimentalTopLevelAwait,
-    enablePBL,
     enableAOT,
     aotCache,
     input,
