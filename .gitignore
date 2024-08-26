@@ -5,23 +5,17 @@
 
 /runtime/fastly/build-*/
 
-/compute-js/
 node_modules/
 .DS_Store
-/dist
-# *.o
-# *.d
-/rusturl/
 # compiler_flags
 /fastly-weval.wasm
 /fastly.debug.wasm
 /fastly.wasm
-/runtime/js-compute-runtime/obj
+/fastly-ics.wevalcache
 tests/wpt-harness/wpt-test-runner.js
 wpt-runtime.wasm
 docs-app/bin/main.wasm
 docs-app/pkg/*.tar.gz
 
-*.a
 yarn-error.log
 .vscode
