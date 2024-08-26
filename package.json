@@ -27,7 +27,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "test": "npm run test:types && npm run test:cli && npm run test:integration -- --local && npm run test:integration",
+    "test": "npm run test:types && npm run test:cli",
     "test:cli": "brittle --bail integration-tests/cli/**.test.js",
     "test:integration": "node ./integration-tests/js-compute/test.js",
     "test:wpt": "tests/wpt-harness/build-wpt-runtime.sh && node ./tests/wpt-harness/run-wpt.mjs -vv",
