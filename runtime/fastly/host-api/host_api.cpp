@@ -573,9 +573,7 @@ Result<HttpHeaders *> HttpHeaders::FromEntries(vector<tuple<HostString, HostStri
 Result<Void>
 write_headers(HttpHeaders *headers,
               std::vector<std::tuple<host_api::HostString, host_api::HostString>> *list) {
-  for (const auto &tuple : *list) {
-    const std::string_view name = std::get<0>(tuple);
-    const std::string_view value = std::get<1>(tuple);
+  for (const auto &[name, value] : *list) {
     auto res = headers->append(name, value);
     if (res.is_err()) {
       return res;
