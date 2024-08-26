@@ -1,6 +1,7 @@
 /* eslint-env serviceworker */
 import { pass, assert, assertDoesNotThrow, assertThrows } from "./assertions.js";
 import { routes } from "./routes.js";
+import { CacheOverride } from "fastly:cache-override";
 
 // setInterval
 {
@@ -345,11 +346,13 @@ import { routes } from "./routes.js";
     routes.set('/setTimeout/fetch-timeout', async () => {
         let timedOut = false
         const first = fetch('https://httpbin.org/delay/1', {
-            backend: 'httpbin'
+            backend: 'httpbin',
+            cacheOverride: new CacheOverride('pass')
         })
         const second = Promise.race([
             fetch('https://httpbin.org/delay/1', {
-                backend: 'httpbin'
+                backend: 'httpbin',
+                cacheOverride: new CacheOverride('pass')
             }),
             new Promise(resolve => setTimeout(resolve, 5)).then(() => {
                 timedOut = true
