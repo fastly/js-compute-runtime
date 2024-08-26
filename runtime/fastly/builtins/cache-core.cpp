@@ -73,7 +73,7 @@ JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
       MOZ_ASSERT(Headers::mode(headers) == Headers::Mode::ContentOnly);
       Headers::HeadersList *headers_list = Headers::get_list(cx, headers);
       MOZ_ASSERT(headers_list);
-      auto res = host_api::write_headers(request_handle.headers_writable(), headers_list);
+      auto res = host_api::write_headers(request_handle.headers_writable(), *headers_list);
       if (auto *err = res.to_err()) {
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
       }
@@ -363,7 +363,7 @@ JS::Result<host_api::CacheWriteOptions> parseInsertOptions(JSContext *cx,
     MOZ_ASSERT(Headers::mode(headers) == Headers::Mode::ContentOnly);
     Headers::HeadersList *headers_list = Headers::get_list(cx, headers);
     MOZ_ASSERT(headers_list);
-    auto res = host_api::write_headers(request_handle.headers_writable(), headers_list);
+    auto res = host_api::write_headers(request_handle.headers_writable(), *headers_list);
     if (auto *err = res.to_err()) {
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }

@@ -519,7 +519,7 @@ bool RequestOrResponse::commit_headers(JSContext *cx, HandleObject self) {
     headers_handle = Response::response_handle(self).headers_writable();
   }
 
-  auto res = host_api::write_headers(headers_handle, list);
+  auto res = host_api::write_headers(headers_handle, *list);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;

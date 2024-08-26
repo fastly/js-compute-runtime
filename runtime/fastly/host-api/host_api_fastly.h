@@ -156,7 +156,7 @@ namespace host_api {
 
 Result<Void>
 write_headers(HttpHeaders *headers,
-              std::vector<std::tuple<host_api::HostString, host_api::HostString>> *list);
+              std::vector<std::tuple<host_api::HostString, host_api::HostString>> &list);
 
 JSString *get_geo_info(JSContext *cx, JS::HandleString address_str);
 
