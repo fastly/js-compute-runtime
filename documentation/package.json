@@ -12,9 +12,9 @@
   },
   "devDependencies": {
     "@cmfcmf/docusaurus-search-local": "1.1.0",
-    "@docusaurus/core": "^3.4.0",
-    "@docusaurus/module-type-aliases": "^3.4.0",
-    "@docusaurus/preset-classic": "^3.4.0",
+    "@docusaurus/core": "^3.5.2",
+    "@docusaurus/module-type-aliases": "^3.5.2",
+    "@docusaurus/preset-classic": "^3.5.2",
     "@mdx-js/react": "^3.0.1",
     "@swc/core": "^1.6.13",
     "clsx": "^2.1.1",
