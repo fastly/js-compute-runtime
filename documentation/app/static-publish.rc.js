@@ -10,7 +10,7 @@
 const config = {
   rootDir: "../build",
   staticContentRootDir: "./static-publisher",
-  kvStoreName: "js-docs-site",
+  kvStoreName: "site",
   contentCompression: [], // For this config value, default is [] if kvStoreName is null.
   server: {
     publicDirPrefix: "",
