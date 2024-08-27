@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.21.1](https://github.com/fastly/js-compute-runtime/compare/v3.21.0...v3.21.1) (2024-08-27)
+
+
+### Bug Fixes
+
+* missing publish file, parallel publish build ([#912](https://github.com/fastly/js-compute-runtime/issues/912)) ([91ae54c](https://github.com/fastly/js-compute-runtime/commit/91ae54cbbd92d83fa9c1896df006b1008a5f8291))
+
 ## [3.21.0](https://github.com/fastly/js-compute-runtime/compare/v3.20.0...v3.21.0) (2024-08-27)
 
 
