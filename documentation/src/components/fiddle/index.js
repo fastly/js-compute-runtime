@@ -5,6 +5,12 @@ function hexString(buffer) {
 }
 
 function compat(data) {
+    let deps = {}
+    if (data.src.deps) {
+        deps = JSON.parse(data.src.deps)
+    }
+    deps["@fastly/js-compute"] = "^3";
+    data.src.deps = JSON.stringify(deps);
     if (!('requests' in data) || ('reqUrl' in data)) {
         const {
             reqUrl, reqMethod, reqHeaders, reqBody, purgeFirst, enableCluster, enableShield, useH2, requests, ...retainedProps
