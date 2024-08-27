@@ -43,7 +43,7 @@ In this example we have a create a logger named `"splunk"` and logs the incoming
     "https://http-me.glitch.me"
   ],
   "src": {
-    "deps": "{}",
+    "deps": "{\n  \"@fastly/js-compute\": \"^3\"\n}",
     "main": `
 /// <reference types="@fastly/js-compute" />
 import { Logger } from "fastly:logger";

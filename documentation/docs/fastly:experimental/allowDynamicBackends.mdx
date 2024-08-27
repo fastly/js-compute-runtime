@@ -47,7 +47,7 @@ or
 
 ## Examples
 
-In this example an implicit Dynamic Backend is created when making the fetch request to [https://www.fastly.com](https://www.fastly.com) and the response is then returned to the client.
+In this example an implicit Dynamic Backend is created when making the fetch request to <https://www.fastly.com/> and the response is then returned to the client.
 
 <Fiddle config={{
   "type": "javascript",
@@ -56,7 +56,7 @@ In this example an implicit Dynamic Backend is created when making the fetch req
     "https://http-me.glitch.me"
   ],
   "src": {
-    "deps": "{}",
+    "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",
     "main": `
 /// <reference types="@fastly/js-compute" />
 import { allowDynamicBackends } from "fastly:experimental";

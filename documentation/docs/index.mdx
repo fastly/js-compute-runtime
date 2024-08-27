@@ -51,7 +51,7 @@ JavaScript code compiled for Fastly Compute has access to a global environment w
     "https://http-me.glitch.me"
   ],
   "src": {
-    "deps": "{}",
+    "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",
     "main": `
 /// <reference types="@fastly/js-compute" />
 async function app(event) {

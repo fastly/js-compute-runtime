@@ -42,7 +42,7 @@ The following example logs the string value of a [Backend](../Backend.mdx) objec
     "https://http-me.glitch.me"
   ],
   "src": {
-    "deps": "{}",
+    "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",
     "main": `
 /// <reference types=\"@fastly/js-compute\" />
 import { Backend } from "fastly:backend";
