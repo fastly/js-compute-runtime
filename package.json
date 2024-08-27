@@ -19,7 +19,7 @@
     "fastly.wasm",
     "fastly.debug.wasm",
     "fastly-weval.wasm",
-    "starling-ics.wevalcache",
+    "fastly-ics.wevalcache",
     "src",
     "index.d.ts",
     "package.json",
