@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.21.0](https://github.com/fastly/js-compute-runtime/compare/v3.20.0...v3.21.0) (2024-08-27)
+
+
+### Features
+
+* ship --debug-build CLI flag as public ([#907](https://github.com/fastly/js-compute-runtime/issues/907)) ([2728141](https://github.com/fastly/js-compute-runtime/commit/27281413db682f5e2e87928937456bc1b8345dd7))
+* support getSetCookie on new StarlingMonkey headers implementation ([#844](https://github.com/fastly/js-compute-runtime/issues/844)) ([c102521](https://github.com/fastly/js-compute-runtime/commit/c1025210a591fc99fae9c3b921504a6189552a74))
+
 ## 3.20.0 (2024-08-08)
 
 ### Added
