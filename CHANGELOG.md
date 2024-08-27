@@ -1,16 +1,20 @@
 # Changelog
 
-## [3.21.1](https://github.com/fastly/js-compute-runtime/compare/v3.21.0...v3.21.1) (2024-08-27)
+## 3.21.2 (2024-08-27)
 
+### Fixed
 
-### Bug Fixes
+* revert documentation website refactoring ([#915](https://github.com/fastly/js-compute-runtime/issues/915)) ([ba1eb66](https://github.com/fastly/js-compute-runtime/commit/ba1eb667cb136c6cdd09938e397ee5cf334561d7))
+
+## 3.21.1 (2024-08-27)
+
+### Fixed
 
 * missing publish file, parallel publish build ([#912](https://github.com/fastly/js-compute-runtime/issues/912)) ([91ae54c](https://github.com/fastly/js-compute-runtime/commit/91ae54cbbd92d83fa9c1896df006b1008a5f8291))
 
-## [3.21.0](https://github.com/fastly/js-compute-runtime/compare/v3.20.0...v3.21.0) (2024-08-27)
+## 3.21.0 (2024-08-27)
 
-
-### Features
+### Added
 
 * ship --debug-build CLI flag as public ([#907](https://github.com/fastly/js-compute-runtime/issues/907)) ([2728141](https://github.com/fastly/js-compute-runtime/commit/27281413db682f5e2e87928937456bc1b8345dd7))
 * support getSetCookie on new StarlingMonkey headers implementation ([#844](https://github.com/fastly/js-compute-runtime/issues/844)) ([c102521](https://github.com/fastly/js-compute-runtime/commit/c1025210a591fc99fae9c3b921504a6189552a74))
