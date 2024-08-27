@@ -51,7 +51,7 @@ jobs:
       
       - run: yarn install --mode=update-lockfile
         working-directory: ./documentation/app
-      - run: npm run build
+      - run: npm run build:files
         working-directory: ./documentation/app
 
       - run: yarn && npm run format-changelog

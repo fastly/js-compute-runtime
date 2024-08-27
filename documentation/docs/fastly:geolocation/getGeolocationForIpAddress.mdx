@@ -107,7 +107,7 @@ In this example we return the geolocation details for the provided ip querystrin
     "https://http-me.glitch.me"
   ],
   "src": {
-    "deps": "{}",
+    "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",
     "main": `
 /// <reference types="@fastly/js-compute" />
 import { getGeolocationForIpAddress } from "fastly:geolocation"

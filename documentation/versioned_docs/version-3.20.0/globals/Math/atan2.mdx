@@ -46,6 +46,6 @@ The `Math.atan2()` method measures the counterclockwise angle θ, in radians, be
 | `-Infinity`          | < 0         | -π                 | 0                  |
 | -0                   | < 0         | -π / 2             | π / 2              |
 
-In addition, for points in the second and third quadrants (`x < 0`), `Math.atan2()` would output an angle less than <math><semantics><mrow><mo>-</mo><mfrac><mi>π</mi><mn>2</mn></mfrac></mrow></semantics></math>.
+In addition, for points in the second and third quadrants (`x < 0`), `Math.atan2()` would output an angle less than <math><semantics><mrow><mo>-</mo><mfrac><mi>π</mi><mn>2</mn></mfrac></mrow><annotation encoding="TeX">-\frac{\pi}{2}</annotation></semantics></math> or greater than <math><semantics><mfrac><mi>π</mi><mn>2</mn></mfrac><annotation encoding="TeX">\frac{\pi}{2}</annotation></semantics></math>.
 
 Because `atan2()` is a static method of `Math`, you always use it as `Math.atan2()`, rather than as a method of a `Math` object you created (`Math` is not a constructor).
