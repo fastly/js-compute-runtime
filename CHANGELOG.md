@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.21.2](https://github.com/fastly/js-compute-runtime/compare/v3.21.1...v3.21.2) (2024-08-27)
+
+
+### Bug Fixes
+
+* revert documentation website refactoring ([#915](https://github.com/fastly/js-compute-runtime/issues/915)) ([ba1eb66](https://github.com/fastly/js-compute-runtime/commit/ba1eb667cb136c6cdd09938e397ee5cf334561d7))
+
 ## [3.21.1](https://github.com/fastly/js-compute-runtime/compare/v3.21.0...v3.21.1) (2024-08-27)
 
 
