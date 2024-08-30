@@ -16,8 +16,6 @@ host_api::ConfigStore ConfigStore::config_store_handle(JSObject *obj) {
 bool ConfigStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
-  MOZ_RELEASE_ASSERT(false);
-
   auto key = core::encode(cx, args[0]);
   // If the converted string has a length of 0 then we throw an Error
   // because config-store keys have to be at-least 1 character.
