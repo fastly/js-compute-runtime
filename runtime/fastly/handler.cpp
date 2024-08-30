@@ -64,15 +64,16 @@ void handle_incoming(host_api::Request req) {
     ENGINE->dump_pending_exception("evaluating code");
   } else if (!success) {
     if (ENGINE->has_pending_async_tasks()) {
-      fprintf(stderr, "Event loop terminated with async tasks pending. "
+      fprintf(stderr, "Warning: JS event loop terminated with async tasks pending. "
                       "Use FetchEvent#waitUntil to extend the service's lifetime "
                       "if needed.\n");
+    } else {
+      fprintf(stderr, "Warning: JS event loop terminated without completing the request.\n");
     }
-    abort();
   }
 
   if (ENGINE->debug_logging_enabled() && ENGINE->has_pending_async_tasks()) {
-    fprintf(stderr, "Event loop terminated with async tasks pending. "
+    fprintf(stderr, "Warming: JS event loop terminated with async tasks pending. "
                     "Use FetchEvent#waitUntil to extend the service's lifetime "
                     "if needed.\n");
     return;

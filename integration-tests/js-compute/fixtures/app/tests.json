@@ -4539,6 +4539,17 @@
       "status": 200
     }
   },
+  "GET /response/stall": {
+    "body_streaming": "first-chunk-only",
+    "environments": ["viceroy", "compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/response/stall"
+    },
+    "downstream_response": {
+      "status": 200
+    }
+  },
   "GET /response/text/guest-backed-stream": {
     "environments": ["viceroy", "compute"],
     "downstream_request": {
