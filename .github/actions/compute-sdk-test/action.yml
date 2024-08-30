@@ -27,9 +27,6 @@ runs:
       uses: actions/download-artifact@v3
       with:
         name: engine-release
-    - run: yarn
-      shell: bash
-    - run: cd ./integration-tests/js-compute && yarn
-      shell: bash
+    - run: npm install
+    - run: cd ./integration-tests/js-compute && npm install
     - run: cd ./integration-tests/js-compute && ./test.js --disable-starlingmonkey --local
-      shell: bash
