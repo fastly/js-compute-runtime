@@ -39,7 +39,7 @@ jobs:
       with:
         node-version: 'lts/*'
     - run: cd documentation && npm install
-    - run: cd documentation && npm build
+    - run: cd documentation && npm run build
 
   ensure_cargo_installs:
     name: Ensure that all required "cargo install" commands are run, or we have a cache hit
