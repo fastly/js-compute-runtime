@@ -4540,7 +4540,7 @@
     }
   },
   "GET /response/stall": {
-    "body_streaming": "first-chunk-only",
+    "body_streaming": "none",
     "environments": ["viceroy", "compute"],
     "downstream_request": {
       "method": "GET",
