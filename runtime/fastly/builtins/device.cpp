@@ -64,7 +64,7 @@ JSObject *deviceToJSON(JSContext *cx, JS::HandleObject self) {
     return nullptr;
   }
 
-  if (!JS_GetProperty(cx, device_info_obj, "hardwareType", &value)) {
+  if (!JS_GetProperty(cx, device_info_obj, "hwtype", &value)) {
     return nullptr;
   }
   MOZ_ASSERT(value.isString() || value.isNullOrUndefined());
@@ -75,7 +75,7 @@ JSObject *deviceToJSON(JSContext *cx, JS::HandleObject self) {
     return nullptr;
   }
 
-  if (!JS_GetProperty(cx, device_info_obj, "isDesktop", &value)) {
+  if (!JS_GetProperty(cx, device_info_obj, "is_desktop", &value)) {
     return nullptr;
   }
   MOZ_ASSERT(value.isBoolean() || value.isNullOrUndefined());
@@ -86,7 +86,7 @@ JSObject *deviceToJSON(JSContext *cx, JS::HandleObject self) {
     return nullptr;
   }
 
-  if (!JS_GetProperty(cx, device_info_obj, "isGameConsole", &value)) {
+  if (!JS_GetProperty(cx, device_info_obj, "is_gameconsole", &value)) {
     return nullptr;
   }
   MOZ_ASSERT(value.isBoolean() || value.isNullOrUndefined());
@@ -97,7 +97,7 @@ JSObject *deviceToJSON(JSContext *cx, JS::HandleObject self) {
     return nullptr;
   }
 
-  if (!JS_GetProperty(cx, device_info_obj, "isMediaPlayer", &value)) {
+  if (!JS_GetProperty(cx, device_info_obj, "is_mediaplayer", &value)) {
     return nullptr;
   }
   MOZ_ASSERT(value.isBoolean() || value.isNullOrUndefined());
@@ -108,7 +108,7 @@ JSObject *deviceToJSON(JSContext *cx, JS::HandleObject self) {
     return nullptr;
   }
 
-  if (!JS_GetProperty(cx, device_info_obj, "isMobile", &value)) {
+  if (!JS_GetProperty(cx, device_info_obj, "is_mobile", &value)) {
     return nullptr;
   }
   MOZ_ASSERT(value.isBoolean() || value.isNullOrUndefined());
@@ -119,7 +119,7 @@ JSObject *deviceToJSON(JSContext *cx, JS::HandleObject self) {
     return nullptr;
   }
 
-  if (!JS_GetProperty(cx, device_info_obj, "isSmartTV", &value)) {
+  if (!JS_GetProperty(cx, device_info_obj, "is_smarttv", &value)) {
     return nullptr;
   }
   MOZ_ASSERT(value.isBoolean() || value.isNullOrUndefined());
@@ -130,7 +130,7 @@ JSObject *deviceToJSON(JSContext *cx, JS::HandleObject self) {
     return nullptr;
   }
 
-  if (!JS_GetProperty(cx, device_info_obj, "isTablet", &value)) {
+  if (!JS_GetProperty(cx, device_info_obj, "is_tablet", &value)) {
     return nullptr;
   }
   MOZ_ASSERT(value.isBoolean() || value.isNullOrUndefined());
@@ -141,7 +141,7 @@ JSObject *deviceToJSON(JSContext *cx, JS::HandleObject self) {
     return nullptr;
   }
 
-  if (!JS_GetProperty(cx, device_info_obj, "isTouchscreen", &value)) {
+  if (!JS_GetProperty(cx, device_info_obj, "is_touchscreen", &value)) {
     return nullptr;
   }
   MOZ_ASSERT(value.isBoolean() || value.isNullOrUndefined());

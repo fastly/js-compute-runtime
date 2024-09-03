@@ -8725,6 +8725,17 @@
       "body": "ok"
     }
   },
+  "GET /device/lookup/useragent-exists-all-fields-identified-tojson": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/device/lookup/useragent-exists-all-fields-identified-tojson"
+    },
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
   "GET /device/lookup/useragent-exists-some-fields-identified": {
     "environments": ["viceroy"],
     "downstream_request": {
