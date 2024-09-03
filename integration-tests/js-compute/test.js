@@ -186,6 +186,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                         break;
                       }
                     case "none":
+                      response.body.on('error', () => {});
                       break;
                     case "full":
                     default:
@@ -203,7 +204,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                 }),
               ]);
               clearTimeout(downstreamTimeout);
-              compareDownstreamResponse(
+              await compareDownstreamResponse(
                 test.downstream_response,
                 response,
                 bodyChunks

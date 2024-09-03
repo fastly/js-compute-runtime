@@ -12,7 +12,7 @@ import compareHeaders from './compare-headers.js';
     }} configResponse
  * @param {import('undici').Dispatcher.ResponseData} actualResponse
  */
-export function compareDownstreamResponse (configResponse, actualResponse, actualBodyChunks) {
+export async function compareDownstreamResponse (configResponse, actualResponse, actualBodyChunks) {
   let errors = [];
   // Status
   if (configResponse.status != actualResponse.statusCode) {
