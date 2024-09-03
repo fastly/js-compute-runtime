@@ -12,7 +12,7 @@ import compareHeaders from './compare-headers.js';
     }} configResponse
  * @param {import('undici').Dispatcher.ResponseData} actualResponse
  */
-export async function compareDownstreamResponse (configResponse, actualResponse) {
+export async function compareDownstreamResponse (configResponse, actualResponse, actualBodyChunks) {
   let errors = [];
   // Status
   if (configResponse.status != actualResponse.statusCode) {
@@ -33,13 +33,8 @@ export async function compareDownstreamResponse (configResponse, actualResponse)
     // Check if we need to stream the response and check the chunks, or the whole body
     if (configResponse.body instanceof Array) {
       // Stream down the response
-      let downstreamBody = actualResponse.body;
       let chunkNumber = 0;
-      const downstreamTimeout = setTimeout(() => {
-        console.error(`[DownstreamResponse: Body Chunk Timeout]`);
-        process.exit(1);
-      }, 30 * 1000);
-      for await (const chunk of downstreamBody) {
+      for (const chunk of actualBodyChunks) {
         const chunkString = chunk.toString('utf8');
 
         // Check if the chunk is equal to what we expected
@@ -53,14 +48,12 @@ export async function compareDownstreamResponse (configResponse, actualResponse)
         }
       }
 
-      clearTimeout(downstreamTimeout);
-
       if (chunkNumber !== configResponse.body.length) {
         errors.push(new Error(`[DownstreamResponse: Body Chunk mismatch] Expected: ${configResponse.body} - Got: (Incomplete stream, Number of chunks returned: ${chunkNumber})`));
       }
     } else {
       // Get the text, and check if it matches the test
-      let downstreamBodyText = await actualResponse.body.text();
+      const downstreamBodyText = Buffer.concat(actualBodyChunks.map(chunk => Buffer.from(chunk))).toString('utf8');
 
       if (downstreamBodyText !== configResponse.body) {
         errors.push(new Error(`[DownstreamResponse: Body mismatch] Expected: ${configResponse.body} - Got: ${downstreamBodyText}`));

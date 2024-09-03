@@ -5,8 +5,6 @@ import { allowDynamicBackends } from "fastly:experimental";
 import { pass, assert, assertDoesNotThrow, assertThrows, assertRejects, assertResolves } from "./assertions.js";
 import { isRunningLocally, routes } from "./routes.js";
 
-/// The backend name is already in use.
-
 routes.set("/backend/timeout", async () => {
   if (isRunningLocally()) {
     return pass('ok')
