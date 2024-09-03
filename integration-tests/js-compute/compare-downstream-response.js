@@ -16,7 +16,11 @@ export async function compareDownstreamResponse (configResponse, actualResponse)
   let errors = [];
   // Status
   if (configResponse.status != actualResponse.statusCode) {
-    errors.push(new Error(`[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.statusCode}`));
+    let bodySummary = '';
+    try {
+      bodySummary = (await actualResponse.body.text()).slice(0, 1000);
+    } catch {}
+    errors.push(new Error(`[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.statusCode}\n${bodySummary}`));
   }
 
   // Headers
@@ -26,7 +30,6 @@ export async function compareDownstreamResponse (configResponse, actualResponse)
 
   // Body
   if (configResponse.body) {
-
     // Check if we need to stream the response and check the chunks, or the whole body
     if (configResponse.body instanceof Array) {
       // Stream down the response
