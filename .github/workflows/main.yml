@@ -139,11 +139,11 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'yarn'
     - name: Download Engine
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4.1.7
       with:
         name: fastly-release
     - name: Download Engine
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4.1.7
       with:
         name: fastly-debug
     - run: yarn
@@ -208,13 +208,13 @@ jobs:
         cache: 'yarn'
 
     - name: Download Engine
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4.1.7
       with:
         name: fastly-${{ matrix.profile }}
 
     - name: Download Engine Weval Cache
       if: matrix.profile == 'weval'
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4.1.7
       with:
         name: fastly-weval-ic-cache
 
@@ -300,11 +300,11 @@ jobs:
       run: echo "Unable to restore from the cache, bailing." && exit 1
 
     - name: Download Engine
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4.1.7
       with:
         name: fastly-${{ matrix.profile }}
     - name: Download Engine (AOT weval cache)
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4.1.7
       if: ${{ matrix.profile == 'weval'}}
       with:
         name: fastly-${{ matrix.profile }}-ic-cache

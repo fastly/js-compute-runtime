@@ -132,22 +132,22 @@ jobs:
       - run: yarn install --immutable
 
       - name: Download Engine Release
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: fastly-release
 
       - name: Download Engine Debug
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: fastly-debug
 
       - name: Download Engine Weval
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: fastly-weval
 
       - name: Download Engine Weval Cache
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: fastly-weval-ic-cache
 
