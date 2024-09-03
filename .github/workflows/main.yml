@@ -238,7 +238,7 @@ jobs:
 
   sdktest:
     concurrency:
-      group: ${{ github.head_ref }}-${{ github.workflow}}-sdktest-${{matrix.profile}}-${{matrix.platform}}
+      group: ${{ github.head_ref }}--sdktest-${{matrix.platform == 'compute' && matrix.profile || ''}}-${{matrix.platform}}
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     strategy:
