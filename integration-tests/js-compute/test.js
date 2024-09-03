@@ -163,6 +163,42 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
             skipped: true,
           };
         }
+        async function getBodyChunks (response) {
+          const bodyChunks = [];
+          let downstreamTimeout;
+          await Promise.race([
+            (async () => {
+              // This body_streaming property allows us to test different cases
+              // of consumer streamining behaviours.
+              switch (test.body_streaming) {
+                case "first-chunk-only":
+                  for await (const chunk of response.body) {
+                    bodyChunks.push(chunk);
+                    response.body.on('error', () => {});
+                    break;
+                  }
+                  break;
+                case "none":
+                  response.body.on('error', () => {});
+                  break;
+                case "full":
+                default:
+                  for await (const chunk of response.body) {
+                    bodyChunks.push(chunk);
+                  }
+              }
+            })(),
+            new Promise((_, reject) => {
+              downstreamTimeout = setTimeout(() => {
+                reject(
+                  new Error(`Test downstream response body chunk timeout`)
+                );
+              }, 30_000);
+            }),
+          ]);
+          clearTimeout(downstreamTimeout);
+          return bodyChunks;
+        }
         if (local) {
           if (test.environments.includes("viceroy")) {
             let path = test.downstream_request.pathname;
@@ -173,37 +209,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                 headers: test.downstream_request.headers || undefined,
                 body: test.downstream_request.body || undefined,
               });
-              const bodyChunks = [];
-              let downstreamTimeout;
-              await Promise.race([
-                (async () => {
-                  // This body_streaming property allows us to test different cases
-                  // of consumer streamining behaviours.
-                  switch (test.body_streaming) {
-                    case "first-chunk-only":
-                      for await (const chunk of response.body) {
-                        bodyChunks.push(chunk);
-                        break;
-                      }
-                    case "none":
-                      response.body.on('error', () => {});
-                      break;
-                    case "full":
-                    default:
-                      for await (const chunk of response.body) {
-                        bodyChunks.push(chunk);
-                      }
-                  }
-                })(),
-                new Promise((_, reject) => {
-                  downstreamTimeout = setTimeout(() => {
-                    reject(
-                      new Error(`Test downstream response body chunk timeout`)
-                    );
-                  }, 30_000);
-                }),
-              ]);
-              clearTimeout(downstreamTimeout);
+              const bodyChunks = await getBodyChunks(response);
               await compareDownstreamResponse(
                 test.downstream_response,
                 response,
@@ -230,15 +236,16 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
               let path = test.downstream_request.pathname;
               let url = `${domain}${path}`;
               try {
-                let response = await request(url, {
+                const response = await request(url, {
                   method: test.downstream_request.method || "GET",
                   headers: test.downstream_request.headers || undefined,
                   body: test.downstream_request.body || undefined,
                 });
-
+                const bodyChunks = await getBodyChunks(response);
                 await compareDownstreamResponse(
                   test.downstream_response,
-                  response
+                  response,
+                  bodyChunks
                 );
                 return {
                   title,
