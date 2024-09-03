@@ -20,8 +20,7 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 'lts/*'
-        cache: 'yarn'
-    - run: yarn install --immutable
+    - run: npm ci
     - run: npm run format-changelog
 
   check-docusaurus:
@@ -32,9 +31,8 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 'lts/*'
-        cache: 'yarn'
-    - run: cd documentation && yarn install
-    - run: cd documentation && yarn build
+    - run: cd documentation && npm install
+    - run: cd documentation && npm run build
 
   ensure_cargo_installs:
     name: Ensure that all required "cargo install" commands are run, or we have a cache hit
@@ -121,7 +119,6 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'yarn'
     - name: Download Engine
       uses: actions/download-artifact@v3
       with:
@@ -130,8 +127,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: fastly-debug
-    - run: yarn
-      shell: bash
+    - run: npm install
     - run: npm test
 
   build:
@@ -189,7 +185,6 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 'lts/*'
-        cache: 'yarn'
 
     - name: Download Engine
       uses: actions/download-artifact@v3
@@ -222,7 +217,7 @@ jobs:
         echo "bailing out from the build early"
         exit 1
     
-    - run: yarn install --frozen-lockfile
+    - run: npm install
 
     - name: Build WPT runtime
       run: tests/wpt-harness/build-wpt-runtime.sh ${{matrix.profile == 'weval' && '--enable-experimental-aot' || matrix.profile == 'debug' && '--debug-build' || ''}}
@@ -256,7 +251,6 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 'lts/*'
-        cache: 'yarn'
 
     - name: Set up Fastly CLI
       uses: fastly/compute-actions/setup@v4
@@ -293,10 +287,10 @@ jobs:
       with:
         name: fastly-${{ matrix.profile }}-ic-cache
 
-    - run: yarn install --frozen-lockfile
+    - run: npm install
 
-    - name: Yarn install
-      run: yarn && cd ./integration-tests/js-compute && yarn
+    - name: Npm install
+      run: npm install && cd ./integration-tests/js-compute && npm install
 
     - run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }} ${{ matrix.profile == 'debug' && '--debug-build' || '' }}
       env:
