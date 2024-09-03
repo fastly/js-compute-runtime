@@ -74,7 +74,12 @@ async function app(event) {
             res = fail(`${path} endpoint does not exist`)
         }
     } catch (error) {
-        res = fail(`The routeHandler for ${path} threw an error: ${error.message || error}` + '\n' + error.stack)
+        if (error instanceof Response) {
+            res = error;
+        }
+        else {
+            res = fail(`The routeHandler for ${path} threw an error: ${error.message || error}` + '\n' + error.stack)
+        }
     } finally {
         res.headers.set('fastly_service_version', FASTLY_SERVICE_VERSION);
     }
