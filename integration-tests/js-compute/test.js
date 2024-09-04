@@ -47,14 +47,14 @@ if (!local && process.env.FASTLY_API_TOKEN === undefined) {
   try {
     zx.verbose = false;
     process.env.FASTLY_API_TOKEN = String(
-      await zx`fastly profile token --quiet`
+      await zx`fastly profile token --quiet`,
     ).trim();
   } catch {
     console.error(
-      "No environment variable named FASTLY_API_TOKEN has been set and no default fastly profile exists."
+      "No environment variable named FASTLY_API_TOKEN has been set and no default fastly profile exists.",
     );
     console.error(
-      "In order to run the tests, either create a fastly profile using `fastly profile create` or export a fastly token under the name FASTLY_API_TOKEN"
+      "In order to run the tests, either create a fastly profile using `fastly profile create` or export a fastly token under the name FASTLY_API_TOKEN",
     );
     process.exit(1);
   }
@@ -75,10 +75,10 @@ let localServer;
 await cd(fixturePath);
 await copyFile(
   join(fixturePath, "fastly.toml.in"),
-  join(fixturePath, "fastly.toml")
+  join(fixturePath, "fastly.toml"),
 );
 const config = TOML.parse(
-  await readFile(join(fixturePath, "fastly.toml"), "utf-8")
+  await readFile(join(fixturePath, "fastly.toml"), "utf-8"),
 );
 config.name = serviceName;
 if (aot) {
@@ -94,7 +94,7 @@ if (debugBuild) {
 await writeFile(
   join(fixturePath, "fastly.toml"),
   TOML.stringify(config),
-  "utf-8"
+  "utf-8",
 );
 if (!local) {
   core.startGroup("Delete service if already exists");
@@ -131,7 +131,7 @@ await retry(10, expBackoff("60s", "30s"), async () => {
   const response = await request(domain);
   if (response.statusCode !== 200) {
     throw new Error(
-      `Application "${fixture}" :: Not yet available on domain: ${domain}`
+      `Application "${fixture}" :: Not yet available on domain: ${domain}`,
     );
   }
 });
@@ -163,7 +163,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
             skipped: true,
           };
         }
-        async function getBodyChunks (response) {
+        async function getBodyChunks(response) {
           const bodyChunks = [];
           let downstreamTimeout;
           await Promise.race([
@@ -174,12 +174,12 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                 case "first-chunk-only":
                   for await (const chunk of response.body) {
                     bodyChunks.push(chunk);
-                    response.body.on('error', () => {});
+                    response.body.on("error", () => {});
                     break;
                   }
                   break;
                 case "none":
-                  response.body.on('error', () => {});
+                  response.body.on("error", () => {});
                   break;
                 case "full":
                 default:
@@ -191,7 +191,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
             new Promise((_, reject) => {
               downstreamTimeout = setTimeout(() => {
                 reject(
-                  new Error(`Test downstream response body chunk timeout`)
+                  new Error(`Test downstream response body chunk timeout`),
                 );
               }, 30_000);
             }),
@@ -213,7 +213,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
               await compareDownstreamResponse(
                 test.downstream_response,
                 response,
-                bodyChunks
+                bodyChunks,
               );
               return {
                 title,
@@ -245,7 +245,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                 await compareDownstreamResponse(
                   test.downstream_response,
                   response,
-                  bodyChunks
+                  bodyChunks,
                 );
                 return {
                   title,
@@ -264,8 +264,8 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
             };
           }
         }
-      })
-    ))
+      }),
+    )),
   );
 }
 core.endGroup();
@@ -292,7 +292,7 @@ for (const result of results) {
           white,
           info,
           `Skipped as test marked to only run on Fastly Compute: ${result.value.title}`,
-          reset
+          reset,
         );
       } else if (
         !local &&
@@ -302,14 +302,14 @@ for (const result of results) {
           white,
           info,
           `Skipped as test marked to only run on local server: ${result.value.title}`,
-          reset
+          reset,
         );
       } else {
         console.log(
           white,
           info,
           `Skipped due to no environments set: ${result.value.title}`,
-          reset
+          reset,
         );
       }
     } else {
@@ -355,7 +355,7 @@ if (!local && !failed.length) {
 }
 if (process.exitCode == undefined || process.exitCode == 0) {
   console.log(
-    `All tests passed! Took ${(Date.now() - startTime) / 1000} seconds to complete`
+    `All tests passed! Took ${(Date.now() - startTime) / 1000} seconds to complete`,
   );
 } else {
   console.log(`Tests failed!`);

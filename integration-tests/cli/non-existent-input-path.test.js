@@ -1,18 +1,20 @@
-import test from 'brittle';
-import { getBinPath } from 'get-bin-path'
-import { prepareEnvironment } from '@jakechampion/cli-testing-library';
+import test from "brittle";
+import { getBinPath } from "get-bin-path";
+import { prepareEnvironment } from "@jakechampion/cli-testing-library";
 
-const cli = await getBinPath({name:"js-compute"})
+const cli = await getBinPath({ name: "js-compute" });
 
-test('should return non-zero exit code', async function (t) {
-    const { execute, cleanup} = await prepareEnvironment();
-    t.teardown(async function () {
-        await cleanup();
-    });
+test("should return non-zero exit code", async function (t) {
+  const { execute, cleanup } = await prepareEnvironment();
+  t.teardown(async function () {
+    await cleanup();
+  });
 
-    const { code, stdout, stderr } = await execute(process.execPath, cli);
+  const { code, stdout, stderr } = await execute(process.execPath, cli);
 
-    t.alike(stdout, []);
-    t.alike(stderr, ['Error: The `input` path points to a non-existent file: {{base}}/bin/index.js']);
-    t.is(code, 1);
+  t.alike(stdout, []);
+  t.alike(stderr, [
+    "Error: The `input` path points to a non-existent file: {{base}}/bin/index.js",
+  ]);
+  t.is(code, 1);
 });

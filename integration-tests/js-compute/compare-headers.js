@@ -39,7 +39,7 @@ const compareHeaders = (configHeaders, wasmModuleHeaders) => {
   }
 
   for (let [configHeaderKey, configHeaderValue] of Object.entries(
-    configHeaders
+    configHeaders,
   )) {
     let wasmModuleHeaderValue =
       wasmModuleHeaders[configHeaderKey.toLowerCase()];
@@ -48,20 +48,25 @@ const compareHeaders = (configHeaders, wasmModuleHeaders) => {
     }
     if (Array.isArray(configHeaderValue)) {
       if (!Array.isArray(wasmModuleHeaderValue)) {
-        throw new Error(`[Header Value mismatch] Expected multiple headers for '${configHeaderKey}', but ony got one.`);
+        throw new Error(
+          `[Header Value mismatch] Expected multiple headers for '${configHeaderKey}', but ony got one.`,
+        );
       }
       if (configHeaderValue.length !== wasmModuleHeaderValue.length) {
-        throw new Error(`[Header Value mismatch] Expected ${configHeaderValue.length} headers for '${configHeaderKey}', but got ${wasmModuleHeaderValue.length}.`);
+        throw new Error(
+          `[Header Value mismatch] Expected ${configHeaderValue.length} headers for '${configHeaderKey}', but got ${wasmModuleHeaderValue.length}.`,
+        );
       }
       for (const [idx, configValue] of configHeaderValue.entries()) {
         if (wasmModuleHeaderValue[idx] !== configValue) {
-          throw new Error(`[Header Value mismatch] Expected '${configValue}' for header item ${idx} of '${configHeaderKey}', but got '${wasmModuleHeaderValue[idx]}'.`);
+          throw new Error(
+            `[Header Value mismatch] Expected '${configValue}' for header item ${idx} of '${configHeaderKey}', but got '${wasmModuleHeaderValue[idx]}'.`,
+          );
         }
       }
-    }
-    else if (wasmModuleHeaderValue !== configHeaderValue) {
+    } else if (wasmModuleHeaderValue !== configHeaderValue) {
       throw new Error(
-        `[Header Value mismatch] Expected: '${configHeaderKey}: ${configHeaderValue}' (${configHeaderValue.length}), got '${configHeaderKey}: ${wasmModuleHeaderValue}' (${wasmModuleHeaderValue?.length})`
+        `[Header Value mismatch] Expected: '${configHeaderKey}: ${configHeaderValue}' (${configHeaderValue.length}), got '${configHeaderKey}: ${wasmModuleHeaderValue}' (${wasmModuleHeaderValue?.length})`,
       );
     }
   }

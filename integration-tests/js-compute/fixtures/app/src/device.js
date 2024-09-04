@@ -23,7 +23,7 @@ routes.set("/device/interface", () => {
     assert(
       actual,
       expected,
-      `Reflect.getOwnPropertyDescriptor(Device, 'prototype')`
+      `Reflect.getOwnPropertyDescriptor(Device, 'prototype')`,
     );
   }
 
@@ -39,7 +39,7 @@ routes.set("/device/interface", () => {
     assert(
       actual,
       expected,
-      `Reflect.getOwnPropertyDescriptor(Device, 'length')`
+      `Reflect.getOwnPropertyDescriptor(Device, 'length')`,
     );
   }
 
@@ -55,7 +55,7 @@ routes.set("/device/interface", () => {
     assert(
       actual,
       expected,
-      `Reflect.getOwnPropertyDescriptor(Device, 'name')`
+      `Reflect.getOwnPropertyDescriptor(Device, 'name')`,
     );
   }
 
@@ -93,18 +93,18 @@ routes.set("/device/interface", () => {
     assert(
       actual,
       expected,
-      `Reflect.getOwnPropertyDescriptor(Device.prototype, 'constructor')`
+      `Reflect.getOwnPropertyDescriptor(Device.prototype, 'constructor')`,
     );
 
     assert(
       typeof Device.prototype.constructor,
       "function",
-      `typeof Device.prototype.constructor`
+      `typeof Device.prototype.constructor`,
     );
 
     actual = Reflect.getOwnPropertyDescriptor(
       Device.prototype.constructor,
-      "length"
+      "length",
     );
     expected = {
       value: 0,
@@ -115,12 +115,12 @@ routes.set("/device/interface", () => {
     assert(
       actual,
       expected,
-      `Reflect.getOwnPropertyDescriptor(Device.prototype.constructor, 'length')`
+      `Reflect.getOwnPropertyDescriptor(Device.prototype.constructor, 'length')`,
     );
 
     actual = Reflect.getOwnPropertyDescriptor(
       Device.prototype.constructor,
-      "name"
+      "name",
     );
     expected = {
       value: "Device",
@@ -131,7 +131,7 @@ routes.set("/device/interface", () => {
     assert(
       actual,
       expected,
-      `Reflect.getOwnPropertyDescriptor(Device.prototype.constructor, 'name')`
+      `Reflect.getOwnPropertyDescriptor(Device.prototype.constructor, 'name')`,
     );
   }
 
@@ -139,7 +139,7 @@ routes.set("/device/interface", () => {
   {
     actual = Reflect.getOwnPropertyDescriptor(
       Device.prototype,
-      Symbol.toStringTag
+      Symbol.toStringTag,
     );
     expected = {
       writable: false,
@@ -150,13 +150,13 @@ routes.set("/device/interface", () => {
     assert(
       actual,
       expected,
-      `Reflect.getOwnPropertyDescriptor(Device.prototype, [Symbol.toStringTag])`
+      `Reflect.getOwnPropertyDescriptor(Device.prototype, [Symbol.toStringTag])`,
     );
 
     assert(
       typeof Device.prototype[Symbol.toStringTag],
       "string",
-      `typeof Device.prototype[Symbol.toStringTag]`
+      `typeof Device.prototype[Symbol.toStringTag]`,
     );
   }
 
@@ -172,7 +172,7 @@ routes.set("/device/interface", () => {
     assert(
       actual,
       expected,
-      `Reflect.getOwnPropertyDescriptor(Device, 'lookup')`
+      `Reflect.getOwnPropertyDescriptor(Device, 'lookup')`,
     );
 
     assert(typeof Device.lookup, "function", `typeof Device.lookup`);
@@ -187,7 +187,7 @@ routes.set("/device/interface", () => {
     assert(
       actual,
       expected,
-      `Reflect.getOwnPropertyDescriptor(Device.lookup, 'length')`
+      `Reflect.getOwnPropertyDescriptor(Device.lookup, 'length')`,
     );
 
     actual = Reflect.getOwnPropertyDescriptor(Device.lookup, "name");
@@ -200,7 +200,7 @@ routes.set("/device/interface", () => {
     assert(
       actual,
       expected,
-      `Reflect.getOwnPropertyDescriptor(Device.lookup, 'name')`
+      `Reflect.getOwnPropertyDescriptor(Device.lookup, 'name')`,
     );
   }
 
@@ -219,33 +219,33 @@ routes.set("/device/interface", () => {
   ]) {
     const descriptors = Reflect.getOwnPropertyDescriptor(
       Device.prototype,
-      property
+      property,
     );
     expected = { enumerable: true, configurable: true };
     assert(
       descriptors.enumerable,
       true,
-      `Reflect.getOwnPropertyDescriptor(Device, '${property}').enumerable`
+      `Reflect.getOwnPropertyDescriptor(Device, '${property}').enumerable`,
     );
     assert(
       descriptors.configurable,
       true,
-      `Reflect.getOwnPropertyDescriptor(Device, '${property}').configurable`
+      `Reflect.getOwnPropertyDescriptor(Device, '${property}').configurable`,
     );
     assert(
       descriptors.value,
       undefined,
-      `Reflect.getOwnPropertyDescriptor(Device, '${property}').value`
+      `Reflect.getOwnPropertyDescriptor(Device, '${property}').value`,
     );
     assert(
       descriptors.set,
       undefined,
-      `Reflect.getOwnPropertyDescriptor(Device, '${property}').set`
+      `Reflect.getOwnPropertyDescriptor(Device, '${property}').set`,
     );
     assert(
       typeof descriptors.get,
       "function",
-      `typeof Reflect.getOwnPropertyDescriptor(Device, '${property}').get`
+      `typeof Reflect.getOwnPropertyDescriptor(Device, '${property}').get`,
     );
   }
 
@@ -298,7 +298,7 @@ routes.set("/device/interface", () => {
         Device.lookup(Symbol());
       },
       TypeError,
-      `can't convert symbol to string`
+      `can't convert symbol to string`,
     );
     return pass("ok");
   });
@@ -308,7 +308,7 @@ routes.set("/device/interface", () => {
         Device.lookup();
       },
       TypeError,
-      `Device.lookup: At least 1 argument required, but only 0 passed`
+      `Device.lookup: At least 1 argument required, but only 0 passed`,
     );
     return pass("ok");
   });
@@ -318,7 +318,7 @@ routes.set("/device/interface", () => {
         Device.lookup("");
       },
       Error,
-      `Device.lookup: useragent parameter can not be an empty string`
+      `Device.lookup: useragent parameter can not be an empty string`,
     );
     return pass("ok");
   });
@@ -335,7 +335,7 @@ routes.set("/device/interface", () => {
     assert(
       device instanceof Device,
       true,
-      `Device.lookup(useragent) instanceof DeviceEntry`
+      `Device.lookup(useragent) instanceof DeviceEntry`,
     );
 
     assert(device.name, "iPhone", `device.name`);
@@ -361,11 +361,7 @@ routes.set("/device/interface", () => {
 
       assert(device.brand, "Apple", `device.brand`);
       assert(device.model, "iPhone4,1", `device.model`);
-      assert(
-        device.hardwareType,
-        "Mobile Phone",
-        `device.hardwareType`
-      );
+      assert(device.hardwareType, "Mobile Phone", `device.hardwareType`);
       assert(device.isDesktop, false, `device.isDesktop`);
       assert(device.isGameConsole, false, `device.isGameConsole`);
       assert(device.isMediaPlayer, false, `device.isMediaPlayer`);
@@ -375,7 +371,7 @@ routes.set("/device/interface", () => {
       assert(device.isTouchscreen, true, `device.isTouchscreen`);
 
       return pass("ok");
-    }
+    },
   );
   routes.set("/device/lookup/useragent-exists-some-fields-identified", () => {
     let useragent =
@@ -385,7 +381,7 @@ routes.set("/device/interface", () => {
     assert(
       device instanceof Device,
       true,
-      `Device.lookup(useragent) instanceof DeviceEntry`
+      `Device.lookup(useragent) instanceof DeviceEntry`,
     );
     assert(device.name, "Asus TeK", `device.name`);
     assert(device.brand, "Asus", `device.brand`);
@@ -401,7 +397,7 @@ routes.set("/device/interface", () => {
     assert(
       JSON.stringify(device),
       '{"name":"Asus TeK","brand":"Asus","model":"TeK","hardwareType":null,"isDesktop":false,"isGameConsole":null,"isMediaPlayer":null,"isMobile":null,"isSmartTV":null,"isTablet":null,"isTouchscreen":null}',
-      `JSON.stringify(device)`
+      `JSON.stringify(device)`,
     );
     return pass("ok");
   });

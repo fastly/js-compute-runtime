@@ -49,11 +49,13 @@ export async function parseInputs(cliInputs) {
       }
       case "--debug-build": {
         wasmEngine = join(__dirname, "../fastly.debug.wasm");
-        console.log('Building with the debug engine');
+        console.log("Building with the debug engine");
         break;
       }
       case "--disable-starlingmonkey": {
-        console.error('The legacy js-compute-runtime.wasm engine requires an older version of the JS SDK');
+        console.error(
+          "The legacy js-compute-runtime.wasm engine requires an older version of the JS SDK",
+        );
         process.exit(1);
       }
       case "--engine-wasm": {

@@ -9,7 +9,7 @@ routes.set("/response/stall", async (event) => {
       start(controller) {
         // stall
       },
-    })
+    }),
   );
 });
 
@@ -23,7 +23,7 @@ routes.set("/response/text/guest-backed-stream", async () => {
   let error = assert(
     text,
     "A".repeat(5000) + "\x00B\x01\x01\x02A",
-    `await res.text() === "a".repeat(5000)`
+    `await res.text() === "a".repeat(5000)`,
   );
   if (error) {
     return error;
@@ -53,7 +53,7 @@ routes.set("/response/arrayBuffer/guest-backed-stream", async () => {
   let error = assert(
     json,
     contents.buffer,
-    `await res.json() === contents.buffer`
+    `await res.json() === contents.buffer`,
   );
   if (error) {
     return error;

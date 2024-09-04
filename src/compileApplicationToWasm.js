@@ -10,7 +10,7 @@ import weval from "@cfallin/weval";
 import { precompile } from "./precompile.js";
 import { bundle } from "./bundle.js";
 
-async function getTmpDir () {
+async function getTmpDir() {
   return await mkdtemp(normalize(tmpdir() + sep));
 }
 
@@ -21,18 +21,18 @@ export async function compileApplicationToWasm(
   enableExperimentalHighResolutionTimeMethods = false,
   enableExperimentalTopLevelAwait = false,
   enableAOT = false,
-  aotCache = '',
+  aotCache = "",
 ) {
   try {
     if (!(await isFile(input))) {
       console.error(
-        `Error: The \`input\` path does not point to a file: ${input}`
+        `Error: The \`input\` path does not point to a file: ${input}`,
       );
       process.exit(1);
     }
   } catch (error) {
     console.error(
-      `Error: The \`input\` path points to a non-existent file: ${input}`
+      `Error: The \`input\` path points to a non-existent file: ${input}`,
     );
     process.exit(1);
   }
@@ -42,7 +42,7 @@ export async function compileApplicationToWasm(
   } catch (error) {
     console.error(
       `Error: Failed to open the \`input\` (${input})`,
-      error.message
+      error.message,
     );
     process.exit(1);
   }
@@ -50,13 +50,13 @@ export async function compileApplicationToWasm(
   try {
     if (!(await isFile(wasmEngine))) {
       console.error(
-        `Error: The \`wasmEngine\` path does not point to a file: ${wasmEngine}`
+        `Error: The \`wasmEngine\` path does not point to a file: ${wasmEngine}`,
       );
       process.exit(1);
     }
   } catch (error) {
     console.error(
-      `Error: The \`wasmEngine\` path points to a non-existent file: ${wasmEngine}`
+      `Error: The \`wasmEngine\` path points to a non-existent file: ${wasmEngine}`,
     );
     process.exit(1);
   }
@@ -67,7 +67,7 @@ export async function compileApplicationToWasm(
   } catch (error) {
     console.error(
       `Error: Failed to create the \`output\` (${output}) directory`,
-      error.message
+      error.message,
     );
     process.exit(1);
   }
@@ -75,40 +75,38 @@ export async function compileApplicationToWasm(
   try {
     if (!(await isFileOrDoesNotExist(output))) {
       console.error(
-        `Error: The \`output\` path does not point to a file: ${output}`
+        `Error: The \`output\` path does not point to a file: ${output}`,
       );
       process.exit(1);
     }
   } catch (error) {
     console.error(
       `Error: Failed to check whether the \`output\` (${output}) is a file path`,
-      error.message
+      error.message,
     );
     process.exit(1);
   }
 
-  let wizerInput, cleanup = () => {};
+  let wizerInput,
+    cleanup = () => {};
 
   let contents;
   try {
     contents = await bundle(input, enableExperimentalTopLevelAwait);
   } catch (error) {
-    console.error(
-      `Error:`,
-      error.message
-    );
+    console.error(`Error:`, error.message);
     process.exit(1);
   }
 
   wizerInput = precompile(
     contents.outputFiles[0].text,
     undefined,
-    enableExperimentalTopLevelAwait
+    enableExperimentalTopLevelAwait,
   );
 
   // for StarlingMonkey, we need to write to a tmpdir pending streaming source hooks or similar
   const tmpDir = await getTmpDir();
-  const outPath = resolve(tmpDir, 'input.js');
+  const outPath = resolve(tmpDir, "input.js");
   await writeFile(outPath, wizerInput);
   wizerInput = outPath;
   cleanup = () => {
@@ -123,7 +121,7 @@ export async function compileApplicationToWasm(
         `"${wevalBin}"`,
         [
           "weval",
-          ...aotCache ? [`--cache-ro ${aotCache}`] : [],
+          ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
           "--dir .",
           `--dir ${dirname(wizerInput)}`,
           "-w",
@@ -140,7 +138,7 @@ export async function compileApplicationToWasm(
               enableExperimentalHighResolutionTimeMethods ? "1" : "0",
             ...process.env,
           },
-        }
+        },
       );
       if (wevalProcess.status !== 0) {
         throw new Error(`Weval initialization failure`);
@@ -169,7 +167,7 @@ export async function compileApplicationToWasm(
               enableExperimentalHighResolutionTimeMethods ? "1" : "0",
             ...process.env,
           },
-        }
+        },
       );
       if (wizerProcess.status !== 0) {
         throw new Error(`Wizer initialization failure`);
@@ -179,7 +177,7 @@ export async function compileApplicationToWasm(
   } catch (error) {
     console.error(
       `Error: Failed to compile JavaScript to Wasm: `,
-      error.message
+      error.message,
     );
     process.exit(1);
   } finally {

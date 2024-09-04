@@ -15,13 +15,27 @@ let b = random3Decimals();
 // then we may have another bug with how we are seeding the random
 // number generator in SpiderMonkey.
 routes.set("/random", () => {
-  error = assert(a !== b, true, "The first 4 digits were repeated in sequential calls to Math.random() during wizening\n\n" + JSON.stringify({ a, b }, undefined, 4))
-  if (error) { return error; }
+  error = assert(
+    a !== b,
+    true,
+    "The first 4 digits were repeated in sequential calls to Math.random() during wizening\n\n" +
+      JSON.stringify({ a, b }, undefined, 4),
+  );
+  if (error) {
+    return error;
+  }
 
   let c = random3Decimals();
   let d = random3Decimals();
-  error = assert(c !== d, true, "The first 4 digits were repeated in sequential calls to Math.random() during request handling\n\n" + JSON.stringify({ c, d }, undefined, 4));
-  if (error) { return error; }
+  error = assert(
+    c !== d,
+    true,
+    "The first 4 digits were repeated in sequential calls to Math.random() during request handling\n\n" +
+      JSON.stringify({ c, d }, undefined, 4),
+  );
+  if (error) {
+    return error;
+  }
 
-  return pass()
+  return pass();
 });

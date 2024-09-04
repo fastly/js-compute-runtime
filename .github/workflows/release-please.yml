@@ -43,12 +43,12 @@ jobs:
         with:
           node-version: 'lts/*'
 
-      - run: npm install --mode=update-lockfile
+      - run: npm update
         working-directory: ./documentation
       - run: npm run docusaurus docs:version "$(npm pkg get version --json --prefix=../ | jq -r)"
         working-directory: ./documentation
       
-      - run: npm install --mode=update-lockfile
+      - run: npm update
         working-directory: ./documentation/app
       - run: npm run build:files
         working-directory: ./documentation/app
