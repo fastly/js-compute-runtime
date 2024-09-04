@@ -1,6 +1,6 @@
-import { basename } from "node:path";
-import { argv } from "node:process";
-import { printVersion } from "./printVersion.js";
+import { basename } from 'node:path';
+import { argv } from 'node:process';
+import { printVersion } from './printVersion.js';
 
 export async function printHelp() {
   await printVersion();

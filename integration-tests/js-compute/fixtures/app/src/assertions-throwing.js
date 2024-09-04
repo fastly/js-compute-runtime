@@ -49,7 +49,7 @@ function prettyPrintSymbol(a) {
 export function assert(actual, expected, code) {
   if (!deepEqual(actual, expected)) {
     fail(
-      `Expected \`${code}\` to equal \`${JSON.stringify(prettyPrintSymbol(expected))}\` - Found \`${JSON.stringify(prettyPrintSymbol(actual))}\``
+      `Expected \`${code}\` to equal \`${JSON.stringify(prettyPrintSymbol(expected))}\` - Found \`${JSON.stringify(prettyPrintSymbol(actual))}\``,
     );
   }
 }
@@ -59,7 +59,7 @@ export async function assertResolves(func) {
     await func();
   } catch (error) {
     fail(
-      `Expected \`${func.toString()}\` to resolve - Found it rejected: ${error.name}: ${error.message}`
+      `Expected \`${func.toString()}\` to resolve - Found it rejected: ${error.name}: ${error.message}`,
     );
   }
 }
@@ -71,7 +71,7 @@ export async function assertRejects(func, errorClass, errorMessage) {
     if (errorClass) {
       if (error instanceof errorClass === false) {
         fail(
-          `Expected \`${func.toString()}\` to reject instance of \`${errorClass.name}\` - Found instance of \`${error.name}\``
+          `Expected \`${func.toString()}\` to reject instance of \`${errorClass.name}\` - Found instance of \`${error.name}\``,
         );
       }
     }
@@ -79,16 +79,14 @@ export async function assertRejects(func, errorClass, errorMessage) {
     if (errorMessage) {
       if (error.message !== errorMessage) {
         fail(
-          `Expected \`${func.toString()}\` to reject error message of \`${errorMessage}\` - Found \`${error.message}\``
+          `Expected \`${func.toString()}\` to reject error message of \`${errorMessage}\` - Found \`${error.message}\``,
         );
       }
     }
 
     return;
   }
-  fail(
-    `Expected \`${func.toString()}\` to reject - Found it did not reject`
-  );
+  fail(`Expected \`${func.toString()}\` to reject - Found it did not reject`);
 }
 
 export function assertThrows(func, errorClass, errorMessage) {
@@ -98,7 +96,7 @@ export function assertThrows(func, errorClass, errorMessage) {
     if (errorClass) {
       if (error instanceof errorClass === false) {
         fail(
-          `Expected \`${func.toString()}\` to throw instance of \`${errorClass.name}\` - Found instance of \`${error.name}\`: ${error.message}\n${error.stack}`
+          `Expected \`${func.toString()}\` to throw instance of \`${errorClass.name}\` - Found instance of \`${error.name}\`: ${error.message}\n${error.stack}`,
         );
       }
     }
@@ -106,16 +104,14 @@ export function assertThrows(func, errorClass, errorMessage) {
     if (errorMessage) {
       if (error.message !== errorMessage) {
         fail(
-          `Expected \`${func.toString()}\` to throw error message of \`${errorMessage}\` - Found \`${error.message}\``
+          `Expected \`${func.toString()}\` to throw error message of \`${errorMessage}\` - Found \`${error.message}\``,
         );
       }
     }
-    
+
     return;
   }
-  fail(
-    `Expected \`${func.toString()}\` to throw - Found it did not throw`
-  );
+  fail(`Expected \`${func.toString()}\` to throw - Found it did not throw`);
 }
 
 export function assertDoesNotThrow(func) {
@@ -123,7 +119,7 @@ export function assertDoesNotThrow(func) {
     func();
   } catch (error) {
     fail(
-      `Expected \`${func.toString()}\` to not throw - Found it did throw: ${error.name}: ${error.message}`
+      `Expected \`${func.toString()}\` to not throw - Found it did throw: ${error.name}: ${error.message}`,
     );
   }
 }

@@ -1,15 +1,18 @@
 import { routes } from "./routes.js";
-import { allowDynamicBackends } from 'fastly:experimental';
+import { allowDynamicBackends } from "fastly:experimental";
 
 routes.set("/hono", async (evt) => {
   const app = new Hono2();
-  const REALIP = '1.2.3.4';
-  const HONO_TAG = 'hono';
-  const REAL_HDR = 'real-hdr';
-  const xdeviceid = 'device-id';
+  const REALIP = "1.2.3.4";
+  const HONO_TAG = "hono";
+  const REAL_HDR = "real-hdr";
+  const xdeviceid = "device-id";
   allowDynamicBackends(true);
   app.get("/hono", async (c) => {
-    const newRequest = new Request("https://compute-sdk-test-backend.edgecompute.app/", c.req.raw);
+    const newRequest = new Request(
+      "https://compute-sdk-test-backend.edgecompute.app/",
+      c.req.raw,
+    );
     console.log("newRequest: " + newRequest.url);
     newRequest.headers.set("X-Connecting-IP", `${REALIP}`);
     newRequest.headers.set(`${REAL_HDR}`, `${REALIP}`);
@@ -38,7 +41,7 @@ routes.set("/hono", async (evt) => {
 // node_modules/hono/dist/utils/body.js
 var parseBody = async (
   request,
-  options = /* @__PURE__ */ Object.create(null)
+  options = /* @__PURE__ */ Object.create(null),
 ) => {
   const { all = false, dot = false } = options;
   const headers =
@@ -191,7 +194,7 @@ var getPath = (request) => {
       const queryIndex = url.indexOf("?", i);
       const path = url.slice(start, queryIndex === -1 ? void 0 : queryIndex);
       return tryDecodeURI(
-        path.includes("%25") ? path.replace(/%25/g, "%2525") : path
+        path.includes("%25") ? path.replace(/%25/g, "%2525") : path,
       );
     } else if (charCode === 63) {
       break;
@@ -276,7 +279,7 @@ var _getQueryParam = (url, key, multiple) => {
         const valueIndex = keyIndex2 + key.length + 2;
         const endIndex = url.indexOf("&", valueIndex);
         return _decodeURI(
-          url.slice(valueIndex, endIndex === -1 ? void 0 : endIndex)
+          url.slice(valueIndex, endIndex === -1 ? void 0 : endIndex),
         );
       } else if (trailingKeyCode == 38 || isNaN(trailingKeyCode)) {
         return "";
@@ -303,7 +306,7 @@ var _getQueryParam = (url, key, multiple) => {
         ? nextKeyIndex === -1
           ? void 0
           : nextKeyIndex
-        : valueIndex
+        : valueIndex,
     );
     if (encoded) {
       name = _decodeURI(name);
@@ -318,7 +321,7 @@ var _getQueryParam = (url, key, multiple) => {
     } else {
       value = url.slice(
         valueIndex + 1,
-        nextKeyIndex === -1 ? void 0 : nextKeyIndex
+        nextKeyIndex === -1 ? void 0 : nextKeyIndex,
       );
       if (encoded) {
         value = _decodeURI(value);
@@ -372,7 +375,7 @@ var HonoRequest = class {
     const keys = Object.keys(this.#matchResult[0][this.routeIndex][1]);
     for (const key of keys) {
       const value = this.getParamValue(
-        this.#matchResult[0][this.routeIndex][1][key]
+        this.#matchResult[0][this.routeIndex][1][key],
       );
       if (value && typeof value === "string") {
         decoded[key] = /\%/.test(value) ? decodeURIComponent_(value) : value;
@@ -472,7 +475,7 @@ var resolveCallback = async (
   phase,
   preserveCallbacks,
   context,
-  buffer
+  buffer,
 ) => {
   const callbacks = str.callbacks;
   if (!callbacks?.length) {
@@ -484,13 +487,13 @@ var resolveCallback = async (
     buffer = [str];
   }
   const resStr = Promise.all(
-    callbacks.map((c) => c({ phase, buffer, context }))
+    callbacks.map((c) => c({ phase, buffer, context })),
   ).then((res) =>
     Promise.all(
       res
         .filter(Boolean)
-        .map((str2) => resolveCallback(str2, phase, false, context, buffer))
-    ).then(() => buffer[0])
+        .map((str2) => resolveCallback(str2, phase, false, context, buffer)),
+    ).then(() => buffer[0]),
   );
   if (preserveCallbacks) {
     return raw(await resStr, callbacks);
@@ -537,7 +540,7 @@ var Context = class {
     this.#req ??= new HonoRequest(
       this.#rawRequest,
       this.#path,
-      this.#matchResult
+      this.#matchResult,
     );
     return this.#req;
   }
@@ -731,8 +734,8 @@ var Context = class {
               html2,
               HtmlEscapedCallbackPhase.Stringify,
               false,
-              {}
-            )
+              {},
+            ),
           )
           .then((html2) => {
             return typeof arg === "number"
@@ -962,7 +965,7 @@ var Hono = class {
     const handler = async (c, next) => {
       const res = await applicationHandler(
         replaceRequest(c.req.raw),
-        ...getOptions(c)
+        ...getOptions(c),
       );
       if (res) {
         return res;
@@ -993,7 +996,7 @@ var Hono = class {
       return (async () =>
         new Response(
           null,
-          await this.dispatch(request, executionCtx, env, "GET")
+          await this.dispatch(request, executionCtx, env, "GET"),
         ))();
     }
     const path = this.getPath(request, { env });
@@ -1018,7 +1021,7 @@ var Hono = class {
         ? res
             .then(
               (resolved) =>
-                resolved || (c.finalized ? c.res : this.notFoundHandler(c))
+                resolved || (c.finalized ? c.res : this.notFoundHandler(c)),
             )
             .catch((err) => this.handleError(err, c))
         : (res ?? this.notFoundHandler(c));
@@ -1026,14 +1029,14 @@ var Hono = class {
     const composed = compose(
       matchResult[0],
       this.errorHandler,
-      this.notFoundHandler
+      this.notFoundHandler,
     );
     return (async () => {
       try {
         const context = await composed(c);
         if (!context.finalized) {
           throw new Error(
-            "Context is not finalized. Did you forget to return a Response object or `await next()`?"
+            "Context is not finalized. Did you forget to return a Response object or `await next()`?",
           );
         }
         return context.res;
@@ -1062,7 +1065,7 @@ var Hono = class {
   fire = () => {
     addEventListener("fetch", (event) => {
       event.respondWith(
-        this.dispatch(event.request, event, void 0, event.request.method)
+        this.dispatch(event.request, event, void 0, event.request.method),
       );
     });
   };
@@ -1135,7 +1138,8 @@ var Node = class {
         if (
           Object.keys(this.children).some(
             (k) =>
-              k !== ONLY_WILDCARD_REG_EXP_STR && k !== TAIL_WILDCARD_REG_EXP_STR
+              k !== ONLY_WILDCARD_REG_EXP_STR &&
+              k !== TAIL_WILDCARD_REG_EXP_STR,
           )
         ) {
           throw PATH_ERROR;
@@ -1159,7 +1163,7 @@ var Node = class {
             (k) =>
               k.length > 1 &&
               k !== ONLY_WILDCARD_REG_EXP_STR &&
-              k !== TAIL_WILDCARD_REG_EXP_STR
+              k !== TAIL_WILDCARD_REG_EXP_STR,
           )
         ) {
           throw PATH_ERROR;
@@ -1232,7 +1236,7 @@ var Trie = class {
       index,
       paramAssoc,
       this.context,
-      pathErrorCheckOnly
+      pathErrorCheckOnly,
     );
     return paramAssoc;
   }
@@ -1256,7 +1260,7 @@ var Trie = class {
           return "";
         }
         return "";
-      }
+      },
     );
     return [new RegExp(`^${regexp}`), indexReplacementMap, paramReplacementMap];
   }
@@ -1271,8 +1275,8 @@ function buildWildcardRegExp(path) {
     path === "*"
       ? ""
       : `^${path.replace(/\/\*$|([.\\+*[^\]$()])/g, (_, metaChar) =>
-          metaChar ? `\\${metaChar}` : "(?:|/.*)"
-        )}$`
+          metaChar ? `\\${metaChar}` : "(?:|/.*)",
+        )}$`,
   ));
 }
 function clearWildcardRegExpCache() {
@@ -1287,7 +1291,7 @@ function buildMatcherFromPreprocessedRoutes(routes) {
   const routesWithStaticPathFlag = routes
     .map((route) => [!/\*|\/:/.test(route[0]), ...route])
     .sort(([isStaticA, pathA], [isStaticB, pathB]) =>
-      isStaticA ? 1 : isStaticB ? -1 : pathA.length - pathB.length
+      isStaticA ? 1 : isStaticB ? -1 : pathA.length - pathB.length,
     );
   const staticMap = /* @__PURE__ */ Object.create(null);
   for (let i = 0, j = -1, len = routesWithStaticPathFlag.length; i < len; i++) {
@@ -1401,7 +1405,7 @@ var RegExpRouter = class {
       Object.keys(routes).forEach((m) => {
         if (method === METHOD_NAME_ALL || method === m) {
           Object.keys(routes[m]).forEach(
-            (p) => re.test(p) && routes[m][p].push([handler, paramCount])
+            (p) => re.test(p) && routes[m][p].push([handler, paramCount]),
           );
         }
       });
@@ -1445,7 +1449,7 @@ var RegExpRouter = class {
     [...Object.keys(this.routes), ...Object.keys(this.middleware)].forEach(
       (method) => {
         matchers[method] ||= this.buildMatcher(method);
-      }
+      },
     );
     this.middleware = this.routes = void 0;
     return matchers;
@@ -1465,7 +1469,7 @@ var RegExpRouter = class {
           ...Object.keys(r[METHOD_NAME_ALL]).map((path) => [
             path,
             r[METHOD_NAME_ALL][path],
-          ])
+          ]),
         );
       }
     });
@@ -1631,8 +1635,8 @@ var Node2 = class {
                   nextNode.children["*"],
                   method,
                   node.params,
-                  /* @__PURE__ */ Object.create(null)
-                )
+                  /* @__PURE__ */ Object.create(null),
+                ),
               );
             }
             handlerSets.push(
@@ -1640,8 +1644,8 @@ var Node2 = class {
                 nextNode,
                 method,
                 node.params,
-                /* @__PURE__ */ Object.create(null)
-              )
+                /* @__PURE__ */ Object.create(null),
+              ),
             );
           } else {
             tempNodes.push(nextNode);
@@ -1658,8 +1662,8 @@ var Node2 = class {
                   astNode,
                   method,
                   node.params,
-                  /* @__PURE__ */ Object.create(null)
-                )
+                  /* @__PURE__ */ Object.create(null),
+                ),
               );
               tempNodes.push(astNode);
             }
@@ -1674,7 +1678,7 @@ var Node2 = class {
           if (matcher instanceof RegExp && matcher.test(restPathString)) {
             params[name] = restPathString;
             handlerSets.push(
-              ...this.gHSets(child, method, node.params, params)
+              ...this.gHSets(child, method, node.params, params),
             );
             continue;
           }
@@ -1686,7 +1690,7 @@ var Node2 = class {
               params[name] = part;
               if (isLast === true) {
                 handlerSets.push(
-                  ...this.gHSets(child, method, params, node.params)
+                  ...this.gHSets(child, method, params, node.params),
                 );
                 if (child.children["*"]) {
                   handlerSets.push(
@@ -1694,8 +1698,8 @@ var Node2 = class {
                       child.children["*"],
                       method,
                       params,
-                      node.params
-                    )
+                      node.params,
+                    ),
                   );
                 }
               } else {

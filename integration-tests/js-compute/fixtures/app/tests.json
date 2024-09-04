@@ -5306,9 +5306,7 @@
     },
     "downstream_response": {
       "status": 200,
-      "headers": [
-        ["cuStom", "test"]
-      ]
+      "headers": [["cuStom", "test"]]
     }
   },
   "GET /headers/from-response/delete-invalid": {
@@ -5329,9 +5327,7 @@
     },
     "downstream_response": {
       "status": 200,
-      "headers": [
-        ["cuStom", "test"]
-      ]
+      "headers": [["cuStom", "test"]]
     }
   },
 
@@ -9052,7 +9048,12 @@
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [["result", "!*+-.^_`|~1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"]]
+      "headers": [
+        [
+          "result",
+          "!*+-.^_`|~1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        ]
+      ]
     }
   },
   "GET /request/method/guest": {

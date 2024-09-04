@@ -13,22 +13,21 @@ routes.set("/tee", async function (event) {
   // `pending_req_select`, as we were waiting on an http request whose body had
   // not been closed.
   let res = await fetch(
-    new Request('/post', {
+    new Request("/post", {
       body: body1,
       headers: req.headers,
       method: req.method,
       backend: "httpbin",
-    })
+    }),
   );
-  let body = await res.json()
+  let body = await res.json();
 
   return new Response(body.data);
 });
 
-
 routes.set("/tee/error", async function (event) {
   const req = event.request;
-  let res = fetch('/post', {
+  let res = fetch("/post", {
     method: "POST",
     body: new ReadableStream({
       start: (controller) => {

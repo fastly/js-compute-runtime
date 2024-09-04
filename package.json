@@ -37,13 +37,16 @@
     "build:debug": "./runtime/fastly/build-debug.sh",
     "build:weval": "./runtime/fastly/build-release-weval.sh",
     "build:debug:info": "./runtime/fastly/build-debug.sh --keep-debug-info",
-    "format-changelog": "node ci/format-changelog.js CHANGELOG.md"
+    "format-changelog": "node ci/format-changelog.js CHANGELOG.md",
+    "format": "prettier --write *.js src/*.js integration-tests/**/*.js",
+    "format:check": "prettier --check *.js src/*.js integration-tests/**/*.js"
   },
   "devDependencies": {
     "@jakechampion/cli-testing-library": "^1.0.0",
     "brittle": "^3.5.2",
     "eslint": "^9.6.0",
     "get-bin-path": "^11.0.0",
+    "prettier": "^3.3.3",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
     "tsd": "^0.31.1",
