@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.21.3 (2024-09-04)
+
+### Fixed
+
+* Device.toJSON() properties ([#937](https://github.com/fastly/js-compute-runtime/issues/937)) ([c4182d3](https://github.com/fastly/js-compute-runtime/commit/c4182d30e8d22d7720acb9d51bd59763ab8b83e5))
+* event loop stall error no longer a panic ([#934](https://github.com/fastly/js-compute-runtime/issues/934)) ([08c9934](https://github.com/fastly/js-compute-runtime/commit/08c9934c59bd00ddd2dde252f6529ee8322be809))
+
 ## 3.21.2 (2024-08-27)
 
 ### Fixed
