@@ -106,6 +106,7 @@ jobs:
         ci/clang-format.sh
     - run: |
         ci/rustfmt.sh
+    - run: npm install
     - run: npm run format:check
 
   test-npm-package:
