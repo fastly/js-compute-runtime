@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { parseInputs } from "./src/parseInputs.js";
-import { printVersion } from "./src/printVersion.js";
-import { printHelp } from "./src/printHelp.js";
-import { addSdkMetadataField } from "./src/addSdkMetadataField.js";
+import { parseInputs } from './src/parseInputs.js';
+import { printVersion } from './src/printVersion.js';
+import { printHelp } from './src/printHelp.js';
+import { addSdkMetadataField } from './src/addSdkMetadataField.js';
 
 const {
   enableAOT,
@@ -29,7 +29,7 @@ if (version) {
   // it could be that the user is using an older version of js-compute-runtime
   // and a newer version does not support the platform they are using.
   const { compileApplicationToWasm } = await import(
-    "./src/compileApplicationToWasm.js"
+    './src/compileApplicationToWasm.js'
   );
   await compileApplicationToWasm(
     input,

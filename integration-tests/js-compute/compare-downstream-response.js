@@ -1,4 +1,4 @@
-import compareHeaders from "./compare-headers.js";
+import compareHeaders from './compare-headers.js';
 
 /**
  * Function to compare a response from a server (Viceroy, Fastly Compute, etc...)
@@ -20,7 +20,7 @@ export async function compareDownstreamResponse(
   let errors = [];
   // Status
   if (configResponse.status != actualResponse.statusCode) {
-    let bodySummary = "";
+    let bodySummary = '';
     try {
       bodySummary = (await actualResponse.body.text()).slice(0, 1000);
     } catch {}
@@ -43,13 +43,13 @@ export async function compareDownstreamResponse(
       // Stream down the response
       let chunkNumber = 0;
       for (const chunk of actualBodyChunks) {
-        const chunkString = chunk.toString("utf8");
+        const chunkString = chunk.toString('utf8');
 
         // Check if the chunk is equal to what we expected
-        if (configResponse.body[chunkNumber].includes(chunk.toString("utf8"))) {
+        if (configResponse.body[chunkNumber].includes(chunk.toString('utf8'))) {
           // Yay! We got a matching Chunk, let's see if this is the end of one of our expected chunks. If so, we need to increment our chunk number :)
           if (
-            configResponse.body[chunkNumber].endsWith(chunk.toString("utf8"))
+            configResponse.body[chunkNumber].endsWith(chunk.toString('utf8'))
           ) {
             chunkNumber++;
           }
@@ -73,7 +73,7 @@ export async function compareDownstreamResponse(
       // Get the text, and check if it matches the test
       const downstreamBodyText = Buffer.concat(
         actualBodyChunks.map((chunk) => Buffer.from(chunk)),
-      ).toString("utf8");
+      ).toString('utf8');
 
       if (downstreamBodyText !== configResponse.body) {
         errors.push(
@@ -86,6 +86,6 @@ export async function compareDownstreamResponse(
   }
 
   if (errors.length) {
-    throw new Error(errors.map((error) => error.message).join("\n"));
+    throw new Error(errors.map((error) => error.message).join('\n'));
   }
 }

@@ -1,14 +1,14 @@
-import { dirname, resolve, sep, normalize } from "node:path";
-import { tmpdir } from "node:os";
-import { spawnSync } from "node:child_process";
-import { mkdir, readFile, mkdtemp, writeFile } from "node:fs/promises";
-import { rmSync } from "node:fs";
-import { isFile } from "./isFile.js";
-import { isFileOrDoesNotExist } from "./isFileOrDoesNotExist.js";
-import wizer from "@bytecodealliance/wizer";
-import weval from "@cfallin/weval";
-import { precompile } from "./precompile.js";
-import { bundle } from "./bundle.js";
+import { dirname, resolve, sep, normalize } from 'node:path';
+import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
+import { mkdir, readFile, mkdtemp, writeFile } from 'node:fs/promises';
+import { rmSync } from 'node:fs';
+import { isFile } from './isFile.js';
+import { isFileOrDoesNotExist } from './isFileOrDoesNotExist.js';
+import wizer from '@bytecodealliance/wizer';
+import weval from '@cfallin/weval';
+import { precompile } from './precompile.js';
+import { bundle } from './bundle.js';
 
 async function getTmpDir() {
   return await mkdtemp(normalize(tmpdir() + sep));
@@ -21,7 +21,7 @@ export async function compileApplicationToWasm(
   enableExperimentalHighResolutionTimeMethods = false,
   enableExperimentalTopLevelAwait = false,
   enableAOT = false,
-  aotCache = "",
+  aotCache = '',
 ) {
   try {
     if (!(await isFile(input))) {
@@ -38,7 +38,7 @@ export async function compileApplicationToWasm(
   }
 
   try {
-    await readFile(input, { encoding: "utf-8" });
+    await readFile(input, { encoding: 'utf-8' });
   } catch (error) {
     console.error(
       `Error: Failed to open the \`input\` (${input})`,
@@ -106,7 +106,7 @@ export async function compileApplicationToWasm(
 
   // for StarlingMonkey, we need to write to a tmpdir pending streaming source hooks or similar
   const tmpDir = await getTmpDir();
-  const outPath = resolve(tmpDir, "input.js");
+  const outPath = resolve(tmpDir, 'input.js');
   await writeFile(outPath, wizerInput);
   wizerInput = outPath;
   cleanup = () => {
@@ -120,11 +120,11 @@ export async function compileApplicationToWasm(
       let wevalProcess = spawnSync(
         `"${wevalBin}"`,
         [
-          "weval",
+          'weval',
           ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
-          "--dir .",
+          '--dir .',
           `--dir ${dirname(wizerInput)}`,
-          "-w",
+          '-w',
           `-i "${wasmEngine}"`,
           `-o "${output}"`,
         ],
@@ -132,10 +132,10 @@ export async function compileApplicationToWasm(
           stdio: [null, process.stdout, process.stderr],
           input: wizerInput,
           shell: true,
-          encoding: "utf-8",
+          encoding: 'utf-8',
           env: {
             ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
-              enableExperimentalHighResolutionTimeMethods ? "1" : "0",
+              enableExperimentalHighResolutionTimeMethods ? '1' : '0',
             ...process.env,
           },
         },
@@ -148,12 +148,12 @@ export async function compileApplicationToWasm(
       let wizerProcess = spawnSync(
         `"${wizer}"`,
         [
-          "--inherit-env=true",
-          "--allow-wasi",
-          "--dir=.",
+          '--inherit-env=true',
+          '--allow-wasi',
+          '--dir=.',
           `--dir=${dirname(wizerInput)}`,
           `--wasm-bulk-memory=true`,
-          "-r _start=wizer.resume",
+          '-r _start=wizer.resume',
           `-o="${output}"`,
           `"${wasmEngine}"`,
         ],
@@ -161,10 +161,10 @@ export async function compileApplicationToWasm(
           stdio: [null, process.stdout, process.stderr],
           input: wizerInput,
           shell: true,
-          encoding: "utf-8",
+          encoding: 'utf-8',
           env: {
             ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
-              enableExperimentalHighResolutionTimeMethods ? "1" : "0",
+              enableExperimentalHighResolutionTimeMethods ? '1' : '0',
             ...process.env,
           },
         },

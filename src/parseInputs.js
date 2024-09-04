@@ -1,7 +1,7 @@
-import { fileURLToPath } from "node:url";
-import { dirname, join, isAbsolute } from "node:path";
-import { unknownArgument } from "./unknownArgument.js";
-import { tooManyEngines } from "./tooManyEngines.js";
+import { fileURLToPath } from 'node:url';
+import { dirname, join, isAbsolute } from 'node:path';
+import { unknownArgument } from './unknownArgument.js';
+import { tooManyEngines } from './tooManyEngines.js';
 
 export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -10,55 +10,55 @@ export async function parseInputs(cliInputs) {
   let enableExperimentalTopLevelAwait = false;
   let enableAOT = false;
   let customEngineSet = false;
-  let wasmEngine = join(__dirname, "../fastly.wasm");
-  let aotCache = join(__dirname, "../fastly-ics.wevalcache");
+  let wasmEngine = join(__dirname, '../fastly.wasm');
+  let aotCache = join(__dirname, '../fastly-ics.wevalcache');
   let customInputSet = false;
-  let input = join(process.cwd(), "bin/index.js");
+  let input = join(process.cwd(), 'bin/index.js');
   let customOutputSet = false;
-  let output = join(process.cwd(), "bin/main.wasm");
+  let output = join(process.cwd(), 'bin/main.wasm');
   let cliInput;
 
   // eslint-disable-next-line no-cond-assign
   loop: while ((cliInput = cliInputs.shift())) {
     switch (cliInput) {
-      case "--": {
+      case '--': {
         break loop;
       }
-      case "--enable-experimental-high-resolution-time-methods": {
+      case '--enable-experimental-high-resolution-time-methods': {
         enableExperimentalHighResolutionTimeMethods = true;
         break;
       }
-      case "--enable-experimental-top-level-await": {
+      case '--enable-experimental-top-level-await': {
         enableExperimentalTopLevelAwait = true;
         break;
       }
-      case "--enable-experimental-aot": {
+      case '--enable-experimental-aot': {
         enableAOT = true;
         break;
       }
-      case "-V":
-      case "--version": {
+      case '-V':
+      case '--version': {
         return { version: true };
       }
-      case "-h":
-      case "--help": {
+      case '-h':
+      case '--help': {
         return { help: true };
       }
-      case "--starlingmonkey": {
+      case '--starlingmonkey': {
         break;
       }
-      case "--debug-build": {
-        wasmEngine = join(__dirname, "../fastly.debug.wasm");
-        console.log("Building with the debug engine");
+      case '--debug-build': {
+        wasmEngine = join(__dirname, '../fastly.debug.wasm');
+        console.log('Building with the debug engine');
         break;
       }
-      case "--disable-starlingmonkey": {
+      case '--disable-starlingmonkey': {
         console.error(
-          "The legacy js-compute-runtime.wasm engine requires an older version of the JS SDK",
+          'The legacy js-compute-runtime.wasm engine requires an older version of the JS SDK',
         );
         process.exit(1);
       }
-      case "--engine-wasm": {
+      case '--engine-wasm': {
         if (customEngineSet) {
           tooManyEngines();
         }
@@ -71,7 +71,7 @@ export async function parseInputs(cliInputs) {
         }
         break;
       }
-      case "--aot-cache": {
+      case '--aot-cache': {
         if (isAbsolute(value)) {
           aotCache = value;
         } else {
@@ -83,11 +83,11 @@ export async function parseInputs(cliInputs) {
         // The reason this is not another `case` and is an `if` using `startsWith`
         // is because previous versions of the CLI allowed an arbitrary amount of
         // = characters to be present. E.G. This is valid --engine-wasm====js.wasm
-        if (cliInput.startsWith("--engine-wasm=")) {
+        if (cliInput.startsWith('--engine-wasm=')) {
           if (customEngineSet) {
             tooManyEngines();
           }
-          const value = cliInput.replace(/--engine-wasm=+/, "");
+          const value = cliInput.replace(/--engine-wasm=+/, '');
           // This is used to detect if multiple --engine-wasm flags have been set
           // which is not supported.
           customEngineSet = true;
@@ -97,7 +97,7 @@ export async function parseInputs(cliInputs) {
             wasmEngine = join(process.cwd(), value);
           }
           break;
-        } else if (cliInput.startsWith("-")) {
+        } else if (cliInput.startsWith('-')) {
           unknownArgument(cliInput);
         } else {
           if (!customInputSet) {
@@ -123,7 +123,7 @@ export async function parseInputs(cliInputs) {
   }
 
   if (!customEngineSet && enableAOT) {
-    wasmEngine = join(__dirname, "../fastly-weval.wasm");
+    wasmEngine = join(__dirname, '../fastly-weval.wasm');
   }
 
   return {

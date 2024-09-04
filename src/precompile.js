@@ -1,12 +1,12 @@
-import regexpuc from "regexpu-core";
-import { parse } from "acorn";
-import MagicString from "magic-string";
-import { simple as simpleWalk } from "acorn-walk";
+import regexpuc from 'regexpu-core';
+import { parse } from 'acorn';
+import MagicString from 'magic-string';
+import { simple as simpleWalk } from 'acorn-walk';
 
 const PREAMBLE = `;{
   // Precompiled regular expressions
   const precompile = (r) => { r.exec('a'); r.exec('\\u1000'); };`;
-const POSTAMBLE = "}";
+const POSTAMBLE = '}';
 
 /// Emit a block of javascript that will pre-compile the regular expressions given. As spidermonkey
 /// will intern regular expressions, duplicating them at the top level and testing them with both
@@ -14,7 +14,7 @@ const POSTAMBLE = "}";
 /// handler.
 export function precompile(
   source,
-  filename = "<input>",
+  filename = '<input>',
   enableExperimentalTopLevelAwait = false,
 ) {
   const magicString = new MagicString(source, {
@@ -22,8 +22,8 @@ export function precompile(
   });
 
   const ast = parse(source, {
-    ecmaVersion: "latest",
-    sourceType: enableExperimentalTopLevelAwait ? "module" : "script",
+    ecmaVersion: 'latest',
+    sourceType: enableExperimentalTopLevelAwait ? 'module' : 'script',
   });
 
   const precompileCalls = [];
@@ -33,7 +33,7 @@ export function precompile(
       let transpiledPattern;
       try {
         transpiledPattern = regexpuc(node.regex.pattern, node.regex.flags, {
-          unicodePropertyEscapes: "transform",
+          unicodePropertyEscapes: 'transform',
         });
       } catch {
         // swallow regex parse errors here to instead throw them at the engine level
@@ -48,7 +48,7 @@ export function precompile(
 
   if (!precompileCalls.length) return source;
 
-  magicString.prepend(`${PREAMBLE}${precompileCalls.join("\n")}${POSTAMBLE}`);
+  magicString.prepend(`${PREAMBLE}${precompileCalls.join('\n')}${POSTAMBLE}`);
 
   // When we're ready to pipe in source maps:
   // const map = magicString.generateMap({
