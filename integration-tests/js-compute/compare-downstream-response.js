@@ -26,7 +26,7 @@ export async function compareDownstreamResponse(
     } catch {}
     errors.push(
       new Error(
-        `[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.statusCode}\n${bodySummary}`,
+        `[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.statusCode}\n${bodySummary ? `BODY: "${bodySummary}"` : ''}`,
       ),
     );
   }

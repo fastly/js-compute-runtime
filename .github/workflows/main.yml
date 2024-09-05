@@ -294,6 +294,12 @@ jobs:
     - name: Npm install
       run: npm install && cd ./integration-tests/js-compute && npm install
 
-    - run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }} ${{ matrix.profile == 'debug' && '--debug-build' || '' }}
+    - name: Run Tests
+      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }} ${{ matrix.profile == 'debug' && '--debug-build' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
+
+    - name: Run TLA Tests
+      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --tla ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }} ${{ matrix.profile == 'debug' && '--debug-build' || '' }}
+      env:
+        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  

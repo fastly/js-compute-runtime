@@ -35,6 +35,7 @@ async function sleep(seconds) {
 let args = argv.slice(2);
 
 const local = args.includes('--local');
+const tla = args.includes('--tla');
 const aot = args.includes('--aot');
 const debugBuild = args.includes('--debug-build');
 const filter = args.filter((arg) => !arg.startsWith('--'));
@@ -66,7 +67,7 @@ const branchName = (await zx`git branch --show-current`).stdout
   .trim()
   .replace(/[^a-zA-Z0-9_-]/g, '_');
 
-const fixture = 'app';
+const fixture = tla ? 'tla' : 'app';
 const serviceName = `${fixture}--${branchName}${aot ? '--aot' : ''}${process.env.SUFFIX_STRING || ''}`;
 let domain;
 const fixturePath = join(__dirname, 'fixtures', fixture);
