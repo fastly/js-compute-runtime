@@ -31,7 +31,7 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 'lts/*'
-    - run: cd documentation && npm install
+    - run: cd documentation && npm ci
     - run: cd documentation && npm run build
 
   ensure_cargo_installs:
