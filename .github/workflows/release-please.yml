@@ -166,7 +166,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: npm install
+      - run: npm ci
         working-directory: ./documentation
 
       - name: Set up Fastly CLI
