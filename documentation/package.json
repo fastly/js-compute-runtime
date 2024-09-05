@@ -4,7 +4,7 @@
     "start": "docusaurus start",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
-    "deploy": "yarn build && cd app && yarn && yarn deploy",
+    "deploy": "npm run build && cd app && npm install && npm run deploy",
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
