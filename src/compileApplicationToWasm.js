@@ -134,9 +134,10 @@ export async function compileApplicationToWasm(
           shell: true,
           encoding: 'utf-8',
           env: {
+            ...process.env,
             ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
               enableExperimentalHighResolutionTimeMethods ? '1' : '0',
-            ...process.env,
+            ENABLE_MODULE_MODE: enableExperimentalTopLevelAwait ? '1' : '0',
           },
         },
       );
@@ -163,9 +164,10 @@ export async function compileApplicationToWasm(
           shell: true,
           encoding: 'utf-8',
           env: {
+            ...process.env,
             ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
               enableExperimentalHighResolutionTimeMethods ? '1' : '0',
-            ...process.env,
+            ENABLE_MODULE_MODE: enableExperimentalTopLevelAwait ? '1' : '0',
           },
         },
       );

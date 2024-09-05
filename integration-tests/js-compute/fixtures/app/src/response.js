@@ -4,6 +4,8 @@ import { routes } from "./routes.js";
 import { pass, assert, assertThrows } from "./assertions.js";
 
 routes.set("/response/stall", async (event) => {
+  // keep connection open 10 seconds
+  event.waitUntil(new Promise(resolve => setTimeout(resolve, 10_000)));
   return new Response(
     new ReadableStream({
       start(controller) {

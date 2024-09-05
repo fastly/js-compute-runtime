@@ -18,7 +18,6 @@ api::Engine *ENGINE;
 // Install corresponds to Wizer time, so we configure the engine here
 bool install(api::Engine *engine) {
   ENGINE = engine;
-  engine->enable_module_mode(false);
   return true;
 }
 
