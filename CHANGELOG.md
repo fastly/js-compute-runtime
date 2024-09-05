@@ -1,11 +1,10 @@
 # Changelog
 
-## [3.21.4](https://github.com/fastly/js-compute-runtime/compare/v3.21.3...v3.21.4) (2024-09-05)
+## 3.21.4 (2024-09-05)
 
+### Fixed
 
-### Bug Fixes
-
-* --experimental-top-level-await support ([#945](https://github.com/fastly/js-compute-runtime/issues/945)) ([edd8ada](https://github.com/fastly/js-compute-runtime/commit/edd8ada770ae3cd2763ee30bfb15a7a6709a1f37))
+* \--experimental-top-level-await support ([#945](https://github.com/fastly/js-compute-runtime/issues/945)) ([edd8ada](https://github.com/fastly/js-compute-runtime/commit/edd8ada770ae3cd2763ee30bfb15a7a6709a1f37))
 
 ## 3.21.3 (2024-09-04)
 
