@@ -2773,4 +2773,16 @@ Result<HostString> DeviceDetection::lookup(std::string_view user_agent) {
   return res;
 }
 
+Result<uint64_t> Runtime::get_vcpu_ms() {
+  Result<uint64_t> res;
+  uint64_t ret;
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::runtime_get_vcpu_ms(&ret), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+  return res;
+}
+
 } // namespace host_api

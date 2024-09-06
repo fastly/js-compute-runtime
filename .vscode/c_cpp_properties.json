@@ -3,12 +3,11 @@
         {
             "name": "sm-wasi",
             "includePath": [
-                "${workspaceFolder}/runtime/spidermonkey/debug/include",
-                "${workspaceFolder}/runtime/spidermonkey/release/include",
+                "${workspaceFolder}/runtime/StarlingMonkey/include",
+                "${workspaceFolder}/runtime/StarlingMonkey/builtins/web",
+                "${workspaceFolder}/runtime/fastly/build-debug/",
                 "/opt/wasi-sdk/share/wasi-sysroot/include/",
-                "${workspaceFolder}/runtime/js-compute-runtime",
-                "${workspaceFolder}/runtime/js-compute-runtime/build/openssl-3.0.7/include",
-                "${workspaceFolder}/runtime/js-compute-runtime/third_party/fmt/include"
+                "${workspaceFolder}/runtime/fastly/host-api"
             ],
             "defines": [
                 "__wasi__"
@@ -22,8 +21,7 @@
             },
             "forcedInclude": [
                 "${workspaceFolder}/.vscode/vscode-preinclude.h"
-            ],
-            "compileCommands": "${workspaceFolder}/runtime/js-compute-runtime/compile_commands.json"
+            ]
         }
     ],
     "version": 4

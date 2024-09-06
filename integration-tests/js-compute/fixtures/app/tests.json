@@ -9066,5 +9066,16 @@
       "status": 200,
       "body": "ok"
     }
+  },
+  "GET /runtime/get-vcpu-ms": {
+    "environments": ["compute", "viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/runtime/get-vcpu-ms"
+    },
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
   }
 }

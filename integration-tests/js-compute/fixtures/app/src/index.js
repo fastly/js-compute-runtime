@@ -44,6 +44,7 @@ import "./request-method.js";
 import "./response-json.js";
 import "./response-redirect.js";
 import "./response.js";
+import "./runtime.js";
 import "./secret-store.js";
 import "./server.js";
 import "./tee.js";
