@@ -227,7 +227,6 @@ bool runtime_get_vcpu_time(JSContext *cx, unsigned argc, JS::Value *vp) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
-  fprintf(stderr, "GOT: %llu", res.unwrap());
   args.rval().setNumber(res.unwrap());
   return true;
 }
