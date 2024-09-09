@@ -56,7 +56,7 @@ jobs:
         path: "/home/runner/.cargo/bin/${{ matrix.crate }}"
         key: crate-cache-${{ matrix.crate }}-${{ matrix.version }}
     - name: Install ${{ matrix.crate }} ${{ matrix.version }}
-      run: cargo install ${{ matrix.crate }} ${{ matrix.options }} --version ${{ matrix.version }}
+      run: cargo install ${{ matrix.crate }} ${{ matrix.options }} --version ${{ matrix.version }} --force
 
   shellcheck:
     env:
