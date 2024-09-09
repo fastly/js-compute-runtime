@@ -7,9 +7,11 @@ defaults:
   run:
     shell: bash
 env:
-  viceroy_version: 0.10.0
-  wasm-tools_version: 1.0.28
-  fastly-cli_version: 10.8.10
+  # Note: when updated, also update version in ensure_cargo_installs
+  viceroy_version: 0.12.0
+  # Note: when updated, also update version in ensure_cargo_installs
+  wasm-tools_version: 1.216.0
+  fastly-cli_version: 10.13.3
 
 jobs:
   check-changelog:
@@ -40,10 +42,10 @@ jobs:
       matrix:
         include:
           - crate: viceroy
-            version: 0.10.0 # Note: workflow-level env vars can't be used in matrix definitions
+            version: 0.12.0 # Note: workflow-level env vars can't be used in matrix definitions
             options: ""
           - crate: wasm-tools
-            version: 1.0.28 # Note: workflow-level env vars can't be used in matrix definitions
+            version: 1.216.0 # Note: workflow-level env vars can't be used in matrix definitions
             options: ""
     runs-on: ubuntu-latest
     steps:
@@ -54,8 +56,7 @@ jobs:
         path: "/home/runner/.cargo/bin/${{ matrix.crate }}"
         key: crate-cache-${{ matrix.crate }}-${{ matrix.version }}
     - name: Install ${{ matrix.crate }} ${{ matrix.version }}
-      run: cargo install ${{ matrix.crate }} ${{ matrix.options }} --version ${{ matrix.version }}
-      if: steps.cache-crate.outputs.cache-hit != 'true'
+      run: cargo install ${{ matrix.crate }} ${{ matrix.options }} --version ${{ matrix.version }} --force
 
   shellcheck:
     env:
@@ -134,6 +135,7 @@ jobs:
 
   build:
     name: Build
+    needs: [ensure_cargo_installs]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -212,13 +214,6 @@ jobs:
         path: "/home/runner/.cargo/bin/wasm-tools"
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
     
-    - name: "Check wasm-tools has been restored"
-      if: steps.wasm-tools.outputs.cache-hit != 'true'
-      run: |
-        echo "wasm-tools was not restored from the cache"
-        echo "bailing out from the build early"
-        exit 1
-    
     - run: npm install
 
     - name: Build WPT runtime
@@ -243,7 +238,7 @@ jobs:
       matrix:
         platform: [viceroy, compute]
         profile: [debug, release, weval]
-    needs: [build]
+    needs: [build, ensure_cargo_installs]
     steps:
     - name: Checkout fastly/js-compute-runtime
       uses: actions/checkout@v3
@@ -274,10 +269,6 @@ jobs:
       with:
         path: "/home/runner/.cargo/bin/wasm-tools"
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
-
-    - name: "Check caches have been restored"
-      if: steps.wasm-tools.outputs.cache-hit != 'true' || matrix.platform == 'viceory' && steps.viceroy.outputs.cache-hit != 'true'
-      run: echo "Unable to restore from the cache, bailing." && exit 1
 
     - name: Download Engine
       uses: actions/download-artifact@v3

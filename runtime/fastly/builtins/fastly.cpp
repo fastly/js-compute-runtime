@@ -220,6 +220,17 @@ bool Fastly::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool runtime_get_vcpu_time(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  auto res = host_api::Runtime::get_vcpu_ms();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  args.rval().setNumber(res.unwrap());
+  return true;
+}
+
 bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "fastly.env.get", 1))
@@ -409,6 +420,23 @@ bool install(api::Engine *engine) {
   }
   RootedValue env_builtin_val(engine->cx(), JS::ObjectValue(*env_builtin));
   if (!engine->define_builtin_module("fastly:env", env_builtin_val)) {
+    return false;
+  }
+
+  // fastly:runtime
+  auto runtime_vcpu_time_get =
+      JS_NewFunction(engine->cx(), &runtime_get_vcpu_time, 0, 0, "vCpuTime");
+  RootedObject runtime_vcpu_time_get_obj(engine->cx(), JS_GetFunctionObject(runtime_vcpu_time_get));
+  RootedValue runtime_vcpu_time_get_val(engine->cx(), ObjectValue(*runtime_vcpu_time_get_obj));
+  RootedObject runtime_builtin(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  if (!JS_SetProperty(engine->cx(), runtime_builtin, "vCpuTime", runtime_vcpu_time_get_val)) {
+    return false;
+  }
+  if (!JS_SetProperty(engine->cx(), fastly, "vCpuTime", runtime_vcpu_time_get_val)) {
+    return false;
+  }
+  RootedValue runtime_builtin_val(engine->cx(), JS::ObjectValue(*runtime_builtin));
+  if (!engine->define_builtin_module("fastly:runtime", runtime_builtin_val)) {
     return false;
   }
 

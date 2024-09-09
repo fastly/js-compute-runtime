@@ -806,6 +806,11 @@ public:
   static Result<HostString> lookup(std::string_view user_agent);
 };
 
+class Runtime final {
+public:
+  static Result<uint64_t> get_vcpu_ms();
+};
+
 } // namespace host_api
 
 #endif

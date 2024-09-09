@@ -54,6 +54,16 @@ export function assert(actual, expected, code) {
   }
 }
 
+export { assert as strictEqual }
+
+export function ok(truthy, code) {
+  if (!truthy) {
+    fail(
+      `Expected ${code ? ' ' + code : ''}to be truthy - Found \`${JSON.stringify(prettyPrintSymbol(truthy))}\``,
+    );
+  }
+}
+
 export async function assertResolves(func) {
   try {
     await func();
@@ -123,6 +133,8 @@ export function assertDoesNotThrow(func) {
     );
   }
 }
+
+export { deepEqual as deepStrictEqual }
 
 export function deepEqual(a, b) {
   var aKeys;
