@@ -20,13 +20,9 @@ export async function compareDownstreamResponse(
   let errors = [];
   // Status
   if (configResponse.status != actualResponse.statusCode) {
-    let bodySummary = '';
-    try {
-      bodySummary = (await actualResponse.body.text()).slice(0, 1000);
-    } catch {}
     errors.push(
       new Error(
-        `[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.statusCode}\n${bodySummary ? `BODY: "${bodySummary}"` : ''}`,
+        `[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.statusCode}\n${actualBodyChunks.length ? `"${Buffer.concat(actualBodyChunks)}"` : ''}`,
       ),
     );
   }

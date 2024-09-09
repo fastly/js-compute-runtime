@@ -1,10 +1,5 @@
 {
   "GET /hello-world": {
-    "environments": ["viceroy", "compute"],
-    "downstream_request": {
-      "method": "GET",
-      "pathname": "/hello-world"
-    },
     "downstream_response": {
       "status": 200,
       "body": "hello world"

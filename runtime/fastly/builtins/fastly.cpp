@@ -231,6 +231,33 @@ bool runtime_get_vcpu_time(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool runtime_purge_surrogate_key(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  fprintf(stderr, "WAT");
+  if (!args.requireAtLeast(cx, "purgeSurrogateKey", 1)) {
+    return false;
+  }
+  JS::RootedString surrogate_key(cx, JS::ToString(cx, args.get(0)));
+  if (!surrogate_key) {
+    return false;
+  }
+  auto surrogate_key_chars = core::encode(cx, surrogate_key);
+  bool soft = false;
+  auto soft_val = args.get(1);
+  if (soft_val.isBoolean()) {
+    soft = soft_val.toBoolean();
+  }
+  auto purge_res = host_api::Runtime::purge_surrogate_key(surrogate_key_chars, soft);
+  if (auto *err = purge_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  MOZ_ASSERT(!purge_res.unwrap().has_value());
+
+  args.rval().setUndefined();
+  return true;
+}
+
 bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "fastly.env.get", 1))
@@ -424,11 +451,25 @@ bool install(api::Engine *engine) {
   }
 
   // fastly:runtime
+  RootedObject runtime_builtin(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  auto runtime_purge_surrogate_key_fn =
+      JS_NewFunction(engine->cx(), &runtime_purge_surrogate_key, 1, 0, "purgeSurrogateKey");
+  RootedObject runtime_purge_surrogate_key_obj(
+      engine->cx(), JS_GetFunctionObject(runtime_purge_surrogate_key_fn));
+  RootedValue runtime_purge_surrogate_key_val(engine->cx(),
+                                              ObjectValue(*runtime_purge_surrogate_key_obj));
+
+  if (!JS_SetProperty(engine->cx(), runtime_builtin, "purgeSurrogateKey",
+                      runtime_purge_surrogate_key_val)) {
+    return false;
+  }
+  if (!JS_SetProperty(engine->cx(), fastly, "purgeSurrogateKey", runtime_purge_surrogate_key_val)) {
+    return false;
+  }
   auto runtime_vcpu_time_get =
       JS_NewFunction(engine->cx(), &runtime_get_vcpu_time, 0, 0, "vCpuTime");
   RootedObject runtime_vcpu_time_get_obj(engine->cx(), JS_GetFunctionObject(runtime_vcpu_time_get));
   RootedValue runtime_vcpu_time_get_val(engine->cx(), ObjectValue(*runtime_vcpu_time_get_obj));
-  RootedObject runtime_builtin(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   if (!JS_SetProperty(engine->cx(), runtime_builtin, "vCpuTime", runtime_vcpu_time_get_val)) {
     return false;
   }

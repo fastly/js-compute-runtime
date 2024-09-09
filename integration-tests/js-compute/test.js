@@ -200,6 +200,21 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
           clearTimeout(downstreamTimeout);
           return bodyChunks;
         }
+        // default test options
+        if (!test.downstream_request) {
+          const [method, pathname, extra] = title.split(' ');
+          if (typeof extra === 'string')
+            throw new Error('Cannot infer downstream_request from title');
+          test.downstream_request = { method, pathname };
+        }
+        if (!test.downstream_response) {
+          test.downstream_response = {
+            status: 200,
+          };
+        }
+        if (!test.environments) {
+          test.environments = ['viceroy', 'compute'];
+        }
         if (local) {
           if (test.environments.includes('viceroy')) {
             let path = test.downstream_request.pathname;
