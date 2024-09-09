@@ -7,9 +7,9 @@ defaults:
   run:
     shell: bash
 env:
-  viceroy_version: 0.10.0
-  wasm-tools_version: 1.0.28
-  fastly-cli_version: 10.8.10
+  viceroy_version: 0.12.0
+  wasm-tools_version: 1.216.0
+  fastly-cli_version: 10.13.3
 
 jobs:
   check-changelog:
