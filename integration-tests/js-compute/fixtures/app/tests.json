@@ -4243,6 +4243,10 @@
     }
   },
   "GET /runtime/purge-surrogate-key-invalid": {},
-  "GET /runtime/purge-surrogate-key-hard": {},
-  "GET /runtime/purge-surrogate-key-soft": {}
+  "GET /runtime/purge-surrogate-key-hard": {
+    "environments": ["compute"]
+  },
+  "GET /runtime/purge-surrogate-key-soft": {
+    "environments": ["compute"]
+  }
 }
