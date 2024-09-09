@@ -1,11 +1,12 @@
 /* eslint-env serviceworker */
 
-import { routes } from "./routes.js";
-import { pass, assert, assertThrows } from "./assertions.js";
+import { routes } from './routes.js';
+import { pass, assert } from './assertions.js';
+import { allowDynamicBackends } from 'fastly:experimental';
 
-routes.set("/response/stall", async (event) => {
+routes.set('/response/stall', async (event) => {
   // keep connection open 10 seconds
-  event.waitUntil(new Promise(resolve => setTimeout(resolve, 10_000)));
+  event.waitUntil(new Promise((resolve) => setTimeout(resolve, 10_000)));
   return new Response(
     new ReadableStream({
       start(controller) {
@@ -15,7 +16,7 @@ routes.set("/response/stall", async (event) => {
   );
 });
 
-routes.set("/response/text/guest-backed-stream", async () => {
+routes.set('/response/text/guest-backed-stream', async () => {
   let contents = new Array(10).fill(new Uint8Array(500).fill(65));
   contents.push(new Uint8Array([0, 66]));
   contents.push(new Uint8Array([1, 1, 2, 65]));
@@ -24,7 +25,7 @@ routes.set("/response/text/guest-backed-stream", async () => {
 
   let error = assert(
     text,
-    "A".repeat(5000) + "\x00B\x01\x01\x02A",
+    'A'.repeat(5000) + '\x00B\x01\x01\x02A',
     `await res.text() === "a".repeat(5000)`,
   );
   if (error) {
@@ -32,7 +33,8 @@ routes.set("/response/text/guest-backed-stream", async () => {
   }
   return pass();
 });
-routes.set("/response/json/guest-backed-stream", async () => {
+
+routes.set('/response/json/guest-backed-stream', async () => {
   let obj = { a: 1, b: 2, c: { d: 3 } };
   let encoder = new TextEncoder();
   let contents = encoder.encode(JSON.stringify(obj));
@@ -45,7 +47,8 @@ routes.set("/response/json/guest-backed-stream", async () => {
   }
   return pass();
 });
-routes.set("/response/arrayBuffer/guest-backed-stream", async () => {
+
+routes.set('/response/arrayBuffer/guest-backed-stream', async () => {
   let obj = { a: 1, b: 2, c: { d: 3 } };
   let encoder = new TextEncoder();
   let contents = encoder.encode(JSON.stringify(obj));
@@ -62,7 +65,8 @@ routes.set("/response/arrayBuffer/guest-backed-stream", async () => {
   }
   return pass();
 });
-routes.set("/response/ip-port-undefined", async () => {
+
+routes.set('/response/ip-port-undefined', async () => {
   let res = new Response();
   let error = assert(res.ip, undefined);
   if (error) {
@@ -72,6 +76,20 @@ routes.set("/response/ip-port-undefined", async () => {
   if (error) {
     return error;
   }
+  return pass();
+});
+
+routes.set('/response/request-body-init', async () => {
+  allowDynamicBackends(true);
+  // fetch an image
+  const downloadResp = await fetch('https://httpbin.org/image');
+  // stream it through an echo proxy
+  const postResp = await fetch(
+    new Request('https://httpbin.org/anything', {
+        method: 'POST',
+        body: downloadResp.body,
+    })
+  );
   return pass();
 });
 
