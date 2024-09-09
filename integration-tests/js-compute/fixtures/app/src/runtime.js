@@ -12,7 +12,7 @@ routes.set("/runtime/get-vcpu-ms", () => {
   ok(cpuTime > 0);
   ok(cpuTime < 3000);
   const arr = [];
-  for (let i = 0; i < 3000; i++) {
+  for (let i = 0; i < 10_000; i++) {
     arr.push(i);
   }
   const cpuTime2 = vCpuTime();
