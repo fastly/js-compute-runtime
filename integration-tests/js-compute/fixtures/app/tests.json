@@ -1732,6 +1732,20 @@
   "GET /response/arrayBuffer/guest-backed-stream": {},
   "GET /response/json": {},
   "GET /response/redirect": {},
+  "GET /response/request-body-init": {
+    "downstream_response": {
+      "status": 200,
+      "body_prefix": [
+        123, 10, 32, 32, 34, 97, 114, 103, 115, 34, 58, 32, 123, 125, 44, 32,
+        10, 32, 32, 34, 100, 97, 116, 97, 34, 58, 32, 34, 100, 97, 116, 97, 58,
+        97, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110, 47, 111, 99, 116,
+        101, 116, 45, 115, 116, 114, 101, 97, 109, 59, 98, 97, 115, 101, 54, 52,
+        44, 85, 107, 108, 71, 82, 107, 65, 112, 65, 65, 66, 88, 82, 85, 74, 81,
+        86, 108, 65, 52, 87, 65, 111, 65, 65, 65, 65, 69, 65, 65, 65, 65, 69, 81
+      ],
+      "body_suffix": [123, 10, 32, 32, 34, 97, 114, 103, 115, 34, 58, 32]
+    }
+  },
   "GET /response/ip-port-undefined": {},
   "GET /setInterval/exposed-as-global": {},
   "GET /setInterval/interface": {},

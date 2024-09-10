@@ -12,18 +12,52 @@ import compareHeaders from './compare-headers.js';
     }} configResponse
  * @param {import('undici').Dispatcher.ResponseData} actualResponse
  */
+
+function maybeUint8Array(body) {
+  if (Array.isArray(body) && typeof body[0] === 'number')
+    return new Uint8Array(body);
+  return body;
+}
+
+/**
+ * @param {Uint8Array[]} buffers
+ * @returns
+ */
+function concat(buffers) {
+  const out = new Uint8Array(buffers.reduce((len, buf) => len + buf.length, 0));
+  let curPos = 0;
+  for (const buf of buffers) {
+    if (!(buf instanceof Uint8Array)) throw new Error('not a uint8 array');
+    out.set(buf, curPos);
+    curPos += buf.length;
+  }
+  return out;
+}
+
+function bufferToString(actualBodyChunks) {
+  try {
+    return new TextDecoder().decode(concat(actualBodyChunks));
+  } catch {
+    return concat(actualBodyChunks);
+  }
+}
+
+function bufferEq(a, b) {
+  for (let i = 0; i < a.byteLength; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 export async function compareDownstreamResponse(
   configResponse,
   actualResponse,
   actualBodyChunks,
 ) {
-  let errors = [];
   // Status
   if (configResponse.status != actualResponse.statusCode) {
-    errors.push(
-      new Error(
-        `[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.statusCode}\n${actualBodyChunks.length ? `"${Buffer.concat(actualBodyChunks)}"` : ''}`,
-      ),
+    throw new Error(
+      `[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.statusCode}\n${actualBodyChunks.length ? `\n"${bufferToString(actualBodyChunks)}"` : ''}`,
     );
   }
 
@@ -33,8 +67,47 @@ export async function compareDownstreamResponse(
   }
 
   // Body
-  if (configResponse.body) {
+  if (
+    configResponse.body ||
+    configResponse.body_prefix ||
+    configResponse.body_suffix
+  ) {
+    if (configResponse.body_prefix) {
+      const body_prefix = maybeUint8Array(configResponse.body_prefix);
+      const actual_prefix = concat(actualBodyChunks).slice(
+        0,
+        body_prefix.byteLength,
+      );
+      if (body_prefix.byteLength !== actual_prefix.byteLength) {
+        throw new Error(
+          `[DownstreamResponse: Body Prefix length mismatch] Expected: ${body_prefix.byteLength} - Got ${actual_prefix.byteLength}: \n"${bufferToString(actualBodyChunks)}"`,
+        );
+      }
+      if (!bufferEq(actual_prefix, body_prefix)) {
+        throw new Error(
+          `[DownstreamResponse: Body Prefix mismatch] Expected: ${body_prefix} - Got ${actual_prefix}:\n"${bufferToString(actualBodyChunks)}"`,
+        );
+      }
+    }
+    if (configResponse.body_suffix) {
+      const body_suffix = maybeUint8Array(configResponse.body_suffix);
+      const actual_suffix = concat(actualBodyChunks).slice(
+        0,
+        body_suffix.byteLength,
+      );
+      if (body_suffix.byteLength !== actual_suffix.byteLength) {
+        throw new Error(
+          `[DownstreamResponse: Body Suffix length mismatch] Expected: ${body_suffix.byteLength} - Got: ${actual_suffix.byteLength}: \n"${bufferToString(actualBodyChunks)}"`,
+        );
+      }
+      if (!bufferEq(actual_suffix, body_suffix)) {
+        throw new Error(
+          `[DownstreamResponse: Body Suffix mismatch] Expected: ${body_suffix} - Got ${actual_suffix}:\n"${bufferToString(actualBodyChunks)}"`,
+        );
+      }
+    }
     // Check if we need to stream the response and check the chunks, or the whole body
+    configResponse.body = maybeUint8Array(configResponse.body);
     if (configResponse.body instanceof Array) {
       // Stream down the response
       let chunkNumber = 0;
@@ -50,38 +123,31 @@ export async function compareDownstreamResponse(
             chunkNumber++;
           }
         } else {
-          errors.push(
-            new Error(
-              `[DownstreamResponse: Body Chunk mismatch] Expected: ${configResponse.body[chunkNumber]} - Got: ${chunkString}`,
-            ),
+          throw new Error(
+            `[DownstreamResponse: Body Chunk mismatch] Expected: ${configResponse.body[chunkNumber]} - Got: ${chunkString}`,
           );
         }
       }
 
       if (chunkNumber !== configResponse.body.length) {
-        errors.push(
-          new Error(
-            `[DownstreamResponse: Body Chunk mismatch] Expected: ${configResponse.body} - Got: (Incomplete stream, Number of chunks returned: ${chunkNumber})`,
-          ),
+        throw new Error(
+          `[DownstreamResponse: Body Chunk mismatch] Expected: ${configResponse.body} - Got: (Incomplete stream, Number of chunks returned: ${chunkNumber})`,
         );
       }
-    } else {
+    } else if (configResponse.body !== undefined) {
       // Get the text, and check if it matches the test
-      const downstreamBodyText = Buffer.concat(
-        actualBodyChunks.map((chunk) => Buffer.from(chunk)),
-      ).toString('utf8');
-
-      if (downstreamBodyText !== configResponse.body) {
-        errors.push(
-          new Error(
-            `[DownstreamResponse: Body mismatch] Expected: ${configResponse.body} - Got: ${downstreamBodyText}`,
-          ),
+      const downstreamBodyText = new TextDecoder().decode(
+        concat(actualBodyChunks),
+      );
+      const eq =
+        typeof configResponse.body === 'string'
+          ? downstreamBodyText === configResponse.body
+          : bufferEq(configResponse.body, concat(actualBodyChunks));
+      if (!eq) {
+        throw new Error(
+          `[DownstreamResponse: Body mismatch] Expected: ${configResponse.body} - Got: ${downstreamBodyText}`,
         );
       }
     }
-  }
-
-  if (errors.length) {
-    throw new Error(errors.map((error) => error.message).join('\n'));
   }
 }
