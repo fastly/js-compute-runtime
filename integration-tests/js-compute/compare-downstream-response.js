@@ -44,8 +44,7 @@ function bufferToString(actualBodyChunks) {
 
 function bufferEq(a, b) {
   for (let i = 0; i < a.byteLength; i++) {
-    if (a[i] !== b[i])
-      return false;
+    if (a[i] !== b[i]) return false;
   }
   return true;
 }
@@ -140,7 +139,10 @@ export async function compareDownstreamResponse(
       const downstreamBodyText = new TextDecoder().decode(
         concat(actualBodyChunks),
       );
-      const eq = typeof configResponse.body === 'string' ? downstreamBodyText === configResponse.body : bufferEq(configResponse.body, concat(actualBodyChunks));
+      const eq =
+        typeof configResponse.body === 'string'
+          ? downstreamBodyText === configResponse.body
+          : bufferEq(configResponse.body, concat(actualBodyChunks));
       if (!eq) {
         throw new Error(
           `[DownstreamResponse: Body mismatch] Expected: ${configResponse.body} - Got: ${downstreamBodyText}`,
