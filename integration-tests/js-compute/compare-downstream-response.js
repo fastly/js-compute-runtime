@@ -42,6 +42,14 @@ function bufferToString(actualBodyChunks) {
   }
 }
 
+function bufferEq(a, b) {
+  for (let i = 0; i < a.byteLength; i++) {
+    if (a[i] !== b[i])
+      return false;
+  }
+  return true;
+}
+
 export async function compareDownstreamResponse(
   configResponse,
   actualResponse,
@@ -76,11 +84,10 @@ export async function compareDownstreamResponse(
           `[DownstreamResponse: Body Prefix length mismatch] Expected: ${body_prefix.byteLength} - Got ${actual_prefix.byteLength}: \n"${bufferToString(actualBodyChunks)}"`,
         );
       }
-      for (let i = 0; i < actual_prefix.byteLength; i++) {
-        if (actual_prefix[i] !== body_prefix[i])
-          throw new Error(
-            `[DownstreamResponse: Body Prefix mismatch] Expected: ${body_prefix} - Got ${actual_prefix}:\n"${bufferToString(actualBodyChunks)}"`,
-          );
+      if (!bufferEq(actual_prefix, body_prefix)) {
+        throw new Error(
+          `[DownstreamResponse: Body Prefix mismatch] Expected: ${body_prefix} - Got ${actual_prefix}:\n"${bufferToString(actualBodyChunks)}"`,
+        );
       }
     }
     if (configResponse.body_suffix) {
@@ -94,11 +101,10 @@ export async function compareDownstreamResponse(
           `[DownstreamResponse: Body Suffix length mismatch] Expected: ${body_suffix.byteLength} - Got: ${actual_suffix.byteLength}: \n"${bufferToString(actualBodyChunks)}"`,
         );
       }
-      for (let i = 0; i < actual_suffix.byteLength; i++) {
-        if (actual_suffix[i] !== body_suffix[i])
-          throw new Error(
-            `[DownstreamResponse: Body Suffix mismatch] Expected: ${body_suffix} - Got ${actual_suffix}:\n"${bufferToString(actualBodyChunks)}"`,
-          );
+      if (!bufferEq(actual_suffix, body_suffix)) {
+        throw new Error(
+          `[DownstreamResponse: Body Suffix mismatch] Expected: ${body_suffix} - Got ${actual_suffix}:\n"${bufferToString(actualBodyChunks)}"`,
+        );
       }
     }
     // Check if we need to stream the response and check the chunks, or the whole body
@@ -131,10 +137,11 @@ export async function compareDownstreamResponse(
       }
     } else if (configResponse.body !== undefined) {
       // Get the text, and check if it matches the test
-      const downstreamBodyText = new TextEncoder().encode(
+      const downstreamBodyText = new TextDecoder().decode(
         concat(actualBodyChunks),
       );
-      if (downstreamBodyText !== configResponse.body) {
+      const eq = typeof configResponse.body === 'string' ? downstreamBodyText === configResponse.body : bufferEq(configResponse.body, concat(actualBodyChunks));
+      if (!eq) {
         throw new Error(
           `[DownstreamResponse: Body mismatch] Expected: ${configResponse.body} - Got: ${downstreamBodyText}`,
         );
