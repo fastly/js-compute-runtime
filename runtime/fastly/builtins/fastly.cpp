@@ -233,7 +233,6 @@ bool runtime_get_vcpu_time(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool runtime_purge_surrogate_key(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  fprintf(stderr, "WAT");
   if (!args.requireAtLeast(cx, "purgeSurrogateKey", 1)) {
     return false;
   }
