@@ -2766,7 +2766,6 @@ Result<std::optional<HostString>> Runtime::purge_surrogate_key(std::string_view 
 
   fastly::PurgeOptions options{nullptr, 0, nullptr};
 
-  MOZ_ASSERT(!(options_mask & FASTLY_HOST_PURGE_OPTIONS_MASK_SOFT_PURGE));
   MOZ_ASSERT(!(options_mask & FASTLY_HOST_PURGE_OPTIONS_MASK_RET_BUF));
 
   if (!convert_result(fastly::purge_surrogate_key(reinterpret_cast<char *>(host_key.ptr),
