@@ -2421,34 +2421,6 @@ Result<uint64_t> CacheHandle::get_hits() {
   return res;
 }
 
-Result<std::optional<HostString>> Fastly::purge_surrogate_key(std::string_view key) {
-  Result<std::optional<HostString>> res;
-
-  auto host_key = string_view_to_world_string(key);
-  fastly::fastly_host_error err;
-  // TODO: we don't currently define any meaningful options in fastly.wit
-  uint32_t options_mask = 0;
-
-  fastly::PurgeOptions options{nullptr, 0, nullptr};
-
-  // Currently this host-call has been implemented to support the `SimpleCache.delete(key)` method,
-  // which uses hard-purging and not soft-purging.
-  // TODO: Create a JS API for this hostcall which supports hard-purging and another which supports
-  // soft-purging. E.G. `fastly.purgeSurrogateKey(key)` and `fastly.softPurgeSurrogateKey(key)`
-  MOZ_ASSERT(!(options_mask & FASTLY_HOST_PURGE_OPTIONS_MASK_SOFT_PURGE));
-  MOZ_ASSERT(!(options_mask & FASTLY_HOST_PURGE_OPTIONS_MASK_RET_BUF));
-
-  if (!convert_result(fastly::purge_surrogate_key(reinterpret_cast<char *>(host_key.ptr),
-                                                  host_key.len, options_mask, &options),
-                      &err)) {
-    res.emplace_err(err);
-  } else {
-    res.emplace(std::nullopt);
-  }
-
-  return res;
-}
-
 const std::optional<std::string> FastlySendError::message() const {
   switch (this->tag) {
   /// The send-error-detail struct has not been populated.
@@ -2782,6 +2754,28 @@ Result<uint64_t> Runtime::get_vcpu_ms() {
   } else {
     res.emplace(ret);
   }
+  return res;
+}
+
+Result<std::optional<HostString>> Runtime::purge_surrogate_key(std::string_view key, bool soft) {
+  Result<std::optional<HostString>> res;
+
+  auto host_key = string_view_to_world_string(key);
+  fastly::fastly_host_error err;
+  uint32_t options_mask = soft ? FASTLY_HOST_PURGE_OPTIONS_MASK_SOFT_PURGE : 0;
+
+  fastly::PurgeOptions options{nullptr, 0, nullptr};
+
+  MOZ_ASSERT(!(options_mask & FASTLY_HOST_PURGE_OPTIONS_MASK_RET_BUF));
+
+  if (!convert_result(fastly::purge_surrogate_key(reinterpret_cast<char *>(host_key.ptr),
+                                                  host_key.len, options_mask, &options),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(std::nullopt);
+  }
+
   return res;
 }
 

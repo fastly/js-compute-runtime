@@ -737,7 +737,7 @@ bool SimpleCache::purge(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto purge_res = host_api::Fastly::purge_surrogate_key(surrogate_key);
+  auto purge_res = host_api::Runtime::purge_surrogate_key(surrogate_key, false);
   if (auto *err = purge_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;

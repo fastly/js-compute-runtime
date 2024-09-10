@@ -748,14 +748,6 @@ public:
   Result<uint64_t> get_hits();
 };
 
-class Fastly final {
-  ~Fastly() = delete;
-
-public:
-  /// Purge the given surrogate key.
-  static Result<std::optional<HostString>> purge_surrogate_key(std::string_view key);
-};
-
 struct BackendHealth final {
 public:
   uint8_t state = 0;
@@ -809,6 +801,8 @@ public:
 class Runtime final {
 public:
   static Result<uint64_t> get_vcpu_ms();
+  /// Purge the given surrogate key.
+  static Result<std::optional<HostString>> purge_surrogate_key(std::string_view key, bool soft);
 };
 
 } // namespace host_api
