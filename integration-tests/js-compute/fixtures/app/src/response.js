@@ -82,7 +82,11 @@ routes.set('/response/ip-port-undefined', async () => {
 routes.set('/response/request-body-init', async () => {
   allowDynamicBackends(true);
   // fetch an image
-  const downloadResp = await fetch('https://httpbin.org/image');
+  const downloadResp = await fetch('https://httpbin.org/image', {
+    headers: {
+      accept: 'image/webp'
+    }
+  });
   // stream it through an echo proxy
   const postResp = await fetch(
     new Request('https://httpbin.org/anything', {
@@ -90,7 +94,8 @@ routes.set('/response/request-body-init', async () => {
         body: downloadResp.body,
     })
   );
-  return pass();
+  // finally stream back to user
+  return postResp;
 });
 
 function iteratableToStream(iterable) {
