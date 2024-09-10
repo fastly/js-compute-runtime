@@ -2745,11 +2745,11 @@ Result<HostString> DeviceDetection::lookup(std::string_view user_agent) {
   return res;
 }
 
-Result<uint64_t> Runtime::get_vcpu_ms() {
+Result<uint64_t> Compute::get_vcpu_ms() {
   Result<uint64_t> res;
   uint64_t ret;
   fastly::fastly_host_error err;
-  if (!convert_result(fastly::runtime_get_vcpu_ms(&ret), &err)) {
+  if (!convert_result(fastly::compute_get_vcpu_ms(&ret), &err)) {
     res.emplace_err(err);
   } else {
     res.emplace(ret);
@@ -2757,7 +2757,7 @@ Result<uint64_t> Runtime::get_vcpu_ms() {
   return res;
 }
 
-Result<std::optional<HostString>> Runtime::purge_surrogate_key(std::string_view key, bool soft) {
+Result<std::optional<HostString>> Compute::purge_surrogate_key(std::string_view key, bool soft) {
   Result<std::optional<HostString>> res;
 
   auto host_key = string_view_to_world_string(key);

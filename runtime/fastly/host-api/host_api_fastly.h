@@ -798,7 +798,7 @@ public:
   static Result<HostString> lookup(std::string_view user_agent);
 };
 
-class Runtime final {
+class Compute final {
 public:
   static Result<uint64_t> get_vcpu_ms();
   /// Purge the given surrogate key.
