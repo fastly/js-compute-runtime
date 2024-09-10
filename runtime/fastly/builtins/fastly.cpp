@@ -220,9 +220,9 @@ bool Fastly::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool runtime_get_vcpu_time(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool compute_get_vcpu_time(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  auto res = host_api::Runtime::get_vcpu_ms();
+  auto res = host_api::Compute::get_vcpu_ms();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -231,7 +231,7 @@ bool runtime_get_vcpu_time(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool runtime_purge_surrogate_key(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool compute_purge_surrogate_key(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "purgeSurrogateKey", 1)) {
     return false;
@@ -246,7 +246,7 @@ bool runtime_purge_surrogate_key(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (soft_val.isBoolean()) {
     soft = soft_val.toBoolean();
   }
-  auto purge_res = host_api::Runtime::purge_surrogate_key(surrogate_key_chars, soft);
+  auto purge_res = host_api::Compute::purge_surrogate_key(surrogate_key_chars, soft);
   if (auto *err = purge_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -449,34 +449,34 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  // fastly:runtime
-  RootedObject runtime_builtin(engine->cx(), JS_NewObject(engine->cx(), nullptr));
-  auto runtime_purge_surrogate_key_fn =
-      JS_NewFunction(engine->cx(), &runtime_purge_surrogate_key, 1, 0, "purgeSurrogateKey");
-  RootedObject runtime_purge_surrogate_key_obj(
-      engine->cx(), JS_GetFunctionObject(runtime_purge_surrogate_key_fn));
-  RootedValue runtime_purge_surrogate_key_val(engine->cx(),
-                                              ObjectValue(*runtime_purge_surrogate_key_obj));
+  // fastly:compute
+  RootedObject compute_builtin(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  auto compute_purge_surrogate_key_fn =
+      JS_NewFunction(engine->cx(), &compute_purge_surrogate_key, 1, 0, "purgeSurrogateKey");
+  RootedObject compute_purge_surrogate_key_obj(
+      engine->cx(), JS_GetFunctionObject(compute_purge_surrogate_key_fn));
+  RootedValue compute_purge_surrogate_key_val(engine->cx(),
+                                              ObjectValue(*compute_purge_surrogate_key_obj));
 
-  if (!JS_SetProperty(engine->cx(), runtime_builtin, "purgeSurrogateKey",
-                      runtime_purge_surrogate_key_val)) {
+  if (!JS_SetProperty(engine->cx(), compute_builtin, "purgeSurrogateKey",
+                      compute_purge_surrogate_key_val)) {
     return false;
   }
-  if (!JS_SetProperty(engine->cx(), fastly, "purgeSurrogateKey", runtime_purge_surrogate_key_val)) {
+  if (!JS_SetProperty(engine->cx(), fastly, "purgeSurrogateKey", compute_purge_surrogate_key_val)) {
     return false;
   }
-  auto runtime_vcpu_time_get =
-      JS_NewFunction(engine->cx(), &runtime_get_vcpu_time, 0, 0, "vCpuTime");
-  RootedObject runtime_vcpu_time_get_obj(engine->cx(), JS_GetFunctionObject(runtime_vcpu_time_get));
-  RootedValue runtime_vcpu_time_get_val(engine->cx(), ObjectValue(*runtime_vcpu_time_get_obj));
-  if (!JS_SetProperty(engine->cx(), runtime_builtin, "vCpuTime", runtime_vcpu_time_get_val)) {
+  auto compute_vcpu_time_get =
+      JS_NewFunction(engine->cx(), &compute_get_vcpu_time, 0, 0, "vCpuTime");
+  RootedObject compute_vcpu_time_get_obj(engine->cx(), JS_GetFunctionObject(compute_vcpu_time_get));
+  RootedValue compute_vcpu_time_get_val(engine->cx(), ObjectValue(*compute_vcpu_time_get_obj));
+  if (!JS_SetProperty(engine->cx(), compute_builtin, "vCpuTime", compute_vcpu_time_get_val)) {
     return false;
   }
-  if (!JS_SetProperty(engine->cx(), fastly, "vCpuTime", runtime_vcpu_time_get_val)) {
+  if (!JS_SetProperty(engine->cx(), fastly, "vCpuTime", compute_vcpu_time_get_val)) {
     return false;
   }
-  RootedValue runtime_builtin_val(engine->cx(), JS::ObjectValue(*runtime_builtin));
-  if (!engine->define_builtin_module("fastly:runtime", runtime_builtin_val)) {
+  RootedValue compute_builtin_val(engine->cx(), JS::ObjectValue(*compute_builtin));
+  if (!engine->define_builtin_module("fastly:compute", compute_builtin_val)) {
     return false;
   }
 
