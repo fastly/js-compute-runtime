@@ -123,10 +123,10 @@ jobs:
           macos-latest
         ]
         exclude:
-          - os: macos-latest
-            node: 18
-          - os: windows-latest
-            node: 18
+        - os: macos-latest
+          node-version: 18
+        - os: windows-latest
+          node-version: 18
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
