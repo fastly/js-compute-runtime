@@ -113,11 +113,21 @@ jobs:
 
   test-npm-package:
     if: github.ref != 'refs/heads/main'
-    runs-on: ubuntu-latest
     needs: [build]
     strategy:
       matrix:
         node-version: [18, 22]
+        os: [
+          ubuntu-latest,
+          windows-latest,
+          macos-latest
+        ]
+        exclude:
+          - os: macos-latest
+            node: 18
+          - os: windows-latest
+            node: 18
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
@@ -131,6 +141,14 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: fastly-debug
+    - name: Download Engine
+      uses: actions/download-artifact@v3
+      with:
+        name: fastly-weval
+    - name: Download Engine Weval Cache
+      uses: actions/download-artifact@v3
+      with:
+        name: fastly-weval-ic-cache
     - run: npm install
     - run: npm test
 
