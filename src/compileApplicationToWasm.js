@@ -10,9 +10,12 @@ import weval from '@cfallin/weval';
 import { precompile } from './precompile.js';
 import { bundle } from './bundle.js';
 
-const maybeWindowsPath = process.platform === 'win32' ? (path) => {
-  return '//?/' + path.replace(/\\/g, '/');
-} : path => path;
+const maybeWindowsPath =
+  process.platform === 'win32'
+    ? (path) => {
+        return '//?/' + path.replace(/\\/g, '/');
+      }
+    : (path) => path;
 
 async function getTmpDir() {
   return await mkdtemp(normalize(tmpdir() + sep));

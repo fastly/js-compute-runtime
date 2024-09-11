@@ -14,7 +14,10 @@ test('should create wasm file with --enable-experimental-aot and return zero exi
 
   t.is(await exists('./bin/main.wasm'), false);
 
-  const { code, stdout, stderr } = await execute(process.execPath, cli + ' --enable-experimental-aot');
+  const { code, stdout, stderr } = await execute(
+    process.execPath,
+    cli + ' --enable-experimental-aot',
+  );
 
   t.is(await exists('./bin/main.wasm'), true);
   t.alike(stdout, []);
