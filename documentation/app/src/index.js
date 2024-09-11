@@ -13,7 +13,6 @@ addEventListener("fetch", (event) => event.respondWith(app(event)));
 async function app(event) {
     try {
         console.log(`FASTLY_SERVICE_VERSION: ${env('FASTLY_SERVICE_VERSION')}`)
-        event.request.pathname = event.request.pathname.replace(':', '_');
         const response = await get('site', event.request)
         if (response) {
             response.headers.set("x-compress-hint", "on");
