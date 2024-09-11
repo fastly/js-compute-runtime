@@ -94,7 +94,7 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
 `,
           };
         }
-        case 'runtime': {
+        case 'compute': {
           return {
             contents: `export const { purgeSurrogateKey, vCpuTime } = globalThis.fastly;`,
           };

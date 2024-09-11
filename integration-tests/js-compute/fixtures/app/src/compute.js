@@ -1,8 +1,8 @@
 import { pass, ok, strictEqual, assertThrows } from './assertions-throwing.js';
 import { routes } from './routes.js';
-import { purgeSurrogateKey, vCpuTime } from 'fastly:runtime';
+import { purgeSurrogateKey, vCpuTime } from 'fastly:compute';
 
-routes.set('/runtime/get-vcpu-ms', () => {
+routes.set('/compute/get-vcpu-ms', () => {
   const cpuTime = vCpuTime();
   strictEqual(typeof cpuTime, 'number');
   ok(cpuTime > 0);
@@ -18,7 +18,7 @@ routes.set('/runtime/get-vcpu-ms', () => {
   return pass('ok');
 });
 
-routes.set('/runtime/purge-surrogate-key-invalid', () => {
+routes.set('/compute/purge-surrogate-key-invalid', () => {
   assertThrows(
     () => {
       purgeSurrogateKey();
@@ -29,12 +29,12 @@ routes.set('/runtime/purge-surrogate-key-invalid', () => {
   return pass('ok');
 });
 
-routes.set('/runtime/purge-surrogate-key-hard', () => {
+routes.set('/compute/purge-surrogate-key-hard', () => {
   purgeSurrogateKey('test');
   return pass('ok');
 });
 
-routes.set('/runtime/purge-surrogate-key-soft', () => {
+routes.set('/compute/purge-surrogate-key-soft', () => {
   purgeSurrogateKey('test', true);
   return pass('ok');
 });

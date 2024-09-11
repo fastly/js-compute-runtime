@@ -750,7 +750,7 @@ int device_detection_lookup(const char *user_agent, size_t user_agent_len, const
                             size_t buf_len, size_t *nwritten);
 
 WASM_IMPORT("fastly_compute_runtime", "get_vcpu_ms")
-int runtime_get_vcpu_ms(uint64_t *vcpu_ms);
+int compute_get_vcpu_ms(uint64_t *vcpu_ms);
 
 } // namespace fastly
 #ifdef __cplusplus

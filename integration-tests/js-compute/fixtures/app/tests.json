@@ -4250,17 +4250,17 @@
       "body": "ok"
     }
   },
-  "GET /runtime/get-vcpu-ms": {
+  "GET /compute/get-vcpu-ms": {
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
-  "GET /runtime/purge-surrogate-key-invalid": {},
-  "GET /runtime/purge-surrogate-key-hard": {
+  "GET /compute/purge-surrogate-key-invalid": {},
+  "GET /compute/purge-surrogate-key-hard": {
     "environments": ["compute"]
   },
-  "GET /runtime/purge-surrogate-key-soft": {
+  "GET /compute/purge-surrogate-key-soft": {
     "environments": ["compute"]
   }
 }
