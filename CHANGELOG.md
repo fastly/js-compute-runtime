@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.22.0 (2024-09-11)
+
+### Added
+
+* Add support for vcpu ms hostcall ([#950](https://github.com/fastly/js-compute-runtime/issues/950)) ([aea826f](https://github.com/fastly/js-compute-runtime/commit/aea826feb65c680f627b9e3b01152bb0534d9fd6))
+* expose purgeSurrogateKey hostcall ([#953](https://github.com/fastly/js-compute-runtime/issues/953)) ([4468e3c](https://github.com/fastly/js-compute-runtime/commit/4468e3c2a70d97b3efd1e76a7053b9d1a01227e0))
+
+### Fixed
+
+* passing direct response body to requests in streaming ([#954](https://github.com/fastly/js-compute-runtime/issues/954)) ([6bf90b9](https://github.com/fastly/js-compute-runtime/commit/6bf90b915379ddab5257672b4778c0b81a5523e4))
+
 ## 3.21.4 (2024-09-05)
 
 ### Fixed
