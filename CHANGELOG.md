@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.22.2](https://github.com/fastly/js-compute-runtime/compare/v3.22.1...v3.22.2) (2024-09-12)
+
+
+### Bug Fixes
+
+* docs deployment ([#964](https://github.com/fastly/js-compute-runtime/issues/964)) ([510c246](https://github.com/fastly/js-compute-runtime/commit/510c246315cfb247485aed05442be93981e965f2))
+
 ## 3.22.1 (2024-09-12)
 
 ### Fixed
