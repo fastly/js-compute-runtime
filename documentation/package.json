@@ -9,7 +9,8 @@
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "rename": "node rename-docs.mjs add-prefix"
+    "remove-fastly-prefix": "node rename-docs.mjs remove-prefix",
+    "add-fastly-prefix": "node rename-docs.mjs add-prefix"
   },
   "devDependencies": {
     "@cmfcmf/docusaurus-search-local": "^0.11.0",
