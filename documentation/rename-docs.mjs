@@ -27,7 +27,7 @@ const subsystems = [
 ];
 
 const files = readdirSync('docs');
-const direction = files[0].startsWith('fastly:') ? 'remove-prefix' : 'add-prefix';
+const direction = process.argv[2] || (files.some(f => f.startsWith('fastly:')) ? 'remove-prefix' : 'add-prefix');
 
 for (const file of files) {
   if (direction === 'remove-prefix' && file.startsWith('fastly:')) {
