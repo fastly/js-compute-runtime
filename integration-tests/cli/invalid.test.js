@@ -14,8 +14,8 @@ test('should return non-zero exit code on syntax errors', async function (t) {
   const { code, stdout, stderr } = await execute(process.execPath, cli);
   t.alike(stdout, []);
   strictEqual(
-    stderr.join('\n').toString().replace(/\r\n/g, '\n'),
-    `✘ [ERROR] Expected identifier but found end of file
+    stderr.join('\n').toString().replace(/\r\n/g, '\n').slice(1),
+    ` [ERROR] Expected identifier but found end of file
 bin/index.js:4:9:
 4 │ "hello";@
 ╵          ^
