@@ -20,8 +20,10 @@ test('should return non-zero exit code', async function (t) {
 
   t.alike(stdout, []);
   ok(
-    stderr.startsWith('Error: The `wasmEngine` path does not point to a file:'),
+    stderr
+      .toString()
+      .startsWith('Error: The `wasmEngine` path does not point to a file:'),
   );
-  ok(stderr.endsWith('engine.wasm'));
+  ok(stderr.toString().endsWith('engine.wasm'));
   t.is(code, 1);
 });
