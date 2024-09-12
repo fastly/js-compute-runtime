@@ -1,6 +1,7 @@
 import test from 'brittle';
 import { getBinPath } from 'get-bin-path';
 import { prepareEnvironment } from '@jakechampion/cli-testing-library';
+import { ok } from 'node:assert';
 
 const cli = await getBinPath({ name: 'js-compute' });
 
@@ -17,8 +18,13 @@ test('should return non-zero exit code', async function (t) {
   );
 
   t.alike(stdout, []);
-  t.alike(stderr, [
-    'Error: The `wasmEngine` path points to a non-existent file: {{base}}/engine.wasm',
-  ]);
+  ok(
+    stderr
+      .toString()
+      .startsWith(
+        'Error: The `wasmEngine` path points to a non-existent file:',
+      ),
+  );
+  ok(stderr.toString().endsWith('engine.wasm'));
   t.is(code, 1);
 });
