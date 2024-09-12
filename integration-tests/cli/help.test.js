@@ -18,7 +18,7 @@ test('--help should return help on stdout and zero exit code', async function (t
   t.teardown(async function () {
     await cleanup();
   });
-  const { code, stdout, stderr } = await execute(cli, `--help`);
+  const { code, stdout, stderr } = await execute('node', `${cli} --help`);
 
   t.is(code, 0);
   t.alike(stdout, [
@@ -44,7 +44,7 @@ test('-h should return help on stdout and zero exit code', async function (t) {
   t.teardown(async function () {
     await cleanup();
   });
-  const { code, stdout, stderr } = await execute(cli, `-h`);
+  const { code, stdout, stderr } = await execute('node', `${cli} -h`);
 
   t.is(code, 0);
   t.alike(stdout, [

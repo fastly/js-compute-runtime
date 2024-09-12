@@ -10,6 +10,13 @@ import weval from '@cfallin/weval';
 import { precompile } from './precompile.js';
 import { bundle } from './bundle.js';
 
+const maybeWindowsPath =
+  process.platform === 'win32'
+    ? (path) => {
+        return '//?/' + path.replace(/\\/g, '/');
+      }
+    : (path) => path;
+
 async function getTmpDir() {
   return await mkdtemp(normalize(tmpdir() + sep));
 }
@@ -87,9 +94,6 @@ export async function compileApplicationToWasm(
     process.exit(1);
   }
 
-  let wizerInput,
-    cleanup = () => {};
-
   let contents;
   try {
     contents = await bundle(input, enableExperimentalTopLevelAwait);
@@ -98,7 +102,7 @@ export async function compileApplicationToWasm(
     process.exit(1);
   }
 
-  wizerInput = precompile(
+  let wizerInput = precompile(
     contents.outputFiles[0].text,
     undefined,
     enableExperimentalTopLevelAwait,
@@ -109,9 +113,6 @@ export async function compileApplicationToWasm(
   const outPath = resolve(tmpDir, 'input.js');
   await writeFile(outPath, wizerInput);
   wizerInput = outPath;
-  cleanup = () => {
-    rmSync(tmpDir, { recursive: true });
-  };
 
   try {
     if (enableAOT) {
@@ -123,14 +124,14 @@ export async function compileApplicationToWasm(
           'weval',
           ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
           '--dir .',
-          `--dir ${dirname(wizerInput)}`,
+          `--dir ${maybeWindowsPath(dirname(wizerInput))}`,
           '-w',
           `-i "${wasmEngine}"`,
           `-o "${output}"`,
         ],
         {
           stdio: [null, process.stdout, process.stderr],
-          input: wizerInput,
+          input: maybeWindowsPath(wizerInput),
           shell: true,
           encoding: 'utf-8',
           env: {
@@ -152,7 +153,7 @@ export async function compileApplicationToWasm(
           '--inherit-env=true',
           '--allow-wasi',
           '--dir=.',
-          `--dir=${dirname(wizerInput)}`,
+          `--dir=${maybeWindowsPath(dirname(wizerInput))}`,
           `--wasm-bulk-memory=true`,
           '-r _start=wizer.resume',
           `-o="${output}"`,
@@ -160,7 +161,7 @@ export async function compileApplicationToWasm(
         ],
         {
           stdio: [null, process.stdout, process.stderr],
-          input: wizerInput,
+          input: maybeWindowsPath(wizerInput),
           shell: true,
           encoding: 'utf-8',
           env: {
@@ -183,6 +184,6 @@ export async function compileApplicationToWasm(
     );
     process.exit(1);
   } finally {
-    cleanup();
+    rmSync(tmpDir, { recursive: true });
   }
 }

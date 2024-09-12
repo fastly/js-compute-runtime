@@ -1,6 +1,7 @@
 import test from 'brittle';
 import { getBinPath } from 'get-bin-path';
 import { prepareEnvironment } from '@jakechampion/cli-testing-library';
+import { ok } from 'node:assert';
 
 const cli = await getBinPath({ name: 'js-compute' });
 
@@ -14,8 +15,11 @@ test('should return non-zero exit code', async function (t) {
   const { code, stdout, stderr } = await execute(process.execPath, cli);
 
   t.alike(stdout, []);
-  t.alike(stderr, [
-    'Error: The `output` path does not point to a file: {{base}}/bin/main.wasm',
-  ]);
+  ok(
+    stderr
+      .toString()
+      .startsWith('Error: The `output` path does not point to a file:'),
+  );
+  ok(stderr.toString().endsWith('main.wasm'));
   t.is(code, 1);
 });
