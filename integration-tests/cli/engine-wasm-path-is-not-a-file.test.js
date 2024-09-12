@@ -1,7 +1,7 @@
 import test from 'brittle';
 import { getBinPath } from 'get-bin-path';
 import { prepareEnvironment } from '@jakechampion/cli-testing-library';
-import { strictEqual } from 'node:assert';
+import { ok } from 'node:assert';
 
 const cli = await getBinPath({ name: 'js-compute' });
 
