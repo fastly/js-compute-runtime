@@ -1,0 +1,62 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# `KVStore()`
+
+The **`KVStore` constructor** lets you connect your Fastly Compute application to a Fastly KV store.
+
+A Fastly KV store is a persistent, globally consistent key-value store. See [Data stores for Fastly services](https://developer.fastly.com/learning/concepts/kv-stores/#kv-stores) for initialization and usage details.
+
+>**Note**: Can only be used when processing requests, not during build-time initialization.
+
+## Syntax
+
+```js
+new KVStore(name)
+```
+
+> **Note:** `KVStore()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
+
+### Parameters
+
+- `name` _: string_
+  - The Fastly KV store which should be associated with this KVStore instance
+  
+### Return value
+
+A new `KVStore` object.
+
+### Exceptions
+
+- `TypeError`
+  - Thrown if no KV Store exists with the provided name
+  - Thrown if the provided name is longer than 255 in length
+  - Thrown if the provided name is an empty string
+  - Thrown if the provided name does not start with an ascii alphabetical character 
+  - Thrown if the provided name contains control characters `(\u0000-\u001F)`
+
+## Examples
+
+In this example we connect to an KV Store named `'files'` and save an entry to the store under the key `'hello'` and then read back the value and return it to the client.
+
+```js
+/// <reference types="@fastly/js-compute" />
+
+import { KVStore } from "fastly:kv-store";
+
+async function app(event) {
+  const files = new KVStore('files')
+
+  await files.put('hello', 'world')
+
+  const entry = await files.get('hello')
+
+  return new Response(await entry.text())
+}
+
+addEventListener("fetch", (event) => event.respondWith(app(event)))
+
+```
