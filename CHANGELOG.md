@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.22.1](https://github.com/fastly/js-compute-runtime/compare/v3.22.0...v3.22.1) (2024-09-12)
+
+
+### Bug Fixes
+
+* fastly:compute type index ([#960](https://github.com/fastly/js-compute-runtime/issues/960)) ([9bd25fd](https://github.com/fastly/js-compute-runtime/commit/9bd25fd5481693394669d814738fb3d05fdf2312))
+* windows support & windows ci ([#962](https://github.com/fastly/js-compute-runtime/issues/962)) ([d8e9c5e](https://github.com/fastly/js-compute-runtime/commit/d8e9c5e5a7ec6972ad6018b66a4eb454bef4c8f0))
+
 ## 3.22.0 (2024-09-11)
 
 ### Added
