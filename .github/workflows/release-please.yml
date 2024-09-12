@@ -45,6 +45,8 @@ jobs:
 
       - run: npm update
         working-directory: ./documentation
+      - run: npm run rename
+        working-directory: ./documentation
       - run: npm run docusaurus docs:version "$(npm pkg get version --json --prefix=../ | jq -r)"
         working-directory: ./documentation
       
@@ -165,6 +167,9 @@ jobs:
           rm .npmrc
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: npm run rename
+        working-directory: ./documentation
 
       - run: npm ci
         working-directory: ./documentation

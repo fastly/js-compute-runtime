@@ -33,6 +33,7 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 'lts/*'
+    - run: cd documentation && npm run rename
     - run: cd documentation && npm ci
     - run: cd documentation && npm run build
 
