@@ -2,7 +2,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "docusaurus build",
+    "build": "node --max-old-space-size=8000 node_modules/.bin/docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "npm run build && cd app && npm install && npm run deploy",
     "clear": "docusaurus clear",
