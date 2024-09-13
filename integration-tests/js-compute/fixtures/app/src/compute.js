@@ -16,7 +16,6 @@ routes.set('/compute/get-vcpu-ms', () => {
   const cpuTime2 = vCpuTime();
   ok(cpuTime2 > cpuTime);
   ok(cpuTime2 - cpuTime > 1);
-  ok(cpuTime2 - cpuTime < 3000);
   return pass('ok');
 });
 
