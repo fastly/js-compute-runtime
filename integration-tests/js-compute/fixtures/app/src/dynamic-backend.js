@@ -2119,7 +2119,7 @@ routes.set('/backend/timeout', async () => {
             target: 'http-me.glitch.me',
             grpc: 0
           });
-          await fetch('https://http-me.glitch.me/headers', {
+          await fetch('https://http-me.glitch.me/anything', {
             backend,
             cacheOverride: new CacheOverride('pass'),
           });
@@ -2137,7 +2137,7 @@ routes.set('/backend/timeout', async () => {
             target: 'http-me.glitch.me',
             grpc: true
           });
-          await fetch('https://http-me.glitch.me/headers', {
+          await fetch('https://http-me.glitch.me/anything', {
             backend,
             cacheOverride: new CacheOverride('pass'),
           });
