@@ -3,18 +3,19 @@ import { Backend } from 'fastly:backend';
 import { CacheOverride } from 'fastly:cache-override';
 import { allowDynamicBackends } from 'fastly:experimental';
 import {
-  pass,
   assert,
   assertDoesNotThrow,
-  assertThrows,
   assertRejects,
   assertResolves,
+  assertThrows,
+  ok,
+  strictEqual,
 } from './assertions-throwing.js';
 import { isRunningLocally, routes } from './routes.js';
 
 routes.set('/backend/timeout', async () => {
   if (isRunningLocally()) {
-    return pass('ok');
+    return;
   }
   allowDynamicBackends(true);
   let backend = new Backend({
@@ -38,7 +39,6 @@ routes.set('/backend/timeout', async () => {
     'HTTP response timeout',
   );
   console.timeEnd(`fetch('https://http-me.glitch.me/test?wait=5000'`);
-  return pass('ok');
 });
 
 // implicit dynamic backend
@@ -48,14 +48,12 @@ routes.set('/backend/timeout', async () => {
     async () => {
       allowDynamicBackends(false);
       await assertRejects(() => fetch('https://http-me.glitch.me/headers'));
-      return pass('ok');
     },
   );
   routes.set('/implicit-dynamic-backend/dynamic-backends-enabled', async () => {
     allowDynamicBackends(true);
     await assertResolves(() => fetch('https://http-me.glitch.me/headers'));
     await assertResolves(() => fetch('https://www.fastly.com'));
-    return pass('ok');
   });
   routes.set(
     '/implicit-dynamic-backend/dynamic-backends-enabled-called-twice',
@@ -63,12 +61,11 @@ routes.set('/backend/timeout', async () => {
       allowDynamicBackends(true);
       await assertResolves(() => fetch('https://http-me.glitch.me/headers'));
       await assertResolves(() => fetch('https://http-me.glitch.me/headers'));
-      return pass('ok');
     },
   );
   routes.set('/implicit-dynamic-backend/default-timeouts', async () => {
     if (isRunningLocally()) {
-      return pass('ok');
+      return;
     }
     allowDynamicBackends(true);
     allowDynamicBackends({
@@ -84,7 +81,6 @@ routes.set('/backend/timeout', async () => {
       DOMException,
       'HTTP response timeout',
     );
-    return pass('ok');
   });
 }
 
@@ -101,7 +97,6 @@ routes.set('/backend/timeout', async () => {
           cacheOverride: new CacheOverride('pass'),
         }),
       );
-      return pass('ok');
     },
   );
   routes.set(
@@ -115,7 +110,6 @@ routes.set('/backend/timeout', async () => {
           cacheOverride: new CacheOverride('pass'),
         }),
       );
-      return pass('ok');
     },
   );
 }
@@ -365,8 +359,6 @@ routes.set('/backend/timeout', async () => {
       expected,
       `Reflect.getOwnPropertyDescriptor(Backend.prototype.toName, 'name')`,
     );
-
-    return pass('ok');
   });
 
   // constructor
@@ -379,7 +371,6 @@ routes.set('/backend/timeout', async () => {
         TypeError,
         `calling a builtin Backend constructor without new is forbidden`,
       );
-      return pass('ok');
     });
     routes.set('/backend/constructor/empty-parameter', async () => {
       assertThrows(
@@ -389,7 +380,6 @@ routes.set('/backend/timeout', async () => {
         TypeError,
         `Backend constructor: At least 1 argument required, but only 0 passed`,
       );
-      return pass('ok');
     });
     routes.set('/backend/constructor/parameter-not-an-object', async () => {
       const constructorArguments = [
@@ -412,7 +402,6 @@ routes.set('/backend/timeout', async () => {
           `Backend constructor: configuration parameter must be an Object`,
         );
       }
-      return pass('ok');
     });
     // name property
     {
@@ -426,7 +415,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: name can not be null or undefined`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -439,7 +427,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: name can not be null or undefined`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -452,7 +439,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: name can not be more than 254 characters`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -465,7 +451,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: name can not be an empty string`,
           );
-          return pass('ok');
         },
       );
       // https://tc39.es/ecma262/#sec-tostring
@@ -493,7 +478,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `can't convert symbol to string`,
           );
-          return pass('ok');
         },
       );
     }
@@ -510,7 +494,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: target can not be null or undefined`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -523,7 +506,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: target can not be null or undefined`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -536,7 +518,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: target can not be an empty string`,
           );
-          return pass('ok');
         },
       );
       // https://tc39.es/ecma262/#sec-tostring
@@ -564,7 +545,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `can't convert symbol to string`,
           );
-          return pass('ok');
         },
       );
 
@@ -612,7 +592,6 @@ routes.set('/backend/timeout', async () => {
             });
             i++;
           }
-          return pass('ok');
         },
       );
 
@@ -679,7 +658,6 @@ routes.set('/backend/timeout', async () => {
             );
             i++;
           }
-          return pass('ok');
         },
       );
     }
@@ -696,7 +674,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: ciphers can not be an empty string`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -709,7 +686,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: none of the provided ciphers are supported by Fastly. The list of supported ciphers is available on https://developer.fastly.com/learning/concepts/routing-traffic-to-fastly/#use-a-tls-configuration`,
           );
-          return pass('ok');
         },
       );
       const validCiphers = [
@@ -1020,7 +996,6 @@ routes.set('/backend/timeout', async () => {
                 .join(':'),
             });
           });
-          return pass('ok');
         },
       );
       routes.set(
@@ -1060,7 +1035,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: none of the provided ciphers are supported by Fastly. The list of supported ciphers is available on https://developer.fastly.com/learning/concepts/routing-traffic-to-fastly/#use-a-tls-configuration`,
           );
-          return pass('ok');
         },
       );
       // https://tc39.es/ecma262/#sec-tostring
@@ -1088,7 +1062,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `can't convert symbol to string`,
           );
-          return pass('ok');
         },
       );
     }
@@ -1109,7 +1082,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: hostOverride can not be an empty string`,
           );
-          return pass('ok');
         },
       );
       // https://tc39.es/ecma262/#sec-tostring
@@ -1146,7 +1118,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `can't convert symbol to string`,
           );
-          return pass('ok');
         },
       );
 
@@ -1160,7 +1131,6 @@ routes.set('/backend/timeout', async () => {
               hostOverride: 'www.fastly.com',
             });
           });
-          return pass('ok');
         },
       );
     }
@@ -1181,7 +1151,6 @@ routes.set('/backend/timeout', async () => {
             RangeError,
             `Backend constructor: connectTimeout can not be a negative number`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -1198,7 +1167,6 @@ routes.set('/backend/timeout', async () => {
             RangeError,
             `Backend constructor: connectTimeout must be less than 2^32`,
           );
-          return pass('ok');
         },
       );
       // https://tc39.es/ecma262/#sec-tonumber
@@ -1238,7 +1206,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `can't convert symbol to number`,
           );
-          return pass('ok');
         },
       );
 
@@ -1252,7 +1219,6 @@ routes.set('/backend/timeout', async () => {
               connectTimeout: 1,
             });
           });
-          return pass('ok');
         },
       );
     }
@@ -1273,7 +1239,6 @@ routes.set('/backend/timeout', async () => {
             RangeError,
             `Backend constructor: firstByteTimeout can not be a negative number`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -1290,7 +1255,6 @@ routes.set('/backend/timeout', async () => {
             RangeError,
             `Backend constructor: firstByteTimeout must be less than 2^32`,
           );
-          return pass('ok');
         },
       );
       // https://tc39.es/ecma262/#sec-tonumber
@@ -1330,7 +1294,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `can't convert symbol to number`,
           );
-          return pass('ok');
         },
       );
 
@@ -1344,7 +1307,6 @@ routes.set('/backend/timeout', async () => {
               firstByteTimeout: 1,
             });
           });
-          return pass('ok');
         },
       );
     }
@@ -1365,7 +1327,6 @@ routes.set('/backend/timeout', async () => {
             RangeError,
             `Backend constructor: betweenBytesTimeout can not be a negative number`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -1382,7 +1343,6 @@ routes.set('/backend/timeout', async () => {
             RangeError,
             `Backend constructor: betweenBytesTimeout must be less than 2^32`,
           );
-          return pass('ok');
         },
       );
       // https://tc39.es/ecma262/#sec-tonumber
@@ -1422,7 +1382,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `can't convert symbol to number`,
           );
-          return pass('ok');
         },
       );
 
@@ -1436,7 +1395,6 @@ routes.set('/backend/timeout', async () => {
               betweenBytesTimeout: 1,
             });
           });
-          return pass('ok');
         },
       );
     }
@@ -1470,7 +1428,6 @@ routes.set('/backend/timeout', async () => {
               useSSL: false,
             });
           });
-          return pass('ok');
         },
       );
     }
@@ -1504,7 +1461,6 @@ routes.set('/backend/timeout', async () => {
               dontPool: false,
             });
           });
-          return pass('ok');
         },
       );
     }
@@ -1525,7 +1481,6 @@ routes.set('/backend/timeout', async () => {
             RangeError,
             `Backend constructor: tlsMinVersion must be either 1, 1.1, 1.2, or 1.3`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -1542,7 +1497,6 @@ routes.set('/backend/timeout', async () => {
             RangeError,
             `Backend constructor: tlsMinVersion must be either 1, 1.1, 1.2, or 1.3`,
           );
-          return pass('ok');
         },
       );
       // https://tc39.es/ecma262/#sec-tonumber
@@ -1582,7 +1536,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `can't convert symbol to number`,
           );
-          return pass('ok');
         },
       );
 
@@ -1624,7 +1577,6 @@ routes.set('/backend/timeout', async () => {
               tlsMinVersion: 1.3,
             });
           });
-          return pass('ok');
         },
       );
 
@@ -1643,7 +1595,6 @@ routes.set('/backend/timeout', async () => {
             RangeError,
             `Backend constructor: tlsMinVersion must be less than or equal to tlsMaxVersion`,
           );
-          return pass('ok');
         },
       );
     }
@@ -1664,7 +1615,6 @@ routes.set('/backend/timeout', async () => {
             RangeError,
             `Backend constructor: tlsMaxVersion must be either 1, 1.1, 1.2, or 1.3`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -1681,7 +1631,6 @@ routes.set('/backend/timeout', async () => {
             RangeError,
             `Backend constructor: tlsMaxVersion must be either 1, 1.1, 1.2, or 1.3`,
           );
-          return pass('ok');
         },
       );
       // https://tc39.es/ecma262/#sec-tonumber
@@ -1721,7 +1670,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `can't convert symbol to number`,
           );
-          return pass('ok');
         },
       );
 
@@ -1755,7 +1703,6 @@ routes.set('/backend/timeout', async () => {
               tlsMaxVersion: 1.3,
             });
           });
-          return pass('ok');
         },
       );
     }
@@ -1776,7 +1723,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: certificateHostname can not be an empty string`,
           );
-          return pass('ok');
         },
       );
       // https://tc39.es/ecma262/#sec-tostring
@@ -1813,7 +1759,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `can't convert symbol to string`,
           );
-          return pass('ok');
         },
       );
 
@@ -1827,7 +1772,6 @@ routes.set('/backend/timeout', async () => {
               certificateHostname: 'www.fastly.com',
             });
           });
-          return pass('ok');
         },
       );
     }
@@ -1848,7 +1792,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: caCertificate can not be an empty string`,
           );
-          return pass('ok');
         },
       );
       // https://tc39.es/ecma262/#sec-tostring
@@ -1885,7 +1828,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `can't convert symbol to string`,
           );
-          return pass('ok');
         },
       );
 
@@ -1899,7 +1841,6 @@ routes.set('/backend/timeout', async () => {
               caCertificate: 'www.fastly.com',
             });
           });
-          return pass('ok');
         },
       );
     }
@@ -1920,7 +1861,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: sniHostname can not be an empty string`,
           );
-          return pass('ok');
         },
       );
       // https://tc39.es/ecma262/#sec-tostring
@@ -1957,7 +1897,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `can't convert symbol to string`,
           );
-          return pass('ok');
         },
       );
 
@@ -1971,7 +1910,6 @@ routes.set('/backend/timeout', async () => {
               sniHostname: 'www.fastly.com',
             });
           });
-          return pass('ok');
         },
       );
     }
@@ -1992,7 +1930,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: clientCertificate must be an object containing 'certificate' and 'key' properties`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -2009,7 +1946,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: clientCertificate 'certificate' must be a certificate string`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -2026,7 +1962,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: clientCertificate 'certificate' can not be an empty string`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -2043,7 +1978,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: clientCertificate 'key' must be a SecretStoreEntry instance`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -2060,7 +1994,6 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: clientCertificate 'key' must be a SecretStoreEntry instance`,
           );
-          return pass('ok');
         },
       );
       routes.set(
@@ -2080,14 +2013,13 @@ routes.set('/backend/timeout', async () => {
             TypeError,
             `Backend constructor: clientCertificate 'key' must be a SecretStoreEntry instance`,
           );
-          return pass('ok');
         },
       );
       routes.set(
         '/backend/constructor/parameter-clientCertificate-valid',
         async () => {
           if (isRunningLocally()) {
-            return pass('ok');
+            return;
           }
           let backend = new Backend({
             name: 'clientCertificate-clientCertificate-valid',
@@ -2101,7 +2033,6 @@ routes.set('/backend/timeout', async () => {
             backend,
             cacheOverride: new CacheOverride('pass'),
           });
-          return pass('ok');
         },
       );
     }
@@ -2112,38 +2043,33 @@ routes.set('/backend/timeout', async () => {
         '/backend/constructor/parameter-grpc-property-falsy',
         async () => {
           if (isRunningLocally()) {
-            return pass('ok');
+            return;
           }
           let backend = new Backend({
             name: 'grpc-grpc-invalid',
             target: 'http-me.glitch.me',
-            grpc: 0
+            grpc: 0,
           });
           await fetch('https://http-me.glitch.me/anything', {
             backend,
             cacheOverride: new CacheOverride('pass'),
           });
-          return pass('ok');
         },
       );
-      routes.set(
-        '/backend/constructor/parameter-grpc-enabled',
-        async () => {
-          if (isRunningLocally()) {
-            return pass('ok');
-          }
-          let backend = new Backend({
-            name: 'grpc-grpc-valid',
-            target: 'http-me.glitch.me',
-            grpc: true
-          });
-          await fetch('https://http-me.glitch.me/anything', {
-            backend,
-            cacheOverride: new CacheOverride('pass'),
-          });
-          return pass('ok');
-        },
-      );
+      routes.set('/backend/constructor/parameter-grpc-enabled', async () => {
+        if (isRunningLocally()) {
+          return;
+        }
+        let backend = new Backend({
+          name: 'grpc-grpc-valid',
+          target: 'http-me.glitch.me',
+          grpc: true,
+        });
+        await fetch('https://http-me.glitch.me/anything', {
+          backend,
+          cacheOverride: new CacheOverride('pass'),
+        });
+      });
     }
   }
 
@@ -2157,7 +2083,6 @@ routes.set('/backend/timeout', async () => {
         TypeError,
         `Backend.exists is not a constructor`,
       );
-      return pass('ok');
     });
     routes.set('/backend/exists/empty-parameter', async () => {
       assertThrows(
@@ -2167,7 +2092,6 @@ routes.set('/backend/timeout', async () => {
         TypeError,
         `Backend.exists: At least 1 argument required, but only 0 passed`,
       );
-      return pass('ok');
     });
     // https://tc39.es/ecma262/#sec-tostring
     routes.set('/backend/exists/parameter-calls-7.1.17-ToString', async () => {
@@ -2192,7 +2116,6 @@ routes.set('/backend/timeout', async () => {
         TypeError,
         `can't convert symbol to string`,
       );
-      return pass('ok');
     });
 
     routes.set('/backend/exists/parameter-invalid', async () => {
@@ -2204,17 +2127,14 @@ routes.set('/backend/timeout', async () => {
       assertThrows(() => Backend.exists('a'.repeat(255)), TypeError);
       // .length == 0
       assertThrows(() => Backend.exists(''), TypeError);
-      return pass('ok');
     });
     routes.set('/backend/exists/happy-path-backend-exists', async () => {
       assert(Backend.exists('TheOrigin'), true, `Backend.exists('TheOrigin')`);
-      return pass('ok');
     });
     routes.set(
       '/backend/exists/happy-path-backend-does-not-exist',
       async () => {
         assert(Backend.exists('meow'), false, `Backend.exists('meow')`);
-        return pass('ok');
       },
     );
   }
@@ -2229,7 +2149,6 @@ routes.set('/backend/timeout', async () => {
         TypeError,
         `Backend.fromName is not a constructor`,
       );
-      return pass('ok');
     });
     routes.set('/backend/fromName/empty-parameter', async () => {
       assertThrows(
@@ -2239,7 +2158,6 @@ routes.set('/backend/timeout', async () => {
         TypeError,
         `Backend.fromName: At least 1 argument required, but only 0 passed`,
       );
-      return pass('ok');
     });
     // https://tc39.es/ecma262/#sec-tostring
     routes.set(
@@ -2266,7 +2184,6 @@ routes.set('/backend/timeout', async () => {
           TypeError,
           `can't convert symbol to string`,
         );
-        return pass('ok');
       },
     );
 
@@ -2279,7 +2196,6 @@ routes.set('/backend/timeout', async () => {
       assertThrows(() => Backend.fromName('a'.repeat(255)), TypeError);
       // .length == 0
       assertThrows(() => Backend.fromName(''), TypeError);
-      return pass('ok');
     });
     routes.set('/backend/fromName/happy-path-backend-exists', async () => {
       allowDynamicBackends(false);
@@ -2294,8 +2210,6 @@ routes.set('/backend/timeout', async () => {
           backend: Backend.fromName('TheOrigin'),
         }),
       );
-
-      return pass('ok');
     });
     routes.set(
       '/backend/fromName/happy-path-backend-does-not-exist',
@@ -2305,7 +2219,6 @@ routes.set('/backend/timeout', async () => {
           Error,
           "Backend.fromName: backend named 'meow' does not exist",
         );
-        return pass('ok');
       },
     );
   }
@@ -2316,7 +2229,6 @@ routes.set('/backend/timeout', async () => {
       assertThrows(() => {
         new Backend.health();
       }, TypeError);
-      return pass('ok');
     });
     routes.set('/backend/health/empty-parameter', async () => {
       assertThrows(
@@ -2326,7 +2238,6 @@ routes.set('/backend/timeout', async () => {
         TypeError,
         `Backend.health: At least 1 argument required, but only 0 passed`,
       );
-      return pass('ok');
     });
     // https://tc39.es/ecma262/#sec-tostring
     routes.set('/backend/health/parameter-calls-7.1.17-ToString', async () => {
@@ -2351,7 +2262,6 @@ routes.set('/backend/timeout', async () => {
         TypeError,
         `can't convert symbol to string`,
       );
-      return pass('ok');
     });
 
     routes.set('/backend/health/parameter-invalid', async () => {
@@ -2363,7 +2273,6 @@ routes.set('/backend/timeout', async () => {
       assertThrows(() => Backend.health('a'.repeat(255)), TypeError);
       // .length == 0
       assertThrows(() => Backend.health(''), TypeError);
-      return pass('ok');
     });
     routes.set('/backend/health/happy-path-backend-exists', async () => {
       assert(
@@ -2376,8 +2285,6 @@ routes.set('/backend/timeout', async () => {
         'unknown',
         "Backend.health('TheOrigin')",
       );
-
-      return pass('ok');
     });
     routes.set(
       '/backend/health/happy-path-backend-does-not-exist',
@@ -2387,7 +2294,6 @@ routes.set('/backend/timeout', async () => {
           Error,
           "Backend.health: backend named 'meow' does not exist",
         );
-        return pass('ok');
       },
     );
   }
@@ -2398,16 +2304,14 @@ routes.set('/backend/timeout', async () => {
     const res = await fetch('https://http-me.glitch.me/headers', {
       cacheOverride: new CacheOverride('pass'),
     });
-    assert(res.port > 0);
-    assert(res.ip.split('.').length > 1 || res.ip.split(':').length > 1);
-    return pass('ok');
+    ok(res.port > 0);
+    ok(res.ip.split('.').length > 1 || res.ip.split(':').length > 1);
   });
   routes.set('/backend/port-ip-cached', async () => {
     allowDynamicBackends(true);
     const res = await fetch('https://http-me.glitch.me/headers');
-    assert(res.port > 0);
-    assert(res.ip.split('.').length > 1 || res.ip.split(':').length > 1);
-    return pass('ok');
+    strictEqual(res.port, undefined);
+    strictEqual(res.ip, undefined);
   });
 }
 
