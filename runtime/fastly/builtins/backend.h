@@ -28,6 +28,7 @@ public:
     DontPool,
     ClientCert,
     ClientCertKey,
+    Grpc,
     Count
   };
 

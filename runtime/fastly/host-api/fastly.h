@@ -208,6 +208,8 @@ typedef struct fastly_host_http_send_error_detail {
 #define BACKEND_CONFIG_SNI_HOSTNAME (1u << 11)
 #define BACKEND_CONFIG_DONT_POOL (1u << 12)
 #define BACKEND_CONFIG_CLIENT_CERT (1u << 13)
+#define BACKEND_CONFIG_GRPC (1u << 14)
+#define BACKEND_CONFIG_KEEPALIVE (1u << 15)
 
 typedef enum BACKEND_HEALTH {
   UNKNOWN = 0,
@@ -241,6 +243,11 @@ typedef struct DynamicBackendConfig {
   const char *client_certificate;
   uint32_t client_certificate_len;
   uint32_t client_key;
+  uint32_t http_keepalive_time_ms;
+  uint32_t tcp_keepalive_enable;
+  uint32_t tcp_keepalive_interface_secs;
+  uint32_t tcp_keepalive_probes;
+  uint32_t tcp_keepalive_time_secs;
 } DynamicBackendConfig;
 
 #define INVALID_HANDLE (UINT32_MAX - 1)

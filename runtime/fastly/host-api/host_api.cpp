@@ -1102,6 +1102,10 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
     backend_configuration.client_key = config.client_cert->key;
   }
 
+  if (config.grpc.value_or(false)) {
+    backend_config_mask |= BACKEND_CONFIG_GRPC;
+  }
+
   auto name_str = string_view_to_world_string(name);
   auto target_str = string_view_to_world_string(target);
   fastly::fastly_host_error err;
