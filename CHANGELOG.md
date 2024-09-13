@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.22.4 (2024-09-13)
+
+### Fixed
+
+* docs build ([#968](https://github.com/fastly/js-compute-runtime/issues/968)) ([796cdc0](https://github.com/fastly/js-compute-runtime/commit/796cdc03b4a123f2edc9d8fdeb21246cc63669ee))
+
 ## 3.22.3 (2024-09-12)
 
 ### Fixed
