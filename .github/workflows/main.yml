@@ -393,7 +393,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [viceroy, compute]
-    needs: [build, ensure-cargo-installs]
+    needs: [build-debug, ensure-cargo-installs]
     steps:
     - name: Checkout fastly/js-compute-runtime
       uses: actions/checkout@v3
