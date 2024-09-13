@@ -1430,8 +1430,8 @@
       "body": "ok"
     }
   },
-  "GET /backend/constructor/parameter-grpc-invalid": {},
-  "GET /backend/constructor/parameter-grpc-valid": {},
+  "GET /backend/constructor/parameter-grpc-property-falsy": {},
+  "GET /backend/constructor/parameter-grpc-enabled": {},
   "GET /backend/health/called-as-constructor-function": {
     "downstream_response": {
       "status": 200,
