@@ -2405,8 +2405,8 @@ routes.set('/backend/timeout', async () => {
   routes.set('/backend/port-ip-cached', async () => {
     allowDynamicBackends(true);
     const res = await fetch('https://http-me.glitch.me/headers');
-    assert(res.port, undefined);
-    assert(res.ip, undefined);
+    assert(res.port > 0);
+    assert(res.ip.split('.').length > 1 || res.ip.split(':').length > 1);
     return pass('ok');
   });
 }
