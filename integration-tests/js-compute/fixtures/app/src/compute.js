@@ -7,9 +7,11 @@ routes.set('/compute/get-vcpu-ms', () => {
   strictEqual(typeof cpuTime, 'number');
   ok(cpuTime > 0);
   ok(cpuTime < 3000);
-  const arr = [];
-  for (let i = 0; i < 10_000; i++) {
-    arr.push(i);
+  const arr = new Array(100_000).fill(1);
+  for (let j = 1; j < 100; j++) {
+    for (let i = 1; i < 100_000; i++) {
+      arr[i] = (arr[i] + arr[i - 1] + i) / 3;
+    }
   }
   const cpuTime2 = vCpuTime();
   ok(cpuTime2 > cpuTime);
