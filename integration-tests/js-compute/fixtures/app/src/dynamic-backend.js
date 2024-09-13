@@ -2065,10 +2065,10 @@ routes.set('/backend/timeout', async () => {
           target: 'http-me.glitch.me',
           grpc: true,
         });
-        assertRejects(() => fetch('https://http-me.glitch.me/anything', {
+        await assertRejects(() => fetch('https://http-me.glitch.me/anything', {
           backend,
           cacheOverride: new CacheOverride('pass'),
-        }), TypeError, 'HTTP protocol error');
+        }), DOMException);
       });
     }
   }
