@@ -6,7 +6,7 @@ import { rmSync } from 'node:fs';
 import { isFile } from './isFile.js';
 import { isFileOrDoesNotExist } from './isFileOrDoesNotExist.js';
 import wizer from '@bytecodealliance/wizer';
-import weval from '@cfallin/weval';
+import weval from '@bytecodealliance/weval';
 import { precompile } from './precompile.js';
 import { bundle } from './bundle.js';
 
