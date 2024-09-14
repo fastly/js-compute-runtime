@@ -118,6 +118,15 @@ declare module 'fastly:backend' {
       certificate: string,
       key: import('fastly:secret-store').SecretStoreEntry,
     }
+    /**
+     * @experimental
+     * 
+     * When enabled, sets that this backend is to be used for gRPC traffic.
+     * 
+     * Warning: When using this experimental feature, no guarantees are provided for behaviours for
+     * backends that do not provide gRPC traffic.
+     */
+    grpc?: boolean;
   }
 
   /**

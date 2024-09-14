@@ -1,4 +1,7 @@
 name: CI
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 on:
   pull_request:
   push:
@@ -7,9 +10,9 @@ defaults:
   run:
     shell: bash
 env:
-  # Note: when updated, also update version in ensure_cargo_installs
+  # Note: when updated, also update version in ensure-cargo-installs
   viceroy_version: 0.12.0
-  # Note: when updated, also update version in ensure_cargo_installs
+  # Note: when updated, also update version in ensure-cargo-installs
   wasm-tools_version: 1.216.0
   fastly-cli_version: 10.13.3
 
@@ -37,7 +40,7 @@ jobs:
     - run: cd documentation && npm ci
     - run: cd documentation && npm run build
 
-  ensure_cargo_installs:
+  ensure-cargo-installs:
     name: Ensure that all required "cargo install" commands are run, or we have a cache hit
     strategy:
       matrix:
@@ -153,13 +156,39 @@ jobs:
     - run: npm install
     - run: npm test
 
+  build-debug:
+    name: Debug Build
+    needs: [ensure-cargo-installs]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - name: Install Rust 1.77.1
+      run: |
+        rustup toolchain install 1.77.1
+        rustup target add wasm32-wasi --toolchain 1.77.1
+    - name: Restore wasm-tools from cache
+      uses: actions/cache@v3
+      id: wasm-tools
+      with:
+        path: "/home/runner/.cargo/bin/wasm-tools"
+        key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
+    - name: Build
+      run: npm run build:debug
+    - uses: actions/upload-artifact@v3
+      with:
+        if-no-files-found: error
+        name: fastly-debug
+        path: fastly.debug.wasm
+
   build:
     name: Build
-    needs: [ensure_cargo_installs]
+    needs: [ensure-cargo-installs]
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        profile: [debug, release, weval]
+        profile: [release, weval]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -178,9 +207,6 @@ jobs:
       if: ${{ matrix.profile == 'release' }}
       run: npm run build
     - name: Build
-      if: ${{ matrix.profile == 'debug' }}
-      run: npm run build:debug
-    - name: Build
       if: ${{ matrix.profile == 'weval' }}
       run: npm run build:weval
     - uses: actions/upload-artifact@v3
@@ -194,13 +220,58 @@ jobs:
         name: fastly-${{ matrix.profile }}-ic-cache
         path: fastly-ics.wevalcache
 
-  run_wpt:
+  run-wpt-debug:
+    if: github.ref != 'refs/heads/main'
+    name: Run Web Platform Tests Debug
+    needs: [build-debug, ensure-cargo-installs]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 'lts/*'
+
+    - name: Download Engine
+      uses: actions/download-artifact@v3
+      with:
+        name: fastly-debug
+
+    - name: Restore Viceroy from cache
+      uses: actions/cache@v3
+      with:
+        path: "/home/runner/.cargo/bin/viceroy"
+        key: crate-cache-viceroy-${{ env.viceroy_version }}
+    
+    - name: Restore wasm-tools from cache
+      uses: actions/cache@v3
+      id: wasm-tools
+      with:
+        path: "/home/runner/.cargo/bin/wasm-tools"
+        key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
+    
+    - run: npm install
+
+    - name: Build WPT runtime
+      run: tests/wpt-harness/build-wpt-runtime.sh --debug-build
+
+    - name: Prepare WPT hosts
+      run: |
+        cd tests/wpt-harness/wpt
+        ./wpt make-hosts-file | sudo tee -a /etc/hosts
+
+    - name: Run tests
+      timeout-minutes: 20
+      run: node ./tests/wpt-harness/run-wpt.mjs -vv
+
+  run-wpt:
     strategy:
       matrix:
-        profile: [debug, release, weval]
+        profile: [release, weval]
     if: github.ref != 'refs/heads/main'
     name: Run Web Platform Tests
-    needs: [build, ensure_cargo_installs]
+    needs: [build, ensure-cargo-installs]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -257,8 +328,8 @@ jobs:
       fail-fast: false
       matrix:
         platform: [viceroy, compute]
-        profile: [debug, release, weval]
-    needs: [build, ensure_cargo_installs]
+        profile: [release, weval]
+    needs: [build, ensure-cargo-installs]
     steps:
     - name: Checkout fastly/js-compute-runtime
       uses: actions/checkout@v3
@@ -300,17 +371,75 @@ jobs:
       with:
         name: fastly-${{ matrix.profile }}-ic-cache
 
-    - run: npm install
+    - name: Npm install
+      run: npm install && cd ./integration-tests/js-compute && npm install
+
+    - name: Run Tests
+      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }}
+      env:
+        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
+
+    - name: Run TLA Tests
+      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --tla ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }}
+      env:
+        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  
+
+  sdktest-debug:
+    concurrency:
+      group: ${{ github.head_ref }}--sdktest-debug-${{matrix.platform}}
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [viceroy, compute]
+    needs: [build-debug, ensure-cargo-installs]
+    steps:
+    - name: Checkout fastly/js-compute-runtime
+      uses: actions/checkout@v3
+      with:
+        submodules: false
+        ref: ${{ github.head_ref || github.ref_name }}
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 'lts/*'
+
+    - name: Set up Fastly CLI
+      uses: fastly/compute-actions/setup@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        cli_version: ${{ env.fastly-cli_version }}
+
+    - name: Restore Viceroy from cache
+      if: ${{ matrix.platform == 'viceroy' }}
+      uses: actions/cache@v3
+      id: viceroy
+      with:
+        path: "/home/runner/.cargo/bin/viceroy"
+        key: crate-cache-viceroy-${{ env.viceroy_version }}
+    
+    - name: Restore wasm-tools from cache
+      uses: actions/cache@v3
+      id: wasm-tools
+      with:
+        path: "/home/runner/.cargo/bin/wasm-tools"
+        key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
+
+    - name: Download Engine
+      uses: actions/download-artifact@v3
+      with:
+        name: fastly-debug
 
     - name: Npm install
       run: npm install && cd ./integration-tests/js-compute && npm install
 
     - name: Run Tests
-      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }} ${{ matrix.profile == 'debug' && '--debug-build' || '' }}
+      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --debug-build ${{ matrix.platform == 'viceroy' && '--local' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
     - name: Run TLA Tests
-      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --tla ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }} ${{ matrix.profile == 'debug' && '--debug-build' || '' }}
+      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --tla --debug-build ${{ matrix.platform == 'viceroy' && '--local' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  
+      

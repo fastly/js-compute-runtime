@@ -820,6 +820,11 @@ JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::Han
                              .key = (host_api::CertKey)client_cert_key_slot.toInt32()};
   }
 
+  auto grpc_slot = JS::GetReservedSlot(backend, Backend::Slots::Grpc);
+  if (!grpc_slot.isNullOrUndefined()) {
+    backend_config.grpc = grpc_slot.toBoolean();
+  }
+
   auto res = host_api::HttpReq::register_dynamic_backend(name_str, target_str, backend_config);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -1196,6 +1201,8 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
     }
   }
 
+  JS::SetReservedSlot(backend, Backend::Slots::Grpc, JS::BooleanValue(false));
+
   auto result = Backend::register_dynamic_backend(cx, backend);
   if (result.isErr()) {
     return nullptr;
@@ -1536,6 +1543,18 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     if (!Backend::set_client_cert_key(cx, backend, client_cert_key_val)) {
       return false;
     }
+  }
+
+  JS::RootedValue grpc_val(cx);
+  if (!JS_HasProperty(cx, configuration, "grpc", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "grpc", &grpc_val)) {
+      return false;
+    }
+    auto value = JS::ToBoolean(grpc_val);
+    JS::SetReservedSlot(backend, Backend::Slots::Grpc, JS::BooleanValue(value));
   }
 
   auto result = Backend::register_dynamic_backend(cx, backend);

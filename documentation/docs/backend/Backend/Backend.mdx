@@ -97,6 +97,10 @@ new Backend(backendConfiguration)
         - The PEM certificate string.
       - `key` _: SecretStoreEntry_
         - The `SecretStoreEntry` to use for the key, created via [`SecretStore.prototype.get`](../../fastly:secret-store/SecretStore/prototype/get.mdx) or alteratively via [`SecretStore.fromBytes`](../../fastly:secret-store/SecretStore/fromBytes.mdx).
+    - `grpc` _: boolean_ _**optional**_
+      - **_Experimental feature_**
+      - When enabled, sets that this backend is to be used for gRPC traffic. 
+      - _Warning: When using this experimental feature, no guarantees are provided for behaviours for backends that do not provide gRPC traffic._
 
 ### Return value
 
