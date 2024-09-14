@@ -361,6 +361,7 @@ struct BackendConfig {
   std::optional<HostString> ciphers;
   std::optional<HostString> sni_hostname;
   std::optional<ClientCert> client_cert;
+  std::optional<bool> grpc;
 };
 
 struct CacheOverrideTag final {

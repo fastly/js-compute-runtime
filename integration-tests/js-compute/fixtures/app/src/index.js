@@ -65,11 +65,11 @@ async function app(event) {
   console.log(`FASTLY_SERVICE_VERSION: ${FASTLY_SERVICE_VERSION}`);
   const path = new URL(event.request.url).pathname;
   console.log(`path: ${path}`);
-  let res = new Response("Internal Server Error", { status: 500 });
+  let res;
   try {
     const routeHandler = routes.get(path);
     if (routeHandler) {
-      res = await routeHandler(event);
+      res = await routeHandler(event) || new Response("ok");
     } else {
       res = fail(`${path} endpoint does not exist`);
     }
