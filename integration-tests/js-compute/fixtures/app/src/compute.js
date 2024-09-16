@@ -1,4 +1,4 @@
-import { pass, ok, strictEqual, assertThrows } from './assertions-throwing.js';
+import { pass, ok, strictEqual, assertThrows } from './assertions.js';
 import { routes } from './routes.js';
 import { purgeSurrogateKey, vCpuTime } from 'fastly:compute';
 

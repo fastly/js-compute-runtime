@@ -1,37 +1,37 @@
-import { routes } from "./routes.js";
-import { allowDynamicBackends } from "fastly:experimental";
+import { routes } from './routes.js';
+import { allowDynamicBackends } from 'fastly:experimental';
 
-routes.set("/hono", async (evt) => {
+routes.set('/hono', async (evt) => {
   const app = new Hono2();
-  const REALIP = "1.2.3.4";
-  const HONO_TAG = "hono";
-  const REAL_HDR = "real-hdr";
-  const xdeviceid = "device-id";
+  const REALIP = '1.2.3.4';
+  const HONO_TAG = 'hono';
+  const REAL_HDR = 'real-hdr';
+  const xdeviceid = 'device-id';
   allowDynamicBackends(true);
-  app.get("/hono", async (c) => {
+  app.get('/hono', async (c) => {
     const newRequest = new Request(
-      "https://compute-sdk-test-backend.edgecompute.app/",
+      'https://compute-sdk-test-backend.edgecompute.app/',
       c.req.raw,
     );
-    console.log("newRequest: " + newRequest.url);
-    newRequest.headers.set("X-Connecting-IP", `${REALIP}`);
+    console.log('newRequest: ' + newRequest.url);
+    newRequest.headers.set('X-Connecting-IP', `${REALIP}`);
     newRequest.headers.set(`${REAL_HDR}`, `${REALIP}`);
-    let cacheOverride = new CacheOverride("pass");
-    newRequest.headers.set("Cache-Control", "no-cache");
-    newRequest.headers.set("Surrogate-Control", "maxage=0");
+    let cacheOverride = new CacheOverride('pass');
+    newRequest.headers.set('Cache-Control', 'no-cache');
+    newRequest.headers.set('Surrogate-Control', 'maxage=0');
     if (xdeviceid === true) {
-      newRequest.headers.set("X-KnownDevice", "1");
+      newRequest.headers.set('X-KnownDevice', '1');
     } else {
-      newRequest.headers.set("X-KnownDevice", "0");
+      newRequest.headers.set('X-KnownDevice', '0');
     }
     const res = await fetch(newRequest, { cacheOverride });
-    console.log("res.status: " + res.status);
+    console.log('res.status: ' + res.status);
     const newResponse = new Response(res.body, res);
-    if (c.req.header("Fastly-Debug") === "bw-fastly-debug") {
-      newResponse.headers.set("X-Connecting-IP", `${REALIP}`);
-      newResponse.headers.set("X-Custom-Router", `${HONO_TAG}`);
-      newResponse.headers.set("X-Service-Version", fastly.sdkVersion);
-      newResponse.headers.set("X-KnownDevice", `${xdeviceid}`);
+    if (c.req.header('Fastly-Debug') === 'bw-fastly-debug') {
+      newResponse.headers.set('X-Connecting-IP', `${REALIP}`);
+      newResponse.headers.set('X-Custom-Router', `${HONO_TAG}`);
+      newResponse.headers.set('X-Service-Version', fastly.sdkVersion);
+      newResponse.headers.set('X-KnownDevice', `${xdeviceid}`);
     }
     return newResponse;
   });
@@ -46,11 +46,11 @@ var parseBody = async (
   const { all = false, dot = false } = options;
   const headers =
     request instanceof HonoRequest ? request.raw.headers : request.headers;
-  const contentType = headers.get("Content-Type");
+  const contentType = headers.get('Content-Type');
   if (
-    (contentType !== null && contentType.startsWith("multipart/form-data")) ||
+    (contentType !== null && contentType.startsWith('multipart/form-data')) ||
     (contentType !== null &&
-      contentType.startsWith("application/x-www-form-urlencoded"))
+      contentType.startsWith('application/x-www-form-urlencoded'))
   ) {
     return parseFormData(request, { all, dot });
   }
@@ -66,7 +66,7 @@ async function parseFormData(request, options) {
 function convertFormDataToBodyData(formData, options) {
   const form = /* @__PURE__ */ Object.create(null);
   formData.forEach((value, key) => {
-    const shouldParseAllValues = options.all || key.endsWith("[]");
+    const shouldParseAllValues = options.all || key.endsWith('[]');
     if (!shouldParseAllValues) {
       form[key] = value;
     } else {
@@ -75,7 +75,7 @@ function convertFormDataToBodyData(formData, options) {
   });
   if (options.dot) {
     Object.entries(form).forEach(([key, value]) => {
-      const shouldParseDotValues = key.includes(".");
+      const shouldParseDotValues = key.includes('.');
       if (shouldParseDotValues) {
         handleParsingNestedValues(form, key, value);
         delete form[key];
@@ -97,14 +97,14 @@ var handleParsingAllValues = (form, key, value) => {
 };
 var handleParsingNestedValues = (form, key, value) => {
   let nestedForm = form;
-  const keys = key.split(".");
+  const keys = key.split('.');
   keys.forEach((key2, index) => {
     if (index === keys.length - 1) {
       nestedForm[key2] = value;
     } else {
       if (
         !nestedForm[key2] ||
-        typeof nestedForm[key2] !== "object" ||
+        typeof nestedForm[key2] !== 'object' ||
         Array.isArray(nestedForm[key2]) ||
         nestedForm[key2] instanceof File
       ) {
@@ -117,8 +117,8 @@ var handleParsingNestedValues = (form, key, value) => {
 
 // node_modules/hono/dist/utils/url.js
 var splitPath = (path) => {
-  const paths = path.split("/");
-  if (paths[0] === "") {
+  const paths = path.split('/');
+  if (paths[0] === '') {
     paths.shift();
   }
   return paths;
@@ -151,8 +151,8 @@ var replaceGroupMarks = (paths, groups) => {
 };
 var patternCache = {};
 var getPattern = (label) => {
-  if (label === "*") {
-    return "*";
+  if (label === '*') {
+    return '*';
   }
   const match = label.match(/^\:([^\{\}]+)(?:\{(.+)\})?$/);
   if (match) {
@@ -161,7 +161,7 @@ var getPattern = (label) => {
         patternCache[label] = [
           label,
           match[1],
-          new RegExp("^" + match[2] + "$"),
+          new RegExp('^' + match[2] + '$'),
         ];
       } else {
         patternCache[label] = [label, match[1], true];
@@ -186,15 +186,15 @@ var tryDecodeURI = (str) => {
 };
 var getPath = (request) => {
   const url = request.url;
-  const start = url.indexOf("/", 8);
+  const start = url.indexOf('/', 8);
   let i = start;
   for (; i < url.length; i++) {
     const charCode = url.charCodeAt(i);
     if (charCode === 37) {
-      const queryIndex = url.indexOf("?", i);
+      const queryIndex = url.indexOf('?', i);
       const path = url.slice(start, queryIndex === -1 ? void 0 : queryIndex);
       return tryDecodeURI(
-        path.includes("%25") ? path.replace(/%25/g, "%2525") : path,
+        path.includes('%25') ? path.replace(/%25/g, '%2525') : path,
       );
     } else if (charCode === 63) {
       break;
@@ -204,28 +204,28 @@ var getPath = (request) => {
 };
 var getPathNoStrict = (request) => {
   const result = getPath(request);
-  return result.length > 1 && result[result.length - 1] === "/"
+  return result.length > 1 && result[result.length - 1] === '/'
     ? result.slice(0, -1)
     : result;
 };
 var mergePath = (...paths) => {
-  let p = "";
+  let p = '';
   let endsWithSlash = false;
   for (let path of paths) {
-    if (p[p.length - 1] === "/") {
+    if (p[p.length - 1] === '/') {
       p = p.slice(0, -1);
       endsWithSlash = true;
     }
-    if (path[0] !== "/") {
+    if (path[0] !== '/') {
       path = `/${path}`;
     }
-    if (path === "/" && endsWithSlash) {
+    if (path === '/' && endsWithSlash) {
       p = `${p}/`;
-    } else if (path !== "/") {
+    } else if (path !== '/') {
       p = `${p}${path}`;
     }
-    if (path === "/" && p === "") {
-      p = "/";
+    if (path === '/' && p === '') {
+      p = '/';
     }
   }
   return p;
@@ -234,24 +234,24 @@ var checkOptionalParameter = (path) => {
   if (!path.match(/\:.+\?$/)) {
     return null;
   }
-  const segments = path.split("/");
+  const segments = path.split('/');
   const results = [];
-  let basePath = "";
+  let basePath = '';
   segments.forEach((segment) => {
-    if (segment !== "" && !/\:/.test(segment)) {
-      basePath += "/" + segment;
+    if (segment !== '' && !/\:/.test(segment)) {
+      basePath += '/' + segment;
     } else if (/\:/.test(segment)) {
       if (/\?/.test(segment)) {
-        if (results.length === 0 && basePath === "") {
-          results.push("/");
+        if (results.length === 0 && basePath === '') {
+          results.push('/');
         } else {
           results.push(basePath);
         }
-        const optionalSegment = segment.replace("?", "");
-        basePath += "/" + optionalSegment;
+        const optionalSegment = segment.replace('?', '');
+        basePath += '/' + optionalSegment;
         results.push(basePath);
       } else {
-        basePath += "/" + segment;
+        basePath += '/' + segment;
       }
     }
   });
@@ -261,8 +261,8 @@ var _decodeURI = (value) => {
   if (!/[%+]/.test(value)) {
     return value;
   }
-  if (value.indexOf("+") !== -1) {
-    value = value.replace(/\+/g, " ");
+  if (value.indexOf('+') !== -1) {
+    value = value.replace(/\+/g, ' ');
   }
   return /%/.test(value) ? decodeURIComponent_(value) : value;
 };
@@ -277,12 +277,12 @@ var _getQueryParam = (url, key, multiple) => {
       const trailingKeyCode = url.charCodeAt(keyIndex2 + key.length + 1);
       if (trailingKeyCode === 61) {
         const valueIndex = keyIndex2 + key.length + 2;
-        const endIndex = url.indexOf("&", valueIndex);
+        const endIndex = url.indexOf('&', valueIndex);
         return _decodeURI(
           url.slice(valueIndex, endIndex === -1 ? void 0 : endIndex),
         );
       } else if (trailingKeyCode == 38 || isNaN(trailingKeyCode)) {
-        return "";
+        return '';
       }
       keyIndex2 = url.indexOf(`&${key}`, keyIndex2 + 1);
     }
@@ -293,10 +293,10 @@ var _getQueryParam = (url, key, multiple) => {
   }
   const results = {};
   encoded ??= /[%+]/.test(url);
-  let keyIndex = url.indexOf("?", 8);
+  let keyIndex = url.indexOf('?', 8);
   while (keyIndex !== -1) {
-    const nextKeyIndex = url.indexOf("&", keyIndex + 1);
-    let valueIndex = url.indexOf("=", keyIndex);
+    const nextKeyIndex = url.indexOf('&', keyIndex + 1);
+    let valueIndex = url.indexOf('=', keyIndex);
     if (valueIndex > nextKeyIndex && nextKeyIndex !== -1) {
       valueIndex = -1;
     }
@@ -312,12 +312,12 @@ var _getQueryParam = (url, key, multiple) => {
       name = _decodeURI(name);
     }
     keyIndex = nextKeyIndex;
-    if (name === "") {
+    if (name === '') {
       continue;
     }
     let value;
     if (valueIndex === -1) {
-      value = "";
+      value = '';
     } else {
       value = url.slice(
         valueIndex + 1,
@@ -352,7 +352,7 @@ var HonoRequest = class {
   routeIndex = 0;
   path;
   bodyCache = {};
-  constructor(request, path = "/", matchResult = [[]]) {
+  constructor(request, path = '/', matchResult = [[]]) {
     this.raw = request;
     this.path = path;
     this.#matchResult = matchResult;
@@ -377,7 +377,7 @@ var HonoRequest = class {
       const value = this.getParamValue(
         this.#matchResult[0][this.routeIndex][1][key],
       );
-      if (value && typeof value === "string") {
+      if (value && typeof value === 'string') {
         decoded[key] = /\%/.test(value) ? decodeURIComponent_(value) : value;
       }
     }
@@ -414,7 +414,7 @@ var HonoRequest = class {
     const anyCachedKey = Object.keys(bodyCache)[0];
     if (anyCachedKey) {
       return bodyCache[anyCachedKey].then((body) => {
-        if (anyCachedKey === "json") {
+        if (anyCachedKey === 'json') {
           body = JSON.stringify(body);
         }
         return new Response(body)[key]();
@@ -423,19 +423,19 @@ var HonoRequest = class {
     return (bodyCache[key] = raw2[key]());
   };
   json() {
-    return this.cachedBody("json");
+    return this.cachedBody('json');
   }
   text() {
-    return this.cachedBody("text");
+    return this.cachedBody('text');
   }
   arrayBuffer() {
-    return this.cachedBody("arrayBuffer");
+    return this.cachedBody('arrayBuffer');
   }
   blob() {
-    return this.cachedBody("blob");
+    return this.cachedBody('blob');
   }
   formData() {
-    return this.cachedBody("formData");
+    return this.cachedBody('formData');
   }
   addValidatedData(target, data) {
     this.#validatedData[target] = data;
@@ -503,7 +503,7 @@ var resolveCallback = async (
 };
 
 // node_modules/hono/dist/context.js
-var TEXT_PLAIN = "text/plain; charset=UTF-8";
+var TEXT_PLAIN = 'text/plain; charset=UTF-8';
 var setHeaders = (headers, map = {}) => {
   Object.entries(map).forEach(([key, value]) => headers.set(key, value));
   return headers;
@@ -545,33 +545,33 @@ var Context = class {
     return this.#req;
   }
   get event() {
-    if (this.#executionCtx && "respondWith" in this.#executionCtx) {
+    if (this.#executionCtx && 'respondWith' in this.#executionCtx) {
       return this.#executionCtx;
     } else {
-      throw Error("This context has no FetchEvent");
+      throw Error('This context has no FetchEvent');
     }
   }
   get executionCtx() {
     if (this.#executionCtx) {
       return this.#executionCtx;
     } else {
-      throw Error("This context has no ExecutionContext");
+      throw Error('This context has no ExecutionContext');
     }
   }
   get res() {
     this.#isFresh = false;
-    return (this.#res ||= new Response("404 Not Found", { status: 404 }));
+    return (this.#res ||= new Response('404 Not Found', { status: 404 }));
   }
   set res(_res) {
     this.#isFresh = false;
     if (this.#res && _res) {
-      this.#res.headers.delete("content-type");
+      this.#res.headers.delete('content-type');
       for (const [k, v] of this.#res.headers.entries()) {
-        if (k === "set-cookie") {
+        if (k === 'set-cookie') {
           const cookies = this.#res.headers.getSetCookie();
-          _res.headers.delete("set-cookie");
+          _res.headers.delete('set-cookie');
           for (const cookie of cookies) {
-            _res.headers.append("set-cookie", cookie);
+            _res.headers.append('set-cookie', cookie);
           }
         } else {
           _res.headers.set(k, v);
@@ -648,11 +648,11 @@ var Context = class {
         headers: this.#preparedHeaders,
       });
     }
-    if (arg && typeof arg !== "number") {
+    if (arg && typeof arg !== 'number') {
       const header = new Headers(arg.headers);
       if (this.#headers) {
         this.#headers.forEach((v, k) => {
-          if (k === "set-cookie") {
+          if (k === 'set-cookie') {
             header.append(k, v);
           } else {
             header.set(k, v);
@@ -665,13 +665,13 @@ var Context = class {
         status: arg.status ?? this.#status,
       });
     }
-    const status = typeof arg === "number" ? arg : this.#status;
+    const status = typeof arg === 'number' ? arg : this.#status;
     this.#preparedHeaders ??= {};
     this.#headers ??= new Headers();
     setHeaders(this.#headers, this.#preparedHeaders);
     if (this.#res) {
       this.#res.headers.forEach((v, k) => {
-        if (k === "set-cookie") {
+        if (k === 'set-cookie') {
           this.#headers?.append(k, v);
         } else {
           this.#headers?.set(k, v);
@@ -681,7 +681,7 @@ var Context = class {
     }
     headers ??= {};
     for (const [k, v] of Object.entries(headers)) {
-      if (typeof v === "string") {
+      if (typeof v === 'string') {
         this.#headers.set(k, v);
       } else {
         this.#headers.delete(k);
@@ -696,7 +696,7 @@ var Context = class {
     });
   };
   body = (data, arg, headers) => {
-    return typeof arg === "number"
+    return typeof arg === 'number'
       ? this.newResponse(data, arg, headers)
       : this.newResponse(data, arg);
   };
@@ -707,23 +707,23 @@ var Context = class {
       }
       this.#preparedHeaders = {};
     }
-    this.#preparedHeaders["content-type"] = TEXT_PLAIN;
-    return typeof arg === "number"
+    this.#preparedHeaders['content-type'] = TEXT_PLAIN;
+    return typeof arg === 'number'
       ? this.newResponse(text, arg, headers)
       : this.newResponse(text, arg);
   };
   json = (object, arg, headers) => {
     const body = JSON.stringify(object);
     this.#preparedHeaders ??= {};
-    this.#preparedHeaders["content-type"] = "application/json; charset=UTF-8";
-    return typeof arg === "number"
+    this.#preparedHeaders['content-type'] = 'application/json; charset=UTF-8';
+    return typeof arg === 'number'
       ? this.newResponse(body, arg, headers)
       : this.newResponse(body, arg);
   };
   html = (html, arg, headers) => {
     this.#preparedHeaders ??= {};
-    this.#preparedHeaders["content-type"] = "text/html; charset=UTF-8";
-    if (typeof html === "object") {
+    this.#preparedHeaders['content-type'] = 'text/html; charset=UTF-8';
+    if (typeof html === 'object') {
       if (!(html instanceof Promise)) {
         html = html.toString();
       }
@@ -738,19 +738,19 @@ var Context = class {
             ),
           )
           .then((html2) => {
-            return typeof arg === "number"
+            return typeof arg === 'number'
               ? this.newResponse(html2, arg, headers)
               : this.newResponse(html2, arg);
           });
       }
     }
-    return typeof arg === "number"
+    return typeof arg === 'number'
       ? this.newResponse(html, arg, headers)
       : this.newResponse(html, arg);
   };
   redirect = (location, status) => {
     this.#headers ??= new Headers();
-    this.#headers.set("Location", location);
+    this.#headers.set('Location', location);
     return this.newResponse(null, status ?? 302);
   };
   notFound = () => {
@@ -766,7 +766,7 @@ var compose = (middleware, onError, onNotFound) => {
     return dispatch(0);
     async function dispatch(i) {
       if (i <= index) {
-        throw new Error("next() called multiple times");
+        throw new Error('next() called multiple times');
       }
       index = i;
       let res;
@@ -812,24 +812,24 @@ var compose = (middleware, onError, onNotFound) => {
 };
 
 // node_modules/hono/dist/router.js
-var METHOD_NAME_ALL = "ALL";
-var METHOD_NAME_ALL_LOWERCASE = "all";
-var METHODS = ["get", "post", "put", "delete", "options", "patch"];
+var METHOD_NAME_ALL = 'ALL';
+var METHOD_NAME_ALL_LOWERCASE = 'all';
+var METHODS = ['get', 'post', 'put', 'delete', 'options', 'patch'];
 var MESSAGE_MATCHER_IS_ALREADY_BUILT =
-  "Can not add a route since the matcher is already built.";
+  'Can not add a route since the matcher is already built.';
 var UnsupportedPathError = class extends Error {};
 
 // node_modules/hono/dist/hono-base.js
-var COMPOSED_HANDLER = Symbol("composedHandler");
+var COMPOSED_HANDLER = Symbol('composedHandler');
 var notFoundHandler = (c) => {
-  return c.text("404 Not Found", 404);
+  return c.text('404 Not Found', 404);
 };
 var errorHandler = (err, c) => {
-  if ("getResponse" in err) {
+  if ('getResponse' in err) {
     return err.getResponse();
   }
   console.error(err);
-  return c.text("Internal Server Error", 500);
+  return c.text('Internal Server Error', 500);
 };
 var Hono = class {
   get;
@@ -843,20 +843,20 @@ var Hono = class {
   use;
   router;
   getPath;
-  _basePath = "/";
-  #path = "/";
+  _basePath = '/';
+  #path = '/';
   routes = [];
   constructor(options = {}) {
     const allMethods = [...METHODS, METHOD_NAME_ALL_LOWERCASE];
     allMethods.forEach((method) => {
       this[method] = (args1, ...args) => {
-        if (typeof args1 === "string") {
+        if (typeof args1 === 'string') {
           this.#path = args1;
         } else {
           this.addRoute(method, this.#path, args1);
         }
         args.forEach((handler) => {
-          if (typeof handler !== "string") {
+          if (typeof handler !== 'string') {
             this.addRoute(method, this.#path, handler);
           }
         });
@@ -875,10 +875,10 @@ var Hono = class {
       return this;
     };
     this.use = (arg1, ...handlers) => {
-      if (typeof arg1 === "string") {
+      if (typeof arg1 === 'string') {
         this.#path = arg1;
       } else {
-        this.#path = "*";
+        this.#path = '*';
         handlers.unshift(arg1);
       }
       handlers.forEach((handler) => {
@@ -934,7 +934,7 @@ var Hono = class {
     let replaceRequest;
     let optionHandler;
     if (options) {
-      if (typeof options === "function") {
+      if (typeof options === 'function') {
         optionHandler = options;
       } else {
         optionHandler = options.optionHandler;
@@ -955,10 +955,10 @@ var Hono = class {
         };
     replaceRequest ||= (() => {
       const mergedPath = mergePath(this._basePath, path);
-      const pathPrefixLength = mergedPath === "/" ? 0 : mergedPath.length;
+      const pathPrefixLength = mergedPath === '/' ? 0 : mergedPath.length;
       return (request) => {
         const url = new URL(request.url);
-        url.pathname = url.pathname.slice(pathPrefixLength) || "/";
+        url.pathname = url.pathname.slice(pathPrefixLength) || '/';
         return new Request(url, request);
       };
     })();
@@ -972,7 +972,7 @@ var Hono = class {
       }
       await next();
     };
-    this.addRoute(METHOD_NAME_ALL, mergePath(path, "*"), handler);
+    this.addRoute(METHOD_NAME_ALL, mergePath(path, '*'), handler);
     return this;
   }
   addRoute(method, path, handler) {
@@ -992,11 +992,11 @@ var Hono = class {
     throw err;
   }
   dispatch(request, executionCtx, env, method) {
-    if (method === "HEAD") {
+    if (method === 'HEAD') {
       return (async () =>
         new Response(
           null,
-          await this.dispatch(request, executionCtx, env, "GET"),
+          await this.dispatch(request, executionCtx, env, 'GET'),
         ))();
     }
     const path = this.getPath(request, { env });
@@ -1036,7 +1036,7 @@ var Hono = class {
         const context = await composed(c);
         if (!context.finalized) {
           throw new Error(
-            "Context is not finalized. Did you forget to return a Response object or `await next()`?",
+            'Context is not finalized. Did you forget to return a Response object or `await next()`?',
           );
         }
         return context.res;
@@ -1058,12 +1058,12 @@ var Hono = class {
     input = input.toString();
     const path = /^https?:\/\//.test(input)
       ? input
-      : `http://localhost${mergePath("/", input)}`;
+      : `http://localhost${mergePath('/', input)}`;
     const req = new Request(path, requestInit);
     return this.fetch(req, Env, executionCtx);
   };
   fire = () => {
-    addEventListener("fetch", (event) => {
+    addEventListener('fetch', (event) => {
       event.respondWith(
         this.dispatch(event.request, event, void 0, event.request.method),
       );
@@ -1072,11 +1072,11 @@ var Hono = class {
 };
 
 // node_modules/hono/dist/router/reg-exp-router/node.js
-var LABEL_REG_EXP_STR = "[^/]+";
-var ONLY_WILDCARD_REG_EXP_STR = ".*";
-var TAIL_WILDCARD_REG_EXP_STR = "(?:|/.*)";
+var LABEL_REG_EXP_STR = '[^/]+';
+var ONLY_WILDCARD_REG_EXP_STR = '.*';
+var TAIL_WILDCARD_REG_EXP_STR = '(?:|/.*)';
 var PATH_ERROR = Symbol();
-var regExpMetaChars = new Set(".\\+*[^]$()");
+var regExpMetaChars = new Set('.\\+*[^]$()');
 function compareKey(a, b) {
   if (a.length === 1) {
     return b.length === 1 ? (a < b ? -1 : 1) : -1;
@@ -1116,19 +1116,19 @@ var Node = class {
     }
     const [token, ...restTokens] = tokens;
     const pattern =
-      token === "*"
+      token === '*'
         ? restTokens.length === 0
-          ? ["", "", ONLY_WILDCARD_REG_EXP_STR]
-          : ["", "", LABEL_REG_EXP_STR]
-        : token === "/*"
-          ? ["", "", TAIL_WILDCARD_REG_EXP_STR]
+          ? ['', '', ONLY_WILDCARD_REG_EXP_STR]
+          : ['', '', LABEL_REG_EXP_STR]
+        : token === '/*'
+          ? ['', '', TAIL_WILDCARD_REG_EXP_STR]
           : token.match(/^\:([^\{\}]+)(?:\{(.+)\})?$/);
     let node;
     if (pattern) {
       const name = pattern[1];
       let regexpStr = pattern[2] || LABEL_REG_EXP_STR;
       if (name && pattern[2]) {
-        regexpStr = regexpStr.replace(/^\((?!\?:)(?=[^)]+\)$)/, "(?:");
+        regexpStr = regexpStr.replace(/^\((?!\?:)(?=[^)]+\)$)/, '(?:');
         if (/\((?!\?:)/.test(regexpStr)) {
           throw PATH_ERROR;
         }
@@ -1148,11 +1148,11 @@ var Node = class {
           return;
         }
         node = this.children[regexpStr] = new Node();
-        if (name !== "") {
+        if (name !== '') {
           node.varIndex = context.varIndex++;
         }
       }
-      if (!pathErrorCheckOnly && name !== "") {
+      if (!pathErrorCheckOnly && name !== '') {
         paramMap.push([name, node.varIndex]);
       }
     } else {
@@ -1181,23 +1181,23 @@ var Node = class {
     const strList = childKeys.map((k) => {
       const c = this.children[k];
       return (
-        (typeof c.varIndex === "number"
+        (typeof c.varIndex === 'number'
           ? `(${k})@${c.varIndex}`
           : regExpMetaChars.has(k)
             ? `\\${k}`
             : k) + c.buildRegExpStr()
       );
     });
-    if (typeof this.index === "number") {
+    if (typeof this.index === 'number') {
       strList.unshift(`#${this.index}`);
     }
     if (strList.length === 0) {
-      return "";
+      return '';
     }
     if (strList.length === 1) {
       return strList[0];
     }
-    return "(?:" + strList.join("|") + ")";
+    return '(?:' + strList.join('|') + ')';
   }
 };
 
@@ -1242,7 +1242,7 @@ var Trie = class {
   }
   buildRegExp() {
     let regexp = this.root.buildRegExpStr();
-    if (regexp === "") {
+    if (regexp === '') {
       return [/^$/, [], []];
     }
     let captureIndex = 0;
@@ -1251,15 +1251,15 @@ var Trie = class {
     regexp = regexp.replace(
       /#(\d+)|@(\d+)|\.\*\$/g,
       (_, handlerIndex, paramIndex) => {
-        if (typeof handlerIndex !== "undefined") {
+        if (typeof handlerIndex !== 'undefined') {
           indexReplacementMap[++captureIndex] = Number(handlerIndex);
-          return "$()";
+          return '$()';
         }
-        if (typeof paramIndex !== "undefined") {
+        if (typeof paramIndex !== 'undefined') {
           paramReplacementMap[Number(paramIndex)] = ++captureIndex;
-          return "";
+          return '';
         }
-        return "";
+        return '';
       },
     );
     return [new RegExp(`^${regexp}`), indexReplacementMap, paramReplacementMap];
@@ -1272,10 +1272,10 @@ var nullMatcher = [/^$/, [], /* @__PURE__ */ Object.create(null)];
 var wildcardRegExpCache = /* @__PURE__ */ Object.create(null);
 function buildWildcardRegExp(path) {
   return (wildcardRegExpCache[path] ??= new RegExp(
-    path === "*"
-      ? ""
+    path === '*'
+      ? ''
       : `^${path.replace(/\/\*$|([.\\+*[^\]$()])/g, (_, metaChar) =>
-          metaChar ? `\\${metaChar}` : "(?:|/.*)",
+          metaChar ? `\\${metaChar}` : '(?:|/.*)',
         )}$`,
   ));
 }
@@ -1354,7 +1354,7 @@ function findMiddleware(middleware, path) {
   return void 0;
 }
 var RegExpRouter = class {
-  name = "RegExpRouter";
+  name = 'RegExpRouter';
   middleware;
   routes;
   constructor() {
@@ -1376,8 +1376,8 @@ var RegExpRouter = class {
         });
       });
     }
-    if (path === "/*") {
-      path = "*";
+    if (path === '/*') {
+      path = '*';
     }
     const paramCount = (path.match(/\/:/g) || []).length;
     if (/\*$/.test(path)) {
@@ -1439,7 +1439,7 @@ var RegExpRouter = class {
       if (!match) {
         return [[], emptyParam];
       }
-      const index = match.indexOf("", 1);
+      const index = match.indexOf('', 1);
       return [matcher[1][index], match];
     };
     return this.match(method, path);
@@ -1483,7 +1483,7 @@ var RegExpRouter = class {
 
 // node_modules/hono/dist/router/smart-router/router.js
 var SmartRouter = class {
-  name = "SmartRouter";
+  name = 'SmartRouter';
   routers = [];
   routes = [];
   constructor(init) {
@@ -1497,7 +1497,7 @@ var SmartRouter = class {
   }
   match(method, path) {
     if (!this.routes) {
-      throw new Error("Fatal error");
+      throw new Error('Fatal error');
     }
     const { routers, routes } = this;
     const len = routers.length;
@@ -1522,14 +1522,14 @@ var SmartRouter = class {
       break;
     }
     if (i === len) {
-      throw new Error("Fatal error");
+      throw new Error('Fatal error');
     }
     this.name = `SmartRouter + ${this.activeRouter.name}`;
     return res;
   }
   get activeRouter() {
     if (this.routes || this.routers.length !== 1) {
-      throw new Error("No active router has been determined yet.");
+      throw new Error('No active router has been determined yet.');
     }
     return this.routers[0];
   }
@@ -1546,7 +1546,7 @@ var Node2 = class {
   constructor(method, handler, children) {
     this.children = children || /* @__PURE__ */ Object.create(null);
     this.methods = [];
-    this.name = "";
+    this.name = '';
     if (method && handler) {
       const m = /* @__PURE__ */ Object.create(null);
       m[method] = { handler, possibleKeys: [], score: 0, name: this.name };
@@ -1629,10 +1629,10 @@ var Node2 = class {
         if (nextNode) {
           nextNode.params = node.params;
           if (isLast === true) {
-            if (nextNode.children["*"]) {
+            if (nextNode.children['*']) {
               handlerSets.push(
                 ...this.gHSets(
-                  nextNode.children["*"],
+                  nextNode.children['*'],
                   method,
                   node.params,
                   /* @__PURE__ */ Object.create(null),
@@ -1654,8 +1654,8 @@ var Node2 = class {
         for (let k = 0, len3 = node.patterns.length; k < len3; k++) {
           const pattern = node.patterns[k];
           const params = { ...node.params };
-          if (pattern === "*") {
-            const astNode = node.children["*"];
+          if (pattern === '*') {
+            const astNode = node.children['*'];
             if (astNode) {
               handlerSets.push(
                 ...this.gHSets(
@@ -1669,12 +1669,12 @@ var Node2 = class {
             }
             continue;
           }
-          if (part === "") {
+          if (part === '') {
             continue;
           }
           const [key, name, matcher] = pattern;
           const child = node.children[key];
-          const restPathString = parts.slice(i).join("/");
+          const restPathString = parts.slice(i).join('/');
           if (matcher instanceof RegExp && matcher.test(restPathString)) {
             params[name] = restPathString;
             handlerSets.push(
@@ -1686,16 +1686,16 @@ var Node2 = class {
             matcher === true ||
             (matcher instanceof RegExp && matcher.test(part))
           ) {
-            if (typeof key === "string") {
+            if (typeof key === 'string') {
               params[name] = part;
               if (isLast === true) {
                 handlerSets.push(
                   ...this.gHSets(child, method, params, node.params),
                 );
-                if (child.children["*"]) {
+                if (child.children['*']) {
                   handlerSets.push(
                     ...this.gHSets(
-                      child.children["*"],
+                      child.children['*'],
                       method,
                       params,
                       node.params,
@@ -1721,7 +1721,7 @@ var Node2 = class {
 
 // node_modules/hono/dist/router/trie-router/router.js
 var TrieRouter = class {
-  name = "TrieRouter";
+  name = 'TrieRouter';
   node;
   constructor() {
     this.node = new Node2();

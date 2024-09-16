@@ -37,7 +37,7 @@ export function pass(message = "") {
 }
 
 export function fail(message = "") {
-  return new Response(message, { status: 500 });
+  throw new Response(message, { status: 500 });
 }
 
 function prettyPrintSymbol(a) {
@@ -48,8 +48,18 @@ function prettyPrintSymbol(a) {
 }
 export function assert(actual, expected, code) {
   if (!deepEqual(actual, expected)) {
-    return fail(
+    fail(
       `Expected \`${code}\` to equal \`${JSON.stringify(prettyPrintSymbol(expected))}\` - Found \`${JSON.stringify(prettyPrintSymbol(actual))}\``,
+    );
+  }
+}
+
+export { assert as strictEqual }
+
+export function ok(truthy, code) {
+  if (!truthy) {
+    fail(
+      `Expected ${code ? ' ' + code : ''}to be truthy - Found \`${JSON.stringify(prettyPrintSymbol(truthy))}\``,
     );
   }
 }
@@ -58,7 +68,7 @@ export async function assertResolves(func) {
   try {
     await func();
   } catch (error) {
-    return fail(
+    fail(
       `Expected \`${func.toString()}\` to resolve - Found it rejected: ${error.name}: ${error.message}`,
     );
   }
@@ -67,13 +77,10 @@ export async function assertResolves(func) {
 export async function assertRejects(func, errorClass, errorMessage) {
   try {
     await func();
-    return fail(
-      `Expected \`${func.toString()}\` to reject - Found it did not reject`,
-    );
   } catch (error) {
     if (errorClass) {
       if (error instanceof errorClass === false) {
-        return fail(
+        fail(
           `Expected \`${func.toString()}\` to reject instance of \`${errorClass.name}\` - Found instance of \`${error.name}\``,
         );
       }
@@ -81,24 +88,24 @@ export async function assertRejects(func, errorClass, errorMessage) {
 
     if (errorMessage) {
       if (error.message !== errorMessage) {
-        return fail(
+        fail(
           `Expected \`${func.toString()}\` to reject error message of \`${errorMessage}\` - Found \`${error.message}\``,
         );
       }
     }
+
+    return;
   }
+  fail(`Expected \`${func.toString()}\` to reject - Found it did not reject`);
 }
 
 export function assertThrows(func, errorClass, errorMessage) {
   try {
     func();
-    return fail(
-      `Expected \`${func.toString()}\` to throw - Found it did not throw`,
-    );
   } catch (error) {
     if (errorClass) {
       if (error instanceof errorClass === false) {
-        return fail(
+        fail(
           `Expected \`${func.toString()}\` to throw instance of \`${errorClass.name}\` - Found instance of \`${error.name}\`: ${error.message}\n${error.stack}`,
         );
       }
@@ -106,23 +113,28 @@ export function assertThrows(func, errorClass, errorMessage) {
 
     if (errorMessage) {
       if (error.message !== errorMessage) {
-        return fail(
+        fail(
           `Expected \`${func.toString()}\` to throw error message of \`${errorMessage}\` - Found \`${error.message}\``,
         );
       }
     }
+
+    return;
   }
+  fail(`Expected \`${func.toString()}\` to throw - Found it did not throw`);
 }
 
 export function assertDoesNotThrow(func) {
   try {
     func();
   } catch (error) {
-    return fail(
+    fail(
       `Expected \`${func.toString()}\` to not throw - Found it did throw: ${error.name}: ${error.message}`,
     );
   }
 }
+
+export { deepEqual as deepStrictEqual }
 
 export function deepEqual(a, b) {
   var aKeys;

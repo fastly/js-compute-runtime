@@ -1,122 +1,91 @@
 /* eslint-env serviceworker */
 import {
-  pass,
   assert,
   assertDoesNotThrow,
   assertThrows,
-} from "./assertions.js";
-import { routes } from "./routes.js";
-import { CacheOverride } from "fastly:cache-override";
+} from './assertions.js';
+import { routes } from './routes.js';
+import { CacheOverride } from 'fastly:cache-override';
 
 // setInterval
 {
-  routes.set("/setInterval/exposed-as-global", async () => {
-    let error = assert(typeof setInterval, "function", `typeof setInterval`);
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/setInterval/exposed-as-global', async () => {
+    assert(typeof setInterval, 'function', `typeof setInterval`);
   });
-  routes.set("/setInterval/interface", async () => {
-    let actual = Reflect.getOwnPropertyDescriptor(globalThis, "setInterval");
+  routes.set('/setInterval/interface', async () => {
+    let actual = Reflect.getOwnPropertyDescriptor(globalThis, 'setInterval');
     let expected = {
       writable: true,
       enumerable: true,
       configurable: true,
       value: globalThis.setInterval,
     };
-    let error = assert(
+    assert(
       actual,
       expected,
       `Reflect.getOwnPropertyDescriptor(globalThis, 'setInterval)`,
     );
-    if (error) {
-      return error;
-    }
 
-    error = assert(
+    assert(
       typeof globalThis.setInterval,
-      "function",
+      'function',
       `typeof globalThis.setInterval`,
     );
-    if (error) {
-      return error;
-    }
 
-    actual = Reflect.getOwnPropertyDescriptor(globalThis.setInterval, "length");
+    actual = Reflect.getOwnPropertyDescriptor(globalThis.setInterval, 'length');
     expected = {
       value: 1,
       writable: false,
       enumerable: false,
       configurable: true,
     };
-    error = assert(
+    assert(
       actual,
       expected,
       `Reflect.getOwnPropertyDescriptor(globalThis.setInterval, 'length')`,
     );
-    if (error) {
-      return error;
-    }
 
-    actual = Reflect.getOwnPropertyDescriptor(globalThis.setInterval, "name");
+    actual = Reflect.getOwnPropertyDescriptor(globalThis.setInterval, 'name');
     expected = {
-      value: "setInterval",
+      value: 'setInterval',
       writable: false,
       enumerable: false,
       configurable: true,
     };
-    error = assert(
+    assert(
       actual,
       expected,
       `Reflect.getOwnPropertyDescriptor(globalThis.setInterval, 'name')`,
     );
-    if (error) {
-      return error;
-    }
-
-    return pass();
   });
-  routes.set("/setInterval/called-as-constructor-function", async () => {
-    let error = assertThrows(
+  routes.set('/setInterval/called-as-constructor-function', async () => {
+    assertThrows(
       () => {
         new setInterval();
       },
       TypeError,
       `setInterval is not a constructor`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
-  routes.set("/setInterval/empty-parameter", async () => {
-    let error = assertThrows(
+  routes.set('/setInterval/empty-parameter', async () => {
+    assertThrows(
       () => {
         setInterval();
       },
       TypeError,
       `setInterval: At least 1 argument required, but only 0 passed`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
-  routes.set("/setInterval/handler-parameter-not-supplied", async () => {
-    let error = assertThrows(
+  routes.set('/setInterval/handler-parameter-not-supplied', async () => {
+    assertThrows(
       () => {
         setInterval();
       },
       TypeError,
       `setInterval: At least 1 argument required, but only 0 passed`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
-  routes.set("/setInterval/handler-parameter-not-callable", async () => {
+  routes.set('/setInterval/handler-parameter-not-callable', async () => {
     let non_callable_types = [
       // Primitive types
       null,
@@ -124,33 +93,25 @@ import { CacheOverride } from "fastly:cache-override";
       true,
       1,
       1n,
-      "hello",
+      'hello',
       Symbol(),
       // After primitive types, the only remaining types are Objects and Functions
       {},
     ];
     for (const type of non_callable_types) {
-      let error = assertThrows(() => {
+      assertThrows(() => {
         setInterval(type);
       }, Error);
-      if (error) {
-        return error;
-      }
     }
-    return pass();
   });
-  routes.set("/setInterval/timeout-parameter-not-supplied", async () => {
-    let error = assertDoesNotThrow(() => {
+  routes.set('/setInterval/timeout-parameter-not-supplied', async () => {
+    assertDoesNotThrow(() => {
       setInterval(function () {});
     });
-    if (error) {
-      return error;
-    }
-    return pass();
   });
   // https://tc39.es/ecma262/#sec-tonumber
   routes.set(
-    "/setInterval/timeout-parameter-calls-7.1.4-ToNumber",
+    '/setInterval/timeout-parameter-calls-7.1.4-ToNumber',
     async () => {
       let sentinel;
       let requestedType;
@@ -164,212 +125,125 @@ import { CacheOverride } from "fastly:cache-override";
         };
         setInterval(function () {}, timeout);
       };
-      let error = assertThrows(test);
-      if (error) {
-        return error;
-      }
+      assertThrows(test);
       try {
         test();
       } catch (thrownError) {
-        let error = assert(thrownError, sentinel, "thrownError === sentinel");
-        if (error) {
-          return error;
-        }
-        error = assert(requestedType, "number", 'requestedType === "number"');
-        if (error) {
-          return error;
-        }
+        assert(thrownError, sentinel, 'thrownError === sentinel');
+        assert(requestedType, 'number', 'requestedType === "number"');
       }
-      error = assertThrows(
+      assertThrows(
         () => setInterval(function () {}, Symbol()),
         TypeError,
         `can't convert symbol to number`,
       );
-      if (error) {
-        return error;
-      }
-      return pass();
     },
   );
 
-  routes.set("/setInterval/timeout-parameter-negative", async () => {
-    let error = assertDoesNotThrow(() => setInterval(() => {}, -1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => setInterval(() => {}, -1.1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() =>
-      setInterval(() => {}, Number.MIN_SAFE_INTEGER),
-    );
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => setInterval(() => {}, Number.MIN_VALUE));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => setInterval(() => {}, -Infinity));
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/setInterval/timeout-parameter-negative', async () => {
+    assertDoesNotThrow(() => setInterval(() => {}, -1));
+    assertDoesNotThrow(() => setInterval(() => {}, -1.1));
+    assertDoesNotThrow(() => setInterval(() => {}, Number.MIN_SAFE_INTEGER));
+    assertDoesNotThrow(() => setInterval(() => {}, Number.MIN_VALUE));
+    assertDoesNotThrow(() => setInterval(() => {}, -Infinity));
   });
-  routes.set("/setInterval/timeout-parameter-positive", async () => {
-    let error = assertDoesNotThrow(() => setInterval(() => {}, 1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => setInterval(() => {}, 1.1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() =>
-      setInterval(() => {}, Number.MAX_SAFE_INTEGER),
-    );
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => setInterval(() => {}, Number.MAX_VALUE));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => setInterval(() => {}, Infinity));
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/setInterval/timeout-parameter-positive', async () => {
+    assertDoesNotThrow(() => setInterval(() => {}, 1));
+    assertDoesNotThrow(() => setInterval(() => {}, 1.1));
+    assertDoesNotThrow(() => setInterval(() => {}, Number.MAX_SAFE_INTEGER));
+    assertDoesNotThrow(() => setInterval(() => {}, Number.MAX_VALUE));
+    assertDoesNotThrow(() => setInterval(() => {}, Infinity));
   });
-  routes.set("/setInterval/returns-integer", async () => {
+  routes.set('/setInterval/returns-integer', async () => {
     let id = setInterval(() => {}, 1);
-    let error = assert(typeof id, "number", `typeof id === "number"`);
-    if (error) {
-      return error;
-    }
-    return pass();
+    assert(typeof id, 'number', `typeof id === "number"`);
   });
-  routes.set("/setInterval/called-unbound", async () => {
-    let error = assertDoesNotThrow(() => {
+  routes.set('/setInterval/called-unbound', async () => {
+    assertDoesNotThrow(() => {
       setInterval.call(undefined, () => {}, 1);
     });
-    if (error) {
-      return error;
-    }
-    return pass();
   });
 }
 
 // setTimeout
 {
-  routes.set("/setTimeout/exposed-as-global", async () => {
-    let error = assert(typeof setTimeout, "function", `typeof setTimeout`);
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/setTimeout/exposed-as-global', async () => {
+    assert(typeof setTimeout, 'function', `typeof setTimeout`);
   });
-  routes.set("/setTimeout/interface", async () => {
-    let actual = Reflect.getOwnPropertyDescriptor(globalThis, "setTimeout");
+  routes.set('/setTimeout/interface', async () => {
+    let actual = Reflect.getOwnPropertyDescriptor(globalThis, 'setTimeout');
     let expected = {
       writable: true,
       enumerable: true,
       configurable: true,
       value: globalThis.setTimeout,
     };
-    let error = assert(
+    assert(
       actual,
       expected,
       `Reflect.getOwnPropertyDescriptor(globalThis, 'setTimeout)`,
     );
-    if (error) {
-      return error;
-    }
 
-    error = assert(
+    assert(
       typeof globalThis.setTimeout,
-      "function",
+      'function',
       `typeof globalThis.setTimeout`,
     );
-    if (error) {
-      return error;
-    }
 
-    actual = Reflect.getOwnPropertyDescriptor(globalThis.setTimeout, "length");
+    actual = Reflect.getOwnPropertyDescriptor(globalThis.setTimeout, 'length');
     expected = {
       value: 1,
       writable: false,
       enumerable: false,
       configurable: true,
     };
-    error = assert(
+    assert(
       actual,
       expected,
       `Reflect.getOwnPropertyDescriptor(globalThis.setTimeout, 'length')`,
     );
-    if (error) {
-      return error;
-    }
 
-    actual = Reflect.getOwnPropertyDescriptor(globalThis.setTimeout, "name");
+    actual = Reflect.getOwnPropertyDescriptor(globalThis.setTimeout, 'name');
     expected = {
-      value: "setTimeout",
+      value: 'setTimeout',
       writable: false,
       enumerable: false,
       configurable: true,
     };
-    error = assert(
+    assert(
       actual,
       expected,
       `Reflect.getOwnPropertyDescriptor(globalThis.setTimeout, 'name')`,
     );
-    if (error) {
-      return error;
-    }
-
-    return pass();
   });
-  routes.set("/setTimeout/called-as-constructor-function", async () => {
-    let error = assertThrows(
+  routes.set('/setTimeout/called-as-constructor-function', async () => {
+    assertThrows(
       () => {
         new setTimeout();
       },
       TypeError,
       `setTimeout is not a constructor`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
-  routes.set("/setTimeout/empty-parameter", async () => {
-    let error = assertThrows(
+  routes.set('/setTimeout/empty-parameter', async () => {
+    assertThrows(
       () => {
         setTimeout();
       },
       TypeError,
       `setTimeout: At least 1 argument required, but only 0 passed`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
-  routes.set("/setTimeout/handler-parameter-not-supplied", async () => {
-    let error = assertThrows(
+  routes.set('/setTimeout/handler-parameter-not-supplied', async () => {
+    assertThrows(
       () => {
         setTimeout();
       },
       TypeError,
       `setTimeout: At least 1 argument required, but only 0 passed`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
-  routes.set("/setTimeout/handler-parameter-not-callable", async () => {
+  routes.set('/setTimeout/handler-parameter-not-callable', async () => {
     let non_callable_types = [
       // Primitive types
       null,
@@ -377,32 +251,24 @@ import { CacheOverride } from "fastly:cache-override";
       true,
       1,
       1n,
-      "hello",
+      'hello',
       Symbol(),
       // After primitive types, the only remaining types are Objects and Functions
       {},
     ];
     for (const type of non_callable_types) {
-      let error = assertThrows(() => {
+      assertThrows(() => {
         setTimeout(type);
       }, Error);
-      if (error) {
-        return error;
-      }
     }
-    return pass();
   });
-  routes.set("/setTimeout/timeout-parameter-not-supplied", async () => {
-    let error = assertDoesNotThrow(() => {
+  routes.set('/setTimeout/timeout-parameter-not-supplied', async () => {
+    assertDoesNotThrow(() => {
       setTimeout(function () {});
     });
-    if (error) {
-      return error;
-    }
-    return pass();
   });
   // https://tc39.es/ecma262/#sec-tonumber
-  routes.set("/setTimeout/timeout-parameter-calls-7.1.4-ToNumber", async () => {
+  routes.set('/setTimeout/timeout-parameter-calls-7.1.4-ToNumber', async () => {
     let sentinel;
     let requestedType;
     const test = () => {
@@ -415,101 +281,44 @@ import { CacheOverride } from "fastly:cache-override";
       };
       setTimeout(function () {}, timeout);
     };
-    let error = assertThrows(test);
-    if (error) {
-      return error;
-    }
+    assertThrows(test);
     try {
       test();
     } catch (thrownError) {
-      let error = assert(thrownError, sentinel, "thrownError === sentinel");
-      if (error) {
-        return error;
-      }
-      error = assert(requestedType, "number", 'requestedType === "number"');
-      if (error) {
-        return error;
-      }
+      assert(thrownError, sentinel, 'thrownError === sentinel');
+      assert(requestedType, 'number', 'requestedType === "number"');
     }
-    error = assertThrows(
+    assertThrows(
       () => setTimeout(function () {}, Symbol()),
       TypeError,
       `can't convert symbol to number`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
 
-  routes.set("/setTimeout/timeout-parameter-negative", async () => {
-    let error = assertDoesNotThrow(() => setTimeout(() => {}, -1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => setTimeout(() => {}, -1.1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() =>
-      setTimeout(() => {}, Number.MIN_SAFE_INTEGER),
-    );
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => setTimeout(() => {}, Number.MIN_VALUE));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => setTimeout(() => {}, -Infinity));
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/setTimeout/timeout-parameter-negative', async () => {
+    assertDoesNotThrow(() => setTimeout(() => {}, -1));
+    assertDoesNotThrow(() => setTimeout(() => {}, -1.1));
+    assertDoesNotThrow(() => setTimeout(() => {}, Number.MIN_SAFE_INTEGER));
+    assertDoesNotThrow(() => setTimeout(() => {}, Number.MIN_VALUE));
+    assertDoesNotThrow(() => setTimeout(() => {}, -Infinity));
   });
-  routes.set("/setTimeout/timeout-parameter-positive", async () => {
-    let error = assertDoesNotThrow(() => setTimeout(() => {}, 1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => setTimeout(() => {}, 1.1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() =>
-      setTimeout(() => {}, Number.MAX_SAFE_INTEGER),
-    );
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => setTimeout(() => {}, Number.MAX_VALUE));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => setTimeout(() => {}, Infinity));
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/setTimeout/timeout-parameter-positive', async () => {
+    assertDoesNotThrow(() => setTimeout(() => {}, 1));
+    assertDoesNotThrow(() => setTimeout(() => {}, 1.1));
+    assertDoesNotThrow(() => setTimeout(() => {}, Number.MAX_SAFE_INTEGER));
+    assertDoesNotThrow(() => setTimeout(() => {}, Number.MAX_VALUE));
+    assertDoesNotThrow(() => setTimeout(() => {}, Infinity));
   });
-  routes.set("/setTimeout/returns-integer", async () => {
+  routes.set('/setTimeout/returns-integer', async () => {
     let id = setTimeout(() => {}, 1);
-    let error = assert(typeof id, "number", `typeof id === "number"`);
-    if (error) {
-      return error;
-    }
-    return pass();
+    assert(typeof id, 'number', `typeof id === "number"`);
   });
-  routes.set("/setTimeout/called-unbound", async () => {
-    let error = assertDoesNotThrow(() => {
+  routes.set('/setTimeout/called-unbound', async () => {
+    assertDoesNotThrow(() => {
       setTimeout.call(undefined, () => {}, 1);
     });
-    if (error) {
-      return error;
-    }
-    return pass();
   });
-  routes.set("/setTimeout/200-ms", async () => {
+  routes.set('/setTimeout/200-ms', async () => {
     let controller, start;
     setTimeout(() => {
       const end = Date.now();
@@ -533,82 +342,58 @@ import { CacheOverride } from "fastly:cache-override";
       }),
     );
   });
-  routes.set("/setTimeout/fetch-timeout", async () => {
+  routes.set('/setTimeout/fetch-timeout', async () => {
     let timedOut = false;
-    const first = fetch("https://httpbin.org/delay/2", {
-      backend: "httpbin",
-      cacheOverride: new CacheOverride("pass"),
+    const first = fetch('https://httpbin.org/delay/2', {
+      backend: 'httpbin',
+      cacheOverride: new CacheOverride('pass'),
     });
     const second = Promise.race([
-      fetch("https://httpbin.org/delay/2", {
-        backend: "httpbin",
-        cacheOverride: new CacheOverride("pass"),
+      fetch('https://httpbin.org/delay/2', {
+        backend: 'httpbin',
+        cacheOverride: new CacheOverride('pass'),
       }),
       new Promise((resolve) => setTimeout(resolve, 5)).then(() => {
         timedOut = true;
-        return { status: 504, errors: "timeout" };
+        return { status: 504, errors: 'timeout' };
       }),
     ]);
     const firstValue = await first;
-    let error = assert(timedOut, true, "should have timed out");
-    if (error) {
-      return error;
-    }
-    error = assert(firstValue.status, 200, "should get first value");
-    if (error) {
-      return error;
-    }
+    assert(timedOut, true, 'should have timed out');
+    assert(firstValue.status, 200, 'should get first value');
     const secondValue = await second;
-    error = assert(secondValue.status, 504, "should get second value timeout");
-    if (error) {
-      return error;
-    }
-    return pass();
+    assert(secondValue.status, 504, 'should get second value timeout');
   });
 }
 
 // clearInterval
 {
-  routes.set("/clearInterval/exposed-as-global", async () => {
-    let error = assert(
-      typeof clearInterval,
-      "function",
-      `typeof clearInterval`,
-    );
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/clearInterval/exposed-as-global', async () => {
+    assert(typeof clearInterval, 'function', `typeof clearInterval`);
   });
-  routes.set("/clearInterval/interface", async () => {
-    let actual = Reflect.getOwnPropertyDescriptor(globalThis, "clearInterval");
+  routes.set('/clearInterval/interface', async () => {
+    let actual = Reflect.getOwnPropertyDescriptor(globalThis, 'clearInterval');
     let expected = {
       writable: true,
       enumerable: true,
       configurable: true,
       value: globalThis.clearInterval,
     };
-    let error = assert(
+    assert(
       actual,
       expected,
       `Reflect.getOwnPropertyDescriptor(globalThis, 'clearInterval)`,
     );
-    if (error) {
-      return error;
-    }
 
-    error = assert(
+    assert(
       typeof globalThis.clearInterval,
-      "function",
+      'function',
       `typeof globalThis.clearInterval`,
     );
-    if (error) {
-      return error;
-    }
 
     actual = Reflect.getOwnPropertyDescriptor(
       globalThis.clearInterval,
-      "length",
+      'length',
     );
     expected = {
       value: 1,
@@ -616,61 +401,45 @@ import { CacheOverride } from "fastly:cache-override";
       enumerable: false,
       configurable: true,
     };
-    error = assert(
+    assert(
       actual,
       expected,
       `Reflect.getOwnPropertyDescriptor(globalThis.clearInterval, 'length')`,
     );
-    if (error) {
-      return error;
-    }
 
-    actual = Reflect.getOwnPropertyDescriptor(globalThis.clearInterval, "name");
+    actual = Reflect.getOwnPropertyDescriptor(globalThis.clearInterval, 'name');
     expected = {
-      value: "clearInterval",
+      value: 'clearInterval',
       writable: false,
       enumerable: false,
       configurable: true,
     };
-    error = assert(
+    assert(
       actual,
       expected,
       `Reflect.getOwnPropertyDescriptor(globalThis.clearInterval, 'name')`,
     );
-    if (error) {
-      return error;
-    }
-
-    return pass();
   });
-  routes.set("/clearInterval/called-as-constructor-function", async () => {
-    let error = assertThrows(
+  routes.set('/clearInterval/called-as-constructor-function', async () => {
+    assertThrows(
       () => {
         new clearInterval();
       },
       TypeError,
       `clearInterval is not a constructor`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
-  routes.set("/clearInterval/id-parameter-not-supplied", async () => {
-    let error = assertThrows(
+  routes.set('/clearInterval/id-parameter-not-supplied', async () => {
+    assertThrows(
       () => {
         clearInterval();
       },
       TypeError,
       `clearInterval: At least 1 argument required, but only 0 passed`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
   // https://tc39.es/ecma262/#sec-tonumber
-  routes.set("/clearInterval/id-parameter-calls-7.1.4-ToNumber", async () => {
+  routes.set('/clearInterval/id-parameter-calls-7.1.4-ToNumber', async () => {
     let sentinel;
     let requestedType;
     const test = () => {
@@ -683,140 +452,73 @@ import { CacheOverride } from "fastly:cache-override";
       };
       clearInterval(timeout);
     };
-    let error = assertThrows(test);
-    if (error) {
-      return error;
-    }
+    assertThrows(test);
     try {
       test();
     } catch (thrownError) {
-      let error = assert(thrownError, sentinel, "thrownError === sentinel");
-      if (error) {
-        return error;
-      }
-      error = assert(requestedType, "number", 'requestedType === "number"');
-      if (error) {
-        return error;
-      }
+      assert(thrownError, sentinel, 'thrownError === sentinel');
+      assert(requestedType, 'number', 'requestedType === "number"');
     }
-    error = assertThrows(
+    assertThrows(
       () => clearInterval(Symbol()),
       TypeError,
       `can't convert symbol to number`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
 
-  routes.set("/clearInterval/id-parameter-negative", async () => {
-    let error = assertDoesNotThrow(() => clearInterval(-1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearInterval(-1.1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearInterval(Number.MIN_SAFE_INTEGER));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearInterval(Number.MIN_VALUE));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearInterval(-Infinity));
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/clearInterval/id-parameter-negative', async () => {
+    assertDoesNotThrow(() => clearInterval(-1));
+    assertDoesNotThrow(() => clearInterval(-1.1));
+    assertDoesNotThrow(() => clearInterval(Number.MIN_SAFE_INTEGER));
+    assertDoesNotThrow(() => clearInterval(Number.MIN_VALUE));
+    assertDoesNotThrow(() => clearInterval(-Infinity));
   });
-  routes.set("/clearInterval/id-parameter-positive", async () => {
-    let error = assertDoesNotThrow(() => clearInterval(1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearInterval(1.1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearInterval(Number.MAX_SAFE_INTEGER));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearInterval(Number.MAX_VALUE));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearInterval(Infinity));
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/clearInterval/id-parameter-positive', async () => {
+    assertDoesNotThrow(() => clearInterval(1));
+    assertDoesNotThrow(() => clearInterval(1.1));
+    assertDoesNotThrow(() => clearInterval(Number.MAX_SAFE_INTEGER));
+    assertDoesNotThrow(() => clearInterval(Number.MAX_VALUE));
+    assertDoesNotThrow(() => clearInterval(Infinity));
   });
-  routes.set("/clearInterval/returns-undefined", async () => {
+  routes.set('/clearInterval/returns-undefined', async () => {
     let result = clearInterval(1);
-    let error = assert(
-      typeof result,
-      "undefined",
-      `typeof result === "undefined"`,
-    );
-    if (error) {
-      return error;
-    }
-    return pass();
+    assert(typeof result, 'undefined', `typeof result === "undefined"`);
   });
-  routes.set("/clearInterval/called-unbound", async () => {
-    let error = assertDoesNotThrow(() => {
+  routes.set('/clearInterval/called-unbound', async () => {
+    assertDoesNotThrow(() => {
       clearInterval.call(undefined, 1);
     });
-    if (error) {
-      return error;
-    }
-    return pass();
   });
 }
 
 // clearTimeout
 {
-  routes.set("/clearTimeout/exposed-as-global", async () => {
-    let error = assert(typeof clearTimeout, "function", `typeof clearTimeout`);
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/clearTimeout/exposed-as-global', async () => {
+    assert(typeof clearTimeout, 'function', `typeof clearTimeout`);
   });
-  routes.set("/clearTimeout/interface", async () => {
-    let actual = Reflect.getOwnPropertyDescriptor(globalThis, "clearTimeout");
+  routes.set('/clearTimeout/interface', async () => {
+    let actual = Reflect.getOwnPropertyDescriptor(globalThis, 'clearTimeout');
     let expected = {
       writable: true,
       enumerable: true,
       configurable: true,
       value: globalThis.clearTimeout,
     };
-    let error = assert(
+    assert(
       actual,
       expected,
       `Reflect.getOwnPropertyDescriptor(globalThis, 'clearTimeout)`,
     );
-    if (error) {
-      return error;
-    }
 
-    error = assert(
+    assert(
       typeof globalThis.clearTimeout,
-      "function",
+      'function',
       `typeof globalThis.clearTimeout`,
     );
-    if (error) {
-      return error;
-    }
 
     actual = Reflect.getOwnPropertyDescriptor(
       globalThis.clearTimeout,
-      "length",
+      'length',
     );
     expected = {
       value: 1,
@@ -824,61 +526,45 @@ import { CacheOverride } from "fastly:cache-override";
       enumerable: false,
       configurable: true,
     };
-    error = assert(
+    assert(
       actual,
       expected,
       `Reflect.getOwnPropertyDescriptor(globalThis.clearTimeout, 'length')`,
     );
-    if (error) {
-      return error;
-    }
 
-    actual = Reflect.getOwnPropertyDescriptor(globalThis.clearTimeout, "name");
+    actual = Reflect.getOwnPropertyDescriptor(globalThis.clearTimeout, 'name');
     expected = {
-      value: "clearTimeout",
+      value: 'clearTimeout',
       writable: false,
       enumerable: false,
       configurable: true,
     };
-    error = assert(
+    assert(
       actual,
       expected,
       `Reflect.getOwnPropertyDescriptor(globalThis.clearTimeout, 'name')`,
     );
-    if (error) {
-      return error;
-    }
-
-    return pass();
   });
-  routes.set("/clearTimeout/called-as-constructor-function", async () => {
-    let error = assertThrows(
+  routes.set('/clearTimeout/called-as-constructor-function', async () => {
+    assertThrows(
       () => {
         new clearTimeout();
       },
       TypeError,
       `clearTimeout is not a constructor`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
-  routes.set("/clearTimeout/id-parameter-not-supplied", async () => {
-    let error = assertThrows(
+  routes.set('/clearTimeout/id-parameter-not-supplied', async () => {
+    assertThrows(
       () => {
         clearTimeout();
       },
       TypeError,
       `clearTimeout: At least 1 argument required, but only 0 passed`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
   // https://tc39.es/ecma262/#sec-tonumber
-  routes.set("/clearTimeout/id-parameter-calls-7.1.4-ToNumber", async () => {
+  routes.set('/clearTimeout/id-parameter-calls-7.1.4-ToNumber', async () => {
     let sentinel;
     let requestedType;
     const test = () => {
@@ -891,98 +577,41 @@ import { CacheOverride } from "fastly:cache-override";
       };
       clearTimeout(timeout);
     };
-    let error = assertThrows(test);
-    if (error) {
-      return error;
-    }
+    assertThrows(test);
     try {
       test();
     } catch (thrownError) {
-      let error = assert(thrownError, sentinel, "thrownError === sentinel");
-      if (error) {
-        return error;
-      }
-      error = assert(requestedType, "number", 'requestedType === "number"');
-      if (error) {
-        return error;
-      }
+      assert(thrownError, sentinel, 'thrownError === sentinel');
+      assert(requestedType, 'number', 'requestedType === "number"');
     }
-    error = assertThrows(
+    assertThrows(
       () => clearTimeout(Symbol()),
       TypeError,
       `can't convert symbol to number`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
 
-  routes.set("/clearTimeout/id-parameter-negative", async () => {
-    let error = assertDoesNotThrow(() => clearTimeout(-1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearTimeout(-1.1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearTimeout(Number.MIN_SAFE_INTEGER));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearTimeout(Number.MIN_VALUE));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearTimeout(-Infinity));
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/clearTimeout/id-parameter-negative', async () => {
+    assertDoesNotThrow(() => clearTimeout(-1));
+    assertDoesNotThrow(() => clearTimeout(-1.1));
+    assertDoesNotThrow(() => clearTimeout(Number.MIN_SAFE_INTEGER));
+    assertDoesNotThrow(() => clearTimeout(Number.MIN_VALUE));
+    assertDoesNotThrow(() => clearTimeout(-Infinity));
   });
-  routes.set("/clearTimeout/id-parameter-positive", async () => {
-    let error = assertDoesNotThrow(() => clearTimeout(1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearTimeout(1.1));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearTimeout(Number.MAX_SAFE_INTEGER));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearTimeout(Number.MAX_VALUE));
-    if (error) {
-      return error;
-    }
-    error = assertDoesNotThrow(() => clearTimeout(Infinity));
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/clearTimeout/id-parameter-positive', async () => {
+    assertDoesNotThrow(() => clearTimeout(1));
+    assertDoesNotThrow(() => clearTimeout(1.1));
+    assertDoesNotThrow(() => clearTimeout(Number.MAX_SAFE_INTEGER));
+    assertDoesNotThrow(() => clearTimeout(Number.MAX_VALUE));
+    assertDoesNotThrow(() => clearTimeout(Infinity));
   });
-  routes.set("/clearTimeout/returns-undefined", async () => {
+  routes.set('/clearTimeout/returns-undefined', async () => {
     let result = clearTimeout(1);
-    let error = assert(
-      typeof result,
-      "undefined",
-      `typeof result === "undefined"`,
-    );
-    if (error) {
-      return error;
-    }
-    return pass();
+    assert(typeof result, 'undefined', `typeof result === "undefined"`);
   });
-  routes.set("/clearTimeout/called-unbound", async () => {
-    let error = assertDoesNotThrow(() => {
+  routes.set('/clearTimeout/called-unbound', async () => {
+    assertDoesNotThrow(() => {
       clearTimeout.call(undefined, 1);
     });
-    if (error) {
-      return error;
-    }
-    return pass();
   });
 }

@@ -1,37 +1,29 @@
 /* eslint-env serviceworker */
-import { SecretStore, SecretStoreEntry } from "fastly:secret-store";
-import { pass, assert, assertThrows, assertRejects } from "./assertions.js";
-import { routes } from "./routes.js";
-import fc from "./fast-check.js";
+import { SecretStore, SecretStoreEntry } from 'fastly:secret-store';
+import { assert, assertThrows, assertRejects } from './assertions.js';
+import { routes } from './routes.js';
+import fc from './fast-check.js';
 
 // SecretStore
 {
-  routes.set("/secret-store/exposed-as-global", () => {
-    let error = assert(typeof SecretStore, "function", `typeof SecretStore`);
-    if (error) {
-      return error;
-    }
-    return pass();
+  routes.set('/secret-store/exposed-as-global', () => {
+    assert(typeof SecretStore, 'function', `typeof SecretStore`);
   });
-  routes.set("/secret-store/interface", SecretStoreInterfaceTests);
+  routes.set('/secret-store/interface', SecretStoreInterfaceTests);
   // SecretStore constructor
   {
-    routes.set("/secret-store/constructor/called-as-regular-function", () => {
-      let error = assertThrows(
+    routes.set('/secret-store/constructor/called-as-regular-function', () => {
+      assertThrows(
         () => {
           SecretStore();
         },
         TypeError,
         `calling a builtin SecretStore constructor without new is forbidden`,
       );
-      if (error) {
-        return error;
-      }
-      return pass();
     });
     // https://tc39.es/ecma262/#sec-tostring
     routes.set(
-      "/secret-store/constructor/parameter-calls-7.1.17-ToString",
+      '/secret-store/constructor/parameter-calls-7.1.17-ToString',
       () => {
         let sentinel;
         const test = () => {
@@ -43,74 +35,52 @@ import fc from "./fast-check.js";
           };
           new SecretStore(name);
         };
-        let error = assertThrows(test);
-        if (error) {
-          return error;
-        }
+        assertThrows(test);
         try {
           test();
         } catch (thrownError) {
-          let error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        error = assertThrows(
+        assertThrows(
           () => new SecretStore(Symbol()),
           TypeError,
           `can't convert symbol to string`,
         );
-        if (error) {
-          return error;
-        }
-        return pass();
       },
     );
-    routes.set("/secret-store/constructor/empty-parameter", () => {
-      let error = assertThrows(
+    routes.set('/secret-store/constructor/empty-parameter', () => {
+      assertThrows(
         () => {
           new SecretStore();
         },
         TypeError,
         `SecretStore constructor: At least 1 argument required, but only 0 passed`,
       );
-      if (error) {
-        return error;
-      }
-      return pass();
     });
-    routes.set("/secret-store/constructor/found-store", () => {
+    routes.set('/secret-store/constructor/found-store', () => {
       const store = createValidStore();
-      let error = assert(
+      assert(
         store instanceof SecretStore,
         true,
         `store instanceof SecretStore`,
       );
-      if (error) {
-        return error;
-      }
-      return pass();
     });
-    routes.set("/secret-store/constructor/missing-store", () => {
-      let error = assertThrows(
+    routes.set('/secret-store/constructor/missing-store', () => {
+      assertThrows(
         () => {
-          new SecretStore("missing");
+          new SecretStore('missing');
         },
         Error,
         `SecretStore constructor: No SecretStore named 'missing' exists`,
       );
-      if (error) {
-        return error;
-      }
-      return pass();
     });
-    routes.set("/secret-store/constructor/invalid-name", () => {
+    routes.set('/secret-store/constructor/invalid-name', () => {
       // control Characters (\\u0000-\\u001F) are not allowed
       fc.configureGlobal({ verbose: true });
       const charactersOtherThanLettersNumbersDashesUnderscoresAndPeriods = fc
         .fullUnicode()
         .filter((c) => {
-          if (c == "-" || c == "_" || c == ".") {
+          if (c == '-' || c == '_' || c == '.') {
             return false;
           }
           const code = c.charCodeAt(0);
@@ -128,76 +98,56 @@ import fc from "./fast-check.js";
           }
           return true;
         });
-      let error;
       fc.assert(
         fc.property(
           charactersOtherThanLettersNumbersDashesUnderscoresAndPeriods,
           (character) => {
-            error = assertThrows(
+            assertThrows(
               () => {
                 new SecretStore(character);
               },
               TypeError,
               `SecretStore constructor: name can contain only ascii alphanumeric characters, underscores, dashes, and ascii whitespace`,
             );
-            return error == undefined;
           },
         ),
       );
-      if (error) {
-        return error;
-      }
 
       // must be less than 256 characters
-      error = assertThrows(
+      assertThrows(
         () => {
-          new SecretStore("a".repeat(256));
+          new SecretStore('a'.repeat(256));
         },
         TypeError,
         `SecretStore constructor: name can not be more than 255 characters`,
       );
-      if (error) {
-        return error;
-      }
 
       // empty string not allowed
-      error = assertThrows(
+      assertThrows(
         () => {
-          new SecretStore("");
+          new SecretStore('');
         },
         TypeError,
         `SecretStore constructor: name can not be an empty string`,
       );
-      if (error) {
-        return error;
-      }
-      return pass();
     });
   }
 
   // SecretStore get method
   {
-    routes.set("/secret-store/get/called-as-constructor", () => {
-      let error = assertThrows(() => {
-        new SecretStore.prototype.get("1");
+    routes.set('/secret-store/get/called-as-constructor', () => {
+      assertThrows(() => {
+        new SecretStore.prototype.get('1');
       }, TypeError);
-      if (error) {
-        return error;
-      }
-      return pass();
     });
-    routes.set("/secret-store/get/called-unbound", () => {
-      let error = assertThrows(() => {
-        SecretStore.prototype.get.call(undefined, "1");
+    routes.set('/secret-store/get/called-unbound', () => {
+      assertThrows(() => {
+        SecretStore.prototype.get.call(undefined, '1');
       }, TypeError);
-      if (error) {
-        return error;
-      }
-      return pass();
     });
     // https://tc39.es/ecma262/#sec-tostring
     routes.set(
-      "/secret-store/get/key-parameter-calls-7.1.17-ToString",
+      '/secret-store/get/key-parameter-calls-7.1.17-ToString',
       async () => {
         let sentinel;
         const test = () => {
@@ -210,19 +160,13 @@ import fc from "./fast-check.js";
           const store = createValidStore();
           return store.get(key);
         };
-        let error = assertThrows(test);
-        if (error) {
-          return error;
-        }
+        assertThrows(test);
         try {
           test();
         } catch (thrownError) {
-          let error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        error = assertThrows(
+        assertThrows(
           () => {
             const store = createValidStore();
             return store.get(Symbol());
@@ -230,14 +174,10 @@ import fc from "./fast-check.js";
           TypeError,
           `can't convert symbol to string`,
         );
-        if (error) {
-          return error;
-        }
-        return pass();
       },
     );
-    routes.set("/secret-store/get/key-parameter-not-supplied", () => {
-      let error = assertThrows(
+    routes.set('/secret-store/get/key-parameter-not-supplied', () => {
+      assertThrows(
         () => {
           const store = createValidStore();
           return store.get();
@@ -245,71 +185,55 @@ import fc from "./fast-check.js";
         TypeError,
         `get: At least 1 argument required, but only 0 passed`,
       );
-      if (error) {
-        return error;
-      }
-      return pass();
     });
-    routes.set("/secret-store/get/key-parameter-empty-string", async () => {
-      let error = await assertRejects(
+    routes.set('/secret-store/get/key-parameter-empty-string', async () => {
+      await assertRejects(
         async () => {
           const store = createValidStore();
-          return await store.get("");
+          return await store.get('');
         },
         TypeError,
         `SecretStore key can not be an empty string`,
       );
-      if (error) {
-        return error;
-      }
-      return pass();
     });
     routes.set(
-      "/secret-store/get/key-parameter-255-character-string",
+      '/secret-store/get/key-parameter-255-character-string',
       async () => {
         const store = createValidStore();
-        const key = "a".repeat(255);
+        const key = 'a'.repeat(255);
         let result = store.get(key);
-        let error = assert(
+        assert(
           result instanceof Promise,
           true,
           `store.get(key) instanceof Promise`,
         );
         result = await result;
-        error = assert(
+        assert(
           result instanceof SecretStoreEntry,
           true,
           `(await store.get(key)) instanceof SecretStoreEntry`,
         );
-        if (error) {
-          return error;
-        }
-        return pass();
       },
     );
     routes.set(
-      "/secret-store/get/key-parameter-256-character-string",
+      '/secret-store/get/key-parameter-256-character-string',
       async () => {
-        let error = await assertRejects(
+        await assertRejects(
           async () => {
             const store = createValidStore();
-            const key = "a".repeat(256);
+            const key = 'a'.repeat(256);
             return store.get(key);
           },
           TypeError,
           `SecretStore key can not be more than 255 characters`,
         );
-        if (error) {
-          return error;
-        }
-        return pass();
       },
     );
-    routes.set("/secret-store/get/key-parameter-invalid-string", async () => {
+    routes.set('/secret-store/get/key-parameter-invalid-string', async () => {
       const charactersOtherThanLettersNumbersDashesUnderscoresAndPeriods = fc
         .fullUnicode()
         .filter((c) => {
-          if (c == "-" || c == "_" || c == ".") {
+          if (c == '-' || c == '_' || c == '.') {
             return false;
           }
           const code = c.charCodeAt(0);
@@ -328,12 +252,11 @@ import fc from "./fast-check.js";
           return true;
         });
 
-      let error;
       fc.assert(
         fc.asyncProperty(
           charactersOtherThanLettersNumbersDashesUnderscoresAndPeriods,
           async (character) => {
-            let error = await assertRejects(
+            await assertRejects(
               async () => {
                 const store = createValidStore();
                 return store.get(character);
@@ -341,205 +264,146 @@ import fc from "./fast-check.js";
               TypeError,
               `SecretStore key can contain only ascii alphanumeric characters, underscores, dashes, and ascii whitespace`,
             );
-            return error == undefined;
           },
         ),
       );
-      if (error) {
-        return error;
-      }
-      return pass();
     });
     routes.set(
-      "/secret-store/get/key-does-not-exist-returns-null",
+      '/secret-store/get/key-does-not-exist-returns-null',
       async () => {
         let store = createValidStore();
         let result = await store.get(Math.random());
-        let error = assert(result, null, `store.get(Math.random())`);
-        if (error) {
-          return error;
-        }
-        return pass();
+        assert(result, null, `store.get(Math.random())`);
       },
     );
-    routes.set("/secret-store/get/key-exists", async () => {
+    routes.set('/secret-store/get/key-exists', async () => {
       let store = createValidStore();
-      let result = await store.get("first");
-      let error = assert(
+      let result = await store.get('first');
+      assert(
         result instanceof SecretStoreEntry,
         true,
         `(store.get(key) instanceof SecretStoreEntry)`,
       );
-      if (error) {
-        return error;
-      }
-      return pass();
     });
   }
 
   // SecretStore.fromBytes static method
   {
-    routes.set("/secret-store/from-bytes/invalid", async () => {
-      let error = assertThrows(
+    routes.set('/secret-store/from-bytes/invalid', async () => {
+      assertThrows(
         () => {
-          SecretStore.fromBytes("blah");
+          SecretStore.fromBytes('blah');
         },
         TypeError,
         `SecretStore.fromBytes: bytes must be an ArrayBuffer or ArrayBufferView object`,
       );
-      if (error) {
-        return error;
-      }
-      return pass();
     });
-    routes.set("/secret-store/from-bytes/valid", async () => {
-      let result, error;
+    routes.set('/secret-store/from-bytes/valid', async () => {
+      let result;
       result = SecretStore.fromBytes(new Uint8Array([1, 2, 3]));
-      error = assert(
+      assert(
         result instanceof SecretStoreEntry,
         true,
         `(SecretStore.fromBytes(Uint8Array) instanceof SecretStoreEntry)`,
       );
-      if (error) {
-        return error;
-      }
-      error = assert(
+      assert(
         result.rawBytes(),
         new Uint8Array([1, 2, 3]),
         `(SecretStore.fromBytes(Uint8Array).rawBytes() === Uint8Array)`,
       );
-      if (error) {
-        return error;
-      }
       result = SecretStore.fromBytes(new Uint16Array([4, 5, 6]));
-      error = assert(
+      assert(
         result instanceof SecretStoreEntry,
         true,
         `(SecretStore.fromBytes(Uint16Array) instanceof SecretStoreEntry)`,
       );
-      if (error) {
-        return error;
-      }
       // (can rely on Wasm being little endian)
-      error = assert(
+      assert(
         result.rawBytes(),
         new Uint8Array([4, 0, 5, 0, 6, 0]),
         `(SecretStore.fromBytes(Uint16Array).rawBytes() === Uint8Array)`,
       );
-      if (error) {
-        return error;
-      }
       result = SecretStore.fromBytes(new Uint16Array([7, 8, 9]).buffer);
-      error = assert(
+      assert(
         result instanceof SecretStoreEntry,
         true,
         `(SecretStore.fromBytes(ArrayBuffer) instanceof SecretStoreEntry)`,
       );
-      if (error) {
-        return error;
-      }
-      error = assert(
+      assert(
         result.rawBytes(),
         new Uint8Array([7, 0, 8, 0, 9, 0]),
         `(SecretStore.fromBytes(ArrayBuffer).rawBytes() === Uint8Array)`,
       );
-      if (error) {
-        return error;
-      }
-      return pass();
     });
   }
 }
 // SecretStoreEntry
 {
-  routes.set("/secret-store-entry/interface", () => {
+  routes.set('/secret-store-entry/interface', () => {
     return SecretStoreEntryInterfaceTests();
   });
-  routes.set("/secret-store-entry/plaintext", async () => {
+  routes.set('/secret-store-entry/plaintext', async () => {
     let store = createValidStore();
-    let secret = await store.get("first");
+    let secret = await store.get('first');
     let result = secret.plaintext();
-    let error = assert(
+    assert(
       result,
-      "This is also some secret data",
+      'This is also some secret data',
       `(await store.get('first')).plaintext()`,
     );
-    if (error) {
-      return error;
-    }
-    return pass();
   });
 }
 function SecretStoreEntryInterfaceTests() {
   let actual = Reflect.ownKeys(SecretStoreEntry);
-  let expected = ["prototype", "length", "name"];
-  let error = assert(actual, expected, `Reflect.ownKeys(SecretStoreEntry)`);
-  if (error) {
-    return error;
-  }
+  let expected = ['prototype', 'length', 'name'];
+  assert(actual, expected, `Reflect.ownKeys(SecretStoreEntry)`);
 
-  actual = Reflect.getOwnPropertyDescriptor(SecretStoreEntry, "prototype");
+  actual = Reflect.getOwnPropertyDescriptor(SecretStoreEntry, 'prototype');
   expected = {
     value: SecretStoreEntry.prototype,
     writable: false,
     enumerable: false,
     configurable: false,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStoreEntry, 'prototype')`,
   );
-  if (error) {
-    return error;
-  }
 
-  actual = Reflect.getOwnPropertyDescriptor(SecretStoreEntry, "length");
+  actual = Reflect.getOwnPropertyDescriptor(SecretStoreEntry, 'length');
   expected = {
     value: 0,
     writable: false,
     enumerable: false,
     configurable: true,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStoreEntry, 'length')`,
   );
-  if (error) {
-    return error;
-  }
 
-  actual = Reflect.getOwnPropertyDescriptor(SecretStoreEntry, "name");
+  actual = Reflect.getOwnPropertyDescriptor(SecretStoreEntry, 'name');
   expected = {
-    value: "SecretStoreEntry",
+    value: 'SecretStoreEntry',
     writable: false,
     enumerable: false,
     configurable: true,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStoreEntry, 'name')`,
   );
-  if (error) {
-    return error;
-  }
 
   actual = Reflect.ownKeys(SecretStoreEntry.prototype);
-  expected = ["constructor", "plaintext", "rawBytes"];
-  error = assert(
-    actual,
-    expected,
-    `Reflect.ownKeys(SecretStoreEntry.prototype)`,
-  );
-  if (error) {
-    return error;
-  }
+  expected = ['constructor', 'plaintext', 'rawBytes'];
+  assert(actual, expected, `Reflect.ownKeys(SecretStoreEntry.prototype)`);
 
   actual = Reflect.getOwnPropertyDescriptor(
     SecretStoreEntry.prototype,
-    "constructor",
+    'constructor',
   );
   expected = {
     writable: true,
@@ -547,18 +411,15 @@ function SecretStoreEntryInterfaceTests() {
     configurable: true,
     value: SecretStoreEntry.prototype.constructor,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStoreEntry.prototype, 'constructor')`,
   );
-  if (error) {
-    return error;
-  }
 
   actual = Reflect.getOwnPropertyDescriptor(
     SecretStoreEntry.prototype,
-    "plaintext",
+    'plaintext',
   );
   expected = {
     writable: true,
@@ -566,35 +427,26 @@ function SecretStoreEntryInterfaceTests() {
     configurable: true,
     value: SecretStoreEntry.prototype.plaintext,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStoreEntry.prototype, 'plaintext')`,
   );
-  if (error) {
-    return error;
-  }
 
-  error = assert(
+  assert(
     typeof SecretStoreEntry.prototype.constructor,
-    "function",
+    'function',
     `typeof SecretStoreEntry.prototype.constructor`,
   );
-  if (error) {
-    return error;
-  }
-  error = assert(
+  assert(
     typeof SecretStoreEntry.prototype.plaintext,
-    "function",
+    'function',
     `typeof SecretStoreEntry.prototype.plaintext`,
   );
-  if (error) {
-    return error;
-  }
 
   actual = Reflect.getOwnPropertyDescriptor(
     SecretStoreEntry.prototype.constructor,
-    "length",
+    'length',
   );
   expected = {
     value: 0,
@@ -602,37 +454,31 @@ function SecretStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStoreEntry.prototype.constructor, 'length')`,
   );
-  if (error) {
-    return error;
-  }
 
   actual = Reflect.getOwnPropertyDescriptor(
     SecretStoreEntry.prototype.constructor,
-    "name",
+    'name',
   );
   expected = {
-    value: "SecretStoreEntry",
+    value: 'SecretStoreEntry',
     writable: false,
     enumerable: false,
     configurable: true,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStoreEntry.prototype.constructor, 'name')`,
   );
-  if (error) {
-    return error;
-  }
 
   actual = Reflect.getOwnPropertyDescriptor(
     SecretStoreEntry.prototype.plaintext,
-    "length",
+    'length',
   );
   expected = {
     value: 0,
@@ -640,103 +486,80 @@ function SecretStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStoreEntry.prototype.plaintext, 'length')`,
   );
-  if (error) {
-    return error;
-  }
 
   actual = Reflect.getOwnPropertyDescriptor(
     SecretStoreEntry.prototype.plaintext,
-    "name",
+    'name',
   );
   expected = {
-    value: "plaintext",
+    value: 'plaintext',
     writable: false,
     enumerable: false,
     configurable: true,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStoreEntry.prototype.plaintext, 'name')`,
   );
-  if (error) {
-    return error;
-  }
-
-  return pass();
 }
 
 function SecretStoreInterfaceTests() {
   let actual = Reflect.ownKeys(SecretStore);
-  let expected = ["prototype", "fromBytes", "length", "name"];
-  let error = assert(actual, expected, `Reflect.ownKeys(SecretStore)`);
-  if (error) {
-    return error;
-  }
+  let expected = ['prototype', 'fromBytes', 'length', 'name'];
+  assert(actual, expected, `Reflect.ownKeys(SecretStore)`);
 
-  actual = Reflect.getOwnPropertyDescriptor(SecretStore, "prototype");
+  actual = Reflect.getOwnPropertyDescriptor(SecretStore, 'prototype');
   expected = {
     value: SecretStore.prototype,
     writable: false,
     enumerable: false,
     configurable: false,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStore, 'prototype')`,
   );
-  if (error) {
-    return error;
-  }
 
-  actual = Reflect.getOwnPropertyDescriptor(SecretStore, "length");
+  actual = Reflect.getOwnPropertyDescriptor(SecretStore, 'length');
   expected = {
     value: 1,
     writable: false,
     enumerable: false,
     configurable: true,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStore, 'length')`,
   );
-  if (error) {
-    return error;
-  }
 
-  actual = Reflect.getOwnPropertyDescriptor(SecretStore, "name");
+  actual = Reflect.getOwnPropertyDescriptor(SecretStore, 'name');
   expected = {
-    value: "SecretStore",
+    value: 'SecretStore',
     writable: false,
     enumerable: false,
     configurable: true,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStore, 'name')`,
   );
-  if (error) {
-    return error;
-  }
 
   actual = Reflect.ownKeys(SecretStore.prototype);
-  expected = ["constructor", "get"];
-  error = assert(actual, expected, `Reflect.ownKeys(SecretStore.prototype)`);
-  if (error) {
-    return error;
-  }
+  expected = ['constructor', 'get'];
+  assert(actual, expected, `Reflect.ownKeys(SecretStore.prototype)`);
 
   actual = Reflect.getOwnPropertyDescriptor(
     SecretStore.prototype,
-    "constructor",
+    'constructor',
   );
   expected = {
     writable: true,
@@ -744,51 +567,39 @@ function SecretStoreInterfaceTests() {
     configurable: true,
     value: SecretStore.prototype.constructor,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStore.prototype, 'constructor')`,
   );
-  if (error) {
-    return error;
-  }
 
-  actual = Reflect.getOwnPropertyDescriptor(SecretStore.prototype, "get");
+  actual = Reflect.getOwnPropertyDescriptor(SecretStore.prototype, 'get');
   expected = {
     writable: true,
     enumerable: true,
     configurable: true,
     value: SecretStore.prototype.get,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStore.prototype, 'get')`,
   );
-  if (error) {
-    return error;
-  }
 
-  error = assert(
+  assert(
     typeof SecretStore.prototype.constructor,
-    "function",
+    'function',
     `typeof SecretStore.prototype.constructor`,
   );
-  if (error) {
-    return error;
-  }
-  error = assert(
+  assert(
     typeof SecretStore.prototype.get,
-    "function",
+    'function',
     `typeof SecretStore.prototype.get`,
   );
-  if (error) {
-    return error;
-  }
 
   actual = Reflect.getOwnPropertyDescriptor(
     SecretStore.prototype.constructor,
-    "length",
+    'length',
   );
   expected = {
     value: 1,
@@ -796,37 +607,31 @@ function SecretStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStore.prototype.constructor, 'length')`,
   );
-  if (error) {
-    return error;
-  }
 
   actual = Reflect.getOwnPropertyDescriptor(
     SecretStore.prototype.constructor,
-    "name",
+    'name',
   );
   expected = {
-    value: "SecretStore",
+    value: 'SecretStore',
     writable: false,
     enumerable: false,
     configurable: true,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStore.prototype.constructor, 'name')`,
   );
-  if (error) {
-    return error;
-  }
 
   actual = Reflect.getOwnPropertyDescriptor(
     SecretStore.prototype.get,
-    "length",
+    'length',
   );
   expected = {
     value: 1,
@@ -834,34 +639,26 @@ function SecretStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStore.prototype.get, 'length')`,
   );
-  if (error) {
-    return error;
-  }
 
-  actual = Reflect.getOwnPropertyDescriptor(SecretStore.prototype.get, "name");
+  actual = Reflect.getOwnPropertyDescriptor(SecretStore.prototype.get, 'name');
   expected = {
-    value: "get",
+    value: 'get',
     writable: false,
     enumerable: false,
     configurable: true,
   };
-  error = assert(
+  assert(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(SecretStore.prototype.get, 'name')`,
   );
-  if (error) {
-    return error;
-  }
-
-  return pass();
 }
 
 function createValidStore() {
-  return new SecretStore("example-test-secret-store");
+  return new SecretStore('example-test-secret-store');
 }

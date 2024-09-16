@@ -1,16 +1,16 @@
-import { routes } from "./routes";
+import { routes } from './routes';
 
-routes.set("/async-select/hello", () => {
+routes.set('/async-select/hello', () => {
   let requestsData = [
     {
-      url: "https://compute-sdk-test-backend.edgecompute.app/async_select_1",
-      backend: "TheOrigin",
-      header: "fooname",
+      url: 'https://compute-sdk-test-backend.edgecompute.app/async_select_1',
+      backend: 'TheOrigin',
+      header: 'fooname',
     },
     {
-      url: "https://compute-sdk-test-backend.edgecompute.app/async_select_2",
-      backend: "TheOrigin2",
-      header: "barname",
+      url: 'https://compute-sdk-test-backend.edgecompute.app/async_select_2',
+      backend: 'TheOrigin2',
+      header: 'barname',
     },
   ];
 
@@ -36,9 +36,9 @@ async function processUpstreamRequests(requests, requestsData) {
     let headerValue = response.headers.get(header);
     if (headerValue == null) {
       throw new Error(
-        "No header value on the response from the request with url " +
+        'No header value on the response from the request with url ' +
           response.url +
-          " and with the header name: " +
+          ' and with the header name: ' +
           header,
       );
     }
@@ -46,7 +46,7 @@ async function processUpstreamRequests(requests, requestsData) {
   }
 
   // Send our response downstream
-  return new Response("pong", {
+  return new Response('pong', {
     headers: responseHeaders,
   });
 }

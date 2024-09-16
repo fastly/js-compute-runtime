@@ -1,10 +1,10 @@
-import { routes } from "./routes.js";
-import { assert, pass } from "./assertions.js";
-import { includeBytes } from "fastly:experimental";
+import { routes } from './routes.js';
+import { assert } from './assertions.js';
+import { includeBytes } from 'fastly:experimental';
 
 let message;
 try {
-  message = includeBytes("message.txt");
+  message = includeBytes('message.txt');
 } catch {}
 
 const expected = [
@@ -12,10 +12,6 @@ const expected = [
   101, 115, 10,
 ];
 
-routes.set("/includeBytes", () => {
-  let error = assert(Array.from(message), expected, `message === expected`);
-  if (error) {
-    return error;
-  }
-  return pass();
+routes.set('/includeBytes', () => {
+  assert(Array.from(message), expected, `message === expected`);
 });

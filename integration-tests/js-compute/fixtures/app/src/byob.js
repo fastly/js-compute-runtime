@@ -1,8 +1,8 @@
-import { routes } from "./routes";
-routes.set("/byob", () => {
+import { routes } from './routes';
+routes.set('/byob', () => {
   // eslint-disable-next-line no-undef
   const stream = new ReadableStream({
-    type: "bytes",
+    type: 'bytes',
     autoAllocateChunkSize: 1024,
     async pull(controller) {
       const view = controller.byobRequest.view;
