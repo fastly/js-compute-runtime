@@ -1,7 +1,7 @@
 /* eslint-env serviceworker */
 
 import { routes } from './routes.js';
-import { pass, assert } from './assertions.js';
+import { assert } from './assertions.js';
 import { allowDynamicBackends } from 'fastly:experimental';
 
 routes.set('/response/stall', async (event) => {
@@ -23,15 +23,11 @@ routes.set('/response/text/guest-backed-stream', async () => {
   let res = new Response(iteratableToStream(contents));
   let text = await res.text();
 
-  let error = assert(
+  assert(
     text,
     'A'.repeat(5000) + '\x00B\x01\x01\x02A',
     `await res.text() === "a".repeat(5000)`,
   );
-  if (error) {
-    return error;
-  }
-  return pass();
 });
 
 routes.set('/response/json/guest-backed-stream', async () => {
@@ -41,11 +37,7 @@ routes.set('/response/json/guest-backed-stream', async () => {
   let res = new Response(iteratableToStream([contents]));
   let json = await res.json();
 
-  let error = assert(json, obj, `await res.json() === obj`);
-  if (error) {
-    return error;
-  }
-  return pass();
+  assert(json, obj, `await res.json() === obj`);
 });
 
 routes.set('/response/arrayBuffer/guest-backed-stream', async () => {
@@ -55,28 +47,13 @@ routes.set('/response/arrayBuffer/guest-backed-stream', async () => {
   let res = new Response(iteratableToStream([contents]));
   let json = await res.arrayBuffer();
 
-  let error = assert(
-    json,
-    contents.buffer,
-    `await res.json() === contents.buffer`,
-  );
-  if (error) {
-    return error;
-  }
-  return pass();
+  assert(json, contents.buffer, `await res.json() === contents.buffer`);
 });
 
 routes.set('/response/ip-port-undefined', async () => {
   let res = new Response();
-  let error = assert(res.ip, undefined);
-  if (error) {
-    return error;
-  }
-  error = assert(res.port, undefined);
-  if (error) {
-    return error;
-  }
-  return pass();
+  assert(res.ip, undefined);
+  assert(res.port, undefined);
 });
 
 routes.set('/response/request-body-init', async () => {
@@ -84,15 +61,15 @@ routes.set('/response/request-body-init', async () => {
   // fetch an image
   const downloadResp = await fetch('https://httpbin.org/image', {
     headers: {
-      accept: 'image/webp'
-    }
+      accept: 'image/webp',
+    },
   });
   // stream it through an echo proxy
   const postResp = await fetch(
     new Request('https://httpbin.org/anything', {
-        method: 'POST',
-        body: downloadResp.body,
-    })
+      method: 'POST',
+      body: downloadResp.body,
+    }),
   );
   // finally stream back to user
   return postResp;

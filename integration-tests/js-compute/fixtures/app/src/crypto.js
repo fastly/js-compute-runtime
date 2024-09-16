@@ -2,185 +2,146 @@
 /* eslint-env serviceworker, shared-node-browser, browser */
 
 import {
-  pass,
   assert,
   assertThrows,
   assertRejects,
   assertResolves,
-} from "./assertions.js";
-import { routes } from "./routes.js";
+} from './assertions.js';
+import { routes } from './routes.js';
 
 // From https://www.rfc-editor.org/rfc/rfc7517#appendix-A.1
 const publicRsaJsonWebKeyData = {
-  alg: "RS256",
-  e: "AQAB",
+  alg: 'RS256',
+  e: 'AQAB',
   ext: true,
-  key_ops: ["verify"],
-  kty: "RSA",
-  n: "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
+  key_ops: ['verify'],
+  kty: 'RSA',
+  n: '0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw',
 };
 
 // From https://www.rfc-editor.org/rfc/rfc7517#appendix-A.1
 const publicEcdsaJsonWebKeyData = {
-  kty: "EC",
-  crv: "P-256",
-  x: "MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4",
-  y: "4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM",
-  kid: "1",
+  kty: 'EC',
+  crv: 'P-256',
+  x: 'MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4',
+  y: '4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM',
+  kid: '1',
   ext: true,
-  key_ops: ["verify"],
+  key_ops: ['verify'],
 };
 
 // From https://www.rfc-editor.org/rfc/rfc7517#appendix-A.2
 const privateEcdsaJsonWebKeyData = {
-  kty: "EC",
-  crv: "P-256",
-  x: "MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4",
-  y: "4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM",
-  d: "870MB6gfuTJ4HtUnUvYMyJpr5eUZNP4Bk43bVdj3eAE",
-  use: "sig",
-  kid: "1",
+  kty: 'EC',
+  crv: 'P-256',
+  x: 'MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4',
+  y: '4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM',
+  d: '870MB6gfuTJ4HtUnUvYMyJpr5eUZNP4Bk43bVdj3eAE',
+  use: 'sig',
+  kid: '1',
   ext: true,
-  key_ops: ["sign"],
+  key_ops: ['sign'],
 };
 
 // From https://www.rfc-editor.org/rfc/rfc7517#appendix-A.2
 const privateRsaJsonWebKeyData = {
-  alg: "RS256",
-  d: "X4cTteJY_gn4FYPsXB8rdXix5vwsg1FLN5E3EaG6RJoVH-HLLKD9M7dx5oo7GURknchnrRweUkC7hT5fJLM0WbFAKNLWY2vv7B6NqXSzUvxT0_YSfqijwp3RTzlBaCxWp4doFk5N2o8Gy_nHNKroADIkJ46pRUohsXywbReAdYaMwFs9tv8d_cPVY3i07a3t8MN6TNwm0dSawm9v47UiCl3Sk5ZiG7xojPLu4sbg1U2jx4IBTNBznbJSzFHK66jT8bgkuqsk0GjskDJk19Z4qwjwbsnn4j2WBii3RL-Us2lGVkY8fkFzme1z0HbIkfz0Y6mqnOYtqc0X4jfcKoAC8Q",
-  dp: "G4sPXkc6Ya9y8oJW9_ILj4xuppu0lzi_H7VTkS8xj5SdX3coE0oimYwxIi2emTAue0UOa5dpgFGyBJ4c8tQ2VF402XRugKDTP8akYhFo5tAA77Qe_NmtuYZc3C3m3I24G2GvR5sSDxUyAN2zq8Lfn9EUms6rY3Ob8YeiKkTiBj0",
-  dq: "s9lAH9fggBsoFR8Oac2R_E2gw282rT2kGOAhvIllETE1efrA6huUUvMfBcMpn8lqeW6vzznYY5SSQF7pMdC_agI3nG8Ibp1BUb0JUiraRNqUfLhcQb_d9GF4Dh7e74WbRsobRonujTYN1xCaP6TO61jvWrX-L18txXw494Q_cgk",
-  e: "AQAB",
+  alg: 'RS256',
+  d: 'X4cTteJY_gn4FYPsXB8rdXix5vwsg1FLN5E3EaG6RJoVH-HLLKD9M7dx5oo7GURknchnrRweUkC7hT5fJLM0WbFAKNLWY2vv7B6NqXSzUvxT0_YSfqijwp3RTzlBaCxWp4doFk5N2o8Gy_nHNKroADIkJ46pRUohsXywbReAdYaMwFs9tv8d_cPVY3i07a3t8MN6TNwm0dSawm9v47UiCl3Sk5ZiG7xojPLu4sbg1U2jx4IBTNBznbJSzFHK66jT8bgkuqsk0GjskDJk19Z4qwjwbsnn4j2WBii3RL-Us2lGVkY8fkFzme1z0HbIkfz0Y6mqnOYtqc0X4jfcKoAC8Q',
+  dp: 'G4sPXkc6Ya9y8oJW9_ILj4xuppu0lzi_H7VTkS8xj5SdX3coE0oimYwxIi2emTAue0UOa5dpgFGyBJ4c8tQ2VF402XRugKDTP8akYhFo5tAA77Qe_NmtuYZc3C3m3I24G2GvR5sSDxUyAN2zq8Lfn9EUms6rY3Ob8YeiKkTiBj0',
+  dq: 's9lAH9fggBsoFR8Oac2R_E2gw282rT2kGOAhvIllETE1efrA6huUUvMfBcMpn8lqeW6vzznYY5SSQF7pMdC_agI3nG8Ibp1BUb0JUiraRNqUfLhcQb_d9GF4Dh7e74WbRsobRonujTYN1xCaP6TO61jvWrX-L18txXw494Q_cgk',
+  e: 'AQAB',
   ext: true,
-  key_ops: ["sign"],
-  kty: "RSA",
-  n: "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
-  p: "83i-7IvMGXoMXCskv73TKr8637FiO7Z27zv8oj6pbWUQyLPQBQxtPVnwD20R-60eTDmD2ujnMt5PoqMrm8RfmNhVWDtjjMmCMjOpSXicFHj7XOuVIYQyqVWlWEh6dN36GVZYk93N8Bc9vY41xy8B9RzzOGVQzXvNEvn7O0nVbfs",
-  q: "3dfOR9cuYq-0S-mkFLzgItgMEfFzB2q3hWehMuG0oCuqnb3vobLyumqjVZQO1dIrdwgTnCdpYzBcOfW5r370AFXjiWft_NGEiovonizhKpo9VVS78TzFgxkIdrecRezsZ-1kYd_s1qDbxtkDEgfAITAG9LUnADun4vIcb6yelxk",
-  qi: "GyM_p6JrXySiz1toFgKbWV-JdI3jQ4ypu9rbMWx3rQJBfmt0FoYzgUIZEVFEcOqwemRN81zoDAaa-Bk0KWNGDjJHZDdDmFhW3AN7lI-puxk_mHZGJ11rxyR8O55XLSe3SPmRfKwZI6yU24ZxvQKFYItdldUKGzO6Ia6zTKhAVRU",
+  key_ops: ['sign'],
+  kty: 'RSA',
+  n: '0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw',
+  p: '83i-7IvMGXoMXCskv73TKr8637FiO7Z27zv8oj6pbWUQyLPQBQxtPVnwD20R-60eTDmD2ujnMt5PoqMrm8RfmNhVWDtjjMmCMjOpSXicFHj7XOuVIYQyqVWlWEh6dN36GVZYk93N8Bc9vY41xy8B9RzzOGVQzXvNEvn7O0nVbfs',
+  q: '3dfOR9cuYq-0S-mkFLzgItgMEfFzB2q3hWehMuG0oCuqnb3vobLyumqjVZQO1dIrdwgTnCdpYzBcOfW5r370AFXjiWft_NGEiovonizhKpo9VVS78TzFgxkIdrecRezsZ-1kYd_s1qDbxtkDEgfAITAG9LUnADun4vIcb6yelxk',
+  qi: 'GyM_p6JrXySiz1toFgKbWV-JdI3jQ4ypu9rbMWx3rQJBfmt0FoYzgUIZEVFEcOqwemRN81zoDAaa-Bk0KWNGDjJHZDdDmFhW3AN7lI-puxk_mHZGJ11rxyR8O55XLSe3SPmRfKwZI6yU24ZxvQKFYItdldUKGzO6Ia6zTKhAVRU',
 };
 
 const rsaJsonWebKeyAlgorithm = {
-  name: "RSASSA-PKCS1-v1_5",
-  hash: { name: "SHA-256" },
+  name: 'RSASSA-PKCS1-v1_5',
+  hash: { name: 'SHA-256' },
 };
 
 const ecdsaJsonWebKeyAlgorithm = {
-  name: "ECDSA",
-  namedCurve: "P-256",
-  hash: { name: "SHA-256" },
+  name: 'ECDSA',
+  namedCurve: 'P-256',
+  hash: { name: 'SHA-256' },
 };
 
-let error;
-routes.set("/crypto", async () => {
-  error = assert(typeof crypto, "object", `typeof crypto`);
-  if (error) {
-    return error;
-  }
-  error = assert(crypto instanceof Crypto, true, `crypto instanceof Crypto`);
-  if (error) {
-    return error;
-  }
-  return pass("ok");
+routes.set('/crypto', async () => {
+  assert(typeof crypto, 'object', `typeof crypto`);
+  assert(crypto instanceof Crypto, true, `crypto instanceof Crypto`);
 });
 
-routes.set("/crypto.subtle", async () => {
-  error = assert(typeof crypto.subtle, "object", `typeof crypto.subtle`);
-  if (error) {
-    return error;
-  }
-  error = assert(
+routes.set('/crypto.subtle', async () => {
+  assert(typeof crypto.subtle, 'object', `typeof crypto.subtle`);
+  assert(
     crypto.subtle instanceof SubtleCrypto,
     true,
     `crypto.subtle instanceof SubtleCrypto`,
   );
-  if (error) {
-    return error;
-  }
-  return pass("ok");
 });
 
 // importKey
 {
-  routes.set("/crypto.subtle.importKey", async () => {
-    error = assert(
+  routes.set('/crypto.subtle.importKey', async () => {
+    assert(
       typeof crypto.subtle.importKey,
-      "function",
+      'function',
       `typeof crypto.subtle.importKey`,
     );
-    if (error) {
-      return error;
-    }
-    error = assert(
+    assert(
       crypto.subtle.importKey,
       SubtleCrypto.prototype.importKey,
       `crypto.subtle.importKey === SubtleCrypto.prototype.importKey`,
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.importKey/length", async () => {
-    error = assert(
+  routes.set('/crypto.subtle.importKey/length', async () => {
+    assert(
       crypto.subtle.importKey.length,
       5,
       `crypto.subtle.importKey.length === 5`,
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.importKey/called-as-constructor", async () => {
-    error = assertThrows(
+  routes.set('/crypto.subtle.importKey/called-as-constructor', async () => {
+    assertThrows(
       () => {
         new crypto.subtle.importKey();
       },
       TypeError,
-      "crypto.subtle.importKey is not a constructor",
+      'crypto.subtle.importKey is not a constructor',
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.importKey/called-with-wrong-this", async () => {
-    error = await assertRejects(async () => {
+  routes.set('/crypto.subtle.importKey/called-with-wrong-this', async () => {
+    await assertRejects(async () => {
       await crypto.subtle.importKey.call(
         undefined,
-        "jwk",
+        'jwk',
         publicRsaJsonWebKeyData,
         rsaJsonWebKeyAlgorithm,
         publicRsaJsonWebKeyData.ext,
         publicRsaJsonWebKeyData.key_ops,
       );
     }, TypeError);
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.importKey/called-with-no-arguments", async () => {
-    error = await assertRejects(
+  routes.set('/crypto.subtle.importKey/called-with-no-arguments', async () => {
+    await assertRejects(
       async () => {
         await crypto.subtle.importKey();
       },
       TypeError,
-      "SubtleCrypto.importKey: At least 5 arguments required, but only 0 passed",
+      'SubtleCrypto.importKey: At least 5 arguments required, but only 0 passed',
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
 
   // first-parameter
   {
     routes.set(
-      "/crypto.subtle.importKey/first-parameter-calls-7.1.17-ToString",
+      '/crypto.subtle.importKey/first-parameter-calls-7.1.17-ToString',
       async () => {
-        const sentinel = Symbol("sentinel");
+        const sentinel = Symbol('sentinel');
         const test = async () => {
           const format = {
             toString() {
@@ -195,37 +156,26 @@ routes.set("/crypto.subtle", async () => {
             publicRsaJsonWebKeyData.key_ops,
           );
         };
-        let error = await assertRejects(test);
-        if (error) {
-          return error;
-        }
+        await assertRejects(test);
         try {
           await test();
         } catch (thrownError) {
-          let error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        return pass("ok");
       },
     );
     routes.set(
-      "/crypto.subtle.importKey/first-parameter-non-existant-format",
+      '/crypto.subtle.importKey/first-parameter-non-existant-format',
       async () => {
-        let error = await assertRejects(async () => {
+        await assertRejects(async () => {
           await crypto.subtle.importKey(
-            "jake",
+            'jake',
             publicRsaJsonWebKeyData,
             rsaJsonWebKeyAlgorithm,
             publicRsaJsonWebKeyData.ext,
             publicRsaJsonWebKeyData.key_ops,
           );
         }, Error);
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
   }
@@ -233,48 +183,40 @@ routes.set("/crypto.subtle", async () => {
   // second-parameter
   {
     routes.set(
-      "/crypto.subtle.importKey/second-parameter-invalid-format",
+      '/crypto.subtle.importKey/second-parameter-invalid-format',
       async () => {
-        let error = await assertRejects(async () => {
+        await assertRejects(async () => {
           await crypto.subtle.importKey(
-            "jwk",
+            'jwk',
             Symbol(),
             rsaJsonWebKeyAlgorithm,
             publicRsaJsonWebKeyData.ext,
             publicRsaJsonWebKeyData.key_ops,
           );
         }, Error);
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
     // jwk public key
     {
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-e-field",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-e-field',
         async () => {
-          let error = await assertRejects(async () => {
+          await assertRejects(async () => {
             delete publicRsaJsonWebKeyData.e;
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
               publicRsaJsonWebKeyData.key_ops,
             );
           }, DOMException);
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-e-field-calls-7.1.17-ToString",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-e-field-calls-7.1.17-ToString',
         async () => {
-          let sentinel = Symbol("sentinel");
+          let sentinel = Symbol('sentinel');
           const test = async () => {
             sentinel = Symbol();
             publicRsaJsonWebKeyData.e = {
@@ -283,40 +225,29 @@ routes.set("/crypto.subtle", async () => {
               },
             };
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
               publicRsaJsonWebKeyData.key_ops,
             );
           };
-          let error = await assertRejects(test);
-          if (error) {
-            return error;
-          }
+          await assertRejects(test);
           try {
             await test();
           } catch (thrownError) {
-            let error = assert(
-              thrownError,
-              sentinel,
-              "thrownError === sentinel",
-            );
-            if (error) {
-              return error;
-            }
+            assert(thrownError, sentinel, 'thrownError === sentinel');
           }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-e-field",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-e-field',
         async () => {
-          let error = await assertRejects(
+          await assertRejects(
             async () => {
-              publicRsaJsonWebKeyData.e = "`~!@#@#$Q%^%&^*";
+              publicRsaJsonWebKeyData.e = '`~!@#@#$Q%^%&^*';
               await crypto.subtle.importKey(
-                "jwk",
+                'jwk',
                 publicRsaJsonWebKeyData,
                 rsaJsonWebKeyAlgorithm,
                 publicRsaJsonWebKeyData.ext,
@@ -326,156 +257,124 @@ routes.set("/crypto.subtle", async () => {
             Error,
             "The JWK member 'e' could not be base64url decoded or contained padding",
           );
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-kty-field",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-kty-field',
         async () => {
-          let error = await assertRejects(async () => {
+          await assertRejects(async () => {
             delete publicRsaJsonWebKeyData.kty;
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
               publicRsaJsonWebKeyData.key_ops,
             );
           }, Error);
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-kty-field",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-kty-field',
         async () => {
-          let error = await assertRejects(async () => {
-            publicRsaJsonWebKeyData.kty = "jake";
+          await assertRejects(async () => {
+            publicRsaJsonWebKeyData.kty = 'jake';
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
               publicRsaJsonWebKeyData.key_ops,
             );
           }, Error);
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-key_ops-field",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-key_ops-field',
         async () => {
-          let error = await assertResolves(async () => {
+          await assertResolves(async () => {
             const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
             delete publicRsaJsonWebKeyData.key_ops;
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
               key_ops,
             );
           });
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-non-sequence-key_ops-field",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-non-sequence-key_ops-field',
         async () => {
-          let error = await assertRejects(async () => {
+          await assertRejects(async () => {
             const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
-            publicRsaJsonWebKeyData.key_ops = "jake";
+            publicRsaJsonWebKeyData.key_ops = 'jake';
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
               key_ops,
             );
           }, Error);
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
 
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-empty-key_ops-field",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-empty-key_ops-field',
         async () => {
-          let error = await assertResolves(async () => {
+          await assertResolves(async () => {
             const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
             publicRsaJsonWebKeyData.key_ops = [];
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
               key_ops,
             );
           });
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-duplicated-key_ops-field",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-duplicated-key_ops-field',
         async () => {
-          let error = await assertRejects(async () => {
+          await assertRejects(async () => {
             const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
-            publicRsaJsonWebKeyData.key_ops = ["sign", "sign"];
+            publicRsaJsonWebKeyData.key_ops = ['sign', 'sign'];
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
               key_ops,
             );
           }, Error);
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-key_ops-field",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-key_ops-field',
         async () => {
-          let error = await assertRejects(async () => {
+          await assertRejects(async () => {
             const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
-            publicRsaJsonWebKeyData.key_ops = ["sign", "jake"];
+            publicRsaJsonWebKeyData.key_ops = ['sign', 'jake'];
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
               key_ops,
             );
           }, Error);
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
 
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString',
         async () => {
-          let sentinel = Symbol("sentinel");
+          let sentinel = Symbol('sentinel');
           const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
           const test = async () => {
             sentinel = Symbol();
@@ -484,43 +383,32 @@ routes.set("/crypto.subtle", async () => {
                 throw sentinel;
               },
             };
-            publicRsaJsonWebKeyData.key_ops = ["sign", op];
+            publicRsaJsonWebKeyData.key_ops = ['sign', op];
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
               key_ops,
             );
           };
-          let error = await assertRejects(test);
-          if (error) {
-            return error;
-          }
+          await assertRejects(test);
           try {
             await test();
           } catch (thrownError) {
-            let error = assert(
-              thrownError,
-              sentinel,
-              "thrownError === sentinel",
-            );
-            if (error) {
-              return error;
-            }
+            assert(thrownError, sentinel, 'thrownError === sentinel');
           }
-          return pass("ok");
         },
       );
 
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-n-field",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-n-field',
         async () => {
-          let error = await assertRejects(
+          await assertRejects(
             async () => {
               delete publicRsaJsonWebKeyData.n;
               await crypto.subtle.importKey(
-                "jwk",
+                'jwk',
                 publicRsaJsonWebKeyData,
                 rsaJsonWebKeyAlgorithm,
                 publicRsaJsonWebKeyData.ext,
@@ -528,18 +416,14 @@ routes.set("/crypto.subtle", async () => {
               );
             },
             Error,
-            "Data provided to an operation does not meet requirements",
+            'Data provided to an operation does not meet requirements',
           );
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-n-field-calls-7.1.17-ToString",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-n-field-calls-7.1.17-ToString',
         async () => {
-          let sentinel = Symbol("sentinel");
+          let sentinel = Symbol('sentinel');
           const test = async () => {
             sentinel = Symbol();
             publicRsaJsonWebKeyData.n = {
@@ -548,40 +432,29 @@ routes.set("/crypto.subtle", async () => {
               },
             };
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
               publicRsaJsonWebKeyData.key_ops,
             );
           };
-          let error = await assertRejects(test);
-          if (error) {
-            return error;
-          }
+          await assertRejects(test);
           try {
             await test();
           } catch (thrownError) {
-            let error = assert(
-              thrownError,
-              sentinel,
-              "thrownError === sentinel",
-            );
-            if (error) {
-              return error;
-            }
+            assert(thrownError, sentinel, 'thrownError === sentinel');
           }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-n-field",
+        '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-n-field',
         async () => {
-          let error = await assertRejects(
+          await assertRejects(
             async () => {
-              publicRsaJsonWebKeyData.n = "`~!@#@#$Q%^%&^*";
+              publicRsaJsonWebKeyData.n = '`~!@#@#$Q%^%&^*';
               await crypto.subtle.importKey(
-                "jwk",
+                'jwk',
                 publicRsaJsonWebKeyData,
                 rsaJsonWebKeyAlgorithm,
                 publicRsaJsonWebKeyData.ext,
@@ -591,10 +464,6 @@ routes.set("/crypto.subtle", async () => {
             Error,
             "The JWK member 'n' could not be base64url decoded or contained padding",
           );
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
     }
@@ -605,13 +474,13 @@ routes.set("/crypto.subtle", async () => {
     // raw Elliptic Curve public keys
     {
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-x-field",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-x-field',
         async () => {
-          let error = await assertRejects(
+          await assertRejects(
             async () => {
               delete publicEcdsaJsonWebKeyData.x;
               await crypto.subtle.importKey(
-                "jwk",
+                'jwk',
                 publicEcdsaJsonWebKeyData,
                 ecdsaJsonWebKeyAlgorithm,
                 publicEcdsaJsonWebKeyData.ext,
@@ -619,18 +488,14 @@ routes.set("/crypto.subtle", async () => {
               );
             },
             DOMException,
-            "Data provided to an operation does not meet requirements",
+            'Data provided to an operation does not meet requirements',
           );
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-x-field-calls-7.1.17-ToString",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-x-field-calls-7.1.17-ToString',
         async () => {
-          let sentinel = Symbol("sentinel");
+          let sentinel = Symbol('sentinel');
           const test = async () => {
             sentinel = Symbol();
             publicEcdsaJsonWebKeyData.x = {
@@ -639,40 +504,29 @@ routes.set("/crypto.subtle", async () => {
               },
             };
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicEcdsaJsonWebKeyData,
               ecdsaJsonWebKeyAlgorithm,
               publicEcdsaJsonWebKeyData.ext,
               publicEcdsaJsonWebKeyData.key_ops,
             );
           };
-          let error = await assertRejects(test);
-          if (error) {
-            return error;
-          }
+          await assertRejects(test);
           try {
             await test();
           } catch (thrownError) {
-            let error = assert(
-              thrownError,
-              sentinel,
-              "thrownError === sentinel",
-            );
-            if (error) {
-              return error;
-            }
+            assert(thrownError, sentinel, 'thrownError === sentinel');
           }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-x-field",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-x-field',
         async () => {
-          let error = await assertRejects(
+          await assertRejects(
             async () => {
-              publicEcdsaJsonWebKeyData.x = "`~!@#@#$Q%^%&^*";
+              publicEcdsaJsonWebKeyData.x = '`~!@#@#$Q%^%&^*';
               await crypto.subtle.importKey(
-                "jwk",
+                'jwk',
                 publicEcdsaJsonWebKeyData,
                 ecdsaJsonWebKeyAlgorithm,
                 publicEcdsaJsonWebKeyData.ext,
@@ -682,20 +536,16 @@ routes.set("/crypto.subtle", async () => {
             Error,
             "The JWK member 'x' could not be base64url decoded or contained padding",
           );
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-y-field",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-y-field',
         async () => {
-          let error = await assertRejects(
+          await assertRejects(
             async () => {
               delete publicEcdsaJsonWebKeyData.y;
               await crypto.subtle.importKey(
-                "jwk",
+                'jwk',
                 publicEcdsaJsonWebKeyData,
                 ecdsaJsonWebKeyAlgorithm,
                 publicEcdsaJsonWebKeyData.ext,
@@ -703,18 +553,14 @@ routes.set("/crypto.subtle", async () => {
               );
             },
             DOMException,
-            "Data provided to an operation does not meet requirements",
+            'Data provided to an operation does not meet requirements',
           );
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-y-field-calls-7.1.17-ToString",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-y-field-calls-7.1.17-ToString',
         async () => {
-          let sentinel = Symbol("sentinel");
+          let sentinel = Symbol('sentinel');
           const test = async () => {
             sentinel = Symbol();
             publicEcdsaJsonWebKeyData.y = {
@@ -723,40 +569,29 @@ routes.set("/crypto.subtle", async () => {
               },
             };
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicEcdsaJsonWebKeyData,
               ecdsaJsonWebKeyAlgorithm,
               publicEcdsaJsonWebKeyData.ext,
               publicEcdsaJsonWebKeyData.key_ops,
             );
           };
-          let error = await assertRejects(test);
-          if (error) {
-            return error;
-          }
+          await assertRejects(test);
           try {
             await test();
           } catch (thrownError) {
-            let error = assert(
-              thrownError,
-              sentinel,
-              "thrownError === sentinel",
-            );
-            if (error) {
-              return error;
-            }
+            assert(thrownError, sentinel, 'thrownError === sentinel');
           }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-y-field",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-y-field',
         async () => {
-          let error = await assertRejects(
+          await assertRejects(
             async () => {
-              publicEcdsaJsonWebKeyData.y = "`~!@#@#$Q%^%&^*";
+              publicEcdsaJsonWebKeyData.y = '`~!@#@#$Q%^%&^*';
               await crypto.subtle.importKey(
-                "jwk",
+                'jwk',
                 publicEcdsaJsonWebKeyData,
                 ecdsaJsonWebKeyAlgorithm,
                 publicEcdsaJsonWebKeyData.ext,
@@ -766,156 +601,124 @@ routes.set("/crypto.subtle", async () => {
             Error,
             "The JWK member 'y' could not be base64url decoded or contained padding",
           );
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-kty-field",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-kty-field',
         async () => {
-          let error = await assertRejects(async () => {
+          await assertRejects(async () => {
             delete publicEcdsaJsonWebKeyData.kty;
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicEcdsaJsonWebKeyData,
               ecdsaJsonWebKeyAlgorithm,
               publicEcdsaJsonWebKeyData.ext,
               publicEcdsaJsonWebKeyData.key_ops,
             );
           }, Error);
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-kty-field",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-kty-field',
         async () => {
-          let error = await assertRejects(async () => {
-            publicEcdsaJsonWebKeyData.kty = "jake";
+          await assertRejects(async () => {
+            publicEcdsaJsonWebKeyData.kty = 'jake';
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicEcdsaJsonWebKeyData,
               ecdsaJsonWebKeyAlgorithm,
               publicEcdsaJsonWebKeyData.ext,
               publicEcdsaJsonWebKeyData.key_ops,
             );
           }, Error);
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-key_ops-field",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-key_ops-field',
         async () => {
-          let error = await assertResolves(async () => {
+          await assertResolves(async () => {
             const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
             delete publicEcdsaJsonWebKeyData.key_ops;
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicEcdsaJsonWebKeyData,
               ecdsaJsonWebKeyAlgorithm,
               publicEcdsaJsonWebKeyData.ext,
               key_ops,
             );
           });
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-non-sequence-key_ops-field",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-non-sequence-key_ops-field',
         async () => {
-          let error = await assertRejects(async () => {
+          await assertRejects(async () => {
             const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
-            publicEcdsaJsonWebKeyData.key_ops = "jake";
+            publicEcdsaJsonWebKeyData.key_ops = 'jake';
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicEcdsaJsonWebKeyData,
               ecdsaJsonWebKeyAlgorithm,
               publicEcdsaJsonWebKeyData.ext,
               key_ops,
             );
           }, Error);
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
 
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-empty-key_ops-field",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-empty-key_ops-field',
         async () => {
-          let error = await assertResolves(async () => {
+          await assertResolves(async () => {
             const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
             publicEcdsaJsonWebKeyData.key_ops = [];
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicEcdsaJsonWebKeyData,
               ecdsaJsonWebKeyAlgorithm,
               publicEcdsaJsonWebKeyData.ext,
               key_ops,
             );
           });
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-duplicated-key_ops-field",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-duplicated-key_ops-field',
         async () => {
-          let error = await assertRejects(async () => {
+          await assertRejects(async () => {
             const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
-            publicEcdsaJsonWebKeyData.key_ops = ["sign", "sign"];
+            publicEcdsaJsonWebKeyData.key_ops = ['sign', 'sign'];
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicEcdsaJsonWebKeyData,
               ecdsaJsonWebKeyAlgorithm,
               publicEcdsaJsonWebKeyData.ext,
               key_ops,
             );
           }, Error);
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-key_ops-field",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-key_ops-field',
         async () => {
-          let error = await assertRejects(async () => {
+          await assertRejects(async () => {
             const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
-            publicEcdsaJsonWebKeyData.key_ops = ["sign", "jake"];
+            publicEcdsaJsonWebKeyData.key_ops = ['sign', 'jake'];
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicEcdsaJsonWebKeyData,
               ecdsaJsonWebKeyAlgorithm,
               publicEcdsaJsonWebKeyData.ext,
               key_ops,
             );
           }, Error);
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
 
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString",
+        '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString',
         async () => {
-          let sentinel = Symbol("sentinel");
+          let sentinel = Symbol('sentinel');
           const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
           const test = async () => {
             sentinel = Symbol();
@@ -924,39 +727,28 @@ routes.set("/crypto.subtle", async () => {
                 throw sentinel;
               },
             };
-            publicEcdsaJsonWebKeyData.key_ops = ["sign", op];
+            publicEcdsaJsonWebKeyData.key_ops = ['sign', op];
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicEcdsaJsonWebKeyData,
               ecdsaJsonWebKeyAlgorithm,
               publicEcdsaJsonWebKeyData.ext,
               key_ops,
             );
           };
-          let error = await assertRejects(test);
-          if (error) {
-            return error;
-          }
+          await assertRejects(test);
           try {
             await test();
           } catch (thrownError) {
-            let error = assert(
-              thrownError,
-              sentinel,
-              "thrownError === sentinel",
-            );
-            if (error) {
-              return error;
-            }
+            assert(thrownError, sentinel, 'thrownError === sentinel');
           }
-          return pass("ok");
         },
       );
 
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-private/second-parameter-d-field-calls-7.1.17-ToString",
+        '/crypto.subtle.importKey/ecdsa-jwk-private/second-parameter-d-field-calls-7.1.17-ToString',
         async () => {
-          let sentinel = Symbol("sentinel");
+          let sentinel = Symbol('sentinel');
           const test = async () => {
             sentinel = Symbol();
             privateEcdsaJsonWebKeyData.d = {
@@ -965,17 +757,14 @@ routes.set("/crypto.subtle", async () => {
               },
             };
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               privateEcdsaJsonWebKeyData,
               ecdsaJsonWebKeyAlgorithm,
               privateEcdsaJsonWebKeyData.ext,
               privateEcdsaJsonWebKeyData.key_ops,
             );
           };
-          let error = await assertRejects(test);
-          if (error) {
-            return error;
-          }
+          await assertRejects(test);
           try {
             await test();
           } catch (thrownError) {
@@ -984,26 +773,18 @@ routes.set("/crypto.subtle", async () => {
               typeof thrownError,
               Object.keys(thrownError),
             );
-            let error = assert(
-              thrownError,
-              sentinel,
-              "thrownError === sentinel",
-            );
-            if (error) {
-              return error;
-            }
+            assert(thrownError, sentinel, 'thrownError === sentinel');
           }
-          return pass("ok");
         },
       );
       routes.set(
-        "/crypto.subtle.importKey/ecdsa-jwk-private/second-parameter-invalid-d-field",
+        '/crypto.subtle.importKey/ecdsa-jwk-private/second-parameter-invalid-d-field',
         async () => {
-          let error = await assertRejects(
+          await assertRejects(
             async () => {
-              privateEcdsaJsonWebKeyData.d = "`~!@#@#$Q%^%&^*";
+              privateEcdsaJsonWebKeyData.d = '`~!@#@#$Q%^%&^*';
               await crypto.subtle.importKey(
-                "jwk",
+                'jwk',
                 privateEcdsaJsonWebKeyData,
                 ecdsaJsonWebKeyAlgorithm,
                 privateEcdsaJsonWebKeyData.ext,
@@ -1013,10 +794,6 @@ routes.set("/crypto.subtle", async () => {
             Error,
             "The JWK member 'd' could not be base64url decoded or contained padding",
           );
-          if (error) {
-            return error;
-          }
-          return pass("ok");
         },
       );
     }
@@ -1028,12 +805,12 @@ routes.set("/crypto.subtle", async () => {
   // third-parameter
   {
     routes.set(
-      "/crypto.subtle.importKey/third-parameter-undefined",
+      '/crypto.subtle.importKey/third-parameter-undefined',
       async () => {
-        let error = await assertRejects(
+        await assertRejects(
           async () => {
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               undefined,
               publicRsaJsonWebKeyData.ext,
@@ -1041,18 +818,14 @@ routes.set("/crypto.subtle", async () => {
             );
           },
           Error,
-          "Algorithm: Unrecognized name",
+          'Algorithm: Unrecognized name',
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
     routes.set(
-      "/crypto.subtle.importKey/third-parameter-name-field-calls-7.1.17-ToString",
+      '/crypto.subtle.importKey/third-parameter-name-field-calls-7.1.17-ToString',
       async () => {
-        const sentinel = Symbol("sentinel");
+        const sentinel = Symbol('sentinel');
         const test = async () => {
           rsaJsonWebKeyAlgorithm.name = {
             toString() {
@@ -1060,51 +833,40 @@ routes.set("/crypto.subtle", async () => {
             },
           };
           await crypto.subtle.importKey(
-            "jwk",
+            'jwk',
             publicRsaJsonWebKeyData,
             rsaJsonWebKeyAlgorithm,
             publicRsaJsonWebKeyData.ext,
             publicRsaJsonWebKeyData.key_ops,
           );
         };
-        let error = await assertRejects(test);
-        if (error) {
-          return error;
-        }
+        await assertRejects(test);
         try {
           await test();
         } catch (thrownError) {
-          let error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        return pass("ok");
       },
     );
     routes.set(
-      "/crypto.subtle.importKey/third-parameter-invalid-name-field",
+      '/crypto.subtle.importKey/third-parameter-invalid-name-field',
       async () => {
-        let error = await assertRejects(async () => {
-          rsaJsonWebKeyAlgorithm.name = "`~!@#@#$Q%^%&^*";
+        await assertRejects(async () => {
+          rsaJsonWebKeyAlgorithm.name = '`~!@#@#$Q%^%&^*';
           await crypto.subtle.importKey(
-            "jwk",
+            'jwk',
             publicRsaJsonWebKeyData,
             rsaJsonWebKeyAlgorithm,
             publicRsaJsonWebKeyData.ext,
             publicRsaJsonWebKeyData.key_ops,
           );
         }, Error);
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
     routes.set(
-      "/crypto.subtle.importKey/third-parameter-hash-name-field-calls-7.1.17-ToString",
+      '/crypto.subtle.importKey/third-parameter-hash-name-field-calls-7.1.17-ToString',
       async () => {
-        const sentinel = Symbol("sentinel");
+        const sentinel = Symbol('sentinel');
         const test = async () => {
           rsaJsonWebKeyAlgorithm.hash.name = {
             toString() {
@@ -1112,36 +874,29 @@ routes.set("/crypto.subtle", async () => {
             },
           };
           await crypto.subtle.importKey(
-            "jwk",
+            'jwk',
             publicRsaJsonWebKeyData,
             rsaJsonWebKeyAlgorithm,
             publicRsaJsonWebKeyData.ext,
             publicRsaJsonWebKeyData.key_ops,
           );
         };
-        let error = await assertRejects(test);
-        if (error) {
-          return error;
-        }
+        await assertRejects(test);
         try {
           await test();
         } catch (thrownError) {
-          let error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        return pass("ok");
       },
     );
     routes.set(
-      "/crypto.subtle.importKey/third-parameter-hash-algorithm-does-not-match-json-web-key-hash-algorithm",
+      '/crypto.subtle.importKey/third-parameter-hash-algorithm-does-not-match-json-web-key-hash-algorithm',
       async () => {
-        let error = await assertRejects(
+        await assertRejects(
           async () => {
-            rsaJsonWebKeyAlgorithm.hash.name = "SHA-1";
+            rsaJsonWebKeyAlgorithm.hash.name = 'SHA-1';
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
@@ -1151,10 +906,6 @@ routes.set("/crypto.subtle", async () => {
           Error,
           "The JWK 'alg' member was inconsistent with that specified by the Web Crypto call",
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
   }
@@ -1162,87 +913,71 @@ routes.set("/crypto.subtle", async () => {
   // fifth-parameter
   {
     routes.set(
-      "/crypto.subtle.importKey/fifth-parameter-undefined",
+      '/crypto.subtle.importKey/fifth-parameter-undefined',
       async () => {
-        let error = await assertRejects(async () => {
+        await assertRejects(async () => {
           await crypto.subtle.importKey(
-            "jwk",
+            'jwk',
             publicRsaJsonWebKeyData,
             rsaJsonWebKeyAlgorithm,
             publicRsaJsonWebKeyData.ext,
             undefined,
           );
         }, Error);
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
-    routes.set("/crypto.subtle.importKey/fifth-parameter-invalid", async () => {
-      let error = await assertRejects(async () => {
+    routes.set('/crypto.subtle.importKey/fifth-parameter-invalid', async () => {
+      await assertRejects(async () => {
         await crypto.subtle.importKey(
-          "jwk",
+          'jwk',
           publicRsaJsonWebKeyData,
           rsaJsonWebKeyAlgorithm,
           publicRsaJsonWebKeyData.ext,
-          ["jake"],
+          ['jake'],
         );
       }, Error);
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
     routes.set(
-      "/crypto.subtle.importKey/fifth-parameter-duplicate-operations",
+      '/crypto.subtle.importKey/fifth-parameter-duplicate-operations',
       async () => {
-        let error = await assertResolves(async () => {
+        await assertResolves(async () => {
           const key_ops = publicRsaJsonWebKeyData.key_ops.concat(
             publicRsaJsonWebKeyData.key_ops,
           );
           await crypto.subtle.importKey(
-            "jwk",
+            'jwk',
             publicRsaJsonWebKeyData,
             rsaJsonWebKeyAlgorithm,
             publicRsaJsonWebKeyData.ext,
             key_ops,
           );
         });
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
 
     routes.set(
-      "/crypto.subtle.importKey/fifth-parameter-operations-do-not-match-json-web-key-operations",
+      '/crypto.subtle.importKey/fifth-parameter-operations-do-not-match-json-web-key-operations',
       async () => {
-        let error = await assertRejects(
+        await assertRejects(
           async () => {
             await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
-              ["sign"],
+              ['sign'],
             );
           },
           Error,
           "The JWK 'key_ops' member was inconsistent with that specified by the Web Crypto call. The JWK usage must be a superset of those requested",
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
 
     routes.set(
-      "/crypto.subtle.importKey/fifth-parameter-operation-fields-calls-7.1.17-ToString",
+      '/crypto.subtle.importKey/fifth-parameter-operation-fields-calls-7.1.17-ToString',
       async () => {
-        let sentinel = Symbol("sentinel");
+        let sentinel = Symbol('sentinel');
         const test = async () => {
           sentinel = Symbol();
           const op = {
@@ -1251,223 +986,132 @@ routes.set("/crypto.subtle", async () => {
             },
           };
           await crypto.subtle.importKey(
-            "jwk",
+            'jwk',
             publicRsaJsonWebKeyData,
             rsaJsonWebKeyAlgorithm,
             publicRsaJsonWebKeyData.ext,
-            ["sign", op],
+            ['sign', op],
           );
         };
-        let error = await assertRejects(test);
-        if (error) {
-          return error;
-        }
+        await assertRejects(test);
         try {
           await test();
         } catch (thrownError) {
-          let error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        return pass("ok");
       },
     );
   }
 
   // happy paths
   {
-    routes.set("/crypto.subtle.importKey/JWK-RS256-Public", async () => {
+    routes.set('/crypto.subtle.importKey/JWK-RS256-Public', async () => {
       const key = await crypto.subtle.importKey(
-        "jwk",
+        'jwk',
         publicRsaJsonWebKeyData,
         rsaJsonWebKeyAlgorithm,
         publicRsaJsonWebKeyData.ext,
         publicRsaJsonWebKeyData.key_ops,
       );
-      error = await assert(
-        key instanceof CryptoKey,
-        true,
-        `key instanceof CryptoKey`,
-      );
-      if (error) {
-        return error;
-      }
-      error = await assert(
+      await assert(key instanceof CryptoKey, true, `key instanceof CryptoKey`);
+      await assert(
         key.algorithm,
         {
-          name: "RSASSA-PKCS1-v1_5",
+          name: 'RSASSA-PKCS1-v1_5',
           hash: {
-            name: "SHA-256",
+            name: 'SHA-256',
           },
           modulusLength: 2048,
           publicExponent: new Uint8Array([1, 0, 1]),
         },
         `key.algorithm`,
       );
-      if (error) {
-        return error;
-      }
-      error = await assert(key.extractable, true, `key.extractable === true`);
-      if (error) {
-        return error;
-      }
-      error = await assert(key.type, "public", `key.type === "public"`);
-      if (error) {
-        return error;
-      }
-      error = await assert(
-        key.usages,
-        ["verify"],
-        `key.usages deep equals ["verify"]`,
-      );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+      await assert(key.extractable, true, `key.extractable === true`);
+      await assert(key.type, 'public', `key.type === "public"`);
+      await assert(key.usages, ['verify'], `key.usages deep equals ["verify"]`);
     });
 
-    routes.set("/crypto.subtle.importKey/JWK-EC256-Public", async () => {
+    routes.set('/crypto.subtle.importKey/JWK-EC256-Public', async () => {
       const key = await crypto.subtle.importKey(
-        "jwk",
+        'jwk',
         publicEcdsaJsonWebKeyData,
         ecdsaJsonWebKeyAlgorithm,
         publicEcdsaJsonWebKeyData.ext,
         publicEcdsaJsonWebKeyData.key_ops,
       );
-      error = await assert(
-        key instanceof CryptoKey,
-        true,
-        `key instanceof CryptoKey`,
-      );
-      if (error) {
-        return error;
-      }
-      error = await assert(
+      await assert(key instanceof CryptoKey, true, `key instanceof CryptoKey`);
+      await assert(
         key.algorithm,
         {
-          name: "ECDSA",
-          namedCurve: "P-256",
+          name: 'ECDSA',
+          namedCurve: 'P-256',
         },
         `key.algorithm`,
       );
-      if (error) {
-        return error;
-      }
-      error = await assert(key.extractable, true, `key.extractable === true`);
-      if (error) {
-        return error;
-      }
-      error = await assert(key.type, "public", `key.type === "public"`);
-      if (error) {
-        return error;
-      }
-      error = await assert(
-        key.usages,
-        ["verify"],
-        `key.usages deep equals ["verify"]`,
-      );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+      await assert(key.extractable, true, `key.extractable === true`);
+      await assert(key.type, 'public', `key.type === "public"`);
+      await assert(key.usages, ['verify'], `key.usages deep equals ["verify"]`);
     });
 
-    routes.set("/crypto.subtle.importKey/HMAC", async () => {
+    routes.set('/crypto.subtle.importKey/HMAC', async () => {
       const keyUint8Array = new Uint8Array([1, 0, 1]);
 
-      for (const algorithm of ["SHA-1", "SHA-256", "SHA-384", "SHA-512"]) {
+      for (const algorithm of ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512']) {
         const key = await globalThis.crypto.subtle.importKey(
-          "raw",
+          'raw',
           keyUint8Array,
-          { name: "HMAC", hash: algorithm },
+          { name: 'HMAC', hash: algorithm },
           false,
-          ["sign", "verify"],
+          ['sign', 'verify'],
         );
-        error = await assert(
+        await assert(
           key instanceof CryptoKey,
           true,
           `key instanceof CryptoKey`,
         );
-        if (error) {
-          return error;
-        }
-        error = await assert(
+        await assert(
           key.algorithm,
           {
-            name: "HMAC",
+            name: 'HMAC',
             hash: { name: algorithm },
             length: 24,
           },
           `key.algorithm`,
         );
-        if (error) {
-          return error;
-        }
-        error = await assert(key.extractable, false, `key.extractable`);
-        if (error) {
-          return error;
-        }
-        error = await assert(key.type, "secret", `key.type`);
-        if (error) {
-          return error;
-        }
-        error = await assert(key.usages, ["sign", "verify"], `key.usages`);
-        if (error) {
-          return error;
-        }
+        await assert(key.extractable, false, `key.extractable`);
+        await assert(key.type, 'secret', `key.type`);
+        await assert(key.usages, ['sign', 'verify'], `key.usages`);
       }
-      return pass("ok");
     });
-    routes.set("/crypto.subtle.importKey/JWK-HS256-Public", async () => {
+    routes.set('/crypto.subtle.importKey/JWK-HS256-Public', async () => {
       const key = await crypto.subtle.importKey(
-        "jwk",
+        'jwk',
         {
-          kty: "oct",
-          k: "Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE",
-          alg: "HS256",
+          kty: 'oct',
+          k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE',
+          alg: 'HS256',
           ext: true,
         },
         {
-          name: "HMAC",
-          hash: { name: "SHA-256" },
+          name: 'HMAC',
+          hash: { name: 'SHA-256' },
         },
         false,
-        ["sign", "verify"],
+        ['sign', 'verify'],
       );
-      error = await assert(
-        key instanceof CryptoKey,
-        true,
-        `key instanceof CryptoKey`,
-      );
-      if (error) {
-        return error;
-      }
-      error = await assert(
+      await assert(key instanceof CryptoKey, true, `key instanceof CryptoKey`);
+      await assert(
         key.algorithm,
         {
-          name: "HMAC",
-          hash: { name: "SHA-256" },
+          name: 'HMAC',
+          hash: { name: 'SHA-256' },
           length: 256,
         },
         `key.algorithm`,
       );
-      if (error) {
-        return error;
-      }
-      error = await assert(key.extractable, false, `key.extractable`);
-      if (error) {
-        return error;
-      }
-      error = await assert(key.type, "secret", `key.type`);
-      if (error) {
-        return error;
-      }
-      error = await assert(key.usages, ["sign", "verify"], `key.usages`);
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+      await assert(key.extractable, false, `key.extractable`);
+      await assert(key.type, 'secret', `key.type`);
+      await assert(key.usages, ['sign', 'verify'], `key.usages`);
     });
   }
 }
@@ -1475,79 +1119,52 @@ routes.set("/crypto.subtle", async () => {
 // digest
 {
   const enc = new TextEncoder();
-  const data = enc.encode("hello world");
-  routes.set("/crypto.subtle.digest", async () => {
-    error = assert(
+  const data = enc.encode('hello world');
+  routes.set('/crypto.subtle.digest', async () => {
+    assert(
       typeof crypto.subtle.digest,
-      "function",
+      'function',
       `typeof crypto.subtle.digest`,
     );
-    if (error) {
-      return error;
-    }
-    error = assert(
+    assert(
       crypto.subtle.digest,
       SubtleCrypto.prototype.digest,
       `crypto.subtle.digest === SubtleCrypto.prototype.digest`,
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.digest/length", async () => {
-    error = assert(
-      crypto.subtle.digest.length,
-      2,
-      `crypto.subtle.digest.length === 2`,
-    );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
+  routes.set('/crypto.subtle.digest/length', async () => {
+    assert(crypto.subtle.digest.length, 2, `crypto.subtle.digest.length === 2`);
   });
-  routes.set("/crypto.subtle.digest/called-as-constructor", async () => {
-    error = assertThrows(
+  routes.set('/crypto.subtle.digest/called-as-constructor', async () => {
+    assertThrows(
       () => {
         new crypto.subtle.digest();
       },
       TypeError,
-      "crypto.subtle.digest is not a constructor",
+      'crypto.subtle.digest is not a constructor',
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.digest/called-with-wrong-this", async () => {
-    error = await assertRejects(async () => {
+  routes.set('/crypto.subtle.digest/called-with-wrong-this', async () => {
+    await assertRejects(async () => {
       await crypto.subtle.digest.call(undefined);
     }, TypeError);
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.digest/called-with-no-arguments", async () => {
-    error = await assertRejects(
+  routes.set('/crypto.subtle.digest/called-with-no-arguments', async () => {
+    await assertRejects(
       async () => {
         await crypto.subtle.digest();
       },
       TypeError,
-      "SubtleCrypto.digest: At least 2 arguments required, but only 0 passed",
+      'SubtleCrypto.digest: At least 2 arguments required, but only 0 passed',
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
 
   // first-parameter
   {
     routes.set(
-      "/crypto.subtle.digest/first-parameter-calls-7.1.17-ToString",
+      '/crypto.subtle.digest/first-parameter-calls-7.1.17-ToString',
       async () => {
-        const sentinel = Symbol("sentinel");
+        const sentinel = Symbol('sentinel');
         const test = async () => {
           await crypto.subtle.digest(
             {
@@ -1560,101 +1177,74 @@ routes.set("/crypto.subtle", async () => {
             data,
           );
         };
-        let error = await assertRejects(test);
-        if (error) {
-          return error;
-        }
+        await assertRejects(test);
         try {
           await test();
         } catch (thrownError) {
-          let error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        return pass("ok");
       },
     );
     routes.set(
-      "/crypto.subtle.digest/first-parameter-non-existant-format",
+      '/crypto.subtle.digest/first-parameter-non-existant-format',
       async () => {
-        let error = await assertRejects(
+        await assertRejects(
           async () => {
-            await crypto.subtle.digest("jake", data);
+            await crypto.subtle.digest('jake', data);
           },
           Error,
-          "Algorithm: Unrecognized name",
+          'Algorithm: Unrecognized name',
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
   }
   // second-parameter
   {
-    routes.set("/crypto.subtle.digest/second-parameter-undefined", async () => {
-      let error = await assertRejects(async () => {
-        await crypto.subtle.digest("sha-1", undefined);
+    routes.set('/crypto.subtle.digest/second-parameter-undefined', async () => {
+      await assertRejects(async () => {
+        await crypto.subtle.digest('sha-1', undefined);
       }, Error);
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
   }
   // happy paths
   {
     // "MD5"
-    routes.set("/crypto.subtle.digest/md5", async () => {
+    routes.set('/crypto.subtle.digest/md5', async () => {
       const result = new Uint8Array(
-        await crypto.subtle.digest("md5", new Uint8Array()),
+        await crypto.subtle.digest('md5', new Uint8Array()),
       );
       const expected = new Uint8Array([
         212, 29, 140, 217, 143, 0, 178, 4, 233, 128, 9, 152, 236, 248, 66, 126,
       ]);
-      error = assert(result, expected, "result deep equals expected");
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+      assert(result, expected, 'result deep equals expected');
     });
     // "SHA-1"
-    routes.set("/crypto.subtle.digest/sha-1", async () => {
+    routes.set('/crypto.subtle.digest/sha-1', async () => {
       const result = new Uint8Array(
-        await crypto.subtle.digest("sha-1", new Uint8Array()),
+        await crypto.subtle.digest('sha-1', new Uint8Array()),
       );
       const expected = new Uint8Array([
         218, 57, 163, 238, 94, 107, 75, 13, 50, 85, 191, 239, 149, 96, 24, 144,
         175, 216, 7, 9,
       ]);
-      error = assert(result, expected, "result deep equals expected");
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+      assert(result, expected, 'result deep equals expected');
     });
     // "SHA-256"
-    routes.set("/crypto.subtle.digest/sha-256", async () => {
+    routes.set('/crypto.subtle.digest/sha-256', async () => {
       const result = new Uint8Array(
-        await crypto.subtle.digest("sha-256", new Uint8Array()),
+        await crypto.subtle.digest('sha-256', new Uint8Array()),
       );
       const expected = new Uint8Array([
         227, 176, 196, 66, 152, 252, 28, 20, 154, 251, 244, 200, 153, 111, 185,
         36, 39, 174, 65, 228, 100, 155, 147, 76, 164, 149, 153, 27, 120, 82,
         184, 85,
       ]);
-      error = assert(result, expected, "result deep equals expected");
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+      assert(result, expected, 'result deep equals expected');
     });
     // "SHA-384"
-    routes.set("/crypto.subtle.digest/sha-384", async () => {
+    routes.set('/crypto.subtle.digest/sha-384', async () => {
       const result = new Uint8Array(
-        await crypto.subtle.digest("sha-384", new Uint8Array()),
+        await crypto.subtle.digest('sha-384', new Uint8Array()),
       );
       const expected = new Uint8Array([
         56, 176, 96, 167, 81, 172, 150, 56, 76, 217, 50, 126, 177, 177, 227,
@@ -1662,16 +1252,12 @@ routes.set("/crypto.subtle", async () => {
         218, 39, 78, 222, 191, 231, 111, 101, 251, 213, 26, 210, 241, 72, 152,
         185, 91,
       ]);
-      error = assert(result, expected, "result deep equals expected");
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+      assert(result, expected, 'result deep equals expected');
     });
     // "SHA-512"
-    routes.set("/crypto.subtle.digest/sha-512", async () => {
+    routes.set('/crypto.subtle.digest/sha-512', async () => {
       const result = new Uint8Array(
-        await crypto.subtle.digest("sha-512", new Uint8Array()),
+        await crypto.subtle.digest('sha-512', new Uint8Array()),
       );
       const expected = new Uint8Array([
         207, 131, 225, 53, 126, 239, 184, 189, 241, 84, 40, 80, 214, 109, 128,
@@ -1680,11 +1266,7 @@ routes.set("/crypto.subtle", async () => {
         236, 47, 99, 185, 49, 189, 71, 65, 122, 129, 165, 56, 50, 122, 249, 39,
         218, 62,
       ]);
-      error = assert(result, expected, "result deep equals expected");
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+      assert(result, expected, 'result deep equals expected');
     });
   }
 }
@@ -1692,52 +1274,29 @@ routes.set("/crypto.subtle", async () => {
 // sign
 {
   const enc = new TextEncoder();
-  const data = enc.encode("hello world");
-  routes.set("/crypto.subtle.sign", async () => {
-    error = assert(
-      typeof crypto.subtle.sign,
-      "function",
-      `typeof crypto.subtle.sign`,
-    );
-    if (error) {
-      return error;
-    }
-    error = assert(
+  const data = enc.encode('hello world');
+  routes.set('/crypto.subtle.sign', async () => {
+    assert(typeof crypto.subtle.sign, 'function', `typeof crypto.subtle.sign`);
+    assert(
       crypto.subtle.sign,
       SubtleCrypto.prototype.sign,
       `crypto.subtle.sign === SubtleCrypto.prototype.sign`,
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.sign/length", async () => {
-    error = assert(
-      crypto.subtle.sign.length,
-      3,
-      `crypto.subtle.sign.length === 3`,
-    );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
+  routes.set('/crypto.subtle.sign/length', async () => {
+    assert(crypto.subtle.sign.length, 3, `crypto.subtle.sign.length === 3`);
   });
-  routes.set("/crypto.subtle.sign/called-as-constructor", async () => {
-    error = assertThrows(
+  routes.set('/crypto.subtle.sign/called-as-constructor', async () => {
+    assertThrows(
       () => {
         new crypto.subtle.sign();
       },
       TypeError,
-      "crypto.subtle.sign is not a constructor",
+      'crypto.subtle.sign is not a constructor',
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.sign/called-with-wrong-this", async () => {
-    error = await assertRejects(async () => {
+  routes.set('/crypto.subtle.sign/called-with-wrong-this', async () => {
+    await assertRejects(async () => {
       await crypto.subtle.sign.call(
         undefined,
         rsaJsonWebKeyAlgorithm,
@@ -1745,32 +1304,24 @@ routes.set("/crypto.subtle", async () => {
         data,
       );
     }, TypeError);
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.sign/called-with-no-arguments", async () => {
-    error = await assertRejects(
+  routes.set('/crypto.subtle.sign/called-with-no-arguments', async () => {
+    await assertRejects(
       async () => {
         await crypto.subtle.sign();
       },
       TypeError,
-      "SubtleCrypto.sign: At least 3 arguments required, but only 0 passed",
+      'SubtleCrypto.sign: At least 3 arguments required, but only 0 passed',
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
   // first-parameter
   {
     routes.set(
-      "/crypto.subtle.sign/first-parameter-calls-7.1.17-ToString",
+      '/crypto.subtle.sign/first-parameter-calls-7.1.17-ToString',
       async () => {
-        const sentinel = Symbol("sentinel");
+        const sentinel = Symbol('sentinel');
         const key = await crypto.subtle.importKey(
-          "jwk",
+          'jwk',
           privateRsaJsonWebKeyData,
           rsaJsonWebKeyAlgorithm,
           privateRsaJsonWebKeyData.ext,
@@ -1789,66 +1340,51 @@ routes.set("/crypto.subtle", async () => {
             data,
           );
         };
-        let error = await assertRejects(test);
-        if (error) {
-          return error;
-        }
+        await assertRejects(test);
         try {
           await test();
         } catch (thrownError) {
-          let error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        return pass("ok");
       },
     );
     routes.set(
-      "/crypto.subtle.sign/first-parameter-non-existant-algorithm",
+      '/crypto.subtle.sign/first-parameter-non-existant-algorithm',
       async () => {
-        let error = await assertRejects(
+        await assertRejects(
           async () => {
             const key = await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               privateRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               privateRsaJsonWebKeyData.ext,
               privateRsaJsonWebKeyData.key_ops,
             );
-            await crypto.subtle.sign("jake", key, data);
+            await crypto.subtle.sign('jake', key, data);
           },
           Error,
-          "Algorithm: Unrecognized name",
+          'Algorithm: Unrecognized name',
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
   }
   // second-parameter
   {
     routes.set(
-      "/crypto.subtle.sign/second-parameter-invalid-format",
+      '/crypto.subtle.sign/second-parameter-invalid-format',
       async () => {
-        let error = await assertRejects(async () => {
-          await crypto.subtle.sign(rsaJsonWebKeyAlgorithm, "jake", data);
+        await assertRejects(async () => {
+          await crypto.subtle.sign(rsaJsonWebKeyAlgorithm, 'jake', data);
         }, Error);
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
     routes.set(
-      "/crypto.subtle.sign/second-parameter-invalid-usages",
+      '/crypto.subtle.sign/second-parameter-invalid-usages',
       async () => {
-        let error = await assertRejects(
+        await assertRejects(
           async () => {
             const key = await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
@@ -1859,21 +1395,17 @@ routes.set("/crypto.subtle", async () => {
           Error,
           "CryptoKey doesn't support signing",
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
   }
   // third-parameter
   {
     routes.set(
-      "/crypto.subtle.sign/third-parameter-invalid-format",
+      '/crypto.subtle.sign/third-parameter-invalid-format',
       async () => {
-        let error = await assertRejects(async () => {
+        await assertRejects(async () => {
           const key = await crypto.subtle.importKey(
-            "jwk",
+            'jwk',
             publicRsaJsonWebKeyData,
             rsaJsonWebKeyAlgorithm,
             publicRsaJsonWebKeyData.ext,
@@ -1881,18 +1413,14 @@ routes.set("/crypto.subtle", async () => {
           );
           await crypto.subtle.sign(rsaJsonWebKeyAlgorithm, key, undefined);
         }, Error);
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
   }
   // happy-path
   {
-    routes.set("/crypto.subtle.sign/happy-path-jwk", async () => {
+    routes.set('/crypto.subtle.sign/happy-path-jwk', async () => {
       const key = await crypto.subtle.importKey(
-        "jwk",
+        'jwk',
         privateRsaJsonWebKeyData,
         rsaJsonWebKeyAlgorithm,
         privateRsaJsonWebKeyData.ext,
@@ -1920,33 +1448,29 @@ routes.set("/crypto.subtle", async () => {
         49, 122, 190, 154, 167, 9, 12, 32, 77, 177, 222, 54, 211, 233, 219, 205,
         133, 0, 113, 77, 158, 1, 125, 5, 15, 195,
       ]);
-      error = assert(signature, expected, "signature deep equals expected");
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+      assert(signature, expected, 'signature deep equals expected');
     });
-    routes.set("/crypto.subtle.sign/happy-path-hmac", async () => {
+    routes.set('/crypto.subtle.sign/happy-path-hmac', async () => {
       const encoder = new TextEncoder();
-      const messageUint8Array = encoder.encode("aki");
+      const messageUint8Array = encoder.encode('aki');
       const keyUint8Array = new Uint8Array([1, 0, 1]);
       const results = {
-        "SHA-1": new Uint8Array([
+        'SHA-1': new Uint8Array([
           222, 61, 81, 133, 232, 89, 130, 225, 248, 25, 220, 34, 245, 103, 89,
           127, 136, 77, 146, 166,
         ]),
-        "SHA-256": new Uint8Array([
+        'SHA-256': new Uint8Array([
           92, 237, 16, 210, 91, 89, 194, 36, 95, 98, 27, 175, 64, 25, 15, 160,
           152, 178, 145, 235, 62, 92, 23, 202, 125, 228, 8, 25, 148, 26, 215,
           242,
         ]),
-        "SHA-384": new Uint8Array([
+        'SHA-384': new Uint8Array([
           238, 20, 74, 173, 238, 236, 161, 229, 250, 167, 72, 210, 188, 239,
           233, 39, 233, 166, 114, 241, 140, 229, 201, 129, 243, 173, 74, 198,
           223, 145, 228, 96, 253, 91, 166, 111, 244, 23, 141, 62, 112, 156, 90,
           166, 214, 69, 185, 48,
         ]),
-        "SHA-512": new Uint8Array([
+        'SHA-512': new Uint8Array([
           211, 127, 139, 149, 23, 225, 84, 230, 82, 249, 109, 254, 168, 236,
           217, 112, 174, 52, 231, 62, 167, 197, 33, 11, 181, 21, 162, 236, 214,
           132, 43, 161, 92, 112, 230, 182, 140, 69, 169, 229, 87, 98, 57, 81,
@@ -1955,82 +1479,59 @@ routes.set("/crypto.subtle", async () => {
         ]),
       };
 
-      for (const algorithm of ["SHA-1", "SHA-256", "SHA-384", "SHA-512"]) {
+      for (const algorithm of ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512']) {
         const key = await globalThis.crypto.subtle.importKey(
-          "raw",
+          'raw',
           keyUint8Array,
-          { name: "HMAC", hash: algorithm },
+          { name: 'HMAC', hash: algorithm },
           false,
-          ["sign", "verify"],
+          ['sign', 'verify'],
         );
         // Sign the message with HMAC and the CryptoKey
         const signature = new Uint8Array(
-          await globalThis.crypto.subtle.sign("HMAC", key, messageUint8Array),
+          await globalThis.crypto.subtle.sign('HMAC', key, messageUint8Array),
         );
         const expected = results[algorithm];
-        error = assert(
+        assert(
           signature,
           expected,
           `${algorithm} signature deep equals expected`,
         );
-        if (error) {
-          return error;
-        }
       }
-      return pass("ok");
     });
   }
 }
 
 // verify
 {
-  routes.set("/crypto.subtle.verify", async () => {
-    error = assert(
+  routes.set('/crypto.subtle.verify', async () => {
+    assert(
       typeof crypto.subtle.verify,
-      "function",
+      'function',
       `typeof crypto.subtle.verify`,
     );
-    if (error) {
-      return error;
-    }
-    error = assert(
+    assert(
       crypto.subtle.verify,
       SubtleCrypto.prototype.verify,
       `crypto.subtle.verify === SubtleCrypto.prototype.verify`,
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.verify/length", async () => {
-    error = assert(
-      crypto.subtle.verify.length,
-      4,
-      `crypto.subtle.verify.length === 4`,
-    );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
+  routes.set('/crypto.subtle.verify/length', async () => {
+    assert(crypto.subtle.verify.length, 4, `crypto.subtle.verify.length === 4`);
   });
-  routes.set("/crypto.subtle.verify/called-as-constructor", async () => {
-    error = assertThrows(
+  routes.set('/crypto.subtle.verify/called-as-constructor', async () => {
+    assertThrows(
       () => {
         new crypto.subtle.verify();
       },
       TypeError,
-      "crypto.subtle.verify is not a constructor",
+      'crypto.subtle.verify is not a constructor',
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.verify/called-with-wrong-this", async () => {
-    error = await assertRejects(async () => {
+  routes.set('/crypto.subtle.verify/called-with-wrong-this', async () => {
+    await assertRejects(async () => {
       const key = await crypto.subtle.importKey(
-        "jwk",
+        'jwk',
         publicRsaJsonWebKeyData,
         rsaJsonWebKeyAlgorithm,
         publicRsaJsonWebKeyData.ext,
@@ -2044,33 +1545,25 @@ routes.set("/crypto.subtle", async () => {
         new Uint8Array(),
       );
     }, TypeError);
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
-  routes.set("/crypto.subtle.verify/called-with-no-arguments", async () => {
-    error = await assertRejects(
+  routes.set('/crypto.subtle.verify/called-with-no-arguments', async () => {
+    await assertRejects(
       async () => {
         await crypto.subtle.verify();
       },
       TypeError,
-      "SubtleCrypto.verify: At least 4 arguments required, but only 0 passed",
+      'SubtleCrypto.verify: At least 4 arguments required, but only 0 passed',
     );
-    if (error) {
-      return error;
-    }
-    return pass("ok");
   });
   // first-parameter
   {
     routes.set(
-      "/crypto.subtle.verify/first-parameter-calls-7.1.17-ToString",
+      '/crypto.subtle.verify/first-parameter-calls-7.1.17-ToString',
       async () => {
-        const sentinel = Symbol("sentinel");
+        const sentinel = Symbol('sentinel');
         const test = async () => {
           const key = await crypto.subtle.importKey(
-            "jwk",
+            'jwk',
             publicRsaJsonWebKeyData,
             rsaJsonWebKeyAlgorithm,
             publicRsaJsonWebKeyData.ext,
@@ -2089,76 +1582,61 @@ routes.set("/crypto.subtle", async () => {
             new Uint8Array(),
           );
         };
-        let error = await assertRejects(test);
-        if (error) {
-          return error;
-        }
+        await assertRejects(test);
         try {
           await test();
         } catch (thrownError) {
-          let error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        return pass("ok");
       },
     );
     routes.set(
-      "/crypto.subtle.verify/first-parameter-non-existant-algorithm",
+      '/crypto.subtle.verify/first-parameter-non-existant-algorithm',
       async () => {
-        let error = await assertRejects(
+        await assertRejects(
           async () => {
             const key = await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               publicRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               publicRsaJsonWebKeyData.ext,
               publicRsaJsonWebKeyData.key_ops,
             );
             await crypto.subtle.verify(
-              "jake",
+              'jake',
               key,
               new Uint8Array(),
               new Uint8Array(),
             );
           },
           Error,
-          "Algorithm: Unrecognized name",
+          'Algorithm: Unrecognized name',
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
   }
   // second-parameter
   {
     routes.set(
-      "/crypto.subtle.verify/second-parameter-invalid-format",
+      '/crypto.subtle.verify/second-parameter-invalid-format',
       async () => {
-        let error = await assertRejects(async () => {
+        await assertRejects(async () => {
           await crypto.subtle.verify(
             rsaJsonWebKeyAlgorithm,
-            "jake",
+            'jake',
             new Uint8Array(),
             new Uint8Array(),
           );
         }, Error);
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
     routes.set(
-      "/crypto.subtle.verify/second-parameter-invalid-usages",
+      '/crypto.subtle.verify/second-parameter-invalid-usages',
       async () => {
-        let error = await assertRejects(
+        await assertRejects(
           async () => {
             const key = await crypto.subtle.importKey(
-              "jwk",
+              'jwk',
               privateRsaJsonWebKeyData,
               rsaJsonWebKeyAlgorithm,
               privateRsaJsonWebKeyData.ext,
@@ -2174,21 +1652,17 @@ routes.set("/crypto.subtle", async () => {
           Error,
           "CryptoKey doesn't support verification",
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
   }
   // third-parameter
   {
     routes.set(
-      "/crypto.subtle.verify/third-parameter-invalid-format",
+      '/crypto.subtle.verify/third-parameter-invalid-format',
       async () => {
-        let error = await assertRejects(async () => {
+        await assertRejects(async () => {
           const key = await crypto.subtle.importKey(
-            "jwk",
+            'jwk',
             publicRsaJsonWebKeyData,
             rsaJsonWebKeyAlgorithm,
             publicRsaJsonWebKeyData.ext,
@@ -2201,21 +1675,17 @@ routes.set("/crypto.subtle", async () => {
             new Uint8Array(),
           );
         }, Error);
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
   }
   // fourth-parameter
   {
     routes.set(
-      "/crypto.subtle.verify/fourth-parameter-invalid-format",
+      '/crypto.subtle.verify/fourth-parameter-invalid-format',
       async () => {
-        let error = await assertRejects(async () => {
+        await assertRejects(async () => {
           const key = await crypto.subtle.importKey(
-            "jwk",
+            'jwk',
             publicRsaJsonWebKeyData,
             rsaJsonWebKeyAlgorithm,
             publicRsaJsonWebKeyData.ext,
@@ -2228,18 +1698,14 @@ routes.set("/crypto.subtle", async () => {
             undefined,
           );
         }, Error);
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
   }
   // incorrect-signature
   {
-    routes.set("/crypto.subtle.verify/incorrect-signature-jwk", async () => {
+    routes.set('/crypto.subtle.verify/incorrect-signature-jwk', async () => {
       const key = await crypto.subtle.importKey(
-        "jwk",
+        'jwk',
         publicRsaJsonWebKeyData,
         rsaJsonWebKeyAlgorithm,
         publicRsaJsonWebKeyData.ext,
@@ -2247,61 +1713,53 @@ routes.set("/crypto.subtle", async () => {
       );
       const signature = new Uint8Array();
       const enc = new TextEncoder();
-      const data = enc.encode("hello world");
+      const data = enc.encode('hello world');
       const result = await crypto.subtle.verify(
         rsaJsonWebKeyAlgorithm,
         key,
         signature,
         data,
       );
-      error = assert(result, false, "result === false");
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+      assert(result, false, 'result === false');
     });
-    routes.set("/crypto.subtle.verify/incorrect-signature-hmac", async () => {
+    routes.set('/crypto.subtle.verify/incorrect-signature-hmac', async () => {
       const keyUint8Array = new Uint8Array([1, 0, 1]);
       const signature = new Uint8Array();
       const enc = new TextEncoder();
-      const data = enc.encode("hello world");
+      const data = enc.encode('hello world');
 
-      for (const algorithm of ["SHA-1", "SHA-256", "SHA-384", "SHA-512"]) {
+      for (const algorithm of ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512']) {
         const key = await globalThis.crypto.subtle.importKey(
-          "raw",
+          'raw',
           keyUint8Array,
-          { name: "HMAC", hash: algorithm },
+          { name: 'HMAC', hash: algorithm },
           false,
-          ["sign", "verify"],
+          ['sign', 'verify'],
         );
-        const result = await crypto.subtle.verify("HMAC", key, signature, data);
-        error = assert(result, false, "result");
-        if (error) {
-          return error;
-        }
+        const result = await crypto.subtle.verify('HMAC', key, signature, data);
+        assert(result, false, 'result');
       }
-      return pass("ok");
     });
   }
   // correct-signature
   {
-    routes.set("/crypto.subtle.verify/correct-signature-jwk-rsa", async () => {
+    routes.set('/crypto.subtle.verify/correct-signature-jwk-rsa', async () => {
       const pkey = await crypto.subtle.importKey(
-        "jwk",
+        'jwk',
         privateRsaJsonWebKeyData,
         rsaJsonWebKeyAlgorithm,
         privateRsaJsonWebKeyData.ext,
         privateRsaJsonWebKeyData.key_ops,
       );
       const key = await crypto.subtle.importKey(
-        "jwk",
+        'jwk',
         publicRsaJsonWebKeyData,
         rsaJsonWebKeyAlgorithm,
         publicRsaJsonWebKeyData.ext,
         publicRsaJsonWebKeyData.key_ops,
       );
       const enc = new TextEncoder();
-      const data = enc.encode("hello world");
+      const data = enc.encode('hello world');
       const signature = await crypto.subtle.sign(
         rsaJsonWebKeyAlgorithm,
         pkey,
@@ -2313,31 +1771,27 @@ routes.set("/crypto.subtle", async () => {
         signature,
         data,
       );
-      error = assert(result, true, "result === true");
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+      assert(result, true, 'result === true');
     });
     routes.set(
-      "/crypto.subtle.verify/correct-signature-jwk-ecdsa",
+      '/crypto.subtle.verify/correct-signature-jwk-ecdsa',
       async () => {
         const pkey = await crypto.subtle.importKey(
-          "jwk",
+          'jwk',
           privateEcdsaJsonWebKeyData,
           ecdsaJsonWebKeyAlgorithm,
           privateEcdsaJsonWebKeyData.ext,
           privateEcdsaJsonWebKeyData.key_ops,
         );
         const key = await crypto.subtle.importKey(
-          "jwk",
+          'jwk',
           publicEcdsaJsonWebKeyData,
           ecdsaJsonWebKeyAlgorithm,
           publicEcdsaJsonWebKeyData.ext,
           publicEcdsaJsonWebKeyData.key_ops,
         );
         const enc = new TextEncoder();
-        const data = enc.encode("hello world");
+        const data = enc.encode('hello world');
         const signature = await crypto.subtle.sign(
           ecdsaJsonWebKeyAlgorithm,
           pkey,
@@ -2349,31 +1803,27 @@ routes.set("/crypto.subtle", async () => {
           signature,
           data,
         );
-        error = assert(result, true, "result === true");
-        if (error) {
-          return error;
-        }
-        return pass("ok");
+        assert(result, true, 'result === true');
       },
     );
-    routes.set("/crypto.subtle.verify/correct-signature-hmac", async () => {
+    routes.set('/crypto.subtle.verify/correct-signature-hmac', async () => {
       const results = {
-        "SHA-1": new Uint8Array([
+        'SHA-1': new Uint8Array([
           222, 61, 81, 133, 232, 89, 130, 225, 248, 25, 220, 34, 245, 103, 89,
           127, 136, 77, 146, 166,
         ]),
-        "SHA-256": new Uint8Array([
+        'SHA-256': new Uint8Array([
           92, 237, 16, 210, 91, 89, 194, 36, 95, 98, 27, 175, 64, 25, 15, 160,
           152, 178, 145, 235, 62, 92, 23, 202, 125, 228, 8, 25, 148, 26, 215,
           242,
         ]),
-        "SHA-384": new Uint8Array([
+        'SHA-384': new Uint8Array([
           238, 20, 74, 173, 238, 236, 161, 229, 250, 167, 72, 210, 188, 239,
           233, 39, 233, 166, 114, 241, 140, 229, 201, 129, 243, 173, 74, 198,
           223, 145, 228, 96, 253, 91, 166, 111, 244, 23, 141, 62, 112, 156, 90,
           166, 214, 69, 185, 48,
         ]),
-        "SHA-512": new Uint8Array([
+        'SHA-512': new Uint8Array([
           211, 127, 139, 149, 23, 225, 84, 230, 82, 249, 109, 254, 168, 236,
           217, 112, 174, 52, 231, 62, 167, 197, 33, 11, 181, 21, 162, 236, 214,
           132, 43, 161, 92, 112, 230, 182, 140, 69, 169, 229, 87, 98, 57, 81,
@@ -2382,32 +1832,28 @@ routes.set("/crypto.subtle", async () => {
         ]),
       };
       const encoder = new TextEncoder();
-      const messageUint8Array = encoder.encode("aki");
+      const messageUint8Array = encoder.encode('aki');
       const keyUint8Array = new Uint8Array([1, 0, 1]);
 
-      for (const algorithm of ["SHA-1", "SHA-256", "SHA-384", "SHA-512"]) {
+      for (const algorithm of ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512']) {
         const key = await globalThis.crypto.subtle.importKey(
-          "raw",
+          'raw',
           keyUint8Array,
-          { name: "HMAC", hash: algorithm },
+          { name: 'HMAC', hash: algorithm },
           false,
-          ["sign", "verify"],
+          ['sign', 'verify'],
         );
         // Sign the message with HMAC and the CryptoKey
         // const signature = new Uint8Array(await globalThis.crypto.subtle.sign("HMAC", key, messageUint8Array));
         const signature = results[algorithm];
         const result = await crypto.subtle.verify(
-          "HMAC",
+          'HMAC',
           key,
           signature,
           messageUint8Array,
         );
-        error = assert(result, true, "result");
-        if (error) {
-          return error;
-        }
+        assert(result, true, 'result');
       }
-      return pass("ok");
     });
   }
 }

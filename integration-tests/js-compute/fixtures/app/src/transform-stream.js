@@ -1,4 +1,4 @@
-import { routes } from "./routes.js";
+import { routes } from './routes.js';
 
 function upperCase() {
   const decoder = new TextDecoder();
@@ -10,16 +10,16 @@ function upperCase() {
   });
 }
 
-routes.set("/identity", () => {
-  return fetch("https://http-me.glitch.me/test?body=hello", {
-    backend: "http-me",
+routes.set('/identity', () => {
+  return fetch('https://http-me.glitch.me/test?body=hello', {
+    backend: 'http-me',
   }).then((response) => {
     return new Response(response.body.pipeThrough(new TransformStream()));
   });
 });
-routes.set("/uppercase", () => {
-  return fetch("https://http-me.glitch.me/test?body=hello", {
-    backend: "http-me",
+routes.set('/uppercase', () => {
+  return fetch('https://http-me.glitch.me/test?body=hello', {
+    backend: 'http-me',
   }).then((response) => {
     return new Response(response.body.pipeThrough(upperCase()));
   });

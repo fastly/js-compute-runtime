@@ -10,7 +10,7 @@ import {
   assertThrows,
   ok,
   strictEqual,
-} from './assertions-throwing.js';
+} from './assertions.js';
 import { isRunningLocally, routes } from './routes.js';
 
 routes.set('/backend/timeout', async () => {
@@ -2065,10 +2065,14 @@ routes.set('/backend/timeout', async () => {
           target: 'http-me.glitch.me',
           grpc: true,
         });
-        await assertRejects(() => fetch('https://http-me.glitch.me/anything', {
-          backend,
-          cacheOverride: new CacheOverride('pass'),
-        }), DOMException);
+        await assertRejects(
+          () =>
+            fetch('https://http-me.glitch.me/anything', {
+              backend,
+              cacheOverride: new CacheOverride('pass'),
+            }),
+          DOMException,
+        );
       });
     }
   }

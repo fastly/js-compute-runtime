@@ -1,5 +1,5 @@
 /* eslint-env serviceworker */
-import { routes } from "./routes.js";
+import { routes } from './routes.js';
 // React
 var React = {};
 {
@@ -13,22 +13,22 @@ var React = {};
    * LICENSE file in the root directory of this source tree.
    */
   let exports = React;
-  let l = Symbol.for("react.element"),
-    n = Symbol.for("react.portal"),
-    p = Symbol.for("react.fragment"),
-    q = Symbol.for("react.strict_mode"),
-    r = Symbol.for("react.profiler"),
-    t = Symbol.for("react.provider"),
-    u = Symbol.for("react.context"),
-    v = Symbol.for("react.forward_ref"),
-    w = Symbol.for("react.suspense"),
-    x = Symbol.for("react.memo"),
-    y = Symbol.for("react.lazy"),
+  let l = Symbol.for('react.element'),
+    n = Symbol.for('react.portal'),
+    p = Symbol.for('react.fragment'),
+    q = Symbol.for('react.strict_mode'),
+    r = Symbol.for('react.profiler'),
+    t = Symbol.for('react.provider'),
+    u = Symbol.for('react.context'),
+    v = Symbol.for('react.forward_ref'),
+    w = Symbol.for('react.suspense'),
+    x = Symbol.for('react.memo'),
+    y = Symbol.for('react.lazy'),
     z = Symbol.iterator;
   function A(a) {
-    if (null === a || "object" !== typeof a) return null;
-    a = (z && a[z]) || a["@@iterator"];
-    return "function" === typeof a ? a : null;
+    if (null === a || 'object' !== typeof a) return null;
+    a = (z && a[z]) || a['@@iterator'];
+    return 'function' === typeof a ? a : null;
   }
   let B = {
       isMounted: function () {
@@ -48,14 +48,14 @@ var React = {};
   }
   E.prototype.isReactComponent = {};
   E.prototype.setState = function (a, b) {
-    if ("object" !== typeof a && "function" !== typeof a && null != a)
+    if ('object' !== typeof a && 'function' !== typeof a && null != a)
       throw Error(
-        "setState(...): takes an object of state variables to update or a function which returns an object of state variables.",
+        'setState(...): takes an object of state variables to update or a function which returns an object of state variables.',
       );
-    this.updater.enqueueSetState(this, a, b, "setState");
+    this.updater.enqueueSetState(this, a, b, 'setState');
   };
   E.prototype.forceUpdate = function (a) {
-    this.updater.enqueueForceUpdate(this, a, "forceUpdate");
+    this.updater.enqueueForceUpdate(this, a, 'forceUpdate');
   };
   function F() {}
   F.prototype = E.prototype;
@@ -80,7 +80,7 @@ var React = {};
       h = null;
     if (null != b)
       for (d in (void 0 !== b.ref && (h = b.ref),
-      void 0 !== b.key && (k = "" + b.key),
+      void 0 !== b.key && (k = '' + b.key),
       b))
         J.call(b, d) && !L.hasOwnProperty(d) && (c[d] = b[d]);
     var g = arguments.length - 2;
@@ -111,12 +111,12 @@ var React = {};
     };
   }
   function O(a) {
-    return "object" === typeof a && null !== a && a.$$typeof === l;
+    return 'object' === typeof a && null !== a && a.$$typeof === l;
   }
   function escape(a) {
-    var b = { "=": "=0", ":": "=2" };
+    var b = { '=': '=0', ':': '=2' };
     return (
-      "$" +
+      '$' +
       a.replace(/[=:]/g, function (a) {
         return b[a];
       })
@@ -124,22 +124,22 @@ var React = {};
   }
   var P = /\/+/g;
   function Q(a, b) {
-    return "object" === typeof a && null !== a && null != a.key
-      ? escape("" + a.key)
+    return 'object' === typeof a && null !== a && null != a.key
+      ? escape('' + a.key)
       : b.toString(36);
   }
   function R(a, b, e, d, c) {
     var k = typeof a;
-    if ("undefined" === k || "boolean" === k) a = null;
+    if ('undefined' === k || 'boolean' === k) a = null;
     var h = !1;
     if (null === a) h = !0;
     else
       switch (k) {
-        case "string":
-        case "number":
+        case 'string':
+        case 'number':
           h = !0;
           break;
-        case "object":
+        case 'object':
           switch (a.$$typeof) {
             case l:
             case n:
@@ -150,11 +150,11 @@ var React = {};
       return (
         (h = a),
         (c = c(h)),
-        (a = "" === d ? "." + Q(h, 0) : d),
+        (a = '' === d ? '.' + Q(h, 0) : d),
         I(c)
-          ? ((e = ""),
-            null != a && (e = a.replace(P, "$&/") + "/"),
-            R(c, b, e, "", function (a) {
+          ? ((e = ''),
+            null != a && (e = a.replace(P, '$&/') + '/'),
+            R(c, b, e, '', function (a) {
               return a;
             }))
           : null != c &&
@@ -163,33 +163,33 @@ var React = {};
                 c,
                 e +
                   (!c.key || (h && h.key === c.key)
-                    ? ""
-                    : ("" + c.key).replace(P, "$&/") + "/") +
+                    ? ''
+                    : ('' + c.key).replace(P, '$&/') + '/') +
                   a,
               )),
             b.push(c)),
         1
       );
     h = 0;
-    d = "" === d ? "." : d + ":";
+    d = '' === d ? '.' : d + ':';
     if (I(a))
       for (var g = 0; g < a.length; g++) {
         k = a[g];
         var f = d + Q(k, g);
         h += R(k, b, e, f, c);
       }
-    else if (((f = A(a)), "function" === typeof f))
+    else if (((f = A(a)), 'function' === typeof f))
       for (a = f.call(a), g = 0; !(k = a.next()).done; )
         (k = k.value), (f = d + Q(k, g++)), (h += R(k, b, e, f, c));
-    else if ("object" === k)
+    else if ('object' === k)
       throw (
         ((b = String(a)),
         Error(
-          "Objects are not valid as a React child (found: " +
-            ("[object Object]" === b
-              ? "object with keys {" + Object.keys(a).join(", ") + "}"
+          'Objects are not valid as a React child (found: ' +
+            ('[object Object]' === b
+              ? 'object with keys {' + Object.keys(a).join(', ') + '}'
               : b) +
-            "). If you meant to render a collection of children, use an array instead.",
+            '). If you meant to render a collection of children, use an array instead.',
         ))
       );
     return h;
@@ -198,7 +198,7 @@ var React = {};
     if (null == a) return a;
     var d = [],
       c = 0;
-    R(a, d, "", "", function (a) {
+    R(a, d, '', '', function (a) {
       return b.call(e, a, c++);
     });
     return d;
@@ -257,7 +257,7 @@ var React = {};
     only: function (a) {
       if (!O(a))
         throw Error(
-          "React.Children.only expected to receive a single React element child.",
+          'React.Children.only expected to receive a single React element child.',
         );
       return a;
     },
@@ -272,9 +272,9 @@ var React = {};
   exports.cloneElement = function (a, b, e) {
     if (null === a || void 0 === a)
       throw Error(
-        "React.cloneElement(...): The argument must be a React element, but you passed " +
+        'React.cloneElement(...): The argument must be a React element, but you passed ' +
           a +
-          ".",
+          '.',
       );
     var d = C({}, a.props),
       c = a.key,
@@ -282,7 +282,7 @@ var React = {};
       h = a._owner;
     if (null != b) {
       void 0 !== b.ref && ((k = b.ref), (h = K.current));
-      void 0 !== b.key && (c = "" + b.key);
+      void 0 !== b.key && (c = '' + b.key);
       if (a.type && a.type.defaultProps) var g = a.type.defaultProps;
       for (f in b)
         J.call(b, f) &&
@@ -341,7 +341,7 @@ var React = {};
     }
   };
   exports.unstable_act = function () {
-    throw Error("act(...) is not supported in production builds of React.");
+    throw Error('act(...) is not supported in production builds of React.');
   };
   exports.useCallback = function (a, b) {
     return U.current.useCallback(a, b);
@@ -386,7 +386,7 @@ var React = {};
   exports.useTransition = function () {
     return U.current.useTransition();
   };
-  exports.version = "18.2.0";
+  exports.version = '18.2.0';
 }
 
 // react/jsx-runtime
@@ -401,7 +401,7 @@ let jsx, jsxs;
    * This source code is licensed under the MIT license found in the
    * LICENSE file in the root directory of this source tree.
    */
-  let k = Symbol.for("react.element"),
+  let k = Symbol.for('react.element'),
     m = Object.prototype.hasOwnProperty,
     n =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -412,8 +412,8 @@ let jsx, jsxs;
       d = {},
       e = null,
       h = null;
-    void 0 !== g && (e = "" + g);
-    void 0 !== a.key && (e = "" + a.key);
+    void 0 !== g && (e = '' + g);
+    void 0 !== a.key && (e = '' + a.key);
     void 0 !== a.ref && (h = a.ref);
     for (b in a) m.call(a, b) && !p.hasOwnProperty(b) && (d[b] = a[b]);
     if (c && c.defaultProps)
@@ -445,18 +445,18 @@ let renderToReadableStream;
   var aa = React;
   function k(a) {
     for (
-      var b = "https://reactjs.org/docs/error-decoder.html?invariant=" + a,
+      var b = 'https://reactjs.org/docs/error-decoder.html?invariant=' + a,
         c = 1;
       c < arguments.length;
       c++
     )
-      b += "&args[]=" + encodeURIComponent(arguments[c]);
+      b += '&args[]=' + encodeURIComponent(arguments[c]);
     return (
-      "Minified React error #" +
+      'Minified React error #' +
       a +
-      "; visit " +
+      '; visit ' +
       b +
-      " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+      ' for the full message or use the non-minified dev environment for full errors and additional helpful warnings.'
     );
   }
   var l = null,
@@ -498,7 +498,7 @@ let renderToReadableStream;
     return ca.encode(a);
   }
   function da(a, b) {
-    "function" === typeof a.error ? a.error(b) : a.close();
+    'function' === typeof a.error ? a.error(b) : a.close();
   }
   var x = Object.prototype.hasOwnProperty,
     ea =
@@ -523,81 +523,81 @@ let renderToReadableStream;
     this.removeEmptyString = g;
   }
   var z = {};
-  "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style"
-    .split(" ")
+  'children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style'
+    .split(' ')
     .forEach(function (a) {
       z[a] = new y(a, 0, !1, a, null, !1, !1);
     });
   [
-    ["acceptCharset", "accept-charset"],
-    ["className", "class"],
-    ["htmlFor", "for"],
-    ["httpEquiv", "http-equiv"],
+    ['acceptCharset', 'accept-charset'],
+    ['className', 'class'],
+    ['htmlFor', 'for'],
+    ['httpEquiv', 'http-equiv'],
   ].forEach(function (a) {
     var b = a[0];
     z[b] = new y(b, 1, !1, a[1], null, !1, !1);
   });
-  ["contentEditable", "draggable", "spellCheck", "value"].forEach(function (a) {
+  ['contentEditable', 'draggable', 'spellCheck', 'value'].forEach(function (a) {
     z[a] = new y(a, 2, !1, a.toLowerCase(), null, !1, !1);
   });
   [
-    "autoReverse",
-    "externalResourcesRequired",
-    "focusable",
-    "preserveAlpha",
+    'autoReverse',
+    'externalResourcesRequired',
+    'focusable',
+    'preserveAlpha',
   ].forEach(function (a) {
     z[a] = new y(a, 2, !1, a, null, !1, !1);
   });
-  "allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope"
-    .split(" ")
+  'allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope'
+    .split(' ')
     .forEach(function (a) {
       z[a] = new y(a, 3, !1, a.toLowerCase(), null, !1, !1);
     });
-  ["checked", "multiple", "muted", "selected"].forEach(function (a) {
+  ['checked', 'multiple', 'muted', 'selected'].forEach(function (a) {
     z[a] = new y(a, 3, !0, a, null, !1, !1);
   });
-  ["capture", "download"].forEach(function (a) {
+  ['capture', 'download'].forEach(function (a) {
     z[a] = new y(a, 4, !1, a, null, !1, !1);
   });
-  ["cols", "rows", "size", "span"].forEach(function (a) {
+  ['cols', 'rows', 'size', 'span'].forEach(function (a) {
     z[a] = new y(a, 6, !1, a, null, !1, !1);
   });
-  ["rowSpan", "start"].forEach(function (a) {
+  ['rowSpan', 'start'].forEach(function (a) {
     z[a] = new y(a, 5, !1, a.toLowerCase(), null, !1, !1);
   });
   var ja = /[\-:]([a-z])/g;
   function ka(a) {
     return a[1].toUpperCase();
   }
-  "accent-height alignment-baseline arabic-form baseline-shift cap-height clip-path clip-rule color-interpolation color-interpolation-filters color-profile color-rendering dominant-baseline enable-background fill-opacity fill-rule flood-color flood-opacity font-family font-size font-size-adjust font-stretch font-style font-variant font-weight glyph-name glyph-orientation-horizontal glyph-orientation-vertical horiz-adv-x horiz-origin-x image-rendering letter-spacing lighting-color marker-end marker-mid marker-start overline-position overline-thickness paint-order panose-1 pointer-events rendering-intent shape-rendering stop-color stop-opacity strikethrough-position strikethrough-thickness stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit stroke-opacity stroke-width text-anchor text-decoration text-rendering underline-position underline-thickness unicode-bidi unicode-range units-per-em v-alphabetic v-hanging v-ideographic v-mathematical vector-effect vert-adv-y vert-origin-x vert-origin-y word-spacing writing-mode xmlns:xlink x-height"
-    .split(" ")
+  'accent-height alignment-baseline arabic-form baseline-shift cap-height clip-path clip-rule color-interpolation color-interpolation-filters color-profile color-rendering dominant-baseline enable-background fill-opacity fill-rule flood-color flood-opacity font-family font-size font-size-adjust font-stretch font-style font-variant font-weight glyph-name glyph-orientation-horizontal glyph-orientation-vertical horiz-adv-x horiz-origin-x image-rendering letter-spacing lighting-color marker-end marker-mid marker-start overline-position overline-thickness paint-order panose-1 pointer-events rendering-intent shape-rendering stop-color stop-opacity strikethrough-position strikethrough-thickness stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit stroke-opacity stroke-width text-anchor text-decoration text-rendering underline-position underline-thickness unicode-bidi unicode-range units-per-em v-alphabetic v-hanging v-ideographic v-mathematical vector-effect vert-adv-y vert-origin-x vert-origin-y word-spacing writing-mode xmlns:xlink x-height'
+    .split(' ')
     .forEach(function (a) {
       var b = a.replace(ja, ka);
       z[b] = new y(b, 1, !1, a, null, !1, !1);
     });
-  "xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type"
-    .split(" ")
+  'xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type'
+    .split(' ')
     .forEach(function (a) {
       var b = a.replace(ja, ka);
-      z[b] = new y(b, 1, !1, a, "http://www.w3.org/1999/xlink", !1, !1);
+      z[b] = new y(b, 1, !1, a, 'http://www.w3.org/1999/xlink', !1, !1);
     });
-  ["xml:base", "xml:lang", "xml:space"].forEach(function (a) {
+  ['xml:base', 'xml:lang', 'xml:space'].forEach(function (a) {
     var b = a.replace(ja, ka);
-    z[b] = new y(b, 1, !1, a, "http://www.w3.org/XML/1998/namespace", !1, !1);
+    z[b] = new y(b, 1, !1, a, 'http://www.w3.org/XML/1998/namespace', !1, !1);
   });
-  ["tabIndex", "crossOrigin"].forEach(function (a) {
+  ['tabIndex', 'crossOrigin'].forEach(function (a) {
     z[a] = new y(a, 1, !1, a.toLowerCase(), null, !1, !1);
   });
   z.xlinkHref = new y(
-    "xlinkHref",
+    'xlinkHref',
     1,
     !1,
-    "xlink:href",
-    "http://www.w3.org/1999/xlink",
+    'xlink:href',
+    'http://www.w3.org/1999/xlink',
     !0,
     !1,
   );
-  ["src", "href", "action", "formAction"].forEach(function (a) {
+  ['src', 'href', 'action', 'formAction'].forEach(function (a) {
     z[a] = new y(a, 1, !1, a.toLowerCase(), null, !0, !0);
   });
   var B = {
@@ -645,7 +645,7 @@ let renderToReadableStream;
       strokeOpacity: !0,
       strokeWidth: !0,
     },
-    la = ["Webkit", "ms", "Moz", "O"];
+    la = ['Webkit', 'ms', 'Moz', 'O'];
   Object.keys(B).forEach(function (a) {
     la.forEach(function (b) {
       b = b + a.charAt(0).toUpperCase() + a.substring(1);
@@ -654,29 +654,29 @@ let renderToReadableStream;
   });
   var oa = /["'&<>]/;
   function C(a) {
-    if ("boolean" === typeof a || "number" === typeof a) return "" + a;
-    a = "" + a;
+    if ('boolean' === typeof a || 'number' === typeof a) return '' + a;
+    a = '' + a;
     var b = oa.exec(a);
     if (b) {
-      var c = "",
+      var c = '',
         d,
         f = 0;
       for (d = b.index; d < a.length; d++) {
         switch (a.charCodeAt(d)) {
           case 34:
-            b = "&quot;";
+            b = '&quot;';
             break;
           case 38:
-            b = "&amp;";
+            b = '&amp;';
             break;
           case 39:
-            b = "&#x27;";
+            b = '&#x27;';
             break;
           case 60:
-            b = "&lt;";
+            b = '&lt;';
             break;
           case 62:
-            b = "&gt;";
+            b = '&gt;';
             break;
           default:
             continue;
@@ -692,28 +692,28 @@ let renderToReadableStream;
   var pa = /([A-Z])/g,
     qa = /^ms-/,
     ra = Array.isArray,
-    sa = w("<script>"),
-    ta = w("\x3c/script>"),
+    sa = w('<script>'),
+    ta = w('\x3c/script>'),
     ua = w('<script src="'),
     va = w('<script type="module" src="'),
     wa = w('" async="">\x3c/script>'),
     xa = /(<\/|<)(s)(cript)/gi;
   function ya(a, b, c, d) {
-    return "" + b + ("s" === c ? "\\u0073" : "\\u0053") + d;
+    return '' + b + ('s' === c ? '\\u0073' : '\\u0053') + d;
   }
   function za(a, b, c, d, f) {
-    a = void 0 === a ? "" : a;
+    a = void 0 === a ? '' : a;
     b = void 0 === b ? sa : w('<script nonce="' + C(b) + '">');
     var e = [];
-    void 0 !== c && e.push(b, u(("" + c).replace(xa, ya)), ta);
+    void 0 !== c && e.push(b, u(('' + c).replace(xa, ya)), ta);
     if (void 0 !== d) for (c = 0; c < d.length; c++) e.push(ua, u(C(d[c])), wa);
     if (void 0 !== f) for (d = 0; d < f.length; d++) e.push(va, u(C(f[d])), wa);
     return {
       bootstrapChunks: e,
       startInlineScript: b,
-      placeholderPrefix: w(a + "P:"),
-      segmentPrefix: w(a + "S:"),
-      boundaryPrefix: a + "B:",
+      placeholderPrefix: w(a + 'P:'),
+      segmentPrefix: w(a + 'S:'),
+      boundaryPrefix: a + 'B:',
       idPrefix: a,
       nextSuspenseID: 0,
       sentCompleteSegmentFunction: !1,
@@ -726,9 +726,9 @@ let renderToReadableStream;
   }
   function Aa(a) {
     return D(
-      "http://www.w3.org/2000/svg" === a
+      'http://www.w3.org/2000/svg' === a
         ? 2
-        : "http://www.w3.org/1998/Math/MathML" === a
+        : 'http://www.w3.org/1998/Math/MathML' === a
           ? 3
           : 0,
       null,
@@ -736,97 +736,97 @@ let renderToReadableStream;
   }
   function Ba(a, b, c) {
     switch (b) {
-      case "select":
+      case 'select':
         return D(1, null != c.value ? c.value : c.defaultValue);
-      case "svg":
+      case 'svg':
         return D(2, null);
-      case "math":
+      case 'math':
         return D(3, null);
-      case "foreignObject":
+      case 'foreignObject':
         return D(1, null);
-      case "table":
+      case 'table':
         return D(4, null);
-      case "thead":
-      case "tbody":
-      case "tfoot":
+      case 'thead':
+      case 'tbody':
+      case 'tfoot':
         return D(5, null);
-      case "colgroup":
+      case 'colgroup':
         return D(7, null);
-      case "tr":
+      case 'tr':
         return D(6, null);
     }
     return 4 <= a.insertionMode || 0 === a.insertionMode ? D(1, null) : a;
   }
-  var Ca = w("\x3c!-- --\x3e");
+  var Ca = w('\x3c!-- --\x3e');
   function Da(a, b, c, d) {
-    if ("" === b) return d;
+    if ('' === b) return d;
     d && a.push(Ca);
     a.push(u(C(b)));
     return !0;
   }
   var Ea = new Map(),
     Fa = w(' style="'),
-    Ga = w(":"),
-    Ha = w(";");
+    Ga = w(':'),
+    Ha = w(';');
   function Ia(a, b, c) {
-    if ("object" !== typeof c) throw Error(k(62));
+    if ('object' !== typeof c) throw Error(k(62));
     b = !0;
     for (var d in c)
       if (x.call(c, d)) {
         var f = c[d];
-        if (null != f && "boolean" !== typeof f && "" !== f) {
-          if (0 === d.indexOf("--")) {
+        if (null != f && 'boolean' !== typeof f && '' !== f) {
+          if (0 === d.indexOf('--')) {
             var e = u(C(d));
-            f = u(C(("" + f).trim()));
+            f = u(C(('' + f).trim()));
           } else {
             e = d;
             var g = Ea.get(e);
             void 0 !== g
               ? (e = g)
               : ((g = w(
-                  C(e.replace(pa, "-$1").toLowerCase().replace(qa, "-ms-")),
+                  C(e.replace(pa, '-$1').toLowerCase().replace(qa, '-ms-')),
                 )),
                 Ea.set(e, g),
                 (e = g));
             f =
-              "number" === typeof f
+              'number' === typeof f
                 ? 0 === f || x.call(B, d)
-                  ? u("" + f)
-                  : u(f + "px")
-                : u(C(("" + f).trim()));
+                  ? u('' + f)
+                  : u(f + 'px')
+                : u(C(('' + f).trim()));
           }
           b ? ((b = !1), a.push(Fa, e, Ga, f)) : a.push(Ha, e, Ga, f);
         }
       }
     b || a.push(E);
   }
-  var H = w(" "),
+  var H = w(' '),
     I = w('="'),
     E = w('"'),
     Ja = w('=""');
   function J(a, b, c, d) {
     switch (c) {
-      case "style":
+      case 'style':
         Ia(a, b, d);
         return;
-      case "defaultValue":
-      case "defaultChecked":
-      case "innerHTML":
-      case "suppressContentEditableWarning":
-      case "suppressHydrationWarning":
+      case 'defaultValue':
+      case 'defaultChecked':
+      case 'innerHTML':
+      case 'suppressContentEditableWarning':
+      case 'suppressHydrationWarning':
         return;
     }
     if (
       !(2 < c.length) ||
-      ("o" !== c[0] && "O" !== c[0]) ||
-      ("n" !== c[1] && "N" !== c[1])
+      ('o' !== c[0] && 'O' !== c[0]) ||
+      ('n' !== c[1] && 'N' !== c[1])
     )
       if (((b = z.hasOwnProperty(c) ? z[c] : null), null !== b)) {
         switch (typeof d) {
-          case "function":
-          case "symbol":
+          case 'function':
+          case 'symbol':
             return;
-          case "boolean":
+          case 'boolean':
             if (!b.acceptsBooleans) return;
         }
         c = u(b.attributeName);
@@ -846,35 +846,35 @@ let renderToReadableStream;
             !isNaN(d) && 1 <= d && a.push(H, c, I, u(C(d)), E);
             break;
           default:
-            b.sanitizeURL && (d = "" + d), a.push(H, c, I, u(C(d)), E);
+            b.sanitizeURL && (d = '' + d), a.push(H, c, I, u(C(d)), E);
         }
       } else if (ia(c)) {
         switch (typeof d) {
-          case "function":
-          case "symbol":
+          case 'function':
+          case 'symbol':
             return;
-          case "boolean":
+          case 'boolean':
             if (
               ((b = c.toLowerCase().slice(0, 5)),
-              "data-" !== b && "aria-" !== b)
+              'data-' !== b && 'aria-' !== b)
             )
               return;
         }
         a.push(H, u(c), I, u(C(d)), E);
       }
   }
-  var K = w(">"),
-    Ka = w("/>");
+  var K = w('>'),
+    Ka = w('/>');
   function L(a, b, c) {
     if (null != b) {
       if (null != c) throw Error(k(60));
-      if ("object" !== typeof b || !("__html" in b)) throw Error(k(61));
+      if ('object' !== typeof b || !('__html' in b)) throw Error(k(61));
       b = b.__html;
-      null !== b && void 0 !== b && a.push(u("" + b));
+      null !== b && void 0 !== b && a.push(u('' + b));
     }
   }
   function La(a) {
-    var b = "";
+    var b = '';
     aa.Children.forEach(a, function (a) {
       null != a && (b += a);
     });
@@ -890,10 +890,10 @@ let renderToReadableStream;
         var g = b[e];
         if (null != g)
           switch (e) {
-            case "children":
+            case 'children':
               c = g;
               break;
-            case "dangerouslySetInnerHTML":
+            case 'dangerouslySetInnerHTML':
               f = g;
               break;
             default:
@@ -902,25 +902,25 @@ let renderToReadableStream;
       }
     a.push(K);
     L(a, f, c);
-    return "string" === typeof c ? (a.push(u(C(c))), null) : c;
+    return 'string' === typeof c ? (a.push(u(C(c))), null) : c;
   }
-  var Oa = w("\n"),
+  var Oa = w('\n'),
     Pa = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/,
     Qa = new Map();
   function M(a) {
     var b = Qa.get(a);
     if (void 0 === b) {
       if (!Pa.test(a)) throw Error(k(65, a));
-      b = w("<" + a);
+      b = w('<' + a);
       Qa.set(a, b);
     }
     return b;
   }
-  var Ra = w("<!DOCTYPE html>");
+  var Ra = w('<!DOCTYPE html>');
   function Sa(a, b, c, d, f) {
     switch (b) {
-      case "select":
-        a.push(M("select"));
+      case 'select':
+        a.push(M('select'));
         var e = null,
           g = null;
         for (r in c)
@@ -928,14 +928,14 @@ let renderToReadableStream;
             var h = c[r];
             if (null != h)
               switch (r) {
-                case "children":
+                case 'children':
                   e = h;
                   break;
-                case "dangerouslySetInnerHTML":
+                case 'dangerouslySetInnerHTML':
                   g = h;
                   break;
-                case "defaultValue":
-                case "value":
+                case 'defaultValue':
+                case 'value':
                   break;
                 default:
                   J(a, d, r, h);
@@ -944,9 +944,9 @@ let renderToReadableStream;
         a.push(K);
         L(a, g, e);
         return e;
-      case "option":
+      case 'option':
         g = f.selectedValue;
-        a.push(M("option"));
+        a.push(M('option'));
         var m = (h = null),
           q = null;
         var r = null;
@@ -955,50 +955,50 @@ let renderToReadableStream;
             var v = c[e];
             if (null != v)
               switch (e) {
-                case "children":
+                case 'children':
                   h = v;
                   break;
-                case "selected":
+                case 'selected':
                   q = v;
                   break;
-                case "dangerouslySetInnerHTML":
+                case 'dangerouslySetInnerHTML':
                   r = v;
                   break;
-                case "value":
+                case 'value':
                   m = v;
                 default:
                   J(a, d, e, v);
               }
           }
         if (null != g)
-          if (((c = null !== m ? "" + m : La(h)), ra(g)))
+          if (((c = null !== m ? '' + m : La(h)), ra(g)))
             for (d = 0; d < g.length; d++) {
-              if ("" + g[d] === c) {
+              if ('' + g[d] === c) {
                 a.push(Ma);
                 break;
               }
             }
-          else "" + g === c && a.push(Ma);
+          else '' + g === c && a.push(Ma);
         else q && a.push(Ma);
         a.push(K);
         L(a, r, h);
         return h;
-      case "textarea":
-        a.push(M("textarea"));
+      case 'textarea':
+        a.push(M('textarea'));
         r = g = e = null;
         for (h in c)
           if (x.call(c, h) && ((m = c[h]), null != m))
             switch (h) {
-              case "children":
+              case 'children':
                 r = m;
                 break;
-              case "value":
+              case 'value':
                 e = m;
                 break;
-              case "defaultValue":
+              case 'defaultValue':
                 g = m;
                 break;
-              case "dangerouslySetInnerHTML":
+              case 'dangerouslySetInnerHTML':
                 throw Error(k(91));
               default:
                 J(a, d, h, m);
@@ -1008,81 +1008,81 @@ let renderToReadableStream;
         if (null != r) {
           if (null != e) throw Error(k(92));
           if (ra(r) && 1 < r.length) throw Error(k(93));
-          e = "" + r;
+          e = '' + r;
         }
-        "string" === typeof e && "\n" === e[0] && a.push(Oa);
-        null !== e && a.push(u(C("" + e)));
+        'string' === typeof e && '\n' === e[0] && a.push(Oa);
+        null !== e && a.push(u(C('' + e)));
         return null;
-      case "input":
-        a.push(M("input"));
+      case 'input':
+        a.push(M('input'));
         m = r = h = e = null;
         for (g in c)
           if (x.call(c, g) && ((q = c[g]), null != q))
             switch (g) {
-              case "children":
-              case "dangerouslySetInnerHTML":
-                throw Error(k(399, "input"));
-              case "defaultChecked":
+              case 'children':
+              case 'dangerouslySetInnerHTML':
+                throw Error(k(399, 'input'));
+              case 'defaultChecked':
                 m = q;
                 break;
-              case "defaultValue":
+              case 'defaultValue':
                 h = q;
                 break;
-              case "checked":
+              case 'checked':
                 r = q;
                 break;
-              case "value":
+              case 'value':
                 e = q;
                 break;
               default:
                 J(a, d, g, q);
             }
         null !== r
-          ? J(a, d, "checked", r)
-          : null !== m && J(a, d, "checked", m);
-        null !== e ? J(a, d, "value", e) : null !== h && J(a, d, "value", h);
+          ? J(a, d, 'checked', r)
+          : null !== m && J(a, d, 'checked', m);
+        null !== e ? J(a, d, 'value', e) : null !== h && J(a, d, 'value', h);
         a.push(Ka);
         return null;
-      case "menuitem":
-        a.push(M("menuitem"));
+      case 'menuitem':
+        a.push(M('menuitem'));
         for (var A in c)
           if (x.call(c, A) && ((e = c[A]), null != e))
             switch (A) {
-              case "children":
-              case "dangerouslySetInnerHTML":
+              case 'children':
+              case 'dangerouslySetInnerHTML':
                 throw Error(k(400));
               default:
                 J(a, d, A, e);
             }
         a.push(K);
         return null;
-      case "title":
-        a.push(M("title"));
+      case 'title':
+        a.push(M('title'));
         e = null;
         for (v in c)
           if (x.call(c, v) && ((g = c[v]), null != g))
             switch (v) {
-              case "children":
+              case 'children':
                 e = g;
                 break;
-              case "dangerouslySetInnerHTML":
+              case 'dangerouslySetInnerHTML':
                 throw Error(k(434));
               default:
                 J(a, d, v, g);
             }
         a.push(K);
         return e;
-      case "listing":
-      case "pre":
+      case 'listing':
+      case 'pre':
         a.push(M(b));
         g = e = null;
         for (m in c)
           if (x.call(c, m) && ((h = c[m]), null != h))
             switch (m) {
-              case "children":
+              case 'children':
                 e = h;
                 break;
-              case "dangerouslySetInnerHTML":
+              case 'dangerouslySetInnerHTML':
                 g = h;
                 break;
               default:
@@ -1091,77 +1091,77 @@ let renderToReadableStream;
         a.push(K);
         if (null != g) {
           if (null != e) throw Error(k(60));
-          if ("object" !== typeof g || !("__html" in g)) throw Error(k(61));
+          if ('object' !== typeof g || !('__html' in g)) throw Error(k(61));
           c = g.__html;
           null !== c &&
             void 0 !== c &&
-            ("string" === typeof c && 0 < c.length && "\n" === c[0]
+            ('string' === typeof c && 0 < c.length && '\n' === c[0]
               ? a.push(Oa, u(c))
-              : a.push(u("" + c)));
+              : a.push(u('' + c)));
         }
-        "string" === typeof e && "\n" === e[0] && a.push(Oa);
+        'string' === typeof e && '\n' === e[0] && a.push(Oa);
         return e;
-      case "area":
-      case "base":
-      case "br":
-      case "col":
-      case "embed":
-      case "hr":
-      case "img":
-      case "keygen":
-      case "link":
-      case "meta":
-      case "param":
-      case "source":
-      case "track":
-      case "wbr":
+      case 'area':
+      case 'base':
+      case 'br':
+      case 'col':
+      case 'embed':
+      case 'hr':
+      case 'img':
+      case 'keygen':
+      case 'link':
+      case 'meta':
+      case 'param':
+      case 'source':
+      case 'track':
+      case 'wbr':
         a.push(M(b));
         for (var F in c)
           if (x.call(c, F) && ((e = c[F]), null != e))
             switch (F) {
-              case "children":
-              case "dangerouslySetInnerHTML":
+              case 'children':
+              case 'dangerouslySetInnerHTML':
                 throw Error(k(399, b));
               default:
                 J(a, d, F, e);
             }
         a.push(Ka);
         return null;
-      case "annotation-xml":
-      case "color-profile":
-      case "font-face":
-      case "font-face-src":
-      case "font-face-uri":
-      case "font-face-format":
-      case "font-face-name":
-      case "missing-glyph":
+      case 'annotation-xml':
+      case 'color-profile':
+      case 'font-face':
+      case 'font-face-src':
+      case 'font-face-uri':
+      case 'font-face-format':
+      case 'font-face-name':
+      case 'missing-glyph':
         return Na(a, c, b, d);
-      case "html":
+      case 'html':
         return 0 === f.insertionMode && a.push(Ra), Na(a, c, b, d);
       default:
-        if (-1 === b.indexOf("-") && "string" !== typeof c.is)
+        if (-1 === b.indexOf('-') && 'string' !== typeof c.is)
           return Na(a, c, b, d);
         a.push(M(b));
         g = e = null;
         for (q in c)
           if (x.call(c, q) && ((h = c[q]), null != h))
             switch (q) {
-              case "children":
+              case 'children':
                 e = h;
                 break;
-              case "dangerouslySetInnerHTML":
+              case 'dangerouslySetInnerHTML':
                 g = h;
                 break;
-              case "style":
+              case 'style':
                 Ia(a, d, h);
                 break;
-              case "suppressContentEditableWarning":
-              case "suppressHydrationWarning":
+              case 'suppressContentEditableWarning':
+              case 'suppressHydrationWarning':
                 break;
               default:
                 ia(q) &&
-                  "function" !== typeof h &&
-                  "symbol" !== typeof h &&
+                  'function' !== typeof h &&
+                  'symbol' !== typeof h &&
                   a.push(H, u(q), I, u(C(h)), E);
             }
         a.push(K);
@@ -1169,21 +1169,21 @@ let renderToReadableStream;
         return e;
     }
   }
-  var Ta = w("</"),
-    Ua = w(">"),
+  var Ta = w('</'),
+    Ua = w('>'),
     Va = w('<template id="'),
     Wa = w('"></template>'),
-    Xa = w("\x3c!--$--\x3e"),
+    Xa = w('\x3c!--$--\x3e'),
     Ya = w('\x3c!--$?--\x3e<template id="'),
     Za = w('"></template>'),
-    $a = w("\x3c!--$!--\x3e"),
-    ab = w("\x3c!--/$--\x3e"),
-    bb = w("<template"),
+    $a = w('\x3c!--$!--\x3e'),
+    ab = w('\x3c!--/$--\x3e'),
+    bb = w('<template'),
     cb = w('"'),
     db = w(' data-dgst="');
   w(' data-msg="');
   w(' data-stck="');
-  var eb = w("></template>");
+  var eb = w('></template>');
   function fb(a, b, c) {
     p(a, Ya);
     if (null === c) throw Error(k(395));
@@ -1192,25 +1192,25 @@ let renderToReadableStream;
   }
   var gb = w('<div hidden id="'),
     hb = w('">'),
-    ib = w("</div>"),
+    ib = w('</div>'),
     jb = w('<svg aria-hidden="true" style="display:none" id="'),
     kb = w('">'),
-    lb = w("</svg>"),
+    lb = w('</svg>'),
     mb = w('<math aria-hidden="true" style="display:none" id="'),
     nb = w('">'),
-    ob = w("</math>"),
+    ob = w('</math>'),
     pb = w('<table hidden id="'),
     qb = w('">'),
-    rb = w("</table>"),
+    rb = w('</table>'),
     sb = w('<table hidden><tbody id="'),
     tb = w('">'),
-    ub = w("</tbody></table>"),
+    ub = w('</tbody></table>'),
     vb = w('<table hidden><tr id="'),
     wb = w('">'),
-    xb = w("</tr></table>"),
+    xb = w('</tr></table>'),
     yb = w('<table hidden><colgroup id="'),
     zb = w('">'),
-    Ab = w("</colgroup></table>");
+    Ab = w('</colgroup></table>');
   function Bb(a, b, c, d) {
     switch (c.insertionMode) {
       case 0:
@@ -1284,77 +1284,77 @@ let renderToReadableStream;
     ),
     Nb = w('$RX("'),
     Ob = w('"'),
-    Pb = w(")\x3c/script>"),
-    Qb = w(","),
+    Pb = w(')\x3c/script>'),
+    Qb = w(','),
     Rb = /[<\u2028\u2029]/g;
   function Sb(a) {
     return JSON.stringify(a).replace(Rb, function (a) {
       switch (a) {
-        case "<":
-          return "\\u003c";
-        case "\u2028":
-          return "\\u2028";
-        case "\u2029":
-          return "\\u2029";
+        case '<':
+          return '\\u003c';
+        case '\u2028':
+          return '\\u2028';
+        case '\u2029':
+          return '\\u2029';
         default:
           throw Error(
-            "escapeJSStringsForInstructionScripts encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React",
+            'escapeJSStringsForInstructionScripts encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React',
           );
       }
     });
   }
   var N = Object.assign,
-    Tb = Symbol.for("react.element"),
-    Ub = Symbol.for("react.portal"),
-    Vb = Symbol.for("react.fragment"),
-    Wb = Symbol.for("react.strict_mode"),
-    Xb = Symbol.for("react.profiler"),
-    Yb = Symbol.for("react.provider"),
-    Zb = Symbol.for("react.context"),
-    $b = Symbol.for("react.forward_ref"),
-    ac = Symbol.for("react.suspense"),
-    bc = Symbol.for("react.suspense_list"),
-    cc = Symbol.for("react.memo"),
-    dc = Symbol.for("react.lazy"),
-    ec = Symbol.for("react.scope"),
-    fc = Symbol.for("react.debug_trace_mode"),
-    gc = Symbol.for("react.legacy_hidden"),
-    hc = Symbol.for("react.default_value"),
+    Tb = Symbol.for('react.element'),
+    Ub = Symbol.for('react.portal'),
+    Vb = Symbol.for('react.fragment'),
+    Wb = Symbol.for('react.strict_mode'),
+    Xb = Symbol.for('react.profiler'),
+    Yb = Symbol.for('react.provider'),
+    Zb = Symbol.for('react.context'),
+    $b = Symbol.for('react.forward_ref'),
+    ac = Symbol.for('react.suspense'),
+    bc = Symbol.for('react.suspense_list'),
+    cc = Symbol.for('react.memo'),
+    dc = Symbol.for('react.lazy'),
+    ec = Symbol.for('react.scope'),
+    fc = Symbol.for('react.debug_trace_mode'),
+    gc = Symbol.for('react.legacy_hidden'),
+    hc = Symbol.for('react.default_value'),
     ic = Symbol.iterator;
   function jc(a) {
     if (null == a) return null;
-    if ("function" === typeof a) return a.displayName || a.name || null;
-    if ("string" === typeof a) return a;
+    if ('function' === typeof a) return a.displayName || a.name || null;
+    if ('string' === typeof a) return a;
     switch (a) {
       case Vb:
-        return "Fragment";
+        return 'Fragment';
       case Ub:
-        return "Portal";
+        return 'Portal';
       case Xb:
-        return "Profiler";
+        return 'Profiler';
       case Wb:
-        return "StrictMode";
+        return 'StrictMode';
       case ac:
-        return "Suspense";
+        return 'Suspense';
       case bc:
-        return "SuspenseList";
+        return 'SuspenseList';
     }
-    if ("object" === typeof a)
+    if ('object' === typeof a)
       switch (a.$$typeof) {
         case Zb:
-          return (a.displayName || "Context") + ".Consumer";
+          return (a.displayName || 'Context') + '.Consumer';
         case Yb:
-          return (a._context.displayName || "Context") + ".Provider";
+          return (a._context.displayName || 'Context') + '.Provider';
         case $b:
           var b = a.render;
           a = a.displayName;
           a ||
-            ((a = b.displayName || b.name || ""),
-            (a = "" !== a ? "ForwardRef(" + a + ")" : "ForwardRef"));
+            ((a = b.displayName || b.name || ''),
+            (a = '' !== a ? 'ForwardRef(' + a + ')' : 'ForwardRef'));
           return a;
         case cc:
           return (
-            (b = a.displayName || null), null !== b ? b : jc(a.type) || "Memo"
+            (b = a.displayName || null), null !== b ? b : jc(a.type) || 'Memo'
           );
         case dc:
           b = a._payload;
@@ -1448,22 +1448,22 @@ let renderToReadableStream;
     var e = { queue: [], replace: !1 };
     a._reactInternals = e;
     var g = b.contextType;
-    a.context = "object" === typeof g && null !== g ? g._currentValue : d;
+    a.context = 'object' === typeof g && null !== g ? g._currentValue : d;
     g = b.getDerivedStateFromProps;
-    "function" === typeof g &&
+    'function' === typeof g &&
       ((g = g(c, f)),
       (f = null === g || void 0 === g ? f : N({}, f, g)),
       (a.state = f));
     if (
-      "function" !== typeof b.getDerivedStateFromProps &&
-      "function" !== typeof a.getSnapshotBeforeUpdate &&
-      ("function" === typeof a.UNSAFE_componentWillMount ||
-        "function" === typeof a.componentWillMount)
+      'function' !== typeof b.getDerivedStateFromProps &&
+      'function' !== typeof a.getSnapshotBeforeUpdate &&
+      ('function' === typeof a.UNSAFE_componentWillMount ||
+        'function' === typeof a.componentWillMount)
     )
       if (
         ((b = a.state),
-        "function" === typeof a.componentWillMount && a.componentWillMount(),
-        "function" === typeof a.UNSAFE_componentWillMount &&
+        'function' === typeof a.componentWillMount && a.componentWillMount(),
+        'function' === typeof a.UNSAFE_componentWillMount &&
           a.UNSAFE_componentWillMount(),
         b !== a.state && qc.enqueueReplaceState(a, a.state, null),
         null !== e.queue && 0 < e.queue.length)
@@ -1481,14 +1481,14 @@ let renderToReadableStream;
           f = !0;
           for (g = g ? 1 : 0; g < b.length; g++) {
             var h = b[g];
-            h = "function" === typeof h ? h.call(a, e, c, d) : h;
+            h = 'function' === typeof h ? h.call(a, e, c, d) : h;
             null != h && (f ? ((f = !1), (e = N({}, e, h))) : N(e, h));
           }
           a.state = e;
         }
       else e.queue = null;
   }
-  var sc = { id: 1, overflow: "" };
+  var sc = { id: 1, overflow: '' };
   function tc(a, b, c) {
     var d = a.id;
     a = a.overflow;
@@ -1515,7 +1515,7 @@ let renderToReadableStream;
   function yc(a, b) {
     return (a === b && (0 !== a || 1 / a === 1 / b)) || (a !== a && b !== b);
   }
-  var zc = "function" === typeof Object.is ? Object.is : yc,
+  var zc = 'function' === typeof Object.is ? Object.is : yc,
     R = null,
     Ac = null,
     Bc = null,
@@ -1551,7 +1551,7 @@ let renderToReadableStream;
     S = V = null;
   }
   function Hc(a, b) {
-    return "function" === typeof b ? b(a) : b;
+    return 'function' === typeof b ? b(a) : b;
   }
   function Ic(a, b, c) {
     R = W();
@@ -1570,7 +1570,7 @@ let renderToReadableStream;
       return [S.memoizedState, b];
     }
     a =
-      a === Hc ? ("function" === typeof b ? b() : b) : void 0 !== c ? c(b) : b;
+      a === Hc ? ('function' === typeof b ? b() : b) : void 0 !== c ? c(b) : b;
     S.memoizedState = a;
     a = S.queue = { last: null, dispatch: null };
     a = a.dispatch = Jc.bind(null, R, a);
@@ -1665,9 +1665,9 @@ let renderToReadableStream;
         var c = Nc;
         if (null === c) throw Error(k(404));
         b = U++;
-        a = ":" + c.idPrefix + "R" + a;
-        0 < b && (a += "H" + b.toString(32));
-        return a + ":";
+        a = ':' + c.idPrefix + 'R' + a;
+        0 < b && (a += 'H' + b.toString(32));
+        return a + ':';
       },
       useMutableSource: function (a, b) {
         W();
@@ -1753,7 +1753,7 @@ let renderToReadableStream;
   }
   function Y(a, b) {
     a = a.onError(b);
-    if (null != a && "string" !== typeof a)
+    if (null != a && 'string' !== typeof a)
       throw Error(
         'onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "' +
           typeof a +
@@ -1784,11 +1784,11 @@ let renderToReadableStream;
       e = d.childContextTypes;
     if (null !== e && void 0 !== e) {
       var g = b.legacyContext;
-      if ("function" !== typeof c.getChildContext) d = g;
+      if ('function' !== typeof c.getChildContext) d = g;
       else {
         c = c.getChildContext();
         for (var h in c)
-          if (!(h in e)) throw Error(k(108, jc(d) || "Unknown", h));
+          if (!(h in e)) throw Error(k(108, jc(d) || 'Unknown', h));
         d = N({}, g, c);
       }
       b.legacyContext = d;
@@ -1806,11 +1806,11 @@ let renderToReadableStream;
     return b;
   }
   function Zc(a, b, c, d, f) {
-    if ("function" === typeof c)
+    if ('function' === typeof c)
       if (c.prototype && c.prototype.isReactComponent) {
         f = lc(c, b.legacyContext);
         var e = c.contextType;
-        e = new c(d, "object" === typeof e && null !== e ? e._currentValue : f);
+        e = new c(d, 'object' === typeof e && null !== e ? e._currentValue : f);
         rc(e, c, d, f);
         Xc(a, b, e, c);
       } else {
@@ -1818,9 +1818,9 @@ let renderToReadableStream;
         f = Wc(a, b, c, d, e);
         var g = 0 !== U;
         if (
-          "object" === typeof f &&
+          'object' === typeof f &&
           null !== f &&
-          "function" === typeof f.render &&
+          'function' === typeof f.render &&
           void 0 === f.$$typeof
         )
           rc(f, c, d, e), Xc(a, b, f, c);
@@ -1834,7 +1834,7 @@ let renderToReadableStream;
           }
         } else Z(a, b, f);
       }
-    else if ("string" === typeof c) {
+    else if ('string' === typeof c) {
       f = b.blockedSegment;
       e = Sa(f.chunks, c, d, a.responseState, f.formatContext);
       f.lastPushedText = !1;
@@ -1843,21 +1843,21 @@ let renderToReadableStream;
       $c(a, b, e);
       f.formatContext = g;
       switch (c) {
-        case "area":
-        case "base":
-        case "br":
-        case "col":
-        case "embed":
-        case "hr":
-        case "img":
-        case "input":
-        case "keygen":
-        case "link":
-        case "meta":
-        case "param":
-        case "source":
-        case "track":
-        case "wbr":
+        case 'area':
+        case 'base':
+        case 'br':
+        case 'col':
+        case 'embed':
+        case 'hr':
+        case 'img':
+        case 'input':
+        case 'keygen':
+        case 'link':
+        case 'meta':
+        case 'param':
+        case 'source':
+        case 'track':
+        case 'wbr':
           break;
         default:
           f.chunks.push(Ta, u(c), Ua);
@@ -1923,7 +1923,7 @@ let renderToReadableStream;
           }
           return;
       }
-      if ("object" === typeof c && null !== c)
+      if ('object' === typeof c && null !== c)
         switch (c.$$typeof) {
           case $b:
             d = Wc(a, b, c.render, d, f);
@@ -1977,12 +1977,12 @@ let renderToReadableStream;
             Zc(a, b, c, d, void 0);
             return;
         }
-      throw Error(k(130, null == c ? c : typeof c, ""));
+      throw Error(k(130, null == c ? c : typeof c, ''));
     }
   }
   function Z(a, b, c) {
     b.node = c;
-    if ("object" === typeof c && null !== c) {
+    if ('object' === typeof c && null !== c) {
       switch (c.$$typeof) {
         case Tb:
           Zc(a, b, c.type, c.props, c.ref);
@@ -1999,10 +1999,10 @@ let renderToReadableStream;
         bd(a, b, c);
         return;
       }
-      null === c || "object" !== typeof c
+      null === c || 'object' !== typeof c
         ? (d = null)
-        : ((d = (ic && c[ic]) || c["@@iterator"]),
-          (d = "function" === typeof d ? d : null));
+        : ((d = (ic && c[ic]) || c['@@iterator']),
+          (d = 'function' === typeof d ? d : null));
       if (d && (d = d.call(c))) {
         c = d.next();
         if (!c.done) {
@@ -2017,13 +2017,13 @@ let renderToReadableStream;
       throw Error(
         k(
           31,
-          "[object Object]" === a
-            ? "object with keys {" + Object.keys(c).join(", ") + "}"
+          '[object Object]' === a
+            ? 'object with keys {' + Object.keys(c).join(', ') + '}'
             : a,
         ),
       );
     }
-    "string" === typeof c
+    'string' === typeof c
       ? ((d = b.blockedSegment),
         (d.lastPushedText = Da(
           b.blockedSegment.chunks,
@@ -2031,11 +2031,11 @@ let renderToReadableStream;
           a.responseState,
           d.lastPushedText,
         )))
-      : "number" === typeof c &&
+      : 'number' === typeof c &&
         ((d = b.blockedSegment),
         (d.lastPushedText = Da(
           b.blockedSegment.chunks,
-          "" + c,
+          '' + c,
           a.responseState,
           d.lastPushedText,
         )));
@@ -2060,7 +2060,7 @@ let renderToReadableStream;
     } catch (m) {
       if (
         (Gc(),
-        "object" === typeof m && null !== m && "function" === typeof m.then)
+        'object' === typeof m && null !== m && 'function' === typeof m.then)
       ) {
         c = m;
         var g = b.blockedSegment,
@@ -2188,9 +2188,9 @@ let renderToReadableStream;
             } catch (G) {
               if (
                 (Gc(),
-                "object" === typeof G &&
+                'object' === typeof G &&
                   null !== G &&
-                  "function" === typeof G.then)
+                  'function' === typeof G.then)
               ) {
                 var q = g.ping;
                 G.then(q, q);
@@ -2363,8 +2363,8 @@ let renderToReadableStream;
         if (null === m) throw Error(k(395));
         p(d, m);
         p(d, Ob);
-        if (q || r || v) p(d, Qb), p(d, u(Sb(q || "")));
-        if (r || v) p(d, Qb), p(d, u(Sb(r || "")));
+        if (q || r || v) p(d, Qb), p(d, u(Sb(q || '')));
+        if (r || v) p(d, Qb), p(d, u(Sb(r || '')));
         v && (p(d, Qb), p(d, u(Sb(v))));
         if (!t(d, Pb)) {
           a.destination = null;
@@ -2465,7 +2465,7 @@ let renderToReadableStream;
           function () {
             var a = new ReadableStream(
               {
-                type: "bytes",
+                type: 'bytes',
                 pull: function (a) {
                   if (1 === h.status) (h.status = 2), da(a, h.fatalError);
                   else if (2 !== h.status && null === h.destination) {
@@ -2496,35 +2496,35 @@ let renderToReadableStream;
         var m = b.signal,
           q = function () {
             ld(h, m.reason);
-            m.removeEventListener("abort", q);
+            m.removeEventListener('abort', q);
           };
-        m.addEventListener("abort", q);
+        m.addEventListener('abort', q);
       }
       Uc(h);
     });
   };
 }
 
-routes.set("/react-byob", async () => {
+routes.set('/react-byob', async () => {
   const stream = await renderToReadableStream(jsx(App, {}), {
-    bootstrapScripts: ["/main.js"],
+    bootstrapScripts: ['/main.js'],
   });
   return new Response(stream, {
     headers: {
-      "content-type": "text/html",
+      'content-type': 'text/html',
     },
   });
 
   function App() {
-    const qq = typeof jsx !== "undefined" ? jsx : q;
-    return qq("html", {
+    const qq = typeof jsx !== 'undefined' ? jsx : q;
+    return qq('html', {
       children: [
-        qq("title", {
-          children: "My app",
+        qq('title', {
+          children: 'My app',
         }),
-        qq("body", {
-          children: qq("h1", {
-            children: "App",
+        qq('body', {
+          children: qq('h1', {
+            children: 'App',
           }),
         }),
       ],

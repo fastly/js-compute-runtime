@@ -1,107 +1,87 @@
 /// <reference path="../../../../../types/index.d.ts" />
 /* eslint-env serviceworker */
 
-import { pass, assert, assertThrows } from "./assertions.js";
+import { assert, assertThrows } from './assertions.js';
 import {
   RateCounter,
   PenaltyBox,
   EdgeRateLimiter,
-} from "fastly:edge-rate-limiter";
-import { routes, isRunningLocally } from "./routes.js";
+} from 'fastly:edge-rate-limiter';
+import { routes, isRunningLocally } from './routes.js';
 
-let error;
 // RateCounter
 {
-  routes.set("/rate-counter/interface", () => {
+  routes.set('/rate-counter/interface', () => {
     let actual = Reflect.ownKeys(RateCounter);
-    let expected = ["prototype", "length", "name"];
-    error = assert(actual, expected, `Reflect.ownKeys(RateCounter)`);
-    if (error) {
-      return error;
-    }
+    let expected = ['prototype', 'length', 'name'];
+    assert(actual, expected, `Reflect.ownKeys(RateCounter)`);
 
     // Check the prototype descriptors are correct
     {
-      actual = Reflect.getOwnPropertyDescriptor(RateCounter, "prototype");
+      actual = Reflect.getOwnPropertyDescriptor(RateCounter, 'prototype');
       expected = {
         value: RateCounter.prototype,
         writable: false,
         enumerable: false,
         configurable: false,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter, 'prototype')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the constructor function's defined parameter length is correct
     {
-      actual = Reflect.getOwnPropertyDescriptor(RateCounter, "length");
+      actual = Reflect.getOwnPropertyDescriptor(RateCounter, 'length');
       expected = {
         value: 0,
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter, 'length')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the constructor function's name is correct
     {
-      actual = Reflect.getOwnPropertyDescriptor(RateCounter, "name");
+      actual = Reflect.getOwnPropertyDescriptor(RateCounter, 'name');
       expected = {
-        value: "RateCounter",
+        value: 'RateCounter',
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter, 'name')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the prototype has the correct keys
     {
       actual = Reflect.ownKeys(RateCounter.prototype);
       expected = [
-        "constructor",
-        "increment",
-        "lookupRate",
-        "lookupCount",
+        'constructor',
+        'increment',
+        'lookupRate',
+        'lookupCount',
         Symbol.toStringTag,
       ];
-      error = assert(
-        actual,
-        expected,
-        `Reflect.ownKeys(RateCounter.prototype)`,
-      );
-      if (error) {
-        return error;
-      }
+      assert(actual, expected, `Reflect.ownKeys(RateCounter.prototype)`);
     }
 
     // Check the constructor on the prototype is correct
     {
       actual = Reflect.getOwnPropertyDescriptor(
         RateCounter.prototype,
-        "constructor",
+        'constructor',
       );
       expected = {
         writable: true,
@@ -109,27 +89,21 @@ let error;
         configurable: true,
         value: RateCounter.prototype.constructor,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype, 'constructor')`,
       );
-      if (error) {
-        return error;
-      }
 
-      error = assert(
+      assert(
         typeof RateCounter.prototype.constructor,
-        "function",
+        'function',
         `typeof RateCounter.prototype.constructor`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         RateCounter.prototype.constructor,
-        "length",
+        'length',
       );
       expected = {
         value: 0,
@@ -137,33 +111,27 @@ let error;
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype.constructor, 'length')`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         RateCounter.prototype.constructor,
-        "name",
+        'name',
       );
       expected = {
-        value: "RateCounter",
+        value: 'RateCounter',
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype.constructor, 'name')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the Symbol.toStringTag on the prototype is correct
@@ -176,32 +144,26 @@ let error;
         writable: false,
         enumerable: false,
         configurable: true,
-        value: "RateCounter",
+        value: 'RateCounter',
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype, [Symbol.toStringTag])`,
       );
-      if (error) {
-        return error;
-      }
 
-      error = assert(
+      assert(
         typeof RateCounter.prototype[Symbol.toStringTag],
-        "string",
+        'string',
         `typeof RateCounter.prototype[Symbol.toStringTag]`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the increment method has correct descriptors, length and name
     {
       actual = Reflect.getOwnPropertyDescriptor(
         RateCounter.prototype,
-        "increment",
+        'increment',
       );
       expected = {
         writable: true,
@@ -209,27 +171,21 @@ let error;
         configurable: true,
         value: RateCounter.prototype.increment,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype, 'increment')`,
       );
-      if (error) {
-        return error;
-      }
 
-      error = assert(
+      assert(
         typeof RateCounter.prototype.increment,
-        "function",
+        'function',
         `typeof RateCounter.prototype.increment`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         RateCounter.prototype.increment,
-        "length",
+        'length',
       );
       expected = {
         value: 2,
@@ -237,40 +193,34 @@ let error;
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype.increment, 'length')`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         RateCounter.prototype.increment,
-        "name",
+        'name',
       );
       expected = {
-        value: "increment",
+        value: 'increment',
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype.increment, 'name')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the lookupRate method has correct descriptors, length and name
     {
       actual = Reflect.getOwnPropertyDescriptor(
         RateCounter.prototype,
-        "lookupRate",
+        'lookupRate',
       );
       expected = {
         writable: true,
@@ -278,27 +228,21 @@ let error;
         configurable: true,
         value: RateCounter.prototype.lookupRate,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype, 'lookupRate')`,
       );
-      if (error) {
-        return error;
-      }
 
-      error = assert(
+      assert(
         typeof RateCounter.prototype.lookupRate,
-        "function",
+        'function',
         `typeof RateCounter.prototype.lookupRate`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         RateCounter.prototype.lookupRate,
-        "length",
+        'length',
       );
       expected = {
         value: 2,
@@ -306,40 +250,34 @@ let error;
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype.lookupRate, 'length')`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         RateCounter.prototype.lookupRate,
-        "name",
+        'name',
       );
       expected = {
-        value: "lookupRate",
+        value: 'lookupRate',
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype.lookupRate, 'name')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the lookupCount method has correct descriptors, length and name
     {
       actual = Reflect.getOwnPropertyDescriptor(
         RateCounter.prototype,
-        "lookupCount",
+        'lookupCount',
       );
       expected = {
         writable: true,
@@ -347,27 +285,21 @@ let error;
         configurable: true,
         value: RateCounter.prototype.lookupCount,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype, 'lookupCount')`,
       );
-      if (error) {
-        return error;
-      }
 
-      error = assert(
+      assert(
         typeof RateCounter.prototype.lookupCount,
-        "function",
+        'function',
         `typeof RateCounter.prototype.lookupCount`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         RateCounter.prototype.lookupCount,
-        "length",
+        'length',
       );
       expected = {
         value: 2,
@@ -375,76 +307,60 @@ let error;
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype.lookupCount, 'length')`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         RateCounter.prototype.lookupCount,
-        "name",
+        'name',
       );
       expected = {
-        value: "lookupCount",
+        value: 'lookupCount',
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(RateCounter.prototype.lookupCount, 'name')`,
       );
-      if (error) {
-        return error;
-      }
     }
-
-    return pass("ok");
   });
 
   // RateCounter constructor
   {
-    routes.set("/rate-counter/constructor/called-as-regular-function", () => {
-      error = assertThrows(
+    routes.set('/rate-counter/constructor/called-as-regular-function', () => {
+      assertThrows(
         () => {
           RateCounter();
         },
         Error,
         `calling a builtin RateCounter constructor without new is forbidden`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
     routes.set(
-      "/rate-counter/constructor/called-as-constructor-no-arguments",
+      '/rate-counter/constructor/called-as-constructor-no-arguments',
       () => {
-        error = assertThrows(
+        assertThrows(
           () => new RateCounter(),
           Error,
           `RateCounter constructor: At least 1 argument required, but only 0 passed`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
     // Ensure we correctly coerce the parameter to a string as according to
     // https://tc39.es/ecma262/#sec-tostring
     routes.set(
-      "/rate-counter/constructor/name-parameter-calls-7.1.17-ToString",
+      '/rate-counter/constructor/name-parameter-calls-7.1.17-ToString',
       () => {
         if (!isRunningLocally()) {
           let sentinel;
           const test = () => {
-            sentinel = Symbol("sentinel");
+            sentinel = Symbol('sentinel');
             const name = {
               toString() {
                 throw sentinel;
@@ -452,564 +368,417 @@ let error;
             };
             new RateCounter(name);
           };
-          error = assertThrows(test);
-          if (error) {
-            return error;
-          }
+          assertThrows(test);
           try {
             test();
           } catch (thrownError) {
-            error = assert(thrownError, sentinel, "thrownError === sentinel");
-            if (error) {
-              return error;
-            }
+            assert(thrownError, sentinel, 'thrownError === sentinel');
           }
-          error = assertThrows(
+          assertThrows(
             () => {
               new RateCounter(Symbol());
             },
             Error,
             `can't convert symbol to string`,
           );
-          if (error) {
-            return error;
-          }
         }
-        return pass("ok");
       },
     );
-    routes.set("/rate-counter/constructor/happy-path", () => {
-      error = assert(
-        new RateCounter("rc") instanceof RateCounter,
+    routes.set('/rate-counter/constructor/happy-path', () => {
+      assert(
+        new RateCounter('rc') instanceof RateCounter,
         true,
         `new RateCounter("rc") instanceof RateCounter`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
   }
 
   // RateCounter increment method
   // increment(entry: string, delta: number): void;
   {
-    routes.set("/rate-counter/increment/called-as-constructor", () => {
-      error = assertThrows(() => {
-        new RateCounter.prototype.increment("entry", 1);
+    routes.set('/rate-counter/increment/called-as-constructor', () => {
+      assertThrows(() => {
+        new RateCounter.prototype.increment('entry', 1);
       }, Error);
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
     // Ensure we correctly coerce the parameter to a string as according to
     // https://tc39.es/ecma262/#sec-tostring
     routes.set(
-      "/rate-counter/increment/entry-parameter-calls-7.1.17-ToString",
+      '/rate-counter/increment/entry-parameter-calls-7.1.17-ToString',
       () => {
         let sentinel;
         const test = () => {
-          sentinel = Symbol("sentinel");
+          sentinel = Symbol('sentinel');
           const entry = {
             toString() {
               throw sentinel;
             },
           };
-          let rc = new RateCounter("rc");
+          let rc = new RateCounter('rc');
           rc.increment(entry, 1);
         };
-        error = assertThrows(test);
-        if (error) {
-          return error;
-        }
+        assertThrows(test);
         try {
           test();
         } catch (thrownError) {
           console.log({ thrownError });
-          error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
+            let rc = new RateCounter('rc');
             rc.increment(Symbol(), 1);
           },
           Error,
           `can't convert symbol to string`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
-    routes.set("/rate-counter/increment/entry-parameter-not-supplied", () => {
-      error = assertThrows(
+    routes.set('/rate-counter/increment/entry-parameter-not-supplied', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
+          let rc = new RateCounter('rc');
           rc.increment();
         },
         Error,
         `increment: At least 2 arguments required, but only 0 passed`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/rate-counter/increment/delta-parameter-not-supplied", () => {
-      error = assertThrows(
+    routes.set('/rate-counter/increment/delta-parameter-not-supplied', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          rc.increment("entry");
+          let rc = new RateCounter('rc');
+          rc.increment('entry');
         },
         Error,
         `increment: At least 2 arguments required, but only 1 passed`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/rate-counter/increment/delta-parameter-negative", () => {
-      error = assertThrows(
+    routes.set('/rate-counter/increment/delta-parameter-negative', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          rc.increment("entry", -1);
+          let rc = new RateCounter('rc');
+          rc.increment('entry', -1);
         },
         Error,
         `increment: delta parameter is an invalid value, only positive numbers can be used for delta values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/rate-counter/increment/delta-parameter-infinity", () => {
-      error = assertThrows(
+    routes.set('/rate-counter/increment/delta-parameter-infinity', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          rc.increment("entry", Infinity);
+          let rc = new RateCounter('rc');
+          rc.increment('entry', Infinity);
         },
         Error,
         `increment: delta parameter is an invalid value, only positive numbers can be used for delta values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/rate-counter/increment/delta-parameter-NaN", () => {
-      error = assertThrows(
+    routes.set('/rate-counter/increment/delta-parameter-NaN', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          rc.increment("entry", NaN);
+          let rc = new RateCounter('rc');
+          rc.increment('entry', NaN);
         },
         Error,
         `increment: delta parameter is an invalid value, only positive numbers can be used for delta values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/rate-counter/increment/returns-undefined", () => {
-      let rc = new RateCounter("rc");
-      error = assert(
-        rc.increment("meow", 1),
-        undefined,
-        "rc.increment('meow', 1)",
-      );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+    routes.set('/rate-counter/increment/returns-undefined', () => {
+      let rc = new RateCounter('rc');
+      assert(rc.increment('meow', 1), undefined, "rc.increment('meow', 1)");
     });
   }
 
   // RateCounter lookupRate method
   // lookupRate(entry: string, window: [1, 10, 60]): number;
   {
-    routes.set("/rate-counter/lookupRate/called-as-constructor", () => {
-      error = assertThrows(() => {
-        new RateCounter.prototype.lookupRate("entry", 1);
+    routes.set('/rate-counter/lookupRate/called-as-constructor', () => {
+      assertThrows(() => {
+        new RateCounter.prototype.lookupRate('entry', 1);
       }, Error);
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
     // Ensure we correctly coerce the parameter to a string as according to
     // https://tc39.es/ecma262/#sec-tostring
     routes.set(
-      "/rate-counter/lookupRate/entry-parameter-calls-7.1.17-ToString",
+      '/rate-counter/lookupRate/entry-parameter-calls-7.1.17-ToString',
       () => {
         let sentinel;
         const test = () => {
-          sentinel = Symbol("sentinel");
+          sentinel = Symbol('sentinel');
           const entry = {
             toString() {
               throw sentinel;
             },
           };
-          let rc = new RateCounter("rc");
+          let rc = new RateCounter('rc');
           rc.lookupRate(entry, 1);
         };
-        error = assertThrows(test);
-        if (error) {
-          return error;
-        }
+        assertThrows(test);
         try {
           test();
         } catch (thrownError) {
           console.log({ thrownError });
-          error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
+            let rc = new RateCounter('rc');
             rc.lookupRate(Symbol(), 1);
           },
           Error,
           `can't convert symbol to string`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
-    routes.set("/rate-counter/lookupRate/entry-parameter-not-supplied", () => {
-      error = assertThrows(
+    routes.set('/rate-counter/lookupRate/entry-parameter-not-supplied', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
+          let rc = new RateCounter('rc');
           rc.lookupRate();
         },
         Error,
         `lookupRate: At least 2 arguments required, but only 0 passed`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/rate-counter/lookupRate/window-parameter-not-supplied", () => {
-      error = assertThrows(
+    routes.set('/rate-counter/lookupRate/window-parameter-not-supplied', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          rc.lookupRate("entry");
+          let rc = new RateCounter('rc');
+          rc.lookupRate('entry');
         },
         Error,
         `lookupRate: At least 2 arguments required, but only 1 passed`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/rate-counter/lookupRate/window-parameter-negative", () => {
+    routes.set('/rate-counter/lookupRate/window-parameter-negative', () => {
       if (!isRunningLocally()) {
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
-            rc.lookupRate("entry", -1);
+            let rc = new RateCounter('rc');
+            rc.lookupRate('entry', -1);
           },
           Error,
           `lookupRate: window parameter must be either: 1, 10, or 60`,
         );
-        if (error) {
-          return error;
-        }
       }
-      return pass("ok");
     });
-    routes.set("/rate-counter/lookupRate/window-parameter-infinity", () => {
+    routes.set('/rate-counter/lookupRate/window-parameter-infinity', () => {
       if (!isRunningLocally()) {
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
-            rc.lookupRate("entry", Infinity);
+            let rc = new RateCounter('rc');
+            rc.lookupRate('entry', Infinity);
           },
           Error,
           `lookupRate: window parameter must be either: 1, 10, or 60`,
         );
-        if (error) {
-          return error;
-        }
       }
-      return pass("ok");
     });
-    routes.set("/rate-counter/lookupRate/window-parameter-NaN", () => {
+    routes.set('/rate-counter/lookupRate/window-parameter-NaN', () => {
       if (!isRunningLocally()) {
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
-            rc.lookupRate("entry", NaN);
+            let rc = new RateCounter('rc');
+            rc.lookupRate('entry', NaN);
           },
           Error,
           `lookupRate: window parameter must be either: 1, 10, or 60`,
         );
-        if (error) {
-          return error;
-        }
       }
-      return pass("ok");
     });
-    routes.set("/rate-counter/lookupRate/returns-number", () => {
-      let rc = new RateCounter("rc");
-      error = assert(
-        typeof rc.lookupRate("meow", 1),
-        "number",
+    routes.set('/rate-counter/lookupRate/returns-number', () => {
+      let rc = new RateCounter('rc');
+      assert(
+        typeof rc.lookupRate('meow', 1),
+        'number',
         `typeof rc.lookupRate('meow', 1)`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
   }
 
   // RateCounter lookupCount method
   // lookupCount(entry: string, duration: [10, 20, 30, 40, 50, 60]): number;
   {
-    routes.set("/rate-counter/lookupCount/called-as-constructor", () => {
-      error = assertThrows(() => {
-        new RateCounter.prototype.lookupCount("entry", 1);
+    routes.set('/rate-counter/lookupCount/called-as-constructor', () => {
+      assertThrows(() => {
+        new RateCounter.prototype.lookupCount('entry', 1);
       }, Error);
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
     // Ensure we correctly coerce the parameter to a string as according to
     // https://tc39.es/ecma262/#sec-tostring
     routes.set(
-      "/rate-counter/lookupCount/entry-parameter-calls-7.1.17-ToString",
+      '/rate-counter/lookupCount/entry-parameter-calls-7.1.17-ToString',
       () => {
         let sentinel;
         const test = () => {
-          sentinel = Symbol("sentinel");
+          sentinel = Symbol('sentinel');
           const entry = {
             toString() {
               throw sentinel;
             },
           };
-          let rc = new RateCounter("rc");
+          let rc = new RateCounter('rc');
           rc.lookupCount(entry, 1);
         };
-        error = assertThrows(test);
-        if (error) {
-          return error;
-        }
+        assertThrows(test);
         try {
           test();
         } catch (thrownError) {
           console.log({ thrownError });
-          error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
+            let rc = new RateCounter('rc');
             rc.lookupCount(Symbol(), 1);
           },
           Error,
           `can't convert symbol to string`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
-    routes.set("/rate-counter/lookupCount/entry-parameter-not-supplied", () => {
+    routes.set('/rate-counter/lookupCount/entry-parameter-not-supplied', () => {
       if (!isRunningLocally()) {
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
+            let rc = new RateCounter('rc');
             rc.lookupCount();
           },
           Error,
           `lookupCount: At least 2 arguments required, but only 0 passed`,
         );
-        if (error) {
-          return error;
-        }
       }
-      return pass("ok");
     });
     routes.set(
-      "/rate-counter/lookupCount/duration-parameter-not-supplied",
+      '/rate-counter/lookupCount/duration-parameter-not-supplied',
       () => {
         if (!isRunningLocally()) {
-          error = assertThrows(
+          assertThrows(
             () => {
-              let rc = new RateCounter("rc");
-              rc.lookupCount("entry");
+              let rc = new RateCounter('rc');
+              rc.lookupCount('entry');
             },
             Error,
             `lookupCount: At least 2 arguments required, but only 1 passed`,
           );
-          if (error) {
-            return error;
-          }
         }
-        return pass("ok");
       },
     );
-    routes.set("/rate-counter/lookupCount/duration-parameter-negative", () => {
+    routes.set('/rate-counter/lookupCount/duration-parameter-negative', () => {
       if (!isRunningLocally()) {
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
-            rc.lookupCount("entry", -1);
+            let rc = new RateCounter('rc');
+            rc.lookupCount('entry', -1);
           },
           Error,
           `lookupCount: duration parameter must be either: 10, 20, 30, 40, 50, or 60`,
         );
-        if (error) {
-          return error;
-        }
       }
-      return pass("ok");
     });
-    routes.set("/rate-counter/lookupCount/duration-parameter-infinity", () => {
+    routes.set('/rate-counter/lookupCount/duration-parameter-infinity', () => {
       if (!isRunningLocally()) {
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
-            rc.lookupCount("entry", Infinity);
+            let rc = new RateCounter('rc');
+            rc.lookupCount('entry', Infinity);
           },
           Error,
           `lookupCount: duration parameter must be either: 10, 20, 30, 40, 50, or 60`,
         );
-        if (error) {
-          return error;
-        }
       }
-      return pass("ok");
     });
-    routes.set("/rate-counter/lookupCount/duration-parameter-NaN", () => {
+    routes.set('/rate-counter/lookupCount/duration-parameter-NaN', () => {
       if (!isRunningLocally()) {
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
-            rc.lookupCount("entry", NaN);
+            let rc = new RateCounter('rc');
+            rc.lookupCount('entry', NaN);
           },
           Error,
           `lookupCount: duration parameter must be either: 10, 20, 30, 40, 50, or 60`,
         );
-        if (error) {
-          return error;
-        }
       }
-      return pass("ok");
     });
-    routes.set("/rate-counter/lookupCount/returns-number", () => {
-      let rc = new RateCounter("rc");
-      error = assert(
-        typeof rc.lookupCount("meow", 10),
-        "number",
+    routes.set('/rate-counter/lookupCount/returns-number', () => {
+      let rc = new RateCounter('rc');
+      assert(
+        typeof rc.lookupCount('meow', 10),
+        'number',
         `typeof rc.lookupCount('meow', 1)`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
   }
 }
 
 // PenaltyBox
 {
-  routes.set("/penalty-box/interface", () => {
+  routes.set('/penalty-box/interface', () => {
     let actual = Reflect.ownKeys(PenaltyBox);
-    let expected = ["prototype", "length", "name"];
-    error = assert(actual, expected, `Reflect.ownKeys(PenaltyBox)`);
-    if (error) {
-      return error;
-    }
+    let expected = ['prototype', 'length', 'name'];
+    assert(actual, expected, `Reflect.ownKeys(PenaltyBox)`);
 
     // Check the prototype descriptors are correct
     {
-      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox, "prototype");
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox, 'prototype');
       expected = {
         value: PenaltyBox.prototype,
         writable: false,
         enumerable: false,
         configurable: false,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox, 'prototype')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the constructor function's defined parameter length is correct
     {
-      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox, "length");
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox, 'length');
       expected = {
         value: 0,
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox, 'length')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the constructor function's name is correct
     {
-      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox, "name");
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox, 'name');
       expected = {
-        value: "PenaltyBox",
+        value: 'PenaltyBox',
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox, 'name')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the prototype has the correct keys
     {
       actual = Reflect.ownKeys(PenaltyBox.prototype);
-      expected = ["constructor", "add", "has", Symbol.toStringTag];
-      error = assert(actual, expected, `Reflect.ownKeys(PenaltyBox.prototype)`);
-      if (error) {
-        return error;
-      }
+      expected = ['constructor', 'add', 'has', Symbol.toStringTag];
+      assert(actual, expected, `Reflect.ownKeys(PenaltyBox.prototype)`);
     }
 
     // Check the constructor on the prototype is correct
     {
       actual = Reflect.getOwnPropertyDescriptor(
         PenaltyBox.prototype,
-        "constructor",
+        'constructor',
       );
       expected = {
         writable: true,
@@ -1017,27 +786,21 @@ let error;
         configurable: true,
         value: PenaltyBox.prototype.constructor,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, 'constructor')`,
       );
-      if (error) {
-        return error;
-      }
 
-      error = assert(
+      assert(
         typeof PenaltyBox.prototype.constructor,
-        "function",
+        'function',
         `typeof PenaltyBox.prototype.constructor`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         PenaltyBox.prototype.constructor,
-        "length",
+        'length',
       );
       expected = {
         value: 0,
@@ -1045,33 +808,27 @@ let error;
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.constructor, 'length')`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         PenaltyBox.prototype.constructor,
-        "name",
+        'name',
       );
       expected = {
-        value: "PenaltyBox",
+        value: 'PenaltyBox',
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.constructor, 'name')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the Symbol.toStringTag on the prototype is correct
@@ -1084,57 +841,45 @@ let error;
         writable: false,
         enumerable: false,
         configurable: true,
-        value: "PenaltyBox",
+        value: 'PenaltyBox',
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, [Symbol.toStringTag])`,
       );
-      if (error) {
-        return error;
-      }
 
-      error = assert(
+      assert(
         typeof PenaltyBox.prototype[Symbol.toStringTag],
-        "string",
+        'string',
         `typeof PenaltyBox.prototype[Symbol.toStringTag]`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the add method has correct descriptors, length and name
     {
-      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, "add");
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, 'add');
       expected = {
         writable: true,
         enumerable: true,
         configurable: true,
         value: PenaltyBox.prototype.add,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, 'add')`,
       );
-      if (error) {
-        return error;
-      }
 
-      error = assert(
+      assert(
         typeof PenaltyBox.prototype.add,
-        "function",
+        'function',
         `typeof PenaltyBox.prototype.add`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         PenaltyBox.prototype.add,
-        "length",
+        'length',
       );
       expected = {
         value: 2,
@@ -1142,65 +887,53 @@ let error;
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.add, 'length')`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         PenaltyBox.prototype.add,
-        "name",
+        'name',
       );
       expected = {
-        value: "add",
+        value: 'add',
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.add, 'name')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the has method has correct descriptors, length and name
     {
-      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, "has");
+      actual = Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, 'has');
       expected = {
         writable: true,
         enumerable: true,
         configurable: true,
         value: PenaltyBox.prototype.has,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype, 'has')`,
       );
-      if (error) {
-        return error;
-      }
 
-      error = assert(
+      assert(
         typeof PenaltyBox.prototype.has,
-        "function",
+        'function',
         `typeof PenaltyBox.prototype.has`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         PenaltyBox.prototype.has,
-        "length",
+        'length',
       );
       expected = {
         value: 1,
@@ -1208,76 +941,60 @@ let error;
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.has, 'length')`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         PenaltyBox.prototype.has,
-        "name",
+        'name',
       );
       expected = {
-        value: "has",
+        value: 'has',
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(PenaltyBox.prototype.has, 'name')`,
       );
-      if (error) {
-        return error;
-      }
     }
-
-    return pass("ok");
   });
 
   // PenaltyBox constructor
   {
-    routes.set("/penalty-box/constructor/called-as-regular-function", () => {
-      error = assertThrows(
+    routes.set('/penalty-box/constructor/called-as-regular-function', () => {
+      assertThrows(
         () => {
           PenaltyBox();
         },
         Error,
         `calling a builtin PenaltyBox constructor without new is forbidden`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
     routes.set(
-      "/penalty-box/constructor/called-as-constructor-no-arguments",
+      '/penalty-box/constructor/called-as-constructor-no-arguments',
       () => {
-        error = assertThrows(
+        assertThrows(
           () => new PenaltyBox(),
           Error,
           `PenaltyBox constructor: At least 1 argument required, but only 0 passed`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
     // Ensure we correctly coerce the parameter to a string as according to
     // https://tc39.es/ecma262/#sec-tostring
     routes.set(
-      "/penalty-box/constructor/name-parameter-calls-7.1.17-ToString",
+      '/penalty-box/constructor/name-parameter-calls-7.1.17-ToString',
       () => {
         if (!isRunningLocally()) {
           let sentinel;
           const test = () => {
-            sentinel = Symbol("sentinel");
+            sentinel = Symbol('sentinel');
             const name = {
               toString() {
                 throw sentinel;
@@ -1285,340 +1002,247 @@ let error;
             };
             new PenaltyBox(name);
           };
-          error = assertThrows(test);
-          if (error) {
-            return error;
-          }
+          assertThrows(test);
           try {
             test();
           } catch (thrownError) {
-            error = assert(thrownError, sentinel, "thrownError === sentinel");
-            if (error) {
-              return error;
-            }
+            assert(thrownError, sentinel, 'thrownError === sentinel');
           }
-          error = assertThrows(
+          assertThrows(
             () => {
               new PenaltyBox(Symbol());
             },
             Error,
             `can't convert symbol to string`,
           );
-          if (error) {
-            return error;
-          }
         }
-        return pass("ok");
       },
     );
-    routes.set("/penalty-box/constructor/happy-path", () => {
-      error = assert(
-        new PenaltyBox("rc") instanceof PenaltyBox,
+    routes.set('/penalty-box/constructor/happy-path', () => {
+      assert(
+        new PenaltyBox('rc') instanceof PenaltyBox,
         true,
         `new PenaltyBox("rc") instanceof PenaltyBox`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
   }
 
   // PenaltyBox has method
   // has(entry: string): boolean;
   {
-    routes.set("/penalty-box/has/called-as-constructor", () => {
-      error = assertThrows(() => {
-        new PenaltyBox.prototype.has("entry");
+    routes.set('/penalty-box/has/called-as-constructor', () => {
+      assertThrows(() => {
+        new PenaltyBox.prototype.has('entry');
       }, Error);
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
     // Ensure we correctly coerce the parameter to a string as according to
     // https://tc39.es/ecma262/#sec-tostring
-    routes.set("/penalty-box/has/entry-parameter-calls-7.1.17-ToString", () => {
+    routes.set('/penalty-box/has/entry-parameter-calls-7.1.17-ToString', () => {
       let sentinel;
       const test = () => {
-        sentinel = Symbol("sentinel");
+        sentinel = Symbol('sentinel');
         const entry = {
           toString() {
             throw sentinel;
           },
         };
-        let pb = new PenaltyBox("pb");
+        let pb = new PenaltyBox('pb');
         pb.has(entry);
       };
-      error = assertThrows(test);
-      if (error) {
-        return error;
-      }
+      assertThrows(test);
       try {
         test();
       } catch (thrownError) {
         console.log({ thrownError });
-        error = assert(thrownError, sentinel, "thrownError === sentinel");
-        if (error) {
-          return error;
-        }
+        assert(thrownError, sentinel, 'thrownError === sentinel');
       }
-      error = assertThrows(
+      assertThrows(
         () => {
-          let pb = new PenaltyBox("pb");
+          let pb = new PenaltyBox('pb');
           pb.has(Symbol());
         },
         Error,
         `can't convert symbol to string`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/penalty-box/has/entry-parameter-not-supplied", () => {
-      error = assertThrows(
+    routes.set('/penalty-box/has/entry-parameter-not-supplied', () => {
+      assertThrows(
         () => {
-          let pb = new PenaltyBox("pb");
+          let pb = new PenaltyBox('pb');
           pb.has();
         },
         Error,
         `has: At least 1 argument required, but only 0 passed`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/penalty-box/has/returns-boolean", () => {
-      let pb = new PenaltyBox("pb");
-      error = assert(pb.has("meow"), false, "pb.has('meow')");
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+    routes.set('/penalty-box/has/returns-boolean', () => {
+      let pb = new PenaltyBox('pb');
+      assert(pb.has('meow'), false, "pb.has('meow')");
     });
   }
 
   // PenaltyBox add method
   // add(entry: string, timeToLive: number): void;
   {
-    routes.set("/penalty-box/add/called-as-constructor", () => {
-      error = assertThrows(() => {
-        new PenaltyBox.prototype.add("entry", 1);
+    routes.set('/penalty-box/add/called-as-constructor', () => {
+      assertThrows(() => {
+        new PenaltyBox.prototype.add('entry', 1);
       }, Error);
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
     // Ensure we correctly coepbe the parameter to a string as according to
     // https://tc39.es/ecma262/#sec-tostring
-    routes.set("/penalty-box/add/entry-parameter-calls-7.1.17-ToString", () => {
+    routes.set('/penalty-box/add/entry-parameter-calls-7.1.17-ToString', () => {
       let sentinel;
       const test = () => {
-        sentinel = Symbol("sentinel");
+        sentinel = Symbol('sentinel');
         const entry = {
           toString() {
             throw sentinel;
           },
         };
-        let pb = new PenaltyBox("pb");
+        let pb = new PenaltyBox('pb');
         pb.add(entry, 1);
       };
-      error = assertThrows(test);
-      if (error) {
-        return error;
-      }
+      assertThrows(test);
       try {
         test();
       } catch (thrownError) {
         console.log({ thrownError });
-        error = assert(thrownError, sentinel, "thrownError === sentinel");
-        if (error) {
-          return error;
-        }
+        assert(thrownError, sentinel, 'thrownError === sentinel');
       }
-      error = assertThrows(
+      assertThrows(
         () => {
-          let pb = new PenaltyBox("pb");
+          let pb = new PenaltyBox('pb');
           pb.add(Symbol(), 1);
         },
         Error,
         `can't convert symbol to string`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/penalty-box/add/entry-parameter-not-supplied", () => {
-      error = assertThrows(
+    routes.set('/penalty-box/add/entry-parameter-not-supplied', () => {
+      assertThrows(
         () => {
-          let pb = new PenaltyBox("pb");
+          let pb = new PenaltyBox('pb');
           pb.add();
         },
         Error,
         `add: At least 2 arguments required, but only 0 passed`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/penalty-box/add/timeToLive-parameter-not-supplied", () => {
-      error = assertThrows(
+    routes.set('/penalty-box/add/timeToLive-parameter-not-supplied', () => {
+      assertThrows(
         () => {
-          let pb = new PenaltyBox("pb");
-          pb.add("entry");
+          let pb = new PenaltyBox('pb');
+          pb.add('entry');
         },
         Error,
         `add: At least 2 arguments required, but only 1 passed`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/penalty-box/add/timeToLive-parameter-negative", () => {
-      error = assertThrows(
+    routes.set('/penalty-box/add/timeToLive-parameter-negative', () => {
+      assertThrows(
         () => {
-          let pb = new PenaltyBox("pb");
-          pb.add("entry", -1);
+          let pb = new PenaltyBox('pb');
+          pb.add('entry', -1);
         },
         Error,
         `add: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/penalty-box/add/timeToLive-parameter-infinity", () => {
-      error = assertThrows(
+    routes.set('/penalty-box/add/timeToLive-parameter-infinity', () => {
+      assertThrows(
         () => {
-          let pb = new PenaltyBox("pb");
-          pb.add("entry", Infinity);
+          let pb = new PenaltyBox('pb');
+          pb.add('entry', Infinity);
         },
         Error,
         `add: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/penalty-box/add/timeToLive-parameter-NaN", () => {
-      error = assertThrows(
+    routes.set('/penalty-box/add/timeToLive-parameter-NaN', () => {
+      assertThrows(
         () => {
-          let pb = new PenaltyBox("pb");
-          pb.add("entry", NaN);
+          let pb = new PenaltyBox('pb');
+          pb.add('entry', NaN);
         },
         Error,
         `add: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/penalty-box/add/returns-undefined", () => {
-      let pb = new PenaltyBox("pb");
-      error = assert(pb.add("meow", 1), undefined, `pb.add('meow', 1)`);
-      if (error) {
-        return error;
-      }
-      return pass("ok");
+    routes.set('/penalty-box/add/returns-undefined', () => {
+      let pb = new PenaltyBox('pb');
+      assert(pb.add('meow', 1), undefined, `pb.add('meow', 1)`);
     });
   }
 }
 
 // EdgeRateLimiter
 {
-  routes.set("/edge-rate-limiter/interface", () => {
+  routes.set('/edge-rate-limiter/interface', () => {
     let actual = Reflect.ownKeys(EdgeRateLimiter);
-    let expected = ["prototype", "length", "name"];
-    error = assert(actual, expected, `Reflect.ownKeys(EdgeRateLimiter)`);
-    if (error) {
-      return error;
-    }
+    let expected = ['prototype', 'length', 'name'];
+    assert(actual, expected, `Reflect.ownKeys(EdgeRateLimiter)`);
 
     // Check the prototype descriptors are correct
     {
-      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, "prototype");
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, 'prototype');
       expected = {
         value: EdgeRateLimiter.prototype,
         writable: false,
         enumerable: false,
         configurable: false,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, 'prototype')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the constructor function's defined parameter length is correct
     {
-      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, "length");
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, 'length');
       expected = {
         value: 0,
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, 'length')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the constructor function's name is correct
     {
-      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, "name");
+      actual = Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, 'name');
       expected = {
-        value: "EdgeRateLimiter",
+        value: 'EdgeRateLimiter',
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter, 'name')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the prototype has the correct keys
     {
       actual = Reflect.ownKeys(EdgeRateLimiter.prototype);
-      expected = ["constructor", "checkRate", Symbol.toStringTag];
-      error = assert(
-        actual,
-        expected,
-        `Reflect.ownKeys(EdgeRateLimiter.prototype)`,
-      );
-      if (error) {
-        return error;
-      }
+      expected = ['constructor', 'checkRate', Symbol.toStringTag];
+      assert(actual, expected, `Reflect.ownKeys(EdgeRateLimiter.prototype)`);
     }
 
     // Check the constructor on the prototype is correct
     {
       actual = Reflect.getOwnPropertyDescriptor(
         EdgeRateLimiter.prototype,
-        "constructor",
+        'constructor',
       );
       expected = {
         writable: true,
@@ -1626,27 +1250,21 @@ let error;
         configurable: true,
         value: EdgeRateLimiter.prototype.constructor,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype, 'constructor')`,
       );
-      if (error) {
-        return error;
-      }
 
-      error = assert(
+      assert(
         typeof EdgeRateLimiter.prototype.constructor,
-        "function",
+        'function',
         `typeof EdgeRateLimiter.prototype.constructor`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         EdgeRateLimiter.prototype.constructor,
-        "length",
+        'length',
       );
       expected = {
         value: 0,
@@ -1654,33 +1272,27 @@ let error;
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype.constructor, 'length')`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         EdgeRateLimiter.prototype.constructor,
-        "name",
+        'name',
       );
       expected = {
-        value: "EdgeRateLimiter",
+        value: 'EdgeRateLimiter',
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype.constructor, 'name')`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the Symbol.toStringTag on the prototype is correct
@@ -1693,32 +1305,26 @@ let error;
         writable: false,
         enumerable: false,
         configurable: true,
-        value: "EdgeRateLimiter",
+        value: 'EdgeRateLimiter',
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype, [Symbol.toStringTag])`,
       );
-      if (error) {
-        return error;
-      }
 
-      error = assert(
+      assert(
         typeof EdgeRateLimiter.prototype[Symbol.toStringTag],
-        "string",
+        'string',
         `typeof EdgeRateLimiter.prototype[Symbol.toStringTag]`,
       );
-      if (error) {
-        return error;
-      }
     }
 
     // Check the checkRate method has correct descriptors, length and name
     {
       actual = Reflect.getOwnPropertyDescriptor(
         EdgeRateLimiter.prototype,
-        "checkRate",
+        'checkRate',
       );
       expected = {
         writable: true,
@@ -1726,27 +1332,21 @@ let error;
         configurable: true,
         value: EdgeRateLimiter.prototype.checkRate,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype, 'checkRate')`,
       );
-      if (error) {
-        return error;
-      }
 
-      error = assert(
+      assert(
         typeof EdgeRateLimiter.prototype.checkRate,
-        "function",
+        'function',
         `typeof EdgeRateLimiter.prototype.checkRate`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         EdgeRateLimiter.prototype.checkRate,
-        "length",
+        'length',
       );
       expected = {
         value: 5,
@@ -1754,409 +1354,311 @@ let error;
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype.checkRate, 'length')`,
       );
-      if (error) {
-        return error;
-      }
 
       actual = Reflect.getOwnPropertyDescriptor(
         EdgeRateLimiter.prototype.checkRate,
-        "name",
+        'name',
       );
       expected = {
-        value: "checkRate",
+        value: 'checkRate',
         writable: false,
         enumerable: false,
         configurable: true,
       };
-      error = assert(
+      assert(
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(EdgeRateLimiter.prototype.checkRate, 'name')`,
       );
-      if (error) {
-        return error;
-      }
     }
-
-    return pass("ok");
   });
 
   // EdgeRateLimiter constructor
   {
     routes.set(
-      "/edge-rate-limiter/constructor/called-as-regular-function",
+      '/edge-rate-limiter/constructor/called-as-regular-function',
       () => {
-        error = assertThrows(
+        assertThrows(
           () => {
             EdgeRateLimiter();
           },
           Error,
           `calling a builtin EdgeRateLimiter constructor without new is forbidden`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
     routes.set(
-      "/edge-rate-limiter/constructor/called-as-constructor-no-arguments",
+      '/edge-rate-limiter/constructor/called-as-constructor-no-arguments',
       () => {
-        error = assertThrows(
+        assertThrows(
           () => new EdgeRateLimiter(),
           Error,
           `EdgeRateLimiter constructor: At least 2 arguments required, but only 0 passed`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
     // Ensure we correctly coerce the parameter to a string as according to
     // https://tc39.es/ecma262/#sec-tostring
     routes.set(
-      "/edge-rate-limiter/constructor/rate-counter-not-instance-of-rateCounter",
+      '/edge-rate-limiter/constructor/rate-counter-not-instance-of-rateCounter',
       () => {
-        error = assertThrows(
+        assertThrows(
           () => {
             new EdgeRateLimiter(true, true);
           },
           Error,
           `EdgeRateLimiter constructor: rateCounter parameter must be an instance of RateCounter`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
     routes.set(
-      "/edge-rate-limiter/constructor/penalty-box-not-instance-of-penaltyBox",
+      '/edge-rate-limiter/constructor/penalty-box-not-instance-of-penaltyBox',
       () => {
-        error = assertThrows(
+        assertThrows(
           () => {
-            new EdgeRateLimiter(new RateCounter("rc"), true);
+            new EdgeRateLimiter(new RateCounter('rc'), true);
           },
           Error,
           `EdgeRateLimiter constructor: penaltyBox parameter must be an instance of PenaltyBox`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
-    routes.set("/edge-rate-limiter/constructor/happy-path", () => {
-      error = assert(
+    routes.set('/edge-rate-limiter/constructor/happy-path', () => {
+      assert(
         new EdgeRateLimiter(
-          new RateCounter("rc"),
-          new PenaltyBox("pb"),
+          new RateCounter('rc'),
+          new PenaltyBox('pb'),
         ) instanceof EdgeRateLimiter,
         true,
         `new EdgeRateLimiter(new RateCounter("rc"), new PenaltyBox('pb')) instanceof EdgeRateLimiter`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
   }
 
   // EdgeRateLimiter checkRate method
   // checkRate(entry: string, delta: number, window: [1, 10, 60], limit: number, timeToLive: number): boolean;
   {
-    routes.set("/edge-rate-limiter/checkRate/called-as-constructor", () => {
-      error = assertThrows(() => {
-        new EdgeRateLimiter.prototype.checkRate("entry");
+    routes.set('/edge-rate-limiter/checkRate/called-as-constructor', () => {
+      assertThrows(() => {
+        new EdgeRateLimiter.prototype.checkRate('entry');
       }, Error);
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
     // Ensure we correctly coerce the parameter to a string as according to
     // https://tc39.es/ecma262/#sec-tostring
     routes.set(
-      "/edge-rate-limiter/checkRate/entry-parameter-calls-7.1.17-ToString",
+      '/edge-rate-limiter/checkRate/entry-parameter-calls-7.1.17-ToString',
       () => {
         let sentinel;
         const test = () => {
-          sentinel = Symbol("sentinel");
+          sentinel = Symbol('sentinel');
           const entry = {
             toString() {
               throw sentinel;
             },
           };
-          let rc = new RateCounter("rc");
-          let pb = new PenaltyBox("pb");
+          let rc = new RateCounter('rc');
+          let pb = new PenaltyBox('pb');
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate(entry, 1, 1, 1, 1);
         };
-        error = assertThrows(test);
-        if (error) {
-          return error;
-        }
+        assertThrows(test);
         try {
           test();
         } catch (thrownError) {
           console.log({ thrownError });
-          error = assert(thrownError, sentinel, "thrownError === sentinel");
-          if (error) {
-            return error;
-          }
+          assert(thrownError, sentinel, 'thrownError === sentinel');
         }
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
-            let pb = new PenaltyBox("pb");
+            let rc = new RateCounter('rc');
+            let pb = new PenaltyBox('pb');
             let erl = new EdgeRateLimiter(rc, pb);
             erl.checkRate(Symbol(), 1, 1, 1, 1);
           },
           Error,
           `can't convert symbol to string`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
     routes.set(
-      "/edge-rate-limiter/checkRate/entry-parameter-not-supplied",
+      '/edge-rate-limiter/checkRate/entry-parameter-not-supplied',
       () => {
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
-            let pb = new PenaltyBox("pb");
+            let rc = new RateCounter('rc');
+            let pb = new PenaltyBox('pb');
             let erl = new EdgeRateLimiter(rc, pb);
             erl.checkRate();
           },
           Error,
           `checkRate: At least 5 arguments required, but only 0 passed`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
-    routes.set("/edge-rate-limiter/checkRate/delta-parameter-negative", () => {
-      error = assertThrows(
+    routes.set('/edge-rate-limiter/checkRate/delta-parameter-negative', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          let pb = new PenaltyBox("pb");
+          let rc = new RateCounter('rc');
+          let pb = new PenaltyBox('pb');
           let erl = new EdgeRateLimiter(rc, pb);
-          erl.checkRate("entry", -1, 1, 1, 1);
+          erl.checkRate('entry', -1, 1, 1, 1);
         },
         Error,
         `checkRate: delta parameter is an invalid value, only positive numbers can be used for delta values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/edge-rate-limiter/checkRate/delta-parameter-infinity", () => {
-      error = assertThrows(
+    routes.set('/edge-rate-limiter/checkRate/delta-parameter-infinity', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          let pb = new PenaltyBox("pb");
+          let rc = new RateCounter('rc');
+          let pb = new PenaltyBox('pb');
           let erl = new EdgeRateLimiter(rc, pb);
-          erl.checkRate("entry", Infinity, 1, 1, 1);
+          erl.checkRate('entry', Infinity, 1, 1, 1);
         },
         Error,
         `checkRate: delta parameter is an invalid value, only positive numbers can be used for delta values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/edge-rate-limiter/checkRate/delta-parameter-NaN", () => {
-      error = assertThrows(
+    routes.set('/edge-rate-limiter/checkRate/delta-parameter-NaN', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          let pb = new PenaltyBox("pb");
+          let rc = new RateCounter('rc');
+          let pb = new PenaltyBox('pb');
           let erl = new EdgeRateLimiter(rc, pb);
-          erl.checkRate("entry", NaN, 1, 1, 1);
+          erl.checkRate('entry', NaN, 1, 1, 1);
         },
         Error,
         `checkRate: delta parameter is an invalid value, only positive numbers can be used for delta values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/edge-rate-limiter/checkRate/window-parameter-negative", () => {
-      error = assertThrows(
+    routes.set('/edge-rate-limiter/checkRate/window-parameter-negative', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          let pb = new PenaltyBox("pb");
+          let rc = new RateCounter('rc');
+          let pb = new PenaltyBox('pb');
           let erl = new EdgeRateLimiter(rc, pb);
-          erl.checkRate("entry", 1, -1, 1, 1);
+          erl.checkRate('entry', 1, -1, 1, 1);
         },
         Error,
         `checkRate: window parameter must be either: 1, 10, or 60`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/edge-rate-limiter/checkRate/window-parameter-infinity", () => {
-      error = assertThrows(
+    routes.set('/edge-rate-limiter/checkRate/window-parameter-infinity', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          let pb = new PenaltyBox("pb");
+          let rc = new RateCounter('rc');
+          let pb = new PenaltyBox('pb');
           let erl = new EdgeRateLimiter(rc, pb);
-          erl.checkRate("entry", 1, Infinity, 1, 1);
+          erl.checkRate('entry', 1, Infinity, 1, 1);
         },
         Error,
         `checkRate: window parameter must be either: 1, 10, or 60`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/edge-rate-limiter/checkRate/window-parameter-NaN", () => {
-      error = assertThrows(
+    routes.set('/edge-rate-limiter/checkRate/window-parameter-NaN', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          let pb = new PenaltyBox("pb");
+          let rc = new RateCounter('rc');
+          let pb = new PenaltyBox('pb');
           let erl = new EdgeRateLimiter(rc, pb);
-          erl.checkRate("entry", 1, NaN, 1, 1);
+          erl.checkRate('entry', 1, NaN, 1, 1);
         },
         Error,
         `checkRate: window parameter must be either: 1, 10, or 60`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/edge-rate-limiter/checkRate/limit-parameter-negative", () => {
-      error = assertThrows(
+    routes.set('/edge-rate-limiter/checkRate/limit-parameter-negative', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          let pb = new PenaltyBox("pb");
+          let rc = new RateCounter('rc');
+          let pb = new PenaltyBox('pb');
           let erl = new EdgeRateLimiter(rc, pb);
-          erl.checkRate("entry", 1, 1, -1, 1);
+          erl.checkRate('entry', 1, 1, -1, 1);
         },
         Error,
         `checkRate: limit parameter is an invalid value, only positive numbers can be used for limit values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/edge-rate-limiter/checkRate/limit-parameter-infinity", () => {
-      error = assertThrows(
+    routes.set('/edge-rate-limiter/checkRate/limit-parameter-infinity', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          let pb = new PenaltyBox("pb");
+          let rc = new RateCounter('rc');
+          let pb = new PenaltyBox('pb');
           let erl = new EdgeRateLimiter(rc, pb);
-          erl.checkRate("entry", 1, 1, Infinity, 1);
+          erl.checkRate('entry', 1, 1, Infinity, 1);
         },
         Error,
         `checkRate: limit parameter is an invalid value, only positive numbers can be used for limit values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/edge-rate-limiter/checkRate/limit-parameter-NaN", () => {
-      error = assertThrows(
+    routes.set('/edge-rate-limiter/checkRate/limit-parameter-NaN', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          let pb = new PenaltyBox("pb");
+          let rc = new RateCounter('rc');
+          let pb = new PenaltyBox('pb');
           let erl = new EdgeRateLimiter(rc, pb);
-          erl.checkRate("entry", 1, 1, NaN, 1);
+          erl.checkRate('entry', 1, 1, NaN, 1);
         },
         Error,
         `checkRate: limit parameter is an invalid value, only positive numbers can be used for limit values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
     routes.set(
-      "/edge-rate-limiter/checkRate/timeToLive-parameter-negative",
+      '/edge-rate-limiter/checkRate/timeToLive-parameter-negative',
       () => {
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
-            let pb = new PenaltyBox("pb");
+            let rc = new RateCounter('rc');
+            let pb = new PenaltyBox('pb');
             let erl = new EdgeRateLimiter(rc, pb);
-            erl.checkRate("entry", 1, 1, 1, -1);
+            erl.checkRate('entry', 1, 1, 1, -1);
           },
           Error,
           `checkRate: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
     routes.set(
-      "/edge-rate-limiter/checkRate/timeToLive-parameter-infinity",
+      '/edge-rate-limiter/checkRate/timeToLive-parameter-infinity',
       () => {
-        error = assertThrows(
+        assertThrows(
           () => {
-            let rc = new RateCounter("rc");
-            let pb = new PenaltyBox("pb");
+            let rc = new RateCounter('rc');
+            let pb = new PenaltyBox('pb');
             let erl = new EdgeRateLimiter(rc, pb);
-            erl.checkRate("entry", 1, 1, 1, Infinity);
+            erl.checkRate('entry', 1, 1, 1, Infinity);
           },
           Error,
           `checkRate: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`,
         );
-        if (error) {
-          return error;
-        }
-        return pass("ok");
       },
     );
-    routes.set("/edge-rate-limiter/checkRate/timeToLive-parameter-NaN", () => {
-      error = assertThrows(
+    routes.set('/edge-rate-limiter/checkRate/timeToLive-parameter-NaN', () => {
+      assertThrows(
         () => {
-          let rc = new RateCounter("rc");
-          let pb = new PenaltyBox("pb");
+          let rc = new RateCounter('rc');
+          let pb = new PenaltyBox('pb');
           let erl = new EdgeRateLimiter(rc, pb);
-          erl.checkRate("entry", 1, 1, 1, NaN);
+          erl.checkRate('entry', 1, 1, 1, NaN);
         },
         Error,
         `checkRate: timeToLive parameter is an invalid value, only numbers from 1 to 60 can be used for timeToLive values.`,
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
-    routes.set("/edge-rate-limiter/checkRate/returns-boolean", () => {
-      let rc = new RateCounter("rc");
-      let pb = new PenaltyBox("pb");
+    routes.set('/edge-rate-limiter/checkRate/returns-boolean', () => {
+      let rc = new RateCounter('rc');
+      let pb = new PenaltyBox('pb');
       let erl = new EdgeRateLimiter(rc, pb);
-      error = assert(
-        erl.checkRate("woof", 1, 10, 100, 5),
+      assert(
+        erl.checkRate('woof', 1, 10, 100, 5),
         false,
         "erl.checkRate('meow', 1, 10, 100, 5)",
       );
-      if (error) {
-        return error;
-      }
-      return pass("ok");
     });
   }
 }

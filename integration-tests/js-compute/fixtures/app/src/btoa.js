@@ -1,1470 +1,384 @@
-import { pass, assert, assertThrows } from "./assertions.js";
-import { routes } from "./routes";
+import { assert, assertThrows } from './assertions.js';
+import { routes } from './routes';
 
-routes.set("/btoa", () => {
-  let error;
+routes.set('/btoa', () => {
   // btoa
   {
-    var everything = "";
+    var everything = '';
     for (var i = 0; i < 256; i++) {
       everything += String.fromCharCode(i);
     }
-    error = assert(
+    assert(
       btoa(everything),
-      "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
+      'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==',
     );
-    if (error) {
-      return error;
-    }
 
-    error = assert(btoa(42), btoa("42"));
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(null), btoa("null"));
-    if (error) {
-      return error;
-    }
-    error = assert(btoa({ x: 1 }), btoa("[object Object]"));
-    if (error) {
-      return error;
-    }
+    assert(btoa(42), btoa('42'));
+    assert(btoa(null), btoa('null'));
+    assert(btoa({ x: 1 }), btoa('[object Object]'));
 
-    error = assertThrows(() => btoa(), TypeError);
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => btoa("🐱"));
-    if (error) {
-      return error;
-    }
+    assertThrows(() => btoa(), TypeError);
+    assertThrows(() => btoa('🐱'));
 
-    error = assert(btoa(""), "", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ab"), "YWI=", `btoa("ab")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("abc"), "YWJj", `btoa("abc")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("abcd"), "YWJjZA==", `btoa("abcd")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("abcde"), "YWJjZGU=", `btoa("abcde")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ÿÿÀ"), "///A", `btoa("ÿÿÀ")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\0a"), "AGE=", `btoa("\\0a")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("a\0b"), "YQBi", `btoa("a\\0b")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(undefined), "dW5kZWZpbmVk", `btoa(undefined)`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(null), "bnVsbA==", `btoa(null)`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(7), "Nw==", `btoa(7)`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(12), "MTI=", `btoa(12)`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(1.5), "MS41", `btoa(1.5)`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(true), "dHJ1ZQ==", `btoa(true)`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(false), "ZmFsc2U=", `btoa(false)`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(NaN), "TmFO", `btoa(NaN)`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(Infinity), "SW5maW5pdHk=", `btoa(Infinity)`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(-Infinity), "LUluZmluaXR5", `btoa(-Infinity)`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(0), "MA==", `btoa(0)`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(-0), "MA==", `btoa(-0)`);
-    if (error) {
-      return error;
-    }
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\0"), "AA==", `btoa("\\0")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x01"), "AQ==", `btoa("\\x01")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x02"), "Ag==", `btoa("\\x02")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x03"), "Aw==", `btoa("\\x03")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x04"), "BA==", `btoa("\\x04")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x05"), "BQ==", `btoa("\\x05")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x06"), "Bg==", `btoa("\\x06")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x07"), "Bw==", `btoa("\\x07")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\b"), "CA==", `btoa("\\b")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\t"), "CQ==", `btoa("\\t")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\n"), "Cg==", `btoa("\\n")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\v"), "Cw==", `btoa("\\v")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\f"), "DA==", `btoa("\\f")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\r"), "DQ==", `btoa("\\r")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x0e"), "Dg==", `btoa("\\x0e")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x0f"), "Dw==", `btoa("\\x0f")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x10"), "EA==", `btoa("\\x10")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x11"), "EQ==", `btoa("\\x11")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x12"), "Eg==", `btoa("\\x12")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x13"), "Ew==", `btoa("\\x13")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x14"), "FA==", `btoa("\\x14")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x15"), "FQ==", `btoa("\\x15")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x16"), "Fg==", `btoa("\\x16")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x17"), "Fw==", `btoa("\\x17")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x18"), "GA==", `btoa("\\x18")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x19"), "GQ==", `btoa("\\x19")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x1a"), "Gg==", `btoa("\\x1a")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x1b"), "Gw==", `btoa("\\x1b")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x1c"), "HA==", `btoa("\\x1c")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x1d"), "HQ==", `btoa("\\x1d")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x1e"), "Hg==", `btoa("\\x1e")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\x1f"), "Hw==", `btoa("\\x1f")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(" "), "IA==", `btoa(" ")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("!"), "IQ==", `btoa("!")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("#"), "Iw==", `btoa("#")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("$"), "JA==", `btoa("$")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("%"), "JQ==", `btoa("%")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("&"), "Jg==", `btoa("&")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("'"), "Jw==", `btoa("'")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("("), "KA==", `btoa("(")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(")"), "KQ==", `btoa(")")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("*"), "Kg==", `btoa("*")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("+"), "Kw==", `btoa("+")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(","), "LA==", `btoa(",")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("-"), "LQ==", `btoa("-")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("."), "Lg==", `btoa(".")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("/"), "Lw==", `btoa("/")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("0"), "MA==", `btoa("0")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("1"), "MQ==", `btoa("1")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("2"), "Mg==", `btoa("2")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("3"), "Mw==", `btoa("3")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("4"), "NA==", `btoa("4")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("5"), "NQ==", `btoa("5")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("6"), "Ng==", `btoa("6")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("7"), "Nw==", `btoa("7")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("8"), "OA==", `btoa("8")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("9"), "OQ==", `btoa("9")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(":"), "Og==", `btoa(":")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(";"), "Ow==", `btoa(";")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("<"), "PA==", `btoa("<")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("="), "PQ==", `btoa("=")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(">"), "Pg==", `btoa(">")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("?"), "Pw==", `btoa("?")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("@"), "QA==", `btoa("@")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("A"), "QQ==", `btoa("A")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("B"), "Qg==", `btoa("B")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("C"), "Qw==", `btoa("C")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("D"), "RA==", `btoa("D")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("E"), "RQ==", `btoa("E")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("F"), "Rg==", `btoa("F")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("G"), "Rw==", `btoa("G")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("H"), "SA==", `btoa("H")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("I"), "SQ==", `btoa("I")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("J"), "Sg==", `btoa("J")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("K"), "Sw==", `btoa("K")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("L"), "TA==", `btoa("L")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("M"), "TQ==", `btoa("M")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("N"), "Tg==", `btoa("N")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("O"), "Tw==", `btoa("O")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("P"), "UA==", `btoa("P")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Q"), "UQ==", `btoa("Q")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("R"), "Ug==", `btoa("R")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("S"), "Uw==", `btoa("S")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("T"), "VA==", `btoa("T")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("U"), "VQ==", `btoa("U")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("V"), "Vg==", `btoa("V")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("W"), "Vw==", `btoa("W")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("X"), "WA==", `btoa("X")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Y"), "WQ==", `btoa("Y")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Z"), "Wg==", `btoa("Z")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("["), "Ww==", `btoa("[")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("\\"), "XA==", `btoa("\\\\")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("]"), "XQ==", `btoa("]")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("^"), "Xg==", `btoa("^")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("_"), "Xw==", `btoa("_")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("a"), "YQ==", `btoa("a")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("b"), "Yg==", `btoa("b")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("c"), "Yw==", `btoa("c")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("d"), "ZA==", `btoa("d")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("e"), "ZQ==", `btoa("e")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("f"), "Zg==", `btoa("f")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("g"), "Zw==", `btoa("g")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("h"), "aA==", `btoa("h")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("i"), "aQ==", `btoa("i")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("j"), "ag==", `btoa("j")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("k"), "aw==", `btoa("k")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("l"), "bA==", `btoa("l")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("m"), "bQ==", `btoa("m")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("n"), "bg==", `btoa("n")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("o"), "bw==", `btoa("o")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("p"), "cA==", `btoa("p")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("q"), "cQ==", `btoa("q")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("r"), "cg==", `btoa("r")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("s"), "cw==", `btoa("s")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("t"), "dA==", `btoa("t")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("u"), "dQ==", `btoa("u")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("v"), "dg==", `btoa("v")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("w"), "dw==", `btoa("w")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("x"), "eA==", `btoa("x")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("y"), "eQ==", `btoa("y")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("z"), "eg==", `btoa("z")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("{"), "ew==", `btoa("{")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("|"), "fA==", `btoa("|")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("}"), "fQ==", `btoa("}")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("~"), "fg==", `btoa("~")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "fw==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "gA==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "gQ==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "gg==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "gw==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "hA==", `btoa("")`);
-    if (error) {
-      return error;
-    }
+    assert(btoa(''), '', `btoa("")`);
+    assert(btoa('ab'), 'YWI=', `btoa("ab")`);
+    assert(btoa('abc'), 'YWJj', `btoa("abc")`);
+    assert(btoa('abcd'), 'YWJjZA==', `btoa("abcd")`);
+    assert(btoa('abcde'), 'YWJjZGU=', `btoa("abcde")`);
+    assert(btoa('ÿÿÀ'), '///A', `btoa("ÿÿÀ")`);
+    assert(btoa('\0a'), 'AGE=', `btoa("\\0a")`);
+    assert(btoa('a\0b'), 'YQBi', `btoa("a\\0b")`);
+    assert(btoa(undefined), 'dW5kZWZpbmVk', `btoa(undefined)`);
+    assert(btoa(null), 'bnVsbA==', `btoa(null)`);
+    assert(btoa(7), 'Nw==', `btoa(7)`);
+    assert(btoa(12), 'MTI=', `btoa(12)`);
+    assert(btoa(1.5), 'MS41', `btoa(1.5)`);
+    assert(btoa(true), 'dHJ1ZQ==', `btoa(true)`);
+    assert(btoa(false), 'ZmFsc2U=', `btoa(false)`);
+    assert(btoa(NaN), 'TmFO', `btoa(NaN)`);
+    assert(btoa(Infinity), 'SW5maW5pdHk=', `btoa(Infinity)`);
+    assert(btoa(-Infinity), 'LUluZmluaXR5', `btoa(-Infinity)`);
+    assert(btoa(0), 'MA==', `btoa(0)`);
+    assert(btoa(-0), 'MA==', `btoa(-0)`);
+    assert(btoa('\0'), 'AA==', `btoa("\\0")`);
+    assert(btoa('\x01'), 'AQ==', `btoa("\\x01")`);
+    assert(btoa('\x02'), 'Ag==', `btoa("\\x02")`);
+    assert(btoa('\x03'), 'Aw==', `btoa("\\x03")`);
+    assert(btoa('\x04'), 'BA==', `btoa("\\x04")`);
+    assert(btoa('\x05'), 'BQ==', `btoa("\\x05")`);
+    assert(btoa('\x06'), 'Bg==', `btoa("\\x06")`);
+    assert(btoa('\x07'), 'Bw==', `btoa("\\x07")`);
+    assert(btoa('\b'), 'CA==', `btoa("\\b")`);
+    assert(btoa('\t'), 'CQ==', `btoa("\\t")`);
+    assert(btoa('\n'), 'Cg==', `btoa("\\n")`);
+    assert(btoa('\v'), 'Cw==', `btoa("\\v")`);
+    assert(btoa('\f'), 'DA==', `btoa("\\f")`);
+    assert(btoa('\r'), 'DQ==', `btoa("\\r")`);
+    assert(btoa('\x0e'), 'Dg==', `btoa("\\x0e")`);
+    assert(btoa('\x0f'), 'Dw==', `btoa("\\x0f")`);
+    assert(btoa('\x10'), 'EA==', `btoa("\\x10")`);
+    assert(btoa('\x11'), 'EQ==', `btoa("\\x11")`);
+    assert(btoa('\x12'), 'Eg==', `btoa("\\x12")`);
+    assert(btoa('\x13'), 'Ew==', `btoa("\\x13")`);
+    assert(btoa('\x14'), 'FA==', `btoa("\\x14")`);
+    assert(btoa('\x15'), 'FQ==', `btoa("\\x15")`);
+    assert(btoa('\x16'), 'Fg==', `btoa("\\x16")`);
+    assert(btoa('\x17'), 'Fw==', `btoa("\\x17")`);
+    assert(btoa('\x18'), 'GA==', `btoa("\\x18")`);
+    assert(btoa('\x19'), 'GQ==', `btoa("\\x19")`);
+    assert(btoa('\x1a'), 'Gg==', `btoa("\\x1a")`);
+    assert(btoa('\x1b'), 'Gw==', `btoa("\\x1b")`);
+    assert(btoa('\x1c'), 'HA==', `btoa("\\x1c")`);
+    assert(btoa('\x1d'), 'HQ==', `btoa("\\x1d")`);
+    assert(btoa('\x1e'), 'Hg==', `btoa("\\x1e")`);
+    assert(btoa('\x1f'), 'Hw==', `btoa("\\x1f")`);
+    assert(btoa(' '), 'IA==', `btoa(" ")`);
+    assert(btoa('!'), 'IQ==', `btoa("!")`);
+    assert(btoa('#'), 'Iw==', `btoa("#")`);
+    assert(btoa('$'), 'JA==', `btoa("$")`);
+    assert(btoa('%'), 'JQ==', `btoa("%")`);
+    assert(btoa('&'), 'Jg==', `btoa("&")`);
+    assert(btoa("'"), 'Jw==', `btoa("'")`);
+    assert(btoa('('), 'KA==', `btoa("(")`);
+    assert(btoa(')'), 'KQ==', `btoa(")")`);
+    assert(btoa('*'), 'Kg==', `btoa("*")`);
+    assert(btoa('+'), 'Kw==', `btoa("+")`);
+    assert(btoa(','), 'LA==', `btoa(",")`);
+    assert(btoa('-'), 'LQ==', `btoa("-")`);
+    assert(btoa('.'), 'Lg==', `btoa(".")`);
+    assert(btoa('/'), 'Lw==', `btoa("/")`);
+    assert(btoa('0'), 'MA==', `btoa("0")`);
+    assert(btoa('1'), 'MQ==', `btoa("1")`);
+    assert(btoa('2'), 'Mg==', `btoa("2")`);
+    assert(btoa('3'), 'Mw==', `btoa("3")`);
+    assert(btoa('4'), 'NA==', `btoa("4")`);
+    assert(btoa('5'), 'NQ==', `btoa("5")`);
+    assert(btoa('6'), 'Ng==', `btoa("6")`);
+    assert(btoa('7'), 'Nw==', `btoa("7")`);
+    assert(btoa('8'), 'OA==', `btoa("8")`);
+    assert(btoa('9'), 'OQ==', `btoa("9")`);
+    assert(btoa(':'), 'Og==', `btoa(":")`);
+    assert(btoa(';'), 'Ow==', `btoa(";")`);
+    assert(btoa('<'), 'PA==', `btoa("<")`);
+    assert(btoa('='), 'PQ==', `btoa("=")`);
+    assert(btoa('>'), 'Pg==', `btoa(">")`);
+    assert(btoa('?'), 'Pw==', `btoa("?")`);
+    assert(btoa('@'), 'QA==', `btoa("@")`);
+    assert(btoa('A'), 'QQ==', `btoa("A")`);
+    assert(btoa('B'), 'Qg==', `btoa("B")`);
+    assert(btoa('C'), 'Qw==', `btoa("C")`);
+    assert(btoa('D'), 'RA==', `btoa("D")`);
+    assert(btoa('E'), 'RQ==', `btoa("E")`);
+    assert(btoa('F'), 'Rg==', `btoa("F")`);
+    assert(btoa('G'), 'Rw==', `btoa("G")`);
+    assert(btoa('H'), 'SA==', `btoa("H")`);
+    assert(btoa('I'), 'SQ==', `btoa("I")`);
+    assert(btoa('J'), 'Sg==', `btoa("J")`);
+    assert(btoa('K'), 'Sw==', `btoa("K")`);
+    assert(btoa('L'), 'TA==', `btoa("L")`);
+    assert(btoa('M'), 'TQ==', `btoa("M")`);
+    assert(btoa('N'), 'Tg==', `btoa("N")`);
+    assert(btoa('O'), 'Tw==', `btoa("O")`);
+    assert(btoa('P'), 'UA==', `btoa("P")`);
+    assert(btoa('Q'), 'UQ==', `btoa("Q")`);
+    assert(btoa('R'), 'Ug==', `btoa("R")`);
+    assert(btoa('S'), 'Uw==', `btoa("S")`);
+    assert(btoa('T'), 'VA==', `btoa("T")`);
+    assert(btoa('U'), 'VQ==', `btoa("U")`);
+    assert(btoa('V'), 'Vg==', `btoa("V")`);
+    assert(btoa('W'), 'Vw==', `btoa("W")`);
+    assert(btoa('X'), 'WA==', `btoa("X")`);
+    assert(btoa('Y'), 'WQ==', `btoa("Y")`);
+    assert(btoa('Z'), 'Wg==', `btoa("Z")`);
+    assert(btoa('['), 'Ww==', `btoa("[")`);
+    assert(btoa('\\'), 'XA==', `btoa("\\\\")`);
+    assert(btoa(']'), 'XQ==', `btoa("]")`);
+    assert(btoa('^'), 'Xg==', `btoa("^")`);
+    assert(btoa('_'), 'Xw==', `btoa("_")`);
+    assert(btoa('a'), 'YQ==', `btoa("a")`);
+    assert(btoa('b'), 'Yg==', `btoa("b")`);
+    assert(btoa('c'), 'Yw==', `btoa("c")`);
+    assert(btoa('d'), 'ZA==', `btoa("d")`);
+    assert(btoa('e'), 'ZQ==', `btoa("e")`);
+    assert(btoa('f'), 'Zg==', `btoa("f")`);
+    assert(btoa('g'), 'Zw==', `btoa("g")`);
+    assert(btoa('h'), 'aA==', `btoa("h")`);
+    assert(btoa('i'), 'aQ==', `btoa("i")`);
+    assert(btoa('j'), 'ag==', `btoa("j")`);
+    assert(btoa('k'), 'aw==', `btoa("k")`);
+    assert(btoa('l'), 'bA==', `btoa("l")`);
+    assert(btoa('m'), 'bQ==', `btoa("m")`);
+    assert(btoa('n'), 'bg==', `btoa("n")`);
+    assert(btoa('o'), 'bw==', `btoa("o")`);
+    assert(btoa('p'), 'cA==', `btoa("p")`);
+    assert(btoa('q'), 'cQ==', `btoa("q")`);
+    assert(btoa('r'), 'cg==', `btoa("r")`);
+    assert(btoa('s'), 'cw==', `btoa("s")`);
+    assert(btoa('t'), 'dA==', `btoa("t")`);
+    assert(btoa('u'), 'dQ==', `btoa("u")`);
+    assert(btoa('v'), 'dg==', `btoa("v")`);
+    assert(btoa('w'), 'dw==', `btoa("w")`);
+    assert(btoa('x'), 'eA==', `btoa("x")`);
+    assert(btoa('y'), 'eQ==', `btoa("y")`);
+    assert(btoa('z'), 'eg==', `btoa("z")`);
+    assert(btoa('{'), 'ew==', `btoa("{")`);
+    assert(btoa('|'), 'fA==', `btoa("|")`);
+    assert(btoa('}'), 'fQ==', `btoa("}")`);
+    assert(btoa('~'), 'fg==', `btoa("~")`);
+    assert(btoa(''), 'fw==', `btoa("")`);
+    assert(btoa(''), 'gA==', `btoa("")`);
+    assert(btoa(''), 'gQ==', `btoa("")`);
+    assert(btoa(''), 'gg==', `btoa("")`);
+    assert(btoa(''), 'gw==', `btoa("")`);
+    assert(btoa(''), 'hA==', `btoa("")`);
     // eslint-disable-next-line no-irregular-whitespace
-    error = assert(btoa(""), "hQ==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "hg==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "hw==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "iA==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "iQ==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "ig==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "iw==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "jA==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "jQ==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "jg==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "jw==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "kA==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "kQ==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "kg==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "kw==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "lA==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "lQ==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "lg==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "lw==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "mA==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "mQ==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "mg==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "mw==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "nA==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "nQ==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "ng==", `btoa("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa(""), "nw==", `btoa("")`);
-    if (error) {
-      return error;
-    }
+    assert(btoa(''), 'hQ==', `btoa("")`);
+    assert(btoa(''), 'hg==', `btoa("")`);
+    assert(btoa(''), 'hw==', `btoa("")`);
+    assert(btoa(''), 'iA==', `btoa("")`);
+    assert(btoa(''), 'iQ==', `btoa("")`);
+    assert(btoa(''), 'ig==', `btoa("")`);
+    assert(btoa(''), 'iw==', `btoa("")`);
+    assert(btoa(''), 'jA==', `btoa("")`);
+    assert(btoa(''), 'jQ==', `btoa("")`);
+    assert(btoa(''), 'jg==', `btoa("")`);
+    assert(btoa(''), 'jw==', `btoa("")`);
+    assert(btoa(''), 'kA==', `btoa("")`);
+    assert(btoa(''), 'kQ==', `btoa("")`);
+    assert(btoa(''), 'kg==', `btoa("")`);
+    assert(btoa(''), 'kw==', `btoa("")`);
+    assert(btoa(''), 'lA==', `btoa("")`);
+    assert(btoa(''), 'lQ==', `btoa("")`);
+    assert(btoa(''), 'lg==', `btoa("")`);
+    assert(btoa(''), 'lw==', `btoa("")`);
+    assert(btoa(''), 'mA==', `btoa("")`);
+    assert(btoa(''), 'mQ==', `btoa("")`);
+    assert(btoa(''), 'mg==', `btoa("")`);
+    assert(btoa(''), 'mw==', `btoa("")`);
+    assert(btoa(''), 'nA==', `btoa("")`);
+    assert(btoa(''), 'nQ==', `btoa("")`);
+    assert(btoa(''), 'ng==', `btoa("")`);
+    assert(btoa(''), 'nw==', `btoa("")`);
     // eslint-disable-next-line no-irregular-whitespace
-    error = assert(btoa(" "), "oA==", `btoa(" ")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¡"), "oQ==", `btoa("¡")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¢"), "og==", `btoa("¢")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("£"), "ow==", `btoa("£")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¤"), "pA==", `btoa("¤")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¥"), "pQ==", `btoa("¥")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¦"), "pg==", `btoa("¦")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("§"), "pw==", `btoa("§")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¨"), "qA==", `btoa("¨")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("©"), "qQ==", `btoa("©")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ª"), "qg==", `btoa("ª")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("«"), "qw==", `btoa("«")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¬"), "rA==", `btoa("¬")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("­"), "rQ==", `btoa("­")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("®"), "rg==", `btoa("®")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¯"), "rw==", `btoa("¯")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("°"), "sA==", `btoa("°")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("±"), "sQ==", `btoa("±")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("²"), "sg==", `btoa("²")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("³"), "sw==", `btoa("³")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("´"), "tA==", `btoa("´")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("µ"), "tQ==", `btoa("µ")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¶"), "tg==", `btoa("¶")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("·"), "tw==", `btoa("·")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¸"), "uA==", `btoa("¸")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¹"), "uQ==", `btoa("¹")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("º"), "ug==", `btoa("º")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("»"), "uw==", `btoa("»")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¼"), "vA==", `btoa("¼")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("½"), "vQ==", `btoa("½")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¾"), "vg==", `btoa("¾")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("¿"), "vw==", `btoa("¿")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("À"), "wA==", `btoa("À")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Á"), "wQ==", `btoa("Á")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Â"), "wg==", `btoa("Â")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ã"), "ww==", `btoa("Ã")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ä"), "xA==", `btoa("Ä")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Å"), "xQ==", `btoa("Å")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Æ"), "xg==", `btoa("Æ")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ç"), "xw==", `btoa("Ç")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("È"), "yA==", `btoa("È")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("É"), "yQ==", `btoa("É")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ê"), "yg==", `btoa("Ê")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ë"), "yw==", `btoa("Ë")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ì"), "zA==", `btoa("Ì")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Í"), "zQ==", `btoa("Í")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Î"), "zg==", `btoa("Î")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ï"), "zw==", `btoa("Ï")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ð"), "0A==", `btoa("Ð")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ñ"), "0Q==", `btoa("Ñ")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ò"), "0g==", `btoa("Ò")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ó"), "0w==", `btoa("Ó")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ô"), "1A==", `btoa("Ô")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Õ"), "1Q==", `btoa("Õ")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ö"), "1g==", `btoa("Ö")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("×"), "1w==", `btoa("×")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ø"), "2A==", `btoa("Ø")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ù"), "2Q==", `btoa("Ù")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ú"), "2g==", `btoa("Ú")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Û"), "2w==", `btoa("Û")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ü"), "3A==", `btoa("Ü")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Ý"), "3Q==", `btoa("Ý")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("Þ"), "3g==", `btoa("Þ")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ß"), "3w==", `btoa("ß")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("à"), "4A==", `btoa("à")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("á"), "4Q==", `btoa("á")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("â"), "4g==", `btoa("â")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ã"), "4w==", `btoa("ã")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ä"), "5A==", `btoa("ä")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("å"), "5Q==", `btoa("å")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("æ"), "5g==", `btoa("æ")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ç"), "5w==", `btoa("ç")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("è"), "6A==", `btoa("è")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("é"), "6Q==", `btoa("é")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ê"), "6g==", `btoa("ê")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ë"), "6w==", `btoa("ë")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ì"), "7A==", `btoa("ì")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("í"), "7Q==", `btoa("í")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("î"), "7g==", `btoa("î")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ï"), "7w==", `btoa("ï")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ð"), "8A==", `btoa("ð")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ñ"), "8Q==", `btoa("ñ")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ò"), "8g==", `btoa("ò")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ó"), "8w==", `btoa("ó")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ô"), "9A==", `btoa("ô")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("õ"), "9Q==", `btoa("õ")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ö"), "9g==", `btoa("ö")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("÷"), "9w==", `btoa("÷")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ø"), "+A==", `btoa("ø")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ù"), "+Q==", `btoa("ù")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ú"), "+g==", `btoa("ú")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("û"), "+w==", `btoa("û")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ü"), "/A==", `btoa("ü")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ý"), "/Q==", `btoa("ý")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("þ"), "/g==", `btoa("þ")`);
-    if (error) {
-      return error;
-    }
-    error = assert(btoa("ÿ"), "/w==", `btoa("ÿ")`);
-    if (error) {
-      return error;
-    }
+    assert(btoa(' '), 'oA==', `btoa(" ")`);
+    assert(btoa('¡'), 'oQ==', `btoa("¡")`);
+    assert(btoa('¢'), 'og==', `btoa("¢")`);
+    assert(btoa('£'), 'ow==', `btoa("£")`);
+    assert(btoa('¤'), 'pA==', `btoa("¤")`);
+    assert(btoa('¥'), 'pQ==', `btoa("¥")`);
+    assert(btoa('¦'), 'pg==', `btoa("¦")`);
+    assert(btoa('§'), 'pw==', `btoa("§")`);
+    assert(btoa('¨'), 'qA==', `btoa("¨")`);
+    assert(btoa('©'), 'qQ==', `btoa("©")`);
+    assert(btoa('ª'), 'qg==', `btoa("ª")`);
+    assert(btoa('«'), 'qw==', `btoa("«")`);
+    assert(btoa('¬'), 'rA==', `btoa("¬")`);
+    assert(btoa('­'), 'rQ==', `btoa("­")`);
+    assert(btoa('®'), 'rg==', `btoa("®")`);
+    assert(btoa('¯'), 'rw==', `btoa("¯")`);
+    assert(btoa('°'), 'sA==', `btoa("°")`);
+    assert(btoa('±'), 'sQ==', `btoa("±")`);
+    assert(btoa('²'), 'sg==', `btoa("²")`);
+    assert(btoa('³'), 'sw==', `btoa("³")`);
+    assert(btoa('´'), 'tA==', `btoa("´")`);
+    assert(btoa('µ'), 'tQ==', `btoa("µ")`);
+    assert(btoa('¶'), 'tg==', `btoa("¶")`);
+    assert(btoa('·'), 'tw==', `btoa("·")`);
+    assert(btoa('¸'), 'uA==', `btoa("¸")`);
+    assert(btoa('¹'), 'uQ==', `btoa("¹")`);
+    assert(btoa('º'), 'ug==', `btoa("º")`);
+    assert(btoa('»'), 'uw==', `btoa("»")`);
+    assert(btoa('¼'), 'vA==', `btoa("¼")`);
+    assert(btoa('½'), 'vQ==', `btoa("½")`);
+    assert(btoa('¾'), 'vg==', `btoa("¾")`);
+    assert(btoa('¿'), 'vw==', `btoa("¿")`);
+    assert(btoa('À'), 'wA==', `btoa("À")`);
+    assert(btoa('Á'), 'wQ==', `btoa("Á")`);
+    assert(btoa('Â'), 'wg==', `btoa("Â")`);
+    assert(btoa('Ã'), 'ww==', `btoa("Ã")`);
+    assert(btoa('Ä'), 'xA==', `btoa("Ä")`);
+    assert(btoa('Å'), 'xQ==', `btoa("Å")`);
+    assert(btoa('Æ'), 'xg==', `btoa("Æ")`);
+    assert(btoa('Ç'), 'xw==', `btoa("Ç")`);
+    assert(btoa('È'), 'yA==', `btoa("È")`);
+    assert(btoa('É'), 'yQ==', `btoa("É")`);
+    assert(btoa('Ê'), 'yg==', `btoa("Ê")`);
+    assert(btoa('Ë'), 'yw==', `btoa("Ë")`);
+    assert(btoa('Ì'), 'zA==', `btoa("Ì")`);
+    assert(btoa('Í'), 'zQ==', `btoa("Í")`);
+    assert(btoa('Î'), 'zg==', `btoa("Î")`);
+    assert(btoa('Ï'), 'zw==', `btoa("Ï")`);
+    assert(btoa('Ð'), '0A==', `btoa("Ð")`);
+    assert(btoa('Ñ'), '0Q==', `btoa("Ñ")`);
+    assert(btoa('Ò'), '0g==', `btoa("Ò")`);
+    assert(btoa('Ó'), '0w==', `btoa("Ó")`);
+    assert(btoa('Ô'), '1A==', `btoa("Ô")`);
+    assert(btoa('Õ'), '1Q==', `btoa("Õ")`);
+    assert(btoa('Ö'), '1g==', `btoa("Ö")`);
+    assert(btoa('×'), '1w==', `btoa("×")`);
+    assert(btoa('Ø'), '2A==', `btoa("Ø")`);
+    assert(btoa('Ù'), '2Q==', `btoa("Ù")`);
+    assert(btoa('Ú'), '2g==', `btoa("Ú")`);
+    assert(btoa('Û'), '2w==', `btoa("Û")`);
+    assert(btoa('Ü'), '3A==', `btoa("Ü")`);
+    assert(btoa('Ý'), '3Q==', `btoa("Ý")`);
+    assert(btoa('Þ'), '3g==', `btoa("Þ")`);
+    assert(btoa('ß'), '3w==', `btoa("ß")`);
+    assert(btoa('à'), '4A==', `btoa("à")`);
+    assert(btoa('á'), '4Q==', `btoa("á")`);
+    assert(btoa('â'), '4g==', `btoa("â")`);
+    assert(btoa('ã'), '4w==', `btoa("ã")`);
+    assert(btoa('ä'), '5A==', `btoa("ä")`);
+    assert(btoa('å'), '5Q==', `btoa("å")`);
+    assert(btoa('æ'), '5g==', `btoa("æ")`);
+    assert(btoa('ç'), '5w==', `btoa("ç")`);
+    assert(btoa('è'), '6A==', `btoa("è")`);
+    assert(btoa('é'), '6Q==', `btoa("é")`);
+    assert(btoa('ê'), '6g==', `btoa("ê")`);
+    assert(btoa('ë'), '6w==', `btoa("ë")`);
+    assert(btoa('ì'), '7A==', `btoa("ì")`);
+    assert(btoa('í'), '7Q==', `btoa("í")`);
+    assert(btoa('î'), '7g==', `btoa("î")`);
+    assert(btoa('ï'), '7w==', `btoa("ï")`);
+    assert(btoa('ð'), '8A==', `btoa("ð")`);
+    assert(btoa('ñ'), '8Q==', `btoa("ñ")`);
+    assert(btoa('ò'), '8g==', `btoa("ò")`);
+    assert(btoa('ó'), '8w==', `btoa("ó")`);
+    assert(btoa('ô'), '9A==', `btoa("ô")`);
+    assert(btoa('õ'), '9Q==', `btoa("õ")`);
+    assert(btoa('ö'), '9g==', `btoa("ö")`);
+    assert(btoa('÷'), '9w==', `btoa("÷")`);
+    assert(btoa('ø'), '+A==', `btoa("ø")`);
+    assert(btoa('ù'), '+Q==', `btoa("ù")`);
+    assert(btoa('ú'), '+g==', `btoa("ú")`);
+    assert(btoa('û'), '+w==', `btoa("û")`);
+    assert(btoa('ü'), '/A==', `btoa("ü")`);
+    assert(btoa('ý'), '/Q==', `btoa("ý")`);
+    assert(btoa('þ'), '/g==', `btoa("þ")`);
+    assert(btoa('ÿ'), '/w==', `btoa("ÿ")`);
   }
 
   // atob
   {
-    error = assert(atob(""), "", `atob("")`);
-    if (error) {
-      return error;
-    }
-    error = assert(atob("abcd"), "i·\x1D");
-    if (error) {
-      return error;
-    }
-    error = assert(atob(" abcd"), "i·\x1D");
-    if (error) {
-      return error;
-    }
-    error = assert(atob("abcd "), "i·\x1D");
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob(" abcd==="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcd=== "));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcd ==="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("a"));
-    if (error) {
-      return error;
-    }
-    error = assert(atob("ab"), "i");
-    if (error) {
-      return error;
-    }
-    error = assert(atob("abc"), "i·");
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcde"));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("𐀀"));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("=="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("==="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("===="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("====="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("a="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("a=="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("a==="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("a===="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("a====="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("ab="));
-    if (error) {
-      return error;
-    }
-    error = assert(atob("ab=="), "i");
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("ab==="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("ab===="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("ab====="));
-    if (error) {
-      return error;
-    }
-    error = assert(atob("abc="), "i·");
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abc=="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abc==="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abc===="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abc====="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcd="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcd=="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcd==="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcd===="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcd====="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcde="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcde=="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcde==="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcde===="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcde====="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("=a"));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("=a="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("a=b"));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("a=b="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("ab=c"));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("ab=c="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abc=d"));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abc=d="));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("ab\u000Bcd"));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("ab\u3000cd"));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("ab\u3001cd"));
-    if (error) {
-      return error;
-    }
-    error = assert(atob("ab\tcd"), "i·\x1D");
-    if (error) {
-      return error;
-    }
-    error = assert(atob("ab\ncd"), "i·\x1D");
-    if (error) {
-      return error;
-    }
-    error = assert(atob("ab\fcd"), "i·\x1D");
-    if (error) {
-      return error;
-    }
-    error = assert(atob("ab\rcd"), "i·\x1D");
-    if (error) {
-      return error;
-    }
-    error = assert(atob("ab cd"), "i·\x1D");
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("ab\u00a0cd"));
-    if (error) {
-      return error;
-    }
-    error = assert(atob("ab\t\n\f\r cd"), "i·\x1D");
-    if (error) {
-      return error;
-    }
-    error = assert(atob(" \t\n\f\r ab\t\n\f\r cd\t\n\f\r "), "i·\x1D");
-    if (error) {
-      return error;
-    }
-    error = assert(atob("ab\t\n\f\r =\t\n\f\r =\t\n\f\r "), "i");
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("A"));
-    if (error) {
-      return error;
-    }
-    error = assert(atob("/A"), "ü");
-    if (error) {
-      return error;
-    }
-    error = assert(atob("//A"), "ÿð");
-    if (error) {
-      return error;
-    }
-    error = assert(atob("///A"), "ÿÿÀ");
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("////A"));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("/"));
-    if (error) {
-      return error;
-    }
-    error = assert(atob("A/"), "\x03");
-    if (error) {
-      return error;
-    }
-    error = assert(atob("AA/"), "\x00\x0F");
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("AAAA/"));
-    if (error) {
-      return error;
-    }
-    error = assert(atob("AAA/"), "\x00\x00?");
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("\u0000nonsense"));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("abcd\u0000nonsense"));
-    if (error) {
-      return error;
-    }
-    error = assert(atob("YQ"), "a");
-    if (error) {
-      return error;
-    }
-    error = assert(atob("YR"), "a");
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("~~"));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob(".."));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("--"));
-    if (error) {
-      return error;
-    }
-    error = assertThrows(() => atob("__"));
-    if (error) {
-      return error;
-    }
+    assert(atob(''), '', `atob("")`);
+    assert(atob('abcd'), 'i·\x1D');
+    assert(atob(' abcd'), 'i·\x1D');
+    assert(atob('abcd '), 'i·\x1D');
+    assertThrows(() => atob(' abcd==='));
+    assertThrows(() => atob('abcd=== '));
+    assertThrows(() => atob('abcd ==='));
+    assertThrows(() => atob('a'));
+    assert(atob('ab'), 'i');
+    assert(atob('abc'), 'i·');
+    assertThrows(() => atob('abcde'));
+    assertThrows(() => atob('𐀀'));
+    assertThrows(() => atob('='));
+    assertThrows(() => atob('=='));
+    assertThrows(() => atob('==='));
+    assertThrows(() => atob('===='));
+    assertThrows(() => atob('====='));
+    assertThrows(() => atob('a='));
+    assertThrows(() => atob('a=='));
+    assertThrows(() => atob('a==='));
+    assertThrows(() => atob('a===='));
+    assertThrows(() => atob('a====='));
+    assertThrows(() => atob('ab='));
+    assert(atob('ab=='), 'i');
+    assertThrows(() => atob('ab==='));
+    assertThrows(() => atob('ab===='));
+    assertThrows(() => atob('ab====='));
+    assert(atob('abc='), 'i·');
+    assertThrows(() => atob('abc=='));
+    assertThrows(() => atob('abc==='));
+    assertThrows(() => atob('abc===='));
+    assertThrows(() => atob('abc====='));
+    assertThrows(() => atob('abcd='));
+    assertThrows(() => atob('abcd=='));
+    assertThrows(() => atob('abcd==='));
+    assertThrows(() => atob('abcd===='));
+    assertThrows(() => atob('abcd====='));
+    assertThrows(() => atob('abcde='));
+    assertThrows(() => atob('abcde=='));
+    assertThrows(() => atob('abcde==='));
+    assertThrows(() => atob('abcde===='));
+    assertThrows(() => atob('abcde====='));
+    assertThrows(() => atob('=a'));
+    assertThrows(() => atob('=a='));
+    assertThrows(() => atob('a=b'));
+    assertThrows(() => atob('a=b='));
+    assertThrows(() => atob('ab=c'));
+    assertThrows(() => atob('ab=c='));
+    assertThrows(() => atob('abc=d'));
+    assertThrows(() => atob('abc=d='));
+    assertThrows(() => atob('ab\u000Bcd'));
+    assertThrows(() => atob('ab\u3000cd'));
+    assertThrows(() => atob('ab\u3001cd'));
+    assert(atob('ab\tcd'), 'i·\x1D');
+    assert(atob('ab\ncd'), 'i·\x1D');
+    assert(atob('ab\fcd'), 'i·\x1D');
+    assert(atob('ab\rcd'), 'i·\x1D');
+    assert(atob('ab cd'), 'i·\x1D');
+    assertThrows(() => atob('ab\u00a0cd'));
+    assert(atob('ab\t\n\f\r cd'), 'i·\x1D');
+    assert(atob(' \t\n\f\r ab\t\n\f\r cd\t\n\f\r '), 'i·\x1D');
+    assert(atob('ab\t\n\f\r =\t\n\f\r =\t\n\f\r '), 'i');
+    assertThrows(() => atob('A'));
+    assert(atob('/A'), 'ü');
+    assert(atob('//A'), 'ÿð');
+    assert(atob('///A'), 'ÿÿÀ');
+    assertThrows(() => atob('////A'));
+    assertThrows(() => atob('/'));
+    assert(atob('A/'), '\x03');
+    assert(atob('AA/'), '\x00\x0F');
+    assertThrows(() => atob('AAAA/'));
+    assert(atob('AAA/'), '\x00\x00?');
+    assertThrows(() => atob('\u0000nonsense'));
+    assertThrows(() => atob('abcd\u0000nonsense'));
+    assert(atob('YQ'), 'a');
+    assert(atob('YR'), 'a');
+    assertThrows(() => atob('~~'));
+    assertThrows(() => atob('..'));
+    assertThrows(() => atob('--'));
+    assertThrows(() => atob('__'));
   }
-
-  return pass("ok");
 });

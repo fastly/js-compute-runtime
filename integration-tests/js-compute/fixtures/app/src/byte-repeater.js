@@ -1,11 +1,11 @@
 /* eslint-env serviceworker */
 
-import { CacheOverride } from "fastly:cache-override";
-import { routes } from "./routes";
+import { CacheOverride } from 'fastly:cache-override';
+import { routes } from './routes';
 
-routes.set("/byte-repeater", () => {
+routes.set('/byte-repeater', () => {
   let headers = new Headers();
-  headers.set("AssemblyScriptHeader", "AssemblyScriptValue");
+  headers.set('AssemblyScriptHeader', 'AssemblyScriptValue');
 
   let streamController;
   let stream = new ReadableStream({
@@ -19,11 +19,11 @@ routes.set("/byte-repeater", () => {
 
   // Make a request upstream
   let upstreamRequest = new Request(
-    "https://compute-sdk-test-backend.edgecompute.app/byte_repeater",
+    'https://compute-sdk-test-backend.edgecompute.app/byte_repeater',
   );
-  upstreamRequest.setCacheOverride(new CacheOverride("pass"));
+  upstreamRequest.setCacheOverride(new CacheOverride('pass'));
   fetch(upstreamRequest, {
-    backend: "TheOrigin",
+    backend: 'TheOrigin',
   }).then(async (upstreamResponse) => {
     let body = upstreamResponse.body;
     let streamReader = body.getReader();
