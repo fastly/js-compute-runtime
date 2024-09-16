@@ -25,7 +25,9 @@ getGeolocationForIpAddress(address)
 
 ### Return value
 
-Returns an `Object` which contains information about the given IP address with the following properties:
+Returns an `Object`, or `null` if no geolocation data was found.
+
+The object contains information about the given IP address with the following properties:
 
 - `as_name`  _: string | null_
   - The name of the organization associated with `as_number`.

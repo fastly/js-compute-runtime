@@ -71,17 +71,25 @@ async function app(event) {
     if (routeHandler) {
       res = (await routeHandler(event)) || new Response('ok');
     } else {
-      res = fail(`${path} endpoint does not exist`);
+      try {
+        fail(`${path} endpoint does not exist`);
+      } catch (errRes) {
+        res = errRes;
+      }
     }
   } catch (error) {
     if (error instanceof Response) {
       res = error;
     } else {
-      res = fail(
-        `The routeHandler for ${path} threw an error: ${error.message || error}` +
-          '\n' +
-          error.stack,
-      );
+      try {
+        fail(
+          `The routeHandler for ${path} threw a [${error.constructor?.name ?? error.name}] error: ${error.message || error}` +
+            '\n' +
+            error.stack,
+        );
+      } catch (errRes) {
+        res = errRes;
+      }
     }
   } finally {
     res.headers.set('fastly_service_version', FASTLY_SERVICE_VERSION);

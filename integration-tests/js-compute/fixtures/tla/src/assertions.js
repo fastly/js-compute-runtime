@@ -9,7 +9,7 @@ export async function sleep(milliseconds) {
 // TODO: Implement ReadableStream getIterator() and [@@asyncIterator]() methods
 export async function streamToString(stream) {
   const decoder = new TextDecoder();
-  let string = "";
+  let string = '';
   let reader = stream.getReader();
   // eslint-disable-next-line no-constant-condition
   while (true) {
@@ -32,16 +32,16 @@ export function iteratableToStream(iterable) {
   });
 }
 
-export function pass(message = "") {
+export function pass(message = '') {
   return new Response(message);
 }
 
-export function fail(message = "") {
+export function fail(message = '') {
   throw new Response(message, { status: 500 });
 }
 
 function prettyPrintSymbol(a) {
-  if (typeof a === "symbol") {
+  if (typeof a === 'symbol') {
     return String(a);
   }
   return a;
@@ -134,15 +134,15 @@ export function deepEqual(a, b) {
 
   typeA = typeof a;
   typeB = typeof b;
-  if (a === null || typeA !== "object") {
-    if (b === null || typeB !== "object") {
+  if (a === null || typeA !== 'object') {
+    if (b === null || typeB !== 'object') {
       return a === b;
     }
     return false;
   }
 
   // Case: `a` is of type 'object'
-  if (b === null || typeB !== "object") {
+  if (b === null || typeB !== 'object') {
     return false;
   }
   if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) {

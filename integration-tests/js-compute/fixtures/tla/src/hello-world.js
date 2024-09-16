@@ -1,5 +1,5 @@
-import { routes } from "./routes";
+import { routes } from './routes';
 
-routes.set("/hello-world", () => {
+routes.set('/hello-world', () => {
   return new Response('hello world');
 });

@@ -247,7 +247,6 @@ routes.set('/device/interface', () => {
       `typeof Reflect.getOwnPropertyDescriptor(Device, '${property}').get`,
     );
   }
-
 });
 
 // Device constructor
@@ -359,7 +358,6 @@ routes.set('/device/interface', () => {
       assert(device.isSmartTV, false, `device.isSmartTV`);
       assert(device.isTablet, false, `device.isTablet`);
       assert(device.isTouchscreen, true, `device.isTouchscreen`);
-
     },
   );
   routes.set('/device/lookup/useragent-exists-some-fields-identified', () => {

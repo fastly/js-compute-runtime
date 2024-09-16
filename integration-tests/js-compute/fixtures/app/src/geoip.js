@@ -1,6 +1,6 @@
 /* eslint-env serviceworker */
 /* global fastly */
-import { assert, assertThrows } from './assertions.js';
+import { assert, assertThrows, strictEqual } from './assertions.js';
 import { getGeolocationForIpAddress } from 'fastly:geolocation';
 import { isRunningLocally, routes } from './routes.js';
 
@@ -127,9 +127,9 @@ routes.set(
 );
 
 let geoFields = [
-  'area_code',
   'as_name',
   'as_number',
+  'area_code',
   'city',
   'conn_speed',
   'conn_type',
@@ -148,15 +148,33 @@ let geoFields = [
   'utc_offset',
 ];
 
+routes.set('/fastly/getgeolocationforipaddress/bad-ip', async () => {
+  let geo = fastly.getGeolocationForIpAddress('0.0.0.0');
+  if (isRunningLocally()) {
+    strictEqual(
+      geo,
+      null,
+      `fastly.getGeolocationForIpAddress('0.0.0.0') == null`,
+    );
+  } else {
+    strictEqual(geo.as_name, '?');
+  }
+  assertThrows(() => {
+    fastly.getGeolocationForIpAddress('999.999.999.999');
+  }, Error);
+});
+
 routes.set(
   '/fastly/getgeolocationforipaddress/parameter-ipv4-string',
   async () => {
+    let geo = fastly.getGeolocationForIpAddress('151.101.1.1');
     if (isRunningLocally()) {
-      let geo = fastly.getGeolocationForIpAddress('2.216.196.179');
+      strictEqual(geo, null);
+    } else {
       assert(
         Object.keys(geo),
         geoFields,
-        `Object.keys(fastly.getGeolocationForIpAddress('2.216.196.179')) == geoFields`,
+        `Object.keys(fastly.getGeolocationForIpAddress('151.101.1.1')) == geoFields`,
       );
     }
   },

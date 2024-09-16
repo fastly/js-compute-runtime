@@ -1,8 +1,4 @@
-import {
-  assert,
-  assertDoesNotThrow,
-  assertThrows,
-} from './assertions.js';
+import { assert, assertDoesNotThrow, assertThrows } from './assertions.js';
 import { routes } from './routes.js';
 import { createFanoutHandoff } from 'fastly:fanout';
 

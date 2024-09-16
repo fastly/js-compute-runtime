@@ -81,7 +81,45 @@ bool Fastly::getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value 
   if (!address_str)
     return false;
 
-  JS::RootedString geo_info_str(cx, host_api::get_geo_info(cx, address_str));
+  auto address = core::encode(cx, address_str);
+  if (!address) {
+    return false;
+  }
+
+  // TODO: Remove all of this and rely on the host for validation as the hostcall only takes one
+  // user-supplied parameter
+  int format = AF_INET;
+  size_t octets_len = 4;
+  if (std::find(address.begin(), address.end(), ':') != address.end()) {
+    format = AF_INET6;
+    octets_len = 16;
+  }
+
+  uint8_t octets[sizeof(struct in6_addr)];
+  if (inet_pton(format, address.begin(), octets) != 1) {
+    // While get_geo_info can be invoked through FetchEvent#client.geo, too,
+    // that path can't result in an invalid address here, so we can be more
+    // specific in the error message.
+    // TODO: Make a TypeError
+    JS_ReportErrorLatin1(cx, "Invalid address passed to fastly.getGeolocationForIpAddress");
+    return false;
+  }
+
+  auto res = host_api::GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  if (!res.unwrap().has_value()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  auto ret = std::move(res.unwrap().value());
+
+  JS::RootedString geo_info_str(
+      cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.ptr.release(), ret.len)));
   if (!geo_info_str)
     return false;
 

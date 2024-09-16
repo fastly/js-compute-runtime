@@ -745,42 +745,6 @@ make_fastly_send_error(fastly::fastly_host_http_send_error_detail &send_error_de
 
 } // namespace
 
-JSString *get_geo_info(JSContext *cx, JS::HandleString address_str) {
-  auto address = core::encode(cx, address_str);
-  if (!address) {
-    return nullptr;
-  }
-
-  // TODO: Remove all of this and rely on the host for validation as the hostcall only takes one
-  // user-supplied parameter
-  int format = AF_INET;
-  size_t octets_len = 4;
-  if (std::find(address.begin(), address.end(), ':') != address.end()) {
-    format = AF_INET6;
-    octets_len = 16;
-  }
-
-  uint8_t octets[sizeof(struct in6_addr)];
-  if (inet_pton(format, address.begin(), octets) != 1) {
-    // While get_geo_info can be invoked through FetchEvent#client.geo, too,
-    // that path can't result in an invalid address here, so we can be more
-    // specific in the error message.
-    // TODO: Make a TypeError
-    JS_ReportErrorLatin1(cx, "Invalid address passed to fastly.getGeolocationForIpAddress");
-    return nullptr;
-  }
-
-  auto res = GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return nullptr;
-  }
-
-  auto ret = std::move(res.unwrap());
-
-  return JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.ptr.release(), ret.len));
-}
-
 Result<HttpBody> HttpBody::make() {
   Result<HttpBody> res;
 
@@ -1570,8 +1534,8 @@ Result<std::optional<uint16_t>> HttpResp::get_port() const {
   return res;
 }
 
-Result<HostString> GeoIp::lookup(std::span<uint8_t> bytes) {
-  Result<HostString> res;
+Result<std::optional<HostString>> GeoIp::lookup(std::span<uint8_t> bytes) {
+  Result<std::optional<HostString>> res;
 
   fastly::fastly_world_list_u8 octets_list{const_cast<uint8_t *>(bytes.data()), bytes.size()};
   fastly::fastly_world_string ret;
@@ -1582,7 +1546,15 @@ Result<HostString> GeoIp::lookup(std::span<uint8_t> bytes) {
                                          &ret.len),
                       &err)) {
     cabi_free(ret.ptr);
-    res.emplace_err(err);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else if (ret.len == 0) {
+    // Viceroy returns a zero len instead of none for unknown cases for some reason
+    cabi_free(ret.ptr);
+    res.emplace(std::nullopt);
   } else {
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, HOSTCALL_BUFFER_LEN, 1, ret.len));
     res.emplace(make_host_string(ret));

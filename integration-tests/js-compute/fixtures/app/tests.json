@@ -1517,9 +1517,8 @@
   "GET /fastly/getgeolocationforipaddress/parameter-empty-string": {
     "environments": ["compute"]
   },
-  "GET /fastly/getgeolocationforipaddress/parameter-ipv4-string": {
-    "environments": ["compute"]
-  },
+  "GET /fastly/getgeolocationforipaddress/bad-ip": {},
+  "GET /fastly/getgeolocationforipaddress/parameter-ipv4-string": {},
   "GET /fastly/getgeolocationforipaddress/parameter-compressed-ipv6-string": {
     "environments": ["compute"]
   },

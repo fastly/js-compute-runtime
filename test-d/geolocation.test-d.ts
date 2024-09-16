@@ -2,7 +2,7 @@
 import { Geolocation, getGeolocationForIpAddress } from "fastly:geolocation";
 import { expectType } from 'tsd';
 
-expectType<(address: string)=>Geolocation>(getGeolocationForIpAddress)
+expectType<(address: string)=>Geolocation | null>(getGeolocationForIpAddress)
 
 const geo = {} as Geolocation
 expectType<string | null>(geo.as_name)
