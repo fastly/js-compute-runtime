@@ -1261,8 +1261,8 @@ Result<HostBytes> HttpReq::downstream_server_ip_addr() {
 }
 
 // http-req-downstream-tls-cipher-openssl-name: func() -> result<string, error>
-Result<HostString> HttpReq::http_req_downstream_tls_cipher_openssl_name() {
-  Result<HostString> res;
+Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_cipher_openssl_name() {
+  Result<std::optional<HostString>> res;
 
   fastly::fastly_host_error err;
   fastly::fastly_world_string ret;
@@ -1278,7 +1278,11 @@ Result<HostString> HttpReq::http_req_downstream_tls_cipher_openssl_name() {
 
   if (!convert_result(status, &err)) {
     cabi_free(ret.ptr);
-    res.emplace_err(err);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
   } else {
     res.emplace(make_host_string(ret));
   }
@@ -1287,8 +1291,8 @@ Result<HostString> HttpReq::http_req_downstream_tls_cipher_openssl_name() {
 }
 
 // http-req-downstream-tls-protocol: func() -> result<string, error>
-Result<HostString> HttpReq::http_req_downstream_tls_protocol() {
-  Result<HostString> res;
+Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_protocol() {
+  Result<std::optional<HostString>> res;
 
   fastly::fastly_host_error err;
   fastly::fastly_world_string ret;
@@ -1303,7 +1307,11 @@ Result<HostString> HttpReq::http_req_downstream_tls_protocol() {
   }
   if (!convert_result(status, &err)) {
     cabi_free(ret.ptr);
-    res.emplace_err(err);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
   } else {
     res.emplace(make_host_string(ret));
   }
@@ -1312,8 +1320,8 @@ Result<HostString> HttpReq::http_req_downstream_tls_protocol() {
 }
 
 // http-req-downstream-tls-client-hello: func() -> result<list<u8>, error>
-Result<HostBytes> HttpReq::http_req_downstream_tls_client_hello() {
-  Result<HostBytes> res;
+Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_client_hello() {
+  Result<std::optional<HostBytes>> res;
 
   fastly::fastly_world_list_u8 ret;
   fastly::fastly_host_error err;
@@ -1327,7 +1335,11 @@ Result<HostBytes> HttpReq::http_req_downstream_tls_client_hello() {
 
   if (!convert_result(status, &err)) {
     cabi_free(ret.ptr);
-    res.emplace_err(err);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
   } else {
     res.emplace(make_host_bytes(ret));
   }
@@ -1336,8 +1348,8 @@ Result<HostBytes> HttpReq::http_req_downstream_tls_client_hello() {
 }
 
 // http-req-downstream-tls-raw-client-certificate: func() -> result<list<u8>, error>
-Result<HostBytes> HttpReq::http_req_downstream_tls_raw_client_certificate() {
-  Result<HostBytes> res;
+Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_raw_client_certificate() {
+  Result<std::optional<HostBytes>> res;
 
   fastly::fastly_world_list_u8 ret;
   fastly::fastly_host_error err;
@@ -1350,7 +1362,11 @@ Result<HostBytes> HttpReq::http_req_downstream_tls_raw_client_certificate() {
   }
   if (!convert_result(status, &err)) {
     cabi_free(ret.ptr);
-    res.emplace_err(err);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
   } else {
     res.emplace(make_host_bytes(ret));
   }
@@ -1359,8 +1375,8 @@ Result<HostBytes> HttpReq::http_req_downstream_tls_raw_client_certificate() {
 }
 
 // http-req-downstream-tls-ja3-md5: func() -> result<list<u8>, error>
-Result<HostBytes> HttpReq::http_req_downstream_tls_ja3_md5() {
-  Result<HostBytes> res;
+Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_ja3_md5() {
+  Result<std::optional<HostBytes>> res;
 
   fastly::fastly_world_list_u8 ret;
   fastly::fastly_host_error err;
@@ -1373,7 +1389,11 @@ Result<HostBytes> HttpReq::http_req_downstream_tls_ja3_md5() {
   }
   if (!convert_result(status, &err)) {
     cabi_free(ret.ptr);
-    res.emplace_err(err);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
   } else {
     res.emplace(make_host_bytes(ret));
   }

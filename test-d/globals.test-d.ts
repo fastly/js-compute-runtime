@@ -208,11 +208,11 @@ import { expectError, expectType } from 'tsd';
   const client = {} as ClientInfo
   expectType<string>(client.address)
   expectType<Geolocation | null>(client.geo)
-  expectType<string>(client.tlsJA3MD5)
-  expectType<string>(client.tlsCipherOpensslName)
-  expectType<string>(client.tlsProtocol)
-  expectType<ArrayBuffer>(client.tlsClientCertificate)
-  expectType<ArrayBuffer>(client.tlsClientHello)
+  expectType<string | null>(client.tlsJA3MD5)
+  expectType<string | null>(client.tlsCipherOpensslName)
+  expectType<string | null>(client.tlsProtocol)
+  expectType<ArrayBuffer | null>(client.tlsClientCertificate)
+  expectType<ArrayBuffer | null>(client.tlsClientHello)
   // They are readonly properties
   expectError(client.address = '')
   expectError(client.geo = {} as Geolocation)

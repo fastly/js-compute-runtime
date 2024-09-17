@@ -308,41 +308,11 @@
   "GET /simple-cache/getOrSet/does-not-freeze-when-called-after-a-get": {
     "environments": ["compute"]
   },
-  "GET /client/tlsJA3MD5": {
-    "environments": ["compute"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /client/tlsClientHello": {
-    "environments": ["compute"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /client/tlsClientCertificate": {
-    "environments": ["compute"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /client/tlsCipherOpensslName": {
-    "environments": ["compute"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /client/tlsProtocol": {
-    "environments": ["compute"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
+  "GET /client/tlsJA3MD5": {},
+  "GET /client/tlsClientHello": {},
+  "GET /client/tlsClientCertificate": {},
+  "GET /client/tlsCipherOpensslName": {},
+  "GET /client/tlsProtocol": {},
   "GET /config-store": {},
   "GET /console": {
     "environments": ["viceroy"],

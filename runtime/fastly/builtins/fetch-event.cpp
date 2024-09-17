@@ -165,7 +165,12 @@ bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::V
       return false;
     }
 
-    auto cipher = std::move(res.unwrap());
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto cipher = std::move(res.unwrap().value());
     result.set(JS_NewStringCopyN(cx, cipher.ptr.get(), cipher.len));
     JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::Cipher),
                         JS::StringValue(result));
@@ -186,7 +191,12 @@ bool ClientInfo::tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    auto ja3 = std::move(res.unwrap());
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto ja3 = std::move(res.unwrap().value());
     JS::UniqueChars hex{OPENSSL_buf2hexstr(ja3.ptr.get(), ja3.len)};
     std::string ja3hex{hex.get(), std::remove(hex.get(), hex.get() + strlen(hex.get()), ':')};
 
@@ -209,7 +219,12 @@ bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *v
       return false;
     }
 
-    auto hello = std::move(res.unwrap());
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto hello = std::move(res.unwrap().value());
     buffer.set(JS::NewArrayBufferWithContents(cx, hello.len, hello.ptr.get(),
                                               JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
     if (!buffer) {
@@ -238,7 +253,13 @@ bool ClientInfo::tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Va
       HANDLE_ERROR(cx, *err);
       return false;
     }
-    auto cert = std::move(res.unwrap());
+
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto cert = std::move(res.unwrap().value());
 
     buffer.set(JS::NewArrayBufferWithContents(cx, cert.len, cert.ptr.get(),
                                               JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
@@ -269,7 +290,12 @@ bool ClientInfo::tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    auto protocol = std::move(res.unwrap());
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto protocol = std::move(res.unwrap().value());
     result.set(JS_NewStringCopyN(cx, protocol.ptr.get(), protocol.len));
     JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::Protocol),
                         JS::StringValue(result));
