@@ -260,14 +260,17 @@ declare var CacheOverride: {
 declare interface ClientInfo {
   /**
    * A string representation of the IPv4 or IPv6 address of the downstream client.
+   * 
+   * While always defined on Fastly compute, on environments where these fields are unavailable,
+   * such as Viceroy, these fields may return *null*.
    */
   readonly address: string;
   readonly geo: import('fastly:geolocation').Geolocation | null;
-  readonly tlsJA3MD5: string;
-  readonly tlsCipherOpensslName: string;
-  readonly tlsProtocol: string;
-  readonly tlsClientCertificate: ArrayBuffer;
-  readonly tlsClientHello: ArrayBuffer;
+  readonly tlsJA3MD5: string | null;
+  readonly tlsCipherOpensslName: string | null;
+  readonly tlsProtocol: string | null;
+  readonly tlsClientCertificate: ArrayBuffer | null;
+  readonly tlsClientHello: ArrayBuffer | null;
 }
 
 /**

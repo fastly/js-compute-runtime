@@ -402,15 +402,15 @@ public:
 
   static Result<HostBytes> downstream_server_ip_addr();
 
-  static Result<HostString> http_req_downstream_tls_cipher_openssl_name();
+  static Result<std::optional<HostString>> http_req_downstream_tls_cipher_openssl_name();
 
-  static Result<HostString> http_req_downstream_tls_protocol();
+  static Result<std::optional<HostString>> http_req_downstream_tls_protocol();
 
-  static Result<HostBytes> http_req_downstream_tls_client_hello();
+  static Result<std::optional<HostBytes>> http_req_downstream_tls_client_hello();
 
-  static Result<HostBytes> http_req_downstream_tls_raw_client_certificate();
+  static Result<std::optional<HostBytes>> http_req_downstream_tls_raw_client_certificate();
 
-  static Result<HostBytes> http_req_downstream_tls_ja3_md5();
+  static Result<std::optional<HostBytes>> http_req_downstream_tls_ja3_md5();
 
   Result<Void> auto_decompress_gzip();
 
