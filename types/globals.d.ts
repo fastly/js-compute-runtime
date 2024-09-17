@@ -262,7 +262,7 @@ declare interface ClientInfo {
    * A string representation of the IPv4 or IPv6 address of the downstream client.
    */
   readonly address: string;
-  readonly geo: import('fastly:geolocation').Geolocation;
+  readonly geo: import('fastly:geolocation').Geolocation | null;
   readonly tlsJA3MD5: string;
   readonly tlsCipherOpensslName: string;
   readonly tlsProtocol: string;

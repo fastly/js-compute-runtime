@@ -174,8 +174,8 @@ jobs:
       with:
         path: "/home/runner/.cargo/bin/wasm-tools"
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
-    - name: Build
-      run: npm run build:debug
+    - name: Build with full debug info
+      run: npm run build:debug:info
     - uses: actions/upload-artifact@v3
       with:
         if-no-files-found: error
@@ -204,10 +204,10 @@ jobs:
         path: "/home/runner/.cargo/bin/wasm-tools"
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
     - name: Build
-      if: ${{ matrix.profile == 'release' }}
+      if: matrix.profile == 'release'
       run: npm run build
     - name: Build
-      if: ${{ matrix.profile == 'weval' }}
+      if: matrix.profile == 'weval'
       run: npm run build:weval
     - uses: actions/upload-artifact@v3
       with:
@@ -215,7 +215,7 @@ jobs:
         name: fastly-${{ matrix.profile }}
         path: fastly${{ matrix.profile == 'debug' && '.debug.wasm' || (matrix.profile == 'weval' && '-weval.wasm' || '.wasm') }}
     - uses: actions/upload-artifact@v3
-      if: ${{ matrix.profile == 'weval' }}
+      if: matrix.profile == 'weval'
       with:
         name: fastly-${{ matrix.profile }}-ic-cache
         path: fastly-ics.wevalcache
@@ -297,14 +297,14 @@ jobs:
       with:
         path: "/home/runner/.cargo/bin/viceroy"
         key: crate-cache-viceroy-${{ env.viceroy_version }}
-    
+
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
       id: wasm-tools
       with:
         path: "/home/runner/.cargo/bin/wasm-tools"
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
-    
+
     - run: npm install
 
     - name: Build WPT runtime
@@ -347,13 +347,13 @@ jobs:
         cli_version: ${{ env.fastly-cli_version }}
 
     - name: Restore Viceroy from cache
-      if: ${{ matrix.platform == 'viceroy' }}
+      if: matrix.platform == 'viceroy'
       uses: actions/cache@v3
       id: viceroy
       with:
         path: "/home/runner/.cargo/bin/viceroy"
         key: crate-cache-viceroy-${{ env.viceroy_version }}
-    
+
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
       id: wasm-tools
@@ -367,7 +367,7 @@ jobs:
         name: fastly-${{ matrix.profile }}
     - name: Download Engine (AOT weval cache)
       uses: actions/download-artifact@v3
-      if: ${{ matrix.profile == 'weval'}}
+      if: matrix.profile == 'weval'
       with:
         name: fastly-${{ matrix.profile }}-ic-cache
 
@@ -411,13 +411,13 @@ jobs:
         cli_version: ${{ env.fastly-cli_version }}
 
     - name: Restore Viceroy from cache
-      if: ${{ matrix.platform == 'viceroy' }}
+      if: matrix.platform == 'viceroy'
       uses: actions/cache@v3
       id: viceroy
       with:
         path: "/home/runner/.cargo/bin/viceroy"
         key: crate-cache-viceroy-${{ env.viceroy_version }}
-    
+
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
       id: wasm-tools
@@ -429,6 +429,10 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: fastly-debug
+
+    - name: Strip debug sections (compute only)
+      if: matrix.platform == 'compute'
+      run: wasm-tools strip fastly.debug.wasm -d ".debug_(info|loc|ranges|abbrev|line|str)" -o fastly.debug.wasm
 
     - name: Npm install
       run: npm install && cd ./integration-tests/js-compute && npm install
@@ -442,4 +446,3 @@ jobs:
       run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --tla --debug-build ${{ matrix.platform == 'viceroy' && '--local' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  
-      

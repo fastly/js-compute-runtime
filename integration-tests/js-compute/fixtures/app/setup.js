@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { $ as zx } from "zx";
-import { argv } from "node:process";
+import { $ as zx } from 'zx';
+import { argv } from 'node:process';
 
 const serviceName = argv[2];
 
@@ -15,10 +15,10 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
     ).trim();
   } catch {
     console.error(
-      "No environment variable named FASTLY_API_TOKEN has been set and no default fastly profile exists.",
+      'No environment variable named FASTLY_API_TOKEN has been set and no default fastly profile exists.',
     );
     console.error(
-      "In order to run the tests, either create a fastly profile using `fastly profile create` or export a fastly token under the name FASTLY_API_TOKEN",
+      'In order to run the tests, either create a fastly profile using `fastly profile create` or export a fastly token under the name FASTLY_API_TOKEN',
     );
     process.exit(1);
   }
@@ -36,7 +36,7 @@ async function setupConfigStores() {
     }
   })();
 
-  let STORE_ID = stores.find(({ name }) => name === "aZ1 __ 2")?.id;
+  let STORE_ID = stores.find(({ name }) => name === 'aZ1 __ 2')?.id;
   if (!STORE_ID) {
     process.env.STORE_ID = JSON.parse(
       await zx`fastly config-store create --quiet --name='aZ1 __ 2' --json --token $FASTLY_API_TOKEN`,
@@ -48,10 +48,10 @@ async function setupConfigStores() {
   try {
     await zx`fastly resource-link create --service-name ${serviceName} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
-    if (!e.message.includes("Duplicate record")) throw e;
+    if (!e.message.includes('Duplicate record')) throw e;
   }
 
-  STORE_ID = stores.find(({ name }) => name === "testconfig")?.id;
+  STORE_ID = stores.find(({ name }) => name === 'testconfig')?.id;
   if (!STORE_ID) {
     process.env.STORE_ID = JSON.parse(
       await zx`fastly config-store create --quiet --name='testconfig' --json --token $FASTLY_API_TOKEN`,
@@ -63,7 +63,7 @@ async function setupConfigStores() {
   try {
     await zx`fastly resource-link create --service-name ${serviceName} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
-    if (!e.message.includes("Duplicate record")) throw e;
+    if (!e.message.includes('Duplicate record')) throw e;
   }
 }
 
@@ -93,7 +93,7 @@ async function setupKVStore() {
   try {
     await zx`fastly resource-link create --service-name ${serviceName} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
-    if (!e.message.includes("Duplicate record")) throw e;
+    if (!e.message.includes('Duplicate record')) throw e;
   }
 }
 
@@ -108,7 +108,7 @@ async function setupSecretStore() {
     }
   })();
   const STORE_ID = stores?.find(
-    ({ name }) => name === "example-test-secret-store",
+    ({ name }) => name === 'example-test-secret-store',
   )?.id;
   if (!STORE_ID) {
     process.env.STORE_ID = JSON.parse(
@@ -119,12 +119,12 @@ async function setupSecretStore() {
   }
   await zx`echo -n 'This is also some secret data' | fastly secret-store-entry create --recreate-allow --name first --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
   let key =
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
   await zx`echo -n 'This is some secret data' | fastly secret-store-entry create --recreate-allow --name ${key} --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
   try {
     await zx`fastly resource-link create --service-name ${serviceName} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
-    if (!e.message.includes("Duplicate record")) throw e;
+    if (!e.message.includes('Duplicate record')) throw e;
   }
 }
 

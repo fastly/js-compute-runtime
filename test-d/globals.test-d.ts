@@ -207,7 +207,7 @@ import { expectError, expectType } from 'tsd';
 {
   const client = {} as ClientInfo
   expectType<string>(client.address)
-  expectType<Geolocation>(client.geo)
+  expectType<Geolocation | null>(client.geo)
   expectType<string>(client.tlsJA3MD5)
   expectType<string>(client.tlsCipherOpensslName)
   expectType<string>(client.tlsProtocol)

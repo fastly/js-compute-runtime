@@ -158,8 +158,6 @@ Result<Void>
 write_headers(HttpHeaders *headers,
               std::vector<std::tuple<host_api::HostString, host_api::HostString>> &list);
 
-JSString *get_geo_info(JSContext *cx, JS::HandleString address_str);
-
 bool error_is_generic(APIError e);
 bool error_is_invalid_argument(APIError e);
 bool error_is_optional_none(APIError e);
@@ -516,7 +514,7 @@ class GeoIp final {
 
 public:
   /// Lookup information about the ip address provided.
-  static Result<HostString> lookup(std::span<uint8_t> bytes);
+  static Result<std::optional<HostString>> lookup(std::span<uint8_t> bytes);
 };
 
 class LogEndpoint final {

@@ -78,23 +78,6 @@ static JSString *retrieve_client_address(JSContext *cx, JS::HandleObject self) {
   return address;
 }
 
-JSString *retrieve_geo_info(JSContext *cx, JS::HandleObject self) {
-  JS::RootedString address_str(cx, client_address(self));
-  if (!address_str) {
-    address_str = retrieve_client_address(cx, self);
-    if (!address_str)
-      return nullptr;
-  }
-
-  JS::RootedString geo(cx, host_api::get_geo_info(cx, address_str));
-  if (!geo)
-    return nullptr;
-
-  JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::GeoInfo),
-                      JS::StringValue(geo));
-  return geo;
-}
-
 } // namespace
 
 bool ClientInfo::address_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -116,9 +99,56 @@ bool ClientInfo::geo_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::RootedString geo_info_str(cx, geo_info(self));
   if (!geo_info_str) {
-    geo_info_str = retrieve_geo_info(cx, self);
+    JS::RootedString address_str(cx, client_address(self));
+    if (!address_str) {
+      address_str = retrieve_client_address(cx, self);
+      if (!address_str)
+        return false;
+    }
+
+    // TODO: skip intermediate encoding, and rely on the fact that we already had the bytes before
+    auto address = core::encode(cx, address_str);
+    if (!address) {
+      return false;
+    }
+
+    // TODO: Remove all of this and rely on the host for validation as the hostcall only takes one
+    // user-supplied parameter
+    int format = AF_INET;
+    size_t octets_len = 4;
+    if (std::find(address.begin(), address.end(), ':') != address.end()) {
+      format = AF_INET6;
+      octets_len = 16;
+    }
+
+    uint8_t octets[sizeof(struct in6_addr)];
+    if (inet_pton(format, address.begin(), octets) != 1) {
+      // While get_geo_info can be invoked through FetchEvent#client.geo, too,
+      // that path can't result in an invalid address here, so we can be more
+      // specific in the error message.
+      // TODO: Make a TypeError
+      JS_ReportErrorLatin1(cx, "Invalid address passed to fastly.getGeolocationForIpAddress");
+      return false;
+    }
+
+    auto res = host_api::GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto ret = std::move(res.unwrap().value());
+    geo_info_str =
+        JS::RootedString(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.ptr.release(), ret.len)));
     if (!geo_info_str)
       return false;
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::GeoInfo),
+                        JS::StringValue(geo_info_str));
   }
 
   return JS_ParseJSON(cx, geo_info_str, args.rval());

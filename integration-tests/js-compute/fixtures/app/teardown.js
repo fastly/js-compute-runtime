@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { $ as zx } from "zx";
+import { $ as zx } from 'zx';
 
 const startTime = Date.now();
 
@@ -12,10 +12,10 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
     ).trim();
   } catch {
     console.error(
-      "No environment variable named FASTLY_API_TOKEN has been set and no default fastly profile exists.",
+      'No environment variable named FASTLY_API_TOKEN has been set and no default fastly profile exists.',
     );
     console.error(
-      "In order to run the tests, either create a fastly profile using `fastly profile create` or export a fastly token under the name FASTLY_API_TOKEN",
+      'In order to run the tests, either create a fastly profile using `fastly profile create` or export a fastly token under the name FASTLY_API_TOKEN',
     );
     process.exit(1);
   }
@@ -43,7 +43,7 @@ async function removeConfigStore() {
     }
   })();
 
-  const STORE_ID = stores.find(({ name }) => name === "aZ1 __ 2")?.id;
+  const STORE_ID = stores.find(({ name }) => name === 'aZ1 __ 2')?.id;
   if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;
     let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
@@ -61,23 +61,23 @@ async function removeConfigStore() {
 }
 
 async function removeKVStore() {
-  let stores = await fetch("https://api.fastly.com/resources/stores/object", {
-    method: "GET",
+  let stores = await fetch('https://api.fastly.com/resources/stores/object', {
+    method: 'GET',
     headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "Fastly-Key": FASTLY_API_TOKEN,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'Fastly-Key': FASTLY_API_TOKEN,
     },
   }).then((res) => res.json());
 
   let STORE_ID = stores.data.find(
-    ({ name }) => name === "example-test-kv-store",
+    ({ name }) => name === 'example-test-kv-store',
   )?.id;
   if (STORE_ID) {
     await fetch(`https://api.fastly.com/resources/stores/object/${STORE_ID}`, {
-      method: "DELETE",
+      method: 'DELETE',
       headers: {
-        "Fastly-Key": FASTLY_API_TOKEN,
+        'Fastly-Key': FASTLY_API_TOKEN,
       },
     });
   }
@@ -104,7 +104,7 @@ async function removeSecretStore() {
   })();
 
   const STORE_ID = stores.find(
-    ({ name }) => name === "example-test-secret-store",
+    ({ name }) => name === 'example-test-secret-store',
   )?.id;
   if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;

@@ -1,9 +1,5 @@
 import { CacheOverride } from 'fastly:cache-override';
-import {
-  assert,
-  assertThrows,
-  assertDoesNotThrow,
-} from './assertions.js';
+import { assert, assertThrows, assertDoesNotThrow } from './assertions.js';
 import { isRunningLocally, routes } from './routes.js';
 
 // CacheOverride constructor

@@ -1,9 +1,5 @@
 /* eslint-env serviceworker */
-import {
-  assert,
-  assertDoesNotThrow,
-  assertThrows,
-} from './assertions.js';
+import { assert, assertDoesNotThrow, assertThrows } from './assertions.js';
 import { routes } from './routes.js';
 import { CacheOverride } from 'fastly:cache-override';
 

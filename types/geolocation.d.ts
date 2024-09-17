@@ -1,6 +1,7 @@
 declare module "fastly:geolocation" {
   /**
    * Retrieve geolocation information about the given IP address.
+   * If no geolocation information is available, returns null.
    *
    * @param address The IPv4 or IPv6 address to query
    *
@@ -65,7 +66,7 @@ declare module "fastly:geolocation" {
    * ```
    * </noscript>
    */
-  function getGeolocationForIpAddress(address: string): Geolocation;
+  function getGeolocationForIpAddress(address: string): Geolocation | null;
   /**
    * [Fastly Geolocation](https://developer.fastly.com/reference/vcl/variables/geolocation/)
    * information about an IP address

@@ -128,14 +128,27 @@ if (!local) {
 }
 
 core.startGroup(`Check service is up and running on ${domain}`);
-await retry(10, expBackoff('60s', '30s'), async () => {
-  const response = await request(domain);
-  if (response.statusCode !== 200) {
-    throw new Error(
-      `Application "${fixture}" :: Not yet available on domain: ${domain}`,
-    );
-  }
-});
+await retry(
+  27,
+  local
+    ? [
+        // we expect it to take ~10 seconds to deploy, so focus on that time
+        6000, 3000, 1500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+        500, 500, 500, 500, 500, 500, 500, 500,
+        // after more than 20 seconds, means we have an unusually slow build, start backoff before timeout
+        1500,
+        3000, 6000, 12000, 24000,
+      ].values()
+    : expBackoff('60s', '10s'),
+  async () => {
+    const response = await request(domain);
+    if (response.statusCode !== 200) {
+      throw new Error(
+        `Application "${fixture}" :: Not yet available on domain: ${domain}`,
+      );
+    }
+  },
+);
 core.endGroup();
 
 let { default: tests } = await import(join(fixturePath, 'tests.json'), {
@@ -248,6 +261,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
           }
         } else {
           if (test.environments.includes('compute')) {
+            // TODO: this just hides flakes, so we should remove this and fix the flakes.
             return retry(10, expBackoff('60s', '10s'), async () => {
               let path = test.downstream_request.pathname;
               let url = `${domain}${path}`;
