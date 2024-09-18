@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.23.0 (2024-09-18)
+
+### Added
+
+* grpc backend option ([#971](https://github.com/fastly/js-compute-runtime/issues/971)) ([e10829d](https://github.com/fastly/js-compute-runtime/commit/e10829d73aa0e0ccee20f19ad4c27b79f3c0723e))
+
+### Fixed
+
+* never error for missing client data, return null instead ([#979](https://github.com/fastly/js-compute-runtime/issues/979)) ([7068321](https://github.com/fastly/js-compute-runtime/commit/706832106fce165c5857f9671cb004ce33537225))
+* null return instead of an error for missing geo data ([d4c9b69](https://github.com/fastly/js-compute-runtime/commit/d4c9b699a115b5475b5a06b2ba66e259c8d4e952))
+* simple cache getOrSet inner rejections to reject outer promise ([#981](https://github.com/fastly/js-compute-runtime/issues/981)) ([c1fdc49](https://github.com/fastly/js-compute-runtime/commit/c1fdc49211b88dbf17a195782ac34a5c226f3f9f))
+
 ## 3.22.4 (2024-09-13)
 
 ### Fixed
