@@ -373,7 +373,7 @@ bool get_or_set_then_handler(JSContext *cx, JS::HandleObject lookup_state, JS::H
 }
 
 bool get_or_set_catch_handler(JSContext *cx, JS::HandleObject lookup_state,
-                              JS::HandleValue out_promise_val, JS::CallArgs args) {
+                              JS::HandleValue inner_promise_val, JS::CallArgs args) {
   JS::RootedValue promise_val(cx);
   if (!JS_GetProperty(cx, lookup_state, "promise", &promise_val)) {
     return false;
@@ -384,13 +384,13 @@ bool get_or_set_catch_handler(JSContext *cx, JS::HandleObject lookup_state,
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  JS::RootedObject out_promise(cx, &out_promise_val.toObject());
-  if (!out_promise) {
+  JS::RootedObject inner_promise(cx, &inner_promise_val.toObject());
+  if (!inner_promise) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
-  MOZ_ASSERT(JS::GetPromiseState(promise) == JS::PromiseState::Rejected);
-  JS::RootedValue promise_rejection_err(cx, JS::GetPromiseResult(promise));
-  JS::RejectPromise(cx, out_promise, promise_rejection_err);
+  MOZ_ASSERT(JS::GetPromiseState(inner_promise) == JS::PromiseState::Rejected);
+  JS::RootedValue promise_rejection_err(cx, JS::GetPromiseResult(inner_promise));
+  JS::RejectPromise(cx, promise, promise_rejection_err);
   return true;
 }
 
