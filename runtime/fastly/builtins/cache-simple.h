@@ -44,9 +44,6 @@ public:
   static bool purge(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool getOrSet(JSContext *cx, unsigned argc, JS::Value *vp);
-
-  static bool getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS::HandleValue extra,
-                                  JS::CallArgs args);
 };
 
 } // namespace fastly::cache_simple

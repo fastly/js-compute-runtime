@@ -218,6 +218,9 @@
   "GET /simple-cache-entry/readablestream": {
     "environments": ["compute"]
   },
+  "GET /simple-cache/getOrSet/rejection-rejects-outer": {
+    "environments": ["compute"]
+  },
   "GET /simple-cache/getOrSet/called-as-constructor": {
     "environments": ["compute"]
   },
