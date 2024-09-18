@@ -1529,6 +1529,21 @@ async function simpleCacheEntryInterfaceTests() {
 // static getOrSet(key: string, set: () => Promise<{value: BodyInit,  ttl: number}>): Promise<SimpleCacheEntry>;
 // static getOrSet(key: string, set: () => Promise<{value: ReadableStream, ttl: number, length: number}>): Promise<SimpleCacheEntry>;
 {
+  routes.set('/simple-cache/getOrSet/rejection-rejects-outer', async () => {
+    if (!isRunningLocally()) {
+      let key = String(Math.random());
+      SimpleCache.get(key);
+      assertRejects(
+        () =>
+          SimpleCache.getOrSet(key, async () => {
+            throw RangeError('inner rejection');
+          }),
+        RangeError,
+        'inner rejection',
+      );
+    }
+  });
+
   routes.set('/simple-cache/getOrSet/called-as-constructor', () => {
     if (!isRunningLocally()) {
       let key = '/simple-cache/getOrSet/called-as-constructor';

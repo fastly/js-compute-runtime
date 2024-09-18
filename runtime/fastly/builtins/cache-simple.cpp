@@ -199,34 +199,30 @@ public:
   }
 };
 
-} // namespace
-
-bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS::HandleValue extra,
-                                      JS::CallArgs args) {
-  MOZ_ASSERT(extra.isObject());
-  JS::RootedObject extraObj(cx, &extra.toObject());
-  JS::RootedValue handleVal(cx);
-  JS::RootedValue promiseVal(cx);
-  if (!JS_GetProperty(cx, extraObj, "promise", &promiseVal)) {
+bool get_or_set_then_handler(JSContext *cx, JS::HandleObject lookup_state, JS::HandleValue extra,
+                             JS::CallArgs args) {
+  JS::RootedValue handle_val(cx);
+  JS::RootedValue promise_val(cx);
+  if (!JS_GetProperty(cx, lookup_state, "promise", &promise_val)) {
     return false;
   }
-  MOZ_ASSERT(promiseVal.isObject());
-  JS::RootedObject promise(cx, &promiseVal.toObject());
+  MOZ_ASSERT(promise_val.isObject());
+  JS::RootedObject promise(cx, &promise_val.toObject());
   if (!promise) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  if (!JS_GetProperty(cx, extraObj, "handle", &handleVal)) {
+  if (!JS_GetProperty(cx, lookup_state, "handle", &handle_val)) {
     return RejectPromiseWithPendingError(cx, promise);
   }
-  MOZ_ASSERT(handleVal.isInt32());
+  MOZ_ASSERT(handle_val.isInt32());
 
-  host_api::CacheHandle handle(handleVal.toInt32());
+  host_api::CacheHandle handle(handle_val.toInt32());
 
   BEGIN_TRANSACTION(transaction, cx, promise, handle);
 
   JS::RootedValue keyVal(cx);
-  if (!JS_GetProperty(cx, extraObj, "key", &keyVal)) {
+  if (!JS_GetProperty(cx, lookup_state, "key", &keyVal)) {
     return false;
   }
 
@@ -376,6 +372,30 @@ bool SimpleCache::getOrSetThenHandler(JSContext *cx, JS::HandleObject owner, JS:
   return true;
 }
 
+bool get_or_set_catch_handler(JSContext *cx, JS::HandleObject lookup_state,
+                              JS::HandleValue inner_promise_val, JS::CallArgs args) {
+  JS::RootedValue promise_val(cx);
+  if (!JS_GetProperty(cx, lookup_state, "promise", &promise_val)) {
+    return false;
+  }
+  MOZ_ASSERT(promise_val.isObject());
+  JS::RootedObject promise(cx, &promise_val.toObject());
+  if (!promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  JS::RootedObject inner_promise(cx, &inner_promise_val.toObject());
+  if (!inner_promise) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+  MOZ_ASSERT(JS::GetPromiseState(inner_promise) == JS::PromiseState::Rejected);
+  JS::RootedValue promise_rejection_err(cx, JS::GetPromiseResult(inner_promise));
+  JS::RejectPromise(cx, promise, promise_rejection_err);
+  return true;
+}
+
+} // namespace
+
 // static getOrSet(key: string, set: () => Promise<{value: BodyInit,  ttl: number}>):
 // SimpleCacheEntry | null; static getOrSet(key: string, set: () => Promise<{value: ReadableStream,
 // ttl: number, length: number}>): SimpleCacheEntry | null;
@@ -462,29 +482,34 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     // JS::RootedObject owner(cx, JS_NewPlainObject(cx));
-    JS::RootedObject extraObj(cx, JS_NewPlainObject(cx));
-    JS::RootedValue handleVal(cx, JS::NumberValue(handle.handle));
-    if (!JS_SetProperty(cx, extraObj, "handle", handleVal)) {
+    JS::RootedObject lookup_state(cx, JS_NewPlainObject(cx));
+    JS::RootedValue handle_val(cx, JS::NumberValue(handle.handle));
+    if (!JS_SetProperty(cx, lookup_state, "handle", handle_val)) {
       return false;
     }
     JS::RootedValue keyVal(
         cx, JS::StringValue(JS_NewStringCopyN(cx, key_chars.begin(), key_chars.len)));
-    if (!JS_SetProperty(cx, extraObj, "key", keyVal)) {
+    if (!JS_SetProperty(cx, lookup_state, "key", keyVal)) {
       return false;
     }
-    JS::RootedValue promiseVal(cx, JS::ObjectValue(*promise));
-    if (!JS_SetProperty(cx, extraObj, "promise", promiseVal)) {
+    JS::RootedValue promise_val(cx, JS::ObjectValue(*promise));
+    if (!JS_SetProperty(cx, lookup_state, "promise", promise_val)) {
       return false;
     }
 
-    JS::RootedValue extra(cx, JS::ObjectValue(*extraObj));
     JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-    JS::RootedObject then_handler(cx,
-                                  create_internal_method<getOrSetThenHandler>(cx, global, extra));
+    JS::RootedObject then_handler(
+        cx, create_internal_method<get_or_set_then_handler>(cx, lookup_state));
     if (!then_handler) {
       return false;
     }
-    if (!JS::AddPromiseReactions(cx, result_promise, then_handler, nullptr)) {
+    JS::RootedValue result_promise_val(cx, JS::ObjectValue(*result_promise));
+    JS::RootedObject catch_handler(
+        cx, create_internal_method<get_or_set_catch_handler>(cx, lookup_state, result_promise_val));
+    if (!then_handler) {
+      return false;
+    }
+    if (!JS::AddPromiseReactions(cx, result_promise, then_handler, catch_handler)) {
       return false;
     }
     transaction.commit();

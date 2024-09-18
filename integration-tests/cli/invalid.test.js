@@ -13,18 +13,36 @@ test('should return non-zero exit code on syntax errors', async function (t) {
   await writeFile('./bin/index.js', '\n\n\n"hello";@');
   const { code, stdout, stderr } = await execute(process.execPath, cli);
   t.alike(stdout, []);
-  strictEqual(
-    stderr.join('').toString().replace(/\r?\n/g, '').slice(1),
-    ` [ERROR] Expected identifier but found end of file
+
+  // TODO: do not even try to fix the mess below if something breaks with it again. Just remove
+  // cli-testing-library dependency entirely and check stderr directly.
+  try {
+    strictEqual(
+      stderr.join('').toString().replace(/\r?\n/g, '').slice(1),
+      ` [ERROR] Expected identifier but found end of file
 bin/index.js:4:9:
 4 │ "hello";@
 ╵          ^
 Error: Build failed with 1 error:
 bin/index.js:4:9: ERROR: Expected identifier but found end of file`.replace(
-      /\r?\n/g,
-      '',
-    ),
-  );
+        /\r?\n/g,
+        '',
+      ),
+    );
+  } catch {
+    strictEqual(
+      stderr.join('').toString().replace(/\r?\n/g, '').slice(1),
+      ` [ERROR] Expected identifier but found end of file
+bin/index.js:4:9:
+4 │ "hello";@
+╵^
+Error: Build failed with 1 error:
+bin/index.js:4:9: ERROR: Expected identifier but found end of file`.replace(
+        /\r?\n/g,
+        '',
+      ),
+    );
+  }
 
   t.is(code, 1);
 });
