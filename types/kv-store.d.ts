@@ -1,3 +1,5 @@
+/// <reference path="globals.d.ts" />
+
 declare module 'fastly:kv-store' {
   /**
    * Class for accessing a [Fastly KV-store](https://developer.fastly.com/reference/api/kv-store/).
@@ -71,7 +73,22 @@ declare module 'fastly:kv-store' {
      * - Be longer than 1024 characters
      * @param value The value to store within the KV Store.
      */
-    put(key: string, value: BodyInit): Promise<undefined>;
+    put(
+      key: string,
+      value: BodyInit,
+      options?: {
+        metadata?: ArrayBufferView | ArrayBuffer | string;
+        ttl?: number;
+        mode?: 'overwrite' | 'add' | 'append' | 'prepend';
+        ifGenerationMatch?: number;
+      },
+    ): Promise<undefined>;
+
+    /**
+     * @param prefix Optional key prefix to search
+     * @param limit Optional limit for the number of keys returned
+     */
+    list(prefix?: string, limit?: number): AsyncIterator<string[]>;
   }
 
   /**
@@ -82,22 +99,41 @@ declare module 'fastly:kv-store' {
      * A ReadableStream with the contents of the entry.
      */
     get body(): ReadableStream;
+
     /**
      * A boolean value that indicates whether the body has been read from already.
      */
     get bodyUsed(): boolean;
+
     /**
      * Reads the body and returns it as a promise that resolves with a string.
      * The response is always decoded using UTF-8.
      */
     text(): Promise<string>;
+
     /**
      * Reads the body and returns it as a promise that resolves with the result of parsing the body text as JSON.
      */
     json(): Promise<object>;
+
     /**
      * Reads the body and returns it as a promise that resolves with an ArrayBuffer.
      */
     arrayBuffer(): Promise<ArrayBuffer>;
+
+    /**
+     * Metadata associatd with this entry
+     */
+    metadata(): ArrayBuffer;
+
+    /**
+     * Metadata string associated with this entry
+     */
+    metadataText(): string;
+
+    /**
+     * The generation of the entry
+     */
+    generation: number;
   }
 }

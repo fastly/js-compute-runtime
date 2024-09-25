@@ -426,6 +426,36 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
   return false;
 }
 
+bool KVStore::list(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  if (args.length > 0) {
+    JS::RootedValue prefix(cx, args.get(0));
+    if (!prefix.isString()) {
+      api::throw_error(cx, api::Errors::TypeError, "KVStore.list", "prefix", "be a string");
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    auto prefix_chars = core::encode(cx, prefix);
+    if (!prefix_chars) {
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+  }
+
+  if (args.length > 1) {
+    JS::RootedValue limit(cx, args.get(1));
+    uint32_t limit = 0;
+    if (limit.isDouble()) {
+      double limit_double = limit.toDouble();
+      modf(value, &limit) == 0.0;
+      limit = limit_double;
+    }
+    if (!limit.isNumber()) {
+      api::throw_error(cx, api::Errors::TypeError, "KVStore.list", "limit", "be an integer");
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+  }
+}
+
 const JSFunctionSpec KVStore::static_methods[] = {
     JS_FS_END,
 };
@@ -438,6 +468,7 @@ const JSFunctionSpec KVStore::methods[] = {
     JS_FN("delete", delete_, 1, JSPROP_ENUMERATE),
     JS_FN("get", get, 1, JSPROP_ENUMERATE),
     JS_FN("put", put, 1, JSPROP_ENUMERATE),
+    JS_FN("list", list, 1, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
@@ -479,7 +510,7 @@ bool KVStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto res = host_api::ObjectStore::open(name);
+  auto res = host_api::KVStore::open(name);
   if (auto *err = res.to_err()) {
     if (host_api::error_is_invalid_argument(*err)) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_DOES_NOT_EXIST,

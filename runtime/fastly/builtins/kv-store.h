@@ -33,6 +33,7 @@ class KVStore final : public builtins::BuiltinImpl<KVStore> {
   static bool delete_(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool put(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool list(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
   static constexpr const char *class_name = "KVStore";
