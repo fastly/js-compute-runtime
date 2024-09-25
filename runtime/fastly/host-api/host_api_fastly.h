@@ -239,6 +239,30 @@ public:
   const std::optional<std::string> message() const;
 };
 
+class FastlyKVError final {
+public:
+  enum detail {
+    /// The kv-error-detail struct has not been populated.
+    uninitialized,
+    /// There was no kv error.
+    ok,
+    /// Bad request.
+    bad_request,
+    /// KV store entry not found.
+    not_found,
+    /// Invalid state for operation.
+    precondition_failed,
+    /// Buffer size issues.
+    payload_too_large,
+    /// Oh no.
+    internal_error,
+    /// Rate limiting
+    too_many_requests,
+  };
+
+  const std::optional<std::string> message() const;
+};
+
 /// A convenience wrapper for the host calls involving http bodies.
 class HttpBody final {
 public:
@@ -910,6 +934,113 @@ public:
 class DeviceDetection final {
 public:
   static Result<HostString> lookup(std::string_view user_agent);
+};
+
+class KVStorePendingLookup final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  KVStorePendingLookup() = default;
+  explicit KVStorePendingLookup(Handle handle) : handle{handle} {}
+  explicit KVStorePendingLookup(FastlyAsyncTask async) : handle{async.handle()} {}
+
+  /// Block until the response is ready.
+  api::FastlyResult<HttpBody, FastlyKVError> wait();
+
+  /// Fetch the handle for this pending request.
+  FastlyAsyncTask::Handle async_handle() const;
+};
+
+class KVStorePendingInsert final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  KVStorePendingInsert() = default;
+  explicit KVStorePendingInsert(Handle handle) : handle{handle} {}
+  explicit KVStorePendingInsert(FastlyAsyncTask async) : handle{async.handle()} {}
+
+  /// Block until the response is ready.
+  api::FastlyResult<Void, FastlyKVError> wait();
+
+  /// Fetch the handle for this pending request.
+  FastlyAsyncTask::Handle async_handle() const;
+};
+
+class KVStorePendingDelete final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  KVStorePendingDelete() = default;
+  explicit KVStorePendingDelete(Handle handle) : handle{handle} {}
+  explicit KVStorePendingDelete(FastlyAsyncTask async) : handle{async.handle()} {}
+
+  /// Block until the response is ready.
+  api::FastlyResult<Void, FastlyKVError> wait();
+
+  /// Fetch the handle for this pending request.
+  FastlyAsyncTask::Handle async_handle() const;
+};
+
+class KVStorePendingList final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  KVStorePendingList() = default;
+  explicit KVStorePendingList(Handle handle) : handle{handle} {}
+  explicit KVStorePendingList(FastlyAsyncTask async) : handle{async.handle()} {}
+
+  /// Block until the response is ready.
+  api::FastlyResult<Void, FastlyKVError> wait();
+
+  /// Fetch the handle for this pending request.
+  FastlyAsyncTask::Handle async_handle() const;
+};
+
+class KVStore final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  KVStore() = default;
+  explicit KVStore(Handle handle) : handle{handle} {}
+
+  static Result<KVStore> open(std::string_view name);
+
+  enum InsertMode : uint32_t {
+    overwrite,
+    add,
+    append,
+    prepend,
+  };
+
+  Result<KVStorePendingLookup::Handle> lookup(std::string_view key);
+  Result<KVStorePendingInsert::Handle> insert(std::string_view key, HttpBody body,
+                                              std::optional<InsertMode> mode,
+                                              std::optional<uint32_t> if_generation_match,
+                                              std::optional<uint32_t> ttl);
+  Result<KVStorePendingDelete::Handle> delete_(std::string_view key);
+  Result<KVStorePendingList::Handle> list();
+
+  Result<Void> insert(std::string_view name, HttpBody body);
 };
 
 class Compute final {

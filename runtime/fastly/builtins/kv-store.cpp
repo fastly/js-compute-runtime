@@ -479,7 +479,7 @@ bool KVStore::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto res = host_api::ObjectStore::open(name);
+  auto res = host_api::KVStore::open(name);
   if (auto *err = res.to_err()) {
     if (host_api::error_is_invalid_argument(*err)) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_DOES_NOT_EXIST,
