@@ -196,8 +196,8 @@ HostString make_host_string(fastly::fastly_world_list_u8 str) {
   return HostString{JS::UniqueChars{reinterpret_cast<char *>(str.ptr)}, str.len};
 }
 
-HostBytes make_host_bytes(fastly::fastly_world_list_u8 str) {
-  return HostBytes{std::unique_ptr<uint8_t[]>{str.ptr}, str.len};
+HostBytes make_host_bytes(uint8_t *ptr, size_t len) {
+  return HostBytes{std::unique_ptr<uint8_t[]>{ptr}, len};
 }
 
 Response make_response(fastly::fastly_host_http_response &resp) {
@@ -743,6 +743,45 @@ make_fastly_send_error(fastly::fastly_host_http_send_error_detail &send_error_de
   return res;
 }
 
+FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error) {
+  FastlyKVError err;
+  switch (kv_error) {
+  case KV_ERROR_BAD_REQUEST: {
+    err.detail = FastlyKVError::detail::bad_request;
+    break;
+  }
+  case KV_ERROR_INTERNAL_ERROR: {
+    err.detail = FastlyKVError::detail::internal_error;
+    break;
+  }
+  case KV_ERROR_NOT_FOUND: {
+    err.detail = FastlyKVError::detail::not_found;
+    break;
+  }
+  case KV_ERROR_OK: {
+    err.detail = FastlyKVError::detail::ok;
+    break;
+  }
+  case KV_ERROR_PAYLOAD_TOO_LARGE: {
+    err.detail = FastlyKVError::detail::payload_too_large;
+    break;
+  }
+  case KV_ERROR_PRECONDITION_FAILED: {
+    err.detail = FastlyKVError::detail::precondition_failed;
+    break;
+  }
+  case KV_ERROR_TOO_MANY_REQUESTS: {
+    err.detail = FastlyKVError::detail::too_many_requests;
+    break;
+  }
+  case KV_ERROR_UNINITIALIZED: {
+    err.detail = FastlyKVError::detail::uninitialized;
+    break;
+  }
+  }
+  return err;
+}
+
 } // namespace
 
 Result<HttpBody> HttpBody::make() {
@@ -772,6 +811,20 @@ Result<HostString> HttpBody::read(uint32_t chunk_size) const {
     res.emplace_err(err);
   } else {
     res.emplace(JS::UniqueChars(reinterpret_cast<char *>(ret.ptr)), ret.len);
+  }
+
+  return res;
+}
+
+Result<size_t> HttpBody::read_into(uint8_t *ptr, size_t chunk_size) const {
+  Result<size_t> res;
+
+  size_t len;
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::body_read(this->handle, ptr, chunk_size, &len), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(len);
   }
 
   return res;
@@ -1003,6 +1056,8 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
   memset(&backend_configuration, 0, sizeof(backend_configuration));
   uint32_t backend_config_mask = 0;
 
+  auto target_str = string_view_to_world_string(target);
+
   if (auto &val = config.host_override) {
     backend_config_mask |= BACKEND_CONFIG_HOST_OVERRIDE;
     auto host_override = string_view_to_world_string(*val);
@@ -1069,6 +1124,9 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
     auto sni_hostname = string_view_to_world_string(*val);
     backend_configuration.sni_hostname = reinterpret_cast<char *>(sni_hostname.ptr);
     backend_configuration.sni_hostname_len = sni_hostname.len;
+  } else if (config.use_ssl.value_or(false)) {
+    backend_configuration.sni_hostname = reinterpret_cast<char *>(target_str.ptr);
+    backend_configuration.sni_hostname_len = target_str.len;
   }
 
   if (auto &val = config.client_cert) {
@@ -1105,7 +1163,6 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
   }
 
   auto name_str = string_view_to_world_string(name);
-  auto target_str = string_view_to_world_string(target);
   fastly::fastly_host_error err;
   if (!convert_result(fastly::req_register_dynamic_backend(
                           reinterpret_cast<char *>(name_str.ptr), name_str.len,
@@ -1272,7 +1329,7 @@ Result<HostBytes> HttpReq::downstream_client_ip_addr() {
     cabi_free(octets.ptr);
     res.emplace_err(err);
   } else {
-    res.emplace(make_host_bytes(octets));
+    res.emplace(make_host_bytes(octets.ptr, octets.len));
   }
 
   return res;
@@ -1288,7 +1345,7 @@ Result<HostBytes> HttpReq::downstream_server_ip_addr() {
     cabi_free(octets.ptr);
     res.emplace_err(err);
   } else {
-    res.emplace(make_host_bytes(octets));
+    res.emplace(make_host_bytes(octets.ptr, octets.len));
   }
 
   return res;
@@ -1375,7 +1432,7 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_client_hello()
       res.emplace_err(err);
     }
   } else {
-    res.emplace(make_host_bytes(ret));
+    res.emplace(make_host_bytes(ret.ptr, ret.len));
   }
 
   return res;
@@ -1402,7 +1459,7 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_raw_client_cer
       res.emplace_err(err);
     }
   } else {
-    res.emplace(make_host_bytes(ret));
+    res.emplace(make_host_bytes(ret.ptr, ret.len));
   }
 
   return res;
@@ -1429,7 +1486,7 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_ja3_md5() {
       res.emplace_err(err);
     }
   } else {
-    res.emplace(make_host_bytes(ret));
+    res.emplace(make_host_bytes(ret.ptr, ret.len));
   }
 
   return res;
@@ -1565,7 +1622,7 @@ Result<std::optional<HostBytes>> HttpResp::get_ip() const {
       res.emplace_err(err);
     }
   } else {
-    res.emplace(make_host_bytes(ret));
+    res.emplace(make_host_bytes(ret.ptr, ret.len));
   }
   return res;
 }
@@ -1878,7 +1935,7 @@ Result<std::optional<HostBytes>> Secret::plaintext() const {
   } else {
     ret.ptr =
         static_cast<uint8_t *>(JS_realloc(CONTEXT, ret.ptr, DICTIONARY_ENTRY_MAX_LEN, ret.len));
-    res.emplace(make_host_bytes(ret));
+    res.emplace(make_host_bytes(ret.ptr, ret.len));
   }
 
   return res;
@@ -1920,7 +1977,7 @@ Result<std::optional<Secret>> SecretStore::get(std::string_view name) {
   return res;
 }
 
-Result<Secret> SecretStore::from_bytes(uint8_t *bytes, size_t len) {
+Result<Secret> SecretStore::from_bytes(const uint8_t *bytes, size_t len) {
   Result<Secret> res;
 
   fastly::fastly_world_list_u8 bytes_list{const_cast<uint8_t *>(bytes), len};
@@ -2375,7 +2432,7 @@ Result<HostBytes> CacheHandle::get_user_metadata() {
     cabi_free(ret.ptr);
     res.emplace_err(err);
   } else {
-    res.emplace(make_host_bytes(ret));
+    res.emplace(make_host_bytes(ret.ptr, ret.len));
   }
 
   return res;
@@ -2449,6 +2506,35 @@ Result<uint64_t> CacheHandle::get_hits() {
   }
 
   return res;
+}
+
+const std::optional<std::string> FastlyKVError::message() const {
+  switch (this->detail) {
+  /// The kv-error-detail struct has not been populated.
+  case uninitialized:
+    return "Uninitialized.";
+  /// There was no kv error.
+  case ok:
+    return std::nullopt;
+  /// Bad request.
+  case bad_request:
+    return "Bad request.";
+  /// KV store entry not found.
+  case not_found:
+    return "Not found.";
+  /// Invalid state for operation.
+  case precondition_failed:
+    return "Precondition failed.";
+  /// Buffer size issues.
+  case payload_too_large:
+    return "Payload too large.";
+  /// Oh no.
+  case internal_error:
+    return "Internal error.";
+  /// Rate limiting
+  case too_many_requests:
+    return "Too many requests.";
+  };
 }
 
 const std::optional<std::string> FastlySendError::message() const {
@@ -3059,6 +3145,232 @@ Result<HostString> DeviceDetection::lookup(std::string_view user_agent) {
     res.emplace(make_host_string(ret));
   }
   return res;
+}
+
+Result<KVStore> KVStore::open(std::string_view name) {
+  Result<KVStore> res;
+
+  auto name_str = string_view_to_world_string(name);
+  KVStore::Handle ret;
+  fastly::fastly_host_error err;
+  if (!convert_result(
+          fastly::kv_store_open(reinterpret_cast<char *>(name_str.ptr), name_str.len, &ret),
+          &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<KVStorePendingList::Handle> KVStore::list(std::optional<string_view> cursor,
+                                                 std::optional<uint32_t> limit,
+                                                 std::optional<string_view> prefix, bool eventual) {
+  Result<KVStorePendingList::Handle> res;
+
+  fastly::KVListOptions list_options{eventual ? KV_LIST_MODE_EVENTUAL : KV_LIST_MODE_STRONG};
+
+  uint32_t options_mask = 0;
+  if (cursor.has_value()) {
+    options_mask |= KV_LIST_CONFIG_CURSOR;
+    list_options.cursor = reinterpret_cast<const uint8_t *>(cursor.value().data());
+    list_options.cursor_len = cursor.value().length();
+  }
+  if (limit.has_value()) {
+    options_mask |= KV_LIST_CONFIG_LIMIT;
+    list_options.limit = limit.value();
+  }
+  if (prefix.has_value()) {
+    options_mask |= KV_LIST_CONFIG_PREFIX;
+    list_options.prefix = reinterpret_cast<const uint8_t *>(prefix.value().data());
+    list_options.prefix_len = prefix.value().length();
+  }
+
+  KVStore::Handle ret;
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::kv_store_list(this->handle, options_mask, &list_options, &ret),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+  return res;
+}
+
+FastlyResult<HttpBody, FastlyKVError> KVStorePendingList::wait() {
+  FastlyResult<HttpBody, FastlyKVError> res;
+
+  fastly::fastly_host_error err;
+  HttpBody body{};
+  fastly::fastly_kv_error kv_err;
+
+  if (!convert_result(fastly::kv_store_list_wait(this->handle, &body.handle, &kv_err), &err) ||
+      kv_err != KV_ERROR_OK || body.handle == INVALID_HANDLE) {
+    res.emplace_err(make_fastly_kv_error(kv_err));
+  } else {
+    res.emplace(body);
+  }
+
+  return res;
+}
+
+FastlyAsyncTask::Handle KVStorePendingList::async_handle() const {
+  return FastlyAsyncTask::Handle{this->handle};
+}
+
+Result<KVStorePendingLookup::Handle> KVStore::lookup(std::string_view key) {
+  Result<KVStorePendingLookup::Handle> res;
+  fastly::KVLookupOptions lookup_options{};
+  KVStore::Handle ret;
+  fastly::fastly_host_error err;
+  if (!convert_result(
+          fastly::kv_store_lookup(this->handle, key.data(), key.length(), 0, &lookup_options, &ret),
+          &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+  return res;
+}
+
+FastlyResult<std::optional<std::tuple<HttpBody, HostBytes, uint32_t>>, FastlyKVError>
+KVStorePendingLookup::wait() {
+  FastlyResult<std::optional<std::tuple<HttpBody, HostBytes, uint32_t>>, FastlyKVError> res;
+
+  fastly::fastly_host_error err;
+  HttpBody body{};
+
+  uint32_t gen_out;
+  fastly::fastly_kv_error kv_err = 0;
+  uint8_t *metadata_buf = reinterpret_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
+  size_t metadata_nwritten;
+
+  if (!convert_result(fastly::kv_store_lookup_wait(this->handle, &body.handle, metadata_buf,
+                                                   HOSTCALL_BUFFER_LEN, &metadata_nwritten,
+                                                   &gen_out, &kv_err),
+                      &err) ||
+      ((kv_err != KV_ERROR_OK || body.handle == INVALID_HANDLE) && kv_err != KV_ERROR_NOT_FOUND)) {
+    cabi_free(metadata_buf);
+    res.emplace_err(make_fastly_kv_error(kv_err));
+  } else if (kv_err == KV_ERROR_NOT_FOUND) {
+    cabi_free(metadata_buf);
+    res.emplace(std::nullopt);
+  } else {
+    if (metadata_nwritten > 0) {
+      cabi_realloc(metadata_buf, HOSTCALL_BUFFER_LEN, 1, metadata_nwritten);
+      res.emplace(std::make_tuple(body, make_host_bytes(metadata_buf, metadata_nwritten), gen_out));
+    } else {
+      cabi_free(metadata_buf);
+      res.emplace(std::make_tuple(body, HostBytes{}, gen_out));
+    }
+  }
+
+  return res;
+}
+
+FastlyAsyncTask::Handle KVStorePendingLookup::async_handle() const {
+  return FastlyAsyncTask::Handle{this->handle};
+}
+
+Result<KVStorePendingDelete::Handle> KVStore::delete_(std::string_view key) {
+  Result<KVStorePendingDelete::Handle> res;
+  fastly::KVDeleteOptions delete_options{};
+  KVStore::Handle ret;
+  fastly::fastly_host_error err;
+  if (!convert_result(
+          fastly::kv_store_delete(this->handle, key.data(), key.length(), 0, &delete_options, &ret),
+          &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+  return res;
+}
+
+FastlyResult<Void, FastlyKVError> KVStorePendingDelete::wait() {
+  FastlyResult<Void, FastlyKVError> res;
+  fastly::fastly_host_error err;
+  fastly::fastly_kv_error kv_err;
+  if (!convert_result(fastly::kv_store_delete_wait(this->handle, &kv_err), &err) ||
+      kv_err != KV_ERROR_OK) {
+    res.emplace_err(make_fastly_kv_error(kv_err));
+  }
+  return res;
+}
+
+FastlyAsyncTask::Handle KVStorePendingDelete::async_handle() const {
+  return FastlyAsyncTask::Handle{this->handle};
+}
+
+Result<KVStorePendingInsert::Handle>
+KVStore::insert(std::string_view key, HttpBody body, std::optional<InsertMode> mode,
+                std::optional<uint32_t> if_generation_match,
+                std::optional<std::tuple<const uint8_t *, size_t>> metadata,
+                std::optional<uint32_t> ttl) {
+  Result<KVStorePendingInsert::Handle> res;
+  fastly::KVInsertOptions insert_options{};
+
+  uint32_t options_mask = 0;
+  if (mode.has_value()) {
+    switch (mode.value()) {
+    case InsertMode::add: {
+      insert_options.mode = KV_INSERT_MODE_ADD;
+      break;
+    }
+    case InsertMode::append: {
+      insert_options.mode = KV_INSERT_MODE_APPEND;
+      break;
+    }
+    case InsertMode::overwrite: {
+      insert_options.mode = KV_INSERT_MODE_OVERWRITE;
+      break;
+    }
+    case InsertMode::prepend: {
+      insert_options.mode = KV_INSERT_MODE_PREPEND;
+      break;
+    }
+    }
+  }
+  if (metadata.has_value()) {
+    options_mask |= KV_INSERT_CONFIG_METADATA;
+    insert_options.metadata_len = std::get<1>(metadata.value());
+    insert_options.metadata = std::get<0>(metadata.value());
+  }
+  if (if_generation_match.has_value()) {
+    options_mask |= KV_INSERT_CONFIG_IF_GENERATION_MATCH;
+    insert_options.if_generation_match = if_generation_match.value();
+  }
+  if (ttl.has_value()) {
+    options_mask |= KV_INSERT_CONFIG_TIME_TO_LIVE_SEC;
+    insert_options.time_to_live_sec = ttl.value();
+  }
+
+  KVStore::Handle ret;
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::kv_store_insert(this->handle, key.data(), key.length(), body.handle,
+                                              options_mask, &insert_options, &ret),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+  return res;
+}
+
+FastlyResult<Void, FastlyKVError> KVStorePendingInsert::wait() {
+  FastlyResult<Void, FastlyKVError> res;
+  fastly::fastly_host_error err;
+  fastly::fastly_kv_error kv_err;
+  if (!convert_result(fastly::kv_store_insert_wait(this->handle, &kv_err), &err) ||
+      kv_err != KV_ERROR_OK) {
+    res.emplace_err(make_fastly_kv_error(kv_err));
+  }
+  return res;
+}
+
+FastlyAsyncTask::Handle KVStorePendingInsert::async_handle() const {
+  return FastlyAsyncTask::Handle{this->handle};
 }
 
 Result<uint64_t> Compute::get_vcpu_ms() {

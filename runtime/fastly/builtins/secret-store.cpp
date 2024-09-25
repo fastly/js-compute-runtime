@@ -1,8 +1,10 @@
 #include "secret-store.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
+#include "../common/validations.h"
 #include "../host-api/host_api_fastly.h"
 #include "fastly.h"
 
+using fastly::common::validate_bytes;
 using fastly::fastly::FastlyGetErrorMessage;
 
 namespace fastly::secret_store {
@@ -176,38 +178,6 @@ bool SecretStore::from_bytes(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!args.requireAtLeast(cx, "SecretStore.fromBytes", 1)) {
     return false;
   }
-  auto bytes = args.get(0);
-  if (!bytes.isObject()) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                              JSMSG_SECRET_STORE_FROM_BYTES_INVALID_BUFFER);
-    return false;
-  }
-
-  JS::RootedObject bytes_obj(cx, &bytes.toObject());
-
-  if (!JS::IsArrayBufferObject(bytes_obj) && !JS_IsArrayBufferViewObject(bytes_obj)) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                              JSMSG_SECRET_STORE_FROM_BYTES_INVALID_BUFFER);
-    return false;
-  }
-
-  mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
-  uint8_t *buf;
-  size_t length;
-  if (JS_IsArrayBufferViewObject(bytes_obj)) {
-    JS::AutoCheckCannotGC noGC;
-    bool is_shared;
-    length = JS_GetArrayBufferViewByteLength(bytes_obj);
-    buf = (uint8_t *)JS_GetArrayBufferViewData(bytes_obj, &is_shared, noGC);
-    MOZ_ASSERT(!is_shared);
-  } else if (JS::IsArrayBufferObject(bytes_obj)) {
-    bool is_shared;
-    JS::GetArrayBufferLengthAndData(bytes_obj, &length, &is_shared, (uint8_t **)&buf);
-  } else {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                              JSMSG_SECRET_STORE_FROM_BYTES_INVALID_BUFFER);
-    return false;
-  }
 
   JS::RootedObject entry(
       cx, JS_NewObjectWithGivenProto(cx, &SecretStoreEntry::class_, SecretStoreEntry::proto_obj));
@@ -215,7 +185,17 @@ bool SecretStore::from_bytes(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto res = host_api::SecretStore::from_bytes(buf, length);
+  auto bytes = args.get(0);
+
+  auto maybe_byte_data = validate_bytes(cx, bytes, "SecretStore.fromBytes");
+  if (!maybe_byte_data) {
+    return false;
+  }
+  // important no work is done here before the host call so our buffer doesn't move
+  const uint8_t *data;
+  size_t len;
+  std::tie(data, len) = maybe_byte_data.value();
+  auto res = host_api::SecretStore::from_bytes(data, len);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;

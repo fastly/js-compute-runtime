@@ -6,6 +6,7 @@ import { env } from 'fastly:env';
 
 import './hello-world.js';
 import './hono.js';
+import './kv-store.js';
 
 addEventListener('fetch', (event) => {
   event.respondWith(app(event));

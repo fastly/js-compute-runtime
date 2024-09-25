@@ -2,12 +2,12 @@
 #define fastly_H
 #ifdef __cplusplus
 extern "C" {
+namespace fastly {
 #endif
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-namespace fastly {
 
 typedef struct fastly_world_string {
   uint8_t *ptr;
@@ -193,7 +193,9 @@ typedef struct fastly_host_http_send_error_detail {
   uint8_t tls_alert_id;
 } fastly_host_http_send_error_detail;
 
-// The values need to match https://docs.rs/fastly-sys/0.8.7/src/fastly_sys/lib.rs.html#86-108
+typedef uint32_t fastly_kv_error;
+
+// The values need to match https://docs.rs/fastly-sys/0.10.5/src/fastly_sys/lib.rs.html#111
 #define BACKEND_CONFIG_RESERVED (1u << 0)
 #define BACKEND_CONFIG_HOST_OVERRIDE (1u << 1)
 #define BACKEND_CONFIG_CONNECT_TIMEOUT (1u << 2)
@@ -547,6 +549,101 @@ int object_store_pending_delete_wait(uint32_t handle);
 WASM_IMPORT("fastly_object_store", "insert")
 int object_store_insert(uint32_t object_store_handle, const char *key, size_t key_len,
                         uint32_t body_handle);
+
+// Module fastly_kv_store
+#define KV_LOOKUP_CONFIG_RESERVED (1u << 0)
+
+typedef struct __attribute__((aligned(4))) KVLookupOptions {
+  uint32_t reserved;
+} KVLookupOptions;
+
+#define KV_INSERT_CONFIG_RESERVED (1u << 0)
+#define KV_INSERT_CONFIG_BACKGROUND_FETCH (1u << 1)
+#define KV_INSERT_CONFIG_IF_GENERATION_MATCH (1u << 2)
+#define KV_INSERT_CONFIG_METADATA (1u << 3)
+#define KV_INSERT_CONFIG_TIME_TO_LIVE_SEC (1u << 4)
+
+#define KV_INSERT_MODE_OVERWRITE 0u
+#define KV_INSERT_MODE_ADD 1u
+#define KV_INSERT_MODE_APPEND 2u
+#define KV_INSERT_MODE_PREPEND 3u
+
+typedef struct __attribute__((aligned(4))) KVInsertOptions {
+  uint32_t mode;
+  uint32_t if_generation_match;
+  const uint8_t *metadata;
+  uint32_t metadata_len;
+  uint32_t time_to_live_sec;
+} KVInsertOptions;
+
+#define KV_DELETE_CONFIG_RESERVED (1u << 0)
+
+typedef struct __attribute__((aligned(4))) KVDeleteOptions {
+  uint32_t reserved;
+} KVDeleteOptions;
+
+#define KV_LIST_CONFIG_RESERVED (1u << 0)
+#define KV_LIST_CONFIG_CURSOR (1u << 1)
+#define KV_LIST_CONFIG_LIMIT (1u << 2)
+#define KV_LIST_CONFIG_PREFIX (1u << 3)
+
+#define KV_LIST_MODE_STRONG 0u
+#define KV_LIST_MODE_EVENTUAL 1u
+
+typedef struct __attribute__((aligned(4))) KVListOptions {
+  uint32_t mode;
+  const uint8_t *cursor;
+  uint32_t cursor_len;
+  uint32_t limit;
+  const uint8_t *prefix;
+  uint32_t prefix_len;
+} KVListOptions;
+
+#define KV_ERROR_UNINITIALIZED 0u
+#define KV_ERROR_OK 1u
+#define KV_ERROR_BAD_REQUEST 2u
+#define KV_ERROR_NOT_FOUND 3u
+#define KV_ERROR_PRECONDITION_FAILED 4u
+#define KV_ERROR_PAYLOAD_TOO_LARGE 5u
+#define KV_ERROR_INTERNAL_ERROR 6u
+#define KV_ERROR_TOO_MANY_REQUESTS 7u
+
+WASM_IMPORT("fastly_kv_store", "open")
+int kv_store_open(const char *name, size_t name_len, uint32_t *kv_store_handle_out);
+
+WASM_IMPORT("fastly_kv_store", "lookup")
+int kv_store_lookup(uint32_t kv_store_handle, const char *key, size_t key_len,
+                    uint32_t lookup_options_mask, KVLookupOptions *lookup_options,
+                    uint32_t *kv_store_lookup_handle_out);
+
+WASM_IMPORT("fastly_kv_store", "lookup_wait")
+int kv_store_lookup_wait(uint32_t kv_store_handle_lookup_handle, uint32_t *body_handle_out,
+                         uint8_t *metadata_buf_out, size_t metadata_buf_len, size_t *nwritten_out,
+                         uint32_t *generation_out, uint32_t *kv_error_out);
+
+WASM_IMPORT("fastly_kv_store", "insert")
+int kv_store_insert(uint32_t kv_store_handle, const char *key, size_t key_len, uint32_t body_handle,
+                    uint32_t insert_options_mask, KVInsertOptions *insert_options,
+                    uint32_t *kv_store_insert_handle_out);
+
+WASM_IMPORT("fastly_kv_store", "insert_wait")
+int kv_store_insert_wait(uint32_t kv_store_insert_handle, uint32_t *kv_error_out);
+
+WASM_IMPORT("fastly_kv_store", "delete")
+int kv_store_delete(uint32_t handle, const char *key, size_t key_len, uint32_t delete_options_mask,
+                    KVDeleteOptions *delete_options, uint32_t *kv_store_delete_handle_out);
+
+WASM_IMPORT("fastly_kv_store", "delete_wait")
+int kv_store_delete_wait(uint32_t kv_store_delete_handle, uint32_t *kv_error_out);
+
+WASM_IMPORT("fastly_kv_store", "list")
+int kv_store_list(uint32_t kv_store_handle, uint32_t list_options_mask, KVListOptions *list_options,
+                  uint32_t *kv_store_list_handle_out);
+
+WASM_IMPORT("fastly_kv_store", "list_wait")
+int kv_store_list_wait(uint32_t kv_store_list_handle, uint32_t *body_handle_out,
+                       uint32_t *kv_error_out);
+
 WASM_IMPORT("fastly_geo", "lookup")
 int geo_lookup(const uint8_t *addr_octets, size_t addr_len, char *buf, size_t buf_len,
                size_t *nwritten);
@@ -578,11 +675,11 @@ int async_select(uint32_t handles[], size_t handles_len, uint32_t timeout_ms,
 WASM_IMPORT("fastly_async_io", "is_ready")
 int async_is_ready(uint32_t handle, uint32_t *is_ready_out);
 
-struct __attribute__((aligned(4))) PurgeOptions {
+typedef struct __attribute__((aligned(4))) PurgeOptions {
   uint8_t *ret_buf_ptr;
   size_t ret_buf_len;
   size_t *ret_buf_nwritten_out;
-};
+} PurgeOptions;
 
 #define FASTLY_HOST_PURGE_OPTIONS_MASK_SOFT_PURGE (1 << 0)
 #define FASTLY_HOST_PURGE_OPTIONS_MASK_RET_BUF (1 << 1)
@@ -806,8 +903,8 @@ int device_detection_lookup(const char *user_agent, size_t user_agent_len, const
 WASM_IMPORT("fastly_compute_runtime", "get_vcpu_ms")
 int compute_get_vcpu_ms(uint64_t *vcpu_ms);
 
-} // namespace fastly
 #ifdef __cplusplus
-}
+} // namespace fastly
+} // extern C
 #endif
 #endif

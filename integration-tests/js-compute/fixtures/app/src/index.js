@@ -27,7 +27,6 @@ import './fetch-errors.js';
 import './geoip.js';
 import './headers.js';
 import './include-bytes.js';
-import './kv-store.js';
 import './logger.js';
 import './manual-framing-headers.js';
 import './missing-backend.js';

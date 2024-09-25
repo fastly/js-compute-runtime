@@ -17,6 +17,7 @@
 #include "js/experimental/TypedData.h"
 #pragma clang diagnostic pop
 
+#include "../common/validations.h"
 #include "../host-api/host_api_fastly.h"
 #include "./fetch/request-response.h"
 #include "./secret-store.h"
@@ -27,6 +28,7 @@
 #include "fastly.h"
 
 using builtins::BuiltinImpl;
+using fastly::common::parse_and_validate_timeout;
 using fastly::fastly::Fastly;
 using fastly::fastly::FastlyGetErrorMessage;
 using fastly::fetch::RequestOrResponse;
@@ -796,32 +798,6 @@ bool set_sni_hostname(JSContext *cx, host_api::BackendConfig &backend,
   return true;
 }
 
-// Timeouts for backends must be less than 2^32 milliseconds, or
-// about a month and a half.
-std::optional<uint32_t> parse_and_validate_timeout(JSContext *cx, JS::HandleValue value,
-                                                   std::string property_name) {
-  double native_value;
-  if (!JS::ToNumber(cx, value, &native_value)) {
-    return std::nullopt;
-  }
-  if (std::isnan(native_value)) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_NAN,
-                              property_name.c_str());
-    return std::nullopt;
-  }
-  if (native_value < 0) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_NEGATIVE,
-                              property_name.c_str());
-    return std::nullopt;
-  }
-  if (native_value >= 0x100000000) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_TOO_BIG,
-                              property_name.c_str());
-    return std::nullopt;
-  }
-  return std::round(native_value);
-}
-
 bool validate_target(JSContext *cx, std::string_view target_string) {
   auto length = target_string.length();
   if (length == 0) {
@@ -842,6 +818,8 @@ bool validate_target(JSContext *cx, std::string_view target_string) {
 }
 
 host_api::BackendConfig default_backend_config{};
+
+const double MAX_BACKEND_TIMEOUT = 0x100000000;
 
 bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
                           HandleObject configuration) {
@@ -867,7 +845,8 @@ bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
     if (!JS_GetProperty(cx, configuration, "connectTimeout", &connect_timeout_val)) {
       return false;
     }
-    auto parsed = parse_and_validate_timeout(cx, connect_timeout_val, "connectTimeout");
+    auto parsed = parse_and_validate_timeout(cx, connect_timeout_val, "Backend constructor",
+                                             "connectTimeout", MAX_BACKEND_TIMEOUT);
     if (!parsed) {
       return false;
     }
@@ -884,7 +863,8 @@ bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
     if (!JS_GetProperty(cx, configuration, "firstByteTimeout", &first_byte_timeout_val)) {
       return false;
     }
-    auto parsed = parse_and_validate_timeout(cx, first_byte_timeout_val, "firstByteTimeout");
+    auto parsed = parse_and_validate_timeout(cx, first_byte_timeout_val, "Backend constructor",
+                                             "firstByteTimeout", MAX_BACKEND_TIMEOUT);
     if (!parsed) {
       return false;
     }
@@ -901,7 +881,8 @@ bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
     if (!JS_GetProperty(cx, configuration, "betweenBytesTimeout", &between_bytes_timeout_val)) {
       return false;
     }
-    auto parsed = parse_and_validate_timeout(cx, between_bytes_timeout_val, "betweenBytesTimeout");
+    auto parsed = parse_and_validate_timeout(cx, between_bytes_timeout_val, "Backend constructor",
+                                             "betweenBytesTimeout", MAX_BACKEND_TIMEOUT);
     if (!parsed) {
       return false;
     }
@@ -1166,7 +1147,8 @@ bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
     if (!JS_GetProperty(cx, configuration, "httpKeepalive", &http_keepalive_time_ms_val)) {
       return false;
     }
-    auto parsed = parse_and_validate_timeout(cx, http_keepalive_time_ms_val, "httpKeepalive");
+    auto parsed = parse_and_validate_timeout(cx, http_keepalive_time_ms_val, "httpKeepalive",
+                                             "Backend constructor", MAX_BACKEND_TIMEOUT);
     if (!parsed) {
       return false;
     }
@@ -1202,7 +1184,8 @@ bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
         if (!JS_GetProperty(cx, tcp_keepalive_obj, "timeSecs", &tcp_keepalive_time_secs_val)) {
           return false;
         }
-        auto parsed = parse_and_validate_timeout(cx, tcp_keepalive_time_secs_val, "timeSecs");
+        auto parsed = parse_and_validate_timeout(cx, tcp_keepalive_time_secs_val, "timeSecs",
+                                                 "Backend constructor", MAX_BACKEND_TIMEOUT);
         if (!parsed) {
           return false;
         }
@@ -1219,7 +1202,8 @@ bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
           return false;
         }
         auto parsed =
-            parse_and_validate_timeout(cx, tcp_keepalive_interval_secs_val, "intervalSecs");
+            parse_and_validate_timeout(cx, tcp_keepalive_interval_secs_val, "intervalSecs",
+                                       "Backend constructor", MAX_BACKEND_TIMEOUT);
         if (!parsed) {
           return false;
         }
