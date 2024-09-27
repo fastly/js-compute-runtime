@@ -245,7 +245,7 @@ typedef struct DynamicBackendConfig {
   uint32_t client_key;
   uint32_t http_keepalive_time_ms;
   uint32_t tcp_keepalive_enable;
-  uint32_t tcp_keepalive_interface_secs;
+  uint32_t tcp_keepalive_interval_secs;
   uint32_t tcp_keepalive_probes;
   uint32_t tcp_keepalive_time_secs;
 } DynamicBackendConfig;

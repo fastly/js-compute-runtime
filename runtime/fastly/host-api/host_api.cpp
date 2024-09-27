@@ -985,7 +985,6 @@ Result<Void> HttpReq::auto_decompress_gzip() {
 Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::string_view target,
                                                const BackendConfig &config) {
   Result<Void> res;
-
   fastly::DynamicBackendConfig backend_configuration;
   memset(&backend_configuration, 0, sizeof(backend_configuration));
   uint32_t backend_config_mask = 0;
@@ -1068,6 +1067,27 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
 
   if (config.grpc.value_or(false)) {
     backend_config_mask |= BACKEND_CONFIG_GRPC;
+  }
+
+  if (config.http_keepalive_time_ms.has_value()) {
+    backend_config_mask |= BACKEND_CONFIG_KEEPALIVE;
+    backend_configuration.tcp_keepalive_enable = 1;
+    backend_configuration.http_keepalive_time_ms = config.http_keepalive_time_ms.value();
+  }
+
+  if (config.tcp_keepalive.has_value()) {
+    backend_config_mask |= BACKEND_CONFIG_KEEPALIVE;
+    backend_configuration.tcp_keepalive_enable = 1;
+    auto tcp_keepalive = config.tcp_keepalive.value();
+    if (tcp_keepalive.interval_secs.has_value()) {
+      backend_configuration.tcp_keepalive_interval_secs = tcp_keepalive.interval_secs.value();
+    }
+    if (tcp_keepalive.probes.has_value()) {
+      backend_configuration.tcp_keepalive_probes = tcp_keepalive.probes.value();
+    }
+    if (tcp_keepalive.time_secs.has_value()) {
+      backend_configuration.tcp_keepalive_time_secs = tcp_keepalive.time_secs.value();
+    }
   }
 
   auto name_str = string_view_to_world_string(name);

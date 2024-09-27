@@ -4,51 +4,16 @@ hide_table_of_contents: false
 pagination_next: null
 pagination_prev: null
 ---
-import {Fiddle} from '@site/src/components/fiddle';
 
-# `Backend()`
+# setDefaultBackendConfiguration()
 
-The **`Backend` constructor** lets you dynamically create new [Fastly Backends](https://developer.fastly.com/reference/api/services/backend/) for your Fastly Compute service.
-
-Dynamically creating new [Fastly Backends](https://developer.fastly.com/reference/api/services/backend/) is disabled by default for Fastly Services. Please contact [Fastly Support](https://support.fastly.com/hc/requests/new?ticket_form_id=360000269711) to request the feature be enabled on the Fastly Services which require Dynamic Backends.
-
-By default, Dynamic Backends are disabled within a JavaScript application as it can be a potential avenue for third-party JavaScript code to send requests, potentially including sensitive/secret data, off to destinations that the JavaScript project was not intending, which could be a security issue.
-
-To enable Dynamic Backends the application will need to explicitly allow Dynamic Backends via:
-
-```js
-import { allowDynamicBackends } from "fastly:experimental";
-allowDynamicBackends(true);
-```
-
-**Note**: Backend constructors can only be used when processing requests, not during build-time initialization.
-
-## Syntax
-
-```js
-new Backend(backendConfiguration)
-```
-
-> **Note:** `Backend()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
+The **`setDefaultBackendConfiguration()`** allows setting backend configuration defaults that should apply to any newly created dynamic backends via the `new Backend()` constructor.
 
 ### Parameters
 
-- `backendConfiguration`
+- `defaultBackendConfiguration`
 
-  - : An Object which contains all the configuration options to apply to the newly created Backend.
-
-    - `name` _: string_
-      - The name of the backend.
-      - The name has to be between 1 and 254 characters inclusive.
-      - The name can be whatever you would like, as long as it does not match the name of any of the static service backends nor match any other dynamic backends built during a single execution of the application.
-      - Throws a [`TypeError`](../../globals/TypeError/TypeError.mdx) if the value is not valid. I.E. The value is null, undefined, an empty string or a string with more than 254 characters.
-    - `target` _: string_
-      - A hostname, IPv4, or IPv6 address for the backend as well as an optional port.
-      - The target has to be at-least 1 character.
-      - Throws a [`TypeError`](../../globals/TypeError/TypeError.mdx) if the value is not valid. I.E. Is null, undefined, an empty string, not a valid IP address or host, or is the string `::`
-    - `hostOverride` _: string_ _**optional**_
-      - If set, will force the HTTP Host header on connections to this backend to be the supplied value.
-      - Throws a [`TypeError`](../../globals/TypeError/TypeError.mdx) if the value is an empty string.
+  - : An Object which contains the generic configuration options to apply to newly created Backends.
     - `connectTimeout` _: number_ _**optional**_
       - Maximum duration in milliseconds to wait for a connection to this backend to be established.
       - If exceeded, the connection is aborted and a 503 response will be presented instead.
@@ -88,9 +53,6 @@ new Backend(backendConfiguration)
       - If the backend server is not able to negotiate a connection meeting this constraint, a 503 response will be presented instead.
       - [List of ciphers supported by Fastly](https://developer.fastly.com/learning/concepts/routing-traffic-to-fastly/#use-a-tls-configuration).
       - Throws a [`TypeError`](../../globals/TypeError/TypeError.mdx) if the value is an empty string.
-    - `sniHostname` _: string_ _**optional**_
-      - The SNI hostname to use on connections to this backend.
-      - Throws a [`TypeError`](../../globals/TypeError/TypeError.mdx) if the value is an empty string.
     - `clientCertificate` _: object_ _**optional**_
       - The client certificate to provide for the TLS handshake
       - `certificate` _: string_
@@ -107,71 +69,20 @@ new Backend(backendConfiguration)
         - Configure how long to wait between each TCP keepalive probe sent to the backend to determine if it is still active.
       - `probes` _: number_ _**optional**_
         - Number of probes to send to the backend before it is considered dead.
-    - `grpc` _: boolean_ _**optional**_
-      - **_Experimental feature_**
-      - When enabled, sets that this backend is to be used for gRPC traffic. 
-      - _Warning: When using this experimental feature, no guarantees are provided for behaviours for backends that do not provide gRPC traffic._
 
-All optional generic options can have their defaults set via [`setDefaultBackendConfiguration()`](../setDefaultBackendConfiguration.mdx).
+## Syntax
 
-This includes all configuration options above except for `name`, `target`, `hostOverride`, `sniHostname` and `grpc`.
+```js
+setDefaultBackendConfiguration(defaultConfig)
+```
 
 ### Return value
 
-A new `Backend` object.
+None.
 
 ## Examples
 
-In this example an implicit Dynamic Backend is created when making the fetch request to <https://www.fastly.com/> and the response is then returned to the client.
-<Fiddle config={{
-  "type": "javascript",
-  "title": "Implicit Dynamic Backend Example",
-  "origins": [
-    "https://http-me.glitch.me"
-  ],
-  "src": {
-    "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",
-    "main": `
-/// <reference types="@fastly/js-compute" />
-import { allowDynamicBackends } from "fastly:experimental";
-allowDynamicBackends(true);
-async function app() {
-  // For any request, return the fastly homepage -- without defining a backend!
-  return fetch('https://www.fastly.com/');
-}
-addEventListener("fetch", event => event.respondWith(app(event)));
-`
-  },
-  "requests": [
-    {
-      "enableCluster": true,
-      "enableShield": false,
-      "enableWAF": false,
-      "method": "GET",
-      "path": "/status=200",
-      "useFreshCache": false,
-      "followRedirects": false,
-      "tests": "",
-      "delay": 0
-    }
-  ],
-  "srcVersion": 1
-}}>
-
-```js
-/// <reference types="@fastly/js-compute" />
-import { allowDynamicBackends } from "fastly:experimental";
-allowDynamicBackends(true);
-async function app() {
-  // For any request, return the fastly homepage -- without defining a backend!
-  return fetch('https://www.fastly.com/');
-}
-addEventListener("fetch", event => event.respondWith(app(event)));
-```
-
-</Fiddle>
-
-In this example an explicit Dynamic Backend is created and supplied to the fetch request, the response is then returned to the client.
+In this example an explicit Dynamic Backend is created and supplied to the fetch request, with timeouts and TLS options provided from the default backend configuration options.
 
 
 <Fiddle config={{
@@ -185,20 +96,23 @@ In this example an explicit Dynamic Backend is created and supplied to the fetch
     "main": `
 /// <reference types="@fastly/js-compute" />
 import { allowDynamicBackends } from "fastly:experimental";
-import { Backend } from "fastly:backend";
+import { Backend, setDefaultBackendConfiguration } from "fastly:backend";
 allowDynamicBackends(true);
+setDefaultBackendConfiguration({
+  connectTimeout: 1000,
+  firstByteTimeout: 15_000,
+  betweenBytesTimeout: 10_000,
+  useSSL: true,
+  sslMinVersion: 1.3,
+  sslMaxVersion: 1.3
+});
 async function app() {
   // For any request, return the fastly homepage -- without defining a backend!
+  // Timeouts and TLS configuration still get set from the default backend configuration above.
   const backend = new Backend({
     name: 'fastly',
     target: 'fastly.com',
-    hostOverride: "www.fastly.com",
-    connectTimeout: 1000,
-    firstByteTimeout: 15000,
-    betweenBytesTimeout: 10000,
-    useSSL: true,
-    sslMinVersion: 1.3,
-    sslMaxVersion: 1.3,
+    hostOverride: "www.fastly.com"
   });
   return fetch('https://www.fastly.com/', {
     backend // Here we are configuring this request to use the backend from above.
@@ -228,18 +142,20 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 import { allowDynamicBackends } from "fastly:experimental";
 import { Backend } from "fastly:backend";
 allowDynamicBackends(true);
+setDefaultBackendConfiguration({
+  connectTimeout: 1000,
+  firstByteTimeout: 15_000,
+  betweenBytesTimeout: 10_000,
+  useSSL: true,
+  sslMinVersion: 1.3,
+  sslMaxVersion: 1.3
+});
 async function app() {
   // For any request, return the fastly homepage -- without defining a backend!
   const backend = new Backend({
     name: 'fastly',
     target: 'fastly.com',
-    hostOverride: "www.fastly.com",
-    connectTimeout: 1000,
-    firstByteTimeout: 15000,
-    betweenBytesTimeout: 10000,
-    useSSL: true,
-    sslMinVersion: 1.3,
-    sslMaxVersion: 1.3,
+    hostOverride: "www.fastly.com"
   });
   return fetch('https://www.fastly.com/', {
     backend // Here we are configuring this request to use the backend from above.

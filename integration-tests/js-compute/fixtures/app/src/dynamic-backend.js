@@ -1,5 +1,5 @@
 /// <reference path="../../../../../types/index.d.ts" />
-import { Backend } from 'fastly:backend';
+import { Backend, setDefaultBackendConfiguration } from 'fastly:backend';
 import { CacheOverride } from 'fastly:cache-override';
 import { allowDynamicBackends } from 'fastly:experimental';
 import {
@@ -1309,6 +1309,19 @@ routes.set('/backend/timeout', async () => {
           });
         },
       );
+
+      routes.set(
+        '/backend/constructor/parameter-firstByteTimeout-property-invalid-number',
+        async () => {
+          assertThrows(() => {
+            new Backend({
+              name: 'firstByteTimeout-property-valid-number',
+              target: 'a',
+              firstByteTimeout: 'zzz',
+            });
+          }, RangeError);
+        },
+      );
     }
 
     // betweenBytesTimeout property
@@ -2075,6 +2088,100 @@ routes.set('/backend/timeout', async () => {
         );
       });
     }
+
+    // httpKeepalive
+    {
+      routes.set('/backend/constructor/http-keepalive-invalid', async () => {
+        await assertRejects(async () => {
+          await fetch('https://http-me.glitch.me/anything', {
+            backend: new Backend({
+              name: 'grpc-grpc-invalid',
+              target: 'http-me.glitch.me',
+              httpKeepalive: NaN,
+            }),
+            cacheOverride: new CacheOverride('pass'),
+          });
+        }, RangeError);
+      });
+      routes.set('/backend/constructor/http-keepalive', async () => {
+        await fetch('https://http-me.glitch.me/anything', {
+          backend: new Backend({
+            name: 'grpc-grpc-invalid',
+            target: 'http-me.glitch.me',
+            httpKeepalive: 500,
+          }),
+          cacheOverride: new CacheOverride('pass'),
+        });
+      });
+    }
+
+    // tcpKeepalive
+    {
+      routes.set('/backend/constructor/tcp-keepalive-invalid', async () => {
+        await assertRejects(async () => {
+          await fetch('https://http-me.glitch.me/anything', {
+            backend: new Backend({
+              name: 'grpc-grpc-invalid',
+              target: 'http-me.glitch.me',
+              tcpKeepalive: 'blah',
+            }),
+            cacheOverride: new CacheOverride('pass'),
+          });
+        }, TypeError);
+        await assertRejects(async () => {
+          await fetch('https://http-me.glitch.me/anything', {
+            backend: new Backend({
+              name: 'grpc-grpc-invalid',
+              target: 'http-me.glitch.me',
+              tcpKeepalive: {
+                intervalSecs: 'boo',
+              },
+            }),
+            cacheOverride: new CacheOverride('pass'),
+          });
+        }, RangeError);
+      });
+      routes.set('/backend/constructor/tcp-keepalive', async () => {
+        await fetch('https://http-me.glitch.me/anything', {
+          backend: new Backend({
+            name: 'grpc-grpc-invalid',
+            target: 'http-me.glitch.me',
+            tcpKeepalive: {
+              intervalSecs: 1000,
+              probes: 4,
+            },
+          }),
+          cacheOverride: new CacheOverride('pass'),
+        });
+      });
+    }
+  }
+
+  // setDefaultBackendConfiguration
+  {
+    routes.set('/backend/set-default-backend-configuration', async () => {
+      if (isRunningLocally()) {
+        return;
+      }
+      setDefaultBackendConfiguration({
+        firstByteTimeout: 1_000,
+      });
+      const backend = new Backend({
+        name: 'new-default',
+        target: 'http-me.glitch.me',
+      });
+      console.time(`fetch('https://http-me.glitch.me/test?wait=2000'`);
+      await assertRejects(
+        () =>
+          fetch('https://http-me.glitch.me/test?wait=2000', {
+            backend,
+            cacheOverride: new CacheOverride('pass'),
+          }),
+        DOMException,
+        'HTTP response timeout',
+      );
+      console.timeEnd(`fetch('https://http-me.glitch.me/test?wait=2000'`);
+    });
   }
 
   // exists

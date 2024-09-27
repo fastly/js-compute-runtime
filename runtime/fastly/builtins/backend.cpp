@@ -714,128 +714,15 @@ bool is_valid_host(std::string_view host) {
 
 OpenSSLCipherConfigurationParser cipher_parser;
 
-bool Backend::is_cipher_suite_supported_by_fastly(std::string_view cipher_spec) {
+bool is_cipher_suite_supported_by_fastly(std::string_view cipher_spec) {
   auto ciphers = cipher_parser.parse(cipher_spec);
   return ciphers.size() > 0;
-}
-JS::Result<mozilla::Ok> Backend::register_dynamic_backend(JSContext *cx, JS::HandleObject backend) {
-  MOZ_ASSERT(is_instance(backend));
-
-  JS::RootedString name(cx, JS::GetReservedSlot(backend, Backend::Slots::Name).toString());
-  auto name_chars = core::encode(cx, name);
-  std::string_view name_str = name_chars;
-
-  JS::RootedString target(cx, JS::GetReservedSlot(backend, Backend::Slots::Target).toString());
-  auto target_chars = core::encode(cx, target);
-  std::string_view target_str = target_chars;
-
-  host_api::BackendConfig backend_config;
-
-  auto host_override_slot = JS::GetReservedSlot(backend, Backend::Slots::HostOverride);
-  if (!host_override_slot.isNullOrUndefined()) {
-    JS::RootedString host_override(cx, host_override_slot.toString());
-    auto host_override_chars = core::encode(cx, host_override);
-    backend_config.host_override.emplace(std::move(host_override_chars));
-  }
-
-  auto connect_timeout_slot = JS::GetReservedSlot(backend, Backend::Slots::ConnectTimeout);
-  if (!connect_timeout_slot.isNullOrUndefined()) {
-    backend_config.connect_timeout = connect_timeout_slot.toInt32();
-  }
-
-  auto first_byte_timeout_slot = JS::GetReservedSlot(backend, Backend::Slots::FirstByteTimeout);
-  if (!first_byte_timeout_slot.isNullOrUndefined()) {
-    backend_config.first_byte_timeout = first_byte_timeout_slot.toInt32();
-  }
-
-  auto between_bytes_timeout_slot =
-      JS::GetReservedSlot(backend, Backend::Slots::BetweenBytesTimeout);
-  if (!between_bytes_timeout_slot.isNullOrUndefined()) {
-    backend_config.between_bytes_timeout = between_bytes_timeout_slot.toInt32();
-  }
-
-  auto use_ssl_slot = JS::GetReservedSlot(backend, Backend::Slots::UseSsl);
-  if (!use_ssl_slot.isNullOrUndefined()) {
-    backend_config.use_ssl = use_ssl_slot.toBoolean();
-  }
-
-  auto dont_pool_slot = JS::GetReservedSlot(backend, Backend::Slots::DontPool);
-  if (!dont_pool_slot.isNullOrUndefined()) {
-    backend_config.dont_pool = dont_pool_slot.toBoolean();
-  }
-
-  auto tls_min_version = JS::GetReservedSlot(backend, Backend::Slots::TlsMinVersion);
-  if (!tls_min_version.isNullOrUndefined()) {
-    backend_config.ssl_min_version = host_api::TlsVersion(tls_min_version.toInt32());
-  }
-
-  auto tls_max_version = JS::GetReservedSlot(backend, Backend::Slots::TlsMaxVersion);
-  if (!tls_max_version.isNullOrUndefined()) {
-    backend_config.ssl_max_version = host_api::TlsVersion(tls_max_version.toInt32());
-  }
-
-  auto certificate_hostname_slot =
-      JS::GetReservedSlot(backend, Backend::Slots::CertificateHostname);
-  if (!certificate_hostname_slot.isNullOrUndefined()) {
-    MOZ_ASSERT(certificate_hostname_slot.isString());
-    JS::RootedString certificate_hostname_string(cx, certificate_hostname_slot.toString());
-    auto certificate_hostname_chars = core::encode(cx, certificate_hostname_string);
-    backend_config.cert_hostname.emplace(std::move(certificate_hostname_chars));
-  }
-
-  auto ca_certificate_slot = JS::GetReservedSlot(backend, Backend::Slots::CaCertificate);
-  if (!ca_certificate_slot.isNullOrUndefined()) {
-    MOZ_ASSERT(ca_certificate_slot.isString());
-    JS::RootedString ca_certificate_string(cx, ca_certificate_slot.toString());
-    auto ca_certificate_chars = core::encode(cx, ca_certificate_string);
-    backend_config.ca_cert.emplace(std::move(ca_certificate_chars));
-  }
-
-  auto ciphers_slot = JS::GetReservedSlot(backend, Backend::Slots::Ciphers);
-  if (!ciphers_slot.isNullOrUndefined()) {
-    MOZ_ASSERT(ciphers_slot.isString());
-    JS::RootedString ciphers_string(cx, ciphers_slot.toString());
-    auto ciphers_chars = core::encode(cx, ciphers_string);
-    backend_config.ciphers.emplace(std::move(ciphers_chars));
-  }
-
-  auto sni_hostname_slot = JS::GetReservedSlot(backend, Backend::Slots::SniHostname);
-  if (!sni_hostname_slot.isNullOrUndefined()) {
-    MOZ_ASSERT(sni_hostname_slot.isString());
-    JS::RootedString sni_hostname_string(cx, sni_hostname_slot.toString());
-    auto sni_hostname_chars = core::encode(cx, sni_hostname_string);
-    backend_config.sni_hostname.emplace(std::move(sni_hostname_chars));
-  }
-
-  auto client_cert_slot = JS::GetReservedSlot(backend, Backend::Slots::ClientCert);
-  if (!client_cert_slot.isNullOrUndefined()) {
-    MOZ_ASSERT(client_cert_slot.isString());
-    JS::RootedString client_cert_string(cx, client_cert_slot.toString());
-    auto client_cert_chars = core::encode(cx, client_cert_string);
-
-    auto client_cert_key_slot = JS::GetReservedSlot(backend, Backend::Slots::ClientCertKey);
-
-    backend_config.client_cert =
-        host_api::ClientCert{.cert = std::move(client_cert_chars),
-                             .key = (host_api::CertKey)client_cert_key_slot.toInt32()};
-  }
-
-  auto grpc_slot = JS::GetReservedSlot(backend, Backend::Slots::Grpc);
-  if (!grpc_slot.isNullOrUndefined()) {
-    backend_config.grpc = grpc_slot.toBoolean();
-  }
-
-  auto res = host_api::HttpReq::register_dynamic_backend(name_str, target_str, backend_config);
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return JS::Result<mozilla::Ok>(JS::Error());
-  }
-  return mozilla::Ok();
 }
 
 JSString *Backend::name(JSContext *cx, JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return JS::GetReservedSlot(self, Backend::Slots::Name).toString();
+  return nullptr;
 }
 
 bool Backend::to_string(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -866,6 +753,493 @@ host_api::HostString parse_and_validate_name(JSContext *cx, JS::HandleValue name
   }
   return core::encode(cx, name);
 }
+
+bool set_host_override(JSContext *cx, host_api::BackendConfig &backend_config,
+                       JS::HandleValue host_override_val) {
+  auto host_override = JS::RootedString(cx, JS::ToString(cx, host_override_val));
+  if (!host_override) {
+    return false;
+  }
+
+  if (JS_GetStringLength(host_override) == 0) {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_BACKEND_HOST_OVERRIDE_EMPTY);
+    return false;
+  }
+  backend_config.host_override = core::encode(cx, host_override);
+  return true;
+}
+
+bool set_sni_hostname(JSContext *cx, host_api::BackendConfig &backend,
+                      JS::HandleValue sni_hostname_val) {
+  auto sni_hostname = RootedString(cx, JS::ToString(cx, sni_hostname_val));
+  if (!sni_hostname) {
+    return false;
+  }
+
+  if (JS_GetStringLength(sni_hostname) == 0) {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_SNI_HOSTNAME_EMPTY);
+    return false;
+  }
+  backend.sni_hostname = core::encode(cx, sni_hostname);
+  return true;
+}
+
+// Timeouts for backends must be less than 2^32 milliseconds, or
+// about a month and a half.
+std::optional<uint32_t> parse_and_validate_timeout(JSContext *cx, JS::HandleValue value,
+                                                   std::string property_name) {
+  double native_value;
+  if (!JS::ToNumber(cx, value, &native_value)) {
+    return std::nullopt;
+  }
+  if (std::isnan(native_value)) {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_NAN,
+                              property_name.c_str());
+    return std::nullopt;
+  }
+  if (native_value < 0) {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_NEGATIVE,
+                              property_name.c_str());
+    return std::nullopt;
+  }
+  if (native_value >= 0x100000000) {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_TOO_BIG,
+                              property_name.c_str());
+    return std::nullopt;
+  }
+  return std::round(native_value);
+}
+
+bool validate_target(JSContext *cx, std::string_view target_string) {
+  auto length = target_string.length();
+  if (length == 0) {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_EMPTY);
+    return false;
+  }
+
+  if (target_string == "::") {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_INVALID);
+    return false;
+  }
+  if (!is_valid_host(target_string) && !is_valid_ip(target_string)) {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_INVALID);
+    return false;
+  }
+
+  return true;
+}
+
+host_api::BackendConfig default_backend_config{};
+
+bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
+                          HandleObject configuration) {
+  bool found;
+  JS::RootedValue host_override_val(cx);
+  if (!JS_HasProperty(cx, configuration, "hostOverride", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "hostOverride", &host_override_val)) {
+      return false;
+    }
+    if (!set_host_override(cx, backend, host_override_val)) {
+      return false;
+    }
+  }
+
+  JS::RootedValue connect_timeout_val(cx);
+  if (!JS_HasProperty(cx, configuration, "connectTimeout", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "connectTimeout", &connect_timeout_val)) {
+      return false;
+    }
+    auto parsed = parse_and_validate_timeout(cx, connect_timeout_val, "connectTimeout");
+    if (!parsed) {
+      return false;
+    }
+    backend.connect_timeout = parsed;
+  }
+
+  // Timeouts for backends must be less than 2^32 milliseconds, or
+  // about a month and a half.
+  JS::RootedValue first_byte_timeout_val(cx);
+  if (!JS_HasProperty(cx, configuration, "firstByteTimeout", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "firstByteTimeout", &first_byte_timeout_val)) {
+      return false;
+    }
+    auto parsed = parse_and_validate_timeout(cx, first_byte_timeout_val, "firstByteTimeout");
+    if (!parsed) {
+      return false;
+    }
+    backend.first_byte_timeout = parsed;
+  }
+
+  // Timeouts for backends must be less than 2^32 milliseconds, or
+  // about a month and a half.
+  JS::RootedValue between_bytes_timeout_val(cx);
+  if (!JS_HasProperty(cx, configuration, "betweenBytesTimeout", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "betweenBytesTimeout", &between_bytes_timeout_val)) {
+      return false;
+    }
+    auto parsed = parse_and_validate_timeout(cx, between_bytes_timeout_val, "betweenBytesTimeout");
+    if (!parsed) {
+      return false;
+    }
+    backend.between_bytes_timeout = parsed;
+  }
+
+  // Has to be either: 1; 1.1; 1.2; 1.3;
+  JS::RootedValue tls_min_version_val(cx);
+  if (!JS_HasProperty(cx, configuration, "tlsMinVersion", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "tlsMinVersion", &tls_min_version_val)) {
+      return false;
+    }
+    double version;
+    if (!JS::ToNumber(cx, tls_min_version_val, &version)) {
+      return false;
+    }
+
+    if (std::isnan(version)) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MIN_INVALID);
+      return false;
+    }
+
+    if (version == 1.3) {
+      backend.ssl_min_version = host_api::TlsVersion::version_1_3();
+    } else if (version == 1.2) {
+      backend.ssl_min_version = host_api::TlsVersion::version_1_2();
+    } else if (version == 1.1) {
+      backend.ssl_min_version = host_api::TlsVersion::version_1_1();
+    } else if (version == 1) {
+      backend.ssl_min_version = host_api::TlsVersion::version_1();
+    } else {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MIN_INVALID);
+      return false;
+    }
+  }
+
+  // Has to be either: 1; 1.1; 1.2; 1.3;
+  JS::RootedValue tls_max_version_val(cx);
+  if (!JS_HasProperty(cx, configuration, "tlsMaxVersion", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "tlsMaxVersion", &tls_max_version_val)) {
+      return false;
+    }
+    double version;
+    if (!JS::ToNumber(cx, tls_max_version_val, &version)) {
+      return false;
+    }
+
+    if (std::isnan(version)) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MAX_INVALID);
+      return false;
+    }
+
+    if (version == 1.3) {
+      backend.ssl_max_version = host_api::TlsVersion::version_1_3();
+    } else if (version == 1.2) {
+      backend.ssl_max_version = host_api::TlsVersion::version_1_2();
+    } else if (version == 1.1) {
+      backend.ssl_max_version = host_api::TlsVersion::version_1_1();
+    } else if (version == 1) {
+      backend.ssl_max_version = host_api::TlsVersion::version_1();
+    } else {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MAX_INVALID);
+      return false;
+    }
+  }
+
+  if (backend.ssl_min_version.has_value() && backend.ssl_max_version.has_value()) {
+    if (backend.ssl_min_version->value > backend.ssl_max_version->value) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_TLS_MIN_GREATER_THAN_TLS_MAX);
+      return false;
+    }
+  }
+
+  JS::RootedValue certificate_hostname_val(cx);
+  if (!JS_HasProperty(cx, configuration, "certificateHostname", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "certificateHostname", &certificate_hostname_val)) {
+      return false;
+    }
+    auto certificate_hostname = JS::RootedString(cx, JS::ToString(cx, certificate_hostname_val));
+    if (!certificate_hostname) {
+      return false;
+    }
+
+    if (JS_GetStringLength(certificate_hostname) == 0) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CERTIFICATE_HOSTNAME_EMPTY);
+      return false;
+    }
+    backend.cert_hostname = core::encode(cx, certificate_hostname);
+  }
+
+  JS::RootedValue use_ssl_val(cx);
+  if (!JS_HasProperty(cx, configuration, "useSSL", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "useSSL", &use_ssl_val)) {
+      return false;
+    }
+    backend.use_ssl = JS::ToBoolean(use_ssl_val);
+  }
+
+  JS::RootedValue dont_pool_val(cx);
+  if (!JS_HasProperty(cx, configuration, "dontPool", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "dontPool", &dont_pool_val)) {
+      return false;
+    }
+    backend.dont_pool = JS::ToBoolean(dont_pool_val);
+  }
+
+  JS::RootedValue ca_certificate_val(cx);
+  if (!JS_HasProperty(cx, configuration, "caCertificate", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "caCertificate", &ca_certificate_val)) {
+      return false;
+    }
+    auto ca_certificate = JS::RootedString(cx, JS::ToString(cx, ca_certificate_val));
+    if (!ca_certificate) {
+      return false;
+    }
+    if (JS_GetStringLength(ca_certificate) == 0) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CA_CERTIFICATE_EMPTY);
+      return false;
+    }
+    backend.ca_cert = core::encode(cx, ca_certificate);
+  }
+
+  // Cipher list consisting of one or more cipher strings separated by colons.
+  // Commas or spaces are also acceptable separators but colons are normally used.
+  JS::RootedValue ciphers_val(cx);
+  if (!JS_HasProperty(cx, configuration, "ciphers", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "ciphers", &ciphers_val)) {
+      return false;
+    }
+    auto ciphers_chars = core::encode(cx, ciphers_val);
+    if (!ciphers_chars) {
+      return false;
+    }
+    if (ciphers_chars.size() == 0) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_CIPHERS_EMPTY);
+      return false;
+    }
+    std::string cipher_spec(ciphers_chars.begin(), ciphers_chars.len);
+    if (!is_cipher_suite_supported_by_fastly(cipher_spec)) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CIPHERS_NOT_AVALIABLE);
+      return false;
+    }
+    backend.ciphers.emplace(std::move(ciphers_chars));
+  }
+
+  JS::RootedValue sni_hostname_val(cx);
+  if (!JS_HasProperty(cx, configuration, "sniHostname", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "sniHostname", &sni_hostname_val)) {
+      return false;
+    }
+    if (!set_sni_hostname(cx, backend, sni_hostname_val)) {
+      return false;
+    }
+  }
+
+  JS::RootedValue client_cert_val(cx);
+  if (!JS_HasProperty(cx, configuration, "clientCertificate", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "clientCertificate", &client_cert_val)) {
+      return false;
+    }
+    if (!client_cert_val.isObject()) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CLIENT_CERTIFICATE_NOT_OBJECT);
+      return false;
+    }
+    JS::RootedObject client_cert_obj(cx, &client_cert_val.toObject());
+
+    JS::RootedValue client_cert_cert_val(cx);
+    if (!JS_HasProperty(cx, client_cert_obj, "certificate", &found)) {
+      return false;
+    }
+    if (!found) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CLIENT_CERTIFICATE_NO_CERTIFICATE);
+      return false;
+    }
+    if (!JS_GetProperty(cx, client_cert_obj, "certificate", &client_cert_cert_val)) {
+      return false;
+    }
+    RootedString client_cert(cx, JS::ToString(cx, client_cert_cert_val));
+    if (!client_cert) {
+      return false;
+    }
+
+    if (JS_GetStringLength(client_cert) == 0) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CLIENT_CERTIFICATE_CERTIFICATE_EMPTY);
+      return false;
+    }
+    JS::RootedValue client_cert_key_val(cx);
+    if (!JS_HasProperty(cx, client_cert_obj, "key", &found)) {
+      return false;
+    }
+    if (!found) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CLIENT_CERTIFICATE_KEY_INVALID);
+      return false;
+    }
+    if (!JS_GetProperty(cx, client_cert_obj, "key", &client_cert_key_val)) {
+      return false;
+    }
+
+    if (!SecretStoreEntry::is_instance(client_cert_key_val)) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_CLIENT_CERTIFICATE_KEY_INVALID);
+      return false;
+    }
+    JS::RootedObject client_cert_key_obj(cx, &client_cert_key_val.toObject());
+
+    backend.client_cert =
+        host_api::ClientCert{.cert = core::encode(cx, client_cert),
+                             .key = SecretStoreEntry::secret_handle(client_cert_key_obj).handle};
+  }
+
+  JS::RootedValue grpc_val(cx);
+  if (!JS_HasProperty(cx, configuration, "grpc", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "grpc", &grpc_val)) {
+      return false;
+    }
+    backend.grpc = JS::ToBoolean(grpc_val);
+  }
+
+  JS::RootedValue http_keepalive_time_ms_val(cx);
+  if (!JS_HasProperty(cx, configuration, "httpKeepalive", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "httpKeepalive", &http_keepalive_time_ms_val)) {
+      return false;
+    }
+    auto parsed = parse_and_validate_timeout(cx, http_keepalive_time_ms_val, "httpKeepalive");
+    if (!parsed) {
+      return false;
+    }
+    backend.http_keepalive_time_ms = parsed;
+  }
+
+  JS::RootedValue tcp_keepalive_val(cx);
+  if (!JS_HasProperty(cx, configuration, "tcpKeepalive", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "tcpKeepalive", &tcp_keepalive_val)) {
+      return false;
+    }
+    if (tcp_keepalive_val.isBoolean()) {
+      if (tcp_keepalive_val.toBoolean()) {
+        backend.tcp_keepalive = host_api::TcpKeepalive{};
+      }
+    } else if (!tcp_keepalive_val.isObject()) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_BACKEND_TCP_KEEPALIVE_NOT_OBJECT_OR_BOOL);
+      return false;
+    }
+    if (tcp_keepalive_val.isObject()) {
+      host_api::TcpKeepalive tcp_keepalive{};
+      JS::RootedObject tcp_keepalive_obj(cx, &tcp_keepalive_val.toObject());
+
+      JS::RootedValue tcp_keepalive_time_secs_val(cx);
+      if (!JS_HasProperty(cx, tcp_keepalive_obj, "timeSecs", &found)) {
+        return false;
+      }
+      if (found) {
+        if (!JS_GetProperty(cx, tcp_keepalive_obj, "timeSecs", &tcp_keepalive_time_secs_val)) {
+          return false;
+        }
+        auto parsed = parse_and_validate_timeout(cx, tcp_keepalive_time_secs_val, "timeSecs");
+        if (!parsed) {
+          return false;
+        }
+        tcp_keepalive.time_secs = parsed;
+      }
+
+      JS::RootedValue tcp_keepalive_interval_secs_val(cx);
+      if (!JS_HasProperty(cx, tcp_keepalive_obj, "intervalSecs", &found)) {
+        return false;
+      }
+      if (found) {
+        if (!JS_GetProperty(cx, tcp_keepalive_obj, "intervalSecs",
+                            &tcp_keepalive_interval_secs_val)) {
+          return false;
+        }
+        auto parsed =
+            parse_and_validate_timeout(cx, tcp_keepalive_interval_secs_val, "intervalSecs");
+        if (!parsed) {
+          return false;
+        }
+        tcp_keepalive.interval_secs = parsed;
+      }
+
+      JS::RootedValue tcp_keepalive_probes_val(cx);
+      if (!JS_HasProperty(cx, tcp_keepalive_obj, "probes", &found)) {
+        return false;
+      }
+      if (found) {
+        if (!JS_GetProperty(cx, tcp_keepalive_obj, "probes", &tcp_keepalive_probes_val)) {
+          return false;
+        }
+        double native_value;
+        if (!JS::ToNumber(cx, tcp_keepalive_probes_val, &native_value)) {
+          return false;
+        }
+        if (std::isnan(native_value) || native_value <= 0 || native_value >= 0x100000000) {
+          JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                    JSMSG_BACKEND_TCP_KEEPALIVE_INVALID_PROBES);
+          return false;
+        }
+        tcp_keepalive.probes = std::round(native_value);
+      }
+      backend.tcp_keepalive = tcp_keepalive;
+    }
+  }
+  return true;
+}
+
 } // namespace
 
 bool Backend::exists(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -979,135 +1353,17 @@ const JSFunctionSpec Backend::methods[] = {JS_FN("toString", to_string, 0, JSPRO
                                            JS_FS_END};
 const JSPropertySpec Backend::properties[] = {JS_PS_END};
 
-bool Backend::set_name(JSContext *cx, JSObject *backend, JS::HandleValue name_val) {
+std::optional<host_api::HostString> Backend::set_name(JSContext *cx, JSObject *backend,
+                                                      JS::HandleValue name_val) {
   MOZ_ASSERT(is_instance(backend));
   auto name = parse_and_validate_name(cx, name_val);
   if (!name) {
-    return false;
+    return std::nullopt;
   }
 
   JS::SetReservedSlot(backend, Backend::Slots::Name,
                       JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
-  return true;
-}
-
-bool Backend::set_host_override(JSContext *cx, JSObject *backend,
-                                JS::HandleValue host_override_val) {
-  MOZ_ASSERT(is_instance(backend));
-  auto host_override = JS::ToString(cx, host_override_val);
-  if (!host_override) {
-    return false;
-  }
-
-  if (JS_GetStringLength(host_override) == 0) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                              JSMSG_BACKEND_HOST_OVERRIDE_EMPTY);
-    return false;
-  }
-  JS::SetReservedSlot(backend, Backend::Slots::HostOverride, JS::StringValue(host_override));
-  return true;
-}
-
-bool Backend::set_sni_hostname(JSContext *cx, JSObject *backend, JS::HandleValue sni_hostname_val) {
-  auto sni_hostname = JS::ToString(cx, sni_hostname_val);
-  if (!sni_hostname) {
-    return false;
-  }
-
-  if (JS_GetStringLength(sni_hostname) == 0) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_SNI_HOSTNAME_EMPTY);
-    return false;
-  }
-  JS::SetReservedSlot(backend, Backend::Slots::SniHostname, JS::StringValue(sni_hostname));
-  return true;
-}
-
-bool Backend::set_client_cert(JSContext *cx, JSObject *backend, JS::HandleValue client_cert_val) {
-  auto client_cert = JS::ToString(cx, client_cert_val);
-  if (!client_cert) {
-    return false;
-  }
-
-  if (JS_GetStringLength(client_cert) == 0) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                              JSMSG_BACKEND_CLIENT_CERTIFICATE_CERTIFICATE_EMPTY);
-    return false;
-  }
-  JS::SetReservedSlot(backend, Backend::Slots::ClientCert, JS::StringValue(client_cert));
-  return true;
-}
-
-bool Backend::set_client_cert_key(JSContext *cx, JSObject *backend,
-                                  JS::HandleValue client_cert_key_val) {
-  if (!SecretStoreEntry::is_instance(client_cert_key_val)) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                              JSMSG_BACKEND_CLIENT_CERTIFICATE_KEY_INVALID);
-    return false;
-  }
-  JS::RootedObject client_cert_key_obj(cx, &client_cert_key_val.toObject());
-  JS::SetReservedSlot(backend, Backend::Slots::ClientCertKey,
-                      JS::Int32Value(SecretStoreEntry::secret_handle(client_cert_key_obj).handle));
-  return true;
-}
-
-/// Timeouts for backends must be less than 2^32 milliseconds, or
-/// about a month and a half.
-bool Backend::set_timeout_slot(JSContext *cx, JSObject *backend, JS::HandleValue value,
-                               Backend::Slots slot, std::string property_name) {
-  double native_value;
-  if (!JS::ToNumber(cx, value, &native_value)) {
-    return false;
-  }
-  int64_t timeout = std::round(native_value);
-  if (timeout < 0) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_NEGATIVE,
-                              property_name.c_str());
-    return false;
-  }
-  if (timeout >= std::pow(2, 32)) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TIMEOUT_TOO_BIG,
-                              property_name.c_str());
-    return false;
-  }
-  JS::SetReservedSlot(backend, slot, JS::Int32Value(timeout));
-  return true;
-}
-
-bool Backend::set_target(JSContext *cx, JSObject *backend, JS::HandleValue target_val) {
-  if (target_val.isNullOrUndefined()) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_NOT_SET);
-    return false;
-  }
-
-  auto target_string_slice = core::encode_spec_string(cx, target_val);
-  if (!target_string_slice.data) {
-    return false;
-  }
-
-  std::string_view target_string(reinterpret_cast<char *>(target_string_slice.data),
-                                 target_string_slice.len);
-  auto length = target_string.length();
-  if (length == 0) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_EMPTY);
-    return false;
-  }
-
-  if (target_string == "::") {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_INVALID);
-    return false;
-  }
-  if (!is_valid_host(target_string) && !is_valid_ip(target_string)) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_INVALID);
-    return false;
-  }
-
-  auto target_str = JS_NewStringCopyN(cx, target_string.data(), target_string.length());
-  if (!target_str) {
-    return false;
-  }
-  JS::RootedValue target(cx, JS::StringValue(target_str));
-  JS::SetReservedSlot(backend, Backend::Slots::Target, target);
-  return true;
+  return name;
 }
 
 JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
@@ -1153,65 +1409,43 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
     return nullptr;
   }
 
+  host_api::BackendConfig backend_config = default_backend_config.clone();
+
   JS::RootedValue name(cx, JS::StringValue(name_js_str));
   if (!Backend::set_name(cx, backend, name)) {
     return nullptr;
   }
-  if (!Backend::set_host_override(cx, backend, name)) {
+  if (!set_host_override(cx, backend_config, name)) {
     return nullptr;
   }
-  if (!Backend::set_target(cx, backend, name)) {
+  auto target_string_slice = core::encode_spec_string(cx, name);
+  if (!target_string_slice.data) {
+    return nullptr;
+  }
+  std::string_view target_string(reinterpret_cast<char *>(target_string_slice.data),
+                                 target_string_slice.len);
+  if (!validate_target(cx, target_string)) {
     return nullptr;
   }
   const jsurl::SpecString origin_specstring = jsurl::origin(url);
   std::string_view origin((char *)origin_specstring.data, origin_specstring.len);
 
   auto use_ssl = origin.rfind("https://", 0) == 0;
-  JS::SetReservedSlot(backend, Backend::Slots::UseSsl, JS::BooleanValue(use_ssl));
   if (use_ssl) {
-    if (!Backend::set_sni_hostname(cx, backend, name)) {
+    if (!set_sni_hostname(cx, backend_config, name)) {
       return nullptr;
     }
   }
 
-  JS::SetReservedSlot(backend, Backend::Slots::DontPool, JS::BooleanValue(false));
-
-  if (Fastly::defaultDynamicBackendConfig.connect_timeout.has_value()) {
-    JS::RootedValue connect_timeout_val(
-        cx, JS::NumberValue(Fastly::defaultDynamicBackendConfig.connect_timeout.value()));
-    if (!Backend::set_timeout_slot(cx, backend, connect_timeout_val, Backend::Slots::ConnectTimeout,
-                                   "connectTimeout")) {
-      return nullptr;
-    }
-  }
-  if (Fastly::defaultDynamicBackendConfig.between_bytes_timeout.has_value()) {
-    JS::RootedValue between_bytes_timeout_val(
-        cx, JS::NumberValue(Fastly::defaultDynamicBackendConfig.between_bytes_timeout.value()));
-    if (!Backend::set_timeout_slot(cx, backend, between_bytes_timeout_val,
-                                   Backend::Slots::BetweenBytesTimeout, "betweenBytesTimeout")) {
-      return nullptr;
-    }
-  }
-  if (Fastly::defaultDynamicBackendConfig.first_byte_timeout.has_value()) {
-    JS::RootedValue first_byte_timeout_val(
-        cx, JS::NumberValue(Fastly::defaultDynamicBackendConfig.first_byte_timeout.value()));
-    if (!Backend::set_timeout_slot(cx, backend, first_byte_timeout_val,
-                                   Backend::Slots::FirstByteTimeout, "firstByteTimeout")) {
-      return nullptr;
-    }
-  }
-
-  JS::SetReservedSlot(backend, Backend::Slots::Grpc, JS::BooleanValue(false));
-
-  auto result = Backend::register_dynamic_backend(cx, backend);
-  if (result.isErr()) {
+  auto res = host_api::HttpReq::register_dynamic_backend(name_str, target_string, backend_config);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return nullptr;
-  } else {
-    if (!JS_SetProperty(cx, Backend::backends, name_str.c_str(), backend_val)) {
-      return nullptr;
-    }
-    return backend;
   }
+  if (!JS_SetProperty(cx, Backend::backends, name_str.c_str(), backend_val)) {
+    return nullptr;
+  }
+  return backend;
 }
 
 bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -1226,18 +1460,19 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  auto configuration = RootedObject(cx, &configuration_parameter.toObject());
+
   JS::RootedObject backend(cx, JS_NewObjectForConstructor(cx, &class_, args));
   if (!backend) {
     return false;
   }
 
-  JS::RootedObject configuration(cx, &configuration_parameter.toObject());
-
   JS::RootedValue name_val(cx);
   if (!JS_GetProperty(cx, configuration, "name", &name_val)) {
     return false;
   }
-  if (!Backend::set_name(cx, backend, name_val)) {
+  auto backend_name = Backend::set_name(cx, backend, name_val);
+  if (!backend_name) {
     return false;
   }
 
@@ -1245,323 +1480,50 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!JS_GetProperty(cx, configuration, "target", &target_val)) {
     return false;
   }
-  if (!Backend::set_target(cx, backend, target_val)) {
+  if (target_val.isNullOrUndefined()) {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TARGET_NOT_SET);
+    return false;
+  }
+  auto target_string_slice = core::encode_spec_string(cx, target_val);
+  if (!target_string_slice.data) {
+    return false;
+  }
+  std::string_view target_string(reinterpret_cast<char *>(target_string_slice.data),
+                                 target_string_slice.len);
+  if (!validate_target(cx, target_string)) {
     return false;
   }
 
-  bool found;
-  JS::RootedValue host_override_val(cx);
-  if (!JS_HasProperty(cx, configuration, "hostOverride", &found)) {
+  host_api::BackendConfig backend_config = default_backend_config.clone();
+  if (!apply_backend_config(cx, backend_config, configuration)) {
     return false;
   }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "hostOverride", &host_override_val)) {
-      return false;
-    }
-    if (!Backend::set_host_override(cx, backend, host_override_val)) {
-      return false;
-    }
-  }
 
-  JS::RootedValue connect_timeout_val(cx);
-  if (!JS_HasProperty(cx, configuration, "connectTimeout", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "connectTimeout", &connect_timeout_val)) {
-      return false;
-    }
-    if (!Backend::set_timeout_slot(cx, backend, connect_timeout_val, Backend::Slots::ConnectTimeout,
-                                   "connectTimeout")) {
-      return false;
-    }
-  }
-
-  /// Timeouts for backends must be less than 2^32 milliseconds, or
-  /// about a month and a half.
-  JS::RootedValue first_byte_timeout_val(cx);
-  if (!JS_HasProperty(cx, configuration, "firstByteTimeout", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "firstByteTimeout", &first_byte_timeout_val)) {
-      return false;
-    }
-    if (!Backend::set_timeout_slot(cx, backend, first_byte_timeout_val,
-                                   Backend::Slots::FirstByteTimeout, "firstByteTimeout")) {
-      return false;
-    }
-  }
-
-  /// Timeouts for backends must be less than 2^32 milliseconds, or
-  /// about a month and a half.
-  JS::RootedValue between_bytes_timeout_val(cx);
-  if (!JS_HasProperty(cx, configuration, "betweenBytesTimeout", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "betweenBytesTimeout", &between_bytes_timeout_val)) {
-      return false;
-    }
-    if (!Backend::set_timeout_slot(cx, backend, between_bytes_timeout_val,
-                                   Backend::Slots::BetweenBytesTimeout, "betweenBytesTimeout")) {
-      return false;
-    }
-  }
-
-  /// Has to be either: 1; 1.1; 1.2; 1.3;
-  JS::RootedValue tls_min_version_val(cx);
-  std::optional<host_api::TlsVersion> tls_min_version;
-  if (!JS_HasProperty(cx, configuration, "tlsMinVersion", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "tlsMinVersion", &tls_min_version_val)) {
-      return false;
-    }
-    double version;
-    if (!JS::ToNumber(cx, tls_min_version_val, &version)) {
-      return false;
-    }
-
-    if (std::isnan(version)) {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MIN_INVALID);
-      return false;
-    }
-
-    if (version == 1.3) {
-      tls_min_version = host_api::TlsVersion::version_1_3();
-    } else if (version == 1.2) {
-      tls_min_version = host_api::TlsVersion::version_1_2();
-    } else if (version == 1.1) {
-      tls_min_version = host_api::TlsVersion::version_1_1();
-    } else if (version == 1) {
-      tls_min_version = host_api::TlsVersion::version_1();
-    } else {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MIN_INVALID);
-      return false;
-    }
-    JS::SetReservedSlot(backend, Backend::Slots::TlsMinVersion,
-                        JS::Int32Value(tls_min_version->value));
-  }
-
-  /// Has to be either: 1; 1.1; 1.2; 1.3;
-  JS::RootedValue tls_max_version_val(cx);
-  std::optional<host_api::TlsVersion> tls_max_version;
-  if (!JS_HasProperty(cx, configuration, "tlsMaxVersion", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "tlsMaxVersion", &tls_max_version_val)) {
-      return false;
-    }
-    double version;
-    if (!JS::ToNumber(cx, tls_max_version_val, &version)) {
-      return false;
-    }
-
-    if (std::isnan(version)) {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MAX_INVALID);
-      return false;
-    }
-
-    if (version == 1.3) {
-      tls_max_version = host_api::TlsVersion::version_1_3();
-    } else if (version == 1.2) {
-      tls_max_version = host_api::TlsVersion::version_1_2();
-    } else if (version == 1.1) {
-      tls_max_version = host_api::TlsVersion::version_1_1();
-    } else if (version == 1) {
-      tls_max_version = host_api::TlsVersion::version_1();
-    } else {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_TLS_MAX_INVALID);
-      return false;
-    }
-    JS::SetReservedSlot(backend, Backend::Slots::TlsMaxVersion,
-                        JS::Int32Value(tls_max_version->value));
-  }
-
-  if (tls_min_version.has_value() && tls_max_version.has_value()) {
-    if (tls_min_version->value > tls_max_version->value) {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_BACKEND_TLS_MIN_GREATER_THAN_TLS_MAX);
-      return false;
-    }
-  }
-
-  JS::RootedValue certificate_hostname_val(cx);
-  if (!JS_HasProperty(cx, configuration, "certificateHostname", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "certificateHostname", &certificate_hostname_val)) {
-      return false;
-    }
-    auto certificate_hostname = JS::ToString(cx, certificate_hostname_val);
-    if (!certificate_hostname) {
-      return false;
-    }
-
-    if (JS_GetStringLength(certificate_hostname) == 0) {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_BACKEND_CERTIFICATE_HOSTNAME_EMPTY);
-      return false;
-    }
-    JS::SetReservedSlot(backend, Backend::Slots::CertificateHostname,
-                        JS::StringValue(certificate_hostname));
-  }
-
-  JS::RootedValue use_ssl_val(cx);
-  if (!JS_HasProperty(cx, configuration, "useSSL", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "useSSL", &use_ssl_val)) {
-      return false;
-    }
-    auto value = JS::ToBoolean(use_ssl_val);
-    JS::SetReservedSlot(backend, Backend::Slots::UseSsl, JS::BooleanValue(value));
-  }
-
-  JS::RootedValue dont_pool_val(cx);
-  if (!JS_HasProperty(cx, configuration, "dontPool", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "dontPool", &dont_pool_val)) {
-      return false;
-    }
-    auto value = JS::ToBoolean(dont_pool_val);
-    JS::SetReservedSlot(backend, Backend::Slots::DontPool, JS::BooleanValue(value));
-  }
-
-  JS::RootedValue ca_certificate_val(cx);
-  if (!JS_HasProperty(cx, configuration, "caCertificate", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "caCertificate", &ca_certificate_val)) {
-      return false;
-    }
-    auto ca_certificate = JS::ToString(cx, ca_certificate_val);
-    if (!ca_certificate) {
-      return false;
-    }
-    if (JS_GetStringLength(ca_certificate) == 0) {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_BACKEND_CA_CERTIFICATE_EMPTY);
-      return false;
-    }
-    JS::SetReservedSlot(backend, Backend::Slots::CaCertificate, JS::StringValue(ca_certificate));
-  }
-
-  /// Cipher list consisting of one or more cipher strings separated by colons.
-  // Commas or spaces are also acceptable separators but colons are normally used.
-  JS::RootedValue ciphers_val(cx);
-  if (!JS_HasProperty(cx, configuration, "ciphers", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "ciphers", &ciphers_val)) {
-      return false;
-    }
-    auto ciphers_chars = core::encode(cx, ciphers_val);
-    if (!ciphers_chars) {
-      return false;
-    }
-    if (ciphers_chars.size() == 0) {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_CIPHERS_EMPTY);
-      return false;
-    }
-    std::string cipher_spec(ciphers_chars.begin(), ciphers_chars.len);
-    if (!is_cipher_suite_supported_by_fastly(cipher_spec)) {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_BACKEND_CIPHERS_NOT_AVALIABLE);
-      return false;
-    }
-    JS::SetReservedSlot(
-        backend, Backend::Slots::Ciphers,
-        JS::StringValue(JS_NewStringCopyN(cx, ciphers_chars.begin(), ciphers_chars.len)));
-  }
-
-  JS::RootedValue sni_hostname_val(cx);
-  if (!JS_HasProperty(cx, configuration, "sniHostname", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "sniHostname", &sni_hostname_val)) {
-      return false;
-    }
-    if (!Backend::set_sni_hostname(cx, backend, sni_hostname_val)) {
-      return false;
-    }
-  }
-
-  JS::RootedValue client_cert_val(cx);
-  if (!JS_HasProperty(cx, configuration, "clientCertificate", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "clientCertificate", &client_cert_val)) {
-      return false;
-    }
-    if (!client_cert_val.isObject()) {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_BACKEND_CLIENT_CERTIFICATE_NOT_OBJECT);
-      return false;
-    }
-    JS::RootedObject client_cert_obj(cx, &client_cert_val.toObject());
-
-    JS::RootedValue client_cert_cert_val(cx);
-    if (!JS_HasProperty(cx, client_cert_obj, "certificate", &found)) {
-      return false;
-    }
-    if (!found) {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_BACKEND_CLIENT_CERTIFICATE_NO_CERTIFICATE);
-      return false;
-    }
-    if (!JS_GetProperty(cx, client_cert_obj, "certificate", &client_cert_cert_val)) {
-      return false;
-    }
-    if (!Backend::set_client_cert(cx, backend, client_cert_cert_val)) {
-      return false;
-    }
-
-    JS::RootedValue client_cert_key_val(cx);
-    if (!JS_HasProperty(cx, client_cert_obj, "key", &found)) {
-      return false;
-    }
-    if (!found) {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_BACKEND_CLIENT_CERTIFICATE_KEY_INVALID);
-      return false;
-    }
-    if (!JS_GetProperty(cx, client_cert_obj, "key", &client_cert_key_val)) {
-      return false;
-    }
-    if (!Backend::set_client_cert_key(cx, backend, client_cert_key_val)) {
-      return false;
-    }
-  }
-
-  JS::RootedValue grpc_val(cx);
-  if (!JS_HasProperty(cx, configuration, "grpc", &found)) {
-    return false;
-  }
-  if (found) {
-    if (!JS_GetProperty(cx, configuration, "grpc", &grpc_val)) {
-      return false;
-    }
-    auto value = JS::ToBoolean(grpc_val);
-    JS::SetReservedSlot(backend, Backend::Slots::Grpc, JS::BooleanValue(value));
-  }
-
-  auto result = Backend::register_dynamic_backend(cx, backend);
-  if (result.isErr()) {
+  auto res = host_api::HttpReq::register_dynamic_backend(backend_name.value(), target_string,
+                                                         backend_config);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
   args.rval().setObject(*backend);
+  return true;
+}
+
+bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "setDefaultBackendConfig", 1)) {
+    return false;
+  }
+  auto backend_config_val = args.get(0);
+  if (!backend_config_val.isObject()) {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_BACKEND_PARAMETER_NOT_OBJECT);
+    return false;
+  }
+  RootedObject backend_config_obj(cx, &backend_config_val.toObject());
+  if (!apply_backend_config(cx, default_backend_config, backend_config_obj)) {
+    return false;
+  }
   return true;
 }
 
@@ -1580,6 +1542,16 @@ bool install(api::Engine *engine) {
   RootedValue backend_val(engine->cx(), ObjectValue(*backend_obj));
   RootedObject backend_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   if (!JS_SetProperty(engine->cx(), backend_ns, "Backend", backend_val)) {
+    return false;
+  }
+  auto set_default_backend_config_fn =
+      JS_NewFunction(engine->cx(), &set_default_backend_config, 1, 0, "setDefaultBackedConfig");
+  RootedObject set_default_backend_config_obj(engine->cx(),
+                                              JS_GetFunctionObject(set_default_backend_config_fn));
+  RootedValue set_default_backend_config_val(engine->cx(),
+                                             JS::ObjectValue(*set_default_backend_config_obj));
+  if (!JS_SetProperty(engine->cx(), backend_ns, "setDefaultBackendConfig",
+                      set_default_backend_config_val)) {
     return false;
   }
   RootedValue backend_ns_val(engine->cx(), JS::ObjectValue(*backend_ns));

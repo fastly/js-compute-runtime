@@ -976,435 +976,80 @@
       "body": "ok"
     }
   },
-  "GET /backend/interface": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/called-as-regular-function": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/empty-parameter": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-not-an-object": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-name-property-null": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-name-property-undefined": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-name-property-too-long": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-name-property-empty-string": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-name-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-target-property-null": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-target-property-undefined": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-target-property-empty-string": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-target-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-target-property-valid-host": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-target-property-invalid-host": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-ciphers-property-empty-string": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-ciphers-property-invalid-cipherlist-string": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-supported-by-fastly": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-but-not-supported-by-fastly": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-ciphers-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-hostOverride-property-empty-string": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-hostOverride-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-hostOverride-property-valid-string": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-connectTimeout-property-negative-number": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-connectTimeout-property-too-big": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-connectTimeout-property-calls-7.1.4-ToNumber": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-connectTimeout-property-valid-number": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-firstByteTimeout-property-negative-number": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-firstByteTimeout-property-too-big": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-firstByteTimeout-property-calls-7.1.4-ToNumber": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-firstByteTimeout-property-valid-number": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-betweenBytesTimeout-property-negative-number": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-betweenBytesTimeout-property-too-big": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-betweenBytesTimeout-property-calls-7.1.4-ToNumber": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-betweenBytesTimeout-property-valid-number": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-useSSL-property-valid-boolean": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-dontPool-property-valid-boolean": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-tlsMinVersion-property-nan": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-tlsMinVersion-property-invalid-number": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-tlsMinVersion-property-calls-7.1.4-ToNumber": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-tlsMinVersion-property-valid-number": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-tlsMinVersion-greater-than-tlsMaxVersion": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-tlsMaxVersion-property-nan": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-tlsMaxVersion-property-invalid-number": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-tlsMaxVersion-property-calls-7.1.4-ToNumber": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-tlsMaxVersion-property-valid-number": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-certificateHostname-property-empty-string": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-certificateHostname-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-certificateHostname-property-valid-string": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-caCertificate-property-empty-string": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-caCertificate-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-caCertificate-property-valid-string": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-sniHostname-property-empty-string": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-sniHostname-property-calls-7.1.17-ToString": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-sniHostname-property-valid-string": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-clientCertificate-property-invalid": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-clientCertificate-certificate-property-missing": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-clientCertificate-certificate-property-invalid": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-clientCertificate-key-property-missing": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-clientCertificate-key-property-invalid": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-clientCertificate-key-property-fake": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /backend/constructor/parameter-clientCertificate-valid": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
+  "GET /backend/interface": {},
+  "GET /backend/constructor/called-as-regular-function": {},
+  "GET /backend/constructor/empty-parameter": {},
+  "GET /backend/constructor/parameter-not-an-object": {},
+  "GET /backend/constructor/parameter-name-property-null": {},
+  "GET /backend/constructor/parameter-name-property-undefined": {},
+  "GET /backend/constructor/parameter-name-property-too-long": {},
+  "GET /backend/constructor/parameter-name-property-empty-string": {},
+  "GET /backend/constructor/parameter-name-property-calls-7.1.17-ToString": {},
+  "GET /backend/constructor/parameter-target-property-null": {},
+  "GET /backend/constructor/parameter-target-property-undefined": {},
+  "GET /backend/constructor/parameter-target-property-empty-string": {},
+  "GET /backend/constructor/parameter-target-property-calls-7.1.17-ToString": {},
+  "GET /backend/constructor/parameter-target-property-valid-host": {},
+  "GET /backend/constructor/parameter-target-property-invalid-host": {},
+  "GET /backend/constructor/parameter-ciphers-property-empty-string": {},
+  "GET /backend/constructor/parameter-ciphers-property-invalid-cipherlist-string": {},
+  "GET /backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-supported-by-fastly": {},
+  "GET /backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-but-not-supported-by-fastly": {},
+  "GET /backend/constructor/parameter-ciphers-property-calls-7.1.17-ToString": {},
+  "GET /backend/constructor/parameter-hostOverride-property-empty-string": {},
+  "GET /backend/constructor/parameter-hostOverride-property-calls-7.1.17-ToString": {},
+  "GET /backend/constructor/parameter-hostOverride-property-valid-string": {},
+  "GET /backend/constructor/parameter-connectTimeout-property-negative-number": {},
+  "GET /backend/constructor/parameter-connectTimeout-property-too-big": {},
+  "GET /backend/constructor/parameter-connectTimeout-property-calls-7.1.4-ToNumber": {},
+  "GET /backend/constructor/parameter-connectTimeout-property-valid-number": {},
+  "GET /backend/constructor/parameter-firstByteTimeout-property-negative-number": {},
+  "GET /backend/constructor/parameter-firstByteTimeout-property-too-big": {},
+  "GET /backend/constructor/parameter-firstByteTimeout-property-calls-7.1.4-ToNumber": {},
+  "GET /backend/constructor/parameter-firstByteTimeout-property-valid-number": {},
+  "GET /backend/constructor/parameter-firstByteTimeout-property-invalid-number": {},
+  "GET /backend/constructor/parameter-betweenBytesTimeout-property-negative-number": {},
+  "GET /backend/constructor/parameter-betweenBytesTimeout-property-too-big": {},
+  "GET /backend/constructor/parameter-betweenBytesTimeout-property-calls-7.1.4-ToNumber": {},
+  "GET /backend/constructor/parameter-betweenBytesTimeout-property-valid-number": {},
+  "GET /backend/constructor/parameter-useSSL-property-valid-boolean": {},
+  "GET /backend/constructor/parameter-dontPool-property-valid-boolean": {},
+  "GET /backend/constructor/parameter-tlsMinVersion-property-nan": {},
+  "GET /backend/constructor/parameter-tlsMinVersion-property-invalid-number": {},
+  "GET /backend/constructor/parameter-tlsMinVersion-property-calls-7.1.4-ToNumber": {},
+  "GET /backend/constructor/parameter-tlsMinVersion-property-valid-number": {},
+  "GET /backend/constructor/parameter-tlsMinVersion-greater-than-tlsMaxVersion": {},
+  "GET /backend/constructor/parameter-tlsMaxVersion-property-nan": {},
+  "GET /backend/constructor/parameter-tlsMaxVersion-property-invalid-number": {},
+  "GET /backend/constructor/parameter-tlsMaxVersion-property-calls-7.1.4-ToNumber": {},
+  "GET /backend/constructor/parameter-tlsMaxVersion-property-valid-number": {},
+  "GET /backend/constructor/parameter-certificateHostname-property-empty-string": {},
+  "GET /backend/constructor/parameter-certificateHostname-property-calls-7.1.17-ToString": {},
+  "GET /backend/constructor/parameter-certificateHostname-property-valid-string": {},
+  "GET /backend/constructor/parameter-caCertificate-property-empty-string": {},
+  "GET /backend/constructor/parameter-caCertificate-property-calls-7.1.17-ToString": {},
+  "GET /backend/constructor/parameter-caCertificate-property-valid-string": {},
+  "GET /backend/constructor/parameter-sniHostname-property-empty-string": {},
+  "GET /backend/constructor/parameter-sniHostname-property-calls-7.1.17-ToString": {},
+  "GET /backend/constructor/parameter-sniHostname-property-valid-string": {},
+  "GET /backend/constructor/parameter-clientCertificate-property-invalid": {},
+  "GET /backend/constructor/parameter-clientCertificate-certificate-property-missing": {},
+  "GET /backend/constructor/parameter-clientCertificate-certificate-property-invalid": {},
+  "GET /backend/constructor/parameter-clientCertificate-key-property-missing": {},
+  "GET /backend/constructor/parameter-clientCertificate-key-property-invalid": {},
+  "GET /backend/constructor/parameter-clientCertificate-key-property-fake": {},
+  "GET /backend/constructor/parameter-clientCertificate-valid": {},
   "GET /backend/constructor/parameter-grpc-property-falsy": {},
   "GET /backend/constructor/parameter-grpc-enabled": {},
+  "GET /backend/constructor/http-keepalive-invalid": {},
+  "GET /backend/constructor/http-keepalive": {
+    "enviroments": ["compute"]
+  },
+  "GET /backend/constructor/tcp-keepalive-invalid": {},
+  "GET /backend/constructor/tcp-keepalive": {
+    "enviroments": ["compute"]
+  },
+  "GET /backend/set-default-backend-configuration": {},
   "GET /backend/health/called-as-constructor-function": {
     "downstream_response": {
       "status": 200,

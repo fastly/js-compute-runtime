@@ -345,6 +345,12 @@ struct ClientCert {
   CertKey key;
 };
 
+struct TcpKeepalive {
+  std::optional<uint32_t> interval_secs;
+  std::optional<uint32_t> probes;
+  std::optional<uint32_t> time_secs;
+};
+
 struct BackendConfig {
   std::optional<HostString> host_override;
   std::optional<uint32_t> connect_timeout;
@@ -360,6 +366,74 @@ struct BackendConfig {
   std::optional<HostString> sni_hostname;
   std::optional<ClientCert> client_cert;
   std::optional<bool> grpc;
+  std::optional<uint32_t> http_keepalive_time_ms;
+  std::optional<TcpKeepalive> tcp_keepalive;
+
+  BackendConfig clone() {
+    BackendConfig cloned{};
+    if (host_override.has_value()) {
+      cloned.host_override = host_api::HostString(std::string_view(host_override.value()));
+    }
+    if (connect_timeout.has_value()) {
+      cloned.connect_timeout = connect_timeout.value();
+    }
+    if (first_byte_timeout.has_value()) {
+      cloned.first_byte_timeout = first_byte_timeout.value();
+    }
+    if (between_bytes_timeout.has_value()) {
+      cloned.between_bytes_timeout = between_bytes_timeout.value();
+    }
+    if (use_ssl.has_value()) {
+      cloned.use_ssl = use_ssl.value();
+    }
+    if (dont_pool.has_value()) {
+      cloned.dont_pool = dont_pool.value();
+    }
+    if (ssl_min_version.has_value()) {
+      cloned.ssl_min_version = TlsVersion(ssl_min_version.value().value);
+    }
+    if (ssl_max_version.has_value()) {
+      cloned.ssl_max_version = TlsVersion(ssl_max_version.value().value);
+    }
+    if (cert_hostname.has_value()) {
+      cloned.cert_hostname = host_api::HostString(std::string_view(cert_hostname.value()));
+    }
+    if (ca_cert.has_value()) {
+      cloned.ca_cert = host_api::HostString(std::string_view(ca_cert.value()));
+    }
+    if (ciphers.has_value()) {
+      cloned.ciphers = host_api::HostString(std::string_view(ciphers.value()));
+    }
+    if (sni_hostname.has_value()) {
+      cloned.sni_hostname = host_api::HostString(std::string_view(sni_hostname.value()));
+    }
+    if (client_cert.has_value()) {
+      host_api::HostString client_cert_cloned =
+          host_api::HostString(std::string_view(client_cert.value().cert));
+      cloned.client_cert = ClientCert{std::move(client_cert_cloned), client_cert.value().key};
+    }
+    if (grpc.has_value()) {
+      cloned.grpc = grpc.value();
+    }
+    if (http_keepalive_time_ms.has_value()) {
+      cloned.http_keepalive_time_ms = http_keepalive_time_ms.value();
+    }
+    if (tcp_keepalive.has_value()) {
+      TcpKeepalive tcp_keepalive_cloned{};
+      TcpKeepalive &tcp_keepalive_val = tcp_keepalive.value();
+      if (tcp_keepalive_val.interval_secs.has_value()) {
+        tcp_keepalive_cloned.interval_secs = tcp_keepalive_val.interval_secs.value();
+      }
+      if (tcp_keepalive_val.probes.has_value()) {
+        tcp_keepalive_cloned.probes = tcp_keepalive_val.probes.value();
+      }
+      if (tcp_keepalive_val.time_secs.has_value()) {
+        tcp_keepalive_cloned.time_secs = tcp_keepalive_val.time_secs.value();
+      }
+      cloned.tcp_keepalive = tcp_keepalive_cloned;
+    }
+    return cloned;
+  }
 };
 
 struct CacheOverrideTag final {
