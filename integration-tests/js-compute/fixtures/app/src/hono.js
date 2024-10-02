@@ -10,7 +10,7 @@ routes.set('/hono', async (evt) => {
   allowDynamicBackends(true);
   app.get('/hono', async (c) => {
     const newRequest = new Request(
-      'https://compute-sdk-test-backend.edgecompute.app/',
+      'https://http-me.glitch.me/anything',
       c.req.raw,
     );
     console.log('newRequest: ' + newRequest.url);

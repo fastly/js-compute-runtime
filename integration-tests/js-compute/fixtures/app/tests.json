@@ -1433,7 +1433,7 @@
   "GET /hono": {
     "downstream_response": {
       "status": 200,
-      "body": ["Compute SDK Test Backend"]
+      "body_prefix": "{\n    \"args\": {},"
     }
   },
   "POST /tee": {
