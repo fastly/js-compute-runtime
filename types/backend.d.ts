@@ -1,8 +1,8 @@
 /// <reference path="../types/secret-store.d.ts" />
 
 declare module 'fastly:backend' {
-  export function setDefaultBackendConfiguration(
-    defaultBackendConfiguration: DefaultBackendConfiguration,
+  export function setDefaultDynamicBackendConfig(
+    defaultDynamicBackendConfiguration: DefaultBackendConfiguration,
   ): void;
 
   interface DefaultBackendConfiguration {

@@ -112,7 +112,7 @@ new Backend(backendConfiguration)
       - When enabled, sets that this backend is to be used for gRPC traffic. 
       - _Warning: When using this experimental feature, no guarantees are provided for behaviours for backends that do not provide gRPC traffic._
 
-All optional generic options can have their defaults set via [`setDefaultBackendConfiguration()`](../setDefaultBackendConfiguration.mdx).
+All optional generic options can have their defaults set via [`setDefaultDynamicBackendConfig()`](../setDefaultDynamicBackendConfig.mdx).
 
 This includes all configuration options above except for `name`, `target`, `hostOverride`, `sniHostname` and `grpc`.
 

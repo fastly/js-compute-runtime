@@ -1,5 +1,5 @@
 /// <reference path="../../../../../types/index.d.ts" />
-import { Backend, setDefaultBackendConfiguration } from 'fastly:backend';
+import { Backend, setDefaultDynamicBackendConfig } from 'fastly:backend';
 import { CacheOverride } from 'fastly:cache-override';
 import { allowDynamicBackends } from 'fastly:experimental';
 import {
@@ -2157,13 +2157,13 @@ routes.set('/backend/timeout', async () => {
     }
   }
 
-  // setDefaultBackendConfiguration
+  // setDefaultDynamicBackendConfig
   {
     routes.set('/backend/set-default-backend-configuration', async () => {
       if (isRunningLocally()) {
         return;
       }
-      setDefaultBackendConfiguration({
+      setDefaultDynamicBackendConfig({
         firstByteTimeout: 1_000,
       });
       const backend = new Backend({

@@ -5,13 +5,13 @@ pagination_next: null
 pagination_prev: null
 ---
 
-# setDefaultBackendConfiguration()
+# setDefaultDynamicBackendConfig()
 
-The **`setDefaultBackendConfiguration()`** allows setting backend configuration defaults that should apply to any newly created dynamic backends via the `new Backend()` constructor.
+The **`setDefaultDynamicBackendConfig()`** allows setting backend configuration defaults that should apply to any newly created dynamic backends via the `new Backend()` constructor.
 
 ### Parameters
 
-- `defaultBackendConfiguration`
+- `defaultDynamicBackendConfig`
 
   - : An Object which contains the generic configuration options to apply to newly created Backends.
     - `connectTimeout` _: number_ _**optional**_
@@ -73,7 +73,7 @@ The **`setDefaultBackendConfiguration()`** allows setting backend configuration 
 ## Syntax
 
 ```js
-setDefaultBackendConfiguration(defaultConfig)
+setDefaultDynamicBackendConfig(defaultConfig)
 ```
 
 ### Return value
@@ -96,9 +96,9 @@ In this example an explicit Dynamic Backend is created and supplied to the fetch
     "main": `
 /// <reference types="@fastly/js-compute" />
 import { allowDynamicBackends } from "fastly:experimental";
-import { Backend, setDefaultBackendConfiguration } from "fastly:backend";
+import { Backend, setDefaultDynamicBackendConfig } from "fastly:backend";
 allowDynamicBackends(true);
-setDefaultBackendConfiguration({
+setDefaultDynamicBackendConfig({
   connectTimeout: 1000,
   firstByteTimeout: 15_000,
   betweenBytesTimeout: 10_000,
@@ -142,7 +142,7 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 import { allowDynamicBackends } from "fastly:experimental";
 import { Backend } from "fastly:backend";
 allowDynamicBackends(true);
-setDefaultBackendConfiguration({
+setDefaultDynamicBackendConfig({
   connectTimeout: 1000,
   firstByteTimeout: 15_000,
   betweenBytesTimeout: 10_000,

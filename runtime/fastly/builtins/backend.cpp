@@ -1511,7 +1511,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "setDefaultBackendConfig", 1)) {
+  if (!args.requireAtLeast(cx, "setDefaultDynamicBackendConfiguration", 1)) {
     return false;
   }
   auto backend_config_val = args.get(0);
@@ -1544,13 +1544,13 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(engine->cx(), backend_ns, "Backend", backend_val)) {
     return false;
   }
-  auto set_default_backend_config_fn =
-      JS_NewFunction(engine->cx(), &set_default_backend_config, 1, 0, "setDefaultBackedConfig");
+  auto set_default_backend_config_fn = JS_NewFunction(engine->cx(), &set_default_backend_config, 1,
+                                                      0, "setDefaultDynamicBackendConfig");
   RootedObject set_default_backend_config_obj(engine->cx(),
                                               JS_GetFunctionObject(set_default_backend_config_fn));
   RootedValue set_default_backend_config_val(engine->cx(),
                                              JS::ObjectValue(*set_default_backend_config_obj));
-  if (!JS_SetProperty(engine->cx(), backend_ns, "setDefaultBackendConfig",
+  if (!JS_SetProperty(engine->cx(), backend_ns, "setDefaultDynamicBackendConfig",
                       set_default_backend_config_val)) {
     return false;
   }
