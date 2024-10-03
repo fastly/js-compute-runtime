@@ -370,53 +370,68 @@ struct BackendConfig {
   std::optional<TcpKeepalive> tcp_keepalive;
 
   BackendConfig clone() {
-    BackendConfig cloned{};
+    std::optional<HostString> out_host_override{};
+    std::optional<uint32_t> out_connect_timeout{};
+    std::optional<uint32_t> out_first_byte_timeout{};
+    std::optional<uint32_t> out_between_bytes_timeout{};
+    std::optional<bool> out_use_ssl{};
+    std::optional<bool> out_dont_pool{};
+    std::optional<TlsVersion> out_ssl_min_version{};
+    std::optional<TlsVersion> out_ssl_max_version{};
+    std::optional<HostString> out_cert_hostname{};
+    std::optional<HostString> out_ca_cert{};
+    std::optional<HostString> out_ciphers{};
+    std::optional<HostString> out_sni_hostname{};
+    std::optional<ClientCert> out_client_cert{};
+    std::optional<bool> out_grpc{};
+    std::optional<uint32_t> out_http_keepalive_time_ms{};
+    std::optional<TcpKeepalive> out_tcp_keepalive{};
     if (host_override.has_value()) {
-      cloned.host_override = host_api::HostString(std::string_view(host_override.value()));
+      out_host_override = host_api::HostString(std::string_view(host_override.value()));
     }
     if (connect_timeout.has_value()) {
-      cloned.connect_timeout = connect_timeout.value();
+      out_connect_timeout = connect_timeout.value();
     }
     if (first_byte_timeout.has_value()) {
-      cloned.first_byte_timeout = first_byte_timeout.value();
+      out_first_byte_timeout = first_byte_timeout.value();
     }
     if (between_bytes_timeout.has_value()) {
-      cloned.between_bytes_timeout = between_bytes_timeout.value();
+      out_between_bytes_timeout = between_bytes_timeout.value();
     }
     if (use_ssl.has_value()) {
-      cloned.use_ssl = use_ssl.value();
+      out_use_ssl = use_ssl.value();
     }
     if (dont_pool.has_value()) {
-      cloned.dont_pool = dont_pool.value();
+      out_dont_pool = dont_pool.value();
     }
     if (ssl_min_version.has_value()) {
-      cloned.ssl_min_version = TlsVersion(ssl_min_version.value().value);
+      out_ssl_min_version = TlsVersion(ssl_min_version.value().value);
     }
     if (ssl_max_version.has_value()) {
-      cloned.ssl_max_version = TlsVersion(ssl_max_version.value().value);
+      out_ssl_max_version = TlsVersion(ssl_max_version.value().value);
     }
     if (cert_hostname.has_value()) {
-      cloned.cert_hostname = host_api::HostString(std::string_view(cert_hostname.value()));
+      out_cert_hostname = host_api::HostString(std::string_view(cert_hostname.value()));
     }
     if (ca_cert.has_value()) {
-      cloned.ca_cert = host_api::HostString(std::string_view(ca_cert.value()));
+      out_ca_cert = host_api::HostString(std::string_view(ca_cert.value()));
     }
     if (ciphers.has_value()) {
-      cloned.ciphers = host_api::HostString(std::string_view(ciphers.value()));
+      out_ciphers = host_api::HostString(std::string_view(ciphers.value()));
     }
     if (sni_hostname.has_value()) {
-      cloned.sni_hostname = host_api::HostString(std::string_view(sni_hostname.value()));
+      out_sni_hostname = host_api::HostString(std::string_view(sni_hostname.value()));
     }
     if (client_cert.has_value()) {
       host_api::HostString client_cert_cloned =
           host_api::HostString(std::string_view(client_cert.value().cert));
-      cloned.client_cert = ClientCert{std::move(client_cert_cloned), client_cert.value().key};
+      out_client_cert = ClientCert{std::move(client_cert_cloned), client_cert.value().key};
     }
     if (grpc.has_value()) {
-      cloned.grpc = grpc.value();
+      out_grpc = grpc.value();
     }
     if (http_keepalive_time_ms.has_value()) {
-      cloned.http_keepalive_time_ms = http_keepalive_time_ms.value();
+      out_http_keepalive_time_ms = http_keepalive_time_ms.value();
     }
     if (tcp_keepalive.has_value()) {
       TcpKeepalive tcp_keepalive_cloned{};
@@ -430,9 +445,24 @@ struct BackendConfig {
       if (tcp_keepalive_val.time_secs.has_value()) {
         tcp_keepalive_cloned.time_secs = tcp_keepalive_val.time_secs.value();
       }
-      cloned.tcp_keepalive = tcp_keepalive_cloned;
+      out_tcp_keepalive = tcp_keepalive_cloned;
     }
-    return cloned;
+    return BackendConfig{std::move(out_host_override),
+                         std::move(out_connect_timeout),
+                         std::move(out_first_byte_timeout),
+                         std::move(out_between_bytes_timeout),
+                         std::move(out_use_ssl),
+                         std::move(out_dont_pool),
+                         std::move(out_ssl_min_version),
+                         std::move(out_ssl_max_version),
+                         std::move(out_cert_hostname),
+                         std::move(out_ca_cert),
+                         std::move(out_ciphers),
+                         std::move(out_sni_hostname),
+                         std::move(out_client_cert),
+                         std::move(out_grpc),
+                         std::move(out_http_keepalive_time_ms),
+                         std::move(out_tcp_keepalive)};
   }
 };
 

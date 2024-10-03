@@ -722,7 +722,6 @@ bool is_cipher_suite_supported_by_fastly(std::string_view cipher_spec) {
 JSString *Backend::name(JSContext *cx, JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return JS::GetReservedSlot(self, Backend::Slots::Name).toString();
-  return nullptr;
 }
 
 bool Backend::to_string(JSContext *cx, unsigned argc, JS::Value *vp) {
