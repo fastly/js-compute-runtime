@@ -1,9 +1,37 @@
 /// <reference path="../types/secret-store.d.ts" />
 
 declare module 'fastly:backend' {
+  /**
+   * Set the default backend configuration options for dynamic backends.
+   * 
+   * Applies to backends created via `new Backend(...)` as well as for dynamic backends
+   * implicitly created when using `fetch()`.
+   * 
+   * @param defaultDynamicBackendConfiguration default backend configuration options
+   */
   export function setDefaultDynamicBackendConfig(
     defaultDynamicBackendConfiguration: DefaultBackendConfiguration,
   ): void;
+
+  /**
+   * Whether or not to allow Dynamic Backends.
+   * 
+   * By default, Dynamic Backends are enabled, but can be a potential security concern since
+   * third-party JavaScript code may send arbitrary requests, potentially including sensitive/secret
+   * data, off to destinations that the JavaScript project was not intending.
+   * 
+   * Using `allowDynamicBackends(false)` this security property can be restored to only use explicit
+   * backend definitions.
+   *
+   * @note 
+   * This feature is still disabled by default for Fastly Services, so even with it enabled in the JS
+   * SDK, the service-level configuratio will apply. Contact
+   * [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711)
+   * to request the feature be disabled or enabled on Fastly Services.
+   * 
+   * @experimental
+   */
+  export function allowDynamicBackends(enabled: boolean): void;
 
   interface DefaultBackendConfiguration {
     /**

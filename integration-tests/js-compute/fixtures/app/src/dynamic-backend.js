@@ -1,7 +1,10 @@
 /// <reference path="../../../../../types/index.d.ts" />
-import { Backend, setDefaultDynamicBackendConfig } from 'fastly:backend';
+import {
+  Backend,
+  setDefaultDynamicBackendConfig,
+  allowDynamicBackends,
+} from 'fastly:backend';
 import { CacheOverride } from 'fastly:cache-override';
-import { allowDynamicBackends } from 'fastly:experimental';
 import {
   assert,
   assertDoesNotThrow,

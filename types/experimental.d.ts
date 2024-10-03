@@ -17,6 +17,13 @@ declare module "fastly:experimental" {
    */
   export function setBaseURL(base: URL | null | undefined): void;
   /**
+   * 
+   * Set the default backend to use when dynamic backends are disabled.
+   * 
+   * For backwards compatibility, unless allowDynamicBackends has been explicitly
+   * called before invoking this function, it will disable dynamic backends when it is called
+   * in order to apply, as if calling allowDynamicBackends(false).
+   * 
    * @experimental
    */
   export function setDefaultBackend(backend: string): void;

@@ -1438,6 +1438,12 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
 
   auto res = host_api::HttpReq::register_dynamic_backend(name_str, target_string, backend_config);
   if (auto *err = res.to_err()) {
+    if (host_api::error_is_unsupported(*err)) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED, target_string.data(),
+                                "fetch()");
+      return nullptr;
+    }
     HANDLE_ERROR(cx, *err);
     return nullptr;
   }
@@ -1501,6 +1507,12 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto res = host_api::HttpReq::register_dynamic_backend(backend_name.value(), target_string,
                                                          backend_config);
   if (auto *err = res.to_err()) {
+    if (host_api::error_is_unsupported(*err)) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED, target_string_slice.data,
+                                "Backend constructor");
+      return false;
+    }
     HANDLE_ERROR(cx, *err);
     return false;
   }
@@ -1553,6 +1565,18 @@ bool install(api::Engine *engine) {
                       set_default_backend_config_val)) {
     return false;
   }
+
+  auto allow_dynamic_backends_fn =
+      JS_NewFunction(engine->cx(), &Fastly::allowDynamicBackends_set, 1, 0, "allowDynamicBackends");
+  RootedObject allow_dynamic_backends_obj(engine->cx(),
+                                          JS_GetFunctionObject(allow_dynamic_backends_fn));
+  RootedValue allow_dynamic_backends_val(engine->cx(),
+                                         JS::ObjectValue(*allow_dynamic_backends_obj));
+  if (!JS_SetProperty(engine->cx(), backend_ns, "allowDynamicBackends",
+                      allow_dynamic_backends_val)) {
+    return false;
+  }
+
   RootedValue backend_ns_val(engine->cx(), JS::ObjectValue(*backend_ns));
   if (!engine->define_builtin_module("fastly:backend", backend_ns_val)) {
     return false;

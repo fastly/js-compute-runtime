@@ -1,0 +1,32 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+import {Fiddle} from '@site/src/components/fiddle';
+
+# allowDynamicBackends
+
+The **`allowDynamicBackends()`** function is used to control whether or not Dynamic Backends should be allowed within this Fastly Compute Service.
+
+By default, Dynamic Backends are enabled, but can be a potential security concern since third-party JavaScript code may send arbitrary requests, potentially including sensitive/secret data, off to destinations that the JavaScript project was not intending.
+
+Using `allowDynamicBackends(false)` this security property can be restored to only use explicit backend definitions.
+
+>**Note**: Dynamic Backends are disabled by default for Fastly Services. Please contact [Fastly Support](https://support.fastly.com/hc/requests/new?ticket_form_id=360000269711) to request the feature be enabled or disabled on Fastly Services.
+
+## Syntax
+
+```js
+allowDynamicBackends(enabledOrConfig)
+```
+
+### Parameters
+
+- `enabled` _: boolean_
+  - Whether or not to allow Dynamic Backends
+
+### Return value
+
+`undefined`.

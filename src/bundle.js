@@ -16,6 +16,7 @@ let fastlyPlugin = {
             contents: `
 export const Backend = globalThis.Backend;
 export const setDefaultDynamicBackendConfig = Object.getOwnPropertyDescriptor(globalThis.fastly, 'allowDynamicBackends').set;
+export const allowDynamicBackends = Object.getOwnPropertyDescriptor(globalThis.fastly, 'allowDynamicBackends').set;
 `,
           };
         }
