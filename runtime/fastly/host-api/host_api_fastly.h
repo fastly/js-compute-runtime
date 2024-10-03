@@ -434,18 +434,7 @@ struct BackendConfig {
       out_http_keepalive_time_ms = http_keepalive_time_ms.value();
     }
     if (tcp_keepalive.has_value()) {
-      TcpKeepalive tcp_keepalive_cloned{};
-      TcpKeepalive &tcp_keepalive_val = tcp_keepalive.value();
-      if (tcp_keepalive_val.interval_secs.has_value()) {
-        tcp_keepalive_cloned.interval_secs = tcp_keepalive_val.interval_secs.value();
-      }
-      if (tcp_keepalive_val.probes.has_value()) {
-        tcp_keepalive_cloned.probes = tcp_keepalive_val.probes.value();
-      }
-      if (tcp_keepalive_val.time_secs.has_value()) {
-        tcp_keepalive_cloned.time_secs = tcp_keepalive_val.time_secs.value();
-      }
-      out_tcp_keepalive = tcp_keepalive_cloned;
+      out_tcp_keepalive = tcp_keepalive.value();
     }
     return BackendConfig{std::move(out_host_override),
                          std::move(out_connect_timeout),
