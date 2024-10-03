@@ -35,6 +35,7 @@ async function sleep(seconds) {
 let args = argv.slice(2);
 
 const local = args.includes('--local');
+const verbose = args.includes('--verbose');
 const tla = args.includes('--tla');
 const aot = args.includes('--aot');
 const debugBuild = args.includes('--debug-build');
@@ -123,7 +124,7 @@ if (!local) {
     core.endGroup();
   }
 } else {
-  localServer = zx`fastly compute serve --verbose`;
+  localServer = zx`fastly compute serve --verbose --viceroy-args="${verbose ? '-vv' : ''}"`;
   domain = 'http://127.0.0.1:7676';
 }
 

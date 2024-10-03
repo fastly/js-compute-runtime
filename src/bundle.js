@@ -12,7 +12,12 @@ let fastlyPlugin = {
     build.onLoad({ filter: /^.*/, namespace: 'fastly' }, async (args) => {
       switch (args.path) {
         case 'backend': {
-          return { contents: `export const Backend = globalThis.Backend;` };
+          return {
+            contents: `
+export const Backend = globalThis.Backend;
+export const setDefaultDynamicBackendConfig = Object.getOwnPropertyDescriptor(globalThis.fastly, 'allowDynamicBackends').set;
+`,
+          };
         }
         case 'body': {
           return {

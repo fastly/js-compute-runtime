@@ -6,6 +6,7 @@
 #pragma clang diagnostic pop
 #include "../../StarlingMonkey/builtins/web/url.h"
 #include "./fetch/request-response.h"
+#include "backend.h"
 #include "encode.h"
 #include "fastly.h"
 #include "js/Conversions.h"
@@ -49,7 +50,6 @@ JS::PersistentRooted<JSObject *> Fastly::env;
 JS::PersistentRooted<JSObject *> Fastly::baseURL;
 JS::PersistentRooted<JSString *> Fastly::defaultBackend;
 bool Fastly::allowDynamicBackends = false;
-host_api::BackendConfig Fastly::defaultDynamicBackendConfig;
 
 bool Fastly::dump(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -387,31 +387,11 @@ bool Fastly::allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *v
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   JS::HandleValue set_value = args.get(0);
   if (set_value.isObject()) {
-    allowDynamicBackends = true;
     RootedObject options_value(cx, &set_value.toObject());
-
-    RootedValue connect_timeout(cx);
-    if (!JS_GetProperty(cx, options_value, "connectTimeout", &connect_timeout)) {
+    if (!backend::set_default_backend_config(cx, argc, vp)) {
       return false;
     }
-    RootedValue between_bytes_timeout(cx);
-    if (!JS_GetProperty(cx, options_value, "betweenBytesTimeout", &between_bytes_timeout)) {
-      return false;
-    }
-    RootedValue first_byte_timeout(cx);
-    if (!JS_GetProperty(cx, options_value, "firstByteTimeout", &first_byte_timeout)) {
-      return false;
-    }
-
-    if (connect_timeout.isNumber()) {
-      defaultDynamicBackendConfig.connect_timeout = connect_timeout.toNumber();
-    }
-    if (between_bytes_timeout.isNumber()) {
-      defaultDynamicBackendConfig.between_bytes_timeout = between_bytes_timeout.toNumber();
-    }
-    if (first_byte_timeout.isNumber()) {
-      defaultDynamicBackendConfig.first_byte_timeout = first_byte_timeout.toNumber();
-    }
+    allowDynamicBackends = true;
   } else {
     allowDynamicBackends = JS::ToBoolean(set_value);
   }

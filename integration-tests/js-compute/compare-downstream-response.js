@@ -16,6 +16,7 @@ import compareHeaders from './compare-headers.js';
 function maybeUint8Array(body) {
   if (Array.isArray(body) && typeof body[0] === 'number')
     return new Uint8Array(body);
+  if (typeof body === 'string') return new TextEncoder().encode(body);
   return body;
 }
 
