@@ -222,7 +222,23 @@ routes.set('/backend/timeout', async () => {
     );
 
     actual = Reflect.ownKeys(Backend.prototype);
-    expected = ['constructor', 'toString', 'toName'];
+    expected = [
+      'constructor',
+      'isDynamic',
+      'host',
+      'hostOverride',
+      'port',
+      'connectTimeout',
+      'firstByteTimeout',
+      'betweenBytesTimeout',
+      'httpKeepaliveTime',
+      'tcpKeepalive',
+      'isSsl',
+      'tlsMinVersion',
+      'tlsMaxVersion',
+      'toString',
+      'toName',
+    ];
     assert(actual, expected, `Reflect.ownKeys(Backend.prototype)`);
 
     actual = Reflect.getOwnPropertyDescriptor(Backend.prototype, 'constructor');
@@ -2409,6 +2425,63 @@ routes.set('/backend/timeout', async () => {
     );
   }
 
+  // backend props
+  routes.set('/backend/props', async () => {
+    allowDynamicBackends(true);
+    {
+      const backend = createValidFastlyBackend() ?? validFastlyBackend;
+      strictEqual(backend.isDynamic, true);
+      strictEqual(backend.target, 'www.fastly.com');
+      strictEqual(backend.hostOverride, 'www.fastly.com');
+      strictEqual(backend.port, 443);
+      if (isRunningLocally()) {
+        strictEqual(backend.connectTimeout, null);
+        strictEqual(backend.firstByteTimeout, null);
+        strictEqual(backend.betweenBytesTimeout, null);
+        strictEqual(backend.httpKeepaliveTime, 0);
+        strictEqual(backend.tcpKeepalive, null);
+        strictEqual(backend.isSSL, true);
+        strictEqual(backend.tlsMinVersion, null);
+        strictEqual(backend.tlsMaxVersion, null);
+      } else {
+        strictEqual(backend.connectTimeout, null);
+        strictEqual(backend.firstByteTimeout, null);
+        strictEqual(backend.betweenBytesTimeout, null);
+        strictEqual(backend.httpKeepaliveTime, 0);
+        strictEqual(backend.tcpKeepalive, null);
+        strictEqual(backend.isSSL, true);
+        strictEqual(backend.tlsMinVersion, null);
+        strictEqual(backend.tlsMaxVersion, null);
+      }
+    }
+    {
+      const backend = createValidHttpMeBackend() ?? validHttpMeBackend;
+      strictEqual(backend.isDynamic, true);
+      strictEqual(backend.target, 'http-me.glitch.me');
+      strictEqual(backend.hostOverride, 'http-me.glitch.me');
+      strictEqual(backend.port, 443);
+      if (isRunningLocally()) {
+        strictEqual(backend.connectTimeout, null);
+        strictEqual(backend.firstByteTimeout, null);
+        strictEqual(backend.betweenBytesTimeout, null);
+        strictEqual(backend.httpKeepaliveTime, 0);
+        strictEqual(backend.tcpKeepalive, null);
+        strictEqual(backend.isSSL, true);
+        strictEqual(backend.tlsMinVersion, null);
+        strictEqual(backend.tlsMaxVersion, null);
+      } else {
+        strictEqual(backend.connectTimeout, null);
+        strictEqual(backend.firstByteTimeout, null);
+        strictEqual(backend.betweenBytesTimeout, null);
+        strictEqual(backend.httpKeepaliveTime, 0);
+        strictEqual(backend.tcpKeepalive, null);
+        strictEqual(backend.isSSL, true);
+        strictEqual(backend.tlsMinVersion, null);
+        strictEqual(backend.tlsMaxVersion, null);
+      }
+    }
+  });
+
   // ip & port
   routes.set('/backend/port-ip-defined', async () => {
     allowDynamicBackends(true);
@@ -2426,9 +2499,11 @@ routes.set('/backend/timeout', async () => {
   });
 }
 
+let validHttpMeBackend;
 function createValidHttpMeBackend() {
+  if (validHttpMeBackend) return;
   // We are defining all the possible fields here but any number of fields can be defined - the ones which are not defined will use their default value instead.
-  return new Backend({
+  return (validHttpMeBackend = new Backend({
     name: 'http-me',
     target: 'http-me.glitch.me',
     hostOverride: 'http-me.glitch.me',
@@ -2443,15 +2518,21 @@ function createValidHttpMeBackend() {
     // Colon-delimited list of permitted SSL Ciphers
     ciphers: 'ECDHE-RSA-AES128-GCM-SHA256:!RC4',
     sniHostname: 'http-me.glitch.me',
-  });
+  }));
 }
 
+let validFastlyBackend;
 function createValidFastlyBackend() {
-  return new Backend({
+  if (validFastlyBackend) return;
+  return (validFastlyBackend = new Backend({
     name: 'fastly',
     target: 'www.fastly.com',
     hostOverride: 'www.fastly.com',
     useSSL: true,
     dontPool: true,
-  });
+    tcpKeepalive: {
+      timeSecs: 1,
+      probes: 1,
+    },
+  }));
 }

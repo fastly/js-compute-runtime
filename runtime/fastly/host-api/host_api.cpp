@@ -929,6 +929,20 @@ TlsVersion::TlsVersion(uint8_t raw) : value{raw} {
 
 uint8_t TlsVersion::get_version() const { return this->value; }
 
+double TlsVersion::get_version_number() const {
+  switch (this->value) {
+  case fastly::TLS::VERSION_1:
+    return 1.0;
+  case fastly::TLS::VERSION_1_1:
+    return 1.1;
+  case fastly::TLS::VERSION_1_2:
+    return 1.2;
+  case fastly::TLS::VERSION_1_3:
+    return 1.3;
+  }
+  MOZ_ASSERT_UNREACHABLE();
+}
+
 TlsVersion TlsVersion::version_1() { return TlsVersion{fastly::TLS::VERSION_1}; }
 
 TlsVersion TlsVersion::version_1_1() { return TlsVersion{fastly::TLS::VERSION_1_1}; }
@@ -2595,10 +2609,10 @@ Result<bool> Backend::exists(std::string_view name) {
   return res;
 }
 
-Result<BackendHealth> Backend::health(std::string_view name) {
+Result<BackendHealth> Backend::health() const {
   Result<BackendHealth> res;
 
-  auto name_str = string_view_to_world_string(name);
+  auto name_str = string_view_to_world_string(this->name_);
   fastly::fastly_host_error err;
 
   uint32_t fastly_backend_health;
@@ -2620,6 +2634,292 @@ Result<BackendHealth> Backend::health(std::string_view name) {
     }
   }
 
+  return res;
+}
+
+Result<bool> Backend::is_dynamic() const {
+  Result<bool> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint32_t is_dynamic;
+  if (!convert_result(fastly::backend_is_dynamic(reinterpret_cast<char *>(name_str.ptr),
+                                                 name_str.len, &is_dynamic),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(is_dynamic);
+  }
+  return res;
+}
+
+Result<HostString> Backend::get_host() const {
+  Result<HostString> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  fastly::fastly_world_string ret;
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 4));
+  if (!convert_result(fastly::backend_get_host(reinterpret_cast<char *>(name_str.ptr), name_str.len,
+                                               ret.ptr, HOSTCALL_BUFFER_LEN, &ret.len),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+  return res;
+}
+
+Result<HostString> Backend::get_override_host() const {
+  Result<HostString> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  fastly::fastly_world_string ret;
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 4));
+  if (!convert_result(fastly::backend_get_override_host(reinterpret_cast<char *>(name_str.ptr),
+                                                        name_str.len, ret.ptr, HOSTCALL_BUFFER_LEN,
+                                                        &ret.len),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+  return res;
+}
+
+Result<uint16_t> Backend::get_port() const {
+  Result<uint16_t> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint16_t port;
+  if (!convert_result(
+          fastly::backend_get_port(reinterpret_cast<char *>(name_str.ptr), name_str.len, &port),
+          &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(port);
+  }
+  return res;
+}
+
+Result<std::optional<uint32_t>> Backend::get_connect_timeout_ms() const {
+  Result<std::optional<uint32_t>> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint32_t connect_timeout_ms;
+  if (!convert_result(fastly::backend_get_connect_timeout_ms(reinterpret_cast<char *>(name_str.ptr),
+                                                             name_str.len, &connect_timeout_ms),
+                      &err)) {
+    if (host_api::error_is_unsupported(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(connect_timeout_ms);
+  }
+  return res;
+}
+
+Result<std::optional<uint32_t>> Backend::get_first_byte_timeout_ms() const {
+  Result<std::optional<uint32_t>> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint32_t first_byte_timeout_ms;
+  if (!convert_result(
+          fastly::backend_get_first_byte_timeout_ms(reinterpret_cast<char *>(name_str.ptr),
+                                                    name_str.len, &first_byte_timeout_ms),
+          &err)) {
+    if (host_api::error_is_unsupported(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(first_byte_timeout_ms);
+  }
+  return res;
+}
+
+Result<std::optional<uint32_t>> Backend::get_between_bytes_timeout_ms() const {
+  Result<std::optional<uint32_t>> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint32_t between_bytes_timeout_ms;
+  if (!convert_result(
+          fastly::backend_get_between_bytes_timeout_ms(reinterpret_cast<char *>(name_str.ptr),
+                                                       name_str.len, &between_bytes_timeout_ms),
+          &err)) {
+    if (host_api::error_is_unsupported(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(between_bytes_timeout_ms);
+  }
+  return res;
+}
+
+Result<uint32_t> Backend::get_http_keepalive_time() const {
+  Result<uint32_t> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint32_t http_keepalive_time;
+  if (!convert_result(
+          fastly::backend_get_http_keepalive_time(reinterpret_cast<char *>(name_str.ptr),
+                                                  name_str.len, &http_keepalive_time),
+          &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(http_keepalive_time);
+  }
+  return res;
+}
+
+Result<bool> Backend::get_tcp_keepalive_enable() const {
+  Result<bool> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint32_t tcp_keepalive_enable;
+  if (!convert_result(
+          fastly::backend_get_tcp_keepalive_enable(reinterpret_cast<char *>(name_str.ptr),
+                                                   name_str.len, &tcp_keepalive_enable),
+          &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(tcp_keepalive_enable);
+  }
+  return res;
+}
+
+Result<uint32_t> Backend::get_tcp_keepalive_interval() const {
+  Result<uint32_t> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint32_t tcp_keepalive_interval;
+  if (!convert_result(
+          fastly::backend_get_tcp_keepalive_interval(reinterpret_cast<char *>(name_str.ptr),
+                                                     name_str.len, &tcp_keepalive_interval),
+          &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(tcp_keepalive_interval);
+  }
+  return res;
+}
+
+Result<uint32_t> Backend::get_tcp_keepalive_probes() const {
+  Result<uint32_t> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint32_t tcp_keepalive_probes;
+  if (!convert_result(
+          fastly::backend_get_tcp_keepalive_probes(reinterpret_cast<char *>(name_str.ptr),
+                                                   name_str.len, &tcp_keepalive_probes),
+          &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(tcp_keepalive_probes);
+  }
+  return res;
+}
+
+Result<uint32_t> Backend::get_tcp_keepalive_time() const {
+  Result<uint32_t> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint32_t tcp_keepalive_time;
+  if (!convert_result(fastly::backend_get_tcp_keepalive_time(reinterpret_cast<char *>(name_str.ptr),
+                                                             name_str.len, &tcp_keepalive_time),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(tcp_keepalive_time);
+  }
+  return res;
+}
+
+Result<bool> Backend::is_ssl() const {
+  Result<bool> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint32_t fastly_backend_is_ssl;
+  if (!convert_result(fastly::backend_is_ssl(reinterpret_cast<char *>(name_str.ptr), name_str.len,
+                                             &fastly_backend_is_ssl),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(fastly_backend_is_ssl);
+  }
+  return res;
+}
+
+Result<std::optional<TlsVersion>> Backend::ssl_min_version() const {
+  Result<std::optional<TlsVersion>> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint32_t fastly_backend_ssl_min_version;
+  if (!convert_result(fastly::backend_get_ssl_min_version(reinterpret_cast<char *>(name_str.ptr),
+                                                          name_str.len,
+                                                          &fastly_backend_ssl_min_version),
+                      &err)) {
+    if (host_api::error_is_unsupported(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(fastly_backend_ssl_min_version);
+  }
+  return res;
+}
+
+Result<std::optional<TlsVersion>> Backend::ssl_max_version() const {
+  Result<std::optional<TlsVersion>> res;
+
+  auto name_str = string_view_to_world_string(this->name_);
+  fastly::fastly_host_error err;
+
+  uint32_t fastly_backend_ssl_max_version;
+  if (!convert_result(fastly::backend_get_ssl_max_version(reinterpret_cast<char *>(name_str.ptr),
+                                                          name_str.len,
+                                                          &fastly_backend_ssl_max_version),
+                      &err)) {
+    if (host_api::error_is_unsupported(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(fastly_backend_ssl_max_version);
+  }
   return res;
 }
 
