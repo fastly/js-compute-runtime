@@ -1440,8 +1440,8 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   if (auto *err = res.to_err()) {
     if (host_api::error_is_unsupported(*err)) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED, target_string.data(),
-                                "fetch()");
+                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED_IMPLICIT, target_string.data(),
+                                url_string.data);
       return nullptr;
     }
     HANDLE_ERROR(cx, *err);
@@ -1509,8 +1509,8 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (auto *err = res.to_err()) {
     if (host_api::error_is_unsupported(*err)) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED, target_string_slice.data,
-                                "Backend constructor");
+                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED_EXPLICIT,
+                                target_string_slice.data);
       return false;
     }
     HANDLE_ERROR(cx, *err);
@@ -1535,6 +1535,29 @@ bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!apply_backend_config(cx, default_backend_config, backend_config_obj)) {
     return false;
   }
+  return true;
+}
+
+// TODO: in next major, when global and fastly experimental are deprecated,
+//       make it so that calling twice always throws an already enforced error.
+//       and possibly also don't allow changing the default again.
+bool enforce_explicit_backends(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  auto default_backend_val = args.get(0);
+  if (!default_backend_val.isNullOrUndefined()) {
+    if (!default_backend_val.isString()) {
+      api::throw_error(cx, api::Errors::TypeError, "enforceExplicitBackends", "defaultBackend",
+                       "be undefined or a string");
+      return false;
+    }
+    JS::RootedString backend(cx, JS::ToString(cx, default_backend_val));
+    if (!backend) {
+      return false;
+    }
+    Fastly::defaultBackend = backend;
+  }
+  Fastly::allowDynamicBackends = false;
+  args.rval().setUndefined();
   return true;
 }
 
@@ -1566,14 +1589,14 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  auto allow_dynamic_backends_fn =
-      JS_NewFunction(engine->cx(), &Fastly::allowDynamicBackends_set, 1, 0, "allowDynamicBackends");
-  RootedObject allow_dynamic_backends_obj(engine->cx(),
-                                          JS_GetFunctionObject(allow_dynamic_backends_fn));
-  RootedValue allow_dynamic_backends_val(engine->cx(),
-                                         JS::ObjectValue(*allow_dynamic_backends_obj));
-  if (!JS_SetProperty(engine->cx(), backend_ns, "allowDynamicBackends",
-                      allow_dynamic_backends_val)) {
+  auto enforce_explicit_backends_fn =
+      JS_NewFunction(engine->cx(), &enforce_explicit_backends, 1, 0, "enforceExplicitBackends");
+  RootedObject enforce_explicit_backends_obj(engine->cx(),
+                                             JS_GetFunctionObject(enforce_explicit_backends_fn));
+  RootedValue enforce_explicit_backends_val(engine->cx(),
+                                            JS::ObjectValue(*enforce_explicit_backends_obj));
+  if (!JS_SetProperty(engine->cx(), backend_ns, "enforceExplicitBackends",
+                      enforce_explicit_backends_val)) {
     return false;
   }
 

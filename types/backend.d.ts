@@ -1,12 +1,18 @@
 /// <reference path="../types/secret-store.d.ts" />
+/// <reference path="../types/globals.d.ts" />
 
 declare module 'fastly:backend' {
   /**
    * Set the default backend configuration options for dynamic backends.
-   * 
-   * Applies to backends created via `new Backend(...)` as well as for dynamic backends
-   * implicitly created when using `fetch()`.
-   * 
+   *
+   * Applies to backends created via {@link Backend | new Backend(...)} as well as for dynamic backends
+   * implicitly created when using {@link fetch | fetch()}.
+   *
+   * @note
+   * Dynamic backends are by default disabled at the Fastly service level.
+   * Contact [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711)
+   * to request dynamic backends on Fastly Services.
+   *
    * @param defaultDynamicBackendConfiguration default backend configuration options
    */
   export function setDefaultDynamicBackendConfig(
@@ -14,24 +20,27 @@ declare module 'fastly:backend' {
   ): void;
 
   /**
-   * Whether or not to allow Dynamic Backends.
-   * 
-   * By default, Dynamic Backends are enabled, but can be a potential security concern since
-   * third-party JavaScript code may send arbitrary requests, potentially including sensitive/secret
-   * data, off to destinations that the JavaScript project was not intending.
-   * 
-   * Using `allowDynamicBackends(false)` this security property can be restored to only use explicit
-   * backend definitions.
+   * Call this function to enforce the security property of explicitly-defined backends, even
+   * when dynamic backends are enabled at the Fastly service level.
    *
-   * @note 
-   * This feature is still disabled by default for Fastly Services, so even with it enabled in the JS
-   * SDK, the service-level configuratio will apply. Contact
-   * [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711)
-   * to request the feature be disabled or enabled on Fastly Services.
-   * 
+   * By default, if dynamic backends are supported for the Fastly service, they will be automatically
+   * used when creating a new `fetch()` request. This default behaviour for dynamic backends can be a
+   * potential security concern since third-party JavaScript code may send arbitrary requests,
+   * including sensitive/secret data, off to destinations that the JavaScript project was not
+   * intending.
+   *
+   * When calling this function, an optional default backend name can be provided.
+   *
+   * @note
+   * This is a separate option to the service-level dynamic backend support for Fastly services.
+   * By default, dynamic backends are disabled for Fastly Services, so that even if not using this
+   * function, the service-level security configuration will apply.
+   *
+   * @param defaultBackend the name of the default backend to use, when using {@link fetch | fetch()}.
+   *
    * @experimental
    */
-  export function allowDynamicBackends(enabled: boolean): void;
+  export function enforceExplicitBackends(defaultBackend?: string): void;
 
   interface DefaultBackendConfiguration {
     /**
@@ -115,23 +124,25 @@ declare module 'fastly:backend' {
      * Enables and sets the TCP keep alive options for the backend.
      * Setting to boolean true enables keepalive with the default options.
      */
-    tcpKeepalive?: boolean | {
-      /**
-       * Configure how long to wait after the last sent data over the TCP connection before
-       * starting to send TCP keepalive probes.
-       */
-      timeSecs?: number;
+    tcpKeepalive?:
+      | boolean
+      | {
+          /**
+           * Configure how long to wait after the last sent data over the TCP connection before
+           * starting to send TCP keepalive probes.
+           */
+          timeSecs?: number;
 
-      /**
-       * Configure how long to wait between each TCP keepalive probe sent to the backend to determine if it is still active.
-       */
-      intervalSecs?: number;
+          /**
+           * Configure how long to wait between each TCP keepalive probe sent to the backend to determine if it is still active.
+           */
+          intervalSecs?: number;
 
-      /**
-       * Number of probes to send to the backend before it is considered dead.
-       */
-      probes?: number;
-    };
+          /**
+           * Number of probes to send to the backend before it is considered dead.
+           */
+          probes?: number;
+        };
   }
 
   interface BackendConfiguration extends DefaultBackendConfiguration {
@@ -196,63 +207,11 @@ declare module 'fastly:backend' {
    * Class for dynamically creating new [Fastly Backends](https://developer.fastly.com/reference/api/services/backend/).
    *
    * @note
-   * This feature is in disabled by default for Fastly Services. Please contact [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711) to request the feature be enabled on the Fastly Services which require Dynamic Backends.
+   * Dynamic backends are by default disabled at the Fastly service level.
+   * Contact [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711)
+   * to request dynamic backends on Fastly Services.
    *
-   * By default, Dynamic Backends are disabled within a JavaScript application as it can be a potential
-   * avenue for third-party JavaScript code to send requests, potentially including sensitive/secret data,
-   * off to destinations that the JavaScript project was not intending, which could be a security issue.
-   *
-   * To enable Dynamic Backends the application will need to explicitly allow Dynamic Backends via:
-   * ```js
-   * import { allowDynamicBackends } from "fastly:experimental";
-   * allowDynamicBackends(true);
-   * ```
-   *
-   * **Note**: Can only be used when processing requests, not during build-time initialization.
-   *
-   * @example
-   * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
-   * In this example an implicit Dynamic Backend is created when making the fetch request to https://www.fastly.com/ and the response is then returned to the client.
-   *
-   * <script type="application/json+fiddle">
-   * {
-   *   "type": "javascript",
-   *   "title": "Implicit Dynamic Backend Example",
-   *   "origins": [
-   *     "https://http-me.glitch.me"
-   *   ],
-   *   "src": {
-   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
-   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { allowDynamicBackends } from \"fastly:experimental\";\nallowDynamicBackends(true);\nasync function app() {\n  // For any request, return the fastly homepage -- without defining a backend!\n  return fetch('https://www.fastly.com/');\n}\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
-   *   },
-   *   "requests": [
-   *     {
-   *       "enableCluster": true,
-   *       "enableShield": false,
-   *       "enableWAF": false,
-   *       "method": "GET",
-   *       "path": "/status=200",
-   *       "useFreshCache": false,
-   *       "followRedirects": false,
-   *       "tests": "",
-   *       "delay": 0
-   *     }
-   *   ],
-   *   "srcVersion": 26
-   * }
-   * </script>
-   * <noscript>
-   * ```js
-   * /// <reference types="@fastly/js-compute" />
-   * import { allowDynamicBackends } from "fastly:experimental";
-   * allowDynamicBackends(true);
-   * async function app() {
-   *   // For any request, return the fastly homepage -- without defining a backend!
-   *   return fetch('https://www.fastly.com/');
-   * }
-   * addEventListener("fetch", event => event.respondWith(app(event)));
-   * ```
-   * </noscript>
+   * To disable the usage of dynamic backends, see {@link enforceExplicitBackends}.
    *
    * @example
    * In this example an explicit Dynamic Backend is created and supplied to the fetch request, the response is then returned to the client.
@@ -266,7 +225,7 @@ declare module 'fastly:backend' {
    *   ],
    *   "src": {
    *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
-   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { allowDynamicBackends } from \"fastly:experimental\";\nimport { Backend } from \"fastly:backend\";\nallowDynamicBackends(true);\nasync function app() {\n  // For any request, return the fastly homepage -- without defining a backend!\n  const backend = new Backend({\n    name: 'fastly',\n    target: 'fastly.com',\n    hostOverride: \"www.fastly.com\",\n    connectTimeout: 1000,\n    firstByteTimeout: 15000,\n    betweenBytesTimeout: 10000,\n    useSSL: true,\n    sslMinVersion: 1.3,\n    sslMaxVersion: 1.3,\n  });\n  return fetch('https://www.fastly.com/', {\n    backend // Here we are configuring this request to use the backend from above.\n  });\n}\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
+   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { Backend } from \"fastly:backend\";\nasync function app() {\n  // For any request, return the fastly homepage -- without defining a backend!\n  const backend = new Backend({\n    name: 'fastly',\n    target: 'fastly.com',\n    hostOverride: \"www.fastly.com\",\n    connectTimeout: 1000,\n    firstByteTimeout: 15000,\n    betweenBytesTimeout: 10000,\n    useSSL: true,\n    sslMinVersion: 1.3,\n    sslMaxVersion: 1.3,\n  });\n  return fetch('https://www.fastly.com/', {\n    backend // Here we are configuring this request to use the backend from above.\n  });\n}\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
    *   },
    *   "requests": [
    *     {
@@ -287,9 +246,7 @@ declare module 'fastly:backend' {
    * <noscript>
    * ```js
    * /// <reference types="@fastly/js-compute" />
-   * import { allowDynamicBackends } from "fastly:experimental";
    * import { Backend } from "fastly:backend";
-   * allowDynamicBackends(true);
    * async function app() {
    *   // For any request, return the fastly homepage -- without defining a backend!
    *   const backend = new Backend({
@@ -323,7 +280,7 @@ declare module 'fastly:backend' {
      */
     constructor(configuration: BackendConfiguration);
     /**
-     * Returns the name of the Backend, which can be used on {@link "globals".RequestInit.backend}
+     * Returns the name of the Backend, which can be used on {@link RequestInit.backend}
      */
     toString(): string;
 

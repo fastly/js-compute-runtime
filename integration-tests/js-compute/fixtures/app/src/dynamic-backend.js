@@ -3,6 +3,7 @@ import {
   Backend,
   setDefaultDynamicBackendConfig,
   allowDynamicBackends,
+  enforceExplicitBackends,
 } from 'fastly:backend';
 import { CacheOverride } from 'fastly:cache-override';
 import {
@@ -56,6 +57,10 @@ routes.set('/backend/timeout', async () => {
   routes.set('/implicit-dynamic-backend/dynamic-backends-enabled', async () => {
     allowDynamicBackends(true);
     await assertResolves(() => fetch('https://http-me.glitch.me/headers'));
+    await assertResolves(() => fetch('https://www.fastly.com'));
+    enforceExplicitBackends();
+    await assertRejects(() => fetch('https://www.fastly.com'));
+    enforceExplicitBackends('TheOrigin');
     await assertResolves(() => fetch('https://www.fastly.com'));
   });
   routes.set(

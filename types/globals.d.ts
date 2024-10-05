@@ -1054,8 +1054,8 @@ declare interface RequestInit {
   // /** Can only be null. Used to disassociate request from any Window. */
   // window?: null;
 
-  /** The Fastly configured backend the request should be sent to. */
-  backend?: string;
+  /** The Fastly configured backend name or instance the request should be sent to. */
+  backend?: string | import('fastly:backend').Backend;
   cacheOverride?: import('fastly:cache-override').CacheOverride;
   cacheKey?: string;
   fastly?: {

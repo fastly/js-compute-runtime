@@ -10,18 +10,9 @@ import {Fiddle} from '@site/src/components/fiddle';
 
 The **`Backend` constructor** lets you dynamically create new [Fastly Backends](https://developer.fastly.com/reference/api/services/backend/) for your Fastly Compute service.
 
-Dynamically creating new [Fastly Backends](https://developer.fastly.com/reference/api/services/backend/) is disabled by default for Fastly Services. Please contact [Fastly Support](https://support.fastly.com/hc/requests/new?ticket_form_id=360000269711) to request the feature be enabled on the Fastly Services which require Dynamic Backends.
+>**Note**: Dynamic backends are by default disabled at the Fastly service level. Contact [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711) to request dynamic backends on Fastly Services.
 
-By default, Dynamic Backends are disabled within a JavaScript application as it can be a potential avenue for third-party JavaScript code to send requests, potentially including sensitive/secret data, off to destinations that the JavaScript project was not intending, which could be a security issue.
-
-To enable Dynamic Backends the application will need to explicitly allow Dynamic Backends via:
-
-```js
-import { allowDynamicBackends } from "fastly:experimental";
-allowDynamicBackends(true);
-```
-
-**Note**: Backend constructors can only be used when processing requests, not during build-time initialization.
+To disable the usage of dynamic backends, see [enforceExplicitBackends](../enforceExplicitBackends.mdx).
 
 ## Syntax
 
@@ -122,57 +113,7 @@ A new `Backend` object.
 
 ## Examples
 
-In this example an implicit Dynamic Backend is created when making the fetch request to <https://www.fastly.com/> and the response is then returned to the client.
-<Fiddle config={{
-  "type": "javascript",
-  "title": "Implicit Dynamic Backend Example",
-  "origins": [
-    "https://http-me.glitch.me"
-  ],
-  "src": {
-    "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",
-    "main": `
-/// <reference types="@fastly/js-compute" />
-import { allowDynamicBackends } from "fastly:experimental";
-allowDynamicBackends(true);
-async function app() {
-  // For any request, return the fastly homepage -- without defining a backend!
-  return fetch('https://www.fastly.com/');
-}
-addEventListener("fetch", event => event.respondWith(app(event)));
-`
-  },
-  "requests": [
-    {
-      "enableCluster": true,
-      "enableShield": false,
-      "enableWAF": false,
-      "method": "GET",
-      "path": "/status=200",
-      "useFreshCache": false,
-      "followRedirects": false,
-      "tests": "",
-      "delay": 0
-    }
-  ],
-  "srcVersion": 1
-}}>
-
-```js
-/// <reference types="@fastly/js-compute" />
-import { allowDynamicBackends } from "fastly:experimental";
-allowDynamicBackends(true);
-async function app() {
-  // For any request, return the fastly homepage -- without defining a backend!
-  return fetch('https://www.fastly.com/');
-}
-addEventListener("fetch", event => event.respondWith(app(event)));
-```
-
-</Fiddle>
-
 In this example an explicit Dynamic Backend is created and supplied to the fetch request, the response is then returned to the client.
-
 
 <Fiddle config={{
   "type": "javascript",
@@ -184,9 +125,7 @@ In this example an explicit Dynamic Backend is created and supplied to the fetch
     "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",
     "main": `
 /// <reference types="@fastly/js-compute" />
-import { allowDynamicBackends } from "fastly:experimental";
 import { Backend } from "fastly:backend";
-allowDynamicBackends(true);
 async function app() {
   // For any request, return the fastly homepage -- without defining a backend!
   const backend = new Backend({
@@ -225,9 +164,7 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 
 ```js
 /// <reference types="@fastly/js-compute" />
-import { allowDynamicBackends } from "fastly:experimental";
 import { Backend } from "fastly:backend";
-allowDynamicBackends(true);
 async function app() {
   // For any request, return the fastly homepage -- without defining a backend!
   const backend = new Backend({
