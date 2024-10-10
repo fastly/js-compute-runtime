@@ -2890,7 +2890,7 @@ Result<std::optional<TlsVersion>> Backend::ssl_min_version() const {
                                                           name_str.len,
                                                           &fastly_backend_ssl_min_version),
                       &err)) {
-    if (host_api::error_is_unsupported(err)) {
+    if (host_api::error_is_unsupported(err) || host_api::error_is_optional_none(err)) {
       res.emplace(std::nullopt);
     } else {
       res.emplace_err(err);
@@ -2912,7 +2912,7 @@ Result<std::optional<TlsVersion>> Backend::ssl_max_version() const {
                                                           name_str.len,
                                                           &fastly_backend_ssl_max_version),
                       &err)) {
-    if (host_api::error_is_unsupported(err)) {
+    if (host_api::error_is_unsupported(err) || host_api::error_is_optional_none(err)) {
       res.emplace(std::nullopt);
     } else {
       res.emplace_err(err);
