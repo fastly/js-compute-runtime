@@ -1,0 +1,23 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# Backend.tcpKeepalive
+
+The read-only **`tcpKeepalive`** property of a `Backend` instance returns an object providing
+the TCP keepalive configuration, if any, otherwise returning `null` if TCP keepalive is not enabled.
+
+This object has the following properties:
+- `timeSecs` _: number or null.
+  - Configure how long to wait after the last sent data over the TCP connection before starting to send TCP keepalive probes.
+- `intervalSecs` _: number or null.
+  - Configure how long to wait between each TCP keepalive probe sent to the backend to determine if it is still active.
+- `probes` _: number or null.
+  - Number of probes to send to the backend before it is considered dead.
+
+## Value
+
+A `Object` or `null`.

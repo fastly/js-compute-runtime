@@ -712,6 +712,53 @@ int backend_exists(const char *name, size_t name_len, uint32_t *exists_out);
 WASM_IMPORT("fastly_backend", "is_healthy")
 int backend_is_healthy(const char *name, size_t name_len, uint32_t *is_healthy_out);
 
+WASM_IMPORT("fastly_backend", "is_dynamic")
+int backend_is_dynamic(const char *name, size_t name_len, uint32_t *is_dynamic_out);
+
+WASM_IMPORT("fastly_backend", "get_host")
+int backend_get_host(const char *name, size_t name_len, uint8_t *value, size_t value_max_len,
+                     size_t *nwritten);
+
+WASM_IMPORT("fastly_backend", "get_override_host")
+int backend_get_override_host(const char *name, size_t name_len, uint8_t *value,
+                              size_t value_max_len, size_t *nwritten);
+
+WASM_IMPORT("fastly_backend", "get_port")
+int backend_get_port(const char *name, size_t name_len, uint16_t *port_out);
+
+WASM_IMPORT("fastly_backend", "get_connect_timeout_ms")
+int backend_get_connect_timeout_ms(const char *name, size_t name_len, uint32_t *timeout_ms);
+
+WASM_IMPORT("fastly_backend", "get_first_byte_timeout_ms")
+int backend_get_first_byte_timeout_ms(const char *name, size_t name_len, uint32_t *timeout_ms);
+
+WASM_IMPORT("fastly_backend", "get_between_bytes_timeout_ms")
+int backend_get_between_bytes_timeout_ms(const char *name, size_t name_len, uint32_t *timeout_ms);
+
+WASM_IMPORT("fastly_backend", "get_http_keepalive_time")
+int backend_get_http_keepalive_time(const char *name, size_t name_len, uint32_t *timeout_ms);
+
+WASM_IMPORT("fastly_backend", "get_tcp_keepalive_enable")
+int backend_get_tcp_keepalive_enable(const char *name, size_t name_len, uint32_t *is_keepalive);
+
+WASM_IMPORT("fastly_backend", "get_tcp_keepalive_interval")
+int backend_get_tcp_keepalive_interval(const char *name, size_t name_len, uint32_t *timeout_ms);
+
+WASM_IMPORT("fastly_backend", "get_tcp_keepalive_probes")
+int backend_get_tcp_keepalive_probes(const char *name, size_t name_len, uint32_t *probe_count);
+
+WASM_IMPORT("fastly_backend", "get_tcp_keepalive_time")
+int backend_get_tcp_keepalive_time(const char *name, size_t name_len, uint32_t *timeout_secs);
+
+WASM_IMPORT("fastly_backend", "is_ssl")
+int backend_is_ssl(const char *name, size_t name_len, uint32_t *is_ssl);
+
+WASM_IMPORT("fastly_backend", "get_ssl_min_version")
+int backend_get_ssl_min_version(const char *name, size_t name_len, uint32_t *ssl_min_version);
+
+WASM_IMPORT("fastly_backend", "get_ssl_max_version")
+int backend_get_ssl_max_version(const char *name, size_t name_len, uint32_t *ssl_max_version);
+
 WASM_IMPORT("fastly_cache", "get_length")
 int cache_get_length(uint32_t handle, uint64_t *ret);
 

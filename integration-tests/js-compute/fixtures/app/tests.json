@@ -1024,6 +1024,7 @@
   "GET /backend/health/happy-path-backend-does-not-exist": {},
   "GET /backend/port-ip-defined": {},
   "GET /backend/port-ip-cached": {},
+  "GET /backend/props": {},
   "GET /dictionary/exposed-as-global": {},
   "GET /dictionary/interface": {},
   "GET /dictionary/constructor/called-as-regular-function": {},
