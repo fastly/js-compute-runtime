@@ -940,7 +940,7 @@ double TlsVersion::get_version_number() const {
   case fastly::TLS::VERSION_1_3:
     return 1.3;
   }
-  MOZ_ASSERT_UNREACHABLE();
+  return 0;
 }
 
 TlsVersion TlsVersion::version_1() { return TlsVersion{fastly::TLS::VERSION_1}; }
