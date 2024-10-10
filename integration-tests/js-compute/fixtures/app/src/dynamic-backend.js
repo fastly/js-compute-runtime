@@ -2470,14 +2470,14 @@ routes.set('/backend/timeout', async () => {
         strictEqual(backend.tlsMinVersion, null);
         strictEqual(backend.tlsMaxVersion, null);
       } else {
-        strictEqual(backend.connectTimeout, null);
-        strictEqual(backend.firstByteTimeout, null);
-        strictEqual(backend.betweenBytesTimeout, null);
+        strictEqual(backend.connectTimeout, 1000);
+        strictEqual(backend.firstByteTimeout, 15000);
+        strictEqual(backend.betweenBytesTimeout, 10000);
         strictEqual(backend.httpKeepaliveTime, 0);
         strictEqual(backend.tcpKeepalive, null);
         strictEqual(backend.isSSL, true);
-        strictEqual(backend.tlsMinVersion, null);
-        strictEqual(backend.tlsMaxVersion, null);
+        strictEqual(backend.tlsMinVersion, 1.2);
+        strictEqual(backend.tlsMaxVersion, 1.2);
       }
     }
   });
