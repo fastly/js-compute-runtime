@@ -28,6 +28,7 @@ bool error_is_generic(APIError e);
 bool error_is_invalid_argument(APIError e);
 bool error_is_optional_none(APIError e);
 bool error_is_bad_handle(APIError e);
+bool error_is_unsupported(APIError e);
 void handle_fastly_error(JSContext *cx, APIError err, int line, const char *func);
 } // namespace host_api
 

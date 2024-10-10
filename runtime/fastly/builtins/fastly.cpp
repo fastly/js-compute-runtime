@@ -49,7 +49,8 @@ const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNu
 JS::PersistentRooted<JSObject *> Fastly::env;
 JS::PersistentRooted<JSObject *> Fastly::baseURL;
 JS::PersistentRooted<JSString *> Fastly::defaultBackend;
-bool Fastly::allowDynamicBackends = false;
+bool allowDynamicBackendsCalled = false;
+bool Fastly::allowDynamicBackends = true;
 
 bool Fastly::dump(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -373,6 +374,9 @@ bool Fastly::defaultBackend_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
 
   defaultBackend = backend;
+  if (!allowDynamicBackendsCalled) {
+    allowDynamicBackends = false;
+  }
   args.rval().setUndefined();
   return true;
 }
@@ -395,6 +399,7 @@ bool Fastly::allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *v
   } else {
     allowDynamicBackends = JS::ToBoolean(set_value);
   }
+  allowDynamicBackendsCalled = true;
   args.rval().setUndefined();
   return true;
 }
