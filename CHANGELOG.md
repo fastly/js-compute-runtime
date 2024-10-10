@@ -1,9 +1,8 @@
 # Changelog
 
-## [3.24.0](https://github.com/fastly/js-compute-runtime/compare/v3.23.0...v3.24.0) (2024-10-10)
+## 3.24.0 (2024-10-10)
 
-
-### Features
+### Added
 
 * setDefaultDynamicBackendConfig with all backend configuration options ([#993](https://github.com/fastly/js-compute-runtime/issues/993)) ([1847924](https://github.com/fastly/js-compute-runtime/commit/1847924e223f01679017d7f79658b7601ad5bd7a))
 

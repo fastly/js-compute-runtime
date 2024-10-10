@@ -1,0 +1,68 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# KVStore.prototype.get
+
+▸ **get**(): `string`
+
+Gets the value associated with the key `key` in the KV store.
+
+## Syntax
+
+```js
+get(key)
+```
+
+### Parameters
+
+- `key` _: string_
+  - The key to retrieve from within the KV-store.
+
+### Return value
+
+If the key does not exist in the KV store, this returns a `Promise` which resolves with `null`.
+
+If the key does exist in the KV store, this returns a `Promise` which resolves with an `KVStoreEntry`.
+
+## Description
+
+Send the given message, converted to a string, to this KVStore instance's endpoint.
+
+The `get()` method requires its `this` value to be a [`KVStore`](../KVStore.mdx) object.
+
+If the `this` value does not inherit from `KVStore.prototype`, a [`TypeError`](../../../globals/TypeError/TypeError.mdx) is thrown.
+
+### Exceptions
+
+- `TypeError`
+  - If the provided `key`:
+    - Is any of the strings `""`, `"."`, or `".."`
+    - Starts with the string `".well-known/acme-challenge/"`
+    - Contains any of the characters `"#?*[]\n\r"`
+    - Is longer than 1024 characters
+
+## Examples
+
+In this example we connect to an KV Store named `'files'` and save an entry to the store under the key `'hello'` and then read back the value and return it to the client.
+
+```js
+/// <reference types="@fastly/js-compute" />
+
+import { KVStore } from "fastly:kv-store";
+
+async function app(event) {
+  const files = new KVStore('files')
+
+  await files.put('hello', 'world')
+
+  const entry = await files.get('hello')
+
+  return new Response(await entry.text())
+}
+
+addEventListener("fetch", (event) => event.respondWith(app(event)))
+
+```

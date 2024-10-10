@@ -1,0 +1,62 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# KVStore.prototype.delete
+
+Deletes the value associated with the key `key` in the KV store.
+
+## Syntax
+
+```js
+delete(key)
+```
+
+### Parameters
+
+- `key` _: string_
+  - The key to retrieve from within the KV-store.
+
+### Return value
+
+Returns `undefined`
+
+### Exceptions
+
+- `TypeError`
+  - If the provided `key`:
+    - Is any of the strings `""`, `"."`, or `".."`
+    - Starts with the string `".well-known/acme-challenge/"`
+    - Contains any of the characters `"#?*[]\n\r"`
+    - Is longer than 1024 characters
+    - Does not exist
+
+## Examples
+
+In this example we connect to an KV Store named `'files'` and save an entry to the store under the key `'hello'` and then delete the entry.
+
+```js
+/// <reference types="@fastly/js-compute" />
+
+import { KVStore } from "fastly:kv-store";
+
+async function app(event) {
+  const files = new KVStore('files')
+
+  await files.put('hello', 'world')
+  await files.delete('hello')
+
+  const entry = await files.get('hello')
+  if (entry) {
+    return new Response(await entry.text())
+  } else {
+    return new Response('no file named hello exists')
+  }
+
+}
+
+addEventListener("fetch", (event) => event.respondWith(app(event)))
+
+```

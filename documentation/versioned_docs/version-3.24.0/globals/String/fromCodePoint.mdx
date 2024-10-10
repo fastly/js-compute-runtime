@@ -1,0 +1,40 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# String.fromCodePoint()
+
+The static **`String.fromCodePoint()`** method returns a string
+created by using the specified sequence of code points.
+
+## Syntax
+
+```js
+String.fromCodePoint(num1)
+String.fromCodePoint(num1, num2)
+String.fromCodePoint(num1, num2, /* …, */ numN)
+```
+
+### Parameters
+
+- `num1, ..., numN`
+  - : A sequence of code points.
+
+### Return value
+
+A string created by using the specified sequence of code points.
+
+### Exceptions
+
+- A `RangeError` is thrown if an invalid Unicode
+  code point is given (e.g. `"RangeError: NaN is not a valid code point"`).
+
+## Description
+
+This method returns a string (and _not_ a `String` object).
+
+Because `fromCodePoint()` is a static method of `String`, you
+must call it as `String.fromCodePoint()`, rather than as a method of a
+`String` object you created.
