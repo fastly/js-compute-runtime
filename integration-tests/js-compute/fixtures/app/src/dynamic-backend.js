@@ -2444,7 +2444,7 @@ routes.set('/backend/timeout', async () => {
         strictEqual(backend.tlsMinVersion, null, 'tlsMinVersion');
         strictEqual(backend.tlsMaxVersion, null, 'tlsMaxVersion');
       } else {
-        strictEqual(backend.connectTimeout, null, 'connectTimeout');
+        strictEqual(backend.connectTimeout, 1000, 'connectTimeout');
         strictEqual(backend.firstByteTimeout, null, 'firstByteTimeout');
         strictEqual(backend.betweenBytesTimeout, null, 'betweenBytesTimeout');
         strictEqual(backend.httpKeepaliveTime, 0, 'httpKeepaliveTime');
