@@ -225,7 +225,7 @@ routes.set('/backend/timeout', async () => {
     expected = [
       'constructor',
       'isDynamic',
-      'host',
+      'target',
       'hostOverride',
       'port',
       'connectTimeout',
@@ -233,7 +233,7 @@ routes.set('/backend/timeout', async () => {
       'betweenBytesTimeout',
       'httpKeepaliveTime',
       'tcpKeepalive',
-      'isSsl',
+      'isSSL',
       'tlsMinVersion',
       'tlsMaxVersion',
       'toString',

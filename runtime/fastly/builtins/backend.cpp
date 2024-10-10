@@ -756,10 +756,14 @@ const host_api::Backend *set_backend(JSContext *cx, JSObject *backend, JS::Handl
 }
 
 const host_api::Backend *get_backend(JSContext *cx, JSObject *backend) {
-  MOZ_ASSERT(Backend::is_instance(backend));
-  auto host_backend = static_cast<const host_api::Backend *>(
-      JS::GetReservedSlot(backend, Backend::Slots::HostBackend).toPrivate());
-  return host_backend;
+  if (!Backend::is_instance(backend)) {
+    return nullptr;
+  }
+  auto backend_slot = JS::GetReservedSlot(backend, Backend::Slots::HostBackend);
+  if (!backend_slot.isDouble()) {
+    return nullptr;
+  }
+  return static_cast<const host_api::Backend *>(backend_slot.toPrivate());
 }
 
 bool set_host_override(JSContext *cx, host_api::BackendConfig &backend_config,
@@ -1251,15 +1255,25 @@ bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
 } // namespace
 
 JSString *Backend::name(JSContext *cx, JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  auto backend = get_backend(cx, self);
-  auto &name = backend->name();
-  return JS_NewStringCopyZ(cx, name.begin());
+  auto backend = static_cast<host_api::Backend *>(
+      JS::GetReservedSlot(self, Backend::Slots::HostBackend).toPrivate());
+  return JS_NewStringCopyZ(cx, backend->name().begin());
 }
 
 bool Backend::to_string(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  args.rval().setString(Backend::name(cx, self));
+
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    args.rval().setMagic(JSWhyMagic::JS_UNINITIALIZED_LEXICAL);
+    return true;
+  }
+  auto &name = backend->name();
+  auto name_str = JS_NewStringCopyZ(cx, name.begin());
+  if (!name_str) {
+    return false;
+  }
+  args.rval().setString(name_str);
   return true;
 }
 
@@ -1369,7 +1383,11 @@ bool Backend::health_for_name(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Backend::health(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
-  auto res = get_backend(cx, self)->health();
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->health();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1389,7 +1407,11 @@ bool Backend::health(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Backend::is_dynamic_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  auto res = get_backend(cx, self)->is_dynamic();
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->is_dynamic();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1400,7 +1422,11 @@ bool Backend::is_dynamic_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Backend::target_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  auto res = get_backend(cx, self)->get_host();
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_host();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1415,7 +1441,11 @@ bool Backend::target_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Backend::host_override_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  auto res = get_backend(cx, self)->get_override_host();
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_override_host();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1430,7 +1460,11 @@ bool Backend::host_override_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Backend::port_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  auto res = get_backend(cx, self)->get_port();
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_port();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1441,7 +1475,11 @@ bool Backend::port_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Backend::connect_timeout_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  auto res = get_backend(cx, self)->get_connect_timeout_ms();
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_connect_timeout_ms();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1456,7 +1494,11 @@ bool Backend::connect_timeout_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Backend::first_byte_timeout_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  auto res = get_backend(cx, self)->get_first_byte_timeout_ms();
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_first_byte_timeout_ms();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1471,7 +1513,11 @@ bool Backend::first_byte_timeout_get(JSContext *cx, unsigned argc, JS::Value *vp
 
 bool Backend::between_bytes_timeout_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  auto res = get_backend(cx, self)->get_between_bytes_timeout_ms();
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_between_bytes_timeout_ms();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1486,7 +1532,11 @@ bool Backend::between_bytes_timeout_get(JSContext *cx, unsigned argc, JS::Value 
 
 bool Backend::http_keepalive_time_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  auto res = get_backend(cx, self)->get_http_keepalive_time();
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_http_keepalive_time();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1499,6 +1549,9 @@ bool Backend::tcp_keepalive_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
   auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
 
   auto res = backend->get_tcp_keepalive_enable();
   if (auto *err = res.to_err()) {
@@ -1551,7 +1604,11 @@ bool Backend::tcp_keepalive_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Backend::is_ssl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  auto res = get_backend(cx, self)->is_ssl();
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->is_ssl();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1562,7 +1619,11 @@ bool Backend::is_ssl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Backend::tls_min_version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  auto res = get_backend(cx, self)->ssl_min_version();
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->ssl_min_version();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1577,7 +1638,11 @@ bool Backend::tls_min_version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Backend::tls_max_version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  auto res = get_backend(cx, self)->ssl_max_version();
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->ssl_max_version();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
