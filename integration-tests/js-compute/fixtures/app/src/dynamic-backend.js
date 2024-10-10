@@ -8,6 +8,7 @@ import {
   assertRejects,
   assertResolves,
   assertThrows,
+  deepStrictEqual,
   ok,
   strictEqual,
 } from './assertions.js';
@@ -2447,8 +2448,12 @@ routes.set('/backend/timeout', async () => {
         strictEqual(backend.connectTimeout, 1000, 'connectTimeout');
         strictEqual(backend.firstByteTimeout, 15000, 'firstByteTimeout');
         strictEqual(backend.betweenBytesTimeout, 10000, 'betweenBytesTimeout');
-        strictEqual(backend.httpKeepaliveTime, 0, 'httpKeepaliveTime');
-        strictEqual(backend.tcpKeepalive, null, 'tcpKeepalive');
+        strictEqual(backend.httpKeepaliveTime, 55000, 'httpKeepaliveTime');
+        deepStrictEqual(backend.tcpKeepalive, {
+          timeSecs: 1,
+          probes: 1,
+          intervalSecs: 0,
+        }, 'tcpKeepalive');
         strictEqual(backend.isSSL, true, 'isSSL');
         strictEqual(backend.tlsMinVersion, null, 'tlsMinVersion');
         strictEqual(backend.tlsMaxVersion, null, 'tlsMaxVersion');
