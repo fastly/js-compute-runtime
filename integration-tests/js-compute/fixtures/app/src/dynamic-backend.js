@@ -2517,7 +2517,7 @@ function createValidHttpMeBackend() {
     target: 'http-me.glitch.me',
     hostOverride: 'http-me.glitch.me',
     connectTimeout: 1000,
-    firstByteTimeout: 180000,
+    firstByteTimeout: 120000,
     betweenBytesTimeout: 9000,
     useSSL: true,
     dontPool: false,
