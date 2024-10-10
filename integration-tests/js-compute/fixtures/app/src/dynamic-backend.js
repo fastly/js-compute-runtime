@@ -2445,8 +2445,8 @@ routes.set('/backend/timeout', async () => {
         strictEqual(backend.tlsMaxVersion, null, 'tlsMaxVersion');
       } else {
         strictEqual(backend.connectTimeout, 1000, 'connectTimeout');
-        strictEqual(backend.firstByteTimeout, null, 'firstByteTimeout');
-        strictEqual(backend.betweenBytesTimeout, null, 'betweenBytesTimeout');
+        strictEqual(backend.firstByteTimeout, 180000, 'firstByteTimeout');
+        strictEqual(backend.betweenBytesTimeout, 9000, 'betweenBytesTimeout');
         strictEqual(backend.httpKeepaliveTime, 0, 'httpKeepaliveTime');
         strictEqual(backend.tcpKeepalive, null, 'tcpKeepalive');
         strictEqual(backend.isSSL, true, 'isSSL');
@@ -2508,8 +2508,8 @@ function createValidHttpMeBackend() {
     target: 'http-me.glitch.me',
     hostOverride: 'http-me.glitch.me',
     connectTimeout: 1000,
-    firstByteTimeout: 15000,
-    betweenBytesTimeout: 10000,
+    firstByteTimeout: 180000,
+    betweenBytesTimeout: 9000,
     useSSL: true,
     dontPool: false,
     tlsMinVersion: 1.2,
