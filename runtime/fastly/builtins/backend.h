@@ -31,10 +31,10 @@ public:
   static bool health_for_name(JSContext *cx, unsigned argc, JS::Value *vp);
 
   // prototype methods
-  static bool to_name(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool to_string(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool health(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  // getters
+  static bool name_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool is_dynamic_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool target_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool host_override_get(JSContext *cx, unsigned argc, JS::Value *vp);
