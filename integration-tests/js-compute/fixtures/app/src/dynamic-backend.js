@@ -233,6 +233,7 @@ routes.set('/backend/timeout', async () => {
     actual = Reflect.ownKeys(Backend.prototype);
     expected = [
       'constructor',
+      'name',
       'isDynamic',
       'target',
       'hostOverride',
@@ -2440,6 +2441,9 @@ routes.set('/backend/timeout', async () => {
     {
       const backend = createValidFastlyBackend() ?? validFastlyBackend;
       strictEqual(backend.isDynamic, true, 'isDymamic');
+      strictEqual(backend.name, 'fastly');
+      strictEqual(backend.toString(), 'fastly');
+      strictEqual(backend.toName(), 'fastly');
       strictEqual(backend.target, 'www.fastly.com', 'target');
       strictEqual(backend.hostOverride, 'www.fastly.com', 'override');
       strictEqual(backend.port, 443, 'port');
@@ -2474,6 +2478,9 @@ routes.set('/backend/timeout', async () => {
     {
       const backend = createValidHttpMeBackend() ?? validHttpMeBackend;
       strictEqual(backend.isDynamic, true, 'isDynamic');
+      strictEqual(backend.name, 'http-me');
+      strictEqual(backend.toString(), 'fastly');
+      strictEqual(backend.toName(), 'fastly');
       strictEqual(backend.target, 'http-me.glitch.me', 'target');
       strictEqual(backend.hostOverride, 'http-me.glitch.me', 'hostOverride');
       strictEqual(backend.port, 443, 'port');
