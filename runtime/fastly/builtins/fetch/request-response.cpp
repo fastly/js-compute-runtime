@@ -459,7 +459,8 @@ JSObject *Request::headers(JSContext *cx, JS::HandleObject obj) {
   if (!headers) {
     MOZ_ASSERT(is_instance(obj));
     if (is_downstream(obj)) {
-      headers = Headers::create(cx, request_handle(obj).headers(), Headers::HeadersGuard::Immutable);
+      headers =
+          Headers::create(cx, request_handle(obj).headers(), Headers::HeadersGuard::Immutable);
     } else {
       headers = Headers::create(cx, Headers::HeadersGuard::Request);
     }
