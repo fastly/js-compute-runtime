@@ -480,9 +480,9 @@ JSObject *Response::headers(JSContext *cx, JS::HandleObject obj) {
     MOZ_ASSERT(is_instance(obj));
     if (is_upstream(obj)) {
       headers =
-          Headers::create(cx, response_handle(obj).headers(), Headers::HeadersGuard::Response);
+          Headers::create(cx, response_handle(obj).headers(), Headers::HeadersGuard::Immutable);
     } else {
-      headers = Headers::create(cx, Headers::HeadersGuard::Immutable);
+      headers = Headers::create(cx, Headers::HeadersGuard::Response);
     }
     if (!headers) {
       return nullptr;
