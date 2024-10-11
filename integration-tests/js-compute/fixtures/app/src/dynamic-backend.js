@@ -2479,8 +2479,8 @@ routes.set('/backend/timeout', async () => {
       const backend = createValidHttpMeBackend() ?? validHttpMeBackend;
       strictEqual(backend.isDynamic, true, 'isDynamic');
       strictEqual(backend.name, 'http-me');
-      strictEqual(backend.toString(), 'fastly');
-      strictEqual(backend.toName(), 'fastly');
+      strictEqual(backend.toString(), 'http-me');
+      strictEqual(backend.toName(), 'http-me');
       strictEqual(backend.target, 'http-me.glitch.me', 'target');
       strictEqual(backend.hostOverride, 'http-me.glitch.me', 'hostOverride');
       strictEqual(backend.port, 443, 'port');
