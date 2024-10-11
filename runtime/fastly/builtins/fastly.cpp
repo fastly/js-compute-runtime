@@ -414,8 +414,6 @@ bool install(api::Engine *engine) {
   bool ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS =
       std::string(std::getenv("ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS")) == "1";
 
-  engine->enable_module_mode(std::string(std::getenv("ENABLE_MODULE_MODE")) == "1");
-
   JS::SetOutOfMemoryCallback(engine->cx(), oom_callback, nullptr);
 
   JS::RootedObject fastly(engine->cx(), JS_NewPlainObject(engine->cx()));
