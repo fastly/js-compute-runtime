@@ -28,6 +28,7 @@ bool error_is_generic(APIError e);
 bool error_is_invalid_argument(APIError e);
 bool error_is_optional_none(APIError e);
 bool error_is_bad_handle(APIError e);
+bool error_is_unsupported(APIError e);
 void handle_fastly_error(JSContext *cx, APIError err, int line, const char *func);
 } // namespace host_api
 
@@ -330,8 +331,10 @@ struct TlsVersion {
   uint8_t value = 0;
 
   explicit TlsVersion(uint8_t raw);
+  explicit TlsVersion(){};
 
   uint8_t get_version() const;
+  double get_version_number() const;
   static TlsVersion version_1();
   static TlsVersion version_1_1();
   static TlsVersion version_1_2();
@@ -853,14 +856,33 @@ public:
 };
 
 class Backend final {
-  std::string_view name;
+  HostString name_;
 
+public:
   Backend() = default;
-  explicit Backend(std::string_view name) : name{name} {}
+  explicit Backend(const std::string_view &name) : name_{name} {}
+  explicit Backend(HostString name) : name_{std::move(name)} {}
+
+  const HostString &name() const { return name_; };
+  Result<BackendHealth> health() const;
+  Result<bool> is_dynamic() const;
+  Result<HostString> get_host() const;
+  Result<HostString> get_override_host() const;
+  Result<uint16_t> get_port() const;
+  Result<std::optional<uint32_t>> get_connect_timeout_ms() const;
+  Result<std::optional<uint32_t>> get_first_byte_timeout_ms() const;
+  Result<std::optional<uint32_t>> get_between_bytes_timeout_ms() const;
+  Result<uint32_t> get_http_keepalive_time() const;
+  Result<bool> get_tcp_keepalive_enable() const;
+  Result<uint32_t> get_tcp_keepalive_interval() const;
+  Result<uint32_t> get_tcp_keepalive_probes() const;
+  Result<uint32_t> get_tcp_keepalive_time() const;
+  Result<bool> is_ssl() const;
+  Result<std::optional<TlsVersion>> ssl_min_version() const;
+  Result<std::optional<TlsVersion>> ssl_max_version() const;
 
 public:
   static Result<bool> exists(std::string_view name);
-  static Result<BackendHealth> health(std::string_view name);
 };
 
 class PenaltyBox final {

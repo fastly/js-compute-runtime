@@ -22,6 +22,7 @@
 #include "./secret-store.h"
 #include "backend.h"
 #include "builtin.h"
+#include "decode.h"
 #include "encode.h"
 #include "fastly.h"
 
@@ -32,6 +33,8 @@ using fastly::fetch::RequestOrResponse;
 using fastly::secret_store::SecretStoreEntry;
 
 namespace fastly::backend {
+
+namespace {
 
 enum class Authentication : uint8_t {
   RSA,
@@ -151,9 +154,8 @@ private:
   static constexpr auto SSL_PROTO_TLSv1_0 = "TLSv1.0";
   static constexpr auto SSL_PROTO_SSLv3 = "SSLv3";
   static constexpr auto SSL_PROTO_TLSv1 = "TLSv1";
-  static constexpr auto SSL_PROTO_SSLv2 = "SSLv2";
 
-  static constexpr auto SEPARATOR = ":, ";
+  // static constexpr auto SEPARATOR = ":, ";
   /**
    * If ! is used then the ciphers are permanently deleted from the list. The ciphers deleted can
    * never reappear in the list even if they are explicitly stated.
@@ -719,19 +721,6 @@ bool is_cipher_suite_supported_by_fastly(std::string_view cipher_spec) {
   return ciphers.size() > 0;
 }
 
-JSString *Backend::name(JSContext *cx, JSObject *self) {
-  MOZ_ASSERT(is_instance(self));
-  return JS::GetReservedSlot(self, Backend::Slots::Name).toString();
-}
-
-bool Backend::to_string(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(0);
-  JS::RootedString name(cx, JS::GetReservedSlot(self, Backend::Slots::Name).toString());
-  args.rval().setString(name);
-  return true;
-}
-
-namespace {
 host_api::HostString parse_and_validate_name(JSContext *cx, JS::HandleValue name_val) {
   if (name_val.isNullOrUndefined()) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_BACKEND_NAME_NOT_SET);
@@ -751,6 +740,29 @@ host_api::HostString parse_and_validate_name(JSContext *cx, JS::HandleValue name
     return nullptr;
   }
   return core::encode(cx, name);
+}
+
+const host_api::Backend *set_backend(JSContext *cx, JSObject *backend, JS::HandleValue name_val) {
+  MOZ_ASSERT(Backend::is_instance(backend));
+  auto name = parse_and_validate_name(cx, name_val);
+  if (!name) {
+    return nullptr;
+  }
+
+  auto host_backend = new host_api::Backend(std::move(name));
+  JS::SetReservedSlot(backend, Backend::Slots::HostBackend, JS::PrivateValue(host_backend));
+  return host_backend;
+}
+
+const host_api::Backend *get_backend(JSContext *cx, JSObject *backend) {
+  if (!Backend::is_instance(backend)) {
+    return nullptr;
+  }
+  auto backend_slot = JS::GetReservedSlot(backend, Backend::Slots::HostBackend);
+  if (!backend_slot.isDouble()) {
+    return nullptr;
+  }
+  return static_cast<const host_api::Backend *>(backend_slot.toPrivate());
 }
 
 bool set_host_override(JSContext *cx, host_api::BackendConfig &backend_config,
@@ -1241,6 +1253,29 @@ bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
 
 } // namespace
 
+JSString *Backend::name(JSContext *cx, JSObject *self) {
+  auto backend = static_cast<host_api::Backend *>(
+      JS::GetReservedSlot(self, Backend::Slots::HostBackend).toPrivate());
+  return JS_NewStringCopyZ(cx, backend->name().begin());
+}
+
+bool Backend::to_string(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    args.rval().setMagic(JSWhyMagic::JS_UNINITIALIZED_LEXICAL);
+    return true;
+  }
+  auto &name = backend->name();
+  auto name_str = JS_NewStringCopyZ(cx, name.begin());
+  if (!name_str) {
+    return false;
+  }
+  args.rval().setString(name_str);
+  return true;
+}
+
 bool Backend::exists(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "Backend.exists", 1)) {
@@ -1295,7 +1330,7 @@ bool Backend::from_name(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   JS::RootedValue name_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
-  if (!Backend::set_name(cx, backend, name_val)) {
+  if (!set_backend(cx, backend, name_val)) {
     return false;
   }
 
@@ -1303,7 +1338,7 @@ bool Backend::from_name(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool Backend::health(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Backend::health_for_name(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "Backend.health", 1)) {
     return false;
@@ -1325,7 +1360,8 @@ bool Backend::health(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto res = host_api::Backend::health(name);
+  auto backend = new host_api::Backend(std::move(name));
+  auto res = backend->health();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1343,27 +1379,302 @@ bool Backend::health(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Backend::health(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->health();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  auto health = res.unwrap();
+  if (health.is_healthy()) {
+    args.rval().setString(JS_NewStringCopyZ(cx, "healthy"));
+  } else if (health.is_unhealthy()) {
+    args.rval().setString(JS_NewStringCopyZ(cx, "unhealthy"));
+  } else {
+    args.rval().setString(JS_NewStringCopyZ(cx, "unknown"));
+  }
+
+  return true;
+}
+
+bool Backend::is_dynamic_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->is_dynamic();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  args.rval().setBoolean(res.unwrap());
+  return true;
+}
+
+bool Backend::target_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_host();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto str = core::decode(cx, res.unwrap());
+  if (!str) {
+    return false;
+  }
+  args.rval().setString(str);
+  return true;
+}
+
+bool Backend::host_override_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_override_host();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto str = core::decode(cx, res.unwrap());
+  if (!str) {
+    return false;
+  }
+  args.rval().setString(str);
+  return true;
+}
+
+bool Backend::port_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_port();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  args.rval().setNumber(res.unwrap());
+  return true;
+}
+
+bool Backend::connect_timeout_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_connect_timeout_ms();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  if (!res.unwrap().has_value()) {
+    args.rval().setNull();
+  } else {
+    args.rval().setNumber(res.unwrap().value());
+  }
+  return true;
+}
+
+bool Backend::first_byte_timeout_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_first_byte_timeout_ms();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  if (!res.unwrap().has_value()) {
+    args.rval().setNull();
+  } else {
+    args.rval().setNumber(res.unwrap().value());
+  }
+  return true;
+}
+
+bool Backend::between_bytes_timeout_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_between_bytes_timeout_ms();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  if (!res.unwrap().has_value()) {
+    args.rval().setNull();
+  } else {
+    args.rval().setNumber(res.unwrap().value());
+  }
+  return true;
+}
+
+bool Backend::http_keepalive_time_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->get_http_keepalive_time();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  args.rval().setNumber(res.unwrap());
+  return true;
+}
+
+bool Backend::tcp_keepalive_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+
+  auto res = backend->get_tcp_keepalive_enable();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  if (!res.unwrap()) {
+    args.rval().setNull();
+    return true;
+  } else {
+    JS::RootedObject tcp_keepalive_obj(cx, JS_NewPlainObject(cx));
+    {
+      auto res = backend->get_tcp_keepalive_interval();
+      if (auto *err = res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        return false;
+      }
+      JS::RootedValue val(cx, JS_NumberValue(res.unwrap()));
+      if (!JS_SetProperty(cx, tcp_keepalive_obj, "intervalSecs", val)) {
+        return false;
+      }
+    }
+    {
+      auto res = backend->get_tcp_keepalive_time();
+      if (auto *err = res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        return false;
+      }
+      JS::RootedValue val(cx, JS_NumberValue(res.unwrap()));
+      if (!JS_SetProperty(cx, tcp_keepalive_obj, "timeSecs", val)) {
+        return false;
+      }
+    }
+    {
+      auto res = backend->get_tcp_keepalive_probes();
+      if (auto *err = res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        return false;
+      }
+      JS::RootedValue val(cx, JS_NumberValue(res.unwrap()));
+      if (!JS_SetProperty(cx, tcp_keepalive_obj, "probes", val)) {
+        return false;
+      }
+    }
+    args.rval().setObject(*tcp_keepalive_obj);
+  }
+
+  return true;
+}
+
+bool Backend::is_ssl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->is_ssl();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  args.rval().setBoolean(res.unwrap());
+  return true;
+}
+
+bool Backend::tls_min_version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->ssl_min_version();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  if (!res.unwrap().has_value()) {
+    args.rval().setNull();
+  } else {
+    args.rval().setNumber(res.unwrap().value().get_version_number());
+  }
+  return true;
+}
+
+bool Backend::tls_max_version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  auto backend = get_backend(cx, self);
+  if (!backend) {
+    return true;
+  }
+  auto res = backend->ssl_max_version();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  if (!res.unwrap().has_value()) {
+    args.rval().setNull();
+  } else {
+    args.rval().setNumber(res.unwrap().value().get_version_number());
+  }
+  return true;
+}
+
 const JSFunctionSpec Backend::static_methods[] = {
     JS_FN("exists", exists, 1, JSPROP_ENUMERATE), JS_FN("fromName", from_name, 1, JSPROP_ENUMERATE),
-    JS_FN("health", health, 1, JSPROP_ENUMERATE), JS_FS_END};
+    JS_FN("health", health_for_name, 1, JSPROP_ENUMERATE), JS_FS_END};
 const JSPropertySpec Backend::static_properties[] = {JS_PS_END};
 const JSFunctionSpec Backend::methods[] = {JS_FN("toString", to_string, 0, JSPROP_ENUMERATE),
                                            JS_FN("toName", to_string, 0, JSPROP_ENUMERATE),
                                            JS_FS_END};
-const JSPropertySpec Backend::properties[] = {JS_PS_END};
-
-std::optional<host_api::HostString> Backend::set_name(JSContext *cx, JSObject *backend,
-                                                      JS::HandleValue name_val) {
-  MOZ_ASSERT(is_instance(backend));
-  auto name = parse_and_validate_name(cx, name_val);
-  if (!name) {
-    return std::nullopt;
-  }
-
-  JS::SetReservedSlot(backend, Backend::Slots::Name,
-                      JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
-  return name;
-}
+const JSPropertySpec Backend::properties[] = {
+    JS_PSG("isDynamic", is_dynamic_get, JSPROP_ENUMERATE),
+    JS_PSG("target", target_get, JSPROP_ENUMERATE),
+    JS_PSG("hostOverride", host_override_get, JSPROP_ENUMERATE),
+    JS_PSG("port", port_get, JSPROP_ENUMERATE),
+    JS_PSG("connectTimeout", connect_timeout_get, JSPROP_ENUMERATE),
+    JS_PSG("firstByteTimeout", first_byte_timeout_get, JSPROP_ENUMERATE),
+    JS_PSG("betweenBytesTimeout", between_bytes_timeout_get, JSPROP_ENUMERATE),
+    JS_PSG("httpKeepaliveTime", http_keepalive_time_get, JSPROP_ENUMERATE),
+    JS_PSG("tcpKeepalive", tcp_keepalive_get, JSPROP_ENUMERATE),
+    JS_PSG("isSSL", is_ssl_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsMinVersion", tls_min_version_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsMaxVersion", tls_max_version_get, JSPROP_ENUMERATE),
+    JS_PS_END};
 
 JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   JS::RootedValue request_url(cx, RequestOrResponse::url(request));
@@ -1411,7 +1722,8 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   host_api::BackendConfig backend_config = default_backend_config.clone();
 
   JS::RootedValue name(cx, JS::StringValue(name_js_str));
-  if (!Backend::set_name(cx, backend, name)) {
+  auto host_backend = set_backend(cx, backend, name);
+  if (!host_backend) {
     return nullptr;
   }
   if (!set_host_override(cx, backend_config, name)) {
@@ -1436,7 +1748,8 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
     }
   }
 
-  auto res = host_api::HttpReq::register_dynamic_backend(name_str, target_string, backend_config);
+  auto res = host_api::HttpReq::register_dynamic_backend(host_backend->name(), target_string,
+                                                         backend_config);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return nullptr;
@@ -1470,8 +1783,8 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!JS_GetProperty(cx, configuration, "name", &name_val)) {
     return false;
   }
-  auto backend_name = Backend::set_name(cx, backend, name_val);
-  if (!backend_name) {
+  auto host_backend = set_backend(cx, backend, name_val);
+  if (!host_backend) {
     return false;
   }
 
@@ -1498,13 +1811,20 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto res = host_api::HttpReq::register_dynamic_backend(backend_name.value(), target_string,
+  auto res = host_api::HttpReq::register_dynamic_backend(host_backend->name(), target_string,
                                                          backend_config);
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
   args.rval().setObject(*backend);
+  return true;
+}
+
+bool finalize(JS::GCContext *gcx, JSObject *obj) {
+  auto backend = static_cast<host_api::Backend *>(
+      JS::GetReservedSlot(obj, Backend::Slots::HostBackend).toPrivate());
+  free(backend);
   return true;
 }
 
