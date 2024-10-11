@@ -2483,7 +2483,11 @@ routes.set('/backend/timeout', async () => {
         strictEqual(backend.firstByteTimeout, 180000, 'firstByteTimeout');
         strictEqual(backend.betweenBytesTimeout, 9000, 'betweenBytesTimeout');
         strictEqual(backend.httpKeepaliveTime, 55000, 'httpKeepaliveTime');
-        strictEqual(backend.tcpKeepalive, null, 'tcpKeepalive');
+        strictEqual(backend.tcpKeepalive, {
+          intervalSecs: 10,
+          timeSecs: 300,
+          probes: 3
+        }, 'tcpKeepalive');
         strictEqual(backend.isSSL, true, 'isSSL');
         strictEqual(backend.tlsMinVersion, 1.2, 'tlsMinVersion');
         strictEqual(backend.tlsMaxVersion, 1.2, 'tlsMaxVersion');
