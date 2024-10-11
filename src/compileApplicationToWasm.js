@@ -131,14 +131,13 @@ export async function compileApplicationToWasm(
         ],
         {
           stdio: [null, process.stdout, process.stderr],
-          input: maybeWindowsPath(wizerInput),
+          input: `${maybeWindowsPath(wizerInput)}${enableExperimentalTopLevelAwait ? '' : ' --legacy-script'}`,
           shell: true,
           encoding: 'utf-8',
           env: {
             ...process.env,
             ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
               enableExperimentalHighResolutionTimeMethods ? '1' : '0',
-            ENABLE_MODULE_MODE: enableExperimentalTopLevelAwait ? '1' : '0',
           },
         },
       );
@@ -161,14 +160,13 @@ export async function compileApplicationToWasm(
         ],
         {
           stdio: [null, process.stdout, process.stderr],
-          input: maybeWindowsPath(wizerInput),
+          input: `${maybeWindowsPath(wizerInput)}${enableExperimentalTopLevelAwait ? '' : ' --legacy-script'}`,
           shell: true,
           encoding: 'utf-8',
           env: {
             ...process.env,
             ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
               enableExperimentalHighResolutionTimeMethods ? '1' : '0',
-            ENABLE_MODULE_MODE: enableExperimentalTopLevelAwait ? '1' : '0',
           },
         },
       );
