@@ -279,15 +279,93 @@ declare module 'fastly:backend' {
      * ```
      */
     constructor(configuration: BackendConfiguration);
+    
     /**
-     * Returns the name of the Backend, which can be used on {@link RequestInit.backend}
+     * The name of the backend
      */
-    toString(): string;
+    readonly name: string;
+
+    /**
+     * Whether this backend was dynamically created by the running service.
+     */
+    readonly isDynamic: boolean;
+    /**
+     * The host target for the backend
+     */
+    readonly target: string;
+    /**
+     * The host header override defined for the backend.
+     * 
+     * See https://docs.fastly.com/en/guides/specifying-an-override-host for more information.
+     */
+    readonly hostOverride: string;
+    /**
+     * The backend port
+     */
+    readonly port: number;
+    /**
+     * The connect timeout for the backend in milliseconds, if available.
+     */
+    readonly connectTimeout: number | null;
+    /**
+     * The first byte timeout for the backend in milliseconds, if available.
+     */
+    readonly firstByteTimeout: number | null;
+    /**
+     * The between bytes timeout for the backend in milliseconds, if available.
+     */
+    readonly betweenBytesTimeout: number | null;
+    /**
+     * The HTTP keepalive time for the backend in milliseconds.
+     */
+    readonly httpKeepaliveTime: number;
+    /**
+     * The TCP keepalive configuration, if TCP keepalive is enabled.
+     */
+    readonly tcpKeepalive: null | {
+      /**
+       * The keepalive time in seconds.
+       */
+      timeSecs: number;
+      /**
+       * The interval in seconds between probes.
+       */
+      intervalSecs: number;
+      /**
+       * The number of probes to send before terminating the keepalive.
+       */
+      probes: number;
+    };
+    /**
+     * Whether the backend is configured to use SSL.
+     */
+    readonly isSSL: boolean;
+    /**
+     * The minimum SSL version number this backend will use, if available.
+     */
+    readonly tlsMinVersion: 1 | 1.1 | 1.2 | 1.3 | null;
+    /**
+     * The maximum SSL version number this backend will use, if available.
+     */
+    readonly tlsMaxversion: 1 | 1.1 | 1.2 | 1.3 | null;
+
+    /**
+     * Get the health of this backend.
+     */
+    health(): 'healthy' | 'unhealthy' | 'unknown';
 
     /**
      * Returns the name associated with the Backend instance.
+     * @deprecated Use `backend.name` instead.
      */
     toName(): string;
+
+    /**
+     * Returns the name associated with the Backend instance.
+     *
+     * @deprecated Use `backend.name` instead.
+     */
+    toString(): string;
 
     /**
      * Returns a boolean indicating if a Backend with the given name exists or not.
@@ -306,6 +384,8 @@ declare module 'fastly:backend' {
      * "healthy" - The backend's health check has succeeded, indicating the backend is working as expected and should receive requests.
      * "unhealthy" - The backend's health check has failed, indicating the backend is not working as expected and should not receive requests.
      * "unknown" - The backend does not have a health check configured.
+     * 
+     * @deprecated Use `backend.health()` ({@link Backend.prototype.health}) instead.
      */
     static health(backend: Backend): 'healthy' | 'unhealthy' | 'unknown';
   }

@@ -12,6 +12,7 @@ import {
   assertRejects,
   assertResolves,
   assertThrows,
+  deepStrictEqual,
   ok,
   strictEqual,
 } from './assertions.js';
@@ -230,7 +231,23 @@ routes.set('/backend/timeout', async () => {
     );
 
     actual = Reflect.ownKeys(Backend.prototype);
-    expected = ['constructor', 'toString', 'toName'];
+    expected = [
+      'constructor',
+      'isDynamic',
+      'target',
+      'hostOverride',
+      'port',
+      'connectTimeout',
+      'firstByteTimeout',
+      'betweenBytesTimeout',
+      'httpKeepaliveTime',
+      'tcpKeepalive',
+      'isSSL',
+      'tlsMinVersion',
+      'tlsMaxVersion',
+      'toString',
+      'toName',
+    ];
     assert(actual, expected, `Reflect.ownKeys(Backend.prototype)`);
 
     actual = Reflect.getOwnPropertyDescriptor(Backend.prototype, 'constructor');
@@ -2417,6 +2434,79 @@ routes.set('/backend/timeout', async () => {
     );
   }
 
+  // backend props
+  routes.set('/backend/props', async () => {
+    allowDynamicBackends(true);
+    {
+      const backend = createValidFastlyBackend() ?? validFastlyBackend;
+      strictEqual(backend.isDynamic, true, 'isDymamic');
+      strictEqual(backend.target, 'www.fastly.com', 'target');
+      strictEqual(backend.hostOverride, 'www.fastly.com', 'override');
+      strictEqual(backend.port, 443, 'port');
+      if (isRunningLocally()) {
+        strictEqual(backend.connectTimeout, null, 'connectTimeout');
+        strictEqual(backend.firstByteTimeout, null, 'firstByteTimeout');
+        strictEqual(backend.betweenBytesTimeout, null, 'betweenBytesTimeout');
+        strictEqual(backend.httpKeepaliveTime, 0, 'httpKeepaliveTime');
+        strictEqual(backend.tcpKeepalive, null, 'tcpKeepalive');
+        strictEqual(backend.isSSL, true, 'isSSL');
+        strictEqual(backend.tlsMinVersion, null, 'tlsMinVersion');
+        strictEqual(backend.tlsMaxVersion, null, 'tlsMaxVersion');
+      } else {
+        strictEqual(backend.connectTimeout, 1000, 'connectTimeout');
+        strictEqual(backend.firstByteTimeout, 15000, 'firstByteTimeout');
+        strictEqual(backend.betweenBytesTimeout, 10000, 'betweenBytesTimeout');
+        strictEqual(backend.httpKeepaliveTime, 55000, 'httpKeepaliveTime');
+        deepStrictEqual(
+          backend.tcpKeepalive,
+          {
+            timeSecs: 1,
+            probes: 1,
+            intervalSecs: 0,
+          },
+          'tcpKeepalive',
+        );
+        strictEqual(backend.isSSL, true, 'isSSL');
+        strictEqual(backend.tlsMinVersion, null, 'tlsMinVersion');
+        strictEqual(backend.tlsMaxVersion, null, 'tlsMaxVersion');
+      }
+    }
+    {
+      const backend = createValidHttpMeBackend() ?? validHttpMeBackend;
+      strictEqual(backend.isDynamic, true, 'isDynamic');
+      strictEqual(backend.target, 'http-me.glitch.me', 'target');
+      strictEqual(backend.hostOverride, 'http-me.glitch.me', 'hostOverride');
+      strictEqual(backend.port, 443, 'port');
+      if (isRunningLocally()) {
+        strictEqual(backend.connectTimeout, null, 'connectTimeout');
+        strictEqual(backend.firstByteTimeout, null, 'firstByteTimeout');
+        strictEqual(backend.betweenBytesTimeout, null, 'betweenBytesTimeout');
+        strictEqual(backend.httpKeepaliveTime, 0, 'httpKeepaliveTime');
+        strictEqual(backend.tcpKeepalive, null, 'tcpKeepalive');
+        strictEqual(backend.isSSL, true, 'isSSL');
+        strictEqual(backend.tlsMinVersion, null, 'tlsMinVersion');
+        strictEqual(backend.tlsMaxVersion, null, 'tlsMaxVersion');
+      } else {
+        strictEqual(backend.connectTimeout, 1000, 'connectTimeout');
+        strictEqual(backend.firstByteTimeout, 180000, 'firstByteTimeout');
+        strictEqual(backend.betweenBytesTimeout, 9000, 'betweenBytesTimeout');
+        strictEqual(backend.httpKeepaliveTime, 55000, 'httpKeepaliveTime');
+        strictEqual(
+          backend.tcpKeepalive,
+          {
+            intervalSecs: 10,
+            timeSecs: 300,
+            probes: 3,
+          },
+          'tcpKeepalive',
+        );
+        strictEqual(backend.isSSL, true, 'isSSL');
+        strictEqual(backend.tlsMinVersion, 1.2, 'tlsMinVersion');
+        strictEqual(backend.tlsMaxVersion, 1.2, 'tlsMaxVersion');
+      }
+    }
+  });
+
   // ip & port
   routes.set('/backend/port-ip-defined', async () => {
     allowDynamicBackends(true);
@@ -2434,15 +2524,17 @@ routes.set('/backend/timeout', async () => {
   });
 }
 
+let validHttpMeBackend;
 function createValidHttpMeBackend() {
+  if (validHttpMeBackend) return;
   // We are defining all the possible fields here but any number of fields can be defined - the ones which are not defined will use their default value instead.
-  return new Backend({
+  return (validHttpMeBackend = new Backend({
     name: 'http-me',
     target: 'http-me.glitch.me',
     hostOverride: 'http-me.glitch.me',
     connectTimeout: 1000,
-    firstByteTimeout: 15000,
-    betweenBytesTimeout: 10000,
+    firstByteTimeout: 180000,
+    betweenBytesTimeout: 9000,
     useSSL: true,
     dontPool: false,
     tlsMinVersion: 1.2,
@@ -2451,15 +2543,21 @@ function createValidHttpMeBackend() {
     // Colon-delimited list of permitted SSL Ciphers
     ciphers: 'ECDHE-RSA-AES128-GCM-SHA256:!RC4',
     sniHostname: 'http-me.glitch.me',
-  });
+  }));
 }
 
+let validFastlyBackend;
 function createValidFastlyBackend() {
-  return new Backend({
+  if (validFastlyBackend) return;
+  return (validFastlyBackend = new Backend({
     name: 'fastly',
     target: 'www.fastly.com',
     hostOverride: 'www.fastly.com',
     useSSL: true,
     dontPool: true,
-  });
+    tcpKeepalive: {
+      timeSecs: 1,
+      probes: 1,
+    },
+  }));
 }
