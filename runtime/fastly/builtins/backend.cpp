@@ -154,7 +154,6 @@ private:
   static constexpr auto SSL_PROTO_TLSv1_0 = "TLSv1.0";
   static constexpr auto SSL_PROTO_SSLv3 = "SSLv3";
   static constexpr auto SSL_PROTO_TLSv1 = "TLSv1";
-  // static constexpr auto SSL_PROTO_SSLv2 = "SSLv2";
 
   // static constexpr auto SEPARATOR = ":, ";
   /**
