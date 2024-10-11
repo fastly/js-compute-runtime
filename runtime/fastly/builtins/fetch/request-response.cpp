@@ -459,7 +459,7 @@ JSObject *Request::headers(JSContext *cx, JS::HandleObject obj) {
   if (!headers) {
     MOZ_ASSERT(is_instance(obj));
     if (is_downstream(obj)) {
-      headers = Headers::create(cx, request_handle(obj).headers(), Headers::HeadersGuard::Request);
+      headers = Headers::create(cx, request_handle(obj).headers(), Headers::HeadersGuard::Immutable);
     } else {
       headers = Headers::create(cx, Headers::HeadersGuard::Request);
     }
@@ -481,7 +481,7 @@ JSObject *Response::headers(JSContext *cx, JS::HandleObject obj) {
       headers =
           Headers::create(cx, response_handle(obj).headers(), Headers::HeadersGuard::Response);
     } else {
-      headers = Headers::create(cx, Headers::HeadersGuard::Response);
+      headers = Headers::create(cx, Headers::HeadersGuard::Immutable);
     }
     if (!headers) {
       return nullptr;
