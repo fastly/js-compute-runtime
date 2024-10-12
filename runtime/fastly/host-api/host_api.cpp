@@ -3061,6 +3061,129 @@ Result<HostString> DeviceDetection::lookup(std::string_view user_agent) {
   return res;
 }
 
+Result<KVStore> KVStore::open(std::string_view name) {
+  Result<KVStore> res;
+
+  auto name_str = string_view_to_world_string(name);
+  KVStore::Handle ret;
+  fastly::fastly_host_error err;
+  if (!convert_result(
+          fastly::kv_store_open(reinterpret_cast<char *>(name_str.ptr), name_str.len, &ret),
+          &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
+// Result<std::optional<HttpBody>> KVStore::lookup(std::string_view name) {
+//   Result<std::optional<HttpBody>> res;
+
+//   auto name_str = string_view_to_world_string(name);
+//   KVStore::Handle ret;
+//   fastly::fastly_host_error err;
+//   bool ok =
+//       convert_result(fastly::object_store_get(this->handle, reinterpret_cast<char *>(name_str.ptr),
+//                                               name_str.len, &ret),
+//                      &err);
+//   if ((!ok && error_is_optional_none(err)) || ret == INVALID_HANDLE) {
+//     res.emplace(std::nullopt);
+//   } else {
+//     res.emplace(ret);
+//   }
+
+//   return res;
+// }
+
+// Result<KVStorePendingLookup::Handle> KVStore::lookup_async(std::string_view name) {
+//   Result<KVStorePendingLookup::Handle> res;
+
+//   auto name_str = string_view_to_world_string(name);
+//   KVStorePendingLookup::Handle ret;
+//   fastly::fastly_host_error err;
+//   if (!convert_result(fastly::object_store_get_async(
+//                           this->handle, reinterpret_cast<char *>(name_str.ptr), name_str.len, &ret),
+//                       &err)) {
+//     res.emplace_err(err);
+//   } else {
+//     res.emplace(ret);
+//   }
+
+//   return res;
+// }
+
+// Result<KVStorePendingDelete::Handle> KVStore::delete_async(std::string_view name) {
+//   Result<KVStorePendingDelete::Handle> res;
+
+//   auto name_str = string_view_to_world_string(name);
+//   KVStorePendingDelete::Handle ret;
+//   fastly::fastly_host_error err;
+//   if (!convert_result(fastly::object_store_delete_async(
+//                           this->handle, reinterpret_cast<char *>(name_str.ptr), name_str.len, &ret),
+//                       &err)) {
+//     res.emplace_err(err);
+//   } else {
+//     res.emplace(ret);
+//   }
+
+//   return res;
+// }
+
+// Result<Void> KVStore::insert(std::string_view name, HttpBody body) {
+//   Result<Void> res;
+
+//   auto name_str = string_view_to_world_string(name);
+//   fastly::fastly_host_error err;
+//   if (!convert_result(fastly::object_store_insert(this->handle,
+//                                                   reinterpret_cast<char *>(name_str.ptr),
+//                                                   name_str.len, body.handle),
+//                       &err)) {
+//     res.emplace_err(err);
+//   } else {
+//     res.emplace();
+//   }
+
+//   return res;
+// }
+
+// FastlyResult<std::optional<HttpBody>, FastlyAPIError> KVStorePendingLookup::wait() {
+//   FastlyResult<std::optional<HttpBody>, FastlyAPIError> res;
+
+//   fastly::fastly_host_error err;
+//   HttpBody::Handle ret = INVALID_HANDLE;
+//   bool ok = convert_result(fastly::object_store_pending_lookup_wait(this->handle, &ret), &err);
+//   if ((!ok && error_is_optional_none(err)) || ret == INVALID_HANDLE) {
+//     res.emplace(std::nullopt);
+//   } else {
+//     res.emplace(ret);
+//   }
+
+//   return res;
+// }
+
+// FastlyAsyncTask::Handle KVStorePendingLookup::async_handle() const {
+//   return FastlyAsyncTask::Handle{this->handle};
+// }
+
+// Result<Void> KVStorePendingDelete::wait() {
+//   Result<Void> res;
+
+//   fastly::fastly_host_error err;
+//   if (!convert_result(fastly::object_store_pending_delete_wait(this->handle), &err)) {
+//     res.emplace_err(err);
+//   } else {
+//     res.emplace(Void{});
+//   }
+
+//   return res;
+// }
+
+// FastlyAsyncTask::Handle KVStorePendingDelete::async_handle() const {
+//   return FastlyAsyncTask::Handle{this->handle};
+// }
+
 Result<uint64_t> Compute::get_vcpu_ms() {
   Result<uint64_t> res;
   uint64_t ret;
