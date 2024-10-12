@@ -38,7 +38,7 @@ routes.set('/headers/from-response/delete-invalid', async () => {
     backend: 'httpbin',
     cacheOverride: new CacheOverride('pass'),
   });
-  const outResponse = new Response(response);
+  const outResponse = new Response(response.body, response);
   outResponse.headers.delete('none');
   return outResponse;
 });
@@ -48,7 +48,7 @@ routes.set('/headers/from-response/set-delete', async () => {
     backend: 'httpbin',
     cacheOverride: new CacheOverride('pass'),
   });
-  const outResponse = new Response(response);
+  const outResponse = new Response(response.body, response);
   outResponse.headers.set('custom', 'test');
   outResponse.headers.set('another', 'test');
   outResponse.headers.delete('access-control-allow-origin');
