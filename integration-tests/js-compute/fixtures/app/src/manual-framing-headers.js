@@ -224,8 +224,11 @@ async function responseMethod(setManualFramingHeaders) {
     backend: 'httpbin',
     cacheOverride: new CacheOverride('pass'),
   });
-  const outResponse = new Response(response);
-  outResponse.setManualFramingHeaders(setManualFramingHeaders);
+  const outResponse = new Response(response.body, {
+    headers: response.headers,
+    status: response.status,
+  });
+  response.setManualFramingHeaders(setManualFramingHeaders);
   outResponse.headers.set('content-length', '11');
   outResponse.headers.delete('transfer-encoding');
   return outResponse;
