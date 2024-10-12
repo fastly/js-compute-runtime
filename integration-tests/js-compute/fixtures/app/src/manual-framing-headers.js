@@ -228,7 +228,6 @@ async function responseMethod(setManualFramingHeaders) {
     headers: response.headers,
     status: response.status,
   });
-  response.setManualFramingHeaders(setManualFramingHeaders);
   outResponse.setManualFramingHeaders(setManualFramingHeaders);
   outResponse.headers.set('content-length', '11');
   outResponse.headers.delete('transfer-encoding');
