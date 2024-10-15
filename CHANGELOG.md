@@ -1,9 +1,8 @@
 # Changelog
 
-## [3.24.0](https://github.com/fastly/js-compute-runtime/compare/v3.23.0...v3.24.0) (2024-10-15)
+## 3.24.0 (2024-10-15)
 
-
-### Features
+### Added
 
 * default enable allowDynamicBackends with better unsupported errors ([#995](https://github.com/fastly/js-compute-runtime/issues/995)) ([bb858fe](https://github.com/fastly/js-compute-runtime/commit/bb858fe71ffa20a6be256fa27c1bfa9e44a503e5))
 * setDefaultDynamicBackendConfig with all backend configuration options ([#993](https://github.com/fastly/js-compute-runtime/issues/993)) ([1847924](https://github.com/fastly/js-compute-runtime/commit/1847924e223f01679017d7f79658b7601ad5bd7a))
