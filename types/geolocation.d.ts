@@ -72,8 +72,8 @@ declare module "fastly:geolocation" {
    * information about an IP address
    *
    * Can be retrieved for the incoming request's client IP address using the
-   * {@linkcode "globals".ClientInfo#geo} accessor, and for arbitrary addresses using
-   * {@linkcode "fastly:geolocation".getGeolocationForIpAddress}.
+   * {@link ClientInfo.geo} accessor, and for arbitrary addresses using
+   * {@link "fastly:geolocation".getGeolocationForIpAddress}.
    * 
    * @example
    * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
