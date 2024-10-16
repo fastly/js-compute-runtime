@@ -54,13 +54,13 @@
     "unified": "^11.0.5"
   },
   "dependencies": {
-    "@bytecodealliance/jco": "^1.5.0",
+    "@bytecodealliance/jco": "^1.7.0",
     "@bytecodealliance/wizer": "^7.0.5",
     "@bytecodealliance/weval": "^0.3.2",
-    "acorn": "^8.12.1",
-    "acorn-walk": "^8.3.3",
-    "esbuild": "^0.23.1",
-    "magic-string": "^0.30.11",
-    "regexpu-core": "^6.0.0"
+    "acorn": "^8.13.0",
+    "acorn-walk": "^8.3.4",
+    "esbuild": "^0.24.0",
+    "magic-string": "^0.30.12",
+    "regexpu-core": "^6.1.1"
   }
 }
