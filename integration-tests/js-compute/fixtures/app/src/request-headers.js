@@ -1,4 +1,5 @@
 /* eslint-env serviceworker */
+import { assertThrows } from './assertions.js';
 import { routes } from './routes.js';
 
 {
@@ -7,6 +8,11 @@ import { routes } from './routes.js';
      * @type {Request} request
      **/
     const request = event.request;
+
+    assertThrows(() => {
+      request.headers.set('should-be', 'immutable');
+    }, TypeError);
+
     const headers = {};
     for (const [name, value] of request.headers.entries()) {
       if (!headers[name]) {
