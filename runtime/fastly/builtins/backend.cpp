@@ -1744,6 +1744,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
 
   auto use_ssl = origin.rfind("https://", 0) == 0;
   if (use_ssl) {
+    backend_config.use_ssl = true;
     if (!set_sni_hostname(cx, backend_config, name)) {
       return nullptr;
     }
