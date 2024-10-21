@@ -58,8 +58,8 @@ routes.set('/backend/timeout', async () => {
   routes.set('/implicit-dynamic-backend/dynamic-backends-enabled', async () => {
     allowDynamicBackends(true);
     await assertResolves(async () => {
-      const res = await fetch('https://http-me.glitch.me/headers');
-      const backend = Backend.fromName(res.backend);
+      await fetch('https://http-me.glitch.me/headers');
+      const backend = Backend.fromName('http-me.glitch.me');
       strictEqual(backend.isSSL, true);
     });
     await assertResolves(() => fetch('https://www.fastly.com'));
