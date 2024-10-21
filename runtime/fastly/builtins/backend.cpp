@@ -1694,7 +1694,9 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   if (!name_js_str) {
     return nullptr;
   }
+  JS::RootedValue name(cx, JS::StringValue(name_js_str));
   std::string name_str((char *)slice.data, slice.len);
+  JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Backend), name);
 
   // Check if we already constructed an implicit dynamic backend for this host.
   bool found;
@@ -1707,6 +1709,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
       return nullptr;
     }
     JS::RootedObject backend(cx, &already_built_backend.toObject());
+
     return backend;
   }
 
@@ -1722,7 +1725,6 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
 
   host_api::BackendConfig backend_config = default_backend_config.clone();
 
-  JS::RootedValue name(cx, JS::StringValue(name_js_str));
   auto host_backend = set_backend(cx, backend, name);
   if (!host_backend) {
     return nullptr;
@@ -1744,6 +1746,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
 
   auto use_ssl = origin.rfind("https://", 0) == 0;
   if (use_ssl) {
+    backend_config.use_ssl = true;
     if (!set_sni_hostname(cx, backend_config, name)) {
       return nullptr;
     }
