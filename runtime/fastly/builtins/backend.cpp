@@ -1723,6 +1723,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   host_api::BackendConfig backend_config = default_backend_config.clone();
 
   JS::RootedValue name(cx, JS::StringValue(name_js_str));
+  JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Backend), name);
   auto host_backend = set_backend(cx, backend, name);
   if (!host_backend) {
     return nullptr;
