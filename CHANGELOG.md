@@ -1,14 +1,12 @@
 # Changelog
 
-## [3.25.0](https://github.com/fastly/js-compute-runtime/compare/v3.24.3...v3.25.0) (2024-10-22)
+## 3.25.0 (2024-10-22)
 
-
-### Features
+### Added
 
 * support backend property on both Request and Response, as a Backend instance ([#1019](https://github.com/fastly/js-compute-runtime/issues/1019)) ([4e3b93d](https://github.com/fastly/js-compute-runtime/commit/4e3b93d9de1f0af9eed7c900eedb8a509d7723da))
 
-
-### Bug Fixes
+### Fixed
 
 * set SSL properly for created dynamic backends ([#1016](https://github.com/fastly/js-compute-runtime/issues/1016)) ([616e898](https://github.com/fastly/js-compute-runtime/commit/616e89827087623b8180665591127143532dc309))
 
