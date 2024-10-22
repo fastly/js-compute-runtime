@@ -711,6 +711,7 @@ bool response_promise_catch_handler(JSContext *cx, JS::HandleObject event,
 // Steps in this function refer to the spec at
 // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
 bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
+  MOZ_ASSERT(false);
   METHOD_HEADER(1)
 
   // Coercion of argument `r` to a Promise<Response>

@@ -55,19 +55,24 @@ routes.set('/backend/timeout', async () => {
       await assertRejects(() => fetch('https://http-me.glitch.me/headers'));
     },
   );
-  routes.set('/implicit-dynamic-backend/dynamic-backends-enabled', async () => {
-    allowDynamicBackends(true);
-    await assertResolves(async () => {
-      const res = await fetch('https://http-me.glitch.me/headers');
-      strictEqual(res.backend.name, 'http-me.glitch.me');
-      strictEqual(res.backend.isSSL, true);
-    });
-    await assertResolves(() => fetch('https://www.fastly.com'));
-    enforceExplicitBackends();
-    await assertRejects(() => fetch('https://www.fastly.com'));
-    enforceExplicitBackends('TheOrigin');
-    await assertResolves(() => fetch('https://www.fastly.com'));
-  });
+  routes.set(
+    '/implicit-dynamic-backend/dynamic-backends-enabled',
+    async (evt) => {
+      allowDynamicBackends(true);
+      strictEqual(evt.request.backend, undefined);
+      strictEqual(new Response('test').backend, undefined);
+      await assertResolves(async () => {
+        const res = await fetch('https://http-me.glitch.me/headers');
+        strictEqual(res.backend.name, 'http-me.glitch.me');
+        strictEqual(res.backend.isSSL, true);
+      });
+      await assertResolves(() => fetch('https://www.fastly.com'));
+      enforceExplicitBackends();
+      await assertRejects(() => fetch('https://www.fastly.com'));
+      enforceExplicitBackends('TheOrigin');
+      await assertResolves(() => fetch('https://www.fastly.com'));
+    },
+  );
   routes.set(
     '/implicit-dynamic-backend/dynamic-backends-enabled-called-twice',
     async () => {

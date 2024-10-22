@@ -1274,7 +1274,7 @@ interface Request extends Body {
   /**
    * The request backend, null for the downstream request itself
    */
-  backend: import('fastly:backend').Backend | null;
+  backend: import('fastly:backend').Backend | undefined;
   setCacheOverride(
     override: import('fastly:cache-override').CacheOverride,
   ): void;
@@ -1337,7 +1337,7 @@ interface Response extends Body {
   /**
    * The response backend, if an upstream response
    */
-  backend: import('fastly:backend').Backend | null;
+  backend: import('fastly:backend').Backend | undefined;
 }
 
 /**

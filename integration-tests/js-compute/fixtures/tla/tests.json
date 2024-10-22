@@ -4,5 +4,11 @@
       "status": 200,
       "body": "hello world"
     }
+  },
+  "GET /hono": {
+    "downstream_response": {
+      "status": 200,
+      "body_prefix": "{\n    \"args\": {},"
+    }
   }
 }

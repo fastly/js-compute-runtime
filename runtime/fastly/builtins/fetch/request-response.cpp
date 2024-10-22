@@ -1202,9 +1202,12 @@ JSObject *RequestOrResponse::create_body_stream(JSContext *cx, JS::HandleObject 
 }
 
 bool RequestOrResponse::backend_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self) {
+  MOZ_ASSERT(false);
+  args.rval().setUndefined();
+  return true;
   JS::RootedValue backend(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Backend)));
   if (!backend.isString()) {
-    args.rval().setNull();
+    args.rval().setUndefined();
     return true;
   }
 
@@ -1393,7 +1396,7 @@ bool Request::method_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!method)
     return false;
 
-  args.rval().setString(method);
+  args.rval().setUndefined();
   return true;
 }
 

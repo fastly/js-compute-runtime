@@ -1357,12 +1357,6 @@
       ]
     }
   },
-  "GET /hono": {
-    "downstream_response": {
-      "status": 200,
-      "body_prefix": "{\n    \"args\": {},"
-    }
-  },
   "POST /tee": {
     "downstream_request": {
       "method": "POST",

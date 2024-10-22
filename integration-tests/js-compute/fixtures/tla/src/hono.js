@@ -13,7 +13,6 @@ routes.set('/hono', async (evt) => {
       'https://http-me.glitch.me/anything',
       c.req.raw,
     );
-    console.log('newRequest: ' + newRequest.url);
     newRequest.headers.set('X-Connecting-IP', `${REALIP}`);
     newRequest.headers.set(`${REAL_HDR}`, `${REALIP}`);
     let cacheOverride = new CacheOverride('pass');
@@ -24,8 +23,8 @@ routes.set('/hono', async (evt) => {
     } else {
       newRequest.headers.set('X-KnownDevice', '0');
     }
+    console.log('a', newRequest.backend);
     const res = await fetch(newRequest, { cacheOverride });
-    console.log('res.status: ' + res.status);
     const newResponse = new Response(res.body, res);
     if (c.req.header('Fastly-Debug') === 'bw-fastly-debug') {
       newResponse.headers.set('X-Connecting-IP', `${REALIP}`);
