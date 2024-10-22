@@ -1332,6 +1332,45 @@ interface Response extends Body {
    * Set cacheOverride: new CacheOverride("pass") to ensure a value.
    */
   readonly port: number | undefined;
+  /**
+   * Fastly-specific property - Returns whether the `Response` resulted from a cache hit.
+   * For request collapsing, typically one response will show as a miss, and the others
+   * (that awaited that response) will show as hits.
+   */
+  readonly wasCached: boolean;
+  /**
+   * Fastly-specific property - Get the Time to Live (TTL) in the cache for this response, if it is cached.
+   *
+   * The TTL determines the duration of "freshness" for the cached response
+   * after it is inserted into the cache.
+   *
+   * Undefined if the response is not cached.
+   */
+  readonly ttl?: number;
+  /**
+   * Fastly-specific property - The current age of the response, if it is cached.
+   *
+   * Undefined if the response is not cached.
+   */
+  readonly age?: number;
+  /**
+   * Fastly-specific property - The time for which the response can safely be used despite being considered stale, if it is cached.
+   *
+   * Undefined if the response is not cached.
+   */
+  readonly swr?: number;
+  /**
+   * Fastly-specific property - The set of request headers for which the response may vary.
+   *
+   * Undefined if the response is not cached.
+   */
+  readonly vary?: Set<string>;
+  /**
+   * Fastly-specific property - The surrogate keys for the cached response.
+   *
+   * Undefined if the response is not cached.
+   */
+  readonly surrogateKeys?: Set<string>;
   // clone(): Response;
   setManualFramingHeaders(manual: boolean): void;
   /**
