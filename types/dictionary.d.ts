@@ -1,4 +1,4 @@
-declare module "fastly:dictionary" {
+declare module 'fastly:dictionary' {
   /**
    * Class for accessing [Fastly Edge Dictionaries](https://docs.fastly.com/en/guides/about-edge-dictionaries).
    *

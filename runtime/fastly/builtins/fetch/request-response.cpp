@@ -8,6 +8,7 @@
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "../../common/ip_octets_to_js_string.h"
 #include "../../common/normalize_http_method.h"
+#include "../backend.h"
 #include "../cache-core.h"
 #include "../cache-override.h"
 #include "../cache-simple.h"
@@ -54,6 +55,7 @@ using builtins::web::streams::TransformStream;
 using builtins::web::url::URL;
 using builtins::web::url::URLSearchParams;
 using builtins::web::worker_location::WorkerLocation;
+using fastly::backend::Backend;
 using fastly::cache_core::CacheEntry;
 using fastly::cache_override::CacheOverride;
 using fastly::cache_simple::SimpleCacheEntry;
@@ -213,8 +215,9 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
 
   bool is_upstream = true;
   bool is_grip_upgrade = false;
+  RootedString backend(cx, RequestOrResponse::backend(context));
   JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle, body,
-                                                 is_upstream, is_grip_upgrade, nullptr));
+                                                 is_upstream, is_grip_upgrade, backend));
   if (!response) {
     return false;
   }
@@ -1198,6 +1201,18 @@ JSObject *RequestOrResponse::create_body_stream(JSContext *cx, JS::HandleObject 
   return body_stream;
 }
 
+bool RequestOrResponse::backend_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self) {
+  JS::RootedValue backend(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Backend)));
+  if (!backend.isString()) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  host_api::HostString name = core::encode(cx, backend);
+  Backend::get_from_valid_name(cx, std::move(name), args.rval());
+  return true;
+}
+
 bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self,
                                  bool create_if_undefined) {
   if (!has_body(self)) {
@@ -1239,7 +1254,7 @@ bool Request::is_downstream(JSObject *obj) {
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::IsDownstream)).toBoolean();
 }
 
-JSString *Request::backend(JSObject *obj) {
+JSString *RequestOrResponse::backend(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
   auto val = JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Backend));
   return val.isString() ? val.toString() : nullptr;
@@ -1421,10 +1436,7 @@ bool Request::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Request::backend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  JS::RootedValue backend(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Backend)));
-  args.rval().set(backend);
-
-  return true;
+  return RequestOrResponse::backend_get(cx, args, self);
 }
 
 bool Request::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -1645,13 +1657,13 @@ const JSFunctionSpec Request::methods[] = {
 };
 
 const JSPropertySpec Request::properties[] = {
-    JS_PSG("method", Request::method_get, JSPROP_ENUMERATE),
-    JS_PSG("url", Request::url_get, JSPROP_ENUMERATE),
-    JS_PSG("version", Request::version_get, JSPROP_ENUMERATE),
-    JS_PSG("headers", Request::headers_get, JSPROP_ENUMERATE),
-    JS_PSG("backend", Request::backend_get, JSPROP_ENUMERATE),
-    JS_PSG("body", Request::body_get, JSPROP_ENUMERATE),
-    JS_PSG("bodyUsed", Request::bodyUsed_get, JSPROP_ENUMERATE),
+    JS_PSG("method", method_get, JSPROP_ENUMERATE),
+    JS_PSG("url", url_get, JSPROP_ENUMERATE),
+    JS_PSG("version", version_get, JSPROP_ENUMERATE),
+    JS_PSG("headers", headers_get, JSPROP_ENUMERATE),
+    JS_PSG("backend", backend_get, JSPROP_ENUMERATE),
+    JS_PSG("body", body_get, JSPROP_ENUMERATE),
+    JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Request", JSPROP_READONLY),
     JS_PS_END,
 };
@@ -2235,13 +2247,12 @@ bool Response::is_grip_upgrade(JSObject *obj) {
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::IsGripUpgrade)).toBoolean();
 }
 
-const char *Response::grip_backend(JSObject *obj) {
+host_api::HostString Response::backend_str(JSContext *cx, JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
 
-  auto backend = reinterpret_cast<char *>(
-      JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::GripBackend)).toPrivate());
-  MOZ_ASSERT(backend);
-  return backend;
+  RootedValue backend(cx, JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Backend)));
+  MOZ_ASSERT(backend.isString());
+  return core::encode(cx, backend);
 }
 
 uint16_t Response::status(JSObject *obj) {
@@ -2530,6 +2541,11 @@ bool Response::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   return RequestOrResponse::body_get(cx, args, self, true);
+}
+
+bool Response::backend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+  return RequestOrResponse::backend_get(cx, args, self);
 }
 
 bool Response::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -2903,6 +2919,7 @@ const JSPropertySpec Response::properties[] = {
     JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
     JS_PSG("ip", ip_get, JSPROP_ENUMERATE),
     JS_PSG("port", port_get, JSPROP_ENUMERATE),
+    JS_PSG("backend", backend_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Response", JSPROP_READONLY),
     JS_PS_END,
 };
@@ -3125,7 +3142,7 @@ bool Response::init_class(JSContext *cx, JS::HandleObject global) {
 
 JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                            host_api::HttpResp response_handle, host_api::HttpBody body_handle,
-                           bool is_upstream, bool is_grip, JS::UniqueChars backend) {
+                           bool is_upstream, bool is_grip, JS::HandleString backend) {
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Response),
                       JS::Int32Value(response_handle.handle));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::NullValue());
@@ -3139,6 +3156,9 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                       JS::BooleanValue(is_upstream));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::IsGripUpgrade),
                       JS::BooleanValue(is_grip));
+  if (backend) {
+    JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Backend), JS::StringValue(backend));
+  }
 
   if (is_upstream) {
     auto res = response_handle.get_status();
@@ -3155,8 +3175,6 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
       JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::HasBody), JS::TrueValue());
     }
   }
-  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::GripBackend),
-                      JS::PrivateValue(std::move(backend.release())));
   return response;
 }
 

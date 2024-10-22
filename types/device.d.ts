@@ -1,4 +1,4 @@
-declare module "fastly:device" {
+declare module 'fastly:device' {
   class Device {
     /**
      * Look up the data associated with a particular User-Agent string.
@@ -66,6 +66,6 @@ declare module "fastly:device" {
      *
      * To get a JSON string, you can use `JSON.stringify(device)` directly; it will call `toJSON()` automatically.
      */
-    toJSON(): Object
+    toJSON(): Object;
   }
 }

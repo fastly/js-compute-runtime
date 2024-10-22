@@ -1,5 +1,4 @@
-declare module "fastly:edge-rate-limiter" {
-
+declare module 'fastly:edge-rate-limiter' {
   export class EdgeRateLimiter {
     /**
      * Open a EdgeRateLimiter with the given ratecounter and penalty-box.
@@ -16,7 +15,13 @@ declare module "fastly:edge-rate-limiter" {
      * @param limit The requests-per-second limit
      * @param timeToLive In minutes, how long the entry should be added into the penalty-box
      */
-    checkRate(entry: string, delta: number, window: 1 | 10 | 60, limit: number, timeToLive: number): boolean;
+    checkRate(
+      entry: string,
+      delta: number,
+      window: 1 | 10 | 60,
+      limit: number,
+      timeToLive: number,
+    ): boolean;
   }
 
   /**
@@ -70,5 +75,4 @@ declare module "fastly:edge-rate-limiter" {
      */
     lookupCount(entry: string, duration: 10 | 20 | 30 | 40 | 50 | 60): number;
   }
-
 }

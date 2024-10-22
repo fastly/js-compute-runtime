@@ -1,4 +1,4 @@
-declare module "fastly:body" {
+declare module 'fastly:body' {
   export class FastlyBody {
     constructor();
     concat(dest: FastlyBody): void;

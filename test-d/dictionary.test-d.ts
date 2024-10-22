@@ -1,12 +1,12 @@
 /// <reference path="../types/dictionary.d.ts" />
-import { Dictionary } from "fastly:dictionary";
-import {expectError, expectType} from 'tsd';
+import { Dictionary } from 'fastly:dictionary';
+import { expectError, expectType } from 'tsd';
 
 // Dictionary
 {
-  expectError(new Dictionary())
-  expectError(Dictionary('example'))
-  expectError(Dictionary())
-  expectType<Dictionary>(new Dictionary('example'))
-  expectType<(key:string) => string|null>(new Dictionary('example').get)
+  expectError(new Dictionary());
+  expectError(Dictionary('example'));
+  expectError(Dictionary());
+  expectType<Dictionary>(new Dictionary('example'));
+  expectType<(key: string) => string | null>(new Dictionary('example').get);
 }

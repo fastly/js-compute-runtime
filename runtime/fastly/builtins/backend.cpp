@@ -1296,6 +1296,25 @@ bool Backend::exists(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Backend::get_from_valid_name(JSContext *cx, host_api::HostString name,
+                                  JS::MutableHandleValue out) {
+  auto backend_instance = JS_NewObjectWithGivenProto(cx, &Backend::class_, Backend::proto_obj);
+  if (!backend_instance) {
+    return false;
+  }
+  JS::RootedValue backend_val(cx, JS::ObjectValue(*backend_instance));
+  JS::RootedObject backend(cx, backend_instance);
+  if (!backend) {
+    return false;
+  }
+
+  auto host_backend = new host_api::Backend(std::move(name));
+  JS::SetReservedSlot(backend, Backend::Slots::HostBackend, JS::PrivateValue(host_backend));
+
+  out.setObject(*backend);
+  return true;
+}
+
 bool Backend::from_name(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "Backend.fromName", 1)) {
@@ -1319,22 +1338,7 @@ bool Backend::from_name(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto backend_instance = JS_NewObjectWithGivenProto(cx, &Backend::class_, Backend::proto_obj);
-  if (!backend_instance) {
-    return false;
-  }
-  JS::RootedValue backend_val(cx, JS::ObjectValue(*backend_instance));
-  JS::RootedObject backend(cx, backend_instance);
-  if (!backend) {
-    return false;
-  }
-
-  JS::RootedValue name_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
-  if (!set_backend(cx, backend, name_val)) {
-    return false;
-  }
-
-  args.rval().setObject(*backend);
+  get_from_valid_name(cx, std::move(name), args.rval());
   return true;
 }
 
@@ -1694,8 +1698,9 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   if (!name_js_str) {
     return nullptr;
   }
-  JS::RootedValue name(cx, JS::StringValue(name_js_str));
   std::string name_str((char *)slice.data, slice.len);
+
+  JS::RootedValue name(cx, JS::StringValue(name_js_str));
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Backend), name);
 
   // Check if we already constructed an implicit dynamic backend for this host.

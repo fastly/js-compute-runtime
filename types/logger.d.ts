@@ -1,13 +1,13 @@
-declare module "fastly:logger" {
+declare module 'fastly:logger' {
   /**
    * Class for creating [Fastly Named Loggers](https://developer.fastly.com/learning/integrations/logging/).
    *
    * **Note**: Can only be used when processing requests, not during build-time initialization.
-   * 
+   *
    * @example
    * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
    * In this example we have a create a logger named 'splunk' and logs the incoming request method and destination.
-   * 
+   *
    * <script type="application/json+fiddle">
    * {
    *   "type": "javascript",
@@ -46,32 +46,31 @@ declare module "fastly:logger" {
    * ```js
    * /// <reference types="@fastly/js-compute" />
    * import { Logger } from "fastly:logger";
-   * 
+   *
    * async function app (event) {
    *   let logger = new Logger("splunk");
    *   logger.log(JSON.stringify({
    *     method: event.request.method,
    *     url: event.request.url
    *   }));
-   * 
+   *
    *   return new Response('OK');
    * }
-   * 
+   *
    * addEventListener("fetch", event => event.respondWith(app(event)));
    * ```
    * </noscript>
    */
   class Logger {
     /**
-      * Creates a new Logger instance for the given [named log endpoint](https://developer.fastly.com/learning/integrations/logging).
-      *
-      * **Note**: Can only be used when processing requests, not during build-time initialization.
-      */
+     * Creates a new Logger instance for the given [named log endpoint](https://developer.fastly.com/learning/integrations/logging).
+     *
+     * **Note**: Can only be used when processing requests, not during build-time initialization.
+     */
     constructor(name: string);
     /**
      * Send the given message, converted to a string, to this Logger instance's endpoint
      */
     log(message: any): void;
   }
-
 }

@@ -7,21 +7,21 @@ declare var self: typeof globalThis;
  * @group DOM Events
  */
 interface EventMap {
-  "fetch": FetchEvent;
+  fetch: FetchEvent;
 }
 
 /**
  * @group DOM Events
  */
 interface EventListenerMap {
-  "fetch": FetchEventListener;
+  fetch: FetchEventListener;
 }
 
 /**
  * @group DOM Events
  */
 interface FetchEventListener {
-  (this: typeof globalThis, event: FetchEvent): any
+  (this: typeof globalThis, event: FetchEvent): any;
 }
 /**
  * @group DOM Events
@@ -34,7 +34,10 @@ declare var onfetch: FetchEventListener;
  * For Fastly Compute, this will be the entrypoint in handling your downstream request from your client.
  * @group DOM Events
  */
-declare function addEventListener<K extends keyof EventMap>(type: K, listener: EventListenerMap[K]): void;
+declare function addEventListener<K extends keyof EventMap>(
+  type: K,
+  listener: EventListenerMap[K],
+): void;
 
 /**
  * @deprecated This has moved to {@link "fastly:backend".BackendConfiguration} - This global variable will be removed in the next major version.
@@ -43,66 +46,114 @@ declare function addEventListener<K extends keyof EventMap>(type: K, listener: E
 declare interface BackendConfiguration {
   /**
    * The name of the backend.
+   * @deprecated to avoid name collisions it is recommended to use auto-generated names by omitting this property.
    */
-  name: string,
+  name?: string;
   /**
    * A hostname, IPv4, or IPv6 address for the backend as well as an optional port.
    * E.G. "hostname", "ip address", "hostname:port", or "ip address:port"
    */
-  target: string,
+  target: string;
   /**
    * If set, will force the HTTP Host header on connections to this backend to be the supplied value.
    */
-  hostOverride?: string,
+  hostOverride?: string;
   /**
    * Maximum duration in milliseconds to wait for a connection to this backend to be established.
    * If exceeded, the connection is aborted and a 503 response will be presented instead.
    * Defaults to 1,000 milliseconds.
    */
-  connectTimeout?: number,
+  connectTimeout?: number;
   /**
    * Maximum duration in milliseconds to wait for the server response to begin after a TCP connection is established and the request has been sent.
    * If exceeded, the connection is aborted and a 503 response will be presented instead.
    * Defaults to 15,000 milliseconds.
    */
-  firstByteTimeout?: number,
+  firstByteTimeout?: number;
   /**
    * Maximum duration in milliseconds that Fastly will wait while receiving no data on a download from a backend.
    * If exceeded, the response received so far will be considered complete and the fetch will end.
    * Defaults to 10,000 milliseconds.
    */
-  betweenBytesTimeout?: number,
+  betweenBytesTimeout?: number;
   /**
    * Whether or not to require TLS for connections to this backend.
    */
-  useSSL?: boolean,
+  useSSL?: boolean;
   /**
    * Minimum allowed TLS version on SSL connections to this backend.
    * If the backend server is not able to negotiate a connection meeting this constraint, a 503 response will be presented instead.
    */
-  tlsMinVersion?: number,
+  tlsMinVersion?: number;
   /**
    * Maximum allowed TLS version on SSL connections to this backend.
    * If the backend server is not able to negotiate a connection meeting this constraint, a 503 response will be presented instead.
    */
-  tlsMaxVersion?: number,
+  tlsMaxVersion?: number;
   /**
    * Define the hostname that the server certificate should declare.
    */
-  certificateHostname?: string,
+  certificateHostname?: string;
   /**
    * The CA certificate to use when checking the validity of the backend.
    */
-  caCertificate?: string,
+  caCertificate?: string;
   /**
-   * List of OpenSSL ciphers to support for connections to this origin. 
+   * List of OpenSSL ciphers to support for connections to this origin.
    * If the backend server is not able to negotiate a connection meeting this constraint, a 503 response will be presented instead.
    */
-  ciphers?: string,
+  ciphers?: string;
   /**
    * The SNI hostname to use on connections to this backend.
    */
-  sniHostname?: string,
+  sniHostname?: string;
+  /**
+   * @experimental
+   *
+   * When enabled, sets that this backend is to be used for gRPC traffic.
+   *
+   * Warning: When using this experimental feature, no guarantees are provided for behaviours for
+   * backends that do not provide gRPC traffic.
+   */
+  grpc?: boolean;
+  /**
+   * Set the client certificate to be provided to the server during the initial TLS handshake.
+   *
+   * @throws {TypeError} Throws a TypeError if the value is not an object of the correct type.
+   */
+  clientCertificate?: {
+    certificate: string;
+    key: import('fastly:secret-store').SecretStoreEntry;
+  };
+
+  /**
+   * Enables and sets the HTTP keepalive time in milliseconds for the backend.
+   */
+  httpKeepalive?: number;
+
+  /**
+   * Enables and sets the TCP keep alive options for the backend.
+   * Setting to boolean true enables keepalive with the default options.
+   */
+  tcpKeepalive?:
+    | boolean
+    | {
+        /**
+         * Configure how long to wait after the last sent data over the TCP connection before
+         * starting to send TCP keepalive probes.
+         */
+        timeSecs?: number;
+
+        /**
+         * Configure how long to wait between each TCP keepalive probe sent to the backend to determine if it is still active.
+         */
+        intervalSecs?: number;
+
+        /**
+         * Number of probes to send to the backend before it is considered dead.
+         */
+        probes?: number;
+      };
 }
 
 /**
@@ -114,13 +165,124 @@ declare interface BackendConfiguration {
 */
 declare class Backend {
   /**
-   * Creates a new Backend object
+   * Creates a new Backend instance
+   *
+   * @example
+   * Construct a new backend with all properties set to their default values:
+   * ```js
+   * const myBackend = new Backend({ name: 'fastly', target: 'www.fastly.com'});
+   * ```
    */
   constructor(configuration: BackendConfiguration);
+
   /**
-   * Returns the name of the Backend, which can be used on {@link RequestInit.backend}
+   * The name of the backend
+   */
+  readonly name: string;
+
+  /**
+   * Whether this backend was dynamically created by the running service.
+   */
+  readonly isDynamic: boolean;
+  /**
+   * The host target for the backend
+   */
+  readonly target: string;
+  /**
+   * The host header override defined for the backend.
+   *
+   * See https://docs.fastly.com/en/guides/specifying-an-override-host for more information.
+   */
+  readonly hostOverride: string;
+  /**
+   * The backend port
+   */
+  readonly port: number;
+  /**
+   * The connect timeout for the backend in milliseconds, if available.
+   */
+  readonly connectTimeout: number | null;
+  /**
+   * The first byte timeout for the backend in milliseconds, if available.
+   */
+  readonly firstByteTimeout: number | null;
+  /**
+   * The between bytes timeout for the backend in milliseconds, if available.
+   */
+  readonly betweenBytesTimeout: number | null;
+  /**
+   * The HTTP keepalive time for the backend in milliseconds.
+   */
+  readonly httpKeepaliveTime: number;
+  /**
+   * The TCP keepalive configuration, if TCP keepalive is enabled.
+   */
+  readonly tcpKeepalive: null | {
+    /**
+     * The keepalive time in seconds.
+     */
+    timeSecs: number;
+    /**
+     * The interval in seconds between probes.
+     */
+    intervalSecs: number;
+    /**
+     * The number of probes to send before terminating the keepalive.
+     */
+    probes: number;
+  };
+  /**
+   * Whether the backend is configured to use SSL.
+   */
+  readonly isSSL: boolean;
+  /**
+   * The minimum SSL version number this backend will use, if available.
+   */
+  readonly tlsMinVersion: 1 | 1.1 | 1.2 | 1.3 | null;
+  /**
+   * The maximum SSL version number this backend will use, if available.
+   */
+  readonly tlsMaxversion: 1 | 1.1 | 1.2 | 1.3 | null;
+
+  /**
+   * Get the health of this backend.
+   */
+  health(): 'healthy' | 'unhealthy' | 'unknown';
+
+  /**
+   * Returns the name associated with the Backend instance.
+   * @deprecated Use `backend.name` instead.
+   */
+  toName(): string;
+
+  /**
+   * Returns the name associated with the Backend instance.
+   *
+   * @deprecated Use `backend.name` instead.
    */
   toString(): string;
+
+  /**
+   * Returns a boolean indicating if a Backend with the given name exists or not.
+   */
+  static exists(name: string): boolean;
+
+  /**
+   * Returns the Backend instance with the given name, if one exists. If one does not exist, an error is thrown.
+   */
+  static fromName(name: string): Backend;
+
+  /**
+   * Returns a string representing the health of the given Backend instance.
+   * Possible values are:
+   *
+   * "healthy" - The backend's health check has succeeded, indicating the backend is working as expected and should receive requests.
+   * "unhealthy" - The backend's health check has failed, indicating the backend is not working as expected and should not receive requests.
+   * "unknown" - The backend does not have a health check configured.
+   *
+   * @deprecated Use `backend.health()` ({@link Backend.prototype.health}) instead.
+   */
+  static health(backend: Backend): 'healthy' | 'unhealthy' | 'unknown';
 }
 
 /**
@@ -189,12 +351,12 @@ declare interface FetchEvent {
  * Override
  *   Override particular cache control settings using a {@linkcode CacheOverride} object.
  *
- * The origin response’s cache control headers will be used for ttl and stale_while_revalidate if None. 
- * 
+ * The origin response’s cache control headers will be used for ttl and stale_while_revalidate if None.
+ *
  * @deprecated This has moved to {@link "fastly:cache-override".CacheOverrideMode} - This global type will be removed in the next major version.
  * @hidden
  */
-declare type CacheOverrideMode = "none" | "pass" | "override";
+declare type CacheOverrideMode = 'none' | 'pass' | 'override';
 
 /**
  * Base class for Cache Override, which is used to configure caching behavior.
@@ -237,7 +399,7 @@ declare interface CacheOverrideInit {
  *
  * Normally, the HTTP Headers on a Response would control how the Response is cached,
  * but CacheOverride can be set on a {@linkcode Request}, to define custom caching behavior.
- * 
+ *
  * @deprecated This has moved to {@link "fastly:cache-override".CacheOverride} - This global interface will be removed in the next major version.
  * @hidden
  */
@@ -251,7 +413,7 @@ declare interface CacheOverride extends CacheOverrideInit {
  */
 declare var CacheOverride: {
   prototype: CacheOverride;
-  new(mode: CacheOverrideMode, init?: CacheOverrideInit): CacheOverride;
+  new (mode: CacheOverrideMode, init?: CacheOverrideInit): CacheOverride;
 };
 
 /**
@@ -260,7 +422,7 @@ declare var CacheOverride: {
 declare interface ClientInfo {
   /**
    * A string representation of the IPv4 or IPv6 address of the downstream client.
-   * 
+   *
    * While always defined on Fastly compute, on environments where these fields are unavailable,
    * such as Viceroy, these fields may return *null*.
    */
@@ -301,7 +463,6 @@ declare class ConfigStore {
    */
   get(key: string): string;
 }
-
 
 /**
  * Class for accessing [Fastly Edge Dictionaries](https://docs.fastly.com/en/guides/about-edge-dictionaries).
@@ -456,7 +617,7 @@ declare interface Geolocation {
  * Class for accessing a [Fastly KV Store](https://developer.fastly.com/reference/api/kv-store/).
  *
  * A KV Store is a persistent, globally consistent key-value store.
- * 
+ *
  * **Note**: Can only be used when processing requests, not during build-time initialization.
  * @deprecated This has moved to {@link "fastly:kv-store".KVStore} - This global class will be removed in the next major version.
  * @hidden
@@ -464,7 +625,7 @@ declare interface Geolocation {
 declare class KVStore {
   /**
    * Creates a new JavaScript KVStore object which interacts with the Fastly KV Store named `name`.
-   * 
+   *
    * @param name Name of the Fastly KV Store to interact with. A name cannot be empty, contain Control characters, or be longer than 255 characters.
    */
   constructor(name: string);
@@ -482,10 +643,10 @@ declare class KVStore {
 
   /**
    * Write the value of `value` into the KV Store under the key `key`.
-   * 
+   *
    * Note: KV Store is eventually consistent, this means that the updated contents associated with the key `key` may not be available to read from all
    * edge locations immediately and some edge locations may continue returning the previous contents associated with the key.
-   * 
+   *
    * @param key The key to associate with the value. A key cannot:
    * - Be any of the strings "", ".", or ".."
    * - Start with the string ".well-known/acme-challenge/""
@@ -498,13 +659,13 @@ declare class KVStore {
 
 /**
  * Class for interacting with a [Fastly KV Store](https://developer.fastly.com/reference/api/kv-store/) entry.
- * 
+ *
  * @deprecated This has moved to {@link "fastly:kv-store".KVStoreEntry} - This global interface will be removed in the next major version.
  * @hidden
  */
 declare interface KVStoreEntry {
   /**
-   * A ReadableStream with the contents of the entry. 
+   * A ReadableStream with the contents of the entry.
    */
   get body(): ReadableStream;
   /**
@@ -512,8 +673,8 @@ declare interface KVStoreEntry {
    */
   get bodyUsed(): boolean;
   /**
-   * Reads the body and returns it as a promise that resolves with a string. 
-   * The response is always decoded using UTF-8. 
+   * Reads the body and returns it as a promise that resolves with a string.
+   * The response is always decoded using UTF-8.
    */
   text(): Promise<string>;
   /**
@@ -521,7 +682,7 @@ declare interface KVStoreEntry {
    */
   json(): Promise<object>;
   /**
-   * Reads the body and returns it as a promise that resolves with an ArrayBuffer. 
+   * Reads the body and returns it as a promise that resolves with an ArrayBuffer.
    */
   arrayBuffer(): Promise<ArrayBuffer>;
   // And eventually formData and blob once we support them on Request and Response, too.
@@ -572,7 +733,7 @@ declare class URL {
 
   toJSON(): string;
 
-  readonly [Symbol.toStringTag]: "URL";
+  readonly [Symbol.toStringTag]: 'URL';
 }
 
 /**
@@ -587,7 +748,7 @@ declare class URLSearchParams {
       | ReadonlyArray<readonly [name: string, value: string]>
       | Iterable<readonly [name: string, value: string]>
       | { readonly [name: string]: string }
-      | string
+      | string,
   );
 
   append(name: string, value: string): void;
@@ -606,12 +767,12 @@ declare class URLSearchParams {
       this: THIS_ARG,
       value: string,
       name: string,
-      searchParams: this
+      searchParams: this,
     ) => void,
-    thisArg?: THIS_ARG
+    thisArg?: THIS_ARG,
   ): void;
 
-  readonly [Symbol.toStringTag]: "URLSearchParams";
+  readonly [Symbol.toStringTag]: 'URLSearchParams';
   [Symbol.iterator](): IterableIterator<[name: string, value: string]>;
 }
 
@@ -659,7 +820,7 @@ declare var console: Console;
  * instances of `TextEncoder` only support UTF-8 encoding.
  *
  * TextEncoder takes a stream of code points as input and emits a stream of UTF-8 bytes.
- * 
+ *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder | TextEncoder on MDN}
  * @example
  * ```js
@@ -677,7 +838,7 @@ declare class TextEncoder {
    * The TextEncoder.encoding read-only property returns a string containing the name of the encoding algorithm used by the specific encoder.
    * It is always set to the value "utf-8".
    */
-  readonly encoding: "utf-8";
+  readonly encoding: 'utf-8';
   /**
    * UTF-8 encodes the `input` string and returns a `Uint8Array` containing the encoded bytes.
    * @param [input='an empty string'] The text to encode.
@@ -716,9 +877,9 @@ declare class TextEncoder {
  */
 declare class TextDecoder {
   // TODO: We should throw a RangeError if supplied a `label` that we do not support
-  constructor(label?: "unicode-1-1-utf-8" | "utf-8" | "utf8");
+  constructor(label?: 'unicode-1-1-utf-8' | 'utf-8' | 'utf8');
   decode(input?: ArrayBuffer | ArrayBufferView): string;
-  get encoding(): "utf-8";
+  get encoding(): 'utf-8';
 }
 
 /**
@@ -789,14 +950,14 @@ declare interface Fastly {
    * JavaScript SDK version string for the JS runtime build.
    * @hidden
    */
-  sdkVersion: string,
+  sdkVersion: string;
 
   /**
    * Creates a new {@linkcode Logger} instance for the given
    * [named log endpoint](https://developer.fastly.com/learning/integrations/logging).
    *
    * **Note**: Can only be used when processing requests, not during build-time initialization.
-   * @deprecated This function will be removed in the next major version. Use of this function can be replaced with the fastly logger class {@link "fastly:logger".Logger} 
+   * @deprecated This function will be removed in the next major version. Use of this function can be replaced with the fastly logger class {@link "fastly:logger".Logger}
    * @hidden
    */
   getLogger(endpoint: string): Logger;
@@ -822,7 +983,9 @@ declare interface Fastly {
    * @deprecated This has moved to {@link "fastly:geolocation".getGeolocationForIpAddress} - This function will be removed in the next major version.
    * @hidden
    */
-  getGeolocationForIpAddress(address: string): import('fastly:geolocation').Geolocation;
+  getGeolocationForIpAddress(
+    address: string,
+  ): import('fastly:geolocation').Geolocation;
 
   /**
    * Embed a file as a Uint8Array.
@@ -849,12 +1012,12 @@ declare var fastly: Fastly;
  * An API for compressing a stream of data.
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/CompressionStream | CompressionStream on MDN}
- * 
+ *
  * @example
  * In this example a request is made to httpbin.org/html and the response body is compressed using gzip compression.
- * 
+ *
  * View this example on [Fiddle](https://fiddle.fastly.dev/fiddle/c1326776).
- * 
+ *
  * ```js
  * async function app(event) {
  *  const req = event.request;
@@ -874,7 +1037,7 @@ declare var fastly: Fastly;
 declare class CompressionStream {
   /**
    * Creates a new `CompressionStream` object which compresses a stream of data.
-   * 
+   *
    * @param format The compression format to use.
    *
    * @throws Throws a `TypeError` if the format passed to the constructor is not supported.
@@ -883,10 +1046,10 @@ declare class CompressionStream {
    * const gzip = new CompressionStream("gzip");
    * ```
    */
-  constructor(format: "deflate" | "deflate-raw" | "gzip");
+  constructor(format: 'deflate' | 'deflate-raw' | 'gzip');
 
   /**
-   * @example 
+   * @example
    * ```js
    * let stream = new CompressionStream("gzip");
    * console.log(stream.readable instanceof ReadableStream); // true
@@ -894,7 +1057,7 @@ declare class CompressionStream {
    */
   readonly readable: ReadableStream<Uint8Array>;
   /**
-   * @example 
+   * @example
    * ```js
    * let stream = new CompressionStream("gzip");
    * console.log(stream.writable instanceof WritableStream); // true
@@ -907,12 +1070,12 @@ declare class CompressionStream {
  * An API for decompressing a stream of data.
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/DecompressionStream | DecompressionStream on MDN}
- * 
+ *
  * @example
  * In this example a request is made to httpbin.org/gzip and the response body is decompressed using gzip decompression.
- * 
+ *
  * View this example on [Fiddle](https://fiddle.fastly.dev/fiddle/637add51).
- * 
+ *
  * ```js
  * async function app(event) {
  *  const backendResponse = await fetch("https://httpbin.org/gzip", { backend: "origin_0" });
@@ -938,10 +1101,10 @@ declare class DecompressionStream {
    * const gzip = new DecompressionStream("gzip");
    * ```
    */
-  constructor(format: "deflate" | "deflate-raw" | "gzip");
+  constructor(format: 'deflate' | 'deflate-raw' | 'gzip');
 
   /**
-   * @example 
+   * @example
    * ```js
    * let stream = new DecompressionStream("gzip");
    * console.log(stream.readable instanceof ReadableStream); // true
@@ -949,7 +1112,7 @@ declare class DecompressionStream {
    */
   readonly readable: ReadableStream<Uint8Array>;
   /**
-   * @example 
+   * @example
    * ```js
    * let stream = new DecompressionStream("gzip");
    * console.log(stream.writable instanceof WritableStream); // true
@@ -991,7 +1154,12 @@ and limitations under the License.
  * ({@linkcode Request}, and {@linkcode Response})
  * @group Fetch API
  */
-declare type BodyInit = ReadableStream | ArrayBufferView | ArrayBuffer | URLSearchParams | string;
+declare type BodyInit =
+  | ReadableStream
+  | ArrayBufferView
+  | ArrayBuffer
+  | URLSearchParams
+  | string;
 
 /**
  * Body for Fetch HTTP Requests and Responses
@@ -1059,9 +1227,9 @@ declare interface RequestInit {
   cacheOverride?: import('fastly:cache-override').CacheOverride;
   cacheKey?: string;
   fastly?: {
-    decompressGzip?: boolean
-  },
-  manualFramingHeaders?: boolean
+    decompressGzip?: boolean;
+  };
+  manualFramingHeaders?: boolean;
 }
 
 /**
@@ -1103,9 +1271,13 @@ interface Request extends Body {
   // /** Creates a copy of the current Request object. */
   clone(): Request;
 
-  // Fastly extensions
-  backend?: string;
-  setCacheOverride(override: import('fastly:cache-override').CacheOverride): void;
+  /**
+   * The request backend, null for the downstream request itself
+   */
+  backend: import('fastly:backend').Backend | undefined;
+  setCacheOverride(
+    override: import('fastly:cache-override').CacheOverride,
+  ): void;
   setCacheKey(key: string): void;
   setManualFramingHeaders(manual: boolean): void;
 }
@@ -1115,7 +1287,7 @@ interface Request extends Body {
  */
 declare var Request: {
   prototype: Request;
-  new(input: RequestInfo | URL, init?: RequestInit): Request;
+  new (input: RequestInfo | URL, init?: RequestInit): Request;
 };
 
 /**
@@ -1148,20 +1320,24 @@ interface Response extends Body {
   readonly url: string;
   /**
    * Fastly-specific property - obtain the IP address used for the request
-   * 
+   *
    * Undefined for user-created responses and when the response is returned from the cache.
    * Set cacheOverride: new CacheOverride("pass") to ensure a value.
    */
   readonly ip: string | undefined;
   /**
    * Fastly-specific property - Obtain the port used for the request
-   * 
+   *
    * Undefined for user-created responses and when the response is returned from the cache.
    * Set cacheOverride: new CacheOverride("pass") to ensure a value.
    */
   readonly port: number | undefined;
   // clone(): Response;
   setManualFramingHeaders(manual: boolean): void;
+  /**
+   * The response backend, if an upstream response
+   */
+  backend: import('fastly:backend').Backend | undefined;
 }
 
 /**
@@ -1169,7 +1345,7 @@ interface Response extends Body {
  */
 declare var Response: {
   prototype: Response;
-  new(body?: BodyInit | null, init?: ResponseInit): Response;
+  new (body?: BodyInit | null, init?: ResponseInit): Response;
   // error(): Response;
   redirect(url: string | URL, status?: number): Response;
   json(data: any, init?: ResponseInit): Response;
@@ -1211,7 +1387,10 @@ interface UnderlyingSinkStartCallback {
  * @group Streams API
  */
 interface UnderlyingSinkWriteCallback<W> {
-  (chunk: W, controller: WritableStreamDefaultController): void | PromiseLike<void>;
+  (
+    chunk: W,
+    controller: WritableStreamDefaultController,
+  ): void | PromiseLike<void>;
 }
 
 /**
@@ -1260,7 +1439,7 @@ interface UnderlyingSource<R = any> {
 /**
  * @group Streams API
  */
-type ReadableStreamType = "bytes";
+type ReadableStreamType = 'bytes';
 
 /**
  * @group Streams API
@@ -1335,7 +1514,9 @@ interface ReadableStreamDefaultReadValueResult<T> {
 /**
  * @group Streams API
  */
-type ReadableStreamDefaultReadResult<T> = ReadableStreamDefaultReadValueResult<T> | ReadableStreamDefaultReadDoneResult;
+type ReadableStreamDefaultReadResult<T> =
+  | ReadableStreamDefaultReadValueResult<T>
+  | ReadableStreamDefaultReadDoneResult;
 
 /**
  * @group Streams API
@@ -1350,7 +1531,7 @@ interface ReadableWritablePair<R = any, W = any> {
   writable: WritableStream<W>;
 }
 
-/** 
+/**
  * This Streams API interface represents a readable stream of byte data. The Fetch API offers a concrete instance of a ReadableStream through the body property of a Response object.
  * @group Streams API
  */
@@ -1358,7 +1539,10 @@ interface ReadableStream<R = any> {
   readonly locked: boolean;
   cancel(reason?: any): Promise<void>;
   getReader(): ReadableStreamDefaultReader<R>;
-  pipeThrough<T>(transform: ReadableWritablePair<T, R>, options?: StreamPipeOptions): ReadableStream<T>;
+  pipeThrough<T>(
+    transform: ReadableWritablePair<T, R>,
+    options?: StreamPipeOptions,
+  ): ReadableStream<T>;
   pipeTo(dest: WritableStream<R>, options?: StreamPipeOptions): Promise<void>;
   tee(): [ReadableStream<R>, ReadableStream<R>];
 }
@@ -1371,7 +1555,10 @@ interface ReadableStream<R = any> {
  */
 declare var ReadableStream: {
   prototype: ReadableStream;
-  new <R = any>(underlyingSource?: UnderlyingSource<R>, strategy?: QueuingStrategy<R>): ReadableStream<R>;
+  new <R = any>(
+    underlyingSource?: UnderlyingSource<R>,
+    strategy?: QueuingStrategy<R>,
+  ): ReadableStream<R>;
 };
 
 /**
@@ -1389,13 +1576,14 @@ interface ReadableStreamDefaultController<R = any> {
  */
 declare var ReadableStreamDefaultController: {
   prototype: ReadableStreamDefaultController;
-  new(): ReadableStreamDefaultController;
+  new (): ReadableStreamDefaultController;
 };
 
 /**
  * @group Streams API
  */
-interface ReadableStreamDefaultReader<R = any> extends ReadableStreamGenericReader {
+interface ReadableStreamDefaultReader<R = any>
+  extends ReadableStreamGenericReader {
   read(): Promise<ReadableStreamDefaultReadResult<R>>;
   releaseLock(): void;
 }
@@ -1416,7 +1604,7 @@ interface ReadableStreamGenericReader {
   cancel(reason?: any): Promise<void>;
 }
 
-/** 
+/**
  * This Streams API interface provides a standard abstraction for writing streaming data to a destination, known as a sink. This object comes with built-in backpressure and queuing.
  * @group Streams API
  */
@@ -1434,7 +1622,10 @@ interface WritableStream<W = any> {
  */
 declare var WritableStream: {
   prototype: WritableStream;
-  new <W = any>(underlyingSink?: UnderlyingSink<W>, strategy?: QueuingStrategy<W>): WritableStream<W>;
+  new <W = any>(
+    underlyingSink?: UnderlyingSink<W>,
+    strategy?: QueuingStrategy<W>,
+  ): WritableStream<W>;
 };
 
 /**
@@ -1450,10 +1641,10 @@ interface WritableStreamDefaultController {
  */
 declare var WritableStreamDefaultController: {
   prototype: WritableStreamDefaultController;
-  new(): WritableStreamDefaultController;
+  new (): WritableStreamDefaultController;
 };
 
-/** 
+/**
  * This Streams API interface is the object returned by WritableStream.getWriter() and once created locks the < writer to the WritableStream ensuring that no other streams can write to the underlying sink.
  * @group Streams API
  */
@@ -1492,7 +1683,11 @@ interface TransformStream<I = any, O = any> {
 
 declare var TransformStream: {
   prototype: TransformStream;
-  new <I = any, O = any>(transformer?: Transformer<I, O>, writableStrategy?: QueuingStrategy<I>, readableStrategy?: QueuingStrategy<O>): TransformStream<I, O>;
+  new <I = any, O = any>(
+    transformer?: Transformer<I, O>,
+    writableStrategy?: QueuingStrategy<I>,
+    readableStrategy?: QueuingStrategy<O>,
+  ): TransformStream<I, O>;
 };
 
 /**
@@ -1510,7 +1705,7 @@ interface TransformStreamDefaultController<O = any> {
  */
 declare var TransformStreamDefaultController: {
   prototype: TransformStreamDefaultController;
-  new(): TransformStreamDefaultController;
+  new (): TransformStreamDefaultController;
 };
 
 /**
@@ -1542,7 +1737,10 @@ interface TransformerStartCallback<O> {
  * @group Streams API
  */
 interface TransformerTransformCallback<I, O> {
-  (chunk: I, controller: TransformStreamDefaultController<O>): void | PromiseLike<void>;
+  (
+    chunk: I,
+    controller: TransformStreamDefaultController<O>,
+  ): void | PromiseLike<void>;
 }
 
 /**
@@ -1562,7 +1760,10 @@ interface Headers {
   get(name: string): string | null;
   has(name: string): boolean;
   set(name: string, value: string): void;
-  forEach(callbackfn: (value: string, key: string, parent: Headers) => void, thisArg?: any): void;
+  forEach(
+    callbackfn: (value: string, key: string, parent: Headers) => void,
+    thisArg?: any,
+  ): void;
   // Iterable methods
   entries(): IterableIterator<[string, string]>;
   keys(): IterableIterator<string>;
@@ -1575,25 +1776,25 @@ interface Headers {
  */
 declare var Headers: {
   prototype: Headers;
-  new(init?: HeadersInit): Headers;
+  new (init?: HeadersInit): Headers;
 };
 
 /**
  * The atob() function decodes a string of data which has been encoded using Base64 encoding.
- * 
+ *
  * @param data A binary string (i.e., a string in which each character in the string is treated as a byte of binary data) containing base64-encoded data.
  * @returns An ASCII string containing decoded data from `data`.
- * 
+ *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/atob | atob on MDN}
  * @group Encoding API
  */
 declare function atob(data: string): string;
 
 /**
- *  The btoa() method creates a Base64-encoded ASCII string from a binary string (i.e., a string in which each character in the string is treated as a byte of binary data). 
+ *  The btoa() method creates a Base64-encoded ASCII string from a binary string (i.e., a string in which each character in the string is treated as a byte of binary data).
  * @param data The binary string to encode.
- * @returns  An ASCII string containing the Base64 representation of `data`. 
- * 
+ * @returns  An ASCII string containing the Base64 representation of `data`.
+ *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/btoa | btoa on MDN}
  * @group Encoding API
  */
@@ -1610,7 +1811,11 @@ declare function btoa(data: string): string;
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/setTimeout | setTimeout on MDN}
  * @group Timers
  */
-declare function setTimeout<TArgs extends any[]>(callback: (...args: TArgs) => void, delay?: number, ...args: TArgs): number;
+declare function setTimeout<TArgs extends any[]>(
+  callback: (...args: TArgs) => void,
+  delay?: number,
+  ...args: TArgs
+): number;
 
 /**
  * The clearTimeout() method cancels a timeout previously established by calling setTimeout(). If the parameter provided does not identify a previously established action, this method does nothing.
@@ -1633,7 +1838,11 @@ declare function clearTimeout(timeoutID?: number): void;
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/setInterval | setInterval on MDN}
  * @group Timers
  */
-declare function setInterval<TArgs extends any[]>(callback: (...args: TArgs) => void, delay?: number, ...args: TArgs): number;
+declare function setInterval<TArgs extends any[]>(
+  callback: (...args: TArgs) => void,
+  delay?: number,
+  ...args: TArgs
+): number;
 
 /**
  * The clearInterval() method cancels a timed, repeating action which was previously established by a call to setInterval(). If the parameter provided does not identify a previously established action, this method does nothing.
@@ -1659,7 +1868,10 @@ declare function clearInterval(intervalID?: number): void;
  * @param init - An object containing settings to apply to the request
  * @group Fetch API
  */
-declare function fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
+declare function fetch(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response>;
 
 /**
  * @group Scheduling
@@ -1676,7 +1888,10 @@ declare function queueMicrotask(callback: VoidFunction): void;
 /**
  * @group DOM APIs
  */
-declare function structuredClone(value: any, options?: StructuredSerializeOptions): any;
+declare function structuredClone(
+  value: any,
+  options?: StructuredSerializeOptions,
+): any;
 
 /**
  * @group DOM APIs
@@ -1715,7 +1930,7 @@ interface WorkerLocation {
  */
 declare var WorkerLocation: {
   prototype: WorkerLocation;
-  new(): WorkerLocation;
+  new (): WorkerLocation;
 };
 
 /**
@@ -1736,7 +1951,10 @@ declare class SubtleCrypto {
   // decrypt(algorithm: AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
   // deriveBits(algorithm: AlgorithmIdentifier | EcdhKeyDeriveParams | HkdfParams | Pbkdf2Params, baseKey: CryptoKey, length: number): Promise<ArrayBuffer>;
   // deriveKey(algorithm: AlgorithmIdentifier | EcdhKeyDeriveParams | HkdfParams | Pbkdf2Params, baseKey: CryptoKey, derivedKeyType: AlgorithmIdentifier | AesDerivedKeyParams | HmacImportParams | HkdfParams | Pbkdf2Params, extractable: boolean, keyUsages: KeyUsage[]): Promise<CryptoKey>;
-  digest(algorithm: AlgorithmIdentifier, data: BufferSource): Promise<ArrayBuffer>;
+  digest(
+    algorithm: AlgorithmIdentifier,
+    data: BufferSource,
+  ): Promise<ArrayBuffer>;
   // encrypt(algorithm: AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
   // exportKey(format: "jwk", key: CryptoKey): Promise<JsonWebKey>;
   // exportKey(format: Exclude<KeyFormat, "jwk">, key: CryptoKey): Promise<ArrayBuffer>;
@@ -1744,22 +1962,39 @@ declare class SubtleCrypto {
   // generateKey(algorithm: AesKeyGenParams | HmacKeyGenParams | Pbkdf2Params, extractable: boolean, keyUsages: ReadonlyArray<KeyUsage>): Promise<CryptoKey>;
   // generateKey(algorithm: AlgorithmIdentifier, extractable: boolean, keyUsages: KeyUsage[]): Promise<CryptoKeyPair | CryptoKey>;
   // importKey(format: "jwk", keyData: JsonWebKey, algorithm: AlgorithmIdentifier | RsaHashedImportParams | EcKeyImportParams | HmacImportParams | AesKeyAlgorithm, extractable: boolean, keyUsages: ReadonlyArray<KeyUsage>): Promise<CryptoKey>;
-  importKey(format: "jwk", keyData: JsonWebKey, algorithm: AlgorithmIdentifier | RsaHashedImportParams | EcKeyImportParams, extractable: boolean, keyUsages: ReadonlyArray<KeyUsage>): Promise<CryptoKey>;
   importKey(
-    format: Exclude<KeyFormat, "jwk">,
+    format: 'jwk',
+    keyData: JsonWebKey,
+    algorithm: AlgorithmIdentifier | RsaHashedImportParams | EcKeyImportParams,
+    extractable: boolean,
+    keyUsages: ReadonlyArray<KeyUsage>,
+  ): Promise<CryptoKey>;
+  importKey(
+    format: Exclude<KeyFormat, 'jwk'>,
     keyData: BufferSource,
     algorithm:
-      AlgorithmIdentifier
+      | AlgorithmIdentifier
       | RsaHashedImportParams
       // | EcKeyImportParams
-      | HmacImportParams
-      // | AesKeyAlgorithm
-    , extractable: boolean, keyUsages: KeyUsage[]): Promise<CryptoKey>;
+      | HmacImportParams,
+    // | AesKeyAlgorithm
+    extractable: boolean,
+    keyUsages: KeyUsage[],
+  ): Promise<CryptoKey>;
   // sign(algorithm: AlgorithmIdentifier | RsaPssParams | EcdsaParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
-  sign(algorithm: AlgorithmIdentifier, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
+  sign(
+    algorithm: AlgorithmIdentifier,
+    key: CryptoKey,
+    data: BufferSource,
+  ): Promise<ArrayBuffer>;
   // unwrapKey(format: KeyFormat, wrappedKey: BufferSource, unwrappingKey: CryptoKey, unwrapAlgorithm: AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, unwrappedKeyAlgorithm: AlgorithmIdentifier | RsaHashedImportParams | EcKeyImportParams | HmacImportParams | AesKeyAlgorithm, extractable: boolean, keyUsages: KeyUsage[]): Promise<CryptoKey>;
   // verify(algorithm: AlgorithmIdentifier | RsaPssParams | EcdsaParams, key: CryptoKey, signature: BufferSource, data: BufferSource): Promise<boolean>;
-  verify(algorithm: AlgorithmIdentifier, key: CryptoKey, signature: BufferSource, data: BufferSource): Promise<boolean>;
+  verify(
+    algorithm: AlgorithmIdentifier,
+    key: CryptoKey,
+    signature: BufferSource,
+    data: BufferSource,
+  ): Promise<boolean>;
   // wrapKey(format: KeyFormat, key: CryptoKey, wrappingKey: CryptoKey, wrapAlgorithm: AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams): Promise<ArrayBuffer>;
 }
 
@@ -1774,8 +2009,8 @@ interface RsaHashedImportParams extends Algorithm {
 type HashAlgorithmIdentifier = AlgorithmIdentifier;
 
 interface EcKeyImportParams {
-  name: "ECDSA";
-  namedCurve: "P-256" | "P-384" | "P-521";
+  name: 'ECDSA';
+  namedCurve: 'P-256' | 'P-384' | 'P-521';
 }
 
 interface JsonWebKey {
@@ -1822,7 +2057,7 @@ interface Crypto {
  */
 declare var Crypto: {
   prototype: Crypto;
-  new(): Crypto;
+  new (): Crypto;
 };
 
 /**
@@ -1849,21 +2084,28 @@ interface CryptoKey {
 
 declare var CryptoKey: {
   prototype: CryptoKey;
-  new(): CryptoKey;
+  new (): CryptoKey;
 };
-
 
 interface KeyAlgorithm {
   name: string;
 }
 
 type KeyFormat =
-  "jwk"
+  | 'jwk'
   // | "pkcs8"
-  | "raw"
-  // | "spki";
-type KeyType = "private" | "public" | "secret";
-type KeyUsage = "decrypt" | "deriveBits" | "deriveKey" | "encrypt" | "sign" | "unwrapKey" | "verify" | "wrapKey";
+  | 'raw';
+// | "spki";
+type KeyType = 'private' | 'public' | 'secret';
+type KeyUsage =
+  | 'decrypt'
+  | 'deriveBits'
+  | 'deriveKey'
+  | 'encrypt'
+  | 'sign'
+  | 'unwrapKey'
+  | 'verify'
+  | 'wrapKey';
 
 /**
  * EventTarget is a DOM interface implemented by objects that can receive events and may have listeners for them.
@@ -1895,7 +2137,7 @@ interface Performance extends EventTarget {
  */
 declare var Performance: {
   prototype: Performance;
-  new(): Performance;
+  new (): Performance;
 };
 
 /**
