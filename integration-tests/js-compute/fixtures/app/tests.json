@@ -1503,7 +1503,10 @@
   "GET /headers/from-response/set-delete": {
     "downstream_response": {
       "status": 200,
-      "headers": [["cuStom", "test"]]
+      "headers": [
+        ["cuStom", "test"],
+        ["another", "test"]
+      ]
     }
   },
 

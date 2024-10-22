@@ -92,7 +92,10 @@ async function app(event) {
       }
     }
   } finally {
-    res.headers.set('fastly_service_version', FASTLY_SERVICE_VERSION);
+    try {
+      // this will fail if headers were same headers object from original upstream
+      res.headers.set('fastly_service_version', FASTLY_SERVICE_VERSION);
+    } catch {}
   }
 
   return res;
