@@ -218,7 +218,13 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   auto backend_value = args.get(1);
-  auto backend_chars = core::encode(cx, backend_value);
+  if (!backend_value.isString()) {
+    // TODO(gb): support Backend instances here?
+    JS_ReportErrorUTF8(cx, "createFanoutHandoff: Backend must be a string");
+    return false;
+  }
+  JS::RootedString backend_str(cx, backend_value.toString());
+  auto backend_chars = core::encode(cx, backend_str);
   if (!backend_chars) {
     return false;
   }
@@ -234,9 +240,10 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   bool is_upstream = true;
   bool is_grip_upgrade = true;
+
   JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle.unwrap(),
                                                  body_handle.unwrap(), is_upstream, is_grip_upgrade,
-                                                 std::move(backend_chars.ptr)));
+                                                 backend_str));
   if (!response) {
     return false;
   }

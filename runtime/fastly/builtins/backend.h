@@ -50,6 +50,9 @@ public:
 
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static void finalize(JS::GCContext *gcx, JSObject *obj);
+
+  static bool get_from_valid_name(JSContext *cx, host_api::HostString name,
+                                  JS::MutableHandleValue out);
 };
 
 bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp);

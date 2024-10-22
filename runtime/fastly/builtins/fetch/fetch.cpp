@@ -77,7 +77,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
 
-  RootedString backend(cx, Request::backend(request));
+  RootedString backend(cx, RequestOrResponse::backend(request));
   if (!backend) {
     if (Fastly::allowDynamicBackends) {
       JS::RootedObject dynamicBackend(cx, Backend::create(cx, request));

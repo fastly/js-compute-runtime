@@ -1,6 +1,6 @@
 /// <reference path="globals.d.ts" />
 
-declare module "fastly:fanout" {
+declare module 'fastly:fanout' {
   /**
    *
    * @param request The request to pass through Fanout.

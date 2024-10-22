@@ -3,7 +3,6 @@
 
 import { routes } from './routes.js';
 import { env } from 'fastly:env';
-import { fail } from './assertions.js';
 
 import './async-select.js';
 import './btoa.js';
@@ -72,7 +71,9 @@ async function app(event) {
       res = (await routeHandler(event)) || new Response('ok');
     } else {
       try {
-        fail(`${path} endpoint does not exist`);
+        return (res = new Response(`${path} endpoint does not exist`, {
+          status: 500,
+        }));
       } catch (errRes) {
         res = errRes;
       }
@@ -82,11 +83,12 @@ async function app(event) {
       res = error;
     } else {
       try {
-        fail(
+        return (res = new Response(
           `The routeHandler for ${path} threw a [${error.constructor?.name ?? error.name}] error: ${error.message || error}` +
             '\n' +
             error.stack,
-        );
+          { status: 500 },
+        ));
       } catch (errRes) {
         res = errRes;
       }
