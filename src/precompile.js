@@ -12,18 +12,14 @@ const POSTAMBLE = '}';
 /// will intern regular expressions, duplicating them at the top level and testing them with both
 /// an ascii and utf8 string should ensure that they won't be re-compiled when run in the fetch
 /// handler.
-export function precompile(
-  source,
-  filename = '<input>',
-  enableExperimentalTopLevelAwait = false,
-) {
+export function precompile(source, filename = '<input>', moduleMode = false) {
   const magicString = new MagicString(source, {
     filename,
   });
 
   const ast = parse(source, {
     ecmaVersion: 'latest',
-    sourceType: enableExperimentalTopLevelAwait ? 'module' : 'script',
+    sourceType: moduleMode ? 'module' : 'script',
   });
 
   const precompileCalls = [];

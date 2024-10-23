@@ -26,9 +26,10 @@ export async function compileApplicationToWasm(
   output,
   wasmEngine,
   enableExperimentalHighResolutionTimeMethods = false,
-  enableExperimentalTopLevelAwait = false,
   enableAOT = false,
   aotCache = '',
+  moduleMode = false,
+  doBundle = false,
 ) {
   try {
     if (!(await isFile(input))) {
@@ -94,86 +95,132 @@ export async function compileApplicationToWasm(
     process.exit(1);
   }
 
-  let contents;
-  try {
-    contents = await bundle(input, enableExperimentalTopLevelAwait);
-  } catch (error) {
-    console.error(`Error:`, error.message);
-    process.exit(1);
+  let tmpDir;
+  if (doBundle) {
+    let contents;
+    try {
+      contents = await bundle(input, moduleMode);
+    } catch (error) {
+      console.error(`Error:`, error.message);
+      process.exit(1);
+    }
+
+    const precompiled = precompile(
+      contents.outputFiles[0].text,
+      undefined,
+      moduleMode,
+    );
+
+    tmpDir = await getTmpDir();
+    const outPath = resolve(tmpDir, 'input.js');
+    await writeFile(outPath, precompiled);
+
+    // the bundled output is now the Wizer input
+    input = outPath;
   }
 
-  let wizerInput = precompile(
-    contents.outputFiles[0].text,
-    undefined,
-    enableExperimentalTopLevelAwait,
-  );
-
-  // for StarlingMonkey, we need to write to a tmpdir pending streaming source hooks or similar
-  const tmpDir = await getTmpDir();
-  const outPath = resolve(tmpDir, 'input.js');
-  await writeFile(outPath, wizerInput);
-  wizerInput = outPath;
-
   try {
-    if (enableAOT) {
-      const wevalBin = await weval();
+    if (!doBundle) {
+      // assert(moduleMode);
+      const spawnOpts = {
+        stdio: [null, process.stdout, process.stderr],
+        input: maybeWindowsPath(input),
+        shell: true,
+        encoding: 'utf-8',
+        env: {
+          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
+            enableExperimentalHighResolutionTimeMethods ? '1' : '0',
+        },
+      };
+      if (enableAOT) {
+        const wevalBin = await weval();
 
-      let wevalProcess = spawnSync(
-        `"${wevalBin}"`,
-        [
-          'weval',
-          ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
-          '--dir .',
-          `--dir ${maybeWindowsPath(dirname(wizerInput))}`,
-          '-w',
-          `-i "${wasmEngine}"`,
-          `-o "${output}"`,
-        ],
-        {
-          stdio: [null, process.stdout, process.stderr],
-          input: `${maybeWindowsPath(wizerInput)}${enableExperimentalTopLevelAwait ? '' : ' --legacy-script'}`,
-          shell: true,
-          encoding: 'utf-8',
-          env: {
-            ...process.env,
-            ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
-              enableExperimentalHighResolutionTimeMethods ? '1' : '0',
-          },
-        },
-      );
-      if (wevalProcess.status !== 0) {
-        throw new Error(`Weval initialization failure`);
+        let wevalProcess = spawnSync(
+          `"${wevalBin}"`,
+          [
+            'weval',
+            ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
+            `--dir="${maybeWindowsPath(process.cwd())}"`,
+            '-w',
+            `-i "${wasmEngine}"`,
+            `-o "${output}"`,
+          ],
+          spawnOpts,
+        );
+        if (wevalProcess.status !== 0) {
+          throw new Error(`Weval initialization failure`);
+        }
+        process.exitCode = wevalProcess.status;
+      } else {
+        let wizerProcess = spawnSync(
+          `"${wizer}"`,
+          [
+            '--allow-wasi',
+            `--wasm-bulk-memory=true`,
+            `--dir="${maybeWindowsPath(process.cwd())}"`,
+            '-r _start=wizer.resume',
+            `-o="${output}"`,
+            `"${wasmEngine}"`,
+          ],
+          spawnOpts,
+        );
+        if (wizerProcess.status !== 0) {
+          throw new Error(`Wizer initialization failure`);
+        }
+        process.exitCode = wizerProcess.status;
       }
-      process.exitCode = wevalProcess.status;
     } else {
-      let wizerProcess = spawnSync(
-        `"${wizer}"`,
-        [
-          '--inherit-env=true',
-          '--allow-wasi',
-          '--dir=.',
-          `--dir=${maybeWindowsPath(dirname(wizerInput))}`,
-          `--wasm-bulk-memory=true`,
-          '-r _start=wizer.resume',
-          `-o="${output}"`,
-          `"${wasmEngine}"`,
-        ],
-        {
-          stdio: [null, process.stdout, process.stderr],
-          input: `${maybeWindowsPath(wizerInput)}${enableExperimentalTopLevelAwait ? '' : ' --legacy-script'}`,
-          shell: true,
-          encoding: 'utf-8',
-          env: {
-            ...process.env,
-            ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
-              enableExperimentalHighResolutionTimeMethods ? '1' : '0',
-          },
+      const spawnOpts = {
+        stdio: [null, process.stdout, process.stderr],
+        input: `${maybeWindowsPath(input)}${moduleMode ? '' : ' --legacy-script'}`,
+        shell: true,
+        encoding: 'utf-8',
+        env: {
+          ...process.env,
+          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
+            enableExperimentalHighResolutionTimeMethods ? '1' : '0',
         },
-      );
-      if (wizerProcess.status !== 0) {
-        throw new Error(`Wizer initialization failure`);
+      };
+      if (enableAOT) {
+        const wevalBin = await weval();
+
+        let wevalProcess = spawnSync(
+          `"${wevalBin}"`,
+          [
+            'weval',
+            ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
+            '--dir .',
+            `--dir ${maybeWindowsPath(dirname(input))}`,
+            '-w',
+            `-i "${wasmEngine}"`,
+            `-o "${output}"`,
+          ],
+          spawnOpts,
+        );
+        if (wevalProcess.status !== 0) {
+          throw new Error(`Weval initialization failure`);
+        }
+        process.exitCode = wevalProcess.status;
+      } else {
+        let wizerProcess = spawnSync(
+          `"${wizer}"`,
+          [
+            '--inherit-env=true',
+            '--allow-wasi',
+            '--dir=.',
+            `--dir=${maybeWindowsPath(dirname(input))}`,
+            '-r _start=wizer.resume',
+            `--wasm-bulk-memory=true`,
+            `-o="${output}"`,
+            `"${wasmEngine}"`,
+          ],
+          spawnOpts,
+        );
+        if (wizerProcess.status !== 0) {
+          throw new Error(`Wizer initialization failure`);
+        }
+        process.exitCode = wizerProcess.status;
       }
-      process.exitCode = wizerProcess.status;
     }
   } catch (error) {
     console.error(
@@ -182,6 +229,8 @@ export async function compileApplicationToWasm(
     );
     process.exit(1);
   } finally {
-    rmSync(tmpDir, { recursive: true });
+    if (doBundle) {
+      rmSync(tmpDir, { recursive: true });
+    }
   }
 }

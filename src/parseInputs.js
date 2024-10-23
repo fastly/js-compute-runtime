@@ -7,9 +7,10 @@ export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
   let enableExperimentalHighResolutionTimeMethods = false;
-  let enableExperimentalTopLevelAwait = false;
   let enableAOT = false;
   let customEngineSet = false;
+  let moduleMode = false;
+  let bundle = true;
   let wasmEngine = join(__dirname, '../fastly.wasm');
   let aotCache = join(__dirname, '../fastly-ics.wevalcache');
   let customInputSet = false;
@@ -28,8 +29,14 @@ export async function parseInputs(cliInputs) {
         enableExperimentalHighResolutionTimeMethods = true;
         break;
       }
+      case '--module-mode': {
+        moduleMode = true;
+        bundle = false;
+        break;
+      }
       case '--enable-experimental-top-level-await': {
-        enableExperimentalTopLevelAwait = true;
+        moduleMode = true;
+        bundle = true;
         break;
       }
       case '--enable-experimental-aot': {
@@ -128,7 +135,8 @@ export async function parseInputs(cliInputs) {
 
   return {
     enableExperimentalHighResolutionTimeMethods,
-    enableExperimentalTopLevelAwait,
+    moduleMode,
+    bundle,
     enableAOT,
     aotCache,
     input,
