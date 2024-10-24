@@ -85,10 +85,24 @@ declare module 'fastly:kv-store' {
     ): Promise<undefined>;
 
     /**
-     * @param prefix Optional key prefix to search
-     * @param limit Optional limit for the number of keys returned
+     * Returns an async iterator for the values of the KV Store
+     * optionally taking a prefix and limit
      */
-    list(prefix?: string, limit?: number): AsyncIterator<string[]>;
+    list(options?: {
+      /**
+       * Do not wait on reindexing the key list, and instead immediately return the current key list
+       */
+      eventual?: boolean;
+      /**
+       * String prefix for keys to list
+       */
+      prefix?: string;
+      /**
+       * Limit the number of keys provided per listing
+       */
+      limit?: number;
+      // {"data":["key0"],"meta":{"limit":1,"next_cursor":"CgRrZXkw"}}
+    }): {}[];
   }
 
   /**

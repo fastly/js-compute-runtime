@@ -193,6 +193,8 @@ typedef struct fastly_host_http_send_error_detail {
   uint8_t tls_alert_id;
 } fastly_host_http_send_error_detail;
 
+typedef uint32_t fastly_kv_error;
+
 // The values need to match https://docs.rs/fastly-sys/0.10.5/src/fastly_sys/lib.rs.html#111
 #define BACKEND_CONFIG_RESERVED (1u << 0)
 #define BACKEND_CONFIG_HOST_OVERRIDE (1u << 1)
@@ -590,10 +592,10 @@ typedef struct __attribute__((aligned(4))) KVDeleteOptions {
 
 typedef struct __attribute__((aligned(4))) KVListOptions {
   uint32_t mode;
-  uint8_t *cursor;
+  const uint8_t *cursor;
   uint32_t cursor_len;
   uint32_t limit;
-  uint8_t *prefix;
+  const uint8_t *prefix;
   uint32_t prefix_len;
 } KVListOptions;
 

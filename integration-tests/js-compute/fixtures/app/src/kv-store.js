@@ -1,6 +1,6 @@
 /* globals KVStoreEntry */
 import {
-  assert,
+  strictEqual,
   assertThrows,
   assertRejects,
   assertResolves,
@@ -8,10 +8,21 @@ import {
 import { KVStore } from 'fastly:kv-store';
 import { routes, isRunningLocally } from './routes.js';
 
+// kvstore e2e tests
+{
+  routes.set('/kv-store-e2e/list', async () => {
+    const store = new KVStore('example-test-kv-store');
+    await store.put('a', 'b');
+    await store.put('c', 'd');
+    const list = await store.list();
+    strictEqual(list, 'b');
+  });
+}
+
 // KVStore
 {
   routes.set('/kv-store/exposed-as-global', async () => {
-    assert(typeof KVStore, 'function', `typeof KVStore`);
+    strictEqual(typeof KVStore, 'function', `typeof KVStore`);
   });
   routes.set('/kv-store/interface', kvStoreInterfaceTests);
   // KVStore constructor
@@ -43,7 +54,7 @@ import { routes, isRunningLocally } from './routes.js';
         try {
           test();
         } catch (thrownError) {
-          assert(thrownError, sentinel, 'thrownError === sentinel');
+          strictEqual(thrownError, sentinel, 'thrownError === sentinel');
         }
         assertThrows(
           () => new KVStore(Symbol()),
@@ -62,8 +73,8 @@ import { routes, isRunningLocally } from './routes.js';
       );
     });
     routes.set('/kv-store/constructor/found-store', async () => {
-      const store = createValidStore();
-      assert(store instanceof KVStore, true, `store instanceof KVStore`);
+      const store = new KVStore('example-test-kv-store');
+      strictEqual(store instanceof KVStore, true, `store instanceof KVStore`);
     });
     routes.set('/kv-store/constructor/missing-store', async () => {
       assertThrows(
@@ -163,18 +174,18 @@ import { routes, isRunningLocally } from './routes.js';
               throw sentinel;
             },
           };
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           await store.put(key, '');
         };
         await assertRejects(test);
         try {
           await test();
         } catch (thrownError) {
-          assert(thrownError, sentinel, 'thrownError === sentinel');
+          strictEqual(thrownError, sentinel, 'thrownError === sentinel');
         }
         await assertRejects(
           async () => {
-            const store = createValidStore();
+            const store = new KVStore('example-test-kv-store');
             await store.put(Symbol(), '');
           },
           Error,
@@ -185,7 +196,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/put/key-parameter-not-supplied', async () => {
       await assertRejects(
         async () => {
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           await store.put();
         },
         TypeError,
@@ -195,7 +206,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/put/key-parameter-empty-string', async () => {
       await assertRejects(
         async () => {
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           await store.put('', '');
         },
         TypeError,
@@ -206,7 +217,7 @@ import { routes, isRunningLocally } from './routes.js';
       '/kv-store/put/key-parameter-1024-character-string',
       async () => {
         await assertResolves(async () => {
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           const key = 'a'.repeat(1024);
           await store.put(key, '');
         });
@@ -217,7 +228,7 @@ import { routes, isRunningLocally } from './routes.js';
       async () => {
         await assertRejects(
           async () => {
-            const store = createValidStore();
+            const store = new KVStore('example-test-kv-store');
             const key = 'a'.repeat(1025);
             await store.put(key, '');
           },
@@ -229,7 +240,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/put/key-parameter-containing-newline', async () => {
       await assertRejects(
         async () => {
-          let store = createValidStore();
+          let store = new KVStore('example-test-kv-store');
           await store.put('\n', '');
         },
         TypeError,
@@ -241,7 +252,7 @@ import { routes, isRunningLocally } from './routes.js';
       async () => {
         await assertRejects(
           async () => {
-            let store = createValidStore();
+            let store = new KVStore('example-test-kv-store');
             await store.put('\r', '');
           },
           TypeError,
@@ -254,7 +265,7 @@ import { routes, isRunningLocally } from './routes.js';
       async () => {
         await assertRejects(
           async () => {
-            let store = createValidStore();
+            let store = new KVStore('example-test-kv-store');
             await store.put('.well-known/acme-challenge/', '');
           },
           TypeError,
@@ -265,7 +276,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/put/key-parameter-single-dot', async () => {
       await assertRejects(
         async () => {
-          let store = createValidStore();
+          let store = new KVStore('example-test-kv-store');
           await store.put('.', '');
         },
         TypeError,
@@ -275,7 +286,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/put/key-parameter-double-dot', async () => {
       await assertRejects(
         async () => {
-          let store = createValidStore();
+          let store = new KVStore('example-test-kv-store');
           await store.put('..', '');
         },
         TypeError,
@@ -289,7 +300,7 @@ import { routes, isRunningLocally } from './routes.js';
         for (const character of specialCharacters) {
           await assertRejects(
             async () => {
-              let store = createValidStore();
+              let store = new KVStore('example-test-kv-store');
               await store.put(character, '');
             },
             TypeError,
@@ -299,14 +310,14 @@ import { routes, isRunningLocally } from './routes.js';
       },
     );
     routes.set('/kv-store/put/value-parameter-as-undefined', async () => {
-      const store = createValidStore();
+      const store = new KVStore('example-test-kv-store');
       let result = store.put('undefined', undefined);
-      assert(
+      strictEqual(
         result instanceof Promise,
         true,
         'store.put("undefined", undefined) instanceof Promise',
       );
-      assert(
+      strictEqual(
         await result,
         undefined,
         'await store.put("undefined", undefined)',
@@ -315,7 +326,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/put/value-parameter-not-supplied', async () => {
       await assertRejects(
         async () => {
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           await store.put('test');
         },
         TypeError,
@@ -330,7 +341,7 @@ import { routes, isRunningLocally } from './routes.js';
         await assertRejects(
           async () => {
             const stream = iteratableToStream([]);
-            const store = createValidStore();
+            const store = new KVStore('example-test-kv-store');
             await store.put('readablestream-empty', stream);
           },
           TypeError,
@@ -338,10 +349,10 @@ import { routes, isRunningLocally } from './routes.js';
         );
         // TODO: uncomment this when conte-provided (guest) streams are supported
         // const stream = iteratableToStream([])
-        // const store = createValidStore()
+        // const store = new KVStore('example-test-kv-store')
         // let result = store.put('readablestream-empty', stream)
-        // assert(result instanceof Promise, true, `store.put('readablestream-empty', stream) instanceof Promise`)
-        // assert(await result, undefined, `await store.put('readablestream-empty', stream)`)
+        // strictEqual(result instanceof Promise, true, `store.put('readablestream-empty', stream) instanceof Promise`)
+        // strictEqual(await result, undefined, `await store.put('readablestream-empty', stream)`)
       },
     );
     routes.set(
@@ -353,14 +364,14 @@ import { routes, isRunningLocally } from './routes.js';
             backend: 'TheOrigin',
           },
         );
-        const store = createValidStore();
+        const store = new KVStore('example-test-kv-store');
         let result = store.put('readablestream-under-30mb', res.body);
-        assert(
+        strictEqual(
           result instanceof Promise,
           true,
           `store.put('readablestream-under-30mb', stream) instanceof Promise`,
         );
-        assert(
+        strictEqual(
           await result,
           undefined,
           `await store.put('readablestream-under-30mb', stream)`,
@@ -368,14 +379,14 @@ import { routes, isRunningLocally } from './routes.js';
       },
     );
     routes.set('/kv-store/put/request-body', async ({ request }) => {
-      const store = createValidStore();
+      const store = new KVStore('example-test-kv-store');
       let result = store.put('readablestream-req', request.body);
-      assert(
+      strictEqual(
         result instanceof Promise,
         true,
         `store.put('readablestream-req', request.body) instanceof Promise`,
       );
-      assert(
+      strictEqual(
         await result,
         undefined,
         `await store.put('readablestream-req', request.body)`,
@@ -390,7 +401,7 @@ import { routes, isRunningLocally } from './routes.js';
             const stream = iteratableToStream([
               'x'.repeat(30 * 1024 * 1024) + 'x',
             ]);
-            const store = createValidStore();
+            const store = new KVStore('example-test-kv-store');
             await store.put('readablestream-over-30mb', stream);
           },
           Error,
@@ -398,10 +409,10 @@ import { routes, isRunningLocally } from './routes.js';
         );
         // TODO: uncomment this when conte-provided (guest) streams are supported
         // const stream = iteratableToStream(['x'.repeat(30*1024*1024) + 'x'])
-        // const store = createValidStore()
+        // const store = new KVStore('example-test-kv-store')
         // let result = store.put('readablestream-over-30mb', stream)
-        // assert(result instanceof Promise, true, `store.put('readablestream-over-30mb', stream) instanceof Promise`)
-        // assert(await result, undefined, `await store.put('readablestream-over-30mb', stream)`)
+        // strictEqual(result instanceof Promise, true, `store.put('readablestream-over-30mb', stream) instanceof Promise`)
+        // strictEqual(await result, undefined, `await store.put('readablestream-over-30mb', stream)`)
       },
     );
     routes.set(
@@ -410,7 +421,7 @@ import { routes, isRunningLocally } from './routes.js';
         const stream = iteratableToStream([]);
         // getReader() causes the stream to become locked
         stream.getReader();
-        const store = createValidStore();
+        const store = new KVStore('example-test-kv-store');
         await assertRejects(
           async () => {
             await store.put('readablestream-locked', stream);
@@ -428,15 +439,15 @@ import { routes, isRunningLocally } from './routes.js';
         new URLSearchParams(),
         new URLSearchParams({ a: 'b', c: 'd' }),
       ];
-      const store = createValidStore();
+      const store = new KVStore('example-test-kv-store');
       for (const searchParams of items) {
         let result = store.put('URLSearchParams', searchParams);
-        assert(
+        strictEqual(
           result instanceof Promise,
           true,
           `store.put('URLSearchParams', searchParams) instanceof Promise`,
         );
-        assert(
+        strictEqual(
           await result,
           undefined,
           `await store.put('URLSearchParams', searchParams)`,
@@ -454,21 +465,25 @@ import { routes, isRunningLocally } from './routes.js';
         '𠈓',
         String('carrot'),
       ];
-      const store = createValidStore();
+      const store = new KVStore('example-test-kv-store');
       for (const string of strings) {
         let result = store.put('string', string);
-        assert(
+        strictEqual(
           result instanceof Promise,
           true,
           `store.put('string', string) instanceof Promise`,
         );
-        assert(await result, undefined, `await store.put('string', string)`);
+        strictEqual(
+          await result,
+          undefined,
+          `await store.put('string', string)`,
+        );
       }
     });
 
     routes.set('/kv-store/put/value-parameter-string-over-30mb', async () => {
       const string = 'x'.repeat(35 * 1024 * 1024) + 'x';
-      const store = createValidStore();
+      const store = new KVStore('example-test-kv-store');
       await assertRejects(
         () => store.put('string-over-30mb', string),
         TypeError,
@@ -488,18 +503,18 @@ import { routes, isRunningLocally } from './routes.js';
               throw sentinel;
             },
           };
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           await store.put('toString', value);
         };
         await assertRejects(test);
         try {
           await test();
         } catch (thrownError) {
-          assert(thrownError, sentinel, 'thrownError === sentinel');
+          strictEqual(thrownError, sentinel, 'thrownError === sentinel');
         }
         await assertRejects(
           async () => {
-            const store = createValidStore();
+            const store = new KVStore('example-test-kv-store');
             await store.put('Symbol()', Symbol());
           },
           TypeError,
@@ -523,16 +538,16 @@ import { routes, isRunningLocally } from './routes.js';
         Uint32Array,
         BigUint64Array,
       ];
-      const store = createValidStore();
+      const store = new KVStore('example-test-kv-store');
       for (const constructor of typedArrayConstructors) {
         const typedArray = new constructor(8);
         let result = store.put(constructor.name, typedArray.buffer);
-        assert(
+        strictEqual(
           result instanceof Promise,
           true,
           `store.put(${constructor.name}, typedArray.buffer) instanceof Promise`,
         );
-        assert(
+        strictEqual(
           await result,
           undefined,
           `await store.put(${constructor.name}, typedArray.buffer)`,
@@ -553,16 +568,16 @@ import { routes, isRunningLocally } from './routes.js';
         Uint32Array,
         BigUint64Array,
       ];
-      const store = createValidStore();
+      const store = new KVStore('example-test-kv-store');
       for (const constructor of typedArrayConstructors) {
         const typedArray = new constructor(8);
         let result = store.put(constructor.name, typedArray.buffer);
-        assert(
+        strictEqual(
           result instanceof Promise,
           true,
           `store.put(${constructor.name}, typedArray.buffer) instanceof Promise`,
         );
-        assert(
+        strictEqual(
           await result,
           undefined,
           `await store.put(${constructor.name}, typedArray.buffer)`,
@@ -583,16 +598,16 @@ import { routes, isRunningLocally } from './routes.js';
         Uint32Array,
         BigUint64Array,
       ];
-      const store = createValidStore();
+      const store = new KVStore('example-test-kv-store');
       for (const constructor of typedArrayConstructors) {
         const typedArray = new constructor(8);
         let result = store.put(constructor.name, typedArray);
-        assert(
+        strictEqual(
           result instanceof Promise,
           true,
           `store.put(${constructor.name}, typedArray) instanceof Promise`,
         );
-        assert(
+        strictEqual(
           await result,
           undefined,
           `await store.put(${constructor.name}, typedArray)`,
@@ -613,17 +628,17 @@ import { routes, isRunningLocally } from './routes.js';
         BigInt64Array,
         BigUint64Array,
       ];
-      const store = createValidStore();
+      const store = new KVStore('example-test-kv-store');
       for (const constructor of typedArrayConstructors) {
         const typedArray = new constructor(8);
         const view = new DataView(typedArray.buffer);
         let result = store.put(`new DataView(${constructor.name})`, view);
-        assert(
+        strictEqual(
           result instanceof Promise,
           true,
           `store.put(new DataView(${constructor.name}), typedArray) instanceof Promise`,
         );
-        assert(
+        strictEqual(
           await result,
           undefined,
           `await store.put(new DataView(${constructor.name}), typedArray)`,
@@ -656,18 +671,18 @@ import { routes, isRunningLocally } from './routes.js';
               throw sentinel;
             },
           };
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           await store.delete(key);
         };
         await assertRejects(test);
         try {
           await test();
         } catch (thrownError) {
-          assert(thrownError, sentinel, 'thrownError === sentinel');
+          strictEqual(thrownError, sentinel, 'thrownError === sentinel');
         }
         await assertRejects(
           async () => {
-            const store = createValidStore();
+            const store = new KVStore('example-test-kv-store');
             await store.delete(Symbol());
           },
           TypeError,
@@ -678,7 +693,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/delete/key-parameter-not-supplied', async () => {
       await assertRejects(
         async () => {
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           await store.delete();
         },
         TypeError,
@@ -688,7 +703,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/delete/key-parameter-empty-string', async () => {
       await assertRejects(
         async () => {
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           await store.delete('');
         },
         TypeError,
@@ -699,7 +714,7 @@ import { routes, isRunningLocally } from './routes.js';
       '/kv-store/delete/key-parameter-1024-character-string',
       async () => {
         await assertResolves(async () => {
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           const key = 'a'.repeat(1024);
           await store.delete(key);
         });
@@ -710,7 +725,7 @@ import { routes, isRunningLocally } from './routes.js';
       async () => {
         await assertRejects(
           async () => {
-            const store = createValidStore();
+            const store = new KVStore('example-test-kv-store');
             const key = 'a'.repeat(1025);
             await store.delete(key);
           },
@@ -724,7 +739,7 @@ import { routes, isRunningLocally } from './routes.js';
       async () => {
         await assertRejects(
           async () => {
-            let store = createValidStore();
+            let store = new KVStore('example-test-kv-store');
             await store.delete('\n');
           },
           TypeError,
@@ -737,7 +752,7 @@ import { routes, isRunningLocally } from './routes.js';
       async () => {
         await assertRejects(
           async () => {
-            let store = createValidStore();
+            let store = new KVStore('example-test-kv-store');
             await store.delete('\r');
           },
           TypeError,
@@ -750,7 +765,7 @@ import { routes, isRunningLocally } from './routes.js';
       async () => {
         await assertRejects(
           async () => {
-            let store = createValidStore();
+            let store = new KVStore('example-test-kv-store');
             await store.delete('.well-known/acme-challenge/');
           },
           TypeError,
@@ -761,7 +776,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/delete/key-parameter-single-dot', async () => {
       await assertRejects(
         async () => {
-          let store = createValidStore();
+          let store = new KVStore('example-test-kv-store');
           await store.delete('.');
         },
         TypeError,
@@ -771,7 +786,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/delete/key-parameter-double-dot', async () => {
       await assertRejects(
         async () => {
-          let store = createValidStore();
+          let store = new KVStore('example-test-kv-store');
           await store.delete('..');
         },
         TypeError,
@@ -785,7 +800,7 @@ import { routes, isRunningLocally } from './routes.js';
         for (const character of specialCharacters) {
           await assertRejects(
             async () => {
-              let store = createValidStore();
+              let store = new KVStore('example-test-kv-store');
               await store.delete(character);
             },
             TypeError,
@@ -800,7 +815,7 @@ import { routes, isRunningLocally } from './routes.js';
         if (isRunningLocally()) {
           return;
         }
-        let store = createValidStore();
+        let store = new KVStore('example-test-kv-store');
         await assertRejects(
           () => store.delete(Math.random()),
           TypeError,
@@ -809,33 +824,33 @@ import { routes, isRunningLocally } from './routes.js';
       },
     );
     routes.set('/kv-store/delete/key-exists', async () => {
-      let store = createValidStore();
+      let store = new KVStore('example-test-kv-store');
       let key = `key-exists-${Math.random()}`;
       await store.put(key, 'hello');
       let result = store.delete(key);
-      assert(
+      strictEqual(
         result instanceof Promise,
         true,
         `store.delete(key) instanceof Promise`,
       );
       result = await result;
-      assert(result, undefined, `(await store.delete(key) === undefined)`);
+      strictEqual(result, undefined, `(await store.delete(key) === undefined)`);
     });
     routes.set('/kv-store/delete/delete-key-twice', async () => {
       if (isRunningLocally()) {
         return;
       }
-      let store = createValidStore();
+      let store = new KVStore('example-test-kv-store');
       let key = `key-exists-${Math.random()}`;
       await store.put(key, 'hello');
       let result = store.delete(key);
-      assert(
+      strictEqual(
         result instanceof Promise,
         true,
         `store.delete(key) instanceof Promise`,
       );
       result = await result;
-      assert(result, undefined, `(await store.delete(key) === undefined)`);
+      strictEqual(result, undefined, `(await store.delete(key) === undefined)`);
       await assertRejects(
         () => store.delete(key),
         TypeError,
@@ -843,7 +858,7 @@ import { routes, isRunningLocally } from './routes.js';
       );
     });
     routes.set('/kv-store/delete/multiple-deletes-at-once', async () => {
-      let store = createValidStore();
+      let store = new KVStore('example-test-kv-store');
       let key1 = `key-exists-${Math.random()}`;
       await store.put(key1, '1hello1');
       let key2 = `key-exists-${Math.random()}`;
@@ -890,18 +905,18 @@ import { routes, isRunningLocally } from './routes.js';
               throw sentinel;
             },
           };
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           await store.get(key);
         };
         await assertRejects(test);
         try {
           await test();
         } catch (thrownError) {
-          assert(thrownError, sentinel, 'thrownError === sentinel');
+          strictEqual(thrownError, sentinel, 'thrownError === sentinel');
         }
         await assertRejects(
           async () => {
-            const store = createValidStore();
+            const store = new KVStore('example-test-kv-store');
             await store.get(Symbol());
           },
           TypeError,
@@ -912,7 +927,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/get/key-parameter-not-supplied', async () => {
       await assertRejects(
         async () => {
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           await store.get();
         },
         TypeError,
@@ -922,7 +937,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/get/key-parameter-empty-string', async () => {
       await assertRejects(
         async () => {
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           await store.get('');
         },
         TypeError,
@@ -933,7 +948,7 @@ import { routes, isRunningLocally } from './routes.js';
       '/kv-store/get/key-parameter-1024-character-string',
       async () => {
         await assertResolves(async () => {
-          const store = createValidStore();
+          const store = new KVStore('example-test-kv-store');
           const key = 'a'.repeat(1024);
           await store.get(key);
         });
@@ -944,7 +959,7 @@ import { routes, isRunningLocally } from './routes.js';
       async () => {
         await assertRejects(
           async () => {
-            const store = createValidStore();
+            const store = new KVStore('example-test-kv-store');
             const key = 'a'.repeat(1025);
             await store.get(key);
           },
@@ -956,7 +971,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/get/key-parameter-containing-newline', async () => {
       await assertRejects(
         async () => {
-          let store = createValidStore();
+          let store = new KVStore('example-test-kv-store');
           await store.get('\n');
         },
         TypeError,
@@ -968,7 +983,7 @@ import { routes, isRunningLocally } from './routes.js';
       async () => {
         await assertRejects(
           async () => {
-            let store = createValidStore();
+            let store = new KVStore('example-test-kv-store');
             await store.get('\r');
           },
           TypeError,
@@ -981,7 +996,7 @@ import { routes, isRunningLocally } from './routes.js';
       async () => {
         await assertRejects(
           async () => {
-            let store = createValidStore();
+            let store = new KVStore('example-test-kv-store');
             await store.get('.well-known/acme-challenge/');
           },
           TypeError,
@@ -992,7 +1007,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/get/key-parameter-single-dot', async () => {
       await assertRejects(
         async () => {
-          let store = createValidStore();
+          let store = new KVStore('example-test-kv-store');
           await store.get('.');
         },
         TypeError,
@@ -1002,7 +1017,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/kv-store/get/key-parameter-double-dot', async () => {
       await assertRejects(
         async () => {
-          let store = createValidStore();
+          let store = new KVStore('example-test-kv-store');
           await store.get('..');
         },
         TypeError,
@@ -1016,7 +1031,7 @@ import { routes, isRunningLocally } from './routes.js';
         for (const character of specialCharacters) {
           await assertRejects(
             async () => {
-              let store = createValidStore();
+              let store = new KVStore('example-test-kv-store');
               await store.get(character);
             },
             TypeError,
@@ -1026,37 +1041,37 @@ import { routes, isRunningLocally } from './routes.js';
       },
     );
     routes.set('/kv-store/get/key-does-not-exist-returns-null', async () => {
-      let store = createValidStore();
+      let store = new KVStore('example-test-kv-store');
       let result = store.get(Math.random());
-      assert(
+      strictEqual(
         result instanceof Promise,
         true,
         `store.get(Math.random()) instanceof Promise`,
       );
-      assert(await result, null, `await store.get(Math.random())`);
+      strictEqual(await result, null, `await store.get(Math.random())`);
     });
     routes.set('/kv-store/get/key-does-not-exist-returns-null', async () => {
-      let store = createValidStore();
+      let store = new KVStore('example-test-kv-store');
       let result = store.get(Math.random());
-      assert(
+      strictEqual(
         result instanceof Promise,
         true,
         `store.get(Math.random()) instanceof Promise`,
       );
-      assert(await result, null, `await store.get(Math.random())`);
+      strictEqual(await result, null, `await store.get(Math.random())`);
     });
     routes.set('/kv-store/get/key-exists', async () => {
-      let store = createValidStore();
+      let store = new KVStore('example-test-kv-store');
       let key = `key-exists-${Math.random()}`;
       await store.put(key, 'hello');
       let result = store.get(key);
-      assert(
+      strictEqual(
         result instanceof Promise,
         true,
         `store.get(key) instanceof Promise`,
       );
       result = await result;
-      assert(
+      strictEqual(
         result instanceof KVStoreEntry,
         true,
         `(await store.get(key) instanceof KVStoreEntry)`,
@@ -1064,7 +1079,7 @@ import { routes, isRunningLocally } from './routes.js';
     });
 
     routes.set('/kv-store/get/multiple-lookups-at-once', async () => {
-      let store = createValidStore();
+      let store = new KVStore('example-test-kv-store');
       let key1 = `key-exists-${Math.random()}`;
       await store.put(key1, '1hello1');
       let key2 = `key-exists-${Math.random()}`;
@@ -1082,11 +1097,31 @@ import { routes, isRunningLocally } from './routes.js';
         store.get(key4),
         store.get(key5),
       ]);
-      assert(await results[0].text(), '1hello1', `await results[0].text()`);
-      assert(await results[1].text(), '2hello2', `await results[1].text()`);
-      assert(await results[2].text(), '3hello3', `await results[2].text()`);
-      assert(await results[3].text(), '4hello4', `await results[3].text()`);
-      assert(await results[4].text(), '5hello5', `await results[4].text()`);
+      strictEqual(
+        await results[0].text(),
+        '1hello1',
+        `await results[0].text()`,
+      );
+      strictEqual(
+        await results[1].text(),
+        '2hello2',
+        `await results[1].text()`,
+      );
+      strictEqual(
+        await results[2].text(),
+        '3hello3',
+        `await results[2].text()`,
+      );
+      strictEqual(
+        await results[3].text(),
+        '4hello4',
+        `await results[3].text()`,
+      );
+      strictEqual(
+        await results[4].text(),
+        '5hello5',
+        `await results[4].text()`,
+      );
     });
   }
 }
@@ -1097,28 +1132,36 @@ import { routes, isRunningLocally } from './routes.js';
     return kvStoreEntryInterfaceTests();
   });
   routes.set('/kv-store-entry/text/valid', async () => {
-    let store = createValidStore();
+    let store = new KVStore('example-test-kv-store');
     let key = `entry-text-valid`;
     await store.put(key, 'hello');
     let entry = await store.get(key);
     let result = entry.text();
-    assert(result instanceof Promise, true, `entry.text() instanceof Promise`);
+    strictEqual(
+      result instanceof Promise,
+      true,
+      `entry.text() instanceof Promise`,
+    );
     result = await result;
-    assert(result, 'hello', `await entry.text())`);
+    strictEqual(result, 'hello', `await entry.text())`);
   });
   routes.set('/kv-store-entry/json/valid', async () => {
-    let store = createValidStore();
+    let store = new KVStore('example-test-kv-store');
     let key = `entry-json-valid`;
     const obj = { a: 1, b: 2, c: 3 };
     await store.put(key, JSON.stringify(obj));
     let entry = await store.get(key);
     let result = entry.json();
-    assert(result instanceof Promise, true, `entry.json() instanceof Promise`);
+    strictEqual(
+      result instanceof Promise,
+      true,
+      `entry.json() instanceof Promise`,
+    );
     result = await result;
-    assert(result, obj, `await entry.json())`);
+    strictEqual(result, obj, `await entry.json())`);
   });
   routes.set('/kv-store-entry/json/invalid', async () => {
-    let store = createValidStore();
+    let store = new KVStore('example-test-kv-store');
     let key = `entry-json-invalid`;
     await store.put(key, "132abc;['-=9");
     let entry = await store.get(key);
@@ -1129,18 +1172,18 @@ import { routes, isRunningLocally } from './routes.js';
     );
   });
   routes.set('/kv-store-entry/arrayBuffer/valid', async () => {
-    let store = createValidStore();
+    let store = new KVStore('example-test-kv-store');
     let key = `entry-arraybuffer-valid`;
     await store.put(key, new Int8Array([0, 1, 2, 3]));
     let entry = await store.get(key);
     let result = entry.arrayBuffer();
-    assert(
+    strictEqual(
       result instanceof Promise,
       true,
       `entry.arrayBuffer() instanceof Promise`,
     );
     result = await result;
-    assert(
+    strictEqual(
       result instanceof ArrayBuffer,
       true,
       `(await entry.arrayBuffer()) instanceof ArrayBuffer`,
@@ -1148,33 +1191,33 @@ import { routes, isRunningLocally } from './routes.js';
   });
 
   routes.set('/kv-store-entry/body', async () => {
-    let store = createValidStore();
+    let store = new KVStore('example-test-kv-store');
     let key = `entry-body`;
     await store.put(key, 'body body body');
     let entry = await store.get(key);
     let result = entry.body;
-    assert(
+    strictEqual(
       result instanceof ReadableStream,
       true,
       `entry.body instanceof ReadableStream`,
     );
     let text = await streamToString(result);
-    assert(text, 'body body body', `entry.body contents as string`);
+    strictEqual(text, 'body body body', `entry.body contents as string`);
   });
   routes.set('/kv-store-entry/bodyUsed', async () => {
-    let store = createValidStore();
+    let store = new KVStore('example-test-kv-store');
     let key = `entry-bodyUsed`;
     await store.put(key, 'body body body');
     let entry = await store.get(key);
-    assert(entry.bodyUsed, false, `entry.bodyUsed`);
+    strictEqual(entry.bodyUsed, false, `entry.bodyUsed`);
     await entry.text();
-    assert(entry.bodyUsed, true, `entry.bodyUsed`);
+    strictEqual(entry.bodyUsed, true, `entry.bodyUsed`);
   });
 }
 async function kvStoreEntryInterfaceTests() {
   let actual = Reflect.ownKeys(KVStoreEntry);
   let expected = ['prototype', 'length', 'name'];
-  assert(actual, expected, `Reflect.ownKeys(KVStoreEntry)`);
+  strictEqual(actual, expected, `Reflect.ownKeys(KVStoreEntry)`);
 
   actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'prototype');
   expected = {
@@ -1183,7 +1226,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: false,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'prototype')`,
@@ -1196,7 +1239,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'length')`,
@@ -1209,7 +1252,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'name')`,
@@ -1217,7 +1260,7 @@ async function kvStoreEntryInterfaceTests() {
 
   actual = Reflect.ownKeys(KVStoreEntry.prototype);
   expected = ['constructor', 'body', 'bodyUsed', 'arrayBuffer', 'json', 'text'];
-  assert(actual, expected, `Reflect.ownKeys(KVStoreEntry.prototype)`);
+  strictEqual(actual, expected, `Reflect.ownKeys(KVStoreEntry.prototype)`);
 
   actual = Reflect.getOwnPropertyDescriptor(
     KVStoreEntry.prototype,
@@ -1229,7 +1272,7 @@ async function kvStoreEntryInterfaceTests() {
     configurable: true,
     value: KVStoreEntry.prototype.constructor,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'constructor')`,
@@ -1242,7 +1285,7 @@ async function kvStoreEntryInterfaceTests() {
     configurable: true,
     value: KVStoreEntry.prototype.text,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'text')`,
@@ -1255,7 +1298,7 @@ async function kvStoreEntryInterfaceTests() {
     configurable: true,
     value: KVStoreEntry.prototype.json,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'json')`,
@@ -1271,80 +1314,80 @@ async function kvStoreEntryInterfaceTests() {
     configurable: true,
     value: KVStoreEntry.prototype.arrayBuffer,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'arrayBuffer')`,
   );
   actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'body');
-  assert(
+  strictEqual(
     actual.enumerable,
     true,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'body').enumerable`,
   );
-  assert(
+  strictEqual(
     actual.configurable,
     true,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'body').configurable`,
   );
-  assert(
+  strictEqual(
     'set' in actual,
     true,
     `'set' in Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'body')`,
   );
-  assert(
+  strictEqual(
     actual.set,
     undefined,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'body').set`,
   );
-  assert(
+  strictEqual(
     typeof actual.get,
     'function',
     `typeof Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'body').get`,
   );
   actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'bodyUsed');
-  assert(
+  strictEqual(
     actual.enumerable,
     true,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'bodyUsed').enumerable`,
   );
-  assert(
+  strictEqual(
     actual.configurable,
     true,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'bodyUsed').configurable`,
   );
-  assert(
+  strictEqual(
     'set' in actual,
     true,
     `'set' in Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'bodyUsed')`,
   );
-  assert(
+  strictEqual(
     actual.set,
     undefined,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'bodyUsed').set`,
   );
-  assert(
+  strictEqual(
     typeof actual.get,
     'function',
     `typeof Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'bodyUsed').get`,
   );
 
-  assert(
+  strictEqual(
     typeof KVStoreEntry.prototype.constructor,
     'function',
     `typeof KVStoreEntry.prototype.constructor`,
   );
-  assert(
+  strictEqual(
     typeof KVStoreEntry.prototype.text,
     'function',
     `typeof KVStoreEntry.prototype.text`,
   );
-  assert(
+  strictEqual(
     typeof KVStoreEntry.prototype.json,
     'function',
     `typeof KVStoreEntry.prototype.json`,
   );
-  assert(
+  strictEqual(
     typeof KVStoreEntry.prototype.arrayBuffer,
     'function',
     `typeof KVStoreEntry.prototype.arrayBuffer`,
@@ -1360,7 +1403,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.constructor, 'length')`,
@@ -1376,7 +1419,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.constructor, 'name')`,
@@ -1392,7 +1435,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.text, 'length')`,
@@ -1408,7 +1451,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.text, 'name')`,
@@ -1424,7 +1467,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.json, 'length')`,
@@ -1440,7 +1483,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.json, 'name')`,
@@ -1456,7 +1499,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.arrayBuffer, 'length')`,
@@ -1472,7 +1515,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.arrayBuffer, 'name')`,
@@ -1482,7 +1525,7 @@ async function kvStoreEntryInterfaceTests() {
 async function kvStoreInterfaceTests() {
   let actual = Reflect.ownKeys(KVStore);
   let expected = ['prototype', 'length', 'name'];
-  assert(actual, expected, `Reflect.ownKeys(KVStore)`);
+  strictEqual(actual, expected, `Reflect.ownKeys(KVStore)`);
 
   actual = Reflect.getOwnPropertyDescriptor(KVStore, 'prototype');
   expected = {
@@ -1491,7 +1534,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: false,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore, 'prototype')`,
@@ -1504,7 +1547,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore, 'length')`,
@@ -1517,11 +1560,15 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(actual, expected, `Reflect.getOwnPropertyDescriptor(KVStore, 'name')`);
+  strictEqual(
+    actual,
+    expected,
+    `Reflect.getOwnPropertyDescriptor(KVStore, 'name')`,
+  );
 
   actual = Reflect.ownKeys(KVStore.prototype);
   expected = ['constructor', 'delete', 'get', 'put'];
-  assert(actual, expected, `Reflect.ownKeys(KVStore.prototype)`);
+  strictEqual(actual, expected, `Reflect.ownKeys(KVStore.prototype)`);
 
   actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'constructor');
   expected = {
@@ -1530,7 +1577,7 @@ async function kvStoreInterfaceTests() {
     configurable: true,
     value: KVStore.prototype.constructor,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'constructor')`,
@@ -1543,7 +1590,7 @@ async function kvStoreInterfaceTests() {
     configurable: true,
     value: KVStore.prototype.delete,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'delete')`,
@@ -1556,7 +1603,7 @@ async function kvStoreInterfaceTests() {
     configurable: true,
     value: KVStore.prototype.get,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'get')`,
@@ -1569,28 +1616,28 @@ async function kvStoreInterfaceTests() {
     configurable: true,
     value: KVStore.prototype.put,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'put')`,
   );
 
-  assert(
+  strictEqual(
     typeof KVStore.prototype.constructor,
     'function',
     `typeof KVStore.prototype.constructor`,
   );
-  assert(
+  strictEqual(
     typeof KVStore.prototype.delete,
     'function',
     `typeof KVStore.prototype.delete`,
   );
-  assert(
+  strictEqual(
     typeof KVStore.prototype.get,
     'function',
     `typeof KVStore.prototype.get`,
   );
-  assert(
+  strictEqual(
     typeof KVStore.prototype.put,
     'function',
     `typeof KVStore.prototype.put`,
@@ -1606,7 +1653,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.constructor, 'length')`,
@@ -1622,7 +1669,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.constructor, 'name')`,
@@ -1635,7 +1682,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.delete, 'length')`,
@@ -1648,7 +1695,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.delete, 'name')`,
@@ -1661,7 +1708,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.get, 'length')`,
@@ -1674,7 +1721,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.get, 'name')`,
@@ -1687,7 +1734,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.put, 'length')`,
@@ -1700,15 +1747,11 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  assert(
+  strictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.put, 'name')`,
   );
-}
-
-function createValidStore() {
-  return new KVStore('example-test-kv-store');
 }
 
 function iteratableToStream(iterable) {

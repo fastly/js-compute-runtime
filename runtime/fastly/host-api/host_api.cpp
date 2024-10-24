@@ -743,6 +743,45 @@ make_fastly_send_error(fastly::fastly_host_http_send_error_detail &send_error_de
   return res;
 }
 
+FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error) {
+  FastlyKVError err;
+  switch (kv_error) {
+  case KV_ERROR_BAD_REQUEST: {
+    err.detail = FastlyKVError::detail::bad_request;
+    break;
+  }
+  case KV_ERROR_INTERNAL_ERROR: {
+    err.detail = FastlyKVError::detail::internal_error;
+    break;
+  }
+  case KV_ERROR_NOT_FOUND: {
+    err.detail = FastlyKVError::detail::not_found;
+    break;
+  }
+  case KV_ERROR_OK: {
+    err.detail = FastlyKVError::detail::ok;
+    break;
+  }
+  case KV_ERROR_PAYLOAD_TOO_LARGE: {
+    err.detail = FastlyKVError::detail::payload_too_large;
+    break;
+  }
+  case KV_ERROR_PRECONDITION_FAILED: {
+    err.detail = FastlyKVError::detail::precondition_failed;
+    break;
+  }
+  case KV_ERROR_TOO_MANY_REQUESTS: {
+    err.detail = FastlyKVError::detail::too_many_requests;
+    break;
+  }
+  case KV_ERROR_UNINITIALIZED: {
+    err.detail = FastlyKVError::detail::uninitialized;
+    break;
+  }
+  }
+  return err;
+}
+
 } // namespace
 
 Result<HttpBody> HttpBody::make() {
@@ -2455,6 +2494,35 @@ Result<uint64_t> CacheHandle::get_hits() {
   return res;
 }
 
+const std::optional<std::string> FastlyKVError::message() const {
+  switch (this->detail) {
+  /// The kv-error-detail struct has not been populated.
+  case uninitialized:
+    return "Uninitialized.";
+  /// There was no kv error.
+  case ok:
+    return std::nullopt;
+  /// Bad request.
+  case bad_request:
+    return "Bad request.";
+  /// KV store entry not found.
+  case not_found:
+    return "Not found.";
+  /// Invalid state for operation.
+  case precondition_failed:
+    return "Precondition failed.";
+  /// Buffer size issues.
+  case payload_too_large:
+    return "Payload too large.";
+  /// Oh no.
+  case internal_error:
+    return "Internal error.";
+  /// Rate limiting
+  case too_many_requests:
+    return "Too many requests.";
+  };
+}
+
 const std::optional<std::string> FastlySendError::message() const {
   switch (this->tag) {
   /// The send-error-detail struct has not been populated.
@@ -3077,6 +3145,64 @@ Result<KVStore> KVStore::open(std::string_view name) {
     res.emplace_err(err);
   } else {
     res.emplace(ret);
+  }
+
+  return res;
+}
+
+Result<KVStorePendingList::Handle> KVStore::list(std::optional<string_view> cursor,
+                                                 std::optional<uint32_t> limit,
+                                                 std::optional<string_view> prefix, bool eventual) {
+  Result<KVStorePendingList::Handle> res;
+
+  fastly::KVListOptions list_options{eventual ? KV_LIST_MODE_EVENTUAL : KV_LIST_MODE_STRONG};
+
+  uint32_t options_mask = 0;
+  if (cursor.has_value()) {
+    options_mask |= KV_LIST_CONFIG_CURSOR;
+    list_options.cursor = reinterpret_cast<const uint8_t *>(cursor.value().data());
+    list_options.cursor_len = cursor.value().length();
+  }
+  if (limit.has_value()) {
+    options_mask |= KV_LIST_CONFIG_LIMIT;
+    list_options.limit = limit.value();
+  }
+  if (prefix.has_value()) {
+    options_mask |= KV_LIST_CONFIG_PREFIX;
+    list_options.prefix = reinterpret_cast<const uint8_t *>(prefix.value().data());
+    list_options.prefix_len = prefix.value().length();
+  }
+
+  KVStore::Handle ret;
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::kv_store_list(this->handle, options_mask, &list_options, &ret),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    fprintf(stderr, "GOT LOOKUP HANDLE %d\n", ret);
+    res.emplace(ret);
+  }
+  return res;
+}
+
+FastlyResult<HttpBody, FastlyKVError> KVStorePendingList::wait() {
+  FastlyResult<HttpBody, FastlyKVError> res;
+
+  fastly::fastly_host_error err;
+  HttpBody body{};
+
+  uint32_t gen_out;
+  fastly::fastly_kv_error kv_err;
+  uint8_t *metadata_buf = reinterpret_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
+  size_t metadata_nwritten;
+
+  if (!convert_result(fastly::kv_store_lookup_wait(this->handle, &body.handle, metadata_buf,
+                                                   HOSTCALL_BUFFER_LEN, &metadata_nwritten,
+                                                   &gen_out, &kv_err),
+                      &err)) {
+    res.emplace_err(make_fastly_kv_error(kv_err));
+  } else {
+    res.emplace(body);
   }
 
   return res;

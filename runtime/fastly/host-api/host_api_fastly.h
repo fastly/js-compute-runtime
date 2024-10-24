@@ -260,6 +260,7 @@ public:
     too_many_requests,
   };
 
+  detail detail;
   const std::optional<std::string> message() const;
 };
 
@@ -355,7 +356,7 @@ struct TlsVersion {
   uint8_t value = 0;
 
   explicit TlsVersion(uint8_t raw);
-  explicit TlsVersion(){};
+  explicit TlsVersion() {};
 
   uint8_t get_version() const;
   double get_version_number() const;
@@ -1006,7 +1007,7 @@ public:
   explicit KVStorePendingList(FastlyAsyncTask async) : handle{async.handle()} {}
 
   /// Block until the response is ready.
-  api::FastlyResult<Void, FastlyKVError> wait();
+  api::FastlyResult<HttpBody, FastlyKVError> wait();
 
   /// Fetch the handle for this pending request.
   FastlyAsyncTask::Handle async_handle() const;
@@ -1038,7 +1039,10 @@ public:
                                               std::optional<uint32_t> if_generation_match,
                                               std::optional<uint32_t> ttl);
   Result<KVStorePendingDelete::Handle> delete_(std::string_view key);
-  Result<KVStorePendingList::Handle> list();
+  // cursor is base64 encoding of the last key
+  Result<KVStorePendingList::Handle> list(std::optional<string_view> cursor,
+                                          std::optional<uint32_t> limit,
+                                          std::optional<string_view> prefix, bool eventual);
 
   Result<Void> insert(std::string_view name, HttpBody body);
 };

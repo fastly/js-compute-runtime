@@ -68,6 +68,7 @@ MSG_DEF(JSMSG_KV_STORE_KEY_ACME,                               0, JSEXN_TYPEERR,
 MSG_DEF(JSMSG_KV_STORE_KEY_RELATIVE,                           0, JSEXN_TYPEERR, "KVStore key can not be '.' or '..'")
 MSG_DEF(JSMSG_KV_STORE_PUT_CONTENT_STREAM,                     0, JSEXN_TYPEERR, "Content-provided streams are not yet supported for streaming into KVStore")
 MSG_DEF(JSMSG_KV_STORE_PUT_OVER_30_MB,                         0, JSEXN_TYPEERR, "KVStore value can not be more than 30 Megabytes in size")
+MSG_DEF(JSMSG_KV_STORE_LIST_ERROR,                             1, JSEXN_TYPEERR, "KVStore list: {0}")
 MSG_DEF(JSMSG_SECRET_STORE_DOES_NOT_EXIST,                     1, JSEXN_TYPEERR, "SecretStore constructor: No SecretStore named '{0}' exists")
 MSG_DEF(JSMSG_SECRET_STORE_KEY_EMPTY,                          0, JSEXN_TYPEERR, "SecretStore key can not be an empty string")
 MSG_DEF(JSMSG_SECRET_STORE_KEY_TOO_LONG,                       0, JSEXN_TYPEERR, "SecretStore key can not be more than 255 characters")

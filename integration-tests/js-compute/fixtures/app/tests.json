@@ -1080,6 +1080,7 @@
     "environments": ["compute"]
   },
   "GET /includeBytes": {},
+  "GET /kv-store-e2e/list": {},
   "GET /kv-store/exposed-as-global": {},
   "GET /kv-store/interface": {},
   "GET /kv-store/constructor/called-as-regular-function": {},
