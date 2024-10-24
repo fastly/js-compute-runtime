@@ -14,6 +14,7 @@ import { routes, isRunningLocally } from './routes.js';
     const store = new KVStore('example-test-kv-store');
     await store.put('a', 'b');
     await store.put('c', 'd');
+    console.log(await store.get('c'));
     const list = await store.list();
     strictEqual(list, 'b');
   });

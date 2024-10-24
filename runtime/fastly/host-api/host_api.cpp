@@ -3179,7 +3179,6 @@ Result<KVStorePendingList::Handle> KVStore::list(std::optional<string_view> curs
                       &err)) {
     res.emplace_err(err);
   } else {
-    fprintf(stderr, "GOT LOOKUP HANDLE %d\n", ret);
     res.emplace(ret);
   }
   return res;
@@ -3207,6 +3206,75 @@ FastlyResult<HttpBody, FastlyKVError> KVStorePendingList::wait() {
 
   return res;
 }
+
+// Result<KVStorePendingLookup::Handle> KVStore::lookup(std::string_view key) {}
+
+Result<KVStorePendingInsert::Handle> KVStore::insert(std::string_view key, HttpBody body,
+                                                     std::optional<InsertMode> mode,
+                                                     std::optional<uint32_t> if_generation_match,
+                                                     std::optional<HostBytes *> metadata,
+                                                     std::optional<uint32_t> ttl) {
+  Result<KVStorePendingInsert::Handle> res;
+  fastly::KVInsertOptions insert_options{};
+
+  uint32_t options_mask = 0;
+  if (mode.has_value()) {
+    switch (mode.value()) {
+    case InsertMode::add: {
+      options_mask |= KV_INSERT_MODE_ADD;
+      break;
+    }
+    case InsertMode::append: {
+      options_mask |= KV_INSERT_MODE_APPEND;
+      break;
+    }
+    case InsertMode::overwrite: {
+      options_mask |= KV_INSERT_MODE_OVERWRITE;
+      break;
+    }
+    case InsertMode::prepend: {
+      options_mask |= KV_INSERT_MODE_PREPEND;
+      break;
+    }
+    }
+  }
+  if (metadata.has_value()) {
+    options_mask |= KV_INSERT_CONFIG_METADATA;
+    insert_options.metadata_len = metadata.value()->size();
+    insert_options.metadata = metadata.value()->begin();
+  }
+  if (if_generation_match.has_value()) {
+    options_mask |= KV_INSERT_CONFIG_IF_GENERATION_MATCH;
+    insert_options.if_generation_match = if_generation_match.value();
+  }
+  if (ttl.has_value()) {
+    options_mask |= KV_INSERT_CONFIG_TIME_TO_LIVE_SEC;
+    insert_options.time_to_live_sec = ttl.value();
+  }
+
+  KVStore::Handle ret;
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::kv_store_insert(this->handle, key.data(), key.length(), body.handle,
+                                              options_mask, &insert_options, &ret),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+  return res;
+}
+
+FastlyResult<Void, FastlyKVError> KVStorePendingInsert::wait() {
+  FastlyResult<Void, FastlyKVError> res;
+  fastly::fastly_host_error err;
+  fastly::fastly_kv_error kv_err;
+  if (!convert_result(fastly::kv_store_insert_wait(this->handle, &kv_err), &err)) {
+    res.emplace_err(make_fastly_kv_error(kv_err));
+  }
+  return res;
+}
+
+// Result<KVStorePendingDelete::Handle> KVStore::delete_(std::string_view key) {}
 
 // Result<std::optional<HttpBody>> KVStore::lookup(std::string_view name) {
 //   Result<std::optional<HttpBody>> res;

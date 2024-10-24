@@ -1037,14 +1037,13 @@ public:
   Result<KVStorePendingInsert::Handle> insert(std::string_view key, HttpBody body,
                                               std::optional<InsertMode> mode,
                                               std::optional<uint32_t> if_generation_match,
+                                              std::optional<HostBytes *> metadata,
                                               std::optional<uint32_t> ttl);
   Result<KVStorePendingDelete::Handle> delete_(std::string_view key);
   // cursor is base64 encoding of the last key
   Result<KVStorePendingList::Handle> list(std::optional<string_view> cursor,
                                           std::optional<uint32_t> limit,
                                           std::optional<string_view> prefix, bool eventual);
-
-  Result<Void> insert(std::string_view name, HttpBody body);
 };
 
 class Compute final {

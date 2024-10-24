@@ -427,10 +427,22 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    auto insert_res = kv_store_handle(self).insert(key_chars, body);
+    auto insert_res = kv_store(self).insert(key_chars, body, std::nullopt, std::nullopt,
+                                            std::nullopt, std::nullopt);
     if (auto *err = insert_res.to_err()) {
       // Ensure that we throw an exception for all unexpected host errors.
       HANDLE_ERROR(cx, *err);
+      return RejectPromiseWithPendingError(cx, result_promise);
+    }
+
+    host_api::KVStorePendingInsert pending_insert(insert_res.unwrap());
+
+    auto res = pending_insert.wait();
+    if (auto *err = res.to_err()) {
+      std::string message =
+          std::move(err->message()).value_or("when attempting to fetch resource.");
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_LIST_ERROR,
+                                message.c_str());
       return RejectPromiseWithPendingError(cx, result_promise);
     }
 
