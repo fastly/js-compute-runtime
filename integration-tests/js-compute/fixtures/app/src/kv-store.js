@@ -1592,7 +1592,7 @@ async function kvStoreInterfaceTests() {
   );
 
   actual = Reflect.ownKeys(KVStore.prototype);
-  expected = ['constructor', 'delete', 'get', 'put'];
+  expected = ['constructor', 'delete', 'get', 'put', 'list'];
   strictEqual(actual, expected, `Reflect.ownKeys(KVStore.prototype)`);
 
   actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'constructor');
