@@ -4,6 +4,7 @@ import {
   assertThrows,
   assertRejects,
   assertResolves,
+  deepStrictEqual,
 } from './assertions.js';
 import { KVStore } from 'fastly:kv-store';
 import { routes, isRunningLocally } from './routes.js';
@@ -13,11 +14,33 @@ import { routes, isRunningLocally } from './routes.js';
   routes.set('/kv-store-e2e/list', async () => {
     const store = new KVStore('example-test-kv-store');
     await store.put('a', 'b');
-    await store.put('c', 'd');
-    const cEntry = await store.get('c');
+    for (let i = 0; i < 100; i++) {
+      await store.put('c' + i, 'd');
+    }
+    const cEntry = await store.get('c1');
     strictEqual(await cEntry.text(), 'd');
-    const list = await store.list();
-    deepStrictEqual(list, ['a', 'c', 'placeholder']);
+
+    assertThrows(() => {
+      store.list({ limit: 'booooo' });
+    }, TypeError);
+
+    assertThrows(() => {
+      store.list({ limit: 5.5 });
+    }, TypeError);
+
+    const list = await store.list({ limit: 10, prefix: 'c' });
+    deepStrictEqual(list, [
+      'c0',
+      'c1',
+      'c10',
+      'c11',
+      'c12',
+      'c13',
+      'c14',
+      'c15',
+      'c16',
+      'c17',
+    ]);
   });
 }
 

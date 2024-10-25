@@ -100,7 +100,7 @@ declare module 'fastly:kv-store' {
       /**
        * Do not wait to sync the key list, and instead immediately return the current cached key list.
        */
-      eventual?: boolean;
+      noSync?: boolean;
       /**
        * String prefix for keys to list.
        */
@@ -109,10 +109,6 @@ declare module 'fastly:kv-store' {
        * Limit the number of keys provided per listing.
        */
       limit?: number;
-      /**
-       * Custom from key to provide when listing.
-       */
-      from?: string;
     }): AsyncIterator<string[]>;
   }
 

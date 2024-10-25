@@ -14,6 +14,7 @@
 #include "js/ArrayBuffer.h"
 #include "js/Stream.h"
 
+#include "../../../StarlingMonkey/builtins/web/base64.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../../../StarlingMonkey/builtins/web/url.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
@@ -496,35 +497,90 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool KVStore::list(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  if (args.length() > 0) {
-    JS::RootedValue prefix(cx, args.get(0));
-    if (!prefix.isString()) {
+  if (!args.get(0).isObject()) {
+    api::throw_error(cx, api::Errors::TypeError, "KVStore.list", "options", "be an object");
+    return false;
+  }
+
+  JS::RootedObject options(cx, &args.get(0).toObject());
+
+  JS::RootedValue limit_val(cx);
+  if (!JS_GetProperty(cx, options, "limit", &limit_val)) {
+    return false;
+  }
+
+  std::optional<uint32_t> limit = std::nullopt;
+  if (!limit_val.isNullOrUndefined()) {
+    if (limit_val.isNumber()) {
+      if (limit_val.isDouble()) {
+        double limit_double = limit_val.toDouble();
+        if (std::floor(limit_double) == limit_double) {
+          limit.emplace(limit_double);
+        }
+      } else if (limit_val.isInt32()) {
+        limit.emplace(limit_val.toInt32());
+      }
+    }
+    if (!limit.has_value()) {
+      api::throw_error(cx, api::Errors::TypeError, "KVStore.list", "limit", "be an integer");
+      return false;
+    }
+  }
+
+  std::optional<std::string_view> prefix = std::nullopt;
+  host_api::HostString prefix_str;
+
+  JS::RootedValue prefix_val(cx);
+  if (!JS_GetProperty(cx, options, "prefix", &prefix_val)) {
+    return false;
+  }
+  if (!prefix_val.isNullOrUndefined()) {
+    if (!prefix_val.isString()) {
       api::throw_error(cx, api::Errors::TypeError, "KVStore.list", "prefix", "be a string");
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
-    auto prefix_chars = core::encode(cx, prefix);
-    if (!prefix_chars) {
+    prefix_str = core::encode(cx, prefix_val);
+    if (!prefix_str) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
+    prefix = prefix_str;
   }
 
-  std::optional<uint32_t> limit;
-
-  if (args.length() > 1) {
-    JS::RootedValue limit_val(cx, args.get(1));
-    if (limit_val.isDouble()) {
-      double limit_double = limit_val.toDouble();
-      double limit_rounded;
-      modf(limit_double, &limit_rounded);
-      limit = limit_rounded;
-    }
-    if (!limit_val.isNumber()) {
-      api::throw_error(cx, api::Errors::TypeError, "KVStore.list", "limit", "be an integer");
+  bool no_sync = false;
+  JS::RootedValue no_sync_val(cx);
+  if (!JS_GetProperty(cx, options, "noSync", &no_sync_val)) {
+    return false;
+  }
+  if (!no_sync_val.isNullOrUndefined()) {
+    if (!no_sync_val.isBoolean()) {
+      api::throw_error(cx, api::Errors::TypeError, "KVStore.list", "noSync", "be a boolean");
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
+    no_sync = no_sync_val.toBoolean();
   }
 
-  auto res = kv_store(self).list(std::nullopt, limit, std::nullopt, false);
+  std::string cursor_64;
+  std::optional<std::string_view> cursor = std::nullopt;
+  JS::RootedValue from_key(cx);
+  if (!JS_GetProperty(cx, options, "fromKey", &from_key)) {
+    return false;
+  }
+  if (!from_key.isNullOrUndefined()) {
+    if (!from_key.isString()) {
+      api::throw_error(cx, api::Errors::TypeError, "KVStore.list", "fromKey", "be a string");
+      return ReturnPromiseRejectedWithPendingError(cx, args);
+    }
+    auto byteStringResult = builtins::web::base64::valueToJSByteString(cx, from_key);
+    if (byteStringResult.isErr()) {
+      return false;
+    }
+    auto byteString = byteStringResult.unwrap();
+    cursor_64 = builtins::web::base64::forgivingBase64Encode(
+        byteString, builtins::web::base64::base64EncodeTable);
+    cursor.emplace(cursor_64);
+  }
+
+  auto res = kv_store(self).list(cursor, limit, prefix, no_sync);
   if (auto *err = res.to_err()) {
     // Ensure that we throw an exception for all unexpected host errors.
     HANDLE_ERROR(cx, *err);
