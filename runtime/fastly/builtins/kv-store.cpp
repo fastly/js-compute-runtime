@@ -20,6 +20,7 @@
 #include "../host-api/host_api_fastly.h"
 #include "./fastly.h"
 #include "builtin.h"
+#include "js/JSON.h"
 #include "kv-store.h"
 
 using builtins::web::streams::NativeStreamSource;
@@ -118,11 +119,6 @@ JSObject *KVStoreEntry::create(JSContext *cx, host_api::HttpBody body_handle) {
 
 namespace {
 
-host_api::ObjectStore kv_store_handle(JSObject *obj) {
-  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(KVStore::Slots::KVStore));
-  return host_api::ObjectStore(val.toInt32());
-}
-
 host_api::KVStore kv_store(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(KVStore::Slots::KVStore));
   return host_api::KVStore(val.toInt32());
@@ -188,6 +184,9 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
   return true;
 }
 
+constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
+constexpr size_t HANDLE_READ_BUFFER_SIZE = 500000;
+
 bool process_pending_kv_store_list(JSContext *cx, host_api::KVStorePendingList::Handle handle,
                                    JS::HandleObject context, JS::HandleObject promise) {
   host_api::KVStorePendingList pending_list(handle);
@@ -200,23 +199,56 @@ bool process_pending_kv_store_list(JSContext *cx, host_api::KVStorePendingList::
     return RejectPromiseWithPendingError(cx, promise);
   }
 
-  JS::ResolvePromise(cx, promise, JS::UndefinedHandleValue);
-  return true;
+  size_t buf_len = 0;
+  char *buf = static_cast<char *>(malloc(HANDLE_READ_BUFFER_SIZE));
+  do {
+    host_api::Result<size_t> chunk =
+        res.unwrap().read_into(reinterpret_cast<uint8_t *>(buf + buf_len), HANDLE_READ_CHUNK_SIZE);
+    if (auto *err = chunk.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    size_t len = chunk.unwrap();
+    if (len == 0) {
+      buf = static_cast<char *>(realloc(buf, buf_len));
+      break;
+    }
+    buf_len += len;
+    if (buf_len > HANDLE_READ_BUFFER_SIZE) {
+      JS_ReportErrorLatin1(cx, "Buffer error: Buffer too large.");
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+  } while (true);
+  JS::RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf, buf_len)));
+  if (!str) {
+    return false;
+  }
+  JS::RootedValue str_val(cx, JS::StringValue(str));
+  JS::RootedValue json(cx);
+  if (!JS_ParseJSON(cx, str, &json)) {
+    return false;
+  }
+  if (!json.isObject()) {
+    JS_ReportErrorLatin1(cx, "Bad data.");
+    return false;
+  }
+  JS::RootedValue list(cx);
+  JS::RootedObject json_obj(cx, &json.toObject());
+  if (!JS_GetProperty(cx, json_obj, "data", &list)) {
+    return false;
+  }
+  return JS::ResolvePromise(cx, promise, list);
 }
 
-bool process_pending_kv_store_delete(JSContext *cx,
-                                     host_api::ObjectStorePendingDelete::Handle handle,
+bool process_pending_kv_store_delete(JSContext *cx, host_api::KVStorePendingDelete::Handle handle,
                                      JS::HandleObject context, JS::HandleObject promise) {
-  host_api::ObjectStorePendingDelete pending_delete(handle);
+  host_api::KVStorePendingDelete pending_delete(handle);
 
   auto res = pending_delete.wait();
   if (auto *err = res.to_err()) {
-    if (host_api::error_is_invalid_argument(*err)) {
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_KV_STORE_DELETE_KEY_DOES_NOT_EXIST);
-    } else {
-      HANDLE_ERROR(cx, *err);
-    }
+    std::string message = std::move(err->message()).value_or("when attempting to fetch resource.");
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_DELETE_ERROR,
+                              message.c_str());
     return RejectPromiseWithPendingError(cx, promise);
   }
 
@@ -224,27 +256,29 @@ bool process_pending_kv_store_delete(JSContext *cx,
   return true;
 }
 
-bool process_pending_kv_store_lookup(JSContext *cx,
-                                     host_api::ObjectStorePendingLookup::Handle handle,
+bool process_pending_kv_store_lookup(JSContext *cx, host_api::KVStorePendingLookup::Handle handle,
                                      JS::HandleObject context, JS::HandleObject promise) {
-  host_api::ObjectStorePendingLookup pending_lookup(handle);
+  host_api::KVStorePendingLookup pending_lookup(handle);
 
   auto res = pending_lookup.wait();
 
   if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
+    std::string message = std::move(err->message()).value_or("when attempting to fetch resource.");
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_LOOKUP_ERROR,
+                              message.c_str());
     return RejectPromiseWithPendingError(cx, promise);
   }
 
-  auto ret = res.unwrap();
-
   // When no entry is found, we are going to resolve the Promise with `null`.
-  if (!ret.has_value()) {
+  if (!res.unwrap().has_value()) {
     JS::RootedValue result(cx);
     result.setNull();
     JS::ResolvePromise(cx, promise, result);
   } else {
-    JS::RootedObject entry(cx, KVStoreEntry::create(cx, ret.value()));
+    host_api::HttpBody body = std::get<0>(res.unwrap().value());
+    // host_api::HostBytes metadata = std::move(std::get<1>(res.unwrap()));
+    // uint32_t gen = std::get<2>(res.unwrap());
+    JS::RootedObject entry(cx, KVStoreEntry::create(cx, body));
     if (!entry) {
       return false;
     }
@@ -278,7 +312,7 @@ bool KVStore::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  auto res = kv_store_handle(self).delete_async(key_chars);
+  auto res = kv_store(self).delete_(key_chars);
 
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -313,7 +347,7 @@ bool KVStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  auto res = kv_store_handle(self).lookup_async(key_chars);
+  auto res = kv_store(self).lookup(key_chars);
 
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -376,7 +410,8 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       JS::RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
       auto body = RequestOrResponse::body_handle(source_owner);
 
-      auto res = kv_store_handle(self).insert(key_chars, body);
+      auto res = kv_store(self).insert(key_chars, body, std::nullopt, std::nullopt, std::nullopt,
+                                       std::nullopt);
       if (auto *err = res.to_err()) {
         HANDLE_ERROR(cx, *err);
         return ReturnPromiseRejectedWithPendingError(cx, args);

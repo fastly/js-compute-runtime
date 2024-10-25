@@ -286,6 +286,9 @@ public:
   /// Read a chunk from this handle.
   Result<HostString> read(uint32_t chunk_size) const;
 
+  /// Read a chunk from this handle in to the specified buffer.
+  Result<size_t> read_into(uint8_t *ptr, size_t chunk_size) const;
+
   /// Write a chunk to the front of this handle.
   Result<uint32_t> write_front(const uint8_t *bytes, size_t len) const;
 
@@ -356,7 +359,7 @@ struct TlsVersion {
   uint8_t value = 0;
 
   explicit TlsVersion(uint8_t raw);
-  explicit TlsVersion() {};
+  explicit TlsVersion(){};
 
   uint8_t get_version() const;
   double get_version_number() const;
@@ -950,7 +953,7 @@ public:
   explicit KVStorePendingLookup(FastlyAsyncTask async) : handle{async.handle()} {}
 
   /// Block until the response is ready.
-  api::FastlyResult<HttpBody, FastlyKVError> wait();
+  api::FastlyResult<std::optional<std::tuple<HttpBody, HostBytes, uint32_t>>, FastlyKVError> wait();
 
   /// Fetch the handle for this pending request.
   FastlyAsyncTask::Handle async_handle() const;

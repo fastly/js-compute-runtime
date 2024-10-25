@@ -1,4 +1,4 @@
-/* globals KVStoreEntry */
+/// <reference path="../../../../../types/index.d.ts" />
 import {
   strictEqual,
   assertThrows,
@@ -14,9 +14,10 @@ import { routes, isRunningLocally } from './routes.js';
     const store = new KVStore('example-test-kv-store');
     await store.put('a', 'b');
     await store.put('c', 'd');
-    console.log(await store.get('c'));
+    const cEntry = await store.get('c');
+    strictEqual(await cEntry.text(), 'd');
     const list = await store.list();
-    strictEqual(list, 'b');
+    deepStrictEqual(list, ['a', 'c', 'placeholder']);
   });
 }
 

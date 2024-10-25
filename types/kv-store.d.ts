@@ -77,10 +77,18 @@ declare module 'fastly:kv-store' {
       key: string,
       value: BodyInit,
       options?: {
+        /**
+         * Optional metadata to be associated with the entry.
+         */
         metadata?: ArrayBufferView | ArrayBuffer | string;
+        /**
+         * TTL for the entry, defaults to 0.
+         */
         ttl?: number;
+        /**
+         * Insert mode, defaults to 'overwrite'.
+         */
         mode?: 'overwrite' | 'add' | 'append' | 'prepend';
-        ifGenerationMatch?: number;
       },
     ): Promise<undefined>;
 
@@ -90,19 +98,22 @@ declare module 'fastly:kv-store' {
      */
     list(options?: {
       /**
-       * Do not wait on reindexing the key list, and instead immediately return the current key list
+       * Do not wait to sync the key list, and instead immediately return the current cached key list.
        */
       eventual?: boolean;
       /**
-       * String prefix for keys to list
+       * String prefix for keys to list.
        */
       prefix?: string;
       /**
-       * Limit the number of keys provided per listing
+       * Limit the number of keys provided per listing.
        */
       limit?: number;
-      // {"data":["key0"],"meta":{"limit":1,"next_cursor":"CgRrZXkw"}}
-    }): {}[];
+      /**
+       * Custom from key to provide when listing.
+       */
+      from?: string;
+    }): AsyncIterator<string[]>;
   }
 
   /**
@@ -144,10 +155,5 @@ declare module 'fastly:kv-store' {
      * Metadata string associated with this entry
      */
     metadataText(): string;
-
-    /**
-     * The generation of the entry
-     */
-    generation: number;
   }
 }
