@@ -1,6 +1,6 @@
 {
   "name": "@fastly/js-compute",
-  "version": "3.23.0",
+  "version": "3.25.0",
   "license": "Apache-2.0",
   "main": "js-compute-runtime-cli.js",
   "types": "types/index.d.ts",
@@ -38,7 +38,7 @@
     "build:weval": "./runtime/fastly/build-release-weval.sh",
     "build:debug:info": "./runtime/fastly/build-debug.sh --keep-debug-info",
     "format-changelog": "node ci/format-changelog.js CHANGELOG.md",
-    "format": "prettier --write *.js src/*.js integration-tests",
+    "format": "prettier --write *.js src/*.js integration-tests types test-d",
     "format:check": "prettier --check *.js src/*.js integration-tests"
   },
   "devDependencies": {
@@ -54,13 +54,13 @@
     "unified": "^11.0.5"
   },
   "dependencies": {
-    "@bytecodealliance/jco": "^1.5.0",
+    "@bytecodealliance/jco": "^1.7.0",
     "@bytecodealliance/wizer": "^7.0.5",
     "@bytecodealliance/weval": "^0.3.2",
-    "acorn": "^8.12.1",
-    "acorn-walk": "^8.3.3",
-    "esbuild": "^0.23.1",
-    "magic-string": "^0.30.11",
-    "regexpu-core": "^6.0.0"
+    "acorn": "^8.13.0",
+    "acorn-walk": "^8.3.4",
+    "esbuild": "^0.24.0",
+    "magic-string": "^0.30.12",
+    "regexpu-core": "^6.1.1"
   }
 }

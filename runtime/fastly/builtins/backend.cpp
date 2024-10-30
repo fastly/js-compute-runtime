@@ -1259,12 +1259,12 @@ JSString *Backend::name(JSContext *cx, JSObject *self) {
   return JS_NewStringCopyZ(cx, backend->name().begin());
 }
 
-bool Backend::to_string(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Backend::name_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
   auto backend = get_backend(cx, self);
   if (!backend) {
-    args.rval().setMagic(JSWhyMagic::JS_UNINITIALIZED_LEXICAL);
+    args.rval().setUndefined();
     return true;
   }
   auto &name = backend->name();
@@ -1296,6 +1296,25 @@ bool Backend::exists(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Backend::get_from_valid_name(JSContext *cx, host_api::HostString name,
+                                  JS::MutableHandleValue out) {
+  auto backend_instance = JS_NewObjectWithGivenProto(cx, &Backend::class_, Backend::proto_obj);
+  if (!backend_instance) {
+    return false;
+  }
+  JS::RootedValue backend_val(cx, JS::ObjectValue(*backend_instance));
+  JS::RootedObject backend(cx, backend_instance);
+  if (!backend) {
+    return false;
+  }
+
+  auto host_backend = new host_api::Backend(std::move(name));
+  JS::SetReservedSlot(backend, Backend::Slots::HostBackend, JS::PrivateValue(host_backend));
+
+  out.setObject(*backend);
+  return true;
+}
+
 bool Backend::from_name(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "Backend.fromName", 1)) {
@@ -1319,22 +1338,7 @@ bool Backend::from_name(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto backend_instance = JS_NewObjectWithGivenProto(cx, &Backend::class_, Backend::proto_obj);
-  if (!backend_instance) {
-    return false;
-  }
-  JS::RootedValue backend_val(cx, JS::ObjectValue(*backend_instance));
-  JS::RootedObject backend(cx, backend_instance);
-  if (!backend) {
-    return false;
-  }
-
-  JS::RootedValue name_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
-  if (!set_backend(cx, backend, name_val)) {
-    return false;
-  }
-
-  args.rval().setObject(*backend);
+  get_from_valid_name(cx, std::move(name), args.rval());
   return true;
 }
 
@@ -1658,10 +1662,11 @@ const JSFunctionSpec Backend::static_methods[] = {
     JS_FN("exists", exists, 1, JSPROP_ENUMERATE), JS_FN("fromName", from_name, 1, JSPROP_ENUMERATE),
     JS_FN("health", health_for_name, 1, JSPROP_ENUMERATE), JS_FS_END};
 const JSPropertySpec Backend::static_properties[] = {JS_PS_END};
-const JSFunctionSpec Backend::methods[] = {JS_FN("toString", to_string, 0, JSPROP_ENUMERATE),
-                                           JS_FN("toName", to_string, 0, JSPROP_ENUMERATE),
+const JSFunctionSpec Backend::methods[] = {JS_FN("toString", name_get, 0, JSPROP_ENUMERATE),
+                                           JS_FN("toName", name_get, 0, JSPROP_ENUMERATE),
                                            JS_FS_END};
 const JSPropertySpec Backend::properties[] = {
+    JS_PSG("name", name_get, JSPROP_ENUMERATE),
     JS_PSG("isDynamic", is_dynamic_get, JSPROP_ENUMERATE),
     JS_PSG("target", target_get, JSPROP_ENUMERATE),
     JS_PSG("hostOverride", host_override_get, JSPROP_ENUMERATE),
@@ -1695,6 +1700,9 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   }
   std::string name_str((char *)slice.data, slice.len);
 
+  JS::RootedValue name(cx, JS::StringValue(name_js_str));
+  JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Backend), name);
+
   // Check if we already constructed an implicit dynamic backend for this host.
   bool found;
   JS::RootedValue already_built_backend(cx);
@@ -1706,6 +1714,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
       return nullptr;
     }
     JS::RootedObject backend(cx, &already_built_backend.toObject());
+
     return backend;
   }
 
@@ -1721,7 +1730,6 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
 
   host_api::BackendConfig backend_config = default_backend_config.clone();
 
-  JS::RootedValue name(cx, JS::StringValue(name_js_str));
   auto host_backend = set_backend(cx, backend, name);
   if (!host_backend) {
     return nullptr;
@@ -1743,6 +1751,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
 
   auto use_ssl = origin.rfind("https://", 0) == 0;
   if (use_ssl) {
+    backend_config.use_ssl = true;
     if (!set_sni_hostname(cx, backend_config, name)) {
       return nullptr;
     }
@@ -1751,6 +1760,12 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   auto res = host_api::HttpReq::register_dynamic_backend(host_backend->name(), target_string,
                                                          backend_config);
   if (auto *err = res.to_err()) {
+    if (host_api::error_is_unsupported(*err)) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED_IMPLICIT, target_string.data(),
+                                url_string.data);
+      return nullptr;
+    }
     HANDLE_ERROR(cx, *err);
     return nullptr;
   }
@@ -1814,6 +1829,12 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto res = host_api::HttpReq::register_dynamic_backend(host_backend->name(), target_string,
                                                          backend_config);
   if (auto *err = res.to_err()) {
+    if (host_api::error_is_unsupported(*err)) {
+      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED_EXPLICIT,
+                                target_string_slice.data);
+      return false;
+    }
     HANDLE_ERROR(cx, *err);
     return false;
   }
@@ -1846,6 +1867,29 @@ bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+// TODO: in next major, when global and fastly experimental are deprecated,
+//       make it so that calling twice always throws an already enforced error.
+//       and possibly also don't allow changing the default again.
+bool enforce_explicit_backends(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  auto default_backend_val = args.get(0);
+  if (!default_backend_val.isNullOrUndefined()) {
+    if (!default_backend_val.isString()) {
+      api::throw_error(cx, api::Errors::TypeError, "enforceExplicitBackends", "defaultBackend",
+                       "be undefined or a string");
+      return false;
+    }
+    JS::RootedString backend(cx, JS::ToString(cx, default_backend_val));
+    if (!backend) {
+      return false;
+    }
+    Fastly::defaultBackend = backend;
+  }
+  Fastly::allowDynamicBackends = false;
+  args.rval().setUndefined();
+  return true;
+}
+
 bool install(api::Engine *engine) {
   JS::RootedObject backends(engine->cx(), JS_NewPlainObject(engine->cx()));
   if (!backends) {
@@ -1873,6 +1917,18 @@ bool install(api::Engine *engine) {
                       set_default_backend_config_val)) {
     return false;
   }
+
+  auto enforce_explicit_backends_fn =
+      JS_NewFunction(engine->cx(), &enforce_explicit_backends, 1, 0, "enforceExplicitBackends");
+  RootedObject enforce_explicit_backends_obj(engine->cx(),
+                                             JS_GetFunctionObject(enforce_explicit_backends_fn));
+  RootedValue enforce_explicit_backends_val(engine->cx(),
+                                            JS::ObjectValue(*enforce_explicit_backends_obj));
+  if (!JS_SetProperty(engine->cx(), backend_ns, "enforceExplicitBackends",
+                      enforce_explicit_backends_val)) {
+    return false;
+  }
+
   RootedValue backend_ns_val(engine->cx(), JS::ObjectValue(*backend_ns));
   if (!engine->define_builtin_module("fastly:backend", backend_ns_val)) {
     return false;

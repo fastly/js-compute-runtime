@@ -3,7 +3,7 @@ on:
     branches:
       - main
 env:
-  wasm-tools_version: 1.0.28
+  wasm-tools_version: 1.216.0
 name: release-please
 jobs:
   release:

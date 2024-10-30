@@ -1,7 +1,11 @@
 /// <reference path="../../../../../types/index.d.ts" />
-import { Backend, setDefaultDynamicBackendConfig } from 'fastly:backend';
-import { CacheOverride } from 'fastly:cache-override';
+import {
+  Backend,
+  setDefaultDynamicBackendConfig,
+  enforceExplicitBackends,
+} from 'fastly:backend';
 import { allowDynamicBackends } from 'fastly:experimental';
+import { CacheOverride } from 'fastly:cache-override';
 import {
   assert,
   assertDoesNotThrow,
@@ -51,11 +55,24 @@ routes.set('/backend/timeout', async () => {
       await assertRejects(() => fetch('https://http-me.glitch.me/headers'));
     },
   );
-  routes.set('/implicit-dynamic-backend/dynamic-backends-enabled', async () => {
-    allowDynamicBackends(true);
-    await assertResolves(() => fetch('https://http-me.glitch.me/headers'));
-    await assertResolves(() => fetch('https://www.fastly.com'));
-  });
+  routes.set(
+    '/implicit-dynamic-backend/dynamic-backends-enabled',
+    async (evt) => {
+      allowDynamicBackends(true);
+      strictEqual(evt.request.backend, undefined);
+      strictEqual(new Response('test').backend, undefined);
+      await assertResolves(async () => {
+        const res = await fetch('https://http-me.glitch.me/headers');
+        strictEqual(res.backend.name, 'http-me.glitch.me');
+        strictEqual(res.backend.isSSL, true);
+      });
+      await assertResolves(() => fetch('https://www.fastly.com'));
+      enforceExplicitBackends();
+      await assertRejects(() => fetch('https://www.fastly.com'));
+      enforceExplicitBackends('TheOrigin');
+      await assertResolves(() => fetch('https://www.fastly.com'));
+    },
+  );
   routes.set(
     '/implicit-dynamic-backend/dynamic-backends-enabled-called-twice',
     async () => {
@@ -225,6 +242,7 @@ routes.set('/backend/timeout', async () => {
     actual = Reflect.ownKeys(Backend.prototype);
     expected = [
       'constructor',
+      'name',
       'isDynamic',
       'target',
       'hostOverride',
@@ -2432,6 +2450,9 @@ routes.set('/backend/timeout', async () => {
     {
       const backend = createValidFastlyBackend() ?? validFastlyBackend;
       strictEqual(backend.isDynamic, true, 'isDymamic');
+      strictEqual(backend.name, 'fastly');
+      strictEqual(backend.toString(), 'fastly');
+      strictEqual(backend.toName(), 'fastly');
       strictEqual(backend.target, 'www.fastly.com', 'target');
       strictEqual(backend.hostOverride, 'www.fastly.com', 'override');
       strictEqual(backend.port, 443, 'port');
@@ -2466,6 +2487,9 @@ routes.set('/backend/timeout', async () => {
     {
       const backend = createValidHttpMeBackend() ?? validHttpMeBackend;
       strictEqual(backend.isDynamic, true, 'isDynamic');
+      strictEqual(backend.name, 'http-me');
+      strictEqual(backend.toString(), 'http-me');
+      strictEqual(backend.toName(), 'http-me');
       strictEqual(backend.target, 'http-me.glitch.me', 'target');
       strictEqual(backend.hostOverride, 'http-me.glitch.me', 'hostOverride');
       strictEqual(backend.port, 443, 'port');

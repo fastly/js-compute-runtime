@@ -18,6 +18,7 @@ public:
     Headers,
     URL,
     ManualFramingHeaders,
+    Backend,
     Count,
   };
 
@@ -99,6 +100,8 @@ public:
 
   static bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self,
                        bool create_if_undefined);
+  static bool backend_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
+  static JSString *backend(JSObject *obj);
 };
 
 class Request final : public builtins::BuiltinImpl<Request> {
@@ -132,8 +135,8 @@ public:
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
     URL = static_cast<int>(RequestOrResponse::Slots::URL),
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
-    Backend = static_cast<int>(RequestOrResponse::Slots::Count),
-    Method,
+    Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
+    Method = static_cast<int>(RequestOrResponse::Slots::Count),
     CacheOverride,
     PendingRequest,
     ResponsePromise,
@@ -158,7 +161,6 @@ public:
   static host_api::HttpReq request_handle(JSObject *obj);
   static host_api::HttpPendingReq pending_handle(JSObject *obj);
   static bool is_downstream(JSObject *obj);
-  static JSString *backend(JSObject *obj);
   static const JSFunctionSpec static_methods[];
   static const JSPropertySpec static_properties[];
   static const JSFunctionSpec methods[];
@@ -191,6 +193,7 @@ class Response final : public builtins::BuiltinImpl<Response> {
 
   template <RequestOrResponse::BodyReadResult result_type>
   static bool bodyAll(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool backend_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool body_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
@@ -212,12 +215,12 @@ public:
     BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
+    Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
     IsUpstream = static_cast<int>(RequestOrResponse::Slots::Count),
     Status,
     StatusMessage,
     Redirected,
     IsGripUpgrade,
-    GripBackend,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -232,7 +235,7 @@ public:
 
   static JSObject *create(JSContext *cx, JS::HandleObject response,
                           host_api::HttpResp response_handle, host_api::HttpBody body_handle,
-                          bool is_upstream, bool is_grip_upgrade, JS::UniqueChars backend);
+                          bool is_upstream, bool is_grip_upgrade, JS::HandleString backend);
 
   /**
    * Returns the RequestOrResponse's Headers, reifying it if necessary.
@@ -242,7 +245,7 @@ public:
   static host_api::HttpResp response_handle(JSObject *obj);
   static bool is_upstream(JSObject *obj);
   static bool is_grip_upgrade(JSObject *obj);
-  static const char *grip_backend(JSObject *obj);
+  static host_api::HostString backend_str(JSContext *cx, JSObject *obj);
   static uint16_t status(JSObject *obj);
   static JSString *status_message(JSObject *obj);
   static void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code);

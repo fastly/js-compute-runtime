@@ -31,10 +31,10 @@ public:
   static bool health_for_name(JSContext *cx, unsigned argc, JS::Value *vp);
 
   // prototype methods
-  static bool to_name(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool to_string(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool health(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  // getters
+  static bool name_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool is_dynamic_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool target_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool host_override_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -50,6 +50,9 @@ public:
 
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
   static void finalize(JS::GCContext *gcx, JSObject *obj);
+
+  static bool get_from_valid_name(JSContext *cx, host_api::HostString name,
+                                  JS::MutableHandleValue out);
 };
 
 bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp);

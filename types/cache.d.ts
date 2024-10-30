@@ -1,25 +1,39 @@
-declare module "fastly:cache" {
-
+declare module 'fastly:cache' {
   interface PurgeOptions {
     /**
      * "pop" - This will remove the content from the POP that contains the currently executing instance.
      * "global" - This will remove the content from all of Fastly.
      */
-    scope: "pop" | "global"
+    scope: 'pop' | 'global';
   }
 
   export class SimpleCache {
     static get(key: string): SimpleCacheEntry | null;
     /**
-      * @deprecated Use `SimpleCache.getOrSet` instead.
-      */
+     * @deprecated Use `SimpleCache.getOrSet` instead.
+     */
     static set(key: string, value: BodyInit, ttl: number): undefined;
     /**
-      * @deprecated Use `SimpleCache.getOrSet` instead.
-      */
-    static set(key: string, value: ReadableStream, ttl: number, length: number): undefined;
-    static getOrSet(key: string, set: () => Promise<{value: BodyInit,  ttl: number}>): Promise<SimpleCacheEntry>;
-    static getOrSet(key: string, set: () => Promise<{value: ReadableStream, ttl: number, length: number}>): Promise<SimpleCacheEntry>;
+     * @deprecated Use `SimpleCache.getOrSet` instead.
+     */
+    static set(
+      key: string,
+      value: ReadableStream,
+      ttl: number,
+      length: number,
+    ): undefined;
+    static getOrSet(
+      key: string,
+      set: () => Promise<{ value: BodyInit; ttl: number }>,
+    ): Promise<SimpleCacheEntry>;
+    static getOrSet(
+      key: string,
+      set: () => Promise<{
+        value: ReadableStream;
+        ttl: number;
+        length: number;
+      }>,
+    ): Promise<SimpleCacheEntry>;
     static purge(key: string, options: PurgeOptions): undefined;
   }
 
@@ -48,23 +62,23 @@ declare module "fastly:cache" {
      * A lookup will succeed when there is at least one cached item that matches lookup’s `key`, and all of the lookup’s headers included in the cache items’ `vary` list match the corresponding headers in that cached item.
      * A typical example is a cached HTTP response, where the request had an "Accept-Encoding" header. In that case, the origin server may or may not decide on a given encoding, and whether that same response is suitable for a request with a different (or missing) Accept-Encoding header is determined by whether Accept-Encoding is listed in Vary header in the origin’s response.
      */
-    headers?: HeadersInit,
+    headers?: HeadersInit;
   }
   export interface TransactionInsertOptions {
     /**
      * Sets the “time to live” for the cache item in milliseconds: The time for which the item will be considered fresh.
      */
-    maxAge: number,
+    maxAge: number;
     /**
      * Sets the list of headers that must match when looking up this cached item.
      */
-    vary?: Array<string>,
+    vary?: Array<string>;
     /**
      * Sets the initial age of the cached item, in milliseconds, to be used in freshness calculations.
      *
      * The initial age is 0 by default.
      */
-    initialAge?: number,
+    initialAge?: number;
     /**
      * Sets the stale-while-revalidate period, in milliseconds for the cached item, which is the time for which the item can be safely used despite being considered stale.
      * Having a stale-while-revalidate period provides a signal that the cache should be updated (or its contents otherwise revalidated for freshness) asynchronously, while the stale cached item continues to be used, rather than blocking on updating the cached item.
@@ -72,7 +86,7 @@ declare module "fastly:cache" {
      *
      * The stale-while-revalidate period is 0 by default.
      */
-    staleWhileRevalidate?: number,
+    staleWhileRevalidate?: number;
     /**
      * Sets the surrogate keys that can be used for purging this cached item.
      * Surrogate key purges are the only means to purge specific items from the cache. At least one surrogate key must be set in order to remove an item without performing a purge-all, waiting for the item’s TTL to elapse, or overwriting the item with insert().
@@ -81,17 +95,17 @@ declare module "fastly:cache" {
      * See the Fastly surrogate keys guide for details.
      * https://docs.fastly.com/en/guides/working-with-surrogate-keys
      */
-    surrogateKeys?: Array<string>,
+    surrogateKeys?: Array<string>;
     /**
      * Sets the size of the cached item, in bytes, when known prior to actually providing the bytes.
      * It is preferable to provide a length, if possible.
      * Clients that begin streaming the item’s contents before it is completely provided will see the promised length which allows them to, for example, use content-length instead of transfer-encoding: chunked if the item is used as the body of a Request or Response.
      */
-    length?: number,
+    length?: number;
     /**
      * Sets the user-defined metadata to associate with the cached item.
      */
-    userMetadata?: ArrayBufferView | ArrayBuffer | URLSearchParams | string,
+    userMetadata?: ArrayBufferView | ArrayBuffer | URLSearchParams | string;
     /**
      * Enable or disable PCI/HIPAA-compliant non-volatile caching.
      * By default, this is false.
@@ -99,7 +113,7 @@ declare module "fastly:cache" {
      * See the Fastly PCI-Compliant Caching and Delivery documentation for details.
      * https://docs.fastly.com/products/pci-compliant-caching-and-delivery
      */
-    sensitive?: boolean,
+    sensitive?: boolean;
   }
 
   /**
@@ -132,7 +146,10 @@ declare module "fastly:cache" {
      * @param key A cache key which is a string with a length of up to 8,135 that identify a cached item. The cache key may not uniquely identify an item; headers can be used to augment the key when multiple items are associated with the same key.
      * @param options A set of options to used whilst performing this insertion into the cache.
      */
-    static insert(key: string, options: InsertOptions): import("fastly:body").FastlyBody;
+    static insert(
+      key: string,
+      options: InsertOptions,
+    ): import('fastly:body').FastlyBody;
 
     /**
      * Perform a transactional lookup into the cache, returning a `TransactionCacheEntry` instance.
@@ -150,7 +167,10 @@ declare module "fastly:cache" {
      * @param key A cache key which is a string with a length of up to 8,135 that identify a cached item. The cache key may not uniquely identify an item; headers can be used to augment the key when multiple items are associated with the same key.
      * @param options A set of options to used whilst performing this lookup into the cache.
      */
-    static transactionLookup(key: string, options?: LookupOptions): TransactionCacheEntry;
+    static transactionLookup(
+      key: string,
+      options?: LookupOptions,
+    ): TransactionCacheEntry;
   }
 
   /// The status of this lookup (and potential transaction)
@@ -186,11 +206,11 @@ declare module "fastly:cache" {
     /**
      * The offset from which to start the range.
      */
-    start: number,
+    start: number;
     /**
      * How long the range should be.
      */
-    end: number,
+    end: number;
   }
 
   export class CacheEntry {
@@ -249,17 +269,17 @@ declare module "fastly:cache" {
     /**
      * Sets the “time to live” for the cache item in milliseconds: The time for which the item will be considered fresh.
      */
-    maxAge: number,
+    maxAge: number;
     /**
      * Sets the list of headers that must match when looking up this cached item.
      */
-    vary?: Array<string>,
+    vary?: Array<string>;
     /**
      * Sets the initial age of the cached item, in milliseconds, to be used in freshness calculations.
      *
      * The initial age is 0 by default.
      */
-    initialAge?: number,
+    initialAge?: number;
     /**
      * Sets the stale-while-revalidate period, in milliseconds for the cached item, which is the time for which the item can be safely used despite being considered stale.
      * Having a stale-while-revalidate period provides a signal that the cache should be updated (or its contents otherwise revalidated for freshness) asynchronously, while the stale cached item continues to be used, rather than blocking on updating the cached item.
@@ -267,7 +287,7 @@ declare module "fastly:cache" {
      *
      * The stale-while-revalidate period is 0 by default.
      */
-    staleWhileRevalidate?: number,
+    staleWhileRevalidate?: number;
     /**
      * Sets the surrogate keys that can be used for purging this cached item.
      * Surrogate key purges are the only means to purge specific items from the cache. At least one surrogate key must be set in order to remove an item without performing a purge-all, waiting for the item’s TTL to elapse, or overwriting the item with insert().
@@ -276,17 +296,17 @@ declare module "fastly:cache" {
      * See the Fastly surrogate keys guide for details.
      * https://docs.fastly.com/en/guides/working-with-surrogate-keys
      */
-    surrogateKeys?: Array<string>,
+    surrogateKeys?: Array<string>;
     /**
      * Sets the size of the cached item, in bytes, when known prior to actually providing the bytes.
      * It is preferable to provide a length, if possible.
      * Clients that begin streaming the item’s contents before it is completely provided will see the promised length which allows them to, for example, use content-length instead of transfer-encoding: chunked if the item is used as the body of a Request or Response.
      */
-    length?: number,
+    length?: number;
     /**
      * Sets the user-defined metadata to associate with the cached item.
      */
-    userMetadata?: ArrayBufferView | ArrayBuffer | URLSearchParams | string,
+    userMetadata?: ArrayBufferView | ArrayBuffer | URLSearchParams | string;
   }
 
   export class TransactionCacheEntry extends CacheEntry {
@@ -295,7 +315,7 @@ declare module "fastly:cache" {
      *
      * This method should only be called when `TransactionCacheEntry.state().mustInsertOrUpdate()` is true; otherwise, an error will be thrown when attempting to perform the insertion.
      */
-    insert(options: TransactionInsertOptions): import("fastly:body").FastlyBody;
+    insert(options: TransactionInsertOptions): import('fastly:body').FastlyBody;
 
     /**
      * Perform a transaction cache insertion, returning a `FastlyBody` instance for providing the cached object itself, and a `CacheEntry` instance which can be used to stream out the newly-inserted cache item.
@@ -303,7 +323,9 @@ declare module "fastly:cache" {
      * For the insertion to complete successfully, the object must be written into the returned `FastlyBody` instance, and then `FastlyBody.protoype.close` must be called.
      * If `FastlyBody.prototype.close` does not get called, the insertion is considered incomplete, and any concurrent lookups that may be reading from the object as it is streamed into the cache may encounter a streaming error.
      */
-    insertAndStreamBack(options: TransactionInsertOptions): [import("fastly:body").FastlyBody, CacheEntry];
+    insertAndStreamBack(
+      options: TransactionInsertOptions,
+    ): [import('fastly:body').FastlyBody, CacheEntry];
     /**
      * Perform an update of the cache item’s metadata.
      */

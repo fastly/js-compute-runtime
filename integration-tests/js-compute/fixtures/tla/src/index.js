@@ -3,11 +3,9 @@
 
 import { routes } from './routes.js';
 import { env } from 'fastly:env';
-import { fail } from './assertions.js';
-import './hello-world.js';
 
-// TLA
-await Promise.resolve();
+import './hello-world.js';
+import './hono.js';
 
 addEventListener('fetch', (event) => {
   event.respondWith(app(event));
@@ -22,23 +20,31 @@ async function app(event) {
   console.log(`FASTLY_SERVICE_VERSION: ${FASTLY_SERVICE_VERSION}`);
   const path = new URL(event.request.url).pathname;
   console.log(`path: ${path}`);
-  let res = new Response('Internal Server Error', { status: 500 });
+  let res;
   try {
     const routeHandler = routes.get(path);
     if (routeHandler) {
-      res = await routeHandler(event);
+      res = (await routeHandler(event)) || new Response('ok');
     } else {
-      res = fail(`${path} endpoint does not exist`);
+      return (res = new Response(`${path} endpoint does not exist`, {
+        status: 500,
+      }));
     }
   } catch (error) {
     if (error instanceof Response) {
       res = error;
     } else {
-      res = fail(
-        `The routeHandler for ${path} threw an error: ${error.message || error}` +
-          '\n' +
-          error.stack,
-      );
+      try {
+        return (res = new Response(
+          `The routeHandler for ${path} threw a [${error.constructor?.name ?? error.name}] error: ${error.message || error}` +
+            '\n' +
+            error.stack,
+          { status: 500 },
+        ));
+      } catch (errRes) {
+        console.error('err2', errRes);
+        res = errRes;
+      }
     }
   } finally {
     res.headers.set('fastly_service_version', FASTLY_SERVICE_VERSION);

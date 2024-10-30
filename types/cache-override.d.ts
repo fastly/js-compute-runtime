@@ -1,16 +1,15 @@
-
-declare module "fastly:cache-override" {
+declare module 'fastly:cache-override' {
   /**
    * Configures the caching behavior of a {@linkcode "globals".Response}.
    *
    * Normally, the HTTP Headers on a {@linkcode "globals".Response} would control how the {@linkcode "globals".Response} is cached,
    * but `CacheOverride` can be set on a {@linkcode "globals".Request}, to define custom caching behavior.
-   * 
+   *
    * @example
    * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
-   * In this example we override the cache for all the requests prefixed /static/ to have a long TTL (Time To Live), 
+   * In this example we override the cache for all the requests prefixed /static/ to have a long TTL (Time To Live),
    * and the home page to have a short TTL and a long SWR (Stale While Revalidate).
-   * 
+   *
    * <script type="application/json+fiddle">
    * {
    *   "type": "javascript",
@@ -42,9 +41,9 @@ declare module "fastly:cache-override" {
    * ```js
    * /// <reference types="@fastly/js-compute" />
    * import { CacheOverride } from "fastly:cache-override";
-   * 
-   * // In this example we override the cache for all the requests prefixed /static/ 
-   * // to have a long TTL (Time To Live), and the home page to have a short TTL and 
+   *
+   * // In this example we override the cache for all the requests prefixed /static/
+   * // to have a long TTL (Time To Live), and the home page to have a short TTL and
    * // a long SWR (Stale While Revalidate).
    * async function app (event) {
    *   const path = (new URL(event.request.url)).pathname;
@@ -68,17 +67,17 @@ declare module "fastly:cache-override" {
   class CacheOverride {
     /**
      * @param mode Sets the cache override mode for a request
-     * 
+     *
      * If set to:
      * - "none": Do not override the behavior specified in the origin response’s cache control headers.
      * - "pass": Do not cache the response to this request, regardless of the origin response’s headers.
      * - "override": Override particular cache control settings using a {@linkcode CacheOverride} object.
-     * 
+     *
      * @param [init]
      *
      * @param {number} [init.ttl]
      * Override the caching behavior of this request to use the given Time to Live (TTL), in seconds.
-     * 
+     *
      * @param {number} [init.swr]
      * Override the caching behavior of this request to use the given `stale-while-revalidate` time,
      * in seconds
@@ -89,7 +88,7 @@ declare module "fastly:cache-override" {
      *
      * See the [Fastly surrogate keys guide](https://docs.fastly.com/en/guides/purging-api-cache-with-surrogate-keys)
      * for details.
-     * 
+     *
      * @param {boolean} [init.pci]
      * Override the caching behavior of this request to enable or disable PCI/HIPAA-compliant
      * non-volatile caching.
@@ -101,30 +100,30 @@ declare module "fastly:cache-override" {
      * for details.
      */
     constructor(
-      mode: "none" | "pass" | "override",
+      mode: 'none' | 'pass' | 'override',
       init?: {
-        ttl?: number,
-        swr?: number,
-        surrogateKey?: string,
-        pci?: boolean
-      }
+        ttl?: number;
+        swr?: number;
+        surrogateKey?: string;
+        pci?: boolean;
+      },
     );
 
     /**
      * Sets the cache override mode for a request
-     * 
+     *
      * If set to:
      * - "none": Do not override the behavior specified in the origin response’s cache control headers.
      * - "pass": Do not cache the response to this request, regardless of the origin response’s headers.
      * - "override": Override particular cache control settings using a {@linkcode CacheOverride} object.
      */
-    public mode: "none" | "pass" | "override";
+    public mode: 'none' | 'pass' | 'override';
     /**
      * Override the caching behavior of this request to use the given Time to Live (TTL), in seconds.
      */
     public ttl?: number;
     /**
-      * Override the caching behavior of this request to use the given `stale-while-revalidate` time,
+     * Override the caching behavior of this request to use the given `stale-while-revalidate` time,
      * in seconds
      */
     public swr?: number;
@@ -137,15 +136,15 @@ declare module "fastly:cache-override" {
      */
     public surrogateKey?: string;
     /**
-    * Override the caching behavior of this request to enable or disable PCI/HIPAA-compliant
-    * non-volatile caching.
-    *
-    * By default, this is false, which means the request may not be PCI/HIPAA-compliant. Set it to
-    * true to enable compliant caching.
-    *
-    * See the [Fastly PCI-Compliant Caching and Delivery documentation](https://docs.fastly.com/products/pci-compliant-caching-and-delivery)
-    * for details.
-    */
+     * Override the caching behavior of this request to enable or disable PCI/HIPAA-compliant
+     * non-volatile caching.
+     *
+     * By default, this is false, which means the request may not be PCI/HIPAA-compliant. Set it to
+     * true to enable compliant caching.
+     *
+     * See the [Fastly PCI-Compliant Caching and Delivery documentation](https://docs.fastly.com/products/pci-compliant-caching-and-delivery)
+     * for details.
+     */
     public pci?: boolean;
   }
 }

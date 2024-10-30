@@ -1,5 +1,41 @@
 # Changelog
 
+## 3.25.0 (2024-10-22)
+
+### Added
+
+* support backend property on both Request and Response, as a Backend instance ([#1019](https://github.com/fastly/js-compute-runtime/issues/1019)) ([4e3b93d](https://github.com/fastly/js-compute-runtime/commit/4e3b93d9de1f0af9eed7c900eedb8a509d7723da))
+
+### Fixed
+
+* set SSL properly for created dynamic backends ([#1016](https://github.com/fastly/js-compute-runtime/issues/1016)) ([616e898](https://github.com/fastly/js-compute-runtime/commit/616e89827087623b8180665591127143532dc309))
+
+## 3.24.3 (2024-10-16)
+
+### Fixed
+
+* docs build, dependency updates ([#1013](https://github.com/fastly/js-compute-runtime/issues/1013)) ([59dc069](https://github.com/fastly/js-compute-runtime/commit/59dc069b97d5b1ef6fba049d592d727dcc409c97))
+
+## 3.24.2 (2024-10-16)
+
+### Fixed
+
+* doc links for deploy ([#1011](https://github.com/fastly/js-compute-runtime/issues/1011)) ([1c55c91](https://github.com/fastly/js-compute-runtime/commit/1c55c91169611a09517bbeecaaa4a55ae9676503))
+
+## 3.24.1 (2024-10-16)
+
+### Fixed
+
+* release workflow versioning ([#1009](https://github.com/fastly/js-compute-runtime/issues/1009)) ([1922c8a](https://github.com/fastly/js-compute-runtime/commit/1922c8affa3085dedf44e7f8adada3be50649118))
+
+## 3.24.0 (2024-10-15)
+
+### Added
+
+* default enable allowDynamicBackends with better unsupported errors ([#995](https://github.com/fastly/js-compute-runtime/issues/995)) ([bb858fe](https://github.com/fastly/js-compute-runtime/commit/bb858fe71ffa20a6be256fa27c1bfa9e44a503e5))
+* setDefaultDynamicBackendConfig with all backend configuration options ([#993](https://github.com/fastly/js-compute-runtime/issues/993)) ([1847924](https://github.com/fastly/js-compute-runtime/commit/1847924e223f01679017d7f79658b7601ad5bd7a))
+* support backend property hostcalls ([#1002](https://github.com/fastly/js-compute-runtime/issues/1002)) ([1d9f91a](https://github.com/fastly/js-compute-runtime/commit/1d9f91a2cba2b5d2dad8ae03094ed9452fcb0a42))
+
 ## 3.23.0 (2024-09-18)
 
 ### Added

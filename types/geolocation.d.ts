@@ -1,4 +1,4 @@
-declare module "fastly:geolocation" {
+declare module 'fastly:geolocation' {
   /**
    * Retrieve geolocation information about the given IP address.
    * If no geolocation information is available, returns null.
@@ -6,11 +6,11 @@ declare module "fastly:geolocation" {
    * @param address The IPv4 or IPv6 address to query
    *
    * **Note**: Can only be used when processing requests, not during build-time initialization.
-   * 
+   *
    * @example
    * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
    * In this example we return the geolocation details for the provided ip querystring parameter or for the incoming client request if the querystring parameter does not exist.
-   * 
+   *
    * <script type="application/json+fiddle">
    * {
    *   "type": "javascript",
@@ -42,12 +42,12 @@ declare module "fastly:geolocation" {
    * ```js
    * /// <reference types="@fastly/js-compute" />
    * import { getGeolocationForIpAddress } from "fastly:geolocation"
-   * 
+   *
    * async function app(event) {
    *   try {
    *     let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address
    *     let geo = getGeolocationForIpAddress(ip);
-   * 
+   *
    *     return new Response(JSON.stringify(geo), {
    *       headers: {
    *         "Content-Type": "application/json",
@@ -60,9 +60,9 @@ declare module "fastly:geolocation" {
    *     });
    *   }
    * }
-   * 
+   *
    * addEventListener("fetch", event => event.respondWith(app(event)));
-   * 
+   *
    * ```
    * </noscript>
    */
@@ -72,13 +72,13 @@ declare module "fastly:geolocation" {
    * information about an IP address
    *
    * Can be retrieved for the incoming request's client IP address using the
-   * {@linkcode "globals".ClientInfo#geo} accessor, and for arbitrary addresses using
-   * {@linkcode "fastly:geolocation".getGeolocationForIpAddress}.
-   * 
+   * {@link ClientInfo.geo} accessor, and for arbitrary addresses using
+   * {@link "fastly:geolocation".getGeolocationForIpAddress}.
+   *
    * @example
    * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
    * In this example we return the geolocation details for the provided ip querystring parameter or for the incoming client request if the querystring parameter does not exist.
-   * 
+   *
    * <script type="application/json+fiddle">
    * {
    *   "type": "javascript",
@@ -110,12 +110,12 @@ declare module "fastly:geolocation" {
    * ```js
    * /// <reference types="@fastly/js-compute" />
    * import { getGeolocationForIpAddress } from "fastly:geolocation"
-   * 
+   *
    * async function app(event) {
    *   try {
    *     let ip = new URL(event.request.url).searchParams.get('ip') || event.client.address
    *     let geo = getGeolocationForIpAddress(ip);
-   * 
+   *
    *     return new Response(JSON.stringify(geo), {
    *       headers: {
    *         "Content-Type": "application/json",
@@ -128,9 +128,9 @@ declare module "fastly:geolocation" {
    *     });
    *   }
    * }
-   * 
+   *
    * addEventListener("fetch", event => event.respondWith(app(event)));
-   * 
+   *
    * ```
    * </noscript>
    */
