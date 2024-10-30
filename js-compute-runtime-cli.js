@@ -9,7 +9,8 @@ const {
   enableAOT,
   aotCache,
   enableExperimentalHighResolutionTimeMethods,
-  enableExperimentalTopLevelAwait,
+  moduleMode,
+  bundle,
   wasmEngine,
   input,
   output,
@@ -36,9 +37,10 @@ if (version) {
     output,
     wasmEngine,
     enableExperimentalHighResolutionTimeMethods,
-    enableExperimentalTopLevelAwait,
     enableAOT,
     aotCache,
+    moduleMode,
+    bundle,
   );
   await addSdkMetadataField(output, enableAOT);
 }
