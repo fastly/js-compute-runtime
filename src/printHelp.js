@@ -14,6 +14,7 @@ FLAGS:
 
 OPTIONS:
     --engine-wasm <engine-wasm>                             The JS engine Wasm file path
+    --enable-experimental-aot                               Enable experimental AOT compilation for performance
     --enable-experimental-high-resolution-time-methods      Enable experimental high-resolution fastly.now() method
     --enable-experimental-top-level-await                   Enable experimental top level await
 
