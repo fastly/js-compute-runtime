@@ -18,6 +18,7 @@ OPTIONS:
                                                             with full error stack support.
     --enable-experimental-aot                               Enable experimental AOT compilation for performance
     --enable-experimental-high-resolution-time-methods      Enable experimental high-resolution fastly.now() method
+    --enable-experimental-top-level-await                   Enable experimental top level await
 
 ARGS:
     <input>     The input JS script's file path [default: bin/index.js]
