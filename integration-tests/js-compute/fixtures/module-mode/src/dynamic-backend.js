@@ -2475,7 +2475,7 @@ routes.set('/backend/timeout', async () => {
           {
             timeSecs: 1,
             probes: 1,
-            intervalSecs: 0,
+            intervalSecs: 10,
           },
           'tcpKeepalive',
         );
