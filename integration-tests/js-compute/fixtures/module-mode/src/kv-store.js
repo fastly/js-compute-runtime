@@ -70,6 +70,7 @@ import { routes, isRunningLocally } from './routes.js';
     let { list, cursor } = await store.list({ limit: 10, prefix: 'c' });
 
     deepStrictEqual(list, [
+      'c',
       'c0',
       'c1',
       'c10',
@@ -79,12 +80,12 @@ import { routes, isRunningLocally } from './routes.js';
       'c14',
       'c15',
       'c16',
-      'c17',
     ]);
 
     ({ list, cursor } = await store.list({ limit: 10, prefix: 'c', cursor }));
 
     deepStrictEqual(list, [
+      'c17',
       'c18',
       'c19',
       'c2',
@@ -94,7 +95,6 @@ import { routes, isRunningLocally } from './routes.js';
       'c23',
       'c24',
       'c25',
-      'c26',
     ]);
   });
 }
