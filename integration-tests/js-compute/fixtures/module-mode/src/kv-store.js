@@ -13,6 +13,9 @@ import { routes, isRunningLocally } from './routes.js';
 {
   routes.set('/kv-store-e2e/list', async () => {
     const store = new KVStore('example-test-kv-store');
+    try {
+      await store.delete('c');
+    } catch {}
     // bad metadata
     await store.put('a', 'b');
     const aEntry = await store.get('a');
