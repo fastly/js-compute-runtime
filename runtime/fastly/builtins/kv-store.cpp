@@ -97,7 +97,8 @@ bool KVStoreEntry::metadata_text(JSContext *cx, unsigned argc, JS::Value *vp) {
   uint8_t *data;
   size_t len;
   bool is_shared;
-  MOZ_ASSERT(JS_GetObjectAsArrayBufferView(&metadata.toObject(), &len, &is_shared, &data));
+  bool got_buffer = JS_GetObjectAsArrayBufferView(&metadata.toObject(), &len, &is_shared, &data);
+  MOZ_ASSERT(got_buffer);
   MOZ_ASSERT(!is_shared);
   JS::RootedString metadata_str(
       cx, core::decode(cx, std::string_view(reinterpret_cast<char *>(data), len)));
