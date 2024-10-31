@@ -136,7 +136,7 @@ export function assertDoesNotThrow(func) {
 
 export function deepStrictEqual(a, b) {
   if (!deepEqual(a, b)) {
-    throw new Error(`Expected ${a} to equal ${b}`);
+    throw new Error(`Expected ${a} to equal ${b}, got ${JSON.stringify(a, null, 2)}`);
   }
 }
 
