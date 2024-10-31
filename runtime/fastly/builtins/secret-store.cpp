@@ -187,7 +187,7 @@ bool SecretStore::from_bytes(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto bytes = args.get(0);
 
-  auto maybe_byte_data = validate_bytes(cx, bytes, "SecretStore.fromBytes", false);
+  auto maybe_byte_data = validate_bytes(cx, bytes, "SecretStore.fromBytes");
   if (!maybe_byte_data) {
     return false;
   }

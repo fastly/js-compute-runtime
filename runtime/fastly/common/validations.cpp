@@ -2,6 +2,7 @@
 
 #include "../builtins/fastly.h"
 #include "../host-api/host_api_fastly.h"
+#include "encode.h"
 
 using fastly::fastly::FastlyGetErrorMessage;
 
@@ -33,7 +34,7 @@ std::optional<uint32_t> parse_and_validate_timeout(JSContext *cx, JS::HandleValu
 }
 
 std::optional<std::tuple<const uint8_t *, size_t>>
-validate_bytes(JSContext *cx, JS::HandleValue bytes, const char *subsystem, bool support_strings) {
+validate_bytes(JSContext *cx, JS::HandleValue bytes, const char *subsystem) {
   if (!bytes.isObject()) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_BUFFER, subsystem);
     return std::nullopt;

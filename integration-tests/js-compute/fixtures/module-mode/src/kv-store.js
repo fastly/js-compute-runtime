@@ -19,7 +19,10 @@ import { routes, isRunningLocally } from './routes.js';
     strictEqual(aEntry.metadata(), null);
 
     for (let i = 0; i < 100; i++) {
-      await store.put('c' + i, 'd', { metadata: new Uint8Array([42]), ttl: i });
+      await store.put('c' + i, 'd', {
+        metadata: i % 2 === 0 ? '42' : new Uint8Array([42]),
+        ttl: i,
+      });
     }
     const cEntry = await store.get('c1');
     strictEqual(await cEntry.text(), 'd');
@@ -27,6 +30,9 @@ import { routes, isRunningLocally } from './routes.js';
     const metadata = await cEntry.metadata();
     strictEqual(metadata.byteLength, 1);
     strictEqual(metadata[0], 42);
+
+    const cEntry2 = await store.get('c2');
+    strictEqual(await cEntry2.metadataText(), '42');
 
     const metadataText = await cEntry.metadataText();
     strictEqual(metadataText, '*');

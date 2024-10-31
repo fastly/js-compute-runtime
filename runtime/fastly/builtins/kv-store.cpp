@@ -453,6 +453,8 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::HandleValue body_val = args.get(1);
 
   JS::RootedValue metadata_val(cx);
+  // used only if we have to do a custom text encoding
+  host_api::HostString metadata_str;
   std::optional<uint32_t> ttl = std::nullopt;
   std::optional<std::tuple<const uint8_t *, size_t>> metadata = std::nullopt;
   std::optional<host_api::KVStore::InsertMode> mode = std::nullopt;
@@ -545,11 +547,17 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
       // metadata object is read last because no JS can run after getting byte reference
       if (!metadata_val.isUndefined()) {
-        auto maybe_byte_data = validate_bytes(cx, metadata_val, "KVStore.put metadata", true);
-        if (!maybe_byte_data) {
-          return ReturnPromiseRejectedWithPendingError(cx, args);
+        if (metadata_val.isString()) {
+          metadata_str = core::encode(cx, metadata_val);
+          metadata = std::make_tuple(reinterpret_cast<const uint8_t *>(metadata_str.ptr.get()),
+                                     metadata_str.len);
+        } else {
+          auto maybe_byte_data = validate_bytes(cx, metadata_val, "KVStore.put metadata");
+          if (!maybe_byte_data) {
+            return ReturnPromiseRejectedWithPendingError(cx, args);
+          }
+          metadata = maybe_byte_data;
         }
-        metadata = maybe_byte_data;
       }
 
       auto res = kv_store(self).insert(key_chars, body, mode, std::nullopt, metadata, ttl);
@@ -605,11 +613,17 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
     // metadata object is read last because no JS can run after getting byte reference
     if (!metadata_val.isUndefined()) {
-      auto maybe_byte_data = validate_bytes(cx, metadata_val, "KVStore.put metadata", true);
-      if (!maybe_byte_data) {
-        return ReturnPromiseRejectedWithPendingError(cx, args);
+      if (metadata_val.isString()) {
+        metadata_str = core::encode(cx, metadata_val);
+        metadata = std::make_tuple(reinterpret_cast<const uint8_t *>(metadata_str.ptr.get()),
+                                   metadata_str.len);
+      } else {
+        auto maybe_byte_data = validate_bytes(cx, metadata_val, "KVStore.put metadata");
+        if (!maybe_byte_data) {
+          return ReturnPromiseRejectedWithPendingError(cx, args);
+        }
+        metadata = maybe_byte_data;
       }
-      metadata = maybe_byte_data;
     }
 
     auto insert_res = kv_store(self).insert(key_chars, body, mode, std::nullopt, metadata, ttl);

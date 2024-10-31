@@ -11,7 +11,7 @@ std::optional<uint32_t> parse_and_validate_timeout(JSContext *cx, JS::HandleValu
                                                    uint64_t max_timeout);
 
 std::optional<std::tuple<const uint8_t *, size_t>>
-validate_bytes(JSContext *cx, JS::HandleValue bytes, const char *subsystem, bool support_strings);
+validate_bytes(JSContext *cx, JS::HandleValue bytes, const char *subsystem);
 
 } // namespace fastly::common
 
