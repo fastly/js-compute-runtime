@@ -1,16 +1,14 @@
 # Changelog
 
-## [3.26.0](https://github.com/fastly/js-compute-runtime/compare/v3.25.0...v3.26.0) (2024-10-31)
+## 3.26.0 (2024-10-31)
 
-
-### Features
+### Added
 
 * document AOT optimization flag ([#1023](https://github.com/fastly/js-compute-runtime/issues/1023)) ([9ba14cd](https://github.com/fastly/js-compute-runtime/commit/9ba14cdb263341d80476233424c9c2c7d5276c2c))
 * KV Store v2 ([#1004](https://github.com/fastly/js-compute-runtime/issues/1004)) ([fda97cc](https://github.com/fastly/js-compute-runtime/commit/fda97cc423a9eb96bd11ac5a5b9a5d4b6f93b081))
 * module mode ([#1021](https://github.com/fastly/js-compute-runtime/issues/1021)) ([9e47649](https://github.com/fastly/js-compute-runtime/commit/9e4764919c678701accd9cef039de5ff2761f7cc))
 
-
-### Bug Fixes
+### Fixed
 
 * typing file for compute builtin ([#1028](https://github.com/fastly/js-compute-runtime/issues/1028)) ([b328546](https://github.com/fastly/js-compute-runtime/commit/b3285467f0e5fedcca6bd23ee414db1e8d92a83a))
 
