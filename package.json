@@ -39,7 +39,8 @@
     "build:debug:info": "./runtime/fastly/build-debug.sh --keep-debug-info",
     "format-changelog": "node ci/format-changelog.js CHANGELOG.md",
     "format": "prettier --write *.js src/*.js integration-tests types test-d",
-    "format:check": "prettier --check *.js src/*.js integration-tests"
+    "format:check": "prettier --check *.js src/*.js integration-tests",
+    "typecheck": "tsc"
   },
   "devDependencies": {
     "@jakechampion/cli-testing-library": "^1.0.0",

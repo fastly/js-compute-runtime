@@ -10,5 +10,5 @@ declare module 'fastly:compute' {
    * @param soft - Enable to perform a soft purge, retaining stale cache entries to
    *               reduce load on the origin server, defaults to a hard purge.
    */
-  export function purgeSurrogateKey(surrogateKey: string, soft?: boolean);
+  export function purgeSurrogateKey(surrogateKey: string, soft?: boolean): boolean;
 }

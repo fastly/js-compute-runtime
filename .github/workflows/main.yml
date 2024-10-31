@@ -155,6 +155,7 @@ jobs:
         name: fastly-weval-ic-cache
     - run: npm install
     - run: npm test
+    - run: npm run typecheck
 
   build-debug:
     name: Debug Build
