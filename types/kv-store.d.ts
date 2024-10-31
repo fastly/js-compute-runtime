@@ -111,7 +111,19 @@ declare module 'fastly:kv-store' {
        * Limit the number of keys provided per listing.
        */
       limit?: number;
-    }): AsyncIterator<string[]>;
+      /**
+       * Cursor
+       *
+       * The base64 cursor string representing the last listing operation
+       */
+      cursor?: string;
+    }): {
+      list: string[];
+      /**
+       * Pass this base64 cursor into a subsequent list call to obtain the next listing
+       */
+      cursor: string;
+    };
   }
 
   /**

@@ -292,7 +292,20 @@ bool process_pending_kv_store_list(JSContext *cx, host_api::KVStorePendingList::
   if (!JS_GetProperty(cx, json_obj, "data", &list)) {
     return false;
   }
-  return JS::ResolvePromise(cx, promise, list);
+  JS::RootedValue meta(cx);
+  if (!JS_GetProperty(cx, json_obj, "meta", &meta)) {
+    return false;
+  }
+  JS::RootedObject meta_obj(cx, &meta.toObject());
+  JS::RootedValue next_cursor(cx);
+  if (!JS_GetProperty(cx, meta_obj, "next_cursor", &next_cursor)) {
+    return false;
+  }
+  JS::RootedObject list_out(cx, JS_NewPlainObject(cx));
+  JS_SetProperty(cx, list_out, "list", list);
+  JS_SetProperty(cx, list_out, "cursor", next_cursor);
+  JS::RootedValue list_out_val(cx, JS::ObjectValue(*list_out));
+  return JS::ResolvePromise(cx, promise, list_out_val);
 }
 
 bool process_pending_kv_store_delete(JSContext *cx, host_api::KVStorePendingDelete::Handle handle,
@@ -532,7 +545,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
       // metadata object is read last because no JS can run after getting byte reference
       if (!metadata_val.isUndefined()) {
-        auto maybe_byte_data = validate_bytes(cx, metadata_val, "KVStore.put metadata");
+        auto maybe_byte_data = validate_bytes(cx, metadata_val, "KVStore.put metadata", true);
         if (!maybe_byte_data) {
           return ReturnPromiseRejectedWithPendingError(cx, args);
         }
@@ -592,7 +605,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
     // metadata object is read last because no JS can run after getting byte reference
     if (!metadata_val.isUndefined()) {
-      auto maybe_byte_data = validate_bytes(cx, metadata_val, "KVStore.put metadata");
+      auto maybe_byte_data = validate_bytes(cx, metadata_val, "KVStore.put metadata", true);
       if (!maybe_byte_data) {
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
@@ -639,6 +652,25 @@ bool KVStore::list(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::RootedObject options(cx, &args.get(0).toObject());
 
+  std::optional<std::string_view> cursor = std::nullopt;
+  host_api::HostString cursor_str;
+
+  JS::RootedValue cursor_val(cx);
+  if (!JS_GetProperty(cx, options, "cursor", &cursor_val)) {
+    return false;
+  }
+  if (!cursor_val.isNullOrUndefined()) {
+    if (!cursor_val.isString()) {
+      api::throw_error(cx, api::Errors::TypeError, "KVStore.list", "cursor", "be a string");
+      return false;
+    }
+    cursor_str = core::encode(cx, cursor_val);
+    if (!cursor_str) {
+      return false;
+    }
+    cursor = cursor_str;
+  }
+
   JS::RootedValue limit_val(cx);
   if (!JS_GetProperty(cx, options, "limit", &limit_val)) {
     return false;
@@ -672,11 +704,11 @@ bool KVStore::list(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!prefix_val.isNullOrUndefined()) {
     if (!prefix_val.isString()) {
       api::throw_error(cx, api::Errors::TypeError, "KVStore.list", "prefix", "be a string");
-      return ReturnPromiseRejectedWithPendingError(cx, args);
+      return false;
     }
     prefix_str = core::encode(cx, prefix_val);
     if (!prefix_str) {
-      return ReturnPromiseRejectedWithPendingError(cx, args);
+      return false;
     }
     prefix = prefix_str;
   }
@@ -689,44 +721,23 @@ bool KVStore::list(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!no_sync_val.isNullOrUndefined()) {
     if (!no_sync_val.isBoolean()) {
       api::throw_error(cx, api::Errors::TypeError, "KVStore.list", "noSync", "be a boolean");
-      return ReturnPromiseRejectedWithPendingError(cx, args);
-    }
-    no_sync = no_sync_val.toBoolean();
-  }
-
-  std::string cursor_64;
-  std::optional<std::string_view> cursor = std::nullopt;
-  JS::RootedValue from_key(cx);
-  if (!JS_GetProperty(cx, options, "fromKey", &from_key)) {
-    return false;
-  }
-  if (!from_key.isNullOrUndefined()) {
-    if (!from_key.isString()) {
-      api::throw_error(cx, api::Errors::TypeError, "KVStore.list", "fromKey", "be a string");
-      return ReturnPromiseRejectedWithPendingError(cx, args);
-    }
-    auto byteStringResult = builtins::web::base64::valueToJSByteString(cx, from_key);
-    if (byteStringResult.isErr()) {
       return false;
     }
-    auto byteString = byteStringResult.unwrap();
-    cursor_64 = builtins::web::base64::forgivingBase64Encode(
-        byteString, builtins::web::base64::base64EncodeTable);
-    cursor.emplace(cursor_64);
+    no_sync = no_sync_val.toBoolean();
   }
 
   auto res = kv_store(self).list(cursor, limit, prefix, no_sync);
   if (auto *err = res.to_err()) {
     // Ensure that we throw an exception for all unexpected host errors.
     HANDLE_ERROR(cx, *err);
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+    return false;
   }
 
   auto handle = res.unwrap();
 
   JS::RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
   if (!result_promise) {
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+    return false;
   }
 
   auto task = new FastlyAsyncTask(handle, self, result_promise, process_pending_kv_store_list);

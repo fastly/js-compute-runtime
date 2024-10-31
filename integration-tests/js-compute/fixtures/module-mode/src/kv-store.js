@@ -26,7 +26,6 @@ import { routes, isRunningLocally } from './routes.js';
 
     const metadata = await cEntry.metadata();
     strictEqual(metadata.byteLength, 1);
-    console.log(metadata);
     strictEqual(metadata[0], 42);
 
     const metadataText = await cEntry.metadataText();
@@ -56,10 +55,9 @@ import { routes, isRunningLocally } from './routes.js';
     }, TypeError);
 
     strictEqual(await store.get('noone'), null);
-    const list = await store.list({ limit: 10, prefix: 'c' });
 
+    let { list, cursor } = await store.list({ limit: 10, prefix: 'c' });
     deepStrictEqual(list, [
-      'c0',
       'c1',
       'c10',
       'c11',
@@ -69,6 +67,21 @@ import { routes, isRunningLocally } from './routes.js';
       'c15',
       'c16',
       'c17',
+      'c18',
+    ]);
+
+    ({ list, cursor } = await store.list({ limit: 10, prefix: 'c', cursor }));
+    deepStrictEqual(list, [
+      'c19',
+      'c2',
+      'c20',
+      'c21',
+      'c22',
+      'c23',
+      'c24',
+      'c25',
+      'c26',
+      'c27',
     ]);
   });
 }
