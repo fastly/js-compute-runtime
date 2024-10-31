@@ -1200,7 +1200,7 @@ routes.set('/backend/timeout', async () => {
               });
             },
             RangeError,
-            `Backend constructor: connectTimeout must be less than 2^32`,
+            `Backend constructor: connectTimeout is above the maximum of 4294967296`,
           );
         },
       );
@@ -1288,7 +1288,7 @@ routes.set('/backend/timeout', async () => {
               });
             },
             RangeError,
-            `Backend constructor: firstByteTimeout must be less than 2^32`,
+            `Backend constructor: firstByteTimeout is above the maximum of 4294967296`,
           );
         },
       );
@@ -1389,7 +1389,7 @@ routes.set('/backend/timeout', async () => {
               });
             },
             RangeError,
-            `Backend constructor: betweenBytesTimeout must be less than 2^32`,
+            `Backend constructor: betweenBytesTimeout is above the maximum of 4294967296`,
           );
         },
       );

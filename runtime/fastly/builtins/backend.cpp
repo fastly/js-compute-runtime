@@ -819,7 +819,7 @@ bool validate_target(JSContext *cx, std::string_view target_string) {
 
 host_api::BackendConfig default_backend_config{};
 
-const double MAX_BACKEND_TIMEOUT = 0x100000000;
+const uint64_t MAX_BACKEND_TIMEOUT = 0x100000000;
 
 bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
                           HandleObject configuration) {
