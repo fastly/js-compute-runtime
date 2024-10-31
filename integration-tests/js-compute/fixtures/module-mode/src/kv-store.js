@@ -39,7 +39,6 @@ import { routes, isRunningLocally } from './routes.js';
     await store.put('c5', 'cba', {
       mode: 'prepend',
       metadata: new Uint8Array([0xf0, 0xf0]),
-      ttl: 5,
     });
     const c5Entry = await store.get('c5');
     strictEqual(await c5Entry.text(), 'cbad');
@@ -47,8 +46,10 @@ import { routes, isRunningLocally } from './routes.js';
 
     // TTL only supported on compute not viceroy
     if (!isRunningLocally()) {
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      strictEqual(await store.get('c5'), null);
+      await store.put('t', 't', { ttl: 2 });
+      strictEqual(await (await store.get('t')).text(), 't');
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      strictEqual(await store.get('t'), null);
     }
 
     assertThrows(() => {
