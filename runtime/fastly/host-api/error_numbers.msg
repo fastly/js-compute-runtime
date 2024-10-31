@@ -58,7 +58,6 @@ MSG_DEF(JSMSG_KV_STORE_NAME_EMPTY,                             0, JSEXN_TYPEERR,
 MSG_DEF(JSMSG_KV_STORE_NAME_TOO_LONG,                          0, JSEXN_TYPEERR, "KVStore constructor: name can not be more than 255 characters")
 MSG_DEF(JSMSG_KV_STORE_NAME_NO_CONTROL_CHARACTERS,             0, JSEXN_TYPEERR, "KVStore constructor: name can not contain control characters (\\u0000-\\u001F)")
 MSG_DEF(JSMSG_KV_STORE_DOES_NOT_EXIST,                         1, JSEXN_TYPEERR, "KVStore constructor: No KVStore named '{0}' exists")
-MSG_DEF(JSMSG_KV_STORE_DELETE_KEY_DOES_NOT_EXIST,              0, JSEXN_TYPEERR, "KVStore.prototype.delete: can not delete key which does not exist")
 MSG_DEF(JSMSG_KV_STORE_KEY_EMPTY,                              0, JSEXN_TYPEERR, "KVStore key can not be an empty string")
 MSG_DEF(JSMSG_KV_STORE_KEY_TOO_LONG,                           0, JSEXN_TYPEERR, "KVStore key can not be more than 1024 characters")
 MSG_DEF(JSMSG_KV_STORE_KEY_INVALID_CHARACTER,                  1, JSEXN_TYPEERR, "KVStore key can not contain {0} character")

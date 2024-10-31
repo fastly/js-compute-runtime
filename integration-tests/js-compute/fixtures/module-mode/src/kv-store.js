@@ -21,7 +21,6 @@ import { routes, isRunningLocally } from './routes.js';
     for (let i = 0; i < 100; i++) {
       await store.put('c' + i, 'd', {
         metadata: i % 2 === 0 ? '42' : new Uint8Array([42]),
-        ttl: i,
       });
     }
     const cEntry = await store.get('c1');
@@ -40,16 +39,16 @@ import { routes, isRunningLocally } from './routes.js';
     await store.put('c5', 'cba', {
       mode: 'prepend',
       metadata: new Uint8Array([0xf0, 0xf0]),
+      ttl: 5,
     });
     const c5Entry = await store.get('c5');
     strictEqual(await c5Entry.text(), 'cbad');
     assertRejects(async () => await c5Entry.metadataText(), TypeError);
 
-    // should TTL invalidate here already?
-    if (false) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const cEntry2 = await store.get('c1');
-      strictEqual(cEntry2, null);
+    // TTL only supported on compute not viceroy
+    if (!isRunningLocally()) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      strictEqual(await store.get('c5'), null);
     }
 
     assertThrows(() => {
@@ -63,7 +62,9 @@ import { routes, isRunningLocally } from './routes.js';
     strictEqual(await store.get('noone'), null);
 
     let { list, cursor } = await store.list({ limit: 10, prefix: 'c' });
+
     deepStrictEqual(list, [
+      'c0',
       'c1',
       'c10',
       'c11',
@@ -73,11 +74,12 @@ import { routes, isRunningLocally } from './routes.js';
       'c15',
       'c16',
       'c17',
-      'c18',
     ]);
 
     ({ list, cursor } = await store.list({ limit: 10, prefix: 'c', cursor }));
+
     deepStrictEqual(list, [
+      'c18',
       'c19',
       'c2',
       'c20',
@@ -87,7 +89,6 @@ import { routes, isRunningLocally } from './routes.js';
       'c24',
       'c25',
       'c26',
-      'c27',
     ]);
   });
 }
@@ -893,7 +894,7 @@ import { routes, isRunningLocally } from './routes.js';
         await assertRejects(
           () => store.delete(Math.random()),
           TypeError,
-          'KVStore.prototype.delete: can not delete key which does not exist',
+          'KVStore delete: Not found.',
         );
       },
     );
@@ -928,7 +929,7 @@ import { routes, isRunningLocally } from './routes.js';
       await assertRejects(
         () => store.delete(key),
         TypeError,
-        'KVStore.prototype.delete: can not delete key which does not exist',
+        'KVStore delete: Not found.',
       );
     });
     routes.set('/kv-store/delete/multiple-deletes-at-once', async () => {
