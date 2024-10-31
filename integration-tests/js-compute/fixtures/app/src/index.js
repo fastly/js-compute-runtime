@@ -18,7 +18,6 @@ import './console.js';
 import './crypto.js';
 import './device.js';
 import './dictionary.js';
-import './dynamic-backend.js';
 import './edge-rate-limiter.js';
 import './env.js';
 import './fanout.js';
