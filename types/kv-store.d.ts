@@ -1,3 +1,5 @@
+/// <reference path="globals.d.ts" />
+
 declare module 'fastly:kv-store' {
   /**
    * Class for accessing a [Fastly KV-store](https://developer.fastly.com/reference/api/kv-store/).
@@ -71,7 +73,57 @@ declare module 'fastly:kv-store' {
      * - Be longer than 1024 characters
      * @param value The value to store within the KV Store.
      */
-    put(key: string, value: BodyInit): Promise<undefined>;
+    put(
+      key: string,
+      value: BodyInit,
+      options?: {
+        /**
+         * Optional metadata to be associated with the entry.
+         *
+         * If passing a string, UTF-8 encoding is used
+         */
+        metadata?: ArrayBufferView | ArrayBuffer | string;
+        /**
+         * TTL for the entry, defaults to 0.
+         */
+        ttl?: number;
+        /**
+         * Insert mode, defaults to 'overwrite'.
+         */
+        mode?: 'overwrite' | 'add' | 'append' | 'prepend';
+      },
+    ): Promise<undefined>;
+
+    /**
+     * Returns an async iterator for the values of the KV Store
+     * optionally taking a prefix and limit
+     */
+    list(options?: {
+      /**
+       * Do not wait to sync the key list, and instead immediately return the current cached key list.
+       */
+      noSync?: boolean;
+      /**
+       * String prefix for keys to list.
+       */
+      prefix?: string;
+      /**
+       * Limit the number of keys provided per listing.
+       */
+      limit?: number;
+      /**
+       * Cursor
+       *
+       * The base64 cursor string representing the last listing operation
+       */
+      cursor?: string;
+    }): {
+      list: string[];
+      /**
+       * Pass this base64 cursor into a subsequent list call to obtain the next listing
+       */
+      cursor: string;
+    };
   }
 
   /**
@@ -82,22 +134,37 @@ declare module 'fastly:kv-store' {
      * A ReadableStream with the contents of the entry.
      */
     get body(): ReadableStream;
+
     /**
      * A boolean value that indicates whether the body has been read from already.
      */
     get bodyUsed(): boolean;
+
     /**
      * Reads the body and returns it as a promise that resolves with a string.
      * The response is always decoded using UTF-8.
      */
     text(): Promise<string>;
+
     /**
      * Reads the body and returns it as a promise that resolves with the result of parsing the body text as JSON.
      */
     json(): Promise<object>;
+
     /**
      * Reads the body and returns it as a promise that resolves with an ArrayBuffer.
      */
     arrayBuffer(): Promise<ArrayBuffer>;
+
+    /**
+     * Metadata associatd with this entry
+     */
+    metadata(): ArrayBuffer | null;
+
+    /**
+     * Metadata string associated with this entry
+     * Throws an error for invalid UTF-8
+     */
+    metadataText(): string | null;
   }
 }

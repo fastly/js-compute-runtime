@@ -1200,7 +1200,7 @@ routes.set('/backend/timeout', async () => {
               });
             },
             RangeError,
-            `Backend constructor: connectTimeout must be less than 2^32`,
+            `Backend constructor: connectTimeout is above the maximum of 4294967296`,
           );
         },
       );
@@ -1288,7 +1288,7 @@ routes.set('/backend/timeout', async () => {
               });
             },
             RangeError,
-            `Backend constructor: firstByteTimeout must be less than 2^32`,
+            `Backend constructor: firstByteTimeout is above the maximum of 4294967296`,
           );
         },
       );
@@ -1389,7 +1389,7 @@ routes.set('/backend/timeout', async () => {
               });
             },
             RangeError,
-            `Backend constructor: betweenBytesTimeout must be less than 2^32`,
+            `Backend constructor: betweenBytesTimeout is above the maximum of 4294967296`,
           );
         },
       );
@@ -2475,7 +2475,7 @@ routes.set('/backend/timeout', async () => {
           {
             timeSecs: 1,
             probes: 1,
-            intervalSecs: 0,
+            intervalSecs: 10,
           },
           'tcpKeepalive',
         );
@@ -2507,7 +2507,7 @@ routes.set('/backend/timeout', async () => {
         strictEqual(backend.firstByteTimeout, 180000, 'firstByteTimeout');
         strictEqual(backend.betweenBytesTimeout, 9000, 'betweenBytesTimeout');
         strictEqual(backend.httpKeepaliveTime, 55000, 'httpKeepaliveTime');
-        strictEqual(
+        deepStrictEqual(
           backend.tcpKeepalive,
           {
             intervalSecs: 10,

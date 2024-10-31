@@ -4,8 +4,10 @@
 import { routes } from './routes.js';
 import { env } from 'fastly:env';
 
+import './dynamic-backend.js';
 import './hello-world.js';
 import './hono.js';
+import './kv-store.js';
 
 addEventListener('fetch', (event) => {
   event.respondWith(app(event));

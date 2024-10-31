@@ -134,7 +134,13 @@ export function assertDoesNotThrow(func) {
   }
 }
 
-export { deepEqual as deepStrictEqual };
+export function deepStrictEqual(a, b) {
+  if (!deepEqual(a, b)) {
+    throw new Error(
+      `Expected ${a} to equal ${b}, got ${JSON.stringify(a, null, 2)}`,
+    );
+  }
+}
 
 export function deepEqual(a, b) {
   var aKeys;
@@ -156,6 +162,15 @@ export function deepEqual(a, b) {
   // Case: `a` is of type 'object'
   if (b === null || typeB !== 'object') {
     return false;
+  }
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) {
+        return false;
+      }
+    }
+    return true;
   }
   if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) {
     return false;
