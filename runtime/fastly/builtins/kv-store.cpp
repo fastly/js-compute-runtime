@@ -276,30 +276,30 @@ bool process_pending_kv_store_list(JSContext *cx, host_api::KVStorePendingList::
   } while (true);
   JS::RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf, buf_len)));
   if (!str) {
-    return false;
+    return RejectPromiseWithPendingError(cx, promise);
   }
   JS::RootedValue str_val(cx, JS::StringValue(str));
   JS::RootedValue json(cx);
   if (!JS_ParseJSON(cx, str, &json)) {
-    return false;
+    return RejectPromiseWithPendingError(cx, promise);
   }
   if (!json.isObject()) {
     JS_ReportErrorLatin1(cx, "Bad data.");
-    return false;
+    return RejectPromiseWithPendingError(cx, promise);
   }
   JS::RootedValue list(cx);
   JS::RootedObject json_obj(cx, &json.toObject());
   if (!JS_GetProperty(cx, json_obj, "data", &list)) {
-    return false;
+    return RejectPromiseWithPendingError(cx, promise);
   }
   JS::RootedValue meta(cx);
   if (!JS_GetProperty(cx, json_obj, "meta", &meta)) {
-    return false;
+    return RejectPromiseWithPendingError(cx, promise);
   }
   JS::RootedObject meta_obj(cx, &meta.toObject());
   JS::RootedValue next_cursor(cx);
   if (!JS_GetProperty(cx, meta_obj, "next_cursor", &next_cursor)) {
-    return false;
+    return RejectPromiseWithPendingError(cx, promise);
   }
   JS::RootedObject list_out(cx, JS_NewPlainObject(cx));
   JS_SetProperty(cx, list_out, "list", list);
@@ -348,7 +348,7 @@ bool process_pending_kv_store_lookup(JSContext *cx, host_api::KVStorePendingLook
     // uint32_t gen = std::get<2>(res.unwrap());
     JS::RootedObject entry(cx, KVStoreEntry::create(cx, body, std::move(metadata)));
     if (!entry) {
-      return false;
+      return RejectPromiseWithPendingError(cx, promise);
     }
     JS::RootedValue result(cx);
     result.setObject(*entry);
