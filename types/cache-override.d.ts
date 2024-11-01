@@ -1,5 +1,49 @@
 declare module 'fastly:cache-override' {
   /**
+   * Cache customization options for responses, provided through the afterSend hook
+   *
+   * For customizing the response status, headers, and other cache options, these
+   * can be modified directly on the response.
+   */
+  interface CacheOptions {
+    /**
+     * Whether to cache this response.
+     *
+     * By default, leaving this field empty, responses will be cached based on their cache header
+     * information.
+     *
+     * Setting this to true or false will override this default cache behaviour, setting in the cache
+     * or not setting in the cache, even if the default behaviour would have been otherwise.
+     *
+     * Setting to 'record-uncacheable' the response will not only not be cached, but the cache will
+     * record that the originating request led to an uncacheable response, so that future cache lookups
+     * will result in immediately going to the backend, rather than attempting to coordinate concurrent
+     * requests to reduce backend traffic.
+     *
+     * See the [Fastly request collapsing guide](https://www.fastly.com/documentation/guides/concepts/edge-state/cache/request-collapsing/)
+     * for more details on the mechanism that `recordUncacheable` disables.
+     */
+    cache?: boolean | 'uncacheable';
+    /**
+     * Get or set a [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream) to be used for
+     * transforming the response body prior to caching.
+     *
+     * Body transformations are performed by specifying a transform, rather than by directly working with the body
+     * during the onAfterSend callback function, because not every response contains a fresh body:
+     * 304 Not Modified responses, which are used to revalidate a stale cached response, are valuable precisely because
+     * they do not retransmit the body.
+     *
+     * For any other response status, the backend response will contain a relevant body, and the `bodyTransform` will
+     * be applied to it. The original backend body is piped to the [`writeable`](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream/writable)
+     * end of the transform, and transform is responsible for writing the new body, which will be read out from the
+     * [`readable`](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream/readable) end of the transform.
+     * This setup allows the transform to work with streamed chunks of the backend body, rather
+     * than necessarily reading it entirely into memory.
+     */
+    bodyTransform?: TransformStream<Uint8Array, Uint8Array>;
+  }
+
+  /**
    * Configures the caching behavior of a {@linkcode "globals".Response}.
    *
    * Normally, the HTTP Headers on a {@linkcode "globals".Response} would control how the {@linkcode "globals".Response} is cached,
@@ -98,6 +142,20 @@ declare module 'fastly:cache-override' {
      *
      * See the [Fastly PCI-Compliant Caching and Delivery documentation](https://docs.fastly.com/products/pci-compliant-caching-and-delivery)
      * for details.
+     *
+     * @param {void} [init.beforeSend]
+     * Set a [callback function](https://developer.mozilla.org/en-US/docs/Glossary/Callback_function) to be invoked if a
+     * request is going all the way to a backend, allowing the request to be modified beforehand.
+     *
+     * See [Modifying a request as it is forwarded to a backend](https://www.fastly.com/documentation/guides/concepts/edge-state/cache/#modifying-a-request-as-it-is-forwarded-to-a-backend)
+     * in the Fastly cache interfaces documentation for details.
+     *
+     * @param {void} [init.afterSend]
+     * Set a [callback function](https://developer.mozilla.org/en-US/docs/Glossary/Callback_function) to be invoked after
+     * a response has been sent, but before it is stored into the cache.
+     *
+     * See [Controlling cache behavior based on backend response](https://www.fastly.com/documentation/guides/concepts/edge-state/cache/#controlling-cache-behavior-based-on-backend-response)
+     * in the Fastly cache interfaces documentation for details.
      */
     constructor(
       mode: 'none' | 'pass' | 'override',
@@ -106,6 +164,10 @@ declare module 'fastly:cache-override' {
         swr?: number;
         surrogateKey?: string;
         pci?: boolean;
+        beforeSend?: (request: Request) => void | PromiseLike<void>;
+        afterSend?: (
+          response: Response,
+        ) => void | CacheOptions | PromiseLike<void | CacheOptions>;
       },
     );
 
@@ -146,5 +208,24 @@ declare module 'fastly:cache-override' {
      * for details.
      */
     public pci?: boolean;
+
+    /**
+     * Callback to be invoked if a request is going all the way to a backend, allowing the request to be modified beforehand.
+     *
+     * See [Modifying a request as it is forwarded to a backend](https://www.fastly.com/documentation/guides/concepts/edge-state/cache/#modifying-a-request-as-it-is-forwarded-to-a-backend)
+     * in the Fastly cache interfaces documentation for details.
+     *
+     */
+    public beforeSend?: (request: Request) => void | PromiseLike<void>;
+
+    /**
+     * Callback to be invoked after a response has been sent, but before it is stored into the cache.
+     *
+     * See [Controlling cache behavior based on backend response](https://www.fastly.com/documentation/guides/concepts/edge-state/cache/#controlling-cache-behavior-based-on-backend-response)
+     * in the Fastly cache interfaces documentation for details.
+     */
+    public afterSend?: (
+      response: Response,
+    ) => void | CacheOptions | PromiseLike<void | CacheOptions>;
   }
 }

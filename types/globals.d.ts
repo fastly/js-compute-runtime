@@ -1274,7 +1274,7 @@ interface Request extends Body {
   /**
    * The request backend, null for the downstream request itself
    */
-  backend: import('fastly:backend').Backend | undefined;
+  readonly backend: import('fastly:backend').Backend | undefined;
   setCacheOverride(
     override: import('fastly:cache-override').CacheOverride,
   ): void;
@@ -1311,10 +1311,18 @@ declare interface ResponseInit {
  * @group Fetch API
  */
 interface Response extends Body {
+  /**
+   * The response headers.
+   *
+   * May be modified event for upstream responses prior to storage in the cache.
+   */
   readonly headers: Headers;
   readonly ok: boolean;
   // readonly redirected: boolean;
-  readonly status: number;
+  /**
+   * The response status. May be modified prior to storage in the cache.
+   */
+  status: number;
   readonly statusText: string;
   // readonly type: ResponseType;
   readonly url: string;
@@ -1337,7 +1345,66 @@ interface Response extends Body {
   /**
    * The response backend, if an upstream response
    */
-  backend: import('fastly:backend').Backend | undefined;
+  readonly backend: import('fastly:backend').Backend | undefined;
+  /**
+   * Fastly-specific property - Returns whether the `Response` resulted from a cache hit.
+   * For request collapsing, typically one response will show as a miss, and the others
+   * (that awaited that response) will show as hits.
+   */
+  readonly cached: boolean;
+  /**
+   * Fastly-specific property - If this was a backend response, whether it should be cached
+   */
+  readonly isCacheable: boolean;
+  /**
+   * Fastly-specific property - Returns whether the cached `Response` is considered stale.
+   *
+   * Undefined if the response is not cached.
+   */
+  readonly isStale: boolean | undefined;
+
+  /**
+   * Fastly-specific property - Get the Time to Live (TTL) in the cache for this response, if it is cached.
+   *
+   * The TTL determines the duration of "freshness" for the cached response
+   * after it is inserted into the cache.
+   *
+   * Undefined if the response is not cached. May be modified prior to injection into the cache.
+   */
+  ttl: number | undefined;
+  /**
+   * Fastly-specific property - The current age of the response, if it is cached.
+   *
+   * Undefined if the response is not cached. May be modified prior to injection into the cache.
+   */
+  readonly age: number | undefined;
+  /**
+   * Fastly-specific property - The time for which the response can safely be used despite being considered stale, if it is cached.
+   *
+   * Undefined if the response is not cached. May be modified prior to injection into the cache.
+   */
+  swr: number | undefined;
+  /**
+   * Fastly-specific property - The set of request headers for which the response may vary.
+   *
+   * Undefined if the response is not cached. May be modified prior to injection into the cache.
+   */
+  vary: Set<string> | undefined;
+  /**
+   * Fastly-specific property - The surrogate keys for the cached response.
+   *
+   * Undefined if the response is not cached. May be modified prior to injection into the cache.
+   */
+  surrogateKeys: Set<string> | undefined;
+  /**
+   * Fastly-specific property - Get or set whether this response should only be stored via PCI/HIPAA-compliant non-volatile caching.
+   *
+   * See the [Fastly PCI-Compliant Caching and Delivery documentation](https://docs.fastly.com/products/pci-compliant-caching-and-delivery)
+   * for details.
+   *
+   * Undefined if the response is not cached. May be modified prior to injection into the cache.
+   */
+  pci: boolean;
 }
 
 /**
