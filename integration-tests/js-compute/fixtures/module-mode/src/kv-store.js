@@ -64,12 +64,9 @@ import { routes, isRunningLocally } from './routes.js';
     }
 
     // bad cursor gives a "bad request" error
-    assertRejects(
-      async () => {
-        await store.list({ cursor: 'boooo' });
-      },
-      TypeError,
-    );
+    assertRejects(async () => {
+      await store.list({ cursor: 'boooo' });
+    }, TypeError);
 
     assertThrows(() => {
       store.list({ limit: 'booooo' });
