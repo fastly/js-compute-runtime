@@ -84,7 +84,7 @@ declare module 'fastly:kv-store' {
          */
         metadata?: ArrayBufferView | ArrayBuffer | string;
         /**
-         * TTL for the entry, defaults to 0.
+         * TTL for the entry.
          */
         ttl?: number;
         /**
@@ -120,9 +120,11 @@ declare module 'fastly:kv-store' {
     }): {
       list: string[];
       /**
-       * Pass this base64 cursor into a subsequent list call to obtain the next listing
+       * Pass this base64 cursor into a subsequent list call to obtain the next listing.
+       * 
+       * The cursor is *undefined* when the end of the list is reached.
        */
-      cursor: string;
+      cursor: string | undefined;
     };
   }
 
