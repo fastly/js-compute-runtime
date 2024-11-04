@@ -45,8 +45,8 @@ export async function parseInputs(cliInputs) {
       }
       case '--enable-experimental-aot': {
         console.error(
-            'Warning: --enable-experimental-aot flag is now --enable-aot. The old flag continues\n' +
-            'to work for now, but please update your build invocation!'
+          'Warning: --enable-experimental-aot flag is now --enable-aot. The old flag continues\n' +
+            'to work for now, but please update your build invocation!',
         );
         enableAOT = true;
         break;
