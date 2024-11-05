@@ -85,7 +85,7 @@ const config = TOML.parse(
 config.name = serviceName;
 if (aot) {
   const buildArgs = config.scripts.build.split(' ');
-  buildArgs.splice(-1, null, '--enable-experimental-aot');
+  buildArgs.splice(-1, null, '--enable-aot');
   config.scripts.build = buildArgs.join(' ');
 }
 if (debugBuild) {
