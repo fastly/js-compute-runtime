@@ -39,7 +39,15 @@ export async function parseInputs(cliInputs) {
         bundle = true;
         break;
       }
+      case '--enable-aot': {
+        enableAOT = true;
+        break;
+      }
       case '--enable-experimental-aot': {
+        console.error(
+          'Warning: --enable-experimental-aot flag is now --enable-aot. The old flag continues\n' +
+            'to work for now, but please update your build invocation!',
+        );
         enableAOT = true;
         break;
       }
