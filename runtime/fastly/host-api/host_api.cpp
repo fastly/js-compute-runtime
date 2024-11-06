@@ -574,8 +574,17 @@ Result<HttpHeaders *> HttpHeaders::FromEntries(vector<tuple<HostString, HostStri
 Result<Void>
 write_headers(HttpHeaders *headers,
               std::vector<std::tuple<host_api::HostString, host_api::HostString>> &list) {
+  std::vector<std::string_view> seen(list.size());
+  host_api::Result<host_api::Void> res;
   for (const auto &[name, value] : list) {
-    auto res = headers->append(name, value);
+    if (std::find(seen.begin(), seen.end(), name) == seen.end()) {
+      // first time seeing a header -> use set in case of existing values on the handle
+      res = headers->set(name, value);
+      seen.push_back(name);
+    } else {
+      // seen before -> use append
+      res = headers->append(name, value);
+    }
     if (res.is_err()) {
       return res;
     }

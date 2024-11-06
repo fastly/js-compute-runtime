@@ -4,10 +4,6 @@
 #include <optional>
 #include <string>
 
-// TODO(GB) remove once https://github.com/bytecodealliance/StarlingMonkey/pull/75 lands
-// clang-format off
-#include "builtin.h"
-// clang-format on
 #include "../../../StarlingMonkey/builtins/web/fetch/fetch-errors.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../../../StarlingMonkey/builtins/web/url.h"
