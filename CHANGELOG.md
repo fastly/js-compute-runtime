@@ -1,14 +1,12 @@
 # Changelog
 
-## [3.27.0](https://github.com/fastly/js-compute-runtime/compare/v3.26.0...v3.27.0) (2024-11-07)
+## 3.27.0 (2024-11-07)
 
+### Added
 
-### Features
+* \--enable-aot AOT compilation flag; no longer experimental. ([#1033](https://github.com/fastly/js-compute-runtime/issues/1033)) ([8128c4d](https://github.com/fastly/js-compute-runtime/commit/8128c4dd4b64b5a9979d7dc690d02b2c7bbcc1f7))
 
-* --enable-aot AOT compilation flag; no longer experimental. ([#1033](https://github.com/fastly/js-compute-runtime/issues/1033)) ([8128c4d](https://github.com/fastly/js-compute-runtime/commit/8128c4dd4b64b5a9979d7dc690d02b2c7bbcc1f7))
-
-
-### Bug Fixes
+### Fixed
 
 * ensure headers are set on first commit ([#1036](https://github.com/fastly/js-compute-runtime/issues/1036)) ([d622799](https://github.com/fastly/js-compute-runtime/commit/d6227994b896b3e31592231db955ddef3e8356bc))
 * fixup compute-file-server-cli dependency build ([#1037](https://github.com/fastly/js-compute-runtime/issues/1037)) ([206a60e](https://github.com/fastly/js-compute-runtime/commit/206a60ed49ebb209df04c9337d9703f1c12a3153))
