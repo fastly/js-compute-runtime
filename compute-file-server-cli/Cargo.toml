@@ -1,0 +1,30 @@
+[package]
+name = "compute-file-server-cli"
+version = "1.1.0"
+edition = "2021"
+description = "Uploads files to Fastly for serving directly from within Fastly Compute applications. Upload any type of file: images, text, video etc and serve directly from Fastly. It is ideal for serving files built from a static site generator such as 11ty."
+license = "MIT"
+license-file = "LICENSE"
+repository = "https://github.com/jakeChampion/compute-file-server"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = "4.0.10"
+walkdir = "2.3.2"
+reqwest = { version = "0.11", features = ["json", "stream"] }
+openssl = { version = "0.10.42", features = ["vendored"] }
+tokio = { version = "1", features = ["full"] }
+simple-error = "0.2.3"
+serde_derive = "1.0.145"
+serde = "1.0.145"
+phf = { version = "0.11", features = ["macros"] }
+fastly-api = "1.0.0-beta.0"
+indicatif = "0.17.1"
+futures = "0.3.24"
+percent-encoding = "2.2.0"
+toml_edit = "0.14.4"
+httpdate = "1.0.2"
+serde_json = "1.0.86"
+sha2 = "0.10.6"
+base64 = "0.13.0"

@@ -1,20 +1,16 @@
 {
   "license": "MIT",
   "devDependencies": {
-    "@fastly/js-compute": "^3",
-    "@jakechampion/c-at-e-file-server-cli": "^0.0.2-main"
+    "@fastly/js-compute": "^3"
   },
   "type": "module",
   "scripts": {
     "build": "npm run build:app && npm run build:files",
     "build:app": "js-compute-runtime src/index.js",
-    "build:files": "c-at-e-file-server local --toml fastly.toml --name site -- ../build/",
+    "build:files": "compute-file-server-cli local --toml fastly.toml --name site -- ../build/",
     "deploy": "npm run deploy:app && npm run deploy:files",
     "deploy:app": "fastly compute publish",
-    "deploy:files": "c-at-e-file-server upload --name 'js-docs-site' -- ../build/",
+    "deploy:files": "compute-file-server-cli upload --name 'js-docs-site' -- ../build/",
     "start": "fastly compute serve"
-  },
-  "dependencies": {
-    "@jakechampion/c-at-e-file-server": "^0.0.2-main"
   }
 }

@@ -43,13 +43,23 @@ jobs:
         with:
           node-version: 'lts/*'
 
+      - name: Cache Compute File Server CLI
+        id: cache-compute-file-server-cli
+        uses: actions/cache@v3
+        with:
+          path: "/home/runner/.cargo/bin/compute-file-server-cli"
+          key: crate-cache-compute-file-server-cli
+      - name: Install Compute File Server CLI
+        if: steps.cache-compute-file-server-cli.outputs.cache-hit != 'true'
+        run: cd compute-file-server-cli && cargo install --path .
+
       - run: npm update
         working-directory: ./documentation
       - run: npm run add-fastly-prefix
         working-directory: ./documentation
       - run: npm run docusaurus docs:version "$(npm pkg get version --json --prefix=../ | jq -r)"
         working-directory: ./documentation
-      
+
       - run: npm update
         working-directory: ./documentation/app
       - run: npm run build:files
