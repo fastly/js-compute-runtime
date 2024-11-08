@@ -1,0 +1,17 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Response.port
+
+The **`port`** getter of the `Response` interface returns the port associated with the request, as a number.
+
+In the case where no port is available (say the response is cached, or was manually created), `undefined` will be returned.
+
+To ensure an origin request with a port, pass a [`CacheOverride`](../../../fastly:cache-override/CacheOverride/CacheOverride.mdx) value.
+
+## Value
+
+`undefined` or `number`.
