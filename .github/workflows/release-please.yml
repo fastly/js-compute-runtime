@@ -99,6 +99,15 @@ jobs:
       with:
         path: "/home/runner/.cargo/bin/wasm-tools"
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
+    - name: Cache Compute File Server CLI
+      id: cache-compute-file-server-cli
+      uses: actions/cache@v3
+      with:
+        path: "/home/runner/.cargo/bin/compute-file-server-cli"
+        key: crate-cache-compute-file-server-cli
+    - name: Install Compute File Server CLI
+      if: steps.cache-compute-file-server-cli.outputs.cache-hit != 'true'
+      run: cd compute-file-server-cli && cargo install --path .
     - name: Build
       if: ${{ matrix.profile == 'release' }}
       run: npm run build
