@@ -585,7 +585,10 @@ async fn clone_version_of_service(
         ..Default::default()
     };
 
-    Ok(clone_service_version(&mut cfg, params).await?.number.unwrap())
+    Ok(clone_service_version(&mut cfg, params)
+        .await?
+        .number
+        .unwrap())
 }
 
 async fn activate_version_of_service(
@@ -607,7 +610,10 @@ async fn activate_version_of_service(
         ..Default::default()
     };
 
-    Ok(activate_service_version(&mut cfg, params).await?.number.unwrap())
+    Ok(activate_service_version(&mut cfg, params)
+        .await?
+        .number
+        .unwrap())
 }
 
 fn cli() -> Command {
@@ -735,7 +741,8 @@ async fn upload(sub_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error
         .get_one::<PathBuf>("path")
         .expect("required in clap");
 
-    let entries = WalkDir::new(path).follow_links(true)
+    let entries = WalkDir::new(path)
+        .follow_links(true)
         .into_iter()
         .filter_map(Result::ok)
         .filter(|e| !e.file_type().is_dir())
@@ -868,7 +875,8 @@ async fn local(sub_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error:
         .get_one::<PathBuf>("toml")
         .expect("required in clap");
 
-    let entries = WalkDir::new(path).follow_links(true)
+    let entries = WalkDir::new(path)
+        .follow_links(true)
         .into_iter()
         .filter_map(Result::ok)
         .filter(|e| !e.file_type().is_dir())
