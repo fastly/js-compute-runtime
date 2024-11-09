@@ -121,7 +121,7 @@ declare module 'fastly:kv-store' {
       list: string[];
       /**
        * Pass this base64 cursor into a subsequent list call to obtain the next listing.
-       * 
+       *
        * The cursor is *undefined* when the end of the list is reached.
        */
       cursor: string | undefined;

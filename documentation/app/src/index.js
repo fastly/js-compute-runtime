@@ -1,7 +1,7 @@
 /// <reference types="@fastly/js-compute" />
 /* eslint-env serviceworker */
 
-import { get } from "@jakechampion/c-at-e-file-server";
+import { get } from "../c-at-e-file-server.js";
 import { env } from "fastly:env";
 import { KVStore } from "fastly:kv-store";
 
