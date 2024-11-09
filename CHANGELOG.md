@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.27.2](https://github.com/fastly/js-compute-runtime/compare/v3.27.1...v3.27.2) (2024-11-09)
+
+
+### Bug Fixes
+
+* docs build, ensuring compute-file-server-cli for publish ([#1044](https://github.com/fastly/js-compute-runtime/issues/1044)) ([40de0b8](https://github.com/fastly/js-compute-runtime/commit/40de0b86a012df7fdba8d764b22ea2893b3d8a0d))
+
 ## 3.27.1 (2024-11-09)
 
 ### Fixed
