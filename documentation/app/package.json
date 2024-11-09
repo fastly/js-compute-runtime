@@ -1,7 +1,8 @@
 {
   "license": "MIT",
   "devDependencies": {
-    "@fastly/js-compute": "^3"
+    "@fastly/js-compute": "^3",
+    "range-parser": "^1.2.1"
   },
   "type": "module",
   "scripts": {
