@@ -285,6 +285,148 @@ int body_write(uint32_t body_handle, const uint8_t *buf, size_t buf_len, BodyWri
 WASM_IMPORT("fastly_http_body", "close")
 int body_close(uint32_t body_handle);
 
+// Module fastly_http_cache
+// HTTP Cache handle type
+typedef uint32_t fastly_http_cache_handle;
+
+// HTTP Cache specific types
+typedef uint32_t fastly_is_cacheable;
+typedef uint32_t fastly_is_sensitive;
+
+// HTTP storage action enum
+typedef uint8_t fastly_http_storage_action;
+#define FASTLY_HTTP_STORAGE_ACTION_INSERT 0
+#define FASTLY_HTTP_STORAGE_ACTION_UPDATE 1
+#define FASTLY_HTTP_STORAGE_ACTION_DO_NOT_STORE 2
+#define FASTLY_HTTP_STORAGE_ACTION_RECORD_UNCACHEABLE 3
+
+// HTTP Cache lookup options
+typedef struct fastly_http_cache_lookup_options {
+  const char *override_key;
+  size_t override_key_len;
+} fastly_http_cache_lookup_options;
+
+// HTTP Cache lookup options mask
+#define FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_RESERVED (1 << 0)
+#define FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_OVERRIDE_KEY (1 << 1)
+
+// HTTP Cache write options
+typedef struct fastly_http_cache_write_options {
+  uint64_t max_age_ns;
+  const char *vary_rule;
+  size_t vary_rule_len;
+  uint64_t initial_age_ns;
+  uint64_t stale_while_revalidate_ns;
+  const char *surrogate_keys;
+  size_t surrogate_keys_len;
+  uint64_t length;
+} fastly_http_cache_write_options;
+
+// HTTP Cache write options mask
+#define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_RESERVED (1 << 0)
+#define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_VARY_RULE (1 << 1)
+#define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS (1 << 2)
+#define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS (1 << 3)
+#define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS (1 << 4)
+#define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_LENGTH (1 << 5)
+#define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA (1 << 6)
+
+// HTTP Cache host calls
+WASM_IMPORT("fastly_http_cache", "is_request_cacheable")
+int http_cache_is_request_cacheable(uint32_t req_handle, uint32_t *is_cacheable_out);
+
+WASM_IMPORT("fastly_http_cache", "get_suggested_cache_key")
+int http_cache_get_suggested_cache_key(uint32_t req_handle, char *key_out, size_t key_out_len,
+                                       size_t *nwritten_out);
+
+WASM_IMPORT("fastly_http_cache", "lookup")
+int http_cache_lookup(uint32_t req_handle, uint32_t options_mask,
+                      fastly_http_cache_lookup_options *options, uint32_t *handle_out);
+
+WASM_IMPORT("fastly_http_cache", "transaction_lookup")
+int http_cache_transaction_lookup(uint32_t req_handle, uint32_t options_mask,
+                                  fastly_http_cache_lookup_options *options, uint32_t *handle_out);
+
+WASM_IMPORT("fastly_http_cache", "transaction_insert")
+int http_cache_transaction_insert(uint32_t handle, uint32_t resp_handle, uint32_t options_mask,
+                                  fastly_http_cache_write_options *options,
+                                  uint32_t *body_handle_out);
+
+WASM_IMPORT("fastly_http_cache", "transaction_insert_and_stream_back")
+int http_cache_transaction_insert_and_stream_back(uint32_t handle, uint32_t resp_handle,
+                                                  uint32_t options_mask,
+                                                  fastly_http_cache_write_options *options,
+                                                  uint32_t *body_handle_out,
+                                                  uint32_t *cache_handle_out);
+
+WASM_IMPORT("fastly_http_cache", "transaction_update")
+int http_cache_transaction_update(uint32_t handle, uint32_t resp_handle, uint32_t options_mask,
+                                  fastly_http_cache_write_options *options);
+
+WASM_IMPORT("fastly_http_cache", "transaction_update_and_return_fresh")
+int http_cache_transaction_update_and_return_fresh(uint32_t handle, uint32_t resp_handle,
+                                                   uint32_t options_mask,
+                                                   fastly_http_cache_write_options *options,
+                                                   uint32_t *fresh_handle_out);
+
+WASM_IMPORT("fastly_http_cache", "transaction_record_not_cacheable")
+int http_cache_transaction_record_not_cacheable(uint32_t handle, uint32_t options_mask,
+                                                fastly_http_cache_write_options *options);
+
+WASM_IMPORT("fastly_http_cache", "transaction_abandon")
+int http_cache_transaction_abandon(uint32_t handle);
+
+WASM_IMPORT("fastly_http_cache", "close")
+int http_cache_close(uint32_t handle);
+
+WASM_IMPORT("fastly_http_cache", "get_suggested_backend_request")
+int http_cache_get_suggested_backend_request(uint32_t handle, uint32_t *req_handle_out);
+
+WASM_IMPORT("fastly_http_cache", "get_suggested_cache_options")
+int http_cache_get_suggested_cache_options(uint32_t handle, uint32_t response_handle,
+                                           uint32_t options_mask,
+                                           fastly_http_cache_write_options *options,
+                                           uint32_t *options_mask_out,
+                                           fastly_http_cache_write_options *options_out);
+
+WASM_IMPORT("fastly_http_cache", "prepare_response_for_storage")
+int http_cache_prepare_response_for_storage(uint32_t handle, uint32_t response_handle,
+                                            uint8_t *storage_action_out,
+                                            uint32_t *updated_resp_handle_out);
+
+WASM_IMPORT("fastly_http_cache", "get_found_response")
+int http_cache_get_found_response(uint32_t handle, uint32_t transform_for_client,
+                                  uint32_t *resp_handle_out, uint32_t *body_handle_out);
+
+WASM_IMPORT("fastly_http_cache", "get_state")
+int http_cache_get_state(uint32_t handle, uint8_t *state_out);
+
+WASM_IMPORT("fastly_http_cache", "get_length")
+int http_cache_get_length(uint32_t handle, uint64_t *length_out);
+
+WASM_IMPORT("fastly_http_cache", "get_max_age_ns")
+int http_cache_get_max_age_ns(uint32_t handle, uint64_t *max_age_ns_out);
+
+WASM_IMPORT("fastly_http_cache", "get_stale_while_revalidate_ns")
+int http_cache_get_stale_while_revalidate_ns(uint32_t handle, uint64_t *swr_ns_out);
+
+WASM_IMPORT("fastly_http_cache", "get_age_ns")
+int http_cache_get_age_ns(uint32_t handle, uint64_t *age_ns_out);
+
+WASM_IMPORT("fastly_http_cache", "get_hits")
+int http_cache_get_hits(uint32_t handle, uint64_t *hits_out);
+
+WASM_IMPORT("fastly_http_cache", "get_sensitive_data")
+int http_cache_get_sensitive_data(uint32_t handle, uint32_t *is_sensitive_out);
+
+WASM_IMPORT("fastly_http_cache", "get_surrogate_keys")
+int http_cache_get_surrogate_keys(uint32_t handle, char *surrogate_keys_out,
+                                  size_t surrogate_keys_out_len, size_t *nwritten_out);
+
+WASM_IMPORT("fastly_http_cache", "get_vary_rule")
+int http_cache_get_vary_rule(uint32_t handle, char *vary_rule_out, size_t vary_rule_out_len,
+                             size_t *nwritten_out);
+
 // Module fastly_log
 WASM_IMPORT("fastly_log", "endpoint_get")
 int log_endpoint_get(const char *name, size_t name_len, uint32_t *endpoint_handle);
@@ -705,33 +847,6 @@ typedef struct fastly_host_cache_lookup_options {
   // * A full request handle, but used only for its headers
   uint32_t request_headers;
 } fastly_host_cache_lookup_options;
-
-// Configuration for several hostcalls that write to the cache:
-// - `insert`
-// - `transaction-insert`
-// - `transaction-insert-and-stream-back`
-// - `transaction-update`
-//
-// Some options are only allowed for certain of these hostcalls see `cache-write-options-mask`.
-typedef struct fastly_host_cache_write_options {
-  // this is a required field there's no flag for it
-  uint64_t max_age_ns;
-  // a full request handle, but used only for its headers
-  uint32_t request_headers;
-  // a list of header names separated by spaces
-  fastly_world_string vary_rule;
-  // The initial age of the object in nanoseconds (default: 0).
-  //
-  // This age is used to determine the freshness lifetime of the object as well as to
-  // prioritize which variant to return if a subsequent lookup matches more than one vary rule
-  uint64_t initial_age_ns;
-  uint64_t stale_while_revalidate_ns;
-  // a list of surrogate keys separated by spaces
-  fastly_world_string surrogate_keys;
-  uint64_t length;
-  fastly_world_list_u8 user_metadata;
-  bool sensitive_data;
-} fastly_host_cache_write_options;
 
 // a cached object was found
 #define FASTLY_HOST_CACHE_LOOKUP_STATE_FOUND (1 << 0)

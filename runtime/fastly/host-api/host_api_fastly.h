@@ -151,11 +151,6 @@ Result<Void>
 write_headers(HttpHeaders *headers,
               std::vector<std::tuple<host_api::HostString, host_api::HostString>> &list);
 
-bool error_is_generic(APIError e);
-bool error_is_invalid_argument(APIError e);
-bool error_is_optional_none(APIError e);
-bool error_is_bad_handle(APIError e);
-
 class FastlySendError final {
 public:
   enum detail {
@@ -571,6 +566,12 @@ public:
 
   HttpHeadersReadOnly *headers() override;
   HttpHeaders *headers_writable() override;
+
+  /// Check if request is cacheable
+  Result<bool> is_cacheable() const;
+
+  /// Get suggested cache key
+  Result<HostString> get_suggested_cache_key() const;
 };
 
 class HttpResp final : public HttpBase {
@@ -635,6 +636,124 @@ class GeoIp final {
 public:
   /// Lookup information about the ip address provided.
   static Result<std::optional<HostString>> lookup(std::span<uint8_t> bytes);
+};
+
+struct HttpCacheWriteOptions final {
+  // Required max age of the response before considered stale
+  uint64_t max_age_ns;
+
+  // Optional vary rule - header names separated by spaces
+  std::optional<std::string_view> vary_rule;
+
+  // Optional initial age of the response in nanoseconds
+  std::optional<uint64_t> initial_age_ns;
+
+  // Optional stale-while-revalidate duration in nanoseconds
+  std::optional<uint64_t> stale_while_revalidate_ns;
+
+  // Optional surrogate keys separated by spaces
+  std::vector<std::string_view> surrogate_keys;
+
+  // Optional length of the response body
+  std::optional<uint64_t> length;
+
+  // Optional flag indicating if this contains sensitive data
+  bool sensitive_data = false;
+};
+
+struct CacheState final {
+  uint8_t state = 0;
+
+  CacheState() = default;
+  CacheState(uint8_t state) : state{state} {}
+
+  bool is_found() const;
+  bool is_usable() const;
+  bool is_stale() const;
+  bool must_insert_or_update() const;
+};
+
+class HttpCacheEntry final {
+public:
+  using Handle = uint32_t;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  HttpCacheEntry() = default;
+  explicit HttpCacheEntry(Handle handle) : handle{handle} {}
+
+  bool is_valid() const { return handle != invalid; }
+
+  /// Lookup a cached object without participating in request collapsing
+  static Result<HttpCacheEntry> lookup(const HttpReq &req);
+
+  /// Lookup a cached object, participating in request collapsing
+  static Result<HttpCacheEntry> transaction_lookup(const HttpReq &req);
+
+  /// Insert a response into cache
+  Result<HttpBody> transaction_insert(const HttpResp &resp, const HttpCacheWriteOptions &opts);
+
+  /// Insert a response and get back a stream
+  Result<std::tuple<HttpBody, HttpCacheEntry>>
+  transaction_insert_and_stream_back(const HttpResp &resp, const HttpCacheWriteOptions &opts);
+
+  /// Update a response's headers and metadata without changing body
+  Result<Void> transaction_update(const HttpResp &resp, const HttpCacheWriteOptions &opts);
+
+  /// Update response and get back a fresh handle
+  Result<HttpCacheEntry> transaction_update_and_return_fresh(const HttpResp &resp,
+                                                             const HttpCacheWriteOptions &opts);
+
+  /// Record that this entry should not be cached
+  Result<Void>
+  transaction_record_not_cacheable(uint64_t max_age_ns,
+                                   std::optional<std::string_view> vary_rule = std::nullopt);
+
+  /// Abandon the transaction
+  Result<Void> transaction_abandon();
+
+  /// Close the cache entry
+  Result<Void> close();
+
+  /// Get suggested backend request
+  Result<HttpReq> get_suggested_backend_request() const;
+
+  /// Get suggested cache options
+  Result<HttpCacheWriteOptions> get_suggested_cache_options(const HttpResp &resp) const;
+
+  /// Prepare response for storage
+  Result<std::tuple<uint8_t, HttpResp>> prepare_response_for_storage(HttpResp resp) const;
+
+  /// Get found response
+  Result<std::optional<Response>> get_found_response(bool transform_for_client = true) const;
+
+  /// Get cache entry state
+  Result<CacheState> get_state() const;
+
+  /// Get content length
+  Result<uint64_t> get_length() const;
+
+  /// Get max age in nanoseconds
+  Result<uint64_t> get_max_age_ns() const;
+
+  /// Get stale while revalidate time in nanoseconds
+  Result<uint64_t> get_stale_while_revalidate_ns() const;
+
+  /// Get age in nanoseconds
+  Result<uint64_t> get_age_ns() const;
+
+  /// Get hit count
+  Result<uint64_t> get_hits() const;
+
+  /// Check if contains sensitive data
+  Result<bool> get_sensitive_data() const;
+
+  /// Get surrogate keys
+  Result<std::vector<HostString>> get_surrogate_keys() const;
+
+  /// Get vary rule
+  Result<std::optional<HostString>> get_vary_rule() const;
 };
 
 class LogEndpoint final {
@@ -799,18 +918,6 @@ struct CacheWriteOptions final {
   HostBytes metadata;
 
   bool sensitive = false;
-};
-
-struct CacheState final {
-  uint8_t state = 0;
-
-  CacheState() = default;
-  CacheState(uint8_t state) : state{state} {}
-
-  bool is_found() const;
-  bool is_usable() const;
-  bool is_stale() const;
-  bool must_insert_or_update() const;
 };
 
 class CacheHandle final {
@@ -1054,11 +1161,14 @@ public:
 void handle_api_error(JSContext *cx, uint8_t err, int line, const char *func);
 void handle_kv_error(JSContext *cx, host_api::FastlyKVError err, const unsigned int err_type,
                      int line, const char *func);
+
 bool error_is_generic(APIError e);
 bool error_is_invalid_argument(APIError e);
 bool error_is_optional_none(APIError e);
 bool error_is_bad_handle(APIError e);
 bool error_is_unsupported(APIError e);
+bool error_is_buffer_len(APIError e);
+
 void handle_fastly_error(JSContext *cx, APIError err, int line, const char *func);
 
 } // namespace host_api
