@@ -20,6 +20,8 @@ bool error_is_bad_handle(APIError e) { return e == FASTLY_HOST_ERROR_BAD_HANDLE;
 
 bool error_is_unsupported(APIError e) { return e == FASTLY_HOST_ERROR_UNSUPPORTED; }
 
+bool error_is_buffer_len(APIError e) { return e == FASTLY_HOST_ERROR_BUFFER_LEN; }
+
 /* Returns false if an exception is set on `cx` and the caller should
    immediately return to propagate the exception. */
 void handle_api_error(JSContext *cx, APIError err, int line, const char *func) {
