@@ -1722,6 +1722,532 @@ Result<std::optional<HostString>> GeoIp::lookup(std::span<uint8_t> bytes) {
   return res;
 }
 
+namespace {
+std::pair<fastly::fastly_http_cache_write_options, uint32_t>
+to_fastly_cache_write_options(const HttpCacheWriteOptions &opts) {
+  fastly::fastly_http_cache_write_options options{};
+  uint32_t mask = 0;
+
+  // Required field, no mask
+  options.max_age_ns = opts.max_age_ns;
+
+  if (opts.vary_rule && !opts.vary_rule->empty()) {
+    options.vary_rule = opts.vary_rule->data();
+    options.vary_rule_len = opts.vary_rule->size();
+    mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_VARY_RULE;
+  }
+
+  if (opts.initial_age_ns) {
+    options.initial_age_ns = *opts.initial_age_ns;
+    mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS;
+  }
+
+  if (opts.stale_while_revalidate_ns) {
+    options.stale_while_revalidate_ns = *opts.stale_while_revalidate_ns;
+    mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS;
+  }
+
+  if (!opts.surrogate_keys.empty()) {
+    // Join surrogate keys with spaces
+    std::string joined_keys;
+    for (const auto &key : opts.surrogate_keys) {
+      if (!joined_keys.empty()) {
+        joined_keys += ' ';
+      }
+      joined_keys.append(key);
+    }
+    options.surrogate_keys = joined_keys.c_str();
+    options.surrogate_keys_len = joined_keys.size();
+    mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS;
+  }
+
+  if (opts.length) {
+    options.length = *opts.length;
+    mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_LENGTH;
+  }
+
+  if (opts.sensitive_data) {
+    mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA;
+  }
+
+  return {options, mask};
+}
+
+HttpCacheWriteOptions
+from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &fastly_opts,
+                                uint32_t mask) {
+  HttpCacheWriteOptions opts;
+
+  // Required field
+  opts.max_age_ns = fastly_opts.max_age_ns;
+
+  if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_VARY_RULE && fastly_opts.vary_rule &&
+      fastly_opts.vary_rule_len > 0) {
+    opts.vary_rule = std::string_view(fastly_opts.vary_rule, fastly_opts.vary_rule_len);
+  }
+
+  if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS) {
+    opts.initial_age_ns = fastly_opts.initial_age_ns;
+  }
+
+  if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS) {
+    opts.stale_while_revalidate_ns = fastly_opts.stale_while_revalidate_ns;
+  }
+
+  if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS && fastly_opts.surrogate_keys &&
+      fastly_opts.surrogate_keys_len > 0) {
+    // Split space-separated surrogate keys
+    std::string_view keys_str(fastly_opts.surrogate_keys, fastly_opts.surrogate_keys_len);
+    size_t pos = 0;
+    while (pos < keys_str.size()) {
+      size_t space = keys_str.find(' ', pos);
+      if (space == std::string_view::npos) {
+        opts.surrogate_keys.push_back(keys_str.substr(pos));
+        break;
+      }
+      opts.surrogate_keys.push_back(keys_str.substr(pos, space - pos));
+      pos = space + 1;
+    }
+  }
+
+  if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_LENGTH) {
+    opts.length = fastly_opts.length;
+  }
+
+  if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA) {
+    opts.sensitive_data = true;
+  }
+
+  return opts;
+}
+} // namespace
+
+// HttpReq cache-related method implementations
+Result<bool> HttpReq::is_cacheable() const {
+  uint32_t is_cacheable_out;
+  auto res = fastly::http_cache_is_request_cacheable(this->handle, &is_cacheable_out);
+  if (res != 0) {
+    return Result<bool>::err(host_api::APIError(res));
+  }
+  return Result<bool>::ok(is_cacheable_out != 0);
+}
+
+Result<HostString> HttpReq::get_suggested_cache_key() const {
+  size_t nwritten;
+  uint8_t *buffer = static_cast<uint8_t *>(cabi_malloc(32, 1)); // HTTP cache keys must be 32 bytes
+  if (!buffer) {
+    return Result<HostString>::err(host_api::APIError(FASTLY_HOST_ERROR_GENERIC_ERROR));
+  }
+
+  auto res = fastly::http_cache_get_suggested_cache_key(
+      this->handle, reinterpret_cast<char *>(buffer), 32, &nwritten);
+
+  if (res != 0) {
+    cabi_free(buffer);
+    return Result<HostString>::err(host_api::APIError(res));
+  }
+
+  fastly::fastly_world_string str = {.ptr = buffer, .len = nwritten};
+  return Result<HostString>::ok(make_host_string(str));
+}
+
+// HttpCacheEntry method implementations
+Result<HttpCacheEntry> HttpCacheEntry::lookup(const HttpReq &req) {
+  uint32_t handle_out;
+  auto res = fastly::http_cache_lookup(req.handle,
+                                       0, // No options
+                                       nullptr, &handle_out);
+
+  if (res != 0) {
+    return Result<HttpCacheEntry>::err(host_api::APIError(res));
+  }
+
+  return Result<HttpCacheEntry>::ok(HttpCacheEntry(handle_out));
+}
+
+Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req) {
+  uint32_t handle_out;
+  auto res = fastly::http_cache_transaction_lookup(req.handle,
+                                                   0, // No options
+                                                   nullptr, &handle_out);
+
+  if (res != 0) {
+    return Result<HttpCacheEntry>::err(host_api::APIError(res));
+  }
+
+  return Result<HttpCacheEntry>::ok(HttpCacheEntry(handle_out));
+}
+
+Result<HttpBody> HttpCacheEntry::transaction_insert(const HttpResp &resp,
+                                                    const HttpCacheWriteOptions &opts) {
+  uint32_t body_handle_out;
+  auto [fastly_opts, mask] = to_fastly_cache_write_options(opts);
+  auto res = fastly::http_cache_transaction_insert(this->handle, resp.handle, mask, &fastly_opts,
+                                                   &body_handle_out);
+
+  if (res != 0) {
+    return Result<HttpBody>::err(host_api::APIError(res));
+  }
+
+  return Result<HttpBody>::ok(HttpBody(body_handle_out));
+}
+
+Result<std::tuple<HttpBody, HttpCacheEntry>>
+HttpCacheEntry::transaction_insert_and_stream_back(const HttpResp &resp,
+                                                   const HttpCacheWriteOptions &opts) {
+  uint32_t body_handle_out;
+  uint32_t cache_handle_out;
+  auto [fastly_opts, mask] = to_fastly_cache_write_options(opts);
+  auto res = fastly::http_cache_transaction_insert_and_stream_back(
+      this->handle, resp.handle, mask, &fastly_opts, &body_handle_out, &cache_handle_out);
+
+  if (res != 0) {
+    return Result<std::tuple<HttpBody, HttpCacheEntry>>::err(host_api::APIError(res));
+  }
+
+  return Result<std::tuple<HttpBody, HttpCacheEntry>>::ok(
+      std::make_tuple(HttpBody(body_handle_out), HttpCacheEntry(cache_handle_out)));
+}
+
+Result<Void> HttpCacheEntry::transaction_update(const HttpResp &resp,
+                                                const HttpCacheWriteOptions &opts) {
+  auto [fastly_opts, mask] = to_fastly_cache_write_options(opts);
+  auto res = fastly::http_cache_transaction_update(this->handle, resp.handle, mask, &fastly_opts);
+
+  if (res != 0) {
+    return Result<Void>::err(host_api::APIError(res));
+  }
+
+  return Result<Void>::ok(Void{});
+}
+
+Result<HttpCacheEntry>
+HttpCacheEntry::transaction_update_and_return_fresh(const HttpResp &resp,
+                                                    const HttpCacheWriteOptions &opts) {
+  uint32_t fresh_handle_out;
+  auto [fastly_opts, mask] = to_fastly_cache_write_options(opts);
+  auto res = fastly::http_cache_transaction_update_and_return_fresh(
+      this->handle, resp.handle, mask, &fastly_opts, &fresh_handle_out);
+
+  if (res != 0) {
+    return Result<HttpCacheEntry>::err(host_api::APIError(res));
+  }
+
+  return Result<HttpCacheEntry>::ok(HttpCacheEntry(fresh_handle_out));
+}
+
+Result<Void>
+HttpCacheEntry::transaction_record_not_cacheable(uint64_t max_age_ns,
+                                                 std::optional<std::string_view> vary_rule) {
+  HttpCacheWriteOptions write_options{.max_age_ns = max_age_ns};
+  if (auto &vary_rule_val = vary_rule) {
+    write_options.vary_rule = *vary_rule;
+  }
+  auto [fastly_opts, mask] = to_fastly_cache_write_options(write_options);
+  auto res = fastly::http_cache_transaction_record_not_cacheable(this->handle, mask, &fastly_opts);
+
+  if (res != 0) {
+    return Result<Void>::err(host_api::APIError(res));
+  }
+
+  return Result<Void>::ok(Void{});
+}
+
+Result<Void> HttpCacheEntry::transaction_abandon() {
+  auto res = fastly::http_cache_transaction_abandon(this->handle);
+
+  if (res != 0) {
+    return Result<Void>::err(host_api::APIError(res));
+  }
+
+  return Result<Void>::ok(Void{});
+}
+
+Result<Void> HttpCacheEntry::close() {
+  auto res = fastly::http_cache_close(this->handle);
+
+  if (res != 0) {
+    return Result<Void>::err(host_api::APIError(res));
+  }
+
+  handle = invalid;
+  return Result<Void>::ok(Void{});
+}
+
+Result<HttpReq> HttpCacheEntry::get_suggested_backend_request() const {
+  uint32_t req_handle_out;
+  auto res = fastly::http_cache_get_suggested_backend_request(this->handle, &req_handle_out);
+
+  if (res != 0) {
+    return Result<HttpReq>::err(host_api::APIError(res));
+  }
+
+  return Result<HttpReq>::ok(HttpReq(req_handle_out));
+}
+
+Result<HttpCacheWriteOptions>
+HttpCacheEntry::get_suggested_cache_options(const HttpResp &resp) const {
+  fastly::fastly_http_cache_write_options options_in{};
+  fastly::fastly_http_cache_write_options options_out{};
+  uint32_t options_mask_out;
+
+  auto res = fastly::http_cache_get_suggested_cache_options(
+      this->handle, resp.handle,
+      FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_VARY_RULE |
+          FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS |
+          FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS |
+          FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS |
+          FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_LENGTH |
+          FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA,
+      &options_in, &options_mask_out, &options_out);
+
+  if (res != 0) {
+    return Result<HttpCacheWriteOptions>::err(host_api::APIError(res));
+  }
+
+  return Result<HttpCacheWriteOptions>::ok(
+      from_fastly_cache_write_options(options_out, options_mask_out));
+}
+
+Result<std::tuple<uint8_t, HttpResp>>
+HttpCacheEntry::prepare_response_for_storage(HttpResp resp) const {
+  uint8_t storage_action_out;
+  uint32_t updated_resp_handle_out;
+
+  auto res = fastly::http_cache_prepare_response_for_storage(
+      this->handle, resp.handle, &storage_action_out, &updated_resp_handle_out);
+
+  if (res != 0) {
+    return Result<std::tuple<uint8_t, HttpResp>>::err(host_api::APIError(res));
+  }
+
+  return Result<std::tuple<uint8_t, HttpResp>>::ok(
+      std::make_tuple(storage_action_out, HttpResp(updated_resp_handle_out)));
+}
+
+Result<std::optional<Response>>
+HttpCacheEntry::get_found_response(bool transform_for_client) const {
+  uint32_t resp_handle_out;
+  uint32_t body_handle_out;
+
+  auto res = fastly::http_cache_get_found_response(this->handle, transform_for_client ? 1 : 0,
+                                                   &resp_handle_out, &body_handle_out);
+
+  if (res != 0) {
+    if (host_api::error_is_optional_none(host_api::APIError(res))) {
+      return Result<std::optional<Response>>::ok(std::nullopt);
+    }
+    return Result<std::optional<Response>>::err(host_api::APIError(res));
+  }
+
+  return Result<std::optional<Response>>::ok(
+      Response(HttpResp(resp_handle_out), HttpBody(body_handle_out)));
+}
+
+Result<CacheState> HttpCacheEntry::get_state() const {
+  uint8_t state_out;
+  auto res = fastly::http_cache_get_state(this->handle, &state_out);
+
+  if (res != 0) {
+    return Result<CacheState>::err(host_api::APIError(res));
+  }
+
+  return Result<CacheState>::ok(CacheState(state_out));
+}
+
+Result<uint64_t> HttpCacheEntry::get_length() const {
+  uint64_t length_out;
+  auto res = fastly::http_cache_get_length(this->handle, &length_out);
+
+  if (res != 0) {
+    return Result<uint64_t>::err(host_api::APIError(res));
+  }
+
+  return Result<uint64_t>::ok(length_out);
+}
+
+Result<uint64_t> HttpCacheEntry::get_max_age_ns() const {
+  uint64_t max_age_out;
+  auto res = fastly::http_cache_get_max_age_ns(this->handle, &max_age_out);
+
+  if (res != 0) {
+    return Result<uint64_t>::err(host_api::APIError(res));
+  }
+
+  return Result<uint64_t>::ok(max_age_out);
+}
+
+Result<uint64_t> HttpCacheEntry::get_stale_while_revalidate_ns() const {
+  uint64_t swr_out;
+  auto res = fastly::http_cache_get_stale_while_revalidate_ns(this->handle, &swr_out);
+
+  if (res != 0) {
+    return Result<uint64_t>::err(host_api::APIError(res));
+  }
+
+  return Result<uint64_t>::ok(swr_out);
+}
+
+Result<uint64_t> HttpCacheEntry::get_age_ns() const {
+  uint64_t age_out;
+  auto res = fastly::http_cache_get_age_ns(this->handle, &age_out);
+
+  if (res != 0) {
+    return Result<uint64_t>::err(host_api::APIError(res));
+  }
+
+  return Result<uint64_t>::ok(age_out);
+}
+
+Result<uint64_t> HttpCacheEntry::get_hits() const {
+  uint64_t hits_out;
+  auto res = fastly::http_cache_get_hits(this->handle, &hits_out);
+
+  if (res != 0) {
+    return Result<uint64_t>::err(host_api::APIError(res));
+  }
+
+  return Result<uint64_t>::ok(hits_out);
+}
+
+Result<bool> HttpCacheEntry::get_sensitive_data() const {
+  uint32_t is_sensitive_out;
+  auto res = fastly::http_cache_get_sensitive_data(this->handle, &is_sensitive_out);
+
+  if (res != 0) {
+    return Result<bool>::err(host_api::APIError(res));
+  }
+
+  return Result<bool>::ok(is_sensitive_out != 0);
+}
+
+Result<std::vector<HostString>> HttpCacheEntry::get_surrogate_keys() const {
+  // Allocate initial buffer
+  size_t nwritten;
+  uint8_t *buffer = static_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
+  if (!buffer) {
+    return Result<std::vector<HostString>>::err(
+        host_api::APIError(FASTLY_HOST_ERROR_GENERIC_ERROR));
+  }
+
+  auto res = fastly::http_cache_get_surrogate_keys(this->handle, reinterpret_cast<char *>(buffer),
+                                                   HOSTCALL_BUFFER_LEN, &nwritten);
+
+  if (res != 0) {
+    if (host_api::error_is_optional_none(host_api::APIError(res))) {
+      cabi_free(buffer);
+      return Result<std::vector<HostString>>::ok(std::vector<HostString>{});
+    }
+    if (host_api::error_is_buffer_len(host_api::APIError(res))) {
+      // Resize buffer and try again
+      uint8_t *new_buffer =
+          static_cast<uint8_t *>(cabi_realloc(buffer, HOSTCALL_BUFFER_LEN, 1, nwritten));
+      if (!new_buffer) {
+        cabi_free(buffer);
+        return Result<std::vector<HostString>>::err(
+            host_api::APIError(FASTLY_HOST_ERROR_GENERIC_ERROR));
+      }
+      buffer = new_buffer;
+
+      res = fastly::http_cache_get_surrogate_keys(this->handle, reinterpret_cast<char *>(buffer),
+                                                  nwritten, &nwritten);
+      if (res != 0) {
+        cabi_free(buffer);
+        return Result<std::vector<HostString>>::err(host_api::APIError(res));
+      }
+    } else {
+      cabi_free(buffer);
+      return Result<std::vector<HostString>>::err(host_api::APIError(res));
+    }
+  }
+
+  // Split the buffer into individual keys
+  std::vector<HostString> keys;
+  const char *start = reinterpret_cast<char *>(buffer);
+  const char *end = start + nwritten;
+  const char *key_start = start;
+
+  for (const char *p = start; p < end; ++p) {
+    if (*p == ' ') {
+      if (p > key_start) { // Skip empty strings from consecutive spaces
+        fastly::fastly_world_string key = {
+            .ptr = static_cast<uint8_t *>(cabi_malloc(p - key_start, 1)),
+            .len = static_cast<size_t>(p - key_start)};
+        if (!key.ptr) {
+          cabi_free(buffer);
+          return Result<std::vector<HostString>>::err(
+              host_api::APIError(FASTLY_HOST_ERROR_GENERIC_ERROR));
+        }
+        std::memcpy(key.ptr, key_start, key.len);
+        keys.push_back(make_host_string(key));
+      }
+      key_start = p + 1;
+    }
+  }
+
+  // Handle the last key if there is one
+  if (key_start < end) {
+    fastly::fastly_world_string key = {.ptr =
+                                           static_cast<uint8_t *>(cabi_malloc(end - key_start, 1)),
+                                       .len = static_cast<size_t>(end - key_start)};
+    if (!key.ptr) {
+      cabi_free(buffer);
+      return Result<std::vector<HostString>>::err(
+          host_api::APIError(FASTLY_HOST_ERROR_GENERIC_ERROR));
+    }
+    std::memcpy(key.ptr, key_start, key.len);
+    keys.push_back(make_host_string(key));
+  }
+
+  cabi_free(buffer);
+  return Result<std::vector<HostString>>::ok(std::move(keys));
+}
+
+Result<std::optional<HostString>> HttpCacheEntry::get_vary_rule() const {
+  // Allocate initial buffer
+  size_t nwritten;
+  uint8_t *buffer = static_cast<uint8_t *>(cabi_malloc(HEADER_MAX_LEN, 1));
+  if (!buffer) {
+    return Result<std::optional<HostString>>::err(
+        host_api::APIError(FASTLY_HOST_ERROR_GENERIC_ERROR));
+  }
+
+  auto res = fastly::http_cache_get_vary_rule(this->handle, reinterpret_cast<char *>(buffer),
+                                              HEADER_MAX_LEN, &nwritten);
+
+  if (res != 0) {
+    if (host_api::error_is_optional_none(host_api::APIError(res))) {
+      cabi_free(buffer);
+      return Result<std::optional<HostString>>::ok(std::nullopt);
+    }
+    if (host_api::error_is_buffer_len(host_api::APIError(res))) {
+      // Resize buffer and try again
+      uint8_t *new_buffer =
+          static_cast<uint8_t *>(cabi_realloc(buffer, HEADER_MAX_LEN, 1, nwritten));
+      if (!new_buffer) {
+        cabi_free(buffer);
+        return Result<std::optional<HostString>>::err(
+            host_api::APIError(FASTLY_HOST_ERROR_GENERIC_ERROR));
+      }
+      buffer = new_buffer;
+
+      res = fastly::http_cache_get_vary_rule(this->handle, reinterpret_cast<char *>(buffer),
+                                             nwritten, &nwritten);
+      if (res != 0) {
+        cabi_free(buffer);
+        return Result<std::optional<HostString>>::err(host_api::APIError(res));
+      }
+    } else {
+      cabi_free(buffer);
+      return Result<std::optional<HostString>>::err(host_api::APIError(res));
+    }
+  }
+
+  fastly::fastly_world_string str = {.ptr = buffer, .len = nwritten};
+
+  return Result<std::optional<HostString>>::ok(make_host_string(str));
+}
+
 Result<LogEndpoint> LogEndpoint::get(std::string_view name) {
   Result<LogEndpoint> res;
 
@@ -2108,10 +2634,36 @@ Result<CacheHandle> CacheHandle::transaction_lookup(std::string_view key,
   return res;
 }
 
+// Configuration for several hostcalls that write to the cache:
+// - `insert`
+// - `transaction-insert`
+// - `transaction-insert-and-stream-back`
+// - `transaction-update`
+//
+// Some options are only allowed for certain of these hostcalls see `cache-write-options-mask`.
+typedef struct fastly_host_cache_write_options {
+  // this is a required field there's no flag for it
+  uint64_t max_age_ns;
+  // a full request handle, but used only for its headers
+  uint32_t request_headers;
+  // a list of header names separated by spaces
+  fastly::fastly_world_string vary_rule;
+  // The initial age of the object in nanoseconds (default: 0).
+  //
+  // This age is used to determine the freshness lifetime of the object as well as to
+  // prioritize which variant to return if a subsequent lookup matches more than one vary rule
+  uint64_t initial_age_ns;
+  uint64_t stale_while_revalidate_ns;
+  // a list of surrogate keys separated by spaces
+  fastly::fastly_world_string surrogate_keys;
+  uint64_t length;
+  fastly::fastly_world_list_u8 user_metadata;
+  bool sensitive_data;
+} fastly_host_cache_write_options;
+
 namespace {
 
-void init_write_options(fastly::fastly_host_cache_write_options &options,
-                        const CacheWriteOptions &opts) {
+void init_write_options(fastly_host_cache_write_options &options, const CacheWriteOptions &opts) {
   memset(&options, 0, sizeof(options));
 
   options.max_age_ns = opts.max_age_ns;
@@ -2161,7 +2713,7 @@ void init_write_options(fastly::fastly_host_cache_write_options &options,
 Result<HttpBody> CacheHandle::insert(std::string_view key, const CacheWriteOptions &os) {
   Result<HttpBody> res;
 
-  fastly::fastly_host_cache_write_options options;
+  fastly_host_cache_write_options options;
   init_write_options(options, os);
 
   fastly::fastly_host_error err;
@@ -2222,7 +2774,7 @@ Result<HttpBody> CacheHandle::insert(std::string_view key, const CacheWriteOptio
 Result<HttpBody> CacheHandle::transaction_insert(const CacheWriteOptions &os) {
   Result<HttpBody> res;
 
-  fastly::fastly_host_cache_write_options options;
+  fastly_host_cache_write_options options;
   init_write_options(options, os);
 
   fastly::fastly_host_error err;
@@ -2281,7 +2833,7 @@ Result<HttpBody> CacheHandle::transaction_insert(const CacheWriteOptions &os) {
 Result<Void> CacheHandle::transaction_update(const CacheWriteOptions &os) {
   Result<Void> res;
 
-  fastly::fastly_host_cache_write_options options;
+  fastly_host_cache_write_options options;
   init_write_options(options, os);
 
   fastly::fastly_host_error err;
@@ -2339,7 +2891,7 @@ Result<std::tuple<HttpBody, CacheHandle>>
 CacheHandle::transaction_insert_and_stream_back(const CacheWriteOptions &os) {
   Result<std::tuple<HttpBody, CacheHandle>> res;
 
-  fastly::fastly_host_cache_write_options options;
+  fastly_host_cache_write_options options;
   init_write_options(options, os);
 
   fastly::fastly_host_error err;
