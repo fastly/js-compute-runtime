@@ -26,7 +26,10 @@ public:
   //
   // `PCI` is interpreted as a boolean, and a flag gets set in the hostcall's
   // `tag` parameter if `PCI` is true.
-  enum Slots { Mode, TTL, SWR, SurrogateKey, PCI, Count };
+  //
+  // `BeforeSend` and `AfterSend` are function callbacks that can be set
+  // to execute before and after sending the request.
+  enum Slots { Mode, TTL, SWR, SurrogateKey, PCI, BeforeSend, AfterSend, Count };
 
   enum class CacheOverrideMode { None, Pass, Override };
 
@@ -44,6 +47,10 @@ public:
   static JSObject *clone(JSContext *cx, JS::HandleObject self);
   static JS::Value pci(JSObject *self);
   static void set_pci(JSObject *self, bool pci);
+  static JS::Value beforeSend(JSObject *self);
+  static void set_beforeSend(JSObject *self, JSObject *fn);
+  static JS::Value afterSend(JSObject *self);
+  static void set_afterSend(JSObject *self, JSObject *fn);
   static CacheOverrideMode mode(JSObject *self);
   static void set_mode(JSObject *self, CacheOverride::CacheOverrideMode mode);
   static bool mode_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
@@ -61,6 +68,12 @@ public:
   static bool pci_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
   static bool pci_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                       JS::MutableHandleValue rval);
+  static bool before_send_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool before_send_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
+                              JS::MutableHandleValue rval);
+  static bool after_send_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool after_send_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
+                             JS::MutableHandleValue rval);
   template <auto accessor_fn> static bool accessor_get(JSContext *cx, unsigned argc, JS::Value *vp);
   template <auto accessor_fn> static bool accessor_set(JSContext *cx, unsigned argc, JS::Value *vp);
 
