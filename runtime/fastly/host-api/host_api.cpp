@@ -3213,7 +3213,7 @@ FastlyResult<HttpBody, FastlyKVError> KVStorePendingList::wait() {
 
   fastly::fastly_host_error err;
   HttpBody body{};
-  fastly::fastly_kv_error kv_err;
+  fastly::fastly_kv_error kv_err = KV_ERROR_UNINITIALIZED;
 
   if (!convert_result(fastly::kv_store_list_wait(this->handle, &body.handle, &kv_err), &err) ||
       kv_err != KV_ERROR_OK || body.handle == INVALID_HANDLE) {
@@ -3252,7 +3252,7 @@ KVStorePendingLookup::wait() {
   HttpBody body{};
 
   uint32_t gen_out;
-  fastly::fastly_kv_error kv_err = 0;
+  fastly::fastly_kv_error kv_err = KV_ERROR_UNINITIALIZED;
   uint8_t *metadata_buf = reinterpret_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
   size_t metadata_nwritten;
 
@@ -3301,7 +3301,7 @@ Result<KVStorePendingDelete::Handle> KVStore::delete_(std::string_view key) {
 FastlyResult<Void, FastlyKVError> KVStorePendingDelete::wait() {
   FastlyResult<Void, FastlyKVError> res;
   fastly::fastly_host_error err;
-  fastly::fastly_kv_error kv_err;
+  fastly::fastly_kv_error kv_err = KV_ERROR_UNINITIALIZED;
   if (!convert_result(fastly::kv_store_delete_wait(this->handle, &kv_err), &err) ||
       kv_err != KV_ERROR_OK) {
     res.emplace_err(make_fastly_kv_error(kv_err));
@@ -3371,7 +3371,7 @@ KVStore::insert(std::string_view key, HttpBody body, std::optional<InsertMode> m
 FastlyResult<Void, FastlyKVError> KVStorePendingInsert::wait() {
   FastlyResult<Void, FastlyKVError> res;
   fastly::fastly_host_error err;
-  fastly::fastly_kv_error kv_err;
+  fastly::fastly_kv_error kv_err = KV_ERROR_UNINITIALIZED;
   if (!convert_result(fastly::kv_store_insert_wait(this->handle, &kv_err), &err) ||
       kv_err != KV_ERROR_OK) {
     res.emplace_err(make_fastly_kv_error(kv_err));
