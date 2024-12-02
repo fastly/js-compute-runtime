@@ -79,6 +79,26 @@ void CacheOverride::set_pci(JSObject *self, bool pci) {
   JS::SetReservedSlot(self, CacheOverride::Slots::PCI, JS::BooleanValue(pci));
 }
 
+JS::Value CacheOverride::beforeSend(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+  return JS::GetReservedSlot(self, Slots::BeforeSend);
+}
+
+void CacheOverride::set_beforeSend(JSObject *self, JSObject *fn) {
+  MOZ_ASSERT(is_instance(self));
+  JS::SetReservedSlot(self, Slots::BeforeSend, JS::ObjectValue(*fn));
+}
+
+JS::Value CacheOverride::afterSend(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+  return JS::GetReservedSlot(self, Slots::AfterSend);
+}
+
+void CacheOverride::set_afterSend(JSObject *self, JSObject *fn) {
+  MOZ_ASSERT(is_instance(self));
+  JS::SetReservedSlot(self, Slots::AfterSend, JS::ObjectValue(*fn));
+}
+
 host_api::CacheOverrideTag CacheOverride::abi_tag(JSObject *self) {
   host_api::CacheOverrideTag tag;
 
@@ -285,6 +305,64 @@ bool CacheOverride::pci_set(JSContext *cx, JS::HandleObject self, JS::HandleValu
   return true;
 }
 
+bool CacheOverride::before_send_get(JSContext *cx, JS::HandleObject self,
+                                    JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    return api::throw_error(cx, api::Errors::WrongReceiver, "beforeSend get", "CacheOverride");
+  }
+  rval.set(CacheOverride::beforeSend(self));
+  return true;
+}
+
+bool CacheOverride::before_send_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
+                                    JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    return api::throw_error(cx, api::Errors::WrongReceiver, "beforeSend set", "CacheOverride");
+  }
+  if (!CacheOverride::ensure_override(cx, self, "beforeSend"))
+    return false;
+  if (val.isUndefined()) {
+    JS::SetReservedSlot(self, Slots::BeforeSend, val);
+  } else if (!val.isObject() || !JS::IsCallable(&val.toObject())) {
+    JS_ReportErrorUTF8(cx, "CacheOverride: beforeSend must be a function");
+    return false;
+  } else {
+    CacheOverride::set_beforeSend(self, &val.toObject());
+  }
+
+  rval.set(CacheOverride::beforeSend(self));
+  return true;
+}
+
+bool CacheOverride::after_send_get(JSContext *cx, JS::HandleObject self,
+                                   JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    return api::throw_error(cx, api::Errors::WrongReceiver, "afterSend get", "CacheOverride");
+  }
+  rval.set(CacheOverride::afterSend(self));
+  return true;
+}
+
+bool CacheOverride::after_send_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
+                                   JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    return api::throw_error(cx, api::Errors::WrongReceiver, "afterSend set", "CacheOverride");
+  }
+  if (!CacheOverride::ensure_override(cx, self, "afterSend"))
+    return false;
+  if (val.isUndefined()) {
+    JS::SetReservedSlot(self, Slots::AfterSend, val);
+  } else if (!val.isObject() || !JS::IsCallable(&val.toObject())) {
+    JS_ReportErrorUTF8(cx, "CacheOverride: afterSend must be a function");
+    return false;
+  } else {
+    CacheOverride::set_afterSend(self, &val.toObject());
+  }
+
+  rval.set(CacheOverride::afterSend(self));
+  return true;
+}
+
 template <auto accessor_fn>
 bool CacheOverride::accessor_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
@@ -308,6 +386,10 @@ const JSPropertySpec CacheOverride::properties[] = {
     JS_PSGS("surrogateKey", accessor_get<surrogate_key_get>, accessor_set<surrogate_key_set>,
             JSPROP_ENUMERATE),
     JS_PSGS("pci", accessor_get<pci_get>, accessor_set<pci_set>, JSPROP_ENUMERATE),
+    JS_PSGS("beforeSend", accessor_get<before_send_get>, accessor_set<before_send_set>,
+            JSPROP_ENUMERATE),
+    JS_PSGS("afterSend", accessor_get<after_send_get>, accessor_set<after_send_set>,
+            JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "CacheOverride", JSPROP_READONLY),
     JS_PS_END};
 
@@ -343,6 +425,16 @@ bool CacheOverride::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     if (!JS_GetProperty(cx, override_init, "pci", &val) || !pci_set(cx, self, val, &val)) {
+      return false;
+    }
+
+    if (!JS_GetProperty(cx, override_init, "beforeSend", &val) ||
+        !before_send_set(cx, self, val, &val)) {
+      return false;
+    }
+
+    if (!JS_GetProperty(cx, override_init, "afterSend", &val) ||
+        !after_send_set(cx, self, val, &val)) {
       return false;
     }
   }
