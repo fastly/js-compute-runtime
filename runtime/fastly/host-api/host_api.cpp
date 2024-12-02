@@ -3215,12 +3215,22 @@ FastlyResult<HttpBody, FastlyKVError> KVStorePendingList::wait() {
   HttpBody body{};
   fastly::fastly_kv_error kv_err = KV_ERROR_UNINITIALIZED;
 
-  if !convert_result(fastly::kv_store_list_wait(this->handle, &body.handle, &kv_err), &err) {
-    res.emplace_err(err);
+  if (!convert_result(fastly::kv_store_list_wait(this->handle, &body.handle, &kv_err), &err)) {
+    switch (err) {
+      case FASTLY_HOST_ERROR_BAD_HANDLE:
+        // InvalidStoreHandle
+        kv_err = KV_ERROR_INTERNAL_ERROR;
+        break;
+      default:
+        // UnexpectedError
+        kv_err = KV_ERROR_INTERNAL_ERROR;
+        break;
+    }
+    res.emplace_err(make_fastly_kv_error(kv_err));
   } else if ( kv_err != KV_ERROR_OK ) {
     res.emplace_err(make_fastly_kv_error(kv_err));
   } else if (body.handle == INVALID_HANDLE) {
-    res.emplace_err(KV_ERROR_INTERNAL_ERROR);
+    res.emplace_err(make_fastly_kv_error(KV_ERROR_INTERNAL_ERROR));
   } else {
     res.emplace(body);
   }
@@ -3259,11 +3269,25 @@ KVStorePendingLookup::wait() {
   uint8_t *metadata_buf = reinterpret_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
   size_t metadata_nwritten;
 
-  if !convert_result(fastly::kv_store_lookup_wait(this->handle, &body.handle, metadata_buf,
+  if (!convert_result(fastly::kv_store_lookup_wait(this->handle, &body.handle, metadata_buf,
                                                    HOSTCALL_BUFFER_LEN, &metadata_nwritten,
-                                                   &gen_out, &kv_err), &err) {
+                                                   &gen_out, &kv_err), &err)) {
     cabi_free(metadata_buf);
-    res.emplace_err(err);
+    switch (err) {
+      case FASTLY_HOST_ERROR_BAD_HANDLE:
+        // InvalidStoreHandle
+        kv_err = KV_ERROR_INTERNAL_ERROR;
+        break;
+      case FASTLY_HOST_ERROR_INVALID_ARGUMENT:
+        // ItemBadRequest
+        kv_err = KV_ERROR_INTERNAL_ERROR;
+        break;
+      default:
+        // UnexpectedError
+        kv_err = KV_ERROR_INTERNAL_ERROR;
+        break;
+    }
+    res.emplace_err(make_fastly_kv_error(kv_err));
   } else if (kv_err == KV_ERROR_NOT_FOUND) {
     cabi_free(metadata_buf);
     res.emplace(std::nullopt);
@@ -3272,7 +3296,7 @@ KVStorePendingLookup::wait() {
     res.emplace_err(make_fastly_kv_error(kv_err));
   } else if (body.handle == INVALID_HANDLE) {
     cabi_free(metadata_buf);
-    res.emplace_err(KV_ERROR_INTERNAL_ERROR);
+    res.emplace_err(make_fastly_kv_error(KV_ERROR_INTERNAL_ERROR));
   } else {
     if (metadata_nwritten > 0) {
       cabi_realloc(metadata_buf, HOSTCALL_BUFFER_LEN, 1, metadata_nwritten);
@@ -3309,8 +3333,22 @@ FastlyResult<Void, FastlyKVError> KVStorePendingDelete::wait() {
   FastlyResult<Void, FastlyKVError> res;
   fastly::fastly_host_error err;
   fastly::fastly_kv_error kv_err = KV_ERROR_UNINITIALIZED;
-  if !convert_result(fastly::kv_store_delete_wait(this->handle, &kv_err), &err) {
-    res.emplace_err(err);
+  if (!convert_result(fastly::kv_store_delete_wait(this->handle, &kv_err), &err)) {
+    switch (err) {
+      case FASTLY_HOST_ERROR_BAD_HANDLE:
+        // InvalidStoreHandle
+        kv_err = KV_ERROR_INTERNAL_ERROR;
+        break;
+      case FASTLY_HOST_ERROR_INVALID_ARGUMENT:
+        // ItemBadRequest
+        kv_err = KV_ERROR_INTERNAL_ERROR;
+        break;
+      default:
+        // UnexpectedError
+        kv_err = KV_ERROR_INTERNAL_ERROR;
+        break;
+    }
+    res.emplace_err(make_fastly_kv_error(kv_err));
   } else if (kv_err != KV_ERROR_OK) {
     res.emplace_err(make_fastly_kv_error(kv_err));
   }
@@ -3380,9 +3418,27 @@ FastlyResult<Void, FastlyKVError> KVStorePendingInsert::wait() {
   FastlyResult<Void, FastlyKVError> res;
   fastly::fastly_host_error err;
   fastly::fastly_kv_error kv_err = KV_ERROR_UNINITIALIZED;
-  if !convert_result(fastly::kv_store_insert_wait(this->handle, &kv_err), &err) {
-    res.emplace_err(err);
-  else if ( kv_err != KV_ERROR_OK ) {
+  if (!convert_result(fastly::kv_store_insert_wait(this->handle, &kv_err), &err)) {
+    switch (err) {
+      case FASTLY_HOST_ERROR_BAD_HANDLE:
+        // InvalidStoreHandle
+        kv_err = KV_ERROR_INTERNAL_ERROR;
+        break;
+      case FASTLY_HOST_ERROR_INVALID_ARGUMENT:
+        // ItemBadRequest
+        kv_err = KV_ERROR_INTERNAL_ERROR;
+        break;
+      case FASTLY_HOST_ERROR_LIMIT_EXCEEDED:
+        // TooManyRequests
+        kv_err = KV_ERROR_INTERNAL_ERROR;
+        break;
+      default:
+        // UnexpectedError
+        kv_err = KV_ERROR_INTERNAL_ERROR;
+        break;
+    }
+    res.emplace_err(make_fastly_kv_error(kv_err));
+  } else if ( kv_err != KV_ERROR_OK ) {
     res.emplace_err(make_fastly_kv_error(kv_err));
   }
   return res;
