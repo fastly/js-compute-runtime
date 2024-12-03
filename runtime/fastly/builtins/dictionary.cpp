@@ -3,7 +3,7 @@
 #include "../host-api/host_api_fastly.h"
 #include "fastly.h"
 
-using fastly::fastly::FastlyGetErrorMessage;
+using fastly::FastlyGetErrorMessage;
 
 namespace fastly::dictionary {
 

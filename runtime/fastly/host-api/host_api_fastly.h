@@ -22,17 +22,9 @@
 
 struct JSErrorFormatString;
 
-namespace host_api {
-void handle_api_error(JSContext *cx, uint8_t err, int line, const char *func);
-bool error_is_generic(APIError e);
-bool error_is_invalid_argument(APIError e);
-bool error_is_optional_none(APIError e);
-bool error_is_bad_handle(APIError e);
-bool error_is_unsupported(APIError e);
-void handle_fastly_error(JSContext *cx, APIError err, int line, const char *func);
-} // namespace host_api
-
 namespace fastly {
+
+const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNumber);
 
 enum FastlyAPIError {
 #define MSG_DEF(name, count, exception, format) name,
@@ -258,9 +250,13 @@ public:
     internal_error,
     /// Rate limiting
     too_many_requests,
+    /// Host error
+    host_error,
   };
 
+  APIError host_err;
   detail detail;
+
   const std::optional<std::string> message() const;
 };
 
@@ -1054,6 +1050,16 @@ public:
   /// Purge the given surrogate key.
   static Result<std::optional<HostString>> purge_surrogate_key(std::string_view key, bool soft);
 };
+
+void handle_api_error(JSContext *cx, uint8_t err, int line, const char *func);
+void handle_kv_error(JSContext *cx, host_api::FastlyKVError err, const unsigned int err_type,
+                     int line, const char *func);
+bool error_is_generic(APIError e);
+bool error_is_invalid_argument(APIError e);
+bool error_is_optional_none(APIError e);
+bool error_is_bad_handle(APIError e);
+bool error_is_unsupported(APIError e);
+void handle_fastly_error(JSContext *cx, APIError err, int line, const char *func);
 
 } // namespace host_api
 

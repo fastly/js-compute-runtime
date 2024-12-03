@@ -15,8 +15,8 @@
 #include "js/Stream.h"
 
 using builtins::web::streams::NativeStreamSource;
+using fastly::FastlyGetErrorMessage;
 using fastly::fastly::convertBodyInit;
-using fastly::fastly::FastlyGetErrorMessage;
 using fastly::fetch::RequestOrResponse;
 
 namespace fastly::body {

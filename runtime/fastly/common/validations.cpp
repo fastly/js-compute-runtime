@@ -4,7 +4,7 @@
 #include "../host-api/host_api_fastly.h"
 #include "encode.h"
 
-using fastly::fastly::FastlyGetErrorMessage;
+using fastly::FastlyGetErrorMessage;
 
 namespace fastly::common {
 std::optional<uint32_t> parse_and_validate_timeout(JSContext *cx, JS::HandleValue value,

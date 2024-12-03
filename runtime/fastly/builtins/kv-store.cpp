@@ -27,10 +27,10 @@
 #include "kv-store.h"
 
 using builtins::web::streams::NativeStreamSource;
+using fastly::FastlyGetErrorMessage;
 using fastly::common::parse_and_validate_timeout;
 using fastly::common::validate_bytes;
 using fastly::fastly::convertBodyInit;
-using fastly::fastly::FastlyGetErrorMessage;
 using fastly::fetch::RequestOrResponse;
 
 namespace fastly::kv_store {
@@ -248,9 +248,7 @@ bool process_pending_kv_store_list(JSContext *cx, host_api::KVStorePendingList::
 
   auto res = pending_list.wait();
   if (auto *err = res.to_err()) {
-    std::string message = std::move(err->message()).value_or("when attempting to fetch resource.");
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_LIST_ERROR,
-                              message.c_str());
+    HANDLE_KV_ERROR(cx, *err, JSMSG_KV_STORE_LIST_ERROR);
     return RejectPromiseWithPendingError(cx, promise);
   }
 
@@ -314,9 +312,7 @@ bool process_pending_kv_store_delete(JSContext *cx, host_api::KVStorePendingDele
 
   auto res = pending_delete.wait();
   if (auto *err = res.to_err()) {
-    std::string message = std::move(err->message()).value_or("when attempting to fetch resource.");
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_DELETE_ERROR,
-                              message.c_str());
+    HANDLE_KV_ERROR(cx, *err, JSMSG_KV_STORE_DELETE_ERROR);
     return RejectPromiseWithPendingError(cx, promise);
   }
 
@@ -331,9 +327,7 @@ bool process_pending_kv_store_lookup(JSContext *cx, host_api::KVStorePendingLook
   auto res = pending_lookup.wait();
 
   if (auto *err = res.to_err()) {
-    std::string message = std::move(err->message()).value_or("when attempting to fetch resource.");
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_LOOKUP_ERROR,
-                              message.c_str());
+    HANDLE_KV_ERROR(cx, *err, JSMSG_KV_STORE_LOOKUP_ERROR);
     return RejectPromiseWithPendingError(cx, promise);
   }
 
@@ -637,10 +631,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
     auto res = pending_insert.wait();
     if (auto *err = res.to_err()) {
-      std::string message =
-          std::move(err->message()).value_or("when attempting to fetch resource.");
-      JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_LIST_ERROR,
-                                message.c_str());
+      HANDLE_KV_ERROR(cx, *err, JSMSG_KV_STORE_INSERT_ERROR);
       return RejectPromiseWithPendingError(cx, result_promise);
     }
 

@@ -4,8 +4,8 @@
 #include "../host-api/host_api_fastly.h"
 #include "fastly.h"
 
+using fastly::FastlyGetErrorMessage;
 using fastly::common::validate_bytes;
-using fastly::fastly::FastlyGetErrorMessage;
 
 namespace fastly::secret_store {
 

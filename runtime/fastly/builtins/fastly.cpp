@@ -38,14 +38,6 @@ bool debug_logging_enabled() { return DEBUG_LOGGING_ENABLED; }
 
 namespace fastly::fastly {
 
-const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNumber) {
-  if (errorNumber > 0 && errorNumber < JSErrNum_Limit) {
-    return &fastly_ErrorFormatString[errorNumber];
-  }
-
-  return nullptr;
-}
-
 JS::PersistentRooted<JSObject *> Fastly::env;
 JS::PersistentRooted<JSObject *> Fastly::baseURL;
 JS::PersistentRooted<JSString *> Fastly::defaultBackend;

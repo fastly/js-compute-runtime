@@ -26,8 +26,6 @@ public:
   static JSObject *create(JSContext *cx);
 };
 
-const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNumber);
-
 class Fastly : public builtins::BuiltinNoConstructor<Fastly> {
 private:
   static bool log(JSContext *cx, unsigned argc, JS::Value *vp);
