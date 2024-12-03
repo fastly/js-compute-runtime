@@ -1,9 +1,8 @@
 # Changelog
 
-## [3.27.3](https://github.com/fastly/js-compute-runtime/compare/v3.27.2...v3.27.3) (2024-12-03)
+## 3.27.3 (2024-12-03)
 
-
-### Bug Fixes
+### Fixed
 
 * KVStore error handling ([#1060](https://github.com/fastly/js-compute-runtime/issues/1060)) ([95885d8](https://github.com/fastly/js-compute-runtime/commit/95885d88b471aa17421dc52073df98e055737e40))
 
