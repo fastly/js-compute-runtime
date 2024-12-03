@@ -5,6 +5,9 @@
 #include "./fetch/request-response.h"
 #include "builtin.h"
 
+#define HANDLE_KV_ERROR(cx, err, err_type)                                                         \
+  ::host_api::handle_kv_error(cx, err, err_type, __LINE__, __func__)
+
 namespace fastly::kv_store {
 
 class KVStoreEntry final : public builtins::BuiltinImpl<KVStoreEntry> {

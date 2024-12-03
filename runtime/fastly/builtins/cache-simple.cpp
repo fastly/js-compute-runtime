@@ -13,8 +13,8 @@
 
 using builtins::BuiltinNoConstructor;
 using builtins::web::streams::NativeStreamSource;
+using fastly::FastlyGetErrorMessage;
 using fastly::fastly::convertBodyInit;
-using fastly::fastly::FastlyGetErrorMessage;
 using fastly::fetch::RequestOrResponse;
 
 namespace fastly::cache_simple {

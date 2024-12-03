@@ -55,11 +55,11 @@ using builtins::web::streams::TransformStream;
 using builtins::web::url::URL;
 using builtins::web::url::URLSearchParams;
 using builtins::web::worker_location::WorkerLocation;
+using fastly::FastlyGetErrorMessage;
 using fastly::backend::Backend;
 using fastly::cache_core::CacheEntry;
 using fastly::cache_override::CacheOverride;
 using fastly::cache_simple::SimpleCacheEntry;
-using fastly::fastly::FastlyGetErrorMessage;
 using fastly::fetch_event::FetchEvent;
 using fastly::kv_store::KVStoreEntry;
 

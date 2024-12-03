@@ -8,9 +8,26 @@ import {
 } from './assertions.js';
 import { KVStore } from 'fastly:kv-store';
 import { routes, isRunningLocally } from './routes.js';
+import { sdkVersion } from 'fastly:experimental';
+
+const debug = sdkVersion.endsWith('-debug');
 
 // kvstore e2e tests
 {
+  routes.set('/kv-store/debug-error', async () => {
+    if (!debug) return;
+
+    // special debug function to create a kv entry with an invalid handle
+    const entry = fastly.dump(null, 'invalidkv');
+
+    // we can then test the invalid handle error
+    try {
+      await entry.text();
+    } catch (e) {
+      strictEqual(e.message.includes('Invalid handle'), true);
+    }
+  });
+
   routes.set('/kv-store-e2e/list', async () => {
     const store = new KVStore('example-test-kv-store');
     try {

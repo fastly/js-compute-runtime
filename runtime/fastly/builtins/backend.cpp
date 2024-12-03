@@ -28,9 +28,9 @@
 #include "fastly.h"
 
 using builtins::BuiltinImpl;
+using fastly::FastlyGetErrorMessage;
 using fastly::common::parse_and_validate_timeout;
 using fastly::fastly::Fastly;
-using fastly::fastly::FastlyGetErrorMessage;
 using fastly::fetch::RequestOrResponse;
 using fastly::secret_store::SecretStoreEntry;
 

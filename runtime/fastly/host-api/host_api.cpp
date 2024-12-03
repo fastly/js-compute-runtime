@@ -753,42 +753,45 @@ make_fastly_send_error(fastly::fastly_host_http_send_error_detail &send_error_de
   return res;
 }
 
-FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error) {
+FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
+                                   fastly::fastly_host_error host_err) {
   FastlyKVError err;
   switch (kv_error) {
   case KV_ERROR_BAD_REQUEST: {
     err.detail = FastlyKVError::detail::bad_request;
-    break;
+    return err;
   }
   case KV_ERROR_INTERNAL_ERROR: {
     err.detail = FastlyKVError::detail::internal_error;
-    break;
+    return err;
   }
   case KV_ERROR_NOT_FOUND: {
     err.detail = FastlyKVError::detail::not_found;
-    break;
+    return err;
   }
   case KV_ERROR_OK: {
     err.detail = FastlyKVError::detail::ok;
-    break;
+    return err;
   }
   case KV_ERROR_PAYLOAD_TOO_LARGE: {
     err.detail = FastlyKVError::detail::payload_too_large;
-    break;
+    return err;
   }
   case KV_ERROR_PRECONDITION_FAILED: {
     err.detail = FastlyKVError::detail::precondition_failed;
-    break;
+    return err;
   }
   case KV_ERROR_TOO_MANY_REQUESTS: {
     err.detail = FastlyKVError::detail::too_many_requests;
-    break;
+    return err;
   }
   case KV_ERROR_UNINITIALIZED: {
     err.detail = FastlyKVError::detail::uninitialized;
-    break;
+    return err;
   }
   }
+  err.detail = FastlyKVError::detail::host_error;
+  err.host_err = host_err;
   return err;
 }
 
@@ -2523,8 +2526,9 @@ const std::optional<std::string> FastlyKVError::message() const {
   /// The kv-error-detail struct has not been populated.
   case uninitialized:
     return "Uninitialized.";
-  /// There was no kv error.
+  /// Host error / no error
   case ok:
+  case host_error:
     return std::nullopt;
   /// Bad request.
   case bad_request:
@@ -3213,11 +3217,11 @@ FastlyResult<HttpBody, FastlyKVError> KVStorePendingList::wait() {
 
   fastly::fastly_host_error err;
   HttpBody body{};
-  fastly::fastly_kv_error kv_err;
+  fastly::fastly_kv_error kv_err = KV_ERROR_UNINITIALIZED;
 
   if (!convert_result(fastly::kv_store_list_wait(this->handle, &body.handle, &kv_err), &err) ||
       kv_err != KV_ERROR_OK || body.handle == INVALID_HANDLE) {
-    res.emplace_err(make_fastly_kv_error(kv_err));
+    res.emplace_err(make_fastly_kv_error(kv_err, err));
   } else {
     res.emplace(body);
   }
@@ -3262,7 +3266,7 @@ KVStorePendingLookup::wait() {
                       &err) ||
       ((kv_err != KV_ERROR_OK || body.handle == INVALID_HANDLE) && kv_err != KV_ERROR_NOT_FOUND)) {
     cabi_free(metadata_buf);
-    res.emplace_err(make_fastly_kv_error(kv_err));
+    res.emplace_err(make_fastly_kv_error(kv_err, err));
   } else if (kv_err == KV_ERROR_NOT_FOUND) {
     cabi_free(metadata_buf);
     res.emplace(std::nullopt);
@@ -3301,10 +3305,10 @@ Result<KVStorePendingDelete::Handle> KVStore::delete_(std::string_view key) {
 FastlyResult<Void, FastlyKVError> KVStorePendingDelete::wait() {
   FastlyResult<Void, FastlyKVError> res;
   fastly::fastly_host_error err;
-  fastly::fastly_kv_error kv_err;
+  fastly::fastly_kv_error kv_err = KV_ERROR_UNINITIALIZED;
   if (!convert_result(fastly::kv_store_delete_wait(this->handle, &kv_err), &err) ||
       kv_err != KV_ERROR_OK) {
-    res.emplace_err(make_fastly_kv_error(kv_err));
+    res.emplace_err(make_fastly_kv_error(kv_err, err));
   }
   return res;
 }
@@ -3371,10 +3375,10 @@ KVStore::insert(std::string_view key, HttpBody body, std::optional<InsertMode> m
 FastlyResult<Void, FastlyKVError> KVStorePendingInsert::wait() {
   FastlyResult<Void, FastlyKVError> res;
   fastly::fastly_host_error err;
-  fastly::fastly_kv_error kv_err;
+  fastly::fastly_kv_error kv_err = KV_ERROR_UNINITIALIZED;
   if (!convert_result(fastly::kv_store_insert_wait(this->handle, &kv_err), &err) ||
       kv_err != KV_ERROR_OK) {
-    res.emplace_err(make_fastly_kv_error(kv_err));
+    res.emplace_err(make_fastly_kv_error(kv_err, err));
   }
   return res;
 }

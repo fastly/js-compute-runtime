@@ -6,6 +6,16 @@
 
 using api::AsyncTask;
 
+namespace fastly {
+const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNumber) {
+  if (errorNumber > 0 && errorNumber < JSErrNum_Limit) {
+    return &fastly_ErrorFormatString[errorNumber];
+  }
+  return nullptr;
+}
+
+} // namespace fastly
+
 namespace host_api {
 
 static_assert(std::is_same_v<APIError, fastly::fastly_host_error>);
@@ -19,6 +29,18 @@ bool error_is_optional_none(APIError e) { return e == FASTLY_HOST_ERROR_OPTIONAL
 bool error_is_bad_handle(APIError e) { return e == FASTLY_HOST_ERROR_BAD_HANDLE; }
 
 bool error_is_unsupported(APIError e) { return e == FASTLY_HOST_ERROR_UNSUPPORTED; }
+
+void handle_kv_error(JSContext *cx, FastlyKVError err, const unsigned int err_type, int line,
+                     const char *func) {
+  // kv error was a host call error -> report as host error
+  if (err.detail == FastlyKVError::detail::host_error) {
+    return handle_api_error(cx, err.host_error, line, func);
+  }
+
+  // kv error is a normal kv error -> report as KV error
+  std::string message = std::move(err.message()).value_or("when attempting to fetch resource.");
+  JS_ReportErrorNumberASCII(cx, fastly::FastlyGetErrorMessage, nullptr, err_type, message.c_str());
+}
 
 /* Returns false if an exception is set on `cx` and the caller should
    immediately return to propagate the exception. */

@@ -11,7 +11,7 @@ using fastly::backend::Backend;
 using fastly::fastly::Fastly;
 using fastly::fetch::Request;
 
-using fastly::fastly::FastlyGetErrorMessage;
+using fastly::FastlyGetErrorMessage;
 
 namespace fastly::fetch {
 

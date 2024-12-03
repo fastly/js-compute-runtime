@@ -4,7 +4,7 @@
 #include "fastly.h"
 
 using builtins::BuiltinImpl;
-using fastly::fastly::FastlyGetErrorMessage;
+using fastly::FastlyGetErrorMessage;
 
 namespace fastly::config_store {
 
