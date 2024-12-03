@@ -11,6 +11,7 @@
 #include "fastly.h"
 #include "js/Conversions.h"
 #include "js/JSON.h"
+#include "kv-store.h"
 #include "logger.h"
 #include <arpa/inet.h>
 
@@ -48,6 +49,26 @@ bool Fastly::dump(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, __func__, 1))
     return false;
+
+// special debug mode operations
+#ifndef NDEBUG
+  if (args.get(0).isNull() && args.get(1).isString()) {
+    JS::RootedString str(cx, args.get(1).toString());
+    auto str_chars = core::encode(cx, str);
+    if (!str_chars) {
+      return false;
+    }
+    if (!strcmp(str_chars.ptr.get(), "invalidkv")) {
+      host_api::HttpBody body(-1);
+      host_api::HostBytes metadata{};
+      // uint32_t gen = std::get<2>(res.unwrap());
+      JS::RootedObject entry(
+          cx, ::fastly::kv_store::KVStoreEntry::create(cx, body, std::move(metadata)));
+      args.rval().setObject(*entry);
+      return true;
+    }
+  }
+#endif
 
   ENGINE->dump_value(args[0], stdout);
 

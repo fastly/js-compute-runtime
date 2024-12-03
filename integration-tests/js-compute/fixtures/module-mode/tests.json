@@ -147,6 +147,7 @@
       "body": "hello world!"
     }
   },
+  "GET /kv-store/debug-error": {},
   "GET /kv-store/delete/called-as-constructor": {},
   "GET /kv-store/delete/called-unbound": {},
   "GET /kv-store/delete/key-parameter-calls-7.1.17-ToString": {},
