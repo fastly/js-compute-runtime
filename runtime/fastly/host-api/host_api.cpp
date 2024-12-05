@@ -761,16 +761,8 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
     err.detail = FastlyKVError::detail::bad_request;
     return err;
   }
-  case KV_ERROR_INTERNAL_ERROR: {
-    err.detail = FastlyKVError::detail::internal_error;
-    return err;
-  }
   case KV_ERROR_NOT_FOUND: {
     err.detail = FastlyKVError::detail::not_found;
-    return err;
-  }
-  case KV_ERROR_OK: {
-    err.detail = FastlyKVError::detail::ok;
     return err;
   }
   case KV_ERROR_PAYLOAD_TOO_LARGE: {
@@ -785,8 +777,9 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
     err.detail = FastlyKVError::detail::too_many_requests;
     return err;
   }
-  case KV_ERROR_UNINITIALIZED: {
-    err.detail = FastlyKVError::detail::uninitialized;
+  case KV_ERROR_INTERNAL_ERROR:
+  default: {
+    err.detail = FastlyKVError::detail::internal_error;
     return err;
   }
   }
