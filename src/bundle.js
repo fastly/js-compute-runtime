@@ -83,7 +83,12 @@ export const sdkVersion = globalThis.fastly.sdkVersion;
           };
         }
         case 'logger': {
-          return { contents: `export const Logger = globalThis.Logger;` };
+          return {
+            contents: `export const Logger = globalThis.Logger;
+export const configureConsole = Logger.configureConsole;
+delete globalThis.Logger.configureConsole;
+`,
+          };
         }
         case 'kv-store': {
           return { contents: `export const KVStore = globalThis.KVStore;` };

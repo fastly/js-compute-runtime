@@ -1,5 +1,7 @@
-import { Logger } from 'fastly:logger';
+import { Logger, configureConsole } from 'fastly:logger';
 import { routes, isRunningLocally } from './routes';
+
+configureConsole({ prefixing: false, stderr: true });
 
 const earlyLogger = new Logger('AnotherLog');
 
@@ -9,6 +11,9 @@ routes.set('/logger', () => {
     logger.log('Hello!');
     earlyLogger.log('World!');
   }
+
+  console.log('LOG');
+  console.error('ERROR');
 
   return new Response();
 });

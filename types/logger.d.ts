@@ -61,7 +61,7 @@ declare module 'fastly:logger' {
    * ```
    * </noscript>
    */
-  class Logger {
+  export class Logger {
     /**
      * Creates a new Logger instance for the given [named log endpoint](https://developer.fastly.com/learning/integrations/logging).
      *
@@ -73,4 +73,29 @@ declare module 'fastly:logger' {
      */
     log(message: any): void;
   }
+
+  interface ConsoleLoggingOptions {
+    /**
+     * Whether to output string prefixes "Log: " | "Debug: " | "Info: " | "Warn: " | "Error: "
+     * before messages.
+     *
+     * Defaults to true.
+     */
+    prefixing?: boolean;
+    /**
+     * Whether to use stderr for `console.warn` and `console.error` messages.
+     *
+     * Defaults to false.
+     */
+    stderr?: boolean;
+  }
+
+  /**
+   * Configure the behaviour of `console.log` and related console logging functions.
+   *
+   * Currently only supports customizing prefixing and stdio output.
+   *
+   * @param loggingOptions The console logging options
+   */
+  export function configureConsole(loggingOptions: ConsoleLoggingOptions): void;
 }
