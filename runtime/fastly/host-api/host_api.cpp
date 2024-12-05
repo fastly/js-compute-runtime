@@ -769,10 +769,6 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
     err.detail = FastlyKVError::detail::not_found;
     return err;
   }
-  case KV_ERROR_OK: {
-    err.detail = FastlyKVError::detail::ok;
-    return err;
-  }
   case KV_ERROR_PAYLOAD_TOO_LARGE: {
     err.detail = FastlyKVError::detail::payload_too_large;
     return err;
