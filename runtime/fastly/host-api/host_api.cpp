@@ -14,7 +14,7 @@
 using api::FastlyResult;
 using fastly::FastlyAPIError;
 
-#define NEVER_HANDLE 0xFFFFFFFE
+#define NEVER_HANDLE 0xFFFFFFFD
 
 #define MILLISECS_IN_NANOSECS 1000000
 #define SECS_IN_NANOSECS 1000000000
@@ -102,8 +102,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
       deadline = task->deadline();
     }
     if (deadline > 0) {
-      uint32_t handle = task->id();
-      MOZ_ASSERT(handle == NEVER_HANDLE || handle == IMMEDIATE_TASK_HANDLE);
+      MOZ_ASSERT(task->id() == NEVER_HANDLE || task->id() == IMMEDIATE_TASK_HANDLE);
       if (now == 0) {
         now = host_api::MonotonicClock::now();
         MOZ_ASSERT(now > 0);
@@ -127,10 +126,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
 
   // When there are no async tasks, sleep until the deadline
   if (handles.size() == 0) {
-    if (soonest_deadline == now) {
-      return soonest_deadline_idx;
-    }
-    MOZ_ASSERT(soonest_deadline > now);
+    MOZ_ASSERT(soonest_deadline >= now);
     sleep_until(soonest_deadline, now);
     return soonest_deadline_idx;
   }
@@ -140,7 +136,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
 
   // only immediate timers in the task list -> do a ready check against all handles instead of a
   // select
-  if (soonest_deadline == now) {
+  if (now != 0 && soonest_deadline == now) {
     for (auto handle : handles) {
       uint32_t is_ready_out;
       if (!convert_result(fastly::async_is_ready(handle, &is_ready_out), &err)) {
@@ -190,7 +186,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
       // non-timer task.
       size_t task_idx = 0;
       for (size_t idx = 0; idx < tasks_len; ++idx) {
-        PollableHandle id = tasks.at(idx)->id();
+        uint32_t id = tasks.at(idx)->id();
         if (id != NEVER_HANDLE && id != IMMEDIATE_TASK_HANDLE) {
           if (ret == task_idx) {
             return idx;
