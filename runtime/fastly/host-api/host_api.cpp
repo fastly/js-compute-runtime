@@ -785,10 +785,6 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
     err.detail = FastlyKVError::detail::too_many_requests;
     return err;
   }
-  case KV_ERROR_UNINITIALIZED: {
-    err.detail = FastlyKVError::detail::uninitialized;
-    return err;
-  }
   }
   err.detail = FastlyKVError::detail::host_error;
   err.host_err = host_err;
