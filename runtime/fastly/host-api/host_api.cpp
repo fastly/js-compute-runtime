@@ -91,31 +91,45 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
   size_t soonest_deadline_idx = -1;
   for (size_t idx = 0; idx < tasks_len; ++idx) {
     auto *task = tasks.at(idx);
-    uint64_t deadline = task->deadline();
-    // Select for completed task deadlines before performing the task select host call.
-    if (deadline > 0) {
-      MOZ_ASSERT(task->id() == NEVER_HANDLE);
+    uint64_t deadline;
+    if (task->id() == IMMEDIATE_TASK_HANDLE) {
       if (now == 0) {
         now = host_api::MonotonicClock::now();
         MOZ_ASSERT(now > 0);
       }
-      if (deadline <= now) {
-        return idx;
+      deadline = now;
+    } else {
+      deadline = task->deadline();
+    }
+    if (deadline > 0) {
+      uint32_t handle = task->id();
+      MOZ_ASSERT(handle == NEVER_HANDLE || handle == IMMEDIATE_TASK_HANDLE);
+      if (now == 0) {
+        now = host_api::MonotonicClock::now();
+        MOZ_ASSERT(now > 0);
       }
+      // expired timers treated as immediates
+      if (deadline < now) {
+        deadline = now;
+      }
+      // this check will always only select the first immediate
       if (soonest_deadline == 0 || deadline < soonest_deadline) {
         soonest_deadline = deadline;
         soonest_deadline_idx = idx;
       }
     } else {
       uint32_t handle = task->id();
-      // Timer task handles are skipped and never passed to the host.
-      MOZ_ASSERT(handle != NEVER_HANDLE);
+      // Timer and immediate task handles are skipped and never passed to the host.
+      MOZ_ASSERT(handle != NEVER_HANDLE && handle != IMMEDIATE_TASK_HANDLE);
       handles.push_back(handle);
     }
   }
 
   // When there are no async tasks, sleep until the deadline
   if (handles.size() == 0) {
+    if (soonest_deadline == now) {
+      return soonest_deadline_idx;
+    }
     MOZ_ASSERT(soonest_deadline > now);
     sleep_until(soonest_deadline, now);
     return soonest_deadline_idx;
@@ -124,8 +138,39 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
   uint32_t ret = UINT32_MAX;
   fastly::fastly_host_error err = 0;
 
+  // only immediate timers in the task list -> do a ready check against all handles instead of a
+  // select
+  if (soonest_deadline == now) {
+    for (auto handle : handles) {
+      uint32_t is_ready_out;
+      if (!convert_result(fastly::async_is_ready(handle, &is_ready_out), &err)) {
+        if (host_api::error_is_bad_handle(err)) {
+          fprintf(stderr, "Critical Error: An invalid handle was provided to async_is_ready.\n");
+        } else {
+          fprintf(stderr, "Critical Error: An unknown error occurred in async_is_ready.\n");
+        }
+        abort();
+      };
+      if (is_ready_out) {
+        size_t task_idx = 0;
+        for (size_t idx = 0; idx < tasks_len; ++idx) {
+          uint32_t handle = tasks.at(idx)->id();
+          if (handle != NEVER_HANDLE && handle != IMMEDIATE_TASK_HANDLE) {
+            if (ret == task_idx) {
+              return idx;
+            }
+            task_idx++;
+          }
+        }
+        abort();
+      }
+    }
+    // no tasks ready -> trigger our soonest immediate or timer
+    return soonest_deadline_idx;
+  }
+
   while (true) {
-    MOZ_ASSERT(soonest_deadline == 0 || soonest_deadline > now);
+    MOZ_ASSERT(soonest_deadline == 0 || soonest_deadline >= now);
     // timeout value of 0 means no timeout for async_select
     uint32_t timeout = soonest_deadline > 0 ? (soonest_deadline - now) / MILLISECS_IN_NANOSECS : 0;
     if (!convert_result(fastly::async_select(handles.data(), handles.size(), timeout, &ret),
@@ -145,7 +190,8 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
       // non-timer task.
       size_t task_idx = 0;
       for (size_t idx = 0; idx < tasks_len; ++idx) {
-        if (tasks.at(idx)->id() != NEVER_HANDLE) {
+        PollableHandle id = tasks.at(idx)->id();
+        if (id != NEVER_HANDLE && id != IMMEDIATE_TASK_HANDLE) {
           if (ret == task_idx) {
             return idx;
           }
