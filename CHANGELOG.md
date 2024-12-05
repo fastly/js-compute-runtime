@@ -1,14 +1,12 @@
 # Changelog
 
-## [3.28.0](https://github.com/fastly/js-compute-runtime/compare/v3.27.3...v3.28.0) (2024-12-05)
+## 3.28.0 (2024-12-05)
 
-
-### Features
+### Added
 
 * configureConsole function for configuring log prefixing and stderr ([#1065](https://github.com/fastly/js-compute-runtime/issues/1065)) ([9ed80ee](https://github.com/fastly/js-compute-runtime/commit/9ed80ee349b4178a54b960081fcae622a6406b70))
 
-
-### Bug Fixes
+### Fixed
 
 * do not throw uninitialized for KV ([#1064](https://github.com/fastly/js-compute-runtime/issues/1064)) ([c160c4a](https://github.com/fastly/js-compute-runtime/commit/c160c4ab5378be20052fed66abc9d194a4329065))
 
