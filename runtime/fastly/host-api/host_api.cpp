@@ -777,7 +777,7 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
     err.detail = FastlyKVError::detail::too_many_requests;
     return err;
   }
-  case KV_ERROR_INTERNAL_ERROR: {
+  case KV_ERROR_INTERNAL_ERROR: {}
   default: {
     err.detail = FastlyKVError::detail::internal_error;
     return err;
