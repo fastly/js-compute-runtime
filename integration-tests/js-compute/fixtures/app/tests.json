@@ -1095,6 +1095,13 @@
   "GET /request/clone/called-unbound": {},
   "GET /request/clone/valid": {},
   "GET /request/clone/invalid": {},
+  "GET /response/blob": {
+    "downstream_response": {
+      "status": 200,
+      "headers": { "content-type": "text/html" },
+      "body": ["<h1>blob</h1>"]
+    }
+  },
   "GET /response/stall": {
     "body_streaming": "none"
   },

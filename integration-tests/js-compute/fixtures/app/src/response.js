@@ -75,6 +75,11 @@ routes.set('/response/request-body-init', async () => {
   return postResp;
 });
 
+routes.set('/response/blob', async () => {
+  const blob = new Blob(['<h1>blob</h1>'], { type: 'text/html' });
+  return new Response(blob);
+});
+
 function iteratableToStream(iterable) {
   return new ReadableStream({
     async pull(controller) {
