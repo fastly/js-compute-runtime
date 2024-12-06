@@ -1,5 +1,6 @@
 #include "request-response.h"
 #include "../../../StarlingMonkey/builtins/web/base64.h"
+#include "../../../StarlingMonkey/builtins/web/blob.h"
 #include "../../../StarlingMonkey/builtins/web/dom-exception.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../../../StarlingMonkey/builtins/web/streams/transform-stream.h"
@@ -33,6 +34,8 @@
 #pragma clang diagnostic pop
 
 using builtins::web::base64::valueToJSByteString;
+using builtins::web::blob::Blob;
+using builtins::web::blob::BlobReader;
 using builtins::web::dom_exception::DOMException;
 
 // We use the StarlingMonkey Headers implementation, despite it supporting features that we do
@@ -354,7 +357,40 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
 
   JS::RootedObject body_obj(cx, body_val.isObject() ? &body_val.toObject() : nullptr);
 
-  if (body_obj && JS::IsReadableStream(body_obj)) {
+  host_api::HostString host_type_str;
+
+  if (Blob::is_instance(body_obj)) {
+    auto native_stream = NativeStreamSource::create(cx, body_obj, JS::UndefinedHandleValue,
+                                                    Blob::stream_pull, Blob::stream_cancel);
+
+    JS::RootedObject source(cx, native_stream);
+    if (!source) {
+      return false;
+    }
+
+    auto readers = Blob::readers(body_obj);
+    auto blob = Blob::blob(body_obj);
+    auto span = std::span<uint8_t>(blob->data(), blob->size());
+
+    if (!readers->put(source, BlobReader(span))) {
+      return false;
+    }
+
+    JS::RootedObject stream(cx, NativeStreamSource::stream(native_stream));
+    if (!stream) {
+      return false;
+    }
+
+    JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream),
+                       JS::ObjectValue(*stream));
+
+    JS::RootedString type_str(cx, Blob::type(body_obj));
+    if (JS::GetStringLength(type_str) > 0) {
+      host_type_str = core::encode(cx, type_str);
+      MOZ_ASSERT(host_type_str);
+      content_type = host_type_str.ptr.get();
+    }
+  } else if (body_obj && JS::IsReadableStream(body_obj)) {
     if (RequestOrResponse::body_unusable(cx, body_obj)) {
       JS_ReportErrorNumberLatin1(cx, FastlyGetErrorMessage, nullptr,
                                  JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
