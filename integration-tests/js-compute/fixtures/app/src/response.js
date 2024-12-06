@@ -76,7 +76,7 @@ routes.set('/response/request-body-init', async () => {
 });
 
 routes.set('/response/blob', async () => {
-  const blob = new Blob(['<h1>blob</h1>'], { type: 'text/html' })
+  const blob = new Blob(['<h1>blob</h1>'], { type: 'text/html' });
   return new Response(blob);
 });
 
