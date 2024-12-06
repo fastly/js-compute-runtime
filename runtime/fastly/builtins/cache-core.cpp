@@ -638,7 +638,7 @@ bool CacheEntry::body(JSContext *cx, unsigned argc, JS::Value *vp) {
   // pull. With the default HWM of 1.0, the streams implementation causes a
   // pull, which means we enqueue a read from the host handle, which we quite
   // often have no interest in at all.
-  JS::RootedObject body_stream(cx, JS::NewReadableDefaultStreamObject(cx, source, nullptr, 0.0));
+  JS::RootedObject body_stream(cx, NativeStreamSource::stream(source));
   if (!body_stream) {
     return false;
   }
