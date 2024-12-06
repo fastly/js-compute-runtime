@@ -346,6 +346,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
   const char *content_type = nullptr;
 
   // We currently support five types of body inputs:
+  // - Blob
   // - byte sequence
   // - buffer source
   // - USV strings
@@ -370,7 +371,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
 
     auto readers = Blob::readers(body_obj);
     auto blob = Blob::blob(body_obj);
-    auto span = std::span<uint8_t>(blob->data(), blob->size());
+    auto span = std::span<uint8_t>(blob->begin(), blob->length());
 
     if (!readers->put(source, BlobReader(span))) {
       return false;
@@ -577,6 +578,15 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
     }
     static_cast<void>(buf.release());
     result.setObject(*array_buffer);
+  } else if constexpr (result_type == RequestOrResponse::BodyReadResult::Blob) {
+    JS::RootedString contentType(cx, JS_GetEmptyString(cx));
+    JS::RootedObject blob(cx, Blob::create(cx, std::move(buf), len, contentType));
+
+    if (!blob) {
+      return RejectPromiseWithPendingError(cx, result_promise);
+    }
+
+    result.setObject(*blob);
   } else {
     JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), len)));
     if (!text) {
@@ -1673,6 +1683,7 @@ const JSPropertySpec Request::static_properties[] = {
 const JSFunctionSpec Request::methods[] = {
     JS_FN("arrayBuffer", Request::bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
+    JS_FN("blob", Request::bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
     JS_FN("json", Request::bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", Request::bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setCacheOverride", Request::setCacheOverride, 3, JSPROP_ENUMERATE),
@@ -2926,6 +2937,7 @@ const JSPropertySpec Response::static_properties[] = {
 const JSFunctionSpec Response::methods[] = {
     JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
+    JS_FN("blob", bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setManualFramingHeaders", Response::setManualFramingHeaders, 1, JSPROP_ENUMERATE),
