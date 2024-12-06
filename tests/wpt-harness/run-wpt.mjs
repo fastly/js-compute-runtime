@@ -1,8 +1,7 @@
-import { stdin, stdout, stderr } from "process";
 import { argv } from 'process';
 import { execFile } from "child_process";
 import { on, once } from "events";
-import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync, stat } from "fs";
+import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync } from "fs";
 import http from "http";
 import path from "path";
 
