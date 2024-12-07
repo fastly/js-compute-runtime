@@ -360,7 +360,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
 
   host_api::HostString host_type_str;
 
-  if (Blob::is_instance(body_obj)) {
+  if (body_obj && Blob::is_instance(body_obj)) {
     auto native_stream = NativeStreamSource::create(cx, body_obj, JS::UndefinedHandleValue,
                                                     Blob::stream_pull, Blob::stream_cancel);
 
