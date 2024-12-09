@@ -11,7 +11,7 @@
     "build:files": "compute-file-server-cli local --toml fastly.toml --name site -- ../build/",
     "deploy": "npm run deploy:app && npm run deploy:files",
     "deploy:app": "fastly compute publish",
-    "deploy:files": "compute-file-server-cli upload --name 'js-docs-site' -- ../build/",
+    "deploy:files": "compute-file-server-cli upload --name 'site' -- ../build/",
     "start": "fastly compute serve"
   }
 }
