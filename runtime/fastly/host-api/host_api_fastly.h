@@ -1035,7 +1035,7 @@ public:
   Result<KVStorePendingLookup::Handle> lookup(std::string_view key);
   Result<KVStorePendingInsert::Handle>
   insert(std::string_view key, HttpBody body, std::optional<InsertMode> mode,
-         std::optional<uint32_t> if_generation_match,
+         std::optional<uint64_t> if_generation_match,
          std::optional<std::tuple<const uint8_t *, size_t>> metadata, std::optional<uint32_t> ttl);
   Result<KVStorePendingDelete::Handle> delete_(std::string_view key);
   // cursor is base64 encoding of the last key

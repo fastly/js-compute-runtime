@@ -559,9 +559,10 @@ typedef struct __attribute__((aligned(4))) KVLookupOptions {
 
 #define KV_INSERT_CONFIG_RESERVED (1u << 0)
 #define KV_INSERT_CONFIG_BACKGROUND_FETCH (1u << 1)
-#define KV_INSERT_CONFIG_IF_GENERATION_MATCH (1u << 2)
+#define KV_INSERT_CONFIG_RESERVED_2 (1u << 2)
 #define KV_INSERT_CONFIG_METADATA (1u << 3)
 #define KV_INSERT_CONFIG_TIME_TO_LIVE_SEC (1u << 4)
+#define KV_INSERT_CONFIG_IF_GENERATION_MATCH (1u << 5)
 
 #define KV_INSERT_MODE_OVERWRITE 0u
 #define KV_INSERT_MODE_ADD 1u
@@ -570,10 +571,11 @@ typedef struct __attribute__((aligned(4))) KVLookupOptions {
 
 typedef struct __attribute__((aligned(4))) KVInsertOptions {
   uint32_t mode;
-  uint32_t if_generation_match;
+  uint32_t reserved;
   const uint8_t *metadata;
   uint32_t metadata_len;
   uint32_t time_to_live_sec;
+  uint64_t if_generation_match;
 } KVInsertOptions;
 
 #define KV_DELETE_CONFIG_RESERVED (1u << 0)
@@ -620,6 +622,11 @@ WASM_IMPORT("fastly_kv_store", "lookup_wait")
 int kv_store_lookup_wait(uint32_t kv_store_handle_lookup_handle, uint32_t *body_handle_out,
                          uint8_t *metadata_buf_out, size_t metadata_buf_len, size_t *nwritten_out,
                          uint32_t *generation_out, uint32_t *kv_error_out);
+
+WASM_IMPORT("fastly_kv_store", "lookup_wait_v2")
+int kv_store_lookup_wait_v2(uint32_t kv_store_handle_lookup_handle, uint32_t *body_handle_out,
+                            uint8_t *metadata_buf_out, size_t metadata_buf_len,
+                            size_t *nwritten_out, uint64_t *generation_out, uint32_t *kv_error_out);
 
 WASM_IMPORT("fastly_kv_store", "insert")
 int kv_store_insert(uint32_t kv_store_handle, const char *key, size_t key_len, uint32_t body_handle,
