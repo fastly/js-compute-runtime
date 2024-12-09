@@ -93,22 +93,22 @@
     "status": "FAIL"
   },
   "Consume blob response's body as blob": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Consume blob response's body as text": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Consume blob response's body as json": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Consume blob response's body as arrayBuffer": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Consume blob response's body as bytes": {
     "status": "FAIL"
   },
   "Consume blob response's body as blob (empty blob as input)": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Consume JSON from text: '\"null\"'": {
     "status": "PASS"
