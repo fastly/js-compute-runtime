@@ -6,7 +6,7 @@
     "status": "PASS"
   },
   "Request has blob method": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Request has formData method": {
     "status": "FAIL"

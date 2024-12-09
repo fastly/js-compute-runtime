@@ -177,7 +177,7 @@
     "status": "PASS"
   },
   "Testing empty Request Content-Type header": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Test that Request.headers has the [SameObject] extended attribute": {
     "status": "PASS"

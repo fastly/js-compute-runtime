@@ -3,7 +3,7 @@
     "status": "PASS"
   },
   "Consume request's body as blob": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Consume request's body as arrayBuffer": {
     "status": "PASS"
