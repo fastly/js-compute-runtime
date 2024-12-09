@@ -1,6 +1,6 @@
 #include "request-response.h"
 #include "../../../StarlingMonkey/builtins/web/base64.h"
-// #include "../../../StarlingMonkey/builtins/web/blob.h"
+#include "../../../StarlingMonkey/builtins/web/blob.h"
 #include "../../../StarlingMonkey/builtins/web/dom-exception.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../../../StarlingMonkey/builtins/web/streams/transform-stream.h"
@@ -34,8 +34,8 @@
 #pragma clang diagnostic pop
 
 using builtins::web::base64::valueToJSByteString;
-// using builtins::web::blob::Blob;
-// using builtins::web::blob::BlobReader;
+using builtins::web::blob::Blob;
+using builtins::web::blob::BlobReader;
 using builtins::web::dom_exception::DOMException;
 
 // We use the StarlingMonkey Headers implementation, despite it supporting features that we do
@@ -360,9 +360,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
 
   host_api::HostString host_type_str;
 
-  // Blob support disabled pending bug fix in test
-  // /override-content-length/request/init/object-literal/true
-  /*if (body_obj && Blob::is_instance(body_obj)) {
+  if (Blob::is_instance(body_obj)) {
     auto native_stream = NativeStreamSource::create(cx, body_obj, JS::UndefinedHandleValue,
                                                     Blob::stream_pull, Blob::stream_cancel);
     if (!native_stream) {
@@ -396,8 +394,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
       MOZ_ASSERT(host_type_str);
       content_type = host_type_str.ptr.get();
     }
-  } else */
-  if (body_obj && JS::IsReadableStream(body_obj)) {
+  } else if (body_obj && JS::IsReadableStream(body_obj)) {
     if (RequestOrResponse::body_unusable(cx, body_obj)) {
       JS_ReportErrorNumberLatin1(cx, FastlyGetErrorMessage, nullptr,
                                  JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
@@ -584,9 +581,7 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
     }
     static_cast<void>(buf.release());
     result.setObject(*array_buffer);
-  }
-  // TODO: Blob support disabled pending bug fix
-  /* else if constexpr (result_type == RequestOrResponse::BodyReadResult::Blob) {
+  } else if constexpr (result_type == RequestOrResponse::BodyReadResult::Blob) {
     JS::RootedString contentType(cx, JS_GetEmptyString(cx));
     JS::RootedObject blob(cx, Blob::create(cx, std::move(buf), len, contentType));
 
@@ -595,8 +590,7 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
     }
 
     result.setObject(*blob);
-  } */
-  else {
+  } else {
     JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), len)));
     if (!text) {
       return RejectPromiseWithPendingError(cx, result_promise);
@@ -1692,8 +1686,7 @@ const JSPropertySpec Request::static_properties[] = {
 const JSFunctionSpec Request::methods[] = {
     JS_FN("arrayBuffer", Request::bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
-    // JS_FN("blob", Request::bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0,
-    // JSPROP_ENUMERATE),
+    JS_FN("blob", Request::bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
     JS_FN("json", Request::bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", Request::bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setCacheOverride", Request::setCacheOverride, 3, JSPROP_ENUMERATE),
@@ -2947,7 +2940,7 @@ const JSPropertySpec Response::static_properties[] = {
 const JSFunctionSpec Response::methods[] = {
     JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
-    // JS_FN("blob", bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
+    JS_FN("blob", bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setManualFramingHeaders", Response::setManualFramingHeaders, 1, JSPROP_ENUMERATE),
