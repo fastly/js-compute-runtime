@@ -3290,12 +3290,12 @@ KVStorePendingLookup::wait() {
   fastly::fastly_host_error err;
   HttpBody body{};
 
-  uint32_t gen_out;
+  uint64_t gen_out;
   fastly::fastly_kv_error kv_err = 0;
   uint8_t *metadata_buf = reinterpret_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
   size_t metadata_nwritten;
 
-  if (!convert_result(fastly::kv_store_lookup_wait(this->handle, &body.handle, metadata_buf,
+  if (!convert_result(fastly::kv_store_lookup_wait_v2(this->handle, &body.handle, metadata_buf,
                                                    HOSTCALL_BUFFER_LEN, &metadata_nwritten,
                                                    &gen_out, &kv_err),
                       &err) ||
@@ -3354,7 +3354,7 @@ FastlyAsyncTask::Handle KVStorePendingDelete::async_handle() const {
 
 Result<KVStorePendingInsert::Handle>
 KVStore::insert(std::string_view key, HttpBody body, std::optional<InsertMode> mode,
-                std::optional<uint32_t> if_generation_match,
+                std::optional<uint64_t> if_generation_match,
                 std::optional<std::tuple<const uint8_t *, size_t>> metadata,
                 std::optional<uint32_t> ttl) {
   Result<KVStorePendingInsert::Handle> res;
