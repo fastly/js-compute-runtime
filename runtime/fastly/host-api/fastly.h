@@ -625,8 +625,8 @@ int kv_store_lookup_wait(uint32_t kv_store_handle_lookup_handle, uint32_t *body_
 
 WASM_IMPORT("fastly_kv_store", "lookup_wait_v2")
 int kv_store_lookup_wait_v2(uint32_t kv_store_handle_lookup_handle, uint32_t *body_handle_out,
-                         uint8_t *metadata_buf_out, size_t metadata_buf_len, size_t *nwritten_out,
-                         uint64_t *generation_out, uint32_t *kv_error_out);
+                            uint8_t *metadata_buf_out, size_t metadata_buf_len,
+                            size_t *nwritten_out, uint64_t *generation_out, uint32_t *kv_error_out);
 
 WASM_IMPORT("fastly_kv_store", "insert")
 int kv_store_insert(uint32_t kv_store_handle, const char *key, size_t key_len, uint32_t body_handle,

@@ -3296,8 +3296,8 @@ KVStorePendingLookup::wait() {
   size_t metadata_nwritten;
 
   if (!convert_result(fastly::kv_store_lookup_wait_v2(this->handle, &body.handle, metadata_buf,
-                                                   HOSTCALL_BUFFER_LEN, &metadata_nwritten,
-                                                   &gen_out, &kv_err),
+                                                      HOSTCALL_BUFFER_LEN, &metadata_nwritten,
+                                                      &gen_out, &kv_err),
                       &err) ||
       ((kv_err != KV_ERROR_OK || body.handle == INVALID_HANDLE) && kv_err != KV_ERROR_NOT_FOUND)) {
     cabi_free(metadata_buf);
