@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.28.0](https://github.com/fastly/js-compute-runtime/compare/v3.27.3...v3.28.0) (2024-12-09)
+
+
+### Features
+
+* configureConsole function for configuring log prefixing and stderr ([#1065](https://github.com/fastly/js-compute-runtime/issues/1065)) ([9ed80ee](https://github.com/fastly/js-compute-runtime/commit/9ed80ee349b4178a54b960081fcae622a6406b70))
+* StarlingMonkey update ([#1067](https://github.com/fastly/js-compute-runtime/issues/1067)) ([857f6fa](https://github.com/fastly/js-compute-runtime/commit/857f6fa497be5e4ba2b48392dbbdc11ab7e98e34))
+
+
+### Bug Fixes
+
+* do not throw uninitialized for KV ([#1064](https://github.com/fastly/js-compute-runtime/issues/1064)) ([c160c4a](https://github.com/fastly/js-compute-runtime/commit/c160c4ab5378be20052fed66abc9d194a4329065))
+* KVStore lookup fix for if-generation-match option ([#1069](https://github.com/fastly/js-compute-runtime/issues/1069)) ([9e4c795](https://github.com/fastly/js-compute-runtime/commit/9e4c795c3c083a85d36808e1ac26376a3779e0a4))
+
 ## 3.27.3 (2024-12-03)
 
 ### Fixed
