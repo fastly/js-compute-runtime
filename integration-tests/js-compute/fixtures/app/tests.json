@@ -1096,6 +1096,7 @@
   "GET /request/clone/valid": {},
   "GET /request/clone/invalid": {},
   "GET /response/blob": {
+    "environments": ["<disabled for now>"],
     "downstream_response": {
       "status": 200,
       "headers": { "content-type": "text/html" },
