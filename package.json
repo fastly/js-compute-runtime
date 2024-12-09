@@ -31,7 +31,7 @@
     "test:cli": "brittle --bail integration-tests/cli/**.test.js",
     "test:integration": "node ./integration-tests/js-compute/test.js",
     "test:wpt": "tests/wpt-harness/build-wpt-runtime.sh && node ./tests/wpt-harness/run-wpt.mjs -vv",
-    "test:wpt:debug": "tests/wpt-harness/build-wpt-runtime.sh --debug-build && node ./tests/wpt-harness/run-wpt.mjs --starlingmonkey -vv",
+    "test:wpt:debug": "tests/wpt-harness/build-wpt-runtime.sh --debug-build && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:types": "tsd",
     "build": "./runtime/fastly/build-release.sh",
     "build:debug": "./runtime/fastly/build-debug.sh",

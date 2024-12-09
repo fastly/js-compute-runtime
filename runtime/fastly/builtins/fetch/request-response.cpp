@@ -1,5 +1,6 @@
 #include "request-response.h"
 #include "../../../StarlingMonkey/builtins/web/base64.h"
+// #include "../../../StarlingMonkey/builtins/web/blob.h"
 #include "../../../StarlingMonkey/builtins/web/dom-exception.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../../../StarlingMonkey/builtins/web/streams/transform-stream.h"
@@ -33,6 +34,8 @@
 #pragma clang diagnostic pop
 
 using builtins::web::base64::valueToJSByteString;
+// using builtins::web::blob::Blob;
+// using builtins::web::blob::BlobReader;
 using builtins::web::dom_exception::DOMException;
 
 // We use the StarlingMonkey Headers implementation, despite it supporting features that we do
@@ -65,10 +68,6 @@ using fastly::kv_store::KVStoreEntry;
 
 namespace builtins::web::streams {
 
-JSObject *NativeStreamSource::stream(JSObject *self) {
-  return fastly::fetch::RequestOrResponse::body_stream(owner(self));
-}
-
 bool NativeStreamSource::stream_is_body(JSContext *cx, JS::HandleObject stream) {
   JSObject *stream_source = get_stream_source(cx, stream);
   return NativeStreamSource::is_instance(stream_source) &&
@@ -80,16 +79,15 @@ bool NativeStreamSource::stream_is_body(JSContext *cx, JS::HandleObject stream) 
 namespace fastly::fetch {
 
 namespace {
-bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObject controller) {
+bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObject stream) {
   JS::RootedValue exn(cx);
   if (!JS_GetPendingException(cx, &exn))
     return false;
   JS_ClearPendingException(cx);
 
-  JS::RootedValueArray<1> args(cx);
-  args[0].set(exn);
-  JS::RootedValue r(cx);
-  return JS::Call(cx, controller, "error", args, &r);
+  RootedValue args(cx);
+  args.set(exn);
+  return JS::ReadableStreamError(cx, stream, args);
 }
 
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
@@ -101,18 +99,18 @@ bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::Han
   MOZ_ASSERT(NativeStreamSource::is_instance(streamSource));
   host_api::HttpBody body(handle);
   JS::RootedObject owner(cx, NativeStreamSource::owner(streamSource));
-  JS::RootedObject controller(cx, NativeStreamSource::controller(streamSource));
+  JS::RootedObject stream(cx, NativeStreamSource::stream(streamSource));
 
   auto read_res = body.read(HANDLE_READ_CHUNK_SIZE);
   if (auto *err = read_res.to_err()) {
     HANDLE_ERROR(cx, *err);
-    return error_stream_controller_with_pending_exception(cx, controller);
+    return error_stream_controller_with_pending_exception(cx, stream);
   }
 
   auto &chunk = read_res.unwrap();
   if (chunk.len == 0) {
     JS::RootedValue r(cx);
-    return JS::Call(cx, controller, "close", JS::HandleValueArray::empty(), &r);
+    return JS::ReadableStreamClose(cx, stream);
   }
 
   // We don't release control of chunk's data until after we've checked that the array buffer
@@ -122,7 +120,7 @@ bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::Han
       cx, JS::NewArrayBufferWithContents(cx, chunk.len, chunk.ptr.get(),
                                          JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory));
   if (!buffer) {
-    return error_stream_controller_with_pending_exception(cx, controller);
+    return error_stream_controller_with_pending_exception(cx, stream);
   }
 
   // At this point `buffer` has taken full ownership of the chunk's data.
@@ -133,11 +131,10 @@ bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::Han
     return false;
   }
 
-  JS::RootedValueArray<1> enqueue_args(cx);
-  enqueue_args[0].setObject(*byte_array);
-  JS::RootedValue r(cx);
-  if (!JS::Call(cx, controller, "enqueue", enqueue_args, &r)) {
-    return error_stream_controller_with_pending_exception(cx, controller);
+  RootedValue enqueue_val(cx);
+  enqueue_val.setObject(*byte_array);
+  if (!JS::ReadableStreamEnqueue(cx, stream, enqueue_val)) {
+    return error_stream_controller_with_pending_exception(cx, stream);
   }
 
   return true;
@@ -349,6 +346,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
   const char *content_type = nullptr;
 
   // We currently support five types of body inputs:
+  // - Blob
   // - byte sequence
   // - buffer source
   // - USV strings
@@ -360,6 +358,45 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
 
   JS::RootedObject body_obj(cx, body_val.isObject() ? &body_val.toObject() : nullptr);
 
+  host_api::HostString host_type_str;
+
+  // Blob support disabled pending bug fix in test
+  // /override-content-length/request/init/object-literal/true
+  /*if (body_obj && Blob::is_instance(body_obj)) {
+    auto native_stream = NativeStreamSource::create(cx, body_obj, JS::UndefinedHandleValue,
+                                                    Blob::stream_pull, Blob::stream_cancel);
+    if (!native_stream) {
+      return false;
+    }
+
+    JS::RootedObject source(cx, native_stream);
+    if (!source) {
+      return false;
+    }
+
+    auto readers = Blob::readers(body_obj);
+    auto blob = Blob::blob(body_obj);
+    auto span = std::span<uint8_t>(blob->begin(), blob->length());
+
+    if (!readers->put(source, BlobReader(span))) {
+      return false;
+    }
+
+    JS::RootedObject stream(cx, NativeStreamSource::stream(native_stream));
+    if (!stream) {
+      return false;
+    }
+
+    JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream),
+                       JS::ObjectValue(*stream));
+
+    JS::RootedString type_str(cx, Blob::type(body_obj));
+    if (JS::GetStringLength(type_str) > 0) {
+      host_type_str = core::encode(cx, type_str);
+      MOZ_ASSERT(host_type_str);
+      content_type = host_type_str.ptr.get();
+    }
+  } else */
   if (body_obj && JS::IsReadableStream(body_obj)) {
     if (RequestOrResponse::body_unusable(cx, body_obj)) {
       JS_ReportErrorNumberLatin1(cx, FastlyGetErrorMessage, nullptr,
@@ -547,7 +584,19 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
     }
     static_cast<void>(buf.release());
     result.setObject(*array_buffer);
-  } else {
+  }
+  // TODO: Blob support disabled pending bug fix
+  /* else if constexpr (result_type == RequestOrResponse::BodyReadResult::Blob) {
+    JS::RootedString contentType(cx, JS_GetEmptyString(cx));
+    JS::RootedObject blob(cx, Blob::create(cx, std::move(buf), len, contentType));
+
+    if (!blob) {
+      return RejectPromiseWithPendingError(cx, result_promise);
+    }
+
+    result.setObject(*blob);
+  } */
+  else {
     JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), len)));
     if (!text) {
       return RejectPromiseWithPendingError(cx, result_promise);
@@ -1185,11 +1234,7 @@ JSObject *RequestOrResponse::create_body_stream(JSContext *cx, JS::HandleObject 
   if (!source)
     return nullptr;
 
-  // Create a readable stream with a highwater mark of 0.0 to prevent an eager
-  // pull. With the default HWM of 1.0, the streams implementation causes a
-  // pull, which means we enqueue a read from the host handle, which we quite
-  // often have no interest in at all.
-  JS::RootedObject body_stream(cx, JS::NewReadableDefaultStreamObject(cx, source, nullptr, 0.0));
+  JS::RootedObject body_stream(cx, NativeStreamSource::stream(source));
   if (!body_stream) {
     return nullptr;
   }
@@ -1647,6 +1692,8 @@ const JSPropertySpec Request::static_properties[] = {
 const JSFunctionSpec Request::methods[] = {
     JS_FN("arrayBuffer", Request::bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
+    // JS_FN("blob", Request::bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0,
+    // JSPROP_ENUMERATE),
     JS_FN("json", Request::bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", Request::bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setCacheOverride", Request::setCacheOverride, 3, JSPROP_ENUMERATE),
@@ -2900,6 +2947,7 @@ const JSPropertySpec Response::static_properties[] = {
 const JSFunctionSpec Response::methods[] = {
     JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
+    // JS_FN("blob", bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setManualFramingHeaders", Response::setManualFramingHeaders, 1, JSPROP_ENUMERATE),
