@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.28.1 (2024-12-10)
+
+### Fixed
+
+* reinstate broken wpt tests ([#1071](https://github.com/fastly/js-compute-runtime/issues/1071)) ([5e2c682](https://github.com/fastly/js-compute-runtime/commit/5e2c68228be24ea6bd286fca0ca1ffbe028199c2))
+
 ## 3.28.0 (2024-12-09)
 
 ### Added

@@ -1,0 +1,43 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Reflect.get()
+
+The static **`Reflect.get()`** method works like getting a
+property from an object (`target[propertyKey]`) as a function.
+
+## Syntax
+
+```js
+Reflect.get(target, propertyKey)
+Reflect.get(target, propertyKey, receiver)
+```
+
+### Parameters
+
+- `target`
+  - : The target object on which to get the property.
+- `propertyKey`
+  - : The name of the property to get.
+- `receiver` _**optional**_
+  - : The value of `this` provided for the call to
+    `target` if a getter is encountered. When used with
+    `Proxy`, it can be an object that inherits from
+    `target`.
+
+### Return value
+
+The value of the property.
+
+### Exceptions
+
+A [`TypeError`](../../globals/TypeError/TypeError.mdx), if `target` is not an
+`Object`.
+
+## Description
+
+The `Reflect.get` method allows you to get a property on an object. It is like the
+[property accessor](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Property_Accessors) syntax as a function.
