@@ -51,7 +51,7 @@ async function handleRequest(event) {
 
 function evalAllScripts(wpt_test_scripts) {
   for (let wpt_test_script of wpt_test_scripts) {
-    eval(wpt_test_script);
+    (0, eval)(wpt_test_script);
   }
 }
 
@@ -69,10 +69,10 @@ async function loadMetaScript(path) {
   let lines = metaSource.split("\n");
   lines = lines.map(line => {
     if (line.indexOf("const ") == 0) {
-      return "var " + line.substr(6);
+      return `var ${line.slice(6)}`;
     }
     if (line.indexOf("let ") == 0) {
-      return "var " + line.substr(4);
+      return `var ${line.slice(4)}`;
     }
     return line;
   });
