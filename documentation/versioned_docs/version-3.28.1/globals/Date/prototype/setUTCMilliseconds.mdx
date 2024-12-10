@@ -1,0 +1,33 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Date.prototype.setUTCMilliseconds()
+
+The **`setUTCMilliseconds()`** method sets the milliseconds for
+a specified date according to universal time.
+
+## Syntax
+
+```js
+setUTCMilliseconds(millisecondsValue)
+```
+
+### Parameters
+
+- `millisecondsValue`
+  - : A number between 0 and 999, representing the milliseconds.
+
+### Return value
+
+The number of milliseconds between 1 January 1970 00:00:00 UTC and the updated date.
+
+## Description
+
+If a parameter you specify is outside of the expected range,
+`setUTCMilliseconds()` attempts to update the date information in the
+`Date` object accordingly. For example, if you use 1100 for
+`millisecondsValue`, the seconds stored in the `Date`
+object will be incremented by 1, and 100 will be used for milliseconds.

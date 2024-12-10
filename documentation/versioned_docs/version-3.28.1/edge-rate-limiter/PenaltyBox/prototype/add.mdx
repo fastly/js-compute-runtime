@@ -1,0 +1,33 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# PenaltyBox.prototype.has
+
+Add an `entry` into the PenaltyBox for the duration of the given `timeToLive`.
+
+## Syntax
+```js
+add(entry, timeToLive)
+```
+
+### Parameters
+
+- `entry` _: string_
+  - The name of the entry to look up
+- `timeToLive` _: number_
+  - In minutes, how long the entry should be added into the PenaltyBox
+  - Valid `timeToLive` is 1 minute to 60 minutes and `timeToLive` value is truncated to the nearest minute.
+
+
+### Return value
+
+Returns `undefined`.
+
+### Exceptions
+
+- `TypeError`
+  - Thrown if the provided `entry` value can not be coerced into a string
+  - Thrown if the provided `timeToLive` value is not either, a number between 1 and 60 inclusively.
