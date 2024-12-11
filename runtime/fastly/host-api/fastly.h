@@ -1080,6 +1080,25 @@ int device_detection_lookup(const char *user_agent, size_t user_agent_len, const
 WASM_IMPORT("fastly_compute_runtime", "get_vcpu_ms")
 int compute_get_vcpu_ms(uint64_t *vcpu_ms);
 
+// ACL handle type
+typedef uint32_t fastly_acl_handle;
+
+// ACL error enum
+typedef uint32_t fastly_acl_error;
+
+#define FASTLY_ACL_ERROR_UNINITIALIZED 0
+#define FASTLY_ACL_ERROR_OK 1
+#define FASTLY_ACL_ERROR_NO_CONTENT 2
+#define FASTLY_ACL_ERROR_TOO_MANY_REQUESTS 3
+
+// ACL host calls
+WASM_IMPORT("fastly_acl", "open")
+int acl_open(const char *name, size_t name_len, uint32_t *acl_handle_out);
+
+WASM_IMPORT("fastly_acl", "lookup")
+int acl_lookup(uint32_t acl_handle, const uint8_t *ip_octets, size_t ip_len,
+               uint32_t *body_handle_out, fastly_acl_error *acl_error_out);
+
 #ifdef __cplusplus
 } // namespace fastly
 } // extern C
