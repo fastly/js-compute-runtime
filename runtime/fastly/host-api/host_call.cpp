@@ -30,6 +30,8 @@ bool error_is_bad_handle(APIError e) { return e == FASTLY_HOST_ERROR_BAD_HANDLE;
 
 bool error_is_unsupported(APIError e) { return e == FASTLY_HOST_ERROR_UNSUPPORTED; }
 
+bool error_is_buffer_len(APIError e) { return e == FASTLY_HOST_ERROR_BUFFER_LEN; }
+
 void handle_kv_error(JSContext *cx, FastlyKVError err, const unsigned int err_type, int line,
                      const char *func) {
   // kv error was a host call error -> report as host error
