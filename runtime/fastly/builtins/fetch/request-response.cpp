@@ -2077,7 +2077,6 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   if (!headers_val.isUndefined()) {
     headers = Headers::create(cx, headers_val, Headers::HeadersGuard::Request);
   } else {
-    DBG("SETTING HEADERS\n");
     headers = Headers::create(cx, input_headers, Headers::HeadersGuard::Request);
   }
 
