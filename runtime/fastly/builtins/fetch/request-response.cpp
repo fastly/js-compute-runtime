@@ -1903,9 +1903,10 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   JS::RootedValue cache_override(cx);
   JS::RootedValue cache_key(cx);
   JS::RootedValue fastly_val(cx);
-  JS::RootedValue manualFramingHeaders(cx);
-  bool hasmanualFramingHeaders;
+  bool hasManualFramingHeaders = false;
+  bool setManualFramingHeaders = false;
   if (init_val.isObject()) {
+    JS::RootedValue manualFramingHeaders(cx);
     JS::RootedObject init(cx, init_val.toObjectOrNull());
     if (!JS_GetProperty(cx, init, "method", &method_val) ||
         !JS_GetProperty(cx, init, "headers", &headers_val) ||
@@ -1914,10 +1915,11 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
         !JS_GetProperty(cx, init, "cacheOverride", &cache_override) ||
         !JS_GetProperty(cx, init, "cacheKey", &cache_key) ||
         !JS_GetProperty(cx, init, "fastly", &fastly_val) ||
-        !JS_HasOwnProperty(cx, init, "manualFramingHeaders", &hasmanualFramingHeaders) ||
+        !JS_HasOwnProperty(cx, init, "manualFramingHeaders", &hasManualFramingHeaders) ||
         !JS_GetProperty(cx, init, "manualFramingHeaders", &manualFramingHeaders)) {
       return nullptr;
     }
+    setManualFramingHeaders = manualFramingHeaders.isBoolean() && manualFramingHeaders.toBoolean();
   } else if (!init_val.isNullOrUndefined()) {
     JS_ReportErrorLatin1(cx, "Request constructor: |init| parameter can't be converted to "
                              "a dictionary");
@@ -2075,6 +2077,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   if (!headers_val.isUndefined()) {
     headers = Headers::create(cx, headers_val, Headers::HeadersGuard::Request);
   } else {
+    DBG("SETTING HEADERS\n");
     headers = Headers::create(cx, input_headers, Headers::HeadersGuard::Request);
   }
 
@@ -2222,18 +2225,17 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
                         JS::BooleanValue(false));
   }
 
-  if (!hasmanualFramingHeaders) {
+  if (!hasManualFramingHeaders) {
     if (input_request) {
-      manualFramingHeaders.set(
-          JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::ManualFramingHeaders)));
-    } else {
-      manualFramingHeaders.setBoolean(false);
+      auto val =
+          JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::ManualFramingHeaders));
+      setManualFramingHeaders = val.isBoolean() && val.toBoolean();
     }
   }
   JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::ManualFramingHeaders),
-                      JS::BooleanValue(JS::ToBoolean(manualFramingHeaders)));
+                      JS::BooleanValue(setManualFramingHeaders));
 
-  if (JS::ToBoolean(manualFramingHeaders)) {
+  if (setManualFramingHeaders) {
     auto res =
         request_handle.set_framing_headers_mode(host_api::FramingHeadersMode::ManuallyFromHeaders);
     if (auto *err = res.to_err()) {
