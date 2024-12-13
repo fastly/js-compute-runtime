@@ -1332,7 +1332,32 @@
       "headers": [["cuStom", "test"]]
     }
   },
-
+  "GET /http-cache/invalid-properties": {},
+  "GET /http-cache/invalid-transform": {},
+  "GET /http-cache/hook-errors": {},
+  "GET /http-cache/readonly-properties": {},
+  "GET /http-cache/property-errors": {},
+  "GET /http-cache/property-access-errors": {},
+  "GET /http-cache/after-send-edge-cache": {},
+  "GET /http-cache/after-send-browser-cache": {},
+  "GET /http-cache/before-send": {},
+  "GET /http-cache/request-mutation": {},
+  "GET /http-cache/request-mutation-order": {},
+  "GET /http-cache/response-mutations": {},
+  "GET /http-cache/cacheability": {},
+  "GET /http-cache/stale-responses": {},
+  "GET /http-cache/body-transform": {},
+  "GET /http-cache/body-transform-error": {},
+  "GET /http-cache/body-transform-invalid-chunk": {},
+  "GET /http-cache/body-transform-write-after-close": {},
+  "GET /http-cache/body-transform-cancel": {},
+  "GET /http-cache/body-transform-backpressure": {},
+  "GET /http-cache/request-collapsing-options": {},
+  "GET /http-cache/request-collapsing-uncacheable": {},
+  "GET /http-cache/request-collapsing-vary": {},
+  "GET /http-cache/concurrent-modifications": {},
+  "GET /http-cache/concurrent-transforms": {},
+  "GET /http-cache/revalidation-updates": {},
   "GET /FastlyBody/interface": {
     "environments": ["compute"],
     "downstream_response": {
