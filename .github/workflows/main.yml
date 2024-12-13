@@ -103,9 +103,9 @@ jobs:
       run: |
         set -x
         curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-25/wasi-sdk-25.0-x86_64-linux.tar.gz
-        tar xf wasi-sdk-25.0-linux.tar.gz
+        tar xf wasi-sdk-25.0-x86_64-linux.tar.gz
         sudo mkdir -p /opt/wasi-sdk
-        sudo mv wasi-sdk-25.0/* /opt/wasi-sdk/
+        sudo mv wasi-sdk-25.0-x86_64-linux/* /opt/wasi-sdk/
         ls /opt/wasi-sdk/
     - run: |
         /opt/wasi-sdk/bin/clang-format --version
