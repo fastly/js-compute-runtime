@@ -99,13 +99,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: "Install wasi-sdk-20 (linux)"
+    - name: "Install wasi-sdk-25 (linux)"
       run: |
         set -x
-        curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
-        tar xf wasi-sdk-20.0-linux.tar.gz
+        curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-25/wasi-sdk-25.0-x86_64-linux.tar.gz
+        tar xf wasi-sdk-25.0-linux.tar.gz
         sudo mkdir -p /opt/wasi-sdk
-        sudo mv wasi-sdk-20.0/* /opt/wasi-sdk/
+        sudo mv wasi-sdk-25.0/* /opt/wasi-sdk/
         ls /opt/wasi-sdk/
     - run: |
         /opt/wasi-sdk/bin/clang-format --version
