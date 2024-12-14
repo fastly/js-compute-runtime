@@ -529,6 +529,20 @@ JSObject *Response::headers(JSContext *cx, JS::HandleObject obj) {
   return headers;
 }
 
+bool Request::isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto handle = request_handle(self);
+  auto res = handle.is_cacheable();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  args.rval().setBoolean(res.unwrap());
+  return true;
+}
+
 // Headers are committed when making the request or response.
 // We ensure the headers are in the ContentOnly or CachedInContent state for
 // future reads and mutations, and then copy them into a new handle created for the
@@ -1703,6 +1717,7 @@ const JSPropertySpec Request::properties[] = {
     JS_PSG("backend", backend_get, JSPROP_ENUMERATE),
     JS_PSG("body", body_get, JSPROP_ENUMERATE),
     JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
+    JS_PSG("isCacheable", isCacheable_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Request", JSPROP_READONLY),
     JS_PS_END,
 };
@@ -2966,9 +2981,413 @@ const JSPropertySpec Response::properties[] = {
     JS_PSG("ip", ip_get, JSPROP_ENUMERATE),
     JS_PSG("port", port_get, JSPROP_ENUMERATE),
     JS_PSG("backend", backend_get, JSPROP_ENUMERATE),
+    JS_PSG("isCacheable", isCacheable_get, JSPROP_ENUMERATE),
+    JS_PSG("cached", cached_get, JSPROP_ENUMERATE),
+    JS_PSG("isStale", isStale_get, JSPROP_ENUMERATE),
+    JS_PSGS("ttl", ttl_get, ttl_set, JSPROP_ENUMERATE),
+    JS_PSG("age", age_get, JSPROP_ENUMERATE),
+    JS_PSGS("swr", swr_get, swr_set, JSPROP_ENUMERATE),
+    JS_PSGS("vary", vary_get, vary_set, JSPROP_ENUMERATE),
+    JS_PSGS("surrogateKeys", surrogateKeys_get, surrogateKeys_set, JSPROP_ENUMERATE),
+    JS_PSGS("pci", pci_get, pci_set, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Response", JSPROP_READONLY),
     JS_PS_END,
 };
+
+host_api::HttpCacheEntry Response::cache_entry(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  auto val = JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::CacheEntry));
+  if (val.isInt32()) {
+    return host_api::HttpCacheEntry(val.toInt32());
+  }
+  return host_api::HttpCacheEntry();
+}
+
+host_api::HttpStorageAction Response::storage_action(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  auto val = JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::StorageAction));
+  return val.isUndefined() ? host_api::HttpStorageAction::DoNotStore : // Default if not set
+             static_cast<host_api::HttpStorageAction>(val.toInt32());
+}
+
+host_api::HttpCacheWriteOptions *Response::cache_write_options(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  auto val = JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::CacheWriteOptions));
+  if (val.isUndefined()) {
+    return nullptr;
+  }
+  return static_cast<host_api::HttpCacheWriteOptions *>(val.toPrivate());
+}
+
+bool Response::isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto action = storage_action(self);
+  args.rval().setBoolean(action == host_api::HttpStorageAction::Insert ||
+                         action == host_api::HttpStorageAction::Update);
+  return true;
+}
+
+bool Response::cached_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+  auto entry = cache_entry(self);
+  args.rval().setBoolean(entry.is_valid());
+  return true;
+}
+
+bool Response::isStale_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto entry = cache_entry(self);
+  if (!entry.is_valid()) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  auto res = entry.get_state();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  args.rval().setBoolean(res.unwrap().is_stale());
+  return true;
+}
+
+bool Response::ttl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto opts = cache_write_options(self);
+  if (!opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  args.rval().setNumber(static_cast<double>(opts->max_age_ns) / 1e9);
+  return true;
+}
+
+bool Response::age_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto opts = cache_write_options(self);
+  if (!opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  args.rval().setNumber(static_cast<double>(opts->initial_age_ns.value_or(0)) / 1e9);
+  return true;
+}
+
+bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto opts = cache_write_options(self);
+  if (!opts || !opts->stale_while_revalidate_ns) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  args.rval().setNumber(static_cast<double>(opts->stale_while_revalidate_ns.value()) / 1e9);
+  return true;
+}
+
+// TODO: Convert from Set to Array
+bool Response::vary_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto opts = cache_write_options(self);
+  if (!opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  if (!opts->vary_rule.has_value()) {
+    // Create empty Set if no vary rule
+    JS::RootedObject set(cx, JS::NewSetObject(cx));
+    if (!set) {
+      return false;
+    }
+    args.rval().setObject(*set);
+    return true;
+  }
+
+  // Split vary rule on commas and trim whitespace
+  std::string_view rule_str(opts->vary_rule.value().begin(), opts->vary_rule.value().end());
+  std::vector<std::string_view> headers;
+  size_t pos = 0;
+  while (pos < rule_str.length()) {
+    // Skip leading whitespace
+    while (pos < rule_str.length() && std::isspace(rule_str[pos])) {
+      pos++;
+    }
+
+    // Find next space
+    size_t comma = rule_str.find(' ', pos);
+
+    std::string_view header;
+    if (comma == std::string_view::npos) {
+      header = rule_str.substr(pos);
+      pos = rule_str.length();
+    } else {
+      header = rule_str.substr(pos, comma - pos);
+      pos = comma + 1;
+    }
+
+    // Trim trailing whitespace
+    while (!header.empty() && std::isspace(header.back())) {
+      header.remove_suffix(1);
+    }
+
+    // Only add non-empty headers
+    if (!header.empty()) {
+      headers.push_back(header);
+    }
+  }
+
+  // Create Set and add headers
+  JS::RootedObject set(cx, JS::NewSetObject(cx));
+  if (!set) {
+    return false;
+  }
+
+  for (const auto &header : headers) {
+    JS::RootedString str(cx, JS_NewStringCopyN(cx, header.data(), header.length()));
+    if (!str) {
+      return false;
+    }
+    JS::RootedValue val(cx, JS::StringValue(str));
+    if (!JS::SetAdd(cx, set, val)) {
+      return false;
+    }
+  }
+
+  args.rval().setObject(*set);
+  return true;
+}
+
+bool Response::surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto opts = cache_write_options(self);
+  if (!opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  JS::RootedObject set(cx, JS::NewSetObject(cx));
+  if (!set) {
+    return false;
+  }
+
+  for (const auto &key : opts->surrogate_keys) {
+    JS::RootedString str(cx, JS_NewStringCopyN(cx, key.data(), key.size()));
+    if (!str) {
+      return false;
+    }
+    JS::RootedValue val(cx, JS::StringValue(str));
+    if (!JS::SetAdd(cx, set, val)) {
+      return false;
+    }
+  }
+
+  args.rval().setObject(*set);
+  return true;
+}
+
+bool Response::pci_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto opts = cache_write_options(self);
+  if (!opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  args.rval().setBoolean(opts->sensitive_data);
+  return true;
+}
+
+// Setters for mutable properties
+
+bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+
+  auto opts = cache_write_options(self);
+  if (!opts) {
+    JS_ReportErrorLatin1(cx, "Cannot set TTL on non-cached response");
+    return false;
+  }
+
+  double seconds;
+  if (!JS::ToNumber(cx, args[0], &seconds)) {
+    return false;
+  }
+
+  opts->max_age_ns = static_cast<uint64_t>(seconds * 1e9);
+
+  args.rval().setUndefined();
+  return true;
+}
+
+bool Response::swr_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+
+  auto opts = cache_write_options(self);
+  if (!opts) {
+    JS_ReportErrorLatin1(cx, "Cannot set stale-while-revalidate on non-cached response");
+    return false;
+  }
+
+  double seconds;
+  if (!JS::ToNumber(cx, args[0], &seconds)) {
+    return false;
+  }
+
+  opts->stale_while_revalidate_ns = static_cast<uint64_t>(seconds * 1e9);
+
+  args.rval().setUndefined();
+  return true;
+}
+
+// TODO: Convert from Set to Array
+bool Response::vary_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+
+  auto opts = cache_write_options(self);
+  if (!opts) {
+    JS_ReportErrorLatin1(cx, "Cannot set vary on non-cached response");
+    return false;
+  }
+
+  JS::RootedObject set_obj(cx);
+  bool is_set = false;
+  if (args[0].isObject()) {
+    set_obj.set(&args[0].toObject());
+    if (!JS::IsSetObject(cx, set_obj, &is_set)) {
+      return false;
+    }
+  }
+  if (!is_set) {
+    JS_ReportErrorLatin1(cx, "vary must be a Set of strings");
+    return false;
+  }
+
+  JS::RootedValue set_vals(cx);
+  if (!JS::SetValues(cx, set_obj, &set_vals)) {
+    return false;
+  }
+
+  MOZ_ASSERT(set_vals.isObject() && JS_IsTypedArrayObject(&set_vals.toObject()));
+
+  JS::RootedObject set_vals_arr(cx, &set_vals.toObject());
+  uint32_t length;
+  if (!JS::GetArrayLength(cx, set_vals_arr, &length)) {
+    return false;
+  }
+
+  std::string vary_rule;
+  for (uint32_t i = 0; i < length; i++) {
+    JS::RootedValue val(cx);
+    if (!JS_GetElement(cx, set_vals_arr, i, &val)) {
+      return false;
+    }
+    if (!val.isString()) {
+      JS_ReportErrorLatin1(cx, "vary must be a Set of strings");
+      return false;
+    }
+    auto str_val = core::encode(cx, val);
+    if (!str_val) {
+      return false;
+    }
+    if (!vary_rule.empty()) {
+      vary_rule += " ";
+    }
+    vary_rule.append(str_val.ptr.get(), str_val.len);
+  }
+
+  opts->vary_rule = std::move(vary_rule);
+
+  args.rval().setUndefined();
+  return true;
+}
+
+// TODO: Convert from Set to Array
+bool Response::surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+
+  auto opts = cache_write_options(self);
+  if (!opts) {
+    JS_ReportErrorLatin1(cx, "Cannot set surrogate keys on non-cached response");
+    return false;
+  }
+
+  JS::RootedObject set_obj(cx);
+  bool is_set = false;
+  if (args[0].isObject()) {
+    set_obj.set(&args[0].toObject());
+    if (!JS::IsSetObject(cx, set_obj, &is_set)) {
+      return false;
+    }
+  }
+  if (!is_set) {
+    JS_ReportErrorLatin1(cx, "surrogateKeys must be a Set of strings");
+    return false;
+  }
+
+  JS::RootedObject set(cx, &args[0].toObject());
+  JS::RootedValue set_values(cx);
+  if (!JS::SetValues(cx, set, &set_values)) {
+    return false;
+  }
+
+  JS::RootedObject values_array(cx, &set_values.toObject());
+  uint32_t length;
+  if (!JS::GetArrayLength(cx, values_array, &length)) {
+    return false;
+  }
+
+  std::vector<std::string> keys;
+  std::vector<JS::UniqueChars> key_storage; // Keep strings alive
+  keys.reserve(length);
+  key_storage.reserve(length);
+
+  for (uint32_t i = 0; i < length; i++) {
+    JS::RootedValue val(cx);
+    if (!JS_GetElement(cx, values_array, i, &val)) {
+      return false;
+    }
+    if (!val.isString()) {
+      JS_ReportErrorLatin1(cx, "surrogateKeys must be a Set of strings");
+      return false;
+    }
+    auto key = core::encode(cx, val);
+    if (!key) {
+      return false;
+    }
+    keys.emplace_back(key.ptr.get(), key.len);
+    key_storage.push_back(std::move(key.ptr));
+  }
+
+  opts->surrogate_keys = std::move(keys);
+
+  args.rval().setUndefined();
+  return true;
+}
+
+bool Response::pci_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+
+  auto opts = cache_write_options(self);
+  if (!opts) {
+    JS_ReportErrorLatin1(cx, "Cannot set PCI flag on non-cached response");
+    return false;
+  }
+  opts->sensitive_data = JS::ToBoolean(args[0]);
+  args.rval().setUndefined();
+  return true;
+}
 
 /**
  * The `Response` constructor https://fetch.spec.whatwg.org/#dom-response
@@ -3205,6 +3624,9 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::GripUpgradeRequest),
                         JS::Int32Value(Request::request_handle(grip_upgrade_request).handle));
   }
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::StorageAction), JS::UndefinedValue());
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::CacheWriteOptions),
+                      JS::UndefinedValue());
   if (backend) {
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Backend), JS::StringValue(backend));
   }

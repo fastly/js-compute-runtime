@@ -1353,10 +1353,6 @@ interface Response extends Body {
    */
   readonly cached: boolean;
   /**
-   * Fastly-specific property - If this was a backend response, whether it should be cached
-   */
-  readonly isCacheable: boolean;
-  /**
    * Fastly-specific property - Returns whether the cached `Response` is considered stale.
    *
    * Undefined if the response is not cached.
@@ -1389,13 +1385,13 @@ interface Response extends Body {
    *
    * Undefined if the response is not cached. May be modified prior to injection into the cache.
    */
-  vary: Set<string> | undefined;
+  vary: Array<string> | undefined;
   /**
    * Fastly-specific property - The surrogate keys for the cached response.
    *
    * Undefined if the response is not cached. May be modified prior to injection into the cache.
    */
-  surrogateKeys: Set<string> | undefined;
+  surrogateKeys: Array<string> | undefined;
   /**
    * Fastly-specific property - Get or set whether this response should only be stored via PCI/HIPAA-compliant non-volatile caching.
    *
@@ -1416,6 +1412,10 @@ declare var Response: {
   // error(): Response;
   redirect(url: string | URL, status?: number): Response;
   json(data: any, init?: ResponseInit): Response;
+  /**
+   * Fastly-specific property - If this was a backend response, whether it should be cached
+   */
+  readonly isCacheable: boolean;
 };
 
 /**

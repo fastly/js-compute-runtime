@@ -1802,10 +1802,10 @@ from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &f
     while (pos < keys_str.size()) {
       size_t space = keys_str.find(' ', pos);
       if (space == std::string_view::npos) {
-        opts.surrogate_keys.push_back(keys_str.substr(pos));
+        opts.surrogate_keys.push_back(std::string(keys_str.substr(pos)));
         break;
       }
-      opts.surrogate_keys.push_back(keys_str.substr(pos, space - pos));
+      opts.surrogate_keys.push_back(std::string(keys_str.substr(pos, space - pos)));
       pos = space + 1;
     }
   }
@@ -2009,19 +2009,20 @@ HttpCacheEntry::get_suggested_cache_options(const HttpResp &resp) const {
       from_fastly_cache_write_options(options_out, options_mask_out));
 }
 
-Result<std::tuple<uint8_t, HttpResp>>
+Result<std::tuple<HttpStorageAction, HttpResp>>
 HttpCacheEntry::prepare_response_for_storage(HttpResp resp) const {
-  uint8_t storage_action_out;
+  HttpStorageAction storage_action_out;
   uint32_t updated_resp_handle_out;
 
   auto res = fastly::http_cache_prepare_response_for_storage(
-      this->handle, resp.handle, &storage_action_out, &updated_resp_handle_out);
+      this->handle, resp.handle, reinterpret_cast<uint8_t *>(&storage_action_out),
+      &updated_resp_handle_out);
 
   if (res != 0) {
-    return Result<std::tuple<uint8_t, HttpResp>>::err(host_api::APIError(res));
+    return Result<std::tuple<HttpStorageAction, HttpResp>>::err(host_api::APIError(res));
   }
 
-  return Result<std::tuple<uint8_t, HttpResp>>::ok(
+  return Result<std::tuple<HttpStorageAction, HttpResp>>::ok(
       std::make_tuple(storage_action_out, HttpResp(updated_resp_handle_out)));
 }
 

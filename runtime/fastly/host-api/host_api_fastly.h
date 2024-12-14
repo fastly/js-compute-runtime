@@ -643,7 +643,7 @@ struct HttpCacheWriteOptions final {
   uint64_t max_age_ns;
 
   // Optional vary rule - header names separated by spaces
-  std::optional<std::string_view> vary_rule;
+  std::optional<std::string> vary_rule;
 
   // Optional initial age of the response in nanoseconds
   std::optional<uint64_t> initial_age_ns;
@@ -652,7 +652,7 @@ struct HttpCacheWriteOptions final {
   std::optional<uint64_t> stale_while_revalidate_ns;
 
   // Optional surrogate keys separated by spaces
-  std::vector<std::string_view> surrogate_keys;
+  std::vector<std::string> surrogate_keys;
 
   // Optional length of the response body
   std::optional<uint64_t> length;
@@ -671,6 +671,13 @@ struct CacheState final {
   bool is_usable() const;
   bool is_stale() const;
   bool must_insert_or_update() const;
+};
+
+enum class HttpStorageAction : uint8_t {
+  Insert = 0,
+  Update = 1,
+  DoNotStore = 2,
+  RecordUncacheable = 3
 };
 
 class HttpCacheEntry final {
@@ -723,7 +730,7 @@ public:
   Result<HttpCacheWriteOptions> get_suggested_cache_options(const HttpResp &resp) const;
 
   /// Prepare response for storage
-  Result<std::tuple<uint8_t, HttpResp>> prepare_response_for_storage(HttpResp resp) const;
+  Result<std::tuple<HttpStorageAction, HttpResp>> prepare_response_for_storage(HttpResp resp) const;
 
   /// Get found response
   Result<std::optional<Response>> get_found_response(bool transform_for_client = true) const;
