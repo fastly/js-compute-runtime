@@ -170,6 +170,16 @@ declare module 'fastly:cache-override' {
         ) => void | CacheOptions | PromiseLike<void | CacheOptions>;
       },
     );
+    constructor(overrideInit?: {
+      ttl?: number;
+      swr?: number;
+      surrogateKey?: string;
+      pci?: boolean;
+      beforeSend?: (request: Request) => void | PromiseLike<void>;
+      afterSend?: (
+        response: Response,
+      ) => void | CacheOptions | PromiseLike<void | CacheOptions>;
+    });
 
     /**
      * Sets the cache override mode for a request

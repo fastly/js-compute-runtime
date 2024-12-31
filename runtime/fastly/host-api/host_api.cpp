@@ -1261,6 +1261,25 @@ Result<HttpPendingReq> HttpReq::send_async_streaming(HttpBody body, std::string_
   return res;
 }
 
+Result<HttpPendingReq> HttpReq::send_async_without_caching(HttpBody body, std::string_view backend,
+                                                           bool streaming) {
+  Result<HttpPendingReq> res;
+
+  fastly::fastly_host_error err;
+  HttpPendingReq::Handle ret;
+  fastly::fastly_world_string backend_str = string_view_to_world_string(backend);
+  if (!convert_result(fastly::req_send_async_v2(this->handle, body.handle,
+                                                reinterpret_cast<char *>(backend_str.ptr),
+                                                backend_str.len, streaming ? 1 : 0, &ret),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(ret);
+  }
+
+  return res;
+}
+
 Result<Void> HttpReq::set_method(std::string_view method) {
   Result<Void> res;
 
@@ -1852,11 +1871,20 @@ Result<HostString> HttpReq::get_suggested_cache_key() const {
 }
 
 // HttpCacheEntry method implementations
-Result<HttpCacheEntry> HttpCacheEntry::lookup(const HttpReq &req) {
+Result<HttpCacheEntry> HttpCacheEntry::lookup(const HttpReq &req, std::span<uint8_t> override_key) {
   uint32_t handle_out;
-  auto res = fastly::http_cache_lookup(req.handle,
-                                       0, // No options
-                                       nullptr, &handle_out);
+  fastly::fastly_http_cache_lookup_options opts{};
+  uint32_t opts_mask = 0;
+
+  if (!override_key.empty()) {
+    MOZ_ASSERT(override_key.size() == 32);
+    opts.override_key = reinterpret_cast<const char *>(override_key.data());
+    opts.override_key_len = override_key.size();
+    opts_mask |= FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_OVERRIDE_KEY;
+  }
+
+  auto res = fastly::http_cache_lookup(req.handle, opts_mask,
+                                       override_key.empty() ? nullptr : &opts, &handle_out);
 
   if (res != 0) {
     return Result<HttpCacheEntry>::err(host_api::APIError(res));
@@ -1865,12 +1893,21 @@ Result<HttpCacheEntry> HttpCacheEntry::lookup(const HttpReq &req) {
   return Result<HttpCacheEntry>::ok(HttpCacheEntry(handle_out));
 }
 
-Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req) {
+Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
+                                                          std::span<uint8_t> override_key) {
   uint32_t handle_out;
-  auto res = fastly::http_cache_transaction_lookup(req.handle,
-                                                   0, // No options
-                                                   nullptr, &handle_out);
+  fastly::fastly_http_cache_lookup_options opts{};
+  uint32_t opts_mask = 0;
 
+  if (!override_key.empty()) {
+    MOZ_ASSERT(override_key.size() == 32);
+    opts.override_key = reinterpret_cast<const char *>(override_key.data());
+    opts.override_key_len = override_key.size();
+    opts_mask |= FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_OVERRIDE_KEY;
+  }
+
+  auto res = fastly::http_cache_lookup(req.handle, opts_mask,
+                                       override_key.empty() ? nullptr : &opts, &handle_out);
   if (res != 0) {
     return Result<HttpCacheEntry>::err(host_api::APIError(res));
   }

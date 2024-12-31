@@ -572,6 +572,10 @@ WASM_IMPORT("fastly_http_req", "send_async_streaming")
 int req_send_async_streaming(uint32_t req_handle, uint32_t body_handle, const char *backend,
                              size_t backend_len, uint32_t *pending_req_out);
 
+WASM_IMPORT("fastly_http_req", "send_async_v2")
+int req_send_async_v2(uint32_t req_handle, uint32_t body_handle, const char *backend,
+                      size_t backend_len, uint32_t streaming, uint32_t *pending_req_out);
+
 WASM_IMPORT("fastly_http_req", "pending_req_poll")
 int req_pending_req_poll(uint32_t req_handle, uint32_t *is_done_out, uint32_t *resp_handle_out,
                          uint32_t *resp_body_handle_out);

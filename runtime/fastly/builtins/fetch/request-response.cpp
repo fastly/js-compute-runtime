@@ -190,6 +190,86 @@ ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
 
 } // namespace
 
+bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
+                                        JS::HandleObject request, const char *fun_name) {
+  MOZ_ASSERT(Response::is_instance(self));
+  // Get response headers object
+  JSObject *headers = Response::headers(cx, self);
+  if (!headers) {
+    return false;
+  }
+  JS::RootedObject headers_val(cx, headers);
+
+  // Get cache handle and hits
+  auto cache_entry_opt = Request::cache_handle(request);
+  if (cache_entry_opt) {
+    auto hits_res = cache_entry_opt->get_hits();
+    if (auto *err = hits_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+    uint64_t hits = hits_res.unwrap();
+
+    // Add HIT headers
+    JS::RootedValue hit_str_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "HIT")));
+    if (!Headers::append_valid_header(cx, headers_val, "x-cache", hit_str_val, fun_name)) {
+      return false;
+    }
+
+    // Convert hits to string and add header
+    std::string hits_str = std::to_string(hits);
+    JS::RootedValue hits_str_val(
+        cx, JS::StringValue(JS_NewStringCopyN(cx, hits_str.c_str(), hits_str.length())));
+    if (!Headers::append_valid_header(cx, headers_val, "x-cache-hits", hits_str_val, fun_name)) {
+      return false;
+    }
+  } else {
+    // Add MISS headers
+    JS::RootedValue miss_str_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "MISS")));
+    if (!Headers::append_valid_header(cx, headers_val, "x-cache", miss_str_val, fun_name)) {
+      return false;
+    }
+
+    JS::RootedValue zero_str_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "0")));
+    if (!Headers::append_valid_header(cx, headers_val, "x-cache-hits", zero_str_val, fun_name)) {
+      return false;
+    }
+  }
+
+  // Rest of the function handling surrogate headers remains the same
+  JSObject *request_headers = Request::headers(cx, request);
+  if (!request_headers) {
+    return false;
+  }
+  JS::RootedObject request_headers_val(cx, request_headers);
+
+  auto ff_idx = Headers::lookup(cx, request_headers_val, "Fastly-FF");
+  auto debug_idx = Headers::lookup(cx, request_headers_val, "Fastly-Debug");
+
+  if (!ff_idx.has_value() && !debug_idx.has_value()) {
+    JS::RootedValue delete_func(cx);
+    if (!JS_GetProperty(cx, headers_val, "delete", &delete_func)) {
+      return false;
+    }
+    {
+      JS::RootedValue key_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "Surrogate-Key")));
+      JS::RootedValue rval(cx);
+      if (!JS::Call(cx, headers_val, delete_func, JS::HandleValueArray(key_val), &rval)) {
+        return false;
+      }
+    }
+    {
+      JS::RootedValue key_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "Surrogate-Control")));
+      JS::RootedValue rval(cx);
+      if (!JS::Call(cx, headers_val, delete_func, JS::HandleValueArray(key_val), &rval)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 bool RequestOrResponse::process_pending_request(JSContext *cx,
                                                 host_api::HttpPendingReq::Handle handle,
                                                 JS::HandleObject context,
@@ -203,23 +283,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     return RejectPromiseWithPendingError(cx, promise);
   }
 
-  auto [response_handle, body] = res.unwrap();
-  JS::RootedObject response_instance(
-      cx, JS_NewObjectWithGivenProto(cx, &Response::class_, Response::proto_obj));
-  if (!response_instance) {
-    return false;
-  }
-
-  bool is_upstream = true;
-  RootedString backend(cx, RequestOrResponse::backend(context));
-  JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle, body,
-                                                 is_upstream, nullptr, backend));
-  if (!response) {
-    return false;
-  }
-
-  RequestOrResponse::set_url(response, RequestOrResponse::url(context));
-  JS::RootedValue response_val(cx, JS::ObjectValue(*response));
+  JS::RootedValue response_val(cx, JS::ObjectValue(*Response::create(cx, context, res.unwrap())));
   return JS::ResolvePromise(cx, promise, response_val);
 }
 
@@ -1300,6 +1364,19 @@ host_api::HttpPendingReq Request::pending_handle(JSObject *obj) {
   }
 
   return res;
+}
+
+std::optional<host_api::HttpCacheEntry> Request::cache_handle(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+
+  JS::Value handle_val =
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::CacheHandle));
+
+  if (handle_val.isInt32()) {
+    return host_api::HttpCacheEntry(handle_val.toInt32());
+  }
+
+  return std::nullopt;
 }
 
 bool Request::is_downstream(JSObject *obj) {
@@ -3603,6 +3680,26 @@ bool Response::init_class(JSContext *cx, JS::HandleObject global) {
   // response type values.
   return (type_default_atom = JS_AtomizeAndPinString(cx, "default")) &&
          (type_error_atom = JS_AtomizeAndPinString(cx, "error"));
+}
+
+JSObject *Response::create(JSContext *cx, HandleObject request, host_api::Response res) {
+  auto [response_handle, body] = res;
+  JS::RootedObject response_instance(
+      cx, JS_NewObjectWithGivenProto(cx, &Response::class_, Response::proto_obj));
+  if (!response_instance) {
+    return nullptr;
+  }
+
+  bool is_upstream = true;
+  RootedString backend(cx, RequestOrResponse::backend(request));
+  JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle, body,
+                                                 is_upstream, nullptr, backend));
+  if (!response) {
+    return nullptr;
+  }
+
+  RequestOrResponse::set_url(response, RequestOrResponse::url(request));
+  return response;
 }
 
 JSObject *Response::create(JSContext *cx, JS::HandleObject response,

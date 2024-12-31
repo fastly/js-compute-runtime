@@ -140,6 +140,7 @@ public:
     Method = static_cast<int>(RequestOrResponse::Slots::Count),
     CacheOverride,
     PendingRequest,
+    CacheHandle,
     ResponsePromise,
     IsDownstream,
     AutoDecompressGzip,
@@ -162,6 +163,7 @@ public:
   static bool isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static host_api::HttpReq request_handle(JSObject *obj);
   static host_api::HttpPendingReq pending_handle(JSObject *obj);
+  static std::optional<host_api::HttpCacheEntry> cache_handle(JSObject *obj);
   static bool is_downstream(JSObject *obj);
   static const JSFunctionSpec static_methods[];
   static const JSPropertySpec static_properties[];
@@ -239,6 +241,7 @@ public:
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  static JSObject *create(JSContext *cx, HandleObject request, host_api::Response res);
   static JSObject *create(JSContext *cx, JS::HandleObject response,
                           host_api::HttpResp response_handle, host_api::HttpBody body_handle,
                           bool is_upstream, JSObject *grip_upgrade_request,
@@ -264,6 +267,9 @@ public:
   static uint16_t status(JSObject *obj);
   static JSString *status_message(JSObject *obj);
   static void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code);
+
+  static bool add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
+                                       JS::HandleObject request, const char *fun_name);
 
   static bool isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool cached_get(JSContext *cx, unsigned argc, JS::Value *vp);

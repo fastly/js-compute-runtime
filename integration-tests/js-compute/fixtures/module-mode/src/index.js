@@ -4,9 +4,11 @@
 import { routes } from './routes.js';
 import { env } from 'fastly:env';
 
+import './console.js';
 import './dynamic-backend.js';
 import './hello-world.js';
 import './hono.js';
+import './http-cache.js';
 import './kv-store.js';
 
 addEventListener('fetch', (event) => {

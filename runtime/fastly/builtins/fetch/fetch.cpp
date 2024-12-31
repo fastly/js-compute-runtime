@@ -1,17 +1,18 @@
 #include "fetch.h"
 #include "../../../StarlingMonkey/builtins/web/fetch/headers.h"
 #include "../backend.h"
+#include "../cache-override.h"
 #include "../fastly.h"
 #include "../fetch-event.h"
 #include "./request-response.h"
 #include "encode.h"
 #include "extension-api.h"
 
+using fastly::FastlyGetErrorMessage;
 using fastly::backend::Backend;
+using fastly::cache_override::CacheOverride;
 using fastly::fastly::Fastly;
 using fastly::fetch::Request;
-
-using fastly::FastlyGetErrorMessage;
 
 namespace fastly::fetch {
 
@@ -46,6 +47,258 @@ public:
     TraceEdge(trc, &promise_, "Fetch promise");
   }
 };
+
+bool must_use_guest_caching(JSContext *cx, HandleObject request) {
+  JS::RootedObject cache_override(
+      cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
+              .toObjectOrNull());
+  if (cache_override) {
+    return !CacheOverride::beforeSend(cache_override).isUndefined() ||
+           !CacheOverride::afterSend(cache_override).isUndefined();
+  }
+  return false;
+}
+
+bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_use_cache) {
+  *should_use_cache = true;
+
+  // Check for pass cache override
+  MOZ_ASSERT(Request::is_instance(request));
+  JS::RootedObject cache_override(
+      cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
+              .toObjectOrNull());
+  if (cache_override) {
+    if (CacheOverride::mode(cache_override) == CacheOverride::CacheOverrideMode::Pass) {
+      // Pass requests have to go through the host for now
+      *should_use_cache = false;
+      return true;
+    }
+  }
+
+  // Check for PURGE method
+  RootedString method_str(cx, Request::method(cx, request));
+  bool is_purge = false;
+  if (method_str && !JS_StringEqualsLiteral(cx, method_str, "PURGE", &is_purge)) {
+    return false;
+  }
+  if (is_purge) {
+    // We don't yet implement guest-side URL purges
+    *should_use_cache = false;
+    return true;
+  }
+
+  // Check if we must use host caching by checking if guest caching is unsupported
+  auto request_handle = Request::request_handle(request);
+  auto res = request_handle.is_cacheable();
+  if (auto *err = res.to_err()) {
+    if (host_api::error_is_unsupported(*err)) {
+      // Guest-side caching is unsupported, so we must use host caching.
+      // If we have hooks we must fail since they require guest caching.
+      if (must_use_guest_caching(cx, request)) {
+        JS_ReportErrorASCII(cx, "HTTP caching API is not enabled; please contact support for help");
+        return false;
+      }
+      *should_use_cache = false;
+      return true;
+    }
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  return true;
+}
+
+// Sends the request body, resolving the response promise with the response
+template <bool with_caching>
+bool fetch_send_body(JSContext *cx, HandleObject request, host_api::HostString &backend_chars,
+                     JS::MutableHandleValue ret) {
+  RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!response_promise) {
+    return false;
+  }
+
+  bool streaming = false;
+  if (!RequestOrResponse::maybe_stream_body(cx, request, &streaming)) {
+    return false;
+  }
+
+  host_api::HttpPendingReq pending_handle;
+  {
+    auto request_handle = Request::request_handle(request);
+    auto body = RequestOrResponse::body_handle(request);
+    auto res = with_caching
+                   ? streaming ? request_handle.send_async_streaming(body, backend_chars)
+                               : request_handle.send_async(body, backend_chars)
+                   : request_handle.send_async_without_caching(body, backend_chars, streaming);
+
+    if (auto *err = res.to_err()) {
+      if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
+        JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                                  JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST, backend_chars.ptr.get());
+      } else {
+        HANDLE_ERROR(cx, *err);
+      }
+      ret.setObject(*PromiseRejectedWithPendingError(cx));
+      return true;
+    }
+
+    pending_handle = res.unwrap();
+  }
+
+  // If the request body is streamed, we need to wait for streaming to complete before marking the
+  // request as pending.
+  if (!streaming) {
+    ENGINE->queue_async_task(new FetchTask(pending_handle.handle, request, response_promise));
+  }
+
+  JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::PendingRequest),
+                      JS::Int32Value(pending_handle.handle));
+  JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ResponsePromise),
+                      JS::ObjectValue(*response_promise));
+  ret.setObject(*response_promise);
+  return true;
+}
+
+bool fetch_send(JSContext *cx, HandleObject request, host_api::HostString &backend_chars,
+                JS::MutableHandleValue ret) {
+  // Determine if we should use guest-side caching
+  bool should_use_guest_caching_out;
+  if (!should_use_guest_caching(cx, request, &should_use_guest_caching_out)) {
+    return false;
+  }
+  if (!should_use_guest_caching_out) {
+    return fetch_send_body<true>(cx, request, backend_chars, ret);
+  }
+
+  // Check if request is actually cacheable
+  bool is_cacheable = false;
+  {
+    auto request_handle = Request::request_handle(request);
+    auto res = request_handle.is_cacheable();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      JSObject *promise = PromiseRejectedWithPendingError(cx);
+      if (!promise) {
+        return false;
+      }
+      ret.setObject(*promise);
+      return true;
+    }
+    is_cacheable = res.unwrap();
+  }
+
+  // If not cacheable, fallback to non-caching path
+  if (!is_cacheable) {
+    return fetch_send_body<false>(cx, request, backend_chars, ret);
+  }
+
+  // Get cache override key if set (TODO)
+  // RootedValue cache_key(cx, JS::GetReservedSlot(request,
+  // static_cast<uint32_t>(Request::Slots::OverrideCacheKey)); JS::SetReservedSlot(request,
+  // static_cast<uint32_t>(Request::Slots::OverrideCacheKey), JS::UndefinedValue());
+
+  // Lookup in cache
+  auto request_handle = Request::request_handle(request);
+
+  // Convert cache key to span if present
+  std::span<uint8_t> override_key_span = {};
+  // host_api::HostString override_key_str;
+  // if (cache_key.isString()) {
+  //   override_key_str = host_api::HostString(cx, cache_key.toString());
+  //   override_key_span = std::span<uint8_t>(reinterpret_cast<uint8_t
+  //   *>(override_key_str.data()),
+  //                                          override_key_str.size());
+  // }
+
+  auto transaction_res =
+      host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_span);
+  if (auto *err = transaction_res.to_err()) {
+    if (host_api::error_is_limit_exceeded(*err)) {
+      JS_ReportErrorASCII(cx, "HTTP caching limit exceeded");
+    } else {
+      HANDLE_ERROR(cx, *err);
+    }
+    JSObject *promise = PromiseRejectedWithPendingError(cx);
+    if (!promise) {
+      return false;
+    }
+    ret.setObject(*promise);
+    return true;
+  }
+  host_api::HttpCacheEntry cache_entry = transaction_res.unwrap();
+  JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheHandle),
+                      JS::Int32Value(cache_entry.handle));
+
+  auto state_res = cache_entry.get_state();
+  if (auto *err = state_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    JSObject *promise = PromiseRejectedWithPendingError(cx);
+    if (!promise) {
+      return false;
+    }
+    ret.setObject(*promise);
+    return true;
+  }
+  auto cache_state = state_res.unwrap();
+
+  // Check for usable cached response
+  auto found_res = cache_entry.get_found_response(true);
+  if (auto *err = found_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    JSObject *promise = PromiseRejectedWithPendingError(cx);
+    if (!promise) {
+      return false;
+    }
+    ret.setObject(*promise);
+    return true;
+  }
+
+  auto maybe_response = found_res.unwrap();
+  if (maybe_response.has_value()) {
+    auto cached_response = maybe_response.value();
+
+    if (cache_state.must_insert_or_update()) {
+      // Need to start background revalidation
+      // Queue async task to handle background cache revalidation, ensuring it blocks process
+      // completion
+      JS_ReportErrorASCII(cx, "TODO: send_async_for_caching background cache revalidation");
+      JSObject *promise = PromiseRejectedWithPendingError(cx);
+      if (!promise) {
+        return false;
+      }
+      ret.setObject(*promise);
+      return true;
+    }
+
+    JS::RootedObject response(cx, Response::create(cx, request, cached_response));
+
+    // Return cached response regardless of revalidation status
+    if (!Response::add_fastly_cache_headers(cx, response, request, "cached response")) {
+      return false;
+    }
+
+    RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
+    JS::RootedValue response_val(cx, JS::ObjectValue(*response));
+    return JS::ResolvePromise(cx, response_promise, response_val);
+  }
+
+  // No valid cached response, need to make backend request
+  if (!cache_state.must_insert_or_update()) {
+    // request collapsing has been disabled: pass the original request to the origin without
+    // updating the cache
+    return fetch_send_body<false>(cx, request, backend_chars, ret);
+  } else {
+    JS_ReportErrorASCII(cx, "TODO: send_async_for_caching");
+    JSObject *promise = PromiseRejectedWithPendingError(cx);
+    if (!promise) {
+      return false;
+    }
+    ret.setObject(*promise);
+    return true;
+  }
+
+  return true;
+}
 
 // TODO: throw in all Request methods/getters that rely on host calls once a
 // request has been sent. The host won't let us act on them anymore anyway.
@@ -110,10 +363,6 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
-  RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
-  if (!response_promise)
-    return ReturnPromiseRejectedWithPendingError(cx, args);
-
   if (!Request::apply_cache_override(cx, request)) {
     return false;
   }
@@ -122,43 +371,10 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
 
-  bool streaming = false;
-  if (!RequestOrResponse::maybe_stream_body(cx, request, &streaming)) {
+  if (!fetch_send(cx, request, backend_chars, args.rval())) {
     return false;
   }
 
-  host_api::HttpPendingReq pending_handle;
-  {
-    auto request_handle = Request::request_handle(request);
-    auto body = RequestOrResponse::body_handle(request);
-    auto res = streaming ? request_handle.send_async_streaming(body, backend_chars)
-                         : request_handle.send_async(body, backend_chars);
-
-    if (auto *err = res.to_err()) {
-      if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
-        JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                  JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST, backend_chars.ptr.get());
-      } else {
-        HANDLE_ERROR(cx, *err);
-      }
-      return ReturnPromiseRejectedWithPendingError(cx, args);
-    }
-
-    pending_handle = res.unwrap();
-  }
-
-  // If the request body is streamed, we need to wait for streaming to complete before marking the
-  // request as pending.
-  if (!streaming) {
-    ENGINE->queue_async_task(new FetchTask(pending_handle.handle, request, response_promise));
-  }
-
-  JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::PendingRequest),
-                      JS::Int32Value(pending_handle.handle));
-  JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ResponsePromise),
-                      JS::ObjectValue(*response_promise));
-
-  args.rval().setObject(*response_promise);
   return true;
 }
 

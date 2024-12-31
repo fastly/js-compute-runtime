@@ -538,6 +538,10 @@ public:
   /// Send this request asynchronously, and allow sending additional data through the body.
   Result<HttpPendingReq> send_async_streaming(HttpBody body, std::string_view backend);
 
+  /// Send this request asynchronously without any caching.
+  Result<HttpPendingReq> send_async_without_caching(HttpBody body, std::string_view backend,
+                                                    bool streaming = false);
+
   /// Get the http version used for this request.
 
   /// Set the request method.
@@ -638,6 +642,11 @@ public:
   static Result<std::optional<HostString>> lookup(std::span<uint8_t> bytes);
 };
 
+struct HttpCacheLookupOptions {
+  const char *override_key_ptr;
+  size_t override_key_len;
+};
+
 struct HttpCacheWriteOptions final {
   // Required max age of the response before considered stale
   uint64_t max_age_ns;
@@ -693,10 +702,11 @@ public:
   bool is_valid() const { return handle != invalid; }
 
   /// Lookup a cached object without participating in request collapsing
-  static Result<HttpCacheEntry> lookup(const HttpReq &req);
+  static Result<HttpCacheEntry> lookup(const HttpReq &req, std::span<uint8_t> override_key = {});
 
   /// Lookup a cached object, participating in request collapsing
-  static Result<HttpCacheEntry> transaction_lookup(const HttpReq &req);
+  static Result<HttpCacheEntry> transaction_lookup(const HttpReq &req,
+                                                   std::span<uint8_t> override_key = {});
 
   /// Insert a response into cache
   Result<HttpBody> transaction_insert(const HttpResp &resp, const HttpCacheWriteOptions &opts);
@@ -1175,6 +1185,7 @@ bool error_is_optional_none(APIError e);
 bool error_is_bad_handle(APIError e);
 bool error_is_unsupported(APIError e);
 bool error_is_buffer_len(APIError e);
+bool error_is_limit_exceeded(APIError e);
 
 void handle_fastly_error(JSContext *cx, APIError err, int line, const char *func);
 
