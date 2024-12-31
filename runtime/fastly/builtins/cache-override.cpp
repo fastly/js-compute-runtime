@@ -164,7 +164,7 @@ bool CacheOverride::ensure_override(JSContext *cx, JS::HandleObject self, const 
 }
 
 bool CacheOverride::mode_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
-                             JS::MutableHandleValue rval) {
+                             JS::MutableHandleValue ret) {
   if (self == proto_obj) {
     return api::throw_error(cx, api::Errors::WrongReceiver, "mode get", "CacheOverride");
   }
@@ -399,17 +399,27 @@ bool CacheOverride::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedObject self(cx, JS_NewObjectForConstructor(cx, &class_, args));
 
   JS::RootedValue val(cx);
-  if (!mode_set(cx, self, args[0], &val))
-    return false;
+
+  JS::RootedValue init(cx);
+  if (args[0].isObject()) {
+    init.setObject(args[0].toObject());
+    CacheOverride::set_mode(self, CacheOverrideMode::Override);
+  } else {
+    if (!mode_set(cx, self, args[0], &val))
+      return false;
+    if (args.length() > 1) {
+      init.set(args[1]);
+    }
+  }
 
   if (CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override) {
-    if (!args.get(1).isObject()) {
+    if (!init.isObject()) {
       JS_ReportErrorUTF8(cx, "Creating a CacheOverride object with mode \"override\" requires "
                              "an init object for the override parameters as the second argument");
       return false;
     }
 
-    JS::RootedObject override_init(cx, &args[1].toObject());
+    JS::RootedObject override_init(cx, &init.toObject());
 
     if (!JS_GetProperty(cx, override_init, "ttl", &val) || !ttl_set(cx, self, val, &val)) {
       return false;
@@ -457,7 +467,6 @@ JSObject *CacheOverride::clone(JSContext *cx, JS::HandleObject self) {
 
   for (size_t i = 0; i < Slots::Count; i++) {
     JS::Value val = JS::GetReservedSlot(self, i);
-    MOZ_ASSERT(!val.isObject());
     JS::SetReservedSlot(result, i, val);
   }
 
