@@ -16,33 +16,6 @@ import { isRunningLocally, routes } from './routes.js';
       );
     },
   );
-  // https://tc39.es/ecma262/#sec-tostring
-  routes.set(
-    '/cache-override/constructor/parameter-calls-7.1.17-ToString',
-    async () => {
-      let sentinel;
-      const test = () => {
-        sentinel = Symbol();
-        const name = {
-          toString() {
-            throw sentinel;
-          },
-        };
-        new CacheOverride(name);
-      };
-      assertThrows(test);
-      try {
-        test();
-      } catch (thrownError) {
-        assert(thrownError, sentinel, 'thrownError === sentinel');
-      }
-      assertThrows(
-        () => new CacheOverride(Symbol()),
-        TypeError,
-        `can't convert symbol to string`,
-      );
-    },
-  );
   routes.set('/cache-override/constructor/empty-parameter', async () => {
     assertThrows(
       () => {
@@ -79,6 +52,9 @@ import { isRunningLocally, routes } from './routes.js';
     });
     assertDoesNotThrow(() => {
       new CacheOverride('override', {});
+    });
+    assertDoesNotThrow(() => {
+      new CacheOverride({});
     });
   });
 }

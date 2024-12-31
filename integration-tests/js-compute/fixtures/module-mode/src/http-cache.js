@@ -1,8 +1,7 @@
 /* eslint-env serviceworker */
 import { strictEqual, assertRejects } from './assertions.js';
 import { routes } from './routes.js';
-import { allowDynamicBackends } from 'fastly:experimental';
-allowDynamicBackends(true);
+import { CacheOverride } from 'fastly:cache-override';
 
 // generate a unique URL everytime so that we never work on a populated cache
 const getTestUrl = () =>
@@ -281,6 +280,20 @@ const getTestUrl = () =>
     strictEqual(res.cached, true);
     strictEqual(calledAfterSend, false);
     strictEqual(res.headers.get('Cache-Control'), 'max-age=3600');
+  });
+
+  routes.set('/http-cache/after-send-res-no-body-error', async () => {
+    let afterSendRes;
+    const cacheOverride = new CacheOverride({
+      afterSend(res) {
+        afterSendRes = res;
+      },
+    });
+    await fetch(url, { cacheOverride });
+    strictEqual(typeof afterSendRes, 'object');
+    // this should throw -> reading a body of a candidate response is not supported
+    // since revalidations have no body
+    return res;
   });
 
   routes.set('/http-cache/before-send', async () => {
@@ -854,4 +867,4 @@ const getTestUrl = () =>
 
 // Testing TODO:
 // - new properties
-// - body transform
+// - body transform (and not being called for revalidations)
