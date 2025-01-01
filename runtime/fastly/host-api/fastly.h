@@ -301,7 +301,7 @@ typedef uint8_t fastly_http_storage_action;
 #define FASTLY_HTTP_STORAGE_ACTION_RECORD_UNCACHEABLE 3
 
 // HTTP Cache lookup options
-typedef struct fastly_http_cache_lookup_options {
+typedef struct __attribute__((aligned(4))) fastly_http_cache_lookup_options {
   const char *override_key;
   size_t override_key_len;
 } fastly_http_cache_lookup_options;
@@ -311,7 +311,7 @@ typedef struct fastly_http_cache_lookup_options {
 #define FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_OVERRIDE_KEY (1 << 1)
 
 // HTTP Cache write options
-typedef struct fastly_http_cache_write_options {
+typedef struct __attribute__((aligned(4))) fastly_http_cache_write_options {
   uint64_t max_age_ns;
   const char *vary_rule;
   size_t vary_rule_len;
