@@ -1853,7 +1853,7 @@ Result<bool> HttpReq::is_cacheable() const {
 
 Result<HostString> HttpReq::get_suggested_cache_key() const {
   size_t nwritten;
-  uint8_t *buffer = static_cast<uint8_t *>(cabi_malloc(32, 1)); // HTTP cache keys must be 32 bytes
+  uint8_t *buffer = static_cast<uint8_t *>(cabi_malloc(32, 4)); // HTTP cache keys must be 32 bytes
   if (!buffer) {
     return Result<HostString>::err(host_api::APIError(FASTLY_HOST_ERROR_GENERIC_ERROR));
   }
@@ -1895,7 +1895,8 @@ Result<HttpCacheEntry> HttpCacheEntry::lookup(const HttpReq &req, std::span<uint
 
 Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
                                                           std::span<uint8_t> override_key) {
-  uint32_t handle_out;
+
+  uint32_t handle_out __attribute__((aligned(4)));
   fastly::fastly_http_cache_lookup_options opts{};
   uint32_t opts_mask = 0;
 
@@ -2162,7 +2163,7 @@ Result<bool> HttpCacheEntry::get_sensitive_data() const {
 Result<std::vector<HostString>> HttpCacheEntry::get_surrogate_keys() const {
   // Allocate initial buffer
   size_t nwritten;
-  uint8_t *buffer = static_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 1));
+  uint8_t *buffer = static_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 4));
   if (!buffer) {
     return Result<std::vector<HostString>>::err(
         host_api::APIError(FASTLY_HOST_ERROR_GENERIC_ERROR));
@@ -2209,7 +2210,7 @@ Result<std::vector<HostString>> HttpCacheEntry::get_surrogate_keys() const {
     if (*p == ' ') {
       if (p > key_start) { // Skip empty strings from consecutive spaces
         fastly::fastly_world_string key = {
-            .ptr = static_cast<uint8_t *>(cabi_malloc(p - key_start, 1)),
+            .ptr = static_cast<uint8_t *>(cabi_malloc(p - key_start, 4)),
             .len = static_cast<size_t>(p - key_start)};
         if (!key.ptr) {
           cabi_free(buffer);
@@ -2226,7 +2227,7 @@ Result<std::vector<HostString>> HttpCacheEntry::get_surrogate_keys() const {
   // Handle the last key if there is one
   if (key_start < end) {
     fastly::fastly_world_string key = {.ptr =
-                                           static_cast<uint8_t *>(cabi_malloc(end - key_start, 1)),
+                                           static_cast<uint8_t *>(cabi_malloc(end - key_start, 4)),
                                        .len = static_cast<size_t>(end - key_start)};
     if (!key.ptr) {
       cabi_free(buffer);
@@ -2244,7 +2245,7 @@ Result<std::vector<HostString>> HttpCacheEntry::get_surrogate_keys() const {
 Result<std::optional<HostString>> HttpCacheEntry::get_vary_rule() const {
   // Allocate initial buffer
   size_t nwritten;
-  uint8_t *buffer = static_cast<uint8_t *>(cabi_malloc(HEADER_MAX_LEN, 1));
+  uint8_t *buffer = static_cast<uint8_t *>(cabi_malloc(HEADER_MAX_LEN, 4));
   if (!buffer) {
     return Result<std::optional<HostString>>::err(
         host_api::APIError(FASTLY_HOST_ERROR_GENERIC_ERROR));
