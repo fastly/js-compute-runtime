@@ -19,6 +19,7 @@ public:
     URL,
     ManualFramingHeaders,
     Backend,
+    CacheHandle,
     Count,
   };
 
@@ -103,6 +104,11 @@ public:
                        bool create_if_undefined);
   static bool backend_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
   static JSString *backend(JSObject *obj);
+
+  /**
+   * Helper method to get the cache entry for a response (if any)
+   */
+  static std::optional<host_api::HttpCacheEntry> cache_entry(JSObject *obj);
 };
 
 class Request final : public builtins::BuiltinImpl<Request> {
@@ -140,7 +146,6 @@ public:
     Method = static_cast<int>(RequestOrResponse::Slots::Count),
     CacheOverride,
     PendingRequest,
-    CacheHandle,
     ResponsePromise,
     IsDownstream,
     AutoDecompressGzip,
@@ -163,7 +168,6 @@ public:
   static bool isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static host_api::HttpReq request_handle(JSObject *obj);
   static host_api::HttpPendingReq pending_handle(JSObject *obj);
-  static std::optional<host_api::HttpCacheEntry> cache_handle(JSObject *obj);
   static bool is_downstream(JSObject *obj);
   static const JSFunctionSpec static_methods[];
   static const JSPropertySpec static_properties[];
@@ -254,10 +258,6 @@ public:
    */
   static JSObject *headers(JSContext *cx, JS::HandleObject obj);
 
-  /**
-   * Helper method to get the cache entry for a response (if any)
-   */
-  static host_api::HttpCacheEntry cache_entry(JSObject *obj);
   static host_api::HttpStorageAction storage_action(JSObject *obj);
   static host_api::HttpCacheWriteOptions *cache_write_options(JSObject *obj);
 
