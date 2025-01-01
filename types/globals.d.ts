@@ -1412,8 +1412,15 @@ declare var Response: {
   // error(): Response;
   redirect(url: string | URL, status?: number): Response;
   json(data: any, init?: ResponseInit): Response;
+
   /**
-   * Fastly-specific property - If this was a backend response, whether it should be cached
+   * Determines whether a request is cacheable per conservative RFC 9111 semantics.
+   * In particular, this function checks whether the request method is `GET` or `HEAD`, and
+   * considers requests with other methods uncacheable. Applications where it is safe to cache
+   * responses to other methods should consider using their own cacheability check instead of
+   * this function.
+   *
+   * This function always returns *false* on hosts not supporting the HTTP Cache API (i.e. Viceroy)
    */
   readonly isCacheable: boolean;
 };

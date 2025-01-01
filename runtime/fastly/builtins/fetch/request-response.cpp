@@ -3179,13 +3179,14 @@ bool Response::vary_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
 
+  JS::RootedObject arr(cx, JS::NewArrayObject(cx, 0));
+  if (!arr) {
+    return false;
+  }
+
   if (!opts->vary_rule.has_value()) {
-    // Create empty Set if no vary rule
-    JS::RootedObject set(cx, JS::NewSetObject(cx));
-    if (!set) {
-      return false;
-    }
-    args.rval().setObject(*set);
+    // Empty Array if no vary rule
+    args.rval().setObject(*arr);
     return true;
   }
 
@@ -3222,24 +3223,20 @@ bool Response::vary_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
   }
 
-  // Create Set and add headers
-  JS::RootedObject set(cx, JS::NewSetObject(cx));
-  if (!set) {
-    return false;
-  }
-
-  for (const auto &header : headers) {
+  // Add headers to array
+  for (size_t i = 0; i < headers.size(); i++) {
+    const auto &header = headers[i];
     JS::RootedString str(cx, JS_NewStringCopyN(cx, header.data(), header.length()));
     if (!str) {
       return false;
     }
     JS::RootedValue val(cx, JS::StringValue(str));
-    if (!JS::SetAdd(cx, set, val)) {
+    if (!JS_SetElement(cx, arr, i, val)) {
       return false;
     }
   }
 
-  args.rval().setObject(*set);
+  args.rval().setObject(*arr);
   return true;
 }
 
@@ -3252,23 +3249,26 @@ bool Response::surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
 
-  JS::RootedObject set(cx, JS::NewSetObject(cx));
-  if (!set) {
+  // Create array with known size
+  JS::RootedObject arr(cx, JS::NewArrayObject(cx, opts->surrogate_keys.size()));
+  if (!arr) {
     return false;
   }
 
-  for (const auto &key : opts->surrogate_keys) {
+  // Add keys to array
+  for (size_t i = 0; i < opts->surrogate_keys.size(); i++) {
+    const auto &key = opts->surrogate_keys[i];
     JS::RootedString str(cx, JS_NewStringCopyN(cx, key.data(), key.size()));
     if (!str) {
       return false;
     }
     JS::RootedValue val(cx, JS::StringValue(str));
-    if (!JS::SetAdd(cx, set, val)) {
+    if (!JS_SetElement(cx, arr, i, val)) {
       return false;
     }
   }
 
-  args.rval().setObject(*set);
+  args.rval().setObject(*arr);
   return true;
 }
 
@@ -3337,46 +3337,41 @@ bool Response::vary_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  JS::RootedObject set_obj(cx);
-  bool is_set = false;
+  JS::RootedObject arr_obj(cx);
+  bool is_array = false;
   if (args[0].isObject()) {
-    set_obj.set(&args[0].toObject());
-    if (!JS::IsSetObject(cx, set_obj, &is_set)) {
+    arr_obj.set(&args[0].toObject());
+    if (!JS::IsArrayObject(cx, arr_obj, &is_array)) {
       return false;
     }
   }
-  if (!is_set) {
-    JS_ReportErrorLatin1(cx, "vary must be a Set of strings");
+  if (!is_array) {
+    JS_ReportErrorLatin1(cx, "vary must be an Array of strings");
     return false;
   }
 
-  JS::RootedValue set_vals(cx);
-  if (!JS::SetValues(cx, set_obj, &set_vals)) {
-    return false;
-  }
-
-  MOZ_ASSERT(set_vals.isObject() && JS_IsTypedArrayObject(&set_vals.toObject()));
-
-  JS::RootedObject set_vals_arr(cx, &set_vals.toObject());
   uint32_t length;
-  if (!JS::GetArrayLength(cx, set_vals_arr, &length)) {
+  if (!JS::GetArrayLength(cx, arr_obj, &length)) {
     return false;
   }
 
   std::string vary_rule;
   for (uint32_t i = 0; i < length; i++) {
     JS::RootedValue val(cx);
-    if (!JS_GetElement(cx, set_vals_arr, i, &val)) {
+    if (!JS_GetElement(cx, arr_obj, i, &val)) {
       return false;
     }
+
     if (!val.isString()) {
-      JS_ReportErrorLatin1(cx, "vary must be a Set of strings");
+      JS_ReportErrorLatin1(cx, "vary must be an Array of strings");
       return false;
     }
+
     auto str_val = core::encode(cx, val);
     if (!str_val) {
       return false;
     }
+
     if (!vary_rule.empty()) {
       vary_rule += " ";
     }
@@ -3389,7 +3384,6 @@ bool Response::vary_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-// TODO: Convert from Set to Array
 bool Response::surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
@@ -3399,28 +3393,23 @@ bool Response::surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  JS::RootedObject set_obj(cx);
-  bool is_set = false;
-  if (args[0].isObject()) {
-    set_obj.set(&args[0].toObject());
-    if (!JS::IsSetObject(cx, set_obj, &is_set)) {
-      return false;
-    }
-  }
-  if (!is_set) {
-    JS_ReportErrorLatin1(cx, "surrogateKeys must be a Set of strings");
+  if (!args[0].isObject()) {
+    JS_ReportErrorLatin1(cx, "surrogateKeys must be an Array of strings");
     return false;
   }
 
-  JS::RootedObject set(cx, &args[0].toObject());
-  JS::RootedValue set_values(cx);
-  if (!JS::SetValues(cx, set, &set_values)) {
+  bool is_arr;
+  JS::RootedObject arr_obj(cx, &args[0].toObject());
+  if (!JS::IsArrayObject(cx, arr_obj, &is_arr)) {
+    return false;
+  }
+  if (!is_arr) {
+    JS_ReportErrorLatin1(cx, "surrogateKeys must be an Array of strings");
     return false;
   }
 
-  JS::RootedObject values_array(cx, &set_values.toObject());
   uint32_t length;
-  if (!JS::GetArrayLength(cx, values_array, &length)) {
+  if (!JS::GetArrayLength(cx, arr_obj, &length)) {
     return false;
   }
 
@@ -3431,11 +3420,11 @@ bool Response::surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   for (uint32_t i = 0; i < length; i++) {
     JS::RootedValue val(cx);
-    if (!JS_GetElement(cx, values_array, i, &val)) {
+    if (!JS_GetElement(cx, arr_obj, i, &val)) {
       return false;
     }
     if (!val.isString()) {
-      JS_ReportErrorLatin1(cx, "surrogateKeys must be a Set of strings");
+      JS_ReportErrorLatin1(cx, "surrogateKeys must be an Array of strings");
       return false;
     }
     auto key = core::encode(cx, val);
