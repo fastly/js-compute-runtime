@@ -201,7 +201,7 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
   JS::RootedObject headers_val(cx, headers);
 
   // Get cache handle and hits
-  auto cache_entry_opt = Request::cache_handle(request);
+  auto cache_entry_opt = RequestOrResponse::cache_entry(request);
   if (cache_entry_opt) {
     auto hits_res = cache_entry_opt->get_hits();
     if (auto *err = hits_res.to_err()) {
@@ -599,6 +599,10 @@ bool Request::isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto handle = request_handle(self);
   auto res = handle.is_cacheable();
   if (auto *err = res.to_err()) {
+    if (host_api::error_is_unsupported(*err)) {
+      args.rval().setBoolean(false);
+      return true;
+    }
     HANDLE_ERROR(cx, *err);
     return false;
   }
@@ -1366,11 +1370,11 @@ host_api::HttpPendingReq Request::pending_handle(JSObject *obj) {
   return res;
 }
 
-std::optional<host_api::HttpCacheEntry> Request::cache_handle(JSObject *obj) {
+std::optional<host_api::HttpCacheEntry> RequestOrResponse::cache_entry(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
 
   JS::Value handle_val =
-      JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::CacheHandle));
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle));
 
   if (handle_val.isInt32()) {
     return host_api::HttpCacheEntry(handle_val.toInt32());
@@ -3071,15 +3075,6 @@ const JSPropertySpec Response::properties[] = {
     JS_PS_END,
 };
 
-host_api::HttpCacheEntry Response::cache_entry(JSObject *obj) {
-  MOZ_ASSERT(is_instance(obj));
-  auto val = JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::CacheEntry));
-  if (val.isInt32()) {
-    return host_api::HttpCacheEntry(val.toInt32());
-  }
-  return host_api::HttpCacheEntry();
-}
-
 host_api::HttpStorageAction Response::storage_action(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
   auto val = JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::StorageAction));
@@ -3107,21 +3102,25 @@ bool Response::isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Response::cached_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  auto entry = cache_entry(self);
-  args.rval().setBoolean(entry.is_valid());
+  auto entry = RequestOrResponse::cache_entry(self);
+  if (!entry.has_value()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+  args.rval().setBoolean(true);
   return true;
 }
 
 bool Response::isStale_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  auto entry = cache_entry(self);
-  if (!entry.is_valid()) {
+  auto entry = RequestOrResponse::cache_entry(self);
+  if (!entry.has_value()) {
     args.rval().setUndefined();
     return true;
   }
 
-  auto res = entry.get_state();
+  auto res = entry.value().get_state();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
