@@ -311,7 +311,7 @@ typedef struct __attribute__((aligned(4))) fastly_http_cache_lookup_options {
 #define FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_OVERRIDE_KEY (1 << 1)
 
 // HTTP Cache write options
-typedef struct __attribute__((aligned(4))) fastly_http_cache_write_options {
+typedef struct __attribute__((aligned(8))) fastly_http_cache_write_options {
   uint64_t max_age_ns;
   const char *vary_rule;
   size_t vary_rule_len;
@@ -847,7 +847,7 @@ int purge_surrogate_key(char *surrogate_key, size_t surrogate_key_len, uint32_t 
 
 // Extensible options for cache lookup operations currently used for both `lookup` and
 // `transaction_lookup`.
-typedef struct fastly_host_cache_lookup_options {
+typedef struct __attribute__((aligned(4))) fastly_host_cache_lookup_options {
   // * A full request handle, but used only for its headers
   uint32_t request_headers;
 } fastly_host_cache_lookup_options;
@@ -865,7 +865,7 @@ WASM_IMPORT("fastly_cache", "lookup")
 int cache_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,
                  fastly_host_cache_lookup_options *options, uint32_t *ret);
 
-typedef __attribute__((aligned(8))) struct {
+typedef struct __attribute__((aligned(8))) {
   uint64_t max_age_ns;
   uint32_t request_headers;
   const uint8_t *vary_rule_ptr;
