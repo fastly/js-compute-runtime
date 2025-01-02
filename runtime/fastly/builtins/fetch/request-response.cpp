@@ -194,44 +194,59 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
                                         JS::HandleObject request, const char *fun_name) {
   MOZ_ASSERT(Response::is_instance(self));
   // Get response headers object
-  JSObject *headers = Response::headers(cx, self);
+  RootedObject headers(cx, Response::headers(cx, self));
   if (!headers) {
     return false;
   }
   JS::RootedObject headers_val(cx, headers);
 
   // Get cache handle and hits
-  auto cache_entry_opt = RequestOrResponse::cache_entry(request);
-  if (cache_entry_opt) {
-    auto hits_res = cache_entry_opt->get_hits();
-    if (auto *err = hits_res.to_err()) {
+  RootedValue res(cx);
+  bool found = false;
+  auto cache_entry = RequestOrResponse::cache_entry(request);
+  if (cache_entry) {
+    auto state_res = cache_entry->get_state();
+    if (auto *err = state_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
     }
-    uint64_t hits = hits_res.unwrap();
+    if (state_res.unwrap().is_found()) {
+      found = true;
+      auto hits_res = cache_entry->get_hits();
+      if (auto *err = hits_res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        return false;
+      }
+      uint64_t hits = hits_res.unwrap();
 
-    // Add HIT headers
-    JS::RootedValue hit_str_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "HIT")));
-    if (!Headers::append_valid_header(cx, headers_val, "x-cache", hit_str_val, fun_name)) {
+      JS::RootedValue hit_str_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "HIT")));
+      JS::RootedValueArray<2> args(cx);
+      args[0].setString(JS_NewStringCopyZ(cx, "x-cache"));
+      args[1].set(hit_str_val);
+      if (!JS::Call(cx, headers_val, "set", args, &res)) {
+        return false;
+      }
+
+      std::string hits_str = std::to_string(hits);
+      args[0].setString(JS_NewStringCopyZ(cx, "x-cache-hits"));
+      args[1].setString(JS_NewStringCopyN(cx, hits_str.c_str(), hits_str.length()));
+      if (!JS::Call(cx, headers_val, "set", args, &res)) {
+        return false;
+      }
+    }
+  }
+  if (!found) {
+    JS::RootedValueArray<2> args(cx);
+
+    args[0].setString(JS_NewStringCopyZ(cx, "x-cache"));
+    args[1].setString(JS_NewStringCopyZ(cx, "MISS"));
+    if (!JS::Call(cx, headers_val, "set", args, &res)) {
       return false;
     }
 
-    // Convert hits to string and add header
-    std::string hits_str = std::to_string(hits);
-    JS::RootedValue hits_str_val(
-        cx, JS::StringValue(JS_NewStringCopyN(cx, hits_str.c_str(), hits_str.length())));
-    if (!Headers::append_valid_header(cx, headers_val, "x-cache-hits", hits_str_val, fun_name)) {
-      return false;
-    }
-  } else {
-    // Add MISS headers
-    JS::RootedValue miss_str_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "MISS")));
-    if (!Headers::append_valid_header(cx, headers_val, "x-cache", miss_str_val, fun_name)) {
-      return false;
-    }
-
-    JS::RootedValue zero_str_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "0")));
-    if (!Headers::append_valid_header(cx, headers_val, "x-cache-hits", zero_str_val, fun_name)) {
+    args[0].setString(JS_NewStringCopyZ(cx, "x-cache-hits"));
+    args[1].setString(JS_NewStringCopyZ(cx, "0"));
+    if (!JS::Call(cx, headers_val, "set", args, &res)) {
       return false;
     }
   }
@@ -243,10 +258,21 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
   }
   JS::RootedObject request_headers_val(cx, request_headers);
 
-  auto ff_idx = Headers::lookup(cx, request_headers_val, "Fastly-FF");
-  auto debug_idx = Headers::lookup(cx, request_headers_val, "Fastly-Debug");
+  JS::RootedValueArray<1> args(cx);
 
-  if (!ff_idx.has_value() && !debug_idx.has_value()) {
+  args[0].setString(JS_NewStringCopyZ(cx, "Fastly-FF"));
+  if (!JS::Call(cx, request_headers_val, "get", args, &res)) {
+    return false;
+  }
+  bool ff_exists = !res.isUndefined();
+
+  args[0].setString(JS_NewStringCopyZ(cx, "Fastly-Debug"));
+  if (!JS::Call(cx, request_headers_val, "get", args, &res)) {
+    return false;
+  }
+  bool debug_exists = !res.isUndefined();
+
+  if (!ff_exists && !debug_exists) {
     JS::RootedValue delete_func(cx);
     if (!JS_GetProperty(cx, headers_val, "delete", &delete_func)) {
       return false;

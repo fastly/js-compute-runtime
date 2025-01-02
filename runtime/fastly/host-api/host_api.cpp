@@ -15,11 +15,22 @@ using api::FastlyResult;
 using fastly::FastlyAPIError;
 
 #ifdef DEBUG
-#define TRACE_CALL()                                                                               \
-  fprintf(stderr, "HOSTCALL: %s()\n", __func__);                                                   \
+
+static void log_hostcall(const char *func_name, ...) {
+  va_list args;
+  va_start(args, func_name);
+  fprintf(stderr, "HOSTCALL: %s(", func_name);
+  vfprintf(stderr, "%s, %s", args);
+  fprintf(stderr, ")\n");
+  va_end(args);
   fflush(stderr);
+}
+
+#define TRACE_CALL() log_hostcall(__func__);
+#define TRACE_CALL_ARGS(...) log_hostcall(__func__, __VA_ARGS__);
 #else
 #define TRACE_CALL()
+#define TRACE_CALL_ARGS(...)
 #endif
 
 #define NEVER_HANDLE 0xFFFFFFFD
@@ -414,7 +425,6 @@ Result<std::optional<std::vector<HostString>>> generic_get_header_values(auto ha
 
 template <auto header_op>
 Result<Void> generic_header_op(auto handle, std::string_view name, std::span<uint8_t> value) {
-  TRACE_CALL()
   Result<Void> res;
 
   fastly::fastly_world_string hdr = string_view_to_world_string(name);
@@ -665,7 +675,7 @@ write_headers(HttpHeaders *headers,
 }
 
 Result<Void> HttpHeaders::remove(string_view name) {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(name.data())
   if (this->handle_state_.get()->is_req()) {
     return generic_header_remove<fastly::req_header_remove>(this->handle_state_.get()->handle(),
                                                             name);
@@ -676,7 +686,7 @@ Result<Void> HttpHeaders::remove(string_view name) {
 }
 
 Result<Void> HttpHeaders::set(string_view name, string_view value) {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(name.data(), value.data())
   std::span<uint8_t> value_span = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
                                    value.size()};
   if (this->handle_state_.get()->is_req()) {
@@ -688,7 +698,7 @@ Result<Void> HttpHeaders::set(string_view name, string_view value) {
   }
 }
 Result<Void> HttpHeaders::append(string_view name, string_view value) {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(name.data(), value.data())
   std::span<uint8_t> value_span = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
                                    value.size()};
   if (this->handle_state_.get()->is_req()) {
@@ -2171,7 +2181,7 @@ HttpCacheEntry::get_found_response(bool transform_for_client) const {
 
 Result<CacheState> HttpCacheEntry::get_state() const {
   TRACE_CALL()
-  uint8_t state_out;
+  alignas(4) uint8_t state_out;
   auto res = fastly::http_cache_get_state(this->handle, &state_out);
 
   if (res != 0) {
@@ -2741,7 +2751,7 @@ Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupO
   fastly::fastly_host_cache_lookup_options os;
   memset(&os, 0, sizeof(os));
 
-  uint8_t options_mask = 0;
+  alignas(4) uint8_t options_mask = 0;
   if (opts.request_headers.is_valid()) {
     os.request_headers = opts.request_headers.handle;
     options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS;

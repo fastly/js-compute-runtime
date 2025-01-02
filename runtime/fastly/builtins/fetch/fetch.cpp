@@ -361,6 +361,7 @@ bool fetch_send(JSContext *cx, HandleObject request, host_api::HostString &backe
 
     RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
     JS::RootedValue response_val(cx, JS::ObjectValue(*response));
+    ret.setObject(*response_promise);
     return JS::ResolvePromise(cx, response_promise, response_val);
   }
 
