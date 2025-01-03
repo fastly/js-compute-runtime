@@ -258,8 +258,23 @@ public:
    */
   static JSObject *headers(JSContext *cx, JS::HandleObject obj);
 
+  /**
+   * Get the storage action for the response, defaults to DoNotSet if no cache info available.
+   */
   static host_api::HttpStorageAction storage_action(JSObject *obj);
+
+  /**
+   * Get the cache write options for the request.
+   *
+   * Returns nullptr if no cache write options are available or this is not a cached response.
+   * Cache write options being null also implies the removal of the body read guard error.
+   */
   static host_api::HttpCacheWriteOptions *cache_write_options(JSObject *obj);
+  /**
+   * Promote a "candidate response" into a "response", disabling the body stream blocking error.
+   * (Clears the cache write options)
+   */
+  static void promote_candidate_response(JSObject *obj);
 
   static bool is_upstream(JSObject *obj);
   static std::optional<host_api::HttpReq> grip_upgrade_request(JSObject *obj);
@@ -267,11 +282,6 @@ public:
   static uint16_t status(JSObject *obj);
   static JSString *status_message(JSObject *obj);
   static void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code);
-
-  /**
-   * Promote a "candidate response" into a "response", disabling the body stream blocking error.
-   */
-  static void promote_candidate_response(JSObject *obj);
 
   static bool add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
                                        JS::HandleObject request, const char *fun_name);
