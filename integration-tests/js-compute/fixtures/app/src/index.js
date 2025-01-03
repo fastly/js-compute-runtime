@@ -14,7 +14,6 @@ import './cache-simple.js';
 import './client.js';
 import './compute.js';
 import './config-store.js';
-import './console.js';
 import './crypto.js';
 import './device.js';
 import './dictionary.js';

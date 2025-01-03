@@ -19,6 +19,7 @@ public:
     URL,
     ManualFramingHeaders,
     Backend,
+    CacheHandle,
     Count,
   };
 
@@ -103,6 +104,11 @@ public:
                        bool create_if_undefined);
   static bool backend_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
   static JSString *backend(JSObject *obj);
+
+  /**
+   * Helper method to get the cache entry for a request or response (if any)
+   */
+  static std::optional<host_api::HttpCacheEntry> cache_entry(JSObject *obj);
 };
 
 class Request final : public builtins::BuiltinImpl<Request> {
@@ -159,6 +165,7 @@ public:
   static bool apply_cache_override(JSContext *cx, JS::HandleObject self);
   static bool apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self);
 
+  static bool isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static host_api::HttpReq request_handle(JSObject *obj);
   static host_api::HttpPendingReq pending_handle(JSObject *obj);
   static bool is_downstream(JSObject *obj);
@@ -223,6 +230,8 @@ public:
     StatusMessage,
     Redirected,
     IsGripUpgrade,
+    StorageAction,
+    CacheWriteOptions,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -235,22 +244,50 @@ public:
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  static JSObject *create(JSContext *cx, HandleObject request, host_api::Response res);
   static JSObject *create(JSContext *cx, JS::HandleObject response,
                           host_api::HttpResp response_handle, host_api::HttpBody body_handle,
                           bool is_upstream, bool is_grip_upgrade, JS::HandleString backend);
+
+  static host_api::HttpResp response_handle(JSObject *obj);
 
   /**
    * Returns the RequestOrResponse's Headers, reifying it if necessary.
    */
   static JSObject *headers(JSContext *cx, JS::HandleObject obj);
 
-  static host_api::HttpResp response_handle(JSObject *obj);
+  static host_api::HttpStorageAction storage_action(JSObject *obj);
+  static host_api::HttpCacheWriteOptions *cache_write_options(JSObject *obj);
+
   static bool is_upstream(JSObject *obj);
   static bool is_grip_upgrade(JSObject *obj);
   static host_api::HostString backend_str(JSContext *cx, JSObject *obj);
   static uint16_t status(JSObject *obj);
   static JSString *status_message(JSObject *obj);
   static void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code);
+
+  /**
+   * Promote a "candidate response" into a "response", disabling the body stream blocking error.
+   */
+  static void promote_candidate_response(JSObject *obj);
+
+  static bool add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
+                                       JS::HandleObject request, const char *fun_name);
+
+  static bool isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool cached_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool isStale_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool ttl_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool ttl_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool age_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool swr_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool swr_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool vary_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool vary_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool pci_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool pci_set(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 
 } // namespace fastly::fetch
