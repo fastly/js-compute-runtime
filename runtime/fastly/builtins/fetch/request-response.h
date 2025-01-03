@@ -106,7 +106,7 @@ public:
   static JSString *backend(JSObject *obj);
 
   /**
-   * Helper method to get the cache entry for a response (if any)
+   * Helper method to get the cache entry for a request or response (if any)
    */
   static std::optional<host_api::HttpCacheEntry> cache_entry(JSObject *obj);
 };
@@ -267,6 +267,11 @@ public:
   static uint16_t status(JSObject *obj);
   static JSString *status_message(JSObject *obj);
   static void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code);
+
+  /**
+   * Promote a "candidate response" into a "response", disabling the body stream blocking error.
+   */
+  static void promote_candidate_response(JSObject *obj);
 
   static bool add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
                                        JS::HandleObject request, const char *fun_name);
