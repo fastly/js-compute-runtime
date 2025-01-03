@@ -309,7 +309,8 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     return RejectPromiseWithPendingError(cx, promise);
   }
 
-  JS::RootedValue response_val(cx, JS::ObjectValue(*Response::create(cx, context, res.unwrap())));
+  JS::RootedObject response(cx, Response::create(cx, context, res.unwrap()));
+  JS::RootedValue response_val(cx, JS::ObjectValue(*response));
   return JS::ResolvePromise(cx, promise, response_val);
 }
 
@@ -1411,15 +1412,8 @@ std::optional<host_api::HttpCacheEntry> RequestOrResponse::cache_entry(JSObject 
 
 void Response::promote_candidate_response(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
-
-  JS::Value handle_val =
-      JS::GetReservedSlot(obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle));
-
-  MOZ_ASSERT(handle_val.isInt32());
-  host_api::HttpCacheEntry cache_entry(handle_val.toInt32());
-
-  JS::SetReservedSlot(obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
-                      JS::UndefinedValue());
+  JS::SetReservedSlot(obj, static_cast<uint32_t>(Response::Slots::CacheWriteOptions),
+                      JS::PrivateValue(nullptr));
 }
 
 bool Request::is_downstream(JSObject *obj) {
@@ -3725,6 +3719,18 @@ JSObject *Response::create(JSContext *cx, HandleObject request, host_api::Respon
     return nullptr;
   }
 
+  std::optional<host_api::HttpCacheEntry> maybe_cache_entry =
+      RequestOrResponse::cache_entry(request);
+  if (maybe_cache_entry.has_value()) {
+    // TODO: passing in CacheWriteOptions, StorageAction through response create flow
+    JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::CacheWriteOptions),
+                        JS::UndefinedValue());
+    JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::StorageAction),
+                        JS::UndefinedValue());
+    JS::SetReservedSlot(response, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
+                        JS::PrivateValue(maybe_cache_entry.value().handle));
+  }
+
   RequestOrResponse::set_url(response, RequestOrResponse::url(request));
   return response;
 }
@@ -3749,6 +3755,8 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                         JS::Int32Value(Request::request_handle(grip_upgrade_request).handle));
   }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::StorageAction), JS::UndefinedValue());
+  JS::SetReservedSlot(response, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
+                      JS::UndefinedValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::CacheWriteOptions),
                       JS::UndefinedValue());
   if (backend) {

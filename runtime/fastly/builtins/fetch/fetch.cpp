@@ -328,9 +328,36 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
       HANDLE_ERROR(cx, *err);
       return false;
     }
-    // auto cache_entry = update_res.unwrap();
-    // args.rval().setObject(*response_obj);
-    return true;
+    auto cache_entry = update_res.unwrap();
+
+    auto found_res = cache_entry.get_found_response(true);
+    if (auto *err = found_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      JSObject *promise = PromiseRejectedWithPendingError(cx);
+      if (!promise) {
+        return false;
+      }
+      args.rval().setObject(*promise);
+      return true;
+    }
+
+    auto cached_response = found_res.unwrap().value();
+
+    JS::RootedObject response(cx, Response::create(cx, request, cached_response));
+    JS::SetReservedSlot(response, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
+                        JS::Int32Value(cache_entry.handle));
+
+    // Return cached response regardless of revalidation status
+    // XQD does not do this? (pending
+    // https://fastly.slack.com/archives/C04N41X6UJ0/p1735936747360679) if
+    // (!Response::add_fastly_cache_headers(cx, response, request, "cached response")) {
+    //   return false;
+    // }
+
+    RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
+    JS::RootedValue response_val(cx, JS::ObjectValue(*response));
+    args.rval().setObject(*response_promise);
+    return JS::ResolvePromise(cx, response_promise, response_val);
   }
   case host_api::HttpStorageAction::DoNotStore: {
     auto res = cache_entry.transaction_abandon();
