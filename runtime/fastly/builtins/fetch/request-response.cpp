@@ -1409,6 +1409,19 @@ std::optional<host_api::HttpCacheEntry> RequestOrResponse::cache_entry(JSObject 
   return std::nullopt;
 }
 
+void Response::promote_candidate_response(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+
+  JS::Value handle_val =
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle));
+
+  MOZ_ASSERT(handle_val.isInt32());
+  host_api::HttpCacheEntry cache_entry(handle_val.toInt32());
+
+  JS::SetReservedSlot(obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
+                      JS::UndefinedValue());
+}
+
 bool Request::is_downstream(JSObject *obj) {
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::IsDownstream)).toBoolean();
 }

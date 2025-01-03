@@ -709,18 +709,18 @@ public:
                                                    std::span<uint8_t> override_key = {});
 
   /// Insert a response into cache
-  Result<HttpBody> transaction_insert(const HttpResp &resp, const HttpCacheWriteOptions &opts);
+  Result<HttpBody> transaction_insert(const HttpResp &resp, const HttpCacheWriteOptions *opts);
 
   /// Insert a response and get back a stream
   Result<std::tuple<HttpBody, HttpCacheEntry>>
-  transaction_insert_and_stream_back(const HttpResp &resp, const HttpCacheWriteOptions &opts);
+  transaction_insert_and_stream_back(const HttpResp &resp, const HttpCacheWriteOptions *opts);
 
   /// Update a response's headers and metadata without changing body
-  Result<Void> transaction_update(const HttpResp &resp, const HttpCacheWriteOptions &opts);
+  Result<Void> transaction_update(const HttpResp &resp, const HttpCacheWriteOptions *opts);
 
   /// Update response and get back a fresh handle
   Result<HttpCacheEntry> transaction_update_and_return_fresh(const HttpResp &resp,
-                                                             const HttpCacheWriteOptions &opts);
+                                                             const HttpCacheWriteOptions *opts);
 
   /// Record that this entry should not be cached
   Result<Void>
