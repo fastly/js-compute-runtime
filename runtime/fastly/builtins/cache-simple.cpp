@@ -329,7 +329,7 @@ bool get_or_set_then_handler(JSContext *cx, JS::HandleObject lookup_state, JS::H
   options.surrogate_keys = key_result.inspect();
 
   auto inserted_res = handle.transaction_insert_and_stream_back(options);
-  if (auto *err = inserted_res.to_err()) {
+  if ([[maybe_unused]] auto *err = inserted_res.to_err()) {
     return false;
   }
 
@@ -340,22 +340,22 @@ bool get_or_set_then_handler(JSContext *cx, JS::HandleObject lookup_state, JS::H
   // source_body will only be valid when the body is a Host-backed ReadableStream
   if (source_body.valid()) {
     auto res = body.append(source_body);
-    if (auto *error = res.to_err()) {
+    if ([[maybe_unused]] auto *error = res.to_err()) {
       return false;
     }
   } else {
     auto write_res = body.write_all_back(reinterpret_cast<uint8_t *>(buf.get()), options.length);
-    if (auto *error = write_res.to_err()) {
+    if ([[maybe_unused]] auto *error = write_res.to_err()) {
       return false;
     }
     auto close_res = body.close();
-    if (auto *error = close_res.to_err()) {
+    if ([[maybe_unused]] auto *error = close_res.to_err()) {
       return false;
     }
   }
 
   auto res = inserted_handle.get_body(host_api::CacheGetBodyOptions{});
-  if (auto *err = res.to_err()) {
+  if ([[maybe_unused]] auto *err = res.to_err()) {
     return false;
   }
 
@@ -442,7 +442,7 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
   // cache under the provided `key`, and then we will resolve with a SimpleCacheEntry
   // containing the value.
   auto state_res = handle.get_state();
-  if (auto *err = state_res.to_err()) {
+  if ([[maybe_unused]] auto *err = state_res.to_err()) {
     return false;
   }
 
@@ -450,7 +450,7 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
   args.rval().setObject(*promise);
   if (state.is_usable()) {
     auto body_res = handle.get_body(host_api::CacheGetBodyOptions{});
-    if (auto *err = body_res.to_err()) {
+    if ([[maybe_unused]] auto *err = body_res.to_err()) {
       return false;
     }
 
