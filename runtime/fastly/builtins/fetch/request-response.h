@@ -188,7 +188,7 @@ public:
   static JSObject *create_instance(JSContext *cx);
 };
 
-class Response final : public builtins::BuiltinImpl<Response> {
+class Response final : public builtins::FinalizableBuiltinImpl<Response> {
   static bool waitUntil(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool ok_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool status_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -232,7 +232,8 @@ public:
     GripUpgradeRequest,
     CacheEntry,
     StorageAction,
-    CacheWriteOptions,
+    SuggestedCacheWriteOptions,
+    OverrideCacheWriteOptions,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -245,7 +246,14 @@ public:
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  /**
+   * Create a response for a request, used for the fetch response flow.
+   */
   static JSObject *create(JSContext *cx, HandleObject request, host_api::Response res);
+
+  /**
+   * Base-level response creation handler, for both upstream and downstream requests.
+   */
   static JSObject *create(JSContext *cx, JS::HandleObject response,
                           host_api::HttpResp response_handle, host_api::HttpBody body_handle,
                           bool is_upstream, JSObject *grip_upgrade_request,
@@ -264,15 +272,8 @@ public:
   static host_api::HttpStorageAction storage_action(JSObject *obj);
 
   /**
-   * Get the cache write options for the request.
-   *
-   * Returns nullptr if no cache write options are available or this is not a cached response.
-   * Cache write options being null also implies the removal of the body read guard error.
-   */
-  static host_api::HttpCacheWriteOptions *cache_write_options(JSObject *obj);
-  /**
    * Promote a "candidate response" into a "response", disabling the body stream blocking error.
-   * (Clears the cache write options)
+   * (Indicated by having nullptr for override_cache_options)
    */
   static void promote_candidate_response(JSObject *obj);
 
@@ -285,6 +286,19 @@ public:
 
   static bool add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
                                        JS::HandleObject request, const char *fun_name);
+
+  /**
+   * Override cache options set by the user, and cache override.
+   *
+   * When unset, implies this response is no longer in its candidate phase, not that it failed.
+   */
+  static host_api::HttpCacheWriteOptions *override_cache_options(JSObject *response);
+  /**
+   * Suggested cache options as provided by the host for the request/response pair, and
+   * computed lazily (fallible).
+   */
+  static host_api::HttpCacheWriteOptions *suggested_cache_options(JSContext *cx,
+                                                                  HandleObject response);
 
   static bool isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool cached_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -300,6 +314,8 @@ public:
   static bool surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool pci_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool pci_set(JSContext *cx, unsigned argc, JS::Value *vp);
+
+  static void finalize(JS::GCContext *gcx, JSObject *self);
 };
 
 } // namespace fastly::fetch

@@ -271,6 +271,8 @@ public:
   /// Returns true when this body handle is valid.
   bool valid() const { return this->handle != invalid; }
 
+  explicit operator bool() const { return valid(); }
+
   /// Make a new body handle.
   static Result<HttpBody> make();
 
@@ -649,7 +651,8 @@ struct HttpCacheLookupOptions {
 
 struct HttpCacheWriteOptions final {
   // Required max age of the response before considered stale
-  uint64_t max_age_ns;
+  // (This is only optional when used for overrides)
+  std::optional<uint64_t> max_age_ns;
 
   // Optional vary rule - header names separated by spaces
   std::optional<std::string> vary_rule;
@@ -667,7 +670,7 @@ struct HttpCacheWriteOptions final {
   std::optional<uint64_t> length;
 
   // Optional flag indicating if this contains sensitive data
-  bool sensitive_data = false;
+  std::optional<bool> sensitive_data;
 };
 
 struct CacheState final {
@@ -737,7 +740,7 @@ public:
   Result<HttpReq> get_suggested_backend_request() const;
 
   /// Get suggested cache options
-  Result<HttpCacheWriteOptions> get_suggested_cache_options(const HttpResp &resp) const;
+  Result<HttpCacheWriteOptions *> get_suggested_cache_options(const HttpResp &resp) const;
 
   /// Prepare response for storage
   Result<std::tuple<HttpStorageAction, HttpResp>> prepare_response_for_storage(HttpResp resp) const;
