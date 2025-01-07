@@ -47,9 +47,9 @@ public:
   static JSObject *clone(JSContext *cx, JS::HandleObject self);
   static JS::Value pci(JSObject *self);
   static void set_pci(JSObject *self, bool pci);
-  static JS::Value beforeSend(JSObject *self);
+  static JSObject *beforeSend(JSObject *self);
   static void set_beforeSend(JSObject *self, JSObject *fn);
-  static JS::Value afterSend(JSObject *self);
+  static JSObject *afterSend(JSObject *self);
   static void set_afterSend(JSObject *self, JSObject *fn);
   static CacheOverrideMode mode(JSObject *self);
   static void set_mode(JSObject *self, CacheOverride::CacheOverrideMode mode);
