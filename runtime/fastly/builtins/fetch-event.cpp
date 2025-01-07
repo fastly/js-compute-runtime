@@ -670,9 +670,10 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
 
   bool streaming = false;
   if (Response::is_grip_upgrade(response_obj)) {
+    auto grip_upgrade_request = Response::grip_upgrade_request(response_obj);
     auto backend = Response::backend_str(cx, response_obj);
 
-    auto res = host_api::HttpReq::redirect_to_grip_proxy(backend);
+    auto res = grip_upgrade_request.redirect_to_grip_proxy(backend);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;

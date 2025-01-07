@@ -211,10 +211,9 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   }
 
   bool is_upstream = true;
-  bool is_grip_upgrade = false;
   RootedString backend(cx, RequestOrResponse::backend(context));
   JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle, body,
-                                                 is_upstream, is_grip_upgrade, backend));
+                                                 is_upstream, nullptr, backend));
   if (!response) {
     return false;
   }
@@ -2285,7 +2284,13 @@ bool Response::is_upstream(JSObject *obj) {
 
 bool Response::is_grip_upgrade(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
-  return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::IsGripUpgrade)).toBoolean();
+  return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::GripUpgradeRequest)).toInt32() != 0;
+}
+
+host_api::HttpReq Response::grip_upgrade_request(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  return host_api::HttpReq(
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::GripUpgradeRequest)).toInt32());
 }
 
 host_api::HostString Response::backend_str(JSContext *cx, JSObject *obj) {
@@ -2716,7 +2721,7 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedObject response(
-      cx, create(cx, response_instance, response_handle, body, false, false, nullptr));
+      cx, create(cx, response_instance, response_handle, body, false, nullptr, nullptr));
   if (!response) {
     return false;
   }
@@ -2860,7 +2865,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedObject response(
-      cx, create(cx, response_instance, response_handle, body, false, false, nullptr));
+      cx, create(cx, response_instance, response_handle, body, false, nullptr, nullptr));
   if (!response) {
     return false;
   }
@@ -3079,7 +3084,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto body = make_res.unwrap();
   JS::RootedObject responseInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
   JS::RootedObject response(
-      cx, create(cx, responseInstance, response_handle, body, false, false, nullptr));
+      cx, create(cx, responseInstance, response_handle, body, false, nullptr, nullptr));
   if (!response) {
     return false;
   }
@@ -3184,7 +3189,8 @@ bool Response::init_class(JSContext *cx, JS::HandleObject global) {
 
 JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                            host_api::HttpResp response_handle, host_api::HttpBody body_handle,
-                           bool is_upstream, bool is_grip, JS::HandleString backend) {
+                           bool is_upstream, JSObject *grip_upgrade_request,
+                           JS::HandleString backend) {
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Response),
                       JS::Int32Value(response_handle.handle));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::NullValue());
@@ -3196,8 +3202,10 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Redirected), JS::FalseValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::IsUpstream),
                       JS::BooleanValue(is_upstream));
-  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::IsGripUpgrade),
-                      JS::BooleanValue(is_grip));
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::GripUpgradeRequest),
+                      JS::Int32Value(grip_upgrade_request
+                                         ? Request::request_handle(grip_upgrade_request).handle
+                                         : 0));
   if (backend) {
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Backend), JS::StringValue(backend));
   }
