@@ -234,6 +234,7 @@ public:
     StorageAction,
     SuggestedCacheWriteOptions,
     OverrideCacheWriteOptions,
+    CacheBodyTransform,
     Count,
   };
   static const JSFunctionSpec static_methods[];
