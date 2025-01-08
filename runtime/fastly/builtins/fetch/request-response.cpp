@@ -189,6 +189,49 @@ ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
   return {std::move(buf), bytes_read};
 }
 
+/**
+ * Any operation which might change the suggested cache options on a candidate response
+ * should invalidate the computed suggested cache options.
+ */
+void invalidate_suggested_cache_options(HandleObject response) {
+  MOZ_ASSERT(Response::is_instance(response));
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptions),
+                      JS::UndefinedValue());
+}
+/**
+ * Headers behave differently, since we have no event on header changes, and instead we
+ * check the generation integer on the headers object for changes.
+ *
+ * This function will check if the gen on the response headers matches what we last recorded,
+ * returning true if it does (meaning no header changes), or false otherwise. When headers don't
+ * match it will update the internal tracking generation so that next time this function is called
+ * it will return true.
+ */
+bool check_or_bump_suggested_cache_options_gen(JSContext *cx, HandleObject response) {
+  MOZ_ASSERT(Response::is_instance(response));
+  JSObject *headers = RequestOrResponse::maybe_headers(response);
+  // if we haven't observed the headers yet then they cant have been changed
+  if (!headers) {
+    return true;
+  }
+  uint32_t headers_gen = Headers::get_generation(headers);
+  // generation overflow implies always invalidation
+  if (headers_gen == UINT32_MAX) {
+    return false;
+  }
+  RootedValue last_headers_gen(
+      cx,
+      JS::GetReservedSlot(
+          response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptionsHeadersGen)));
+  if (last_headers_gen.isUndefined() || last_headers_gen.toInt32() != headers_gen) {
+    JS::SetReservedSlot(
+        response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptionsHeadersGen),
+        JS::Int32Value(headers_gen));
+    return false;
+  }
+  return true;
+}
+
 } // namespace
 
 bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
@@ -2870,6 +2913,7 @@ bool Response::ok_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+// TODO: support status_set for CandidateResponse
 bool Response::status_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
@@ -3588,6 +3632,7 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   uint64_t ttl_ns = static_cast<uint64_t>(seconds * 1e9);
   uint64_t initial_age_ns = suggested_opts->initial_age_ns.value();
   override_opts->max_age_ns = ttl_ns + initial_age_ns;
+  invalidate_suggested_cache_options(self);
 
   args.rval().setUndefined();
   return true;
@@ -3608,6 +3653,7 @@ bool Response::swr_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   override_opts->stale_while_revalidate_ns = static_cast<uint64_t>(seconds * 1e9);
+  invalidate_suggested_cache_options(self);
 
   args.rval().setUndefined();
   return true;
@@ -3664,6 +3710,7 @@ bool Response::vary_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   override_opts->vary_rule = std::move(vary_rule);
+  invalidate_suggested_cache_options(self);
 
   args.rval().setUndefined();
   return true;
@@ -3721,6 +3768,7 @@ bool Response::surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   override_opts->surrogate_keys = std::move(keys);
+  invalidate_suggested_cache_options(self);
 
   args.rval().setUndefined();
   return true;
@@ -3736,6 +3784,7 @@ bool Response::pci_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   override_opts->sensitive_data = JS::ToBoolean(args[0]);
+  invalidate_suggested_cache_options(self);
 
   args.rval().setUndefined();
   return true;
@@ -3976,7 +4025,7 @@ host_api::HttpCacheWriteOptions *Response::suggested_cache_options(JSContext *cx
   MOZ_ASSERT(is_instance(response));
   auto existing = JS::GetReservedSlot(
       response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptions));
-  if (!existing.isUndefined()) {
+  if (!existing.isUndefined() && check_or_bump_suggested_cache_options_gen(cx, response)) {
     return reinterpret_cast<host_api::HttpCacheWriteOptions *>(existing.toPrivate());
   }
   host_api::HttpCacheEntry cache_entry = RequestOrResponse::cache_entry(response).value();
@@ -4056,6 +4105,8 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
   JS::SetReservedSlot(response, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
                       JS::UndefinedValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::SuggestedCacheWriteOptions),
+                      JS::UndefinedValue());
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::SuggestedCacheWriteOptionsHeadersGen),
                       JS::UndefinedValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::OverrideCacheWriteOptions),
                       JS::PrivateValue(nullptr));

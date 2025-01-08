@@ -233,6 +233,7 @@ public:
     CacheEntry,
     StorageAction,
     SuggestedCacheWriteOptions,
+    SuggestedCacheWriteOptionsHeadersGen,
     OverrideCacheWriteOptions,
     CacheBodyTransform,
     Count,
