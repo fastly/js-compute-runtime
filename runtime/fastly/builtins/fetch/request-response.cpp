@@ -363,11 +363,13 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
                                  "return, must be a function");
         return RejectPromiseWithPendingError(cx, response_promise);
       }
-      // TODO: body transform integration
+      JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::CacheBodyTransform),
+                          body_transform_val);
     }
   }
 
   // TODO: final cache write options computation
+  // For simplicity, just inject the full final computation into the override options as everything.
 
   //   extra_surrogate_keys_abi: cache_override
   //     // this is a misnomer: it's actually _keys_ separated by spaces
@@ -386,41 +388,40 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
   //     .map(|t| Duration::from_secs(t as u64)),
   // override_vary_rule_abi: None,
 
-// let storage_action = self
-//             .override_storage_action
-//             .take()
-//             .unwrap_or(self.suggested_storage_action);
+  // let storage_action = self
+  //             .override_storage_action
+  //             .take()
+  //             .unwrap_or(self.suggested_storage_action);
 
-//         let suggested = self
-//             .response
-//             .suggested_cache_options
-//             .take()
-//             .unwrap_or_else(|| self.build_fresh_suggested_cache_options());
+  //         let suggested = self
+  //             .response
+  //             .suggested_cache_options
+  //             .take()
+  //             .unwrap_or_else(|| self.build_fresh_suggested_cache_options());
 
-//         let write_options = cache::WriteOptions {
-//             max_age: self
-//                 .override_ttl
-//                 .map(|ttl| ttl - suggested.initial_age)
-//                 .unwrap_or(suggested.max_age),
-//             initial_age: suggested.initial_age,
-//             stale_while_revalidate: self
-//                 .override_stale_while_revalidate
-//                 .unwrap_or(suggested.stale_while_revalidate),
-//             vary_rule_abi: self
-//                 .override_vary_rule_abi
-//                 .take()
-//                 .unwrap_or(suggested.vary_rule_abi),
-//             surrogate_keys_abi: self
-//                 .override_surrogate_keys_abi
-//                 .take()
-//                 .unwrap_or(suggested.surrogate_keys_abi),
-//             sensitive_data: self.override_pci.unwrap_or(suggested.sensitive_data),
-//             length: self
-//                 .body
-//                 .known_length()
-//                 .filter(|_| self.body_transform.is_no_op()),
-//         };
-
+  //         let write_options = cache::WriteOptions {
+  //             max_age: self
+  //                 .override_ttl
+  //                 .map(|ttl| ttl - suggested.initial_age)
+  //                 .unwrap_or(suggested.max_age),
+  //             initial_age: suggested.initial_age,
+  //             stale_while_revalidate: self
+  //                 .override_stale_while_revalidate
+  //                 .unwrap_or(suggested.stale_while_revalidate),
+  //             vary_rule_abi: self
+  //                 .override_vary_rule_abi
+  //                 .take()
+  //                 .unwrap_or(suggested.vary_rule_abi),
+  //             surrogate_keys_abi: self
+  //                 .override_surrogate_keys_abi
+  //                 .take()
+  //                 .unwrap_or(suggested.surrogate_keys_abi),
+  //             sensitive_data: self.override_pci.unwrap_or(suggested.sensitive_data),
+  //             length: self
+  //                 .body
+  //                 .known_length()
+  //                 .filter(|_| self.body_transform.is_no_op()),
+  //         };
 
   JS::RootedValue response_val(cx, JS::ObjectValue(*response));
   JS::ResolvePromise(cx, response_promise, response_val);
@@ -4058,6 +4059,8 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                       JS::UndefinedValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::OverrideCacheWriteOptions),
                       JS::PrivateValue(nullptr));
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::CacheBodyTransform),
+                      JS::UndefinedValue());
   if (backend) {
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Backend), JS::StringValue(backend));
   }
