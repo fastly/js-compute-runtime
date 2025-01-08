@@ -409,7 +409,7 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
   auto cache_entry = RequestOrResponse::cache_entry(request).value();
   JSObject *response_obj = &response.toObject();
   MOZ_ASSERT(cache_entry.handle == RequestOrResponse::cache_entry(response_obj).value().handle);
-  auto storage_action = Response::storage_action(response_obj);
+  auto storage_action = Response::get_and_clear_storage_action(response_obj);
   // TODO: compute cache_write_options
   auto cache_write_options =
       host_api::HttpCacheWriteOptions{}; // Response::cache_write_options(response_obj);
@@ -478,7 +478,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   auto cache_entry = RequestOrResponse::cache_entry(request).value();
   RootedObject response_obj(cx, &response.toObject());
   MOZ_ASSERT(cache_entry.handle == RequestOrResponse::cache_entry(response_obj).value().handle);
-  auto storage_action = Response::storage_action(response_obj);
+  auto storage_action = Response::get_and_clear_storage_action(response_obj);
   // TODO: compute cache_write_options
   auto cache_write_options =
       host_api::HttpCacheWriteOptions{}; // Response::cache_write_options(response_obj);
@@ -540,7 +540,6 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
       HANDLE_ERROR(cx, *err);
       return false;
     }
-    Response::promote_candidate_response(response_obj);
     args.rval().setObject(*response_obj);
     break;
   }
@@ -551,7 +550,6 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
       HANDLE_ERROR(cx, *err);
       return false;
     }
-    Response::promote_candidate_response(response_obj);
     args.rval().setObject(*response_obj);
     break;
   }
