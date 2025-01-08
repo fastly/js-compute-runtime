@@ -267,15 +267,10 @@ public:
   static JSObject *headers(JSContext *cx, JS::HandleObject obj);
 
   /**
-   * Get the storage action for the response, defaults to DoNotSet if no cache info available.
+   * Get the storage action for the response, panicking if not set available.
+   * Clearing it effectively transitions a Candidate REsponse into a Response.
    */
-  static host_api::HttpStorageAction storage_action(JSObject *obj);
-
-  /**
-   * Promote a "candidate response" into a "response", disabling the body stream blocking error.
-   * (Indicated by having nullptr for override_cache_options)
-   */
-  static void promote_candidate_response(JSObject *obj);
+  static host_api::HttpStorageAction get_and_clear_storage_action(JSObject *obj);
 
   static bool is_upstream(JSObject *obj);
   static std::optional<host_api::HttpReq> grip_upgrade_request(JSObject *obj);
