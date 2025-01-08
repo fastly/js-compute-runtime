@@ -410,16 +410,14 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
   JSObject *response_obj = &response.toObject();
   MOZ_ASSERT(cache_entry.handle == RequestOrResponse::cache_entry(response_obj).value().handle);
   auto storage_action = Response::get_and_clear_storage_action(response_obj);
-  // TODO: compute cache_write_options
-  auto cache_write_options =
-      host_api::HttpCacheWriteOptions{}; // Response::cache_write_options(response_obj);
+  auto cache_write_options = Response::override_cache_options(response_obj);
   // Mark interest as complete for this phase. We will create new event interest for the body
   // streaming promise shortly if needed to simplify return and error paths in this function.
   ENGINE->decr_event_loop_interest();
   switch (storage_action) {
   case host_api::HttpStorageAction::Insert: {
     auto body_res = cache_entry.transaction_insert(Response::response_handle(response_obj),
-                                                   &cache_write_options);
+                                                   cache_write_options);
     if (auto *err = body_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -434,7 +432,7 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
   }
   case host_api::HttpStorageAction::Update: {
     auto res = cache_entry.transaction_update(Response::response_handle(response_obj),
-                                              &cache_write_options);
+                                              cache_write_options);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -450,8 +448,8 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
     return true;
   }
   case host_api::HttpStorageAction::RecordUncacheable: {
-    auto res = cache_entry.transaction_record_not_cacheable(cache_write_options.max_age_ns.value(),
-                                                            cache_write_options.vary_rule);
+    auto res = cache_entry.transaction_record_not_cacheable(cache_write_options->max_age_ns.value(),
+                                                            cache_write_options->vary_rule);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -479,13 +477,13 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   RootedObject response_obj(cx, &response.toObject());
   MOZ_ASSERT(cache_entry.handle == RequestOrResponse::cache_entry(response_obj).value().handle);
   auto storage_action = Response::get_and_clear_storage_action(response_obj);
-  // TODO: compute cache_write_options
-  auto cache_write_options =
-      host_api::HttpCacheWriteOptions{}; // Response::cache_write_options(response_obj);
+  // Override cache write options is set to the final cache write options at the end of the response
+  // process.
+  auto cache_write_options = Response::override_cache_options(response_obj);
   switch (storage_action) {
   case host_api::HttpStorageAction::Insert: {
     auto insert_res = cache_entry.transaction_insert_and_stream_back(
-        Response::response_handle(response_obj), &cache_write_options);
+        Response::response_handle(response_obj), cache_write_options);
     if (auto *err = insert_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -500,7 +498,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   }
   case host_api::HttpStorageAction::Update: {
     auto update_res = cache_entry.transaction_update_and_return_fresh(
-        Response::response_handle(response_obj), &cache_write_options);
+        Response::response_handle(response_obj), cache_write_options);
     if (auto *err = update_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -544,8 +542,8 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     break;
   }
   case host_api::HttpStorageAction::RecordUncacheable: {
-    auto res = cache_entry.transaction_record_not_cacheable(cache_write_options.max_age_ns.value(),
-                                                            cache_write_options.vary_rule);
+    auto res = cache_entry.transaction_record_not_cacheable(cache_write_options->max_age_ns.value(),
+                                                            cache_write_options->vary_rule);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
