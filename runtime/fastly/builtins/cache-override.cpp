@@ -81,7 +81,11 @@ void CacheOverride::set_pci(JSObject *self, bool pci) {
 
 JSObject *CacheOverride::beforeSend(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
-  return JS::GetReservedSlot(self, Slots::BeforeSend).toObjectOrNull();
+  auto before_send = JS::GetReservedSlot(self, Slots::BeforeSend);
+  if (before_send.isUndefined()) {
+    return nullptr;
+  }
+  return before_send.toObjectOrNull();
 }
 
 void CacheOverride::set_beforeSend(JSObject *self, JSObject *fn) {
@@ -91,7 +95,11 @@ void CacheOverride::set_beforeSend(JSObject *self, JSObject *fn) {
 
 JSObject *CacheOverride::afterSend(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
-  return JS::GetReservedSlot(self, Slots::AfterSend).toObjectOrNull();
+  auto before_send = JS::GetReservedSlot(self, Slots::AfterSend);
+  if (before_send.isUndefined()) {
+    return nullptr;
+  }
+  return before_send.toObjectOrNull();
 }
 
 void CacheOverride::set_afterSend(JSObject *self, JSObject *fn) {
@@ -327,7 +335,9 @@ bool CacheOverride::before_send_set(JSContext *cx, JS::HandleObject self, JS::Ha
   if (!ensure_override(cx, self, "beforeSend"))
     return false;
   if (val.isUndefined()) {
-    JS::SetReservedSlot(self, Slots::BeforeSend, val);
+    JS::SetReservedSlot(self, Slots::BeforeSend, JS::UndefinedValue());
+    rval.setUndefined();
+    return true;
   } else if (!val.isObject() || !JS::IsCallable(&val.toObject())) {
     JS_ReportErrorUTF8(cx, "CacheOverride: beforeSend must be a function");
     return false;
@@ -361,7 +371,9 @@ bool CacheOverride::after_send_set(JSContext *cx, JS::HandleObject self, JS::Han
   if (!ensure_override(cx, self, "afterSend"))
     return false;
   if (val.isUndefined()) {
-    JS::SetReservedSlot(self, Slots::AfterSend, val);
+    JS::SetReservedSlot(self, Slots::AfterSend, JS::UndefinedValue());
+    rval.setUndefined();
+    return true;
   } else if (!val.isObject() || !JS::IsCallable(&val.toObject())) {
     JS_ReportErrorUTF8(cx, "CacheOverride: afterSend must be a function");
     return false;
