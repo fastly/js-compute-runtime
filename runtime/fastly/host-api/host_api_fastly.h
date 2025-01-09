@@ -664,7 +664,7 @@ struct HttpCacheWriteOptions final {
   std::optional<uint64_t> stale_while_revalidate_ns;
 
   // Optional surrogate keys separated by spaces
-  std::vector<std::string> surrogate_keys;
+  std::optional<std::vector<std::string>> surrogate_keys;
 
   // Optional length of the response body
   std::optional<uint64_t> length;

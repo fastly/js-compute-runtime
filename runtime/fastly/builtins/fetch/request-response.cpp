@@ -190,15 +190,6 @@ ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
 }
 
 /**
- * Any operation which might change the suggested cache options on a candidate response
- * should invalidate the computed suggested cache options.
- */
-void invalidate_suggested_cache_options(HandleObject response) {
-  MOZ_ASSERT(Response::is_instance(response));
-  JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptions),
-                      JS::UndefinedValue());
-}
-/**
  * Headers behave differently, since we have no event on header changes, and instead we
  * check the generation integer on the headers object for changes.
  *
@@ -215,8 +206,8 @@ bool check_or_bump_suggested_cache_options_gen(JSContext *cx, HandleObject respo
     return true;
   }
   uint32_t headers_gen = Headers::get_generation(headers);
-  // generation overflow implies always invalidation
-  if (headers_gen == UINT32_MAX) {
+  // generation overflow implies always-invalidate
+  if (headers_gen == INT32_MAX) {
     return false;
   }
   RootedValue last_headers_gen(
@@ -411,60 +402,34 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
     }
   }
 
-  // TODO: final cache write options computation
-  // For simplicity, just inject the full final computation into the override options as everything.
+  // we set the override cache write options to the final computation, which will then immediately
+  // be used for the transaction insertion, after which it will be cleared.
+  auto cache_write_options = Response::override_cache_options(response);
+  auto suggested_cache_write_options = Response::suggested_cache_options(cx, response);
+  cache_write_options->initial_age_ns = suggested_cache_write_options->initial_age_ns.value();
+  if (!cache_write_options->max_age_ns.has_value()) {
+    cache_write_options->max_age_ns = suggested_cache_write_options->max_age_ns;
+  }
+  if (!cache_write_options->stale_while_revalidate_ns.has_value()) {
+    cache_write_options->stale_while_revalidate_ns =
+        suggested_cache_write_options->stale_while_revalidate_ns;
+  }
+  if (!cache_write_options->surrogate_keys.has_value()) {
+    cache_write_options->surrogate_keys = std::move(suggested_cache_write_options->surrogate_keys);
+  }
+  if (!cache_write_options->vary_rule.has_value()) {
+    cache_write_options->vary_rule = std::move(suggested_cache_write_options->vary_rule);
+  }
+  if (!cache_write_options->sensitive_data.has_value()) {
+    cache_write_options->sensitive_data = suggested_cache_write_options->sensitive_data;
+  }
 
-  //   extra_surrogate_keys_abi: cache_override
-  //     // this is a misnomer: it's actually _keys_ separated by spaces
-  //     .get_surrogate_key()
-  //     // TODO: throw error if surrogate key is invalid?
-  //     .and_then(|k| HeaderValue::to_str(k).ok())
-  //     .map(str::to_string),
-  // override_storage_action: None,
-  // override_pci: cache_override.get_pci(),
-  // override_stale_while_revalidate: cache_override
-  //     .get_stale_while_revalidate()
-  //     .map(|t| Duration::from_secs(t as u64)),
-  // override_surrogate_keys_abi: None,
-  // override_ttl: cache_override
-  //     .get_ttl()
-  //     .map(|t| Duration::from_secs(t as u64)),
-  // override_vary_rule_abi: None,
+  delete suggested_cache_write_options;
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptions),
+                      JS::UndefinedValue());
 
-  // let storage_action = self
-  //             .override_storage_action
-  //             .take()
-  //             .unwrap_or(self.suggested_storage_action);
-
-  //         let suggested = self
-  //             .response
-  //             .suggested_cache_options
-  //             .take()
-  //             .unwrap_or_else(|| self.build_fresh_suggested_cache_options());
-
-  //         let write_options = cache::WriteOptions {
-  //             max_age: self
-  //                 .override_ttl
-  //                 .map(|ttl| ttl - suggested.initial_age)
-  //                 .unwrap_or(suggested.max_age),
-  //             initial_age: suggested.initial_age,
-  //             stale_while_revalidate: self
-  //                 .override_stale_while_revalidate
-  //                 .unwrap_or(suggested.stale_while_revalidate),
-  //             vary_rule_abi: self
-  //                 .override_vary_rule_abi
-  //                 .take()
-  //                 .unwrap_or(suggested.vary_rule_abi),
-  //             surrogate_keys_abi: self
-  //                 .override_surrogate_keys_abi
-  //                 .take()
-  //                 .unwrap_or(suggested.surrogate_keys_abi),
-  //             sensitive_data: self.override_pci.unwrap_or(suggested.sensitive_data),
-  //             length: self
-  //                 .body
-  //                 .known_length()
-  //                 .filter(|_| self.body_transform.is_no_op()),
-  //         };
+  // TODO: set known length from body stream (before transform completed)
+  // TODO: actually run body transform
 
   JS::RootedValue response_val(cx, JS::ObjectValue(*response));
   JS::ResolvePromise(cx, response_promise, response_val);
@@ -538,15 +503,10 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     suggested_storage_action = host_api::HttpStorageAction::RecordUncacheable;
   }
 
-  // TODO: convert cache override options into override cache write options...
-  // - surrogate_keys must chain with suggested
-  // - handling of length (in the no body transform case)
   host_api::HttpCacheWriteOptions *override_cache_options =
       reinterpret_cast<host_api::HttpCacheWriteOptions *>(
           cabi_malloc(sizeof(host_api::HttpCacheWriteOptions), 4));
 
-  JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
-                      JS::PrivateValue(override_cache_options));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::StorageAction),
                       JS::Int32Value(static_cast<uint32_t>(suggested_storage_action)));
   JS::SetReservedSlot(response, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
@@ -558,7 +518,79 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   RootedObject after_send(cx);
   if (cache_override) {
     after_send.set(CacheOverride::afterSend(cache_override));
+
+    // convert the CacheOverride provided to the request into HttpCacheWriteOptions overrides
+    // that can still be overridden by the candidate reseponse phase
+    host_api::HttpCacheWriteOptions *suggested = nullptr;
+    RootedValue override_ttl(cx, CacheOverride::ttl(cache_override));
+
+    // overriding TTL is computed in terms of the original age, so we need the suggested calculation
+    if (!override_ttl.isUndefined()) {
+      if (!suggested) {
+        suggested = Response::suggested_cache_options(cx, response);
+      }
+      uint64_t ttl_ns = static_cast<uint64_t>(override_ttl.toInt32() * 1e9);
+      uint64_t initial_age_ns = suggested->initial_age_ns.value();
+      override_cache_options->max_age_ns = ttl_ns + initial_age_ns;
+    }
+
+    RootedValue override_swr(cx, CacheOverride::swr(cache_override));
+    if (!override_swr.isUndefined()) {
+      override_cache_options->stale_while_revalidate_ns =
+          static_cast<uint64_t>(override_swr.toInt32() * 1e9);
+    }
+
+    // overriding surrogate keys composes suggested surrogate keys with the original cache override
+    // space-split keys, so again, use the suggested computation to do this.
+    RootedValue override_surrogate_keys(cx, CacheOverride::surrogate_key(cache_override));
+    if (!override_surrogate_keys.isUndefined()) {
+      if (!suggested) {
+        suggested = Response::suggested_cache_options(cx, response);
+      }
+      auto str_val = core::encode(cx, override_surrogate_keys);
+      if (!str_val) {
+        return false;
+      }
+
+      // Get the string data as string_view
+      std::string_view str(str_val.ptr.get(), str_val.len);
+
+      std::vector<std::string> keys;
+      size_t pos = 0;
+      while (pos < str.length()) {
+        // Skip any leading spaces
+        while (pos < str.length() && str[pos] == ' ') {
+          pos++;
+        }
+
+        // Find next space
+        size_t space = str.find(' ', pos);
+
+        // Handle either substring to next space or to end
+        if (space == std::string_view::npos) {
+          if (pos < str.length()) {
+            keys.emplace_back(str.substr(pos));
+          }
+          break;
+        } else {
+          if (space > pos) {
+            keys.emplace_back(str.substr(pos, space - pos));
+          }
+          pos = space + 1;
+        }
+      }
+
+      override_cache_options->surrogate_keys = std::move(keys);
+    }
+
+    RootedValue override_pci(cx, CacheOverride::pci(cache_override));
+    if (!override_pci.isUndefined()) {
+      override_cache_options->sensitive_data = override_pci.toBoolean();
+    }
   }
+
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
+                      JS::PrivateValue(override_cache_options));
 
   JS::RootedObject after_send_promise(cx);
   if (after_send) {
@@ -1779,7 +1811,7 @@ bool Request::apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self) {
 }
 
 /**
- * Apply the CacheOverride to a host-side request handle.
+ * Apply the CacheOverride to a host-side request handle (for non HTTP cache API).
  */
 bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
   MOZ_ASSERT(is_instance(self));
@@ -2935,7 +2967,7 @@ bool Response::url_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-// TODO: store version client-side.
+// TODO: store version client-side, support version_set for HTTP cache Candidate Response flow.
 bool Response::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
@@ -3409,7 +3441,11 @@ bool Response::cached_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   auto entry = RequestOrResponse::cache_entry(self);
   if (!entry.has_value()) {
-    args.rval().setBoolean(false);
+    if (fetch::http_caching_unsupported) {
+      args.rval().setUndefined();
+    } else {
+      args.rval().setBoolean(false);
+    }
     return true;
   }
   args.rval().setBoolean(true);
@@ -3439,6 +3475,10 @@ bool Response::ttl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto override_opts = override_cache_options(self);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
   auto suggested_opts = suggested_cache_options(cx, self);
   if (!suggested_opts) {
     return false;
@@ -3458,6 +3498,12 @@ bool Response::ttl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::age_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
+  auto override_opts = override_cache_options(self);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
   auto suggested_opts = suggested_cache_options(cx, self);
   if (!suggested_opts) {
     return false;
@@ -3472,6 +3518,11 @@ bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto override_opts = override_cache_options(self);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
   auto suggested_opts = suggested_cache_options(cx, self);
   if (!suggested_opts) {
     return false;
@@ -3489,6 +3540,11 @@ bool Response::vary_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto override_opts = override_cache_options(self);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
   auto suggested_opts = suggested_cache_options(cx, self);
   if (!suggested_opts) {
     return false;
@@ -3563,14 +3619,20 @@ bool Response::surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto override_opts = override_cache_options(self);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
   auto suggested_opts = suggested_cache_options(cx, self);
   if (!suggested_opts) {
     return false;
   }
 
   const std::vector<std::string> &surrogate_keys =
-      override_opts && !override_opts->surrogate_keys.empty() ? override_opts->surrogate_keys
-                                                              : suggested_opts->surrogate_keys;
+      override_opts && !override_opts->surrogate_keys.has_value()
+          ? override_opts->surrogate_keys.value()
+          : suggested_opts->surrogate_keys.value();
 
   // Create array with known size
   JS::RootedObject arr(cx, JS::NewArrayObject(cx, surrogate_keys.size()));
@@ -3599,6 +3661,11 @@ bool Response::pci_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto override_opts = override_cache_options(self);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
   auto suggested_opts = suggested_cache_options(cx, self);
   if (!suggested_opts) {
     return false;
@@ -3618,7 +3685,7 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   auto override_opts = override_cache_options(self);
-  auto suggested_opts = suggested_cache_options(cx, self);
+  auto suggested_opts = override_opts ? suggested_cache_options(cx, self) : nullptr;
   if (!override_opts || !suggested_opts) {
     JS_ReportErrorLatin1(cx, "Cannot set TTL on non-cached response");
     return false;
@@ -3632,7 +3699,6 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   uint64_t ttl_ns = static_cast<uint64_t>(seconds * 1e9);
   uint64_t initial_age_ns = suggested_opts->initial_age_ns.value();
   override_opts->max_age_ns = ttl_ns + initial_age_ns;
-  invalidate_suggested_cache_options(self);
 
   args.rval().setUndefined();
   return true;
@@ -3653,7 +3719,6 @@ bool Response::swr_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   override_opts->stale_while_revalidate_ns = static_cast<uint64_t>(seconds * 1e9);
-  invalidate_suggested_cache_options(self);
 
   args.rval().setUndefined();
   return true;
@@ -3710,7 +3775,6 @@ bool Response::vary_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   override_opts->vary_rule = std::move(vary_rule);
-  invalidate_suggested_cache_options(self);
 
   args.rval().setUndefined();
   return true;
@@ -3768,7 +3832,6 @@ bool Response::surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   override_opts->surrogate_keys = std::move(keys);
-  invalidate_suggested_cache_options(self);
 
   args.rval().setUndefined();
   return true;
@@ -3784,7 +3847,6 @@ bool Response::pci_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   override_opts->sensitive_data = JS::ToBoolean(args[0]);
-  invalidate_suggested_cache_options(self);
 
   args.rval().setUndefined();
   return true;
@@ -4006,12 +4068,17 @@ bool Response::init_class(JSContext *cx, JS::HandleObject global) {
          (type_error_atom = JS_AtomizeAndPinString(cx, "error"));
 }
 
-host_api::HttpCacheWriteOptions *Response::override_cache_options(JSObject *response) {
+host_api::HttpCacheWriteOptions *Response::override_cache_options(JSObject *response, bool clear) {
   MOZ_ASSERT(is_instance(response));
-  return reinterpret_cast<host_api::HttpCacheWriteOptions *>(
+  auto cache_options = reinterpret_cast<host_api::HttpCacheWriteOptions *>(
       JS::GetReservedSlot(response,
                           static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions))
           .toPrivate());
+  if (clear) {
+    JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
+                        JS::PrivateValue(nullptr));
+  }
+  return cache_options;
 }
 
 /**
@@ -4037,7 +4104,12 @@ host_api::HttpCacheWriteOptions *Response::suggested_cache_options(JSContext *cx
     return nullptr;
   }
 
+  // TODO: read from the special surrogate keys header here as part of the suggestion.
+
   auto suggested_cache_options = suggested_cache_options_res.unwrap();
+  if (!existing.isUndefined()) {
+    delete reinterpret_cast<host_api::HttpCacheWriteOptions *>(existing.toPrivate());
+  }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptions),
                       JS::PrivateValue(suggested_cache_options));
   return suggested_cache_options;
@@ -4070,15 +4142,13 @@ void Response::finalize(JS::GCContext *gcx, JSObject *self) {
     host_api::HttpCacheWriteOptions *cache_write_options =
         static_cast<host_api::HttpCacheWriteOptions *>(
             suggested_cache_write_options_val.toPrivate());
-    free(cache_write_options);
+    delete cache_write_options;
   }
-  auto override_cache_write_options_val =
-      JS::GetReservedSlot(self, static_cast<size_t>(Response::Slots::OverrideCacheWriteOptions));
-  if (!override_cache_write_options_val.isUndefined()) {
-    host_api::HttpCacheWriteOptions *cache_write_options =
-        static_cast<host_api::HttpCacheWriteOptions *>(
-            override_cache_write_options_val.toPrivate());
-    free(cache_write_options);
+  auto override_cache_write_options = reinterpret_cast<host_api::HttpCacheWriteOptions *>(
+      JS::GetReservedSlot(self, static_cast<size_t>(Response::Slots::OverrideCacheWriteOptions))
+          .toPrivate());
+  if (override_cache_write_options) {
+    delete override_cache_write_options;
   }
 }
 

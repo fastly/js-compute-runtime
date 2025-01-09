@@ -114,8 +114,19 @@ bool must_use_guest_caching(JSContext *cx, HandleObject request) {
   return false;
 }
 
+bool http_caching_unsupported = false;
 bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_use_cache) {
   *should_use_cache = true;
+
+  // If we previously found guest caching unsupported then remember that
+  if (http_caching_unsupported) {
+    if (must_use_guest_caching(cx, request)) {
+      JS_ReportErrorASCII(cx, "HTTP caching API is not enabled; please contact support for help");
+      return false;
+    }
+    *should_use_cache = false;
+    return true;
+  }
 
   // Check for pass cache override
   MOZ_ASSERT(Request::is_instance(request));
@@ -147,6 +158,7 @@ bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_
   auto res = request_handle.is_cacheable();
   if (auto *err = res.to_err()) {
     if (host_api::error_is_unsupported(*err)) {
+      http_caching_unsupported = true;
       // Guest-side caching is unsupported, so we must use host caching.
       // If we have hooks we must fail since they require guest caching.
       if (must_use_guest_caching(cx, request)) {
@@ -192,8 +204,11 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
     return true;
   }
 
-  if (!Request::apply_cache_override(cx, request)) {
-    return false;
+  // cache override only applies to requests with caching
+  if (!without_caching) {
+    if (!Request::apply_cache_override(cx, request)) {
+      return false;
+    }
   }
 
   if (!Request::apply_auto_decompress_gzip(cx, request)) {
@@ -214,7 +229,7 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
   {
     auto request_handle = Request::request_handle(request);
     auto body = RequestOrResponse::body_handle(request);
-    auto res = without_caching
+    auto res = !without_caching
                    ? streaming ? request_handle.send_async_streaming(body, backend_chars)
                                : request_handle.send_async(body, backend_chars)
                    : request_handle.send_async_without_caching(body, backend_chars, streaming);
@@ -261,11 +276,6 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
   if (!backend_chars.ptr) {
     RejectPromiseWithPendingError(cx, ret_promise_obj);
     return true;
-  }
-
-  // TODO: properly integrate
-  if (!Request::apply_cache_override(cx, request)) {
-    return false;
   }
 
   if (!Request::apply_auto_decompress_gzip(cx, request)) {
@@ -410,7 +420,8 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
   JSObject *response_obj = &response.toObject();
   MOZ_ASSERT(cache_entry.handle == RequestOrResponse::cache_entry(response_obj).value().handle);
   auto storage_action = Response::get_and_clear_storage_action(response_obj);
-  auto cache_write_options = Response::override_cache_options(response_obj);
+  auto cache_write_options = Response::override_cache_options(response_obj, true);
+  MOZ_ASSERT(cache_write_options);
   // Mark interest as complete for this phase. We will create new event interest for the body
   // streaming promise shortly if needed to simplify return and error paths in this function.
   ENGINE->decr_event_loop_interest();
@@ -479,7 +490,8 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   auto storage_action = Response::get_and_clear_storage_action(response_obj);
   // Override cache write options is set to the final cache write options at the end of the response
   // process.
-  auto cache_write_options = Response::override_cache_options(response_obj);
+  auto cache_write_options = Response::override_cache_options(response_obj, true);
+  MOZ_ASSERT(cache_write_options);
   switch (storage_action) {
   case host_api::HttpStorageAction::Insert: {
     auto insert_res = cache_entry.transaction_insert_and_stream_back(
