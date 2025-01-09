@@ -1071,8 +1071,8 @@ Result<Void> HttpReq::redirect_to_grip_proxy(std::string_view backend) {
 
   fastly::fastly_host_error err;
   fastly::fastly_world_string backend_str = string_view_to_world_string(backend);
-  if (!convert_result(fastly::req_redirect_to_grip_proxy(reinterpret_cast<char *>(backend_str.ptr),
-                                                         backend_str.len),
+  if (!convert_result(fastly::req_redirect_to_grip_proxy_v2(
+                          this->handle, reinterpret_cast<char *>(backend_str.ptr), backend_str.len),
                       &err)) {
     res.emplace_err(err);
   } else {

@@ -509,7 +509,7 @@ public:
 
   static Result<HttpReq> make();
 
-  static Result<Void> redirect_to_grip_proxy(std::string_view backend);
+  Result<Void> redirect_to_grip_proxy(std::string_view backend);
 
   static Result<Void> register_dynamic_backend(std::string_view name, std::string_view target,
                                                const BackendConfig &config);
