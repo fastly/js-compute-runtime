@@ -287,9 +287,11 @@ public:
   /**
    * Override cache options set by the user, and cache override.
    *
-   * When unset, implies this response is no longer in its candidate phase, not that it failed.
+   * When unset, implies this response is not / no longer a candidate response.
+   * Unsetting is done by the final transaction insert providing clear = true.
    */
-  static host_api::HttpCacheWriteOptions *override_cache_options(JSObject *response);
+  static host_api::HttpCacheWriteOptions *override_cache_options(JSObject *response,
+                                                                 bool clear = false);
   /**
    * Suggested cache options as provided by the host for the request/response pair, and
    * computed lazily (fallible).

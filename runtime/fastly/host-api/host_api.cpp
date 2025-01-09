@@ -1852,10 +1852,10 @@ to_fastly_cache_write_options(const HttpCacheWriteOptions *opts) {
     mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS;
   }
 
-  if (!opts->surrogate_keys.empty()) {
+  if (opts->surrogate_keys.has_value()) {
     // Join surrogate keys with spaces
     std::string joined_keys;
-    for (const auto &key : opts->surrogate_keys) {
+    for (const auto &key : opts->surrogate_keys.value()) {
       if (!joined_keys.empty()) {
         joined_keys += ' ';
       }
@@ -1908,10 +1908,10 @@ from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &f
     while (pos < keys_str.size()) {
       size_t space = keys_str.find(' ', pos);
       if (space == std::string_view::npos) {
-        opts->surrogate_keys.push_back(std::string(keys_str.substr(pos)));
+        opts->surrogate_keys->push_back(std::string(keys_str.substr(pos)));
         break;
       }
-      opts->surrogate_keys.push_back(std::string(keys_str.substr(pos, space - pos)));
+      opts->surrogate_keys->push_back(std::string(keys_str.substr(pos, space - pos)));
       pos = space + 1;
     }
   }

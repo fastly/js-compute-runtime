@@ -1350,12 +1350,14 @@ interface Response extends Body {
    * Fastly-specific property - Returns whether the `Response` resulted from a cache hit.
    * For request collapsing, typically one response will show as a miss, and the others
    * (that awaited that response) will show as hits.
+   *
+   * Undefined if the environment does not support the new HTTP Cache hostcalls.
    */
-  readonly cached: boolean;
+  readonly cached: boolean | undefined;
   /**
    * Fastly-specific property - Returns whether the cached `Response` is considered stale.
    *
-   * Undefined if the response is not cached.
+   * Undefined if the response is not cached or the environment does not support the HTTP Cache hostcalls.
    */
   readonly isStale: boolean | undefined;
 
@@ -1365,31 +1367,31 @@ interface Response extends Body {
    * The TTL determines the duration of "freshness" for the cached response
    * after it is inserted into the cache.
    *
-   * Undefined if the response is not cached. May be modified prior to injection into the cache.
+   * Undefined if the response is not cached or the environment does not support the HTTP Cache hostcalls. May be modified prior to injection into the cache.
    */
   ttl: number | undefined;
   /**
    * Fastly-specific property - The current age of the response, if it is cached.
    *
-   * Undefined if the response is not cached. May be modified prior to injection into the cache.
+   * Undefined if the response is not cached or the environment does not support the HTTP Cache hostcalls. May be modified prior to injection into the cache.
    */
   readonly age: number | undefined;
   /**
    * Fastly-specific property - The time for which the response can safely be used despite being considered stale, if it is cached.
    *
-   * Undefined if the response is not cached. May be modified prior to injection into the cache.
+   * Undefined if the response is not cached or the environment does not support the HTTP Cache hostcalls. May be modified prior to injection into the cache.
    */
   swr: number | undefined;
   /**
    * Fastly-specific property - The set of request headers for which the response may vary.
    *
-   * Undefined if the response is not cached. May be modified prior to injection into the cache.
+   * Undefined if the response is not cached or the environment does not support the HTTP Cache hostcalls. May be modified prior to injection into the cache.
    */
   vary: Array<string> | undefined;
   /**
    * Fastly-specific property - The surrogate keys for the cached response.
    *
-   * Undefined if the response is not cached. May be modified prior to injection into the cache.
+   * Undefined if the response is not cached or the environment does not support the HTTP Cache hostcalls. May be modified prior to injection into the cache.
    */
   surrogateKeys: Array<string> | undefined;
   /**
@@ -1398,9 +1400,9 @@ interface Response extends Body {
    * See the [Fastly PCI-Compliant Caching and Delivery documentation](https://docs.fastly.com/products/pci-compliant-caching-and-delivery)
    * for details.
    *
-   * Undefined if the response is not cached. May be modified prior to injection into the cache.
+   * Undefined if the response is not cached or the environment does not support the HTTP Cache hostcalls. May be modified prior to injection into the cache.
    */
-  pci: boolean;
+  pci: boolean | undefined;
 }
 
 /**
