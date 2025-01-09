@@ -120,7 +120,7 @@ host_api::CacheOverrideTag CacheOverride::abi_tag(JSObject *self) {
     tag.set_stale_while_revalidate();
   }
 
-  if (!pci(self).isUndefined()) {
+  if (!pci(self).isUndefined() && pci(self).toBoolean()) {
     tag.set_pci();
   }
 
