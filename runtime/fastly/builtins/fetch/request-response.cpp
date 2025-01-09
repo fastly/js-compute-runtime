@@ -2282,15 +2282,14 @@ bool Response::is_upstream(JSObject *obj) {
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::IsUpstream)).toBoolean();
 }
 
-bool Response::is_grip_upgrade(JSObject *obj) {
+std::optional<host_api::HttpReq> Response::grip_upgrade_request(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
-  return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::GripUpgradeRequest)).toInt32() != 0;
-}
-
-host_api::HttpReq Response::grip_upgrade_request(JSObject *obj) {
-  MOZ_ASSERT(is_instance(obj));
-  return host_api::HttpReq(
-      JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::GripUpgradeRequest)).toInt32());
+  auto grip_upgrade_request =
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::GripUpgradeRequest));
+  if (grip_upgrade_request.isUndefined()) {
+    return std::nullopt;
+  }
+  return host_api::HttpReq(grip_upgrade_request.toInt32());
 }
 
 host_api::HostString Response::backend_str(JSContext *cx, JSObject *obj) {
@@ -3202,10 +3201,10 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Redirected), JS::FalseValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::IsUpstream),
                       JS::BooleanValue(is_upstream));
-  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::GripUpgradeRequest),
-                      JS::Int32Value(grip_upgrade_request
-                                         ? Request::request_handle(grip_upgrade_request).handle
-                                         : 0));
+  if (grip_upgrade_request) {
+    JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::GripUpgradeRequest),
+                        JS::Int32Value(Request::request_handle(grip_upgrade_request).handle));
+  }
   if (backend) {
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Backend), JS::StringValue(backend));
   }

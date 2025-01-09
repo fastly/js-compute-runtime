@@ -247,8 +247,7 @@ public:
 
   static host_api::HttpResp response_handle(JSObject *obj);
   static bool is_upstream(JSObject *obj);
-  static bool is_grip_upgrade(JSObject *obj);
-  static host_api::HttpReq grip_upgrade_request(JSObject *obj);
+  static std::optional<host_api::HttpReq> grip_upgrade_request(JSObject *obj);
   static host_api::HostString backend_str(JSContext *cx, JSObject *obj);
   static uint16_t status(JSObject *obj);
   static JSString *status_message(JSObject *obj);
