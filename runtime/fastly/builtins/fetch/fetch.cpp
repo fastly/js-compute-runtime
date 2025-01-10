@@ -618,6 +618,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
   if (!should_use_guest_caching_out) {
+    fastly::push_debug_message("Using traditional fetch without cache API");
     return fetch_send_body<false>(cx, request, args.rval());
   }
 
@@ -640,6 +641,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   // If not cacheable, fallback to non-caching path
   if (!is_cacheable) {
+    fastly::push_debug_message("Request not cacheable, using non-caching fetch");
     return fetch_send_body<true>(cx, request, args.rval());
   }
 
@@ -664,6 +666,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   auto transaction_res =
       host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_span);
   if (auto *err = transaction_res.to_err()) {
+    fastly::push_debug_message("Transaction lookup error");
     if (host_api::error_is_limit_exceeded(*err)) {
       JS_ReportErrorASCII(cx, "HTTP caching limit exceeded");
     } else {
@@ -680,6 +683,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   auto state_res = cache_entry.get_state();
   if (auto *err = state_res.to_err()) {
+    fastly::push_debug_message("Cache state error");
     HANDLE_ERROR(cx, *err);
     JSObject *promise = PromiseRejectedWithPendingError(cx);
     if (!promise) {
@@ -689,10 +693,12 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return true;
   }
   auto cache_state = state_res.unwrap();
+  fastly::push_debug_message(std::to_string(cache_state.state));
 
   // Check for usable cached response
   auto found_res = cache_entry.get_found_response(true);
   if (auto *err = found_res.to_err()) {
+    fastly::push_debug_message("Usable cache response error");
     HANDLE_ERROR(cx, *err);
     JSObject *promise = PromiseRejectedWithPendingError(cx);
     if (!promise) {
@@ -704,6 +710,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   auto maybe_response = found_res.unwrap();
   if (maybe_response.has_value()) {
+    fastly::push_debug_message("Have usable response");
     auto cached_response = maybe_response.value();
 
     if (cache_state.must_insert_or_update()) {
@@ -751,12 +758,15 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   // No valid cached response, need to make backend request
   if (!cache_state.must_insert_or_update()) {
+    fastly::push_debug_message("No usable response, and don't need to insert or update -> pass");
     // transaction entry is done
     cache_entry.close();
     // request collapsing has been disabled: pass the original request to the origin without
     // updating the cache and without caching
     return fetch_send_body<true>(cx, request, args.rval());
   } else {
+    fastly::push_debug_message(
+        "No usable response, and must insert or update, running origin fetch hooks");
     JS::RootedValue stream_back_promise(cx);
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
       cache_entry.close();
