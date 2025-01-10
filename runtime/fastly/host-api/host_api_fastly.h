@@ -24,6 +24,10 @@ struct JSErrorFormatString;
 
 namespace fastly {
 
+namespace fastly {
+void push_debug_message(std::string_view msg);
+}
+
 const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNumber);
 
 enum FastlyAPIError {

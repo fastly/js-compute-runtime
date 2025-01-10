@@ -43,6 +43,7 @@ const moduleMode = args.includes('--module-mode');
 const aot = args.includes('--aot');
 const debugBuild = args.includes('--debug-build');
 const filter = args.filter((arg) => !arg.startsWith('--'));
+const bail = args.includes('--bail');
 
 async function $(...args) {
   return await retry(10, () => zx(...args));
@@ -123,7 +124,7 @@ if (!local) {
   if (existsSync(setupPath)) {
     core.startGroup('Extra set-up steps for the service');
     await zx`node ${setupPath} ${serviceName}`;
-    await sleep(60);
+    await sleep(20);
     core.endGroup();
   }
 } else {
@@ -265,31 +266,35 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
           }
         } else {
           if (test.environments.includes('compute')) {
-            // TODO: this just hides flakes, so we should remove this and fix the flakes.
-            return retry(10, expBackoff('60s', '10s'), async () => {
-              let path = test.downstream_request.pathname;
-              let url = `${domain}${path}`;
-              try {
-                const response = await request(url, {
-                  method: test.downstream_request.method || 'GET',
-                  headers: test.downstream_request.headers || undefined,
-                  body: test.downstream_request.body || undefined,
-                });
-                const bodyChunks = await getBodyChunks(response);
-                await compareDownstreamResponse(
-                  test.downstream_response,
-                  response,
-                  bodyChunks,
-                );
-                return {
-                  title,
-                  test,
-                  skipped: false,
-                };
-              } catch (error) {
-                throw new Error(`${title} ${error.message}`);
-              }
-            });
+            // TODO: this just hides flakes, so we should remove retry and fix the flakes.
+            return (bail ? (_, __, fn) => fn() : retry)(
+              10,
+              expBackoff('60s', '10s'),
+              async () => {
+                let path = test.downstream_request.pathname;
+                let url = `${domain}${path}`;
+                try {
+                  const response = await request(url, {
+                    method: test.downstream_request.method || 'GET',
+                    headers: test.downstream_request.headers || undefined,
+                    body: test.downstream_request.body || undefined,
+                  });
+                  const bodyChunks = await getBodyChunks(response);
+                  await compareDownstreamResponse(
+                    test.downstream_response,
+                    response,
+                    bodyChunks,
+                  );
+                  return {
+                    title,
+                    test,
+                    skipped: false,
+                  };
+                } catch (error) {
+                  throw new Error(`${title} ${error.message}`);
+                }
+              },
+            );
           } else {
             return {
               title,

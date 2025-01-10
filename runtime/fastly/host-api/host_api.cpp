@@ -17,20 +17,26 @@ using fastly::FastlyAPIError;
 #ifdef DEBUG
 
 static void log_hostcall(const char *func_name, ...) {
+  std::stringstream ss;
+  ss << "HOSTCALL: " << func_name << "(";
+
   va_list args;
   va_start(args, func_name);
-  fprintf(stderr, "HOSTCALL: %s(", func_name);
 
   const auto *arg = va_arg(args, const std::string_view *);
   if (arg) {
-    fprintf(stderr, "\"%.*s\"", (int)arg->size(), arg->data());
+    ss << std::string_view(arg->data(), arg->size());
     while ((arg = va_arg(args, const std::string_view *))) {
-      fprintf(stderr, ", \"%.*s\"", (int)arg->size(), arg->data());
+      ss << ", " << std::string_view(arg->data(), arg->size());
     }
   }
-  fprintf(stderr, ")\n");
+  ss << ")";
+
   va_end(args);
-  fflush(stderr);
+
+  // fprintf(stderr, "%s\n", ss.str().c_str());
+  // Useful for debugging compute to output logs directly to error responses
+  fastly::fastly::push_debug_message(ss.str());
 }
 
 #define TRACE_CALL() log_hostcall(__func__);
@@ -1378,7 +1384,7 @@ Result<HostString> HttpReq::get_method() const {
 }
 
 Result<Void> HttpReq::set_uri(std::string_view str) {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(std::string_view(std::to_string(this->handle)), str)
   Result<Void> res;
 
   fastly::fastly_host_error err;
@@ -1930,7 +1936,7 @@ from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &f
 
 // HttpReq cache-related method implementations
 Result<bool> HttpReq::is_cacheable() const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(std::string_view(std::to_string(this->handle)))
   uint32_t is_cacheable_out;
   auto res = fastly::http_cache_is_request_cacheable(this->handle, &is_cacheable_out);
   if (res != 0) {
@@ -1985,8 +1991,8 @@ Result<HttpCacheEntry> HttpCacheEntry::lookup(const HttpReq &req, std::span<uint
 
 Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
                                                           std::span<uint8_t> override_key) {
-  TRACE_CALL()
-  uint32_t handle_out __attribute__((aligned(4)));
+  TRACE_CALL_ARGS(std::string_view(std::to_string(req.handle)))
+  alignas(4) uint32_t handle_out;
   fastly::fastly_http_cache_lookup_options opts{};
   uint32_t opts_mask = 0;
 
@@ -2207,15 +2213,18 @@ HttpCacheEntry::get_found_response(bool transform_for_client) const {
 }
 
 Result<CacheState> HttpCacheEntry::get_state() const {
-  TRACE_CALL()
-  alignas(4) uint8_t state_out;
-  auto res = fastly::http_cache_get_state(this->handle, &state_out);
+  TRACE_CALL_ARGS(std::string_view(std::to_string(this->handle)))
+  Result<CacheState> res;
 
-  if (res != 0) {
-    return Result<CacheState>::err(host_api::APIError(res));
+  fastly::fastly_host_error err;
+  alignas(4) uint8_t state;
+  if (!convert_result(fastly::http_cache_get_state(this->handle, &state), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(CacheState{state});
   }
 
-  return Result<CacheState>::ok(CacheState(state_out));
+  return res;
 }
 
 Result<uint64_t> HttpCacheEntry::get_length() const {
