@@ -1,0 +1,38 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+import {Fiddle} from '@site/src/components/fiddle';
+
+# allowDynamicBackends
+
+:::info
+
+This method is deprecated, and dynamic backends are now always supported when enabled at the service level. See [`enforceExplicitBackends`](./enforceExplicitBackends.mdx) instead.
+
+:::
+
+The **`allowDynamicBackends()`** function is used to control whether or not Dynamic Backends should be allowed within this Fastly Compute Service.
+
+By default, Dynamic Backends are enabled, but can be a potential security concern since third-party JavaScript code may send arbitrary requests, potentially including sensitive/secret data, off to destinations that the JavaScript project was not intending.
+
+Using `allowDynamicBackends(false)` this security property can be restored to only use explicit backend definitions.
+
+>**Note**: By default, while dynamic backends are allowed in the SDK, they are by default disabled at the Fastly service level.
+
+## Syntax
+
+```js
+allowDynamicBackends(enabledOrConfig)
+```
+
+### Parameters
+
+- `enabled` _: boolean_
+  - Whether or not to allow Dynamic Backends
+
+### Return value
+
+`undefined`.
