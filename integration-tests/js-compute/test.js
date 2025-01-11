@@ -124,7 +124,7 @@ if (!local) {
   if (existsSync(setupPath)) {
     core.startGroup('Extra set-up steps for the service');
     await zx`node ${setupPath} ${serviceName}`;
-    await sleep(20);
+    await sleep(15);
     core.endGroup();
   }
 } else {

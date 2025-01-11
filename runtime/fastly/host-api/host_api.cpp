@@ -15,7 +15,6 @@ using api::FastlyResult;
 using fastly::FastlyAPIError;
 
 #ifdef DEBUG
-
 static void log_hostcall(const char *func_name, ...) {
   std::stringstream ss;
   ss << "HOSTCALL: " << func_name << "(";
@@ -34,13 +33,13 @@ static void log_hostcall(const char *func_name, ...) {
 
   va_end(args);
 
-  // fprintf(stderr, "%s\n", ss.str().c_str());
+  fprintf(stderr, "%s\n", ss.str().c_str());
   // Useful for debugging compute to output logs directly to error responses
-  fastly::fastly::push_debug_message(ss.str());
+  fastly_push_debug_message(ss.str());
 }
-
 #define TRACE_CALL() log_hostcall(__func__);
 #define TRACE_CALL_ARGS(...) log_hostcall(__func__, __VA_ARGS__, nullptr);
+#define TSV(s) std::string_view(s)
 #else
 #define TRACE_CALL()
 #define TRACE_CALL_ARGS(...)
@@ -885,7 +884,7 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
 } // namespace
 
 Result<HttpBody> HttpBody::make() {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV("body"))
   Result<HttpBody> res;
 
   HttpBody::Handle handle;
@@ -1115,7 +1114,7 @@ TlsVersion TlsVersion::version_1_2() { return TlsVersion{fastly::TLS::VERSION_1_
 TlsVersion TlsVersion::version_1_3() { return TlsVersion{fastly::TLS::VERSION_1_3}; }
 
 Result<HttpReq> HttpReq::make() {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV("http_req"))
   Result<HttpReq> res;
 
   HttpReq::Handle handle;
@@ -1992,10 +1991,11 @@ Result<HttpCacheEntry> HttpCacheEntry::lookup(const HttpReq &req, std::span<uint
 Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
                                                           std::span<uint8_t> override_key) {
   TRACE_CALL_ARGS(std::string_view(std::to_string(req.handle)))
-  alignas(4) uint32_t handle_out;
+  uint32_t handle_out;
   fastly::fastly_http_cache_lookup_options opts{};
   uint32_t opts_mask = 0;
 
+  MOZ_ASSERT(override_key.empty());
   if (!override_key.empty()) {
     MOZ_ASSERT(override_key.size() == 32);
     opts.override_key = reinterpret_cast<const char *>(override_key.data());
@@ -2003,8 +2003,8 @@ Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
     opts_mask |= FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_OVERRIDE_KEY;
   }
 
-  auto res = fastly::http_cache_lookup(req.handle, opts_mask,
-                                       override_key.empty() ? nullptr : &opts, &handle_out);
+  auto res = fastly::http_cache_transaction_lookup(
+      req.handle, opts_mask, override_key.empty() ? nullptr : &opts, &handle_out);
   if (res != 0) {
     return Result<HttpCacheEntry>::err(host_api::APIError(res));
   }
@@ -2177,7 +2177,7 @@ HttpCacheEntry::get_suggested_cache_options(const HttpResp &resp) const {
 Result<std::tuple<HttpStorageAction, HttpResp>>
 HttpCacheEntry::prepare_response_for_storage(HttpResp resp) const {
   TRACE_CALL()
-  HttpStorageAction storage_action_out;
+  alignas(4) HttpStorageAction storage_action_out;
   uint32_t updated_resp_handle_out;
 
   auto res = fastly::http_cache_prepare_response_for_storage(

@@ -22,11 +22,23 @@
 
 struct JSErrorFormatString;
 
-namespace fastly {
+void fastly_push_debug_message(std::string_view msg);
+
+// Debug mode debugging logging that logs both into an error response post-data
+// via fastly.debugMessages, as well as to stderr for flexible debugging.
+#ifdef DEBUG
+#define DEBUG_LOG(msg)                                                                             \
+  {                                                                                                \
+    std::string_view view(msg);                                                                    \
+    fprintf(stderr, "%.*s\n", static_cast<int>(view.size()), view.data());                         \
+    fflush(stderr);                                                                                \
+    fastly_push_debug_message(msg);                                                                \
+  }
+#else
+#define DEBUG_LOG(msg)
+#endif
 
 namespace fastly {
-void push_debug_message(std::string_view msg);
-}
 
 const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNumber);
 
