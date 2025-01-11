@@ -39,6 +39,7 @@ bool debug_logging_enabled() { return DEBUG_LOGGING_ENABLED; }
 
 namespace fastly::fastly {
 
+JS::PersistentRooted<JSObject *> debugMessages;
 JS::PersistentRooted<JSObject *> Fastly::env;
 JS::PersistentRooted<JSObject *> Fastly::baseURL;
 JS::PersistentRooted<JSString *> Fastly::defaultBackend;
@@ -584,6 +585,15 @@ bool install(api::Engine *engine) {
     return false;
   }
 
+  // debugMessages for debug-only builds
+#ifdef DEBUG
+  debugMessages.init(engine->cx(), JS::NewArrayObject(engine->cx(), 0));
+  RootedValue debug_messages_val(engine->cx(), JS::ObjectValue(*debugMessages));
+  if (!JS_SetProperty(engine->cx(), fastly, "debugMessages", debug_messages_val)) {
+    return false;
+  }
+#endif
+
   return true;
 }
 
@@ -639,3 +649,16 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
 }
 
 } // namespace fastly::fastly
+
+void fastly_push_debug_message(std::string_view msg) {
+#ifdef DEBUG
+  JS::RootedString str(
+      ENGINE->cx(), JS_NewStringCopyUTF8N(ENGINE->cx(), JS::UTF8Chars(msg.data(), msg.length())));
+  bool res;
+  uint32_t len;
+  res = JS::GetArrayLength(ENGINE->cx(), fastly::fastly::debugMessages, &len);
+  MOZ_ASSERT(res);
+  res = JS_SetElement(ENGINE->cx(), fastly::fastly::debugMessages, len, str);
+  MOZ_ASSERT(res);
+#endif
+}
