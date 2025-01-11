@@ -464,19 +464,6 @@ const JSPropertySpec Fastly::properties[] = {
     JS_PSG("sdkVersion", version_get, JSPROP_ENUMERATE),
     JS_PS_END};
 
-void push_debug_message(std::string_view msg) {
-#ifdef DEBUG
-  JS::RootedString str(
-      ENGINE->cx(), JS_NewStringCopyUTF8N(ENGINE->cx(), JS::UTF8Chars(msg.data(), msg.length())));
-  bool res;
-  uint32_t len;
-  res = JS::GetArrayLength(ENGINE->cx(), debugMessages, &len);
-  MOZ_ASSERT(res);
-  res = JS_SetElement(ENGINE->cx(), debugMessages, len, str);
-  MOZ_ASSERT(res);
-#endif
-}
-
 bool install(api::Engine *engine) {
   ENGINE = engine;
 
@@ -707,3 +694,16 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
 }
 
 } // namespace fastly::fastly
+
+void fastly_push_debug_message(std::string_view msg) {
+#ifdef DEBUG
+  JS::RootedString str(
+      ENGINE->cx(), JS_NewStringCopyUTF8N(ENGINE->cx(), JS::UTF8Chars(msg.data(), msg.length())));
+  bool res;
+  uint32_t len;
+  res = JS::GetArrayLength(ENGINE->cx(), fastly::fastly::debugMessages, &len);
+  MOZ_ASSERT(res);
+  res = JS_SetElement(ENGINE->cx(), fastly::fastly::debugMessages, len, str);
+  MOZ_ASSERT(res);
+#endif
+}

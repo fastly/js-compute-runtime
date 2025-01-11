@@ -333,6 +333,7 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
 
 bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue request,
                      JS::CallArgs args) {
+  DEBUG_LOG("After afterSend")
   JS::RootedObject request_obj(cx, &request.toObject());
   JS::RootedObject response_promise(
       cx, &JS::GetReservedSlot(request_obj, static_cast<uint32_t>(Request::Slots::ResponsePromise))
@@ -356,6 +357,7 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
     // set_cacheable / set_uncacheable
     if (cache_val.isBoolean()) {
       if (cache_val.toBoolean()) {
+        DEBUG_LOG("After send cache true return")
         if (static_cast<host_api::HttpStorageAction>(
                 JS::GetReservedSlot(response, static_cast<uint32_t>(Response::Slots::StorageAction))
                     .toInt32()) != host_api::HttpStorageAction::Update) {
@@ -364,6 +366,7 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
               JS::Int32Value(static_cast<uint32_t>(host_api::HttpStorageAction::Insert)));
         }
       } else {
+        DEBUG_LOG("After send cache false return")
         JS::SetReservedSlot(
             response, static_cast<uint32_t>(Response::Slots::StorageAction),
             JS::Int32Value(static_cast<uint32_t>(host_api::HttpStorageAction::DoNotStore)));
@@ -378,6 +381,7 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
                                  "return, 'uncacheable' is the only permitted string value");
         return RejectPromiseWithPendingError(cx, response_promise);
       }
+      DEBUG_LOG("After send uncacheable return")
       JS::SetReservedSlot(
           response, static_cast<uint32_t>(Response::Slots::StorageAction),
           JS::Int32Value(static_cast<uint32_t>(host_api::HttpStorageAction::RecordUncacheable)));
@@ -392,6 +396,7 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
       return RejectPromiseWithPendingError(cx, response_promise);
     }
     if (!body_transform_val.isNullOrUndefined()) {
+      DEBUG_LOG("After send body transform")
       if (!body_transform_val.isObject() || !JS_ObjectIsFunction(&body_transform_val.toObject())) {
         JS_ReportErrorLatin1(cx, "Unexpected value for 'bodyTransform' property on afterSend "
                                  "return, must be a function");
@@ -432,6 +437,7 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
   // TODO: actually run body transform
 
   JS::RootedValue response_val(cx, JS::ObjectValue(*response));
+  DEBUG_LOG("HTTP cache lifecycle complete")
   JS::ResolvePromise(cx, response_promise, response_val);
   return true;
 }
@@ -465,6 +471,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
       RequestOrResponse::cache_entry(request);
 
   if (!maybe_cache_entry) {
+    DEBUG_LOG("Non HTTP cache request, returning")
     JS::RootedObject response(cx, Response::create(cx, request, res));
     JS::RootedValue response_val(cx, JS::ObjectValue(*response));
     return JS::ResolvePromise(cx, promise, response_val);
@@ -486,6 +493,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   res.resp = suggested_resp;
 
   // create the candidate response
+  DEBUG_LOG("Creating candidate response")
   JS::RootedObject response(cx, Response::create(cx, request, res));
   // JS::RootedValue response_val(cx, JS::ObjectValue(*response));
 
@@ -500,6 +508,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   }
   if (result.isBoolean() && result.toBoolean() == true &&
       suggested_storage_action != host_api::HttpStorageAction::DoNotStore) {
+    DEBUG_LOG("Set cookie opt-out")
     suggested_storage_action = host_api::HttpStorageAction::RecordUncacheable;
   }
 
@@ -517,6 +526,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
               .toObjectOrNull());
   RootedObject after_send(cx);
   if (cache_override) {
+    DEBUG_LOG("Reading cache override from request")
     after_send.set(CacheOverride::afterSend(cache_override));
 
     // convert the CacheOverride provided to the request into HttpCacheWriteOptions overrides
@@ -587,6 +597,8 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     if (!override_pci.isUndefined()) {
       override_cache_options->sensitive_data = override_pci.toBoolean();
     }
+  } else {
+    DEBUG_LOG("No cache override on request, using suggested only")
   }
 
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
@@ -594,12 +606,14 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
 
   JS::RootedObject after_send_promise(cx);
   if (after_send) {
+    DEBUG_LOG("Calling after send")
     JS::RootedValue ret_val(cx);
     JS::RootedValueArray<1> args(cx);
     args[0].set(JS::ObjectValue(*response));
 
     // now call after_send with the candidate_request, allowing any async work
     if (!JS::Call(cx, JS::NullHandleValue, after_send, args, &ret_val)) {
+      DEBUG_LOG("After send call failure")
       return RejectPromiseWithPendingError(cx, promise);
     }
     after_send_promise = JS::RootedObject(cx, JS::CallOriginalPromiseResolve(cx, ret_val));
