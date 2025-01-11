@@ -67,8 +67,9 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
  * This is useful for debugging compute, allowing messages to be inlined into the response in test
  * case debugging, where other logging systems may introduce greater latency than this.
  */
-void push_debug_message(std::string_view msg);
 
 } // namespace fastly::fastly
+
+void fastly_push_debug_message(std::string_view msg);
 
 #endif

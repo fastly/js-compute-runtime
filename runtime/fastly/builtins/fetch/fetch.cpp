@@ -416,6 +416,7 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
 
 bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject request,
                                           JS::HandleValue response, JS::CallArgs args) {
+  DEBUG_LOG("background_revalidation_then_handler")
   auto cache_entry = RequestOrResponse::cache_entry(request).value();
   JSObject *response_obj = &response.toObject();
   MOZ_ASSERT(cache_entry.handle == RequestOrResponse::cache_entry(response_obj).value().handle);
@@ -474,6 +475,7 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
 
 bool background_revalidation_catch_handler(JSContext *cx, JS::HandleObject request,
                                            JS::HandleValue promise_val, JS::CallArgs args) {
+  DEBUG_LOG("background_revalidation_catch_handler")
   // we follow the Rust implementation calling "close" instead of "transaction_abandon" here
   // this could be reconsidered in future if alternative semantics are required
   auto cache_entry = RequestOrResponse::cache_entry(request).value();
@@ -484,6 +486,7 @@ bool background_revalidation_catch_handler(JSContext *cx, JS::HandleObject reque
 
 bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::HandleValue response,
                               JS::CallArgs args) {
+  DEBUG_LOG("stream_back_then_handler")
   auto cache_entry = RequestOrResponse::cache_entry(request).value();
   RootedObject response_obj(cx, &response.toObject());
   MOZ_ASSERT(cache_entry.handle == RequestOrResponse::cache_entry(response_obj).value().handle);
@@ -575,11 +578,14 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
 
 bool stream_back_catch_handler(JSContext *cx, JS::HandleObject request, JS::HandleValue promise_val,
                                JS::CallArgs args) {
+  DEBUG_LOG("stream_back_catch_handler")
   // we follow the Rust implementation calling "close" instead of "transaction_abandon" here
   // this could be reconsidered in future if alternative semantics are required
   auto cache_entry = RequestOrResponse::cache_entry(request).value();
   cache_entry.close();
-  return true;
+  // "rethrow" the streaming error
+  JS_SetPendingException(cx, args.get(0), JS::ExceptionStackBehavior::DoNotCapture);
+  return false;
 }
 
 // TODO: throw in all Request methods/getters that rely on host calls once a
@@ -618,7 +624,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
   if (!should_use_guest_caching_out) {
-    fastly::push_debug_message("Using traditional fetch without cache API");
+    DEBUG_LOG("Using traditional fetch without cache API")
     return fetch_send_body<false>(cx, request, args.rval());
   }
 
@@ -641,7 +647,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   // If not cacheable, fallback to non-caching path
   if (!is_cacheable) {
-    fastly::push_debug_message("Request not cacheable, using non-caching fetch");
+    DEBUG_LOG("Request not cacheable, using non-caching fetch")
     return fetch_send_body<true>(cx, request, args.rval());
   }
 
@@ -666,7 +672,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   auto transaction_res =
       host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_span);
   if (auto *err = transaction_res.to_err()) {
-    fastly::push_debug_message("Transaction lookup error");
+    DEBUG_LOG("Transaction lookup error")
     if (host_api::error_is_limit_exceeded(*err)) {
       JS_ReportErrorASCII(cx, "HTTP caching limit exceeded");
     } else {
@@ -683,7 +689,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   auto state_res = cache_entry.get_state();
   if (auto *err = state_res.to_err()) {
-    fastly::push_debug_message("Cache state error");
+    DEBUG_LOG("Cache state error")
     HANDLE_ERROR(cx, *err);
     JSObject *promise = PromiseRejectedWithPendingError(cx);
     if (!promise) {
@@ -693,12 +699,13 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return true;
   }
   auto cache_state = state_res.unwrap();
-  fastly::push_debug_message(std::to_string(cache_state.state));
+  std::string state_str = std::to_string(cache_state.state);
+  DEBUG_LOG(state_str)
 
   // Check for usable cached response
   auto found_res = cache_entry.get_found_response(true);
   if (auto *err = found_res.to_err()) {
-    fastly::push_debug_message("Usable cache response error");
+    DEBUG_LOG("Usable cache response error")
     HANDLE_ERROR(cx, *err);
     JSObject *promise = PromiseRejectedWithPendingError(cx);
     if (!promise) {
@@ -710,7 +717,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   auto maybe_response = found_res.unwrap();
   if (maybe_response.has_value()) {
-    fastly::push_debug_message("Have usable response");
+    DEBUG_LOG("Have usable response")
     auto cached_response = maybe_response.value();
 
     if (cache_state.must_insert_or_update()) {
@@ -758,16 +765,15 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   // No valid cached response, need to make backend request
   if (!cache_state.must_insert_or_update()) {
-    fastly::push_debug_message("No usable response, and don't need to insert or update -> pass");
+    DEBUG_LOG("No usable response, and don't need to insert or update -> pass")
     // transaction entry is done
     cache_entry.close();
     // request collapsing has been disabled: pass the original request to the origin without
     // updating the cache and without caching
     return fetch_send_body<true>(cx, request, args.rval());
   } else {
-    fastly::push_debug_message(
-        "No usable response, and must insert or update, running origin fetch hooks");
-    JS::RootedValue stream_back_promise(cx);
+    DEBUG_LOG("No usable response, and must insert or update, running origin fetch hooks")
+    JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*JS::NewPromiseObject(cx, nullptr)));
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
       cache_entry.close();
       return false;
