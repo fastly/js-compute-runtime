@@ -95,11 +95,11 @@ void CacheOverride::set_beforeSend(JSObject *self, JSObject *fn) {
 
 JSObject *CacheOverride::afterSend(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
-  auto before_send = JS::GetReservedSlot(self, Slots::AfterSend);
-  if (before_send.isUndefined()) {
+  auto after_send = JS::GetReservedSlot(self, Slots::AfterSend);
+  if (after_send.isUndefined()) {
     return nullptr;
   }
-  return before_send.toObjectOrNull();
+  return after_send.toObjectOrNull();
 }
 
 void CacheOverride::set_afterSend(JSObject *self, JSObject *fn) {

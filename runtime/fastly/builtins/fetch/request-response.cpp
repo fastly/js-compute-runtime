@@ -342,8 +342,8 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
   JS::RootedValue after_send_ret(cx, args.get(0));
   if (!after_send_ret.isNullOrUndefined()) {
     if (!after_send_ret.isObject()) {
-      JS_ReportErrorLatin1(
-          cx, "Unexpected non-object non-empty return for afterSend() hook on request");
+      api::throw_error(cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
+                       "return either undefined or an object");
       return RejectPromiseWithPendingError(cx, response_promise);
     }
 
@@ -377,8 +377,8 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
         return false;
       }
       if (!is_uncacheable) {
-        JS_ReportErrorLatin1(cx, "Unexpected string value for 'cache' property on afterSend "
-                                 "return, 'uncacheable' is the only permitted string value");
+        api::throw_error(cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
+                         "return a \'cache\' property value 'uncacheable' when set to a string");
         return RejectPromiseWithPendingError(cx, response_promise);
       }
       DEBUG_LOG("After send uncacheable return")
@@ -386,7 +386,8 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
           response, static_cast<uint32_t>(Response::Slots::StorageAction),
           JS::Int32Value(static_cast<uint32_t>(host_api::HttpStorageAction::RecordUncacheable)));
     } else {
-      JS_ReportErrorLatin1(cx, "Unexpected value for 'cache' property on afterSend return");
+      api::throw_error(cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
+                       "return a 'cache' property as either a string or boolean");
       return RejectPromiseWithPendingError(cx, response_promise);
     }
 
@@ -398,8 +399,8 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
     if (!body_transform_val.isNullOrUndefined()) {
       DEBUG_LOG("After send body transform")
       if (!body_transform_val.isObject() || !JS_ObjectIsFunction(&body_transform_val.toObject())) {
-        JS_ReportErrorLatin1(cx, "Unexpected value for 'bodyTransform' property on afterSend "
-                                 "return, must be a function");
+        api::throw_error(cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
+                         "return a 'bodyTransform' property as a function");
         return RejectPromiseWithPendingError(cx, response_promise);
       }
       JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::CacheBodyTransform),
@@ -616,6 +617,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
       DEBUG_LOG("After send call failure")
       return RejectPromiseWithPendingError(cx, promise);
     }
+    DEBUG_LOG("After send call successs")
     after_send_promise = JS::RootedObject(cx, JS::CallOriginalPromiseResolve(cx, ret_val));
     if (!after_send_promise) {
       return false;
@@ -3710,7 +3712,13 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  uint64_t ttl_ns = static_cast<uint64_t>(seconds * 1e9);
+  if (std::isnan(seconds) || seconds <= 0) {
+    api::throw_error(cx, api::Errors::TypeError, "CandidateResponse set", "ttl",
+                     "be a number greater than zero");
+    return false;
+  }
+
+  uint64_t ttl_ns = static_cast<uint64_t>(std::round(seconds * 1e9));
   uint64_t initial_age_ns = suggested_opts->initial_age_ns.value();
   override_opts->max_age_ns = ttl_ns + initial_age_ns;
 
@@ -3723,7 +3731,8 @@ bool Response::swr_set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto override_opts = override_cache_options(self);
   if (!override_opts) {
-    JS_ReportErrorLatin1(cx, "Cannot set stale-while-revalidate on non-cached response");
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "swr",
+                     "be set only on unsent cache transaction responses");
     return false;
   }
 
@@ -3743,7 +3752,8 @@ bool Response::vary_set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto override_opts = override_cache_options(self);
   if (!override_opts) {
-    JS_ReportErrorLatin1(cx, "Cannot set vary on non-cached response");
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "vary",
+                     "be set only on unsent cache transaction responses");
     return false;
   }
 
@@ -3756,7 +3766,7 @@ bool Response::vary_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
   }
   if (!is_array) {
-    JS_ReportErrorLatin1(cx, "vary must be an Array of strings");
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "vary", "be an Array");
     return false;
   }
 
@@ -3773,7 +3783,7 @@ bool Response::vary_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     if (!val.isString()) {
-      JS_ReportErrorLatin1(cx, "vary must be an Array of strings");
+      api::throw_error(cx, api::Errors::TypeError, "Response set", "vary", "contain only strings");
       return false;
     }
 
@@ -3799,12 +3809,13 @@ bool Response::surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto override_opts = override_cache_options(self);
   if (!override_opts) {
-    JS_ReportErrorLatin1(cx, "Cannot set surrogate keys on non-cached response");
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "surrogateKeys",
+                     "be set only on unsent cache transaction responses");
     return false;
   }
 
   if (!args[0].isObject()) {
-    JS_ReportErrorLatin1(cx, "surrogateKeys must be an Array of strings");
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "surrogateKeys", "be an Array");
     return false;
   }
 
@@ -3814,7 +3825,7 @@ bool Response::surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   if (!is_arr) {
-    JS_ReportErrorLatin1(cx, "surrogateKeys must be an Array of strings");
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "surrogateKeys", "be an Array");
     return false;
   }
 
@@ -3834,7 +3845,8 @@ bool Response::surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
     if (!val.isString()) {
-      JS_ReportErrorLatin1(cx, "surrogateKeys must be an Array of strings");
+      api::throw_error(cx, api::Errors::TypeError, "Response set", "surrogateKeys",
+                       "contain only strings");
       return false;
     }
     auto key = core::encode(cx, val);
@@ -3856,7 +3868,8 @@ bool Response::pci_set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto override_opts = override_cache_options(self);
   if (!override_opts) {
-    JS_ReportErrorLatin1(cx, "Cannot set PCI flag on non-cached response");
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "pci",
+                     "be set only on unsent cache transaction responses");
     return false;
   }
 
@@ -4119,11 +4132,7 @@ host_api::HttpCacheWriteOptions *Response::suggested_cache_options(JSContext *cx
   }
 
   // TODO: read from the special surrogate keys header here as part of the suggestion.
-
   auto suggested_cache_options = suggested_cache_options_res.unwrap();
-  if (!existing.isUndefined()) {
-    delete reinterpret_cast<host_api::HttpCacheWriteOptions *>(existing.toPrivate());
-  }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptions),
                       JS::PrivateValue(suggested_cache_options));
   return suggested_cache_options;
@@ -4150,6 +4159,7 @@ JSObject *Response::create(JSContext *cx, HandleObject request, host_api::Respon
 }
 
 void Response::finalize(JS::GCContext *gcx, JSObject *self) {
+  DEBUG_LOG("Response finalize")
   auto suggested_cache_write_options_val =
       JS::GetReservedSlot(self, static_cast<size_t>(Response::Slots::SuggestedCacheWriteOptions));
   if (!suggested_cache_write_options_val.isUndefined()) {

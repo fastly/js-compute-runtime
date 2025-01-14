@@ -1889,12 +1889,21 @@ from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &f
   HttpCacheWriteOptions *opts =
       reinterpret_cast<HttpCacheWriteOptions *>(cabi_malloc(sizeof(HttpCacheWriteOptions), 4));
 
+  opts->max_age_ns = std::nullopt;
+  opts->vary_rule = std::nullopt;
+  opts->initial_age_ns = std::nullopt;
+  opts->stale_while_revalidate_ns = std::nullopt;
+  opts->surrogate_keys = std::nullopt;
+  opts->length = std::nullopt;
+  opts->sensitive_data = std::nullopt;
+
   // Required field
   opts->max_age_ns = fastly_opts.max_age_ns;
 
   if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_VARY_RULE && fastly_opts.vary_rule &&
       fastly_opts.vary_rule_len > 0) {
-    opts->vary_rule = std::string_view(fastly_opts.vary_rule, fastly_opts.vary_rule_len);
+    // Create a new string with a copy of the data instead of a view
+    opts->vary_rule = std::string(fastly_opts.vary_rule, fastly_opts.vary_rule_len);
   }
 
   if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS) {
@@ -1907,6 +1916,7 @@ from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &f
 
   if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS && fastly_opts.surrogate_keys &&
       fastly_opts.surrogate_keys_len > 0) {
+    opts->surrogate_keys.emplace();
     // Split space-separated surrogate keys
     std::string_view keys_str(fastly_opts.surrogate_keys, fastly_opts.surrogate_keys_len);
     size_t pos = 0;
@@ -2149,13 +2159,13 @@ HttpCacheEntry::get_suggested_cache_options(const HttpResp &resp) const {
   }
 
   fastly::fastly_http_cache_write_options options_in{};
-  fastly::fastly_http_cache_write_options options_out{};
-  uint32_t options_mask_out;
-
   options_in.vary_rule = reinterpret_cast<char *>(vary_buffer);
   options_in.vary_rule_len = HOSTCALL_BUFFER_LEN;
   options_in.surrogate_keys = reinterpret_cast<char *>(surrogate_buffer);
   options_in.surrogate_keys_len = HOSTCALL_BUFFER_LEN;
+
+  fastly::fastly_http_cache_write_options options_out{};
+  uint32_t options_mask_out;
 
   auto res = fastly::http_cache_get_suggested_cache_options(
       this->handle, resp.handle, options_mask, &options_in, &options_mask_out, &options_out);
