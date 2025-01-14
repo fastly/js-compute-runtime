@@ -18,6 +18,35 @@ const httpBinBackend = () =>
 
 // Test suite: Error handling
 {
+  routes.set('/http-cache/hook-errors', async () => {
+    const url = getTestUrl();
+    await assertRejects(
+      () =>
+        fetch(url, {
+          cacheOverride: new CacheOverride({
+            beforeSend() {
+              throw new Error('before send error');
+            },
+          }),
+        }),
+      Error,
+      'before send error',
+    );
+
+    await assertRejects(
+      () =>
+        fetch(url, {
+          cacheOverride: new CacheOverride({
+            afterSend() {
+              throw new Error('after send error');
+            },
+          }),
+        }),
+      Error,
+      'after send error',
+    );
+  });
+
   // Test invalid property assignments
   routes.set('/http-cache/invalid-properties', async () => {
     const url = getTestUrl();
@@ -64,34 +93,6 @@ const httpBinBackend = () =>
           }),
         }),
       TypeError,
-    );
-  });
-
-  routes.set('/http-cache/hook-errors', async () => {
-    await assertRejects(
-      () =>
-        fetch(url, {
-          cacheOverride: new CacheOverride({
-            beforeSend() {
-              throw new Error('before send error');
-            },
-          }),
-        }),
-      Error,
-      'before send error',
-    );
-
-    await assertRejects(
-      () =>
-        fetch(url, {
-          cacheOverride: new CacheOverride({
-            afterSend() {
-              throw new Error('after send error');
-            },
-          }),
-        }),
-      Error,
-      'after send error',
     );
   });
 }
