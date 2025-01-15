@@ -265,7 +265,6 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
 bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject request,
                                               JS::HandleValue ret_promise, JS::CallArgs args) {
   JS::RootedObject ret_promise_obj(cx, &ret_promise.toObject());
-  auto cache_entry = RequestOrResponse::cache_entry(request).value();
 
   RootedString backend(cx, get_backend(cx, request));
   if (!backend) {
@@ -284,7 +283,7 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
 
   bool streaming = false;
   if (!RequestOrResponse::maybe_stream_body(cx, request, &streaming)) {
-    cache_entry.close();
+    RequestOrResponse::close_if_cache_entry(cx, request);
     return false;
   }
 
@@ -295,7 +294,9 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
     auto res = request_handle.send_async_without_caching(body, backend_chars, streaming);
 
     if (auto *err = res.to_err()) {
-      cache_entry.close();
+      if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
+        return false;
+      }
       if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
         JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                   JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST, backend_chars.ptr.get());
@@ -322,8 +323,9 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
 
 bool fetch_process_cache_hooks_before_send_reject(JSContext *cx, JS::HandleObject request,
                                                   JS::HandleValue ret_promise, JS::CallArgs args) {
-  auto cache_entry = RequestOrResponse::cache_entry(request).value();
-  cache_entry.close();
+  if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
+    return false;
+  }
   JS::RootedObject ret_promise_obj(cx, &ret_promise.toObject());
   JS::RejectPromise(cx, ret_promise_obj, args.get(0));
   return true;
@@ -417,11 +419,13 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
 bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject request,
                                           JS::HandleValue response, JS::CallArgs args) {
   DEBUG_LOG("background_revalidation_then_handler")
-  auto cache_entry = RequestOrResponse::cache_entry(request).value();
   JSObject *response_obj = &response.toObject();
-  MOZ_ASSERT(cache_entry.handle == RequestOrResponse::cache_entry(response_obj).value().handle);
-  auto storage_action = Response::get_and_clear_storage_action(response_obj);
-  auto cache_write_options = Response::override_cache_options(response_obj, true);
+  auto cache_entry = RequestOrResponse::take_cache_entry(response_obj).value();
+  auto storage_action = Response::storage_action(response_obj).value();
+  auto cache_write_options = Response::override_cache_options(response_obj);
+  // mark the candidate response as locked
+  JS::SetReservedSlot(response_obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
+                      JS::UndefinedValue());
   MOZ_ASSERT(cache_write_options);
   // Mark interest as complete for this phase. We will create new event interest for the body
   // streaming promise shortly if needed to simplify return and error paths in this function.
@@ -478,22 +482,21 @@ bool background_revalidation_catch_handler(JSContext *cx, JS::HandleObject reque
   DEBUG_LOG("background_revalidation_catch_handler")
   // we follow the Rust implementation calling "close" instead of "transaction_abandon" here
   // this could be reconsidered in future if alternative semantics are required
-  auto cache_entry = RequestOrResponse::cache_entry(request).value();
-  cache_entry.close();
+  RequestOrResponse::close_if_cache_entry(cx, request);
   ENGINE->decr_event_loop_interest();
   return true;
 }
 
-bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::HandleValue response,
+bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::HandleValue extra,
                               JS::CallArgs args) {
   DEBUG_LOG("stream_back_then_handler")
-  auto cache_entry = RequestOrResponse::cache_entry(request).value();
+  auto response = args.get(0);
   RootedObject response_obj(cx, &response.toObject());
-  MOZ_ASSERT(cache_entry.handle == RequestOrResponse::cache_entry(response_obj).value().handle);
-  auto storage_action = Response::get_and_clear_storage_action(response_obj);
+  auto cache_entry = RequestOrResponse::take_cache_entry(response_obj).value();
+  auto storage_action = Response::storage_action(response_obj).value();
   // Override cache write options is set to the final cache write options at the end of the response
   // process.
-  auto cache_write_options = Response::override_cache_options(response_obj, true);
+  auto cache_write_options = Response::override_cache_options(response_obj);
   MOZ_ASSERT(cache_write_options);
   switch (storage_action) {
   case host_api::HttpStorageAction::Insert: {
@@ -503,12 +506,47 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
       HANDLE_ERROR(cx, *err);
       return false;
     }
-    // auto [body, cache_entry] = insert_res.unwrap();
-    // TODO: apply body transform through to drive completion
-    fprintf(stderr, "TODO: stream back body streaming");
-    fflush(stderr);
-    // args.rval().setObject(*response_obj);
-    MOZ_ASSERT(false);
+    auto [body, cache_entry] = insert_res.unwrap();
+
+    // TODO: body stream handling
+    // Stream origin response body insto the insert body
+    auto append_res = body.append(RequestOrResponse::body_handle(response_obj));
+
+    if (auto *err = append_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      JSObject *promise = PromiseRejectedWithPendingError(cx);
+      if (!promise) {
+        return false;
+      }
+      args.rval().setObject(*promise);
+      return true;
+    }
+
+    auto found_res = cache_entry.get_found_response(false);
+    if (auto *err = found_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      JSObject *promise = PromiseRejectedWithPendingError(cx);
+      if (!promise) {
+        return false;
+      }
+      args.rval().setObject(*promise);
+      return true;
+    }
+
+    auto found = found_res.unwrap().value();
+
+    // update response to be the new response, effectively disposing the candidate response
+    response_obj.set(Response::create(cx, request, found));
+    JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::StorageAction),
+                        JS::Int32Value(static_cast<uint32_t>(host_api::HttpStorageAction::Insert)));
+
+    // Return cached response regardless of revalidation status
+    RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
+    JS::RootedValue response_val(cx, JS::ObjectValue(*response_obj));
+    args.rval().setObject(*response_promise);
+    if (!JS::ResolvePromise(cx, response_promise, response_val)) {
+      return false;
+    }
     break;
   }
   case host_api::HttpStorageAction::Update: {
@@ -535,8 +573,8 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
 
     // response becomes a new response
     response_obj.set(Response::create(cx, request, cached_response));
-    JS::SetReservedSlot(response_obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
-                        JS::Int32Value(cache_entry.handle));
+    JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::StorageAction),
+                        JS::Int32Value(static_cast<uint32_t>(host_api::HttpStorageAction::Update)));
 
     // Return cached response regardless of revalidation status
     RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
@@ -581,8 +619,9 @@ bool stream_back_catch_handler(JSContext *cx, JS::HandleObject request, JS::Hand
   DEBUG_LOG("stream_back_catch_handler")
   // we follow the Rust implementation calling "close" instead of "transaction_abandon" here
   // this could be reconsidered in future if alternative semantics are required
-  auto cache_entry = RequestOrResponse::cache_entry(request).value();
-  cache_entry.close();
+  if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
+    return false;
+  }
   // "rethrow" the streaming error
   JS_SetPendingException(cx, args.get(0), JS::ExceptionStackBehavior::DoNotCapture);
   return false;
@@ -727,7 +766,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
       RootedValue background_revalidation_promise(cx);
       if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry,
                                             &background_revalidation_promise)) {
-        cache_entry.close();
+        RequestOrResponse::close_if_cache_entry(cx, request);
         return false;
       }
       JS::RootedObject background_revalidation_promise_obj(
@@ -736,7 +775,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
                                                             background_revalidation_catch_handler>(
                                            cx, background_revalidation_promise_obj, request));
       if (!ret_promise) {
-        cache_entry.close();
+        RequestOrResponse::close_if_cache_entry(cx, request);
         return false;
       }
       args.rval().setObject(*ret_promise);
@@ -745,7 +784,9 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
       // keep the event loop alive until background revalidation completes or errors
       ENGINE->incr_event_loop_interest();
     } else {
-      cache_entry.close();
+      if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
+        return false;
+      }
     }
 
     JS::RootedObject response(cx, Response::create(cx, request, cached_response));
@@ -767,7 +808,9 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   if (!cache_state.must_insert_or_update()) {
     DEBUG_LOG("No usable response, and don't need to insert or update -> pass")
     // transaction entry is done
-    cache_entry.close();
+    if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
+      return false;
+    }
     // request collapsing has been disabled: pass the original request to the origin without
     // updating the cache and without caching
     return fetch_send_body<true>(cx, request, args.rval());
@@ -775,7 +818,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     DEBUG_LOG("No usable response, and must insert or update, running origin fetch hooks")
     JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*JS::NewPromiseObject(cx, nullptr)));
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
-      cache_entry.close();
+      RequestOrResponse::close_if_cache_entry(cx, request);
       return false;
     }
     JS::RootedObject stream_back_promise_obj(cx, &stream_back_promise.toObject());
@@ -783,7 +826,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
         cx, internal_method_then<stream_back_then_handler, stream_back_catch_handler>(
                 cx, stream_back_promise_obj, request));
     if (!ret_promise) {
-      cache_entry.close();
+      RequestOrResponse::close_if_cache_entry(cx, request);
       return false;
     }
     JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ResponsePromise),

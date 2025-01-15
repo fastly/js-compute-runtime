@@ -106,9 +106,21 @@ public:
   static JSString *backend(JSObject *obj);
 
   /**
-   * Helper method to get the cache entry for a request or response (if any)
+   * Helper method to get (and possibly unset) the cache entry for a request or response (if any)
    */
   static std::optional<host_api::HttpCacheEntry> cache_entry(JSObject *obj);
+  /**
+   * Helper method to get and unset the cache entry for a request or response (if any)
+   *
+   * Unsetting the cache entry on a Response object freezes the CandidateResponse from further
+   * modification.
+   */
+  static std::optional<host_api::HttpCacheEntry> take_cache_entry(JSObject *obj);
+  /**
+   * Close the cache entry and clear it from the Response, effectively locking this
+   * candidate response object.
+   */
+  static bool close_if_cache_entry(JSContext *cx, JS::HandleObject self);
 };
 
 class Request final : public builtins::BuiltinImpl<Request> {
@@ -269,10 +281,9 @@ public:
   static JSObject *headers(JSContext *cx, JS::HandleObject obj);
 
   /**
-   * Get the storage action for the response, panicking if not set available.
-   * Clearing it effectively transitions a Candidate REsponse into a Response.
+   * Get the storage action for the response.
    */
-  static host_api::HttpStorageAction get_and_clear_storage_action(JSObject *obj);
+  static std::optional<host_api::HttpStorageAction> storage_action(JSObject *obj);
 
   static bool is_upstream(JSObject *obj);
   static std::optional<host_api::HttpReq> grip_upgrade_request(JSObject *obj);
@@ -286,12 +297,8 @@ public:
 
   /**
    * Override cache options set by the user, and cache override.
-   *
-   * When unset, implies this response is not / no longer a candidate response.
-   * Unsetting is done by the final transaction insert providing clear = true.
    */
-  static host_api::HttpCacheWriteOptions *override_cache_options(JSObject *response,
-                                                                 bool clear = false);
+  static host_api::HttpCacheWriteOptions *override_cache_options(JSObject *response);
   /**
    * Suggested cache options as provided by the host for the request/response pair, and
    * computed lazily (fallible).

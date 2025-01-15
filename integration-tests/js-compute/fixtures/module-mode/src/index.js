@@ -15,6 +15,14 @@ addEventListener('fetch', (event) => {
   event.respondWith(app(event));
 });
 
+if (fastly.debugMessages) {
+  const { debug: consoleDebug } = console;
+  console.debug = function debug (...args) {
+    fastly.debugMessages.push(...args);
+    consoleDebug(...args);
+  };
+}
+
 /**
  * @param {FetchEvent} event
  * @returns {Response}
