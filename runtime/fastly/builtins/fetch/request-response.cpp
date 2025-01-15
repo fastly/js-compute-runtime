@@ -331,27 +331,24 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
   return true;
 }
 
-bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue request,
+bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue promise,
                      JS::CallArgs args) {
   DEBUG_LOG("After afterSend")
-  JS::RootedObject request_obj(cx, &request.toObject());
-  JS::RootedObject response_promise(
-      cx, &JS::GetReservedSlot(request_obj, static_cast<uint32_t>(Request::Slots::ResponsePromise))
-               .toObject());
+  JS::RootedObject promise_obj(cx, &promise.toObject());
 
   JS::RootedValue after_send_ret(cx, args.get(0));
   if (!after_send_ret.isNullOrUndefined()) {
     if (!after_send_ret.isObject()) {
       api::throw_error(cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
                        "return either undefined or an object");
-      return RejectPromiseWithPendingError(cx, response_promise);
+      return RejectPromiseWithPendingError(cx, promise_obj);
     }
 
     JS::RootedObject after_send_obj(cx, &after_send_ret.toObject());
 
     JS::RootedValue cache_val(cx);
     if (!JS_GetProperty(cx, after_send_obj, "cache", &cache_val)) {
-      return RejectPromiseWithPendingError(cx, response_promise);
+      return RejectPromiseWithPendingError(cx, promise_obj);
     }
 
     // set_cacheable / set_uncacheable
@@ -379,7 +376,7 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
       if (!is_uncacheable) {
         api::throw_error(cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
                          "return a \'cache\' property value 'uncacheable' when set to a string");
-        return RejectPromiseWithPendingError(cx, response_promise);
+        return RejectPromiseWithPendingError(cx, promise_obj);
       }
       DEBUG_LOG("After send uncacheable return")
       JS::SetReservedSlot(
@@ -388,20 +385,20 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
     } else {
       api::throw_error(cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
                        "return a 'cache' property as either a string or boolean");
-      return RejectPromiseWithPendingError(cx, response_promise);
+      return RejectPromiseWithPendingError(cx, promise_obj);
     }
 
     // set_body_transform
     JS::RootedValue body_transform_val(cx);
     if (!JS_GetProperty(cx, after_send_obj, "bodyTransform", &body_transform_val)) {
-      return RejectPromiseWithPendingError(cx, response_promise);
+      return RejectPromiseWithPendingError(cx, promise_obj);
     }
     if (!body_transform_val.isNullOrUndefined()) {
       DEBUG_LOG("After send body transform")
       if (!body_transform_val.isObject() || !JS_ObjectIsFunction(&body_transform_val.toObject())) {
         api::throw_error(cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
                          "return a 'bodyTransform' property as a function");
-        return RejectPromiseWithPendingError(cx, response_promise);
+        return RejectPromiseWithPendingError(cx, promise_obj);
       }
       JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::CacheBodyTransform),
                           body_transform_val);
@@ -412,6 +409,7 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
   // be used for the transaction insertion, after which it will be cleared.
   auto cache_write_options = Response::override_cache_options(response);
   auto suggested_cache_write_options = Response::suggested_cache_options(cx, response);
+  DEBUG_LOG("Got suggested cache options for write")
   cache_write_options->initial_age_ns = suggested_cache_write_options->initial_age_ns.value();
   if (!cache_write_options->max_age_ns.has_value()) {
     cache_write_options->max_age_ns = suggested_cache_write_options->max_age_ns;
@@ -438,18 +436,19 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue r
   // TODO: actually run body transform
 
   JS::RootedValue response_val(cx, JS::ObjectValue(*response));
-  DEBUG_LOG("HTTP cache lifecycle complete")
-  JS::ResolvePromise(cx, response_promise, response_val);
+  DEBUG_LOG("Resolving promise for then handler in fetch")
+  JS::ResolvePromise(cx, promise_obj, response_val);
   return true;
 }
 
-bool after_send_catch(JSContext *cx, JS::HandleObject response, JS::HandleValue request,
+bool after_send_catch(JSContext *cx, JS::HandleObject response, JS::HandleValue promise,
                       JS::CallArgs args) {
-  JS::RootedObject request_obj(cx, &request.toObject());
-  JS::RootedObject response_promise(
-      cx, &JS::GetReservedSlot(request_obj, static_cast<uint32_t>(Request::Slots::ResponsePromise))
-               .toObject());
-  JS::RejectPromise(cx, response_promise, args.get(0));
+  DEBUG_LOG("After send catch")
+  JS::RootedObject promise_obj(cx, &promise.toObject());
+  if (!RequestOrResponse::close_if_cache_entry(cx, response)) {
+    return false;
+  }
+  JS::RejectPromise(cx, promise_obj, args.get(0));
   return true;
 }
 
@@ -496,7 +495,6 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   // create the candidate response
   DEBUG_LOG("Creating candidate response")
   JS::RootedObject response(cx, Response::create(cx, request, res));
-  // JS::RootedValue response_val(cx, JS::ObjectValue(*response));
 
   // Fastly-specific heuristic: by default, we do not cache responses that set cookies
   RootedValue result(cx);
@@ -520,7 +518,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::StorageAction),
                       JS::Int32Value(static_cast<uint32_t>(suggested_storage_action)));
   JS::SetReservedSlot(response, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
-                      JS::Int32Value(maybe_cache_entry.value().handle));
+                      JS::Int32Value(cache_entry.handle));
 
   RootedObject cache_override(
       cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
@@ -539,6 +537,9 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     if (!override_ttl.isUndefined()) {
       if (!suggested) {
         suggested = Response::suggested_cache_options(cx, response);
+        if (!suggested) {
+          return false;
+        }
       }
       uint64_t ttl_ns = static_cast<uint64_t>(override_ttl.toInt32() * 1e9);
       uint64_t initial_age_ns = suggested->initial_age_ns.value();
@@ -557,6 +558,9 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     if (!override_surrogate_keys.isUndefined()) {
       if (!suggested) {
         suggested = Response::suggested_cache_options(cx, response);
+        if (!suggested) {
+          return false;
+        }
       }
       auto str_val = core::encode(cx, override_surrogate_keys);
       if (!str_val) {
@@ -627,14 +631,14 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     JS::ResolvePromise(cx, after_send_promise, JS::UndefinedHandleValue);
   }
   // when we resume, we pick up the transaction insert
-  JS::RootedValue request_val(cx, JS::ObjectValue(*request));
+  JS::RootedValue promise_val(cx, JS::ObjectValue(*promise));
   JS::RootedObject then_handler_obj(
-      cx, create_internal_method<after_send_then>(cx, response, request_val));
+      cx, create_internal_method<after_send_then>(cx, response, promise_val));
   if (!then_handler_obj) {
     return false;
   }
   JS::RootedObject catch_handler_obj(
-      cx, create_internal_method<after_send_catch>(cx, response, request_val));
+      cx, create_internal_method<after_send_catch>(cx, response, promise_val));
   if (!catch_handler_obj) {
     return false;
   }
@@ -1735,6 +1739,35 @@ std::optional<host_api::HttpCacheEntry> RequestOrResponse::cache_entry(JSObject 
   }
 
   return std::nullopt;
+}
+
+std::optional<host_api::HttpCacheEntry> RequestOrResponse::take_cache_entry(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+
+  JS::Value handle_val =
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle));
+
+  if (handle_val.isInt32()) {
+    JS::SetReservedSlot(obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
+                        JS::UndefinedValue());
+    return host_api::HttpCacheEntry(handle_val.toInt32());
+  }
+
+  return std::nullopt;
+}
+
+bool RequestOrResponse::close_if_cache_entry(JSContext *cx, HandleObject self) {
+  MOZ_ASSERT(is_instance(self));
+  auto maybe_cache_entry = RequestOrResponse::take_cache_entry(self);
+  if (!maybe_cache_entry.has_value()) {
+    return true;
+  }
+  auto res = maybe_cache_entry.value().close();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  return true;
 }
 
 bool Request::is_downstream(JSObject *obj) {
@@ -3430,24 +3463,24 @@ const JSPropertySpec Response::properties[] = {
     JS_PS_END,
 };
 
-host_api::HttpStorageAction Response::get_and_clear_storage_action(JSObject *obj) {
+std::optional<host_api::HttpStorageAction> Response::storage_action(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
   auto val = JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::StorageAction));
+  if (val.isUndefined()) {
+    return std::nullopt;
+  }
   MOZ_ASSERT(val.isInt32());
-  JS::SetReservedSlot(obj, static_cast<uint32_t>(Slots::StorageAction), JS::UndefinedValue());
   return static_cast<host_api::HttpStorageAction>(val.toInt32());
 }
 
 bool Response::isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  auto val = JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::StorageAction));
-  if (val.isUndefined()) {
+  auto action = storage_action(self);
+  if (!action.has_value()) {
     args.rval().setUndefined();
     return true;
   }
-  MOZ_ASSERT(val.isInt32());
-  auto action = static_cast<host_api::HttpStorageAction>(val.toInt32());
   args.rval().setBoolean(action == host_api::HttpStorageAction::Insert ||
                          action == host_api::HttpStorageAction::Update);
   return true;
@@ -3455,25 +3488,29 @@ bool Response::isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Response::cached_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  auto entry = RequestOrResponse::cache_entry(self);
-  if (!entry.has_value()) {
-    if (fetch::http_caching_unsupported) {
-      args.rval().setUndefined();
-    } else {
-      args.rval().setBoolean(false);
-    }
+
+  auto action = storage_action(self);
+  if (action.has_value()) {
+    args.rval().setBoolean(action == host_api::HttpStorageAction::Insert ||
+                           action == host_api::HttpStorageAction::Update);
     return true;
   }
-  args.rval().setBoolean(true);
+  args.rval().setUndefined();
   return true;
 }
 
 bool Response::isStale_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
+  auto action = storage_action(self);
+  if (!action.has_value()) {
+    args.rval().setUndefined();
+    return true;
+  }
+
   auto entry = RequestOrResponse::cache_entry(self);
   if (!entry.has_value()) {
-    args.rval().setUndefined();
+    args.rval().setBoolean(false);
     return true;
   }
 
@@ -3490,20 +3527,39 @@ bool Response::isStale_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::ttl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  auto override_opts = override_cache_options(self);
-  if (!override_opts) {
-    args.rval().setUndefined();
-    return true;
+  auto entry = RequestOrResponse::cache_entry(self);
+  // not a candidate response, already promoted -> was_cached() undefined return
+  if (!entry.has_value()) {
+    auto action = storage_action(self);
+    if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
+        action == host_api::HttpStorageAction::Update) {
+      args.rval().setUndefined();
+      return true;
+    }
   }
-  auto suggested_opts = suggested_cache_options(cx, self);
-  if (!suggested_opts) {
-    return false;
-  }
-  uint64_t max_age_ns = override_opts && override_opts->max_age_ns.has_value()
-                            ? override_opts->max_age_ns.value()
-                            : suggested_opts->max_age_ns.value();
 
-  uint64_t initial_age_ns = suggested_opts->initial_age_ns.value();
+  // both a candidate response and a promoted candidate response have override options defined
+  auto override_opts = override_cache_options(self);
+  MOZ_ASSERT(override_opts);
+
+  uint64_t max_age_ns, initial_age_ns;
+  // a promoted candidate response must define all cache options
+  if (!entry.has_value() ||
+      (override_opts->max_age_ns.has_value() && override_opts->initial_age_ns.has_value())) {
+    max_age_ns = override_opts->max_age_ns.value();
+    initial_age_ns = override_opts->initial_age_ns.value();
+  } else {
+    auto suggested_opts = suggested_cache_options(cx, self);
+    if (!suggested_opts) {
+      return false;
+    }
+    max_age_ns = suggested_opts->max_age_ns.value();
+    if (override_opts->initial_age_ns.has_value()) {
+      override_opts->initial_age_ns = suggested_opts->initial_age_ns;
+    }
+    initial_age_ns = override_opts->initial_age_ns.value();
+  }
+
   MOZ_ASSERT(max_age_ns > initial_age_ns);
   uint64_t ttl_ns = max_age_ns - initial_age_ns;
 
@@ -3514,18 +3570,33 @@ bool Response::ttl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::age_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
+  auto entry = RequestOrResponse::cache_entry(self);
+  // not a candidate response, already promoted -> was_cached() undefined return
+  if (!entry.has_value()) {
+    auto action = storage_action(self);
+    if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
+        action == host_api::HttpStorageAction::Update) {
+      args.rval().setUndefined();
+      return true;
+    }
+  }
+
+  // both a candidate response and a promoted candidate response have override options defined
   auto override_opts = override_cache_options(self);
-  if (!override_opts) {
-    args.rval().setUndefined();
-    return true;
-  }
+  MOZ_ASSERT(override_opts);
 
-  auto suggested_opts = suggested_cache_options(cx, self);
-  if (!suggested_opts) {
-    return false;
+  uint64_t initial_age_ns;
+  // a promoted candidate response must define all cache options
+  if (!entry.has_value() || override_opts->initial_age_ns.has_value()) {
+    initial_age_ns = override_opts->initial_age_ns.value();
+  } else {
+    auto suggested_opts = suggested_cache_options(cx, self);
+    if (!suggested_opts) {
+      return false;
+    }
+    initial_age_ns = suggested_opts->initial_age_ns.value();
+    override_opts->initial_age_ns = suggested_opts->initial_age_ns;
   }
-
-  uint64_t initial_age_ns = suggested_opts->initial_age_ns.value();
   args.rval().setNumber(static_cast<double>(initial_age_ns) / 1e9);
   return true;
 }
@@ -3533,20 +3604,32 @@ bool Response::age_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
+  auto entry = RequestOrResponse::cache_entry(self);
+  // not a candidate response, already promoted -> was_cached() undefined return
+  if (!entry.has_value()) {
+    auto action = storage_action(self);
+    if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
+        action == host_api::HttpStorageAction::Update) {
+      args.rval().setUndefined();
+      return true;
+    }
+  }
+
+  // both a candidate response and a promoted candidate response have override options defined
   auto override_opts = override_cache_options(self);
-  if (!override_opts) {
-    args.rval().setUndefined();
-    return true;
-  }
+  MOZ_ASSERT(override_opts);
 
-  auto suggested_opts = suggested_cache_options(cx, self);
-  if (!suggested_opts) {
-    return false;
+  uint64_t swr_ns;
+  // a promoted candidate response must define all cache options
+  if (!entry.has_value() || override_opts->stale_while_revalidate_ns.has_value()) {
+    swr_ns = override_opts->stale_while_revalidate_ns.value();
+  } else {
+    auto suggested_opts = suggested_cache_options(cx, self);
+    if (!suggested_opts) {
+      return false;
+    }
+    swr_ns = suggested_opts->stale_while_revalidate_ns.value();
   }
-
-  uint64_t swr_ns = override_opts && override_opts->stale_while_revalidate_ns.has_value()
-                        ? override_opts->stale_while_revalidate_ns.value()
-                        : suggested_opts->stale_while_revalidate_ns.value();
 
   args.rval().setNumber(static_cast<double>(swr_ns) / 1e9);
   return true;
@@ -3555,25 +3638,37 @@ bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::vary_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  auto override_opts = override_cache_options(self);
-  if (!override_opts) {
-    args.rval().setUndefined();
-    return true;
+  auto entry = RequestOrResponse::cache_entry(self);
+  // not a candidate response, already promoted -> was_cached() undefined return
+  if (!entry.has_value()) {
+    auto action = storage_action(self);
+    if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
+        action == host_api::HttpStorageAction::Update) {
+      args.rval().setUndefined();
+      return true;
+    }
   }
 
-  auto suggested_opts = suggested_cache_options(cx, self);
-  if (!suggested_opts) {
-    return false;
+  // both a candidate response and a promoted candidate response have override options defined
+  auto override_opts = override_cache_options(self);
+  MOZ_ASSERT(override_opts);
+
+  std::optional<std::string> vary_rule;
+  // a promoted candidate response must define all cache options
+  if (!entry.has_value() || override_opts->vary_rule.has_value()) {
+    vary_rule = override_opts->vary_rule;
+  } else {
+    auto suggested_opts = suggested_cache_options(cx, self);
+    if (!suggested_opts) {
+      return false;
+    }
+    vary_rule = suggested_opts->vary_rule;
   }
 
   JS::RootedObject arr(cx, JS::NewArrayObject(cx, 0));
   if (!arr) {
     return false;
   }
-
-  std::optional<std::string> vary_rule = override_opts && override_opts->vary_rule.has_value()
-                                             ? override_opts->vary_rule
-                                             : suggested_opts->vary_rule;
 
   if (!vary_rule.has_value()) {
     // Empty Array if no vary rule
@@ -3634,31 +3729,42 @@ bool Response::vary_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
+  auto entry = RequestOrResponse::cache_entry(self);
+  // not a candidate response, already promoted -> was_cached() undefined return
+  if (!entry.has_value()) {
+    auto action = storage_action(self);
+    if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
+        action == host_api::HttpStorageAction::Update) {
+      args.rval().setUndefined();
+      return true;
+    }
+  }
+
+  // both a candidate response and a promoted candidate response have override options defined
   auto override_opts = override_cache_options(self);
-  if (!override_opts) {
-    args.rval().setUndefined();
-    return true;
-  }
+  MOZ_ASSERT(override_opts);
 
-  auto suggested_opts = suggested_cache_options(cx, self);
-  if (!suggested_opts) {
-    return false;
+  const std::vector<std::string> *surrogate_keys;
+  // a promoted candidate response must define all cache options
+  if (!entry.has_value() || override_opts->surrogate_keys.has_value()) {
+    surrogate_keys = &override_opts->surrogate_keys.value();
+  } else {
+    auto suggested_opts = suggested_cache_options(cx, self);
+    if (!suggested_opts) {
+      return false;
+    }
+    surrogate_keys = &suggested_opts->surrogate_keys.value();
   }
-
-  const std::vector<std::string> &surrogate_keys =
-      override_opts && !override_opts->surrogate_keys.has_value()
-          ? override_opts->surrogate_keys.value()
-          : suggested_opts->surrogate_keys.value();
 
   // Create array with known size
-  JS::RootedObject arr(cx, JS::NewArrayObject(cx, surrogate_keys.size()));
+  JS::RootedObject arr(cx, JS::NewArrayObject(cx, surrogate_keys->size()));
   if (!arr) {
     return false;
   }
 
   // Add keys to array
-  for (size_t i = 0; i < surrogate_keys.size(); i++) {
-    const auto &key = surrogate_keys[i];
+  for (size_t i = 0; i < surrogate_keys->size(); i++) {
+    const auto &key = surrogate_keys->at(i);
     JS::RootedString str(cx, JS_NewStringCopyN(cx, key.data(), key.size()));
     if (!str) {
       return false;
@@ -3676,20 +3782,32 @@ bool Response::surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::pci_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
+  auto entry = RequestOrResponse::cache_entry(self);
+  // not a candidate response, already promoted -> was_cached() undefined return
+  if (!entry.has_value()) {
+    auto action = storage_action(self);
+    if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
+        action == host_api::HttpStorageAction::Update) {
+      args.rval().setUndefined();
+      return true;
+    }
+  }
+
+  // both a candidate response and a promoted candidate response have override options defined
   auto override_opts = override_cache_options(self);
-  if (!override_opts) {
-    args.rval().setUndefined();
-    return true;
-  }
+  MOZ_ASSERT(override_opts);
 
-  auto suggested_opts = suggested_cache_options(cx, self);
-  if (!suggested_opts) {
-    return false;
+  bool sensitive_data;
+  // a promoted candidate response must define all cache options
+  if (!entry.has_value() || override_opts->sensitive_data.has_value()) {
+    sensitive_data = override_opts->sensitive_data.value();
+  } else {
+    auto suggested_opts = suggested_cache_options(cx, self);
+    if (!suggested_opts) {
+      return false;
+    }
+    sensitive_data = suggested_opts->sensitive_data.value();
   }
-
-  bool sensitive_data = override_opts && override_opts->sensitive_data.has_value()
-                            ? override_opts->sensitive_data.value()
-                            : suggested_opts->sensitive_data.value();
 
   args.rval().setBoolean(sensitive_data);
   return true;
@@ -3701,9 +3819,16 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   auto override_opts = override_cache_options(self);
-  auto suggested_opts = override_opts ? suggested_cache_options(cx, self) : nullptr;
-  if (!override_opts || !suggested_opts) {
-    JS_ReportErrorLatin1(cx, "Cannot set TTL on non-cached response");
+  host_api::HttpCacheWriteOptions *suggested_opts = nullptr;
+  if (RequestOrResponse::cache_entry(self).has_value()) {
+    suggested_opts = suggested_cache_options(cx, self);
+    if (!suggested_opts) {
+      return false;
+    }
+  }
+  if (!suggested_opts) {
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "ttl",
+                     "be set only on unsent cache transaction responses");
     return false;
   }
 
@@ -3713,7 +3838,7 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   if (std::isnan(seconds) || seconds <= 0) {
-    api::throw_error(cx, api::Errors::TypeError, "CandidateResponse set", "ttl",
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "ttl",
                      "be a number greater than zero");
     return false;
   }
@@ -3730,14 +3855,21 @@ bool Response::swr_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   auto override_opts = override_cache_options(self);
-  if (!override_opts) {
+  if (!RequestOrResponse::cache_entry(self).has_value()) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "swr",
                      "be set only on unsent cache transaction responses");
     return false;
   }
+  MOZ_ASSERT(override_opts);
 
   double seconds;
   if (!JS::ToNumber(cx, args[0], &seconds)) {
+    return false;
+  }
+
+  if (std::isnan(seconds) || seconds <= 0) {
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "swr",
+                     "be a number greater than zero");
     return false;
   }
 
@@ -3751,11 +3883,12 @@ bool Response::vary_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   auto override_opts = override_cache_options(self);
-  if (!override_opts) {
+  if (!RequestOrResponse::cache_entry(self).has_value()) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "vary",
                      "be set only on unsent cache transaction responses");
     return false;
   }
+  MOZ_ASSERT(override_opts);
 
   JS::RootedObject arr_obj(cx);
   bool is_array = false;
@@ -3808,11 +3941,12 @@ bool Response::surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   auto override_opts = override_cache_options(self);
-  if (!override_opts) {
+  if (!RequestOrResponse::cache_entry(self).has_value()) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "surrogateKeys",
                      "be set only on unsent cache transaction responses");
     return false;
   }
+  MOZ_ASSERT(override_opts);
 
   if (!args[0].isObject()) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "surrogateKeys", "be an Array");
@@ -3867,13 +4001,19 @@ bool Response::pci_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   auto override_opts = override_cache_options(self);
-  if (!override_opts) {
+  if (!RequestOrResponse::cache_entry(self).has_value()) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "pci",
                      "be set only on unsent cache transaction responses");
     return false;
   }
+  MOZ_ASSERT(override_opts);
 
-  override_opts->sensitive_data = JS::ToBoolean(args[0]);
+  if (!args[0].isBoolean()) {
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "pci", "be a boolean");
+    return false;
+  }
+
+  override_opts->sensitive_data = args[0].toBoolean();
 
   args.rval().setUndefined();
   return true;
@@ -4095,16 +4235,12 @@ bool Response::init_class(JSContext *cx, JS::HandleObject global) {
          (type_error_atom = JS_AtomizeAndPinString(cx, "error"));
 }
 
-host_api::HttpCacheWriteOptions *Response::override_cache_options(JSObject *response, bool clear) {
+host_api::HttpCacheWriteOptions *Response::override_cache_options(JSObject *response) {
   MOZ_ASSERT(is_instance(response));
   auto cache_options = reinterpret_cast<host_api::HttpCacheWriteOptions *>(
       JS::GetReservedSlot(response,
                           static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions))
           .toPrivate());
-  if (clear) {
-    JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
-                        JS::PrivateValue(nullptr));
-  }
   return cache_options;
 }
 
@@ -4113,6 +4249,9 @@ host_api::HttpCacheWriteOptions *Response::override_cache_options(JSObject *resp
  * Slots::SuggestedCacheWriteOptions.
  *
  * Suggested cache options will have ALL values set for HttpCacheWriteOptions (no optionals).
+ *
+ * This function should not be used when the response is closed, as it will panic, instead
+ *
  */
 host_api::HttpCacheWriteOptions *Response::suggested_cache_options(JSContext *cx,
                                                                    HandleObject response) {

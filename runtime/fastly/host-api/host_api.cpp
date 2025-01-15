@@ -2140,7 +2140,6 @@ Result<HttpReq> HttpCacheEntry::get_suggested_backend_request() const {
 Result<HttpCacheWriteOptions *>
 HttpCacheEntry::get_suggested_cache_options(const HttpResp &resp) const {
   TRACE_CALL()
-
   const uint32_t options_mask = FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_VARY_RULE |
                                 FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS |
                                 FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS |
@@ -2169,7 +2168,6 @@ HttpCacheEntry::get_suggested_cache_options(const HttpResp &resp) const {
 
   auto res = fastly::http_cache_get_suggested_cache_options(
       this->handle, resp.handle, options_mask, &options_in, &options_mask_out, &options_out);
-
   if (res != 0) {
     cabi_free(vary_buffer);
     cabi_free(surrogate_buffer);

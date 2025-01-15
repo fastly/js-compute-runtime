@@ -1,5 +1,5 @@
 /* eslint-env serviceworker */
-import { strictEqual, assertRejects } from './assertions.js';
+import { strictEqual, deepStrictEqual, assertRejects } from './assertions.js';
 import { routes } from './routes.js';
 import { CacheOverride } from 'fastly:cache-override';
 import { Backend } from 'fastly:backend';
@@ -77,28 +77,135 @@ const httpBinBackend = () =>
     );
   });
 
-  // Test invalid transform stream
-  routes.set('/http-cache/invalid-transform', async () => {
+  // Test invalid property assignments
+  routes.set('/http-cache/property-errors', async () => {
     const url = getTestUrl();
 
+    // Test invalid swr assignment
     await assertRejects(
       () =>
         fetch(url, {
           cacheOverride: new CacheOverride({
-            afterSend() {
-              return {
-                bodyTransform: 'not a transform stream',
-              };
+            afterSend(res) {
+              res.swr = 'invalid';
+            },
+          }),
+        }),
+      TypeError,
+    );
+
+    // Test invalid vary assignment
+    await assertRejects(
+      () =>
+        fetch(url, {
+          cacheOverride: new CacheOverride({
+            afterSend(res) {
+              res.vary = new Set(['not-an-array']);
+            },
+          }),
+        }),
+      TypeError,
+    );
+
+    // Test invalid surrogateKeys assignment
+    await assertRejects(
+      () =>
+        fetch(url, {
+          cacheOverride: new CacheOverride({
+            afterSend(res) {
+              res.surrogateKeys = new Set(['not-an-array']);
+            },
+          }),
+        }),
+      TypeError,
+    );
+
+    // Test invalid pci assignment
+    await assertRejects(
+      () =>
+        fetch(url, {
+          cacheOverride: new CacheOverride({
+            afterSend(res) {
+              res.pci = 'invalid';
+            },
+          }),
+        }),
+      TypeError,
+    );
+
+    // Test invalid Set contents for vary
+    await assertRejects(
+      () =>
+        fetch(url, {
+          cacheOverride: new CacheOverride({
+            afterSend(res) {
+              res.vary = [1, 2, 3]; // Should only accept strings
+            },
+          }),
+        }),
+      TypeError,
+    );
+
+    // Test invalid Set contents for surrogateKeys
+    await assertRejects(
+      () =>
+        fetch(url, {
+          cacheOverride: new CacheOverride({
+            afterSend(res) {
+              res.surrogateKeys = [1, 2, 3]; // Should only accept strings
             },
           }),
         }),
       TypeError,
     );
   });
-}
 
-// Test suite: Response Property Coverage
-{
+  // Test property access on invalid states
+  routes.set('/http-cache/candidate-response-properties', async () => {
+    const url = getTestUrl();
+
+    // Test accessing cache properties on non-cached response
+    {
+      let candidateRes;
+      const cacheOverride = new CacheOverride({
+        afterSend(res) {
+          candidateRes = res;
+          return { cache: false };
+        },
+      });
+
+      await fetch(url, { cacheOverride });
+      strictEqual(candidateRes.cached, false);
+
+      strictEqual(candidateRes.isStale, false);
+      strictEqual(candidateRes.ttl, 3600);
+      strictEqual(candidateRes.age, 0);
+      deepStrictEqual(candidateRes.vary, []);
+      strictEqual(candidateRes.surrogateKeys.length, 1);
+      strictEqual(typeof candidateRes.surrogateKeys[0], 'string');
+      strictEqual(candidateRes.surrogateKeys[0].length > 10, true);
+    }
+
+    // Test accessing cache properties on non-cached candidate response
+    {
+      const cacheOverride = new CacheOverride({
+        afterSend(candidateRes) {
+          strictEqual(candidateRes.cached, false);
+          strictEqual(candidateRes.isStale, false);
+          strictEqual(candidateRes.ttl, 3600);
+          strictEqual(candidateRes.age, 0);
+          deepStrictEqual(candidateRes.vary, []]);
+          strictEqual(candidateRes.surrogateKeys.length, 1);
+          strictEqual(typeof candidateRes.surrogateKeys[0], 'string');
+          strictEqual(candidateRes.surrogateKeys[0].length > 10, true);
+          return { cache: false };
+        },
+      });
+
+      await fetch(url, { cacheOverride });      
+    }
+  });
+
   // Test readonly properties
   routes.set('/http-cache/readonly-properties', async () => {
     const url = getTestUrl();
@@ -141,114 +248,6 @@ const httpBinBackend = () =>
     assertRejects(() => {
       res2.backend = null;
     }, TypeError);
-  });
-}
-
-// Test suite: Property Error Handling
-{
-  // Test invalid property assignments
-  routes.set('/http-cache/property-errors', async () => {
-    const url = getTestUrl();
-
-    // Test invalid swr assignment
-    await assertRejects(
-      () =>
-        fetch(url, {
-          cacheOverride: new CacheOverride({
-            afterSend(res) {
-              res.swr = 'invalid';
-            },
-          }),
-        }),
-      TypeError,
-    );
-
-    // Test invalid vary assignment
-    await assertRejects(
-      () =>
-        fetch(url, {
-          cacheOverride: new CacheOverride({
-            afterSend(res) {
-              res.vary = ['not-a-set'];
-            },
-          }),
-        }),
-      TypeError,
-    );
-
-    // Test invalid surrogateKeys assignment
-    await assertRejects(
-      () =>
-        fetch(url, {
-          cacheOverride: new CacheOverride({
-            afterSend(res) {
-              res.surrogateKeys = ['not-a-set'];
-            },
-          }),
-        }),
-      TypeError,
-    );
-
-    // Test invalid pci assignment
-    await assertRejects(
-      () =>
-        fetch(url, {
-          cacheOverride: new CacheOverride({
-            afterSend(res) {
-              res.pci = 'invalid';
-            },
-          }),
-        }),
-      TypeError,
-    );
-
-    // Test invalid Set contents for vary
-    await assertRejects(
-      () =>
-        fetch(url, {
-          cacheOverride: new CacheOverride({
-            afterSend(res) {
-              res.vary = new Set([1, 2, 3]); // Should only accept strings
-            },
-          }),
-        }),
-      TypeError,
-    );
-
-    // Test invalid Set contents for surrogateKeys
-    await assertRejects(
-      () =>
-        fetch(url, {
-          cacheOverride: new CacheOverride({
-            afterSend(res) {
-              res.surrogateKeys = new Set([1, 2, 3]); // Should only accept strings
-            },
-          }),
-        }),
-      TypeError,
-    );
-  });
-
-  // Test property access on invalid states
-  routes.set('/http-cache/property-access-errors', async () => {
-    const url = getTestUrl();
-
-    // Test accessing cache properties on non-cached response
-    const cacheOverride = new CacheOverride({
-      afterSend(res) {
-        return { cache: false };
-      },
-    });
-
-    const res = await fetch(url, { cacheOverride });
-    strictEqual(res.cached, false);
-
-    // These should all be undefined for non-cached responses
-    strictEqual(res.isStale, undefined);
-    strictEqual(res.ttl, undefined);
-    strictEqual(res.age, undefined);
-    strictEqual(res.vary, undefined);
-    strictEqual(res.surrogateKeys, undefined);
   });
 }
 
@@ -458,6 +457,25 @@ const httpBinBackend = () =>
 
 // Test suite: Body transform
 {
+  // Test invalid transform stream
+  routes.set('/http-cache/invalid-transform', async () => {
+    const url = getTestUrl();
+
+    await assertRejects(
+      () =>
+        fetch(url, {
+          cacheOverride: new CacheOverride({
+            afterSend() {
+              return {
+                bodyTransform: 'not a transform stream',
+              };
+            },
+          }),
+        }),
+      TypeError,
+    );
+  });
+
   routes.set('/http-cache/body-transform', async () => {
     const url = getTestUrl();
 

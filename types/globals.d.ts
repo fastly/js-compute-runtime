@@ -1268,7 +1268,7 @@ interface Request extends Body {
   /** Returns the URL of request as a string. */
   readonly url: string;
 
-  // /** Creates a copy of the current Request object. */
+  /** Creates a copy of the current Request object. */
   clone(): Request;
 
   /**

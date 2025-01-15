@@ -155,16 +155,13 @@
   "GET /http-cache/invalid-properties": {
     "environments": ["compute"]
   },
-  "GET /http-cache/invalid-transform": {
-    "environments": ["compute"]
-  },
   "GET /http-cache/readonly-properties": {
     "environments": ["compute"]
   },
   "GET /http-cache/property-errors": {
     "environments": ["compute"]
   },
-  "GET /http-cache/property-access-errors": {
+  "GET /http-cache/candidate-response-properties": {
     "environments": ["compute"]
   },
   "GET /http-cache/after-send-edge-cache": {
@@ -189,6 +186,9 @@
     "environments": ["compute"]
   },
   "GET /http-cache/stale-responses": {
+    "environments": ["compute"]
+  },
+  "GET /http-cache/invalid-transform": {
     "environments": ["compute"]
   },
   "GET /http-cache/body-transform": {
