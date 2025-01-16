@@ -189,44 +189,12 @@ ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
   return {std::move(buf), bytes_read};
 }
 
-/**
- * Headers behave differently, since we have no event on header changes, and instead we
- * check the generation integer on the headers object for changes.
- *
- * This function will check if the gen on the response headers matches what we last recorded,
- * returning true if it does (meaning no header changes), or false otherwise. When headers don't
- * match it will update the internal tracking generation so that next time this function is called
- * it will return true.
- */
-bool check_or_bump_suggested_cache_options_gen(JSContext *cx, HandleObject response) {
-  MOZ_ASSERT(Response::is_instance(response));
-  JSObject *headers = RequestOrResponse::maybe_headers(response);
-  // if we haven't observed the headers yet then they cant have been changed
-  if (!headers) {
-    return true;
-  }
-  uint32_t headers_gen = Headers::get_generation(headers);
-  // generation overflow implies always-invalidate
-  if (headers_gen == INT32_MAX) {
-    return false;
-  }
-  RootedValue last_headers_gen(
-      cx,
-      JS::GetReservedSlot(
-          response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptionsHeadersGen)));
-  if (last_headers_gen.isUndefined() || last_headers_gen.toInt32() != headers_gen) {
-    JS::SetReservedSlot(
-        response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptionsHeadersGen),
-        JS::Int32Value(headers_gen));
-    return false;
-  }
-  return true;
-}
-
 } // namespace
 
 bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
-                                        JS::HandleObject request, const char *fun_name) {
+                                        JS::HandleObject request,
+                                        std::optional<host_api::HttpCacheEntry> cache_entry,
+                                        const char *fun_name) {
   MOZ_ASSERT(Response::is_instance(self));
   // Get response headers object
   RootedObject headers(cx, Response::headers(cx, self));
@@ -238,8 +206,7 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
   // Get cache handle and hits
   RootedValue res(cx);
   bool found = false;
-  auto cache_entry = RequestOrResponse::cache_entry(request);
-  if (cache_entry) {
+  if (cache_entry.has_value()) {
     auto state_res = cache_entry->get_state();
     if (auto *err = state_res.to_err()) {
       HANDLE_ERROR(cx, *err);
@@ -473,6 +440,17 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   if (!maybe_cache_entry) {
     DEBUG_LOG("Non HTTP cache request, returning")
     JS::RootedObject response(cx, Response::create(cx, request, res));
+
+    // For a request made without caching (via the Request cache handle false convention), we must
+    // add fastly headers to the Response
+    auto maybe_not_cached = JS::GetReservedSlot(request, static_cast<uint32_t>(Slots::CacheHandle));
+    if (maybe_not_cached.isBoolean() && maybe_not_cached.toBoolean() == false) {
+      if (!Response::add_fastly_cache_headers(cx, response, request, std::nullopt,
+                                              "cached response")) {
+        return false;
+      }
+    }
+
     JS::RootedValue response_val(cx, JS::ObjectValue(*response));
     return JS::ResolvePromise(cx, promise, response_val);
   }
@@ -952,11 +930,16 @@ JSObject *Response::headers(JSContext *cx, JS::HandleObject obj) {
 bool Request::isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
+  // before we can check isCacheable, we must flush the headers to the host handle
+  // this operation is cache tracked through the HeadersGen slot
+  if (!RequestOrResponse::commit_headers(cx, self)) {
+    return false;
+  }
   auto handle = request_handle(self);
   auto res = handle.is_cacheable();
   if (auto *err = res.to_err()) {
     if (host_api::error_is_unsupported(*err)) {
-      args.rval().setBoolean(false);
+      args.rval().setUndefined();
       return true;
     }
     HANDLE_ERROR(cx, *err);
@@ -980,6 +963,13 @@ bool RequestOrResponse::commit_headers(JSContext *cx, HandleObject self) {
       Headers::mode(headers) == Headers::Mode::CachedInContent) {
     return true;
   }
+  bool headers_changed;
+  if (!compare_bump_headers_gen(cx, self, &headers_changed)) {
+    return false;
+  }
+  if (!headers_changed) {
+    return true;
+  }
   MOZ_ASSERT(Headers::mode(headers) == Headers::Mode::ContentOnly);
   Headers::HeadersList *list = Headers::get_list(cx, headers);
   MOZ_ASSERT(list);
@@ -999,6 +989,30 @@ bool RequestOrResponse::commit_headers(JSContext *cx, HandleObject self) {
     return false;
   }
   return true;
+}
+
+bool RequestOrResponse::compare_bump_headers_gen(JSContext *cx, HandleObject self,
+                                                 bool *changed_out) {
+  RootedValue last_headers_gen(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Response::Slots::HeadersGen)));
+  JS::RootedObject headers(cx, RequestOrResponse::maybe_headers(self));
+  if (!headers) {
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::HeadersGen), JS::NullValue());
+    *changed_out = last_headers_gen.isUndefined();
+    return true;
+  }
+  uint32_t headers_gen = Headers::get_generation(headers);
+  // generation overflow implies always-invalidate
+  if (headers_gen == INT32_MAX || last_headers_gen.isUndefined() || last_headers_gen.isNull() ||
+      last_headers_gen.toInt32() != headers_gen) {
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Response::Slots::HeadersGen),
+                        JS::Int32Value(headers_gen));
+    *changed_out = true;
+    return true;
+  } else {
+    *changed_out = false;
+    return false;
+  }
 }
 
 template <RequestOrResponse::BodyReadResult result_type>
@@ -1739,15 +1753,18 @@ std::optional<host_api::HttpCacheEntry> RequestOrResponse::cache_entry(JSObject 
   return std::nullopt;
 }
 
-std::optional<host_api::HttpCacheEntry> RequestOrResponse::take_cache_entry(JSObject *obj) {
+std::optional<host_api::HttpCacheEntry>
+RequestOrResponse::take_cache_entry(JSObject *obj, std::optional<bool> mark_cached) {
   MOZ_ASSERT(is_instance(obj));
 
   JS::Value handle_val =
       JS::GetReservedSlot(obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle));
 
+  JS::SetReservedSlot(obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
+                      mark_cached.has_value() ? JS::BooleanValue(mark_cached.value())
+                                              : JS::UndefinedValue());
+
   if (handle_val.isInt32()) {
-    JS::SetReservedSlot(obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
-                        JS::UndefinedValue());
     return host_api::HttpCacheEntry(handle_val.toInt32());
   }
 
@@ -1756,7 +1773,7 @@ std::optional<host_api::HttpCacheEntry> RequestOrResponse::take_cache_entry(JSOb
 
 bool RequestOrResponse::close_if_cache_entry(JSContext *cx, HandleObject self) {
   MOZ_ASSERT(is_instance(self));
-  auto maybe_cache_entry = RequestOrResponse::take_cache_entry(self);
+  auto maybe_cache_entry = RequestOrResponse::take_cache_entry(self, std::nullopt);
   if (!maybe_cache_entry.has_value()) {
     return true;
   }
@@ -3448,7 +3465,6 @@ const JSPropertySpec Response::properties[] = {
     JS_PSG("ip", ip_get, JSPROP_ENUMERATE),
     JS_PSG("port", port_get, JSPROP_ENUMERATE),
     JS_PSG("backend", backend_get, JSPROP_ENUMERATE),
-    JS_PSG("isCacheable", isCacheable_get, JSPROP_ENUMERATE),
     JS_PSG("cached", cached_get, JSPROP_ENUMERATE),
     JS_PSG("isStale", isStale_get, JSPROP_ENUMERATE),
     JS_PSGS("ttl", ttl_get, ttl_set, JSPROP_ENUMERATE),
@@ -3471,44 +3487,38 @@ std::optional<host_api::HttpStorageAction> Response::storage_action(JSObject *ob
   return static_cast<host_api::HttpStorageAction>(val.toInt32());
 }
 
-bool Response::isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(0)
-
-  auto action = storage_action(self);
-  if (!action.has_value()) {
-    args.rval().setUndefined();
-    return true;
-  }
-  args.rval().setBoolean(action == host_api::HttpStorageAction::Insert ||
-                         action == host_api::HttpStorageAction::Update);
-  return true;
-}
-
 bool Response::cached_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  auto action = storage_action(self);
-  if (action.has_value()) {
-    args.rval().setBoolean(action == host_api::HttpStorageAction::Insert ||
-                           action == host_api::HttpStorageAction::Update);
+  JS::Value cache_entry =
+      JS::GetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle));
+
+  // Candidate Response -> not cached, since it just came from an origin update
+  if (cache_entry.isInt32()) {
+    args.rval().setBoolean(false);
     return true;
   }
+
+  // Actual Response -> cached if we have hits, which marked by slot-saving convention,
+  // Slots::CacheEntry slot = true and false for miss
+  if (cache_entry.isBoolean() && cache_entry.toBoolean()) {
+    args.rval().setBoolean(cache_entry.toBoolean());
+    return true;
+  }
+
+  // Otherwise no info / cache stuff disabled -> undefined
   args.rval().setUndefined();
   return true;
 }
 
+// TODO: extend isStale to non-Candidate Responses?
 bool Response::isStale_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  auto action = storage_action(self);
-  if (!action.has_value()) {
-    args.rval().setUndefined();
-    return true;
-  }
-
   auto entry = RequestOrResponse::cache_entry(self);
+  // isStale is only available on CandidateResponse
   if (!entry.has_value()) {
-    args.rval().setBoolean(false);
+    args.rval().setUndefined();
     return true;
   }
 
@@ -3526,19 +3536,14 @@ bool Response::ttl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
-  // a candidate response, was_cached() -> undefined return
-  if (entry.has_value()) {
-    auto action = storage_action(self);
-    if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
-        action == host_api::HttpStorageAction::Update) {
-      args.rval().setUndefined();
-      return true;
-    }
-  }
 
-  // both a candidate response and a promoted candidate response have override options defined
+  // all caching paths should set the override options as the final options
+  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
   auto override_opts = override_cache_options(self);
-  MOZ_ASSERT(override_opts);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
 
   uint64_t max_age_ns, initial_age_ns;
   // a promoted candidate response must define all cache options
@@ -3569,19 +3574,14 @@ bool Response::age_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
-  // a candidate response, was_cached() -> undefined return
-  if (entry.has_value()) {
-    auto action = storage_action(self);
-    if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
-        action == host_api::HttpStorageAction::Update) {
-      args.rval().setUndefined();
-      return true;
-    }
-  }
 
-  // both a candidate response and a promoted candidate response have override options defined
+  // all caching paths should set the override options as the final options
+  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
   auto override_opts = override_cache_options(self);
-  MOZ_ASSERT(override_opts);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
 
   uint64_t initial_age_ns;
   // a promoted candidate response must define all cache options
@@ -3603,19 +3603,14 @@ bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
-  // a candidate response, was_cached() -> undefined return
-  if (entry.has_value()) {
-    auto action = storage_action(self);
-    if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
-        action == host_api::HttpStorageAction::Update) {
-      args.rval().setUndefined();
-      return true;
-    }
-  }
 
-  // both a candidate response and a promoted candidate response have override options defined
+  // all caching paths should set the override options as the final options
+  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
   auto override_opts = override_cache_options(self);
-  MOZ_ASSERT(override_opts);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
 
   uint64_t swr_ns;
   // a promoted candidate response must define all cache options
@@ -3637,19 +3632,14 @@ bool Response::vary_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
-  // a candidate response, was_cached() undefined return
-  if (entry.has_value()) {
-    auto action = storage_action(self);
-    if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
-        action == host_api::HttpStorageAction::Update) {
-      args.rval().setUndefined();
-      return true;
-    }
-  }
 
-  // both a candidate response and a promoted candidate response have override options defined
+  // all caching paths should set the override options as the final options
+  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
   auto override_opts = override_cache_options(self);
-  MOZ_ASSERT(override_opts);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
 
   std::optional<std::string> vary_rule;
   // a promoted candidate response must define all cache options
@@ -3728,19 +3718,14 @@ bool Response::surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
-  // a candidate response, was_cached() -> undefined return
-  if (entry.has_value()) {
-    auto action = storage_action(self);
-    if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
-        action == host_api::HttpStorageAction::Update) {
-      args.rval().setUndefined();
-      return true;
-    }
-  }
 
-  // both a candidate response and a promoted candidate response have override options defined
+  // all caching paths should set the override options as the final options
+  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
   auto override_opts = override_cache_options(self);
-  MOZ_ASSERT(override_opts);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
 
   const std::vector<std::string> *surrogate_keys;
   // a promoted candidate response must define all cache options
@@ -3781,19 +3766,14 @@ bool Response::pci_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
-  // a candidate response, was_cached() -> undefined return
-  if (entry.has_value()) {
-    auto action = storage_action(self);
-    if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
-        action == host_api::HttpStorageAction::Update) {
-      args.rval().setUndefined();
-      return true;
-    }
-  }
 
-  // both a candidate response and a promoted candidate response have override options defined
+  // all caching paths should set the override options as the final options
+  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
   auto override_opts = override_cache_options(self);
-  MOZ_ASSERT(override_opts);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
 
   bool sensitive_data;
   // a promoted candidate response must define all cache options
@@ -4244,21 +4224,26 @@ host_api::HttpCacheWriteOptions *Response::override_cache_options(JSObject *resp
 }
 
 /**
- * Get suggested HTTP cache write options, lazily computed and cached on
+ * Get suggested HTTP cache write options for this CandidateResponse, lazily computed and cached on
  * Slots::SuggestedCacheWriteOptions.
  *
  * Suggested cache options will have ALL values set for HttpCacheWriteOptions (no optionals).
  *
  * This function should not be used when the response is closed, as it will panic, instead
- *
  */
 host_api::HttpCacheWriteOptions *Response::suggested_cache_options(JSContext *cx,
                                                                    HandleObject response) {
   MOZ_ASSERT(is_instance(response));
   auto existing = JS::GetReservedSlot(
       response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptions));
-  if (!existing.isUndefined() && check_or_bump_suggested_cache_options_gen(cx, response)) {
-    return reinterpret_cast<host_api::HttpCacheWriteOptions *>(existing.toPrivate());
+  if (!existing.isUndefined()) {
+    bool changed;
+    if (!RequestOrResponse::compare_bump_headers_gen(cx, response, &changed)) {
+      return nullptr;
+    }
+    if (!changed) {
+      return reinterpret_cast<host_api::HttpCacheWriteOptions *>(existing.toPrivate());
+    }
   }
   host_api::HttpCacheEntry cache_entry = RequestOrResponse::cache_entry(response).value();
   auto suggested_cache_options_res =
@@ -4338,8 +4323,7 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                       JS::UndefinedValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::SuggestedCacheWriteOptions),
                       JS::UndefinedValue());
-  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::SuggestedCacheWriteOptionsHeadersGen),
-                      JS::UndefinedValue());
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::HeadersGen), JS::UndefinedValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::OverrideCacheWriteOptions),
                       JS::PrivateValue(nullptr));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::CacheBodyTransform),
