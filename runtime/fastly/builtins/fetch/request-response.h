@@ -16,6 +16,7 @@ public:
     HasBody,
     BodyUsed,
     Headers,
+    HeadersGen,
     URL,
     ManualFramingHeaders,
     Backend,
@@ -51,6 +52,13 @@ public:
    * object and commits the headers map values.
    */
   static bool commit_headers(JSContext *cx, JS::HandleObject self);
+
+  /**
+   * Compare the HeadersGen slot with the current headers generation, returning true if the headers
+   * have changed and false otherwise, storing the new generation into the slot.
+   * If the headers are undefined, the generation is tracked as null, still supporting comparison.
+   */
+  static bool compare_bump_headers_gen(JSContext *cx, JS::HandleObject self, bool *changed_out);
 
   static bool append_body(JSContext *cx, JS::HandleObject self, JS::HandleObject source);
 
@@ -107,15 +115,20 @@ public:
 
   /**
    * Helper method to get (and possibly unset) the cache entry for a request or response (if any)
+   *
+   * A Response with a cache entry is a valid CandidateResponse.
    */
   static std::optional<host_api::HttpCacheEntry> cache_entry(JSObject *obj);
   /**
-   * Helper method to get and unset the cache entry for a request or response (if any)
+   * Helper method to get and unset the transaction cache entry for a request or response (if any)
    *
    * Unsetting the cache entry on a Response object freezes the CandidateResponse from further
    * modification.
+   *
+   * A boolean overload for the cache entry disabled case is used to mark if we were cached or not.
    */
-  static std::optional<host_api::HttpCacheEntry> take_cache_entry(JSObject *obj);
+  static std::optional<host_api::HttpCacheEntry> take_cache_entry(JSObject *obj,
+                                                                  std::optional<bool> mark_cached);
   /**
    * Close the cache entry and clear it from the Response, effectively locking this
    * candidate response object.
@@ -152,6 +165,7 @@ public:
     HasBody = static_cast<int>(RequestOrResponse::Slots::HasBody),
     BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
+    HeadersGen = static_cast<int>(RequestOrResponse::Slots::HeadersGen),
     URL = static_cast<int>(RequestOrResponse::Slots::URL),
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
@@ -234,6 +248,7 @@ public:
     HasBody = static_cast<int>(RequestOrResponse::Slots::HasBody),
     BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
+    HeadersGen = static_cast<int>(RequestOrResponse::Slots::HeadersGen),
     URL = static_cast<int>(RequestOrResponse::Slots::Headers),
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
@@ -245,7 +260,6 @@ public:
     CacheEntry,
     StorageAction,
     SuggestedCacheWriteOptions,
-    SuggestedCacheWriteOptionsHeadersGen,
     OverrideCacheWriteOptions,
     CacheBodyTransform,
     Count,
@@ -293,7 +307,9 @@ public:
   static void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code);
 
   static bool add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
-                                       JS::HandleObject request, const char *fun_name);
+                                       JS::HandleObject request,
+                                       std::optional<host_api::HttpCacheEntry> cache_entry,
+                                       const char *fun_name);
 
   /**
    * Override cache options set by the user, and cache override.

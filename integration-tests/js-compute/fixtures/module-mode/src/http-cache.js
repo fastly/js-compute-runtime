@@ -176,7 +176,7 @@ const httpBinBackend = () =>
       await fetch(url, { cacheOverride });
       strictEqual(candidateRes.cached, false);
 
-      strictEqual(candidateRes.isStale, false);
+      strictEqual(candidateRes.isStale, undefined);
       strictEqual(candidateRes.ttl, 3600);
       strictEqual(candidateRes.age, 0);
       deepStrictEqual(candidateRes.vary, []);
@@ -189,7 +189,7 @@ const httpBinBackend = () =>
     {
       const cacheOverride = new CacheOverride({
         afterSend(candidateRes) {
-          strictEqual(candidateRes.cached, false);
+          strictEqual(candidateRes.cached, undefined);
           strictEqual(candidateRes.isStale, false);
           strictEqual(candidateRes.ttl, 3600);
           strictEqual(candidateRes.age, 0);
