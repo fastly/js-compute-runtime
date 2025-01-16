@@ -160,8 +160,7 @@ const httpBinBackend = () =>
     );
   });
 
-  // Test property access on invalid states
-  routes.set('/http-cache/candidate-response-properties', async () => {
+  routes.set('/http-cache/candidate-response-properties-uncached', async () => {
     const url = getTestUrl();
 
     // Test accessing cache properties on non-cached response
@@ -194,7 +193,7 @@ const httpBinBackend = () =>
           strictEqual(candidateRes.isStale, false);
           strictEqual(candidateRes.ttl, 3600);
           strictEqual(candidateRes.age, 0);
-          deepStrictEqual(candidateRes.vary, []]);
+          deepStrictEqual(candidateRes.vary, []);
           strictEqual(candidateRes.surrogateKeys.length, 1);
           strictEqual(typeof candidateRes.surrogateKeys[0], 'string');
           strictEqual(candidateRes.surrogateKeys[0].length > 10, true);
@@ -202,7 +201,52 @@ const httpBinBackend = () =>
         },
       });
 
-      await fetch(url, { cacheOverride });      
+      await fetch(url, { cacheOverride });
+    }
+  });
+
+  routes.set('/http-cache/candidate-response-properties-cached', async () => {
+    const url = getTestUrl();
+
+    // TODO
+    {
+      let candidateRes;
+      const cacheOverride = new CacheOverride({
+        afterSend(res) {
+          candidateRes = res;
+          return { cache: false };
+        },
+      });
+
+      await fetch(url, { cacheOverride });
+      strictEqual(candidateRes.cached, false);
+
+      strictEqual(candidateRes.isStale, false);
+      strictEqual(candidateRes.ttl, 3600);
+      strictEqual(candidateRes.age, 0);
+      deepStrictEqual(candidateRes.vary, []);
+      strictEqual(candidateRes.surrogateKeys.length, 1);
+      strictEqual(typeof candidateRes.surrogateKeys[0], 'string');
+      strictEqual(candidateRes.surrogateKeys[0].length > 10, true);
+    }
+
+    // Test accessing cache properties on non-cached candidate response
+    {
+      const cacheOverride = new CacheOverride({
+        afterSend(candidateRes) {
+          strictEqual(candidateRes.cached, false);
+          strictEqual(candidateRes.isStale, false);
+          strictEqual(candidateRes.ttl, 3600);
+          strictEqual(candidateRes.age, 0);
+          deepStrictEqual(candidateRes.vary, []);
+          strictEqual(candidateRes.surrogateKeys.length, 1);
+          strictEqual(typeof candidateRes.surrogateKeys[0], 'string');
+          strictEqual(candidateRes.surrogateKeys[0].length > 10, true);
+          return { cache: false };
+        },
+      });
+
+      await fetch(url, { cacheOverride });
     }
   });
 
