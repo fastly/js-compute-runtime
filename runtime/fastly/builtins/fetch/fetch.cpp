@@ -502,15 +502,20 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   case host_api::HttpStorageAction::Insert: {
     auto insert_res = cache_entry.transaction_insert_and_stream_back(
         Response::response_handle(response_obj), cache_write_options);
+    DEBUG_LOG("stream back transaction insert")
     if (auto *err = insert_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
     }
+    DEBUG_LOG("stream back transaction insert unwrap")
     auto [body, cache_entry] = insert_res.unwrap();
+    DEBUG_LOG("stream back transaction insert unwrapped")
 
     // TODO: body stream handling
     // Stream origin response body insto the insert body
+    DEBUG_LOG("stream back transaction insert append")
     auto append_res = body.append(RequestOrResponse::body_handle(response_obj));
+    DEBUG_LOG("stream back transaction insert appended")
 
     if (auto *err = append_res.to_err()) {
       HANDLE_ERROR(cx, *err);
@@ -521,8 +526,10 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
       args.rval().setObject(*promise);
       return true;
     }
+    DEBUG_LOG("stream back transaction insert append no error")
 
     auto found_res = cache_entry.get_found_response(false);
+    DEBUG_LOG("stream back transaction insert got found response")
     if (auto *err = found_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       JSObject *promise = PromiseRejectedWithPendingError(cx);
@@ -532,8 +539,11 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
       args.rval().setObject(*promise);
       return true;
     }
+    DEBUG_LOG("stream back transaction insert got found response no error")
 
     auto found = found_res.unwrap().value();
+
+    DEBUG_LOG("stream back transaction insert got found response unwrap")
 
     // update response to be the new response, effectively disposing the candidate response
     response_obj.set(Response::create(cx, request, found));
@@ -547,6 +557,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     if (!JS::ResolvePromise(cx, response_promise, response_val)) {
       return false;
     }
+    DEBUG_LOG("stream back transaction insert all done")
     break;
   }
   case host_api::HttpStorageAction::Update: {

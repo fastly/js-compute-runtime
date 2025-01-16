@@ -511,9 +511,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     suggested_storage_action = host_api::HttpStorageAction::RecordUncacheable;
   }
 
-  host_api::HttpCacheWriteOptions *override_cache_options =
-      reinterpret_cast<host_api::HttpCacheWriteOptions *>(
-          cabi_malloc(sizeof(host_api::HttpCacheWriteOptions), 4));
+  host_api::HttpCacheWriteOptions *override_cache_options = new host_api::HttpCacheWriteOptions();
 
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::StorageAction),
                       JS::Int32Value(static_cast<uint32_t>(suggested_storage_action)));
@@ -3528,8 +3526,8 @@ bool Response::ttl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
-  // not a candidate response, already promoted -> was_cached() undefined return
-  if (!entry.has_value()) {
+  // a candidate response, was_cached() -> undefined return
+  if (entry.has_value()) {
     auto action = storage_action(self);
     if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
         action == host_api::HttpStorageAction::Update) {
@@ -3571,8 +3569,8 @@ bool Response::age_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
-  // not a candidate response, already promoted -> was_cached() undefined return
-  if (!entry.has_value()) {
+  // a candidate response, was_cached() -> undefined return
+  if (entry.has_value()) {
     auto action = storage_action(self);
     if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
         action == host_api::HttpStorageAction::Update) {
@@ -3605,8 +3603,8 @@ bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
-  // not a candidate response, already promoted -> was_cached() undefined return
-  if (!entry.has_value()) {
+  // a candidate response, was_cached() -> undefined return
+  if (entry.has_value()) {
     auto action = storage_action(self);
     if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
         action == host_api::HttpStorageAction::Update) {
@@ -3639,8 +3637,8 @@ bool Response::vary_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
-  // not a candidate response, already promoted -> was_cached() undefined return
-  if (!entry.has_value()) {
+  // a candidate response, was_cached() undefined return
+  if (entry.has_value()) {
     auto action = storage_action(self);
     if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
         action == host_api::HttpStorageAction::Update) {
@@ -3730,8 +3728,8 @@ bool Response::surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
-  // not a candidate response, already promoted -> was_cached() undefined return
-  if (!entry.has_value()) {
+  // a candidate response, was_cached() -> undefined return
+  if (entry.has_value()) {
     auto action = storage_action(self);
     if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
         action == host_api::HttpStorageAction::Update) {
@@ -3783,8 +3781,8 @@ bool Response::pci_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
-  // not a candidate response, already promoted -> was_cached() undefined return
-  if (!entry.has_value()) {
+  // a candidate response, was_cached() -> undefined return
+  if (entry.has_value()) {
     auto action = storage_action(self);
     if (!action.has_value() || action == host_api::HttpStorageAction::Insert ||
         action == host_api::HttpStorageAction::Update) {
@@ -4241,6 +4239,7 @@ host_api::HttpCacheWriteOptions *Response::override_cache_options(JSObject *resp
       JS::GetReservedSlot(response,
                           static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions))
           .toPrivate());
+  MOZ_ASSERT(cache_options);
   return cache_options;
 }
 

@@ -17,7 +17,7 @@ addEventListener('fetch', (event) => {
 
 if (fastly.debugMessages) {
   const { debug: consoleDebug } = console;
-  console.debug = function debug (...args) {
+  console.debug = function debug(...args) {
     fastly.debugMessages.push(...args);
     consoleDebug(...args);
   };

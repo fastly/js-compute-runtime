@@ -1833,69 +1833,88 @@ Result<std::optional<HostString>> GeoIp::lookup(std::span<uint8_t> bytes) {
 }
 
 namespace {
-std::pair<fastly::fastly_http_cache_write_options, uint32_t>
-to_fastly_cache_write_options(const HttpCacheWriteOptions *opts) {
-  fastly::fastly_http_cache_write_options options{};
-  uint32_t mask = 0;
+
+struct FastlyCacheWriteOptionsOwned {
+  std::unique_ptr<fastly::fastly_http_cache_write_options> options;
+  uint32_t mask;
+  // surrogate keys backing store when ' ' joined
+  std::unique_ptr<char[]> surrogate_keys_owned;
+};
+
+FastlyCacheWriteOptionsOwned to_fastly_cache_write_options(const HttpCacheWriteOptions *opts) {
+  FastlyCacheWriteOptionsOwned result{};
+  result.options = std::make_unique<fastly::fastly_http_cache_write_options>();
 
   // Required field, no mask
-  options.max_age_ns = opts->max_age_ns.value();
+  result.options->max_age_ns = opts->max_age_ns.value();
 
   if (opts->vary_rule && !opts->vary_rule->empty()) {
-    options.vary_rule = opts->vary_rule->data();
-    options.vary_rule_len = opts->vary_rule->size();
-    mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_VARY_RULE;
+    result.options->vary_rule = opts->vary_rule->data();
+    result.options->vary_rule_len = opts->vary_rule->size();
+    result.mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_VARY_RULE;
   }
 
   if (opts->initial_age_ns) {
-    options.initial_age_ns = *opts->initial_age_ns;
-    mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS;
+    result.options->initial_age_ns = *opts->initial_age_ns;
+    result.mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS;
   }
 
   if (opts->stale_while_revalidate_ns) {
-    options.stale_while_revalidate_ns = *opts->stale_while_revalidate_ns;
-    mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS;
+    result.options->stale_while_revalidate_ns = *opts->stale_while_revalidate_ns;
+    result.mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS;
   }
 
   if (opts->surrogate_keys.has_value()) {
-    // Join surrogate keys with spaces
-    std::string joined_keys;
-    for (const auto &key : opts->surrogate_keys.value()) {
-      if (!joined_keys.empty()) {
-        joined_keys += ' ';
+    const auto &keys = opts->surrogate_keys.value();
+    if (keys.size() == 1) {
+      result.options->surrogate_keys = keys[0].data();
+      result.options->surrogate_keys_len = keys[0].size();
+    } else if (keys.size() > 1) {
+      // Calculate total length needed including spaces
+      size_t total_len = 0;
+      for (const auto &key : keys) {
+        total_len += key.size() + 1; // +1 for space or null
       }
-      joined_keys.append(key);
+
+      // Allocate array using make_unique instead of cabi_malloc
+      auto surrogate_keys = std::make_unique<char[]>(total_len);
+      size_t pos = 0;
+
+      // Copy first key
+      memcpy(surrogate_keys.get() + pos, keys[0].data(), keys[0].size());
+      pos += keys[0].size();
+
+      // Copy remaining keys with leading space
+      for (size_t i = 1; i < keys.size(); i++) {
+        surrogate_keys[pos++] = ' ';
+        memcpy(surrogate_keys.get() + pos, keys[i].data(), keys[i].size());
+        pos += keys[i].size();
+      }
+
+      result.surrogate_keys_owned = std::move(surrogate_keys);
+      result.options->surrogate_keys = surrogate_keys.get();
+      result.options->surrogate_keys_len =
+          total_len - 1; // -1 because we don't count the null terminator
     }
-    options.surrogate_keys = joined_keys.c_str();
-    options.surrogate_keys_len = joined_keys.size();
-    mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS;
+    result.mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS;
   }
 
   if (opts->length) {
-    options.length = *opts->length;
-    mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_LENGTH;
+    result.options->length = *opts->length;
+    result.mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_LENGTH;
   }
 
   if (opts->sensitive_data) {
-    mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA;
+    result.mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA;
   }
 
-  return {options, mask};
+  return result;
 }
 
 HttpCacheWriteOptions *
 from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &fastly_opts,
                                 uint32_t mask) {
-  HttpCacheWriteOptions *opts =
-      reinterpret_cast<HttpCacheWriteOptions *>(cabi_malloc(sizeof(HttpCacheWriteOptions), 4));
-
-  opts->max_age_ns = std::nullopt;
-  opts->vary_rule = std::nullopt;
-  opts->initial_age_ns = std::nullopt;
-  opts->stale_while_revalidate_ns = std::nullopt;
-  opts->surrogate_keys = std::nullopt;
-  opts->length = std::nullopt;
-  opts->sensitive_data = std::nullopt;
+  HttpCacheWriteOptions *opts = new HttpCacheWriteOptions();
 
   // Required field
   opts->max_age_ns = fastly_opts.max_age_ns;
@@ -2026,9 +2045,9 @@ Result<HttpBody> HttpCacheEntry::transaction_insert(const HttpResp &resp,
                                                     const HttpCacheWriteOptions *opts) {
   TRACE_CALL()
   uint32_t body_handle_out;
-  auto [fastly_opts, mask] = to_fastly_cache_write_options(opts);
-  auto res = fastly::http_cache_transaction_insert(this->handle, resp.handle, mask, &fastly_opts,
-                                                   &body_handle_out);
+  auto owned_opts = to_fastly_cache_write_options(opts);
+  auto res = fastly::http_cache_transaction_insert(this->handle, resp.handle, owned_opts.mask,
+                                                   owned_opts.options.get(), &body_handle_out);
 
   if (res != 0) {
     return Result<HttpBody>::err(host_api::APIError(res));
@@ -2043,10 +2062,10 @@ HttpCacheEntry::transaction_insert_and_stream_back(const HttpResp &resp,
   TRACE_CALL()
   uint32_t body_handle_out;
   uint32_t cache_handle_out;
-  auto [fastly_opts, mask] = to_fastly_cache_write_options(opts);
+  auto owned_opts = to_fastly_cache_write_options(opts);
   auto res = fastly::http_cache_transaction_insert_and_stream_back(
-      this->handle, resp.handle, mask, &fastly_opts, &body_handle_out, &cache_handle_out);
-
+      this->handle, resp.handle, owned_opts.mask, owned_opts.options.get(), &body_handle_out,
+      &cache_handle_out);
   if (res != 0) {
     return Result<std::tuple<HttpBody, HttpCacheEntry>>::err(host_api::APIError(res));
   }
@@ -2058,8 +2077,9 @@ HttpCacheEntry::transaction_insert_and_stream_back(const HttpResp &resp,
 Result<Void> HttpCacheEntry::transaction_update(const HttpResp &resp,
                                                 const HttpCacheWriteOptions *opts) {
   TRACE_CALL()
-  auto [fastly_opts, mask] = to_fastly_cache_write_options(opts);
-  auto res = fastly::http_cache_transaction_update(this->handle, resp.handle, mask, &fastly_opts);
+  auto owned_opts = to_fastly_cache_write_options(opts);
+  auto res = fastly::http_cache_transaction_update(this->handle, resp.handle, owned_opts.mask,
+                                                   owned_opts.options.get());
 
   if (res != 0) {
     return Result<Void>::err(host_api::APIError(res));
@@ -2073,9 +2093,9 @@ HttpCacheEntry::transaction_update_and_return_fresh(const HttpResp &resp,
                                                     const HttpCacheWriteOptions *opts) {
   TRACE_CALL()
   uint32_t fresh_handle_out;
-  auto [fastly_opts, mask] = to_fastly_cache_write_options(opts);
+  auto owned_opts = to_fastly_cache_write_options(opts);
   auto res = fastly::http_cache_transaction_update_and_return_fresh(
-      this->handle, resp.handle, mask, &fastly_opts, &fresh_handle_out);
+      this->handle, resp.handle, owned_opts.mask, owned_opts.options.get(), &fresh_handle_out);
 
   if (res != 0) {
     return Result<HttpCacheEntry>::err(host_api::APIError(res));
@@ -2092,8 +2112,9 @@ HttpCacheEntry::transaction_record_not_cacheable(uint64_t max_age_ns,
   if (auto &vary_rule_val = vary_rule) {
     write_options.vary_rule = *vary_rule;
   }
-  auto [fastly_opts, mask] = to_fastly_cache_write_options(&write_options);
-  auto res = fastly::http_cache_transaction_record_not_cacheable(this->handle, mask, &fastly_opts);
+  auto owned_opts = to_fastly_cache_write_options(&write_options);
+  auto res = fastly::http_cache_transaction_record_not_cacheable(this->handle, owned_opts.mask,
+                                                                 owned_opts.options.get());
 
   if (res != 0) {
     return Result<Void>::err(host_api::APIError(res));

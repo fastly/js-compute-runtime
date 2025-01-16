@@ -161,7 +161,10 @@
   "GET /http-cache/property-errors": {
     "environments": ["compute"]
   },
-  "GET /http-cache/candidate-response-properties": {
+  "GET /http-cache/candidate-response-properties-cached": {
+    "environments": ["compute"]
+  },
+  "GET /http-cache/candidate-response-properties-uncached": {
     "environments": ["compute"]
   },
   "GET /http-cache/after-send-edge-cache": {
