@@ -20,7 +20,7 @@ public:
     URL,
     ManualFramingHeaders,
     Backend,
-    CacheHandle,
+    CacheEntry,
     Count,
   };
 
@@ -169,6 +169,7 @@ public:
     URL = static_cast<int>(RequestOrResponse::Slots::URL),
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
+    CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),
     Method = static_cast<int>(RequestOrResponse::Slots::Count),
     CacheOverride,
     PendingRequest,
@@ -252,12 +253,12 @@ public:
     URL = static_cast<int>(RequestOrResponse::Slots::Headers),
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
+    CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),
     IsUpstream = static_cast<int>(RequestOrResponse::Slots::Count),
     Status,
     StatusMessage,
     Redirected,
     GripUpgradeRequest,
-    CacheEntry,
     StorageAction,
     SuggestedCacheWriteOptions,
     OverrideCacheWriteOptions,
@@ -312,9 +313,16 @@ public:
                                        const char *fun_name);
 
   /**
-   * Override cache options set by the user, and cache override.
+   * Override cache options set by the user & suggested options, or final cache options if
+   * finalized.
    */
   static host_api::HttpCacheWriteOptions *override_cache_options(JSObject *response);
+
+  /**
+   * Takes the override cache options field.
+   */
+  static host_api::HttpCacheWriteOptions *take_override_cache_options(JSObject *response);
+
   /**
    * Suggested cache options as provided by the host for the request/response pair, and
    * computed lazily (fallible).
