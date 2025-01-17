@@ -260,6 +260,8 @@ const httpBinBackend = () =>
     // Wait a bit and verify age increased
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const res2 = await fetch(url, { backend, cacheOverride });
+    strictEqual(res2.cached, true);
+    strictEqual(res2.isStale, undefined);
     strictEqual(res2.age > 0, true);
     strictEqual(res2.backend, backend);
 

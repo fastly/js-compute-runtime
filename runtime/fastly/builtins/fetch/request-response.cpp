@@ -551,7 +551,9 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
       // Get the string data as string_view
       std::string_view str(str_val.ptr.get(), str_val.len);
 
-      std::vector<std::string> keys;
+      // Initialize the optional vector
+      override_cache_options->surrogate_keys.emplace();
+
       size_t pos = 0;
       while (pos < str.length()) {
         // Skip any leading spaces
@@ -565,18 +567,18 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
         // Handle either substring to next space or to end
         if (space == std::string_view::npos) {
           if (pos < str.length()) {
-            keys.emplace_back(str.substr(pos));
+            auto substr = str.substr(pos);
+            override_cache_options->surrogate_keys->push_back(host_api::HostString(substr));
           }
           break;
         } else {
           if (space > pos) {
-            keys.emplace_back(str.substr(pos, space - pos));
+            auto substr = str.substr(pos, space - pos);
+            override_cache_options->surrogate_keys->push_back(host_api::HostString(substr));
           }
           pos = space + 1;
         }
       }
-
-      override_cache_options->surrogate_keys = std::move(keys);
     }
 
     RootedValue override_pci(cx, CacheOverride::pci(cache_override));
@@ -1844,15 +1846,24 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
 bool Request::set_cache_override(JSContext *cx, JS::HandleObject self,
                                  JS::HandleValue cache_override_val) {
   MOZ_ASSERT(is_instance(self));
-  if (!CacheOverride::is_instance(cache_override_val)) {
-    JS_ReportErrorUTF8(cx, "Value passed in as cacheOverride must be an "
-                           "instance of CacheOverride");
-    return false;
-  }
 
-  JS::RootedObject input(cx, &cache_override_val.toObject());
-  JSObject *override = CacheOverride::clone(cx, input);
-  if (!override) {
+  JSObject *override;
+  if (CacheOverride::is_instance(cache_override_val)) {
+    JS::RootedObject input(cx, &cache_override_val.toObject());
+    override = CacheOverride::clone(cx, input);
+    if (!override) {
+      return false;
+    }
+  } else if (cache_override_val.isObject()) {
+    // support constructing the cache override dynamically
+    JS::RootedObject cache_override_obj(cx, &cache_override_val.toObject());
+    override = CacheOverride::create_override(cx, cache_override_obj);
+    if (!override) {
+      return false;
+    }
+  } else {
+    JS_ReportErrorUTF8(cx, "Value passed in as cacheOverride must be an "
+                           "instance of CacheOverride or an object with the same interface");
     return false;
   }
 
@@ -3739,7 +3750,7 @@ bool Response::surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
 
-  const std::vector<std::string> *surrogate_keys;
+  const std::vector<host_api::HostString> *surrogate_keys;
   // a promoted candidate response must define all cache options
   if (!entry.has_value() || override_opts->surrogate_keys.has_value()) {
     surrogate_keys = &override_opts->surrogate_keys.value();
@@ -3760,7 +3771,7 @@ bool Response::surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   // Add keys to array
   for (size_t i = 0; i < surrogate_keys->size(); i++) {
     const auto &key = surrogate_keys->at(i);
-    JS::RootedString str(cx, JS_NewStringCopyN(cx, key.data(), key.size()));
+    JS::RootedString str(cx, JS_NewStringCopyN(cx, key.ptr.get(), key.len));
     if (!str) {
       return false;
     }
@@ -3898,7 +3909,10 @@ bool Response::vary_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  std::string vary_rule;
+  size_t total_len = 0;
+  std::vector<host_api::HostString> encoded_strings;
+  encoded_strings.reserve(length);
+
   for (uint32_t i = 0; i < length; i++) {
     JS::RootedValue val(cx);
     if (!JS_GetElement(cx, arr_obj, i, &val)) {
@@ -3915,13 +3929,32 @@ bool Response::vary_set(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    if (!vary_rule.empty()) {
-      vary_rule += " ";
-    }
-    vary_rule.append(str_val.ptr.get(), str_val.len);
+    encoded_strings.push_back(std::move(str_val));
+    total_len += str_val.len;
   }
 
-  override_opts->vary_rule = std::move(vary_rule);
+  // Add space for spaces between strings
+  if (length > 1) {
+    total_len += length - 1;
+  }
+
+  // Allocate buffer and copy strings with spaces
+  JS::UniqueChars buffer(static_cast<char *>(malloc(total_len)));
+  if (!buffer) {
+    return false;
+  }
+
+  size_t pos = 0;
+  for (size_t i = 0; i < encoded_strings.size(); i++) {
+    const auto &str = encoded_strings[i];
+    if (i > 0) {
+      buffer[pos++] = ' ';
+    }
+    memcpy(buffer.get() + pos, str.ptr.get(), str.len);
+    pos += str.len;
+  }
+
+  override_opts->vary_rule = host_api::HostString(std::move(buffer), total_len);
 
   args.rval().setUndefined();
   return true;
@@ -3958,10 +3991,8 @@ bool Response::surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  std::vector<std::string> keys;
-  std::vector<JS::UniqueChars> key_storage; // Keep strings alive
+  std::vector<host_api::HostString> keys;
   keys.reserve(length);
-  key_storage.reserve(length);
 
   for (uint32_t i = 0; i < length; i++) {
     JS::RootedValue val(cx);
@@ -3977,8 +4008,7 @@ bool Response::surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     if (!key) {
       return false;
     }
-    keys.emplace_back(key.ptr.get(), key.len);
-    key_storage.push_back(std::move(key.ptr));
+    keys.push_back(std::move(key)); // Move the entire HostString
   }
 
   override_opts->surrogate_keys = std::move(keys);

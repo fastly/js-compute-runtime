@@ -1848,9 +1848,10 @@ FastlyCacheWriteOptionsOwned to_fastly_cache_write_options(const HttpCacheWriteO
   // Required field, no mask
   result.options->max_age_ns = opts->max_age_ns.value();
 
-  if (opts->vary_rule && !opts->vary_rule->empty()) {
-    result.options->vary_rule = opts->vary_rule->data();
-    result.options->vary_rule_len = opts->vary_rule->size();
+  if (opts->vary_rule && *opts->vary_rule) {
+    // Convert HostString to char* and length
+    result.options->vary_rule = opts->vary_rule->ptr.get();
+    result.options->vary_rule_len = opts->vary_rule->len;
     result.mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_VARY_RULE;
   }
 
@@ -1867,34 +1868,33 @@ FastlyCacheWriteOptionsOwned to_fastly_cache_write_options(const HttpCacheWriteO
   if (opts->surrogate_keys.has_value()) {
     const auto &keys = opts->surrogate_keys.value();
     if (keys.size() == 1) {
-      result.options->surrogate_keys = keys[0].data();
-      result.options->surrogate_keys_len = keys[0].size();
+      result.options->surrogate_keys = keys[0].ptr.get();
+      result.options->surrogate_keys_len = keys[0].len;
     } else if (keys.size() > 1) {
       // Calculate total length needed including spaces
       size_t total_len = 0;
       for (const auto &key : keys) {
-        total_len += key.size() + 1; // +1 for space or null
+        total_len += key.len + 1; // +1 for space or null
       }
 
-      // Allocate array using make_unique instead of cabi_malloc
+      // Allocate array using make_unique
       auto surrogate_keys = std::make_unique<char[]>(total_len);
       size_t pos = 0;
 
       // Copy first key
-      memcpy(surrogate_keys.get() + pos, keys[0].data(), keys[0].size());
-      pos += keys[0].size();
+      memcpy(surrogate_keys.get() + pos, keys[0].ptr.get(), keys[0].len);
+      pos += keys[0].len;
 
       // Copy remaining keys with leading space
       for (size_t i = 1; i < keys.size(); i++) {
         surrogate_keys[pos++] = ' ';
-        memcpy(surrogate_keys.get() + pos, keys[i].data(), keys[i].size());
-        pos += keys[i].size();
+        memcpy(surrogate_keys.get() + pos, keys[i].ptr.get(), keys[i].len);
+        pos += keys[i].len;
       }
 
       result.surrogate_keys_owned = std::move(surrogate_keys);
-      result.options->surrogate_keys = surrogate_keys.get();
-      result.options->surrogate_keys_len =
-          total_len - 1; // -1 because we don't count the null terminator
+      result.options->surrogate_keys = result.surrogate_keys_owned.get();
+      result.options->surrogate_keys_len = total_len - 1;
     }
     result.mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS;
   }
@@ -1921,8 +1921,10 @@ from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &f
 
   if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_VARY_RULE && fastly_opts.vary_rule &&
       fastly_opts.vary_rule_len > 0) {
-    // Create a new string with a copy of the data instead of a view
-    opts->vary_rule = std::string(fastly_opts.vary_rule, fastly_opts.vary_rule_len);
+    // Create a new HostString from the data
+    opts->vary_rule.emplace(JS::UniqueChars(static_cast<char *>(malloc(fastly_opts.vary_rule_len))),
+                            fastly_opts.vary_rule_len);
+    memcpy(opts->vary_rule->ptr.get(), fastly_opts.vary_rule, fastly_opts.vary_rule_len);
   }
 
   if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS) {
@@ -1942,10 +1944,16 @@ from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &f
     while (pos < keys_str.size()) {
       size_t space = keys_str.find(' ', pos);
       if (space == std::string_view::npos) {
-        opts->surrogate_keys->push_back(std::string(keys_str.substr(pos)));
+        size_t key_len = keys_str.size() - pos;
+        JS::UniqueChars key_ptr(static_cast<char *>(malloc(key_len)));
+        memcpy(key_ptr.get(), keys_str.data() + pos, key_len);
+        opts->surrogate_keys->push_back(HostString(std::move(key_ptr), key_len));
         break;
       }
-      opts->surrogate_keys->push_back(std::string(keys_str.substr(pos, space - pos)));
+      size_t key_len = space - pos;
+      JS::UniqueChars key_ptr(static_cast<char *>(malloc(key_len)));
+      memcpy(key_ptr.get(), keys_str.data() + pos, key_len);
+      opts->surrogate_keys->push_back(HostString(std::move(key_ptr), key_len));
       pos = space + 1;
     }
   }
@@ -1960,6 +1968,7 @@ from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &f
 
   return opts;
 }
+
 } // namespace
 
 // HttpReq cache-related method implementations
@@ -2256,16 +2265,19 @@ Result<CacheState> HttpCacheEntry::get_state() const {
   return res;
 }
 
-Result<uint64_t> HttpCacheEntry::get_length() const {
+Result<std::optional<uint64_t>> HttpCacheEntry::get_length() const {
   TRACE_CALL()
   uint64_t length_out;
   auto res = fastly::http_cache_get_length(this->handle, &length_out);
 
   if (res != 0) {
-    return Result<uint64_t>::err(host_api::APIError(res));
+    if (host_api::error_is_optional_none(host_api::APIError(res))) {
+      return Result<std::optional<uint64_t>>::ok(std::nullopt);
+    }
+    return Result<std::optional<uint64_t>>::err(host_api::APIError(res));
   }
 
-  return Result<uint64_t>::ok(length_out);
+  return Result<std::optional<uint64_t>>::ok(length_out);
 }
 
 Result<uint64_t> HttpCacheEntry::get_max_age_ns() const {

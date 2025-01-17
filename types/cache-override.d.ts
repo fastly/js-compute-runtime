@@ -43,6 +43,61 @@ declare module 'fastly:cache-override' {
     bodyTransform?: TransformStream<Uint8Array, Uint8Array>;
   }
 
+  interface ICacheOverride {
+    /**
+     * Override the caching behavior of this request to use the given Time to Live (TTL), in seconds.
+     */
+    ttl?: number;
+    /**
+     * Override the caching behavior of this request to use the given `stale-while-revalidate` time,
+     * in seconds.
+     */
+    swr?: number;
+    /**
+     * Override the caching behavior of this request to include the given surrogate key, provided as
+     * a header value.
+     *
+     * See the [Fastly surrogate keys guide](https://docs.fastly.com/en/guides/purging-api-cache-with-surrogate-keys)
+     * for details.
+     */
+    surrogateKey?: string;
+    /**
+     * Override the caching behavior of this request to enable or disable PCI/HIPAA-compliant
+     * non-volatile caching.
+     *
+     * By default, this is false, which means the request may not be PCI/HIPAA-compliant. Set it to
+     * true to enable compliant caching.
+     *
+     * See the [Fastly PCI-Compliant Caching and Delivery documentation](https://docs.fastly.com/products/pci-compliant-caching-and-delivery)
+     * for details.
+     */
+    pci?: boolean;
+    /**
+     * Set a [callback function](https://developer.mozilla.org/en-US/docs/Glossary/Callback_function) to be invoked if a
+     * request is going all the way to a backend, allowing the request to be modified beforehand.
+     *
+     * See [Modifying a request as it is forwarded to a backend](https://www.fastly.com/documentation/guides/concepts/edge-state/cache/#modifying-a-request-as-it-is-forwarded-to-a-backend)
+     * in the Fastly cache interfaces documentation for details.
+     *
+     * @param request
+     * @returns {void | PromiseList<void>}
+     */
+    beforeSend?: (request: Request) => void | PromiseLike<void>;
+    /**
+     * Set a [callback function](https://developer.mozilla.org/en-US/docs/Glossary/Callback_function) to be invoked after
+     * a response has been sent, but before it is stored into the cache.
+     *
+     * See [Controlling cache behavior based on backend response](https://www.fastly.com/documentation/guides/concepts/edge-state/cache/#controlling-cache-behavior-based-on-backend-response)
+     *
+     * in the Fastly cache interfaces documentation for details.
+     * @param response
+     * @returns {void | CacheOptions | PromiseLike<void | CacheOptions>}
+     */
+    afterSend?: (
+      response: Response,
+    ) => void | CacheOptions | PromiseLike<void | CacheOptions>;
+  }
+
   /**
    * Configures the caching behavior of a {@linkcode "globals".Response}.
    *
@@ -117,69 +172,10 @@ declare module 'fastly:cache-override' {
      * - "pass": Do not cache the response to this request, regardless of the origin response’s headers.
      * - "override": Override particular cache control settings using a {@linkcode CacheOverride} object.
      *
-     * @param [init]
-     *
-     * @param {number} [init.ttl]
-     * Override the caching behavior of this request to use the given Time to Live (TTL), in seconds.
-     *
-     * @param {number} [init.swr]
-     * Override the caching behavior of this request to use the given `stale-while-revalidate` time,
-     * in seconds
-     *
-     * @param {string} [init.surrogateKey]
-     * Override the caching behavior of this request to include the given surrogate key, provided as
-     * a header value.
-     *
-     * See the [Fastly surrogate keys guide](https://docs.fastly.com/en/guides/purging-api-cache-with-surrogate-keys)
-     * for details.
-     *
-     * @param {boolean} [init.pci]
-     * Override the caching behavior of this request to enable or disable PCI/HIPAA-compliant
-     * non-volatile caching.
-     *
-     * By default, this is false, which means the request may not be PCI/HIPAA-compliant. Set it to
-     * true to enable compliant caching.
-     *
-     * See the [Fastly PCI-Compliant Caching and Delivery documentation](https://docs.fastly.com/products/pci-compliant-caching-and-delivery)
-     * for details.
-     *
-     * @param {void} [init.beforeSend]
-     * Set a [callback function](https://developer.mozilla.org/en-US/docs/Glossary/Callback_function) to be invoked if a
-     * request is going all the way to a backend, allowing the request to be modified beforehand.
-     *
-     * See [Modifying a request as it is forwarded to a backend](https://www.fastly.com/documentation/guides/concepts/edge-state/cache/#modifying-a-request-as-it-is-forwarded-to-a-backend)
-     * in the Fastly cache interfaces documentation for details.
-     *
-     * @param {void} [init.afterSend]
-     * Set a [callback function](https://developer.mozilla.org/en-US/docs/Glossary/Callback_function) to be invoked after
-     * a response has been sent, but before it is stored into the cache.
-     *
-     * See [Controlling cache behavior based on backend response](https://www.fastly.com/documentation/guides/concepts/edge-state/cache/#controlling-cache-behavior-based-on-backend-response)
-     * in the Fastly cache interfaces documentation for details.
+     * @param {[init]} ICacheOverride Sets the cache override init options
      */
-    constructor(
-      mode: 'none' | 'pass' | 'override',
-      init?: {
-        ttl?: number;
-        swr?: number;
-        surrogateKey?: string;
-        pci?: boolean;
-        beforeSend?: (request: Request) => void | PromiseLike<void>;
-        afterSend?: (
-          response: Response,
-        ) => void | CacheOptions | PromiseLike<void | CacheOptions>;
-      },
-    );
-    constructor(overrideInit?: {
-      ttl?: number;
-      swr?: number;
-      surrogateKey?: string;
-      pci?: boolean;
-      beforeSend?: (request: Request) => void | PromiseLike<void>;
-      afterSend?: (
-        response: Response,
-      ) => void | CacheOptions | PromiseLike<void | CacheOptions>;
-    });
+    constructor(mode: 'none' | 'pass' | 'override', init?: ICacheOverride);
+    constructor(overrideInit?: ICacheOverride);
 
     /**
      * Sets the cache override mode for a request
