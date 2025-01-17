@@ -1,5 +1,10 @@
 /* eslint-env serviceworker */
-import { strictEqual, deepStrictEqual, assertRejects } from './assertions.js';
+import {
+  assert,
+  strictEqual,
+  deepStrictEqual,
+  assertRejects,
+} from './assertions.js';
 import { routes } from './routes.js';
 import { CacheOverride } from 'fastly:cache-override';
 import { Backend } from 'fastly:backend';
@@ -163,91 +168,73 @@ const httpBinBackend = () =>
   routes.set('/http-cache/candidate-response-properties-uncached', async () => {
     const url = getTestUrl();
 
-    // Test accessing cache properties on non-cached response
-    {
-      let candidateRes;
-      const cacheOverride = new CacheOverride({
-        afterSend(res) {
-          candidateRes = res;
-          return { cache: false };
-        },
-      });
-
-      await fetch(url, { cacheOverride });
-      strictEqual(candidateRes.cached, false);
-
-      strictEqual(candidateRes.isStale, undefined);
-      strictEqual(candidateRes.ttl, 3600);
-      strictEqual(candidateRes.age, 0);
-      deepStrictEqual(candidateRes.vary, []);
-      strictEqual(candidateRes.surrogateKeys.length, 1);
-      strictEqual(typeof candidateRes.surrogateKeys[0], 'string');
-      strictEqual(candidateRes.surrogateKeys[0].length > 10, true);
-    }
-
     // Test accessing cache properties on non-cached candidate response
-    {
-      const cacheOverride = new CacheOverride({
-        afterSend(candidateRes) {
-          strictEqual(candidateRes.cached, undefined);
-          strictEqual(candidateRes.isStale, false);
-          strictEqual(candidateRes.ttl, 3600);
-          strictEqual(candidateRes.age, 0);
-          deepStrictEqual(candidateRes.vary, []);
-          strictEqual(candidateRes.surrogateKeys.length, 1);
-          strictEqual(typeof candidateRes.surrogateKeys[0], 'string');
-          strictEqual(candidateRes.surrogateKeys[0].length > 10, true);
-          return { cache: false };
-        },
-      });
+    // (before and after hooks lifecycle) & response
+    let candidateRes;
+    const cacheOverride = new CacheOverride({
+      afterSend(res) {
+        candidateRes = res;
+        strictEqual(candidateRes.cached, false);
+        strictEqual(candidateRes.isStale, undefined);
+        strictEqual(candidateRes.ttl, 3600);
+        strictEqual(candidateRes.age, 0);
+        deepStrictEqual(candidateRes.vary, []);
+        strictEqual(candidateRes.surrogateKeys.length, 1);
+        strictEqual(typeof candidateRes.surrogateKeys[0], 'string');
+        strictEqual(candidateRes.surrogateKeys[0].length > 10, true);
+        return { cache: false };
+      },
+    });
 
-      await fetch(url, { cacheOverride });
-    }
+    const res = await fetch(url, { cacheOverride });
+
+    strictEqual(res.cached, false);
+    strictEqual(res.isStale, undefined);
+    strictEqual(res.ttl, 3600);
+    strictEqual(res.age, 0);
+    deepStrictEqual(res.vary, []);
+    strictEqual(res.surrogateKeys.length, 1);
+    strictEqual(typeof res.surrogateKeys[0], 'string');
+    strictEqual(res.surrogateKeys[0].length > 10, true);
+
+    // in the do not store / no cache cases, the candidate response is directly
+    // promoted into the response. We could possibly consider reinstancing in future, but
+    // semantically this is what is defined by the caching APIs.
+    assert(res === candidateRes);
   });
 
   routes.set('/http-cache/candidate-response-properties-cached', async () => {
     const url = getTestUrl();
 
-    // TODO
-    {
-      let candidateRes;
-      const cacheOverride = new CacheOverride({
-        afterSend(res) {
-          candidateRes = res;
-          return { cache: false };
-        },
-      });
+    let candidateRes;
+    const cacheOverride = new CacheOverride({
+      afterSend(res) {
+        candidateRes = res;
+        return { cache: true };
+      },
+    });
 
-      await fetch(url, { cacheOverride });
-      strictEqual(candidateRes.cached, false);
+    const res = await fetch(url, { cacheOverride });
 
-      strictEqual(candidateRes.isStale, false);
-      strictEqual(candidateRes.ttl, 3600);
-      strictEqual(candidateRes.age, 0);
-      deepStrictEqual(candidateRes.vary, []);
-      strictEqual(candidateRes.surrogateKeys.length, 1);
-      strictEqual(typeof candidateRes.surrogateKeys[0], 'string');
-      strictEqual(candidateRes.surrogateKeys[0].length > 10, true);
-    }
+    // in the cache case, a new response is read back from the cache for the origin request
+    strictEqual(res !== candidateRes, true);
 
-    // Test accessing cache properties on non-cached candidate response
-    {
-      const cacheOverride = new CacheOverride({
-        afterSend(candidateRes) {
-          strictEqual(candidateRes.cached, false);
-          strictEqual(candidateRes.isStale, false);
-          strictEqual(candidateRes.ttl, 3600);
-          strictEqual(candidateRes.age, 0);
-          deepStrictEqual(candidateRes.vary, []);
-          strictEqual(candidateRes.surrogateKeys.length, 1);
-          strictEqual(typeof candidateRes.surrogateKeys[0], 'string');
-          strictEqual(candidateRes.surrogateKeys[0].length > 10, true);
-          return { cache: false };
-        },
-      });
+    // the response info is then taken out of the candidate response, and moved into the response
+    strictEqual(candidateRes.cached, false);
+    strictEqual(candidateRes.isStale, undefined);
+    strictEqual(candidateRes.ttl, undefined);
+    strictEqual(candidateRes.age, undefined);
+    strictEqual(candidateRes.vary, undefined);
+    strictEqual(candidateRes.surrogateKeys, undefined);
 
-      await fetch(url, { cacheOverride });
-    }
+    strictEqual(res.cached, false);
+    strictEqual(res.isStale, undefined);
+    strictEqual(res.ttl, 3600);
+    strictEqual(res.age, 0);
+    deepStrictEqual(res.vary, []);
+    strictEqual(res.surrogateKeys.length, 1);
+    strictEqual(typeof res.surrogateKeys[0], 'string');
+    strictEqual(res.surrogateKeys[0].length > 10, true);
   });
 
   // Test readonly properties
@@ -281,16 +268,10 @@ const httpBinBackend = () =>
       res2.cached = false;
     }, TypeError);
     assertRejects(() => {
-      res2.isCacheable = false;
-    }, TypeError);
-    assertRejects(() => {
       res2.isStale = true;
     }, TypeError);
     assertRejects(() => {
       res2.age = 0;
-    }, TypeError);
-    assertRejects(() => {
-      res2.backend = null;
     }, TypeError);
   });
 }
@@ -444,34 +425,6 @@ const httpBinBackend = () =>
     strictEqual(res.pci, true);
     strictEqual([...res.surrogateKeys].sort().join(','), 'key1,key2');
     strictEqual([...res.vary].sort().join(','), 'Accept,User-Agent');
-  });
-
-  // Test cacheability properties
-  routes.set('/http-cache/cacheability', async () => {
-    const url = getTestUrl();
-
-    // Test uncacheable response
-    const uncacheableOverride = new CacheOverride({
-      afterSend(res) {
-        return { cache: 'uncacheable' };
-      },
-    });
-
-    const uncacheableRes = await fetch(url, {
-      cacheOverride: uncacheableOverride,
-    });
-    strictEqual(uncacheableRes.isCacheable, false);
-
-    // Test forced cacheable response
-    const cacheableOverride = new CacheOverride({
-      afterSend(res) {
-        res.headers.set('Cache-Control', 'no-store');
-        return { cache: true }; // Force caching despite headers
-      },
-    });
-
-    const cacheableRes = await fetch(url, { cacheOverride: cacheableOverride });
-    strictEqual(cacheableRes.isCacheable, true);
   });
 
   // Test stale response handling

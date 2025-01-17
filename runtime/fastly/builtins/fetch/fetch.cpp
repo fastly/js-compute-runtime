@@ -206,7 +206,7 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
   } else {
     // track requests without caching via CacheEntry false convention
     // this is used to track that we later must set Fastly headers in this case
-    JS::SetReservedSlot(request, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
+    JS::SetReservedSlot(request, static_cast<uint32_t>(RequestOrResponse::Slots::CacheEntry),
                         JS::BooleanValue(false));
   }
 
@@ -350,7 +350,7 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
   // cache origin request.
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Request),
                       JS::Int32Value(backend_request_handle.handle));
-  JS::SetReservedSlot(request, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
+  JS::SetReservedSlot(request, static_cast<uint32_t>(RequestOrResponse::Slots::CacheEntry),
                       JS::Int32Value(cache_entry.handle));
 
   // Next, if we have a beforeSend hook, we invoke this hook prior to sending to the backend, with
@@ -422,9 +422,6 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
   auto cache_entry = RequestOrResponse::take_cache_entry(response_obj, std::nullopt).value();
   auto storage_action = Response::storage_action(response_obj).value();
   auto cache_write_options = Response::override_cache_options(response_obj);
-  // mark the candidate response as locked
-  JS::SetReservedSlot(response_obj, static_cast<uint32_t>(RequestOrResponse::Slots::CacheHandle),
-                      JS::UndefinedValue());
   MOZ_ASSERT(cache_write_options);
   // Mark interest as complete for this phase. We will create new event interest for the body
   // streaming promise shortly if needed to simplify return and error paths in this function.
@@ -487,22 +484,24 @@ bool background_revalidation_catch_handler(JSContext *cx, JS::HandleObject reque
 }
 
 JSObject *get_found_response(JSContext *cx, host_api::HttpCacheEntry &cache_entry,
-                             JS::HandleObject request, bool transform_for_client) {
+                             JS::HandleObject request, JS::HandleObject candidate_response,
+                             bool transform_for_client) {
   auto found_res = cache_entry.get_found_response(transform_for_client);
   if (auto *err = found_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return nullptr;
   }
   auto found = found_res.unwrap().value();
-  RootedObject res(cx, Response::create(cx, request, found));
-  if (!res) {
+  RootedObject response(cx, Response::create(cx, request, found));
+  if (!response) {
     return nullptr;
   }
-  // TODO:
-  // - set cache_write_options on found response
-  // - set hits on found response
-  // - storage action is left as undefined
-  return res;
+  // copy cache options from candidate response to response
+  auto override_cache_options = Response::take_override_cache_options(candidate_response);
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
+                      JS::PrivateValue(reinterpret_cast<uint32_t>(override_cache_options)));
+
+  return response;
 }
 
 bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::HandleValue extra,
@@ -546,7 +545,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     }
     DEBUG_LOG("stream back transaction insert append no error")
 
-    auto found_response = get_found_response(cx, cache_entry, request, false);
+    auto found_response = get_found_response(cx, cache_entry, request, response_obj, false);
     if (!found_response) {
       JSObject *promise = PromiseRejectedWithPendingError(cx);
       if (!promise) {
@@ -578,7 +577,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     }
     auto cache_entry = update_res.unwrap();
 
-    auto found_response = get_found_response(cx, cache_entry, request, true);
+    auto found_response = get_found_response(cx, cache_entry, request, response_obj, true);
     if (!found_response) {
       JSObject *promise = PromiseRejectedWithPendingError(cx);
       if (!promise) {
@@ -624,8 +623,9 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   }
   // note the storage action on the final response, since the response went through the cache,
   // distinct from responses that did not go through this cache lifecycle.
-  JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::StorageAction),
-                      JS::Int32Value(static_cast<uint32_t>(storage_action)));
+  // TODO: work out why / if this is needed?
+  // JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::StorageAction),
+  //                     JS::Int32Value(static_cast<uint32_t>(storage_action)));
   // in all cases, we must add the fastly cache headers
   if (!Response::add_fastly_cache_headers(cx, response_obj, request, cache_entry,
                                           "cached response")) {
