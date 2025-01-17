@@ -17,6 +17,31 @@ using fastly::FastlyGetErrorMessage;
 
 namespace fastly::cache_override {
 
+namespace {
+
+bool parse_mode(JSContext *cx, JS::HandleValue mode, CacheOverride::CacheOverrideMode *mode_out) {
+  auto mode_chars = core::encode(cx, mode);
+  if (!mode_chars) {
+    return false;
+  }
+
+  if (!strcmp(mode_chars.begin(), "none")) {
+    *mode_out = CacheOverride::CacheOverrideMode::None;
+  } else if (!strcmp(mode_chars.begin(), "pass")) {
+    *mode_out = CacheOverride::CacheOverrideMode::Pass;
+  } else if (!strcmp(mode_chars.begin(), "override")) {
+    *mode_out = CacheOverride::CacheOverrideMode::Override;
+  } else {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_CACHE_OVERRIDE_MODE_INVALID,
+                              mode_chars.begin());
+    return false;
+  }
+
+  return true;
+}
+
+} // namespace
+
 CacheOverride::CacheOverrideMode CacheOverride::mode(JSObject *self) {
   return (CacheOverride::CacheOverrideMode)JS::GetReservedSlot(self, Slots::Mode).toInt32();
 }
@@ -177,21 +202,8 @@ bool CacheOverride::mode_set(JSContext *cx, JS::HandleObject self, JS::HandleVal
     return api::throw_error(cx, api::Errors::WrongReceiver, "mode get", "CacheOverride");
   }
 
-  auto mode_chars = core::encode(cx, val);
-  if (!mode_chars) {
-    return false;
-  }
-
   CacheOverrideMode mode;
-  if (!strcmp(mode_chars.begin(), "none")) {
-    mode = CacheOverrideMode::None;
-  } else if (!strcmp(mode_chars.begin(), "pass")) {
-    mode = CacheOverrideMode::Pass;
-  } else if (!strcmp(mode_chars.begin(), "override")) {
-    mode = CacheOverrideMode::Override;
-  } else {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_CACHE_OVERRIDE_MODE_INVALID,
-                              mode_chars.begin());
+  if (!parse_mode(cx, val, &mode)) {
     return false;
   }
 
@@ -415,63 +427,80 @@ const JSPropertySpec CacheOverride::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "CacheOverride", JSPROP_READONLY),
     JS_PS_END};
 
+JSObject *CacheOverride::create_override(JSContext *cx, JS::HandleObject override_options) {
+  JS::RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  JS::RootedValue val(cx);
+
+  set_mode(self, CacheOverrideMode::Override);
+
+  if (!JS_GetProperty(cx, override_options, "ttl", &val) || !ttl_set(cx, self, val, &val)) {
+    return nullptr;
+  }
+
+  if (!JS_GetProperty(cx, override_options, "swr", &val) || !swr_set(cx, self, val, &val)) {
+    return nullptr;
+  }
+
+  if (!JS_GetProperty(cx, override_options, "surrogateKey", &val) ||
+      !surrogate_key_set(cx, self, val, &val)) {
+    return nullptr;
+  }
+
+  if (!JS_GetProperty(cx, override_options, "pci", &val) || !pci_set(cx, self, val, &val)) {
+    return nullptr;
+  }
+
+  if (!JS_GetProperty(cx, override_options, "beforeSend", &val) ||
+      !before_send_set(cx, self, val, &val)) {
+    return nullptr;
+  }
+
+  if (!JS_GetProperty(cx, override_options, "afterSend", &val) ||
+      !after_send_set(cx, self, val, &val)) {
+    return nullptr;
+  }
+
+  return self;
+}
+
 bool CacheOverride::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   CTOR_HEADER("CacheOverride", 1);
 
-  JS::RootedObject self(cx, JS_NewObjectForConstructor(cx, &class_, args));
-
-  JS::RootedValue val(cx);
-
   JS::RootedValue init(cx);
+  CacheOverrideMode mode;
   if (args[0].isObject()) {
     init.setObject(args[0].toObject());
-    CacheOverride::set_mode(self, CacheOverrideMode::Override);
+    mode = CacheOverrideMode::Override;
   } else {
-    if (!mode_set(cx, self, args[0], &val))
+    if (!parse_mode(cx, args[0], &mode)) {
       return false;
+    }
     if (args.length() > 1) {
       init.set(args[1]);
     }
   }
 
-  if (CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override) {
+  if (mode == CacheOverride::CacheOverrideMode::Override) {
     if (!init.isObject()) {
       JS_ReportErrorUTF8(cx, "Creating a CacheOverride object with mode \"override\" requires "
                              "an init object for the override parameters as the second argument");
       return false;
     }
-
-    JS::RootedObject override_init(cx, &init.toObject());
-
-    if (!JS_GetProperty(cx, override_init, "ttl", &val) || !ttl_set(cx, self, val, &val)) {
+    JS::RootedObject init_obj(cx, &init.toObject());
+    JSObject *cache_override = create_override(cx, init_obj);
+    if (!cache_override) {
       return false;
     }
-
-    if (!JS_GetProperty(cx, override_init, "swr", &val) || !swr_set(cx, self, val, &val)) {
-      return false;
-    }
-
-    if (!JS_GetProperty(cx, override_init, "surrogateKey", &val) ||
-        !surrogate_key_set(cx, self, val, &val)) {
-      return false;
-    }
-
-    if (!JS_GetProperty(cx, override_init, "pci", &val) || !pci_set(cx, self, val, &val)) {
-      return false;
-    }
-
-    if (!JS_GetProperty(cx, override_init, "beforeSend", &val) ||
-        !before_send_set(cx, self, val, &val)) {
-      return false;
-    }
-
-    if (!JS_GetProperty(cx, override_init, "afterSend", &val) ||
-        !after_send_set(cx, self, val, &val)) {
-      return false;
-    }
+    args.rval().setObject(*cache_override);
+    return true;
   }
 
-  args.rval().setObject(*self);
+  JS::RootedObject cache_override(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  if (!cache_override) {
+    return false;
+  }
+  set_mode(cache_override, mode);
+  args.rval().setObject(*cache_override);
   return true;
 }
 

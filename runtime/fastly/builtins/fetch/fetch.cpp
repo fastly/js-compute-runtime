@@ -483,13 +483,17 @@ bool background_revalidation_catch_handler(JSContext *cx, JS::HandleObject reque
   return true;
 }
 
-JSObject *get_found_response(JSContext *cx, host_api::HttpCacheEntry &cache_entry,
-                             JS::HandleObject request, JS::HandleObject candidate_response,
-                             bool transform_for_client) {
+std::optional<JSObject *> get_found_response(JSContext *cx, host_api::HttpCacheEntry &cache_entry,
+                                             JS::HandleObject request,
+                                             JS::HandleValue maybe_candidate_response,
+                                             bool transform_for_client) {
   auto found_res = cache_entry.get_found_response(transform_for_client);
   if (auto *err = found_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return nullptr;
+  }
+  if (!found_res.unwrap().has_value()) {
+    return std::nullopt;
   }
   auto found = found_res.unwrap().value();
   RootedObject response(cx, Response::create(cx, request, found));
@@ -497,7 +501,58 @@ JSObject *get_found_response(JSContext *cx, host_api::HttpCacheEntry &cache_entr
     return nullptr;
   }
   // copy cache options from candidate response to response
-  auto override_cache_options = Response::take_override_cache_options(candidate_response);
+  host_api::HttpCacheWriteOptions *override_cache_options;
+  if (maybe_candidate_response.isObject()) {
+    override_cache_options =
+        Response::take_override_cache_options(&maybe_candidate_response.toObject());
+  } else {
+    // Perhaps we can consider making these hostcalls lazy, requires a Response state enum to know
+    // we are in a state we can do this and then keeping the cache handle around, where it is not
+    // yet clear if holding handles for longer periods on responses is okay.
+    override_cache_options = new host_api::HttpCacheWriteOptions();
+    auto age_res = cache_entry.get_age_ns();
+    if (auto *err = age_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return nullptr;
+    }
+    override_cache_options->initial_age_ns = age_res.unwrap();
+    auto max_age_ns = cache_entry.get_max_age_ns();
+    if (auto *err = max_age_ns.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return nullptr;
+    }
+    override_cache_options->max_age_ns = max_age_ns.unwrap();
+    auto swr_res = cache_entry.get_stale_while_revalidate_ns();
+    if (auto *err = swr_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return nullptr;
+    }
+    override_cache_options->stale_while_revalidate_ns = swr_res.unwrap();
+    auto length_res = cache_entry.get_length();
+    if (auto *err = length_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return nullptr;
+    }
+    override_cache_options->length = length_res.unwrap();
+    auto sensitive_res = cache_entry.get_sensitive_data();
+    if (auto *err = sensitive_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return nullptr;
+    }
+    override_cache_options->sensitive_data = sensitive_res.unwrap();
+    auto vary_res = cache_entry.get_vary_rule();
+    if (auto *err = vary_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return nullptr;
+    }
+    override_cache_options->vary_rule = std::move(vary_res.unwrap());
+    auto surrogate_keys_res = cache_entry.get_surrogate_keys();
+    if (auto *err = surrogate_keys_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return nullptr;
+    }
+    override_cache_options->surrogate_keys = std::move(surrogate_keys_res.unwrap());
+  }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
                       JS::PrivateValue(reinterpret_cast<uint32_t>(override_cache_options)));
 
@@ -545,8 +600,9 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     }
     DEBUG_LOG("stream back transaction insert append no error")
 
-    auto found_response = get_found_response(cx, cache_entry, request, response_obj, false);
-    if (!found_response) {
+    auto found_response = get_found_response(cx, cache_entry, request, response, false);
+    MOZ_ASSERT(found_response.has_value());
+    if (!found_response.value()) {
       JSObject *promise = PromiseRejectedWithPendingError(cx);
       if (!promise) {
         return false;
@@ -556,7 +612,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     }
 
     // update response to be the new response, effectively disposing the candidate response
-    response_obj.set(found_response);
+    response_obj.set(found_response.value());
 
     // Return cached response regardless of revalidation status
     RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
@@ -577,8 +633,9 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     }
     auto cache_entry = update_res.unwrap();
 
-    auto found_response = get_found_response(cx, cache_entry, request, response_obj, true);
-    if (!found_response) {
+    auto found_response = get_found_response(cx, cache_entry, request, response, true);
+    MOZ_ASSERT(found_response.has_value());
+    if (!found_response.value()) {
       JSObject *promise = PromiseRejectedWithPendingError(cx);
       if (!promise) {
         return false;
@@ -588,7 +645,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     }
 
     // response becomes a new response
-    response_obj.set(found_response);
+    response_obj.set(found_response.value());
 
     // Return cached response regardless of revalidation status
     RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
@@ -762,10 +819,9 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   DEBUG_LOG(state_str)
 
   // Check for usable cached response
-  auto found_res = cache_entry.get_found_response(true);
-  if (auto *err = found_res.to_err()) {
-    DEBUG_LOG("Usable cache response error")
-    HANDLE_ERROR(cx, *err);
+  JS::RootedValue no_candidate(cx);
+  auto maybe_response = get_found_response(cx, cache_entry, request, no_candidate, true);
+  if (maybe_response.has_value() && !maybe_response.value()) {
     JSObject *promise = PromiseRejectedWithPendingError(cx);
     if (!promise) {
       return false;
@@ -774,12 +830,12 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return true;
   }
 
-  auto maybe_response = found_res.unwrap();
   if (maybe_response.has_value()) {
-    DEBUG_LOG("Have usable response")
-    auto cached_response = maybe_response.value();
+    DEBUG_LOG("Have usable cached response")
+    JS::RootedObject cached_response(cx, maybe_response.value());
 
     if (cache_state.must_insert_or_update()) {
+      DEBUG_LOG("Usable response must insert or update background revalidation")
       // Need to start background revalidation
       // Queue async task to handle background cache revalidation, ensuring it blocks process
       // completion
@@ -809,21 +865,17 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
       }
     }
 
-    JS::RootedObject response(cx, Response::create(cx, request, cached_response));
-
     // mark the response cache entry as cached for the cached getter
-    if (!RequestOrResponse::take_cache_entry(response, true)) {
-      return false;
-    }
+    RequestOrResponse::take_cache_entry(cached_response, true);
 
     // Return cached response regardless of revalidation status
-    if (!Response::add_fastly_cache_headers(cx, response, request, cache_entry,
+    if (!Response::add_fastly_cache_headers(cx, cached_response, request, cache_entry,
                                             "cached response")) {
       return false;
     }
 
     RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
-    JS::RootedValue response_val(cx, JS::ObjectValue(*response));
+    JS::RootedValue response_val(cx, JS::ObjectValue(*cached_response));
     args.rval().setObject(*response_promise);
     return JS::ResolvePromise(cx, response_promise, response_val);
   }

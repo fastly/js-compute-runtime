@@ -671,7 +671,7 @@ struct HttpCacheWriteOptions final {
   std::optional<uint64_t> max_age_ns;
 
   // Optional vary rule - header names separated by spaces
-  std::optional<std::string> vary_rule;
+  std::optional<HostString> vary_rule;
 
   // Optional initial age of the response in nanoseconds
   std::optional<uint64_t> initial_age_ns;
@@ -680,7 +680,7 @@ struct HttpCacheWriteOptions final {
   std::optional<uint64_t> stale_while_revalidate_ns;
 
   // Optional surrogate keys separated by spaces
-  std::optional<std::vector<std::string>> surrogate_keys;
+  std::optional<std::vector<HostString>> surrogate_keys;
 
   // Optional length of the response body
   std::optional<uint64_t> length;
@@ -768,7 +768,7 @@ public:
   Result<CacheState> get_state() const;
 
   /// Get content length
-  Result<uint64_t> get_length() const;
+  Result<std::optional<uint64_t>> get_length() const;
 
   /// Get max age in nanoseconds
   Result<uint64_t> get_max_age_ns() const;

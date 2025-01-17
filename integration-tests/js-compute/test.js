@@ -268,8 +268,8 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
           if (test.environments.includes('compute')) {
             // TODO: this just hides flakes, so we should remove retry and fix the flakes.
             return (bail ? (_, __, fn) => fn() : retry)(
-              10,
-              expBackoff('60s', '10s'),
+              4,
+              expBackoff('5s', '1s'),
               async () => {
                 let path = test.downstream_request.pathname;
                 let url = `${domain}${path}`;

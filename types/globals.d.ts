@@ -1224,7 +1224,9 @@ declare interface RequestInit {
 
   /** The Fastly configured backend name or instance the request should be sent to. */
   backend?: string | import('fastly:backend').Backend;
-  cacheOverride?: import('fastly:cache-override').CacheOverride;
+  cacheOverride?:
+    | import('fastly:cache-override').CacheOverride
+    | import('fastly:cache-override').ICacheOverride;
   cacheKey?: string;
   fastly?: {
     decompressGzip?: boolean;
