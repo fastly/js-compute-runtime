@@ -172,7 +172,7 @@ function chunks(arr, size) {
 let results = [];
 for (const chunk of chunks(Object.entries(tests), 100)) {
   results.push(
-    ...(await Promise.allSettled(
+    ...(await (bail ? Promise.all : Promise.allSettled)(
       chunk.map(async ([title, test]) => {
         // basic test filtering
         if (filter.length > 0 && filter.every((f) => !title.includes(f))) {
@@ -266,10 +266,9 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
           }
         } else {
           if (test.environments.includes('compute')) {
-            // TODO: this just hides flakes, so we should remove retry and fix the flakes.
-            return (bail ? (_, __, fn) => fn() : retry)(
-              4,
-              expBackoff('5s', '1s'),
+            return (!test.flake ? (_, __, fn) => fn() : retry)(
+              10,
+              expBackoff('60s', '10s'),
               async () => {
                 let path = test.downstream_request.pathname;
                 let url = `${domain}${path}`;

@@ -35,27 +35,31 @@
   "GET /cache-override/fetch/mode-none": {},
   "GET /cache-override/fetch/mode-pass": {},
   "GET /secret-store/exposed-as-global": {},
-  "GET /secret-store/interface": {},
-  "GET /secret-store/constructor/called-as-regular-function": {},
-  "GET /secret-store/constructor/parameter-calls-7.1.17-ToString": {},
-  "GET /secret-store/constructor/empty-parameter": {},
-  "GET /secret-store/constructor/found-store": {},
-  "GET /secret-store/constructor/missing-store": {},
-  "GET /secret-store/constructor/invalid-name": {},
-  "GET /secret-store/get/called-as-constructor": {},
-  "GET /secret-store/get/called-unbound": {},
-  "GET /secret-store/get/key-parameter-calls-7.1.17-ToString": {},
-  "GET /secret-store/get/key-parameter-not-supplied": {},
-  "GET /secret-store/get/key-parameter-empty-string": {},
-  "GET /secret-store/get/key-parameter-255-character-string": {},
-  "GET /secret-store/get/key-parameter-256-character-string": {},
-  "GET /secret-store/get/key-parameter-invalid-string": {},
-  "GET /secret-store/get/key-does-not-exist-returns-null": {},
-  "GET /secret-store/get/key-exists": {},
-  "GET /secret-store/from-bytes/invalid": {},
-  "GET /secret-store/from-bytes/valid": {},
-  "GET /secret-store-entry/interface": {},
-  "GET /secret-store-entry/plaintext": {},
+  "GET /secret-store/interface": { "flake": true },
+  "GET /secret-store/constructor/called-as-regular-function": { "flake": true },
+  "GET /secret-store/constructor/parameter-calls-7.1.17-ToString": {
+    "flake": true
+  },
+  "GET /secret-store/constructor/empty-parameter": { "flake": true },
+  "GET /secret-store/constructor/found-store": { "flake": true },
+  "GET /secret-store/constructor/missing-store": { "flake": true },
+  "GET /secret-store/constructor/invalid-name": { "flake": true },
+  "GET /secret-store/get/called-as-constructor": { "flake": true },
+  "GET /secret-store/get/called-unbound": { "flake": true },
+  "GET /secret-store/get/key-parameter-calls-7.1.17-ToString": {
+    "flake": true
+  },
+  "GET /secret-store/get/key-parameter-not-supplied": { "flake": true },
+  "GET /secret-store/get/key-parameter-empty-string": { "flake": true },
+  "GET /secret-store/get/key-parameter-255-character-string": { "flake": true },
+  "GET /secret-store/get/key-parameter-256-character-string": { "flake": true },
+  "GET /secret-store/get/key-parameter-invalid-string": { "flake": true },
+  "GET /secret-store/get/key-does-not-exist-returns-null": { "flake": true },
+  "GET /secret-store/get/key-exists": { "flake": true },
+  "GET /secret-store/from-bytes/invalid": { "flake": true },
+  "GET /secret-store/from-bytes/valid": { "flake": true },
+  "GET /secret-store-entry/interface": { "flake": true },
+  "GET /secret-store-entry/plaintext": { "flake": true },
   "GET /simple-cache/interface": {},
   "GET /simple-store/constructor/called-as-regular-function": {
     "environments": ["compute"]
@@ -315,7 +319,7 @@
   "GET /client/tlsClientCertificate": {},
   "GET /client/tlsCipherOpensslName": {},
   "GET /client/tlsProtocol": {},
-  "GET /config-store": {},
+  "GET /config-store": { "flake": true },
   "GET /crypto": {
     "downstream_response": {
       "status": 200,
@@ -886,22 +890,24 @@
       "body": "ok"
     }
   },
-  "GET /dictionary/exposed-as-global": {},
-  "GET /dictionary/interface": {},
-  "GET /dictionary/constructor/called-as-regular-function": {},
-  "GET /dictionary/constructor/parameter-calls-7.1.17-ToString": {},
-  "GET /dictionary/constructor/empty-parameter": {},
-  "GET /dictionary/constructor/found": {},
-  "GET /dictionary/constructor/invalid-name": {},
-  "GET /dictionary/get/called-as-constructor": {},
-  "GET /dictionary/get/called-unbound": {},
-  "GET /dictionary/get/key-parameter-calls-7.1.17-ToString": {},
-  "GET /dictionary/get/key-parameter-not-supplied": {},
-  "GET /dictionary/get/key-parameter-empty-string": {},
-  "GET /dictionary/get/key-parameter-255-character-string": {},
-  "GET /dictionary/get/key-parameter-256-character-string": {},
-  "GET /dictionary/get/key-does-not-exist-returns-null": {},
-  "GET /dictionary/get/key-exists": {},
+  "GET /dictionary/exposed-as-global": { "flake": true },
+  "GET /dictionary/interface": { "flake": true },
+  "GET /dictionary/constructor/called-as-regular-function": { "flake": true },
+  "GET /dictionary/constructor/parameter-calls-7.1.17-ToString": {
+    "flake": true
+  },
+  "GET /dictionary/constructor/empty-parameter": { "flake": true },
+  "GET /dictionary/constructor/found": { "flake": true },
+  "GET /dictionary/constructor/invalid-name": { "flake": true },
+  "GET /dictionary/get/called-as-constructor": { "flake": true },
+  "GET /dictionary/get/called-unbound": { "flake": true },
+  "GET /dictionary/get/key-parameter-calls-7.1.17-ToString": { "flake": true },
+  "GET /dictionary/get/key-parameter-not-supplied": { "flake": true },
+  "GET /dictionary/get/key-parameter-empty-string": { "flake": true },
+  "GET /dictionary/get/key-parameter-255-character-string": { "flake": true },
+  "GET /dictionary/get/key-parameter-256-character-string": { "flake": true },
+  "GET /dictionary/get/key-does-not-exist-returns-null": { "flake": true },
+  "GET /dictionary/get/key-exists": { "flake": true },
   "GET /env": {
     "environments": ["viceroy"]
   },
@@ -1034,9 +1040,9 @@
       "body": "ok"
     }
   },
-  "GET /request/constructor/fastly/decompressGzip/true": {},
+  "GET /request/constructor/fastly/decompressGzip/true": { "flake": true },
   "GET /request/constructor/fastly/decompressGzip/false": {},
-  "GET /fetch/requestinit/fastly/decompressGzip/true": {},
+  "GET /fetch/requestinit/fastly/decompressGzip/true": { "flake": true },
   "GET /fetch/requestinit/fastly/decompressGzip/false": {},
   "GET /request/setCacheKey/called-as-constructor": {},
   "GET /request/setCacheKey/called-unbound": {},
@@ -1048,6 +1054,7 @@
   "GET /request/clone/valid": {},
   "GET /request/clone/invalid": {},
   "GET /response/blob": {
+    "flake": true,
     "downstream_response": {
       "status": 200,
       "headers": { "content-type": "text/html" },
@@ -1063,6 +1070,7 @@
   "GET /response/json": {},
   "GET /response/redirect": {},
   "GET /response/request-body-init": {
+    "flake": true,
     "downstream_response": {
       "status": 200,
       "body_prefix": [
