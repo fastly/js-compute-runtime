@@ -449,7 +449,7 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
       HANDLE_ERROR(cx, *err);
       return false;
     }
-    return true;
+    break;
   }
   case host_api::HttpStorageAction::DoNotStore: {
     auto res = cache_entry.transaction_abandon();
@@ -457,7 +457,7 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
       HANDLE_ERROR(cx, *err);
       return false;
     }
-    return true;
+    break;
   }
   case host_api::HttpStorageAction::RecordUncacheable: {
     auto res = cache_entry.transaction_record_not_cacheable(cache_write_options->max_age_ns.value(),
@@ -466,11 +466,12 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
       HANDLE_ERROR(cx, *err);
       return false;
     }
-    return true;
+    break;
   }
   default:
     MOZ_ASSERT_UNREACHABLE();
   }
+  return true;
 }
 
 bool background_revalidation_catch_handler(JSContext *cx, JS::HandleObject request,
@@ -657,6 +658,9 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     break;
   }
   case host_api::HttpStorageAction::DoNotStore: {
+    // promote the CandidateResponse -> body is now readable
+    JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
+                        JS::TrueValue());
     auto res = cache_entry.transaction_abandon();
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
@@ -666,6 +670,9 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     break;
   }
   case host_api::HttpStorageAction::RecordUncacheable: {
+    // promote the CandidateResponse -> body is now readable
+    JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
+                        JS::TrueValue());
     auto res = cache_entry.transaction_record_not_cacheable(cache_write_options->max_age_ns.value(),
                                                             cache_write_options->vary_rule);
     if (auto *err = res.to_err()) {

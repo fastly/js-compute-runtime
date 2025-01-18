@@ -1226,7 +1226,8 @@ declare interface RequestInit {
   backend?: string | import('fastly:backend').Backend;
   cacheOverride?:
     | import('fastly:cache-override').CacheOverride
-    | import('fastly:cache-override').ICacheOverride;
+    | import('fastly:cache-override').ICacheOverride
+    | Exclude<import('fastly:cache-override').CacheOverrideMode, 'override'>;
   cacheKey?: string;
   fastly?: {
     decompressGzip?: boolean;
@@ -1359,9 +1360,9 @@ interface Response extends Body {
   /**
    * Fastly-specific property - Returns whether the cached `Response` is considered stale.
    *
-   * Only available for use inside of the afterSend hook, and undefined otherwise.
+   * Undefined if the environment does not support the new HTTP Cache hostcalls.
    */
-  readonly isStale: boolean | undefined;
+  readonly stale: boolean | undefined;
   /**
    * Fastly-specific property - Get the Time to Live (TTL) in the cache for this response, if it is cached.
    *

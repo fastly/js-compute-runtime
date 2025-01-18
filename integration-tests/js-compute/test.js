@@ -175,7 +175,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
     ...(await Promise.allSettled(
       chunk.map(async ([title, test]) => {
         // basic test filtering
-        if (!title.includes(filter)) {
+        if (filter.every((f) => !title.includes(f))) {
           return {
             title,
             test,
@@ -324,7 +324,7 @@ for (const result of results) {
   if (result.status === 'fulfilled') {
     passed += 1;
     if (result.value.skipped) {
-      if (!result.value.title.includes(filter)) {
+      if (filter.every((f) => !result.value.title.includes(f))) {
         // console.log(white, info, `Skipped by test filter: ${result.value.title}`, reset);
       } else if (local && !result.value.test.environments.includes('viceroy')) {
         console.log(

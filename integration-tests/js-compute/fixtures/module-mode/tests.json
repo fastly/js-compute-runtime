@@ -167,68 +167,50 @@
   "GET /http-cache/candidate-response-properties-uncached": {
     "environments": ["compute"]
   },
-  "GET /http-cache/after-send-edge-cache": {
-    "environments": ["compute"]
-  },
-  "GET /http-cache/after-send-browser-cache": {
-    "environments": ["compute"]
-  },
   "GET /http-cache/before-send": {
     "environments": ["compute"]
   },
-  "GET /http-cache/request-mutation": {
+  "GET /http-cache/after-send-no-cache": {
     "environments": ["compute"]
   },
-  "GET /http-cache/request-mutation-order": {
+  "GET /http-cache/after-send-cache": {
+    "environments": ["compute"]
+  },
+  "GET /http-cache/after-send-cache-expire": {
+    "environments": ["compute"]
+  },
+  "GET /http-cache/after-send-pass": {
+    "environments": ["compute"]
+  },
+  "GET /http-cache/after-send-res-no-body": {
     "environments": ["compute"]
   },
   "GET /http-cache/response-mutations": {
-    "environments": ["compute"]
-  },
-  "GET /http-cache/cacheability": {
     "environments": ["compute"]
   },
   "GET /http-cache/stale-responses": {
     "environments": ["compute"]
   },
   "GET /http-cache/invalid-transform": {
-    "environments": ["compute"]
+    "environments": []
   },
   "GET /http-cache/body-transform": {
-    "environments": ["compute"]
+    "environments": []
   },
   "GET /http-cache/body-transform-error": {
-    "environments": ["compute"]
+    "environments": []
   },
   "GET /http-cache/body-transform-invalid-chunk": {
-    "environments": ["compute"]
+    "environments": []
   },
   "GET /http-cache/body-transform-write-after-close": {
-    "environments": ["compute"]
+    "environments": []
   },
   "GET /http-cache/body-transform-cancel": {
-    "environments": ["compute"]
+    "environments": []
   },
   "GET /http-cache/body-transform-backpressure": {
-    "environments": ["compute"]
-  },
-  "GET /http-cache/request-collapsing-options": {
-    "environments": ["compute"]
-  },
-  "GET /http-cache/request-collapsing-uncacheable": {
-    "environments": ["compute"]
-  },
-  "GET /http-cache/request-collapsing-vary": {
-    "environments": ["compute"]
-  },
-  "GET /http-cache/concurrent-modifications": {
-    "environments": ["compute"]
-  },
-  "GET /http-cache/concurrent-transforms": {
-    "environments": ["compute"]
-  },
-  "GET /http-cache/revalidation-updates": {
-    "environments": ["compute"]
+    "environments": []
   },
   "GET /kv-store-e2e/list": {},
   "GET /kv-store/exposed-as-global": {},

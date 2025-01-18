@@ -332,7 +332,7 @@ public:
 
   static bool isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool cached_get(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool isStale_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool stale_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool ttl_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool ttl_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool age_get(JSContext *cx, unsigned argc, JS::Value *vp);
