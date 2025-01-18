@@ -172,7 +172,7 @@ function chunks(arr, size) {
 let results = [];
 for (const chunk of chunks(Object.entries(tests), 100)) {
   results.push(
-    ...(await (bail ? Promise.all : Promise.allSettled)(
+    ...(await (bail ? Promise.all.bind(Promise) : Promise.allSettled.bind(Promise))(
       chunk.map(async ([title, test]) => {
         // basic test filtering
         if (filter.length > 0 && filter.every((f) => !title.includes(f))) {
