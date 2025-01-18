@@ -14,7 +14,10 @@
 using api::FastlyResult;
 using fastly::FastlyAPIError;
 
-#ifdef DEBUG
+// Define CALL_LOGGING to enable call logging throughout the codebase
+// #define CALL_LOGGING
+
+#if defined(DEBUG) && defined(CALL_LOGGING)
 static void log_hostcall(const char *func_name, ...) {
   std::stringstream ss;
   ss << "HOSTCALL: " << func_name << "(";

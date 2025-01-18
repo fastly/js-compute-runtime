@@ -24,9 +24,12 @@ struct JSErrorFormatString;
 
 void fastly_push_debug_message(std::string_view msg);
 
+// Define CALL_LOGGING to enable call logging throughout the codebase
+// #define CALL_LOGGING
+
 // Debug mode debugging logging that logs both into an error response post-data
 // via fastly.debugMessages, as well as to stderr for flexible debugging.
-#ifdef DEBUG
+#if defined(DEBUG) && defined(CALL_LOGGING)
 #define DEBUG_LOG(msg)                                                                             \
   {                                                                                                \
     std::string_view view(msg);                                                                    \
