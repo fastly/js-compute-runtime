@@ -324,7 +324,10 @@ for (const result of results) {
   if (result.status === 'fulfilled') {
     passed += 1;
     if (result.value.skipped) {
-      if (filter.length > 0 && filter.every((f) => !result.value.title.includes(f))) {
+      if (
+        filter.length > 0 &&
+        filter.every((f) => !result.value.title.includes(f))
+      ) {
         // console.log(white, info, `Skipped by test filter: ${result.value.title}`, reset);
       } else if (local && !result.value.test.environments.includes('viceroy')) {
         console.log(
