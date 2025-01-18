@@ -1133,24 +1133,6 @@
   "Origin parsing: <isolated-app://x:0> without base": {
     "status": "PASS"
   },
-  "Origin parsing: <non-special:\\\\opaque> without base": {
-    "status": "PASS"
-  },
-  "Origin parsing: <non-special:\\\\opaque/path> without base": {
-    "status": "PASS"
-  },
-  "Origin parsing: <non-special:\\\\opaque\\path> without base": {
-    "status": "PASS"
-  },
-  "Origin parsing: <non-special:\\/opaque> without base": {
-    "status": "PASS"
-  },
-  "Origin parsing: <non-special:/\\path> without base": {
-    "status": "PASS"
-  },
-  "Origin parsing: <non-special://host/a\\b> without base": {
-    "status": "PASS"
-  },
   "Origin parsing: <http://example.com/U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿?U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿> without base": {
     "status": "PASS"
   }
