@@ -1355,7 +1355,7 @@ const debug = sdkVersion.endsWith('-debug');
       `entry.json() instanceof Promise`,
     );
     result = await result;
-    strictEqual(result, obj, `await entry.json())`);
+    deepStrictEqual(result, obj, `await entry.json())`);
   });
   routes.set('/kv-store-entry/json/invalid', async () => {
     let store = new KVStore('example-test-kv-store');
@@ -1414,7 +1414,7 @@ const debug = sdkVersion.endsWith('-debug');
 async function kvStoreEntryInterfaceTests() {
   let actual = Reflect.ownKeys(KVStoreEntry);
   let expected = ['prototype', 'length', 'name'];
-  strictEqual(actual, expected, `Reflect.ownKeys(KVStoreEntry)`);
+  deepStrictEqual(actual, expected, `Reflect.ownKeys(KVStoreEntry)`);
 
   actual = Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'prototype');
   expected = {
@@ -1423,7 +1423,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: false,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'prototype')`,
@@ -1436,7 +1436,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'length')`,
@@ -1449,7 +1449,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry, 'name')`,
@@ -1466,7 +1466,7 @@ async function kvStoreEntryInterfaceTests() {
     'metadata',
     'metadataText',
   ];
-  strictEqual(actual, expected, `Reflect.ownKeys(KVStoreEntry.prototype)`);
+  deepStrictEqual(actual, expected, `Reflect.ownKeys(KVStoreEntry.prototype)`);
 
   actual = Reflect.getOwnPropertyDescriptor(
     KVStoreEntry.prototype,
@@ -1478,7 +1478,7 @@ async function kvStoreEntryInterfaceTests() {
     configurable: true,
     value: KVStoreEntry.prototype.constructor,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'constructor')`,
@@ -1491,7 +1491,7 @@ async function kvStoreEntryInterfaceTests() {
     configurable: true,
     value: KVStoreEntry.prototype.text,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'text')`,
@@ -1504,7 +1504,7 @@ async function kvStoreEntryInterfaceTests() {
     configurable: true,
     value: KVStoreEntry.prototype.json,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'json')`,
@@ -1520,7 +1520,7 @@ async function kvStoreEntryInterfaceTests() {
     configurable: true,
     value: KVStoreEntry.prototype.arrayBuffer,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype, 'arrayBuffer')`,
@@ -1609,7 +1609,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.constructor, 'length')`,
@@ -1625,7 +1625,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.constructor, 'name')`,
@@ -1641,7 +1641,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.text, 'length')`,
@@ -1657,7 +1657,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.text, 'name')`,
@@ -1673,7 +1673,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.json, 'length')`,
@@ -1689,7 +1689,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.json, 'name')`,
@@ -1705,7 +1705,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.arrayBuffer, 'length')`,
@@ -1721,7 +1721,7 @@ async function kvStoreEntryInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStoreEntry.prototype.arrayBuffer, 'name')`,
@@ -1731,7 +1731,7 @@ async function kvStoreEntryInterfaceTests() {
 async function kvStoreInterfaceTests() {
   let actual = Reflect.ownKeys(KVStore);
   let expected = ['prototype', 'length', 'name'];
-  strictEqual(actual, expected, `Reflect.ownKeys(KVStore)`);
+  deepStrictEqual(actual, expected, `Reflect.ownKeys(KVStore)`);
 
   actual = Reflect.getOwnPropertyDescriptor(KVStore, 'prototype');
   expected = {
@@ -1740,7 +1740,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: false,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore, 'prototype')`,
@@ -1753,7 +1753,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore, 'length')`,
@@ -1766,7 +1766,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore, 'name')`,
@@ -1774,7 +1774,7 @@ async function kvStoreInterfaceTests() {
 
   actual = Reflect.ownKeys(KVStore.prototype);
   expected = ['constructor', 'delete', 'get', 'put', 'list'];
-  strictEqual(actual, expected, `Reflect.ownKeys(KVStore.prototype)`);
+  deepStrictEqual(actual, expected, `Reflect.ownKeys(KVStore.prototype)`);
 
   actual = Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'constructor');
   expected = {
@@ -1783,7 +1783,7 @@ async function kvStoreInterfaceTests() {
     configurable: true,
     value: KVStore.prototype.constructor,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'constructor')`,
@@ -1796,7 +1796,7 @@ async function kvStoreInterfaceTests() {
     configurable: true,
     value: KVStore.prototype.delete,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'delete')`,
@@ -1809,7 +1809,7 @@ async function kvStoreInterfaceTests() {
     configurable: true,
     value: KVStore.prototype.get,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'get')`,
@@ -1822,7 +1822,7 @@ async function kvStoreInterfaceTests() {
     configurable: true,
     value: KVStore.prototype.put,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype, 'put')`,
@@ -1859,7 +1859,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.constructor, 'length')`,
@@ -1875,7 +1875,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.constructor, 'name')`,
@@ -1888,7 +1888,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.delete, 'length')`,
@@ -1901,7 +1901,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.delete, 'name')`,
@@ -1914,7 +1914,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.get, 'length')`,
@@ -1927,7 +1927,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.get, 'name')`,
@@ -1940,7 +1940,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.put, 'length')`,
@@ -1953,7 +1953,7 @@ async function kvStoreInterfaceTests() {
     enumerable: false,
     configurable: true,
   };
-  strictEqual(
+  deepStrictEqual(
     actual,
     expected,
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.put, 'name')`,

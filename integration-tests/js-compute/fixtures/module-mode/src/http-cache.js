@@ -458,7 +458,7 @@ const httpBinBackend = () =>
       },
     });
     strictEqual(afterSendCalled, true);
-    strictEqual(res.status, 200);
+    strictEqual(res.status, 201);
     strictEqual(res.headers.get('X-Custom'), 'test');
     strictEqual(res.ttl, 4000);
     strictEqual(res.swr, 400);

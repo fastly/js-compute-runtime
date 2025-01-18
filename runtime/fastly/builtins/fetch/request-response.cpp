@@ -3033,11 +3033,41 @@ bool Response::ok_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-// TODO: support status_set for CandidateResponse
 bool Response::status_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   args.rval().setInt32(status(self));
+  return true;
+}
+
+bool Response::status_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto maybe_cache_entry = RequestOrResponse::cache_entry(self);
+  if (!maybe_cache_entry.has_value()) {
+    args.rval().set(args[0]);
+    return true;
+  }
+
+  // If it _is_ a CandidateResponse, then support the status set, with validation
+  bool valid_status = true;
+  uint16_t status;
+  if (!args[0].isNumber() || !JS::ToUint16(cx, args[0], &status)) {
+    valid_status = false;
+  }
+  if (!valid_status || status < 200 || status > 599) {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
+    return false;
+  }
+
+  auto res = response_handle(self).set_status(status);
+
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
   return true;
 }
 
@@ -3480,7 +3510,7 @@ const JSPropertySpec Response::properties[] = {
     JS_PSG("redirected", redirected_get, JSPROP_ENUMERATE),
     JS_PSG("type", type_get, JSPROP_ENUMERATE),
     JS_PSG("url", url_get, JSPROP_ENUMERATE),
-    JS_PSG("status", status_get, JSPROP_ENUMERATE),
+    JS_PSGS("status", status_get, status_set, JSPROP_ENUMERATE),
     JS_PSG("ok", ok_get, JSPROP_ENUMERATE),
     JS_PSG("statusText", statusText_get, JSPROP_ENUMERATE),
     JS_PSG("version", version_get, JSPROP_ENUMERATE),

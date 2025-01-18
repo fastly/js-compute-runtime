@@ -219,6 +219,7 @@ class Response final : public builtins::FinalizableBuiltinImpl<Response> {
   static bool waitUntil(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool ok_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool status_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool status_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool statusText_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool url_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool version_get(JSContext *cx, unsigned argc, JS::Value *vp);

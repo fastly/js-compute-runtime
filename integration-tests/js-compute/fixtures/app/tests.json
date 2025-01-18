@@ -1685,6 +1685,7 @@
     }
   },
   "GET /core-cache/lookup/options-parameter-headers-field-undefined": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
@@ -1692,6 +1693,7 @@
     }
   },
   "GET /core-cache/lookup/options-parameter-headers-field-valid-sequence": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
@@ -1706,6 +1708,7 @@
     }
   },
   "GET /core-cache/lookup/options-parameter-headers-field-valid-Headers-instance": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
@@ -1797,6 +1800,7 @@
     }
   },
   "GET /core-cache/insert/options-parameter-maxAge-field-valid-record": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
@@ -1867,6 +1871,7 @@
     }
   },
   "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-valid-record": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
@@ -2525,6 +2530,7 @@
     }
   },
   "GET /transaction-cache-entry/insert/options-parameter-sensitive-field": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
@@ -2868,6 +2874,7 @@
     }
   },
   "GET /transaction-cache-entry/update/write-to-writer-and-read-from-reader": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
@@ -3403,6 +3410,7 @@
     }
   },
   "GET /core-cache/transaction-lookup-transaction-insert-vary-works": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "status": 200,
@@ -3582,6 +3590,8 @@
     }
   },
   "GET /compute/get-vcpu-ms": {
+    "flake": true,
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
