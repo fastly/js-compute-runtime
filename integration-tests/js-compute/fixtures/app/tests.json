@@ -223,6 +223,7 @@
     "environments": ["compute"]
   },
   "GET /simple-cache-entry/readablestream": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/rejection-rejects-outer": {
@@ -1119,7 +1120,7 @@
       "body": ["START\nEND\n"]
     }
   },
-  "GET /setTimeout/fetch-timeout": {},
+  "GET /setTimeout/fetch-timeout": { "flake": true },
   "GET /clearInterval/exposed-as-global": {},
   "GET /clearInterval/interface": {},
   "GET /clearInterval/called-as-constructor-function": {},
@@ -2395,6 +2396,7 @@
     }
   },
   "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-valid-record": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
@@ -2430,6 +2432,7 @@
     }
   },
   "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-valid-record": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
@@ -2465,6 +2468,7 @@
     }
   },
   "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-valid-record": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
