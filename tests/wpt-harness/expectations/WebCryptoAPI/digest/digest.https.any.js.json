@@ -238,17 +238,5 @@
   },
   "AES-KW with long": {
     "status": "PASS"
-  },
-  "empty algorithm object with empty": {
-    "status": "FAIL"
-  },
-  "empty algorithm object with short": {
-    "status": "FAIL"
-  },
-  "empty algorithm object with medium": {
-    "status": "FAIL"
-  },
-  "empty algorithm object with long": {
-    "status": "FAIL"
   }
 }
