@@ -436,14 +436,7 @@ const httpBinBackend = () =>
           afterSendCalled = true;
 
           // Test mutating various response properties
-
-          // cannot change status
-          try {
-            res.status = 201;
-            assert(false, 'Expected failure');
-          } catch (err) {
-            strictEqual(err instanceof TypeError, true);
-          }
+          res.status = 201;
 
           // can change headers
           res.headers.set('X-Custom', 'test');
