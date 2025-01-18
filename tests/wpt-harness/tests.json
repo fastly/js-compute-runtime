@@ -134,7 +134,6 @@
   "fetch/api/response/response-error-from-stream.any.js",
   "fetch/api/response/response-error.any.js",
   "fetch/api/response/response-from-stream.any.js",
-  "fetch/api/response/response-headers-guard.any.js",
   "fetch/api/response/response-init-001.any.js",
   "fetch/api/response/response-init-002.any.js",
   "fetch/api/response/response-init-contenttype.any.js",
