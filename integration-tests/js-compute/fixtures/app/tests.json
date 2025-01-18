@@ -80,6 +80,7 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/purge/key-parameter-8135-character-string": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/purge/key-parameter-8136-character-string": {
@@ -95,6 +96,7 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/set/key-parameter-calls-7.1.17-ToString": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/tll-parameter-7.1.4-ToNumber": {
@@ -173,6 +175,7 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/set/returns-undefined": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/get/called-as-constructor": {
@@ -194,6 +197,7 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/get/key-does-not-exist-returns-null": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/get/key-exists": {
@@ -1701,6 +1705,7 @@
     }
   },
   "GET /core-cache/lookup/options-parameter-headers-field-valid-record": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
@@ -2495,6 +2500,7 @@
     }
   },
   "GET /transaction-cache-entry/insert/options-parameter-length-field-valid-record": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
