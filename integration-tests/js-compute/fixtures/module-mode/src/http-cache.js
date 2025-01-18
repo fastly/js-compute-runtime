@@ -190,7 +190,7 @@ const httpBinBackend = () =>
     const res = await fetch(url, { cacheOverride });
 
     strictEqual(res.cached, false);
-    strictEqual(res.stale, undefined);
+    strictEqual(res.stale, false);
     strictEqual(res.ttl, 3600);
     strictEqual(res.age, 0);
     deepStrictEqual(res.vary, []);
