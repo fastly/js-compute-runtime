@@ -1,7 +1,7 @@
 /* eslint-env serviceworker */
 
 import { routes } from './routes.js';
-import { assert } from './assertions.js';
+import { assert, assertThrows } from './assertions.js';
 import { allowDynamicBackends } from 'fastly:experimental';
 
 routes.set('/response/stall', async (event) => {
@@ -64,6 +64,11 @@ routes.set('/response/request-body-init', async () => {
       accept: 'image/webp',
     },
   });
+
+  assertThrows(() => {
+    downloadResp.headers.set('should-be', 'immutable');
+  }, TypeError);
+
   // stream it through an echo proxy
   const postResp = await fetch(
     new Request('https://httpbin.org/anything', {

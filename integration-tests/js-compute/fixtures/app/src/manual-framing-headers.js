@@ -224,10 +224,14 @@ async function responseMethod(setManualFramingHeaders) {
     backend: 'httpbin',
     cacheOverride: new CacheOverride('pass'),
   });
-  response.setManualFramingHeaders(setManualFramingHeaders);
-  response.headers.set('content-length', '11');
-  response.headers.delete('transfer-encoding');
-  return response;
+  const outResponse = new Response(response.body, {
+    headers: response.headers,
+    status: response.status,
+  });
+  outResponse.setManualFramingHeaders(setManualFramingHeaders);
+  outResponse.headers.set('content-length', '11');
+  outResponse.headers.delete('transfer-encoding');
+  return outResponse;
 }
 
 routes.set('/override-content-length/response/method/false', async () => {
