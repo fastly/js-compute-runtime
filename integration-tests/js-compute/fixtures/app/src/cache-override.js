@@ -61,7 +61,8 @@ import { isRunningLocally, routes } from './routes.js';
 // Using CacheOverride
 {
   routes.set('/cache-override/fetch/mode-none', async () => {
-    if (!isRunningLocally()) {
+    if (isRunningLocally()) return;
+    {
       const response = await fetch('https://http-me.glitch.me/now?status=200', {
         backend: 'httpme',
         cacheOverride: new CacheOverride('none'),
@@ -72,12 +73,38 @@ import { isRunningLocally, routes } from './routes.js';
         `CacheOveride('none'); response.headers.has('x-cache') === true`,
       );
     }
+
+    {
+      const response = await fetch('https://http-me.glitch.me/now?status=200', {
+        backend: 'httpme',
+        cacheOverride: 'none',
+      });
+      assert(
+        response.headers.has('x-cache'),
+        true,
+        `CacheOveride('none'); response.headers.has('x-cache') === true`,
+      );
+    }
   });
   routes.set('/cache-override/fetch/mode-pass', async () => {
-    if (!isRunningLocally()) {
+    if (isRunningLocally()) return;
+
+    {
       const response = await fetch('https://http-me.glitch.me/now?status=200', {
         backend: 'httpme',
         cacheOverride: new CacheOverride('pass'),
+      });
+      assert(
+        response.headers.has('x-cache'),
+        false,
+        `CacheOveride('pass'); response.headers.has('x-cache') === false`,
+      );
+    }
+
+    {
+      const response = await fetch('https://http-me.glitch.me/now?status=200', {
+        backend: 'httpme',
+        cacheOverride: 'pass',
       });
       assert(
         response.headers.has('x-cache'),

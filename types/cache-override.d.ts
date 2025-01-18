@@ -15,7 +15,7 @@ declare module 'fastly:cache-override' {
      * Setting this to true or false will override this default cache behaviour, setting in the cache
      * or not setting in the cache, even if the default behaviour would have been otherwise.
      *
-     * Setting to 'record-uncacheable' the response will not only not be cached, but the cache will
+     * Setting to 'uncacheable' the response will not only not be cached, but the cache will
      * record that the originating request led to an uncacheable response, so that future cache lookups
      * will result in immediately going to the backend, rather than attempting to coordinate concurrent
      * requests to reduce backend traffic.
@@ -42,6 +42,15 @@ declare module 'fastly:cache-override' {
      */
     bodyTransform?: TransformStream<Uint8Array, Uint8Array>;
   }
+  /**
+   * The cache override mode for a request
+   *
+   * If set to:
+   * - "none": Do not override the behavior specified in the origin response’s cache control headers.
+   * - "pass": Do not cache the response to this request, regardless of the origin response’s headers.
+   * - "override": Override particular cache control settings using a {@linkcode CacheOverride} object.
+   */
+  type CacheOverrideMode = 'none' | 'pass' | 'override';
 
   interface ICacheOverride {
     /**
@@ -174,7 +183,7 @@ declare module 'fastly:cache-override' {
      *
      * @param {[init]} ICacheOverride Sets the cache override init options
      */
-    constructor(mode: 'none' | 'pass' | 'override', init?: ICacheOverride);
+    constructor(mode: CacheOverrideMode, init?: ICacheOverride);
     constructor(overrideInit?: ICacheOverride);
 
     /**
@@ -185,7 +194,7 @@ declare module 'fastly:cache-override' {
      * - "pass": Do not cache the response to this request, regardless of the origin response’s headers.
      * - "override": Override particular cache control settings using a {@linkcode CacheOverride} object.
      */
-    public mode: 'none' | 'pass' | 'override';
+    public mode: CacheOverrideMode;
     /**
      * Override the caching behavior of this request to use the given Time to Live (TTL), in seconds.
      */

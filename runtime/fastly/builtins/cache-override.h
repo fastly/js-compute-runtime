@@ -79,7 +79,7 @@ public:
 
   static bool ensure_override(JSContext *cx, JS::HandleObject self, const char *field);
 
-  static JSObject *create_override(JSContext *cx, JS::HandleObject override_options);
+  static JSObject *create(JSContext *cx, JS::HandleValue override);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 

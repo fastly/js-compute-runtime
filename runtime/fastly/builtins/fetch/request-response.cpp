@@ -206,6 +206,7 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
   // Get cache handle and hits
   RootedValue res(cx);
   bool found = false;
+  bool stale = false;
   if (cache_entry.has_value()) {
     auto state_res = cache_entry->get_state();
     if (auto *err = state_res.to_err()) {
@@ -214,6 +215,7 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
     }
     if (state_res.unwrap().is_found()) {
       found = true;
+      stale = state_res.unwrap().is_stale();
       auto hits_res = cache_entry->get_hits();
       if (auto *err = hits_res.to_err()) {
         HANDLE_ERROR(cx, *err);
@@ -240,7 +242,8 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
   // Mark cached: found on the response, via the CacheEntry = boolean Response-phase convention slot
   // reuse (the cache handle was released from the response, promoting it from a CandidateResponse
   // to a response by the time we get here, which is why it's passed as an optional argument)
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::CacheEntry), JS::BooleanValue(found));
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::CacheEntry),
+                      found && stale ? JS::NullValue() : JS::BooleanValue(found));
   if (!found) {
     JS::RootedValueArray<2> args(cx);
 
@@ -500,6 +503,9 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
                       JS::Int32Value(static_cast<uint32_t>(suggested_storage_action)));
   JS::SetReservedSlot(response, static_cast<uint32_t>(RequestOrResponse::Slots::CacheEntry),
                       JS::Int32Value(cache_entry.handle));
+  // CandidateResponse does not have a body!
+  JS::SetReservedSlot(response, static_cast<uint32_t>(RequestOrResponse::Slots::HasBody),
+                      JS::FalseValue());
 
   RootedObject cache_override(
       cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
@@ -1844,20 +1850,19 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
 }
 
 bool Request::set_cache_override(JSContext *cx, JS::HandleObject self,
-                                 JS::HandleValue cache_override_val) {
+                                 JS::HandleValue cache_override) {
   MOZ_ASSERT(is_instance(self));
 
   JSObject *override;
-  if (CacheOverride::is_instance(cache_override_val)) {
-    JS::RootedObject input(cx, &cache_override_val.toObject());
+  if (CacheOverride::is_instance(cache_override)) {
+    JS::RootedObject input(cx, &cache_override.toObject());
     override = CacheOverride::clone(cx, input);
     if (!override) {
       return false;
     }
-  } else if (cache_override_val.isObject()) {
+  } else if (cache_override.isObject() || cache_override.isString()) {
     // support constructing the cache override dynamically
-    JS::RootedObject cache_override_obj(cx, &cache_override_val.toObject());
-    override = CacheOverride::create_override(cx, cache_override_obj);
+    override = CacheOverride::create(cx, cache_override);
     if (!override) {
       return false;
     }
@@ -3103,6 +3108,7 @@ bool Response::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Response::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
+
   return RequestOrResponse::body_get(cx, args, self, true);
 }
 
@@ -3485,7 +3491,7 @@ const JSPropertySpec Response::properties[] = {
     JS_PSG("port", port_get, JSPROP_ENUMERATE),
     JS_PSG("backend", backend_get, JSPROP_ENUMERATE),
     JS_PSG("cached", cached_get, JSPROP_ENUMERATE),
-    JS_PSG("isStale", isStale_get, JSPROP_ENUMERATE),
+    JS_PSG("stale", stale_get, JSPROP_ENUMERATE),
     JS_PSGS("ttl", ttl_get, ttl_set, JSPROP_ENUMERATE),
     JS_PSG("age", age_get, JSPROP_ENUMERATE),
     JS_PSGS("swr", swr_get, swr_set, JSPROP_ENUMERATE),
@@ -3514,15 +3520,18 @@ bool Response::cached_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // Candidate Response -> not cached, since it just came from an origin update
   if (cache_entry.isInt32()) {
-    DEBUG_LOG("CACHE ENTRY INT")
     args.rval().setBoolean(false);
     return true;
   }
 
-  // Actual Response -> cache_entry boolean slot-saving convention used to indicate if cached
+  // Actual Response -> cache_entry boolean/null slot-saving convention used to indicate if
+  // cached/stale
   if (cache_entry.isBoolean()) {
-    DEBUG_LOG("CACHE ENTRY BOOL")
     args.rval().setBoolean(cache_entry.toBoolean());
+    return true;
+  }
+  if (cache_entry.isNull()) {
+    args.rval().setBoolean(true);
     return true;
   }
 
@@ -3531,24 +3540,26 @@ bool Response::cached_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-// TODO: extend isStale to non-Candidate Responses?
-bool Response::isStale_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Response::stale_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  auto entry = RequestOrResponse::cache_entry(self);
-  // isStale is only available on CandidateResponse
-  if (!entry.has_value()) {
-    args.rval().setUndefined();
+  JS::Value cache_entry =
+      JS::GetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::CacheEntry));
+
+  // Actual Response -> cache_entry null slot-saving convention used to indicate if stale
+  if (cache_entry.isNull()) {
+    args.rval().setBoolean(true);
     return true;
   }
 
-  auto res = entry.value().get_state();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  // Candidate Response -> not cached, since it just came from an origin update
+  if (cache_entry.isInt32() || cache_entry.isBoolean()) {
+    args.rval().setBoolean(false);
+    return true;
   }
 
-  args.rval().setBoolean(res.unwrap().is_stale());
+  // Otherwise no info / cache stuff disabled -> undefined
+  args.rval().setUndefined();
   return true;
 }
 
