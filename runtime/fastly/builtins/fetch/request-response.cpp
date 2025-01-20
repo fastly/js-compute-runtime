@@ -973,7 +973,8 @@ bool RequestOrResponse::commit_headers(JSContext *cx, HandleObject self) {
     return true;
   }
   if (Headers::mode(headers) == Headers::Mode::Uninitialized ||
-      Headers::mode(headers) == Headers::Mode::CachedInContent) {
+      Headers::mode(headers) == Headers::Mode::CachedInContent ||
+      Headers::mode(headers) == Headers::Mode::HostOnly) {
     return true;
   }
   bool headers_changed;
