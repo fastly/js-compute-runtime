@@ -40,6 +40,7 @@ let args = argv.slice(2);
 const local = args.includes('--local');
 const verbose = args.includes('--verbose');
 const moduleMode = args.includes('--module-mode');
+const httpCache = args.includes('--http-cache');
 const aot = args.includes('--aot');
 const debugBuild = args.includes('--debug-build');
 const filter = args.filter((arg) => !arg.startsWith('--'));
@@ -73,7 +74,7 @@ const branchName = (await zx`git branch --show-current`).stdout
   .replace(/[^a-zA-Z0-9_-]/g, '_');
 
 const fixture = moduleMode ? 'module-mode' : 'app';
-const serviceName = `${fixture}--${branchName}${aot ? '--aot' : ''}${process.env.SUFFIX_STRING || ''}`;
+const serviceName = `${fixture}--${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING || ''}`;
 let domain;
 const fixturePath = join(__dirname, 'fixtures', fixture);
 let localServer;
@@ -95,6 +96,11 @@ if (aot) {
 if (debugBuild) {
   const buildArgs = config.scripts.build.split(' ');
   buildArgs.splice(-1, null, '--debug-build');
+  config.scripts.build = buildArgs.join(' ');
+}
+if (httpCache) {
+  const buildArgs = config.scripts.build.split(' ');
+  buildArgs.splice(-1, null, '--enable-http-cache');
   config.scripts.build = buildArgs.join(' ');
 }
 await writeFile(
@@ -178,6 +184,18 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
       chunk.map(async ([title, test]) => {
         // basic test filtering
         if (filter.length > 0 && filter.every((f) => !title.includes(f))) {
+          return {
+            title,
+            test,
+            skipped: true,
+          };
+        }
+        // feature based test filtering
+        if (
+          !httpCache &&
+          test.features &&
+          test.features.includes('http-cache')
+        ) {
           return {
             title,
             test,

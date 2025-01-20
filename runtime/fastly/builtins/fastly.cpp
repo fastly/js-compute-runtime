@@ -50,6 +50,7 @@ JS::PersistentRooted<JSObject *> Fastly::baseURL;
 JS::PersistentRooted<JSString *> Fastly::defaultBackend;
 bool allowDynamicBackendsCalled = false;
 bool Fastly::allowDynamicBackends = true;
+bool ENABLE_EXPERIMENTAL_HTTP_CACHE = false;
 
 bool Fastly::dump(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -469,6 +470,8 @@ bool install(api::Engine *engine) {
 
   bool ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS =
       std::string(std::getenv("ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS")) == "1";
+  ENABLE_EXPERIMENTAL_HTTP_CACHE =
+      std::string(std::getenv("ENABLE_EXPERIMENTAL_HTTP_CACHE")) == "1";
 
   JS::SetOutOfMemoryCallback(engine->cx(), oom_callback, nullptr);
 

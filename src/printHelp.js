@@ -20,6 +20,8 @@ OPTIONS:
     --module-mode                            [experimental] Run all sources as native modules,
                                                            with full error stack support.
     --engine-wasm <engine-wasm>                             The JS engine Wasm file path
+                                                            with full error stack support
+    --enable-http-cache                                     Enable the HTTP cache hook API
     --enable-aot                                            Enable AOT compilation for performance
     --enable-experimental-high-resolution-time-methods      Enable experimental fastly.now() method
     --enable-experimental-top-level-await                   Enable experimental top level await
