@@ -852,6 +852,33 @@ typedef struct __attribute__((aligned(4))) fastly_host_cache_lookup_options {
   uint32_t request_headers;
 } fastly_host_cache_lookup_options;
 
+// Configuration for several hostcalls that write to the cache:
+// - `insert`
+// - `transaction-insert`
+// - `transaction-insert-and-stream-back`
+// - `transaction-update`
+//
+// Some options are only allowed for certain of these hostcalls see `cache-write-options-mask`.
+typedef struct fastly_host_cache_write_options {
+  // this is a required field there's no flag for it
+  uint64_t max_age_ns;
+  // a full request handle, but used only for its headers
+  uint32_t request_headers;
+  // a list of header names separated by spaces
+  fastly_world_string vary_rule;
+  // The initial age of the object in nanoseconds (default: 0).
+  //
+  // This age is used to determine the freshness lifetime of the object as well as to
+  // prioritize which variant to return if a subsequent lookup matches more than one vary rule
+  uint64_t initial_age_ns;
+  uint64_t stale_while_revalidate_ns;
+  // a list of surrogate keys separated by spaces
+  fastly_world_string surrogate_keys;
+  uint64_t length;
+  fastly_world_list_u8 user_metadata;
+  bool sensitive_data;
+} fastly_host_cache_write_options;
+
 // a cached object was found
 #define FASTLY_HOST_CACHE_LOOKUP_STATE_FOUND (1 << 0)
 // the cached object is valid to use (implies found)
