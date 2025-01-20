@@ -2558,27 +2558,6 @@
   "Parsing: <//a/../> against <file:///>": {
     "status": "PASS"
   },
-  "Parsing: <non-special:\\\\opaque> without base": {
-    "status": "PASS"
-  },
-  "Parsing: <non-special:\\\\opaque/path> without base": {
-    "status": "PASS"
-  },
-  "Parsing: <non-special:\\\\opaque\\path> without base": {
-    "status": "PASS"
-  },
-  "Parsing: <non-special:\\/opaque> without base": {
-    "status": "PASS"
-  },
-  "Parsing: <non-special:/\\path> without base": {
-    "status": "PASS"
-  },
-  "Parsing: <non-special://host\\a> without base": {
-    "status": "PASS"
-  },
-  "Parsing: <non-special://host/a\\b> without base": {
-    "status": "PASS"
-  },
   "Parsing: <http://example.com/U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿?U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿> without base": {
     "status": "PASS"
   }

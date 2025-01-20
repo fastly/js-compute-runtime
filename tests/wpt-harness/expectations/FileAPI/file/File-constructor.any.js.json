@@ -1,0 +1,149 @@
+{
+  "File interface object exists": {
+    "status": "PASS"
+  },
+  "Required arguments": {
+    "status": "FAIL"
+  },
+  "empty fileBits": {
+    "status": "FAIL"
+  },
+  "DOMString fileBits": {
+    "status": "FAIL"
+  },
+  "Unicode DOMString fileBits": {
+    "status": "FAIL"
+  },
+  "String object fileBits": {
+    "status": "FAIL"
+  },
+  "Empty Blob fileBits": {
+    "status": "FAIL"
+  },
+  "Blob fileBits": {
+    "status": "FAIL"
+  },
+  "Empty File fileBits": {
+    "status": "FAIL"
+  },
+  "File fileBits": {
+    "status": "FAIL"
+  },
+  "ArrayBuffer fileBits": {
+    "status": "FAIL"
+  },
+  "Typed array fileBits": {
+    "status": "FAIL"
+  },
+  "Various fileBits": {
+    "status": "FAIL"
+  },
+  "Number in fileBits": {
+    "status": "FAIL"
+  },
+  "Array in fileBits": {
+    "status": "FAIL"
+  },
+  "Object in fileBits": {
+    "status": "FAIL"
+  },
+  "Object with toString in fileBits": {
+    "status": "FAIL"
+  },
+  "Custom @@iterator": {
+    "status": "FAIL"
+  },
+  "Invalid bits argument: \"hello\"": {
+    "status": "FAIL"
+  },
+  "Invalid bits argument: 0": {
+    "status": "FAIL"
+  },
+  "Invalid bits argument: null": {
+    "status": "FAIL"
+  },
+  "Bits argument: object that throws": {
+    "status": "FAIL"
+  },
+  "Using fileName": {
+    "status": "FAIL"
+  },
+  "No replacement when using special character in fileName": {
+    "status": "FAIL"
+  },
+  "Using null fileName": {
+    "status": "FAIL"
+  },
+  "Using number fileName": {
+    "status": "FAIL"
+  },
+  "Using empty string fileName": {
+    "status": "FAIL"
+  },
+  "Using type in File constructor: text/plain": {
+    "status": "FAIL"
+  },
+  "Using type in File constructor: text/plain;charset=UTF-8": {
+    "status": "FAIL"
+  },
+  "Using type in File constructor: TEXT/PLAIN": {
+    "status": "FAIL"
+  },
+  "Using type in File constructor: 𝓽𝓮𝔁𝓽/𝔭𝔩𝔞𝔦𝔫": {
+    "status": "FAIL"
+  },
+  "Using type in File constructor: ascii/nonprintable\u001f": {
+    "status": "FAIL"
+  },
+  "Using type in File constructor: ascii/nonprintable": {
+    "status": "FAIL"
+  },
+  "Using type in File constructor: nonasciiî": {
+    "status": "FAIL"
+  },
+  "Using type in File constructor: nonasciiሴ": {
+    "status": "FAIL"
+  },
+  "Using type in File constructor: nonparsable": {
+    "status": "FAIL"
+  },
+  "Using lastModified": {
+    "status": "FAIL"
+  },
+  "Misusing name": {
+    "status": "FAIL"
+  },
+  "Unknown properties are ignored": {
+    "status": "FAIL"
+  },
+  "Invalid property bag: 123": {
+    "status": "FAIL"
+  },
+  "Invalid property bag: 123.4": {
+    "status": "FAIL"
+  },
+  "Invalid property bag: true": {
+    "status": "FAIL"
+  },
+  "Invalid property bag: \"abc\"": {
+    "status": "FAIL"
+  },
+  "Unusual but valid property bag: null": {
+    "status": "FAIL"
+  },
+  "Unusual but valid property bag: undefined": {
+    "status": "FAIL"
+  },
+  "Unusual but valid property bag: 1,2,3": {
+    "status": "FAIL"
+  },
+  "Unusual but valid property bag: /regex/": {
+    "status": "FAIL"
+  },
+  "Unusual but valid property bag: function() {}": {
+    "status": "FAIL"
+  },
+  "Property bag propagates exceptions": {
+    "status": "FAIL"
+  }
+}

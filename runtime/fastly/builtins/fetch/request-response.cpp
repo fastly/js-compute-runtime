@@ -1,6 +1,6 @@
 #include "request-response.h"
 #include "../../../StarlingMonkey/builtins/web/base64.h"
-// #include "../../../StarlingMonkey/builtins/web/blob.h"
+#include "../../../StarlingMonkey/builtins/web/blob.h"
 #include "../../../StarlingMonkey/builtins/web/dom-exception.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../../../StarlingMonkey/builtins/web/streams/transform-stream.h"
@@ -34,8 +34,8 @@
 #pragma clang diagnostic pop
 
 using builtins::web::base64::valueToJSByteString;
-// using builtins::web::blob::Blob;
-// using builtins::web::blob::BlobReader;
+using builtins::web::blob::Blob;
+using builtins::web::blob::BlobReader;
 using builtins::web::dom_exception::DOMException;
 
 // We use the StarlingMonkey Headers implementation, despite it supporting features that we do
@@ -211,10 +211,9 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   }
 
   bool is_upstream = true;
-  bool is_grip_upgrade = false;
   RootedString backend(cx, RequestOrResponse::backend(context));
   JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle, body,
-                                                 is_upstream, is_grip_upgrade, backend));
+                                                 is_upstream, nullptr, backend));
   if (!response) {
     return false;
   }
@@ -360,9 +359,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
 
   host_api::HostString host_type_str;
 
-  // Blob support disabled pending bug fix in test
-  // /override-content-length/request/init/object-literal/true
-  /*if (body_obj && Blob::is_instance(body_obj)) {
+  if (Blob::is_instance(body_obj)) {
     auto native_stream = NativeStreamSource::create(cx, body_obj, JS::UndefinedHandleValue,
                                                     Blob::stream_pull, Blob::stream_cancel);
     if (!native_stream) {
@@ -396,8 +393,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
       MOZ_ASSERT(host_type_str);
       content_type = host_type_str.ptr.get();
     }
-  } else */
-  if (body_obj && JS::IsReadableStream(body_obj)) {
+  } else if (body_obj && JS::IsReadableStream(body_obj)) {
     if (RequestOrResponse::body_unusable(cx, body_obj)) {
       JS_ReportErrorNumberLatin1(cx, FastlyGetErrorMessage, nullptr,
                                  JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
@@ -584,9 +580,7 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
     }
     static_cast<void>(buf.release());
     result.setObject(*array_buffer);
-  }
-  // TODO: Blob support disabled pending bug fix
-  /* else if constexpr (result_type == RequestOrResponse::BodyReadResult::Blob) {
+  } else if constexpr (result_type == RequestOrResponse::BodyReadResult::Blob) {
     JS::RootedString contentType(cx, JS_GetEmptyString(cx));
     JS::RootedObject blob(cx, Blob::create(cx, std::move(buf), len, contentType));
 
@@ -595,8 +589,7 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
     }
 
     result.setObject(*blob);
-  } */
-  else {
+  } else {
     JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), len)));
     if (!text) {
       return RejectPromiseWithPendingError(cx, result_promise);
@@ -1692,8 +1685,7 @@ const JSPropertySpec Request::static_properties[] = {
 const JSFunctionSpec Request::methods[] = {
     JS_FN("arrayBuffer", Request::bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
-    // JS_FN("blob", Request::bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0,
-    // JSPROP_ENUMERATE),
+    JS_FN("blob", Request::bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
     JS_FN("json", Request::bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", Request::bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setCacheOverride", Request::setCacheOverride, 3, JSPROP_ENUMERATE),
@@ -1910,9 +1902,10 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   JS::RootedValue cache_override(cx);
   JS::RootedValue cache_key(cx);
   JS::RootedValue fastly_val(cx);
-  JS::RootedValue manualFramingHeaders(cx);
-  bool hasmanualFramingHeaders;
+  bool hasManualFramingHeaders = false;
+  bool setManualFramingHeaders = false;
   if (init_val.isObject()) {
+    JS::RootedValue manualFramingHeaders(cx);
     JS::RootedObject init(cx, init_val.toObjectOrNull());
     if (!JS_GetProperty(cx, init, "method", &method_val) ||
         !JS_GetProperty(cx, init, "headers", &headers_val) ||
@@ -1921,10 +1914,11 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
         !JS_GetProperty(cx, init, "cacheOverride", &cache_override) ||
         !JS_GetProperty(cx, init, "cacheKey", &cache_key) ||
         !JS_GetProperty(cx, init, "fastly", &fastly_val) ||
-        !JS_HasOwnProperty(cx, init, "manualFramingHeaders", &hasmanualFramingHeaders) ||
+        !JS_HasOwnProperty(cx, init, "manualFramingHeaders", &hasManualFramingHeaders) ||
         !JS_GetProperty(cx, init, "manualFramingHeaders", &manualFramingHeaders)) {
       return nullptr;
     }
+    setManualFramingHeaders = manualFramingHeaders.isBoolean() && manualFramingHeaders.toBoolean();
   } else if (!init_val.isNullOrUndefined()) {
     JS_ReportErrorLatin1(cx, "Request constructor: |init| parameter can't be converted to "
                              "a dictionary");
@@ -2229,18 +2223,17 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
                         JS::BooleanValue(false));
   }
 
-  if (!hasmanualFramingHeaders) {
+  if (!hasManualFramingHeaders) {
     if (input_request) {
-      manualFramingHeaders.set(
-          JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::ManualFramingHeaders)));
-    } else {
-      manualFramingHeaders.setBoolean(false);
+      auto val =
+          JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::ManualFramingHeaders));
+      setManualFramingHeaders = val.isBoolean() && val.toBoolean();
     }
   }
   JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::ManualFramingHeaders),
-                      JS::BooleanValue(JS::ToBoolean(manualFramingHeaders)));
+                      JS::BooleanValue(setManualFramingHeaders));
 
-  if (JS::ToBoolean(manualFramingHeaders)) {
+  if (setManualFramingHeaders) {
     auto res =
         request_handle.set_framing_headers_mode(host_api::FramingHeadersMode::ManuallyFromHeaders);
     if (auto *err = res.to_err()) {
@@ -2289,9 +2282,14 @@ bool Response::is_upstream(JSObject *obj) {
   return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::IsUpstream)).toBoolean();
 }
 
-bool Response::is_grip_upgrade(JSObject *obj) {
+std::optional<host_api::HttpReq> Response::grip_upgrade_request(JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
-  return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::IsGripUpgrade)).toBoolean();
+  auto grip_upgrade_request =
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::GripUpgradeRequest));
+  if (grip_upgrade_request.isUndefined()) {
+    return std::nullopt;
+  }
+  return host_api::HttpReq(grip_upgrade_request.toInt32());
 }
 
 host_api::HostString Response::backend_str(JSContext *cx, JSObject *obj) {
@@ -2722,7 +2720,7 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedObject response(
-      cx, create(cx, response_instance, response_handle, body, false, false, nullptr));
+      cx, create(cx, response_instance, response_handle, body, false, nullptr, nullptr));
   if (!response) {
     return false;
   }
@@ -2866,7 +2864,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedObject response(
-      cx, create(cx, response_instance, response_handle, body, false, false, nullptr));
+      cx, create(cx, response_instance, response_handle, body, false, nullptr, nullptr));
   if (!response) {
     return false;
   }
@@ -2947,7 +2945,7 @@ const JSPropertySpec Response::static_properties[] = {
 const JSFunctionSpec Response::methods[] = {
     JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
-    // JS_FN("blob", bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
+    JS_FN("blob", bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setManualFramingHeaders", Response::setManualFramingHeaders, 1, JSPROP_ENUMERATE),
@@ -3085,7 +3083,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto body = make_res.unwrap();
   JS::RootedObject responseInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
   JS::RootedObject response(
-      cx, create(cx, responseInstance, response_handle, body, false, false, nullptr));
+      cx, create(cx, responseInstance, response_handle, body, false, nullptr, nullptr));
   if (!response) {
     return false;
   }
@@ -3190,7 +3188,8 @@ bool Response::init_class(JSContext *cx, JS::HandleObject global) {
 
 JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                            host_api::HttpResp response_handle, host_api::HttpBody body_handle,
-                           bool is_upstream, bool is_grip, JS::HandleString backend) {
+                           bool is_upstream, JSObject *grip_upgrade_request,
+                           JS::HandleString backend) {
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Response),
                       JS::Int32Value(response_handle.handle));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::NullValue());
@@ -3202,8 +3201,10 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Redirected), JS::FalseValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::IsUpstream),
                       JS::BooleanValue(is_upstream));
-  JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::IsGripUpgrade),
-                      JS::BooleanValue(is_grip));
+  if (grip_upgrade_request) {
+    JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::GripUpgradeRequest),
+                        JS::Int32Value(Request::request_handle(grip_upgrade_request).handle));
+  }
   if (backend) {
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Backend), JS::StringValue(backend));
   }

@@ -302,8 +302,9 @@ int req_register_dynamic_backend(const char *name_prefix, size_t name_prefix_len
 WASM_IMPORT("fastly_http_req", "body_downstream_get")
 int req_body_downstream_get(uint32_t *req_handle_out, uint32_t *body_handle_out);
 
-WASM_IMPORT("fastly_http_req", "redirect_to_grip_proxy")
-int req_redirect_to_grip_proxy(const char *backend_name, size_t backend_name_len);
+WASM_IMPORT("fastly_http_req", "redirect_to_grip_proxy_v2")
+int req_redirect_to_grip_proxy_v2(uint32_t req_handle, const char *backend_name,
+                                  size_t backend_name_len);
 
 /**
  * Set the cache override behavior for this request.

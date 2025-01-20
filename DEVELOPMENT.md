@@ -20,14 +20,14 @@ To build from source, you need to have the following tools installed to successf
 
 #### Linux
 
+- Build tools
+  ```sh
+  sudo apt install build-essential
+  ```
 - Rust
   ```
   curl -so rust.sh https://sh.rustup.rs && sh rust.sh -y
   restart shell or run source $HOME/.cargo/env
-  ```
-- Build tools
-  ```sh
-  sudo apt install build-essential
   ```
 - binaryen
   ```sh
@@ -50,14 +50,9 @@ To build from source, you need to have the following tools installed to successf
   sudo mv wasi-sdk-20.0/* /opt/wasi-sdk/
   ```
 
-Once you have those installed, you will need to compile SpiderMonkey:
-```
-(cd runtime/spidermonkey && bash build-engine.sh)
-```
-
-Once that is done, the runtime and the CLI tool for applying it to JS source code can be built using npm:
+Build the runtime using npm:
 ```sh
-npm run build && npm run build:starlingmonkey
+npm run build && npm run build:debug && npm run build:weval
 ```
 
 #### macOS (Apple silicon)
@@ -81,9 +76,9 @@ npm run build && npm run build:starlingmonkey
   ```sh
   brew install binaryen
   ```
-- Python 3.11 (Spidermonkey build requires a version before 3.12)
+- Python
   ```sh
-  brew install python@3.11
+  brew install python@3
   ``` 
 - Rust
   ```sh
@@ -108,18 +103,44 @@ npm run build && npm run build:starlingmonkey
   sudo mv wasi-sdk-20.0/* /opt/wasi-sdk/
   ```
 
-Once you have those installed, you will need to compile SpiderMonkey:
+Build the runtime using npm:
 ```sh
-export PATH="/opt/homebrew/opt/python@3.11/libexec/bin:$PATH"
-(cd runtime/spidermonkey && bash build-engine.sh)
+npm run build && npm run build:debug && npm run build:weval
 ```
 
-Once that is done, the runtime and the CLI tool for applying it to JS source code can be built using npm:
-```sh
-npm run build && npm run build:starlingmonkey
-```
+## Testing a Local build in a Compute application
+:warning:	**You should not use this for production workloads!!!!!!!!**
 
-## Testing
+You can test a local build of the JS Compute runtime by installing it in your JavaScript Compute application and running that locally or by uploading it to your Fastly service.
+
+1. First, follow the directions in [Building the JS Compute Runtime](#building-the-js-compute-runtime) for your platform to obtain a local build. The build outputs are the following files:
+   - `fastly.wasm`
+   - `fastly.debug.wasm`
+   - `fastly-weval.wasm`
+   - `fastly-ics.wevalcache`
+
+2. Create a local tarball using npm.
+   ```shell
+   npm pack
+   ```
+
+   The resulting tarball will have a filename such as `fastly-js-compute-<version>.tgz`.
+
+3. In your Compute application, install the tarball using `npm`:
+   ```shell
+   npm install /path/to/fastly-js-compute-<version>.tgz
+   ```
+
+4. Build and test or deploy your application as usual, using `fastly compute serve` or `fastly compute publish`, or an appropriate npm script.
+
+## Testing a Dev Release in a Compute application
+:warning:	**You should not use this for production workloads!!!!!!!!**
+
+Dev builds are released before production releases to allow for further testing. These are not released upstream to NPM, however you can acquire them from the [Releases](https://github.com/fastly/js-compute-runtime/releases/) section. Download the runtime for your platform, extract the executable and place it in the /node_modules/@fastly/js-compute/bin/PLATFORM folder of your Fastly Compute project. Then you can use the normal [Fastly CLI](https://github.com/fastly/cli) to build your service.
+
+Please submit an [issue](https://github.com/fastly/js-compute-runtime/issues) if you find any problems during testing.
+
+## Automated Testing
 
 The JS Compute Runtime has automated tests which run on all pull-requests. The test applications are located within <./integration-tests/js-compute>.
 
@@ -129,10 +150,3 @@ To run an end-to-end test which builds and deploys an application to fastly:
 - Install the test dependencies: `npm install`
 - Get a list of all the applications to test: `node test.js`
 - Test a single application via: `node test.js <name>` or test all via `node test.js --all`
-
-## Testing a Dev Release
-:warning:	**You should not use this for production workloads!!!!!!!!**
-
-Dev builds are released before production releases to allow for further testing. These are not released upstream to NPM, however you can acquire them from the [Releases](https://github.com/fastly/js-compute-runtime/releases/) section. Download the runtime for your platform, extract the executable and place it in the /node_modules/@fastly/js-compute/bin/PLATFORM folder of your Fastly Compute project. Then you can use the normal [Fastly CLI](https://github.com/fastly/cli) to build your service. 
-
-Please submit an [issue](https://github.com/fastly/js-compute-runtime/issues) if you find any problems during testing.

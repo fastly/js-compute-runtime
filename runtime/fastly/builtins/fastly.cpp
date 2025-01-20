@@ -212,6 +212,7 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS_ReportErrorUTF8(cx, "createFanoutHandoff: request parameter must be an instance of Request");
     return false;
   }
+  auto grip_upgrade_request = &request_value.toObject();
 
   auto response_handle = host_api::HttpResp::make();
   if (auto *err = response_handle.to_err()) {
@@ -250,11 +251,10 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   bool is_upstream = true;
-  bool is_grip_upgrade = true;
 
   JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle.unwrap(),
-                                                 body_handle.unwrap(), is_upstream, is_grip_upgrade,
-                                                 backend_str));
+                                                 body_handle.unwrap(), is_upstream,
+                                                 grip_upgrade_request, backend_str));
   if (!response) {
     return false;
   }
