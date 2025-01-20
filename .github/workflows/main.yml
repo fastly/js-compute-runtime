@@ -329,7 +329,7 @@ jobs:
       matrix:
         platform: [viceroy, compute]
         profile: [release, weval]
-        features: [http-cache]
+        features: [none, http-cache]
         exclude:
           - platform: viceroy
             features: http-cache
@@ -397,7 +397,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [viceroy, compute]
-        features: [http-cache]
+        features: [none, http-cache]
         exclude:
           - platform: viceroy
             features: http-cache
