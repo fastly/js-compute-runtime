@@ -90,7 +90,11 @@ async function app(event) {
         return (res = new Response(
           `The routeHandler for ${path} threw a [${error.constructor?.name ?? error.name}] error: ${error.message || error}` +
             '\n' +
-            error.stack,
+            error.stack +
+            (fastly.debugMessages
+              ? '\n[DEBUG BUILD MESSAGES]:\n\n  - ' +
+                fastly.debugMessages.join('\n  - ')
+              : ''),
           { status: 500 },
         ));
       } catch (errRes) {
