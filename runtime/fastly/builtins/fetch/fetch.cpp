@@ -119,9 +119,18 @@ bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_
   *should_use_cache = true;
 
   // If we previously found guest caching unsupported then remember that
-  if (http_caching_unsupported) {
+  if (http_caching_unsupported || !fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
     if (must_use_guest_caching(cx, request)) {
-      JS_ReportErrorASCII(cx, "HTTP caching API is not enabled; please contact support for help");
+      if (!fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
+        JS_ReportErrorASCII(
+            cx,
+            "HTTP caching API is not enabled for JavaScript; enable it with the --http-cache flag "
+            "to the js-compute build command, or contact support for help");
+      } else {
+        JS_ReportErrorASCII(
+            cx,
+            "HTTP caching API is not enabled for this service; please contact support for help");
+      }
       return false;
     }
     *should_use_cache = false;

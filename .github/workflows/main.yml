@@ -329,6 +329,10 @@ jobs:
       matrix:
         platform: [viceroy, compute]
         profile: [release, weval]
+        features: [http-cache]
+        exclude:
+          - platform: viceroy
+            features: http-cache
     needs: [build, ensure-cargo-installs]
     steps:
     - name: Checkout fastly/js-compute-runtime
@@ -375,12 +379,12 @@ jobs:
       run: npm install && cd ./integration-tests/js-compute && npm install
 
     - name: Run Tests
-      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }}
+      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.profile == 'weval' && ' --aot' || '' }}${{ matrix.features == 'http-cache' && ' --enable-http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
     - name: Run Module Mode Tests
-      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --module-mode ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }}
+      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --module-mode${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.profile == 'weval' && ' --aot' || '' }}${{ matrix.features == 'http-cache' && ' --enable-http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  
 
@@ -393,6 +397,10 @@ jobs:
       fail-fast: false
       matrix:
         platform: [viceroy, compute]
+        features: [http-cache]
+        exclude:
+          - platform: viceroy
+            features: http-cache
     needs: [build-debug, ensure-cargo-installs]
     steps:
     - name: Checkout fastly/js-compute-runtime
@@ -438,11 +446,11 @@ jobs:
       run: npm install && cd ./integration-tests/js-compute && npm install
 
     - name: Run Tests
-      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --debug-build ${{ matrix.platform == 'viceroy' && '--local' || '' }}
+      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --enable-http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
     - name: Run Module Mode Tests
-      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --module-mode --debug-build ${{ matrix.platform == 'viceroy' && '--local' || '' }}
+      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --module-mode --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --enable-http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  

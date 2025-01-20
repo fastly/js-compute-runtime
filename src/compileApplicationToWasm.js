@@ -25,6 +25,7 @@ export async function compileApplicationToWasm(
   input,
   output,
   wasmEngine,
+  enableHttpCache = false,
   enableExperimentalHighResolutionTimeMethods = false,
   enableAOT = false,
   aotCache = '',
@@ -132,6 +133,7 @@ export async function compileApplicationToWasm(
           ...env,
           ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
             enableExperimentalHighResolutionTimeMethods ? '1' : '0',
+          ENABLE_EXPERIMENTAL_HTTP_CACHE: enableHttpCache ? '1' : '0',
         },
       };
       if (enableAOT) {

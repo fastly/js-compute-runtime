@@ -150,67 +150,88 @@
     }
   },
   "GET /http-cache/hook-errors": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "feature": ["http-cache"]
   },
   "GET /http-cache/invalid-properties": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/readonly-properties": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/property-errors": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/candidate-response-properties-cached": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/candidate-response-properties-uncached": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/before-send": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/after-send-no-cache": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/after-send-cache": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/after-send-cache-expire": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/after-send-pass": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/after-send-res-no-body": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/response-mutations": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/stale-responses": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/invalid-transform": {
-    "environments": []
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/body-transform": {
-    "environments": []
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/body-transform-error": {
-    "environments": []
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/body-transform-invalid-chunk": {
-    "environments": []
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/body-transform-write-after-close": {
-    "environments": []
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/body-transform-cancel": {
-    "environments": []
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /http-cache/body-transform-backpressure": {
-    "environments": []
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /kv-store-e2e/list": {},
   "GET /kv-store/exposed-as-global": {},

@@ -11,6 +11,8 @@
 
 namespace fastly::fastly {
 
+extern bool ENABLE_EXPERIMENTAL_HTTP_CACHE;
+
 class Env : public builtins::BuiltinNoConstructor<Env> {
 private:
   static bool env_get(JSContext *cx, unsigned argc, JS::Value *vp);
