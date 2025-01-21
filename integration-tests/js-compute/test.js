@@ -37,6 +37,7 @@ async function sleep(seconds) {
 
 let args = argv.slice(2);
 
+const ci = args.includes('--ci');
 const local = args.includes('--local');
 const verbose = args.includes('--verbose');
 const moduleMode = args.includes('--module-mode');
@@ -73,9 +74,11 @@ const branchName = (await zx`git branch --show-current`).stdout
   .trim()
   .replace(/[^a-zA-Z0-9_-]/g, '_');
 
-const fixture = 'app';
-const serviceName = `${fixture}--${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING || ''}`;
-if (!local) process.env.FASTLY_SERVICE_NAME = serviceName;
+const fixture = !moduleMode ? 'app' : 'module-mode';
+
+// Service names are carefully unique to support parallel runs
+const serviceName = `${fixture}-${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING || ''}`;
+if (!local && ci) process.env.FASTLY_SERVICE_NAME = serviceName;
 let domain;
 const fixturePath = join(__dirname, 'fixtures', fixture);
 let localServer;
@@ -130,7 +133,7 @@ if (!local) {
   const setupPath = join(__dirname, 'setup.js');
   if (existsSync(setupPath)) {
     core.startGroup('Extra set-up steps for the service');
-    await zx`node ${setupPath} ${serviceName}`;
+    await zx`node ${setupPath} ${ci ? serviceName : ''}`;
     await sleep(15);
     core.endGroup();
   }
@@ -409,7 +412,7 @@ if (!local && !failed.length) {
   const teardownPath = join(fixturePath, 'teardown.js');
   if (existsSync(teardownPath)) {
     core.startGroup('Tear down the extra set-up for the service');
-    await zx`${teardownPath} ${serviceName}`;
+    await zx`${teardownPath} ${ci ? serviceName : ''}`;
     core.endGroup();
   }
 
