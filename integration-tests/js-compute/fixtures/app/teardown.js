@@ -149,7 +149,7 @@ async function removeSecretStore() {
   }
 }
 
-await removeConfigStore();
+await removeConfigStores();
 await removeKVStore();
 await removeSecretStore();
 
