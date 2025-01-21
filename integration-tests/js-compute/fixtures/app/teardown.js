@@ -90,16 +90,14 @@ if (STORE_ID) {
 }
 
 async function removeKVStore() {
-  let stores = (
-    await fetch('https://api.fastly.com/resources/stores/object', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'Fastly-Key': FASTLY_API_TOKEN,
-      },
-    }).then((res) => res.json())
-  ).Data;
+  let stores = await fetch('https://api.fastly.com/resources/stores/object', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'Fastly-Key': FASTLY_API_TOKEN,
+    },
+  }).then((res) => res.json());
 
   let STORE_ID = existingStoreId(stores, KV_STORE_NAME);
   if (STORE_ID) {
