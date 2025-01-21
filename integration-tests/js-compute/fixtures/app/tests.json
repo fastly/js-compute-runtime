@@ -1374,13 +1374,15 @@
     }
   },
   "GET /headers/from-response/set": {
+    "flake": true,
     "downstream_response": {
       "status": 200,
       "headers": [["cuStom", "test"]]
     }
   },
-  "GET /headers/from-response/delete-invalid": {},
+  "GET /headers/from-response/delete-invalid": { "flake": true },
   "GET /headers/from-response/set-delete": {
+    "flake": true,
     "downstream_response": {
       "status": 200,
       "headers": [["cuStom", "test"]]

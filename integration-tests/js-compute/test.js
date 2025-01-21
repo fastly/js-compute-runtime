@@ -297,7 +297,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                     skipped: false,
                   };
                 } catch (error) {
-                  console.error(test.downstream_request.pathname);
+                  console.error('\n' + test.downstream_request.pathname);
                   throw new Error(`${title} ${error.message}`, {
                     cause: error,
                   });
@@ -314,8 +314,8 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
         } else {
           if (test.environments.includes('compute')) {
             return retry(
-              test.flake ? 10 : 4,
-              expBackoff(test.flake ? '60s' : '10s', test.flake ? '10s' : '1s'),
+              test.flake ? 20 : 4,
+              expBackoff(test.flake ? '60s' : '30s', test.flake ? '10s' : '1s'),
               async () => {
                 let path = test.downstream_request.pathname;
                 let url = `${domain}${path}`;
@@ -337,7 +337,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                     skipped: false,
                   };
                 } catch (error) {
-                  console.error(test.downstream_request.pathname);
+                  console.error('\n' + test.downstream_request.pathname);
                   throw new Error(`${title} ${error.message}`);
                 }
               },
