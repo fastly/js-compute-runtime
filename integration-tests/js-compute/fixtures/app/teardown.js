@@ -36,7 +36,7 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
 const FASTLY_API_TOKEN = process.env.FASTLY_API_TOKEN;
 zx.verbose = true;
 
-async function removeConfigStore() {
+async function removeConfigStores() {
   let stores = await (async function () {
     try {
       return JSON.parse(
@@ -56,7 +56,7 @@ async function removeConfigStore() {
     }
   })();
 
-  const STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME_1);
+  let STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME_1);
   if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;
     let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
@@ -71,22 +71,22 @@ async function removeConfigStore() {
       await zx`fastly config-store delete --store-id=$STORE_ID  --token $FASTLY_API_TOKEN`;
     } catch {}
   }
-}
 
-const STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME_2);
-if (STORE_ID) {
-  process.env.STORE_ID = STORE_ID;
-  let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
-  if (LINK_ID) {
-    process.env.LINK_ID = LINK_ID;
+  STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME_2);
+  if (STORE_ID) {
+    process.env.STORE_ID = STORE_ID;
+    let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
+    if (LINK_ID) {
+      process.env.LINK_ID = LINK_ID;
+      try {
+        await zx`fastly resource-link delete --version latest --autoclone --id=$LINK_ID  --token $FASTLY_API_TOKEN`;
+        await zx`fastly service-version activate --version latest --token $FASTLY_API_TOKEN`;
+      } catch {}
+    }
     try {
-      await zx`fastly resource-link delete --version latest --autoclone --id=$LINK_ID  --token $FASTLY_API_TOKEN`;
-      await zx`fastly service-version activate --version latest --token $FASTLY_API_TOKEN`;
+      await zx`fastly config-store delete --store-id=$STORE_ID  --token $FASTLY_API_TOKEN`;
     } catch {}
   }
-  try {
-    await zx`fastly config-store delete --store-id=$STORE_ID  --token $FASTLY_API_TOKEN`;
-  } catch {}
 }
 
 async function removeKVStore() {
