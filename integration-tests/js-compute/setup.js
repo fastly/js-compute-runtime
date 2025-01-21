@@ -36,6 +36,7 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
   }
   zx.verbose = true;
 }
+const FASTLY_API_TOKEN = process.env.FASTLY_API_TOKEN;
 
 async function setupConfigStores() {
   let stores = await (async function () {
@@ -98,14 +99,17 @@ async function setupKVStore() {
   if (STORE_ID) {
     // it is possible for KV store to return a KV store that actually isn't available
     // so test the KV store works before continuing
-    const res = await fetch(`https://api.fastly.com/resources/stores/kv/${STORE_ID}/keys?limit=1`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'Fastly-Key': FASTLY_API_TOKEN,
+    const res = await fetch(
+      `https://api.fastly.com/resources/stores/kv/${STORE_ID}/keys?limit=1`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'Fastly-Key': FASTLY_API_TOKEN,
+        },
       },
-    });
+    );
     console.log(res);
     if (!res.ok) {
       STORE_ID = null;
