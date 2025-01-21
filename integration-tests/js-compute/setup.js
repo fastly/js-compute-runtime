@@ -94,7 +94,23 @@ async function setupKVStore() {
     }
   })();
 
-  const STORE_ID = existingStoreId(stores, KV_STORE_NAME);
+  let STORE_ID = existingStoreId(stores, KV_STORE_NAME);
+  if (STORE_ID) {
+    // it is possible for KV store to return a KV store that actually isn't available
+    // so test the KV store works before continuing
+    const res = await fetch(`https://api.fastly.com/resources/stores/kv/${STORE_ID}/keys?limit=1`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'Fastly-Key': FASTLY_API_TOKEN,
+      },
+    });
+    console.log(res);
+    if (!res.ok) {
+      STORE_ID = null;
+    }
+  }
   if (!STORE_ID) {
     console.log(`Creating new KV store ${KV_STORE_NAME}`);
     process.env.STORE_ID = JSON.parse(
