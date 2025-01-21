@@ -151,7 +151,7 @@
   },
   "GET /http-cache/hook-errors": {
     "environments": ["compute"],
-    "feature": ["http-cache"]
+    "features": ["http-cache"]
   },
   "GET /http-cache/invalid-properties": {
     "environments": ["compute"],
