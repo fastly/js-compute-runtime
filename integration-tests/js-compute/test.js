@@ -46,6 +46,8 @@ const aot = args.includes('--aot');
 const debugBuild = args.includes('--debug-build');
 const filter = args.filter((arg) => !arg.startsWith('--'));
 const bail = args.includes('--bail');
+const skipSetup = args.includes('--skip-setup');
+const skipTeardown = args.includes('--skip-setup');
 
 async function $(...args) {
   return await retry(10, () => zx(...args));
@@ -130,12 +132,14 @@ if (!local) {
       .Name;
   core.notice(`Service is running on ${domain}`);
 
-  const setupPath = join(__dirname, 'setup.js');
-  if (existsSync(setupPath)) {
-    core.startGroup('Extra set-up steps for the service');
-    await zx`node ${setupPath} ${ci ? serviceName : ''}`;
-    await sleep(15);
-    core.endGroup();
+  if (!skipSetup) {
+    const setupPath = join(__dirname, 'setup.js');
+    if (existsSync(setupPath)) {
+      core.startGroup('Extra set-up steps for the service');
+      await zx`node ${setupPath} ${ci ? serviceName : ''}`;
+      await sleep(15);
+      core.endGroup();
+    }
   }
 } else {
   localServer = zx`fastly compute serve --verbose --viceroy-args="${verbose ? '-vv' : ''}"`;
@@ -409,17 +413,19 @@ if (!local && failed.length) {
 }
 
 if (!local && !failed.length) {
-  const teardownPath = join(fixturePath, 'teardown.js');
-  if (existsSync(teardownPath)) {
-    core.startGroup('Tear down the extra set-up for the service');
-    await zx`${teardownPath} ${ci ? serviceName : ''}`;
+  if (!skipTeardown) {
+    const teardownPath = join(fixturePath, 'teardown.js');
+    if (existsSync(teardownPath)) {
+      core.startGroup('Tear down the extra set-up for the service');
+      await zx`${teardownPath} ${ci ? serviceName : ''}`;
+      core.endGroup();
+    }
+
+    core.startGroup('Delete service');
+    // Delete the service now the tests have finished
+    await zx`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
     core.endGroup();
   }
-
-  core.startGroup('Delete service');
-  // Delete the service now the tests have finished
-  await zx`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
-  core.endGroup();
 }
 if (process.exitCode == undefined || process.exitCode == 0) {
   console.log(
