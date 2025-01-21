@@ -47,7 +47,7 @@ const debugBuild = args.includes('--debug-build');
 const filter = args.filter((arg) => !arg.startsWith('--'));
 const bail = args.includes('--bail');
 const skipSetup = args.includes('--skip-setup');
-const skipTeardown = args.includes('--skip-setup');
+const skipTeardown = args.includes('--skip-teardown');
 const ci = args.includes('--ci');
 
 async function $(...args) {
@@ -297,6 +297,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                     skipped: false,
                   };
                 } catch (error) {
+                  console.error(test.downstream_request.pathname);
                   throw new Error(`${title} ${error.message}`, {
                     cause: error,
                   });
@@ -336,6 +337,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                     skipped: false,
                   };
                 } catch (error) {
+                  console.error(test.downstream_request.pathname);
                   throw new Error(`${title} ${error.message}`);
                 }
               },
