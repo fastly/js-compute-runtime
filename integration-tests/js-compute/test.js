@@ -79,7 +79,7 @@ const branchName = (await zx`git branch --show-current`).stdout
 const fixture = !moduleMode ? 'app' : 'module-mode';
 
 // Service names are carefully unique to support parallel runs
-const serviceName = `app-${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING || ''}`;
+const serviceName = `app-${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING ? '--' + process.env.SUFFIX_STRING : ''}`;
 if (!local && ci) process.env.FASTLY_SERVICE_NAME = serviceName;
 let domain;
 const fixturePath = join(__dirname, 'fixtures', fixture);

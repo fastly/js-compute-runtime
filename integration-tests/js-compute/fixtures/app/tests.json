@@ -40,7 +40,7 @@
   "GET /cache-override/fetch/mode-pass": {
     "flake": true
   },
-  "GET /secret-store/exposed-as-global": {},
+  "GET /secret-store/exposed-as-global": { "flake": true },
   "GET /secret-store/interface": { "flake": true },
   "GET /secret-store/constructor/called-as-regular-function": { "flake": true },
   "GET /secret-store/constructor/parameter-calls-7.1.17-ToString": {
@@ -68,21 +68,27 @@
   "GET /secret-store-entry/plaintext": { "flake": true },
   "GET /simple-cache/interface": {},
   "GET /simple-store/constructor/called-as-regular-function": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/constructor/throws": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/purge/called-as-constructor": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/purge/key-parameter-calls-7.1.17-ToString": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/purge/key-parameter-not-supplied": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/purge/key-parameter-empty-string": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/purge/key-parameter-8135-character-string": {
@@ -90,15 +96,19 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/purge/key-parameter-8136-character-string": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/purge/options-parameter": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/purge/returns-undefined": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/called-as-constructor": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/key-parameter-calls-7.1.17-ToString": {
@@ -106,18 +116,23 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/set/tll-parameter-7.1.4-ToNumber": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/no-parameters-supplied": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/key-parameter-empty-string": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/key-parameter-8135-character-string": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/key-parameter-8136-character-string": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/ttl-parameter-negative-number": {
@@ -125,57 +140,75 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/set/ttl-parameter-NaN": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/ttl-parameter-Infinity": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-as-undefined": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-missing-length-parameter": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-negative-length-parameter": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-nan-length-parameter": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-negative-infinity-length-parameter": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-positive-infinity-length-parameter": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/length-parameter-7.1.4-ToNumber": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-empty": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-locked": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-URLSearchParams": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-strings": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-calls-7.1.17-ToString": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-buffer": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-arraybuffer": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-typed-arrays": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-dataview": {
@@ -187,21 +220,27 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/get/called-as-constructor": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/get/key-parameter-calls-7.1.17-ToString": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/get/key-parameter-not-supplied": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/get/key-parameter-empty-string": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/get/key-parameter-8135-character-string": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/get/key-parameter-8136-character-string": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/get/key-does-not-exist-returns-null": {
@@ -209,25 +248,32 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/get/key-exists": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache-entry/interface": {},
   "GET /simple-cache-entry/text/valid": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache-entry/json/valid": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache-entry/json/invalid": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache-entry/arrayBuffer/valid": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache-entry/body": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache-entry/bodyUsed": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache-entry/readablestream": {
@@ -235,6 +281,7 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/rejection-rejects-outer": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/called-as-constructor": {
@@ -242,90 +289,119 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/no-parameters-supplied": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/key-parameter-calls-7.1.17-ToString": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/key-parameter-empty-string": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/key-parameter-8135-character-string": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/key-parameter-8136-character-string": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/ttl-field-7.1.4-ToNumber": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/ttl-field-negative-number": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/ttl-field-NaN": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/ttl-field-Infinity": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-as-undefined": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-missing-length-field": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-negative-length-field": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-nan-length-field": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-negative-infinity-length-field": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-positive-infinity-length-field": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/length-field-7.1.4-ToNumber": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-empty": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-locked": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-URLSearchParams": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-strings": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-calls-7.1.17-ToString": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-buffer": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-typed-arrays": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-dataview": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/returns-SimpleCacheEntry": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/executes-the-set-method-when-key-not-in-cache": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/does-not-execute-the-set-method-when-key-is-in-cache": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/does-not-freeze-when-called-after-a-get": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /client/tlsJA3MD5": {},
