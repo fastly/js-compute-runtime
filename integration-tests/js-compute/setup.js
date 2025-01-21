@@ -7,10 +7,10 @@ const serviceName = argv[2];
 
 const startTime = Date.now();
 
-const CONFIG_STORE_NAME_1 = `aZ1 __ 2__${serviceName.replace(/-/g, '_')}`;
-const CONFIG_STORE_NAME_2 = `testconfig__${serviceName.replace(/-/g, '_')}`;
-const KV_STORE_NAME = `example-test-kv-store--${serviceName}`;
-const SECRET_STORE_NAME = `example-test-secret-store--${serviceName}`;
+const CONFIG_STORE_NAME_1 = `aZ1 __ 2${serviceName ? '__' + serviceName.replace(/-/g, '_') : ''}`;
+const CONFIG_STORE_NAME_2 = `testconfig${serviceName ? '__' + serviceName.replace(/-/g, '_') : ''}`;
+const KV_STORE_NAME = `example-test-kv-store${serviceName ? '--' + serviceName : ''}`;
+const SECRET_STORE_NAME = `example-test-secret-store${serviceName ? '--' + serviceName : ''}`;
 
 function existingStoreId(stores, existingName) {
   const existing = stores.find(
