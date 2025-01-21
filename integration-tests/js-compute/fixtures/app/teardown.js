@@ -2,6 +2,13 @@
 
 import { $ as zx } from 'zx';
 
+const serviceName = argv[2];
+
+const CONFIG_STORE_NAME_1 = `aZ1 __ 2__${serviceName.replace(/-/g, '_')}`;
+const CONFIG_STORE_NAME_2 = `testconfig__${serviceName.replace(/-/g, '_')}`;
+const KV_STORE_NAME = `example-test-kv-store--${serviceName}`;
+const SECRET_STORE_NAME = `example-test-kv-store--${serviceName}`;
+
 const startTime = Date.now();
 
 zx.verbose = false;
@@ -43,7 +50,7 @@ async function removeConfigStore() {
     }
   })();
 
-  const STORE_ID = stores.find(({ name }) => name === 'aZ1 __ 2')?.id;
+  const STORE_ID = stores.find(({ name }) => name === CONFIG_STORE_NAME_1)?.id;
   if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;
     let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
@@ -60,6 +67,22 @@ async function removeConfigStore() {
   }
 }
 
+const STORE_ID = stores.find(({ name }) => name === CONFIG_STORE_NAME_2)?.id;
+if (STORE_ID) {
+  process.env.STORE_ID = STORE_ID;
+  let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
+  if (LINK_ID) {
+    process.env.LINK_ID = LINK_ID;
+    try {
+      await zx`fastly resource-link delete --version latest --autoclone --id=$LINK_ID  --token $FASTLY_API_TOKEN`;
+      await zx`fastly service-version activate --version latest --token $FASTLY_API_TOKEN`;
+    } catch {}
+  }
+  try {
+    await zx`fastly config-store delete --store-id=$STORE_ID  --token $FASTLY_API_TOKEN`;
+  } catch {}
+}
+
 async function removeKVStore() {
   let stores = await fetch('https://api.fastly.com/resources/stores/object', {
     method: 'GET',
@@ -70,9 +93,7 @@ async function removeKVStore() {
     },
   }).then((res) => res.json());
 
-  let STORE_ID = stores.data.find(
-    ({ name }) => name === 'example-test-kv-store',
-  )?.id;
+  let STORE_ID = stores.data.find(({ name }) => name === KV_STORE_NAME)?.id;
   if (STORE_ID) {
     await fetch(`https://api.fastly.com/resources/stores/object/${STORE_ID}`, {
       method: 'DELETE',
@@ -103,9 +124,7 @@ async function removeSecretStore() {
     }
   })();
 
-  const STORE_ID = stores.find(
-    ({ name }) => name === 'example-test-secret-store',
-  )?.id;
+  const STORE_ID = stores.find(({ name }) => name === SECRET_STORE_NAME)?.id;
   if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;
     let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;

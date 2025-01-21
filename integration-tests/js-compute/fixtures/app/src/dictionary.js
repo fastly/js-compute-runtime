@@ -3,6 +3,9 @@
 import { Dictionary } from 'fastly:dictionary';
 import { routes } from './routes.js';
 import { assertThrows, assert, assertResolves } from './assertions.js';
+import { env } from 'fastly:env';
+
+const DICTIONARY_NAME = `aZ1 __ 2__${env('FASTLY_SERVICE_NAME').replace(/-/g, '_')}`;
 
 // Dictionary
 {
@@ -342,5 +345,5 @@ function dictionaryInterfaceTests() {
 }
 
 function createValidDictionary() {
-  return new Dictionary('aZ1 __ 2');
+  return new Dictionary(DICTIONARY_NAME);
 }
