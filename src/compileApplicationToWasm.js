@@ -146,7 +146,6 @@ export async function compileApplicationToWasm(
             'weval',
             ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
             `--dir="${maybeWindowsPath(process.cwd())}"`,
-            '--inherit-env=true',
             '-w',
             `-i "${wasmEngine}"`,
             `-o "${output}"`,
