@@ -7,6 +7,11 @@ const serviceName = argv[2];
 
 const startTime = Date.now();
 
+const CONFIG_STORE_NAME_1 = `aZ1 __ 2__${serviceName.replace(/-/g, '_')}`;
+const CONFIG_STORE_NAME_2 = `testconfig__${serviceName.replace(/-/g, '_')}`;
+const KV_STORE_NAME = `example-test-kv-store--${serviceName}`;
+const SECRET_STORE_NAME = `example-test-kv-store--${serviceName}`;
+
 if (process.env.FASTLY_API_TOKEN === undefined) {
   zx.verbose = false;
   try {
@@ -36,12 +41,14 @@ async function setupConfigStores() {
     }
   })();
 
-  let STORE_ID = stores.find(({ name }) => name === 'aZ1 __ 2')?.id;
+  let STORE_ID = stores.find(({ name }) => name === CONFIG_STORE_NAME_1)?.id;
   if (!STORE_ID) {
+    console.log(`Creating new config store ${CONFIG_STORE_NAME_1}`);
     process.env.STORE_ID = JSON.parse(
-      await zx`fastly config-store create --quiet --name='aZ1 __ 2' --json --token $FASTLY_API_TOKEN`,
+      await zx`fastly config-store create --quiet --name='${CONFIG_STORE_NAME_1}' --json --token $FASTLY_API_TOKEN`,
     ).id;
   } else {
+    console.log(`Using existing config store ${CONFIG_STORE_NAME_2}`);
     process.env.STORE_ID = STORE_ID;
   }
   await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
@@ -51,13 +58,14 @@ async function setupConfigStores() {
     if (!e.message.includes('Duplicate record')) throw e;
   }
 
-  STORE_ID = stores.find(({ name }) => name === 'testconfig')?.id;
+  STORE_ID = stores.find(({ name }) => name === CONFIG_STORE_NAME_2)?.id;
   if (!STORE_ID) {
+    console.log(`Creating new config store ${CONFIG_STORE_NAME_2}`);
     process.env.STORE_ID = JSON.parse(
-      await zx`fastly config-store create --quiet --name='testconfig' --json --token $FASTLY_API_TOKEN`,
+      await zx`fastly config-store create --quiet --name='${CONFIG_STORE_NAME_2}' --json --token $FASTLY_API_TOKEN`,
     ).id;
   } else {
-    process.env.STORE_ID = STORE_ID;
+    console.log(`Using existing config store ${CONFIG_STORE_NAME_2}`);
   }
   await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
   try {
@@ -78,16 +86,14 @@ async function setupKVStore() {
     }
   })();
 
-  const existing = stores.Data.find(
-    ({ Name }) => Name === `example-test-kv-store`,
-  );
-  // For somereason the StarlingMonkey version of this contains "ID" instead of "StoreID"
-  const STORE_ID = existing?.StoreID || existing?.ID;
+  const STORE_ID = stores.Data.find(({ Name }) => Name === KV_STORE_NAME)?id;
   if (!STORE_ID) {
+    console.log(`Creating new KV store ${KV_STORE_NAME}`);
     process.env.STORE_ID = JSON.parse(
-      await zx`fastly kv-store create --quiet --name='example-test-kv-store' --json --token $FASTLY_API_TOKEN`,
+      await zx`fastly kv-store create --quiet --name='${KV_STORE_NAME}' --json --token $FASTLY_API_TOKEN`,
     ).id;
   } else {
+    console.log(`Using existing KV store ${KV_STORE_NAME}`);
     process.env.STORE_ID = STORE_ID;
   }
   try {
@@ -107,14 +113,14 @@ async function setupSecretStore() {
       return [];
     }
   })();
-  const STORE_ID = stores?.find(
-    ({ name }) => name === 'example-test-secret-store',
-  )?.id;
+  const STORE_ID = stores?.find(({ name }) => name === SECRET_STORE_NAME)?.id;
   if (!STORE_ID) {
+    console.log(`Creating new secret store ${SECRET_STORE_NAME}`);
     process.env.STORE_ID = JSON.parse(
-      await zx`fastly secret-store create --quiet --name=example-test-secret-store --json --token $FASTLY_API_TOKEN`,
+      await zx`fastly secret-store create --quiet --name='${SECRET_STORE_NAME}' --json --token $FASTLY_API_TOKEN`,
     ).id;
   } else {
+    console.log(`Using existing secret store {SECRET_STORE_NAME}`);
     process.env.STORE_ID = STORE_ID;
   }
   await zx`echo -n 'This is also some secret data' | fastly secret-store-entry create --recreate-allow --name first --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;

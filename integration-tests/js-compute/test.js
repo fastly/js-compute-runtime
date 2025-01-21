@@ -75,6 +75,7 @@ const branchName = (await zx`git branch --show-current`).stdout
 
 const fixture = moduleMode ? 'module-mode' : 'app';
 const serviceName = `${fixture}--${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING || ''}`;
+process.env.FASTLY_SERVICE_NAME = serviceName;
 let domain;
 const fixturePath = join(__dirname, 'fixtures', fixture);
 let localServer;
@@ -405,7 +406,7 @@ if (!local && !failed.length) {
   const teardownPath = join(fixturePath, 'teardown.js');
   if (existsSync(teardownPath)) {
     core.startGroup('Tear down the extra set-up for the service');
-    await zx`${teardownPath}`;
+    await zx`${teardownPath} ${serviceName}`;
     core.endGroup();
   }
 
