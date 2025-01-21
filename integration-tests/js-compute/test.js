@@ -38,7 +38,6 @@ async function sleep(seconds) {
 
 let args = argv.slice(2);
 
-const ci = args.includes('--ci');
 const local = args.includes('--local');
 const verbose = args.includes('--verbose');
 const moduleMode = args.includes('--module-mode');
@@ -81,7 +80,7 @@ const fixture = !moduleMode ? 'app' : 'module-mode';
 
 // Service names are carefully unique to support parallel runs
 const serviceName = `app-${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING ? '--' + process.env.SUFFIX_STRING : ''}`;
-let domain;
+let domain, serviceId;
 const fixturePath = join(__dirname, 'fixtures', fixture);
 let localServer;
 
@@ -132,10 +131,11 @@ if (!local) {
   core.endGroup();
 
   // get the public domain of the deployed application
-  domain =
-    'https://' +
-    JSON.parse(await $`fastly domain list --quiet --version latest --json`)[0]
-      .Name;
+  const domainListing = JSON.parse(
+    await $`fastly domain list --quiet --version latest --json`,
+  )[0];
+  domain = `https://${domainListing.Name}`;
+  serviceId = domainListing.ServiceID;
   core.notice(`Service is running on ${domain}`);
 } else {
   localServer = zx`fastly compute serve --verbose --viceroy-args="${verbose ? '-vv' : ''}"`;
@@ -170,7 +170,7 @@ if (!local && !skipSetup) {
   const setupPath = join(__dirname, 'setup.js');
   if (existsSync(setupPath)) {
     core.startGroup('Extra set-up steps for the service');
-    await zx`node ${setupPath} ${ci ? serviceName : ''}`;
+    await zx`node ${setupPath} ${serviceName}`;
     await sleep(15);
     core.endGroup();
   }
@@ -431,7 +431,7 @@ if (!local && !failed.length) {
     const teardownPath = join(fixturePath, 'teardown.js');
     if (existsSync(teardownPath)) {
       core.startGroup('Tear down the extra set-up for the service');
-      await zx`${teardownPath} ${ci ? serviceName : ''}`;
+      await zx`${teardownPath} ${serviceName}`;
       core.endGroup();
     }
 
