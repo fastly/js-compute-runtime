@@ -48,6 +48,7 @@ const filter = args.filter((arg) => !arg.startsWith('--'));
 const bail = args.includes('--bail');
 const skipSetup = args.includes('--skip-setup');
 const skipTeardown = args.includes('--skip-setup');
+const ci = args.includes('--ci');
 
 async function $(...args) {
   return await retry(10, () => zx(...args));
@@ -84,7 +85,7 @@ let domain, serviceId;
 const fixturePath = join(__dirname, 'fixtures', fixture);
 let localServer;
 
-const env = getEnv(serviceName);
+const env = getEnv(ci ? serviceName : null);
 Object.assign(process.env, env);
 
 await cd(fixturePath);
