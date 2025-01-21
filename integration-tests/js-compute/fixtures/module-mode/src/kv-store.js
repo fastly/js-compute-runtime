@@ -11,8 +11,7 @@ import { routes, isRunningLocally } from './routes.js';
 import { sdkVersion } from 'fastly:experimental';
 import { env } from 'fastly:env';
 
-const FASTLY_SERVICE_NAME = env('FASTLY_SERVICE_NAME');
-const KV_STORE_NAME = `example-test-kv-store${FASTLY_SERVICE_NAME ? `--${FASTLY_SERVICE_NAME}` : ''}`;
+const KV_STORE_NAME = env('KV_STORE_NAME');
 
 const debug = sdkVersion.endsWith('-debug');
 

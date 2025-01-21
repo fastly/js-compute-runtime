@@ -37,9 +37,9 @@ service_id = ""
     [local_server.config_stores.testconfig.contents]
       "twitter" = "https://twitter.com/fastly"
 
-    [local_server.config_stores."aZ1 __ 2"]
+    [local_server.config_stores."DICTIONARY_NAME"]
       format = "inline-toml"
-    [local_server.config_stores."aZ1 __ 2".contents]
+    [local_server.config_stores."DICTIONARY_NAME".contents]
       "twitter" = "https://twitter.com/fastly"
 
   [local_server.geolocation]
@@ -89,19 +89,15 @@ service_id = ""
 
   [local_server.kv_stores]
 
-    [[local_server.kv_stores.example-test-kv-store]]
-      key = "placeholder"
-      data = 'placholder'
-
-    [[local_server.kv_stores.example-test-kv-store-sm]]
+    [[local_server.kv_stores.KV_STORE_NAME]]
       key = "placeholder"
       data = 'placholder'
 
   [local_server.secret_stores]
-    [[local_server.secret_stores.example-test-secret-store]]
+    [[local_server.secret_stores.SECRET_STORE_NAME]]
       key = "first"
       data = "This is also some secret data"
-    [[local_server.secret_stores.example-test-secret-store]]
+    [[local_server.secret_stores.SECRET_STORE_NAME]]
       key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       data = "This is some secret data"
 

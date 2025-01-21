@@ -2,13 +2,12 @@
 
 import { $ as zx } from 'zx';
 import { argv } from 'node:process';
+import { getEnv } from './env.js';
 
 const serviceName = argv[2];
 
-const CONFIG_STORE_NAME_1 = `aZ1 __ 2${serviceName ? '__' + serviceName.replace(/-/g, '_') : ''}`;
-const CONFIG_STORE_NAME_2 = `testconfig${serviceName ? '__' + serviceName.replace(/-/g, '_') : ''}`;
-const KV_STORE_NAME = `example-test-kv-store${serviceName ? '--' + serviceName : ''}`;
-const SECRET_STORE_NAME = `example-test-secret-store${serviceName ? '--' + serviceName : ''}`;
+const { DICTIONARY_NAME, CONFIG_STORE_NAME, KV_STORE_NAME, SECRET_STORE_NAME } =
+  getEnv(serviceName);
 
 function existingStoreId(stores, existingName) {
   const existing = stores.find(({ name }) => name === existingName);
@@ -56,7 +55,7 @@ async function removeConfigStores() {
     }
   })();
 
-  let STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME_1);
+  let STORE_ID = existingStoreId(stores, DICTIONARY_NAME);
   if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;
     let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
@@ -72,7 +71,7 @@ async function removeConfigStores() {
     } catch {}
   }
 
-  STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME_2);
+  STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME);
   if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;
     let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
