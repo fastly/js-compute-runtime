@@ -85,7 +85,7 @@ let domain, serviceId;
 const fixturePath = join(__dirname, 'fixtures', fixture);
 let localServer;
 
-const env = getEnv(ci ? serviceName : null);
+const env = getEnv(ci && !local ? serviceName : null);
 Object.assign(process.env, env);
 
 await cd(fixturePath);
