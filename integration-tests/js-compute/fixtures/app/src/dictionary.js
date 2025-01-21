@@ -5,8 +5,7 @@ import { routes } from './routes.js';
 import { assertThrows, assert, assertResolves } from './assertions.js';
 import { env } from 'fastly:env';
 
-const FASTLY_SERVICE_NAME = env('FASTLY_SERVICE_NAME');
-const DICTIONARY_NAME = `aZ1 __ 2${FASTLY_SERVICE_NAME ? `__${FASTLY_SERVICE_NAME.replace(/-/g, '_')}` : ''}`;
+const DICTIONARY_NAME = env('DICTIONARY_NAME');
 
 // Dictionary
 {

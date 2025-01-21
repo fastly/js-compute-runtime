@@ -2,15 +2,14 @@
 
 import { $ as zx } from 'zx';
 import { argv } from 'node:process';
+import { getEnv } from './env.js';
 
 const serviceName = argv[2];
 
-const startTime = Date.now();
+const { DICTIONARY_NAME, CONFIG_STORE_NAME, KV_STORE_NAME, SECRET_STORE_NAME } =
+  getEnv(serviceName);
 
-const CONFIG_STORE_NAME_1 = `aZ1 __ 2${serviceName ? '__' + serviceName.replace(/-/g, '_') : ''}`;
-const CONFIG_STORE_NAME_2 = `testconfig${serviceName ? '__' + serviceName.replace(/-/g, '_') : ''}`;
-const KV_STORE_NAME = `example-test-kv-store${serviceName ? '--' + serviceName : ''}`;
-const SECRET_STORE_NAME = `example-test-secret-store${serviceName ? '--' + serviceName : ''}`;
+const startTime = Date.now();
 
 function existingStoreId(stores, existingName) {
   const existing = stores.find(
@@ -49,14 +48,14 @@ async function setupConfigStores() {
     }
   })();
 
-  let STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME_1);
+  let STORE_ID = existingStoreId(stores, DICTIONARY_NAME);
   if (!STORE_ID) {
-    console.log(`Creating new config store ${CONFIG_STORE_NAME_1}`);
+    console.log(`Creating new config store ${DICTIONARY_NAME}`);
     process.env.STORE_ID = JSON.parse(
-      await zx`fastly config-store create --quiet --name=${CONFIG_STORE_NAME_1} --json --token $FASTLY_API_TOKEN`,
+      await zx`fastly config-store create --quiet --name=${DICTIONARY_NAME} --json --token $FASTLY_API_TOKEN`,
     ).id;
   } else {
-    console.log(`Using existing config store ${CONFIG_STORE_NAME_1}`);
+    console.log(`Using existing config store ${DICTIONARY_NAME}`);
     process.env.STORE_ID = STORE_ID;
   }
   await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
@@ -66,14 +65,14 @@ async function setupConfigStores() {
     if (!e.message.includes('Duplicate record')) throw e;
   }
 
-  STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME_2);
+  STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME);
   if (!STORE_ID) {
-    console.log(`Creating new config store ${CONFIG_STORE_NAME_2}`);
+    console.log(`Creating new config store ${CONFIG_STORE_NAME}`);
     process.env.STORE_ID = JSON.parse(
-      await zx`fastly config-store create --quiet --name=${CONFIG_STORE_NAME_2} --json --token $FASTLY_API_TOKEN`,
+      await zx`fastly config-store create --quiet --name=${CONFIG_STORE_NAME} --json --token $FASTLY_API_TOKEN`,
     ).id;
   } else {
-    console.log(`Using existing config store ${CONFIG_STORE_NAME_2}`);
+    console.log(`Using existing config store ${CONFIG_STORE_NAME}`);
     process.env.STORE_ID = STORE_ID;
   }
   await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;

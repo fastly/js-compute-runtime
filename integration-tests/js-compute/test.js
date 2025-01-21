@@ -10,6 +10,7 @@ import { existsSync } from 'node:fs';
 import { copyFile, readFile, writeFile } from 'node:fs/promises';
 import core from '@actions/core';
 import TOML from '@iarna/toml';
+import { getEnv } from './env.js';
 
 // test environment variable handling
 process.env.LOCAL_TEST = 'local val';
@@ -80,10 +81,12 @@ const fixture = !moduleMode ? 'app' : 'module-mode';
 
 // Service names are carefully unique to support parallel runs
 const serviceName = `app-${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING ? '--' + process.env.SUFFIX_STRING : ''}`;
-if (!local && ci) process.env.FASTLY_SERVICE_NAME = serviceName;
 let domain;
 const fixturePath = join(__dirname, 'fixtures', fixture);
 let localServer;
+
+const env = getEnv(serviceName);
+Object.assign(process.env, env);
 
 await cd(fixturePath);
 await copyFile(
@@ -91,7 +94,10 @@ await copyFile(
   join(fixturePath, 'fastly.toml'),
 );
 const config = TOML.parse(
-  await readFile(join(fixturePath, 'fastly.toml'), 'utf-8'),
+  (await readFile(join(fixturePath, 'fastly.toml'), 'utf-8')).replace(
+    /DICTIONARY_NAME|CONFIG_STORE_NAME|KV_STORE_NAME|SECRET_STORE_NAME/g,
+    (match) => env[match] || match,
+  ),
 );
 config.name = serviceName;
 if (aot) {
@@ -131,16 +137,6 @@ if (!local) {
     JSON.parse(await $`fastly domain list --quiet --version latest --json`)[0]
       .Name;
   core.notice(`Service is running on ${domain}`);
-
-  if (!skipSetup) {
-    const setupPath = join(__dirname, 'setup.js');
-    if (existsSync(setupPath)) {
-      core.startGroup('Extra set-up steps for the service');
-      await zx`node ${setupPath} ${ci ? serviceName : ''}`;
-      await sleep(15);
-      core.endGroup();
-    }
-  }
 } else {
   localServer = zx`fastly compute serve --verbose --viceroy-args="${verbose ? '-vv' : ''}"`;
   domain = 'http://127.0.0.1:7676';
@@ -169,6 +165,16 @@ await retry(
   },
 );
 core.endGroup();
+
+if (!local && !skipSetup) {
+  const setupPath = join(__dirname, 'setup.js');
+  if (existsSync(setupPath)) {
+    core.startGroup('Extra set-up steps for the service');
+    await zx`node ${setupPath} ${ci ? serviceName : ''}`;
+    await sleep(15);
+    core.endGroup();
+  }
+}
 
 let { default: tests } = await import(join(fixturePath, 'tests.json'), {
   with: { type: 'json' },
@@ -266,28 +272,36 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
         }
         if (local) {
           if (test.environments.includes('viceroy')) {
-            let path = test.downstream_request.pathname;
-            let url = `${domain}${path}`;
-            try {
-              const response = await request(url, {
-                method: test.downstream_request.method || 'GET',
-                headers: test.downstream_request.headers || undefined,
-                body: test.downstream_request.body || undefined,
-              });
-              const bodyChunks = await getBodyChunks(response);
-              await compareDownstreamResponse(
-                test.downstream_response,
-                response,
-                bodyChunks,
-              );
-              return {
-                title,
-                test,
-                skipped: false,
-              };
-            } catch (error) {
-              throw new Error(`${title} ${error.message}`, { cause: error });
-            }
+            return (!test.flake ? (_, __, fn) => fn() : retry)(
+              5,
+              expBackoff('10s', '1s'),
+              async () => {
+                let path = test.downstream_request.pathname;
+                let url = `${domain}${path}`;
+                try {
+                  const response = await request(url, {
+                    method: test.downstream_request.method || 'GET',
+                    headers: test.downstream_request.headers || undefined,
+                    body: test.downstream_request.body || undefined,
+                  });
+                  const bodyChunks = await getBodyChunks(response);
+                  await compareDownstreamResponse(
+                    test.downstream_response,
+                    response,
+                    bodyChunks,
+                  );
+                  return {
+                    title,
+                    test,
+                    skipped: false,
+                  };
+                } catch (error) {
+                  throw new Error(`${title} ${error.message}`, {
+                    cause: error,
+                  });
+                }
+              },
+            );
           } else {
             return {
               title,
