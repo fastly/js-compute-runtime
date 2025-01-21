@@ -127,7 +127,7 @@ if (!local) {
       .Name;
   core.notice(`Service is running on ${domain}`);
 
-  const setupPath = join(fixturePath, 'setup.js');
+  const setupPath = join(__dirname, 'setup.js');
   if (existsSync(setupPath)) {
     core.startGroup('Extra set-up steps for the service');
     await zx`node ${setupPath} ${serviceName}`;
