@@ -9,6 +9,9 @@ import {
 import { KVStore } from 'fastly:kv-store';
 import { routes, isRunningLocally } from './routes.js';
 import { sdkVersion } from 'fastly:experimental';
+import { env } from 'fastly:env';
+
+const KV_STORE_NAME = `example-test-kv-store--${env('FASTLY_SERVICE_NAME')}`;
 
 const debug = sdkVersion.endsWith('-debug');
 
@@ -29,7 +32,7 @@ const debug = sdkVersion.endsWith('-debug');
   });
 
   routes.set('/kv-store-e2e/list', async () => {
-    const store = new KVStore('example-test-kv-store');
+    const store = new KVStore(KV_STORE_NAME);
     try {
       await store.delete('c');
     } catch {}
@@ -269,7 +272,7 @@ const debug = sdkVersion.endsWith('-debug');
       );
     });
     routes.set('/kv-store/constructor/found-store', async () => {
-      const store = new KVStore('example-test-kv-store');
+      const store = new KVStore(KV_STORE_NAME);
       strictEqual(store instanceof KVStore, true, `store instanceof KVStore`);
     });
     routes.set('/kv-store/constructor/missing-store', async () => {
@@ -370,7 +373,7 @@ const debug = sdkVersion.endsWith('-debug');
               throw sentinel;
             },
           };
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           await store.put(key, '');
         };
         await assertRejects(test);
@@ -381,7 +384,7 @@ const debug = sdkVersion.endsWith('-debug');
         }
         await assertRejects(
           async () => {
-            const store = new KVStore('example-test-kv-store');
+            const store = new KVStore(KV_STORE_NAME);
             await store.put(Symbol(), '');
           },
           Error,
@@ -392,7 +395,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/put/key-parameter-not-supplied', async () => {
       await assertRejects(
         async () => {
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           await store.put();
         },
         TypeError,
@@ -402,7 +405,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/put/key-parameter-empty-string', async () => {
       await assertRejects(
         async () => {
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           await store.put('', '');
         },
         TypeError,
@@ -413,7 +416,7 @@ const debug = sdkVersion.endsWith('-debug');
       '/kv-store/put/key-parameter-1024-character-string',
       async () => {
         await assertResolves(async () => {
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           const key = 'a'.repeat(1024);
           await store.put(key, '');
         });
@@ -424,7 +427,7 @@ const debug = sdkVersion.endsWith('-debug');
       async () => {
         await assertRejects(
           async () => {
-            const store = new KVStore('example-test-kv-store');
+            const store = new KVStore(KV_STORE_NAME);
             const key = 'a'.repeat(1025);
             await store.put(key, '');
           },
@@ -436,7 +439,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/put/key-parameter-containing-newline', async () => {
       await assertRejects(
         async () => {
-          let store = new KVStore('example-test-kv-store');
+          let store = new KVStore(KV_STORE_NAME);
           await store.put('\n', '');
         },
         TypeError,
@@ -448,7 +451,7 @@ const debug = sdkVersion.endsWith('-debug');
       async () => {
         await assertRejects(
           async () => {
-            let store = new KVStore('example-test-kv-store');
+            let store = new KVStore(KV_STORE_NAME);
             await store.put('\r', '');
           },
           TypeError,
@@ -461,7 +464,7 @@ const debug = sdkVersion.endsWith('-debug');
       async () => {
         await assertRejects(
           async () => {
-            let store = new KVStore('example-test-kv-store');
+            let store = new KVStore(KV_STORE_NAME);
             await store.put('.well-known/acme-challenge/', '');
           },
           TypeError,
@@ -472,7 +475,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/put/key-parameter-single-dot', async () => {
       await assertRejects(
         async () => {
-          let store = new KVStore('example-test-kv-store');
+          let store = new KVStore(KV_STORE_NAME);
           await store.put('.', '');
         },
         TypeError,
@@ -482,7 +485,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/put/key-parameter-double-dot', async () => {
       await assertRejects(
         async () => {
-          let store = new KVStore('example-test-kv-store');
+          let store = new KVStore(KV_STORE_NAME);
           await store.put('..', '');
         },
         TypeError,
@@ -496,7 +499,7 @@ const debug = sdkVersion.endsWith('-debug');
         for (const character of specialCharacters) {
           await assertRejects(
             async () => {
-              let store = new KVStore('example-test-kv-store');
+              let store = new KVStore(KV_STORE_NAME);
               await store.put(character, '');
             },
             TypeError,
@@ -506,7 +509,7 @@ const debug = sdkVersion.endsWith('-debug');
       },
     );
     routes.set('/kv-store/put/value-parameter-as-undefined', async () => {
-      const store = new KVStore('example-test-kv-store');
+      const store = new KVStore(KV_STORE_NAME);
       let result = store.put('undefined', undefined);
       strictEqual(
         result instanceof Promise,
@@ -522,7 +525,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/put/value-parameter-not-supplied', async () => {
       await assertRejects(
         async () => {
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           await store.put('test');
         },
         TypeError,
@@ -537,7 +540,7 @@ const debug = sdkVersion.endsWith('-debug');
         await assertRejects(
           async () => {
             const stream = iteratableToStream([]);
-            const store = new KVStore('example-test-kv-store');
+            const store = new KVStore(KV_STORE_NAME);
             await store.put('readablestream-empty', stream);
           },
           TypeError,
@@ -545,7 +548,7 @@ const debug = sdkVersion.endsWith('-debug');
         );
         // TODO: uncomment this when conte-provided (guest) streams are supported
         // const stream = iteratableToStream([])
-        // const store = new KVStore('example-test-kv-store')
+        // const store = new KVStore(KV_STORE_NAME)
         // let result = store.put('readablestream-empty', stream)
         // strictEqual(result instanceof Promise, true, `store.put('readablestream-empty', stream) instanceof Promise`)
         // strictEqual(await result, undefined, `await store.put('readablestream-empty', stream)`)
@@ -560,7 +563,7 @@ const debug = sdkVersion.endsWith('-debug');
             backend: 'TheOrigin',
           },
         );
-        const store = new KVStore('example-test-kv-store');
+        const store = new KVStore(KV_STORE_NAME);
         let result = store.put('readablestream-under-30mb', res.body);
         strictEqual(
           result instanceof Promise,
@@ -575,7 +578,7 @@ const debug = sdkVersion.endsWith('-debug');
       },
     );
     routes.set('/kv-store/put/request-body', async ({ request }) => {
-      const store = new KVStore('example-test-kv-store');
+      const store = new KVStore(KV_STORE_NAME);
       let result = store.put('readablestream-req', request.body);
       strictEqual(
         result instanceof Promise,
@@ -597,7 +600,7 @@ const debug = sdkVersion.endsWith('-debug');
             const stream = iteratableToStream([
               'x'.repeat(30 * 1024 * 1024) + 'x',
             ]);
-            const store = new KVStore('example-test-kv-store');
+            const store = new KVStore(KV_STORE_NAME);
             await store.put('readablestream-over-30mb', stream);
           },
           Error,
@@ -605,7 +608,7 @@ const debug = sdkVersion.endsWith('-debug');
         );
         // TODO: uncomment this when conte-provided (guest) streams are supported
         // const stream = iteratableToStream(['x'.repeat(30*1024*1024) + 'x'])
-        // const store = new KVStore('example-test-kv-store')
+        // const store = new KVStore(KV_STORE_NAME)
         // let result = store.put('readablestream-over-30mb', stream)
         // strictEqual(result instanceof Promise, true, `store.put('readablestream-over-30mb', stream) instanceof Promise`)
         // strictEqual(await result, undefined, `await store.put('readablestream-over-30mb', stream)`)
@@ -617,7 +620,7 @@ const debug = sdkVersion.endsWith('-debug');
         const stream = iteratableToStream([]);
         // getReader() causes the stream to become locked
         stream.getReader();
-        const store = new KVStore('example-test-kv-store');
+        const store = new KVStore(KV_STORE_NAME);
         await assertRejects(
           async () => {
             await store.put('readablestream-locked', stream);
@@ -635,7 +638,7 @@ const debug = sdkVersion.endsWith('-debug');
         new URLSearchParams(),
         new URLSearchParams({ a: 'b', c: 'd' }),
       ];
-      const store = new KVStore('example-test-kv-store');
+      const store = new KVStore(KV_STORE_NAME);
       for (const searchParams of items) {
         let result = store.put('URLSearchParams', searchParams);
         strictEqual(
@@ -661,7 +664,7 @@ const debug = sdkVersion.endsWith('-debug');
         '𠈓',
         String('carrot'),
       ];
-      const store = new KVStore('example-test-kv-store');
+      const store = new KVStore(KV_STORE_NAME);
       for (const string of strings) {
         let result = store.put('string', string);
         strictEqual(
@@ -679,7 +682,7 @@ const debug = sdkVersion.endsWith('-debug');
 
     routes.set('/kv-store/put/value-parameter-string-over-30mb', async () => {
       const string = 'x'.repeat(35 * 1024 * 1024) + 'x';
-      const store = new KVStore('example-test-kv-store');
+      const store = new KVStore(KV_STORE_NAME);
       await assertRejects(
         () => store.put('string-over-30mb', string),
         TypeError,
@@ -699,7 +702,7 @@ const debug = sdkVersion.endsWith('-debug');
               throw sentinel;
             },
           };
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           await store.put('toString', value);
         };
         await assertRejects(test);
@@ -710,7 +713,7 @@ const debug = sdkVersion.endsWith('-debug');
         }
         await assertRejects(
           async () => {
-            const store = new KVStore('example-test-kv-store');
+            const store = new KVStore(KV_STORE_NAME);
             await store.put('Symbol()', Symbol());
           },
           TypeError,
@@ -734,7 +737,7 @@ const debug = sdkVersion.endsWith('-debug');
         Uint32Array,
         BigUint64Array,
       ];
-      const store = new KVStore('example-test-kv-store');
+      const store = new KVStore(KV_STORE_NAME);
       for (const constructor of typedArrayConstructors) {
         const typedArray = new constructor(8);
         let result = store.put(constructor.name, typedArray.buffer);
@@ -764,7 +767,7 @@ const debug = sdkVersion.endsWith('-debug');
         Uint32Array,
         BigUint64Array,
       ];
-      const store = new KVStore('example-test-kv-store');
+      const store = new KVStore(KV_STORE_NAME);
       for (const constructor of typedArrayConstructors) {
         const typedArray = new constructor(8);
         let result = store.put(constructor.name, typedArray.buffer);
@@ -794,7 +797,7 @@ const debug = sdkVersion.endsWith('-debug');
         Uint32Array,
         BigUint64Array,
       ];
-      const store = new KVStore('example-test-kv-store');
+      const store = new KVStore(KV_STORE_NAME);
       for (const constructor of typedArrayConstructors) {
         const typedArray = new constructor(8);
         let result = store.put(constructor.name, typedArray);
@@ -824,7 +827,7 @@ const debug = sdkVersion.endsWith('-debug');
         BigInt64Array,
         BigUint64Array,
       ];
-      const store = new KVStore('example-test-kv-store');
+      const store = new KVStore(KV_STORE_NAME);
       for (const constructor of typedArrayConstructors) {
         const typedArray = new constructor(8);
         const view = new DataView(typedArray.buffer);
@@ -867,7 +870,7 @@ const debug = sdkVersion.endsWith('-debug');
               throw sentinel;
             },
           };
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           await store.delete(key);
         };
         await assertRejects(test);
@@ -878,7 +881,7 @@ const debug = sdkVersion.endsWith('-debug');
         }
         await assertRejects(
           async () => {
-            const store = new KVStore('example-test-kv-store');
+            const store = new KVStore(KV_STORE_NAME);
             await store.delete(Symbol());
           },
           TypeError,
@@ -889,7 +892,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/delete/key-parameter-not-supplied', async () => {
       await assertRejects(
         async () => {
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           await store.delete();
         },
         TypeError,
@@ -899,7 +902,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/delete/key-parameter-empty-string', async () => {
       await assertRejects(
         async () => {
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           await store.delete('');
         },
         TypeError,
@@ -910,7 +913,7 @@ const debug = sdkVersion.endsWith('-debug');
       '/kv-store/delete/key-parameter-1024-character-string',
       async () => {
         await assertResolves(async () => {
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           const key = 'a'.repeat(1024);
           await store.put(key, '');
           await store.delete(key);
@@ -922,7 +925,7 @@ const debug = sdkVersion.endsWith('-debug');
       async () => {
         await assertRejects(
           async () => {
-            const store = new KVStore('example-test-kv-store');
+            const store = new KVStore(KV_STORE_NAME);
             const key = 'a'.repeat(1025);
             await store.delete(key);
           },
@@ -936,7 +939,7 @@ const debug = sdkVersion.endsWith('-debug');
       async () => {
         await assertRejects(
           async () => {
-            let store = new KVStore('example-test-kv-store');
+            let store = new KVStore(KV_STORE_NAME);
             await store.delete('\n');
           },
           TypeError,
@@ -949,7 +952,7 @@ const debug = sdkVersion.endsWith('-debug');
       async () => {
         await assertRejects(
           async () => {
-            let store = new KVStore('example-test-kv-store');
+            let store = new KVStore(KV_STORE_NAME);
             await store.delete('\r');
           },
           TypeError,
@@ -962,7 +965,7 @@ const debug = sdkVersion.endsWith('-debug');
       async () => {
         await assertRejects(
           async () => {
-            let store = new KVStore('example-test-kv-store');
+            let store = new KVStore(KV_STORE_NAME);
             await store.delete('.well-known/acme-challenge/');
           },
           TypeError,
@@ -973,7 +976,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/delete/key-parameter-single-dot', async () => {
       await assertRejects(
         async () => {
-          let store = new KVStore('example-test-kv-store');
+          let store = new KVStore(KV_STORE_NAME);
           await store.delete('.');
         },
         TypeError,
@@ -983,7 +986,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/delete/key-parameter-double-dot', async () => {
       await assertRejects(
         async () => {
-          let store = new KVStore('example-test-kv-store');
+          let store = new KVStore(KV_STORE_NAME);
           await store.delete('..');
         },
         TypeError,
@@ -997,7 +1000,7 @@ const debug = sdkVersion.endsWith('-debug');
         for (const character of specialCharacters) {
           await assertRejects(
             async () => {
-              let store = new KVStore('example-test-kv-store');
+              let store = new KVStore(KV_STORE_NAME);
               await store.delete(character);
             },
             TypeError,
@@ -1012,7 +1015,7 @@ const debug = sdkVersion.endsWith('-debug');
         if (isRunningLocally()) {
           return;
         }
-        let store = new KVStore('example-test-kv-store');
+        let store = new KVStore(KV_STORE_NAME);
         await assertRejects(
           () => store.delete(Math.random()),
           TypeError,
@@ -1021,7 +1024,7 @@ const debug = sdkVersion.endsWith('-debug');
       },
     );
     routes.set('/kv-store/delete/key-exists', async () => {
-      let store = new KVStore('example-test-kv-store');
+      let store = new KVStore(KV_STORE_NAME);
       let key = `key-exists-${Math.random()}`;
       await store.put(key, 'hello');
       let result = store.delete(key);
@@ -1037,7 +1040,7 @@ const debug = sdkVersion.endsWith('-debug');
       if (isRunningLocally()) {
         return;
       }
-      let store = new KVStore('example-test-kv-store');
+      let store = new KVStore(KV_STORE_NAME);
       let key = `key-exists-${Math.random()}`;
       await store.put(key, 'hello');
       let result = store.delete(key);
@@ -1055,7 +1058,7 @@ const debug = sdkVersion.endsWith('-debug');
       );
     });
     routes.set('/kv-store/delete/multiple-deletes-at-once', async () => {
-      let store = new KVStore('example-test-kv-store');
+      let store = new KVStore(KV_STORE_NAME);
       let key1 = `key-exists-${Math.random()}`;
       await store.put(key1, '1hello1');
       let key2 = `key-exists-${Math.random()}`;
@@ -1102,7 +1105,7 @@ const debug = sdkVersion.endsWith('-debug');
               throw sentinel;
             },
           };
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           await store.get(key);
         };
         await assertRejects(test);
@@ -1113,7 +1116,7 @@ const debug = sdkVersion.endsWith('-debug');
         }
         await assertRejects(
           async () => {
-            const store = new KVStore('example-test-kv-store');
+            const store = new KVStore(KV_STORE_NAME);
             await store.get(Symbol());
           },
           TypeError,
@@ -1124,7 +1127,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/get/key-parameter-not-supplied', async () => {
       await assertRejects(
         async () => {
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           await store.get();
         },
         TypeError,
@@ -1134,7 +1137,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/get/key-parameter-empty-string', async () => {
       await assertRejects(
         async () => {
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           await store.get('');
         },
         TypeError,
@@ -1145,7 +1148,7 @@ const debug = sdkVersion.endsWith('-debug');
       '/kv-store/get/key-parameter-1024-character-string',
       async () => {
         await assertResolves(async () => {
-          const store = new KVStore('example-test-kv-store');
+          const store = new KVStore(KV_STORE_NAME);
           const key = 'a'.repeat(1024);
           await store.get(key);
         });
@@ -1156,7 +1159,7 @@ const debug = sdkVersion.endsWith('-debug');
       async () => {
         await assertRejects(
           async () => {
-            const store = new KVStore('example-test-kv-store');
+            const store = new KVStore(KV_STORE_NAME);
             const key = 'a'.repeat(1025);
             await store.get(key);
           },
@@ -1168,7 +1171,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/get/key-parameter-containing-newline', async () => {
       await assertRejects(
         async () => {
-          let store = new KVStore('example-test-kv-store');
+          let store = new KVStore(KV_STORE_NAME);
           await store.get('\n');
         },
         TypeError,
@@ -1180,7 +1183,7 @@ const debug = sdkVersion.endsWith('-debug');
       async () => {
         await assertRejects(
           async () => {
-            let store = new KVStore('example-test-kv-store');
+            let store = new KVStore(KV_STORE_NAME);
             await store.get('\r');
           },
           TypeError,
@@ -1193,7 +1196,7 @@ const debug = sdkVersion.endsWith('-debug');
       async () => {
         await assertRejects(
           async () => {
-            let store = new KVStore('example-test-kv-store');
+            let store = new KVStore(KV_STORE_NAME);
             await store.get('.well-known/acme-challenge/');
           },
           TypeError,
@@ -1204,7 +1207,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/get/key-parameter-single-dot', async () => {
       await assertRejects(
         async () => {
-          let store = new KVStore('example-test-kv-store');
+          let store = new KVStore(KV_STORE_NAME);
           await store.get('.');
         },
         TypeError,
@@ -1214,7 +1217,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set('/kv-store/get/key-parameter-double-dot', async () => {
       await assertRejects(
         async () => {
-          let store = new KVStore('example-test-kv-store');
+          let store = new KVStore(KV_STORE_NAME);
           await store.get('..');
         },
         TypeError,
@@ -1228,7 +1231,7 @@ const debug = sdkVersion.endsWith('-debug');
         for (const character of specialCharacters) {
           await assertRejects(
             async () => {
-              let store = new KVStore('example-test-kv-store');
+              let store = new KVStore(KV_STORE_NAME);
               await store.get(character);
             },
             TypeError,
@@ -1238,7 +1241,7 @@ const debug = sdkVersion.endsWith('-debug');
       },
     );
     routes.set('/kv-store/get/key-does-not-exist-returns-null', async () => {
-      let store = new KVStore('example-test-kv-store');
+      let store = new KVStore(KV_STORE_NAME);
       let result = store.get(Math.random());
       strictEqual(
         result instanceof Promise,
@@ -1248,7 +1251,7 @@ const debug = sdkVersion.endsWith('-debug');
       strictEqual(await result, null, `await store.get(Math.random())`);
     });
     routes.set('/kv-store/get/key-does-not-exist-returns-null', async () => {
-      let store = new KVStore('example-test-kv-store');
+      let store = new KVStore(KV_STORE_NAME);
       let result = store.get(Math.random());
       strictEqual(
         result instanceof Promise,
@@ -1258,7 +1261,7 @@ const debug = sdkVersion.endsWith('-debug');
       strictEqual(await result, null, `await store.get(Math.random())`);
     });
     routes.set('/kv-store/get/key-exists', async () => {
-      let store = new KVStore('example-test-kv-store');
+      let store = new KVStore(KV_STORE_NAME);
       let key = `key-exists-${Math.random()}`;
       await store.put(key, 'hello');
       let result = store.get(key);
@@ -1276,7 +1279,7 @@ const debug = sdkVersion.endsWith('-debug');
     });
 
     routes.set('/kv-store/get/multiple-lookups-at-once', async () => {
-      let store = new KVStore('example-test-kv-store');
+      let store = new KVStore(KV_STORE_NAME);
       let key1 = `key-exists-${Math.random()}`;
       await store.put(key1, '1hello1');
       let key2 = `key-exists-${Math.random()}`;
@@ -1329,7 +1332,7 @@ const debug = sdkVersion.endsWith('-debug');
     return kvStoreEntryInterfaceTests();
   });
   routes.set('/kv-store-entry/text/valid', async () => {
-    let store = new KVStore('example-test-kv-store');
+    let store = new KVStore(KV_STORE_NAME);
     let key = `entry-text-valid`;
     await store.put(key, 'hello');
     let entry = await store.get(key);
@@ -1343,7 +1346,7 @@ const debug = sdkVersion.endsWith('-debug');
     strictEqual(result, 'hello', `await entry.text())`);
   });
   routes.set('/kv-store-entry/json/valid', async () => {
-    let store = new KVStore('example-test-kv-store');
+    let store = new KVStore(KV_STORE_NAME);
     let key = `entry-json-valid`;
     const obj = { a: 1, b: 2, c: 3 };
     await store.put(key, JSON.stringify(obj));
@@ -1358,7 +1361,7 @@ const debug = sdkVersion.endsWith('-debug');
     deepStrictEqual(result, obj, `await entry.json())`);
   });
   routes.set('/kv-store-entry/json/invalid', async () => {
-    let store = new KVStore('example-test-kv-store');
+    let store = new KVStore(KV_STORE_NAME);
     let key = `entry-json-invalid`;
     await store.put(key, "132abc;['-=9");
     let entry = await store.get(key);
@@ -1369,7 +1372,7 @@ const debug = sdkVersion.endsWith('-debug');
     );
   });
   routes.set('/kv-store-entry/arrayBuffer/valid', async () => {
-    let store = new KVStore('example-test-kv-store');
+    let store = new KVStore(KV_STORE_NAME);
     let key = `entry-arraybuffer-valid`;
     await store.put(key, new Int8Array([0, 1, 2, 3]));
     let entry = await store.get(key);
@@ -1388,7 +1391,7 @@ const debug = sdkVersion.endsWith('-debug');
   });
 
   routes.set('/kv-store-entry/body', async () => {
-    let store = new KVStore('example-test-kv-store');
+    let store = new KVStore(KV_STORE_NAME);
     let key = `entry-body`;
     await store.put(key, 'body body body');
     let entry = await store.get(key);
@@ -1402,7 +1405,7 @@ const debug = sdkVersion.endsWith('-debug');
     strictEqual(text, 'body body body', `entry.body contents as string`);
   });
   routes.set('/kv-store-entry/bodyUsed', async () => {
-    let store = new KVStore('example-test-kv-store');
+    let store = new KVStore(KV_STORE_NAME);
     let key = `entry-bodyUsed`;
     await store.put(key, 'body body body');
     let entry = await store.get(key);

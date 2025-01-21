@@ -2254,6 +2254,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::BodyUsed), JS::FalseValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Method),
                       JS::StringValue(GET_atom));
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::OverrideCacheKey),
+                      JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::CacheOverride),
                       JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
