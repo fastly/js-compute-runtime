@@ -290,9 +290,9 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
           }
         } else {
           if (test.environments.includes('compute')) {
-            return (!test.flake ? (_, __, fn) => fn() : retry)(
-              10,
-              expBackoff('60s', '10s'),
+            return (local && !test.flake ? (_, __, fn) => fn() : retry)(
+              test.flake ? 10 : 5,
+              expBackoff(test.flake ? '60s' : '10s', test.flake ? '10s' : '1s'),
               async () => {
                 let path = test.downstream_request.pathname;
                 let url = `${domain}${path}`;
