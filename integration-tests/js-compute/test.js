@@ -193,9 +193,12 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
         }
         // feature based test filtering
         if (
-          !httpCache &&
-          test.features &&
-          test.features.includes('http-cache')
+          (!httpCache &&
+            test.features &&
+            test.features.includes('http-cache')) ||
+          (httpCache &&
+            test.features &&
+            test.features.includes('skip-http-cache'))
         ) {
           return {
             title,
