@@ -298,7 +298,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
         } else {
           if (test.environments.includes('compute')) {
             return retry(
-              test.flake ? 10 : 5,
+              test.flake ? 10 : 4,
               expBackoff(test.flake ? '60s' : '10s', test.flake ? '10s' : '1s'),
               async () => {
                 let path = test.downstream_request.pathname;
