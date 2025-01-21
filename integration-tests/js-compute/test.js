@@ -197,6 +197,22 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
       bail ? Promise.all.bind(Promise) : Promise.allSettled.bind(Promise)
     )(
       chunk.map(async ([title, test]) => {
+        // test defaults
+        if (!test.downstream_request) {
+          const [method, pathname, extra] = title.split(' ');
+          if (typeof extra === 'string')
+            throw new Error('Cannot infer downstream_request from title');
+          test.downstream_request = { method, pathname };
+        }
+        if (!test.downstream_response) {
+          test.downstream_response = {
+            status: 200,
+          };
+        }
+        if (!test.environments) {
+          test.environments = ['viceroy', 'compute'];
+        }
+
         // basic test filtering
         if (filter.length > 0 && filter.every((f) => !title.includes(f))) {
           return {
@@ -255,21 +271,6 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
           ]);
           clearTimeout(downstreamTimeout);
           return bodyChunks;
-        }
-        // default test options
-        if (!test.downstream_request) {
-          const [method, pathname, extra] = title.split(' ');
-          if (typeof extra === 'string')
-            throw new Error('Cannot infer downstream_request from title');
-          test.downstream_request = { method, pathname };
-        }
-        if (!test.downstream_response) {
-          test.downstream_response = {
-            status: 200,
-          };
-        }
-        if (!test.environments) {
-          test.environments = ['viceroy', 'compute'];
         }
         if (local) {
           if (test.environments.includes('viceroy')) {
