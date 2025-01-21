@@ -99,7 +99,7 @@ async function setupKVStore() {
     console.log(`Creating new KV store ${KV_STORE_NAME}`);
     process.env.STORE_ID = JSON.parse(
       await zx`fastly kv-store create --quiet --name=${KV_STORE_NAME} --json --token $FASTLY_API_TOKEN`,
-    ).id;
+    ).StoreID;
   } else {
     console.log(`Using existing KV store ${KV_STORE_NAME}`);
     process.env.STORE_ID = STORE_ID;
