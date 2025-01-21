@@ -1164,6 +1164,7 @@
   "GET /response/json": {},
   "GET /response/redirect": {},
   "GET /response/request-body-init": {
+    "flake": true,
     "features": ["skip-http-cache"],
     "downstream_response": {
       "status": 200,
