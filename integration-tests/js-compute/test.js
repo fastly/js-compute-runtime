@@ -73,7 +73,7 @@ const branchName = (await zx`git branch --show-current`).stdout
   .trim()
   .replace(/[^a-zA-Z0-9_-]/g, '_');
 
-const fixture = moduleMode ? 'module-mode' : 'app';
+const fixture = 'app';
 const serviceName = `${fixture}--${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING || ''}`;
 if (!local) process.env.FASTLY_SERVICE_NAME = serviceName;
 let domain;
