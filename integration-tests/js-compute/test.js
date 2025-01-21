@@ -75,7 +75,8 @@ const branchName = (await zx`git branch --show-current`).stdout
 
 const fixture = moduleMode ? 'module-mode' : 'app';
 const serviceName = `${fixture}--${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING || ''}`;
-process.env.FASTLY_SERVICE_NAME = serviceName;
+if (!local)
+  process.env.FASTLY_SERVICE_NAME = serviceName;
 let domain;
 const fixturePath = join(__dirname, 'fixtures', fixture);
 let localServer;

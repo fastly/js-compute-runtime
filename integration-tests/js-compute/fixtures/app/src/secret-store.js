@@ -5,7 +5,8 @@ import { routes } from './routes.js';
 import fc from './fast-check.js';
 import { env } from 'fastly:env';
 
-const SECRET_STORE_NAME = `example-test-secret-store--${env('FASTLY_SERVICE_NAME')}`;
+const FASTLY_SERVICE_NAME = env('FASTLY_SERVICE_NAME');
+const SECRET_STORE_NAME = `example-test-secret-store${FASTLY_SERVICE_NAME ? `--${FASTLY_SERVICE_NAME}` : ''}`;
 
 // SecretStore
 {
