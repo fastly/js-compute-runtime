@@ -1825,8 +1825,13 @@ JSString *Request::method(JSContext *cx, JS::HandleObject obj) {
 
 bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValue cache_key_val) {
   MOZ_ASSERT(is_instance(self));
+  JS::RootedString cache_key_str(cx, JS::ToString(cx, cache_key_val));
+  if (!cache_key_str) {
+    return false;
+  }
+  JS::RootedValue cache_key_str_val(cx, JS::StringValue(cache_key_str));
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
-  auto keyString = core::encode(cx, cache_key_val);
+  auto keyString = core::encode(cx, cache_key_str_val);
   if (!keyString) {
     return false;
   }
@@ -1839,6 +1844,7 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
   if (!headers) {
     return false;
   }
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::OverrideCacheKey), cache_key_str_val);
   JS::RootedObject headers_val(cx, headers);
   JS::RootedValue value_val(
       cx, JS::StringValue(JS_NewStringCopyN(cx, hex_str.c_str(), hex_str.length())));

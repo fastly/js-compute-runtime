@@ -5,6 +5,7 @@
 #include "../fastly.h"
 #include "../fetch-event.h"
 #include "./request-response.h"
+#include "builtin.h"
 #include "encode.h"
 #include "extension-api.h"
 
@@ -782,23 +783,19 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return fetch_send_body<true>(cx, request, args.rval());
   }
 
-  // TODO: Get cache override key if set
-  // RootedValue cache_key(cx, JS::GetReservedSlot(request,
-  // static_cast<uint32_t>(Request::Slots::OverrideCacheKey)); JS::SetReservedSlot(request,
-  // static_cast<uint32_t>(Request::Slots::OverrideCacheKey), JS::UndefinedValue());
-
   // Lookup in cache
   auto request_handle = Request::request_handle(request);
 
-  // Convert cache key to span if present
+  // Convert override cache key to span if present
+  host_api::HostString override_key_str;
   std::span<uint8_t> override_key_span = {};
-  // host_api::HostString override_key_str;
-  // if (cache_key.isString()) {
-  //   override_key_str = host_api::HostString(cx, cache_key.toString());
-  //   override_key_span = std::span<uint8_t>(reinterpret_cast<uint8_t
-  //   *>(override_key_str.data()),
-  //                                          override_key_str.size());
-  // }
+  JS::RootedValue override_cache_key(
+      cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::OverrideCacheKey)));
+  if (override_cache_key.isString()) {
+    override_key_str = core::encode(cx, override_cache_key);
+    override_key_span = std::span<uint8_t>(reinterpret_cast<uint8_t *>(override_key_str.ptr.get()),
+                                           override_key_str.size());
+  }
 
   auto transaction_res =
       host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_span);
