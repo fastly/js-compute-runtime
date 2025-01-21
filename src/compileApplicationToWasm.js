@@ -186,6 +186,7 @@ export async function compileApplicationToWasm(
           [
             'weval',
             ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
+            '--inherit-env=true',
             '--dir .',
             `--dir ${maybeWindowsPath(dirname(input))}`,
             '-w',
