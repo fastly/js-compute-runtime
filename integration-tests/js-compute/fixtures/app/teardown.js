@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { $ as zx } from 'zx';
+import { argv } from 'node:process';
 
 const serviceName = argv[2];
 
