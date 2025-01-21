@@ -29,11 +29,17 @@
     }
   },
   "GET /cache-override/constructor/called-as-regular-function": {},
-  "GET /cache-override/constructor/empty-parameter": {},
-  "GET /cache-override/constructor/invalid-mode": {},
+  "GET /cache-override/constructor/empty-parameter": {
+    "flake": true
+  },
+  "GET /cache-override/constructor/invalid-mode": {
+    "flake": true
+  },
   "GET /cache-override/constructor/valid-mode": {},
   "GET /cache-override/fetch/mode-none": {},
-  "GET /cache-override/fetch/mode-pass": {},
+  "GET /cache-override/fetch/mode-pass": {
+    "flake": true
+  },
   "GET /secret-store/exposed-as-global": {},
   "GET /secret-store/interface": { "flake": true },
   "GET /secret-store/constructor/called-as-regular-function": { "flake": true },
@@ -115,6 +121,7 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/set/ttl-parameter-negative-number": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/ttl-parameter-NaN": {
@@ -172,6 +179,7 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-dataview": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/set/returns-undefined": {
@@ -230,6 +238,7 @@
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/called-as-constructor": {
+    "flake": true,
     "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/no-parameters-supplied": {

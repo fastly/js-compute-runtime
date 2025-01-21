@@ -1418,7 +1418,6 @@ function ensureLion() {
       assertDoesNotThrow(() => {
         entry = CoreCache.lookup('lion');
       });
-      console.debug('ENTRY', entry, JSON.stringify(entry), typeof entry);
       assert(
         entry instanceof CacheEntry,
         true,
