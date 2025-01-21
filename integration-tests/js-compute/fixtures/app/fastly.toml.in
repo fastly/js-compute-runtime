@@ -32,9 +32,9 @@ service_id = ""
       override_host = "http-me.glitch.me"
 
   [local_server.config_stores]
-    [local_server.config_stores.testconfig]
+    [local_server.config_stores.CONFIG_STORE_NAME]
       format = "inline-toml"
-    [local_server.config_stores.testconfig.contents]
+    [local_server.config_stores.CONFIG_STORE_NAME.contents]
       "twitter" = "https://twitter.com/fastly"
 
     [local_server.config_stores."DICTIONARY_NAME"]
