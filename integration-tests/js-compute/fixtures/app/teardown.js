@@ -7,7 +7,12 @@ const serviceName = argv[2];
 const CONFIG_STORE_NAME_1 = `aZ1 __ 2__${serviceName.replace(/-/g, '_')}`;
 const CONFIG_STORE_NAME_2 = `testconfig__${serviceName.replace(/-/g, '_')}`;
 const KV_STORE_NAME = `example-test-kv-store--${serviceName}`;
-const SECRET_STORE_NAME = `example-test-kv-store--${serviceName}`;
+const SECRET_STORE_NAME = `example-test-secret-store--${serviceName}`;
+
+function existingStoreId(stores, existingName) {
+  const existing = stores.find(({ name }) => name === existingName);
+  return existing?.id || existing?.StoreID;
+}
 
 const startTime = Date.now();
 
@@ -50,7 +55,7 @@ async function removeConfigStore() {
     }
   })();
 
-  const STORE_ID = stores.find(({ name }) => name === CONFIG_STORE_NAME_1)?.id;
+  const STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME_1);
   if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;
     let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
@@ -67,7 +72,7 @@ async function removeConfigStore() {
   }
 }
 
-const STORE_ID = stores.find(({ name }) => name === CONFIG_STORE_NAME_2)?.id;
+const STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME_2);
 if (STORE_ID) {
   process.env.STORE_ID = STORE_ID;
   let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
@@ -84,16 +89,18 @@ if (STORE_ID) {
 }
 
 async function removeKVStore() {
-  let stores = await fetch('https://api.fastly.com/resources/stores/object', {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      'Fastly-Key': FASTLY_API_TOKEN,
-    },
-  }).then((res) => res.json());
+  let stores = (
+    await fetch('https://api.fastly.com/resources/stores/object', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'Fastly-Key': FASTLY_API_TOKEN,
+      },
+    }).then((res) => res.json())
+  ).Data;
 
-  let STORE_ID = stores.data.find(({ name }) => name === KV_STORE_NAME)?.id;
+  let STORE_ID = existingStoreId(stores, KV_STORE_NAME);
   if (STORE_ID) {
     await fetch(`https://api.fastly.com/resources/stores/object/${STORE_ID}`, {
       method: 'DELETE',
@@ -124,7 +131,7 @@ async function removeSecretStore() {
     }
   })();
 
-  const STORE_ID = stores.find(({ name }) => name === SECRET_STORE_NAME)?.id;
+  const STORE_ID = existingStoreId(stores, SECRET_STORE_NAME);
   if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;
     let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;

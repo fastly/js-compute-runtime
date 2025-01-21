@@ -122,10 +122,9 @@ bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_
   if (http_caching_unsupported || !fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
     if (must_use_guest_caching(cx, request)) {
       if (!fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
-        JS_ReportErrorASCII(
-            cx,
-            "HTTP caching API is not enabled for JavaScript; enable it with the --http-cache flag "
-            "to the js-compute build command, or contact support for help");
+        JS_ReportErrorASCII(cx, "HTTP caching API is not enabled for JavaScript; enable it with "
+                                "the --enable-http-cache flag "
+                                "to the js-compute build command, or contact support for help");
       } else {
         JS_ReportErrorASCII(
             cx,
@@ -783,7 +782,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return fetch_send_body<true>(cx, request, args.rval());
   }
 
-  // Get cache override key if set (TODO)
+  // TODO: Get cache override key if set
   // RootedValue cache_key(cx, JS::GetReservedSlot(request,
   // static_cast<uint32_t>(Request::Slots::OverrideCacheKey)); JS::SetReservedSlot(request,
   // static_cast<uint32_t>(Request::Slots::OverrideCacheKey), JS::UndefinedValue());

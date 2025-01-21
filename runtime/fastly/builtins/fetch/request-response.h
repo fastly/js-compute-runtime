@@ -171,6 +171,7 @@ public:
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
     CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),
     Method = static_cast<int>(RequestOrResponse::Slots::Count),
+    OverrideCacheKey,
     CacheOverride,
     PendingRequest,
     ResponsePromise,
@@ -186,6 +187,7 @@ public:
 
   static JSObject *response_promise(JSObject *obj);
   static JSString *method(JSContext *cx, JS::HandleObject obj);
+  // static JSString *override_cache_key(JSContext *cx)
   static bool set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValue cache_key_val);
   static bool set_cache_override(JSContext *cx, JS::HandleObject self,
                                  JS::HandleValue cache_override_val);
