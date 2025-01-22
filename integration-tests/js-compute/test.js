@@ -11,6 +11,9 @@ import { copyFile, readFile, writeFile } from 'node:fs/promises';
 import core from '@actions/core';
 import TOML from '@iarna/toml';
 
+// test environment variable handling
+process.env.LOCAL_TEST = 'local val';
+
 async function killPortProcess(port) {
   zx.verbose = false;
   const pids = (await zx`lsof -ti:${port}`).stdout;

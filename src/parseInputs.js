@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, isAbsolute } from 'node:path';
 import { unknownArgument } from './unknownArgument.js';
 import { tooManyEngines } from './tooManyEngines.js';
+import { EnvParser } from './env.js';
 
 export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -19,11 +20,30 @@ export async function parseInputs(cliInputs) {
   let output = join(process.cwd(), 'bin/main.wasm');
   let cliInput;
 
+  const envParser = new EnvParser();
+
   // eslint-disable-next-line no-cond-assign
   loop: while ((cliInput = cliInputs.shift())) {
     switch (cliInput) {
       case '--': {
         break loop;
+      }
+      case '--env': {
+        const value = cliInputs.shift();
+        if (!value) {
+          console.error('Error: --env requires a KEY=VALUE pair');
+          process.exit(1);
+        }
+        // If value ends with comma, it's a continuation
+        while (
+          value.endsWith(',') &&
+          cliInputs.length > 0 &&
+          !cliInputs[0].startsWith('-')
+        ) {
+          value = value + cliInputs.shift();
+        }
+        envParser.parse(value);
+        break;
       }
       case '--enable-experimental-high-resolution-time-methods': {
         enableExperimentalHighResolutionTimeMethods = true;
@@ -87,6 +107,7 @@ export async function parseInputs(cliInputs) {
         break;
       }
       case '--aot-cache': {
+        const value = cliInputs.shift();
         if (isAbsolute(value)) {
           aotCache = value;
         } else {
@@ -95,22 +116,21 @@ export async function parseInputs(cliInputs) {
         break;
       }
       default: {
-        // The reason this is not another `case` and is an `if` using `startsWith`
-        // is because previous versions of the CLI allowed an arbitrary amount of
-        // = characters to be present. E.G. This is valid --engine-wasm====js.wasm
         if (cliInput.startsWith('--engine-wasm=')) {
           if (customEngineSet) {
             tooManyEngines();
           }
           const value = cliInput.replace(/--engine-wasm=+/, '');
-          // This is used to detect if multiple --engine-wasm flags have been set
-          // which is not supported.
           customEngineSet = true;
           if (isAbsolute(value)) {
             wasmEngine = value;
           } else {
             wasmEngine = join(process.cwd(), value);
           }
+          break;
+        } else if (cliInput.startsWith('--env=')) {
+          const value = cliInput.replace(/--env=/, '');
+          envParser.parse(value);
           break;
         } else if (cliInput.startsWith('-')) {
           unknownArgument(cliInput);
@@ -150,5 +170,6 @@ export async function parseInputs(cliInputs) {
     input,
     output,
     wasmEngine,
+    env: envParser.getEnv(),
   };
 }

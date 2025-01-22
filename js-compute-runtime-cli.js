@@ -16,6 +16,7 @@ const {
   output,
   version,
   help,
+  env,
 } = await parseInputs(process.argv.slice(2));
 
 if (version) {
@@ -41,6 +42,7 @@ if (version) {
     aotCache,
     moduleMode,
     bundle,
+    env,
   );
   await addSdkMetadataField(output, enableAOT);
 }

@@ -22,11 +22,16 @@ using fastly::fetch::RequestOrResponse;
 using fastly::fetch::Response;
 using fastly::logger::Logger;
 
+extern char **environ;
+
 namespace {
 
 bool DEBUG_LOGGING_ENABLED = false;
 
 api::Engine *ENGINE;
+
+// Global storage for Wizer-time environment
+std::unordered_map<std::string, std::string> initialized_env;
 
 static void oom_callback(JSContext *cx, void *data) {
   fprintf(stderr, "Critical Error: out of memory\n");
@@ -319,15 +324,42 @@ bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!args.requireAtLeast(cx, "fastly.env.get", 1))
     return false;
 
-  auto var_name_chars = core::encode(cx, args[0]);
-  if (!var_name_chars) {
+  JS::RootedString str(cx, JS::ToString(cx, args[0]));
+  if (!str) {
     return false;
   }
-  JS::RootedString env_var(cx, JS_NewStringCopyZ(cx, getenv(var_name_chars.begin())));
-  if (!env_var)
-    return false;
 
-  args.rval().setString(env_var);
+  JS::UniqueChars ptr = JS_EncodeStringToUTF8(cx, str);
+  if (!ptr) {
+    return false;
+  }
+
+  // This shouldn't fail, since the encode operation ensured `str` is linear.
+  JSLinearString *linear = JS_EnsureLinearString(cx, str);
+  uint32_t len = JS::GetDeflatedUTF8StringLength(linear);
+
+  std::string key_str(ptr.get(), len);
+
+  // First check initialized environment
+  if (auto it = initialized_env.find(key_str); it != initialized_env.end()) {
+    JS::RootedString env_var(cx, JS_NewStringCopyN(cx, it->second.data(), it->second.size()));
+    if (!env_var)
+      return false;
+    args.rval().setString(env_var);
+    return true;
+  }
+
+  // Fallback to getenv with caching
+  if (const char *value = std::getenv(key_str.c_str())) {
+    auto [it, _] = initialized_env.emplace(key_str, value);
+    JS::RootedString env_var(cx, JS_NewStringCopyN(cx, it->second.data(), it->second.size()));
+    if (!env_var)
+      return false;
+    args.rval().setString(env_var);
+    return true;
+  }
+
+  args.rval().setUndefined();
   return true;
 }
 
@@ -475,6 +507,19 @@ bool install(api::Engine *engine) {
   }
 
   // fastly:env
+  // first, store the initialized environment vars from Wizer
+  initialized_env.clear();
+
+  for (char **env = environ; *env; env++) {
+    const char *entry = *env;
+    const char *eq = entry;
+    while (*eq && *eq != '=')
+      eq++;
+
+    if (*eq == '=') {
+      initialized_env.emplace(std::string(entry, eq - entry), std::string(eq + 1));
+    }
+  }
   RootedValue env_get(engine->cx());
   if (!JS_GetProperty(engine->cx(), Fastly::env, "get", &env_get)) {
     return false;

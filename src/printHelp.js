@@ -13,11 +13,15 @@ FLAGS:
     -V, --version                                           Prints version information
 
 OPTIONS:
-    --engine-wasm <engine-wasm>                             The JS engine Wasm file path
+    --env <KEY=VALUE>                                       Set environment variables, possibly inheriting
+                                                           from the current environment. Multiple
+                                                           variables can be comma-separated 
+                                                           (e.g., --env ENV_VAR,OVERRIDE=val)
     --module-mode                            [experimental] Run all sources as native modules,
-                                                            with full error stack support.
+                                                           with full error stack support.
+    --engine-wasm <engine-wasm>                             The JS engine Wasm file path
     --enable-aot                                            Enable AOT compilation for performance
-    --enable-experimental-high-resolution-time-methods      Enable experimental high-resolution fastly.now() method
+    --enable-experimental-high-resolution-time-methods      Enable experimental fastly.now() method
     --enable-experimental-top-level-await                   Enable experimental top level await
 
 ARGS:
