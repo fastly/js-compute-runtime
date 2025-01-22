@@ -220,6 +220,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
             title,
             test,
             skipped: true,
+            skipReason: null, // dont mention filtered tests
           };
         }
         // feature based test filtering
@@ -235,6 +236,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
             title,
             test,
             skipped: true,
+            skipReason: `feature "http-cache" ${httpCache ? '' : 'not '}"enabled`,
           };
         }
         async function getBodyChunks(response) {
@@ -311,13 +313,14 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
               title,
               test,
               skipped: true,
+              skipReason: 'no environments',
             };
           }
         } else {
           if (test.environments.includes('compute')) {
             return retry(
-              test.flake ? 10 : bail ? 1 : 4,
-              expBackoff(test.flake ? '60s' : '30s', test.flake ? '10s' : '1s'),
+              test.flake ? 15 : bail ? 1 : 4,
+              expBackoff(test.flake ? '60s' : '30s', test.flake ? '30s' : '1s'),
               async () => {
                 let path = test.downstream_request.pathname;
                 let url = `${domain}${path}`;
@@ -349,6 +352,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
               title,
               test,
               skipped: true,
+              skipReason: 'no environments',
             };
           }
         }
@@ -373,36 +377,13 @@ for (const result of results) {
   if (result.status === 'fulfilled') {
     passed += 1;
     if (result.value.skipped) {
-      if (
-        filter.length > 0 &&
-        filter.every((f) => !result.value.title.includes(f))
-      ) {
-        // console.log(white, info, `Skipped by test filter: ${result.value.title}`, reset);
-      } else if (local && !result.value.test.environments.includes('viceroy')) {
+      if (result.value.skipReason)
         console.log(
           white,
           info,
-          `Skipped as test marked to only run on Fastly Compute: ${result.value.title}`,
+          `Skipped ${result.value.title} due to ${result.value.skipReason}`,
           reset,
         );
-      } else if (
-        !local &&
-        !result.value.test.environments.includes('compute')
-      ) {
-        console.log(
-          white,
-          info,
-          `Skipped as test marked to only run on local server: ${result.value.title}`,
-          reset,
-        );
-      } else {
-        console.log(
-          white,
-          info,
-          `Skipped due to no environments set: ${result.value.title}`,
-          reset,
-        );
-      }
     } else {
       console.log(green, tick, result.value.title, reset);
     }
