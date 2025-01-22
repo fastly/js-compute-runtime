@@ -30,6 +30,7 @@ export async function compileApplicationToWasm(
   aotCache = '',
   moduleMode = false,
   doBundle = false,
+  env,
 ) {
   try {
     if (!(await isFile(input))) {
@@ -128,6 +129,7 @@ export async function compileApplicationToWasm(
         shell: true,
         encoding: 'utf-8',
         env: {
+          ...env,
           ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
             enableExperimentalHighResolutionTimeMethods ? '1' : '0',
         },
@@ -176,7 +178,7 @@ export async function compileApplicationToWasm(
         shell: true,
         encoding: 'utf-8',
         env: {
-          ...process.env,
+          ...env,
           ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
             enableExperimentalHighResolutionTimeMethods ? '1' : '0',
         },
