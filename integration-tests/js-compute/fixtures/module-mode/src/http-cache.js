@@ -8,19 +8,10 @@ import {
 } from './assertions.js';
 import { routes } from './routes.js';
 import { CacheOverride } from 'fastly:cache-override';
-import { Backend } from 'fastly:backend';
 
 // generate a unique URL everytime so that we never work on a populated cache
 const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
   'https://httpbin.org/anything' + path;
-
-let _httpBinBackend;
-const httpBinBackend = () =>
-  _httpBinBackend ||
-  (_httpBinBackend = new Backend({
-    name: `httpbin-${Math.random().toString().slice(2)}`,
-    target: 'httpbin.org',
-  }));
 
 // afterSend error handling
 {
@@ -60,14 +51,13 @@ const httpBinBackend = () =>
     await assertRejects(
       () =>
         fetch(url, {
-          backend: httpBinBackend(),
           cacheOverride: new CacheOverride({
             afterSend(res) {
               res.status = 'invalid'; // Should throw type error
             },
           }),
         }),
-      TypeError,
+      RangeError,
     );
 
     await assertRejects(

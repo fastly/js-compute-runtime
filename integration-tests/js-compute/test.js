@@ -212,7 +212,10 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
         }
 
         // basic test filtering
-        if (filter.length > 0 && filter.every((f) => !title.includes(f))) {
+        if (
+          test.skip ||
+          (filter.length > 0 && filter.every((f) => !title.includes(f)))
+        ) {
           return {
             title,
             test,
@@ -272,7 +275,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
         }
         if (local) {
           if (test.environments.includes('viceroy')) {
-            return (!test.flake ? (_, __, fn) => fn() : retry)(
+            return (bail || !test.flake ? (_, __, fn) => fn() : retry)(
               5,
               expBackoff('10s', '1s'),
               async () => {
@@ -313,7 +316,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
         } else {
           if (test.environments.includes('compute')) {
             return retry(
-              test.flake ? 10 : 4,
+              test.flake ? 10 : bail ? 1 : 4,
               expBackoff(test.flake ? '60s' : '30s', test.flake ? '10s' : '1s'),
               async () => {
                 let path = test.downstream_request.pathname;
