@@ -169,7 +169,7 @@ if (!local) {
   const setupPath = join(__dirname, 'setup.js');
   if (existsSync(setupPath)) {
     core.startGroup('Extra set-up steps for the service');
-    await zx`node ${setupPath} ${serviceName} ${serviceId}`;
+    await zx`node ${setupPath} ${serviceId} ${ci ? serviceName : ''}`;
     await sleep(15);
     core.endGroup();
   }
@@ -432,7 +432,7 @@ if (!local && !failed.length) {
   const teardownPath = join(fixturePath, 'teardown.js');
   if (existsSync(teardownPath)) {
     core.startGroup('Tear down the extra set-up for the service');
-    await zx`${teardownPath} ${serviceName} ${serviceId}`;
+    await zx`${teardownPath} ${serviceId} ${ci ? serviceName : ''}`;
     core.endGroup();
   }
 

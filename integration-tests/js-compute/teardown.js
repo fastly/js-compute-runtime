@@ -4,7 +4,8 @@ import { $ as zx } from 'zx';
 import { argv } from 'node:process';
 import { getEnv } from './env.js';
 
-const serviceName = argv[2];
+const serviceId = argv[2];
+const serviceName = argv[3];
 
 const { DICTIONARY_NAME, CONFIG_STORE_NAME, KV_STORE_NAME, SECRET_STORE_NAME } =
   getEnv(serviceName);
