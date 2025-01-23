@@ -108,12 +108,12 @@ jobs:
     - name: Build
       if: ${{ matrix.profile == 'weval' }}
       run: npm run build:weval
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         name: fastly-${{ matrix.profile }}
         path: fastly${{ matrix.profile == 'debug' && '.debug.wasm' || (matrix.profile == 'weval' && '-weval.wasm' || '.wasm') }}
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: ${{ matrix.profile == 'weval' }}
       with:
         name: fastly-${{ matrix.profile }}-ic-cache
@@ -154,22 +154,22 @@ jobs:
       - run: npm install --immutable
 
       - name: Download Engine Release
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: fastly-release
 
       - name: Download Engine Debug
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: fastly-debug
 
       - name: Download Engine Weval
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: fastly-weval
 
       - name: Download Engine Weval Cache
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: fastly-weval-ic-cache
 
