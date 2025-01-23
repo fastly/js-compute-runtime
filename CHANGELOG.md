@@ -1,16 +1,14 @@
 # Changelog
 
-## [3.29.0](https://github.com/fastly/js-compute-runtime/compare/v3.28.0...v3.29.0) (2025-01-23)
+## 3.29.0 (2025-01-23)
 
-
-### Features
+### Added
 
 * Blob support for fetch API ([#1070](https://github.com/fastly/js-compute-runtime/issues/1070)) ([56aa96d](https://github.com/fastly/js-compute-runtime/commit/56aa96d5a223d45d79327f0a19bcfd93f1e90363))
-* Fanout update to redirect_to_grip_proxy_v2 passing request handle ([#1079](https://github.com/fastly/js-compute-runtime/issues/1079)) ([baf0a6e](https://github.com/fastly/js-compute-runtime/commit/baf0a6e3f2d655954d7ae73944b7e72709356a2d))
+* Fanout update to redirect\_to\_grip\_proxy\_v2 passing request handle ([#1079](https://github.com/fastly/js-compute-runtime/issues/1079)) ([baf0a6e](https://github.com/fastly/js-compute-runtime/commit/baf0a6e3f2d655954d7ae73944b7e72709356a2d))
 * support --env option for the runtime build ([#1090](https://github.com/fastly/js-compute-runtime/issues/1090)) ([e81d252](https://github.com/fastly/js-compute-runtime/commit/e81d252e0f1c2a76441cef407c7c1dc84ed93dcc))
 
-
-### Bug Fixes
+### Fixed
 
 * reinstate broken wpt tests ([#1071](https://github.com/fastly/js-compute-runtime/issues/1071)) ([5e2c682](https://github.com/fastly/js-compute-runtime/commit/5e2c68228be24ea6bd286fca0ca1ffbe028199c2))
 
