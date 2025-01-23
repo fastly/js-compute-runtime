@@ -91,10 +91,18 @@ await copyFile(
   join(fixturePath, 'fastly.toml.in'),
   join(fixturePath, 'fastly.toml'),
 );
+const envSeen = new Set();
 const config = TOML.parse(
   (await readFile(join(fixturePath, 'fastly.toml'), 'utf-8')).replace(
     /DICTIONARY_NAME|CONFIG_STORE_NAME|KV_STORE_NAME|SECRET_STORE_NAME/g,
-    (match) => env[match] || match,
+    (match) => {
+      // we only replace the second instance, because the first is the --env flag itself
+      if (!envSeen.has(match)) {
+        envSeen.add(match);
+        return match;
+      }
+      return env[match] || match;
+    },
   ),
 );
 config.name = serviceName;
@@ -126,7 +134,7 @@ if (!local) {
   core.endGroup();
   core.startGroup('Build and deploy service');
   await zx`npm i`;
-  await $`fastly compute publish -i --quiet --token $FASTLY_API_TOKEN --status-check-off`;
+  await $`fastly compute publish -i ${verbose ? '--verbose' : '--quiet'} --token $FASTLY_API_TOKEN --status-check-off`;
   core.endGroup();
 
   // get the public domain of the deployed application

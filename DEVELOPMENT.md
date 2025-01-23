@@ -170,6 +170,7 @@ In addition the following flags can be added after the command (passed via `npm 
 
 - `--local`: Test locally using Viceroy, instead of publishing to a staging Compute service.
 - `--bail`: Immediately stop testing on the first failure, and report the failure.
+* `--verbose`: Adds verbose logging to `fastly compute publish` and Viceroy (which provides hostcall logging as well).
 - `--debug-build`: Use the debug build
 - `--module-mode`: Run the module mode test suite (`fixtures/module-mode` instead of `fixtures/app`).
 - `--http-cache`: Run the HTTP cache test suite

@@ -9,7 +9,7 @@ name = "js-test-app"
 service_id = ""
 
 [scripts]
-  build = "node ../../../../js-compute-runtime-cli.js --enable-experimental-high-resolution-time-methods --module-mode src/index.js"
+  build = "node ../../../../js-compute-runtime-cli.js --env CONFIG_STORE_NAME,DICTIONARY_NAME,KV_STORE_NAME,SECRET_STORE_NAME,LOCAL_TEST,TEST=\"foo\" --enable-experimental-high-resolution-time-methods --module-mode src/index.js"
 
 [local_server]
 
@@ -32,14 +32,14 @@ service_id = ""
       override_host = "http-me.glitch.me"
 
   [local_server.config_stores]
-    [local_server.config_stores.testconfig]
+    [local_server.config_stores.CONFIG_STORE_NAME]
       format = "inline-toml"
-    [local_server.config_stores.testconfig.contents]
+    [local_server.config_stores.CONFIG_STORE_NAME.contents]
       "twitter" = "https://twitter.com/fastly"
 
-    [local_server.config_stores."aZ1 __ 2"]
+    [local_server.config_stores."DICTIONARY_NAME"]
       format = "inline-toml"
-    [local_server.config_stores."aZ1 __ 2".contents]
+    [local_server.config_stores."DICTIONARY_NAME".contents]
       "twitter" = "https://twitter.com/fastly"
 
   [local_server.geolocation]
@@ -89,19 +89,15 @@ service_id = ""
 
   [local_server.kv_stores]
 
-    [[local_server.kv_stores.example-test-kv-store]]
-      key = "placeholder"
-      data = 'placholder'
-
-    [[local_server.kv_stores.example-test-kv-store-sm]]
+    [[local_server.kv_stores.KV_STORE_NAME]]
       key = "placeholder"
       data = 'placholder'
 
   [local_server.secret_stores]
-    [[local_server.secret_stores.example-test-secret-store]]
+    [[local_server.secret_stores.SECRET_STORE_NAME]]
       key = "first"
       data = "This is also some secret data"
-    [[local_server.secret_stores.example-test-secret-store]]
+    [[local_server.secret_stores.SECRET_STORE_NAME]]
       key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       data = "This is some secret data"
 
