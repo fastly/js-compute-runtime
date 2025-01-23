@@ -138,19 +138,19 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - name: Download Engine
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: fastly-release
     - name: Download Engine
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: fastly-debug
     - name: Download Engine
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: fastly-weval
     - name: Download Engine Weval Cache
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: fastly-weval-ic-cache
     - run: npm install
@@ -176,7 +176,7 @@ jobs:
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
     - name: Build with full debug info
       run: npm run build:debug:info
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         name: fastly-debug
@@ -209,12 +209,12 @@ jobs:
     - name: Build
       if: matrix.profile == 'weval'
       run: npm run build:weval
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         name: fastly-${{ matrix.profile }}
         path: fastly${{ matrix.profile == 'debug' && '.debug.wasm' || (matrix.profile == 'weval' && '-weval.wasm' || '.wasm') }}
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: matrix.profile == 'weval'
       with:
         name: fastly-${{ matrix.profile }}-ic-cache
@@ -234,7 +234,7 @@ jobs:
         node-version: 'lts/*'
 
     - name: Download Engine
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: fastly-debug
 
@@ -282,13 +282,13 @@ jobs:
         node-version: 'lts/*'
 
     - name: Download Engine
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: fastly-${{ matrix.profile }}
 
     - name: Download Engine Weval Cache
       if: matrix.profile == 'weval'
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: fastly-weval-ic-cache
 
@@ -362,11 +362,11 @@ jobs:
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
 
     - name: Download Engine
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: fastly-${{ matrix.profile }}
     - name: Download Engine (AOT weval cache)
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       if: matrix.profile == 'weval'
       with:
         name: fastly-${{ matrix.profile }}-ic-cache
@@ -426,7 +426,7 @@ jobs:
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
 
     - name: Download Engine
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: fastly-debug
 
