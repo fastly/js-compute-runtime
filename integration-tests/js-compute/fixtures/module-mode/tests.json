@@ -174,7 +174,6 @@
     "features": ["http-cache"]
   },
   "GET /http-cache/before-send": {
-    "flake": true,
     "environments": ["compute"],
     "features": ["http-cache"]
   },
