@@ -1,6 +1,6 @@
 {
   "name": "@fastly/js-compute",
-  "version": "3.29.1",
+  "version": "3.29.2",
   "license": "Apache-2.0",
   "main": "js-compute-runtime-cli.js",
   "types": "types/index.d.ts",
