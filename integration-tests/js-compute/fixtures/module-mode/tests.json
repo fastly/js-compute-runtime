@@ -6,8 +6,12 @@
       "body": "ok"
     }
   },
-  "GET /implicit-dynamic-backend/dynamic-backends-disabled": {},
-  "GET /implicit-dynamic-backend/dynamic-backends-enabled": {},
+  "GET /implicit-dynamic-backend/dynamic-backends-disabled": {
+    "flake": true
+  },
+  "GET /implicit-dynamic-backend/dynamic-backends-enabled": {
+    "flake": true
+  },
   "GET /implicit-dynamic-backend/dynamic-backends-enabled-called-twice": {},
   "GET /explicit-dynamic-backend/dynamic-backends-enabled-all-fields": {},
   "GET /explicit-dynamic-backend/dynamic-backends-enabled-minimal-fields": {},
