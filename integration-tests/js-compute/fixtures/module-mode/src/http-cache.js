@@ -265,16 +265,53 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
 
 // beforeSend
 {
+  routes.set('/http-cache/before-send-errors', async () => {
+    {
+      const url = getTestUrl();
+      try {
+        await fetch(url, {
+          cacheOverride: {
+            beforeSend(_req) {
+              throw new Error('before send error');
+            },
+          },
+        });
+        assert(false, 'expected an error');
+      } catch (e) {
+        strictEqual(e.message, 'before send error');
+      }
+    }
+
+    {
+      const url = getTestUrl();
+      try {
+        await fetch(url, {
+          cacheOverride: {
+            beforeSend(_req) {
+              return Promise.reject(new Error('before send reject'));
+            },
+          },
+        });
+        assert(false, 'expected an error');
+      } catch (e) {
+        strictEqual(e.message, 'before send reject');
+      }
+    }
+  });
+
   // Test basic request mutation via beforeSend
   routes.set('/http-cache/before-send', async () => {
     const url = getTestUrl();
+    let calledBeforeSend = false;
     const res = await fetch(url, {
       cacheOverride: {
         beforeSend(req) {
+          calledBeforeSend = true;
           req.headers.set('X-Test', 'modified value');
         },
       },
     });
+    strictEqual(calledBeforeSend, true);
     const body = await res.text();
     strictEqual(body.includes('modified value'), true);
   });

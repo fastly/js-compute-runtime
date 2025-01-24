@@ -315,6 +315,8 @@ public:
                                        std::optional<host_api::HttpCacheEntry> cache_entry,
                                        const char *fun_name);
 
+  static bool has_body_transform(JSObject *self);
+
   /**
    * Override cache options set by the user & suggested options, or final cache options if
    * finalized.

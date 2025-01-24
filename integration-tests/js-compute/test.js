@@ -149,45 +149,52 @@ if (!local) {
   domain = 'http://127.0.0.1:7676';
 }
 
-core.startGroup(`Check service is up and running on ${domain}`);
-await retry(
-  27,
-  local
-    ? [
-        // we expect it to take ~10 seconds to deploy, so focus on that time
-        6000, 3000, 1500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
-        500, 500, 500, 500, 500, 500, 500, 500,
-        // after more than 20 seconds, means we have an unusually slow build, start backoff before timeout
-        1500,
-        3000, 6000, 12000, 24000,
-      ].values()
-    : expBackoff('60s', '10s'),
-  async () => {
-    const response = await request(domain);
-    if (response.statusCode !== 200) {
-      throw new Error(
-        `Application "${fixture}" :: Not yet available on domain: ${domain}`,
-      );
+core.startGroup(`Setting up service ${domain}`);
+
+const [{ default: tests }] = await Promise.all([
+  (async () => {
+    return await import(join(fixturePath, 'tests.json'), {
+      with: { type: 'json' },
+    });
+  })(),
+  (async () => {
+    await retry(
+      27,
+      local
+        ? [
+            // we expect it to take ~10 seconds to deploy, so focus on that time
+            6000, 3000, 1500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+            500, 500, 500, 500, 500, 500, 500, 500, 500,
+            // after more than 20 seconds, means we have an unusually slow build, start backoff before timeout
+            1500,
+            3000, 6000, 12000, 24000,
+          ].values()
+        : expBackoff('60s', '10s'),
+      async () => {
+        const response = await request(domain);
+        if (response.statusCode !== 200) {
+          throw new Error(
+            `Application "${fixture}" :: Not yet available on domain: ${domain}`,
+          );
+        }
+      },
+    );
+  })(),
+  (async () => {
+    if (!local) {
+      const setupPath = join(__dirname, 'setup.js');
+      if (existsSync(setupPath)) {
+        await zx`node ${setupPath} ${serviceId} ${ci ? serviceName : ''}`;
+        await sleep(15);
+      }
     }
-  },
-);
+  })(),
+]);
+
 core.endGroup();
 
-if (!local) {
-  const setupPath = join(__dirname, 'setup.js');
-  if (existsSync(setupPath)) {
-    core.startGroup('Extra set-up steps for the service');
-    await zx`node ${setupPath} ${serviceId} ${ci ? serviceName : ''}`;
-    await sleep(15);
-    core.endGroup();
-  }
-}
-
-let { default: tests } = await import(join(fixturePath, 'tests.json'), {
-  with: { type: 'json' },
-});
-
 core.startGroup('Running tests');
+
 function chunks(arr, size) {
   const output = [];
   for (let i = 0; i < arr.length; i += size) {
