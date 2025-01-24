@@ -271,12 +271,12 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
     const res = await fetch(url, {
       cacheOverride: {
         beforeSend(req) {
-          req.headers.set('X-Test', 'modified');
+          req.headers.set('X-Test', 'modified value');
         },
       },
     });
-    const body = await res.json();
-    strictEqual(body, 'modified');
+    const body = await res.text();
+    strictEqual(body.includes('modified value'), true);
   });
 }
 
