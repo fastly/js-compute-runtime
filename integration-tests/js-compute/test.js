@@ -389,18 +389,19 @@ const info = '\u2139';
 const tick = '\u2714';
 const cross = '\u2716';
 for (const result of results) {
-  if (result.status === 'fulfilled') {
-    passed += 1;
-    if (result.value.skipped) {
-      if (result.value.skipReason)
+  if (result.status === 'fulfilled' || bail) {
+    const value = bail ? result : result.value;
+    if (value.skipped) {
+      if (value.skipReason)
         console.log(
           white,
           info,
-          `Skipped ${result.value.title} due to ${result.value.skipReason}`,
+          `Skipped ${value.title} due to ${value.skipReason}`,
           reset,
         );
     } else {
-      console.log(green, tick, result.value.title, reset);
+      passed += 1;
+      console.log(green, tick, value.title, reset);
     }
   } else {
     console.log(red, cross, result.reason, reset);
