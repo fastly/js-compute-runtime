@@ -285,6 +285,29 @@ int body_write(uint32_t body_handle, const uint8_t *buf, size_t buf_len, BodyWri
 WASM_IMPORT("fastly_http_body", "close")
 int body_close(uint32_t body_handle);
 
+WASM_IMPORT("fastly_http_body", "abandon")
+int body_abandon(uint32_t body_handle);
+
+WASM_IMPORT("fastly_http_body", "trailer_append")
+int body_trailer_append(uint32_t body_handle, const uint8_t *name, size_t name_len,
+                        const uint8_t *value, size_t value_len);
+
+WASM_IMPORT("fastly_http_body", "trailer_names_get")
+int body_trailer_names_get(uint32_t body_handle, char *buf, size_t buf_len, uint32_t cursor,
+                           uint32_t *ending_cursor, size_t *nwritten);
+
+WASM_IMPORT("fastly_http_body", "trailer_value_get")
+int body_trailer_value_get(uint32_t body_handle, const uint8_t *name, size_t name_len, char *value,
+                           size_t value_max_len, size_t *nwritten);
+
+WASM_IMPORT("fastly_http_body", "trailer_values_get")
+int body_trailer_values_get(uint32_t body_handle, const uint8_t *name, size_t name_len, char *buf,
+                            size_t buf_len, uint32_t cursor, uint32_t *ending_cursor,
+                            size_t *nwritten);
+
+WASM_IMPORT("fastly_http_body", "known_length")
+int body_known_length(uint32_t body_handle, uint64_t *length);
+
 // Module fastly_http_cache
 // HTTP Cache handle type
 typedef uint32_t fastly_http_cache_handle;

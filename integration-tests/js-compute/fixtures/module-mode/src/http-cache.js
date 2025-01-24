@@ -313,7 +313,7 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
     });
     strictEqual(calledBeforeSend, true);
     const body = await res.text();
-    strictEqual(body.includes('modified value'), false); // failure to test length setting flow
+    strictEqual(body.includes('modified value'), true);
   });
 }
 

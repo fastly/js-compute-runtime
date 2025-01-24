@@ -325,6 +325,12 @@ public:
   /// Close this handle, and reset internal state to invalid.
   Result<Void> close();
 
+  /// Abandon this handle (close unsuccessfully) and reset internal state
+  Result<Void> abandon();
+
+  /// Get the length of the body if known
+  Result<std::optional<uint64_t>> known_length() const;
+
   FastlyAsyncTask::Handle async_handle() const;
 };
 
