@@ -279,6 +279,9 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
                                               JS::HandleValue ret_promise, JS::CallArgs args) {
   JS::RootedObject ret_promise_obj(cx, &ret_promise.toObject());
 
+  JS::SetReservedSlot(request, static_cast<uint32_t>(RequestOrResponse::Slots::BodyUsed),
+                      JS::BooleanValue(false));
+
   RootedString backend(cx, get_backend(cx, request));
   if (!backend) {
     RejectPromiseWithPendingError(cx, ret_promise_obj);
@@ -290,7 +293,6 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
     return true;
   }
 
-  DEBUG_LOG("committing headers")
   if (!RequestOrResponse::commit_headers(cx, request)) {
     return false;
   }
@@ -391,6 +393,14 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
     JS::RootedValue ret_val(cx);
     JS::RootedValueArray<1> args(cx);
     args[0].set(JS::ObjectValue(*request));
+
+    // lock the body temporarily (throwing if already used here, earlier than usual, instead)
+    if (RequestOrResponse::body_used(request)) {
+      JS_ReportErrorASCII(cx, "Body has already been consumed");
+      ret_promise.setObject(*PromiseRejectedWithPendingError(cx));
+    }
+    JS::SetReservedSlot(request, static_cast<uint32_t>(RequestOrResponse::Slots::BodyUsed),
+                        JS::BooleanValue(true));
 
     // now call before_send with the candidate_request, allowing any async work
     if (!JS::Call(cx, JS::NullHandleValue, before_send, args, &ret_val)) {
