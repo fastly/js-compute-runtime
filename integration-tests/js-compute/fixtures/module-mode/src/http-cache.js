@@ -509,39 +509,37 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
 
     // Fetch stale response
     let calledAfterSendStale = false;
-    // TODO: fix:
-    // const res2 = await fetch(url, {
-    //   cacheOverride: {
-    //     // aftersend will be performed for background revalidation
-    //     afterSend(res) {
-    //       calledAfterSendStale = true;
-    //     },
-    //   },
-    // });
+    const res2 = await fetch(url, {
+      cacheOverride: {
+        // aftersend will be performed for background revalidation
+        afterSend(res) {
+          calledAfterSendStale = true;
+        },
+      },
+    });
     // stale response is returned while background revalidation happens
-    // strictEqual(calledAfterSendStale, false);
-    // strictEqual(res2.cached, true);
-    // strictEqual(res2.stale, true);
-    // await res2.arrayBuffer();
+    strictEqual(calledAfterSendStale, false);
+    strictEqual(res2.cached, true);
+    strictEqual(res2.stale, true);
+    await res2.arrayBuffer();
 
     // Wait for stale response to be invalidated too
-    // await new Promise((resolve) => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     // // Now we should get back the background revalidation we just performed
-    // let calledAfterSend = false;
-    // const res3 = await fetch(url, {
-    //   cacheOverride: {
-    //     afterSend(res) {
-    //       calledAfterSend = true;
-    //     },
-    //   },
-    // });
+    let calledAfterSend = false;
+    const res3 = await fetch(url, {
+      cacheOverride: {
+        afterSend(res) {
+          calledAfterSend = true;
+        },
+      },
+    });
 
-    // TODO: properly test background revalidation here
-    // strictEqual(res3.cached, true);
-    // strictEqual(res3.stale, false);
-    // strictEqual(calledAfterSend, false);
-    // strictEqual(calledAfterStale, true);
+    strictEqual(res3.cached, true);
+    strictEqual(res3.stale, false);
+    strictEqual(calledAfterSend, false);
+    strictEqual(calledAfterSendStale, true);
   });
 }
 
@@ -741,212 +739,206 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
   });
 }
 
-// TODO: Enable this suite once we support full asynchrony for transaction lookups
 // Test suite: Concurrent / Request Collapsing Behaviors
-// {
-//
-// // Test request mutation order with multiple concurrent requests
-// routes.set('/http-cache/request-mutation-order', async () => {
-//   const url = getTestUrl();
+{
+  // Test request mutation order with multiple concurrent requests
+  routes.set('/http-cache/sequential', async () => {
+    const url = getTestUrl();
 
-//   let beforeSendCount = 0;
+    let beforeSendCount = 0;
 
-//   const cacheOverride = new CacheOverride({
-//     beforeSend(req) {
-//       beforeSendCount++;
-//       req.headers.set('X-Count', beforeSendCount.toString());
-//     },
-//   });
+    const cacheOverride = new CacheOverride({
+      beforeSend(req) {
+        beforeSendCount++;
+        req.headers.set('X-Count', 'COUNT ' + beforeSendCount.toString());
+      },
+    });
 
-//   const [res1, res2] = await Promise.all([
-//     fetch(url, { cacheOverride }),
-//     fetch(url, { cacheOverride }),
-//   ]);
+    const res1 = await fetch(url, { cacheOverride });
+    const res2 = await fetch(url, { cacheOverride });
 
-//   // Only one beforeSend should execute due to request collapsing
-//   strictEqual(beforeSendCount, 1);
-//   strictEqual(res1.cached, false);
-//   strictEqual(res2.cached, true);
-// });
-//   routes.set('/http-cache/concurrent-cache', async () => {
-//     const url = getTestUrl();
+    // Only one beforeSend should execute due to request collapsing
+    strictEqual(beforeSendCount, 1);
+    strictEqual(res1.cached || res2.cached, true);
+    strictEqual(res1.cached && res2.cached, false);
 
-//     const [res2, res3] = await Promise.all([
-//       // Make concurrent requests with different modifications
-//       fetch(url, {
-//         cacheOverride: {
-//           afterSend(res) {
-//             res.headers.set('X-Custom', 'value1');
-//             res.ttl = 1800; // Different TTL
-//             return { cache: true };
-//           },
-//         }
-//       }),
-//       // Concurrent modifications to same cache entry
-//       fetch(url, {
-//         cacheOverride: {
-//           afterSend(res) {
-//             res.headers.set('X-Custom', 'value2');
-//             res.swr = 300; // Add stale-while-revalidate
-//             return { cache: true };
-//           },
-//         }
-//       }),
-//     ]);
+    strictEqual((await res1.text()).includes('COUNT 1'), true);
+    strictEqual((await res2.text()).includes('COUNT 1'), true);
+  });
 
-//     // Check that modifications were applied in order
-//     strictEqual(res2.ttl, 1800);
-//     strictEqual(res2.headers.get('X-Custom'), 'value1');
-//     strictEqual(res3.swr, 300);
-//     strictEqual(res3.headers.get('X-Custom'), 'value2');
-//   });
+  // TODO:
+  routes.set('/http-cache/parallel', async () => {
+    const url = getTestUrl();
 
-//   Test request collapsing with different cache options
-//   routes.set('/http-cache/request-collapsing-options', async () => {
-//     const url = getTestUrl();
-//     let backendCalls = 0;
+    let beforeSendCount = 0;
 
-//     const cacheOverride = new CacheOverride({
-//       beforeSend() {
-//         backendCalls++;
-//       },
-//       afterSend(res) {
-//         // Simulate slow backend
-//         return new Promise((resolve) =>
-//           setTimeout(() => {
-//             resolve({ cache: true });
-//           }, 100),
-//         );
-//       },
-//     });
+    const cacheOverride = new CacheOverride({
+      beforeSend(req) {
+        beforeSendCount++;
+        req.headers.set('X-Count', 'COUNT ' + beforeSendCount.toString());
+      },
+    });
 
-//     // Make multiple concurrent requests
-//     const results = await Promise.all([
-//       fetch(url, { cacheOverride }),
-//       fetch(url, { cacheOverride }),
-//       fetch(url, { cacheOverride }),
-//     ]);
+    const [res1, res2] = await Promise.all([
+      fetch(url, { cacheOverride }),
+      fetch(url, { cacheOverride }),
+    ]);
 
-//     // Only one backend call should occur due to request collapsing
-//     strictEqual(backendCalls, 1);
-//     strictEqual(results[0].cached, false);
-//     strictEqual(results[1].cached, true);
-//     strictEqual(results[2].cached, true);
-//   });
+    // Only one beforeSend should execute due to request collapsing
+    strictEqual(beforeSendCount, 1);
+    strictEqual(res1.cached || res2.cached, true);
+    strictEqual(res1.cached && res2.cached, false);
 
-//   // Test request collapsing with uncacheable responses
-//   routes.set('/http-cache/request-collapsing-uncacheable', async () => {
-//     const url = getTestUrl();
-//     let backendCalls = 0;
+    strictEqual((await res1.text()).includes('COUNT 1'), true);
+    strictEqual((await res2.text()).includes('COUNT 1'), true);
+  });
 
-//     const cacheOverride = new CacheOverride({
-//       beforeSend() {
-//         backendCalls++;
-//       },
-//       afterSend() {
-//         return { cache: 'uncacheable' };
-//       },
-//     });
+  // Test request collapsing with different cache options
+  routes.set('/http-cache/parallel-three', async () => {
+    const url = getTestUrl();
+    let backendCalls = 0;
 
-//     // First batch of concurrent requests
-//     const results1 = await Promise.all([
-//       fetch(url, { cacheOverride }),
-//       fetch(url, { cacheOverride }),
-//       fetch(url, { cacheOverride }),
-//     ]);
+    const cacheOverride = new CacheOverride({
+      beforeSend() {
+        backendCalls++;
+      },
+      afterSend(res) {
+        // Simulate slow backend
+        return new Promise((resolve) =>
+          setTimeout(() => {
+            resolve({ cache: true });
+          }, 100),
+        );
+      },
+    });
 
-//     // Should have collapsed to one backend call
-//     strictEqual(backendCalls, 1);
-//     results1.forEach((res) => strictEqual(res.cached, false));
+    // Make multiple concurrent requests
+    const results = await Promise.all([
+      fetch(url, { cacheOverride }),
+      fetch(url, { cacheOverride }),
+      fetch(url, { cacheOverride }),
+    ]);
 
-//     // Second request after small delay
-//     await new Promise((resolve) => setTimeout(resolve, 50));
-//     const res = await fetch(url, { cacheOverride });
+    // Only one backend call should occur due to request collapsing
+    strictEqual(backendCalls, 1);
+    strictEqual(results[0].cached, false);
+    strictEqual(results[1].cached, true);
+    strictEqual(results[2].cached, true);
+  });
 
-//     // Should trigger new backend call since previous response was marked uncacheable
-//     strictEqual(backendCalls, 2);
-//     strictEqual(res.cached, false);
-//   });
+  // Test request collapsing with uncacheable responses
+  routes.set('/http-cache/request-collapsing-uncacheable', async () => {
+    const url = getTestUrl();
+    let backendCalls = 0;
 
-//   // Test request collapsing with varying headers
-//   routes.set('/http-cache/request-collapsing-vary', async () => {
-//     const url = getTestUrl();
-//     let backendCalls = 0;
+    const cacheOverride = new CacheOverride({
+      beforeSend() {
+        backendCalls++;
+      },
+      afterSend() {
+        return { cache: 'uncacheable' };
+      },
+    });
 
-//     const cacheOverride = new CacheOverride({
-//       beforeSend() {
-//         backendCalls++;
-//       },
-//       afterSend(res) {
-//         res.vary = new Set(['User-Agent']);
-//         return { cache: true };
-//       },
-//     });
+    // First batch of concurrent requests
+    const results1 = await Promise.all([
+      fetch(url, { cacheOverride }),
+      fetch(url, { cacheOverride }),
+      fetch(url, { cacheOverride }),
+    ]);
 
-//     // Concurrent requests with same User-Agent
-//     const headers1 = { 'User-Agent': 'bot1' };
-//     const results1 = await Promise.all([
-//       fetch(url, { cacheOverride, headers: headers1 }),
-//       fetch(url, { cacheOverride, headers: headers1 }),
-//     ]);
+    // Should have collapsed to one backend call
+    strictEqual(backendCalls, 1);
+    results1.forEach((res) => strictEqual(res.cached, false));
 
-//     strictEqual(backendCalls, 1); // Should collapse
-//     strictEqual(results1[0].cached, false);
-//     strictEqual(results1[1].cached, true);
+    // Second request after small delay
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const res = await fetch(url, { cacheOverride });
 
-//     // Concurrent requests with different User-Agent
-//     const headers2 = { 'User-Agent': 'bot2' };
-//     const results2 = await Promise.all([
-//       fetch(url, { cacheOverride, headers: headers2 }),
-//       fetch(url, { cacheOverride, headers: headers2 }),
-//     ]);
+    // Should trigger new backend call since previous response was marked uncacheable
+    strictEqual(backendCalls, 2);
+    strictEqual(res.cached, false);
+  });
 
-//     strictEqual(backendCalls, 2); // Should trigger new backend call
-//     strictEqual(results2[0].cached, false);
-//     strictEqual(results2[1].cached, true);
-//   });
-//
-// // Test race conditions with body transforms
-// routes.set('/http-cache/concurrent-transforms', async () => {
-//   const url = getTestUrl();
+  // Test request collapsing with varying headers
+  routes.set('/http-cache/request-collapsing-vary', async () => {
+    const url = getTestUrl();
+    let backendCalls = 0;
 
-//   // Create two different transforms
-//   const transform1 = new TransformStream({
-//     transform(chunk, controller) {
-//       const text = new TextDecoder().decode(chunk);
-//       controller.enqueue(new TextEncoder().encode(text.toUpperCase()));
-//     },
-//   });
+    const cacheOverride = new CacheOverride({
+      beforeSend() {
+        backendCalls++;
+      },
+      afterSend(res) {
+        res.vary = new Set(['User-Agent']);
+        return { cache: true };
+      },
+    });
 
-//   const transform2 = new TransformStream({
-//     transform(chunk, controller) {
-//       const text = new TextDecoder().decode(chunk);
-//       controller.enqueue(new TextEncoder().encode(text.toLowerCase()));
-//     },
-//   });
+    // Concurrent requests with same User-Agent
+    const headers1 = { 'User-Agent': 'bot1' };
+    const results1 = await Promise.all([
+      fetch(url, { cacheOverride, headers: headers1 }),
+      fetch(url, { cacheOverride, headers: headers1 }),
+    ]);
 
-//   const cacheOverride1 = new CacheOverride({
-//     afterSend() {
-//       return { bodyTransform: transform1, cache: true };
-//     },
-//   });
+    strictEqual(backendCalls, 1); // Should collapse
+    strictEqual(results1[0].cached, false);
+    strictEqual(results1[1].cached, true);
 
-//   const cacheOverride2 = new CacheOverride({
-//     afterSend() {
-//       return { bodyTransform: transform2, cache: true };
-//     },
-//   });
+    // Concurrent requests with different User-Agent
+    const headers2 = { 'User-Agent': 'bot2' };
+    const results2 = await Promise.all([
+      fetch(url, { cacheOverride, headers: headers2 }),
+      fetch(url, { cacheOverride, headers: headers2 }),
+    ]);
 
-//   // Make concurrent requests with different transforms
-//   const [res1, res2] = await Promise.all([
-//     fetch(url, { cacheOverride: cacheOverride1 }),
-//     fetch(url, { cacheOverride: cacheOverride2 }),
-//   ]);
+    strictEqual(backendCalls, 2); // Should trigger new backend call
+    strictEqual(results2[0].cached, false);
+    strictEqual(results2[1].cached, true);
+  });
 
-//   // Check that transforms were applied correctly
-//   const text1 = await res1.text();
-//   const text2 = await res2.text();
-//   strictEqual(text1, text1.toUpperCase());
-//   strictEqual(text2, text2.toLowerCase());
-// });
-// }
+  // Test race conditions with body transforms
+  routes.set('/http-cache/concurrent-transforms', async () => {
+    const url = getTestUrl();
+
+    // Create two different transforms
+    const transform1 = new TransformStream({
+      transform(chunk, controller) {
+        const text = new TextDecoder().decode(chunk);
+        controller.enqueue(new TextEncoder().encode(text.toUpperCase()));
+      },
+    });
+
+    const transform2 = new TransformStream({
+      transform(chunk, controller) {
+        const text = new TextDecoder().decode(chunk);
+        controller.enqueue(new TextEncoder().encode(text.toLowerCase()));
+      },
+    });
+
+    const cacheOverride1 = new CacheOverride({
+      afterSend() {
+        return { bodyTransform: transform1, cache: true };
+      },
+    });
+
+    const cacheOverride2 = new CacheOverride({
+      afterSend() {
+        return { bodyTransform: transform2, cache: true };
+      },
+    });
+
+    // Make concurrent requests with different transforms
+    const [res1, res2] = await Promise.all([
+      fetch(url, { cacheOverride: cacheOverride1 }),
+      fetch(url, { cacheOverride: cacheOverride2 }),
+    ]);
+
+    // Check that transforms were applied correctly
+    const text1 = await res1.text();
+    const text2 = await res2.text();
+    strictEqual(text1, text1.toUpperCase());
+    strictEqual(text2, text2.toLowerCase());
+  });
+}

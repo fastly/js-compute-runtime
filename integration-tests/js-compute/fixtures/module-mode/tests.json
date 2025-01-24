@@ -213,6 +213,20 @@
     "environments": ["compute"],
     "features": ["http-cache"]
   },
+  "GET /http-cache/sequential": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/parallel": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/parallel-three": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
   "GET /http-cache/body-transform": {
     "skip": true,
     "environments": ["compute"],
