@@ -235,7 +235,9 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
             title,
             test,
             skipped: true,
-            skipReason: null, // dont mention filtered tests
+            skipReason: test.skip
+              ? 'MARKED AS SKIPPED (pending further work)'
+              : null, // dont mention filtered tests
           };
         }
         // feature based test filtering

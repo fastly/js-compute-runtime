@@ -407,15 +407,21 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
       ret_promise.setObject(*PromiseRejectedWithPendingError(cx));
       return true;
     }
-    before_send_promise = JS::RootedObject(cx, JS::CallOriginalPromiseResolve(cx, ret_val));
+    before_send_promise.set(JS::CallOriginalPromiseResolve(cx, ret_val));
     if (!before_send_promise) {
       return false;
     }
   } else {
-    before_send_promise = JS::NewPromiseObject(cx, nullptr);
-    JS::ResolvePromise(cx, before_send_promise, JS::UndefinedHandleValue);
+    before_send_promise.set(JS::NewPromiseObject(cx, nullptr));
+    if (!before_send_promise) {
+      return false;
+    }
+    if (!JS::ResolvePromise(cx, before_send_promise, JS::UndefinedHandleValue)) {
+      return false;
+    }
   }
   // when we resume, we pick up in fetch_send_body_with_cache_hooks_origin_request
+  ret_promise.setObject(*JS::NewPromiseObject(cx, nullptr));
   JS::RootedObject then_handler_obj(
       cx,
       create_internal_method<fetch_process_cache_hooks_origin_request>(cx, request, ret_promise));
@@ -432,8 +438,9 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
 }
 
 bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject request,
-                                          JS::HandleValue response, JS::CallArgs args) {
+                                          JS::HandleValue extra, JS::CallArgs args) {
   DEBUG_LOG("background_revalidation_then_handler")
+  auto response = args.get(0);
   JSObject *response_obj = &response.toObject();
   auto cache_entry = RequestOrResponse::take_cache_entry(response_obj, std::nullopt).value();
   auto storage_action = Response::storage_action(response_obj).value();
