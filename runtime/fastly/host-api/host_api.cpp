@@ -1039,6 +1039,40 @@ Result<Void> HttpBody::close() {
   return res;
 }
 
+Result<Void> HttpBody::abandon() {
+  TRACE_CALL()
+  Result<Void> res;
+
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::body_abandon(this->handle), &err)) {
+    res.emplace_err(err);
+  } else {
+    handle = INVALID_HANDLE;
+    res.emplace();
+  }
+
+  return res;
+}
+
+Result<std::optional<uint64_t>> HttpBody::known_length() const {
+  TRACE_CALL()
+  Result<std::optional<uint64_t>> res;
+
+  fastly::fastly_host_error err;
+  uint64_t length;
+  if (!convert_result(fastly::body_known_length(this->handle, &length), &err)) {
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(length);
+  }
+
+  return res;
+}
+
 FastlyAsyncTask::Handle HttpBody::async_handle() const {
   return FastlyAsyncTask::Handle{this->handle};
 }

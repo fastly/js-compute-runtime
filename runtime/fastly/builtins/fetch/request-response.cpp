@@ -412,25 +412,18 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
   }
   // we can set the length if there is no body transform
   if (!Response::has_body_transform(response)) {
-    auto cache_entry = RequestOrResponse::cache_entry(response);
-    auto length_res = cache_entry.value().get_length();
+    auto length_res = RequestOrResponse::body_handle(response).known_length();
     if (auto *err = length_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return RejectPromiseWithPendingError(cx, promise_obj);
     }
     cache_write_options->length = length_res.unwrap();
-    if (length_res.unwrap().has_value()) {
-      DEBUG_LOG("set length")
-    } else {
-      DEBUG_LOG("no length to set")
-    }
   }
 
   delete suggested_cache_write_options;
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptions),
                       JS::UndefinedValue());
-  // TODO: set known length from body stream (before transform completed)
-  // TODO: actually run body transform
+
   JS::RootedValue response_val(cx, JS::ObjectValue(*response));
   JS::ResolvePromise(cx, promise_obj, response_val);
   return true;
