@@ -207,6 +207,11 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
     return true;
   }
 
+  // commit the headers into the headers handle
+  if (!RequestOrResponse::commit_headers(cx, request)) {
+    return false;
+  }
+
   // cache override only applies to requests with caching
   if (!without_caching) {
     if (!Request::apply_cache_override(cx, request)) {
@@ -283,6 +288,11 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
   if (!backend_chars.ptr) {
     RejectPromiseWithPendingError(cx, ret_promise_obj);
     return true;
+  }
+
+  DEBUG_LOG("committing headers")
+  if (!RequestOrResponse::commit_headers(cx, request)) {
+    return false;
   }
 
   if (!Request::apply_auto_decompress_gzip(cx, request)) {
@@ -377,23 +387,10 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
 
   JS::RootedObject before_send_promise(cx);
   if (before_send) {
-    RootedObject requestInstance(
-        cx, JS_NewObjectWithGivenProto(cx, &Request::class_, Request::proto_obj));
-    if (!requestInstance) {
-      return false;
-    }
-    RootedObject candidate_request(cx, Request::create(cx, requestInstance, backend_request_handle,
-                                                       host_api::HttpBody{}, false));
-    JS::SetReservedSlot(candidate_request,
-                        static_cast<uint32_t>(RequestOrResponse::Slots::BodyUsed),
-                        JS::BooleanValue(true));
-    JS::SetReservedSlot(
-        candidate_request, static_cast<uint32_t>(Request::Slots::CacheOverride),
-        JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride)));
-
+    DEBUG_LOG("Calling before send")
     JS::RootedValue ret_val(cx);
     JS::RootedValueArray<1> args(cx);
-    args[0].set(JS::ObjectValue(*candidate_request));
+    args[0].set(JS::ObjectValue(*request));
 
     // now call before_send with the candidate_request, allowing any async work
     if (!JS::Call(cx, JS::NullHandleValue, before_send, args, &ret_val)) {
@@ -446,9 +443,8 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
 
     auto body = body_res.unwrap();
 
-    auto body_transform = JS::GetReservedSlot(
-        response_obj, static_cast<uint32_t>(Response::Slots::CacheBodyTransform));
-    if (body_transform.isUndefined()) {
+    if (!Response::has_body_transform(response_obj)) {
+      // This is a BLOCKING append. We should have a non-blocking hostcall variant to use here.
       auto append_res = body.append(RequestOrResponse::body_handle(response_obj));
       DEBUG_LOG("stream back transaction insert appended")
 
@@ -461,6 +457,20 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
         args.rval().setObject(*promise);
         return true;
       }
+
+      DEBUG_LOG("stream back transaction insert append close")
+      auto close_res = body.close();
+
+      if (auto *err = close_res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        JSObject *promise = PromiseRejectedWithPendingError(cx);
+        if (!promise) {
+          return false;
+        }
+        args.rval().setObject(*promise);
+        return true;
+      }
+      DEBUG_LOG("stream back transaction insert append closed")
 
       return true;
     }
@@ -615,12 +625,9 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     auto [body, cache_entry] = insert_res.unwrap();
     DEBUG_LOG("stream back transaction insert unwrapped")
 
-    auto body_transform = JS::GetReservedSlot(
-        response_obj, static_cast<uint32_t>(Response::Slots::CacheBodyTransform));
-    if (body_transform.isUndefined()) {
+    if (!Response::has_body_transform(response_obj)) {
       DEBUG_LOG("stream back transaction insert append")
       auto append_res = body.append(RequestOrResponse::body_handle(response_obj));
-      DEBUG_LOG("stream back transaction insert appended")
 
       if (auto *err = append_res.to_err()) {
         HANDLE_ERROR(cx, *err);
@@ -631,7 +638,19 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
         args.rval().setObject(*promise);
         return true;
       }
-      DEBUG_LOG("stream back transaction insert append no error")
+      DEBUG_LOG("stream back transaction insert append close")
+      auto close_res = body.close();
+
+      if (auto *err = close_res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        JSObject *promise = PromiseRejectedWithPendingError(cx);
+        if (!promise) {
+          return false;
+        }
+        args.rval().setObject(*promise);
+        return true;
+      }
+      DEBUG_LOG("stream back transaction insert append closed")
     } else {
       // TODO: body stream handling
       // Stream origin response body insto the insert body
@@ -774,10 +793,6 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   RootedObject request(cx, Request::create(cx, requestInstance, args[0], args.get(1)));
   if (!request) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
-  }
-
-  if (!RequestOrResponse::commit_headers(cx, request)) {
-    return false;
   }
 
   // Determine if we should use guest-side caching

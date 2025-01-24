@@ -10,8 +10,6 @@ const serviceName = argv[3];
 const { DICTIONARY_NAME, CONFIG_STORE_NAME, KV_STORE_NAME, SECRET_STORE_NAME } =
   getEnv(serviceName);
 
-const startTime = Date.now();
-
 function existingStoreId(stores, existingName) {
   const existing = stores.find(
     ({ Name, name }) => name === existingName || Name === existingName,
@@ -148,7 +146,3 @@ await setupKVStore();
 await setupSecretStore();
 
 await zx`fastly service-version activate --service-id ${serviceId} --version latest --token $FASTLY_API_TOKEN`;
-
-console.log(
-  `Set up has finished! Took ${(Date.now() - startTime) / 1000} seconds to complete`,
-);

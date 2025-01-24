@@ -191,6 +191,10 @@ ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
 
 } // namespace
 
+bool Response::has_body_transform(JSObject *self) {
+  return !JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::CacheBodyTransform)).isUndefined();
+}
+
 bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
                                         JS::HandleObject request,
                                         std::optional<host_api::HttpCacheEntry> cache_entry,
@@ -406,6 +410,16 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
   if (!cache_write_options->sensitive_data.has_value()) {
     cache_write_options->sensitive_data = suggested_cache_write_options->sensitive_data;
   }
+  // we can set the length if there is no body transform
+  if (!Response::has_body_transform(response)) {
+    cache_write_options->length = suggested_cache_write_options->length;
+    if (suggested_cache_write_options->length.has_value()) {
+      DEBUG_LOG("set length")
+    } else {
+      DEBUG_LOG("no length to set")
+    }
+  }
+
   delete suggested_cache_write_options;
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::SuggestedCacheWriteOptions),
                       JS::UndefinedValue());
