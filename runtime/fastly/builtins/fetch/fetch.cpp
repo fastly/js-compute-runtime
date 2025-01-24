@@ -443,12 +443,34 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
       HANDLE_ERROR(cx, *err);
       return false;
     }
-    ENGINE->incr_event_loop_interest();
-    // host_api::HttpBody body = body_res.unwrap();
-    // TODO: apply body transform through to drive completion
-    fprintf(stderr, "TODO: background revalidation body streaming");
-    fflush(stderr);
-    MOZ_ASSERT(false);
+
+    auto body = body_res.unwrap();
+
+    auto body_transform = JS::GetReservedSlot(
+        response_obj, static_cast<uint32_t>(Response::Slots::CacheBodyTransform));
+    if (body_transform.isUndefined()) {
+      auto append_res = body.append(RequestOrResponse::body_handle(response_obj));
+      DEBUG_LOG("stream back transaction insert appended")
+
+      if (auto *err = append_res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        JSObject *promise = PromiseRejectedWithPendingError(cx);
+        if (!promise) {
+          return false;
+        }
+        args.rval().setObject(*promise);
+        return true;
+      }
+
+      return true;
+    }
+
+    // TODO: Body transform handling
+    // ENGINE->incr_event_loop_interest();
+    DEBUG_LOG("TODO: Background revalidation transform stream")
+    JS_ReportErrorASCII(cx, "background revalidation body transform streaming TODO");
+    return false;
+
     break;
   }
   case host_api::HttpStorageAction::Update: {
@@ -593,22 +615,30 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     auto [body, cache_entry] = insert_res.unwrap();
     DEBUG_LOG("stream back transaction insert unwrapped")
 
-    // TODO: body stream handling
-    // Stream origin response body insto the insert body
-    DEBUG_LOG("stream back transaction insert append")
-    auto append_res = body.append(RequestOrResponse::body_handle(response_obj));
-    DEBUG_LOG("stream back transaction insert appended")
+    auto body_transform = JS::GetReservedSlot(
+        response_obj, static_cast<uint32_t>(Response::Slots::CacheBodyTransform));
+    if (body_transform.isUndefined()) {
+      DEBUG_LOG("stream back transaction insert append")
+      auto append_res = body.append(RequestOrResponse::body_handle(response_obj));
+      DEBUG_LOG("stream back transaction insert appended")
 
-    if (auto *err = append_res.to_err()) {
-      HANDLE_ERROR(cx, *err);
-      JSObject *promise = PromiseRejectedWithPendingError(cx);
-      if (!promise) {
-        return false;
+      if (auto *err = append_res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        JSObject *promise = PromiseRejectedWithPendingError(cx);
+        if (!promise) {
+          return false;
+        }
+        args.rval().setObject(*promise);
+        return true;
       }
-      args.rval().setObject(*promise);
-      return true;
+      DEBUG_LOG("stream back transaction insert append no error")
+    } else {
+      // TODO: body stream handling
+      // Stream origin response body insto the insert body
+      DEBUG_LOG("TODO: body stream handling")
+      JS_ReportErrorASCII(cx, "Body transform stream TODO");
+      return false;
     }
-    DEBUG_LOG("stream back transaction insert append no error")
 
     auto found_response = get_found_response(cx, cache_entry, request, response, false);
     MOZ_ASSERT(found_response.has_value());
