@@ -412,8 +412,14 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
   }
   // we can set the length if there is no body transform
   if (!Response::has_body_transform(response)) {
-    cache_write_options->length = suggested_cache_write_options->length;
-    if (suggested_cache_write_options->length.has_value()) {
+    auto cache_entry = RequestOrResponse::cache_entry(response);
+    auto length_res = cache_entry.value().get_length();
+    if (auto *err = length_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return RejectPromiseWithPendingError(cx, promise_obj);
+    }
+    cache_write_options->length = length_res.unwrap();
+    if (length_res.unwrap().has_value()) {
       DEBUG_LOG("set length")
     } else {
       DEBUG_LOG("no length to set")
