@@ -16,33 +16,6 @@ import { isRunningLocally, routes } from './routes.js';
       );
     },
   );
-  // https://tc39.es/ecma262/#sec-tostring
-  routes.set(
-    '/cache-override/constructor/parameter-calls-7.1.17-ToString',
-    async () => {
-      let sentinel;
-      const test = () => {
-        sentinel = Symbol();
-        const name = {
-          toString() {
-            throw sentinel;
-          },
-        };
-        new CacheOverride(name);
-      };
-      assertThrows(test);
-      try {
-        test();
-      } catch (thrownError) {
-        assert(thrownError, sentinel, 'thrownError === sentinel');
-      }
-      assertThrows(
-        () => new CacheOverride(Symbol()),
-        TypeError,
-        `can't convert symbol to string`,
-      );
-    },
-  );
   routes.set('/cache-override/constructor/empty-parameter', async () => {
     assertThrows(
       () => {
@@ -80,12 +53,16 @@ import { isRunningLocally, routes } from './routes.js';
     assertDoesNotThrow(() => {
       new CacheOverride('override', {});
     });
+    assertDoesNotThrow(() => {
+      new CacheOverride({});
+    });
   });
 }
 // Using CacheOverride
 {
   routes.set('/cache-override/fetch/mode-none', async () => {
-    if (!isRunningLocally()) {
+    if (isRunningLocally()) return;
+    {
       const response = await fetch('https://http-me.glitch.me/now?status=200', {
         backend: 'httpme',
         cacheOverride: new CacheOverride('none'),
@@ -96,12 +73,38 @@ import { isRunningLocally, routes } from './routes.js';
         `CacheOveride('none'); response.headers.has('x-cache') === true`,
       );
     }
+
+    {
+      const response = await fetch('https://http-me.glitch.me/now?status=200', {
+        backend: 'httpme',
+        cacheOverride: 'none',
+      });
+      assert(
+        response.headers.has('x-cache'),
+        true,
+        `CacheOveride('none'); response.headers.has('x-cache') === true`,
+      );
+    }
   });
   routes.set('/cache-override/fetch/mode-pass', async () => {
-    if (!isRunningLocally()) {
+    if (isRunningLocally()) return;
+
+    {
       const response = await fetch('https://http-me.glitch.me/now?status=200', {
         backend: 'httpme',
         cacheOverride: new CacheOverride('pass'),
+      });
+      assert(
+        response.headers.has('x-cache'),
+        false,
+        `CacheOveride('pass'); response.headers.has('x-cache') === false`,
+      );
+    }
+
+    {
+      const response = await fetch('https://http-me.glitch.me/now?status=200', {
+        backend: 'httpme',
+        cacheOverride: 'pass',
       });
       assert(
         response.headers.has('x-cache'),

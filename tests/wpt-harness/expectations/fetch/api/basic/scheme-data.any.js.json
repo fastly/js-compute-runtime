@@ -21,6 +21,6 @@
     "status": "FAIL"
   },
   "Fetching [GET] data:notAdataUrl.com is KO": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }

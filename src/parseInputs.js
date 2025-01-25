@@ -7,6 +7,7 @@ import { EnvParser } from './env.js';
 export async function parseInputs(cliInputs) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
+  let enableHttpCache = false;
   let enableExperimentalHighResolutionTimeMethods = false;
   let enableAOT = false;
   let customEngineSet = false;
@@ -52,6 +53,10 @@ export async function parseInputs(cliInputs) {
       case '--module-mode': {
         moduleMode = true;
         bundle = false;
+        break;
+      }
+      case '--enable-http-cache': {
+        enableHttpCache = true;
         break;
       }
       case '--enable-experimental-top-level-await': {
@@ -163,6 +168,7 @@ export async function parseInputs(cliInputs) {
 
   return {
     enableExperimentalHighResolutionTimeMethods,
+    enableHttpCache,
     moduleMode,
     bundle,
     enableAOT,

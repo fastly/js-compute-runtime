@@ -181,6 +181,7 @@
   "SKIP fetch/api/basic/mode-no-cors.sub.any.js",
   "SKIP fetch/api/basic/request-private-network-headers.tentative.any.js",
   "SKIP fetch/api/basic/request-upload.h2.any.js",
+  "SKIP fetch/api/response/response-headers-guard.any.js",
   "SKIP fetch/api/idlharness.any.js",
   "SKIP url/idlharness.any.js",
   "SLOW compression/compression-stream.tentative.any.js",

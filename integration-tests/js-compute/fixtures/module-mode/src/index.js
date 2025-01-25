@@ -3,15 +3,29 @@
 
 import { routes } from './routes.js';
 import { env } from 'fastly:env';
+import { enableDebugLogging } from 'fastly:experimental';
 
+import './console.js';
 import './dynamic-backend.js';
 import './hello-world.js';
 import './hono.js';
+import './http-cache.js';
 import './kv-store.js';
 
 addEventListener('fetch', (event) => {
   event.respondWith(app(event));
 });
+
+if (env('FASTLY_DEBUG_LOGGING') === '1') {
+  if (fastly.debugMessages) {
+    const { debug: consoleDebug } = console;
+    console.debug = function debug(...args) {
+      fastly.debugMessages.push(...args);
+      consoleDebug(...args);
+    };
+  }
+  enableDebugLogging(true);
+}
 
 /**
  * @param {FetchEvent} event
@@ -40,11 +54,14 @@ async function app(event) {
         return (res = new Response(
           `The routeHandler for ${path} threw a [${error.constructor?.name ?? error.name}] error: ${error.message || error}` +
             '\n' +
-            error.stack,
+            error.stack +
+            (fastly.debugMessages
+              ? '\n[DEBUG BUILD MESSAGES]:\n\n  - ' +
+                fastly.debugMessages.join('\n  - ')
+              : ''),
           { status: 500 },
         ));
       } catch (errRes) {
-        console.error('err2', errRes);
         res = errRes;
       }
     }

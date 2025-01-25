@@ -2,10 +2,20 @@
 
 import { $ as zx } from 'zx';
 import { argv } from 'node:process';
+import { getEnv } from './env.js';
 
-const serviceName = argv[2];
+const serviceId = argv[2];
+const serviceName = argv[3];
 
-const startTime = Date.now();
+const { DICTIONARY_NAME, CONFIG_STORE_NAME, KV_STORE_NAME, SECRET_STORE_NAME } =
+  getEnv(serviceName);
+
+function existingStoreId(stores, existingName) {
+  const existing = stores.find(
+    ({ Name, name }) => name === existingName || Name === existingName,
+  );
+  return existing?.id || existing?.StoreID;
+}
 
 if (process.env.FASTLY_API_TOKEN === undefined) {
   zx.verbose = false;
@@ -24,6 +34,7 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
   }
   zx.verbose = true;
 }
+const FASTLY_API_TOKEN = process.env.FASTLY_API_TOKEN;
 
 async function setupConfigStores() {
   let stores = await (async function () {
@@ -36,32 +47,36 @@ async function setupConfigStores() {
     }
   })();
 
-  let STORE_ID = stores.find(({ name }) => name === 'aZ1 __ 2')?.id;
+  let STORE_ID = existingStoreId(stores, DICTIONARY_NAME);
   if (!STORE_ID) {
+    console.log(`Creating new config store ${DICTIONARY_NAME}`);
     process.env.STORE_ID = JSON.parse(
-      await zx`fastly config-store create --quiet --name='aZ1 __ 2' --json --token $FASTLY_API_TOKEN`,
+      await zx`fastly config-store create --quiet --name=${DICTIONARY_NAME} --json --token $FASTLY_API_TOKEN`,
     ).id;
   } else {
+    console.log(`Using existing config store ${DICTIONARY_NAME}`);
     process.env.STORE_ID = STORE_ID;
   }
   await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
   try {
-    await zx`fastly resource-link create --service-name ${serviceName} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
+    await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
 
-  STORE_ID = stores.find(({ name }) => name === 'testconfig')?.id;
+  STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME);
   if (!STORE_ID) {
+    console.log(`Creating new config store ${CONFIG_STORE_NAME}`);
     process.env.STORE_ID = JSON.parse(
-      await zx`fastly config-store create --quiet --name='testconfig' --json --token $FASTLY_API_TOKEN`,
+      await zx`fastly config-store create --quiet --name=${CONFIG_STORE_NAME} --json --token $FASTLY_API_TOKEN`,
     ).id;
   } else {
+    console.log(`Using existing config store ${CONFIG_STORE_NAME}`);
     process.env.STORE_ID = STORE_ID;
   }
   await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
   try {
-    await zx`fastly resource-link create --service-name ${serviceName} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
+    await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
@@ -72,26 +87,24 @@ async function setupKVStore() {
     try {
       return JSON.parse(
         await zx`fastly kv-store list --quiet --json --token $FASTLY_API_TOKEN`,
-      );
+      ).Data;
     } catch {
       return [];
     }
   })();
 
-  const existing = stores.Data.find(
-    ({ Name }) => Name === `example-test-kv-store`,
-  );
-  // For somereason the StarlingMonkey version of this contains "ID" instead of "StoreID"
-  const STORE_ID = existing?.StoreID || existing?.ID;
+  const STORE_ID = existingStoreId(stores, KV_STORE_NAME);
   if (!STORE_ID) {
+    console.log(`Creating new KV store ${KV_STORE_NAME}`);
     process.env.STORE_ID = JSON.parse(
-      await zx`fastly kv-store create --quiet --name='example-test-kv-store' --json --token $FASTLY_API_TOKEN`,
-    ).id;
+      await zx`fastly kv-store create --quiet --name=${KV_STORE_NAME} --json --token $FASTLY_API_TOKEN`,
+    ).StoreID;
   } else {
+    console.log(`Using existing KV store ${KV_STORE_NAME}`);
     process.env.STORE_ID = STORE_ID;
   }
   try {
-    await zx`fastly resource-link create --service-name ${serviceName} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
+    await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
@@ -107,14 +120,14 @@ async function setupSecretStore() {
       return [];
     }
   })();
-  const STORE_ID = stores?.find(
-    ({ name }) => name === 'example-test-secret-store',
-  )?.id;
+  const STORE_ID = existingStoreId(stores, SECRET_STORE_NAME);
   if (!STORE_ID) {
+    console.log(`Creating new secret store ${SECRET_STORE_NAME}`);
     process.env.STORE_ID = JSON.parse(
-      await zx`fastly secret-store create --quiet --name=example-test-secret-store --json --token $FASTLY_API_TOKEN`,
+      await zx`fastly secret-store create --quiet --name=${SECRET_STORE_NAME} --json --token $FASTLY_API_TOKEN`,
     ).id;
   } else {
+    console.log(`Using existing secret store ${SECRET_STORE_NAME}`);
     process.env.STORE_ID = STORE_ID;
   }
   await zx`echo -n 'This is also some secret data' | fastly secret-store-entry create --recreate-allow --name first --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
@@ -122,7 +135,7 @@ async function setupSecretStore() {
     'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
   await zx`echo -n 'This is some secret data' | fastly secret-store-entry create --recreate-allow --name ${key} --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
   try {
-    await zx`fastly resource-link create --service-name ${serviceName} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
+    await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
@@ -132,8 +145,4 @@ await setupConfigStores();
 await setupKVStore();
 await setupSecretStore();
 
-await zx`fastly service-version activate --service-name ${serviceName} --version latest --token $FASTLY_API_TOKEN`;
-
-console.log(
-  `Set up has finished! Took ${(Date.now() - startTime) / 1000} seconds to complete`,
-);
+await zx`fastly service-version activate --service-id ${serviceId} --version latest --token $FASTLY_API_TOKEN`;

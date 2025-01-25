@@ -46,9 +46,9 @@ void handle_incoming(host_api::Request req) {
   }
 
   if (ENGINE->debug_logging_enabled()) {
-    fastly::fetch_event::dispatch_fetch_event(fetch_event, &total_compute);
+    fetch_event::dispatch_fetch_event(fetch_event, &total_compute);
   } else {
-    fastly::fetch_event::dispatch_fetch_event(fetch_event);
+    fetch_event::dispatch_fetch_event(fetch_event);
   }
 
   // Loop until no more resolved promises or backend requests are pending.

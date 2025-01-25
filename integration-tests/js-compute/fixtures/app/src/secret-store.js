@@ -3,6 +3,9 @@ import { SecretStore, SecretStoreEntry } from 'fastly:secret-store';
 import { assert, assertThrows, assertRejects } from './assertions.js';
 import { routes } from './routes.js';
 import fc from './fast-check.js';
+import { env } from 'fastly:env';
+
+const SECRET_STORE_NAME = env('SECRET_STORE_NAME');
 
 // SecretStore
 {
@@ -660,5 +663,5 @@ function SecretStoreInterfaceTests() {
 }
 
 function createValidStore() {
-  return new SecretStore('example-test-secret-store');
+  return new SecretStore(SECRET_STORE_NAME);
 }

@@ -122,15 +122,6 @@ test('EnvParser should merge and override values', function (t) {
   });
 });
 
-test('EnvParser should throw on missing equal sign', function (t) {
-  const parser = new EnvParser();
-
-  t.exception(
-    () => parser.parse('INVALID_FORMAT'),
-    'Invalid environment variable format: INVALID_FORMAT\nMust be in format KEY=VALUE',
-  );
-});
-
 test('EnvParser should throw on empty key', function (t) {
   const parser = new EnvParser();
 

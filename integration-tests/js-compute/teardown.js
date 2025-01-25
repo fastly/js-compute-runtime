@@ -1,6 +1,19 @@
 #!/usr/bin/env node
 
 import { $ as zx } from 'zx';
+import { argv } from 'node:process';
+import { getEnv } from './env.js';
+
+const serviceId = argv[2];
+const serviceName = argv[3];
+
+const { DICTIONARY_NAME, CONFIG_STORE_NAME, KV_STORE_NAME, SECRET_STORE_NAME } =
+  getEnv(serviceName);
+
+function existingStoreId(stores, existingName) {
+  const existing = stores.find(({ name }) => name === existingName);
+  return existing?.id || existing?.StoreID;
+}
 
 const startTime = Date.now();
 
@@ -23,7 +36,7 @@ if (process.env.FASTLY_API_TOKEN === undefined) {
 const FASTLY_API_TOKEN = process.env.FASTLY_API_TOKEN;
 zx.verbose = true;
 
-async function removeConfigStore() {
+async function removeConfigStores() {
   let stores = await (async function () {
     try {
       return JSON.parse(
@@ -43,7 +56,23 @@ async function removeConfigStore() {
     }
   })();
 
-  const STORE_ID = stores.find(({ name }) => name === 'aZ1 __ 2')?.id;
+  let STORE_ID = existingStoreId(stores, DICTIONARY_NAME);
+  if (STORE_ID) {
+    process.env.STORE_ID = STORE_ID;
+    let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
+    if (LINK_ID) {
+      process.env.LINK_ID = LINK_ID;
+      try {
+        await zx`fastly resource-link delete --version latest --autoclone --id=$LINK_ID  --token $FASTLY_API_TOKEN`;
+        await zx`fastly service-version activate --version latest --token $FASTLY_API_TOKEN`;
+      } catch {}
+    }
+    try {
+      await zx`fastly config-store delete --store-id=$STORE_ID  --token $FASTLY_API_TOKEN`;
+    } catch {}
+  }
+
+  STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME);
   if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;
     let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
@@ -61,18 +90,18 @@ async function removeConfigStore() {
 }
 
 async function removeKVStore() {
-  let stores = await fetch('https://api.fastly.com/resources/stores/object', {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      'Fastly-Key': FASTLY_API_TOKEN,
-    },
-  }).then((res) => res.json());
+  let stores = (
+    await fetch('https://api.fastly.com/resources/stores/object', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'Fastly-Key': FASTLY_API_TOKEN,
+      },
+    }).then((res) => res.json())
+  ).Data;
 
-  let STORE_ID = stores.data.find(
-    ({ name }) => name === 'example-test-kv-store',
-  )?.id;
+  let STORE_ID = existingStoreId(stores, KV_STORE_NAME);
   if (STORE_ID) {
     await fetch(`https://api.fastly.com/resources/stores/object/${STORE_ID}`, {
       method: 'DELETE',
@@ -103,9 +132,7 @@ async function removeSecretStore() {
     }
   })();
 
-  const STORE_ID = stores.find(
-    ({ name }) => name === 'example-test-secret-store',
-  )?.id;
+  const STORE_ID = existingStoreId(stores, SECRET_STORE_NAME);
   if (STORE_ID) {
     process.env.STORE_ID = STORE_ID;
     let LINK_ID = links.find(({ resource_id }) => resource_id == STORE_ID)?.id;
@@ -122,7 +149,7 @@ async function removeSecretStore() {
   }
 }
 
-await removeConfigStore();
+await removeConfigStores();
 await removeKVStore();
 await removeSecretStore();
 

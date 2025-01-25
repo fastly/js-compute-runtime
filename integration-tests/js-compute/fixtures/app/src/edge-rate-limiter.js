@@ -8,6 +8,11 @@ import {
   EdgeRateLimiter,
 } from 'fastly:edge-rate-limiter';
 import { routes, isRunningLocally } from './routes.js';
+import { env } from 'fastly:env';
+
+const FASTLY_SERVICE_NAME = env('FASTLY_SERVICE_NAME');
+const PENALTY_BOX_NAME = `pb${FASTLY_SERVICE_NAME}`;
+const RATE_COUNTER_NAME = `rc${FASTLY_SERVICE_NAME}`;
 
 // RateCounter
 {
@@ -386,7 +391,7 @@ import { routes, isRunningLocally } from './routes.js';
     );
     routes.set('/rate-counter/constructor/happy-path', () => {
       assert(
-        new RateCounter('rc') instanceof RateCounter,
+        new RateCounter(RATE_COUNTER_NAME) instanceof RateCounter,
         true,
         `new RateCounter("rc") instanceof RateCounter`,
       );
@@ -414,7 +419,7 @@ import { routes, isRunningLocally } from './routes.js';
               throw sentinel;
             },
           };
-          let rc = new RateCounter('rc');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
           rc.increment(entry, 1);
         };
         assertThrows(test);
@@ -426,7 +431,7 @@ import { routes, isRunningLocally } from './routes.js';
         }
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
             rc.increment(Symbol(), 1);
           },
           Error,
@@ -437,7 +442,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/rate-counter/increment/entry-parameter-not-supplied', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
           rc.increment();
         },
         Error,
@@ -447,7 +452,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/rate-counter/increment/delta-parameter-not-supplied', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
           rc.increment('entry');
         },
         Error,
@@ -457,7 +462,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/rate-counter/increment/delta-parameter-negative', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
           rc.increment('entry', -1);
         },
         Error,
@@ -467,7 +472,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/rate-counter/increment/delta-parameter-infinity', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
           rc.increment('entry', Infinity);
         },
         Error,
@@ -477,7 +482,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/rate-counter/increment/delta-parameter-NaN', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
           rc.increment('entry', NaN);
         },
         Error,
@@ -485,7 +490,7 @@ import { routes, isRunningLocally } from './routes.js';
       );
     });
     routes.set('/rate-counter/increment/returns-undefined', () => {
-      let rc = new RateCounter('rc');
+      let rc = new RateCounter(RATE_COUNTER_NAME);
       assert(rc.increment('meow', 1), undefined, "rc.increment('meow', 1)");
     });
   }
@@ -511,7 +516,7 @@ import { routes, isRunningLocally } from './routes.js';
               throw sentinel;
             },
           };
-          let rc = new RateCounter('rc');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
           rc.lookupRate(entry, 1);
         };
         assertThrows(test);
@@ -523,7 +528,7 @@ import { routes, isRunningLocally } from './routes.js';
         }
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
             rc.lookupRate(Symbol(), 1);
           },
           Error,
@@ -534,7 +539,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/rate-counter/lookupRate/entry-parameter-not-supplied', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
           rc.lookupRate();
         },
         Error,
@@ -544,7 +549,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/rate-counter/lookupRate/window-parameter-not-supplied', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
           rc.lookupRate('entry');
         },
         Error,
@@ -555,7 +560,7 @@ import { routes, isRunningLocally } from './routes.js';
       if (!isRunningLocally()) {
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
             rc.lookupRate('entry', -1);
           },
           Error,
@@ -567,7 +572,7 @@ import { routes, isRunningLocally } from './routes.js';
       if (!isRunningLocally()) {
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
             rc.lookupRate('entry', Infinity);
           },
           Error,
@@ -579,7 +584,7 @@ import { routes, isRunningLocally } from './routes.js';
       if (!isRunningLocally()) {
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
             rc.lookupRate('entry', NaN);
           },
           Error,
@@ -588,7 +593,7 @@ import { routes, isRunningLocally } from './routes.js';
       }
     });
     routes.set('/rate-counter/lookupRate/returns-number', () => {
-      let rc = new RateCounter('rc');
+      let rc = new RateCounter(RATE_COUNTER_NAME);
       assert(
         typeof rc.lookupRate('meow', 1),
         'number',
@@ -618,7 +623,7 @@ import { routes, isRunningLocally } from './routes.js';
               throw sentinel;
             },
           };
-          let rc = new RateCounter('rc');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
           rc.lookupCount(entry, 1);
         };
         assertThrows(test);
@@ -630,7 +635,7 @@ import { routes, isRunningLocally } from './routes.js';
         }
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
             rc.lookupCount(Symbol(), 1);
           },
           Error,
@@ -642,7 +647,7 @@ import { routes, isRunningLocally } from './routes.js';
       if (!isRunningLocally()) {
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
             rc.lookupCount();
           },
           Error,
@@ -656,7 +661,7 @@ import { routes, isRunningLocally } from './routes.js';
         if (!isRunningLocally()) {
           assertThrows(
             () => {
-              let rc = new RateCounter('rc');
+              let rc = new RateCounter(RATE_COUNTER_NAME);
               rc.lookupCount('entry');
             },
             Error,
@@ -669,7 +674,7 @@ import { routes, isRunningLocally } from './routes.js';
       if (!isRunningLocally()) {
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
             rc.lookupCount('entry', -1);
           },
           Error,
@@ -681,7 +686,7 @@ import { routes, isRunningLocally } from './routes.js';
       if (!isRunningLocally()) {
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
             rc.lookupCount('entry', Infinity);
           },
           Error,
@@ -693,7 +698,7 @@ import { routes, isRunningLocally } from './routes.js';
       if (!isRunningLocally()) {
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
             rc.lookupCount('entry', NaN);
           },
           Error,
@@ -702,7 +707,7 @@ import { routes, isRunningLocally } from './routes.js';
       }
     });
     routes.set('/rate-counter/lookupCount/returns-number', () => {
-      let rc = new RateCounter('rc');
+      let rc = new RateCounter(RATE_COUNTER_NAME);
       assert(
         typeof rc.lookupCount('meow', 10),
         'number',
@@ -1020,7 +1025,7 @@ import { routes, isRunningLocally } from './routes.js';
     );
     routes.set('/penalty-box/constructor/happy-path', () => {
       assert(
-        new PenaltyBox('rc') instanceof PenaltyBox,
+        new PenaltyBox(RATE_COUNTER_NAME) instanceof PenaltyBox,
         true,
         `new PenaltyBox("rc") instanceof PenaltyBox`,
       );
@@ -1046,7 +1051,7 @@ import { routes, isRunningLocally } from './routes.js';
             throw sentinel;
           },
         };
-        let pb = new PenaltyBox('pb');
+        let pb = new PenaltyBox(PENALTY_BOX_NAME);
         pb.has(entry);
       };
       assertThrows(test);
@@ -1058,7 +1063,7 @@ import { routes, isRunningLocally } from './routes.js';
       }
       assertThrows(
         () => {
-          let pb = new PenaltyBox('pb');
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           pb.has(Symbol());
         },
         Error,
@@ -1068,7 +1073,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/penalty-box/has/entry-parameter-not-supplied', () => {
       assertThrows(
         () => {
-          let pb = new PenaltyBox('pb');
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           pb.has();
         },
         Error,
@@ -1076,7 +1081,7 @@ import { routes, isRunningLocally } from './routes.js';
       );
     });
     routes.set('/penalty-box/has/returns-boolean', () => {
-      let pb = new PenaltyBox('pb');
+      let pb = new PenaltyBox(`pb-`);
       assert(pb.has('meow'), false, "pb.has('meow')");
     });
   }
@@ -1100,7 +1105,7 @@ import { routes, isRunningLocally } from './routes.js';
             throw sentinel;
           },
         };
-        let pb = new PenaltyBox('pb');
+        let pb = new PenaltyBox(PENALTY_BOX_NAME);
         pb.add(entry, 1);
       };
       assertThrows(test);
@@ -1112,7 +1117,7 @@ import { routes, isRunningLocally } from './routes.js';
       }
       assertThrows(
         () => {
-          let pb = new PenaltyBox('pb');
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           pb.add(Symbol(), 1);
         },
         Error,
@@ -1122,7 +1127,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/penalty-box/add/entry-parameter-not-supplied', () => {
       assertThrows(
         () => {
-          let pb = new PenaltyBox('pb');
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           pb.add();
         },
         Error,
@@ -1132,7 +1137,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/penalty-box/add/timeToLive-parameter-not-supplied', () => {
       assertThrows(
         () => {
-          let pb = new PenaltyBox('pb');
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           pb.add('entry');
         },
         Error,
@@ -1142,7 +1147,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/penalty-box/add/timeToLive-parameter-negative', () => {
       assertThrows(
         () => {
-          let pb = new PenaltyBox('pb');
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           pb.add('entry', -1);
         },
         Error,
@@ -1152,7 +1157,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/penalty-box/add/timeToLive-parameter-infinity', () => {
       assertThrows(
         () => {
-          let pb = new PenaltyBox('pb');
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           pb.add('entry', Infinity);
         },
         Error,
@@ -1162,7 +1167,7 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/penalty-box/add/timeToLive-parameter-NaN', () => {
       assertThrows(
         () => {
-          let pb = new PenaltyBox('pb');
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           pb.add('entry', NaN);
         },
         Error,
@@ -1170,7 +1175,7 @@ import { routes, isRunningLocally } from './routes.js';
       );
     });
     routes.set('/penalty-box/add/returns-undefined', () => {
-      let pb = new PenaltyBox('pb');
+      let pb = new PenaltyBox(PENALTY_BOX_NAME);
       assert(pb.add('meow', 1), undefined, `pb.add('meow', 1)`);
     });
   }
@@ -1421,7 +1426,7 @@ import { routes, isRunningLocally } from './routes.js';
       () => {
         assertThrows(
           () => {
-            new EdgeRateLimiter(new RateCounter('rc'), true);
+            new EdgeRateLimiter(new RateCounter(RATE_COUNTER_NAME), true);
           },
           Error,
           `EdgeRateLimiter constructor: penaltyBox parameter must be an instance of PenaltyBox`,
@@ -1431,11 +1436,11 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/edge-rate-limiter/constructor/happy-path', () => {
       assert(
         new EdgeRateLimiter(
-          new RateCounter('rc'),
-          new PenaltyBox('pb'),
+          new RateCounter(RATE_COUNTER_NAME),
+          new PenaltyBox(PENALTY_BOX_NAME),
         ) instanceof EdgeRateLimiter,
         true,
-        `new EdgeRateLimiter(new RateCounter("rc"), new PenaltyBox('pb')) instanceof EdgeRateLimiter`,
+        `new EdgeRateLimiter(new RateCounter("rc"), new PenaltyBox(PENALTY_BOX_NAME)) instanceof EdgeRateLimiter`,
       );
     });
   }
@@ -1461,8 +1466,8 @@ import { routes, isRunningLocally } from './routes.js';
               throw sentinel;
             },
           };
-          let rc = new RateCounter('rc');
-          let pb = new PenaltyBox('pb');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate(entry, 1, 1, 1, 1);
         };
@@ -1475,8 +1480,8 @@ import { routes, isRunningLocally } from './routes.js';
         }
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
-            let pb = new PenaltyBox('pb');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
+            let pb = new PenaltyBox(PENALTY_BOX_NAME);
             let erl = new EdgeRateLimiter(rc, pb);
             erl.checkRate(Symbol(), 1, 1, 1, 1);
           },
@@ -1490,8 +1495,8 @@ import { routes, isRunningLocally } from './routes.js';
       () => {
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
-            let pb = new PenaltyBox('pb');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
+            let pb = new PenaltyBox(PENALTY_BOX_NAME);
             let erl = new EdgeRateLimiter(rc, pb);
             erl.checkRate();
           },
@@ -1503,8 +1508,8 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/edge-rate-limiter/checkRate/delta-parameter-negative', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
-          let pb = new PenaltyBox('pb');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate('entry', -1, 1, 1, 1);
         },
@@ -1515,8 +1520,8 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/edge-rate-limiter/checkRate/delta-parameter-infinity', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
-          let pb = new PenaltyBox('pb');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate('entry', Infinity, 1, 1, 1);
         },
@@ -1527,8 +1532,8 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/edge-rate-limiter/checkRate/delta-parameter-NaN', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
-          let pb = new PenaltyBox('pb');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate('entry', NaN, 1, 1, 1);
         },
@@ -1539,8 +1544,8 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/edge-rate-limiter/checkRate/window-parameter-negative', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
-          let pb = new PenaltyBox('pb');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate('entry', 1, -1, 1, 1);
         },
@@ -1551,8 +1556,8 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/edge-rate-limiter/checkRate/window-parameter-infinity', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
-          let pb = new PenaltyBox('pb');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate('entry', 1, Infinity, 1, 1);
         },
@@ -1563,8 +1568,8 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/edge-rate-limiter/checkRate/window-parameter-NaN', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
-          let pb = new PenaltyBox('pb');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate('entry', 1, NaN, 1, 1);
         },
@@ -1575,8 +1580,8 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/edge-rate-limiter/checkRate/limit-parameter-negative', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
-          let pb = new PenaltyBox('pb');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate('entry', 1, 1, -1, 1);
         },
@@ -1587,8 +1592,8 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/edge-rate-limiter/checkRate/limit-parameter-infinity', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
-          let pb = new PenaltyBox('pb');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate('entry', 1, 1, Infinity, 1);
         },
@@ -1599,8 +1604,8 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/edge-rate-limiter/checkRate/limit-parameter-NaN', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
-          let pb = new PenaltyBox('pb');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate('entry', 1, 1, NaN, 1);
         },
@@ -1613,8 +1618,8 @@ import { routes, isRunningLocally } from './routes.js';
       () => {
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
-            let pb = new PenaltyBox('pb');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
+            let pb = new PenaltyBox(PENALTY_BOX_NAME);
             let erl = new EdgeRateLimiter(rc, pb);
             erl.checkRate('entry', 1, 1, 1, -1);
           },
@@ -1628,8 +1633,8 @@ import { routes, isRunningLocally } from './routes.js';
       () => {
         assertThrows(
           () => {
-            let rc = new RateCounter('rc');
-            let pb = new PenaltyBox('pb');
+            let rc = new RateCounter(RATE_COUNTER_NAME);
+            let pb = new PenaltyBox(PENALTY_BOX_NAME);
             let erl = new EdgeRateLimiter(rc, pb);
             erl.checkRate('entry', 1, 1, 1, Infinity);
           },
@@ -1641,8 +1646,8 @@ import { routes, isRunningLocally } from './routes.js';
     routes.set('/edge-rate-limiter/checkRate/timeToLive-parameter-NaN', () => {
       assertThrows(
         () => {
-          let rc = new RateCounter('rc');
-          let pb = new PenaltyBox('pb');
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate('entry', 1, 1, 1, NaN);
         },
@@ -1651,8 +1656,8 @@ import { routes, isRunningLocally } from './routes.js';
       );
     });
     routes.set('/edge-rate-limiter/checkRate/returns-boolean', () => {
-      let rc = new RateCounter('rc');
-      let pb = new PenaltyBox('pb');
+      let rc = new RateCounter(RATE_COUNTER_NAME);
+      let pb = new PenaltyBox(PENALTY_BOX_NAME);
       let erl = new EdgeRateLimiter(rc, pb);
       assert(
         erl.checkRate('woof', 1, 10, 100, 5),
