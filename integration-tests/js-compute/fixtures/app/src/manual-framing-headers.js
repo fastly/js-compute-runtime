@@ -238,25 +238,26 @@ routes.set('/override-content-length/response/method/true', async () => {
   return responseMethod(true);
 });
 
-// TODO: uncomment when we have an implementation of Response.prototype.clone
-// async function responseClone(setManualFramingHeaders) {
-//     let response = new Response("meow", {
-//         backend: "httpme",
-//         method: "POST",
-//         body: "meow",
-//         setManualFramingHeaders,
-//         headers: {
-//             "transfer-encoding": "chunked"
-//         }
-//     });
-//     response = response.clone();
-//     return response;
-// }
+async function responseClone(setManualFramingHeaders) {
+  let response = new Response('meow', {
+    backend: 'httpme',
+    method: 'POST',
+    body: 'meow',
+    setManualFramingHeaders,
+    headers: {
+      'transfer-encoding': 'chunked',
+    },
+  });
+  response = response.clone();
+  return response;
+}
 
-// routes.set("/override-content-length/response/clone/true", async () => {
-//     return responseClone(true);
-// });
+// TODO: implement Response.clone
+routes.set('/override-content-length/response/clone/true', async () => {
+  return responseClone(true);
+});
 
-// routes.set("/override-content-length/response/clone/false", async () => {
-//     return responseClone(false);
-// });
+// TODO: implement Response.clone
+routes.set('/override-content-length/response/clone/false', async () => {
+  return responseClone(false);
+});
