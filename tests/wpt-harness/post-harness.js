@@ -1,8 +1,5 @@
 /* eslint-env serviceworker */
 /* global add_completion_callback setup done */
-import { enableDebugLogging, setBaseURL } from "fastly:experimental";
-
-enableDebugLogging(true);
 
 let completionPromise = new Promise((resolve) => {
     add_completion_callback(function(tests, harness_status, asserts) {
