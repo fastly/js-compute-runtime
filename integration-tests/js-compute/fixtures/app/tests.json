@@ -1130,13 +1130,9 @@
       "body": "ok"
     }
   },
-  "GET /request/constructor/fastly/decompressGzip/true": {
-    "features": ["skip-http-cache"]
-  },
+  "GET /request/constructor/fastly/decompressGzip/true": {},
   "GET /request/constructor/fastly/decompressGzip/false": {},
-  "GET /fetch/requestinit/fastly/decompressGzip/true": {
-    "features": ["skip-http-cache"]
-  },
+  "GET /fetch/requestinit/fastly/decompressGzip/true": {},
   "GET /fetch/requestinit/fastly/decompressGzip/false": {},
   "GET /request/setCacheKey/called-as-constructor": {},
   "GET /request/setCacheKey/called-unbound": {},
@@ -1165,7 +1161,6 @@
   "GET /response/redirect": {},
   "GET /response/request-body-init": {
     "flake": true,
-    "features": ["skip-http-cache"],
     "downstream_response": {
       "status": 200,
       "body_prefix": [
