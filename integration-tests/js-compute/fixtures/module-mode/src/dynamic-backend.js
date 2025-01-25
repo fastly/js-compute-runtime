@@ -52,7 +52,11 @@ routes.set('/backend/timeout', async () => {
     '/implicit-dynamic-backend/dynamic-backends-disabled',
     async () => {
       allowDynamicBackends(false);
-      await assertRejects(() => fetch('https://http-me.glitch.me/headers'));
+      await assertRejects(() =>
+        fetch('https://http-me.glitch.me/headers', {
+          cacheOverride: 'pass',
+        }),
+      );
     },
   );
   routes.set(
@@ -62,7 +66,9 @@ routes.set('/backend/timeout', async () => {
       strictEqual(evt.request.backend, undefined);
       strictEqual(new Response('test').backend, undefined);
       await assertResolves(async () => {
-        const res = await fetch('https://http-me.glitch.me/headers');
+        const res = await fetch('https://http-me.glitch.me/headers', {
+          cacheOverride: 'pass',
+        });
         strictEqual(res.backend.name, 'http-me.glitch.me');
         strictEqual(res.backend.isSSL, true);
       });

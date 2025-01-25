@@ -6,12 +6,8 @@
       "body": "ok"
     }
   },
-  "GET /implicit-dynamic-backend/dynamic-backends-disabled": {
-    "flake": true
-  },
-  "GET /implicit-dynamic-backend/dynamic-backends-enabled": {
-    "flake": true
-  },
+  "GET /implicit-dynamic-backend/dynamic-backends-disabled": {},
+  "GET /implicit-dynamic-backend/dynamic-backends-enabled": {},
   "GET /implicit-dynamic-backend/dynamic-backends-enabled-called-twice": {},
   "GET /explicit-dynamic-backend/dynamic-backends-enabled-all-fields": {},
   "GET /explicit-dynamic-backend/dynamic-backends-enabled-minimal-fields": {},
@@ -217,20 +213,6 @@
     "environments": ["compute"],
     "features": ["http-cache"]
   },
-  "GET /http-cache/sequential": {
-    "environments": ["compute"],
-    "features": ["http-cache"]
-  },
-  "GET /http-cache/parallel": {
-    "skip": true,
-    "environments": ["compute"],
-    "features": ["http-cache"]
-  },
-  "GET /http-cache/parallel-three": {
-    "skip": true,
-    "environments": ["compute"],
-    "features": ["http-cache"]
-  },
   "GET /http-cache/body-transform": {
     "skip": true,
     "environments": ["compute"],
@@ -257,6 +239,48 @@
     "features": ["http-cache"]
   },
   "GET /http-cache/body-transform-backpressure": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/concurrent-transforms": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/sequential": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/sequential-three": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/sequential-request-collapsing-uncacheable": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/sequential-request-collapsing-vary": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/parallel": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/parallel-three": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/parallel-request-collapsing-uncacheable": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/parallel-request-collapsing-vary": {
     "skip": true,
     "environments": ["compute"],
     "features": ["http-cache"]

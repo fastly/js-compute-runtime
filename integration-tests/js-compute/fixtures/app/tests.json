@@ -1256,7 +1256,6 @@
       "body": "hello world!"
     }
   },
-
   "GET /tee/error": {
     "downstream_request": {
       "method": "GET",
@@ -1268,7 +1267,6 @@
       "body": "Error: TypeError"
     }
   },
-
   "GET /override-content-length/request/init/object-literal/true": {
     "environments": ["compute"],
     "downstream_response": {
@@ -1283,7 +1281,6 @@
       "body": "ok"
     }
   },
-
   "GET /override-content-length/request/clone/true": {
     "environments": ["compute"],
     "downstream_response": {
@@ -1298,7 +1295,6 @@
       "body": "ok"
     }
   },
-
   "GET /override-content-length/fetch/init/object-literal/true": {
     "environments": ["compute"],
     "downstream_response": {
@@ -1313,7 +1309,14 @@
       "body": "ok"
     }
   },
-
+  "/override-content-length/response/clone/true": {
+    "skip": true,
+    "environments": ["compute"]
+  },
+  "/override-content-length/response/clone/false": {
+    "skip": true,
+    "environments": ["compute"]
+  },
   "GET /override-content-length/response/init/object-literal/true": {
     "environments": ["compute"],
     "downstream_response": {
@@ -1322,7 +1325,6 @@
       "headers": { "content-length": "4" }
     }
   },
-
   "GET /override-content-length/response/init/object-literal/false": {
     "environments": ["compute"],
     "downstream_response": {
@@ -1330,7 +1332,6 @@
       "body": "meow"
     }
   },
-
   "GET /override-content-length/response/init/response-instance/true": {
     "environments": ["compute"],
     "downstream_response": {
@@ -1339,7 +1340,6 @@
       "headers": { "content-length": "4" }
     }
   },
-
   "GET /override-content-length/response/init/response-instance/false": {
     "environments": ["compute"],
     "downstream_response": {
@@ -1347,11 +1347,9 @@
       "body": "meow"
     }
   },
-
   "GET /override-content-length/response/method/false": {
     "environments": ["compute"]
   },
-
   "GET /override-content-length/response/method/true": {
     "environments": ["compute"],
     "downstream_response": {
@@ -1359,7 +1357,6 @@
       "headers": { "content-length": "11" }
     }
   },
-
   "GET /headers/non-ascii-latin1-field-value": {
     "downstream_response": {
       "status": 200,
@@ -2321,7 +2318,6 @@
   "GET /transaction-cache-entry/cancel/called-twice-throws": {
     "environments": ["compute"]
   },
-
   "GET /rate-counter/interface": {
     "downstream_response": {
       "status": 200,
@@ -2730,7 +2726,6 @@
       "body": "ok"
     }
   },
-
   "GET /device/interface": {
     "downstream_response": {
       "status": 200,
