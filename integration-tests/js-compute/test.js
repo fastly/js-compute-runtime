@@ -44,6 +44,7 @@ const moduleMode = args.includes('--module-mode');
 const httpCache = args.includes('--http-cache');
 const aot = args.includes('--aot');
 const debugBuild = args.includes('--debug-build');
+const debugLog = args.includes('--debug-log');
 const filter = args.filter((arg) => !arg.startsWith('--'));
 const bail = args.includes('--bail');
 const ci = args.includes('--ci');
@@ -85,6 +86,9 @@ let localServer;
 
 const env = getEnv(ci && !local ? serviceName : null);
 Object.assign(process.env, env);
+if (debugLog) {
+  process.env.FASTLY_DEBUG_LOGGING = '1';
+}
 
 await cd(fixturePath);
 await copyFile(

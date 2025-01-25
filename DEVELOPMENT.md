@@ -170,8 +170,9 @@ In addition the following flags can be added after the command (passed via `npm 
 
 - `--local`: Test locally using Viceroy, instead of publishing to a staging Compute service.
 - `--bail`: Immediately stop testing on the first failure, and report the failure.
-* `--verbose`: Adds verbose logging to `fastly compute publish` and Viceroy (which provides hostcall logging as well).
+- `--verbose`: Adds verbose logging to `fastly compute publish` and Viceroy (which provides hostcall logging as well).
 - `--debug-build`: Use the debug build
+- `--debug-log`: Enable debug logging for the tests (engine-level DEBUG_LOG)
 - `--module-mode`: Run the module mode test suite (`fixtures/module-mode` instead of `fixtures/app`).
 - `--http-cache`: Run the HTTP cache test suite
 - `[...args]`: Additional arguments allow for filtering tests
@@ -179,10 +180,10 @@ In addition the following flags can be added after the command (passed via `npm 
 A typical development test command is therefore something like:
 
 ```
-npm run build:debug && npm run test:integration -- --debug-build --local --bail /crypto
+npm run build:debug && npm run test:integration -- --debug-build --debug-log --local --bail /crypto
 ```
 
-Which would run a debug build, and then that build against all the crypto tests locally on Viceroy, throwing an error as soon as one is found.
+Which would run a debug build, enable debugging logging, and then that build against all the crypto tests locally on Viceroy, throwing an error as soon as one is found.
 
 Some tests can only be run on Compute and not Viceroy and will be automatically skipped. A green tick is always shown for a test that ran successfully - if it is missing that means it did not run.
 

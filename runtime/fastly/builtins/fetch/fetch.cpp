@@ -389,7 +389,6 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
 
   JS::RootedObject before_send_promise(cx);
   if (before_send) {
-    DEBUG_LOG("Calling before send")
     JS::RootedValue ret_val(cx);
     JS::RootedValueArray<1> args(cx);
     args[0].set(JS::ObjectValue(*request));
@@ -439,7 +438,6 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
 
 bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject request,
                                           JS::HandleValue extra, JS::CallArgs args) {
-  DEBUG_LOG("background_revalidation_then_handler")
   auto response = args.get(0);
   JSObject *response_obj = &response.toObject();
   auto cache_entry = RequestOrResponse::take_cache_entry(response_obj, std::nullopt).value();
@@ -461,7 +459,6 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
     auto body = body_res.unwrap();
 
     if (!Response::has_body_transform(response_obj)) {
-      // This is a BLOCKING append. We should have a non-blocking hostcall variant to use here.
       auto append_res = body.append(RequestOrResponse::body_handle(response_obj));
       DEBUG_LOG("stream back transaction insert appended")
 
@@ -534,7 +531,6 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
 
 bool background_revalidation_catch_handler(JSContext *cx, JS::HandleObject request,
                                            JS::HandleValue promise_val, JS::CallArgs args) {
-  DEBUG_LOG("background_revalidation_catch_handler")
   // we follow the Rust implementation calling "close" instead of "transaction_abandon" here
   // this could be reconsidered in future if alternative semantics are required
   RequestOrResponse::close_if_cache_entry(cx, request);
@@ -620,7 +616,6 @@ std::optional<JSObject *> get_found_response(JSContext *cx, host_api::HttpCacheE
 
 bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::HandleValue extra,
                               JS::CallArgs args) {
-  DEBUG_LOG("stream_back_then_handler")
   auto response = args.get(0);
   RootedObject response_obj(cx, &response.toObject());
   auto cache_entry = RequestOrResponse::take_cache_entry(response_obj, false).value();
@@ -775,7 +770,6 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
 
 bool stream_back_catch_handler(JSContext *cx, JS::HandleObject request, JS::HandleValue promise_val,
                                JS::CallArgs args) {
-  DEBUG_LOG("stream_back_catch_handler")
   // we follow the Rust implementation calling "close" instead of "transaction_abandon" here
   // this could be reconsidered in future if alternative semantics are required
   if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
@@ -786,8 +780,6 @@ bool stream_back_catch_handler(JSContext *cx, JS::HandleObject request, JS::Hand
   return false;
 }
 
-// TODO: throw in all Request methods/getters that rely on host calls once a
-// request has been sent. The host won't let us act on them anymore anyway.
 /**
  * The `fetch` global function
  * https://fetch.spec.whatwg.org/#fetch-method
@@ -818,7 +810,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return false;
   }
   if (!should_use_guest_caching_out) {
-    DEBUG_LOG("Using traditional fetch without cache API")
+    DEBUG_LOG("HTTP Cache: Using traditional fetch without cache API")
     return fetch_send_body<false>(cx, request, args.rval());
   }
 
@@ -841,7 +833,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   // If not cacheable, fallback to non-caching path
   if (!is_cacheable) {
-    DEBUG_LOG("Request not cacheable, using non-caching fetch")
+    DEBUG_LOG("HTTP Cache: Request not cacheable, using non-caching fetch")
     return fetch_send_body<true>(cx, request, args.rval());
   }
 
@@ -862,7 +854,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   auto transaction_res =
       host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_span);
   if (auto *err = transaction_res.to_err()) {
-    DEBUG_LOG("Transaction lookup error")
+    DEBUG_LOG("HTTP Cache: Transaction lookup error")
     if (host_api::error_is_limit_exceeded(*err)) {
       JS_ReportErrorASCII(cx, "HTTP caching limit exceeded");
     } else {
@@ -877,9 +869,11 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
   host_api::HttpCacheEntry cache_entry = transaction_res.unwrap();
 
+  // This forces synchronous lookups, but we should be able to abstract a new CacheLookupTask, which
+  // could be fully async based on its handle as an async select task handle, and then we could
+  // support multiple cache lookups in parallel together.
   auto state_res = cache_entry.get_state();
   if (auto *err = state_res.to_err()) {
-    DEBUG_LOG("Cache state error")
     HANDLE_ERROR(cx, *err);
     JSObject *promise = PromiseRejectedWithPendingError(cx);
     if (!promise) {
@@ -890,7 +884,6 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
   auto cache_state = state_res.unwrap();
   std::string state_str = std::to_string(cache_state.state);
-  DEBUG_LOG(state_str)
 
   // Check for usable cached response
   JS::RootedValue no_candidate(cx);
@@ -905,11 +898,9 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
 
   if (maybe_response.has_value()) {
-    DEBUG_LOG("Have usable cached response")
     JS::RootedObject cached_response(cx, maybe_response.value());
 
     if (cache_state.must_insert_or_update()) {
-      DEBUG_LOG("Usable response must insert or update background revalidation")
       // Need to start background revalidation
       // Queue async task to handle background cache revalidation, ensuring it blocks process
       // completion
@@ -956,7 +947,6 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   // No valid cached response, need to make backend request
   if (!cache_state.must_insert_or_update()) {
-    DEBUG_LOG("No usable response, and don't need to insert or update -> pass")
     // transaction entry is done
     if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
       return false;
@@ -965,7 +955,6 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     // updating the cache and without caching
     return fetch_send_body<true>(cx, request, args.rval());
   } else {
-    DEBUG_LOG("No usable response, and must insert or update, running origin fetch hooks")
     JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*JS::NewPromiseObject(cx, nullptr)));
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
       RequestOrResponse::close_if_cache_entry(cx, request);

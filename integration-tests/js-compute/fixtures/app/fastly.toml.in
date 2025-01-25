@@ -9,7 +9,7 @@ name = "js-test-app"
 service_id = ""
 
 [scripts]
-  build = "node ../../../../js-compute-runtime-cli.js --env CONFIG_STORE_NAME,DICTIONARY_NAME,KV_STORE_NAME,SECRET_STORE_NAME,LOCAL_TEST,TEST=\"foo\" --enable-experimental-high-resolution-time-methods src/index.js"
+  build = "node ../../../../js-compute-runtime-cli.js --env FASTLY_DEBUG_LOGGING,CONFIG_STORE_NAME,DICTIONARY_NAME,KV_STORE_NAME,SECRET_STORE_NAME,LOCAL_TEST,TEST=\"foo\" --enable-experimental-high-resolution-time-methods src/index.js"
 
 [local_server]
 

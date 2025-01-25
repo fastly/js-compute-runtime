@@ -11,6 +11,7 @@
 
 namespace fastly::fastly {
 
+extern bool DEBUG_LOGGING_ENABLED;
 extern bool ENABLE_EXPERIMENTAL_HTTP_CACHE;
 
 class Env : public builtins::BuiltinNoConstructor<Env> {

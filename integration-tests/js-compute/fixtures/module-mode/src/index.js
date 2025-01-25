@@ -3,6 +3,7 @@
 
 import { routes } from './routes.js';
 import { env } from 'fastly:env';
+import { enableDebugLogging } from 'fastly:experimental';
 
 import './console.js';
 import './dynamic-backend.js';
@@ -15,12 +16,15 @@ addEventListener('fetch', (event) => {
   event.respondWith(app(event));
 });
 
-if (fastly.debugMessages) {
-  const { debug: consoleDebug } = console;
-  console.debug = function debug(...args) {
-    fastly.debugMessages.push(...args);
-    consoleDebug(...args);
-  };
+if (env('FASTLY_DEBUG_LOGGING') === '1') {
+  if (fastly.debugMessages) {
+    const { debug: consoleDebug } = console;
+    console.debug = function debug(...args) {
+      fastly.debugMessages.push(...args);
+      consoleDebug(...args);
+    };
+  }
+  enableDebugLogging(true);
 }
 
 /**

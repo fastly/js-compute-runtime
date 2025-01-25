@@ -26,8 +26,6 @@ extern char **environ;
 
 namespace {
 
-bool DEBUG_LOGGING_ENABLED = false;
-
 api::Engine *ENGINE;
 
 // Global storage for Wizer-time environment
@@ -40,9 +38,11 @@ static void oom_callback(JSContext *cx, void *data) {
 
 } // namespace
 
-bool debug_logging_enabled() { return DEBUG_LOGGING_ENABLED; }
+bool debug_logging_enabled() { return fastly::fastly::DEBUG_LOGGING_ENABLED; }
 
 namespace fastly::fastly {
+
+bool DEBUG_LOGGING_ENABLED = false;
 
 JS::PersistentRooted<JSObject *> debugMessages;
 JS::PersistentRooted<JSObject *> Fastly::env;
@@ -585,6 +585,13 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(engine->cx(), experimental, "setDefaultBackend", set_default_backend_val)) {
     return false;
   }
+  auto enable_debug_logging =
+      JS_NewFunction(engine->cx(), &Fastly::enableDebugLogging, 1, 0, "enableDebugLogging");
+  RootedObject enable_debug_logging_obj(engine->cx(), JS_GetFunctionObject(enable_debug_logging));
+  RootedValue enable_debug_logging_val(engine->cx(), ObjectValue(*enable_debug_logging_obj));
+  if (!JS_SetProperty(engine->cx(), experimental, "enableDebugLogging", enable_debug_logging_val)) {
+    return false;
+  }
   auto allow_dynamic_backends =
       JS_NewFunction(engine->cx(), &Fastly::allowDynamicBackends_set, 1, 0, "allowDynamicBackends");
   RootedObject allow_dynamic_backends_obj(engine->cx(),
@@ -700,13 +707,19 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
 
 void fastly_push_debug_message(std::string_view msg) {
 #ifdef DEBUG
-  JS::RootedString str(
-      ENGINE->cx(), JS_NewStringCopyUTF8N(ENGINE->cx(), JS::UTF8Chars(msg.data(), msg.length())));
-  bool res;
-  uint32_t len;
-  res = JS::GetArrayLength(ENGINE->cx(), fastly::fastly::debugMessages, &len);
-  MOZ_ASSERT(res);
-  res = JS_SetElement(ENGINE->cx(), fastly::fastly::debugMessages, len, str);
-  MOZ_ASSERT(res);
+  if (fastly::fastly::DEBUG_LOGGING_ENABLED) {
+    // Log to both stderr and debug message log
+    fprintf(stderr, "%.*s\n", static_cast<int>(msg.size()), msg.data());
+    fflush(stderr);
+    JS::RootedString str(
+        ENGINE->cx(), JS_NewStringCopyUTF8N(ENGINE->cx(), JS::UTF8Chars(msg.data(), msg.length())));
+    MOZ_ASSERT(str);
+    bool res;
+    uint32_t len;
+    res = JS::GetArrayLength(ENGINE->cx(), fastly::fastly::debugMessages, &len);
+    MOZ_ASSERT(res);
+    res = JS_SetElement(ENGINE->cx(), fastly::fastly::debugMessages, len, str);
+    MOZ_ASSERT(res);
+  }
 #endif
 }
