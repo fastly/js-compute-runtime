@@ -25,6 +25,7 @@ routes.set('/request/constructor/fastly/decompressGzip/false', async () => {
       accept: 'application/json',
     },
     backend: 'httpbin',
+    cacheOverride: 'pass',
     fastly: {
       decompressGzip: false,
     },
@@ -57,6 +58,7 @@ routes.set('/fetch/requestinit/fastly/decompressGzip/false', async () => {
       accept: 'application/json',
     },
     backend: 'httpbin',
+    cacheOverride: 'pass',
     fastly: {
       decompressGzip: false,
     },
