@@ -1,5 +1,6 @@
 #include "fetch.h"
 #include "../../../StarlingMonkey/builtins/web/fetch/headers.h"
+#include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../backend.h"
 #include "../cache-override.h"
 #include "../fastly.h"
@@ -9,40 +10,18 @@
 #include "encode.h"
 #include "extension-api.h"
 
+using builtins::web::streams::NativeStreamSource;
 using fastly::FastlyGetErrorMessage;
 using fastly::backend::Backend;
 using fastly::cache_override::CacheOverride;
 using fastly::fastly::Fastly;
+using fastly::fetch::ENGINE;
 using fastly::fetch::Request;
+using fastly::fetch::RequestOrResponse;
+using fastly::fetch::Response;
 using fastly::fetch_event::FetchEvent;
 
 namespace {
-
-template <InternalMethod then_handler, InternalMethod catch_handler>
-JSObject *internal_method_then(JSContext *cx, JS::HandleObject promise, JS::HandleObject receiver,
-                               const JS::HandleValue extra = UndefinedHandleValue) {
-  JS::RootedObject then_handler_obj(cx, create_internal_method<then_handler>(cx, receiver, extra));
-  if (!then_handler_obj) {
-    return nullptr;
-  }
-  JS::RootedObject catch_handler_obj(cx,
-                                     create_internal_method<catch_handler>(cx, receiver, extra));
-  if (!catch_handler_obj) {
-    return nullptr;
-  }
-  JS::RootedObject return_promise(
-      cx, JS::CallOriginalPromiseThen(cx, promise, then_handler_obj, catch_handler_obj));
-  if (!return_promise) {
-    return nullptr;
-  }
-  return return_promise;
-}
-
-} // namespace
-
-namespace fastly::fetch {
-
-api::Engine *ENGINE;
 
 class FetchTask final : public api::AsyncTask {
   Heap<JSObject *> request_;
@@ -73,6 +52,26 @@ public:
     TraceEdge(trc, &promise_, "Fetch promise");
   }
 };
+
+template <InternalMethod then_handler, InternalMethod catch_handler>
+JSObject *internal_method_then(JSContext *cx, JS::HandleObject promise, JS::HandleObject receiver,
+                               const JS::HandleValue extra = UndefinedHandleValue) {
+  JS::RootedObject then_handler_obj(cx, create_internal_method<then_handler>(cx, receiver, extra));
+  if (!then_handler_obj) {
+    return nullptr;
+  }
+  JS::RootedObject catch_handler_obj(cx,
+                                     create_internal_method<catch_handler>(cx, receiver, extra));
+  if (!catch_handler_obj) {
+    return nullptr;
+  }
+  JS::RootedObject return_promise(
+      cx, JS::CallOriginalPromiseThen(cx, promise, then_handler_obj, catch_handler_obj));
+  if (!return_promise) {
+    return nullptr;
+  }
+  return return_promise;
+}
 
 JSString *get_backend(JSContext *cx, JS::HandleObject request) {
   RootedString backend(cx, RequestOrResponse::backend(request));
@@ -120,9 +119,9 @@ bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_
   *should_use_cache = true;
 
   // If we previously found guest caching unsupported then remember that
-  if (http_caching_unsupported || !fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
+  if (http_caching_unsupported || !fastly::fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
     if (must_use_guest_caching(cx, request)) {
-      if (!fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
+      if (!fastly::fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
         JS_ReportErrorASCII(cx, "HTTP caching API is not enabled for JavaScript; enable it with "
                                 "the --enable-http-cache flag "
                                 "to the js-compute build command, or contact support for help");
@@ -250,7 +249,8 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
     if (auto *err = res.to_err()) {
       if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
         JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                  JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST, backend_chars.ptr.get());
+                                  fastly::JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST,
+                                  backend_chars.ptr.get());
       } else {
         HANDLE_ERROR(cx, *err);
       }
@@ -319,7 +319,8 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
       }
       if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
         JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                  JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST, backend_chars.ptr.get());
+                                  fastly::JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST,
+                                  backend_chars.ptr.get());
       } else {
         HANDLE_ERROR(cx, *err);
       }
@@ -436,10 +437,67 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
   return JS::AddPromiseReactions(cx, before_send_promise, then_handler_obj, catch_handler_obj);
 }
 
+template <InternalMethod then_or_catch_handler>
+bool apply_transform_stream(JSContext *cx, JS::HandleObject response,
+                            host_api::HttpBody into_body) {
+  // Create the stream source from the response body
+  JS::RootedObject source(
+      cx, NativeStreamSource::create(cx, response, JS::UndefinedHandleValue,
+                                     RequestOrResponse::body_source_pull_algorithm,
+                                     RequestOrResponse::body_source_cancel_algorithm));
+  if (!source) {
+    return false;
+  }
+
+  JS::RootedObject body_stream(cx, NativeStreamSource::stream(source));
+  if (!body_stream) {
+    return false;
+  }
+
+  // Create the transform stream, and extract its readable and writable end objects
+  JS::RootedValue transform_stream(
+      cx,
+      JS::GetReservedSlot(response, static_cast<uint32_t>(Response::Slots::CacheBodyTransform)));
+
+  JS::RootedObject transform_instance(cx);
+  if (!JS::Construct(cx, transform_stream, JS::RootedValueArray<0>(cx), &transform_instance)) {
+    return false;
+  }
+
+  JS::RootedValue transform_readable(cx);
+  if (!JS_GetProperty(cx, transform_instance, "readable", &transform_readable)) {
+    return false;
+  }
+
+  JS::RootedValue transform_writable(cx);
+  if (!JS_GetProperty(cx, transform_instance, "writable", &transform_writable)) {
+    return false;
+  }
+
+  // Pipe the readable end into the into_body, with the completion handler on error or success
+  // TODO
+
+  // Pipe the body stream into the writable end of the transform stream
+  JS::RootedValueArray<1> args(cx);
+  args[0].set(transform_writable);
+  JS::RootedValue pipe_ret(cx);
+  JS::RootedObject transform_readable_obj(cx, &transform_readable.toObject());
+  return JS::Call(cx, transform_readable_obj, "pipeTo", args, &pipe_ret);
+}
+
+bool background_cleanup_handler(JSContext *cx, JS::HandleObject request,
+                                JS::HandleValue promise_val, JS::CallArgs args) {
+  // we follow the Rust implementation calling "close" instead of "transaction_abandon" here
+  // this could be reconsidered in future if alternative semantics are required
+  RequestOrResponse::close_if_cache_entry(cx, request);
+  ENGINE->decr_event_loop_interest();
+  return true;
+}
+
 bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject request,
                                           JS::HandleValue extra, JS::CallArgs args) {
   auto response = args.get(0);
-  JSObject *response_obj = &response.toObject();
+  RootedObject response_obj(cx, &response.toObject());
   auto cache_entry = RequestOrResponse::take_cache_entry(response_obj, std::nullopt).value();
   auto storage_action = Response::storage_action(response_obj).value();
   auto cache_write_options = Response::override_cache_options(response_obj);
@@ -460,7 +518,6 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
 
     if (!Response::has_body_transform(response_obj)) {
       auto append_res = body.append(RequestOrResponse::body_handle(response_obj));
-      DEBUG_LOG("stream back transaction insert appended")
 
       if (auto *err = append_res.to_err()) {
         HANDLE_ERROR(cx, *err);
@@ -472,9 +529,7 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
         return true;
       }
 
-      DEBUG_LOG("stream back transaction insert append close")
       auto close_res = body.close();
-
       if (auto *err = close_res.to_err()) {
         HANDLE_ERROR(cx, *err);
         JSObject *promise = PromiseRejectedWithPendingError(cx);
@@ -484,17 +539,11 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
         args.rval().setObject(*promise);
         return true;
       }
-      DEBUG_LOG("stream back transaction insert append closed")
 
       return true;
     }
 
-    // TODO: Body transform handling
-    // ENGINE->incr_event_loop_interest();
-    DEBUG_LOG("TODO: Background revalidation transform stream")
-    JS_ReportErrorASCII(cx, "background revalidation body transform streaming TODO");
-    return false;
-
+    return apply_transform_stream<background_cleanup_handler>(cx, response_obj, body);
     break;
   }
   case host_api::HttpStorageAction::Update: {
@@ -526,15 +575,6 @@ bool background_revalidation_then_handler(JSContext *cx, JS::HandleObject reques
   default:
     MOZ_ASSERT_UNREACHABLE();
   }
-  return true;
-}
-
-bool background_revalidation_catch_handler(JSContext *cx, JS::HandleObject request,
-                                           JS::HandleValue promise_val, JS::CallArgs args) {
-  // we follow the Rust implementation calling "close" instead of "transaction_abandon" here
-  // this could be reconsidered in future if alternative semantics are required
-  RequestOrResponse::close_if_cache_entry(cx, request);
-  ENGINE->decr_event_loop_interest();
   return true;
 }
 
@@ -628,17 +668,14 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   case host_api::HttpStorageAction::Insert: {
     auto insert_res = cache_entry.transaction_insert_and_stream_back(
         Response::response_handle(response_obj), cache_write_options);
-    DEBUG_LOG("stream back transaction insert")
     if (auto *err = insert_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
     }
-    DEBUG_LOG("stream back transaction insert unwrap")
+
     auto [body, cache_entry] = insert_res.unwrap();
-    DEBUG_LOG("stream back transaction insert unwrapped")
 
     if (!Response::has_body_transform(response_obj)) {
-      DEBUG_LOG("stream back transaction insert append")
       auto append_res = body.append(RequestOrResponse::body_handle(response_obj));
 
       if (auto *err = append_res.to_err()) {
@@ -650,9 +687,8 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
         args.rval().setObject(*promise);
         return true;
       }
-      DEBUG_LOG("stream back transaction insert append close")
-      auto close_res = body.close();
 
+      auto close_res = body.close();
       if (auto *err = close_res.to_err()) {
         HANDLE_ERROR(cx, *err);
         JSObject *promise = PromiseRejectedWithPendingError(cx);
@@ -662,13 +698,10 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
         args.rval().setObject(*promise);
         return true;
       }
-      DEBUG_LOG("stream back transaction insert append closed")
     } else {
-      // TODO: body stream handling
-      // Stream origin response body insto the insert body
-      DEBUG_LOG("TODO: body stream handling")
-      JS_ReportErrorASCII(cx, "Body transform stream TODO");
-      return false;
+      if (!apply_transform_stream<nullptr>(cx, response_obj, body)) {
+        return false;
+      }
     }
 
     auto found_response = get_found_response(cx, cache_entry, request, response, false);
@@ -692,7 +725,6 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
     if (!JS::ResolvePromise(cx, response_promise, response_val)) {
       return false;
     }
-    DEBUG_LOG("stream back transaction insert all done")
     break;
   }
   case host_api::HttpStorageAction::Update: {
@@ -779,6 +811,12 @@ bool stream_back_catch_handler(JSContext *cx, JS::HandleObject request, JS::Hand
   JS_SetPendingException(cx, args.get(0), JS::ExceptionStackBehavior::DoNotCapture);
   return false;
 }
+
+} // namespace
+
+namespace fastly::fetch {
+
+api::Engine *ENGINE;
 
 /**
  * The `fetch` global function
@@ -912,9 +950,10 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
       }
       JS::RootedObject background_revalidation_promise_obj(
           cx, &background_revalidation_promise.toObject());
-      JS::RootedObject ret_promise(cx, internal_method_then<background_revalidation_then_handler,
-                                                            background_revalidation_catch_handler>(
-                                           cx, background_revalidation_promise_obj, request));
+      JS::RootedObject ret_promise(
+          cx,
+          internal_method_then<background_revalidation_then_handler, background_cleanup_handler>(
+              cx, background_revalidation_promise_obj, request));
       if (!ret_promise) {
         RequestOrResponse::close_if_cache_entry(cx, request);
         return false;
