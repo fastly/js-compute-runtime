@@ -1364,7 +1364,7 @@ interface Response extends Body {
    */
   readonly stale: boolean | undefined;
   /**
-   * Fastly-specific property - Get the Time to Live (TTL) in the cache for this response, if it is cached.
+   * Fastly-specific property - Get the Time to Live (TTL) in the cache for this response in seconds, if it is cached.
    *
    * The TTL determines the duration of "freshness" for the cached response
    * after it is inserted into the cache.
@@ -1373,13 +1373,13 @@ interface Response extends Body {
    */
   ttl: number | undefined;
   /**
-   * Fastly-specific property - The current age of the response, if it is cached.
+   * Fastly-specific property - The current age of the response in seconds, if it is cached.
    *
    * Undefined if the response is not cached or the environment does not support the HTTP Cache hostcalls. May be modified prior to injection into the cache.
    */
   readonly age: number | undefined;
   /**
-   * Fastly-specific property - The time for which the response can safely be used despite being considered stale, if it is cached.
+   * Fastly-specific property - The time in seconds for which the response can safely be used despite being considered stale, if it is cached.
    *
    * Undefined if the response is not cached or the environment does not support the HTTP Cache hostcalls. May be modified prior to injection into the cache.
    */

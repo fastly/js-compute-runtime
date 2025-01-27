@@ -21,7 +21,7 @@ declare module 'fastly:cache-override' {
      * requests to reduce backend traffic.
      *
      * See the [Fastly request collapsing guide](https://www.fastly.com/documentation/guides/concepts/edge-state/cache/request-collapsing/)
-     * for more details on the mechanism that `recordUncacheable` disables.
+     * for more details on the mechanism that `uncacheable` disables.
      */
     cache?: boolean | 'uncacheable';
     /**
