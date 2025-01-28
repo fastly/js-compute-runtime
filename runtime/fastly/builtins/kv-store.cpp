@@ -39,7 +39,7 @@ namespace {
 
 api::Engine *ENGINE;
 
-std::string_view bad_chars{"#?*[]\n\r"};
+std::string_view bad_chars{"#;?^|\n\r"};
 
 std::optional<char> find_invalid_character_for_kv_store_key(const char *str) {
   std::optional<char> res;
@@ -205,14 +205,14 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
     case '\r':
       character = "carriage return";
       break;
-    case '[':
-      character = '[';
+    case '^':
+      character = '^';
       break;
-    case ']':
-      character = ']';
+    case '|':
+      character = '|';
       break;
-    case '*':
-      character = '*';
+    case ';':
+      character = ';';
       break;
     case '?':
       character = '?';

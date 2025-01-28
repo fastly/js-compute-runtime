@@ -492,7 +492,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set(
       '/kv-store/put/key-parameter-containing-special-characters',
       async () => {
-        const specialCharacters = ['[', ']', '*', '?', '#'];
+        const specialCharacters = [';', '^', '|', '#', '?'];
         for (const character of specialCharacters) {
           await assertRejects(
             async () => {
@@ -993,7 +993,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set(
       '/kv-store/delete/key-parameter-containing-special-characters',
       async () => {
-        const specialCharacters = ['[', ']', '*', '?', '#'];
+        const specialCharacters = [';', '^', '|', '#', '?'];
         for (const character of specialCharacters) {
           await assertRejects(
             async () => {
@@ -1224,7 +1224,7 @@ const debug = sdkVersion.endsWith('-debug');
     routes.set(
       '/kv-store/get/key-parameter-containing-special-characters',
       async () => {
-        const specialCharacters = ['[', ']', '*', '?', '#'];
+        const specialCharacters = [';', '^', '|', '#', '?'];
         for (const character of specialCharacters) {
           await assertRejects(
             async () => {
