@@ -214,7 +214,6 @@
     "features": ["http-cache"]
   },
   "GET /http-cache/body-transform": {
-    "skip": true,
     "environments": ["compute"],
     "features": ["http-cache"]
   },
@@ -395,5 +394,17 @@
   "GET /kv-store-entry/json/invalid": { "flake": true },
   "GET /kv-store-entry/arrayBuffer/valid": { "flake": true },
   "GET /kv-store-entry/body": { "flake": true },
-  "GET /kv-store-entry/bodyUsed": { "flake": true }
+  "GET /kv-store-entry/bodyUsed": { "flake": true },
+  "GET /transform-stream/identity": {
+    "downstream_response": { "body": "hello" }
+  },
+  "GET /transform-stream/uppercase": {
+    "downstream_response": { "body": "HELLO" }
+  },
+  "GET /transform-stream/multi-stream-forwarding": {
+    "environments": ["viceroy"],
+    "downstream_response": {
+      "body": "This sentence will be streamed in chunks."
+    }
+  }
 }

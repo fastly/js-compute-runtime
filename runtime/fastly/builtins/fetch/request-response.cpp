@@ -94,7 +94,7 @@ bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObj
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
 
 bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::HandleObject context,
-                       JS::HandleObject promise) {
+                       JS::HandleValue promise) {
   MOZ_ASSERT(context);
   JS::RootedObject streamSource(cx, context);
   MOZ_ASSERT(NativeStreamSource::is_instance(streamSource));
@@ -144,18 +144,33 @@ bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::Han
 struct ReadResult {
   JS::UniqueChars buffer;
   size_t length;
+  bool end_of_stream;
 };
 
 // Returns a UniqueChars and the length of that string. The UniqueChars value is not
 // null-terminated.
-ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
+template <bool read_async> ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
   std::vector<host_api::HostString> chunks;
   size_t bytes_read = 0;
+  bool end_of_stream = true;
   while (true) {
+    DEBUG_LOG("read from handle all loop")
+    if (read_async) {
+      auto ready_res = body.is_ready();
+      if (auto *err = ready_res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        return {nullptr, 0, true};
+      }
+      if (!ready_res.unwrap()) {
+        DEBUG_LOG("async break")
+        end_of_stream = false;
+        break;
+      }
+    }
     auto res = body.read(HANDLE_READ_CHUNK_SIZE);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
-      return {nullptr, 0};
+      return {nullptr, 0, true};
     }
 
     auto &chunk = res.unwrap();
@@ -168,7 +183,9 @@ ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
   }
 
   JS::UniqueChars buf;
-  if (chunks.size() == 1) {
+  if (chunks.size() == 0) {
+    return {nullptr, 0, end_of_stream};
+  } else if (chunks.size() == 1) {
     // If there was only one chunk read, reuse that allocation.
     auto &chunk = chunks.back();
     buf = std::move(chunk.ptr);
@@ -186,7 +203,7 @@ ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
     }
   }
 
-  return {std::move(buf), bytes_read};
+  return {std::move(buf), bytes_read, end_of_stream};
 }
 
 } // namespace
@@ -368,9 +385,10 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
       return RejectPromiseWithPendingError(cx, promise_obj);
     }
     if (!body_transform_val.isNullOrUndefined()) {
-      if (!body_transform_val.isObject() || !JS_ObjectIsFunction(&body_transform_val.toObject())) {
-        api::throw_error(cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
-                         "return a 'bodyTransform' property as a function");
+      if (!TransformStream::is_instance(body_transform_val)) {
+        api::throw_error(
+            cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
+            "return a 'bodyTransform' property that is an instance of a TransformStream");
         return RejectPromiseWithPendingError(cx, promise_obj);
       }
       JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::CacheBodyTransform),
@@ -436,15 +454,15 @@ bool after_send_catch(JSContext *cx, JS::HandleObject response, JS::HandleValue 
 
 bool RequestOrResponse::process_pending_request(JSContext *cx,
                                                 host_api::HttpPendingReq::Handle handle,
-                                                JS::HandleObject request,
-                                                JS::HandleObject promise) {
+                                                JS::HandleObject request, JS::HandleValue promise) {
   MOZ_ASSERT(Request::is_instance(request));
   host_api::HttpPendingReq pending(handle);
+  JS::RootedObject promise_obj(cx, &promise.toObject());
   auto res_res = pending.wait();
   if (auto *err = res_res.to_err()) {
     std::string message = std::move(err->message()).value_or("when attempting to fetch resource.");
     DOMException::raise(cx, message, "NetworkError");
-    return RejectPromiseWithPendingError(cx, promise);
+    return RejectPromiseWithPendingError(cx, promise_obj);
   }
 
   auto res = res_res.unwrap();
@@ -466,7 +484,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     }
 
     JS::RootedValue response_val(cx, JS::ObjectValue(*response));
-    return JS::ResolvePromise(cx, promise, response_val);
+    return JS::ResolvePromise(cx, promise_obj, response_val);
   }
 
   // after_send lifecycle implementation for a response generated from a request with a cache entry
@@ -474,7 +492,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   auto suggested_res = cache_entry.prepare_response_for_storage(res.resp);
   if (auto *err = suggested_res.to_err()) {
     HANDLE_ERROR(cx, *err);
-    return RejectPromiseWithPendingError(cx, promise);
+    return RejectPromiseWithPendingError(cx, promise_obj);
   }
 
   auto suggested = suggested_res.unwrap();
@@ -607,7 +625,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
 
     // now call after_send with the candidate_request, allowing any async work
     if (!JS::Call(cx, JS::NullHandleValue, after_send, args, &ret_val)) {
-      return RejectPromiseWithPendingError(cx, promise);
+      return RejectPromiseWithPendingError(cx, promise_obj);
     }
     after_send_promise = JS::RootedObject(cx, JS::CallOriginalPromiseResolve(cx, ret_val));
     if (!after_send_promise) {
@@ -618,14 +636,13 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     JS::ResolvePromise(cx, after_send_promise, JS::UndefinedHandleValue);
   }
   // when we resume, we pick up the transaction insert
-  JS::RootedValue promise_val(cx, JS::ObjectValue(*promise));
-  JS::RootedObject then_handler_obj(
-      cx, create_internal_method<after_send_then>(cx, response, promise_val));
+  JS::RootedObject then_handler_obj(cx,
+                                    create_internal_method<after_send_then>(cx, response, promise));
   if (!then_handler_obj) {
     return false;
   }
   JS::RootedObject catch_handler_obj(
-      cx, create_internal_method<after_send_catch>(cx, response, promise_val));
+      cx, create_internal_method<after_send_catch>(cx, response, promise));
   if (!catch_handler_obj) {
     return false;
   }
@@ -1361,13 +1378,46 @@ bool RequestOrResponse::consume_content_stream_for_bodyAll(JSContext *cx, JS::Ha
   return JS::AddPromiseReactions(cx, promise, then_handler, catch_handler);
 }
 
+bool async_process_body_handle_for_bodyAll(JSContext *cx, uint32_t handle, JS::HandleObject self,
+                                           JS::HandleValue body_parser) {
+  auto body = RequestOrResponse::body_handle(self);
+  auto *parse_body = reinterpret_cast<RequestOrResponse::ParseBodyCB *>(body_parser.toPrivate());
+  DEBUG_LOG("Consume read from handle all task")
+  auto [buf, bytes_read, end_of_stream] = read_from_handle_all<true>(cx, body);
+  DEBUG_LOG("Got handle all task")
+  if (!buf && end_of_stream) {
+    DEBUG_LOG("stream error")
+    JS::RootedObject result_promise(cx);
+    result_promise =
+        &JS::GetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyAllPromise))
+             .toObject();
+    JS::SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyAllPromise),
+                        JS::UndefinedValue());
+    return RejectPromiseWithPendingError(cx, result_promise);
+  }
+
+  if (end_of_stream) {
+    DEBUG_LOG("stream complete")
+    return parse_body(cx, self, std::move(buf), bytes_read);
+  }
+
+  // still have to wait for the stream to complete, queue an async task
+  DEBUG_LOG("Read from handle all async task")
+  ENGINE->queue_async_task(new FastlyAsyncTask(body.async_handle(), self, JS::UndefinedHandleValue,
+                                               async_process_body_handle_for_bodyAll));
+  return true;
+}
+
 bool RequestOrResponse::consume_body_handle_for_bodyAll(JSContext *cx, JS::HandleObject self,
                                                         JS::HandleValue body_parser,
                                                         JS::CallArgs args) {
   auto body = body_handle(self);
   auto *parse_body = reinterpret_cast<ParseBodyCB *>(body_parser.toPrivate());
-  auto [buf, bytes_read] = read_from_handle_all(cx, body);
-  if (!buf) {
+  DEBUG_LOG("Consume read from handle all")
+  auto [buf, bytes_read, end_of_stream] = read_from_handle_all<true>(cx, body);
+  DEBUG_LOG("Got handle all")
+  if (!buf && end_of_stream) {
+    DEBUG_LOG("stream error")
     JS::RootedObject result_promise(cx);
     result_promise =
         &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise)).toObject();
@@ -1375,7 +1425,16 @@ bool RequestOrResponse::consume_body_handle_for_bodyAll(JSContext *cx, JS::Handl
     return RejectPromiseWithPendingError(cx, result_promise);
   }
 
-  return parse_body(cx, self, std::move(buf), bytes_read);
+  if (end_of_stream) {
+    DEBUG_LOG("stream complete")
+    return parse_body(cx, self, std::move(buf), bytes_read);
+  }
+
+  // still have to wait for the stream to complete, queue an async task
+  DEBUG_LOG("Read from handle all async")
+  ENGINE->queue_async_task(new FastlyAsyncTask(body.async_handle(), self, body_parser,
+                                               async_process_body_handle_for_bodyAll));
+  return true;
 }
 
 template <RequestOrResponse::BodyReadResult result_type>
@@ -1439,6 +1498,7 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
                                                    JS::HandleObject source,
                                                    JS::HandleObject body_owner,
                                                    JS::HandleObject controller) {
+  DEBUG_LOG("body source pull algorithm")
   // If the stream has been piped to a TransformStream whose readable end was
   // then passed to a Request or Response as the body, we can just append the
   // entire source body to the destination using a single native hostcall, and
@@ -1479,7 +1539,8 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
   JS::RootedObject owner(cx, NativeStreamSource::owner(self));
 
   ENGINE->queue_async_task(new FastlyAsyncTask(RequestOrResponse::body_handle(owner).async_handle(),
-                                               source, nullptr, process_body_read));
+                                               source, JS::UndefinedHandleValue,
+                                               process_body_read));
 
   args.rval().setUndefined();
   return true;
@@ -1527,7 +1588,7 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     }
 
     if (Request::is_instance(body_owner)) {
-      JS::RootedObject promise(cx, Request::response_promise(body_owner));
+      JS::RootedValue promise(cx, JS::ObjectValue(*Request::response_promise(body_owner)));
       ENGINE->queue_async_task(
           new FastlyAsyncTask(Request::pending_handle(body_owner).async_handle(), body_owner,
                               promise, process_pending_request));

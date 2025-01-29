@@ -36,10 +36,11 @@ static void log_hostcall(const char *func_name, ...) {
 }
 #define TRACE_CALL() log_hostcall(__func__);
 #define TRACE_CALL_ARGS(...) log_hostcall(__func__, __VA_ARGS__, nullptr);
+#define TRACE_CALL_RET(...) log_hostcall(__func__, std::string_view("-> "), __VA_ARGS__, nullptr);
 #define TSV(s) std::string_view(s)
 #else
 #define TRACE_CALL()
-#define TRACE_CALL_ARGS(...)
+#define TRACE_CALL_ARGS(...))
 #endif
 
 #define NEVER_HANDLE 0xFFFFFFFD
@@ -889,6 +890,7 @@ Result<HttpBody> HttpBody::make() {
   if (!convert_result(fastly::body_new(&handle), &err)) {
     res.emplace_err(err);
   } else {
+    TRACE_CALL_RET(TSV(std::to_string(handle)))
     res.emplace(handle);
   }
 
@@ -896,7 +898,8 @@ Result<HttpBody> HttpBody::make() {
 }
 
 Result<HostString> HttpBody::read(uint32_t chunk_size) const {
-  TRACE_CALL()
+  auto handle = std::to_string(reinterpret_cast<uint32_t>(this->handle));
+  TRACE_CALL_ARGS(TSV(handle))
   Result<HostString> res;
 
   fastly::fastly_world_list_u8 ret;
@@ -1071,8 +1074,20 @@ FastlyAsyncTask::Handle HttpBody::async_handle() const {
   return FastlyAsyncTask::Handle{this->handle};
 }
 
+Result<bool> HttpBody::is_ready() const {
+  Result<bool> res;
+  uint32_t is_ready;
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::async_is_ready(this->handle, &is_ready), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(is_ready);
+  }
+  return res;
+}
+
 FastlyResult<Response, FastlySendError> HttpPendingReq::wait() {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(this->handle)))
   FastlyResult<Response, FastlySendError> res;
 
   fastly::fastly_host_http_send_error_detail s;
@@ -1153,6 +1168,7 @@ Result<HttpReq> HttpReq::make() {
   if (!convert_result(fastly::req_new(&handle), &err)) {
     res.emplace_err(err);
   } else {
+    TRACE_CALL_RET(TSV(std::to_string(handle)))
     res.emplace(handle);
   }
 
@@ -1361,7 +1377,8 @@ Result<HttpPendingReq> HttpReq::send_async_streaming(HttpBody body, std::string_
 
 Result<HttpPendingReq> HttpReq::send_async_without_caching(HttpBody body, std::string_view backend,
                                                            bool streaming) {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(body.handle)),
+                  streaming ? TSV("streaming") : TSV("not streaming"))
   Result<HttpPendingReq> res;
 
   fastly::fastly_host_error err;
@@ -1394,7 +1411,7 @@ Result<Void> HttpReq::set_method(std::string_view method) {
 }
 
 Result<HostString> HttpReq::get_method() const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(handle)))
   Result<HostString> res;
 
   fastly::fastly_host_error err;
@@ -1414,7 +1431,7 @@ Result<HostString> HttpReq::get_method() const {
 }
 
 Result<Void> HttpReq::set_uri(std::string_view str) {
-  TRACE_CALL_ARGS(std::string_view(std::to_string(this->handle)), str)
+  TRACE_CALL_ARGS(TSV(std::to_string(this->handle)), TSV(str))
   Result<Void> res;
 
   fastly::fastly_host_error err;
@@ -1430,7 +1447,7 @@ Result<Void> HttpReq::set_uri(std::string_view str) {
 }
 
 Result<HostString> HttpReq::get_uri() const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(handle)))
   Result<HostString> res;
 
   fastly::fastly_host_error err;
@@ -1696,7 +1713,7 @@ HttpHeadersReadOnly *HttpReq::headers() {
 HttpHeaders *HttpReq::headers_writable() { return headers()->clone(); }
 
 Result<HttpResp> HttpResp::make() {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV("http_resp"))
   Result<HttpResp> res;
 
   HttpResp::Handle handle;
@@ -1704,6 +1721,7 @@ Result<HttpResp> HttpResp::make() {
   if (!convert_result(fastly::resp_new(&handle), &err)) {
     res.emplace_err(err);
   } else {
+    TRACE_CALL_RET(TSV(std::to_string(handle)))
     res.emplace(handle);
   }
 
@@ -1711,7 +1729,7 @@ Result<HttpResp> HttpResp::make() {
 }
 
 Result<uint16_t> HttpResp::get_status() const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(this->handle)))
   Result<uint16_t> res;
 
   uint16_t ret;
@@ -1740,7 +1758,8 @@ Result<Void> HttpResp::set_status(uint16_t status) {
 }
 
 Result<Void> HttpResp::send_downstream(HttpBody body, bool streaming) {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(body.handle)),
+                  streaming ? TSV("streaming") : TSV("not streaming"))
   Result<Void> res;
 
   fastly::fastly_host_error err;
@@ -2004,7 +2023,7 @@ from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &f
 
 // HttpReq cache-related method implementations
 Result<bool> HttpReq::is_cacheable() const {
-  TRACE_CALL_ARGS(std::string_view(std::to_string(this->handle)))
+  TRACE_CALL_ARGS(TSV(std::to_string(this->handle)))
   uint32_t is_cacheable_out;
   auto res = fastly::http_cache_is_request_cacheable(this->handle, &is_cacheable_out);
   if (res != 0) {
@@ -2059,7 +2078,7 @@ Result<HttpCacheEntry> HttpCacheEntry::lookup(const HttpReq &req, std::span<uint
 
 Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
                                                           std::span<uint8_t> override_key) {
-  TRACE_CALL_ARGS(std::string_view(std::to_string(req.handle)))
+  TRACE_CALL_ARGS(TSV(std::to_string(req.handle)))
   uint32_t handle_out;
   fastly::fastly_http_cache_lookup_options opts{};
   uint32_t opts_mask = 0;
@@ -2099,7 +2118,7 @@ Result<HttpBody> HttpCacheEntry::transaction_insert(const HttpResp &resp,
 Result<std::tuple<HttpBody, HttpCacheEntry>>
 HttpCacheEntry::transaction_insert_and_stream_back(const HttpResp &resp,
                                                    const HttpCacheWriteOptions *opts) {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(this->handle)), TSV(std::to_string(resp.handle)))
   uint32_t body_handle_out;
   uint32_t cache_handle_out;
   auto owned_opts = to_fastly_cache_write_options(opts);
@@ -2110,6 +2129,7 @@ HttpCacheEntry::transaction_insert_and_stream_back(const HttpResp &resp,
     return Result<std::tuple<HttpBody, HttpCacheEntry>>::err(host_api::APIError(res));
   }
 
+  TRACE_CALL_RET(TSV(std::to_string(body_handle_out)), TSV(std::to_string(cache_handle_out)))
   return Result<std::tuple<HttpBody, HttpCacheEntry>>::ok(
       std::make_tuple(HttpBody(body_handle_out), HttpCacheEntry(cache_handle_out)));
 }
@@ -2187,7 +2207,7 @@ Result<Void> HttpCacheEntry::close() {
 }
 
 Result<HttpReq> HttpCacheEntry::get_suggested_backend_request() const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(this->handle)))
   uint32_t req_handle_out;
   auto res = fastly::http_cache_get_suggested_backend_request(this->handle, &req_handle_out);
 
@@ -2200,7 +2220,7 @@ Result<HttpReq> HttpCacheEntry::get_suggested_backend_request() const {
 
 Result<HttpCacheWriteOptions *>
 HttpCacheEntry::get_suggested_cache_options(const HttpResp &resp) const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(this->handle)), TSV(std::to_string(resp.handle)))
   const uint32_t options_mask = FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_VARY_RULE |
                                 FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_INITIAL_AGE_NS |
                                 FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS |
@@ -2245,7 +2265,7 @@ HttpCacheEntry::get_suggested_cache_options(const HttpResp &resp) const {
 
 Result<std::tuple<HttpStorageAction, HttpResp>>
 HttpCacheEntry::prepare_response_for_storage(HttpResp resp) const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(this->handle)), TSV(std::to_string(resp.handle)))
   alignas(4) HttpStorageAction storage_action_out;
   uint32_t updated_resp_handle_out;
 
@@ -2263,7 +2283,7 @@ HttpCacheEntry::prepare_response_for_storage(HttpResp resp) const {
 
 Result<std::optional<Response>>
 HttpCacheEntry::get_found_response(bool transform_for_client) const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(this->handle)))
   uint32_t resp_handle_out;
   uint32_t body_handle_out;
 
@@ -2277,12 +2297,13 @@ HttpCacheEntry::get_found_response(bool transform_for_client) const {
     return Result<std::optional<Response>>::err(host_api::APIError(res));
   }
 
+  TRACE_CALL_RET(TSV(std::to_string(resp_handle_out)), TSV(std::to_string(body_handle_out)))
   return Result<std::optional<Response>>::ok(
       Response(HttpResp(resp_handle_out), HttpBody(body_handle_out)));
 }
 
 Result<CacheState> HttpCacheEntry::get_state() const {
-  TRACE_CALL_ARGS(std::string_view(std::to_string(this->handle)))
+  TRACE_CALL_ARGS(TSV(std::to_string(this->handle)))
   Result<CacheState> res;
 
   fastly::fastly_host_error err;
@@ -3137,7 +3158,7 @@ Result<Void> CacheHandle::transaction_update(const CacheWriteOptions &os) {
 
 Result<std::tuple<HttpBody, CacheHandle>>
 CacheHandle::transaction_insert_and_stream_back(const CacheWriteOptions &os) {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(this->handle)))
   Result<std::tuple<HttpBody, CacheHandle>> res;
 
   fastly::fastly_host_cache_write_options options;

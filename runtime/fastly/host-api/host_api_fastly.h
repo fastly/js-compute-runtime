@@ -22,12 +22,12 @@
 
 struct JSErrorFormatString;
 
-void fastly_push_debug_message(std::string_view msg);
+void fastly_push_debug_message(std::string msg);
 
 // Debug mode debugging logging that logs both into an error response post-data
 // via fastly.debugMessages, as well as to stderr for flexible debugging.
 #if defined(DEBUG)
-#define DEBUG_LOG(msg) fastly_push_debug_message(msg);
+#define DEBUG_LOG(msg) fastly_push_debug_message(std::string(msg));
 #else
 #define DEBUG_LOG(msg)
 #endif
@@ -98,7 +98,7 @@ public:
 };
 
 typedef bool ProcessAsyncTask(JSContext *cx, uint32_t handle, JS::HandleObject context,
-                              JS::HandleObject promise);
+                              JS::HandleValue extra);
 
 class FastlyAsyncTask final : public AsyncTask {
 public:
@@ -106,21 +106,21 @@ public:
 
   static constexpr Handle invalid = UINT32_MAX - 1;
 
-  FastlyAsyncTask(Handle handle, JS::HandleObject context, JS::HandleObject promise,
+  FastlyAsyncTask(Handle handle, JS::HandleObject context, JS::HandleValue extra,
                   ProcessAsyncTask *process) {
     if (static_cast<int32_t>(handle) == INVALID_POLLABLE_HANDLE)
       abort();
     handle_ = static_cast<int32_t>(handle);
     context_ = Heap<JSObject *>(context);
-    promise_ = Heap<JSObject *>(promise);
+    extra_ = Heap<JS::Value>(extra);
     process_steps_ = process;
   }
 
   [[nodiscard]] bool run(Engine *engine) override {
     if (process_steps_) {
-      RootedObject promise(engine->cx(), promise_);
       RootedObject context(engine->cx(), context_);
-      if (!process_steps_(engine->cx(), handle_, context, promise)) {
+      RootedValue extra(engine->cx(), extra_);
+      if (!process_steps_(engine->cx(), handle_, context, extra)) {
         return false;
       }
     }
@@ -136,11 +136,11 @@ public:
 
   void trace(JSTracer *trc) override {
     TraceEdge(trc, &context_, "Async task context");
-    TraceEdge(trc, &promise_, "Async task promise");
+    TraceEdge(trc, &extra_, "Async task extra");
   }
 
   Heap<JSObject *> context_;
-  Heap<JSObject *> promise_;
+  Heap<JS::Value> extra_;
   ProcessAsyncTask *process_steps_ = nullptr;
 };
 
@@ -323,6 +323,8 @@ public:
   Result<std::optional<uint64_t>> known_length() const;
 
   FastlyAsyncTask::Handle async_handle() const;
+
+  Result<bool> is_ready() const;
 };
 
 struct Response;

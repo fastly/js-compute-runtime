@@ -56,7 +56,10 @@ export async function compareDownstreamResponse(
   actualBodyChunks,
 ) {
   // Status
-  if (configResponse.status != actualResponse.statusCode) {
+  if (
+    configResponse.status !== undefined &&
+    configResponse.status != actualResponse.statusCode
+  ) {
     throw new Error(
       `[DownstreamResponse: Status mismatch] Expected: ${configResponse.status} - Got: ${actualResponse.statusCode}\n${actualBodyChunks.length ? `\n"${bufferToString(actualBodyChunks)}"` : ''}`,
     );

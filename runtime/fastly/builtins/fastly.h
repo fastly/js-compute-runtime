@@ -73,6 +73,6 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
 
 } // namespace fastly::fastly
 
-void fastly_push_debug_message(std::string_view msg);
+void fastly_push_debug_message(std::string msg);
 
 #endif

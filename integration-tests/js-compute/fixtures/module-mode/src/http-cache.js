@@ -572,9 +572,11 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
         // Create a transform that uppercases the response
         const transformer = new TransformStream({
           transform(chunk, controller) {
+            console.debug('transform', chunk.byteLength);
             const text = new TextDecoder().decode(chunk);
             const upperText = text.toUpperCase();
             const upperChunk = new TextEncoder().encode(upperText);
+            console.debug('enqueue', upperChunk.byteLength);
             controller.enqueue(upperChunk);
           },
         });

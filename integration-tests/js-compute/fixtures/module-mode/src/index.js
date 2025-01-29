@@ -11,9 +11,11 @@ import './hello-world.js';
 import './hono.js';
 import './http-cache.js';
 import './kv-store.js';
+import './transform-stream.js';
 
 addEventListener('fetch', (event) => {
-  event.respondWith(app(event));
+  const responsePromise = app(event);
+  if (responsePromise) event.respondWith(responsePromise);
 });
 
 if (env('FASTLY_DEBUG_LOGGING') === '1') {
@@ -40,7 +42,10 @@ async function app(event) {
   try {
     const routeHandler = routes.get(path);
     if (routeHandler) {
-      res = (await routeHandler(event)) || new Response('ok');
+      res = await routeHandler(event);
+      if (res !== null) {
+        res = res || new Response('ok');
+      }
     } else {
       return (res = new Response(`${path} endpoint does not exist`, {
         status: 500,

@@ -1,7 +1,9 @@
 #include "fetch.h"
 #include "../../../StarlingMonkey/builtins/web/fetch/headers.h"
+#include "../../../StarlingMonkey/builtins/web/streams/native-stream-sink.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../backend.h"
+#include "../body.h"
 #include "../cache-override.h"
 #include "../fastly.h"
 #include "../fetch-event.h"
@@ -10,9 +12,11 @@
 #include "encode.h"
 #include "extension-api.h"
 
+using builtins::web::streams::NativeStreamSink;
 using builtins::web::streams::NativeStreamSource;
 using fastly::FastlyGetErrorMessage;
 using fastly::backend::Backend;
+using fastly::body::FastlyBody;
 using fastly::cache_override::CacheOverride;
 using fastly::fastly::Fastly;
 using fastly::fetch::ENGINE;
@@ -40,7 +44,7 @@ public:
     JSContext *cx = engine->cx();
 
     const RootedObject request(cx, request_);
-    const RootedObject promise(cx, promise_);
+    const RootedValue promise(cx, JS::ObjectValue(*promise_));
 
     return RequestOrResponse::process_pending_request(cx, handle_, request, promise);
   }
@@ -437,52 +441,87 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
   return JS::AddPromiseReactions(cx, before_send_promise, then_handler_obj, catch_handler_obj);
 }
 
+bool body_sink_write_algorithm(JSContext *cx, JS::CallArgs args, JS::HandleObject stream,
+                               JS::HandleObject owner, JS::HandleValue chunk) {
+  DEBUG_LOG("WRITE ALGORITHM")
+  return true;
+}
+bool body_sink_abort_algorithm(JSContext *cx, JS::CallArgs args, JS::HandleObject stream,
+                               JS::HandleObject owner, JS::HandleValue reason) {
+  DEBUG_LOG("ABORT ALGORITHM")
+  return true;
+}
+bool body_sink_close_algorithm(JSContext *cx, JS::CallArgs args, JS::HandleObject stream,
+                               JS::HandleObject owner) {
+  DEBUG_LOG("CLOSE ALGORITHM")
+  return true;
+}
+
 template <InternalMethod then_or_catch_handler>
 bool apply_transform_stream(JSContext *cx, JS::HandleObject response,
                             host_api::HttpBody into_body) {
-  // Create the stream source from the response body
-  JS::RootedObject source(
-      cx, NativeStreamSource::create(cx, response, JS::UndefinedHandleValue,
-                                     RequestOrResponse::body_source_pull_algorithm,
-                                     RequestOrResponse::body_source_cancel_algorithm));
-  if (!source) {
+  DEBUG_LOG("Apply transform stream")
+  // Create the stream source from the response body (in turn queues the stream task)
+  JS::RootedObject body_stream_in(cx, RequestOrResponse::create_body_stream(cx, response));
+  if (!body_stream_in) {
     return false;
   }
 
-  JS::RootedObject body_stream(cx, NativeStreamSource::stream(source));
-  if (!body_stream) {
+  // Pipe the stream source through the transform stream
+  JSObject *transform_stream =
+      &JS::GetReservedSlot(response, static_cast<uint32_t>(Response::Slots::CacheBodyTransform))
+           .toObject();
+  JS::RootedValueArray<1> pipeThroughArgs(cx);
+  pipeThroughArgs[0].setObject(*transform_stream);
+  JS::RootedValue transform_readable_out(cx);
+  DEBUG_LOG("calling pipe through")
+  if (!JS::Call(cx, body_stream_in, "pipeThrough", pipeThroughArgs, &transform_readable_out)) {
+    DEBUG_LOG("pipe through ERR")
     return false;
   }
+  DEBUG_LOG("pipe through OK")
 
-  // Create the transform stream, and extract its readable and writable end objects
-  JS::RootedValue transform_stream(
-      cx,
-      JS::GetReservedSlot(response, static_cast<uint32_t>(Response::Slots::CacheBodyTransform)));
-
-  JS::RootedObject transform_instance(cx);
-  if (!JS::Construct(cx, transform_stream, JS::RootedValueArray<0>(cx), &transform_instance)) {
+  // Pipe the readable end of the transform stream into the into_body, with the completion handler
+  // on error or success
+  JS::RootedObject fastly_body(
+      cx, FastlyBody::create(cx, reinterpret_cast<uint32_t>(into_body.handle)));
+  if (!fastly_body) {
     return false;
   }
-
-  JS::RootedValue transform_readable(cx);
-  if (!JS_GetProperty(cx, transform_instance, "readable", &transform_readable)) {
+  DEBUG_LOG("created body, creating sink")
+  JS::RootedObject sink(cx, NativeStreamSink::create(cx, fastly_body, JS::UndefinedHandleValue,
+                                                     body_sink_write_algorithm,
+                                                     body_sink_close_algorithm,
+                                                     body_sink_abort_algorithm));
+  if (!sink) {
     return false;
   }
-
-  JS::RootedValue transform_writable(cx);
-  if (!JS_GetProperty(cx, transform_instance, "writable", &transform_writable)) {
+  JS::RootedObject transform_readable_obj(cx, &transform_readable_out.toObject());
+  JS::RootedValueArray<1> pipeToArgs(cx);
+  pipeToArgs[0].setObject(*sink);
+  JS::RootedValue pipe_promise(cx);
+  DEBUG_LOG("calling pipeTo")
+  if (!JS::Call(cx, transform_readable_obj, "pipeTo", pipeToArgs, &pipe_promise)) {
+    DEBUG_LOG("pipe to ERR")
     return false;
   }
+  DEBUG_LOG("pipe to OK")
+  JS::RootedObject pipe_promise_obj(cx, &pipe_promise.toObject());
 
-  // Pipe the readable end into the into_body, with the completion handler on error or success
-  // TODO
+  if (then_or_catch_handler != nullptr) {
+    DEBUG_LOG("adding then or catch")
+    JS::RootedObject then_or_catch_handler_obj(
+        cx, create_internal_method<then_or_catch_handler>(cx, response));
+    if (!then_or_catch_handler_obj) {
+      return false;
+    }
+    if (!JS::AddPromiseReactions(cx, pipe_promise_obj, then_or_catch_handler_obj,
+                                 then_or_catch_handler_obj)) {
+      return false;
+    }
+  }
 
-  // Pipe the body stream into the writable end of the transform stream
-  JS::RootedValueArray<1> args(cx);
-  args[0].set(transform_writable);
-  JS::RootedValue pipe_ret(cx);
-  JS::RootedObject transform_readable_obj(cx, &transform_readable.toObject());
-  return JS::Call(cx, transform_readable_obj, "pipeTo", args, &pipe_ret);
+  return true;
 }
 
 bool background_cleanup_handler(JSContext *cx, JS::HandleObject request,

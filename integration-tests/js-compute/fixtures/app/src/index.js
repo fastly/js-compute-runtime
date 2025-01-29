@@ -45,7 +45,6 @@ import './secret-store.js';
 import './server.js';
 import './tee.js';
 import './timers.js';
-import './transform-stream.js';
 import './urlsearchparams.js';
 
 addEventListener('fetch', (event) => {
