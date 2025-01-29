@@ -40,7 +40,8 @@ static void log_hostcall(const char *func_name, ...) {
 #define TSV(s) std::string_view(s)
 #else
 #define TRACE_CALL()
-#define TRACE_CALL_ARGS(...))
+#define TRACE_CALL_ARGS(...)
+#define TRACE_CALL_RET(...)
 #endif
 
 #define NEVER_HANDLE 0xFFFFFFFD
