@@ -636,7 +636,7 @@ declare class KVStore {
    * @param key The key to retrieve from within the KV Store. A key cannot:
    * - Be any of the strings "", ".", or ".."
    * - Start with the string ".well-known/acme-challenge/""
-   * - Contain any of the characters "#?*[]\n\r"
+   * - Contain any of the characters "#;?^|\n\r"
    * - Be longer than 1024 characters
    */
   get(key: string): Promise<KVStoreEntry | null>;
@@ -650,7 +650,7 @@ declare class KVStore {
    * @param key The key to associate with the value. A key cannot:
    * - Be any of the strings "", ".", or ".."
    * - Start with the string ".well-known/acme-challenge/""
-   * - Contain any of the characters "#?*[]\n\r"
+   * - Contain any of the characters "#;?^|\n\r"
    * - Be longer than 1024 characters
    * @param value The value to store within the KV Store.
    */
