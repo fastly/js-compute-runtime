@@ -373,7 +373,7 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
       JS::SetReservedSlot(
           response, static_cast<uint32_t>(Response::Slots::StorageAction),
           JS::Int32Value(static_cast<uint32_t>(host_api::HttpStorageAction::RecordUncacheable)));
-    } else {
+    } else if (!cache_val.isUndefined()) {
       api::throw_error(cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
                        "return a 'cache' property as either a string or boolean");
       return RejectPromiseWithPendingError(cx, promise_obj);
@@ -384,7 +384,7 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
     if (!JS_GetProperty(cx, after_send_obj, "bodyTransform", &body_transform_val)) {
       return RejectPromiseWithPendingError(cx, promise_obj);
     }
-    if (!body_transform_val.isNullOrUndefined()) {
+    if (!body_transform_val.isUndefined()) {
       if (!TransformStream::is_instance(body_transform_val)) {
         api::throw_error(
             cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
