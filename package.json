@@ -33,7 +33,7 @@
     "test:wpt": "tests/wpt-harness/build-wpt-runtime.sh && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:wpt:debug": "tests/wpt-harness/build-wpt-runtime.sh --debug-build && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:types": "tsd",
-    "build": "./runtime/fastly/build-release.sh",
+    "build:release": "./runtime/fastly/build-release.sh",
     "build:debug": "./runtime/fastly/build-debug.sh",
     "build:weval": "./runtime/fastly/build-release-weval.sh",
     "build:debug:info": "./runtime/fastly/build-debug.sh --keep-debug-info",

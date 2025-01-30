@@ -205,7 +205,7 @@ jobs:
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
     - name: Build
       if: matrix.profile == 'release'
-      run: npm run build
+      run: npm run build:release
     - name: Build
       if: matrix.profile == 'weval'
       run: npm run build:weval
