@@ -95,6 +95,23 @@ bool Fastly::enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool debugLog(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, __func__, 1))
+    return false;
+  JS::RootedString msg_str(cx, JS::ToString(cx, args[0]));
+  if (!msg_str) {
+    return false;
+  }
+  auto msg_host_str = core::encode(cx, msg_str);
+  if (!msg_host_str) {
+    return false;
+  }
+  debug_messages.push_back(std::string(msg_host_str));
+  args.rval().setUndefined();
+  return true;
+}
+
 bool Fastly::getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   REQUEST_HANDLER_ONLY("fastly.getGeolocationForIpAddress");
@@ -523,6 +540,7 @@ bool install(api::Engine *engine) {
   const JSFunctionSpec methods[] = {
       JS_FN("dump", Fastly::dump, 1, 0),
       JS_FN("enableDebugLogging", Fastly::enableDebugLogging, 1, JSPROP_ENUMERATE),
+      JS_FN("debugLog", debugLog, 1, JSPROP_ENUMERATE),
       JS_FN("getGeolocationForIpAddress", Fastly::getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
       JS_FN("getLogger", Fastly::getLogger, 1, JSPROP_ENUMERATE),
       JS_FN("includeBytes", Fastly::includeBytes, 1, JSPROP_ENUMERATE),

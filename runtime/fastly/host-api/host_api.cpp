@@ -899,8 +899,7 @@ Result<HttpBody> HttpBody::make() {
 }
 
 Result<HostString> HttpBody::read(uint32_t chunk_size) const {
-  auto handle = std::to_string(reinterpret_cast<uint32_t>(this->handle));
-  TRACE_CALL_ARGS(TSV(handle))
+  TRACE_CALL_ARGS(TSV(std::to_string(handle)))
   Result<HostString> res;
 
   fastly::fastly_world_list_u8 ret;
@@ -912,6 +911,7 @@ Result<HostString> HttpBody::read(uint32_t chunk_size) const {
     cabi_free(ret.ptr);
     res.emplace_err(err);
   } else {
+    TRACE_CALL_RET(TSV(std::to_string(ret.len)))
     res.emplace(JS::UniqueChars(reinterpret_cast<char *>(ret.ptr)), ret.len);
   }
 

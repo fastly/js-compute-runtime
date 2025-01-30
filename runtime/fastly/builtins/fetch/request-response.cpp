@@ -141,36 +141,36 @@ bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::Han
   return true;
 }
 
+enum StreamState { Complete, Wait, Error };
+
 struct ReadResult {
   JS::UniqueChars buffer;
   size_t length;
-  bool end_of_stream;
+  StreamState state;
 };
 
 // Returns a UniqueChars and the length of that string. The UniqueChars value is not
 // null-terminated.
-template <bool read_async> ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
+ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
   std::vector<host_api::HostString> chunks;
   size_t bytes_read = 0;
   bool end_of_stream = true;
   while (true) {
     DEBUG_LOG("read from handle all loop")
-    if (read_async) {
-      auto ready_res = body.is_ready();
-      if (auto *err = ready_res.to_err()) {
-        HANDLE_ERROR(cx, *err);
-        return {nullptr, 0, true};
-      }
-      if (!ready_res.unwrap()) {
-        DEBUG_LOG("async break")
-        end_of_stream = false;
-        break;
-      }
+    auto ready_res = body.is_ready();
+    if (auto *err = ready_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return {nullptr, 0, StreamState::Error};
+    }
+    if (!ready_res.unwrap()) {
+      DEBUG_LOG("async break")
+      end_of_stream = false;
+      break;
     }
     auto res = body.read(HANDLE_READ_CHUNK_SIZE);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
-      return {nullptr, 0, true};
+      return {nullptr, 0, StreamState::Error};
     }
 
     auto &chunk = res.unwrap();
@@ -184,7 +184,7 @@ template <bool read_async> ReadResult read_from_handle_all(JSContext *cx, host_a
 
   JS::UniqueChars buf;
   if (chunks.size() == 0) {
-    return {nullptr, 0, end_of_stream};
+    return {nullptr, 0, end_of_stream ? StreamState::Complete : StreamState::Wait};
   } else if (chunks.size() == 1) {
     // If there was only one chunk read, reuse that allocation.
     auto &chunk = chunks.back();
@@ -194,7 +194,7 @@ template <bool read_async> ReadResult read_from_handle_all(JSContext *cx, host_a
     buf.reset(static_cast<char *>(JS_string_malloc(cx, bytes_read)));
     if (!buf) {
       JS_ReportOutOfMemory(cx);
-      return {nullptr, 0};
+      return {nullptr, 0, StreamState::Error};
     }
 
     char *end = buf.get();
@@ -203,7 +203,7 @@ template <bool read_async> ReadResult read_from_handle_all(JSContext *cx, host_a
     }
   }
 
-  return {std::move(buf), bytes_read, end_of_stream};
+  return {std::move(buf), bytes_read, end_of_stream ? StreamState::Complete : StreamState::Wait};
 }
 
 } // namespace
@@ -1383,9 +1383,9 @@ bool async_process_body_handle_for_bodyAll(JSContext *cx, uint32_t handle, JS::H
   auto body = RequestOrResponse::body_handle(self);
   auto *parse_body = reinterpret_cast<RequestOrResponse::ParseBodyCB *>(body_parser.toPrivate());
   DEBUG_LOG("Consume read from handle all task")
-  auto [buf, bytes_read, end_of_stream] = read_from_handle_all<true>(cx, body);
+  auto [buf, bytes_read, state] = read_from_handle_all(cx, body);
   DEBUG_LOG("Got handle all task")
-  if (!buf && end_of_stream) {
+  if (state == StreamState::Error) {
     DEBUG_LOG("stream error")
     JS::RootedObject result_promise(cx);
     result_promise =
@@ -1396,7 +1396,7 @@ bool async_process_body_handle_for_bodyAll(JSContext *cx, uint32_t handle, JS::H
     return RejectPromiseWithPendingError(cx, result_promise);
   }
 
-  if (end_of_stream) {
+  if (state == StreamState::Complete) {
     DEBUG_LOG("stream complete")
     return parse_body(cx, self, std::move(buf), bytes_read);
   }
@@ -1414,9 +1414,9 @@ bool RequestOrResponse::consume_body_handle_for_bodyAll(JSContext *cx, JS::Handl
   auto body = body_handle(self);
   auto *parse_body = reinterpret_cast<ParseBodyCB *>(body_parser.toPrivate());
   DEBUG_LOG("Consume read from handle all")
-  auto [buf, bytes_read, end_of_stream] = read_from_handle_all<true>(cx, body);
+  auto [buf, bytes_read, state] = read_from_handle_all(cx, body);
   DEBUG_LOG("Got handle all")
-  if (!buf && end_of_stream) {
+  if (state == StreamState::Error) {
     DEBUG_LOG("stream error")
     JS::RootedObject result_promise(cx);
     result_promise =
@@ -1425,7 +1425,7 @@ bool RequestOrResponse::consume_body_handle_for_bodyAll(JSContext *cx, JS::Handl
     return RejectPromiseWithPendingError(cx, result_promise);
   }
 
-  if (end_of_stream) {
+  if (state == StreamState::Complete) {
     DEBUG_LOG("stream complete")
     return parse_body(cx, self, std::move(buf), bytes_read);
   }

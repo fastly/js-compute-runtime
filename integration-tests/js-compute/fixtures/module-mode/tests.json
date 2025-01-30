@@ -214,7 +214,6 @@
     "features": ["http-cache"]
   },
   "GET /http-cache/body-transform": {
-    "skip": true,
     "environments": ["compute"],
     "features": ["http-cache"]
   },

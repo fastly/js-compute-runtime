@@ -461,25 +461,26 @@ template <InternalMethod then_or_catch_handler>
 bool apply_transform_stream(JSContext *cx, JS::HandleObject response,
                             host_api::HttpBody into_body) {
   DEBUG_LOG("Apply transform stream")
-  // Create the stream source from the response body (in turn queues the stream task)
+  // Create the stream source from the response body
   JS::RootedObject body_stream_in(cx, RequestOrResponse::create_body_stream(cx, response));
   if (!body_stream_in) {
     return false;
   }
 
-  // Pipe the stream source through the transform stream
-  JSObject *transform_stream =
-      &JS::GetReservedSlot(response, static_cast<uint32_t>(Response::Slots::CacheBodyTransform))
-           .toObject();
-  JS::RootedValueArray<1> pipeThroughArgs(cx);
-  pipeThroughArgs[0].setObject(*transform_stream);
-  JS::RootedValue transform_readable_out(cx);
-  DEBUG_LOG("calling pipe through")
-  if (!JS::Call(cx, body_stream_in, "pipeThrough", pipeThroughArgs, &transform_readable_out)) {
-    DEBUG_LOG("pipe through ERR")
+  // Create the transform stream, and extract its readable and writable end objects
+  JS::RootedValue transform_stream(
+      cx,
+      JS::GetReservedSlot(response, static_cast<uint32_t>(Response::Slots::CacheBodyTransform)));
+  JS::RootedObject transform_stream_obj(cx, &transform_stream.toObject());
+  JS::RootedValue transform_readable(cx);
+  if (!JS_GetProperty(cx, transform_stream_obj, "readable", &transform_readable)) {
     return false;
   }
-  DEBUG_LOG("pipe through OK")
+
+  JS::RootedValue transform_writable(cx);
+  if (!JS_GetProperty(cx, transform_stream_obj, "writable", &transform_writable)) {
+    return false;
+  }
 
   // Pipe the readable end of the transform stream into the into_body, with the completion handler
   // on error or success
@@ -496,7 +497,7 @@ bool apply_transform_stream(JSContext *cx, JS::HandleObject response,
   if (!sink) {
     return false;
   }
-  JS::RootedObject transform_readable_obj(cx, &transform_readable_out.toObject());
+  JS::RootedObject transform_readable_obj(cx, &transform_readable.toObject());
   JS::RootedValueArray<1> pipeToArgs(cx);
   pipeToArgs[0].setObject(*sink);
   JS::RootedValue pipe_promise(cx);
@@ -521,6 +522,18 @@ bool apply_transform_stream(JSContext *cx, JS::HandleObject response,
     }
   }
 
+  // Pipe the incoming body stream into the writable end of the transform stream
+  JS::RootedValueArray<1> args(cx);
+  args[0].set(transform_writable);
+  JS::RootedValue pipe_ret(cx);
+  if (!JS::Call(cx, body_stream_in, "pipeTo", args, &pipe_ret)) {
+    return false;
+  }
+
+  // We now add a task for the incoming handle
+  // ENGINE->queue_async_task(
+  //     new FastlyAsyncTask(RequestOrResponse::body_handle(response).async_handle(), nullptr,
+  //                         JS::UndefinedHandleValue, nullptr));
   return true;
 }
 

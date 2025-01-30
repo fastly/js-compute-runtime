@@ -22,7 +22,7 @@ if (env('FASTLY_DEBUG_LOGGING') === '1') {
   if (fastly.debugMessages) {
     const { debug: consoleDebug } = console;
     console.debug = function debug(...args) {
-      fastly.debugMessages.push(...args);
+      fastly.debugLog(...args);
       consoleDebug(...args);
     };
   }
