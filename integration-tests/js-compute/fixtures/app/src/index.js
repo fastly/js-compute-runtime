@@ -3,6 +3,7 @@
 
 import { routes } from './routes.js';
 import { env } from 'fastly:env';
+import { enableDebugLogging } from 'fastly:experimental';
 
 import './async-select.js';
 import './btoa.js';
@@ -14,7 +15,6 @@ import './cache-simple.js';
 import './client.js';
 import './compute.js';
 import './config-store.js';
-import './console.js';
 import './crypto.js';
 import './device.js';
 import './dictionary.js';
@@ -45,12 +45,22 @@ import './secret-store.js';
 import './server.js';
 import './tee.js';
 import './timers.js';
-import './transform-stream.js';
 import './urlsearchparams.js';
 
 addEventListener('fetch', (event) => {
   event.respondWith(app(event));
 });
+
+if (env('FASTLY_DEBUG_LOGGING') === '1') {
+  if (fastly.debugMessages) {
+    const { debug: consoleDebug } = console;
+    console.debug = function debug(...args) {
+      fastly.debugLog(...args);
+      consoleDebug(...args);
+    };
+  }
+  enableDebugLogging(true);
+}
 
 /**
  * @param {FetchEvent} event
@@ -83,7 +93,11 @@ async function app(event) {
         return (res = new Response(
           `The routeHandler for ${path} threw a [${error.constructor?.name ?? error.name}] error: ${error.message || error}` +
             '\n' +
-            error.stack,
+            error.stack +
+            (fastly.debugMessages
+              ? '\n[DEBUG BUILD MESSAGES]:\n\n  - ' +
+                fastly.debugMessages.join('\n  - ')
+              : ''),
           { status: 500 },
         ));
       } catch (errRes) {

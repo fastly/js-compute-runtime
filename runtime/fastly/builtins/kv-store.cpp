@@ -61,7 +61,7 @@ std::optional<char> find_invalid_character_for_kv_store_key(const char *str) {
 template <RequestOrResponse::BodyReadResult result_type>
 bool KVStoreEntry::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  return RequestOrResponse::bodyAll<result_type>(cx, args, self);
+  return RequestOrResponse::bodyAll<result_type, false>(cx, args, self);
 }
 
 bool KVStoreEntry::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -243,13 +243,14 @@ constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
 constexpr size_t HANDLE_READ_BUFFER_SIZE = 500000;
 
 bool process_pending_kv_store_list(JSContext *cx, host_api::KVStorePendingList::Handle handle,
-                                   JS::HandleObject context, JS::HandleObject promise) {
+                                   JS::HandleObject context, JS::HandleValue promise) {
   host_api::KVStorePendingList pending_list(handle);
+  JS::RootedObject promise_obj(cx, &promise.toObject());
 
   auto res = pending_list.wait();
   if (auto *err = res.to_err()) {
     HANDLE_KV_ERROR(cx, *err, JSMSG_KV_STORE_LIST_ERROR);
-    return RejectPromiseWithPendingError(cx, promise);
+    return RejectPromiseWithPendingError(cx, promise_obj);
   }
 
   size_t buf_len = 0;
@@ -259,7 +260,7 @@ bool process_pending_kv_store_list(JSContext *cx, host_api::KVStorePendingList::
         res.unwrap().read_into(reinterpret_cast<uint8_t *>(buf + buf_len), HANDLE_READ_CHUNK_SIZE);
     if (auto *err = chunk.to_err()) {
       HANDLE_ERROR(cx, *err);
-      return RejectPromiseWithPendingError(cx, promise);
+      return RejectPromiseWithPendingError(cx, promise_obj);
     }
     size_t len = chunk.unwrap();
     if (len == 0) {
@@ -269,84 +270,86 @@ bool process_pending_kv_store_list(JSContext *cx, host_api::KVStorePendingList::
     buf_len += len;
     if (buf_len > HANDLE_READ_BUFFER_SIZE) {
       JS_ReportErrorLatin1(cx, "Buffer error: Buffer too large.");
-      return RejectPromiseWithPendingError(cx, promise);
+      return RejectPromiseWithPendingError(cx, promise_obj);
     }
   } while (true);
   JS::RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf, buf_len)));
   if (!str) {
-    return RejectPromiseWithPendingError(cx, promise);
+    return RejectPromiseWithPendingError(cx, promise_obj);
   }
   JS::RootedValue str_val(cx, JS::StringValue(str));
   JS::RootedValue json(cx);
   if (!JS_ParseJSON(cx, str, &json)) {
-    return RejectPromiseWithPendingError(cx, promise);
+    return RejectPromiseWithPendingError(cx, promise_obj);
   }
   if (!json.isObject()) {
     JS_ReportErrorLatin1(cx, "Bad data.");
-    return RejectPromiseWithPendingError(cx, promise);
+    return RejectPromiseWithPendingError(cx, promise_obj);
   }
   JS::RootedValue list(cx);
   JS::RootedObject json_obj(cx, &json.toObject());
   if (!JS_GetProperty(cx, json_obj, "data", &list)) {
-    return RejectPromiseWithPendingError(cx, promise);
+    return RejectPromiseWithPendingError(cx, promise_obj);
   }
   JS::RootedValue meta(cx);
   if (!JS_GetProperty(cx, json_obj, "meta", &meta)) {
-    return RejectPromiseWithPendingError(cx, promise);
+    return RejectPromiseWithPendingError(cx, promise_obj);
   }
   JS::RootedObject meta_obj(cx, &meta.toObject());
   JS::RootedValue next_cursor(cx);
   if (!JS_GetProperty(cx, meta_obj, "next_cursor", &next_cursor)) {
-    return RejectPromiseWithPendingError(cx, promise);
+    return RejectPromiseWithPendingError(cx, promise_obj);
   }
   JS::RootedObject list_out(cx, JS_NewPlainObject(cx));
   JS_SetProperty(cx, list_out, "list", list);
   JS_SetProperty(cx, list_out, "cursor", next_cursor);
   JS::RootedValue list_out_val(cx, JS::ObjectValue(*list_out));
-  return JS::ResolvePromise(cx, promise, list_out_val);
+  return JS::ResolvePromise(cx, promise_obj, list_out_val);
 }
 
 bool process_pending_kv_store_delete(JSContext *cx, host_api::KVStorePendingDelete::Handle handle,
-                                     JS::HandleObject context, JS::HandleObject promise) {
+                                     JS::HandleObject context, JS::HandleValue promise) {
   host_api::KVStorePendingDelete pending_delete(handle);
+  JS::RootedObject promise_obj(cx, &promise.toObject());
 
   auto res = pending_delete.wait();
   if (auto *err = res.to_err()) {
     HANDLE_KV_ERROR(cx, *err, JSMSG_KV_STORE_DELETE_ERROR);
-    return RejectPromiseWithPendingError(cx, promise);
+    return RejectPromiseWithPendingError(cx, promise_obj);
   }
 
-  JS::ResolvePromise(cx, promise, JS::UndefinedHandleValue);
+  JS::ResolvePromise(cx, promise_obj, JS::UndefinedHandleValue);
   return true;
 }
 
 bool process_pending_kv_store_lookup(JSContext *cx, host_api::KVStorePendingLookup::Handle handle,
-                                     JS::HandleObject context, JS::HandleObject promise) {
+                                     JS::HandleObject context, JS::HandleValue promise) {
   host_api::KVStorePendingLookup pending_lookup(handle);
+  JS::RootedObject promise_obj(cx, &promise.toObject());
 
   auto res = pending_lookup.wait();
 
   if (auto *err = res.to_err()) {
     HANDLE_KV_ERROR(cx, *err, JSMSG_KV_STORE_LOOKUP_ERROR);
-    return RejectPromiseWithPendingError(cx, promise);
+    return RejectPromiseWithPendingError(cx, promise_obj);
   }
 
   // When no entry is found, we are going to resolve the Promise with `null`.
   if (!res.unwrap().has_value()) {
     JS::RootedValue result(cx);
     result.setNull();
-    JS::ResolvePromise(cx, promise, result);
+    JS::ResolvePromise(cx, promise_obj, result);
   } else {
     host_api::HttpBody body = std::get<0>(res.unwrap().value());
     host_api::HostBytes metadata = std::move(std::get<1>(res.unwrap().value()));
     // uint32_t gen = std::get<2>(res.unwrap());
     JS::RootedObject entry(cx, KVStoreEntry::create(cx, body, std::move(metadata)));
     if (!entry) {
-      return RejectPromiseWithPendingError(cx, promise);
+      return RejectPromiseWithPendingError(cx, promise_obj);
     }
     JS::RootedValue result(cx);
     result.setObject(*entry);
-    JS::ResolvePromise(cx, promise, result);
+    JS::ResolvePromise(cx, promise_obj, result);
   }
 
   return true;
@@ -382,8 +385,9 @@ bool KVStore::delete_(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto handle = res.unwrap();
 
+  JS::RootedValue result_promise_val(cx, JS::ObjectValue(*result_promise));
   ENGINE->queue_async_task(
-      new FastlyAsyncTask(handle, self, result_promise, process_pending_kv_store_delete));
+      new FastlyAsyncTask(handle, self, result_promise_val, process_pending_kv_store_delete));
 
   args.rval().setObject(*result_promise);
   return true;
@@ -417,7 +421,9 @@ bool KVStore::get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto handle = res.unwrap();
 
-  auto task = new FastlyAsyncTask(handle, self, result_promise, process_pending_kv_store_lookup);
+  JS::RootedValue result_promise_val(cx, JS::ObjectValue(*result_promise));
+  auto task =
+      new FastlyAsyncTask(handle, self, result_promise_val, process_pending_kv_store_lookup);
   ENGINE->queue_async_task(task);
 
   args.rval().setObject(*result_promise);
@@ -744,8 +750,9 @@ bool KVStore::list(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!result_promise) {
     return false;
   }
+  JS::RootedValue result_promise_val(cx, JS::ObjectValue(*result_promise));
 
-  auto task = new FastlyAsyncTask(handle, self, result_promise, process_pending_kv_store_list);
+  auto task = new FastlyAsyncTask(handle, self, result_promise_val, process_pending_kv_store_list);
   ENGINE->queue_async_task(task);
 
   args.rval().setObject(*result_promise);

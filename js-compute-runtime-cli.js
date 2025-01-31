@@ -8,6 +8,7 @@ import { addSdkMetadataField } from './src/addSdkMetadataField.js';
 const {
   enableAOT,
   aotCache,
+  enableHttpCache,
   enableExperimentalHighResolutionTimeMethods,
   moduleMode,
   bundle,
@@ -37,6 +38,7 @@ if (version) {
     input,
     output,
     wasmEngine,
+    enableHttpCache,
     enableExperimentalHighResolutionTimeMethods,
     enableAOT,
     aotCache,

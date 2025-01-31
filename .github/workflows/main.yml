@@ -21,7 +21,7 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: actions/setup-node@v3
       with:
         node-version: 'lts/*'
@@ -32,7 +32,7 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: actions/setup-node@v3
       with:
         node-version: 'lts/*'
@@ -68,7 +68,7 @@ jobs:
       SHELLCHECK_VERSION: v0.8.0
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: actions/cache@v3
       id: cache-shellcheck
       with:
@@ -98,7 +98,7 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: "Install wasi-sdk-20 (linux)"
       run: |
         set -x
@@ -133,7 +133,7 @@ jobs:
           node-version: 18
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
@@ -161,7 +161,7 @@ jobs:
     needs: [ensure-cargo-installs]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
     - name: Install Rust 1.77.1
@@ -190,7 +190,7 @@ jobs:
       matrix:
         profile: [release, weval]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
     - name: Install Rust 1.77.1
@@ -226,7 +226,7 @@ jobs:
     needs: [build-debug, ensure-cargo-installs]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
     - uses: actions/setup-node@v3
@@ -274,7 +274,7 @@ jobs:
     needs: [build, ensure-cargo-installs]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
     - uses: actions/setup-node@v3
@@ -329,10 +329,14 @@ jobs:
       matrix:
         platform: [viceroy, compute]
         profile: [release, weval]
+        features: [none, http-cache]
+        exclude:
+          - platform: viceroy
+            features: http-cache
     needs: [build, ensure-cargo-installs]
     steps:
     - name: Checkout fastly/js-compute-runtime
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: false
         ref: ${{ github.head_ref || github.ref_name }}
@@ -375,12 +379,12 @@ jobs:
       run: npm install && cd ./integration-tests/js-compute && npm install
 
     - name: Run Tests
-      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }}
+      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --ci --skip-teardown${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.profile == 'weval' && ' --aot' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
     - name: Run Module Mode Tests
-      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --module-mode ${{ matrix.platform == 'viceroy' && '--local' || '' }} ${{ matrix.profile == 'weval' && '--aot' || '' }}
+      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --ci --skip-setup --module-mode${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.profile == 'weval' && ' --aot' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  
 
@@ -393,10 +397,14 @@ jobs:
       fail-fast: false
       matrix:
         platform: [viceroy, compute]
+        features: [none, http-cache]
+        exclude:
+          - platform: viceroy
+            features: http-cache
     needs: [build-debug, ensure-cargo-installs]
     steps:
     - name: Checkout fastly/js-compute-runtime
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: false
         ref: ${{ github.head_ref || github.ref_name }}
@@ -438,11 +446,11 @@ jobs:
       run: npm install && cd ./integration-tests/js-compute && npm install
 
     - name: Run Tests
-      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --debug-build ${{ matrix.platform == 'viceroy' && '--local' || '' }}
+      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --skip-teardown --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
     - name: Run Module Mode Tests
-      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --module-mode --debug-build ${{ matrix.platform == 'viceroy' && '--local' || '' }}
+      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --skip-setup --module-mode --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  

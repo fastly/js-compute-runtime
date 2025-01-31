@@ -11,6 +11,9 @@
 
 namespace fastly::fastly {
 
+extern bool DEBUG_LOGGING_ENABLED;
+extern bool ENABLE_EXPERIMENTAL_HTTP_CACHE;
+
 class Env : public builtins::BuiltinNoConstructor<Env> {
 private:
   static bool env_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -61,6 +64,15 @@ public:
 JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
                                                                 JS::HandleValue bodyInit);
 
+/**
+ * Debug only logging system, adding messages to `fastly.debugMessages`
+ *
+ * This is useful for debugging compute, allowing messages to be inlined into the response in test
+ * case debugging, where other logging systems may introduce greater latency than this.
+ */
+
 } // namespace fastly::fastly
+
+void fastly_push_debug_message(std::string msg);
 
 #endif

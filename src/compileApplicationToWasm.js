@@ -25,6 +25,7 @@ export async function compileApplicationToWasm(
   input,
   output,
   wasmEngine,
+  enableHttpCache = false,
   enableExperimentalHighResolutionTimeMethods = false,
   enableAOT = false,
   aotCache = '',
@@ -120,20 +121,22 @@ export async function compileApplicationToWasm(
     input = outPath;
   }
 
+  const spawnOpts = {
+    stdio: [null, process.stdout, process.stderr],
+    input: maybeWindowsPath(input),
+    shell: true,
+    encoding: 'utf-8',
+    env: {
+      ...env,
+      ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
+        enableExperimentalHighResolutionTimeMethods ? '1' : '0',
+      ENABLE_EXPERIMENTAL_HTTP_CACHE: enableHttpCache ? '1' : '0',
+    },
+  };
+
   try {
     if (!doBundle) {
       // assert(moduleMode);
-      const spawnOpts = {
-        stdio: [null, process.stdout, process.stderr],
-        input: maybeWindowsPath(input),
-        shell: true,
-        encoding: 'utf-8',
-        env: {
-          ...env,
-          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
-            enableExperimentalHighResolutionTimeMethods ? '1' : '0',
-        },
-      };
       if (enableAOT) {
         const wevalBin = await weval();
 
@@ -160,6 +163,7 @@ export async function compileApplicationToWasm(
             '--allow-wasi',
             `--wasm-bulk-memory=true`,
             `--dir="${maybeWindowsPath(process.cwd())}"`,
+            '--inherit-env=true',
             '-r _start=wizer.resume',
             `-o="${output}"`,
             `"${wasmEngine}"`,
@@ -172,17 +176,7 @@ export async function compileApplicationToWasm(
         process.exitCode = wizerProcess.status;
       }
     } else {
-      const spawnOpts = {
-        stdio: [null, process.stdout, process.stderr],
-        input: `${maybeWindowsPath(input)}${moduleMode ? '' : ' --legacy-script'}`,
-        shell: true,
-        encoding: 'utf-8',
-        env: {
-          ...env,
-          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
-            enableExperimentalHighResolutionTimeMethods ? '1' : '0',
-        },
-      };
+      spawnOpts.input = `${maybeWindowsPath(input)}${moduleMode ? '' : ' --legacy-script'}`;
       if (enableAOT) {
         const wevalBin = await weval();
 

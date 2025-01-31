@@ -22,6 +22,16 @@
 
 struct JSErrorFormatString;
 
+void fastly_push_debug_message(std::string msg);
+
+// Debug mode debugging logging that logs both into an error response post-data
+// via fastly.debugMessages, as well as to stderr for flexible debugging.
+#if defined(DEBUG)
+#define DEBUG_LOG(msg) fastly_push_debug_message(std::string(msg));
+#else
+#define DEBUG_LOG(msg)
+#endif
+
 namespace fastly {
 
 const JSErrorFormatString *FastlyGetErrorMessage(void *userRef, unsigned errorNumber);
@@ -88,7 +98,7 @@ public:
 };
 
 typedef bool ProcessAsyncTask(JSContext *cx, uint32_t handle, JS::HandleObject context,
-                              JS::HandleObject promise);
+                              JS::HandleValue extra);
 
 class FastlyAsyncTask final : public AsyncTask {
 public:
@@ -96,21 +106,21 @@ public:
 
   static constexpr Handle invalid = UINT32_MAX - 1;
 
-  FastlyAsyncTask(Handle handle, JS::HandleObject context, JS::HandleObject promise,
+  FastlyAsyncTask(Handle handle, JS::HandleObject context, JS::HandleValue extra,
                   ProcessAsyncTask *process) {
     if (static_cast<int32_t>(handle) == INVALID_POLLABLE_HANDLE)
       abort();
     handle_ = static_cast<int32_t>(handle);
     context_ = Heap<JSObject *>(context);
-    promise_ = Heap<JSObject *>(promise);
+    extra_ = Heap<JS::Value>(extra);
     process_steps_ = process;
   }
 
   [[nodiscard]] bool run(Engine *engine) override {
     if (process_steps_) {
-      RootedObject promise(engine->cx(), promise_);
       RootedObject context(engine->cx(), context_);
-      if (!process_steps_(engine->cx(), handle_, context, promise)) {
+      RootedValue extra(engine->cx(), extra_);
+      if (!process_steps_(engine->cx(), handle_, context, extra)) {
         return false;
       }
     }
@@ -126,11 +136,11 @@ public:
 
   void trace(JSTracer *trc) override {
     TraceEdge(trc, &context_, "Async task context");
-    TraceEdge(trc, &promise_, "Async task promise");
+    TraceEdge(trc, &extra_, "Async task extra");
   }
 
   Heap<JSObject *> context_;
-  Heap<JSObject *> promise_;
+  Heap<JS::Value> extra_;
   ProcessAsyncTask *process_steps_ = nullptr;
 };
 
@@ -150,11 +160,6 @@ namespace host_api {
 Result<Void>
 write_headers(HttpHeaders *headers,
               std::vector<std::tuple<host_api::HostString, host_api::HostString>> &list);
-
-bool error_is_generic(APIError e);
-bool error_is_invalid_argument(APIError e);
-bool error_is_optional_none(APIError e);
-bool error_is_bad_handle(APIError e);
 
 class FastlySendError final {
 public:
@@ -276,6 +281,8 @@ public:
   /// Returns true when this body handle is valid.
   bool valid() const { return this->handle != invalid; }
 
+  explicit operator bool() const { return valid(); }
+
   /// Make a new body handle.
   static Result<HttpBody> make();
 
@@ -309,7 +316,15 @@ public:
   /// Close this handle, and reset internal state to invalid.
   Result<Void> close();
 
+  /// Abandon this handle (close unsuccessfully) and reset internal state
+  Result<Void> abandon();
+
+  /// Get the length of the body if known
+  Result<std::optional<uint64_t>> known_length() const;
+
   FastlyAsyncTask::Handle async_handle() const;
+
+  Result<bool> is_ready() const;
 };
 
 struct Response;
@@ -543,6 +558,10 @@ public:
   /// Send this request asynchronously, and allow sending additional data through the body.
   Result<HttpPendingReq> send_async_streaming(HttpBody body, std::string_view backend);
 
+  /// Send this request asynchronously without any caching.
+  Result<HttpPendingReq> send_async_without_caching(HttpBody body, std::string_view backend,
+                                                    bool streaming = false);
+
   /// Get the http version used for this request.
 
   /// Set the request method.
@@ -571,6 +590,12 @@ public:
 
   HttpHeadersReadOnly *headers() override;
   HttpHeaders *headers_writable() override;
+
+  /// Check if request is cacheable
+  Result<bool> is_cacheable() const;
+
+  /// Get suggested cache key
+  Result<HostString> get_suggested_cache_key() const;
 };
 
 class HttpResp final : public HttpBase {
@@ -635,6 +660,138 @@ class GeoIp final {
 public:
   /// Lookup information about the ip address provided.
   static Result<std::optional<HostString>> lookup(std::span<uint8_t> bytes);
+};
+
+struct HttpCacheLookupOptions {
+  const char *override_key_ptr;
+  size_t override_key_len;
+};
+
+struct HttpCacheWriteOptions final {
+  // Required max age of the response before considered stale
+  // (This is only optional when used for overrides)
+  std::optional<uint64_t> max_age_ns;
+
+  // Optional vary rule - header names separated by spaces
+  std::optional<HostString> vary_rule;
+
+  // Optional initial age of the response in nanoseconds
+  std::optional<uint64_t> initial_age_ns;
+
+  // Optional stale-while-revalidate duration in nanoseconds
+  std::optional<uint64_t> stale_while_revalidate_ns;
+
+  // Optional surrogate keys separated by spaces
+  std::optional<std::vector<HostString>> surrogate_keys;
+
+  // Optional length of the response body
+  std::optional<uint64_t> length;
+
+  // Optional flag indicating if this contains sensitive data
+  std::optional<bool> sensitive_data;
+};
+
+struct CacheState final {
+  uint8_t state = 0;
+
+  CacheState() = default;
+  CacheState(uint8_t state) : state{state} {}
+
+  bool is_found() const;
+  bool is_usable() const;
+  bool is_stale() const;
+  bool must_insert_or_update() const;
+};
+
+enum class HttpStorageAction : uint8_t {
+  Insert = 0,
+  Update = 1,
+  DoNotStore = 2,
+  RecordUncacheable = 3
+};
+
+class HttpCacheEntry final {
+public:
+  using Handle = uint32_t;
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  HttpCacheEntry() = default;
+  explicit HttpCacheEntry(Handle handle) : handle{handle} {}
+
+  bool is_valid() const { return handle != invalid; }
+
+  /// Lookup a cached object without participating in request collapsing
+  static Result<HttpCacheEntry> lookup(const HttpReq &req, std::span<uint8_t> override_key = {});
+
+  /// Lookup a cached object, participating in request collapsing
+  static Result<HttpCacheEntry> transaction_lookup(const HttpReq &req,
+                                                   std::span<uint8_t> override_key = {});
+
+  /// Insert a response into cache
+  Result<HttpBody> transaction_insert(const HttpResp &resp, const HttpCacheWriteOptions *opts);
+
+  /// Insert a response and get back a stream
+  Result<std::tuple<HttpBody, HttpCacheEntry>>
+  transaction_insert_and_stream_back(const HttpResp &resp, const HttpCacheWriteOptions *opts);
+
+  /// Update a response's headers and metadata without changing body
+  Result<Void> transaction_update(const HttpResp &resp, const HttpCacheWriteOptions *opts);
+
+  /// Update response and get back a fresh handle
+  Result<HttpCacheEntry> transaction_update_and_return_fresh(const HttpResp &resp,
+                                                             const HttpCacheWriteOptions *opts);
+
+  /// Record that this entry should not be cached
+  Result<Void>
+  transaction_record_not_cacheable(uint64_t max_age_ns,
+                                   std::optional<std::string_view> vary_rule = std::nullopt);
+
+  /// Abandon the transaction
+  Result<Void> transaction_abandon();
+
+  /// Close the cache entry
+  Result<Void> close();
+
+  /// Get suggested backend request
+  Result<HttpReq> get_suggested_backend_request() const;
+
+  /// Get suggested cache options
+  Result<HttpCacheWriteOptions *> get_suggested_cache_options(const HttpResp &resp) const;
+
+  /// Prepare response for storage
+  Result<std::tuple<HttpStorageAction, HttpResp>> prepare_response_for_storage(HttpResp resp) const;
+
+  /// Get found response
+  Result<std::optional<Response>> get_found_response(bool transform_for_client = true) const;
+
+  /// Get cache entry state
+  Result<CacheState> get_state() const;
+
+  /// Get content length
+  Result<std::optional<uint64_t>> get_length() const;
+
+  /// Get max age in nanoseconds
+  Result<uint64_t> get_max_age_ns() const;
+
+  /// Get stale while revalidate time in nanoseconds
+  Result<uint64_t> get_stale_while_revalidate_ns() const;
+
+  /// Get age in nanoseconds
+  Result<uint64_t> get_age_ns() const;
+
+  /// Get hit count
+  Result<uint64_t> get_hits() const;
+
+  /// Check if contains sensitive data
+  Result<bool> get_sensitive_data() const;
+
+  /// Get surrogate keys
+  Result<std::vector<HostString>> get_surrogate_keys() const;
+
+  /// Get vary rule
+  Result<std::optional<HostString>> get_vary_rule() const;
 };
 
 class LogEndpoint final {
@@ -799,18 +956,6 @@ struct CacheWriteOptions final {
   HostBytes metadata;
 
   bool sensitive = false;
-};
-
-struct CacheState final {
-  uint8_t state = 0;
-
-  CacheState() = default;
-  CacheState(uint8_t state) : state{state} {}
-
-  bool is_found() const;
-  bool is_usable() const;
-  bool is_stale() const;
-  bool must_insert_or_update() const;
 };
 
 class CacheHandle final {
@@ -1054,11 +1199,15 @@ public:
 void handle_api_error(JSContext *cx, uint8_t err, int line, const char *func);
 void handle_kv_error(JSContext *cx, host_api::FastlyKVError err, const unsigned int err_type,
                      int line, const char *func);
+
 bool error_is_generic(APIError e);
 bool error_is_invalid_argument(APIError e);
 bool error_is_optional_none(APIError e);
 bool error_is_bad_handle(APIError e);
 bool error_is_unsupported(APIError e);
+bool error_is_buffer_len(APIError e);
+bool error_is_limit_exceeded(APIError e);
+
 void handle_fastly_error(JSContext *cx, APIError err, int line, const char *func);
 
 } // namespace host_api

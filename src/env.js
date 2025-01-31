@@ -6,7 +6,7 @@ function parseEnvPair(pair) {
   if (!trimmedPair.includes('=')) {
     const value = process.env[trimmedPair];
     if (value === undefined) {
-      throw new Error(`Environment variable ${trimmedPair} is not defined`);
+      return undefined;
     }
     console.warn(
       `Writing ${trimmedPair} environment variable into the runtime from the current process environment`,
@@ -44,7 +44,11 @@ function parseEnvString(envString) {
 
   // Parse each pair into the result object
   for (const pair of pairs) {
-    const [key, value] = parseEnvPair(pair);
+    const res = parseEnvPair(pair);
+    if (res === undefined) {
+      continue;
+    }
+    const [key, value] = res;
     result[key] = value;
   }
 

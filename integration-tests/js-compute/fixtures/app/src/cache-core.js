@@ -29,6 +29,17 @@ function iteratableToStream(iterable) {
   });
 }
 
+let createdLion = false;
+function ensureLion() {
+  if (createdLion) return;
+  const writer = CoreCache.insert('lion', {
+    maxAge: 600_000,
+  });
+  writer.append('raar');
+  writer.close();
+  createdLion = true;
+}
+
 // FastlyBody
 {
   routes.set('/FastlyBody/interface', () => {
@@ -94,6 +105,7 @@ function iteratableToStream(iterable) {
         'append',
         'prepend',
         'close',
+        'abandon',
         Symbol.toStringTag,
       ];
       assert(actual, expected, `Reflect.ownKeys(FastlyBody.prototype)`);
@@ -1401,39 +1413,55 @@ function iteratableToStream(iterable) {
       );
     });
 
+    routes.set('/core-cache/lookup/options-parameter-none', () => {
+      ensureLion();
+      let entry;
+      assertDoesNotThrow(() => {
+        entry = CoreCache.lookup('lion');
+      });
+      assert(
+        entry instanceof CacheEntry,
+        true,
+        `CoreCache.lookup('lion', {headers:...}) instanceof CacheEntry`,
+      );
+    });
     routes.set('/core-cache/lookup/options-parameter-wrong-type', () => {
+      ensureLion();
       assertThrows(() => {
-        CoreCache.lookup('cat', '');
+        CoreCache.lookup('lion', '');
       });
     });
     routes.set(
       '/core-cache/lookup/options-parameter-headers-field-wrong-type',
       () => {
+        ensureLion();
         assertThrows(() => {
-          CoreCache.lookup('cat', { headers: '' });
+          CoreCache.lookup('lion', { headers: '' });
         });
       },
     );
     routes.set(
       '/core-cache/lookup/options-parameter-headers-field-undefined',
       () => {
+        ensureLion();
         let entry;
         assertDoesNotThrow(() => {
-          entry = CoreCache.lookup('cat', { headers: undefined });
+          entry = CoreCache.lookup('lion', { headers: undefined });
         });
         assert(
           entry instanceof CacheEntry,
           true,
-          `CoreCache.lookup('cat', {headers:...}) instanceof CacheEntry`,
+          `CoreCache.lookup('lion', {headers:...}) instanceof CacheEntry`,
         );
       },
     );
     routes.set(
       '/core-cache/lookup/options-parameter-headers-field-valid-sequence',
       () => {
+        ensureLion();
         let entry;
         assertDoesNotThrow(() => {
-          entry = CoreCache.lookup('cat', {
+          entry = CoreCache.lookup('lion', {
             headers: [
               ['user-agent', 'Aki 1.0'],
               ['Accept-Encoding', 'br'],
@@ -1443,16 +1471,17 @@ function iteratableToStream(iterable) {
         assert(
           entry instanceof CacheEntry,
           true,
-          `CoreCache.lookup('cat', {headers:...}) instanceof CacheEntry`,
+          `CoreCache.lookup('lion', {headers:...}) instanceof CacheEntry`,
         );
       },
     );
     routes.set(
       '/core-cache/lookup/options-parameter-headers-field-valid-record',
       () => {
+        ensureLion();
         let entry;
         assertDoesNotThrow(() => {
-          entry = CoreCache.lookup('cat', {
+          entry = CoreCache.lookup('lion', {
             headers: {
               'user-agent': 'Aki 1.0',
               'Accept-Encoding': 'br',
@@ -1462,16 +1491,17 @@ function iteratableToStream(iterable) {
         assert(
           entry instanceof CacheEntry,
           true,
-          `CoreCache.lookup('cat', {headers:...}) instanceof CacheEntry`,
+          `CoreCache.lookup('lion', {headers:...}) instanceof CacheEntry`,
         );
       },
     );
     routes.set(
       '/core-cache/lookup/options-parameter-headers-field-valid-Headers-instance',
       () => {
+        ensureLion();
         let entry;
         assertDoesNotThrow(() => {
-          entry = CoreCache.lookup('cat', {
+          entry = CoreCache.lookup('lion', {
             headers: new Headers({
               'user-agent': 'Aki 1.0',
               'Accept-Encoding': 'br',
@@ -1481,7 +1511,7 @@ function iteratableToStream(iterable) {
         assert(
           entry instanceof CacheEntry,
           true,
-          `CoreCache.lookup('cat', {headers:...}) instanceof CacheEntry`,
+          `CoreCache.lookup('lion', {headers:...}) instanceof CacheEntry`,
         );
       },
     );

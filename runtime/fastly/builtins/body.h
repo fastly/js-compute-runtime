@@ -7,13 +7,14 @@
 namespace fastly::body {
 
 class FastlyBody final : public builtins::BuiltinImpl<FastlyBody> {
+public:
   static bool concat(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool read(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool append(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool prepend(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool close(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool abandon(JSContext *cx, unsigned argc, JS::Value *vp);
 
-public:
   static constexpr const char *class_name = "FastlyBody";
   enum class Slots {
     Body,

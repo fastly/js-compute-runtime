@@ -1,64 +1,18 @@
-// Testing/Assertion functions //
-
-export async function sleep(milliseconds) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, milliseconds);
-  });
-}
-
-// TODO: Implement ReadableStream getIterator() and [@@asyncIterator]() methods
-export async function streamToString(stream) {
-  const decoder = new TextDecoder();
-  let string = '';
-  let reader = stream.getReader();
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      return string;
-    }
-    string += decoder.decode(value);
-  }
-}
-
-export function iteratableToStream(iterable) {
-  return new ReadableStream({
-    async pull(controller) {
-      for await (const value of iterable) {
-        controller.enqueue(value);
-      }
-      controller.close();
-    },
-  });
-}
-
-export function pass(message = '') {
-  return new Response(message);
-}
-
-function prettyPrintSymbol(a) {
-  if (typeof a === 'symbol') {
-    return String(a);
-  }
-  return a;
-}
-export function assert(actual, expected, code) {
-  if (!deepEqual(actual, expected)) {
+export function strictEqual(actual, expected, message) {
+  if (actual !== expected) {
     throw new Error(
-      `Expected \`${code}\` to equal \`${JSON.stringify(prettyPrintSymbol(expected))}\` - Found \`${JSON.stringify(prettyPrintSymbol(actual))}\``,
+      `Expected \`${JSON.stringify(actual)}\` to equal \`${JSON.stringify(expected)}\`${message ? '\n' + message : ''}`,
     );
   }
 }
 
-export { assert as strictEqual };
-
-export function ok(truthy, code) {
+export function assert(truthy, maybeMessage) {
   if (!truthy) {
-    throw new Error(
-      `Expected ${code ? ' ' + code : ''}to be truthy - Found \`${JSON.stringify(prettyPrintSymbol(truthy))}\``,
-    );
+    throw new Error(`Assertion failed: ${maybeMessage}`);
   }
 }
+
+export { assert as ok };
 
 export async function assertResolves(func) {
   try {

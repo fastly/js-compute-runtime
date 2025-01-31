@@ -90,6 +90,53 @@
   "GET /backend/port-ip-defined": {},
   "GET /backend/port-ip-cached": {},
   "GET /backend/props": {},
+  "GET /console": {
+    "environments": ["viceroy"],
+    "logs": [
+      "stdout :: Log: Happy birthday Aki and Yuki!",
+      "stdout :: Log: Map: Map(2) { { a: 1, b: { c: 2 } } => 2, [ function foo() {\n    }] => {} }",
+      "stdout :: Log: Set: Set(3) { { a: 1, b: { c: 2 } }, 2, 3 }",
+      "stdout :: Log: Array: [1, 2, 3, [], 5]",
+      "stdout :: Log: Object: { a: 1, b: 2, c: 3, d: [ d() {\n    }], f: [Getter], g: [ function bar() {\n}], h: [ function from() {\n[native code]\n}] }",
+      "stdout :: Log: function: [ function() {\n    }]",
+      "stdout :: Log: boolean: true",
+      "stdout :: Log: undefined: undefined",
+      "stdout :: Log: null: null",
+      "stdout :: Log: proxy: { a: 21 }",
+      "stdout :: Log: Infinity: Infinity",
+      "stdout :: Log: NaN: NaN",
+      "stdout :: Log: Symbol: Symbol(\"wow\")",
+      "stdout :: Log: Error: (new Error(\"uh oh\", \"<stdin>\", 7644))",
+      "stdout :: Log: Number: 1",
+      "stdout :: Log: Number: 1.111",
+      "stdout :: Log: BigInt: 10n",
+      "stdout :: Log: Date: new Date(1660816667120)",
+      "stdout :: Log: string: cake",
+      "stdout :: Log: RegExp: /magic/",
+      "stdout :: Log: Int8Array: Int8Array [1, 3, 4, 2, 5, 6, -97]",
+      "stdout :: Log: Uint8Array: Uint8Array [1, 3, 4, 2, 5, 6, 159]",
+      "stdout :: Log: Uint8ClampedArray: Uint8ClampedArray [1, 3, 4, 2, 5, 6, 255]",
+      "stdout :: Log: Int16Array: Int16Array [1, 3, 4, 2, 5, 6, -31073]",
+      "stdout :: Log: Uint16Array: Uint16Array [1, 3, 4, 2, 5, 6, 34463]",
+      "stdout :: Log: Int32Array: Int32Array [1, 3, 4, 2, 5, 6, 99999]",
+      "stdout :: Log: Uint32Array: Uint32Array [1, 3, 4, 2, 5, 6, 99999]",
+      "stdout :: Log: Float32Array: Float32Array [1, 3, 4, 2, 5, 6, 99999]",
+      "stdout :: Log: Float64Array: Float64Array [1, 3, 4, 2, 5, 6, 99999]",
+      "stdout :: Log: BigInt64Array: BigInt64Array [1n, 3n, 4n, 2n, 5n, 6n, 99999n]",
+      "stdout :: Log: BigUint64Array: BigUint64Array [1n, 3n, 4n, 2n, 5n, 6n, 99999n]",
+      "stdout :: Log: WeakMap: WeakMap { <items unknown> }",
+      "stdout :: Log: WeakSet: WeakSet { <items unknown> }",
+      "stdout :: Log: Promise: Promise { <pending> }",
+      "stdout :: Log: resolved promise: Promise { 9 }",
+      "stdout :: Log: rejected promise: Promise { <rejected> (new Error(\"oops\", \"<stdin>\", 7689)) }",
+      "stdout :: Log: Response: Response { redirected: false, type: \"default\", url: \"\", status: 200, ok: true, statusText: \"\", version: 2, headers: Headers {}, body: ReadableStream { locked: false }, bodyUsed: false }",
+      "stdout :: Log: Request: Request { method: \"POST\", url: \"https://www.fastly.com/\", version: 2, headers: Headers {}, backend: undefined, body: null, bodyUsed: false }",
+      "stdout :: Log: ReadableStream: ReadableStream { locked: false }",
+      "stdout :: Log: TransformStream: TransformStream { readable: ReadableStream { locked: false }, writable: WritableStream {} }",
+      "stdout :: Log: WritableStream: WritableStream {}",
+      "stdout :: Log: URL: URL { hash: \"\", host: \"www.test.com:123\", hostname: \"www.test.com\", href: \"https://www.test.com:123/asdf?some&params=val\", origin: \"https://www.test.com:123\", password: \"\", pathname: \"/asdf\", port: \"123\", protocol: \"https:\", search: \"?some&params=val\", searchParams: URLSearchParams {}, username: \"\" }"
+    ]
+  },
   "GET /hello-world": {
     "downstream_response": {
       "status": 200,
@@ -102,43 +149,179 @@
       "body_prefix": "{\n    \"args\": {},"
     }
   },
-  "GET /kv-store-e2e/list": {},
+  "GET /http-cache/hook-errors": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/invalid-properties": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/readonly-properties": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/property-errors": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/candidate-response-properties-cached": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/candidate-response-properties-uncached": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/before-send-errors": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/before-send": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/after-send-no-cache": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/after-send-cache": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/after-send-cache-expire": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/after-send-pass": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/after-send-res-no-body": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/response-mutations": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/stale-responses": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/invalid-transform": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/body-transform": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/body-transform-delay": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/body-transform-error": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/body-transform-error-delay": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/body-transform-invalid-chunk": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/concurrent-transforms": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/sequential": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/sequential-three": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/sequential-request-collapsing-uncacheable": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/sequential-request-collapsing-vary": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/parallel": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/parallel-three": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/parallel-request-collapsing-uncacheable": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/parallel-request-collapsing-vary": {
+    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /kv-store-e2e/list": { "flake": true },
   "GET /kv-store/exposed-as-global": {},
-  "GET /kv-store/interface": {},
+  "GET /kv-store/interface": { "flake": true },
   "GET /kv-store/constructor/called-as-regular-function": {},
   "GET /kv-store/constructor/parameter-calls-7.1.17-ToString": {},
   "GET /kv-store/constructor/empty-parameter": {},
-  "GET /kv-store/constructor/found-store": {},
+  "GET /kv-store/constructor/found-store": { "flake": true },
   "GET /kv-store/constructor/missing-store": {},
   "GET /kv-store/constructor/invalid-name": {},
   "GET /kv-store/put/called-as-constructor": {},
   "GET /kv-store/put/called-unbound": {},
-  "GET /kv-store/put/key-parameter-calls-7.1.17-ToString": {},
-  "GET /kv-store/put/key-parameter-not-supplied": {},
-  "GET /kv-store/put/key-parameter-empty-string": {},
-  "GET /kv-store/put/key-parameter-1024-character-string": {},
-  "GET /kv-store/put/key-parameter-1025-character-string": {},
-  "GET /kv-store/put/key-parameter-containing-newline": {},
-  "GET /kv-store/put/key-parameter-containing-carriage-return": {},
-  "GET /kv-store/put/key-parameter-starting-with-well-known-acme-challenge": {},
-  "GET /kv-store/put/key-parameter-single-dot": {},
-  "GET /kv-store/put/key-parameter-double-dot": {},
-  "GET /kv-store/put/key-parameter-containing-special-characters": {},
-  "GET /kv-store/put/value-parameter-as-undefined": {},
-  "GET /kv-store/put/value-parameter-not-supplied": {},
-  "GET /kv-store/put/value-parameter-readablestream-empty": {},
-  "GET /kv-store/put/value-parameter-readablestream-under-30mb": {},
-  "GET /kv-store/put/value-parameter-readablestream-over-30mb": {},
-  "GET /kv-store/put/value-parameter-readablestream-locked": {},
-  "GET /kv-store/put/value-parameter-URLSearchParams": {},
-  "GET /kv-store/put/value-parameter-strings": {},
-  "GET /kv-store/put/value-parameter-string-over-30mb": {},
-  "GET /kv-store/put/value-parameter-calls-7.1.17-ToString": {},
-  "GET /kv-store/put/value-parameter-buffer": {},
-  "GET /kv-store/put/value-parameter-arraybuffer": {},
-  "GET /kv-store/put/value-parameter-typed-arrays": {},
-  "GET /kv-store/put/value-parameter-dataview": {},
+  "GET /kv-store/put/key-parameter-calls-7.1.17-ToString": { "flake": true },
+  "GET /kv-store/put/key-parameter-not-supplied": { "flake": true },
+  "GET /kv-store/put/key-parameter-empty-string": { "flake": true },
+  "GET /kv-store/put/key-parameter-1024-character-string": { "flake": true },
+  "GET /kv-store/put/key-parameter-1025-character-string": { "flake": true },
+  "GET /kv-store/put/key-parameter-containing-newline": { "flake": true },
+  "GET /kv-store/put/key-parameter-containing-carriage-return": {
+    "flake": true
+  },
+  "GET /kv-store/put/key-parameter-starting-with-well-known-acme-challenge": {
+    "flake": true
+  },
+  "GET /kv-store/put/key-parameter-single-dot": { "flake": true },
+  "GET /kv-store/put/key-parameter-double-dot": { "flake": true },
+  "GET /kv-store/put/key-parameter-containing-special-characters": {
+    "flake": true
+  },
+  "GET /kv-store/put/value-parameter-as-undefined": { "flake": true },
+  "GET /kv-store/put/value-parameter-not-supplied": { "flake": true },
+  "GET /kv-store/put/value-parameter-readablestream-empty": { "flake": true },
+  "GET /kv-store/put/value-parameter-readablestream-under-30mb": {
+    "flake": true
+  },
+  "GET /kv-store/put/value-parameter-readablestream-over-30mb": {
+    "flake": true
+  },
+  "GET /kv-store/put/value-parameter-readablestream-locked": { "flake": true },
+  "GET /kv-store/put/value-parameter-URLSearchParams": { "flake": true },
+  "GET /kv-store/put/value-parameter-strings": { "flake": true },
+  "GET /kv-store/put/value-parameter-string-over-30mb": { "flake": true },
+  "GET /kv-store/put/value-parameter-calls-7.1.17-ToString": { "flake": true },
+  "GET /kv-store/put/value-parameter-buffer": { "flake": true },
+  "GET /kv-store/put/value-parameter-arraybuffer": { "flake": true },
+  "GET /kv-store/put/value-parameter-typed-arrays": { "flake": true },
+  "GET /kv-store/put/value-parameter-dataview": { "flake": true },
   "POST /kv-store/put/request-body": {
+    "flake": true,
     "environments": ["compute"],
     "downstream_request": {
       "method": "POST",
@@ -147,45 +330,71 @@
       "body": "hello world!"
     }
   },
-  "GET /kv-store/debug-error": {},
-  "GET /kv-store/delete/called-as-constructor": {},
-  "GET /kv-store/delete/called-unbound": {},
-  "GET /kv-store/delete/key-parameter-calls-7.1.17-ToString": {},
-  "GET /kv-store/delete/key-parameter-not-supplied": {},
-  "GET /kv-store/delete/key-parameter-empty-string": {},
-  "GET /kv-store/delete/key-parameter-1024-character-string": {},
-  "GET /kv-store/delete/key-parameter-1025-character-string": {},
-  "GET /kv-store/delete/key-parameter-containing-newline": {},
-  "GET /kv-store/delete/key-parameter-containing-carriage-return": {},
-  "GET /kv-store/delete/key-parameter-starting-with-well-known-acme-challenge": {},
-  "GET /kv-store/delete/key-parameter-single-dot": {},
-  "GET /kv-store/delete/key-parameter-double-dot": {},
-  "GET /kv-store/delete/key-parameter-containing-special-characters": {},
-  "GET /kv-store/delete/key-does-not-exist-returns-undefined": {},
-  "GET /kv-store/delete/key-exists": {},
-  "GET /kv-store/delete/delete-key-twice": {},
-  "GET /kv-store/delete/multiple-deletes-at-once": {},
-  "GET /kv-store/get/called-as-constructor": {},
-  "GET /kv-store/get/called-unbound": {},
-  "GET /kv-store/get/key-parameter-calls-7.1.17-ToString": {},
-  "GET /kv-store/get/key-parameter-not-supplied": {},
-  "GET /kv-store/get/key-parameter-empty-string": {},
-  "GET /kv-store/get/key-parameter-1024-character-string": {},
-  "GET /kv-store/get/key-parameter-1025-character-string": {},
-  "GET /kv-store/get/key-parameter-containing-newline": {},
-  "GET /kv-store/get/key-parameter-containing-carriage-return": {},
-  "GET /kv-store/get/key-parameter-starting-with-well-known-acme-challenge": {},
-  "GET /kv-store/get/key-parameter-single-dot": {},
-  "GET /kv-store/get/key-parameter-double-dot": {},
-  "GET /kv-store/get/key-parameter-containing-special-characters": {},
-  "GET /kv-store/get/key-does-not-exist-returns-null": {},
-  "GET /kv-store/get/key-exists": {},
-  "GET /kv-store/get/multiple-lookups-at-once": {},
-  "GET /kv-store-entry/interface": {},
-  "GET /kv-store-entry/text/valid": {},
-  "GET /kv-store-entry/json/valid": {},
-  "GET /kv-store-entry/json/invalid": {},
-  "GET /kv-store-entry/arrayBuffer/valid": {},
-  "GET /kv-store-entry/body": {},
-  "GET /kv-store-entry/bodyUsed": {}
+  "GET /kv-store/debug-error": { "flake": true },
+  "GET /kv-store/delete/called-as-constructor": { "flake": true },
+  "GET /kv-store/delete/called-unbound": { "flake": true },
+  "GET /kv-store/delete/key-parameter-calls-7.1.17-ToString": { "flake": true },
+  "GET /kv-store/delete/key-parameter-not-supplied": { "flake": true },
+  "GET /kv-store/delete/key-parameter-empty-string": { "flake": true },
+  "GET /kv-store/delete/key-parameter-1024-character-string": { "flake": true },
+  "GET /kv-store/delete/key-parameter-1025-character-string": { "flake": true },
+  "GET /kv-store/delete/key-parameter-containing-newline": { "flake": true },
+  "GET /kv-store/delete/key-parameter-containing-carriage-return": {
+    "flake": true
+  },
+  "GET /kv-store/delete/key-parameter-starting-with-well-known-acme-challenge": {
+    "flake": true
+  },
+  "GET /kv-store/delete/key-parameter-single-dot": { "flake": true },
+  "GET /kv-store/delete/key-parameter-double-dot": { "flake": true },
+  "GET /kv-store/delete/key-parameter-containing-special-characters": {
+    "flake": true
+  },
+  "GET /kv-store/delete/key-does-not-exist-returns-undefined": {
+    "flake": true
+  },
+  "GET /kv-store/delete/key-exists": { "flake": true },
+  "GET /kv-store/delete/delete-key-twice": { "flake": true },
+  "GET /kv-store/delete/multiple-deletes-at-once": { "flake": true },
+  "GET /kv-store/get/called-as-constructor": { "flake": true },
+  "GET /kv-store/get/called-unbound": { "flake": true },
+  "GET /kv-store/get/key-parameter-calls-7.1.17-ToString": { "flake": true },
+  "GET /kv-store/get/key-parameter-not-supplied": { "flake": true },
+  "GET /kv-store/get/key-parameter-empty-string": { "flake": true },
+  "GET /kv-store/get/key-parameter-1024-character-string": { "flake": true },
+  "GET /kv-store/get/key-parameter-1025-character-string": { "flake": true },
+  "GET /kv-store/get/key-parameter-containing-newline": { "flake": true },
+  "GET /kv-store/get/key-parameter-containing-carriage-return": {
+    "flake": true
+  },
+  "GET /kv-store/get/key-parameter-starting-with-well-known-acme-challenge": {
+    "flake": true
+  },
+  "GET /kv-store/get/key-parameter-single-dot": { "flake": true },
+  "GET /kv-store/get/key-parameter-double-dot": { "flake": true },
+  "GET /kv-store/get/key-parameter-containing-special-characters": {
+    "flake": true
+  },
+  "GET /kv-store/get/key-does-not-exist-returns-null": { "flake": true },
+  "GET /kv-store/get/key-exists": { "flake": true },
+  "GET /kv-store/get/multiple-lookups-at-once": { "flake": true },
+  "GET /kv-store-entry/interface": { "flake": true },
+  "GET /kv-store-entry/text/valid": { "flake": true },
+  "GET /kv-store-entry/json/valid": { "flake": true },
+  "GET /kv-store-entry/json/invalid": { "flake": true },
+  "GET /kv-store-entry/arrayBuffer/valid": { "flake": true },
+  "GET /kv-store-entry/body": { "flake": true },
+  "GET /kv-store-entry/bodyUsed": { "flake": true },
+  "GET /transform-stream/identity": {
+    "downstream_response": { "body": "hello" }
+  },
+  "GET /transform-stream/uppercase": {
+    "downstream_response": { "body": "HELLO" }
+  },
+  "GET /transform-stream/multi-stream-forwarding": {
+    "environments": ["viceroy"],
+    "downstream_response": {
+      "body": "This sentence will be streamed in chunks."
+    }
+  }
 }

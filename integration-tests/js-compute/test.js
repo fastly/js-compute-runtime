@@ -10,6 +10,7 @@ import { existsSync } from 'node:fs';
 import { copyFile, readFile, writeFile } from 'node:fs/promises';
 import core from '@actions/core';
 import TOML from '@iarna/toml';
+import { getEnv } from './env.js';
 
 // test environment variable handling
 process.env.LOCAL_TEST = 'local val';
@@ -40,9 +41,13 @@ let args = argv.slice(2);
 const local = args.includes('--local');
 const verbose = args.includes('--verbose');
 const moduleMode = args.includes('--module-mode');
+const httpCache = args.includes('--http-cache');
 const aot = args.includes('--aot');
 const debugBuild = args.includes('--debug-build');
+const debugLog = args.includes('--debug-log');
 const filter = args.filter((arg) => !arg.startsWith('--'));
+const bail = args.includes('--bail');
+const ci = args.includes('--ci');
 
 async function $(...args) {
   return await retry(10, () => zx(...args));
@@ -71,19 +76,38 @@ const branchName = (await zx`git branch --show-current`).stdout
   .trim()
   .replace(/[^a-zA-Z0-9_-]/g, '_');
 
-const fixture = moduleMode ? 'module-mode' : 'app';
-const serviceName = `${fixture}--${branchName}${aot ? '--aot' : ''}${process.env.SUFFIX_STRING || ''}`;
-let domain;
+const fixture = !moduleMode ? 'app' : 'module-mode';
+
+// Service names are carefully unique to support parallel runs
+const serviceName = `app-${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING ? '--' + process.env.SUFFIX_STRING : ''}`;
+let domain, serviceId;
 const fixturePath = join(__dirname, 'fixtures', fixture);
 let localServer;
+
+const env = getEnv(ci && !local ? serviceName : null);
+Object.assign(process.env, env);
+if (debugLog) {
+  process.env.FASTLY_DEBUG_LOGGING = '1';
+}
 
 await cd(fixturePath);
 await copyFile(
   join(fixturePath, 'fastly.toml.in'),
   join(fixturePath, 'fastly.toml'),
 );
+const envSeen = new Set();
 const config = TOML.parse(
-  await readFile(join(fixturePath, 'fastly.toml'), 'utf-8'),
+  (await readFile(join(fixturePath, 'fastly.toml'), 'utf-8')).replace(
+    /DICTIONARY_NAME|CONFIG_STORE_NAME|KV_STORE_NAME|SECRET_STORE_NAME/g,
+    (match) => {
+      // we only replace the second instance, because the first is the --env flag itself
+      if (!envSeen.has(match)) {
+        envSeen.add(match);
+        return match;
+      }
+      return env[match] || match;
+    },
+  ),
 );
 config.name = serviceName;
 if (aot) {
@@ -94,6 +118,11 @@ if (aot) {
 if (debugBuild) {
   const buildArgs = config.scripts.build.split(' ');
   buildArgs.splice(-1, null, '--debug-build');
+  config.scripts.build = buildArgs.join(' ');
+}
+if (httpCache) {
+  const buildArgs = config.scripts.build.split(' ');
+  buildArgs.splice(-1, null, '--enable-http-cache');
   config.scripts.build = buildArgs.join(' ');
 }
 await writeFile(
@@ -109,57 +138,67 @@ if (!local) {
   core.endGroup();
   core.startGroup('Build and deploy service');
   await zx`npm i`;
-  await $`fastly compute publish -i --quiet --token $FASTLY_API_TOKEN --status-check-off`;
+  await $`fastly compute publish -i ${verbose ? '--verbose' : '--quiet'} --token $FASTLY_API_TOKEN --status-check-off`;
   core.endGroup();
 
   // get the public domain of the deployed application
-  domain =
-    'https://' +
-    JSON.parse(await $`fastly domain list --quiet --version latest --json`)[0]
-      .Name;
+  const domainListing = JSON.parse(
+    await $`fastly domain list --quiet --version latest --json`,
+  )[0];
+  domain = `https://${domainListing.Name}`;
+  serviceId = domainListing.ServiceID;
   core.notice(`Service is running on ${domain}`);
-
-  const setupPath = join(fixturePath, 'setup.js');
-  if (existsSync(setupPath)) {
-    core.startGroup('Extra set-up steps for the service');
-    await zx`node ${setupPath} ${serviceName}`;
-    await sleep(60);
-    core.endGroup();
-  }
 } else {
   localServer = zx`fastly compute serve --verbose --viceroy-args="${verbose ? '-vv' : ''}"`;
   domain = 'http://127.0.0.1:7676';
 }
 
-core.startGroup(`Check service is up and running on ${domain}`);
-await retry(
-  27,
-  local
-    ? [
-        // we expect it to take ~10 seconds to deploy, so focus on that time
-        6000, 3000, 1500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
-        500, 500, 500, 500, 500, 500, 500, 500,
-        // after more than 20 seconds, means we have an unusually slow build, start backoff before timeout
-        1500,
-        3000, 6000, 12000, 24000,
-      ].values()
-    : expBackoff('60s', '10s'),
-  async () => {
-    const response = await request(domain);
-    if (response.statusCode !== 200) {
-      throw new Error(
-        `Application "${fixture}" :: Not yet available on domain: ${domain}`,
-      );
+core.startGroup(`Setting up service ${domain}`);
+
+const [{ default: tests }] = await Promise.all([
+  (async () => {
+    return await import(join(fixturePath, 'tests.json'), {
+      with: { type: 'json' },
+    });
+  })(),
+  (async () => {
+    await retry(
+      27,
+      local
+        ? [
+            // we expect it to take ~10 seconds to deploy, so focus on that time
+            6000, 3000, 1500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+            500, 500, 500, 500, 500, 500, 500, 500, 500,
+            // after more than 20 seconds, means we have an unusually slow build, start backoff before timeout
+            1500,
+            3000, 6000, 12000, 24000,
+          ].values()
+        : expBackoff('60s', '10s'),
+      async () => {
+        const response = await request(domain);
+        if (response.statusCode !== 200) {
+          throw new Error(
+            `Application "${fixture}" :: Not yet available on domain: ${domain}`,
+          );
+        }
+      },
+    );
+  })(),
+  (async () => {
+    if (!local) {
+      const setupPath = join(__dirname, 'setup.js');
+      if (existsSync(setupPath)) {
+        await zx`node ${setupPath} ${serviceId} ${ci ? serviceName : ''}`;
+        await sleep(15);
+      }
     }
-  },
-);
+  })(),
+]);
+
 core.endGroup();
 
-let { default: tests } = await import(join(fixturePath, 'tests.json'), {
-  with: { type: 'json' },
-});
-
 core.startGroup('Running tests');
+
 function chunks(arr, size) {
   const output = [];
   for (let i = 0; i < arr.length; i += size) {
@@ -171,14 +210,54 @@ function chunks(arr, size) {
 let results = [];
 for (const chunk of chunks(Object.entries(tests), 100)) {
   results.push(
-    ...(await Promise.allSettled(
+    ...(await (
+      bail ? Promise.all.bind(Promise) : Promise.allSettled.bind(Promise)
+    )(
       chunk.map(async ([title, test]) => {
+        // test defaults
+        if (!test.downstream_request) {
+          const [method, pathname, extra] = title.split(' ');
+          if (typeof extra === 'string')
+            throw new Error('Cannot infer downstream_request from title');
+          test.downstream_request = { method, pathname };
+        }
+        if (!test.downstream_response) {
+          test.downstream_response = {
+            status: 200,
+          };
+        }
+        if (!test.environments) {
+          test.environments = ['viceroy', 'compute'];
+        }
+
         // basic test filtering
-        if (!title.includes(filter)) {
+        if (
+          test.skip ||
+          (filter.length > 0 && filter.every((f) => !title.includes(f)))
+        ) {
           return {
             title,
             test,
             skipped: true,
+            skipReason: test.skip
+              ? 'MARKED AS SKIPPED (pending further work)'
+              : null, // dont mention filtered tests
+          };
+        }
+        // feature based test filtering
+        if (
+          (!httpCache &&
+            test.features &&
+            test.features.includes('http-cache')) ||
+          (httpCache &&
+            test.features &&
+            test.features.includes('skip-http-cache'))
+        ) {
+          return {
+            title,
+            test,
+            skipped: true,
+            skipReason: `feature "http-cache" ${httpCache ? '' : 'not '}"enabled`,
           };
         }
         async function getBodyChunks(response) {
@@ -217,84 +296,84 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
           clearTimeout(downstreamTimeout);
           return bodyChunks;
         }
-        // default test options
-        if (!test.downstream_request) {
-          const [method, pathname, extra] = title.split(' ');
-          if (typeof extra === 'string')
-            throw new Error('Cannot infer downstream_request from title');
-          test.downstream_request = { method, pathname };
-        }
-        if (!test.downstream_response) {
-          test.downstream_response = {
-            status: 200,
-          };
-        }
-        if (!test.environments) {
-          test.environments = ['viceroy', 'compute'];
-        }
         if (local) {
           if (test.environments.includes('viceroy')) {
-            let path = test.downstream_request.pathname;
-            let url = `${domain}${path}`;
-            try {
-              const response = await request(url, {
-                method: test.downstream_request.method || 'GET',
-                headers: test.downstream_request.headers || undefined,
-                body: test.downstream_request.body || undefined,
-              });
-              const bodyChunks = await getBodyChunks(response);
-              await compareDownstreamResponse(
-                test.downstream_response,
-                response,
-                bodyChunks,
-              );
-              return {
-                title,
-                test,
-                skipped: false,
-              };
-            } catch (error) {
-              throw new Error(`${title} ${error.message}`, { cause: error });
-            }
+            return (bail || !test.flake ? (_, __, fn) => fn() : retry)(
+              5,
+              expBackoff('10s', '1s'),
+              async () => {
+                let path = test.downstream_request.pathname;
+                let url = `${domain}${path}`;
+                try {
+                  const response = await request(url, {
+                    method: test.downstream_request.method || 'GET',
+                    headers: test.downstream_request.headers || undefined,
+                    body: test.downstream_request.body || undefined,
+                  });
+                  const bodyChunks = await getBodyChunks(response);
+                  await compareDownstreamResponse(
+                    test.downstream_response,
+                    response,
+                    bodyChunks,
+                  );
+                  return {
+                    title,
+                    test,
+                    skipped: false,
+                  };
+                } catch (error) {
+                  console.error('\n' + test.downstream_request.pathname);
+                  throw new Error(`${title} ${error.message}`, {
+                    cause: error,
+                  });
+                }
+              },
+            );
           } else {
             return {
               title,
               test,
               skipped: true,
+              skipReason: 'no environments',
             };
           }
         } else {
           if (test.environments.includes('compute')) {
-            // TODO: this just hides flakes, so we should remove this and fix the flakes.
-            return retry(10, expBackoff('60s', '10s'), async () => {
-              let path = test.downstream_request.pathname;
-              let url = `${domain}${path}`;
-              try {
-                const response = await request(url, {
-                  method: test.downstream_request.method || 'GET',
-                  headers: test.downstream_request.headers || undefined,
-                  body: test.downstream_request.body || undefined,
-                });
-                const bodyChunks = await getBodyChunks(response);
-                await compareDownstreamResponse(
-                  test.downstream_response,
-                  response,
-                  bodyChunks,
-                );
-                return {
-                  title,
-                  test,
-                  skipped: false,
-                };
-              } catch (error) {
-                throw new Error(`${title} ${error.message}`);
-              }
-            });
+            return retry(
+              test.flake ? 15 : bail ? 1 : 4,
+              expBackoff(test.flake ? '60s' : '30s', test.flake ? '30s' : '1s'),
+              async () => {
+                let path = test.downstream_request.pathname;
+                let url = `${domain}${path}`;
+                try {
+                  const response = await request(url, {
+                    method: test.downstream_request.method || 'GET',
+                    headers: test.downstream_request.headers || undefined,
+                    body: test.downstream_request.body || undefined,
+                  });
+                  const bodyChunks = await getBodyChunks(response);
+                  await compareDownstreamResponse(
+                    test.downstream_response,
+                    response,
+                    bodyChunks,
+                  );
+                  return {
+                    title,
+                    test,
+                    skipped: false,
+                  };
+                } catch (error) {
+                  console.error('\n' + test.downstream_request.pathname);
+                  throw new Error(`${title} ${error.message}`);
+                }
+              },
+            );
           } else {
             return {
               title,
               test,
               skipped: true,
+              skipReason: 'no environments',
             };
           }
         }
@@ -316,38 +395,19 @@ const info = '\u2139';
 const tick = '\u2714';
 const cross = '\u2716';
 for (const result of results) {
-  if (result.status === 'fulfilled') {
-    passed += 1;
-    if (result.value.skipped) {
-      if (!result.value.title.includes(filter)) {
-        // console.log(white, info, `Skipped by test filter: ${result.value.title}`, reset);
-      } else if (local && !result.value.test.environments.includes('viceroy')) {
+  if (result.status === 'fulfilled' || bail) {
+    const value = bail ? result : result.value;
+    if (value.skipped) {
+      if (value.skipReason)
         console.log(
           white,
           info,
-          `Skipped as test marked to only run on Fastly Compute: ${result.value.title}`,
+          `Skipped ${value.title} due to ${value.skipReason}`,
           reset,
         );
-      } else if (
-        !local &&
-        !result.value.test.environments.includes('compute')
-      ) {
-        console.log(
-          white,
-          info,
-          `Skipped as test marked to only run on local server: ${result.value.title}`,
-          reset,
-        );
-      } else {
-        console.log(
-          white,
-          info,
-          `Skipped due to no environments set: ${result.value.title}`,
-          reset,
-        );
-      }
     } else {
-      console.log(green, tick, result.value.title, reset);
+      passed += 1;
+      console.log(green, tick, value.title, reset);
     }
   } else {
     console.log(red, cross, result.reason, reset);
@@ -378,7 +438,7 @@ if (!local && !failed.length) {
   const teardownPath = join(fixturePath, 'teardown.js');
   if (existsSync(teardownPath)) {
     core.startGroup('Tear down the extra set-up for the service');
-    await zx`${teardownPath}`;
+    await zx`${teardownPath} ${serviceId} ${ci ? serviceName : ''}`;
     core.endGroup();
   }
 

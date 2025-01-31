@@ -247,6 +247,19 @@ bool FastlyBody::close(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool FastlyBody::abandon(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  auto body = host_body(self);
+  auto result = body.abandon();
+
+  if (auto *err = result.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  args.rval().setUndefined();
+  return true;
+}
+
 const JSFunctionSpec FastlyBody::static_methods[] = {
     JS_FS_END,
 };
@@ -256,9 +269,13 @@ const JSPropertySpec FastlyBody::static_properties[] = {
 };
 
 const JSFunctionSpec FastlyBody::methods[] = {
-    JS_FN("concat", concat, 1, JSPROP_ENUMERATE), JS_FN("read", read, 1, JSPROP_ENUMERATE),
-    JS_FN("append", append, 1, JSPROP_ENUMERATE), JS_FN("prepend", prepend, 1, JSPROP_ENUMERATE),
-    JS_FN("close", close, 0, JSPROP_ENUMERATE),   JS_FS_END,
+    JS_FN("concat", concat, 1, JSPROP_ENUMERATE),
+    JS_FN("read", read, 1, JSPROP_ENUMERATE),
+    JS_FN("append", append, 1, JSPROP_ENUMERATE),
+    JS_FN("prepend", prepend, 1, JSPROP_ENUMERATE),
+    JS_FN("close", close, 0, JSPROP_ENUMERATE),
+    JS_FN("abandon", abandon, 0, JSPROP_ENUMERATE),
+    JS_FS_END,
 };
 
 const JSPropertySpec FastlyBody::properties[] = {

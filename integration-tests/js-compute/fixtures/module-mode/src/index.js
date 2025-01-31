@@ -3,15 +3,31 @@
 
 import { routes } from './routes.js';
 import { env } from 'fastly:env';
+import { enableDebugLogging } from 'fastly:experimental';
 
+import './console.js';
 import './dynamic-backend.js';
 import './hello-world.js';
 import './hono.js';
+import './http-cache.js';
 import './kv-store.js';
+import './transform-stream.js';
 
 addEventListener('fetch', (event) => {
-  event.respondWith(app(event));
+  const responsePromise = app(event);
+  if (responsePromise) event.respondWith(responsePromise);
 });
+
+if (env('FASTLY_DEBUG_LOGGING') === '1') {
+  if (fastly.debugMessages) {
+    const { debug: consoleDebug } = console;
+    console.debug = function debug(...args) {
+      fastly.debugLog(...args);
+      consoleDebug(...args);
+    };
+  }
+  enableDebugLogging(true);
+}
 
 /**
  * @param {FetchEvent} event
@@ -26,7 +42,10 @@ async function app(event) {
   try {
     const routeHandler = routes.get(path);
     if (routeHandler) {
-      res = (await routeHandler(event)) || new Response('ok');
+      res = await routeHandler(event);
+      if (res !== null) {
+        res = res || new Response('ok');
+      }
     } else {
       return (res = new Response(`${path} endpoint does not exist`, {
         status: 500,
@@ -40,11 +59,14 @@ async function app(event) {
         return (res = new Response(
           `The routeHandler for ${path} threw a [${error.constructor?.name ?? error.name}] error: ${error.message || error}` +
             '\n' +
-            error.stack,
+            error.stack +
+            (fastly.debugMessages
+              ? '\n[DEBUG BUILD MESSAGES]:\n\n  - ' +
+                fastly.debugMessages.join('\n  - ')
+              : ''),
           { status: 500 },
         ));
       } catch (errRes) {
-        console.error('err2', errRes);
         res = errRes;
       }
     }

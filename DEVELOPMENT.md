@@ -51,6 +51,7 @@ To build from source, you need to have the following tools installed to successf
   ```
 
 Build the runtime using npm:
+
 ```sh
 npm run build
 ```
@@ -79,7 +80,7 @@ npm run build
 - Python
   ```sh
   brew install python@3
-  ``` 
+  ```
 - Rust
   ```sh
   curl -so rust.sh https://sh.rustup.rs && sh rust.sh -y
@@ -104,22 +105,26 @@ npm run build
   ```
 
 Build the runtime using npm:
+
 ```sh
 npm run build
 ```
 
 ## Testing a Local build in a Compute application
-:warning:	**You should not use this for production workloads!!!!!!!!**
+
+:warning: **You should not use this for production workloads!!!!!!!!**
 
 You can test a local build of the JS Compute runtime by installing it in your JavaScript Compute application and running that locally or by uploading it to your Fastly service.
 
 1. First, follow the directions in [Building the JS Compute Runtime](#building-the-js-compute-runtime) for your platform to obtain a local build. The build outputs are the following files:
+
    - `fastly.wasm`
    - `fastly.debug.wasm`
    - `fastly-weval.wasm`
    - `fastly-ics.wevalcache`
 
 2. Create a local tarball using npm.
+
    ```shell
    npm pack
    ```
@@ -127,6 +132,7 @@ You can test a local build of the JS Compute runtime by installing it in your Ja
    The resulting tarball will have a filename such as `fastly-js-compute-<version>.tgz`.
 
 3. In your Compute application, install the tarball using `npm`:
+
    ```shell
    npm install /path/to/fastly-js-compute-<version>.tgz
    ```
@@ -134,19 +140,60 @@ You can test a local build of the JS Compute runtime by installing it in your Ja
 4. Build and test or deploy your application as usual, using `fastly compute serve` or `fastly compute publish`, or an appropriate npm script.
 
 ## Testing a Dev Release in a Compute application
-:warning:	**You should not use this for production workloads!!!!!!!!**
+
+:warning: **You should not use this for production workloads!!!!!!!!**
 
 Dev builds are released before production releases to allow for further testing. These are not released upstream to NPM, however you can acquire them from the [Releases](https://github.com/fastly/js-compute-runtime/releases/) section. Download the runtime for your platform, extract the executable and place it in the /node_modules/@fastly/js-compute/bin/PLATFORM folder of your Fastly Compute project. Then you can use the normal [Fastly CLI](https://github.com/fastly/cli) to build your service.
 
 Please submit an [issue](https://github.com/fastly/js-compute-runtime/issues) if you find any problems during testing.
 
-## Automated Testing
+## Tests
 
-The JS Compute Runtime has automated tests which run on all pull-requests. The test applications are located within <./integration-tests/js-compute>.
+All tests are automatically run on pull requests via CI.
 
-To run an end-to-end test which builds and deploys an application to fastly:
-- Build the runtime and cli: `npm run build` in the root of the project
-- Change to the test directory for the runtime: `cd integration-tests/js-compute/`
-- Install the test dependencies: `npm install`
-- Get a list of all the applications to test: `node test.js`
-- Test a single application via: `node test.js <name>` or test all via `node test.js --all`
+### Unit Testing
+
+Unit tests are run via `npm run test`, currently including:
+
+- CLI tests (`npm run test:cli`)
+- Typing tests (`npm run test:types`)
+
+### Integration Tests
+
+Complete test applications are tested from the `./integration-tests/js-compute/fixtures/app/src` and `./integration-tests/js-compute/fixtures/module-mode/src` directories.
+
+Tests themselves are listed in the `./integration-tests/js-compute/fixtures/app/tests.json` and `./integration-tests/js-compute/fixtures/module-mode/tests.json` files.
+
+Integration tests can be run via `npm run test:integration`, which defaults to the release build.
+
+In addition the following flags can be added after the command (passed via `npm run test:debug -- ...` after the `--`):
+
+- `--local`: Test locally using Viceroy, instead of publishing to a staging Compute service.
+- `--bail`: Immediately stop testing on the first failure, and report the failure.
+- `--verbose`: Adds verbose logging to `fastly compute publish` and Viceroy (which provides hostcall logging as well).
+- `--debug-build`: Use the debug build
+- `--debug-log`: Enable debug logging for the tests (engine-level DEBUG_LOG)
+- `--module-mode`: Run the module mode test suite (`fixtures/module-mode` instead of `fixtures/app`).
+- `--http-cache`: Run the HTTP cache test suite
+- `[...args]`: Additional arguments allow for filtering tests
+
+A typical development test command is therefore something like:
+
+```
+npm run build:debug && npm run test:integration -- --debug-build --debug-log --local --bail /crypto
+```
+
+Which would run a debug build, enable debugging logging, and then that build against all the crypto tests locally on Viceroy, throwing an error as soon as one is found.
+
+Some tests can only be run on Compute and not Viceroy and will be automatically skipped. A green tick is always shown for a test that ran successfully - if it is missing that means it did not run.
+
+### Web Platform Tests
+
+The Web Platform tests are included as a submodule, and can be run via `npm run test:wpt` or `npm run test:wpt:debug`.
+
+The WPT test runner supports the following options (passed via `npm run test:wpt -- ...` after the `--`):
+
+- `--update-expectations`: Update the WPT test expectations JSON files based on the current PASS/FAIL test statuses, instead of throwing an error when the current PASS/FAIL lists are not matched.
+- `[...args]`: Filter to apply to WPT tests to run
+
+Run `./tests/wpt-harness/run-wpt.mjs --help` for further options information.

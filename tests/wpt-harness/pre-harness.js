@@ -1,3 +1,6 @@
+import { enableDebugLogging, setBaseURL } from "fastly:experimental";
+// enableDebugLogging(true);
+
 globalThis.GLOBAL = {
   isWindow: function() { return false; },
   isWorker: function() { return true; },

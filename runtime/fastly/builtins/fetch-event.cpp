@@ -898,13 +898,11 @@ bool FetchEvent::is_dispatching(JSObject *self) {
 
 void FetchEvent::start_dispatching(JSObject *self) {
   MOZ_ASSERT(!is_dispatching(self));
-  ENGINE->incr_event_loop_interest();
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::Dispatch), JS::TrueValue());
 }
 
 void FetchEvent::stop_dispatching(JSObject *self) {
   MOZ_ASSERT(is_dispatching(self));
-  ENGINE->decr_event_loop_interest();
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::Dispatch), JS::FalseValue());
 }
 

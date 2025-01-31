@@ -26,8 +26,6 @@ extern char **environ;
 
 namespace {
 
-bool DEBUG_LOGGING_ENABLED = false;
-
 api::Engine *ENGINE;
 
 // Global storage for Wizer-time environment
@@ -38,17 +36,24 @@ static void oom_callback(JSContext *cx, void *data) {
   fflush(stderr);
 }
 
+#ifdef DEBUG
+static std::vector<std::string> debug_messages;
+#endif
+
 } // namespace
 
-bool debug_logging_enabled() { return DEBUG_LOGGING_ENABLED; }
+bool debug_logging_enabled() { return fastly::fastly::DEBUG_LOGGING_ENABLED; }
 
 namespace fastly::fastly {
+
+bool DEBUG_LOGGING_ENABLED = false;
 
 JS::PersistentRooted<JSObject *> Fastly::env;
 JS::PersistentRooted<JSObject *> Fastly::baseURL;
 JS::PersistentRooted<JSString *> Fastly::defaultBackend;
 bool allowDynamicBackendsCalled = false;
 bool Fastly::allowDynamicBackends = true;
+bool ENABLE_EXPERIMENTAL_HTTP_CACHE = false;
 
 bool Fastly::dump(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -86,6 +91,25 @@ bool Fastly::enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!args.requireAtLeast(cx, __func__, 1))
     return false;
   DEBUG_LOGGING_ENABLED = JS::ToBoolean(args[0]);
+  args.rval().setUndefined();
+  return true;
+}
+
+bool debugLog(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, __func__, 1))
+    return false;
+  JS::RootedString msg_str(cx, JS::ToString(cx, args[0]));
+  if (!msg_str) {
+    return false;
+  }
+  auto msg_host_str = core::encode(cx, msg_str);
+  if (!msg_host_str) {
+    return false;
+  }
+#ifdef DEBUG
+  debug_messages.push_back(std::string(msg_host_str));
+#endif
   args.rval().setUndefined();
   return true;
 }
@@ -431,6 +455,25 @@ bool Fastly::defaultBackend_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+#ifdef DEBUG
+bool debugMessages_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  JS::RootedObject debugMessages(cx, JS::NewArrayObject(cx, 0));
+  for (const auto &msg : debug_messages) {
+    JS::RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(msg.data(), msg.length())));
+    MOZ_ASSERT(str);
+    bool res;
+    uint32_t len;
+    res = JS::GetArrayLength(cx, debugMessages, &len);
+    MOZ_ASSERT(res);
+    res = JS_SetElement(cx, debugMessages, len, str);
+    MOZ_ASSERT(res);
+  }
+  args.rval().setObject(*debugMessages);
+  return true;
+}
+#endif
+
 bool Fastly::allowDynamicBackends_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(allowDynamicBackends);
@@ -461,6 +504,9 @@ const JSPropertySpec Fastly::properties[] = {
     JS_PSGS("allowDynamicBackends", allowDynamicBackends_get, allowDynamicBackends_set,
             JSPROP_ENUMERATE),
     JS_PSG("sdkVersion", version_get, JSPROP_ENUMERATE),
+#ifdef DEBUG
+    JS_PSG("debugMessages", debugMessages_get, JSPROP_ENUMERATE),
+#endif
     JS_PS_END};
 
 bool install(api::Engine *engine) {
@@ -468,6 +514,8 @@ bool install(api::Engine *engine) {
 
   bool ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS =
       std::string(std::getenv("ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS")) == "1";
+  ENABLE_EXPERIMENTAL_HTTP_CACHE =
+      std::string(std::getenv("ENABLE_EXPERIMENTAL_HTTP_CACHE")) == "1";
 
   JS::SetOutOfMemoryCallback(engine->cx(), oom_callback, nullptr);
 
@@ -494,6 +542,7 @@ bool install(api::Engine *engine) {
   const JSFunctionSpec methods[] = {
       JS_FN("dump", Fastly::dump, 1, 0),
       JS_FN("enableDebugLogging", Fastly::enableDebugLogging, 1, JSPROP_ENUMERATE),
+      JS_FN("debugLog", debugLog, 1, JSPROP_ENUMERATE),
       JS_FN("getGeolocationForIpAddress", Fastly::getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
       JS_FN("getLogger", Fastly::getLogger, 1, JSPROP_ENUMERATE),
       JS_FN("includeBytes", Fastly::includeBytes, 1, JSPROP_ENUMERATE),
@@ -581,6 +630,13 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(engine->cx(), experimental, "setDefaultBackend", set_default_backend_val)) {
     return false;
   }
+  auto enable_debug_logging =
+      JS_NewFunction(engine->cx(), &Fastly::enableDebugLogging, 1, 0, "enableDebugLogging");
+  RootedObject enable_debug_logging_obj(engine->cx(), JS_GetFunctionObject(enable_debug_logging));
+  RootedValue enable_debug_logging_val(engine->cx(), ObjectValue(*enable_debug_logging_obj));
+  if (!JS_SetProperty(engine->cx(), experimental, "enableDebugLogging", enable_debug_logging_val)) {
+    return false;
+  }
   auto allow_dynamic_backends =
       JS_NewFunction(engine->cx(), &Fastly::allowDynamicBackends_set, 1, 0, "allowDynamicBackends");
   RootedObject allow_dynamic_backends_obj(engine->cx(),
@@ -628,6 +684,11 @@ bool install(api::Engine *engine) {
   if (!engine->define_builtin_module("fastly:fanout", fanout_val)) {
     return false;
   }
+
+  // debugMessages for debug-only builds
+#ifdef DEBUG
+  debug_messages.clear();
+#endif
 
   return true;
 }
@@ -684,3 +745,14 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
 }
 
 } // namespace fastly::fastly
+
+void fastly_push_debug_message(std::string msg) {
+#ifdef DEBUG
+  if (fastly::fastly::DEBUG_LOGGING_ENABLED) {
+    // Log to both stderr and debug message log
+    fprintf(stderr, "%.*s\n", static_cast<int>(msg.size()), msg.data());
+    fflush(stderr);
+    debug_messages.push_back(msg);
+  }
+#endif
+}

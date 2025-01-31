@@ -16,9 +16,11 @@ public:
     HasBody,
     BodyUsed,
     Headers,
+    HeadersGen,
     URL,
     ManualFramingHeaders,
     Backend,
+    CacheEntry,
     Count,
   };
 
@@ -37,7 +39,7 @@ public:
   static bool body_unusable(JSContext *cx, JS::HandleObject body);
   static bool extract_body(JSContext *cx, JS::HandleObject self, JS::HandleValue body_val);
   static bool process_pending_request(JSContext *cx, host_api::HttpPendingReq::Handle handle,
-                                      JS::HandleObject context, JS::HandleObject promise);
+                                      JS::HandleObject context, JS::HandleValue promise);
 
   /**
    * Returns the RequestOrResponse's Headers if it has been reified, nullptr if
@@ -50,6 +52,13 @@ public:
    * object and commits the headers map values.
    */
   static bool commit_headers(JSContext *cx, JS::HandleObject self);
+
+  /**
+   * Compare the HeadersGen slot with the current headers generation, returning true if the headers
+   * have changed and false otherwise, storing the new generation into the slot.
+   * If the headers are undefined, the generation is tracked as null, still supporting comparison.
+   */
+  static bool compare_bump_headers_gen(JSContext *cx, JS::HandleObject self, bool *changed_out);
 
   static bool append_body(JSContext *cx, JS::HandleObject self, JS::HandleObject source);
 
@@ -71,9 +80,10 @@ public:
                                                 JS::HandleValue extra, JS::CallArgs args);
   static bool consume_content_stream_for_bodyAll(JSContext *cx, JS::HandleObject self,
                                                  JS::HandleValue stream_val, JS::CallArgs args);
+  template <bool async>
   static bool consume_body_handle_for_bodyAll(JSContext *cx, JS::HandleObject self,
                                               JS::HandleValue body_parser, JS::CallArgs args);
-  template <RequestOrResponse::BodyReadResult result_type>
+  template <RequestOrResponse::BodyReadResult result_type, bool async>
   static bool bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
   static bool body_source_cancel_algorithm(JSContext *cx, JS::CallArgs args,
                                            JS::HandleObject stream, JS::HandleObject owner,
@@ -103,6 +113,28 @@ public:
                        bool create_if_undefined);
   static bool backend_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
   static JSString *backend(JSObject *obj);
+
+  /**
+   * Helper method to get (and possibly unset) the cache entry for a request or response (if any)
+   *
+   * A Response with a cache entry is a valid CandidateResponse.
+   */
+  static std::optional<host_api::HttpCacheEntry> cache_entry(JSObject *obj);
+  /**
+   * Helper method to get and unset the transaction cache entry for a request or response (if any)
+   *
+   * Unsetting the cache entry on a Response object freezes the CandidateResponse from further
+   * modification.
+   *
+   * A boolean overload for the cache entry disabled case is used to mark if we were cached or not.
+   */
+  static std::optional<host_api::HttpCacheEntry> take_cache_entry(JSObject *obj,
+                                                                  std::optional<bool> mark_cached);
+  /**
+   * Close the cache entry and clear it from the Response, effectively locking this
+   * candidate response object.
+   */
+  static bool close_if_cache_entry(JSContext *cx, JS::HandleObject self);
 };
 
 class Request final : public builtins::BuiltinImpl<Request> {
@@ -134,10 +166,13 @@ public:
     HasBody = static_cast<int>(RequestOrResponse::Slots::HasBody),
     BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
+    HeadersGen = static_cast<int>(RequestOrResponse::Slots::HeadersGen),
     URL = static_cast<int>(RequestOrResponse::Slots::URL),
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
+    CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),
     Method = static_cast<int>(RequestOrResponse::Slots::Count),
+    OverrideCacheKey,
     CacheOverride,
     PendingRequest,
     ResponsePromise,
@@ -153,12 +188,14 @@ public:
 
   static JSObject *response_promise(JSObject *obj);
   static JSString *method(JSContext *cx, JS::HandleObject obj);
+  // static JSString *override_cache_key(JSContext *cx)
   static bool set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValue cache_key_val);
   static bool set_cache_override(JSContext *cx, JS::HandleObject self,
                                  JS::HandleValue cache_override_val);
   static bool apply_cache_override(JSContext *cx, JS::HandleObject self);
   static bool apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self);
 
+  static bool isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static host_api::HttpReq request_handle(JSObject *obj);
   static host_api::HttpPendingReq pending_handle(JSObject *obj);
   static bool is_downstream(JSObject *obj);
@@ -181,10 +218,11 @@ public:
   static JSObject *create_instance(JSContext *cx);
 };
 
-class Response final : public builtins::BuiltinImpl<Response> {
+class Response final : public builtins::FinalizableBuiltinImpl<Response> {
   static bool waitUntil(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool ok_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool status_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool status_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool statusText_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool url_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool version_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -215,14 +253,20 @@ public:
     HasBody = static_cast<int>(RequestOrResponse::Slots::HasBody),
     BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
+    HeadersGen = static_cast<int>(RequestOrResponse::Slots::HeadersGen),
     URL = static_cast<int>(RequestOrResponse::Slots::Headers),
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
+    CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),
     IsUpstream = static_cast<int>(RequestOrResponse::Slots::Count),
     Status,
     StatusMessage,
     Redirected,
     GripUpgradeRequest,
+    StorageAction,
+    SuggestedCacheWriteOptions,
+    OverrideCacheWriteOptions,
+    CacheBodyTransform,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -235,23 +279,79 @@ public:
   static bool init_class(JSContext *cx, JS::HandleObject global);
   static bool constructor(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  /**
+   * Create a response for a request, used for the fetch response flow.
+   */
+  static JSObject *create(JSContext *cx, HandleObject request, host_api::Response res);
+
+  /**
+   * Base-level response creation handler, for both upstream and downstream requests.
+   */
   static JSObject *create(JSContext *cx, JS::HandleObject response,
                           host_api::HttpResp response_handle, host_api::HttpBody body_handle,
                           bool is_upstream, JSObject *grip_upgrade_request,
                           JS::HandleString backend);
+
+  static host_api::HttpResp response_handle(JSObject *obj);
 
   /**
    * Returns the RequestOrResponse's Headers, reifying it if necessary.
    */
   static JSObject *headers(JSContext *cx, JS::HandleObject obj);
 
-  static host_api::HttpResp response_handle(JSObject *obj);
+  /**
+   * Get the storage action for the response.
+   */
+  static std::optional<host_api::HttpStorageAction> storage_action(JSObject *obj);
+
   static bool is_upstream(JSObject *obj);
   static std::optional<host_api::HttpReq> grip_upgrade_request(JSObject *obj);
   static host_api::HostString backend_str(JSContext *cx, JSObject *obj);
   static uint16_t status(JSObject *obj);
   static JSString *status_message(JSObject *obj);
   static void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code);
+
+  static bool add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
+                                       JS::HandleObject request,
+                                       std::optional<host_api::HttpCacheEntry> cache_entry,
+                                       const char *fun_name);
+
+  static bool has_body_transform(JSObject *self);
+
+  /**
+   * Override cache options set by the user & suggested options, or final cache options if
+   * finalized.
+   */
+  static host_api::HttpCacheWriteOptions *override_cache_options(JSObject *response);
+
+  /**
+   * Takes the override cache options field.
+   */
+  static host_api::HttpCacheWriteOptions *take_override_cache_options(JSObject *response);
+
+  /**
+   * Suggested cache options as provided by the host for the request/response pair, and
+   * computed lazily (fallible).
+   */
+  static host_api::HttpCacheWriteOptions *suggested_cache_options(JSContext *cx,
+                                                                  HandleObject response);
+
+  static bool isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool cached_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool stale_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool ttl_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool ttl_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool age_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool swr_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool swr_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool vary_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool vary_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool pci_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool pci_set(JSContext *cx, unsigned argc, JS::Value *vp);
+
+  static void finalize(JS::GCContext *gcx, JSObject *self);
 };
 
 } // namespace fastly::fetch
