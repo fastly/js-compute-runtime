@@ -107,7 +107,9 @@ bool debugLog(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!msg_host_str) {
     return false;
   }
+#ifdef DEBUG
   debug_messages.push_back(std::string(msg_host_str));
+#endif
   args.rval().setUndefined();
   return true;
 }
