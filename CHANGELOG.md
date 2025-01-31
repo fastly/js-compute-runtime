@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.30.0 (2025-01-31)
+
+### Added
+
+* HTTP Cache API ([#1051](https://github.com/fastly/js-compute-runtime/issues/1051)) ([35e7565](https://github.com/fastly/js-compute-runtime/commit/35e7565eaa64a957445fbfd1b8acd9f78b289ba1))
+
+### Fixed
+
+* forbidden KV key special characters to match documentation ([#1097](https://github.com/fastly/js-compute-runtime/issues/1097)) ([fefc024](https://github.com/fastly/js-compute-runtime/commit/fefc024e9b53cc6e0a8bfa6769817a55e2ac154d))
+
 ## 3.29.2 (2025-01-23)
 
 ### Fixed
