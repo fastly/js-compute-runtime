@@ -1384,32 +1384,33 @@ bool RequestOrResponse::consume_content_stream_for_bodyAll(JSContext *cx, JS::Ha
   return JS::AddPromiseReactions(cx, promise, then_handler, catch_handler);
 }
 
-bool async_process_body_handle_for_bodyAll(JSContext *cx, uint32_t handle, JS::HandleObject self,
-                                           JS::HandleValue body_parser) {
-  auto body = RequestOrResponse::body_handle(self);
-  auto *parse_body = reinterpret_cast<RequestOrResponse::ParseBodyCB *>(body_parser.toPrivate());
-  auto [buf, bytes_read, state] = read_from_handle_all<true>(cx, body);
-  if (state == StreamState::Error) {
+// bool async_process_body_handle_for_bodyAll(JSContext *cx, uint32_t handle, JS::HandleObject self,
+//                                            JS::HandleValue body_parser) {
+//   auto body = RequestOrResponse::body_handle(self);
+//   auto *parse_body = reinterpret_cast<RequestOrResponse::ParseBodyCB *>(body_parser.toPrivate());
+//   auto [buf, bytes_read, state] = read_from_handle_all<true>(cx, body);
+//   if (state == StreamState::Error) {
 
-    JS::RootedObject result_promise(cx);
-    result_promise =
-        &JS::GetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyAllPromise))
-             .toObject();
-    JS::SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyAllPromise),
-                        JS::UndefinedValue());
-    return RejectPromiseWithPendingError(cx, result_promise);
-  }
+//     JS::RootedObject result_promise(cx);
+//     result_promise =
+//         &JS::GetReservedSlot(self,
+//         static_cast<uint32_t>(RequestOrResponse::Slots::BodyAllPromise))
+//              .toObject();
+//     JS::SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyAllPromise),
+//                         JS::UndefinedValue());
+//     return RejectPromiseWithPendingError(cx, result_promise);
+//   }
 
-  if (state == StreamState::Complete) {
+//   if (state == StreamState::Complete) {
+//     return parse_body(cx, self, std::move(buf), bytes_read);
+//   }
 
-    return parse_body(cx, self, std::move(buf), bytes_read);
-  }
-
-  // still have to wait for the stream to complete, queue an async task
-  ENGINE->queue_async_task(new FastlyAsyncTask(body.async_handle(), self, JS::UndefinedHandleValue,
-                                               async_process_body_handle_for_bodyAll));
-  return true;
-}
+//   // still have to wait for the stream to complete, queue an async task
+//   ENGINE->queue_async_task(new FastlyAsyncTask(body.async_handle(), self,
+//   JS::UndefinedHandleValue,
+//                                                async_process_body_handle_for_bodyAll));
+//   return true;
+// }
 
 template <bool async>
 bool RequestOrResponse::consume_body_handle_for_bodyAll(JSContext *cx, JS::HandleObject self,
@@ -1431,15 +1432,15 @@ bool RequestOrResponse::consume_body_handle_for_bodyAll(JSContext *cx, JS::Handl
     return parse_body(cx, self, std::move(buf), bytes_read);
   }
 
+  // TODO: the async path isn't working because we don't yet store a chunk buffer along with
+  // the body parser / on the Response slot. This would be a nice addition in future.
+
   // still have to wait for the stream to complete, queue an async task
-  ENGINE->queue_async_task(new FastlyAsyncTask(body.async_handle(), self, JS::UndefinedHandleValue,
-                                               async_process_body_handle_for_bodyAll));
+  // ENGINE->queue_async_task(new FastlyAsyncTask(body.async_handle(), self,
+  // JS::UndefinedHandleValue,
+  //                                              async_process_body_handle_for_bodyAll));
   return true;
 }
-
-// Async case only used from fetch.cpp currently
-template bool RequestOrResponse::bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer, true>(
-    JSContext *, JS::CallArgs, JS::HandleObject);
 
 template <RequestOrResponse::BodyReadResult result_type, bool async>
 bool RequestOrResponse::bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObject self) {

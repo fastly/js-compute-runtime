@@ -533,7 +533,7 @@ bool apply_body_transform(JSContext *cx, JS::HandleValue response, host_api::Htt
 
   JS::Value array_buffer_ret;
   JS::CallArgs args = JS::CallArgsFromVp(0, &array_buffer_ret);
-  if (!RequestOrResponse::bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer, true>(
+  if (!RequestOrResponse::bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer, false>(
           cx, args, response_obj)) {
     return false;
   }
