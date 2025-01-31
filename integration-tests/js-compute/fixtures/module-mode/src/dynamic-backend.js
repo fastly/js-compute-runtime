@@ -2475,7 +2475,7 @@ routes.set('/backend/timeout', async () => {
         strictEqual(backend.connectTimeout, 1000, 'connectTimeout');
         strictEqual(backend.firstByteTimeout, 15000, 'firstByteTimeout');
         strictEqual(backend.betweenBytesTimeout, 10000, 'betweenBytesTimeout');
-        strictEqual(backend.httpKeepaliveTime, 55000, 'httpKeepaliveTime');
+        strictEqual(backend.httpKeepaliveTime, 600000, 'httpKeepaliveTime');
         deepStrictEqual(
           backend.tcpKeepalive,
           {
@@ -2512,7 +2512,7 @@ routes.set('/backend/timeout', async () => {
         strictEqual(backend.connectTimeout, 1000, 'connectTimeout');
         strictEqual(backend.firstByteTimeout, 180000, 'firstByteTimeout');
         strictEqual(backend.betweenBytesTimeout, 9000, 'betweenBytesTimeout');
-        strictEqual(backend.httpKeepaliveTime, 55000, 'httpKeepaliveTime');
+        strictEqual(backend.httpKeepaliveTime, 600000, 'httpKeepaliveTime');
         deepStrictEqual(
           backend.tcpKeepalive,
           {
