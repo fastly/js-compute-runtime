@@ -25,22 +25,23 @@ declare module 'fastly:cache-override' {
      */
     cache?: boolean | 'uncacheable';
     /**
-     * Get or set a [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream) to be used for
-     * transforming the response body prior to caching.
+     * Provide a function to be used for transforming the response body prior to caching.
      *
      * Body transformations are performed by specifying a transform, rather than by directly working with the body
      * during the onAfterSend callback function, because not every response contains a fresh body:
      * 304 Not Modified responses, which are used to revalidate a stale cached response, are valuable precisely because
      * they do not retransmit the body.
      *
-     * For any other response status, the backend response will contain a relevant body, and the `bodyTransform` will
+     * For any other response status, the backend response will contain a relevant body, and the `bodyTransformFn` will
      * be applied to it. The original backend body is piped to the [`writeable`](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream/writable)
      * end of the transform, and transform is responsible for writing the new body, which will be read out from the
      * [`readable`](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream/readable) end of the transform.
      * This setup allows the transform to work with streamed chunks of the backend body, rather
      * than necessarily reading it entirely into memory.
      */
-    bodyTransform?: TransformStream<Uint8Array, Uint8Array>;
+    bodyTransformFn?: (
+      body: Uint8Array,
+    ) => Uint8Array | PromiseLike<Uint8Array>;
   }
   /**
    * The cache override mode for a request

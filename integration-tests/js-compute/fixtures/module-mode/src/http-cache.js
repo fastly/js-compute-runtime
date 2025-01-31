@@ -555,7 +555,7 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
           cacheOverride: new CacheOverride({
             afterSend() {
               return {
-                bodyTransform: 'not a transform stream',
+                bodyTransformFn: 'not a transform function',
               };
             },
           }),
@@ -604,26 +604,12 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
 
     const cacheOverride = new CacheOverride({
       afterSend(res) {
-        // Create a transform that uppercases the response
-        const transformer = new TransformStream({
-          start(controller) {
-            console.debug('transform start');
-          },
-          flush(controller) {
-            console.debug('transform flush');
-          },
-          transform(chunk, controller) {
-            console.debug('transform', chunk.byteLength);
-            const text = new TextDecoder().decode(chunk);
-            const upperText = text.toUpperCase();
-            const upperChunk = new TextEncoder().encode(upperText);
-            console.debug('enqueue', upperChunk.byteLength);
-            controller.enqueue(upperChunk);
-          },
-        });
-
         return {
-          bodyTransform: transformer,
+          bodyTransformFn: (buffer) => {
+            const text = new TextDecoder().decode(buffer);
+            const upperText = text.toUpperCase();
+            return new TextEncoder().encode(upperText);
+          },
           cache: true,
         };
       },
@@ -631,8 +617,32 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
 
     const res = await fetch(url, { cacheOverride });
     const text = await res.text();
+    strictEqual(text.length > 200, true);
     strictEqual(text, text.toUpperCase());
-    throw new Error('wow');
+  });
+
+  routes.set('/http-cache/body-transform-delay', async () => {
+    const url = getTestUrl();
+
+    const cacheOverride = new CacheOverride({
+      afterSend(res) {
+        return {
+          async bodyTransformFn(buffer) {
+            // wait one second before returning the result
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            const text = new TextDecoder().decode(buffer);
+            const upperText = text.toUpperCase();
+            return new TextEncoder().encode(upperText);
+          },
+          cache: true,
+        };
+      },
+    });
+
+    const res = await fetch(url, { cacheOverride });
+    const text = await res.text();
+    strictEqual(text.length > 200, true);
+    strictEqual(text, text.toUpperCase());
   });
 
   // Test transform that throws an error
@@ -641,13 +651,34 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
 
     const cacheOverride = new CacheOverride({
       afterSend() {
-        const transformer = new TransformStream({
-          transform() {
+        return {
+          bodyTransformFn() {
             throw new Error('Transform failed');
           },
-        });
+        };
+      },
+    });
 
-        return { bodyTransform: transformer };
+    // Should reject due to transform error
+    await assertRejects(
+      () => fetch(url, { cacheOverride }).then((res) => res.text()),
+      Error,
+      'Transform failed',
+    );
+  });
+
+  // Test transform that throws an error
+  routes.set('/http-cache/body-transform-error-delay', async () => {
+    const url = getTestUrl();
+
+    const cacheOverride = new CacheOverride({
+      afterSend() {
+        return {
+          async bodyTransformFn() {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            throw new Error('Transform failed');
+          },
+        };
       },
     });
 
@@ -665,164 +696,62 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
 
     const cacheOverride = new CacheOverride({
       afterSend() {
-        const transformer = new TransformStream({
-          transform(chunk, controller) {
-            // Try to enqueue invalid chunk type
-            controller.enqueue('string instead of Uint8Array');
+        return {
+          bodyTransformFn() {
+            return 'string instead of uint8array';
           },
-        });
-
-        return { bodyTransform: transformer };
+        };
       },
     });
 
     // Should reject due to invalid chunk type
     await assertRejects(
       () => fetch(url, { cacheOverride }).then((res) => res.text()),
-      TypeError,
+      Error,
     );
   });
 
-  // Test transform that tries to write after stream is closed
-  routes.set('/http-cache/body-transform-write-after-close', async () => {
-    const url = getTestUrl();
-    let streamController;
-
-    const cacheOverride = new CacheOverride({
-      afterSend() {
-        const transformer = new TransformStream({
-          transform(chunk, controller) {
-            streamController = controller;
-            controller.enqueue(chunk);
-          },
-          flush() {
-            // Try to write after stream is closed
-            setTimeout(() => {
-              try {
-                streamController.enqueue(new Uint8Array([1, 2, 3]));
-              } catch (e) {
-                // Should throw as stream is closed
-                strictEqual(e instanceof TypeError, true);
-              }
-            }, 0);
-          },
-        });
-
-        return { bodyTransform: transformer };
-      },
-    });
-
-    const res = await fetch(url, { cacheOverride });
-    await res.text(); // Should complete successfully
-  });
-
-  // Test cancellation during transform
-  routes.set('/http-cache/body-transform-cancel', async () => {
-    const url = getTestUrl();
-    let transformCalled = false;
-    let cancelCalled = false;
-
-    const cacheOverride = new CacheOverride({
-      afterSend() {
-        const transformer = new TransformStream({
-          transform(chunk, controller) {
-            transformCalled = true;
-            // Simulate slow transform
-            return new Promise((resolve) =>
-              setTimeout(() => {
-                controller.enqueue(chunk);
-                resolve();
-              }, 1000),
-            );
-          },
-          cancel() {
-            cancelCalled = true;
-          },
-        });
-
-        return { bodyTransform: transformer };
-      },
-    });
-
-    const res = await fetch(url, { cacheOverride });
-
-    // Start reading the body then abort
-    const reader = res.body.getReader();
-    await reader.read(); // This will trigger transform
-    await reader.cancel(); // Cancel mid-transform
-
-    strictEqual(transformCalled, true);
-    strictEqual(cancelCalled, true);
-  });
-
-  // Test transform with backpressure
-  routes.set('/http-cache/body-transform-backpressure', async () => {
-    const url = getTestUrl();
-    let chunks = 0;
-
-    const cacheOverride = new CacheOverride({
-      afterSend() {
-        const transformer = new TransformStream({
-          async transform(chunk, controller) {
-            chunks++;
-            // Simulate slow processing of each chunk
-            await new Promise((resolve) => setTimeout(resolve, 100));
-            controller.enqueue(chunk);
-          },
-        });
-
-        return { bodyTransform: transformer };
-      },
-    });
-
-    const res = await fetch(url, { cacheOverride });
-    await res.arrayBuffer(); // Read entire response
-
-    // Verify transform was called for each chunk
-    strictEqual(chunks > 0, true);
-  });
-
-  // Test race conditions with body transforms
+  // Concurrent body transforms
   routes.set('/http-cache/concurrent-transforms', async () => {
-    const url = getTestUrl();
-
-    // Create two different transforms
-    const transform1 = new TransformStream({
-      transform(chunk, controller) {
-        const text = new TextDecoder().decode(chunk);
-        controller.enqueue(new TextEncoder().encode(text.toUpperCase()));
-      },
-    });
-
-    const transform2 = new TransformStream({
-      transform(chunk, controller) {
-        const text = new TextDecoder().decode(chunk);
-        controller.enqueue(new TextEncoder().encode(text.toLowerCase()));
-      },
-    });
+    const url1 = getTestUrl();
+    const url2 = getTestUrl();
 
     const cacheOverride1 = new CacheOverride({
       afterSend() {
-        return { bodyTransform: transform1, cache: true };
+        return {
+          bodyTransformFn(buffer) {
+            const text = new TextDecoder().decode(buffer);
+            return new TextEncoder().encode(text.toUpperCase());
+          },
+          cache: true,
+        };
       },
     });
 
     const cacheOverride2 = new CacheOverride({
       afterSend() {
-        return { bodyTransform: transform2, cache: true };
+        return {
+          bodyTransformFn(buffer) {
+            const text = new TextDecoder().decode(buffer);
+            return new TextEncoder().encode(text.toLowerCase());
+          },
+          cache: true,
+        };
       },
     });
 
     // Make concurrent requests with different transforms
     const [res1, res2] = await Promise.all([
-      fetch(url, { cacheOverride: cacheOverride1 }),
-      fetch(url, { cacheOverride: cacheOverride2 }),
+      fetch(url1, { cacheOverride: cacheOverride1 }),
+      fetch(url2, { cacheOverride: cacheOverride2 }),
     ]);
 
     // Check that transforms were applied correctly
     const text1 = await res1.text();
     const text2 = await res2.text();
+    strictEqual(text1.length > 200, true);
     strictEqual(text1, text1.toUpperCase());
+    strictEqual(text2.length > 200, true);
     strictEqual(text2, text2.toLowerCase());
   });
 }
@@ -1018,7 +947,7 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
 
   // TODO (skipped, due to unknown blocking from host)
   routes.set(
-    '/http-cache/parrallel-request-collapsing-uncacheable',
+    '/http-cache/parallel-request-collapsing-uncacheable',
     async () => {
       const url = getTestUrl();
       let backendCalls = 0;

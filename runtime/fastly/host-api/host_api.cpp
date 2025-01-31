@@ -113,7 +113,22 @@ void sleep_until(uint64_t time_ns, uint64_t now) {
 }
 
 size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
-  TRACE_CALL()
+  if (tasks.size() == 0) {
+    TRACE_CALL()
+  } else {
+    std::string arg0 = std::to_string(tasks.at(0)->handle_);
+    if (tasks.size() == 1) {
+      TRACE_CALL_ARGS(TSV(arg0))
+    } else {
+      std::string arg1 = std::to_string(tasks.at(1)->handle_);
+      if (tasks.size() == 2) {
+        TRACE_CALL_ARGS(TSV(arg0), TSV(arg1))
+      } else {
+        std::string arg2 = std::to_string(tasks.at(2)->handle_);
+        TRACE_CALL_ARGS(TSV(arg0), TSV(arg1), TSV(arg2))
+      }
+    }
+  }
   size_t tasks_len = tasks.size();
   std::vector<api::FastlyAsyncTask::Handle> handles;
   handles.reserve(tasks_len);
@@ -1104,6 +1119,7 @@ FastlyResult<Response, FastlySendError> HttpPendingReq::wait() {
     res.emplace_err(make_fastly_send_error(s));
   } else {
     res.emplace(make_response(ret));
+    TRACE_CALL_RET(TSV(std::to_string(ret.f0)), TSV(std::to_string(ret.f1)))
   }
 
   return res;

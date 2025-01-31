@@ -156,14 +156,14 @@ ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
   size_t bytes_read = 0;
   bool end_of_stream = true;
   while (true) {
-    DEBUG_LOG("read from handle all loop")
+
     auto ready_res = body.is_ready();
     if (auto *err = ready_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return {nullptr, 0, StreamState::Error};
     }
     if (!ready_res.unwrap()) {
-      DEBUG_LOG("async break")
+
       end_of_stream = false;
       break;
     }
@@ -381,18 +381,24 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
 
     // set_body_transform
     JS::RootedValue body_transform_val(cx);
-    if (!JS_GetProperty(cx, after_send_obj, "bodyTransform", &body_transform_val)) {
+    if (!JS_GetProperty(cx, after_send_obj, "bodyTransformFn", &body_transform_val)) {
       return RejectPromiseWithPendingError(cx, promise_obj);
     }
     if (!body_transform_val.isUndefined()) {
-      if (!TransformStream::is_instance(body_transform_val)) {
-        api::throw_error(
-            cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
-            "return a 'bodyTransform' property that is an instance of a TransformStream");
+      bool valid_function = false;
+      if (body_transform_val.isObject()) {
+        JS::RootedObject body_transform_obj(cx, &body_transform_val.toObject());
+        if (JS_ObjectIsFunction(body_transform_obj)) {
+          valid_function = true;
+          JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::CacheBodyTransform),
+                              body_transform_val);
+        }
+      }
+      if (!valid_function) {
+        api::throw_error(cx, api::Errors::TypeError, "Request cache hook", "afterSend()",
+                         "return a 'bodyTransformFn' property that is a function");
         return RejectPromiseWithPendingError(cx, promise_obj);
       }
-      JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::CacheBodyTransform),
-                          body_transform_val);
     }
   }
 
@@ -1382,11 +1388,9 @@ bool async_process_body_handle_for_bodyAll(JSContext *cx, uint32_t handle, JS::H
                                            JS::HandleValue body_parser) {
   auto body = RequestOrResponse::body_handle(self);
   auto *parse_body = reinterpret_cast<RequestOrResponse::ParseBodyCB *>(body_parser.toPrivate());
-  DEBUG_LOG("Consume read from handle all task")
   auto [buf, bytes_read, state] = read_from_handle_all(cx, body);
-  DEBUG_LOG("Got handle all task")
   if (state == StreamState::Error) {
-    DEBUG_LOG("stream error")
+
     JS::RootedObject result_promise(cx);
     result_promise =
         &JS::GetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyAllPromise))
@@ -1397,12 +1401,11 @@ bool async_process_body_handle_for_bodyAll(JSContext *cx, uint32_t handle, JS::H
   }
 
   if (state == StreamState::Complete) {
-    DEBUG_LOG("stream complete")
+
     return parse_body(cx, self, std::move(buf), bytes_read);
   }
 
   // still have to wait for the stream to complete, queue an async task
-  DEBUG_LOG("Read from handle all async task")
   ENGINE->queue_async_task(new FastlyAsyncTask(body.async_handle(), self, JS::UndefinedHandleValue,
                                                async_process_body_handle_for_bodyAll));
   return true;
@@ -1413,11 +1416,9 @@ bool RequestOrResponse::consume_body_handle_for_bodyAll(JSContext *cx, JS::Handl
                                                         JS::CallArgs args) {
   auto body = body_handle(self);
   auto *parse_body = reinterpret_cast<ParseBodyCB *>(body_parser.toPrivate());
-  DEBUG_LOG("Consume read from handle all")
   auto [buf, bytes_read, state] = read_from_handle_all(cx, body);
-  DEBUG_LOG("Got handle all")
   if (state == StreamState::Error) {
-    DEBUG_LOG("stream error")
+
     JS::RootedObject result_promise(cx);
     result_promise =
         &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise)).toObject();
@@ -1426,12 +1427,11 @@ bool RequestOrResponse::consume_body_handle_for_bodyAll(JSContext *cx, JS::Handl
   }
 
   if (state == StreamState::Complete) {
-    DEBUG_LOG("stream complete")
+
     return parse_body(cx, self, std::move(buf), bytes_read);
   }
 
   // still have to wait for the stream to complete, queue an async task
-  DEBUG_LOG("Read from handle all async")
   ENGINE->queue_async_task(new FastlyAsyncTask(body.async_handle(), self, body_parser,
                                                async_process_body_handle_for_bodyAll));
   return true;
@@ -1441,12 +1441,14 @@ template <RequestOrResponse::BodyReadResult result_type>
 bool RequestOrResponse::bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObject self) {
   // TODO: mark body as consumed when operating on stream, too.
   if (body_used(self)) {
+
     JS_ReportErrorASCII(cx, "Body has already been consumed");
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
   JS::RootedObject bodyAll_promise(cx, JS::NewPromiseObject(cx, nullptr));
   if (!bodyAll_promise) {
+
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise),
@@ -1455,6 +1457,7 @@ bool RequestOrResponse::bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObje
   // If the Request/Response doesn't have a body, empty default results need to
   // be returned.
   if (!has_body(self)) {
+
     JS::UniqueChars chars;
     if (!parse_body<result_type>(cx, self, std::move(chars), 0)) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -1465,6 +1468,7 @@ bool RequestOrResponse::bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObje
   }
 
   if (!mark_body_used(cx, self)) {
+
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
@@ -1477,15 +1481,20 @@ bool RequestOrResponse::bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObje
   // https://github.com/fastly/js-compute-runtime/issues/218
   JS::RootedObject stream(cx, body_stream(self));
   if (stream && !NativeStreamSource::stream_is_body(cx, stream)) {
+
     if (!JS_SetElement(cx, stream, 1, body_parser)) {
       return false;
     }
+
     JS::RootedValue extra(cx, JS::ObjectValue(*stream));
     if (!enqueue_internal_method<consume_content_stream_for_bodyAll>(cx, self, extra)) {
+
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
   } else {
+
     if (!enqueue_internal_method<consume_body_handle_for_bodyAll>(cx, self, body_parser)) {
+
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
   }
@@ -1498,7 +1507,9 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
                                                    JS::HandleObject source,
                                                    JS::HandleObject body_owner,
                                                    JS::HandleObject controller) {
-  DEBUG_LOG("body source pull algorithm")
+  if (JS::GetReservedSlot(source, static_cast<uint32_t>(Slots::Body)).isInt32()) {
+    auto handle = std::to_string(RequestOrResponse::body_handle(source).handle);
+  }
   // If the stream has been piped to a TransformStream whose readable end was
   // then passed to a Request or Response as the body, we can just append the
   // entire source body to the destination using a single native hostcall, and
@@ -1510,7 +1521,9 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
   // piped in at the same time.
   JS::RootedObject pipe_dest(cx, NativeStreamSource::piped_to_transform_stream(source));
   if (pipe_dest) {
+
     if (TransformStream::readable_used_as_body(pipe_dest)) {
+
       JS::RootedObject dest_owner(cx, TransformStream::owner(pipe_dest));
       if (!RequestOrResponse::append_body(cx, dest_owner, body_owner)) {
         return false;

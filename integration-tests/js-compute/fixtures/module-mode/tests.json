@@ -217,33 +217,23 @@
     "environments": ["compute"],
     "features": ["http-cache"]
   },
+  "GET /http-cache/body-transform-delay": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
   "GET /http-cache/body-transform-error": {
-    "skip": true,
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/body-transform-error-delay": {
     "environments": ["compute"],
     "features": ["http-cache"]
   },
   "GET /http-cache/body-transform-invalid-chunk": {
-    "skip": true,
-    "environments": ["compute"],
-    "features": ["http-cache"]
-  },
-  "GET /http-cache/body-transform-write-after-close": {
-    "skip": true,
-    "environments": ["compute"],
-    "features": ["http-cache"]
-  },
-  "GET /http-cache/body-transform-cancel": {
-    "skip": true,
-    "environments": ["compute"],
-    "features": ["http-cache"]
-  },
-  "GET /http-cache/body-transform-backpressure": {
-    "skip": true,
     "environments": ["compute"],
     "features": ["http-cache"]
   },
   "GET /http-cache/concurrent-transforms": {
-    "skip": true,
     "environments": ["compute"],
     "features": ["http-cache"]
   },
