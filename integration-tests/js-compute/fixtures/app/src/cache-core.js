@@ -105,6 +105,7 @@ function ensureLion() {
         'append',
         'prepend',
         'close',
+        'abandon',
         Symbol.toStringTag,
       ];
       assert(actual, expected, `Reflect.ownKeys(FastlyBody.prototype)`);
