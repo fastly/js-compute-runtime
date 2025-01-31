@@ -564,41 +564,6 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
     );
   });
 
-  routes.set('/http-cache/body-stream', async () => {
-    const url = getTestUrl();
-
-    const cacheOverride = new CacheOverride({
-      afterSend(res) {
-        // Create a transform that uppercases the response
-        const transformer = new TransformStream({
-          start(controller) {
-            console.debug('transform start');
-          },
-          flush(controller) {
-            console.debug('transform flush');
-          },
-          transform(chunk, controller) {
-            console.debug('transform', chunk.byteLength);
-            const text = new TextDecoder().decode(chunk);
-            const upperText = text.toUpperCase();
-            const upperChunk = new TextEncoder().encode(upperText);
-            console.debug('enqueue', upperChunk.byteLength);
-            controller.enqueue(upperChunk);
-          },
-        });
-
-        return {
-          bodyTransform: transformer,
-          cache: true,
-        };
-      },
-    });
-
-    const res = await fetch(url, { cacheOverride });
-    const text = await res.text();
-    strictEqual(text, text.toUpperCase());
-  });
-
   routes.set('/http-cache/body-transform', async () => {
     const url = getTestUrl();
 
