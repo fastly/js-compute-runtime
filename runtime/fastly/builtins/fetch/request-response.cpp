@@ -151,21 +151,21 @@ struct ReadResult {
 
 // Returns a UniqueChars and the length of that string. The UniqueChars value is not
 // null-terminated.
-ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
+template <bool async> ReadResult read_from_handle_all(JSContext *cx, host_api::HttpBody body) {
   std::vector<host_api::HostString> chunks;
   size_t bytes_read = 0;
   bool end_of_stream = true;
   while (true) {
-
-    auto ready_res = body.is_ready();
-    if (auto *err = ready_res.to_err()) {
-      HANDLE_ERROR(cx, *err);
-      return {nullptr, 0, StreamState::Error};
-    }
-    if (!ready_res.unwrap()) {
-
-      end_of_stream = false;
-      break;
+    if (async) {
+      auto ready_res = body.is_ready();
+      if (auto *err = ready_res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        return {nullptr, 0, StreamState::Error};
+      }
+      if (!ready_res.unwrap()) {
+        end_of_stream = false;
+        break;
+      }
     }
     auto res = body.read(HANDLE_READ_CHUNK_SIZE);
     if (auto *err = res.to_err()) {
@@ -1388,7 +1388,7 @@ bool async_process_body_handle_for_bodyAll(JSContext *cx, uint32_t handle, JS::H
                                            JS::HandleValue body_parser) {
   auto body = RequestOrResponse::body_handle(self);
   auto *parse_body = reinterpret_cast<RequestOrResponse::ParseBodyCB *>(body_parser.toPrivate());
-  auto [buf, bytes_read, state] = read_from_handle_all(cx, body);
+  auto [buf, bytes_read, state] = read_from_handle_all<true>(cx, body);
   if (state == StreamState::Error) {
 
     JS::RootedObject result_promise(cx);
@@ -1411,14 +1411,15 @@ bool async_process_body_handle_for_bodyAll(JSContext *cx, uint32_t handle, JS::H
   return true;
 }
 
+template <bool async>
 bool RequestOrResponse::consume_body_handle_for_bodyAll(JSContext *cx, JS::HandleObject self,
                                                         JS::HandleValue body_parser,
                                                         JS::CallArgs args) {
   auto body = body_handle(self);
   auto *parse_body = reinterpret_cast<ParseBodyCB *>(body_parser.toPrivate());
-  auto [buf, bytes_read, state] = read_from_handle_all(cx, body);
+  auto [buf, bytes_read, state] = read_from_handle_all<async>(cx, body);
+  MOZ_ASSERT(async || state != StreamState::Wait);
   if (state == StreamState::Error) {
-
     JS::RootedObject result_promise(cx);
     result_promise =
         &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise)).toObject();
@@ -1427,17 +1428,20 @@ bool RequestOrResponse::consume_body_handle_for_bodyAll(JSContext *cx, JS::Handl
   }
 
   if (state == StreamState::Complete) {
-
     return parse_body(cx, self, std::move(buf), bytes_read);
   }
 
   // still have to wait for the stream to complete, queue an async task
-  ENGINE->queue_async_task(new FastlyAsyncTask(body.async_handle(), self, body_parser,
+  ENGINE->queue_async_task(new FastlyAsyncTask(body.async_handle(), self, JS::UndefinedHandleValue,
                                                async_process_body_handle_for_bodyAll));
   return true;
 }
 
-template <RequestOrResponse::BodyReadResult result_type>
+// Async case only used from fetch.cpp currently
+template bool RequestOrResponse::bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer, true>(
+    JSContext *, JS::CallArgs, JS::HandleObject);
+
+template <RequestOrResponse::BodyReadResult result_type, bool async>
 bool RequestOrResponse::bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObject self) {
   // TODO: mark body as consumed when operating on stream, too.
   if (body_used(self)) {
@@ -1493,7 +1497,7 @@ bool RequestOrResponse::bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObje
     }
   } else {
 
-    if (!enqueue_internal_method<consume_body_handle_for_bodyAll>(cx, self, body_parser)) {
+    if (!enqueue_internal_method<consume_body_handle_for_bodyAll<async>>(cx, self, body_parser)) {
 
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
@@ -2069,7 +2073,7 @@ bool Request::headers_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 template <RequestOrResponse::BodyReadResult result_type>
 bool Request::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  return RequestOrResponse::bodyAll<result_type>(cx, args, self);
+  return RequestOrResponse::bodyAll<result_type, false>(cx, args, self);
 }
 
 bool Request::backend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -3214,7 +3218,7 @@ bool Response::headers_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 template <RequestOrResponse::BodyReadResult result_type>
 bool Response::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  return RequestOrResponse::bodyAll<result_type>(cx, args, self);
+  return RequestOrResponse::bodyAll<result_type, false>(cx, args, self);
 }
 
 bool Response::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {

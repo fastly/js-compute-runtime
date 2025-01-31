@@ -61,7 +61,7 @@ std::optional<char> find_invalid_character_for_kv_store_key(const char *str) {
 template <RequestOrResponse::BodyReadResult result_type>
 bool KVStoreEntry::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  return RequestOrResponse::bodyAll<result_type>(cx, args, self);
+  return RequestOrResponse::bodyAll<result_type, false>(cx, args, self);
 }
 
 bool KVStoreEntry::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {

@@ -529,12 +529,20 @@ bool apply_body_transform(JSContext *cx, JS::HandleValue response, host_api::Htt
                           JS::MutableHandleObject ret_promise) {
   JS::RootedObject response_obj(cx, &response.toObject());
   // Get the entire body from the response (asynchronously)
-  JS::RootedValue array_buffer_ret(cx);
-  if (!JS::Call(cx, response_obj, "arrayBuffer", JS::HandleValueArray::empty(),
-                &array_buffer_ret)) {
+  // JS::RootedValue array_buffer_ret(cx);
+
+  JS::Value array_buffer_ret;
+  JS::CallArgs args = JS::CallArgsFromVp(0, &array_buffer_ret);
+  if (!RequestOrResponse::bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer, true>(
+          cx, args, response_obj)) {
     return false;
   }
-  JS::RootedObject array_buffer_promise(cx, JS::CallOriginalPromiseResolve(cx, array_buffer_ret));
+  JS::RootedValue array_buffer(cx, array_buffer_ret);
+  // if (!JS::Call(cx, response_obj, "arrayBuffer", JS::HandleValueArray::empty(),
+  //               &array_buffer_ret)) {
+  //   return false;
+  // }
+  JS::RootedObject array_buffer_promise(cx, JS::CallOriginalPromiseResolve(cx, array_buffer));
   if (!array_buffer_promise) {
     return false;
   }

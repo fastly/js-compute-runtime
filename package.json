@@ -34,7 +34,7 @@
     "test:wpt:debug": "tests/wpt-harness/build-wpt-runtime.sh --debug-build && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:types": "tsd",
     "clean": "rm -f starling.wasm fastly.wasm fastly.debug.wasm fastly-weval.wasm fastly-ics.wevalcache fastly-js-compute-*.tgz",
-    "build": "npm run clean && npm run build:release && npm run build:debug && npm run build:weval",
+    "build": "npm run clean && npm run build:debug && npm run build:release && npm run build:weval",
     "build:release": "./runtime/fastly/build-release.sh",
     "build:debug": "./runtime/fastly/build-debug.sh",
     "build:weval": "./runtime/fastly/build-release-weval.sh",

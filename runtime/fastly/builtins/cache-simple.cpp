@@ -22,7 +22,7 @@ namespace fastly::cache_simple {
 template <RequestOrResponse::BodyReadResult result_type>
 bool SimpleCacheEntry::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
-  return RequestOrResponse::bodyAll<result_type>(cx, args, self);
+  return RequestOrResponse::bodyAll<result_type, false>(cx, args, self);
 }
 
 bool SimpleCacheEntry::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
