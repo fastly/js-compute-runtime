@@ -38,7 +38,7 @@ trap 'rm $output' EXIT
 
 echo "Building the runtime..."
 cd "$root"
-if ! npm run build > "$output" 2>&1; then
+if ! npm run build:release > "$output" 2>&1; then
   cat "$output"
   exit 1
 fi

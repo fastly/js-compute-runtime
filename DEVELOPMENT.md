@@ -52,7 +52,7 @@ To build from source, you need to have the following tools installed to successf
 
 Build the runtime using npm:
 ```sh
-npm run build && npm run build:debug && npm run build:weval
+npm run build
 ```
 
 #### macOS (Apple silicon)
@@ -105,7 +105,7 @@ npm run build && npm run build:debug && npm run build:weval
 
 Build the runtime using npm:
 ```sh
-npm run build && npm run build:debug && npm run build:weval
+npm run build
 ```
 
 ## Testing a Local build in a Compute application
