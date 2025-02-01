@@ -185,6 +185,25 @@
     "environments": ["compute"],
     "features": ["http-cache"]
   },
+  "GET /http-cache/after-send-header-remove": {
+    "environments": ["compute"],
+    "features": ["http-cache"],
+    "downstream_response": {
+      "headers": {
+        "connection": true,
+        "content-length": true,
+        "date": true,
+        "content-type": true,
+        "fastly_service_version": true,
+        "server": true,
+        "custom": "custom-header",
+        "x-cache": true,
+        "x-cache-hits": true,
+        "x-served-by": true
+      },
+      "headersExhaustive": true
+    }
+  },
   "GET /http-cache/after-send-cache": {
     "environments": ["compute"],
     "features": ["http-cache"]

@@ -1033,9 +1033,6 @@ bool RequestOrResponse::compare_bump_headers_gen(JSContext *cx, HandleObject sel
   JS::RootedObject headers(cx, RequestOrResponse::maybe_headers(self));
   if (!headers) {
     JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::HeadersGen), JS::NullValue());
-    if (last_headers_gen.isUndefined()) {
-    } else {
-    }
     *changed_out = last_headers_gen.isUndefined();
     return true;
   }
