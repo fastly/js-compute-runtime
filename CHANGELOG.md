@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.30.1 (2025-02-01)
+
+### Fixed
+
+* docs build ([#1104](https://github.com/fastly/js-compute-runtime/issues/1104)) ([49b4758](https://github.com/fastly/js-compute-runtime/commit/49b47580819b0be4718f7156e7ab8d8eb8375143))
+
 ## 3.30.0 (2025-01-31)
 
 ### Added
