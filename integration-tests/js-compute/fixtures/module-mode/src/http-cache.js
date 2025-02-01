@@ -340,6 +340,23 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
     strictEqual(res.headers.get('x-cache'), 'MISS');
   });
 
+  routes.set('/http-cache/after-send-header-remove', async () => {
+    const url = getTestUrl();
+    const res = await fetch(url, {
+      cacheOverride: {
+        afterSend(res) {
+          res.headers.set('Custom', 'custom-header');
+          res.headers.delete('access-control-allow-origin');
+          res.headers.delete('access-control-allow-credentials');
+          return { cache: 'uncacheable' };
+        },
+      },
+    });
+    strictEqual(res.headers.get('Custom'), 'custom-header');
+    strictEqual(res.headers.get('access-control-allow-origin'), null);
+    return res;
+  });
+
   routes.set('/http-cache/after-send-cache', async () => {
     const url = getTestUrl();
     let calledAfterSend = false;
