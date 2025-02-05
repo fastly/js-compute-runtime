@@ -11,6 +11,9 @@ const { DICTIONARY_NAME, CONFIG_STORE_NAME, KV_STORE_NAME, SECRET_STORE_NAME } =
   getEnv(serviceName);
 
 function existingStoreId(stores, existingName) {
+  if (stores == null) {
+    return false;
+  }
   const existing = stores.find(
     ({ Name, name }) => name === existingName || Name === existingName,
   );
