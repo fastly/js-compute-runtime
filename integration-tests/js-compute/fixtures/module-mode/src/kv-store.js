@@ -1403,6 +1403,17 @@ const debug = sdkVersion.endsWith('-debug');
     let text = await streamToString(result);
     strictEqual(text, 'body op', `entry.body contents as string`);
   });
+  routes.set('/kv-store-options/gen-invalid', async () => {
+    await assertRejects(
+      async () => {
+        const store = new KVStore(KV_STORE_NAME);
+        let key = `entry-options-gen-invalid`;
+        await store.put(key, 'body Nan', { gen: '2' });
+      },
+      TypeError,
+      `KVStore.insert: gen must be an integer`,
+    );
+  });
   routes.set('/kv-store-entry/body', async () => {
     let store = new KVStore(KV_STORE_NAME);
     let key = `entry-body`;
