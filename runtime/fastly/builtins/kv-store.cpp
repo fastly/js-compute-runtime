@@ -482,9 +482,9 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
     if (!gen_val.isNullOrUndefined()) {
       if (gen_val.isNumber()) {
-          if (gen_val.toNumber()) {
-            if_gen.emplace(gen_val.toNumber());
-          }
+        if (gen_val.toNumber()) {
+          if_gen.emplace(gen_val.toNumber());
+        }
       }
       if (!if_gen.has_value()) {
         api::throw_error(cx, api::Errors::TypeError, "KVStore.insert", "gen", "be an integer");
