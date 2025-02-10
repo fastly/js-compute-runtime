@@ -91,6 +91,10 @@ declare module 'fastly:kv-store' {
          * Insert mode, defaults to 'overwrite'.
          */
         mode?: 'overwrite' | 'add' | 'append' | 'prepend';
+        /**
+         * If generation match integer.
+         */
+        gen?: number;
       },
     ): Promise<undefined>;
 

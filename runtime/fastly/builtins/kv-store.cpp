@@ -456,6 +456,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
   // used only if we have to do a custom text encoding
   host_api::HostString metadata_str;
   std::optional<uint32_t> ttl = std::nullopt;
+  std::optional<uint64_t> if_gen = std::nullopt;
   std::optional<std::tuple<const uint8_t *, size_t>> metadata = std::nullopt;
   std::optional<host_api::KVStore::InsertMode> mode = std::nullopt;
   if (args.get(2).isObject()) {
@@ -472,6 +473,23 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
         return false;
       }
       ttl = parsed;
+    }
+
+    JS::RootedValue gen_val(cx);
+    if (!JS_GetProperty(cx, opts_val, "gen", &gen_val)) {
+      return false;
+    }
+
+    if (!gen_val.isNullOrUndefined()) {
+      if (gen_val.isNumber()) {
+        if (gen_val.toNumber()) {
+          if_gen.emplace(gen_val.toNumber());
+        }
+      }
+      if (!if_gen.has_value()) {
+        api::throw_error(cx, api::Errors::TypeError, "KVStore.insert", "gen", "be an integer");
+        return ReturnPromiseRejectedWithPendingError(cx, args);
+      }
     }
 
     if (!JS_GetProperty(cx, opts_val, "metadata", &metadata_val)) {
@@ -626,7 +644,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       }
     }
 
-    auto insert_res = kv_store(self).insert(key_chars, body, mode, std::nullopt, metadata, ttl);
+    auto insert_res = kv_store(self).insert(key_chars, body, mode, if_gen, metadata, ttl);
     if (auto *err = insert_res.to_err()) {
       // Ensure that we throw an exception for all unexpected host errors.
       HANDLE_ERROR(cx, *err);

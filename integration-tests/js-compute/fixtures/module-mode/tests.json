@@ -402,6 +402,8 @@
   "GET /kv-store-entry/json/valid": { "flake": true },
   "GET /kv-store-entry/json/invalid": { "flake": true },
   "GET /kv-store-entry/arrayBuffer/valid": { "flake": true },
+  "GET /kv-store-options/gen": { "flake": true },
+  "GET /kv-store-options/gen-invalid": { "flake": true },
   "GET /kv-store-entry/body": { "flake": true },
   "GET /kv-store-entry/bodyUsed": { "flake": true },
   "GET /transform-stream/identity": {

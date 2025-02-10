@@ -30,6 +30,8 @@ put(key, value, options?)
     - TTL for the entry
   - `mode` _: 'overwrite' | 'add' | 'append' | 'prepend'_ _**optional**_
     - Insert mode, defaults to 'overwrite'
+  - `gen` _: number_ _**optional**_
+    - 'generation' header specific to the version of an entry key
 
 ### Return value
 
@@ -51,6 +53,9 @@ If the `this` value does not inherit from `KVStore.prototype`, a [`TypeError`](.
     - Starts with the string `".well-known/acme-challenge/"`
     - Contains any of the characters `"#;?^|\n\r"`
     - Is longer than 1024 characters
+- `TypeError`
+  - If the provided `gen`:
+    - Is not an number
 
 ## Examples
 
