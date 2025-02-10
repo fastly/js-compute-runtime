@@ -482,13 +482,12 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
     if (!gen_val.isNullOrUndefined()) {
       if (gen_val.isNumber()) {
-          if (gen_val.toInt32()) {
-            if_gen.emplace(gen_val.toInt32());
+          if (gen_val.toNumber()) {
+            if_gen.emplace(gen_val.toNumber());
           }
       }
       if (!if_gen.has_value()) {
-        JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                  JSMSG_KV_STORE_PUT_OPTIONS, "if generation match");
+        api::throw_error(cx, api::Errors::TypeError, "KVStore.insert", "gen", "be an integer");
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
     }

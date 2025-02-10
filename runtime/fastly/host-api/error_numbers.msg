@@ -65,7 +65,6 @@ MSG_DEF(JSMSG_KV_STORE_KEY_ACME,                               0, JSEXN_TYPEERR,
 MSG_DEF(JSMSG_KV_STORE_KEY_RELATIVE,                           0, JSEXN_TYPEERR, "KVStore key can not be '.' or '..'")
 MSG_DEF(JSMSG_KV_STORE_PUT_CONTENT_STREAM,                     0, JSEXN_TYPEERR, "Content-provided streams are not yet supported for streaming into KVStore")
 MSG_DEF(JSMSG_KV_STORE_PUT_OVER_30_MB,                         0, JSEXN_TYPEERR, "KVStore value can not be more than 30 Megabytes in size")
-MSG_DEF(JSMSG_KV_STORE_PUT_OPTIONS,                            1, JSEXN_TYPEERR, "KVStore insert option: {0}")
 MSG_DEF(JSMSG_KV_STORE_LIST_ERROR,                             1, JSEXN_TYPEERR, "KVStore list: {0}")
 MSG_DEF(JSMSG_KV_STORE_DELETE_ERROR,                           1, JSEXN_TYPEERR, "KVStore delete: {0}")
 MSG_DEF(JSMSG_KV_STORE_LOOKUP_ERROR,                           1, JSEXN_TYPEERR, "KVStore lookup: {0}")
