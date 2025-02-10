@@ -11,9 +11,6 @@ const { DICTIONARY_NAME, CONFIG_STORE_NAME, KV_STORE_NAME, SECRET_STORE_NAME } =
   getEnv(serviceName);
 
 function existingStoreId(stores, existingName) {
-  if (stores == null) {
-    return false;
-  }
   const existing = stores.find(
     ({ Name, name }) => name === existingName || Name === existingName,
   );
@@ -116,9 +113,14 @@ async function setupKVStore() {
 async function setupSecretStore() {
   let stores = await (async function () {
     try {
-      return JSON.parse(
+      res = JSON.parse(
         await zx`fastly secret-store list --quiet --json --token $FASTLY_API_TOKEN`,
       );
+      if (res == null) {
+        return [];
+      } else {
+        return res;
+      }
     } catch {
       return [];
     }
