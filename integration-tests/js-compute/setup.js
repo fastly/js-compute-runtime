@@ -122,6 +122,7 @@ async function setupSecretStore() {
         return res;
       }
     } catch {
+      console.log(`//~:VEC caught exception in sstore`);
       return [];
     }
   })();
