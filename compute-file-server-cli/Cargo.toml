@@ -13,7 +13,7 @@ repository = "https://github.com/jakeChampion/compute-file-server"
 clap = "4.0.10"
 walkdir = "2.3.2"
 reqwest = { version = "0.11", features = ["json", "stream"] }
-openssl = { version = "0.10.42", features = ["vendored"] }
+openssl = { version = "0.10.70", features = ["vendored"] }
 tokio = { version = "1", features = ["full"] }
 simple-error = "0.2.3"
 serde_derive = "1.0.145"
