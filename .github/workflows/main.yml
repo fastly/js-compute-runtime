@@ -446,11 +446,11 @@ jobs:
       run: npm install && cd ./integration-tests/js-compute && npm install
 
     - name: Run Tests
-      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
+      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --debug-log --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
     - name: Run Module Mode Tests
-      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --module-mode --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
+      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --module-mode --debug-log --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  
