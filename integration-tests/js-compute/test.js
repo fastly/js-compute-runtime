@@ -435,7 +435,6 @@ if (!local && failed.length) {
 }
 
 if (!local && !failed.length) {
-  console.log("//~:VEC importing teardown.js");
   const teardownPath = join(fixturePath, 'teardown.js');
   if (existsSync(teardownPath)) {
     core.startGroup('Tear down the extra set-up for the service');

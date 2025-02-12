@@ -47,7 +47,6 @@ async function setupConfigStores() {
     }
   })();
 
-  console.log(`//~:VEC config stores ${stores}`);
   let STORE_ID = existingStoreId(stores, DICTIONARY_NAME);
   if (!STORE_ID) {
     console.log(`Creating new config store ${DICTIONARY_NAME}`);
@@ -94,7 +93,6 @@ async function setupKVStore() {
     }
   })();
 
-  console.log(`//~:VEC kv stores ${stores}`);
   const STORE_ID = existingStoreId(stores, KV_STORE_NAME);
   if (!STORE_ID) {
     console.log(`Creating new KV store ${KV_STORE_NAME}`);
@@ -118,18 +116,15 @@ async function setupSecretStore() {
       let res = JSON.parse(
         await zx`fastly secret-store list --quiet --json --token $FASTLY_API_TOKEN`,
       );
-      console.log(`//~:VEC res ${res}`);
       if (res == null) {
         return [];
       } else {
         return res;
       }
     } catch {
-      console.log(`//~:VEC caught exception in setting up secret store`);
       return [];
     }
   })();
-  console.log(`//~:VEC secret stores ${stores}`);
   const STORE_ID = existingStoreId(stores, SECRET_STORE_NAME);
   if (!STORE_ID) {
     console.log(`Creating new secret store ${SECRET_STORE_NAME}`);
