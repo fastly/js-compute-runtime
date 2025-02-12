@@ -61,7 +61,7 @@
     "@bytecodealliance/weval": "^0.3.2",
     "acorn": "^8.13.0",
     "acorn-walk": "^8.3.4",
-    "esbuild": "^0.24.0",
+    "esbuild": "^0.25.0",
     "magic-string": "^0.30.12",
     "regexpu-core": "^6.1.1"
   }
