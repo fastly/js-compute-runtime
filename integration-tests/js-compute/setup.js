@@ -115,7 +115,7 @@ async function setupKVStore() {
 async function setupSecretStore() {
   let stores = await (async function () {
     try {
-      res = JSON.parse(
+      let res = JSON.parse(
         await zx`fastly secret-store list --quiet --json --token $FASTLY_API_TOKEN`,
       );
       console.log(`//~:VEC res ${res}`);
