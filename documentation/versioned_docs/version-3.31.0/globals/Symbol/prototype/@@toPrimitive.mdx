@@ -1,0 +1,31 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Symbol.prototype[Symbol.toPrimitive]
+
+The **`[Symbol.toPrimitive]()`** method converts a Symbol object to
+a primitive value.
+
+## Syntax
+
+```js
+Symbol()[Symbol.toPrimitive](hint)
+```
+
+### Return value
+
+The primitive value of the specified `Symbol` object.
+
+## Description
+
+The `[Symbol.toPrimitive]()` method of `Symbol` returns the primitive
+value of a Symbol object as a Symbol data type. The `hint`
+argument is not used.
+
+JavaScript calls the `[Symbol.toPrimitive]()` method to convert an object to a
+primitive value. You rarely need to invoke the `[Symbol.toPrimitive]()` method
+yourself; JavaScript automatically invokes it when encountering an object where a
+primitive value is expected.
