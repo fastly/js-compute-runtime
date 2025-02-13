@@ -221,11 +221,11 @@ jobs:
         if-no-files-found: error
         name: fastly-${{ matrix.profile }}
         path: fastly${{ matrix.profile == 'debug' && '.debug.wasm' || (matrix.profile == 'weval' && '-weval.wasm' || '.wasm') }}
-    - uses: actions/upload-artifact@v4
-      if: matrix.profile == 'weval'
-      with:
-        name: fastly-${{ matrix.profile }}-ic-cache
-        path: fastly-ics.wevalcache
+    # - uses: actions/upload-artifact@v4
+    #   if: matrix.profile == 'weval'
+    #   with:
+    #     name: fastly-${{ matrix.profile }}-ic-cache
+    #     path: fastly-ics.wevalcache
 
   run-wpt-debug:
     if: github.ref != 'refs/heads/main'
@@ -452,6 +452,13 @@ jobs:
     - name: Npm install
       run: npm install && cd ./integration-tests/js-compute && npm install
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        detached: true
+      env:
+        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
+
     - name: Run Tests
       run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --skip-teardown --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
@@ -460,11 +467,5 @@ jobs:
     - name: Run Module Mode Tests
       run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --skip-setup --module-mode --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
-        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  
+        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-      with:
-        detached: true
-      env:
-        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}   
