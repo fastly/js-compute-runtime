@@ -438,7 +438,7 @@ if (!local && !failed.length) {
   const teardownPath = join(fixturePath, 'teardown.js');
   if (existsSync(teardownPath)) {
     core.startGroup('Tear down the extra set-up for the service');
-    await zx`${teardownPath} ${serviceId} ${ci ? serviceName : ''}`;
+    await zx`node ${teardownPath} ${serviceId} ${ci ? serviceName : ''}`;
     core.endGroup();
   }
 

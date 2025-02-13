@@ -59,7 +59,7 @@ async function setupConfigStores() {
   }
   await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
   try {
-    await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
+    await zx`fastly resource-link create --service-id ${serviceId} --version=latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
@@ -76,7 +76,7 @@ async function setupConfigStores() {
   }
   await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
   try {
-    await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
+    await zx`fastly resource-link create --service-id ${serviceId} --version=latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
@@ -104,7 +104,7 @@ async function setupKVStore() {
     process.env.STORE_ID = STORE_ID;
   }
   try {
-    await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
+    await zx`fastly resource-link create --service-id ${serviceId} --version=latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
@@ -140,7 +140,7 @@ async function setupSecretStore() {
     'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
   await zx`echo -n 'This is some secret data' | fastly secret-store-entry create --recreate-allow --name ${key} --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
   try {
-    await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
+    await zx`fastly resource-link create --service-id ${serviceId} --version=latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
