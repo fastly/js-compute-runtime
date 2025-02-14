@@ -43,10 +43,11 @@ async function setupConfigStores() {
         await zx`fastly config-store list --quiet --json --token $FASTLY_API_TOKEN`,
       );
     } catch {
+      console.log(`//~:VEC config store exception `);
       return [];
     }
   })();
-
+  console.log(`//~:VEC config stores ${stores}`)
   let STORE_ID = existingStoreId(stores, DICTIONARY_NAME);
   if (!STORE_ID) {
     console.log(`Creating new config store ${DICTIONARY_NAME}`);
@@ -57,9 +58,11 @@ async function setupConfigStores() {
     console.log(`Using existing config store ${DICTIONARY_NAME}`);
     process.env.STORE_ID = STORE_ID;
   }
-  await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
+  console.log(`//~:VEC store_id ${STORE_ID}`);
+  await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=${STORE_ID} --stdin --token $FASTLY_API_TOKEN`;
   try {
-    await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
+    console.log(`//~:VEC setting resource store_id ${STORE_ID}`);
+    await zx`fastly resource-link create --service-id ${serviceId} --version=latest --resource-id=${STORE_ID} --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
@@ -76,7 +79,7 @@ async function setupConfigStores() {
   }
   await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
   try {
-    await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
+    await zx`fastly resource-link create --service-id ${serviceId} --version=latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
@@ -104,7 +107,7 @@ async function setupKVStore() {
     process.env.STORE_ID = STORE_ID;
   }
   try {
-    await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
+    await zx`fastly resource-link create --service-id ${serviceId} --version=latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
@@ -113,7 +116,7 @@ async function setupKVStore() {
 async function setupSecretStore() {
   let stores = await (async function () {
     try {
-      res = JSON.parse(
+      let res = JSON.parse(
         await zx`fastly secret-store list --quiet --json --token $FASTLY_API_TOKEN`,
       );
       if (res == null) {
@@ -140,7 +143,7 @@ async function setupSecretStore() {
     'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
   await zx`echo -n 'This is some secret data' | fastly secret-store-entry create --recreate-allow --name ${key} --store-id=$STORE_ID --stdin --token $FASTLY_API_TOKEN`;
   try {
-    await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
+    await zx`fastly resource-link create --service-id ${serviceId} --version=latest --resource-id $STORE_ID --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }

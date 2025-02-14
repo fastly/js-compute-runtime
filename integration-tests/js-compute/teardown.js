@@ -49,7 +49,7 @@ async function removeConfigStores() {
   let links = await (async function () {
     try {
       return JSON.parse(
-        await zx`fastly resource-link list --quiet --json --version latest --token $FASTLY_API_TOKEN`,
+        await zx`fastly resource-link list --quiet --json --version=latest --service-id=${serviceId} --token $FASTLY_API_TOKEN`,
       );
     } catch {
       return [];
@@ -63,8 +63,8 @@ async function removeConfigStores() {
     if (LINK_ID) {
       process.env.LINK_ID = LINK_ID;
       try {
-        await zx`fastly resource-link delete --version latest --autoclone --id=$LINK_ID  --token $FASTLY_API_TOKEN`;
-        await zx`fastly service-version activate --version latest --token $FASTLY_API_TOKEN`;
+        await zx`fastly resource-link delete --version=latest --service-id=${serviceId} --autoclone --id=$LINK_ID --token $FASTLY_API_TOKEN`;
+        await zx`fastly service-version activate --sevice-id=${serviceId} --version=latest --token $FASTLY_API_TOKEN`;
       } catch {}
     }
     try {
@@ -79,8 +79,8 @@ async function removeConfigStores() {
     if (LINK_ID) {
       process.env.LINK_ID = LINK_ID;
       try {
-        await zx`fastly resource-link delete --version latest --autoclone --id=$LINK_ID  --token $FASTLY_API_TOKEN`;
-        await zx`fastly service-version activate --version latest --token $FASTLY_API_TOKEN`;
+        await zx`fastly resource-link delete --version=latest --service-id=${serviceId} --autoclone --id=$LINK_ID  --token $FASTLY_API_TOKEN`;
+        await zx`fastly service-version activate --version=latest --sevice-id=${serviceId} --token $FASTLY_API_TOKEN`;
       } catch {}
     }
     try {
@@ -125,7 +125,7 @@ async function removeSecretStore() {
   let links = await (async function () {
     try {
       return JSON.parse(
-        await zx`fastly resource-link list --quiet --json --version latest --token $FASTLY_API_TOKEN`,
+        await zx`fastly resource-link list --quiet --json --version=latest --token $FASTLY_API_TOKEN`,
       );
     } catch {
       return [];
@@ -139,8 +139,8 @@ async function removeSecretStore() {
     if (LINK_ID) {
       process.env.LINK_ID = LINK_ID;
       try {
-        await zx`fastly resource-link delete --version latest --autoclone --id=$LINK_ID  --token $FASTLY_API_TOKEN`;
-        await zx`fastly service-version activate --version latest --token $FASTLY_API_TOKEN`;
+        await zx`fastly resource-link delete --version=latest --service-id=${serviceId} --autoclone --id=$LINK_ID  --token $FASTLY_API_TOKEN`;
+        await zx`fastly service-version activate --version=latest --service-id=${serviceId} --token $FASTLY_API_TOKEN`;
       } catch {}
     }
     try {
