@@ -113,16 +113,11 @@ async function setupKVStore() {
 async function setupSecretStore() {
   let stores = await (async function () {
     try {
-      res = JSON.parse(
+      return JSON.parse(
         await zx`fastly secret-store list --quiet --json --token $FASTLY_API_TOKEN`,
       );
-      if (res == null) {
-        return [];
-      } else {
-        return res;
-      }
-    } catch {
-      return [];
+    } catch (e) {
+      throw e;
     }
   })();
   const STORE_ID = existingStoreId(stores, SECRET_STORE_NAME);
