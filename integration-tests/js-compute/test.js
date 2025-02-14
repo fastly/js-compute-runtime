@@ -45,6 +45,8 @@ const httpCache = args.includes('--http-cache');
 const aot = args.includes('--aot');
 const debugBuild = args.includes('--debug-build');
 const debugLog = args.includes('--debug-log');
+const skipSetup = args.includes('--skip-setup');
+const skipTeardown = args.includes('--skip-setup');
 const filter = args.filter((arg) => !arg.startsWith('--'));
 const bail = args.includes('--bail');
 const ci = args.includes('--ci');
@@ -185,7 +187,7 @@ const [{ default: tests }] = await Promise.all([
     );
   })(),
   (async () => {
-    if (!local) {
+    if (!local && !skipSetup) {
       const setupPath = join(__dirname, 'setup.js');
       if (existsSync(setupPath)) {
         await zx`node ${setupPath} ${serviceId} ${ci ? serviceName : ''}`;
@@ -428,13 +430,10 @@ if (failed.length) {
 }
 
 if (!local && failed.length) {
-  core.notice(`Tests failed, the service is named "${serviceName}"`);
-  if (domain) {
-    core.notice(`You can debug the service on ${domain}`);
-  }
+  core.notice(`Tests failed.`);
 }
 
-if (!local && !failed.length) {
+if (!local && !skipTeardown || failed.length > 0) {
   const teardownPath = join(fixturePath, 'teardown.js');
   if (existsSync(teardownPath)) {
     core.startGroup('Tear down the extra set-up for the service');
