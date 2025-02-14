@@ -46,7 +46,7 @@ const aot = args.includes('--aot');
 const debugBuild = args.includes('--debug-build');
 const debugLog = args.includes('--debug-log');
 const skipSetup = args.includes('--skip-setup');
-const skipTeardown = args.includes('--skip-setup');
+const skipTeardown = args.includes('--skip-teardown');
 const filter = args.filter((arg) => !arg.startsWith('--'));
 const bail = args.includes('--bail');
 const ci = args.includes('--ci');
