@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.31.0 (2025-02-14)
+
+### Added
+
+* KV store generation integer follow up ([#1029](https://github.com/fastly/js-compute-runtime/issues/1029)) ([#1108](https://github.com/fastly/js-compute-runtime/issues/1108)) ([8a076da](https://github.com/fastly/js-compute-runtime/commit/8a076dae5de19cb23cee0569359a6879667d6275))
+
 ## 3.30.1 (2025-02-01)
 
 ### Fixed
