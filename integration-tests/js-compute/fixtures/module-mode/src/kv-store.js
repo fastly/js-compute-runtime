@@ -1393,7 +1393,7 @@ const debug = sdkVersion.endsWith('-debug');
     let store = new KVStore(KV_STORE_NAME);
     let key = `entry-options`;
     await store.put(key, 'body op', {
-      gen: Math.round(Math.random() * 10_000),
+      gen: 2,
     });
     let entry = await store.get(key);
     let result = entry.body;
