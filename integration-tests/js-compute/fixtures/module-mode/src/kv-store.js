@@ -1392,7 +1392,9 @@ const debug = sdkVersion.endsWith('-debug');
   routes.set('/kv-store-options/gen', async () => {
     let store = new KVStore(KV_STORE_NAME);
     let key = `entry-options`;
-    await store.put(key, 'body op', { gen: 2 });
+    await store.put(key, 'body op', {
+      gen: 2,
+    });
     let entry = await store.get(key);
     let result = entry.body;
     strictEqual(
