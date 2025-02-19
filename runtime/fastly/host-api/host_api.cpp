@@ -4353,29 +4353,33 @@ Result<std::optional<Acl>> Acl::open(std::string_view name) {
 Result<std::tuple<std::optional<HttpBody>, Acl::LookupError>>
 Acl::lookup(std::span<uint8_t> ip_octets) const {
   TRACE_CALL()
-  uint32_t body_handle_out;
+  uint32_t body_handle_out = HttpBody::invalid;
   fastly::fastly_acl_error acl_error_out = FASTLY_ACL_ERROR_UNINITIALIZED;
   fastly::fastly_host_error err;
-
-  std::optional<HttpBody> body;
 
   if (!convert_result(fastly::acl_lookup(this->handle, ip_octets.data(), ip_octets.size(),
                                          &body_handle_out, &acl_error_out),
                       &err)) {
     if (acl_error_out != FASTLY_ACL_ERROR_OK && acl_error_out != FASTLY_ACL_ERROR_UNINITIALIZED) {
       return Result<std::tuple<std::optional<HttpBody>, LookupError>>::ok(
-          std::make_tuple(std::move(body), static_cast<Acl::LookupError>(acl_error_out)));
+          std::make_tuple(std::nullopt, static_cast<Acl::LookupError>(acl_error_out)));
     } else {
       return Result<std::tuple<std::optional<HttpBody>, LookupError>>::err(err);
     }
   }
 
-  if (body_handle_out != HttpBody::invalid) {
-    body = HttpBody(body_handle_out);
+  if (acl_error_out != FASTLY_ACL_ERROR_OK) {
+    return Result<std::tuple<std::optional<HttpBody>, LookupError>>::ok(
+        std::make_tuple(std::nullopt, static_cast<Acl::LookupError>(acl_error_out)));
   }
 
-  return Result<std::tuple<std::optional<HttpBody>, Acl::LookupError>>::ok(
-      std::make_tuple(std::move(body), static_cast<Acl::LookupError>(FASTLY_ACL_ERROR_OK)));
+  if (body_handle_out == HttpBody::invalid) {
+    return Result<std::tuple<std::optional<HttpBody>, LookupError>>::ok(std::make_tuple(
+        std::nullopt, static_cast<Acl::LookupError>(FASTLY_ACL_ERROR_UNINITIALIZED)));
+  }
+
+  return Result<std::tuple<std::optional<HttpBody>, Acl::LookupError>>::ok(std::make_tuple(
+      HttpBody{body_handle_out}, static_cast<Acl::LookupError>(FASTLY_ACL_ERROR_OK)));
 }
 
 Result<uint64_t> Compute::get_vcpu_ms() {

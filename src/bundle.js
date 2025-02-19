@@ -13,7 +13,7 @@ let fastlyPlugin = {
       switch (args.path) {
         case 'acl': {
           return {
-            contents: `export const open = globalThis.Acl.open;`,
+            contents: `export const Acl = globalThis.Acl;`,
           };
         }
         case 'backend': {

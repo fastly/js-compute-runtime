@@ -138,6 +138,8 @@ async function setupAcl() {
     ACL_ID = JSON.parse(
       await zx`fastly compute acl create --name=${ACL_NAME} --token $FASTLY_API_TOKEN --json`,
     ).id;
+    await zx`astly compute acl update --acl-id=${ACL_ID} --operation=create --prefix=100.100.0.0/16 --action=BLOCK --token $FASTLY_API_TOKEN`;
+    await zx`astly compute acl update --acl-id=${ACL_ID} --operation=create --prefix=2a03:4b80::/32 --action=ALLOW --token $FASTLY_API_TOKEN`;
   } else {
     console.log(`Using existing ACL ${ACL_NAME}`);
   }

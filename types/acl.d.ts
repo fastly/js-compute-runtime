@@ -1,20 +1,20 @@
 /// <reference path="../types/globals.d.ts" />
 
 declare module 'fastly:acl' {
-  /**
-   * Opens the given ACL store by name
-   */
-  export function open(aclName: string): Acl;
-
   class Acl {
+    /**
+     * Opens the given ACL store by name
+     */
+    static open(aclName: string);
+
     /**
      * Lookup a given IP address in the ACL list.
      *
      * @example
-     * import { open } from 'fastly:acl';
+     * import { Acl } from 'fastly:acl';
      * addEventListener('fetch', async (evt) => {
-     *   const acl = open('myacl');
-     *   const { action, prefix } = await acl.lookup(evt.client.address);
+     *   const myAcl = Acl.open('myacl');
+     *   const { action, prefix } = await myAcl.lookup(evt.client.address);
      *   evt.respondWith(new Response(action === 'block' ? 'blocked' : 'allowed'));
      * });
      *
@@ -23,6 +23,6 @@ declare module 'fastly:acl' {
     lookup(ipAddress: string): Promise<{
       action: 'allow' | 'block';
       prefix: string;
-    }>;
+    } | null>;
   }
 }

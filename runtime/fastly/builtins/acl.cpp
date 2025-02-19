@@ -7,7 +7,7 @@
 #include "js/JSON.h"
 #include <arpa/inet.h>
 
-using builtins::BuiltinImpl;
+using builtins::BuiltinNoConstructor;
 using fastly::FastlyGetErrorMessage;
 
 namespace fastly::acl {
@@ -109,8 +109,8 @@ bool Acl::lookup(JSContext *cx, unsigned argc, JS::Value *vp) {
   case host_api::Acl::LookupError::Ok:
     break;
   case host_api::Acl::LookupError::NoContent:
-    JS_ReportErrorLatin1(cx, "Acl.lookup: No content found");
-    return false;
+    args.rval().setNull();
+    return true;
   case host_api::Acl::LookupError::TooManyRequests:
     JS_ReportErrorLatin1(cx, "Acl.lookup: Too many requests, please try again later");
     return false;
@@ -155,24 +155,13 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  RootedObject acl_obj(engine->cx(), JS_GetConstructor(engine->cx(), BuiltinImpl<Acl>::proto_obj));
+  RootedObject acl_obj(engine->cx(),
+                       JS_GetConstructor(engine->cx(), BuiltinNoConstructor<Acl>::proto_obj));
   RootedValue acl_val(engine->cx(), ObjectValue(*acl_obj));
   RootedObject acl_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   if (!JS_SetProperty(engine->cx(), acl_ns, "Acl", acl_val)) {
     return false;
   }
-
-  RootedValue open_val(engine->cx());
-  if (!JS_GetProperty(engine->cx(), acl_obj, "open", &open_val)) {
-    return false;
-  }
-  if (!JS_SetProperty(engine->cx(), acl_ns, "open", open_val)) {
-    return false;
-  }
-  // When migrating to full module mode by default
-  // if (!JS_DeleteProperty(engine->cx(), acl_obj, "open")) {
-  //   return false;
-  // }
 
   RootedValue acl_ns_val(engine->cx(), JS::ObjectValue(*acl_ns));
   if (!engine->define_builtin_module("fastly:acl", acl_ns_val)) {
