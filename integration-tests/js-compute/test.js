@@ -100,7 +100,7 @@ await copyFile(
 const envSeen = new Set();
 const config = TOML.parse(
   (await readFile(join(fixturePath, 'fastly.toml'), 'utf-8')).replace(
-    /DICTIONARY_NAME|CONFIG_STORE_NAME|KV_STORE_NAME|SECRET_STORE_NAME/g,
+    /DICTIONARY_NAME|CONFIG_STORE_NAME|KV_STORE_NAME|SECRET_STORE_NAME|ACL_NAME/g,
     (match) => {
       // we only replace the second instance, because the first is the --env flag itself
       if (!envSeen.has(match)) {

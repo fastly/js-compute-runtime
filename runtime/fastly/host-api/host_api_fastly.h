@@ -293,6 +293,9 @@ public:
   /// Read a chunk from this handle in to the specified buffer.
   Result<size_t> read_into(uint8_t *ptr, size_t chunk_size) const;
 
+  /// Read all chunks.
+  Result<HostBytes> read_all() const;
+
   /// Write a chunk to the front of this handle.
   Result<uint32_t> write_front(const uint8_t *bytes, size_t len) const;
 

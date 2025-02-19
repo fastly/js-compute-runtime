@@ -149,9 +149,14 @@ async function removeSecretStore() {
   }
 }
 
+async function removeAcl() {
+  console.log('TODO: ACL REMOVE');
+}
+
 await removeConfigStores();
 await removeKVStore();
 await removeSecretStore();
+await removeAcl();
 
 console.log(
   `Tear down has finished! Took ${(Date.now() - startTime) / 1000} seconds to complete`,

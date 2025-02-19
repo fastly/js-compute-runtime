@@ -4,5 +4,6 @@ export function getEnv(serviceName) {
     CONFIG_STORE_NAME: `testconfig${serviceName ? '__' + serviceName.replace(/-/g, '_') : ''}`,
     KV_STORE_NAME: `example-test-kv-store${serviceName ? '--' + serviceName : ''}`,
     SECRET_STORE_NAME: `example-test-secret-store${serviceName ? '--' + serviceName : ''}`,
+    ACL_NAME: `acl${serviceName ? '__' + serviceName.replace(/-/g, '_') : ''}`,
   };
 }

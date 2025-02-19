@@ -948,6 +948,36 @@ Result<size_t> HttpBody::read_into(uint8_t *ptr, size_t chunk_size) const {
   return res;
 }
 
+constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
+constexpr size_t HANDLE_READ_BUFFER_SIZE = 500000;
+
+Result<HostBytes> HttpBody::read_all() const {
+  Result<HostBytes> res;
+  size_t buf_len = 0;
+  uint8_t *buf = static_cast<uint8_t *>(malloc(HANDLE_READ_BUFFER_SIZE));
+  do {
+    host_api::Result<size_t> chunk = this->read_into((buf + buf_len), HANDLE_READ_CHUNK_SIZE);
+    if (auto *err = chunk.to_err()) {
+      free(buf);
+      res.emplace_err(*err);
+      return res;
+    }
+    size_t len = chunk.unwrap();
+    if (len == 0) {
+      buf = static_cast<uint8_t *>(realloc(buf, buf_len));
+      break;
+    }
+    buf_len += len;
+    if (buf_len > HANDLE_READ_BUFFER_SIZE) {
+      free(buf);
+      res.emplace_err(FASTLY_HOST_ERROR_BUFFER_LEN);
+      return res;
+    }
+  } while (true);
+  res.emplace(make_host_bytes(buf, buf_len));
+  return res;
+}
+
 Result<uint32_t> HttpBody::write_front(const uint8_t *ptr, size_t len) const {
   TRACE_CALL()
   Result<uint32_t> res;
@@ -4305,20 +4335,24 @@ FastlyAsyncTask::Handle KVStorePendingInsert::async_handle() const {
 }
 
 Result<std::optional<Acl>> Acl::open(std::string_view name) {
+  TRACE_CALL_ARGS(&name)
   uint32_t handle_out;
   fastly::fastly_host_error err;
   if (!convert_result(fastly::acl_open(name.data(), name.size(), &handle_out), &err)) {
     if (error_is_optional_none(err)) {
+      TRACE_CALL_RET(TSV("<none>"))
       return Result<std::optional<Acl>>::ok(std::nullopt);
     } else {
       return Result<std::optional<Acl>>::err(host_api::APIError(err));
     }
   }
+  TRACE_CALL_RET(TSV(std::to_string(handle_out)))
   return Result<std::optional<Acl>>::ok(Acl(handle_out));
 }
 
 Result<std::tuple<std::optional<HttpBody>, Acl::LookupError>>
 Acl::lookup(std::span<uint8_t> ip_octets) const {
+  TRACE_CALL()
   uint32_t body_handle_out;
   fastly::fastly_acl_error acl_error_out = FASTLY_ACL_ERROR_UNINITIALIZED;
   fastly::fastly_host_error err;
