@@ -157,12 +157,14 @@ if (!local) {
 
 core.startGroup(`Setting up service ${domain}`);
 
-const [{ default: tests }] = await Promise.all([
-  (async () => {
-    return await import(join(fixturePath, 'tests.json'), {
-      with: { type: 'json' },
-    });
-  })(),
+if (!local && !skipSetup) {
+  const setupPath = join(__dirname, 'setup.js');
+  if (existsSync(setupPath)) {
+    await zx`node ${setupPath} ${serviceId} ${ci ? serviceName : ''}`;
+  }
+}
+
+await Promise.all([
   (async () => {
     await retry(
       27,
@@ -186,20 +188,20 @@ const [{ default: tests }] = await Promise.all([
       },
     );
   })(),
-  (async () => {
-    if (!local && !skipSetup) {
-      const setupPath = join(__dirname, 'setup.js');
-      if (existsSync(setupPath)) {
-        await zx`node ${setupPath} ${serviceId} ${ci ? serviceName : ''}`;
-        await sleep(15);
-      }
-    }
-  })(),
+  // we need to wait for the service resource links to all activate,
+  // and we don't currently have a reliable way to poll on that
+  // (perhaps we could poll on the highest version as seen from setup.js resource-link return output
+  // being fully activated?)
+  new Promise((resolve) => setTimeout(resolve, 60_000)),
 ]);
 
 core.endGroup();
 
 core.startGroup('Running tests');
+
+const { default: tests } = await import(join(fixturePath, 'tests.json'), {
+  with: { type: 'json' },
+});
 
 function chunks(arr, size) {
   const output = [];

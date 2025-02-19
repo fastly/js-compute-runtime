@@ -15,7 +15,7 @@ const {
   ACL_NAME,
 } = getEnv(serviceName);
 
-function existingStoreId(stores, existingName) {
+function existingListId(stores, existingName) {
   const existing = stores.find(
     ({ Name, name }) => name === existingName || Name === existingName,
   );
@@ -45,7 +45,7 @@ async function setupConfigStores() {
     await zx`fastly config-store list --quiet --json --token $FASTLY_API_TOKEN`,
   );
 
-  let STORE_ID = existingStoreId(stores, DICTIONARY_NAME);
+  let STORE_ID = existingListId(stores, DICTIONARY_NAME);
   if (!STORE_ID) {
     console.log(`Creating new config store ${DICTIONARY_NAME}`);
     STORE_ID = JSON.parse(
@@ -62,7 +62,7 @@ async function setupConfigStores() {
     if (!e.message.includes('Duplicate record')) throw e;
   }
 
-  STORE_ID = existingStoreId(stores, CONFIG_STORE_NAME);
+  STORE_ID = existingListId(stores, CONFIG_STORE_NAME);
   if (!STORE_ID) {
     console.log(`Creating new config store ${CONFIG_STORE_NAME}`);
     STORE_ID = JSON.parse(
@@ -85,7 +85,7 @@ async function setupKVStore() {
     await zx`fastly kv-store list --quiet --json --token $FASTLY_API_TOKEN`,
   ).Data;
 
-  let STORE_ID = existingStoreId(stores, KV_STORE_NAME);
+  let STORE_ID = existingListId(stores, KV_STORE_NAME);
   if (!STORE_ID) {
     console.log(`Creating new KV store ${KV_STORE_NAME}`);
     STORE_ID = JSON.parse(
@@ -106,7 +106,7 @@ async function setupSecretStore() {
   const stores = JSON.parse(
     await zx`fastly secret-store list --quiet --json --token $FASTLY_API_TOKEN`,
   );
-  let STORE_ID = existingStoreId(stores, SECRET_STORE_NAME);
+  let STORE_ID = existingListId(stores, SECRET_STORE_NAME);
   if (!STORE_ID) {
     console.log(`Creating new secret store ${SECRET_STORE_NAME}`);
     STORE_ID = JSON.parse(
@@ -127,10 +127,20 @@ async function setupSecretStore() {
 }
 
 async function setupAcl() {
-  console.log(`Creating ACL ${ACL_NAME}`);
-  const { stdout } =
-    await zx`fastly acl create --name ${ACL_NAME} --service-id ${serviceId} --version latest --autoclone --token $FASTLY_API_TOKEN`;
-  const ACL_ID = stdout.match(/id: ([a-zA-Z0-9]+)/)[1];
+  let ACL_ID = existingListId(
+    JSON.parse(
+      await zx`fastly compute acl list-acls --quiet --json --token $FASTLY_API_TOKEN`,
+    ).data,
+    ACL_NAME,
+  );
+  if (!ACL_ID) {
+    console.log(`Creating ACL ${ACL_NAME}`);
+    ACL_ID = JSON.parse(
+      await zx`fastly compute acl create --name=${ACL_NAME} --token $FASTLY_API_TOKEN --json`,
+    ).id;
+  } else {
+    console.log(`Using existing ACL ${ACL_NAME}`);
+  }
   try {
     await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id ${ACL_ID} --token $FASTLY_API_TOKEN --autoclone`;
   } catch (e) {

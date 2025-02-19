@@ -28,11 +28,23 @@ routes.set('/acl', async () => {
 
   const acl = open(ACL_NAME);
 
-  await assertRejects(() => acl.lookup(), TypeError, 'a');
-  await assertRejects(() => acl.lookup(5), TypeError, 'b');
-  await assertRejects(() => acl.lookup('not ip'), TypeError, 'c');
-  await assertRejects(() => acl.lookup('999.999.999.999'), TypeError, 'd');
-  await assertRejects(() => acl.lookup('999.999.999.999'), TypeError, 'd');
+  await assertRejects(
+    () => acl.lookup(),
+    TypeError,
+    'lookup: At least 1 argument required, but only 0 passed',
+  );
+  await assertRejects(
+    () => acl.lookup(5),
+    Error,
+    'Invalid address passed to acl.lookup',
+  );
+  await assertRejects(
+    () => acl.lookup('not ip'),
+    Error,
+    'Invalid address passed to acl.lookup',
+  );
+  await assertRejects(() => acl.lookup('999.999.999.999'), Error, 'd');
+  await assertRejects(() => acl.lookup('999.999.999.999'), Error, 'd');
 
   return new Response(JSON.stringify(await acl.lookup('123.123.123.123')));
 });
