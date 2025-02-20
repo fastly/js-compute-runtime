@@ -71,6 +71,12 @@
   "ReadableStream.from throws on invalid iterables; specifically an object with a non-callable @@asyncIterator method": {
     "status": "PASS"
   },
+  "ReadableStream.from throws on invalid iterables; specifically an object with an @@iterator method returning a non-object": {
+    "status": "PASS"
+  },
+  "ReadableStream.from throws on invalid iterables; specifically an object with an @@asyncIterator method returning a non-object": {
+    "status": "PASS"
+  },
   "ReadableStream.from re-throws errors from calling the @@iterator method": {
     "status": "FAIL"
   },
@@ -89,6 +95,15 @@
   "ReadableStream.from: stream errors when next() rejects": {
     "status": "FAIL"
   },
+  "ReadableStream.from: stream errors when next() throws synchronously": {
+    "status": "FAIL"
+  },
+  "ReadableStream.from: stream errors when next() returns a non-object": {
+    "status": "FAIL"
+  },
+  "ReadableStream.from: stream errors when next() fulfills with a non-object": {
+    "status": "FAIL"
+  },
   "ReadableStream.from: stream stalls when next() never settles": {
     "status": "FAIL"
   },
@@ -99,6 +114,18 @@
     "status": "FAIL"
   },
   "ReadableStream.from: return() is not called when iterator completes normally": {
+    "status": "FAIL"
+  },
+  "ReadableStream.from: cancel() resolves when return() method is missing": {
+    "status": "FAIL"
+  },
+  "ReadableStream.from: cancel() rejects when return() is not a method": {
+    "status": "FAIL"
+  },
+  "ReadableStream.from: cancel() rejects when return() rejects": {
+    "status": "FAIL"
+  },
+  "ReadableStream.from: cancel() rejects when return() throws synchronously": {
     "status": "FAIL"
   },
   "ReadableStream.from: cancel() rejects when return() fulfills with a non-object": {
