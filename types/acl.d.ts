@@ -14,8 +14,8 @@ declare module 'fastly:acl' {
      * import { Acl } from 'fastly:acl';
      * addEventListener('fetch', async (evt) => {
      *   const myAcl = Acl.open('myacl');
-     *   const { action, prefix } = await myAcl.lookup(evt.client.address);
-     *   evt.respondWith(new Response(action === 'block' ? 'blocked' : 'allowed'));
+     *   const result = await myAcl.lookup(evt.client.address);
+     *   evt.respondWith(new Response(result?.action === 'BLOCK' ? 'blocked' : 'allowed'));
      * });
      *
      * @param ipAddress Ipv6 or IPv4 IP address string

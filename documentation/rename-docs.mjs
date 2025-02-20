@@ -8,6 +8,7 @@
 import { readdirSync, renameSync } from 'node:fs';
 
 const subsystems = [
+  'acl',
   'backend',
   'cache-override',
   'cache',
