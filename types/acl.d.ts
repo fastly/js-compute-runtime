@@ -21,7 +21,7 @@ declare module 'fastly:acl' {
      * @param ipAddress Ipv6 or IPv4 IP address string
      */
     lookup(ipAddress: string): Promise<{
-      action: 'allow' | 'block';
+      action: 'ALLOW' | 'BLOCK';
       prefix: string;
     } | null>;
   }
