@@ -76,11 +76,6 @@ routes.set('/acl', async () => {
     Error,
     'Invalid address passed to acl.lookup',
   );
-  await assertRejects(
-    () => acl.lookup('2a03:4b80::1'),
-    Error,
-    'Invalid address passed to acl.lookup',
-  );
 
   strictEqual(await acl.lookup('123.123.123.123'), null);
   strictEqual(await acl.lookup('100.99.100.100'), null);
@@ -92,6 +87,10 @@ routes.set('/acl', async () => {
   deepStrictEqual(await acl.lookup('100.100.100.100'), {
     action: 'BLOCK',
     prefix: '100.100.0.0/16',
+  });
+  deepStrictEqual(await acl.lookup('2a03:4b80::1'), {
+    action: 'ALLOW',
+    prefix: '2a03:4b80:0000:0000:0000:0000:0000:0000/32',
   });
   deepStrictEqual(await acl.lookup('2a03:4b80:5c1d:e8f7:92a3:b45c:61d8:7e9f'), {
     action: 'ALLOW',

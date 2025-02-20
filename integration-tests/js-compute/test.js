@@ -435,8 +435,8 @@ if (!local && failed.length) {
   core.notice(`Tests failed.`);
 }
 
-if ((!local && !skipTeardown) || failed.length > 0) {
-  const teardownPath = join(fixturePath, 'teardown.js');
+if (!skipTeardown || failed.length > 0) {
+  const teardownPath = join(__dirname, 'teardown.js');
   if (existsSync(teardownPath)) {
     core.startGroup('Tear down the extra set-up for the service');
     await zx`${teardownPath} ${serviceId} ${ci ? serviceName : ''}`;
