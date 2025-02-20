@@ -36,7 +36,6 @@
 
 using builtins::web::base64::valueToJSByteString;
 using builtins::web::blob::Blob;
-using builtins::web::blob::BlobReader;
 using builtins::web::dom_exception::DOMException;
 
 // We use the StarlingMonkey Headers implementation, despite it supporting features that we do
@@ -792,38 +791,22 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
   host_api::HostString host_type_str;
 
   if (Blob::is_instance(body_obj)) {
-    auto native_stream = NativeStreamSource::create(cx, body_obj, JS::UndefinedHandleValue,
-                                                    Blob::stream_pull, Blob::stream_cancel);
-    if (!native_stream) {
+    RootedValue stream(cx);
+    if (!Blob::stream(cx, body_obj, &stream)) {
       return false;
     }
 
-    JS::RootedObject source(cx, native_stream);
-    if (!source) {
-      return false;
-    }
+    MOZ_ASSERT(stream.isObject());
+    JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream), stream);
 
-    auto readers = Blob::readers(body_obj);
-    auto blob = Blob::blob(body_obj);
-    auto span = std::span<uint8_t>(blob->begin(), blob->length());
-
-    if (!readers->put(source, BlobReader(span))) {
-      return false;
-    }
-
-    JS::RootedObject stream(cx, NativeStreamSource::stream(native_stream));
-    if (!stream) {
-      return false;
-    }
-
-    JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream),
-                       JS::ObjectValue(*stream));
+    // TODO: Set content-length header from known body extracted size
+    // size_t content_length = Blob::blob_size(body_obj);
 
     JS::RootedString type_str(cx, Blob::type(body_obj));
     if (JS::GetStringLength(type_str) > 0) {
       host_type_str = core::encode(cx, type_str);
       MOZ_ASSERT(host_type_str);
-      content_type = host_type_str.ptr.get();
+      content_type = host_type_str.begin();
     }
   } else if (body_obj && JS::IsReadableStream(body_obj)) {
     if (RequestOrResponse::body_unusable(cx, body_obj)) {
