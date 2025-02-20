@@ -435,7 +435,7 @@ if (!local && failed.length) {
   core.notice(`Tests failed.`);
 }
 
-if (!skipTeardown || failed.length > 0) {
+if (!local && !skipTeardown && failed.length === 0) {
   const teardownPath = join(__dirname, 'teardown.js');
   if (existsSync(teardownPath)) {
     core.startGroup('Tear down the extra set-up for the service');
