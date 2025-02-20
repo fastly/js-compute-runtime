@@ -69,18 +69,16 @@ routes.set('/acl', async () => {
     null,
   );
 
-  return new Response(JSON.stringify(await acl.lookup('100.100.100.100')));
-
-  // deepStrictEqual(await acl.lookup('100.100.100.100'), {
-  //   action: 'allow',
-  //   prefix: '100.100.0.0/16',
-  // });
-  // deepStrictEqual(await acl.lookup('2a03:4b80:5c1d:e8f7:92a3:b45c:61d8:7e9f'), {
-  //   action: 'block',
-  //   prefix: '2a03:4b80::/32',
-  // });
-  // deepStrictEqual(await acl.lookup('2a03:4b80::1'), {
-  //   action: 'block',
-  //   prefix: '2a03:4b80::/32',
-  // });
+  deepStrictEqual(await acl.lookup('100.100.100.100'), {
+    action: 'BLOCK',
+    prefix: '100.100.0.0/16',
+  });
+  deepStrictEqual(await acl.lookup('2a03:4b80:5c1d:e8f7:92a3:b45c:61d8:7e9f'), {
+    action: 'ALLOW',
+    prefix: '2a03:4b80::/32',
+  });
+  deepStrictEqual(await acl.lookup('2a03:4b80::1'), {
+    action: 'ALLOW',
+    prefix: '2a03:4b80::/32',
+  });
 });
