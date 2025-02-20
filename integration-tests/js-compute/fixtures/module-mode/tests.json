@@ -1,4 +1,5 @@
 {
+  "GET /acl": { "environments": ["compute"] },
   "GET /backend/timeout": {
     "environments": ["compute"],
     "downstream_response": {

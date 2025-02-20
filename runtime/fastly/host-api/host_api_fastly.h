@@ -10,6 +10,7 @@
 #include <variant>
 #include <vector>
 
+#include "./fastly.h"
 #include "extension-api.h"
 #include "host_api.h"
 #include "js/TypeDecls.h"
@@ -291,6 +292,9 @@ public:
 
   /// Read a chunk from this handle in to the specified buffer.
   Result<size_t> read_into(uint8_t *ptr, size_t chunk_size) const;
+
+  /// Read all chunks.
+  Result<HostBytes> read_all() const;
 
   /// Write a chunk to the front of this handle.
   Result<uint32_t> write_front(const uint8_t *bytes, size_t len) const;
@@ -1187,6 +1191,34 @@ public:
   Result<KVStorePendingList::Handle> list(std::optional<string_view> cursor,
                                           std::optional<uint32_t> limit,
                                           std::optional<string_view> prefix, bool eventual);
+};
+
+class Acl final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  // Acl error type
+  enum class LookupError : uint32_t {
+    Uninitialized = FASTLY_ACL_ERROR_UNINITIALIZED,
+    Ok = FASTLY_ACL_ERROR_OK,
+    NoContent = FASTLY_ACL_ERROR_NO_CONTENT,
+    TooManyRequests = FASTLY_ACL_ERROR_TOO_MANY_REQUESTS
+  };
+
+  Handle handle = invalid;
+
+  Acl() = default;
+  explicit Acl(Handle handle) : handle{handle} {}
+
+  bool is_valid() const { return handle != invalid; }
+
+  static Result<std::optional<Acl>> open(std::string_view name);
+
+  /// Lookup an IP address in the ACL
+  Result<std::tuple<std::optional<HttpBody>, LookupError>>
+  lookup(std::span<uint8_t> ip_octets) const;
 };
 
 class Compute final {

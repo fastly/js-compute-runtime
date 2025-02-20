@@ -239,9 +239,6 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
   return true;
 }
 
-constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
-constexpr size_t HANDLE_READ_BUFFER_SIZE = 500000;
-
 bool process_pending_kv_store_list(JSContext *cx, host_api::KVStorePendingList::Handle handle,
                                    JS::HandleObject context, JS::HandleValue promise) {
   host_api::KVStorePendingList pending_list(handle);
@@ -253,27 +250,16 @@ bool process_pending_kv_store_list(JSContext *cx, host_api::KVStorePendingList::
     return RejectPromiseWithPendingError(cx, promise_obj);
   }
 
-  size_t buf_len = 0;
-  char *buf = static_cast<char *>(malloc(HANDLE_READ_BUFFER_SIZE));
-  do {
-    host_api::Result<size_t> chunk =
-        res.unwrap().read_into(reinterpret_cast<uint8_t *>(buf + buf_len), HANDLE_READ_CHUNK_SIZE);
-    if (auto *err = chunk.to_err()) {
-      HANDLE_ERROR(cx, *err);
-      return RejectPromiseWithPendingError(cx, promise_obj);
-    }
-    size_t len = chunk.unwrap();
-    if (len == 0) {
-      buf = static_cast<char *>(realloc(buf, buf_len));
-      break;
-    }
-    buf_len += len;
-    if (buf_len > HANDLE_READ_BUFFER_SIZE) {
-      JS_ReportErrorLatin1(cx, "Buffer error: Buffer too large.");
-      return RejectPromiseWithPendingError(cx, promise_obj);
-    }
-  } while (true);
-  JS::RootedString str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf, buf_len)));
+  auto buf_res = res.unwrap().read_all();
+  if (auto *err = buf_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return RejectPromiseWithPendingError(cx, promise_obj);
+  }
+
+  JS::RootedString str(
+      cx,
+      JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(reinterpret_cast<char *>(buf_res.unwrap().ptr.get()),
+                                              buf_res.unwrap().len)));
   if (!str) {
     return RejectPromiseWithPendingError(cx, promise_obj);
   }

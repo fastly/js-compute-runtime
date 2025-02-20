@@ -11,6 +11,11 @@ let fastlyPlugin = {
     });
     build.onLoad({ filter: /^.*/, namespace: 'fastly' }, async (args) => {
       switch (args.path) {
+        case 'acl': {
+          return {
+            contents: `export const Acl = globalThis.Acl;`,
+          };
+        }
         case 'backend': {
           return {
             contents: `

@@ -5,6 +5,7 @@ import { routes } from './routes.js';
 import { env } from 'fastly:env';
 import { enableDebugLogging } from 'fastly:experimental';
 
+import './acl.js';
 import './console.js';
 import './dynamic-backend.js';
 import './hello-world.js';

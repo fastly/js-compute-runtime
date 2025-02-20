@@ -40,6 +40,10 @@
 
 // clang-format off
 MSG_DEF(JSMSG_NOT_AN_ERROR,                                    0, JSEXN_ERR, "<Error #0 is reserved>")
+MSG_DEF(JSMSG_ACL_NAME_NOT_STRING,                             0, JSEXN_TYPEERR, "Acl open: name must be a string")
+MSG_DEF(JSMSG_ACL_NAME_TOO_LONG,                               0, JSEXN_TYPEERR, "Acl open: name can not be more than 254 characters")
+MSG_DEF(JSMSG_ACL_NAME_EMPTY,                                  0, JSEXN_TYPEERR, "Acl open: name can not be an empty string")
+MSG_DEF(JSMSG_ACL_NOT_FOUND,                                   1, JSEXN_TYPEERR, "Acl open: \"{0}\" acl not found")
 MSG_DEF(JSMSG_CONFIG_STORE_DOES_NOT_EXIST,                     1, JSEXN_TYPEERR, "ConfigStore constructor: No ConfigStore named '{0}' exists")
 MSG_DEF(JSMSG_CONFIG_STORE_KEY_EMPTY,                          0, JSEXN_TYPEERR, "ConfigStore key can not be an empty string")
 MSG_DEF(JSMSG_CONFIG_STORE_KEY_TOO_LONG,                       0, JSEXN_TYPEERR, "ConfigStore key can not be more than 255 characters")
