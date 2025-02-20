@@ -7,8 +7,13 @@ import { getEnv } from './env.js';
 const serviceId = argv[2];
 const serviceName = argv[3];
 
-const { ACL_NAME, DICTIONARY_NAME, CONFIG_STORE_NAME, KV_STORE_NAME, SECRET_STORE_NAME } =
-  getEnv(serviceName);
+const {
+  ACL_NAME,
+  DICTIONARY_NAME,
+  CONFIG_STORE_NAME,
+  KV_STORE_NAME,
+  SECRET_STORE_NAME,
+} = getEnv(serviceName);
 
 function existingListId(stores, existingName) {
   const existing = stores.find(({ name }) => name === existingName);
