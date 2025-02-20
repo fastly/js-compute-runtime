@@ -668,6 +668,9 @@
   "Parsing: <mailto:example.com/> without base": {
     "status": "PASS"
   },
+  "Parsing: <https://example.com/aaa/bbb/%2e%2e?query> without base": {
+    "status": "PASS"
+  },
   "Parsing: <http:@www.example.com> without base": {
     "status": "PASS"
   },
@@ -2556,6 +2559,27 @@
     "status": "FAIL"
   },
   "Parsing: <//a/../> against <file:///>": {
+    "status": "PASS"
+  },
+  "Parsing: <non-special:\\\\opaque> without base": {
+    "status": "PASS"
+  },
+  "Parsing: <non-special:\\\\opaque/path> without base": {
+    "status": "PASS"
+  },
+  "Parsing: <non-special:\\\\opaque\\path> without base": {
+    "status": "PASS"
+  },
+  "Parsing: <non-special:\\/opaque> without base": {
+    "status": "PASS"
+  },
+  "Parsing: <non-special:/\\path> without base": {
+    "status": "PASS"
+  },
+  "Parsing: <non-special://host\\a> without base": {
+    "status": "PASS"
+  },
+  "Parsing: <non-special://host/a\\b> without base": {
     "status": "PASS"
   },
   "Parsing: <http://example.com/U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿?U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿> without base": {

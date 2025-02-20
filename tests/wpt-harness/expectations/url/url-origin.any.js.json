@@ -536,6 +536,9 @@
   "Origin parsing: <mailto:example.com/> without base": {
     "status": "PASS"
   },
+  "Origin parsing: <https://example.com/aaa/bbb/%2e%2e?query> without base": {
+    "status": "PASS"
+  },
   "Origin parsing: <http:@www.example.com> without base": {
     "status": "PASS"
   },
@@ -1131,6 +1134,24 @@
     "status": "PASS"
   },
   "Origin parsing: <isolated-app://x:0> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <non-special:\\\\opaque> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <non-special:\\\\opaque/path> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <non-special:\\\\opaque\\path> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <non-special:\\/opaque> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <non-special:/\\path> without base": {
+    "status": "PASS"
+  },
+  "Origin parsing: <non-special://host/a\\b> without base": {
     "status": "PASS"
   },
   "Origin parsing: <http://example.com/U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿?U+d800𐟾U+dfff﷐﷏﷯ﷰ￾￿> without base": {
