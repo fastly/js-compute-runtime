@@ -7,7 +7,7 @@ import { getEnv } from './env.js';
 const serviceId = argv[2];
 const serviceName = argv[3];
 
-const { DICTIONARY_NAME, CONFIG_STORE_NAME, KV_STORE_NAME, SECRET_STORE_NAME } =
+const { ACL_NAME, DICTIONARY_NAME, CONFIG_STORE_NAME, KV_STORE_NAME, SECRET_STORE_NAME } =
   getEnv(serviceName);
 
 function existingListId(stores, existingName) {
@@ -111,7 +111,7 @@ async function removeSecretStore() {
 async function removeAcl() {
   const ACL_ID = existingListId(
     JSON.parse(
-      await zx`fastly compute acl acl-list --quiet --json --token $FASTLY_API_TOKEN`,
+      await zx`fastly compute acl list-acls --quiet --json --token $FASTLY_API_TOKEN`,
     ).data,
     ACL_NAME,
   );
