@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.32.0](https://github.com/fastly/js-compute-runtime/compare/v3.31.0...v3.32.0) (2025-02-20)
+
+
+### Features
+
+* Acl Support ([#1073](https://github.com/fastly/js-compute-runtime/issues/1073)) ([0f93f7b](https://github.com/fastly/js-compute-runtime/commit/0f93f7ba72f3a7cdb3de979af8ef677bccc1bd5b))
+
 ## 3.31.0 (2025-02-14)
 
 ### Added
