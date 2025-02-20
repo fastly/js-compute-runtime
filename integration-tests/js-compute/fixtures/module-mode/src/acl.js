@@ -75,10 +75,10 @@ routes.set('/acl', async () => {
   });
   deepStrictEqual(await acl.lookup('2a03:4b80:5c1d:e8f7:92a3:b45c:61d8:7e9f'), {
     action: 'ALLOW',
-    prefix: '2a03:4b80::/32',
+    prefix: '2a03:4b80:0000:0000:0000:0000:0000:0000/32',
   });
   deepStrictEqual(await acl.lookup('2a03:4b80::1'), {
     action: 'ALLOW',
-    prefix: '2a03:4b80::/32',
+    prefix: '2a03:4b80:0000:0000:0000:0000:0000:0000/32',
   });
 });
