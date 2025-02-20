@@ -87,6 +87,11 @@ bool Acl::lookup(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (std::find(address.begin(), address.end(), ':') != address.end()) {
     format = AF_INET6;
     octets_len = 16;
+
+    if (std::find(address.begin(), address.end(), "::") != address.end()) {
+      JS_ReportErrorLatin1(cx, "Invalid address passed to acl.lookup");
+      return false;
+    }
   }
 
   uint8_t octets[sizeof(struct in6_addr)];
