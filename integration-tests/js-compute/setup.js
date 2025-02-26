@@ -48,10 +48,10 @@ async function setupConfigStores() {
   let STORE_ID = existingListId(stores, DICTIONARY_NAME);
   if (!STORE_ID) {
     console.log(`Creating new config store ${DICTIONARY_NAME}`);
+    process.env.DICTIONARY_NAME = DICTIONARY_NAME;
     STORE_ID = JSON.parse(
-      await zx`fastly config-store create --quiet --name=${DICTIONARY_NAME} --json --token $FASTLY_API_TOKEN`,
+      await zx`fastly config-store create --quiet --name=$DICTIONARY_NAME --json --token $FASTLY_API_TOKEN`,
     ).id;
-    console.log('-> ' + STORE_ID);
   } else {
     console.log(`Using existing config store ${DICTIONARY_NAME}`);
   }
@@ -68,7 +68,6 @@ async function setupConfigStores() {
     STORE_ID = JSON.parse(
       await zx`fastly config-store create --quiet --name=${CONFIG_STORE_NAME} --json --token $FASTLY_API_TOKEN`,
     ).id;
-    console.log('-> ' + STORE_ID);
   } else {
     console.log(`Using existing config store ${CONFIG_STORE_NAME}`);
   }
