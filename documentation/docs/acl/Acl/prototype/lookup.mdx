@@ -32,7 +32,7 @@ address prefix that was matched in the ACL.
 import { Acl } from 'fastly:acl';
 addEventListener('fetch', async (evt) => {
   const myAcl = Acl.open('myacl');
-  const { action, prefix } = await myAcl.lookup(evt.client.address);
-  evt.respondWith(new Response(action === 'BLOCK' ? 'blocked' : 'allowed'));
+  const match = await myAcl.lookup(evt.client.address);
+  evt.respondWith(new Response(match?.action === 'BLOCK' ? 'blocked' : 'allowed'));
 });
 ```
