@@ -189,10 +189,8 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
       if (!convert_result(fastly::async_is_ready(handle, &is_ready_out), &err)) {
         if (host_api::error_is_bad_handle(err)) {
           fprintf(stderr, "Critical Error: An invalid handle was provided to async_is_ready.\n");
-          fflush(stderr);
         } else {
           fprintf(stderr, "Critical Error: An unknown error occurred in async_is_ready.\n");
-          fflush(stderr);
         }
         abort();
       };
