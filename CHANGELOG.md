@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.32.2](https://github.com/fastly/js-compute-runtime/compare/v3.32.1...v3.32.2) (2025-02-26)
+
+
+### Bug Fixes
+
+* ready-based immediate task indexing ([#1129](https://github.com/fastly/js-compute-runtime/issues/1129)) ([8cfad4f](https://github.com/fastly/js-compute-runtime/commit/8cfad4f78c137afbdc0281e92c39e31415a1188b))
+
 ## 3.32.1 (2025-02-20)
 
 ### Fixed
