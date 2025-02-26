@@ -51,9 +51,9 @@ async function setupConfigStores() {
     STORE_ID = JSON.parse(
       await zx`fastly config-store create --quiet --name=${DICTIONARY_NAME} --json --token $FASTLY_API_TOKEN`,
     ).id;
+    console.log('-> ' + STORE_ID);
   } else {
     console.log(`Using existing config store ${DICTIONARY_NAME}`);
-    STORE_ID = STORE_ID;
   }
   await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=${STORE_ID} --stdin --token $FASTLY_API_TOKEN`;
   try {
@@ -68,9 +68,9 @@ async function setupConfigStores() {
     STORE_ID = JSON.parse(
       await zx`fastly config-store create --quiet --name=${CONFIG_STORE_NAME} --json --token $FASTLY_API_TOKEN`,
     ).id;
+    console.log('-> ' + STORE_ID);
   } else {
     console.log(`Using existing config store ${CONFIG_STORE_NAME}`);
-    STORE_ID = STORE_ID;
   }
   await zx`echo -n 'https://twitter.com/fastly' | fastly config-store-entry update --upsert --key twitter --store-id=${STORE_ID} --stdin --token $FASTLY_API_TOKEN`;
   try {
@@ -93,7 +93,6 @@ async function setupKVStore() {
     ).StoreID;
   } else {
     console.log(`Using existing KV store ${KV_STORE_NAME}`);
-    STORE_ID = STORE_ID;
   }
   try {
     await zx`fastly resource-link create --service-id ${serviceId} --version latest --resource-id ${STORE_ID} --token $FASTLY_API_TOKEN --autoclone`;
@@ -150,9 +149,11 @@ async function setupAcl() {
   }
 }
 
+zx.verbose = true;
 await setupConfigStores();
 await setupKVStore();
 await setupSecretStore();
 await setupAcl();
+zx.verbose = false;
 
 await zx`fastly service-version activate --service-id ${serviceId} --version latest --token $FASTLY_API_TOKEN`;
