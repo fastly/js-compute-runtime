@@ -473,7 +473,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
         }
       }
       if (!if_gen.has_value()) {
-        api::throw_error(cx, api::Errors::TypeError, "KVStore.insert", "gen", "be an integer");
+        api::throw_error(cx, api::Errors::TypeError, "KVStore.put", "gen", "be an integer");
         return ReturnPromiseRejectedWithPendingError(cx, args);
       }
     }
@@ -564,7 +564,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
         }
       }
 
-      auto res = kv_store(self).insert(key_chars, body, mode, std::nullopt, metadata, ttl);
+      auto res = kv_store(self).insert(key_chars, body, mode, if_gen, metadata, ttl);
       if (auto *err = res.to_err()) {
         HANDLE_ERROR(cx, *err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
