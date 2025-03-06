@@ -135,7 +135,8 @@ async function removeAcl() {
   }
 }
 
-await removeConfigStores();
+// Disabled pending 404 fix
+// await removeConfigStores();
 await removeKVStore();
 await removeSecretStore();
 // Disabled pending 503 fix
