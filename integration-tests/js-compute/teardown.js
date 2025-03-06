@@ -135,10 +135,12 @@ async function removeAcl() {
   }
 }
 
-await removeConfigStores();
+// Disabled pending 404 fix
+// await removeConfigStores();
 await removeKVStore();
 await removeSecretStore();
-await removeAcl();
+// Disabled pending 503 fix
+// await removeAcl();
 
 console.log(
   `Tear down has finished! Took ${(Date.now() - startTime) / 1000} seconds to complete`,

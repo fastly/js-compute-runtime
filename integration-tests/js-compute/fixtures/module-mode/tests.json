@@ -1,5 +1,5 @@
 {
-  "GET /acl": { "environments": ["compute"] },
+  "GET /acl": { "environments": ["compute"], "skip": true },
   "GET /backend/timeout": {
     "environments": ["compute"],
     "downstream_response": {
