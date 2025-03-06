@@ -155,7 +155,7 @@ await setupConfigStores();
 await setupKVStore();
 await setupSecretStore();
 // disabled pending 503 fix
-// await setupAcl(); 
+// await setupAcl();
 zx.verbose = false;
 
 await zx`fastly service-version activate --service-id ${serviceId} --version latest --token $FASTLY_API_TOKEN`;
