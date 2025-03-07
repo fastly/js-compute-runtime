@@ -222,7 +222,9 @@ export async function compileApplicationToWasm(
       }
     }
   } catch (error) {
-    throw new Error(`Error: Failed to compile JavaScript to Wasm:\n${error.message}`);
+    throw new Error(
+      `Error: Failed to compile JavaScript to Wasm:\n${error.message}`,
+    );
   } finally {
     if (doBundle) {
       rmSync(tmpDir, { recursive: true });
