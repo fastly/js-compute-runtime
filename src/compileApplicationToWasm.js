@@ -1,5 +1,5 @@
 import { dirname, resolve, sep, normalize } from 'node:path';
-import { tmpdir } from 'node:os';
+import { tmpdir, freemem } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { mkdir, readFile, mkdtemp, writeFile } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
@@ -131,6 +131,7 @@ export async function compileApplicationToWasm(
       ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
         enableExperimentalHighResolutionTimeMethods ? '1' : '0',
       ENABLE_EXPERIMENTAL_HTTP_CACHE: enableHttpCache ? '1' : '0',
+      RUST_MIN_STACK: Math.max(8 * 1024 * 1024, Math.floor(freemem() * 0.1)),
     },
   };
 
@@ -144,6 +145,7 @@ export async function compileApplicationToWasm(
           `"${wevalBin}"`,
           [
             'weval',
+            '-v',
             ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
             `--dir="${maybeWindowsPath(process.cwd())}"`,
             '-w',
@@ -184,6 +186,7 @@ export async function compileApplicationToWasm(
           `"${wevalBin}"`,
           [
             'weval',
+            '-v',
             ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
             '--dir .',
             `--dir ${maybeWindowsPath(dirname(input))}`,
@@ -219,11 +222,9 @@ export async function compileApplicationToWasm(
       }
     }
   } catch (error) {
-    console.error(
-      `Error: Failed to compile JavaScript to Wasm: `,
-      error.message,
+    throw new Error(
+      `Error: Failed to compile JavaScript to Wasm:\n${error.message}`,
     );
-    process.exit(1);
   } finally {
     if (doBundle) {
       rmSync(tmpDir, { recursive: true });

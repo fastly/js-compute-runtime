@@ -1,3 +1,4 @@
+/// <reference path="acl.d.ts" />
 /// <reference path="backend.d.ts" />
 /// <reference path="body.d.ts" />
 /// <reference path="cache-override.d.ts" />
