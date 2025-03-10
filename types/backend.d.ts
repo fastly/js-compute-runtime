@@ -388,9 +388,7 @@ declare module 'fastly:backend' {
      * "healthy" - The backend's health check has succeeded, indicating the backend is working as expected and should receive requests.
      * "unhealthy" - The backend's health check has failed, indicating the backend is not working as expected and should not receive requests.
      * "unknown" - The backend does not have a health check configured.
-     *
-     * @deprecated Use `backend.health()` ({@link Backend.prototype.health}) instead.
      */
-    static health(backend: Backend): 'healthy' | 'unhealthy' | 'unknown';
+    static health(backend: string | Backend): 'healthy' | 'unhealthy' | 'unknown';
   }
 }
