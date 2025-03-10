@@ -151,8 +151,7 @@ async function setupAcl() {
 }
 
 zx.verbose = true;
-// disabled pending 404 fix
-// await setupConfigStores();
+await setupConfigStores();
 await setupKVStore();
 await setupSecretStore();
 // disabled pending 503 fix
