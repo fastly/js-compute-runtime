@@ -56,7 +56,9 @@ async function removeConfigStores() {
       await zx`fastly resource-link delete --version latest --autoclone --id=${LINK_ID}  --token $FASTLY_API_TOKEN`;
       await zx`fastly service-version activate --version latest --token $FASTLY_API_TOKEN`;
     }
-    await zx`fastly config-store delete --store-id=${STORE_ID}  --token $FASTLY_API_TOKEN`;
+    try {
+      await zx`fastly config-store delete --store-id=${STORE_ID}  --token $FASTLY_API_TOKEN`;
+    } catch {}
   }
 
   STORE_ID = existingListId(stores, CONFIG_STORE_NAME);
