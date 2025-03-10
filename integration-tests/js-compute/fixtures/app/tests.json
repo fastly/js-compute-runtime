@@ -409,7 +409,7 @@
   "GET /client/tlsClientCertificate": {},
   "GET /client/tlsCipherOpensslName": {},
   "GET /client/tlsProtocol": {},
-  "GET /config-store": { "flake": true, "skip": true },
+  "GET /config-store": { "flake": true },
   "GET /crypto": {
     "downstream_response": {
       "status": 200,
@@ -980,49 +980,24 @@
       "body": "ok"
     }
   },
-  "GET /dictionary/exposed-as-global": { "flake": true, "skip": true },
-  "GET /dictionary/interface": { "flake": true, "skip": true },
-  "GET /dictionary/constructor/called-as-regular-function": {
-    "flake": true,
-    "skip": true
-  },
+  "GET /dictionary/exposed-as-global": { "flake": true },
+  "GET /dictionary/interface": { "flake": true },
+  "GET /dictionary/constructor/called-as-regular-function": { "flake": true },
   "GET /dictionary/constructor/parameter-calls-7.1.17-ToString": {
-    "flake": true,
-    "skip": true
+    "flake": true
   },
-  "GET /dictionary/constructor/empty-parameter": {
-    "flake": true,
-    "skip": true
-  },
-  "GET /dictionary/constructor/found": { "flake": true, "skip": true },
-  "GET /dictionary/constructor/invalid-name": { "flake": true, "skip": true },
-  "GET /dictionary/get/called-as-constructor": { "flake": true, "skip": true },
-  "GET /dictionary/get/called-unbound": { "flake": true, "skip": true },
-  "GET /dictionary/get/key-parameter-calls-7.1.17-ToString": {
-    "flake": true,
-    "skip": true
-  },
-  "GET /dictionary/get/key-parameter-not-supplied": {
-    "flake": true,
-    "skip": true
-  },
-  "GET /dictionary/get/key-parameter-empty-string": {
-    "flake": true,
-    "skip": true
-  },
-  "GET /dictionary/get/key-parameter-255-character-string": {
-    "flake": true,
-    "skip": true
-  },
-  "GET /dictionary/get/key-parameter-256-character-string": {
-    "flake": true,
-    "skip": true
-  },
-  "GET /dictionary/get/key-does-not-exist-returns-null": {
-    "flake": true,
-    "skip": true
-  },
-  "GET /dictionary/get/key-exists": { "flake": true, "skip": true },
+  "GET /dictionary/constructor/empty-parameter": { "flake": true },
+  "GET /dictionary/constructor/found": { "flake": true },
+  "GET /dictionary/constructor/invalid-name": { "flake": true },
+  "GET /dictionary/get/called-as-constructor": { "flake": true },
+  "GET /dictionary/get/called-unbound": { "flake": true },
+  "GET /dictionary/get/key-parameter-calls-7.1.17-ToString": { "flake": true },
+  "GET /dictionary/get/key-parameter-not-supplied": { "flake": true },
+  "GET /dictionary/get/key-parameter-empty-string": { "flake": true },
+  "GET /dictionary/get/key-parameter-255-character-string": { "flake": true },
+  "GET /dictionary/get/key-parameter-256-character-string": { "flake": true },
+  "GET /dictionary/get/key-does-not-exist-returns-null": { "flake": true },
+  "GET /dictionary/get/key-exists": { "flake": true },
   "GET /env": {
     "environments": ["viceroy"]
   },

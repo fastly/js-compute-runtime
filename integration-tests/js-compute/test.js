@@ -151,7 +151,7 @@ if (!local) {
   serviceId = domainListing.ServiceID;
   core.notice(`Service is running on ${domain}`);
 } else {
-  localServer = zx`fastly compute serve --verbose --viceroy-args="${verbose ? '-vv' : ''}"`;
+  localServer = zx`fastly compute serve --verbose --viceroy-args=${verbose ? '-vv' : ''}`;
   domain = 'http://127.0.0.1:7676';
 }
 
