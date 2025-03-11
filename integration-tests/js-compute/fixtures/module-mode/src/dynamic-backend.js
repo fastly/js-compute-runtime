@@ -2459,6 +2459,7 @@ routes.set('/backend/timeout', async () => {
       strictEqual(backend.name, 'fastly');
       strictEqual(backend.toString(), 'fastly');
       strictEqual(backend.toName(), 'fastly');
+      strictEqual(backend.health(), 'unknown');
       strictEqual(backend.target, 'www.fastly.com', 'target');
       strictEqual(backend.hostOverride, 'www.fastly.com', 'override');
       strictEqual(backend.port, 443, 'port');
@@ -2496,6 +2497,7 @@ routes.set('/backend/timeout', async () => {
       strictEqual(backend.name, 'http-me');
       strictEqual(backend.toString(), 'http-me');
       strictEqual(backend.toName(), 'http-me');
+      strictEqual(backend.health(), 'unknown');
       strictEqual(backend.target, 'http-me.glitch.me', 'target');
       strictEqual(backend.hostOverride, 'http-me.glitch.me', 'hostOverride');
       strictEqual(backend.port, 443, 'port');
