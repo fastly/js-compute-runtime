@@ -10,7 +10,7 @@
   "dependencies": {
     "@actions/core": "^1",
     "@iarna/toml": "^2",
-    "fast-check": "^3",
+    "fast-check": "^4",
     "undici": "^7",
     "zx": "^8"
   },
