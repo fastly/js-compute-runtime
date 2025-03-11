@@ -192,7 +192,7 @@ await Promise.all([
   // and we don't currently have a reliable way to poll on that
   // (perhaps we could poll on the highest version as seen from setup.js resource-link return output
   // being fully activated?)
-  new Promise((resolve) => setTimeout(resolve, 60_000)),
+  local ? null : new Promise((resolve) => setTimeout(resolve, 60_000)),
 ]);
 
 core.endGroup();
