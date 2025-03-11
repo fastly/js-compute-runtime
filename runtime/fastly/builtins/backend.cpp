@@ -1647,10 +1647,8 @@ const JSFunctionSpec Backend::static_methods[] = {
     JS_FN("health", health_for_name, 1, JSPROP_ENUMERATE), JS_FS_END};
 const JSPropertySpec Backend::static_properties[] = {JS_PS_END};
 const JSFunctionSpec Backend::methods[] = {
-                                           JS_FN("health", health, 0, JSPROP_ENUMERATE),
-                                           JS_FN("toString", name_get, 0, JSPROP_ENUMERATE),
-                                           JS_FN("toName", name_get, 0, JSPROP_ENUMERATE),
-                                           JS_FS_END};
+    JS_FN("health", health, 0, JSPROP_ENUMERATE), JS_FN("toString", name_get, 0, JSPROP_ENUMERATE),
+    JS_FN("toName", name_get, 0, JSPROP_ENUMERATE), JS_FS_END};
 const JSPropertySpec Backend::properties[] = {
     JS_PSG("name", name_get, JSPROP_ENUMERATE),
     JS_PSG("isDynamic", is_dynamic_get, JSPROP_ENUMERATE),
