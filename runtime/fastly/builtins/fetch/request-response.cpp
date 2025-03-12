@@ -835,7 +835,7 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
     }
 
     auto boundary = MultipartFormData::boundary(encoder);
-    
+
     host_type_str = host_api::HostString("multipart/form-data; boundary=" + boundary);
 
     auto length = MultipartFormData::query_length(cx, encoder);
