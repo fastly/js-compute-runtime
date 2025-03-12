@@ -418,6 +418,10 @@ async function runTests(testPaths, viceroy, resultCallback, errorCallback) {
           result.expected = true;
         }
 
+        if (result.status !== 0 && config.logLevel >= LogLevel.VeryVerbose) {
+          console.error(result.message);
+        }
+
         if (result.status == 0) {
           stats.pass++;
           if (!expectation || expectation.status === 'FAIL') {

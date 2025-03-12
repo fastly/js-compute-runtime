@@ -3,147 +3,147 @@
     "status": "PASS"
   },
   "Required arguments": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "empty fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "DOMString fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Unicode DOMString fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "String object fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Empty Blob fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Blob fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Empty File fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "File fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "ArrayBuffer fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Typed array fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Various fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Number in fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Array in fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object in fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Object with toString in fileBits": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Custom @@iterator": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Invalid bits argument: \"hello\"": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Invalid bits argument: 0": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Invalid bits argument: null": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Bits argument: object that throws": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using fileName": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "No replacement when using special character in fileName": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using null fileName": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using number fileName": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using empty string fileName": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using type in File constructor: text/plain": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using type in File constructor: text/plain;charset=UTF-8": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using type in File constructor: TEXT/PLAIN": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using type in File constructor: 𝓽𝓮𝔁𝓽/𝔭𝔩𝔞𝔦𝔫": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using type in File constructor: ascii/nonprintable\u001f": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using type in File constructor: ascii/nonprintable": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using type in File constructor: nonasciiî": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using type in File constructor: nonasciiሴ": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using type in File constructor: nonparsable": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Using lastModified": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Misusing name": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Unknown properties are ignored": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Invalid property bag: 123": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Invalid property bag: 123.4": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Invalid property bag: true": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Invalid property bag: \"abc\"": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Unusual but valid property bag: null": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Unusual but valid property bag: undefined": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Unusual but valid property bag: 1,2,3": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Unusual but valid property bag: /regex/": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Unusual but valid property bag: function() {}": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Property bag propagates exceptions": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }

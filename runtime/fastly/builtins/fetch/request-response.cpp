@@ -1,7 +1,13 @@
 #include "request-response.h"
 #include "../../../StarlingMonkey/builtins/web/base64.h"
 #include "../../../StarlingMonkey/builtins/web/blob.h"
+#include "../../../StarlingMonkey/builtins/web/form-data/form-data-encoder.h"
+#include "../../../StarlingMonkey/builtins/web/form-data/form-data-parser.h"
+#include "../../../StarlingMonkey/builtins/web/form-data/form-data.h"
+
 #include "../../../StarlingMonkey/builtins/web/dom-exception.h"
+#include "../../../StarlingMonkey/builtins/web/fetch/fetch-errors.h"
+#include "../../../StarlingMonkey/builtins/web/fetch/fetch-utils.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../../../StarlingMonkey/builtins/web/streams/transform-stream.h"
 #include "../../../StarlingMonkey/builtins/web/url.h"
@@ -18,6 +24,7 @@
 #include "../kv-store.h"
 #include "extension-api.h"
 #include "fetch.h"
+#include "mozilla/ResultVariant.h"
 
 #include "js/Array.h"
 #include "js/ArrayBuffer.h"
@@ -34,9 +41,17 @@
 #include <allocator.h>
 #pragma clang diagnostic pop
 
-using builtins::web::base64::valueToJSByteString;
 using builtins::web::blob::Blob;
+using builtins::web::form_data::FormData;
+using builtins::web::form_data::MultipartFormData;
+
+using namespace std::literals;
+
+using builtins::web::base64::valueToJSByteString;
 using builtins::web::dom_exception::DOMException;
+using builtins::web::form_data::FormData;
+using builtins::web::form_data::FormDataParser;
+using builtins::web::form_data::MultipartFormData;
 
 // We use the StarlingMonkey Headers implementation, despite it supporting features that we do
 // not - specifically the ability to construct headers unassociated with requests and responses.
@@ -808,6 +823,32 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
       MOZ_ASSERT(host_type_str);
       content_type = host_type_str.begin();
     }
+  } else if (FormData::is_instance(body_obj)) {
+    RootedObject encoder(cx, MultipartFormData::create(cx, body_obj));
+    if (!encoder) {
+      return false;
+    }
+
+    RootedObject stream(cx, MultipartFormData::encode_stream(cx, encoder));
+    if (!stream) {
+      return false;
+    }
+
+    auto boundary = MultipartFormData::boundary(encoder);
+    std::string content_type_str = "multipart/form-data; boundary=" + boundary;
+    host_type_str = host_api::HostString(content_type_str.c_str());
+
+    auto length = MultipartFormData::query_length(cx, encoder);
+    if (length.isErr()) {
+      return false;
+    }
+
+    // content_length = mozilla::Some(length.unwrap());
+    content_type = host_type_str.begin();
+
+    RootedValue stream_val(cx, JS::ObjectValue(*stream));
+    JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream),
+                       stream_val);
   } else if (body_obj && JS::IsReadableStream(body_obj)) {
     if (RequestOrResponse::body_unusable(cx, body_obj)) {
       JS_ReportErrorNumberLatin1(cx, FastlyGetErrorMessage, nullptr,
@@ -1053,12 +1094,47 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
   } else if constexpr (result_type == RequestOrResponse::BodyReadResult::Blob) {
     JS::RootedString contentType(cx, JS_GetEmptyString(cx));
     JS::RootedObject blob(cx, Blob::create(cx, std::move(buf), len, contentType));
-
     if (!blob) {
       return RejectPromiseWithPendingError(cx, result_promise);
     }
 
     result.setObject(*blob);
+  } else if constexpr (result_type == RequestOrResponse::BodyReadResult::FormData) {
+    auto throw_invalid_header = [&]() {
+      api::throw_error(cx, FetchErrors::InvalidFormDataHeader);
+      return RejectPromiseWithPendingError(cx, result_promise);
+    };
+
+    RootedObject headers(cx, RequestOrResponse::maybe_headers(self));
+    if (!headers) {
+      return throw_invalid_header();
+    }
+
+    auto content_type_str = host_api::HostString("Content-Type");
+    auto idx = Headers::lookup(cx, headers, content_type_str);
+    if (!idx) {
+      return throw_invalid_header();
+    }
+
+    auto values = Headers::get_index(cx, headers, idx.value());
+    auto maybe_mime = builtins::web::fetch::extract_mime_type(std::get<1>(*values));
+    if (maybe_mime.isErr()) {
+      return throw_invalid_header();
+    }
+
+    auto parser = FormDataParser::create(maybe_mime.unwrap().to_string());
+    if (!parser) {
+      return throw_invalid_header();
+    }
+
+    std::string_view body(buf.get(), len);
+    RootedObject form_data(cx, parser->parse(cx, body));
+    if (!form_data) {
+      api::throw_error(cx, FetchErrors::InvalidFormData);
+      return RejectPromiseWithPendingError(cx, result_promise);
+    }
+
+    result.setObject(*form_data);
   } else {
     JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), len)));
     if (!text) {
@@ -2271,6 +2347,8 @@ const JSFunctionSpec Request::methods[] = {
     JS_FN("arrayBuffer", Request::bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
     JS_FN("blob", Request::bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
+    JS_FN("formData", Request::bodyAll<RequestOrResponse::BodyReadResult::FormData>, 0,
+          JSPROP_ENUMERATE),
     JS_FN("json", Request::bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", Request::bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setCacheOverride", Request::setCacheOverride, 3, JSPROP_ENUMERATE),
@@ -2682,7 +2760,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   // non-null, and `request`’s method is ``GET`` or ``HEAD``, then throw a
   // TypeError.
   if ((input_has_body || !body_val.isNullOrUndefined()) && is_get_or_head) {
-    JS_ReportErrorLatin1(cx, "Request constructor: HEAD or GET Request cannot have a body.");
+    api::throw_error(cx, FetchErrors::InvalidInitArg, "Request constructor");
     return nullptr;
   }
 
@@ -3566,6 +3644,7 @@ const JSFunctionSpec Response::methods[] = {
     JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
     JS_FN("blob", bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
+    JS_FN("formData", bodyAll<RequestOrResponse::BodyReadResult::FormData>, 0, JSPROP_ENUMERATE),
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setManualFramingHeaders", Response::setManualFramingHeaders, 1, JSPROP_ENUMERATE),
