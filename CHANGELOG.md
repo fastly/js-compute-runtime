@@ -1,15 +1,13 @@
 # Changelog
 
-## [3.33.0](https://github.com/fastly/js-compute-runtime/compare/v3.32.2...v3.33.0) (2025-03-12)
+## 3.33.0 (2025-03-12)
 
-
-### Features
+### Added
 
 * add support for EventTarget ([#1145](https://github.com/fastly/js-compute-runtime/issues/1145)) ([a735993](https://github.com/fastly/js-compute-runtime/commit/a735993e609b5e2405a5223e7bc02ef655a47d68))
 * FormData support and Request.formData and Response.formData ([#1144](https://github.com/fastly/js-compute-runtime/issues/1144)) ([0214ae7](https://github.com/fastly/js-compute-runtime/commit/0214ae70b8d5afd1bc66231d779af5b606e89efb))
 
-
-### Bug Fixes
+### Fixed
 
 * Backend.prototype.health method definition ([#1143](https://github.com/fastly/js-compute-runtime/issues/1143)) ([42d429b](https://github.com/fastly/js-compute-runtime/commit/42d429bafdd7ec02854217675bdb58eba1e533a4))
 * Weval stack overflow bug ([#1135](https://github.com/fastly/js-compute-runtime/issues/1135)) ([f6947d9](https://github.com/fastly/js-compute-runtime/commit/f6947d9eb9fcd10f91c8c439a8a5cd6db8169d9e))
