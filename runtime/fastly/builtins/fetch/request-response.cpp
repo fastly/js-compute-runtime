@@ -835,8 +835,8 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
     }
 
     auto boundary = MultipartFormData::boundary(encoder);
-
-    host_type_str = host_api::HostString("multipart/form-data; boundary=" + boundary);
+    std::string content_type_str = "multipart/form-data; boundary=" + boundary;
+    host_type_str = host_api::HostString(content_type_str.c_str());
 
     auto length = MultipartFormData::query_length(cx, encoder);
     if (length.isErr()) {
