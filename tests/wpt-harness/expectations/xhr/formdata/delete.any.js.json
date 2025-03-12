@@ -1,11 +1,11 @@
 {
   "testFormDataDelete": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "testFormDataDeleteNonExistentKey": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "testFormDataDeleteOtherKey": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }
