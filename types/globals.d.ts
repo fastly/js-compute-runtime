@@ -2185,6 +2185,158 @@ type KeyUsage =
   | 'verify'
   | 'wrapKey';
 
+interface EventInit {
+  bubbles?: boolean;
+  cancelable?: boolean;
+  composed?: boolean;
+}
+
+interface EventListenerOptions {
+  capture?: boolean;
+}
+
+interface AddEventListenerOptions extends EventListenerOptions {
+  once?: boolean;
+  passive?: boolean;
+  // signal?: AbortSignal;
+}
+/**
+ * An event which takes place in the DOM.
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event)
+ */
+interface Event {
+  /**
+   * Returns true or false depending on how event was initialized. True if event goes through its target's ancestors in reverse tree order, and false otherwise.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/bubbles)
+   */
+  readonly bubbles: boolean;
+  /**
+   * @deprecated
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/cancelBubble)
+   */
+  cancelBubble: boolean;
+  /**
+   * Returns true or false depending on how event was initialized. Its return value does not always carry meaning, but true can indicate that part of the operation during which event was dispatched, can be canceled by invoking the preventDefault() method.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/cancelable)
+   */
+  readonly cancelable: boolean;
+  /**
+   * Returns true or false depending on how event was initialized. True if event invokes listeners past a ShadowRoot node that is the root of its target, and false otherwise.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/composed)
+   */
+  readonly composed: boolean;
+  /**
+   * Returns the object whose event listener's callback is currently being invoked.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/currentTarget)
+   */
+  readonly currentTarget: EventTarget | null;
+  /**
+   * Returns true if preventDefault() was invoked successfully to indicate cancelation, and false otherwise.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/defaultPrevented)
+   */
+  readonly defaultPrevented: boolean;
+  /**
+   * Returns the event's phase, which is one of NONE, CAPTURING_PHASE, AT_TARGET, and BUBBLING_PHASE.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/eventPhase)
+   */
+  readonly eventPhase: number;
+  /**
+   * Returns true if event was dispatched by the user agent, and false otherwise.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/isTrusted)
+   */
+  readonly isTrusted: boolean;
+  /**
+   * @deprecated
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/returnValue)
+   */
+  returnValue: boolean;
+  /**
+   * @deprecated
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/srcElement)
+   */
+  readonly srcElement: EventTarget | null;
+  /**
+   * Returns the object to which event is dispatched (its target).
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/target)
+   */
+  readonly target: EventTarget | null;
+  /**
+   * Returns the event's timestamp as the number of milliseconds measured relative to the time origin.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/timeStamp)
+   */
+  readonly timeStamp: DOMHighResTimeStamp;
+  /**
+   * Returns the type of event, e.g. "click", "hashchange", or "submit".
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/type)
+   */
+  readonly type: string;
+  /**
+   * Returns the invocation target objects of event's path (objects on which listeners will be invoked), except for any nodes in shadow trees of which the shadow root's mode is "closed" that are not reachable from event's currentTarget.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/composedPath)
+   */
+  composedPath(): EventTarget[];
+  /**
+   * @deprecated
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/initEvent)
+   */
+  initEvent(type: string, bubbles?: boolean, cancelable?: boolean): void;
+  /**
+   * If invoked when the cancelable attribute value is true, and while executing a listener for the event with passive set to false, signals to the operation that caused event to be dispatched that it needs to be canceled.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/preventDefault)
+   */
+  preventDefault(): void;
+  /**
+   * Invoking this method prevents event from reaching any registered event listeners after the current one finishes running and, when dispatched in a tree, also prevents event from reaching any other objects.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/stopImmediatePropagation)
+   */
+  stopImmediatePropagation(): void;
+  /**
+   * When dispatched in a tree, invoking this method prevents event from reaching any objects other than the current object.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/stopPropagation)
+   */
+  stopPropagation(): void;
+  readonly NONE: 0;
+  readonly CAPTURING_PHASE: 1;
+  readonly AT_TARGET: 2;
+  readonly BUBBLING_PHASE: 3;
+}
+
+declare var Event: {
+  prototype: Event;
+  new(type: string, eventInitDict?: EventInit): Event;
+  readonly NONE: 0;
+  readonly CAPTURING_PHASE: 1;
+  readonly AT_TARGET: 2;
+  readonly BUBBLING_PHASE: 3;
+};
+
+interface EventListener {
+  (evt: Event): void;
+}
+interface EventListenerObject {
+  handleEvent(object: Event): void;
+}
+type EventListenerOrEventListenerObject = EventListener | EventListenerObject;
+
 /**
  * EventTarget is a DOM interface implemented by objects that can receive events and may have listeners for them.
  *
@@ -2192,10 +2344,43 @@ type KeyUsage =
  * @group DOM Events
  */
 interface EventTarget {
-  //addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: AddEventListenerOptions | boolean): void;
-  //dispatchEvent(event: Event): boolean;
-  //removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void;
+  /**
+   * Appends an event listener for events whose type attribute value is type. The callback argument sets the callback that will be invoked when the event is dispatched.
+   *
+   * The options argument sets listener-specific options. For compatibility this can be a boolean, in which case the method behaves exactly as if the value was specified as options's capture.
+   *
+   * When set to true, options's capture prevents callback from being invoked when the event's eventPhase attribute value is BUBBLING_PHASE. When false (or not present), callback will not be invoked when event's eventPhase attribute value is CAPTURING_PHASE. Either way, callback will be invoked if event's eventPhase attribute value is AT_TARGET.
+   *
+   * When set to true, options's passive indicates that the callback will not cancel the event by invoking preventDefault(). This is used to enable performance optimizations described in § 2.8 Observing event listeners.
+   *
+   * When set to true, options's once indicates that the callback will only be invoked once after which the event listener will be removed.
+   *
+   * If an AbortSignal is passed for options's signal, then the event listener will be removed when signal is aborted.
+   *
+   * The event listener is appended to target's event listener list and is not appended if it has the same type, callback, and capture.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener)
+   */
+  addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: AddEventListenerOptions | boolean): void;
+  /**
+   * Dispatches a synthetic event event to target and returns true if either event's cancelable attribute value is false or its preventDefault() method was not invoked, and false otherwise.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/EventTarget/dispatchEvent)
+   */
+  dispatchEvent(event: Event): boolean;
+  /**
+   * Removes the event listener in target's event listener list with the same type, callback, and options.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/EventTarget/removeEventListener)
+   */
+  removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void;
 }
+
+declare var EventTarget: {
+  prototype: EventTarget;
+  new(): EventTarget;
+};
+
 
 /**
  * Provides access to performance-related information for the current page. It's part of the High Resolution Time API, but is enhanced by the Performance Timeline API, the Navigation Timing API, the User Timing API, and the Resource Timing API.
