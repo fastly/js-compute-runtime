@@ -1147,6 +1147,93 @@ and limitations under the License.
  * Copyright (c) Fastly Corporation, under the same license as the rest of the file.
  */
 
+type BlobPart = BufferSource | Blob | string;
+type EndingType = "native" | "transparent";
+type FormDataEntryValue = File | string;
+
+interface BlobPropertyBag {
+  endings?: EndingType;
+  type?: string;
+}
+
+interface FilePropertyBag extends BlobPropertyBag {
+  lastModified?: number;
+}
+
+/**
+ * A file-like object of immutable, raw data. Blobs represent data that isn't necessarily in a JavaScript-native format. The File interface is based on Blob, inheriting blob functionality and expanding it to support files on the user's system.
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob)
+ */
+interface Blob {
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/size) */
+  readonly size: number;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/type) */
+  readonly type: string;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/arrayBuffer) */
+  arrayBuffer(): Promise<ArrayBuffer>;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/slice) */
+  slice(start?: number, end?: number, contentType?: string): Blob;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/stream) */
+  stream(): ReadableStream<Uint8Array>;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/text) */
+  text(): Promise<string>;
+}
+
+declare var Blob: {
+  prototype: Blob;
+  new(blobParts?: BlobPart[], options?: BlobPropertyBag): Blob;
+};
+
+/**
+ * Provides information about files and allows JavaScript in a web page to access their content.
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/File)
+ */
+interface File extends Blob {
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/File/lastModified) */
+  readonly lastModified: number;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/File/name) */
+  readonly name: string;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/File/webkitRelativePath) */
+  readonly webkitRelativePath: string;
+}
+
+declare var File: {
+  prototype: File;
+  new(fileBits: BlobPart[], fileName: string, options?: FilePropertyBag): File;
+};
+
+/**
+ * Provides a way to easily construct a set of key/value pairs representing form fields and their values, which can then be easily sent using the XMLHttpRequest.send() method. It uses the same format a form would use if the encoding type were set to "multipart/form-data".
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData)
+ */
+interface FormData {
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData/append) */
+  append(name: string, value: string | Blob): void;
+  append(name: string, value: string): void;
+  append(name: string, blobValue: Blob, filename?: string): void;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData/delete) */
+  delete(name: string): void;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData/get) */
+  get(name: string): FormDataEntryValue | null;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData/getAll) */
+  getAll(name: string): FormDataEntryValue[];
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData/has) */
+  has(name: string): boolean;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData/set) */
+  set(name: string, value: string | Blob): void;
+  set(name: string, value: string): void;
+  set(name: string, blobValue: Blob, filename?: string): void;
+  forEach(callbackfn: (value: FormDataEntryValue, key: string, parent: FormData) => void, thisArg?: any): void;
+}
+
+declare var FormData: {
+  prototype: FormData;
+  new(form?: any/*form?: HTMLFormElement, submitter?: HTMLElement | null*/): FormData;
+};
+
 /**
  * Used within the
  * [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request/Request) and
@@ -1154,12 +1241,8 @@ and limitations under the License.
  * ({@linkcode Request}, and {@linkcode Response})
  * @group Fetch API
  */
-declare type BodyInit =
-  | ReadableStream
-  | ArrayBufferView
-  | ArrayBuffer
-  | URLSearchParams
-  | string;
+declare type BodyInit = ReadableStream | XMLHttpRequestBodyInit;
+declare type XMLHttpRequestBodyInit = Blob | BufferSource | FormData | URLSearchParams | string;
 
 /**
  * Body for Fetch HTTP Requests and Responses
@@ -1171,8 +1254,8 @@ declare interface Body {
   readonly body: ReadableStream<Uint8Array> | null;
   readonly bodyUsed: boolean;
   arrayBuffer(): Promise<ArrayBuffer>;
-  // blob(): Promise<Blob>;
-  // formData(): Promise<FormData>;
+  blob(): Promise<Blob>;
+  formData(): Promise<FormData>;
   json(): Promise<any>;
   text(): Promise<string>;
 }
