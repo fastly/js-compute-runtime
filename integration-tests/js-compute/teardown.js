@@ -81,7 +81,7 @@ async function removeKVStore() {
 
   let STORE_ID = existingListId(stores, KV_STORE_NAME);
   if (STORE_ID) {
-    await zx`fastly kv-store delete ${STORE_ID} --quiet --all --token $FASTLY_API_TOKEN`;
+    await zx`fastly kv-store delete --store-id=${STORE_ID} --quiet --all -y --token $FASTLY_API_TOKEN`;
   } else {
     console.error(`Unable to find KV Store ${KV_STORE_NAME} to delete`);
   }
