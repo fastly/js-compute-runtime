@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.33.2 (2025-03-17)
+
+### Fixed
+
+* TypeScript declaration return type of Acl.open() ([#1149](https://github.com/fastly/js-compute-runtime/issues/1149)) ([b9765f6](https://github.com/fastly/js-compute-runtime/commit/b9765f68823529327a8ec75268f4833d308ad6bd))
+* TypeScript type definitions for Blob, File, FormData ([#1150](https://github.com/fastly/js-compute-runtime/issues/1150)) ([4c93d79](https://github.com/fastly/js-compute-runtime/commit/4c93d794390e3f2cb98e8e806744620e2cde3b3b))
+* TypeScript type definitions for Event and EventTarget ([#1151](https://github.com/fastly/js-compute-runtime/issues/1151)) ([eb1ab0d](https://github.com/fastly/js-compute-runtime/commit/eb1ab0d2f693c199947e8b6ffc4a7c1d758024ad))
+
 ## 3.33.1 (2025-03-12)
 
 ### Fixed
