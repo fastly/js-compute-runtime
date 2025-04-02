@@ -8,7 +8,7 @@ import {Fiddle} from '@site/src/components/fiddle';
 
 # `ConfigStore()`
 
-The **`ConfigStore` constructor** lets you access a specific [Fastly Edge Dictionary](https://docs.fastly.com/en/guides/about-edge-dictionaries).
+The **`ConfigStore` constructor** lets you access a specific [Fastly Edge ConfigStore](https://www.fastly.com/documentation/reference/api/services/resources/config-store/).
 
 > **Note**: Can only be used when processing requests, not during build-time initialization.
 
@@ -23,7 +23,7 @@ new ConfigStore(name);
 ### Parameters
 
 - `name` _: string_
-  - The name of the [Fastly Edge Dictionary](https://docs.fastly.com/en/guides/about-edge-dictionaries) that this `ConfigStore` instance should provide access to.
+  - The name of the [Fastly Edge ConfigStore](https://www.fastly.com/documentation/reference/api/services/resources/config-store/) that this `ConfigStore` instance should provide access to.
 
 ### Return value
 
@@ -40,7 +40,7 @@ A new `ConfigStore` object.
 
 ## Examples
 
-In this example we have an Edge Dictionary named "animals" and we return the "cat" entry as the response body to the client.
+In this example we have a ConfigStore named "animals" and we return the "cat" entry as the response body to the client.
 
 <Fiddle config={{
   "type": "javascript",
