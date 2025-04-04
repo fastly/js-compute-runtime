@@ -1358,6 +1358,12 @@
       "body": "ok"
     }
   },
+  "GET /headers/getsetcookie": {
+    "downstream_response": {
+      "status":200,
+      "headers": [["name1=value1"], ["name2=value2"]]
+    }
+  },
   "GET /headers/construct": {
     "downstream_response": {
       "status": 200,
