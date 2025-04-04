@@ -1148,7 +1148,7 @@ and limitations under the License.
  */
 
 type BlobPart = BufferSource | Blob | string;
-type EndingType = "native" | "transparent";
+type EndingType = 'native' | 'transparent';
 type FormDataEntryValue = File | string;
 
 interface BlobPropertyBag {
@@ -1182,7 +1182,7 @@ interface Blob {
 
 declare var Blob: {
   prototype: Blob;
-  new(blobParts?: BlobPart[], options?: BlobPropertyBag): Blob;
+  new (blobParts?: BlobPart[], options?: BlobPropertyBag): Blob;
 };
 
 /**
@@ -1201,7 +1201,7 @@ interface File extends Blob {
 
 declare var File: {
   prototype: File;
-  new(fileBits: BlobPart[], fileName: string, options?: FilePropertyBag): File;
+  new (fileBits: BlobPart[], fileName: string, options?: FilePropertyBag): File;
 };
 
 /**
@@ -1226,12 +1226,21 @@ interface FormData {
   set(name: string, value: string | Blob): void;
   set(name: string, value: string): void;
   set(name: string, blobValue: Blob, filename?: string): void;
-  forEach(callbackfn: (value: FormDataEntryValue, key: string, parent: FormData) => void, thisArg?: any): void;
+  forEach(
+    callbackfn: (
+      value: FormDataEntryValue,
+      key: string,
+      parent: FormData,
+    ) => void,
+    thisArg?: any,
+  ): void;
 }
 
 declare var FormData: {
   prototype: FormData;
-  new(form?: any/*form?: HTMLFormElement, submitter?: HTMLElement | null*/): FormData;
+  new (
+    form?: any /*form?: HTMLFormElement, submitter?: HTMLElement | null*/,
+  ): FormData;
 };
 
 /**
@@ -1242,7 +1251,12 @@ declare var FormData: {
  * @group Fetch API
  */
 declare type BodyInit = ReadableStream | XMLHttpRequestBodyInit;
-declare type XMLHttpRequestBodyInit = Blob | BufferSource | FormData | URLSearchParams | string;
+declare type XMLHttpRequestBodyInit =
+  | Blob
+  | BufferSource
+  | FormData
+  | URLSearchParams
+  | string;
 
 /**
  * Body for Fetch HTTP Requests and Responses
@@ -1919,6 +1933,7 @@ interface Headers {
   append(name: string, value: string): void;
   delete(name: string): void;
   get(name: string): string | null;
+  getSetCookie(): string[];
   has(name: string): boolean;
   set(name: string, value: string): void;
   forEach(
@@ -2405,7 +2420,7 @@ interface Event {
 
 declare var Event: {
   prototype: Event;
-  new(type: string, eventInitDict?: EventInit): Event;
+  new (type: string, eventInitDict?: EventInit): Event;
   readonly NONE: 0;
   readonly CAPTURING_PHASE: 1;
   readonly AT_TARGET: 2;
@@ -2444,7 +2459,11 @@ interface EventTarget {
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener)
    */
-  addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: AddEventListenerOptions | boolean): void;
+  addEventListener(
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: AddEventListenerOptions | boolean,
+  ): void;
   /**
    * Dispatches a synthetic event event to target and returns true if either event's cancelable attribute value is false or its preventDefault() method was not invoked, and false otherwise.
    *
@@ -2456,14 +2475,17 @@ interface EventTarget {
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/EventTarget/removeEventListener)
    */
-  removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void;
+  removeEventListener(
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: EventListenerOptions | boolean,
+  ): void;
 }
 
 declare var EventTarget: {
   prototype: EventTarget;
-  new(): EventTarget;
+  new (): EventTarget;
 };
-
 
 /**
  * Provides access to performance-related information for the current page. It's part of the High Resolution Time API, but is enhanced by the Performance Timeline API, the Navigation Timing API, the User Timing API, and the Resource Timing API.
