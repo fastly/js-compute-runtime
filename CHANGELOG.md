@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.33.3](https://github.com/fastly/js-compute-runtime/compare/v3.33.2...v3.33.3) (2025-04-04)
+
+
+### Bug Fixes
+
+* config store documentation fix ([#1160](https://github.com/fastly/js-compute-runtime/issues/1160)) ([4047c7b](https://github.com/fastly/js-compute-runtime/commit/4047c7b0862bbaa799053cc341674725425f933a))
+* TypeScript declaration for Headers ([#1155](https://github.com/fastly/js-compute-runtime/issues/1155)) ([a6664b9](https://github.com/fastly/js-compute-runtime/commit/a6664b908db4f2f784ddedc53798f7c31474530e))
+
 ## 3.33.2 (2025-03-17)
 
 ### Fixed
