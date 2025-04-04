@@ -22,11 +22,17 @@ routes.set('/headers/non-ascii-latin1-field-value', async () => {
 });
 
 routes.set('/headers/getsetcookie', async () => {
-  let response = await fetch('https://http-me.glitch.me/meow?header=Set-Cookie:name1=value1', {
-    backend: 'httpme',
-  });
-  response.headers.append("Set-Cookie", "name2=value2");
-  console.log("response.headers.getSetCookie()", response.headers.getSetCookie());
+  let response = await fetch(
+    'https://http-me.glitch.me/meow?header=Set-Cookie:name1=value1',
+    {
+      backend: 'httpme',
+    },
+  );
+  response.headers.append('Set-Cookie', 'name2=value2');
+  console.log(
+    'response.headers.getSetCookie()',
+    response.headers.getSetCookie(),
+  );
 });
 
 routes.set('/headers/from-response/set', async () => {

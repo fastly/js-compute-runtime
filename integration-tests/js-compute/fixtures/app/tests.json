@@ -1360,7 +1360,7 @@
   },
   "GET /headers/getsetcookie": {
     "downstream_response": {
-      "status":200,
+      "status": 200,
       "headers": [["name1=value1"], ["name2=value2"]]
     }
   },
