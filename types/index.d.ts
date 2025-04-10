@@ -11,6 +11,7 @@
 /// <reference path="env.d.ts" />
 /// <reference path="experimental.d.ts" />
 /// <reference path="fanout.d.ts" />
+/// <reference path="websocket.d.ts" />
 /// <reference path="geolocation.d.ts" />
 /// <reference path="globals.d.ts" />
 /// <reference path="kv-store.d.ts" />
