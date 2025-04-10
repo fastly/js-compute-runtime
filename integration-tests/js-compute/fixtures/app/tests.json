@@ -1002,6 +1002,7 @@
     "environments": ["viceroy"]
   },
   "GET /createFanoutHandoff": {},
+  "GET /createWebsocketHandoff": {},
   "GET /fastly/now": {},
   "GET /fastly/version": {},
   "GET /fastly/getgeolocationforipaddress/interface": {

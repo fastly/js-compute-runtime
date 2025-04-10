@@ -20,6 +20,7 @@ const subsystems = [
   'env',
   'experimental',
   'fanout',
+  'websocket',
   'geolocation',
   'kv-store',
   'logger',
