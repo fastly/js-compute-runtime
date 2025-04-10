@@ -3,7 +3,11 @@ import { routes } from './routes.js';
 import { createWebsocketHandoff } from 'fastly:websocket';
 
 routes.set('/createWebsocketHandoff', () => {
-  assert(typeof createWebsocketHandoff, 'function', 'typeof createWebsocketHandoff');
+  assert(
+    typeof createWebsocketHandoff,
+    'function',
+    'typeof createWebsocketHandoff',
+  );
 
   assert(
     createWebsocketHandoff.name,
