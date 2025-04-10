@@ -303,7 +303,8 @@ bool Fastly::createWebsocketHandoff(JSContext *cx, unsigned argc, JS::Value *vp)
 
   auto request_value = args.get(0);
   if (!Request::is_instance(request_value)) {
-    JS_ReportErrorUTF8(cx, "createWebsocketHandoff: request parameter must be an instance of Request");
+    JS_ReportErrorUTF8(cx,
+                       "createWebsocketHandoff: request parameter must be an instance of Request");
     return false;
   }
   auto websocket_upgrade_request = &request_value.toObject();
@@ -347,8 +348,8 @@ bool Fastly::createWebsocketHandoff(JSContext *cx, unsigned argc, JS::Value *vp)
   bool is_upstream = true;
 
   JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle.unwrap(),
-                                                 body_handle.unwrap(), is_upstream,
-                                                 nullptr, websocket_upgrade_request, backend_str));
+                                                 body_handle.unwrap(), is_upstream, nullptr,
+                                                 websocket_upgrade_request, backend_str));
   if (!response) {
     return false;
   }
@@ -358,7 +359,6 @@ bool Fastly::createWebsocketHandoff(JSContext *cx, unsigned argc, JS::Value *vp)
 
   return true;
 }
-
 
 bool Fastly::now(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -755,10 +755,12 @@ bool install(api::Engine *engine) {
   RootedObject websocket(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   RootedValue websocket_val(engine->cx(), JS::ObjectValue(*websocket));
   RootedValue create_websocket_handoff_val(engine->cx());
-  if (!JS_GetProperty(engine->cx(), fastly, "createWebsocketHandoff", &create_websocket_handoff_val)) {
+  if (!JS_GetProperty(engine->cx(), fastly, "createWebsocketHandoff",
+                      &create_websocket_handoff_val)) {
     return false;
   }
-  if (!JS_SetProperty(engine->cx(), websocket, "createWebsocketHandoff", create_websocket_handoff_val)) {
+  if (!JS_SetProperty(engine->cx(), websocket, "createWebsocketHandoff",
+                      create_websocket_handoff_val)) {
     return false;
   }
   if (!engine->define_builtin_module("fastly:websocket", websocket_val)) {

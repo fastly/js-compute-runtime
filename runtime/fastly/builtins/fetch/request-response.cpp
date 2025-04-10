@@ -4549,8 +4549,8 @@ void Response::finalize(JS::GCContext *gcx, JSObject *self) {
 
 JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                            host_api::HttpResp response_handle, host_api::HttpBody body_handle,
-                           bool is_upstream, JSObject *grip_upgrade_request, JSObject *websocket_upgrade_request,
-                           JS::HandleString backend) {
+                           bool is_upstream, JSObject *grip_upgrade_request,
+                           JSObject *websocket_upgrade_request, JS::HandleString backend) {
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Response),
                       JS::Int32Value(response_handle.handle));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::NullValue());
