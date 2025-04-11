@@ -2958,6 +2958,16 @@ std::optional<host_api::HttpReq> Response::grip_upgrade_request(JSObject *obj) {
   return host_api::HttpReq(grip_upgrade_request.toInt32());
 }
 
+std::optional<host_api::HttpReq> Response::websocket_upgrade_request(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  auto websocket_upgrade_request =
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::WebsocketUpgradeRequest));
+  if (websocket_upgrade_request.isUndefined()) {
+    return std::nullopt;
+  }
+  return host_api::HttpReq(websocket_upgrade_request.toInt32());
+}
+
 host_api::HostString Response::backend_str(JSContext *cx, JSObject *obj) {
   MOZ_ASSERT(is_instance(obj));
 
@@ -3418,7 +3428,7 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedObject response(
-      cx, create(cx, response_instance, response_handle, body, false, nullptr, nullptr));
+      cx, create(cx, response_instance, response_handle, body, false, nullptr, nullptr, nullptr));
   if (!response) {
     return false;
   }
@@ -3562,7 +3572,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedObject response(
-      cx, create(cx, response_instance, response_handle, body, false, nullptr, nullptr));
+      cx, create(cx, response_instance, response_handle, body, false, nullptr, nullptr, nullptr));
   if (!response) {
     return false;
   }
@@ -4338,7 +4348,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto body = make_res.unwrap();
   JS::RootedObject responseInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
   JS::RootedObject response(
-      cx, create(cx, responseInstance, response_handle, body, false, nullptr, nullptr));
+      cx, create(cx, responseInstance, response_handle, body, false, nullptr, nullptr, nullptr));
   if (!response) {
     return false;
   }
@@ -4511,7 +4521,7 @@ JSObject *Response::create(JSContext *cx, HandleObject request, host_api::Respon
   bool is_upstream = true;
   RootedString backend(cx, RequestOrResponse::backend(request));
   JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle, body,
-                                                 is_upstream, nullptr, backend));
+                                                 is_upstream, nullptr, nullptr, backend));
   if (!response) {
     return nullptr;
   }
@@ -4540,7 +4550,7 @@ void Response::finalize(JS::GCContext *gcx, JSObject *self) {
 JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                            host_api::HttpResp response_handle, host_api::HttpBody body_handle,
                            bool is_upstream, JSObject *grip_upgrade_request,
-                           JS::HandleString backend) {
+                           JSObject *websocket_upgrade_request, JS::HandleString backend) {
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Response),
                       JS::Int32Value(response_handle.handle));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::NullValue());
@@ -4555,6 +4565,10 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
   if (grip_upgrade_request) {
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::GripUpgradeRequest),
                         JS::Int32Value(Request::request_handle(grip_upgrade_request).handle));
+  }
+  if (websocket_upgrade_request) {
+    JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::WebsocketUpgradeRequest),
+                        JS::Int32Value(Request::request_handle(websocket_upgrade_request).handle));
   }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::StorageAction), JS::UndefinedValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(RequestOrResponse::Slots::CacheEntry),
