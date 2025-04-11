@@ -82,6 +82,11 @@ export const sdkVersion = globalThis.fastly.sdkVersion;
             contents: `export const createFanoutHandoff = globalThis.fastly.createFanoutHandoff;`,
           };
         }
+        case 'websocket': {
+          return {
+            contents: `export const createWebsocketHandoff = globalThis.fastly.createWebsocketHandoff;`,
+          };
+        }
         case 'geolocation': {
           return {
             contents: `export const getGeolocationForIpAddress = globalThis.fastly.getGeolocationForIpAddress;`,

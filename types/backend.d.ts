@@ -66,6 +66,15 @@ declare module 'fastly:backend' {
     betweenBytesTimeout?: number;
     /**
      * Whether or not to require TLS for connections to this backend.
+     *
+     * When using TLS, Fastly checks the validity of the backend's certificate, and fails the connection if the certificate is invalid.
+     * This check is not optional: an invalid certificate will cause the backend connection to fail (but read on).
+     *
+     * By default, the validity check does not require that the certificate hostname matches the hostname of your request.
+     * You can use {@link BackendConfiguration.certificateHostname} to request a check of the certificate hostname.
+     *
+     * By default, certificate validity uses a set of public certificate authorities.
+     * You can specify an alternative CA using {@link caCertificate}.
      */
     useSSL?: boolean;
     /**
@@ -92,6 +101,8 @@ declare module 'fastly:backend' {
     tlsMaxVersion?: 1 | 1.1 | 1.2 | 1.3;
     /**
      * The CA certificate to use when checking the validity of the backend.
+     *
+     * If not provided (default), the backend's certificate is validated using a set of public root CAs.
      *
      * @throws {TypeError} Throws a TypeError if the value is an empty string.
      */
@@ -186,6 +197,8 @@ declare module 'fastly:backend' {
 
     /**
      * Define the hostname that the server certificate should declare.
+     *
+     * If not set (default), the server certificate may present any hostname.
      *
      * @throws {TypeError} Throws a TypeError if the value is an empty string.
      */

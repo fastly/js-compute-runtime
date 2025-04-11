@@ -283,7 +283,73 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle.unwrap(),
                                                  body_handle.unwrap(), is_upstream,
-                                                 grip_upgrade_request, backend_str));
+                                                 grip_upgrade_request, nullptr, backend_str));
+  if (!response) {
+    return false;
+  }
+
+  RequestOrResponse::set_url(response, RequestOrResponse::url(&request_value.toObject()));
+  args.rval().setObject(*response);
+
+  return true;
+}
+
+bool Fastly::createWebsocketHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  REQUEST_HANDLER_ONLY("createWebsocketHandoff");
+  if (!args.requireAtLeast(cx, "createWebsocketHandoff", 2)) {
+    return false;
+  }
+
+  auto request_value = args.get(0);
+  if (!Request::is_instance(request_value)) {
+    JS_ReportErrorUTF8(cx,
+                       "createWebsocketHandoff: request parameter must be an instance of Request");
+    return false;
+  }
+  auto websocket_upgrade_request = &request_value.toObject();
+
+  auto response_handle = host_api::HttpResp::make();
+  if (auto *err = response_handle.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto body_handle = host_api::HttpBody::make();
+  if (auto *err = body_handle.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  JS::RootedObject response_instance(
+      cx, JS_NewObjectWithGivenProto(cx, &Response::class_, Response::proto_obj));
+  if (!response_instance) {
+    return false;
+  }
+
+  auto backend_value = args.get(1);
+  JS::RootedString backend_str(cx, JS::ToString(cx, backend_value));
+  if (!backend_str) {
+    return false;
+  }
+  auto backend_chars = core::encode(cx, backend_str);
+  if (!backend_chars) {
+    return false;
+  }
+  if (backend_chars.len == 0) {
+    JS_ReportErrorUTF8(cx, "createWebsocketHandoff: Backend parameter can not be an empty string");
+    return false;
+  }
+
+  if (backend_chars.len > 254) {
+    JS_ReportErrorUTF8(cx, "createWebsocketHandoff: name can not be more than 254 characters");
+    return false;
+  }
+
+  bool is_upstream = true;
+
+  JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle.unwrap(),
+                                                 body_handle.unwrap(), is_upstream, nullptr,
+                                                 websocket_upgrade_request, backend_str));
   if (!response) {
     return false;
   }
@@ -547,6 +613,7 @@ bool install(api::Engine *engine) {
       JS_FN("getLogger", Fastly::getLogger, 1, JSPROP_ENUMERATE),
       JS_FN("includeBytes", Fastly::includeBytes, 1, JSPROP_ENUMERATE),
       JS_FN("createFanoutHandoff", Fastly::createFanoutHandoff, 2, JSPROP_ENUMERATE),
+      JS_FN("createWebsocketHandoff", Fastly::createWebsocketHandoff, 2, JSPROP_ENUMERATE),
       ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS ? nowfn : end,
       end};
 
@@ -682,6 +749,21 @@ bool install(api::Engine *engine) {
     return false;
   }
   if (!engine->define_builtin_module("fastly:fanout", fanout_val)) {
+    return false;
+  }
+  // fastly:websocket
+  RootedObject websocket(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue websocket_val(engine->cx(), JS::ObjectValue(*websocket));
+  RootedValue create_websocket_handoff_val(engine->cx());
+  if (!JS_GetProperty(engine->cx(), fastly, "createWebsocketHandoff",
+                      &create_websocket_handoff_val)) {
+    return false;
+  }
+  if (!JS_SetProperty(engine->cx(), websocket, "createWebsocketHandoff",
+                      create_websocket_handoff_val)) {
+    return false;
+  }
+  if (!engine->define_builtin_module("fastly:websocket", websocket_val)) {
     return false;
   }
 
