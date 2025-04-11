@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.34.0](https://github.com/fastly/js-compute-runtime/compare/v3.33.4...v3.34.0) (2025-04-11)
+
+
+### Features
+
+* add support for Websocket passthrough ([#1172](https://github.com/fastly/js-compute-runtime/issues/1172)) ([fcf2a54](https://github.com/fastly/js-compute-runtime/commit/fcf2a54e2935061b4d67ccb430d485d79ee0bd04))
+
 ## [3.33.4](https://github.com/fastly/js-compute-runtime/compare/v3.33.3...v3.33.4) (2025-04-04)
 
 
