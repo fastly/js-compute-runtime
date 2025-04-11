@@ -183,7 +183,8 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
   // only immediate timers in the task list -> do a ready check against all handles instead of a
   // select
   if (now != 0 && soonest_deadline == now) {
-    for (auto handle : handles) {
+    for (ret = 0; ret < handles.size(); ++ret) {
+      auto handle = handles.at(ret);
       uint32_t is_ready_out;
       if (!convert_result(fastly::async_is_ready(handle, &is_ready_out), &err)) {
         if (host_api::error_is_bad_handle(err)) {
@@ -1229,6 +1230,23 @@ Result<Void> HttpReq::redirect_to_grip_proxy(std::string_view backend) {
   fastly::fastly_host_error err;
   fastly::fastly_world_string backend_str = string_view_to_world_string(backend);
   if (!convert_result(fastly::req_redirect_to_grip_proxy_v2(
+                          this->handle, reinterpret_cast<char *>(backend_str.ptr), backend_str.len),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+
+  return res;
+}
+
+Result<Void> HttpReq::redirect_to_websocket_proxy(std::string_view backend) {
+  TRACE_CALL()
+  Result<Void> res;
+
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string backend_str = string_view_to_world_string(backend);
+  if (!convert_result(fastly::req_redirect_to_websocket_proxy_v2(
                           this->handle, reinterpret_cast<char *>(backend_str.ptr), backend_str.len),
                       &err)) {
     res.emplace_err(err);

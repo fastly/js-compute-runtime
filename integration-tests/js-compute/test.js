@@ -151,7 +151,7 @@ if (!local) {
   serviceId = domainListing.ServiceID;
   core.notice(`Service is running on ${domain}`);
 } else {
-  localServer = zx`fastly compute serve --verbose --viceroy-args="${verbose ? '-vv' : ''}"`;
+  localServer = zx`fastly compute serve --verbose --viceroy-args=${verbose ? '-vv' : ''}`;
   domain = 'http://127.0.0.1:7676';
 }
 
@@ -192,7 +192,7 @@ await Promise.all([
   // and we don't currently have a reliable way to poll on that
   // (perhaps we could poll on the highest version as seen from setup.js resource-link return output
   // being fully activated?)
-  new Promise((resolve) => setTimeout(resolve, 60_000)),
+  local ? null : new Promise((resolve) => setTimeout(resolve, 60_000)),
 ]);
 
 core.endGroup();

@@ -471,6 +471,10 @@ WASM_IMPORT("fastly_http_req", "redirect_to_grip_proxy_v2")
 int req_redirect_to_grip_proxy_v2(uint32_t req_handle, const char *backend_name,
                                   size_t backend_name_len);
 
+WASM_IMPORT("fastly_http_req", "redirect_to_websocket_proxy_v2")
+int req_redirect_to_websocket_proxy_v2(uint32_t req_handle, const char *backend_name,
+                                       size_t backend_name_len);
+
 /**
  * Set the cache override behavior for this request.
  *

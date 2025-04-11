@@ -21,6 +21,7 @@ import './dictionary.js';
 import './edge-rate-limiter.js';
 import './env.js';
 import './fanout.js';
+import './websocket.js';
 import './fastly-global.js';
 import './fetch-errors.js';
 import './geoip.js';

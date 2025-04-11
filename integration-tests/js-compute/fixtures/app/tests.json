@@ -1002,6 +1002,7 @@
     "environments": ["viceroy"]
   },
   "GET /createFanoutHandoff": {},
+  "GET /createWebsocketHandoff": {},
   "GET /fastly/now": {},
   "GET /fastly/version": {},
   "GET /fastly/getgeolocationforipaddress/interface": {
@@ -1356,6 +1357,12 @@
     "downstream_response": {
       "status": 200,
       "body": "ok"
+    }
+  },
+  "GET /headers/getsetcookie": {
+    "downstream_response": {
+      "status": 200,
+      "headers": [["name1=value1"], ["name2=value2"]]
     }
   },
   "GET /headers/construct": {

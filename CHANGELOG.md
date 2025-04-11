@@ -1,5 +1,52 @@
 # Changelog
 
+## [3.33.4](https://github.com/fastly/js-compute-runtime/compare/v3.33.3...v3.33.4) (2025-04-04)
+
+
+### Bug Fixes
+
+* publish workflow ([#1166](https://github.com/fastly/js-compute-runtime/issues/1166)) ([3db857c](https://github.com/fastly/js-compute-runtime/commit/3db857c095aabbb15060694c3c84ae985cee13a1))
+
+## [3.33.3](https://github.com/fastly/js-compute-runtime/compare/v3.33.2...v3.33.3) (2025-04-04)
+
+
+### Bug Fixes
+
+* config store documentation fix ([#1160](https://github.com/fastly/js-compute-runtime/issues/1160)) ([4047c7b](https://github.com/fastly/js-compute-runtime/commit/4047c7b0862bbaa799053cc341674725425f933a))
+* TypeScript declaration for Headers ([#1155](https://github.com/fastly/js-compute-runtime/issues/1155)) ([a6664b9](https://github.com/fastly/js-compute-runtime/commit/a6664b908db4f2f784ddedc53798f7c31474530e))
+
+## 3.33.2 (2025-03-17)
+
+### Fixed
+
+* TypeScript declaration return type of Acl.open() ([#1149](https://github.com/fastly/js-compute-runtime/issues/1149)) ([b9765f6](https://github.com/fastly/js-compute-runtime/commit/b9765f68823529327a8ec75268f4833d308ad6bd))
+* TypeScript type definitions for Blob, File, FormData ([#1150](https://github.com/fastly/js-compute-runtime/issues/1150)) ([4c93d79](https://github.com/fastly/js-compute-runtime/commit/4c93d794390e3f2cb98e8e806744620e2cde3b3b))
+* TypeScript type definitions for Event and EventTarget ([#1151](https://github.com/fastly/js-compute-runtime/issues/1151)) ([eb1ab0d](https://github.com/fastly/js-compute-runtime/commit/eb1ab0d2f693c199947e8b6ffc4a7c1d758024ad))
+
+## 3.33.1 (2025-03-12)
+
+### Fixed
+
+* documentation fix ([#1147](https://github.com/fastly/js-compute-runtime/issues/1147)) ([15b9ea5](https://github.com/fastly/js-compute-runtime/commit/15b9ea5b3121e779f0873a1562cc51ed710135c7))
+
+## 3.33.0 (2025-03-12)
+
+### Added
+
+* add support for EventTarget ([#1145](https://github.com/fastly/js-compute-runtime/issues/1145)) ([a735993](https://github.com/fastly/js-compute-runtime/commit/a735993e609b5e2405a5223e7bc02ef655a47d68))
+* FormData support and Request.formData and Response.formData ([#1144](https://github.com/fastly/js-compute-runtime/issues/1144)) ([0214ae7](https://github.com/fastly/js-compute-runtime/commit/0214ae70b8d5afd1bc66231d779af5b606e89efb))
+
+### Fixed
+
+* Backend.prototype.health method definition ([#1143](https://github.com/fastly/js-compute-runtime/issues/1143)) ([42d429b](https://github.com/fastly/js-compute-runtime/commit/42d429bafdd7ec02854217675bdb58eba1e533a4))
+* Weval stack overflow bug ([#1135](https://github.com/fastly/js-compute-runtime/issues/1135)) ([f6947d9](https://github.com/fastly/js-compute-runtime/commit/f6947d9eb9fcd10f91c8c439a8a5cd6db8169d9e))
+
+## 3.32.2 (2025-02-26)
+
+### Fixed
+
+* ready-based immediate task indexing ([#1129](https://github.com/fastly/js-compute-runtime/issues/1129)) ([8cfad4f](https://github.com/fastly/js-compute-runtime/commit/8cfad4f78c137afbdc0281e92c39e31415a1188b))
+
 ## 3.32.1 (2025-02-20)
 
 ### Fixed
