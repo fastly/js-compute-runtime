@@ -1,16 +1,20 @@
 # Changelog
 
-## [3.33.4](https://github.com/fastly/js-compute-runtime/compare/v3.33.3...v3.33.4) (2025-04-04)
+## 3.34.0 (2025-04-11)
 
+### Added
 
-### Bug Fixes
+* add support for Websocket passthrough ([#1172](https://github.com/fastly/js-compute-runtime/issues/1172)) ([fcf2a54](https://github.com/fastly/js-compute-runtime/commit/fcf2a54e2935061b4d67ccb430d485d79ee0bd04))
+
+## 3.33.4 (2025-04-04)
+
+### Fixed
 
 * publish workflow ([#1166](https://github.com/fastly/js-compute-runtime/issues/1166)) ([3db857c](https://github.com/fastly/js-compute-runtime/commit/3db857c095aabbb15060694c3c84ae985cee13a1))
 
-## [3.33.3](https://github.com/fastly/js-compute-runtime/compare/v3.33.2...v3.33.3) (2025-04-04)
+## 3.33.3 (2025-04-04)
 
-
-### Bug Fixes
+### Fixed
 
 * config store documentation fix ([#1160](https://github.com/fastly/js-compute-runtime/issues/1160)) ([4047c7b](https://github.com/fastly/js-compute-runtime/commit/4047c7b0862bbaa799053cc341674725425f933a))
 * TypeScript declaration for Headers ([#1155](https://github.com/fastly/js-compute-runtime/issues/1155)) ([a6664b9](https://github.com/fastly/js-compute-runtime/commit/a6664b908db4f2f784ddedc53798f7c31474530e))
