@@ -1391,8 +1391,8 @@ const debug = sdkVersion.endsWith('-debug');
   });
   routes.set('/kv-store-options/gen', async () => {
     let store = new KVStore(KV_STORE_NAME);
-    let key = `entry-options`;
-    await store.put(key, 'body op', {
+    let key = `entry-options-gen`;
+    await store.put(key, 'body gen', {
       gen: 2,
     });
     let entry = await store.get(key);
@@ -1403,7 +1403,7 @@ const debug = sdkVersion.endsWith('-debug');
       `entry.options instanceof ReadableStream`,
     );
     let text = await streamToString(result);
-    strictEqual(text, 'body op', `entry.body contents as string`);
+    strictEqual(text, 'body gen', `entry.body contents as string`);
   });
   routes.set('/kv-store-options/gen-invalid', async () => {
     await assertRejects(
@@ -1413,7 +1413,7 @@ const debug = sdkVersion.endsWith('-debug');
         await store.put(key, 'body Nan', { gen: '2' });
       },
       TypeError,
-      `KVStore.insert: gen must be an integer`,
+      `KVStore.put: gen must be an integer`,
     );
   });
   routes.set('/kv-store-entry/body', async () => {
