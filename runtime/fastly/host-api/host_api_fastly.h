@@ -846,6 +846,7 @@ public:
   static Result<ConfigStore> open(std::string_view name);
 
   Result<std::optional<HostString>> get(std::string_view name);
+  Result<std::optional<HostString>> get(std::string_view name, uint32_t initial_buf_len);
 };
 
 class ObjectStorePendingLookup final {
