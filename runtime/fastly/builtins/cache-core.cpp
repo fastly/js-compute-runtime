@@ -616,7 +616,7 @@ bool CacheEntry::body(JSContext *cx, unsigned argc, JS::Value *vp) {
     // Reject cases where the start is greater than the end.
     // Ideally this would be a host-side check... but we didn't do it there to begin with,
     // so we couple it to an SDK/runtime upgrade.
-    if(!start_val.isUndefined() && !end_val.isUndefined() && options.end > options.start) {
+    if (!start_val.isUndefined() && !end_val.isUndefined() && options.end > options.start) {
       JS_ReportErrorASCII(cx, "end field is before the start field");
       return false;
     }
