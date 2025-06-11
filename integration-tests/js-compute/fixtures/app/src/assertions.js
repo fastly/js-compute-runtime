@@ -55,7 +55,7 @@ export { assert as strictEqual };
 export function ok(truthy, code) {
   if (!truthy) {
     throw new Error(
-      `Expected ${code ? ' ' + code : ''}to be truthy - Found \`${JSON.stringify(prettyPrintSymbol(truthy))}\``,
+      `Expected ${code ? code + ' ' : ''}to be truthy - Found \`${JSON.stringify(prettyPrintSymbol(truthy))}\``,
     );
   }
 }
