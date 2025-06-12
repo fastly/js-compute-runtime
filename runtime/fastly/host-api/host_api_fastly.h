@@ -940,6 +940,16 @@ public:
 struct CacheLookupOptions final {
   /// A full request handle, used only for its headers.
   HttpReq request_headers;
+
+  /// When a range is provided to get_body,
+  /// respect the requested range even when the body length is unknown
+  /// (e.g. streaming). If "false", when the body length is unknown,
+  /// the entire body will be returned instead of just the requested range.
+  ///
+  /// The default is "false" to preserve the legacy behavior.
+  /// However, if using ranged get_body, Fastly recommends setting this to "true".
+  /// The default may change in a future release.
+  bool always_use_requested_range;
 };
 
 struct CacheGetBodyOptions final {
