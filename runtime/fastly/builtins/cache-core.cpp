@@ -82,7 +82,8 @@ JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
     }
 
     JS::RootedValue always_use_requested_range_val(cx);
-    if (!JS_GetProperty(cx, options_obj, "always_use_requested_range", &always_use_requested_range_val)) {
+    if (!JS_GetProperty(cx, options_obj, "always_use_requested_range",
+                        &always_use_requested_range_val)) {
       return JS::Result<host_api::CacheLookupOptions>(JS::Error());
     }
     // always_use_requested_range property is optional
