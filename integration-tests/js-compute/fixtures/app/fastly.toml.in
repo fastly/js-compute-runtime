@@ -28,8 +28,8 @@ service_id = ""
       override_host = "httpbin.org"
 
     [local_server.backends.httpme]
-      url = "https://http-me.glitch.me"
-      override_host = "http-me.glitch.me"
+      url = "https://http-me.fastly.dev"
+      override_host = "http-me.fastly.dev"
 
   [local_server.config_stores]
     [local_server.config_stores.CONFIG_STORE_NAME]
@@ -124,7 +124,7 @@ service_id = ""
       port = 443
 
     [setup.backends.httpme]
-      address = "http-me.glitch.me"
+      address = "http-me.fastly.dev"
       port = 443
 
     [setup.backends.TheOrigin]

@@ -10,7 +10,7 @@ routes.set('/hono', async (evt) => {
   allowDynamicBackends(true);
   app.get('/hono', async (c) => {
     const newRequest = new Request(
-      'https://http-me.glitch.me/anything',
+      'https://http-me.fastly.dev/anything',
       c.req.raw,
     );
     newRequest.headers.set('X-Connecting-IP', `${REALIP}`);
