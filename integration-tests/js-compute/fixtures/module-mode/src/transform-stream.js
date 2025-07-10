@@ -11,21 +11,27 @@ function upperCase() {
 }
 
 routes.set('/transform-stream/identity', () => {
-  return fetch('https://http-me.fastly.dev/test?body=hello').then((response) => {
-    return new Response(response.body.pipeThrough(new TransformStream()));
-  });
+  return fetch('https://http-me.fastly.dev/test?body=hello').then(
+    (response) => {
+      return new Response(response.body.pipeThrough(new TransformStream()));
+    },
+  );
 });
 
 routes.set('/transform-stream/uppercase', () => {
-  return fetch('https://http-me.fastly.dev/test?body=hello').then((response) => {
-    return new Response(response.body.pipeThrough(upperCase()));
-  });
+  return fetch('https://http-me.fastly.dev/test?body=hello').then(
+    (response) => {
+      return new Response(response.body.pipeThrough(upperCase()));
+    },
+  );
 });
 
 routes.set('/transform-stream/parallel-uppercase', () => {
-  return fetch('https://http-me.fastly.dev/test?body=hello').then((response) => {
-    return new Response(response.body.pipeThrough(upperCase()));
-  });
+  return fetch('https://http-me.fastly.dev/test?body=hello').then(
+    (response) => {
+      return new Response(response.body.pipeThrough(upperCase()));
+    },
+  );
 });
 
 // This is not a test, but the nested stream we loop back to in testing

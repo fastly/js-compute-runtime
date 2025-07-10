@@ -63,10 +63,13 @@ import { isRunningLocally, routes } from './routes.js';
   routes.set('/cache-override/fetch/mode-none', async () => {
     if (isRunningLocally()) return;
     {
-      const response = await fetch('https://http-me.fastly.dev/now?status=200', {
-        backend: 'httpme',
-        cacheOverride: new CacheOverride('none'),
-      });
+      const response = await fetch(
+        'https://http-me.fastly.dev/now?status=200',
+        {
+          backend: 'httpme',
+          cacheOverride: new CacheOverride('none'),
+        },
+      );
       assert(
         response.headers.has('x-cache'),
         true,
@@ -75,10 +78,13 @@ import { isRunningLocally, routes } from './routes.js';
     }
 
     {
-      const response = await fetch('https://http-me.fastly.dev/now?status=200', {
-        backend: 'httpme',
-        cacheOverride: 'none',
-      });
+      const response = await fetch(
+        'https://http-me.fastly.dev/now?status=200',
+        {
+          backend: 'httpme',
+          cacheOverride: 'none',
+        },
+      );
       assert(
         response.headers.has('x-cache'),
         true,
@@ -90,10 +96,13 @@ import { isRunningLocally, routes } from './routes.js';
     if (isRunningLocally()) return;
 
     {
-      const response = await fetch('https://http-me.fastly.dev/now?status=200', {
-        backend: 'httpme',
-        cacheOverride: new CacheOverride('pass'),
-      });
+      const response = await fetch(
+        'https://http-me.fastly.dev/now?status=200',
+        {
+          backend: 'httpme',
+          cacheOverride: new CacheOverride('pass'),
+        },
+      );
       assert(
         response.headers.has('x-cache'),
         false,
@@ -102,10 +111,13 @@ import { isRunningLocally, routes } from './routes.js';
     }
 
     {
-      const response = await fetch('https://http-me.fastly.dev/now?status=200', {
-        backend: 'httpme',
-        cacheOverride: 'pass',
-      });
+      const response = await fetch(
+        'https://http-me.fastly.dev/now?status=200',
+        {
+          backend: 'httpme',
+          cacheOverride: 'pass',
+        },
+      );
       assert(
         response.headers.has('x-cache'),
         false,
