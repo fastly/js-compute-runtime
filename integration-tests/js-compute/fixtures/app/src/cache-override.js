@@ -63,7 +63,7 @@ import { isRunningLocally, routes } from './routes.js';
   routes.set('/cache-override/fetch/mode-none', async () => {
     if (isRunningLocally()) return;
     {
-      const response = await fetch('https://http-me.glitch.me/now?status=200', {
+      const response = await fetch('https://http-me.fastly.dev/now?status=200', {
         backend: 'httpme',
         cacheOverride: new CacheOverride('none'),
       });
@@ -75,7 +75,7 @@ import { isRunningLocally, routes } from './routes.js';
     }
 
     {
-      const response = await fetch('https://http-me.glitch.me/now?status=200', {
+      const response = await fetch('https://http-me.fastly.dev/now?status=200', {
         backend: 'httpme',
         cacheOverride: 'none',
       });
@@ -90,7 +90,7 @@ import { isRunningLocally, routes } from './routes.js';
     if (isRunningLocally()) return;
 
     {
-      const response = await fetch('https://http-me.glitch.me/now?status=200', {
+      const response = await fetch('https://http-me.fastly.dev/now?status=200', {
         backend: 'httpme',
         cacheOverride: new CacheOverride('pass'),
       });
@@ -102,7 +102,7 @@ import { isRunningLocally, routes } from './routes.js';
     }
 
     {
-      const response = await fetch('https://http-me.glitch.me/now?status=200', {
+      const response = await fetch('https://http-me.fastly.dev/now?status=200', {
         backend: 'httpme',
         cacheOverride: 'pass',
       });

@@ -121,7 +121,7 @@ declare module 'fastly:cache-override' {
    *   "type": "javascript",
    *   "title": "CacheOverride Example",
    *   "origins": [
-   *     "https://http-me.glitch.me"
+   *     "https://http-me.fastly.dev"
    *   ],
    *   "src": {
    *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",

@@ -11,7 +11,7 @@ routes.set('/headers/construct', async () => {
 });
 
 routes.set('/headers/non-ascii-latin1-field-value', async () => {
-  let response = await fetch('https://http-me.glitch.me/meow?header=cat:é', {
+  let response = await fetch('https://http-me.fastly.dev/meow?header=cat:é', {
     backend: 'httpme',
   });
 
@@ -23,7 +23,7 @@ routes.set('/headers/non-ascii-latin1-field-value', async () => {
 
 routes.set('/headers/getsetcookie', async () => {
   let response = await fetch(
-    'https://http-me.glitch.me/meow?header=Set-Cookie:name1=value1',
+    'https://http-me.fastly.dev/meow?header=Set-Cookie:name1=value1',
     {
       backend: 'httpme',
     },
