@@ -362,10 +362,6 @@ WASM_IMPORT("fastly_http_cache", "get_suggested_cache_key")
 int http_cache_get_suggested_cache_key(uint32_t req_handle, char *key_out, size_t key_out_len,
                                        size_t *nwritten_out);
 
-WASM_IMPORT("fastly_http_cache", "lookup")
-int http_cache_lookup(uint32_t req_handle, uint32_t options_mask,
-                      fastly_http_cache_lookup_options *options, uint32_t *handle_out);
-
 WASM_IMPORT("fastly_http_cache", "transaction_lookup")
 int http_cache_transaction_lookup(uint32_t req_handle, uint32_t options_mask,
                                   fastly_http_cache_lookup_options *options, uint32_t *handle_out);
