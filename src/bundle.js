@@ -125,6 +125,9 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
             contents: `export const { purgeSurrogateKey, vCpuTime } = globalThis.fastly;`,
           };
         }
+        case 'html-rewriter': {
+          return { contents: `export const HTMLRewritingStream = globalThis.HTMLRewritingStream;` };
+        }
       }
     });
   },
