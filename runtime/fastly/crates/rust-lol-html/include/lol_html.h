@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 // NOTE: all functions that accept pointers will panic abort the thread
 // if NULL pointer is passed (with an exception for the cases where
@@ -39,11 +39,11 @@ typedef struct lol_html_CStreamingHandlerSink lol_html_streaming_sink_t;
 // Should NEVER be deallocated in the C code. Use special `lol_html_str_free`
 // function instead.
 typedef struct {
-    // String data pointer.
-    const char *data;
+  // String data pointer.
+  const char *data;
 
-    // The length of the string in bytes.
-    size_t len;
+  // The length of the string in bytes.
+  size_t len;
 } lol_html_str_t;
 
 // A fat pointer to text chunk content.
@@ -54,11 +54,11 @@ typedef struct {
 // invalid ones related `lol_html_text_chunk_t` struct goes out
 // of scope.
 typedef struct {
-    // String data pointer.
-    const char *data;
+  // String data pointer.
+  const char *data;
 
-    // The length of the string in bytes.
-    size_t len;
+  // The length of the string in bytes.
+  size_t len;
 } lol_html_text_chunk_content_t;
 
 // Utilities
@@ -82,68 +82,54 @@ lol_html_rewriter_builder_t *lol_html_rewriter_builder_new();
 // Rewriter directive that should be returned from each content handler.
 // If LOL_HTML_STOP directive is returned then rewriting stops immediately
 // and `write()` or `end()` methods of the rewriter return an error code.
-typedef enum {
-    LOL_HTML_CONTINUE,
-    LOL_HTML_STOP
-} lol_html_rewriter_directive_t;
+typedef enum { LOL_HTML_CONTINUE, LOL_HTML_STOP } lol_html_rewriter_directive_t;
 
-typedef lol_html_rewriter_directive_t (*lol_html_doctype_handler_t)(
-    lol_html_doctype_t *doctype,
-    void *user_data
-);
+typedef lol_html_rewriter_directive_t (*lol_html_doctype_handler_t)(lol_html_doctype_t *doctype,
+                                                                    void *user_data);
 
-typedef lol_html_rewriter_directive_t (*lol_html_comment_handler_t)(
-    lol_html_comment_t *comment,
-    void *user_data
-);
+typedef lol_html_rewriter_directive_t (*lol_html_comment_handler_t)(lol_html_comment_t *comment,
+                                                                    void *user_data);
 
 typedef lol_html_rewriter_directive_t (*lol_html_text_handler_handler_t)(
-    lol_html_text_chunk_t *chunk,
-    void *user_data
-);
+    lol_html_text_chunk_t *chunk, void *user_data);
 
-typedef lol_html_rewriter_directive_t (*lol_html_element_handler_t)(
-    lol_html_element_t *element,
-    void *user_data
-);
+typedef lol_html_rewriter_directive_t (*lol_html_element_handler_t)(lol_html_element_t *element,
+                                                                    void *user_data);
 
-typedef lol_html_rewriter_directive_t (*lol_html_doc_end_handler_t)(
-    lol_html_doc_end_t *doc_end,
-    void *user_data
-);
+typedef lol_html_rewriter_directive_t (*lol_html_doc_end_handler_t)(lol_html_doc_end_t *doc_end,
+                                                                    void *user_data);
 
-typedef lol_html_rewriter_directive_t (*lol_html_end_tag_handler_t)(
-    lol_html_end_tag_t *end_tag,
-    void *user_data
-);
+typedef lol_html_rewriter_directive_t (*lol_html_end_tag_handler_t)(lol_html_end_tag_t *end_tag,
+                                                                    void *user_data);
 
 // `size_t` byte offsets from the start of the input document
 typedef struct lol_html_SourceLocationBytes {
-    size_t start;
-    size_t end;
+  size_t start;
+  size_t end;
 } lol_html_source_location_bytes_t;
 
 // For use with streaming content handlers.
 //
-// Safety: the user data and the callbacks must be safe to use from a different thread (e.g. can't rely on thread-local storage).
-// It doesn't have to be `Sync`, it will be used only by one thread at a time.
+// Safety: the user data and the callbacks must be safe to use from a different thread (e.g. can't
+// rely on thread-local storage). It doesn't have to be `Sync`, it will be used only by one thread
+// at a time.
 //
 // Handler functions copy this struct. It can (and should) be created on the stack.
 typedef struct lol_html_CStreamingHandler {
-    // Anything you like
-    void *user_data;
-    // Called when the handler is supposed to produce its output. Return `0` for success.
-    // The `sink` argument is guaranteed non-`NULL`. It is valid only for the duration of this call, and can only be used on the same thread.
-    // The sink is for [`lol_html_streaming_sink_write_str`] and [`lol_html_streaming_sink_write_utf8_chunk`].
-    // `user_data` comes from this struct.
-    // `write_all_callback` must not be `NULL`.
-    int (*write_all_callback)(lol_html_streaming_sink_t *sink, void *user_data);
-    // Called exactly once, after the last use of this handler.
-    // `user_data` comes from this struct.
-    // May be `NULL`.
-    void (*drop_callback)(void *user_data);
-    // *Always* initialize to `NULL`.
-    void *reserved;
+  // Anything you like
+  void *user_data;
+  // Called when the handler is supposed to produce its output. Return `0` for success.
+  // The `sink` argument is guaranteed non-`NULL`. It is valid only for the duration of this call,
+  // and can only be used on the same thread. The sink is for [`lol_html_streaming_sink_write_str`]
+  // and [`lol_html_streaming_sink_write_utf8_chunk`]. `user_data` comes from this struct.
+  // `write_all_callback` must not be `NULL`.
+  int (*write_all_callback)(lol_html_streaming_sink_t *sink, void *user_data);
+  // Called exactly once, after the last use of this handler.
+  // `user_data` comes from this struct.
+  // May be `NULL`.
+  void (*drop_callback)(void *user_data);
+  // *Always* initialize to `NULL`.
+  void *reserved;
 } lol_html_streaming_handler_t;
 
 // Selector
@@ -155,17 +141,13 @@ typedef struct lol_html_CStreamingHandler {
 // can be obtained using `lol_html_take_last_error` function.
 //
 // WARNING: Selector SHOULD NOT be deallocated if there are any active rewriter
-// builders that accepted it as an argument to `lol_html_rewriter_builder_add_element_content_handlers()`
-// method. Deallocate all dependant rewriter builders first and then
-// use `lol_html_selector_free` function to free the selector.
-lol_html_selector_t *lol_html_selector_parse(
-    const char *selector,
-    size_t selector_len
-);
+// builders that accepted it as an argument to
+// `lol_html_rewriter_builder_add_element_content_handlers()` method. Deallocate all dependant
+// rewriter builders first and then use `lol_html_selector_free` function to free the selector.
+lol_html_selector_t *lol_html_selector_parse(const char *selector, size_t selector_len);
 
 // Frees the memory held by the parsed selector object.
 void lol_html_selector_free(lol_html_selector_t *selector);
-
 
 // Rewriter builder
 //---------------------------------------------------------------------
@@ -188,16 +170,11 @@ void lol_html_selector_free(lol_html_selector_t *selector);
 // WARNING: Pointers passed to handlers are valid only during the
 // handler execution. So they should never be leaked outside of handlers.
 void lol_html_rewriter_builder_add_document_content_handlers(
-    lol_html_rewriter_builder_t *builder,
-    lol_html_doctype_handler_t doctype_handler,
-    void *doctype_handler_user_data,
-    lol_html_comment_handler_t comment_handler,
-    void *comment_handler_user_data,
-    lol_html_text_handler_handler_t text_handler,
-    void *text_handler_user_data,
-    lol_html_doc_end_handler_t doc_end_handler,
-    void *doc_end_user_data
-);
+    lol_html_rewriter_builder_t *builder, lol_html_doctype_handler_t doctype_handler,
+    void *doctype_handler_user_data, lol_html_comment_handler_t comment_handler,
+    void *comment_handler_user_data, lol_html_text_handler_handler_t text_handler,
+    void *text_handler_user_data, lol_html_doc_end_handler_t doc_end_handler,
+    void *doc_end_user_data);
 
 // Adds element content handlers to the builder for the
 // given CSS selector.
@@ -223,15 +200,10 @@ void lol_html_rewriter_builder_add_document_content_handlers(
 // WARNING: Pointers passed to handlers are valid only during the
 // handler execution. So they should never be leaked outside of handlers.
 int lol_html_rewriter_builder_add_element_content_handlers(
-    lol_html_rewriter_builder_t *builder,
-    const lol_html_selector_t *selector,
-    lol_html_element_handler_t element_handler,
-    void *element_handler_user_data,
-    lol_html_comment_handler_t comment_handler,
-    void *comment_handler_user_data,
-    lol_html_text_handler_handler_t text_handler,
-    void *text_handler_user_data
-);
+    lol_html_rewriter_builder_t *builder, const lol_html_selector_t *selector,
+    lol_html_element_handler_t element_handler, void *element_handler_user_data,
+    lol_html_comment_handler_t comment_handler, void *comment_handler_user_data,
+    lol_html_text_handler_handler_t text_handler, void *text_handler_user_data);
 
 // Frees the memory held by the builder.
 //
@@ -239,22 +211,21 @@ int lol_html_rewriter_builder_add_element_content_handlers(
 // it if it's not intended to be used anymore.
 void lol_html_rewriter_builder_free(lol_html_rewriter_builder_t *builder);
 
-
 // Rewriter
 //---------------------------------------------------------------------
 
 // Memory management settings for the rewriter.
 typedef struct {
-    // Preallocated size of the parsing buffer.
-    //
-    // Can be set to 0. In this case rewriter won't consume any memory initially,
-    // though there might be a performance penalty due to later reallocations.
-    size_t preallocated_parsing_buffer_size;
-    // Maximum amount of memory to be used by a rewriter.
-    //
-    // `lol_html_rewriter_write` and `lol_html_rewriter_end` will return an error
-    // if this limit is exceeded.
-    size_t max_allowed_memory_usage;
+  // Preallocated size of the parsing buffer.
+  //
+  // Can be set to 0. In this case rewriter won't consume any memory initially,
+  // though there might be a performance penalty due to later reallocations.
+  size_t preallocated_parsing_buffer_size;
+  // Maximum amount of memory to be used by a rewriter.
+  //
+  // `lol_html_rewriter_write` and `lol_html_rewriter_end` will return an error
+  // if this limit is exceeded.
+  size_t max_allowed_memory_usage;
 } lol_html_memory_settings_t;
 
 // Builds HTML-rewriter out of the provided builder. Can be called
@@ -271,25 +242,17 @@ typedef struct {
 // setting for safety reasons.
 //
 // In case of an error the function returns a NULL pointer.
-lol_html_rewriter_t *lol_html_rewriter_build(
-    lol_html_rewriter_builder_t *builder,
-    const char *encoding,
-    size_t encoding_len,
-    lol_html_memory_settings_t memory_settings,
-    void (*output_sink)(const char *chunk, size_t chunk_len, void *user_data),
-    void *output_sink_user_data,
-    bool strict
-);
+lol_html_rewriter_t *
+lol_html_rewriter_build(lol_html_rewriter_builder_t *builder, const char *encoding,
+                        size_t encoding_len, lol_html_memory_settings_t memory_settings,
+                        void (*output_sink)(const char *chunk, size_t chunk_len, void *user_data),
+                        void *output_sink_user_data, bool strict);
 
 lol_html_rewriter_t *unstable_lol_html_rewriter_build_with_esi_tags(
-    lol_html_rewriter_builder_t *builder,
-    const char *encoding,
-    size_t encoding_len,
+    lol_html_rewriter_builder_t *builder, const char *encoding, size_t encoding_len,
     lol_html_memory_settings_t memory_settings,
     void (*output_sink)(const char *chunk, size_t chunk_len, void *user_data),
-    void *output_sink_user_data,
-    bool strict
-);
+    void *output_sink_user_data, bool strict);
 
 // Write HTML chunk to rewriter.
 //
@@ -298,11 +261,7 @@ lol_html_rewriter_t *unstable_lol_html_rewriter_build_with_esi_tags(
 //
 // WARNING: if this function errors the rewriter gets into the unrecoverable state,
 // so any further attempts to use the rewriter will cause a thread panic.
-int lol_html_rewriter_write(
-    lol_html_rewriter_t *rewriter,
-    const char *chunk,
-    size_t chunk_len
-);
+int lol_html_rewriter_write(lol_html_rewriter_t *rewriter, const char *chunk, size_t chunk_len);
 
 // Completes rewriting and flushes the remaining output.
 //
@@ -339,10 +298,7 @@ lol_html_str_t lol_html_doctype_system_id_get(const lol_html_doctype_t *doctype)
 // The same doctype can be passed to multiple handlers if it has been
 // captured by multiple selectors. It might be handy to store some processing
 // state on the doctype, so it can be shared between handlers.
-void lol_html_doctype_user_data_set(
-    const lol_html_doctype_t *doctype,
-    void *user_data
-);
+void lol_html_doctype_user_data_set(const lol_html_doctype_t *doctype, void *user_data);
 
 // Returns user data attached to the doctype.
 void *lol_html_doctype_user_data_get(const lol_html_doctype_t *doctype);
@@ -356,7 +312,8 @@ bool lol_html_doctype_is_removed(const lol_html_doctype_t *doctype);
 // Returns [`SourceLocationBytes`].
 //
 // `doctype` must be valid and non-`NULL`.
-lol_html_source_location_bytes_t lol_html_doctype_source_location_bytes(lol_html_doctype_t *doctype);
+lol_html_source_location_bytes_t
+lol_html_doctype_source_location_bytes(lol_html_doctype_t *doctype);
 
 // Comment
 //---------------------------------------------------------------------
@@ -370,11 +327,7 @@ lol_html_str_t lol_html_comment_text_get(const lol_html_comment_t *comment);
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_comment_text_set(
-    lol_html_comment_t *comment,
-    const char *text,
-    size_t text_len
-);
+int lol_html_comment_text_set(lol_html_comment_t *comment, const char *text, size_t text_len);
 
 // Inserts the content string before the comment either as raw text or as HTML.
 //
@@ -382,12 +335,8 @@ int lol_html_comment_text_set(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_comment_before(
-    lol_html_comment_t *comment,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_comment_before(lol_html_comment_t *comment, const char *content, size_t content_len,
+                            bool is_html);
 
 // Inserts the content string after the comment either as raw text or as HTML.
 //
@@ -395,12 +344,8 @@ int lol_html_comment_before(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_comment_after(
-    lol_html_comment_t *comment,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_comment_after(lol_html_comment_t *comment, const char *content, size_t content_len,
+                           bool is_html);
 
 // Replace the comment with the content of the string which is interpreted
 // either as raw text or as HTML.
@@ -409,12 +354,8 @@ int lol_html_comment_after(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_comment_replace(
-    lol_html_comment_t *comment,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_comment_replace(lol_html_comment_t *comment, const char *content, size_t content_len,
+                             bool is_html);
 
 // Removes the comment.
 // `comment` must be valid and non-`NULL`.
@@ -430,10 +371,7 @@ bool lol_html_comment_is_removed(const lol_html_comment_t *comment);
 // The same comment can be passed to multiple handlers if it has been
 // captured by multiple selectors. It might be handy to store some
 // processing state on the comment, so it can be shared between handlers.
-void lol_html_comment_user_data_set(
-    const lol_html_comment_t *comment,
-    void *user_data
-);
+void lol_html_comment_user_data_set(const lol_html_comment_t *comment, void *user_data);
 
 // Returns user data attached to the comment.
 void *lol_html_comment_user_data_get(const lol_html_comment_t *comment);
@@ -441,7 +379,8 @@ void *lol_html_comment_user_data_get(const lol_html_comment_t *comment);
 // Returns [`SourceLocationBytes`].
 //
 // `comment` must be valid and non-`NULL`.
-lol_html_source_location_bytes_t lol_html_comment_source_location_bytes(lol_html_comment_t *comment);
+lol_html_source_location_bytes_t
+lol_html_comment_source_location_bytes(lol_html_comment_t *comment);
 
 // Element
 //---------------------------------------------------------------------
@@ -458,37 +397,30 @@ lol_html_str_t lol_html_element_tag_name_get_preserve_case(const lol_html_elemen
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_element_tag_name_set(
-    lol_html_element_t *element,
-    const char *name,
-    size_t name_len
-);
+int lol_html_element_tag_name_set(lol_html_element_t *element, const char *name, size_t name_len);
 
-// Whether the tag syntactically ends with `/>`. In HTML content this is purely a decorative, unnecessary, and has no effect of any kind.
+// Whether the tag syntactically ends with `/>`. In HTML content this is purely a decorative,
+// unnecessary, and has no effect of any kind.
 //
 // The `/>` syntax only affects parsing of elements in foreign content (SVG and MathML).
 // It will never close any HTML tags that aren't already defined as void in HTML.
 //
-// This function only reports the parsed syntax, and will not report which elements are actually void in HTML.
-// Use `lol_html_element_can_have_content` to check if the element is non-void.
+// This function only reports the parsed syntax, and will not report which elements are actually
+// void in HTML. Use `lol_html_element_can_have_content` to check if the element is non-void.
 //
 // If the `/` is part of an unquoted attribute, it's not parsed as the self-closing syntax.
-bool lol_html_element_is_self_closing(
-    lol_html_element_t *element
-);
+bool lol_html_element_is_self_closing(lol_html_element_t *element);
 
 // Whether the element can have inner content.  Returns `true` unless the element is an [HTML void
 // element](https://html.spec.whatwg.org/multipage/syntax.html#void-elements) or has a
 // self-closing tag (eg, `<foo />`).
-bool lol_html_element_can_have_content(
-    lol_html_element_t *element
-);
+bool lol_html_element_can_have_content(lol_html_element_t *element);
 
 // Returns the namespace URI of the element.
 //
 // NOTE: This method returns static zero-terminated C string, so it don't
 // need to be freed.
-const char* lol_html_element_namespace_uri_get(const lol_html_element_t *element);
+const char *lol_html_element_namespace_uri_get(const lol_html_element_t *element);
 
 // Returns the iterator over the element attributes.
 //
@@ -497,9 +429,7 @@ const char* lol_html_element_namespace_uri_get(const lol_html_element_t *element
 //
 // Use `lol_html_attributes_iterator_free` function to deallocate
 // returned iterator.
-lol_html_attributes_iterator_t *lol_html_attributes_iterator_get(
-    const lol_html_element_t *element
-);
+lol_html_attributes_iterator_t *lol_html_attributes_iterator_get(const lol_html_element_t *element);
 
 // Frees the memory held by the attribute iterator.
 void lol_html_attributes_iterator_free(lol_html_attributes_iterator_t *iterator);
@@ -510,9 +440,8 @@ void lol_html_attributes_iterator_free(lol_html_attributes_iterator_t *iterator)
 //
 // WARNING: Returned attribute is valid only during the handler
 // execution and should never be leaked outside of it.
-const lol_html_attribute_t *lol_html_attributes_iterator_next(
-    lol_html_attributes_iterator_t *iterator
-);
+const lol_html_attribute_t *
+lol_html_attributes_iterator_next(lol_html_attributes_iterator_t *iterator);
 
 // Returns the attribute name.
 lol_html_str_t lol_html_attribute_name_get(const lol_html_attribute_t *attribute);
@@ -526,7 +455,8 @@ lol_html_str_t lol_html_attribute_value_get(const lol_html_attribute_t *attribut
 // Returns [`SourceLocationBytes`].
 //
 // `element` must be valid and non-`NULL`.
-lol_html_source_location_bytes_t lol_html_element_source_location_bytes(lol_html_element_t *element);
+lol_html_source_location_bytes_t
+lol_html_element_source_location_bytes(lol_html_element_t *element);
 
 // Returns the attribute value. The `data` field will be NULL if an attribute with the given name
 // doesn't exist on the element.
@@ -535,21 +465,15 @@ lol_html_source_location_bytes_t lol_html_element_source_location_bytes(lol_html
 //
 // If the provided name is invalid UTF8-string the function returns NULL as well.
 // Therefore one should always check `lol_html_take_last_error` result after the call.
-lol_html_str_t lol_html_element_get_attribute(
-    const lol_html_element_t *element,
-    const char *name,
-    size_t name_len
-);
+lol_html_str_t lol_html_element_get_attribute(const lol_html_element_t *element, const char *name,
+                                              size_t name_len);
 
 // Returns 1 if element has attribute with the given name, and 0 otherwise.
 // Returns -1 in case of an error.
 //
 // Name should be a valid UTF8-string.
-int lol_html_element_has_attribute(
-    const lol_html_element_t *element,
-    const char *name,
-    size_t name_len
-);
+int lol_html_element_has_attribute(const lol_html_element_t *element, const char *name,
+                                   size_t name_len);
 
 // Updates the attribute value if attribute with the given name already exists on
 // the element, or creates adds new attribute with given name and value otherwise.
@@ -558,13 +482,8 @@ int lol_html_element_has_attribute(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_element_set_attribute(
-    lol_html_element_t *element,
-    const char *name,
-    size_t name_len,
-    const char *value,
-    size_t value_len
-);
+int lol_html_element_set_attribute(lol_html_element_t *element, const char *name, size_t name_len,
+                                   const char *value, size_t value_len);
 
 // Removes the attribute with the given name from the element.
 //
@@ -572,11 +491,8 @@ int lol_html_element_set_attribute(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_element_remove_attribute(
-    lol_html_element_t *element,
-    const char *name,
-    size_t name_len
-);
+int lol_html_element_remove_attribute(lol_html_element_t *element, const char *name,
+                                      size_t name_len);
 
 // Inserts the content string before the element either as raw text or as HTML.
 //
@@ -586,12 +502,8 @@ int lol_html_element_remove_attribute(
 // can be obtained using `lol_html_take_last_error` function.
 //
 // Calls [`Element::before`].
-int lol_html_element_before(
-    lol_html_element_t *element,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_element_before(lol_html_element_t *element, const char *content, size_t content_len,
+                            bool is_html);
 
 // Inserts the content string right after the element's start tag
 // either as raw text or as HTML.
@@ -600,12 +512,8 @@ int lol_html_element_before(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_element_prepend(
-    lol_html_element_t *element,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_element_prepend(lol_html_element_t *element, const char *content, size_t content_len,
+                             bool is_html);
 
 // Inserts the content string right before the element's end tag
 // either as raw text or as HTML.
@@ -616,12 +524,8 @@ int lol_html_element_prepend(
 // can be obtained using `lol_html_take_last_error` function.
 //
 // Calls [`Element::append`].
-int lol_html_element_append(
-    lol_html_element_t *element,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_element_append(lol_html_element_t *element, const char *content, size_t content_len,
+                            bool is_html);
 
 // Inserts the content string right after the element's end tag as raw text or as HTML.
 //
@@ -629,12 +533,8 @@ int lol_html_element_append(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_element_after(
-    lol_html_element_t *element,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_element_after(lol_html_element_t *element, const char *content, size_t content_len,
+                           bool is_html);
 
 // Sets either text or HTML inner content of the element.
 //
@@ -642,12 +542,8 @@ int lol_html_element_after(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_element_set_inner_content(
-    lol_html_element_t *element,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_element_set_inner_content(lol_html_element_t *element, const char *content,
+                                       size_t content_len, bool is_html);
 
 // Replaces the element with the provided text or HTML content.
 //
@@ -655,12 +551,8 @@ int lol_html_element_set_inner_content(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_element_replace(
-    lol_html_element_t *element,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_element_replace(lol_html_element_t *element, const char *content, size_t content_len,
+                             bool is_html);
 
 // Removes the element.
 void lol_html_element_remove(const lol_html_element_t *element);
@@ -676,10 +568,7 @@ bool lol_html_element_is_removed(const lol_html_element_t *element);
 // The same element can be passed to multiple handlers if it has been
 // captured by multiple selectors. It might be handy to store some processing
 // state on the element, so it can be shared between handlers.
-void lol_html_element_user_data_set(
-    const lol_html_element_t *element,
-    void *user_data
-);
+void lol_html_element_user_data_set(const lol_html_element_t *element, void *user_data);
 
 // Returns user data attached to the element.
 void *lol_html_element_user_data_get(const lol_html_element_t *element);
@@ -706,14 +595,12 @@ void *lol_html_element_user_data_get(const lol_html_element_t *element);
 //
 // WARNING: Pointers passed to handlers are valid only during the
 // handler execution. So they should never be leaked outside of handlers.
-int lol_html_element_add_end_tag_handler(
-    lol_html_element_t* element,
-    lol_html_end_tag_handler_t end_tag_handler,
-    void* user_data
-);
+int lol_html_element_add_end_tag_handler(lol_html_element_t *element,
+                                         lol_html_end_tag_handler_t end_tag_handler,
+                                         void *user_data);
 
 // Clears the handlers that would run on the end tag of the given element.
-void lol_html_element_clear_end_tag_handlers(lol_html_element_t* element);
+void lol_html_element_clear_end_tag_handlers(lol_html_element_t *element);
 
 // Inserts the content string before the element's end tag either as raw text or as HTML.
 //
@@ -723,12 +610,8 @@ void lol_html_element_clear_end_tag_handlers(lol_html_element_t* element);
 // can be obtained using `lol_html_take_last_error` function.
 //
 // Calls [`EndTag::before`].
-int lol_html_end_tag_before(
-    lol_html_end_tag_t *end_tag,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_end_tag_before(lol_html_end_tag_t *end_tag, const char *content, size_t content_len,
+                            bool is_html);
 
 // Inserts the content string right after the element's end tag as raw text or as HTML.
 //
@@ -736,12 +619,8 @@ int lol_html_end_tag_before(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_end_tag_after(
-    lol_html_end_tag_t *end_tag,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_end_tag_after(lol_html_end_tag_t *end_tag, const char *content, size_t content_len,
+                           bool is_html);
 
 // Removes the end tag.
 // `end_tag` must be valid and non-`NULL`.
@@ -761,11 +640,7 @@ lol_html_str_t lol_html_end_tag_name_get_preserve_case(const lol_html_end_tag_t 
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_end_tag_name_set(
-    lol_html_end_tag_t *end_tag,
-    const char *name,
-    size_t name_len
-);
+int lol_html_end_tag_name_set(lol_html_end_tag_t *end_tag, const char *name, size_t name_len);
 
 // Inserts the content at the end of the document, either as raw text or as HTML.
 //
@@ -773,14 +648,8 @@ int lol_html_end_tag_name_set(
 //
 // Returns 0 if successful, and -1 otherwise. The actual error message
 // can be obtained using the `lol_html_take_last_error` function.
-int lol_html_doc_end_append(
-    lol_html_doc_end_t *doc_end,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
-
-
+int lol_html_doc_end_append(lol_html_doc_end_t *doc_end, const char *content, size_t content_len,
+                            bool is_html);
 
 // [`Element::streaming_prepend`]
 //
@@ -881,7 +750,8 @@ int lol_html_element_streaming_replace(lol_html_element_t *element,
 // Returns [`SourceLocationBytes`].
 //
 // `end_tag` must be valid and non-`NULL`.
-lol_html_source_location_bytes_t lol_html_end_tag_source_location_bytes(lol_html_end_tag_t *end_tag);
+lol_html_source_location_bytes_t
+lol_html_end_tag_source_location_bytes(lol_html_end_tag_t *end_tag);
 
 // [`EndTag::streaming_before`]
 //
@@ -933,20 +803,19 @@ int lol_html_end_tag_streaming_after(lol_html_end_tag_t *end_tag,
 int lol_html_end_tag_streaming_replace(lol_html_end_tag_t *end_tag,
                                        lol_html_streaming_handler_t *streaming_writer);
 
-
-// Write another piece of UTF-8 data to the output. Returns `0` on success, and `-1` if it wasn't valid UTF-8.
-// All pointers must be non-NULL.
-int lol_html_streaming_sink_write_str(lol_html_streaming_sink_t *sink,
-                                         const char *string_utf8,
-                                         size_t string_utf8_len,
-                                         bool is_html);
+// Write another piece of UTF-8 data to the output. Returns `0` on success, and `-1` if it wasn't
+// valid UTF-8. All pointers must be non-NULL.
+int lol_html_streaming_sink_write_str(lol_html_streaming_sink_t *sink, const char *string_utf8,
+                                      size_t string_utf8_len, bool is_html);
 
 // [`StreamingHandlerSink::write_utf8_chunk`]
 //
-// Writes as much of the given UTF-8 fragment as possible, converting the encoding and HTML-escaping if `is_html` is `false`.
+// Writes as much of the given UTF-8 fragment as possible, converting the encoding and HTML-escaping
+// if `is_html` is `false`.
 //
-// The `bytes_utf8` doesn't need to be a complete UTF-8 string, as long as consecutive calls to this function create a valid UTF-8 string.
-// Any incomplete UTF-8 sequence at the end of the content is buffered and flushed as soon as it's completed.
+// The `bytes_utf8` doesn't need to be a complete UTF-8 string, as long as consecutive calls to this
+// function create a valid UTF-8 string. Any incomplete UTF-8 sequence at the end of the content is
+// buffered and flushed as soon as it's completed.
 //
 // Other functions like [`lol_html_streaming_sink_write_str`] should not be called after a
 // `lol_html_streaming_sink_write_utf8_chunk` call with an incomplete UTF-8 sequence.
@@ -954,9 +823,8 @@ int lol_html_streaming_sink_write_str(lol_html_streaming_sink_t *sink,
 // Returns `0` on success, and `-1` if it wasn't valid UTF-8.
 // All pointers must be non-`NULL`.
 int lol_html_streaming_sink_write_utf8_chunk(lol_html_streaming_sink_t *sink,
-                                                const char *bytes_utf8,
-                                                size_t bytes_utf8_len,
-                                                bool is_html);
+                                             const char *bytes_utf8, size_t bytes_utf8_len,
+                                             bool is_html);
 
 // Text chunk
 //---------------------------------------------------------------------
@@ -967,9 +835,7 @@ int lol_html_streaming_sink_write_utf8_chunk(lol_html_streaming_sink_t *sink,
 //
 // WARNING: The pointer is valid only during the handler execution and
 // should never be leaked outside of handlers.
-lol_html_text_chunk_content_t lol_html_text_chunk_content_get(
-    const lol_html_text_chunk_t *chunk
-);
+lol_html_text_chunk_content_t lol_html_text_chunk_content_get(const lol_html_text_chunk_t *chunk);
 
 // Inserts the content string before the text chunk either as raw text or as HTML.
 //
@@ -977,13 +843,8 @@ lol_html_text_chunk_content_t lol_html_text_chunk_content_get(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_text_chunk_before(
-    lol_html_text_chunk_t *chunk,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
-
+int lol_html_text_chunk_before(lol_html_text_chunk_t *chunk, const char *content,
+                               size_t content_len, bool is_html);
 
 // Inserts the content string after the text chunk either as raw text or as HTML.
 //
@@ -991,12 +852,8 @@ int lol_html_text_chunk_before(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_text_chunk_after(
-    lol_html_text_chunk_t *chunk,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_text_chunk_after(lol_html_text_chunk_t *chunk, const char *content, size_t content_len,
+                              bool is_html);
 
 // Replace the text chunk with the content of the string which is interpreted
 // either as raw text or as HTML.
@@ -1005,12 +862,8 @@ int lol_html_text_chunk_after(
 //
 // Returns 0 in case of success and -1 otherwise. The actual error message
 // can be obtained using `lol_html_take_last_error` function.
-int lol_html_text_chunk_replace(
-    lol_html_text_chunk_t *chunk,
-    const char *content,
-    size_t content_len,
-    bool is_html
-);
+int lol_html_text_chunk_replace(lol_html_text_chunk_t *chunk, const char *content,
+                                size_t content_len, bool is_html);
 
 // Removes the text chunk.
 void lol_html_text_chunk_remove(lol_html_text_chunk_t *chunk);
@@ -1039,7 +892,7 @@ bool lol_html_text_chunk_is_last_in_text_node(lol_html_text_chunk_t *text_chunk)
 //
 // Calls [`TextChunk::streaming_before`].
 int lol_html_text_chunk_streaming_before(lol_html_text_chunk_t *text_chunk,
-        lol_html_streaming_handler_t *streaming_writer);
+                                         lol_html_streaming_handler_t *streaming_writer);
 
 // The [`CStreamingHandler`] contains callbacks that will be called
 // when the content needs to be written.
@@ -1071,12 +924,13 @@ int lol_html_text_chunk_streaming_after(lol_html_text_chunk_t *text_chunk,
 //
 // Calls [`TextChunk::streaming_replace`].
 int lol_html_text_chunk_streaming_replace(lol_html_text_chunk_t *text_chunk,
-        lol_html_streaming_handler_t *streaming_writer);
+                                          lol_html_streaming_handler_t *streaming_writer);
 
 // Returns [`SourceLocationBytes`].
 //
 // `text_chunk` must be valid and non-`NULL`.
-lol_html_source_location_bytes_t lol_html_text_chunk_source_location_bytes(lol_html_text_chunk_t *text_chunk);
+lol_html_source_location_bytes_t
+lol_html_text_chunk_source_location_bytes(lol_html_text_chunk_t *text_chunk);
 
 // Attaches custom user data to the text chunk.
 //
@@ -1089,7 +943,7 @@ void lol_html_text_chunk_user_data_set(lol_html_text_chunk_t *chunk, void *user_
 void *lol_html_text_chunk_user_data_get(const lol_html_text_chunk_t *chunk);
 
 #if defined(__cplusplus)
-}  // extern C
+} // extern C
 #endif
 
 #endif // LOL_HTML_H
