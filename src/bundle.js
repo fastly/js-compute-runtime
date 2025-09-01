@@ -126,7 +126,9 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
           };
         }
         case 'html-rewriter': {
-          return { contents: `export const HTMLRewritingStream = globalThis.HTMLRewritingStream;` };
+          return {
+            contents: `export const HTMLRewritingStream = globalThis.HTMLRewritingStream;`,
+          };
         }
       }
     });
