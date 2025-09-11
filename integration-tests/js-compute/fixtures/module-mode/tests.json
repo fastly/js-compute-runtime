@@ -147,7 +147,7 @@
   "GET /hono": {
     "downstream_response": {
       "status": 200,
-      "body_prefix": "{\n    \"args\": {},"
+      "body_prefix": "{\n  \"args\": {},"
     }
   },
   "GET /http-cache/hook-errors": {
