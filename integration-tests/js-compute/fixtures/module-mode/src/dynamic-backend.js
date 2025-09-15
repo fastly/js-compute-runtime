@@ -2206,6 +2206,7 @@ routes.set('/backend/timeout', async () => {
       }
       setDefaultDynamicBackendConfig({
         firstByteTimeout: 1_000,
+        useSSL: true,
       });
       const backend = new Backend({
         name: 'new-default',
