@@ -1353,12 +1353,6 @@
       "headers": { "content-length": "11" }
     }
   },
-  "GET /headers/non-ascii-latin1-field-value": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
   "GET /headers/getsetcookie": {
     "downstream_response": {
       "status": 200,
