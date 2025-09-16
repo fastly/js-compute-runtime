@@ -3,7 +3,7 @@
 import { $ as zx } from 'zx';
 import { argv } from 'node:process';
 import { getEnv } from './env.js';
-import { sleep } from './assertions.js';
+import { sleep } from './fixtures/app/src/assertions.js';
 
 const serviceId = argv[2];
 const serviceName = argv[3];
