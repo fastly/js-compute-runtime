@@ -728,9 +728,6 @@ public:
 
   bool is_valid() const { return handle != invalid; }
 
-  /// Lookup a cached object without participating in request collapsing
-  static Result<HttpCacheEntry> lookup(const HttpReq &req, std::span<uint8_t> override_key = {});
-
   /// Lookup a cached object, participating in request collapsing
   static Result<HttpCacheEntry> transaction_lookup(const HttpReq &req,
                                                    std::span<uint8_t> override_key = {});
