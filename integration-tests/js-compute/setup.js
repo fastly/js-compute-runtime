@@ -3,6 +3,7 @@
 import { $ as zx } from 'zx';
 import { argv } from 'node:process';
 import { getEnv } from './env.js';
+import { sleep } from './fixtures/app/src/assertions.js';
 
 const serviceId = argv[2];
 const serviceName = argv[3];
@@ -148,6 +149,7 @@ async function setupAcl() {
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
+  await sleep(60); // wait for a minute for ACL to be ready
 }
 
 zx.verbose = true;
