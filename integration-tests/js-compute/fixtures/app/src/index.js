@@ -26,6 +26,7 @@ import './fastly-global.js';
 import './fetch-errors.js';
 import './geoip.js';
 import './headers.js';
+import './html-rewriter.js';
 import './include-bytes.js';
 import './logger.js';
 import './manual-framing-headers.js';

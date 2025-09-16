@@ -2992,5 +2992,20 @@
   },
   "GET /compute/purge-surrogate-key-soft": {
     "environments": ["compute"]
-  }
+  },
+  "GET /html-rewriter/set-attribute": {},
+  "GET /html-rewriter/get-attribute": {},
+  "GET /html-rewriter/remove-attribute": {},
+  "GET /html-rewriter/replace-with": {},
+  "GET /html-rewriter/replace-children": {},
+  "GET /html-rewriter/insert": {},
+  "GET /html-rewriter/complex-selector": {},
+  "GET /html-rewriter/no-match-rewritten-content": {},
+  "GET /html-rewriter/multiple-handlers": {},
+  "GET /html-rewriter/invalid-selector": {},
+  "GET /html-rewriter/invalid-handler": {},
+  "GET /html-rewriter/throw-in-handler": {},
+  "GET /html-rewriter/invalid-html": {},
+  "GET /html-rewriter/insertion-order": {},
+  "GET /html-rewriter/escape-html": {}
 }

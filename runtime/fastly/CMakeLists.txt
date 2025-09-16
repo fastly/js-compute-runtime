@@ -47,6 +47,15 @@ add_builtin(fastly::fetch_event
   DEPENDENCIES
     OpenSSL)
 
+add_rust_lib(lol_html_c_api "${CMAKE_CURRENT_SOURCE_DIR}/crates/rust-lol-html" "\"capi\"")
+
+add_builtin(fastly::html_rewriter
+  SRC
+    builtins/html-rewriter.cpp
+  INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/crates/rust-lol-html/include
+)
+
 add_compile_definitions(PUBLIC RUNTIME_VERSION=${RUNTIME_VERSION})
 
 project(FastlyJS)
