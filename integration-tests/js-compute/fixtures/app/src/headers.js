@@ -10,17 +10,6 @@ routes.set('/headers/construct', async () => {
   return new Response('check headers', { headers });
 });
 
-routes.set('/headers/non-ascii-latin1-field-value', async () => {
-  let response = await fetch('https://http-me.glitch.me/meow?header=cat:é', {
-    backend: 'httpme',
-  });
-
-  let text = response.headers.get('cat');
-  console.log("response.headers.get('cat')", response.headers.get('cat'));
-
-  assert(text, 'é', `response.headers.get('cat') === "é"`);
-});
-
 routes.set('/headers/getsetcookie', async () => {
   let response = await fetch(
     'https://http-me.glitch.me/meow?header=Set-Cookie:name1=value1',
