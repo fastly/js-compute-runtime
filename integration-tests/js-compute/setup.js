@@ -148,6 +148,7 @@ async function setupAcl() {
   } catch (e) {
     if (!e.message.includes('Duplicate record')) throw e;
   }
+  await sleep(60); // wait for a minute for ACL to be ready
 }
 
 zx.verbose = true;
