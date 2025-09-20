@@ -1,4 +1,5 @@
 import { build } from 'esbuild';
+import { nodeless } from 'unenv';
 
 let fastlyPlugin = {
   name: 'fastly',
@@ -138,6 +139,9 @@ export async function bundle(input, moduleMode = false) {
     write: false,
     format: moduleMode ? 'esm' : 'iife',
     tsconfig: undefined,
+    alias: nodeless.alias,
+    external: nodeless.external,
+    inject: Object.values(nodeless.inject).filter((v) => typeof v === "string"),
     plugins: [fastlyPlugin],
   });
 }
