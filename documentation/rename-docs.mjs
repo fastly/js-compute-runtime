@@ -25,7 +25,8 @@ const subsystems = [
   'kv-store',
   'logger',
   'object-store',
-  'secret-store'
+  'secret-store',
+  'html-rewriter'
 ];
 
 const files = readdirSync('docs');
