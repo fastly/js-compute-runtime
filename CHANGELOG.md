@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.35.0 (2025-09-26)
+
+### Added
+
+* HTML Rewriter ([0015ff1](https://github.com/fastly/js-compute-runtime/commit/0015ff155b9f57995ccf63671aee8c112b664678))
+
+### Fixed
+
+* Remove broken CI tests ([5b645f7](https://github.com/fastly/js-compute-runtime/commit/5b645f726f7a4f6eb741db3addda4b45be1dd63c))
+* Update rust toolchain for compute-file-server-cli ([09d5a6d](https://github.com/fastly/js-compute-runtime/commit/09d5a6dc66b0f1befff7268915f13dc4d7ac0854))
+
 ## 3.34.0 (2025-04-11)
 
 ### Added
