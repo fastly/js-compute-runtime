@@ -353,7 +353,10 @@ bool HTMLRewritingStream::onElement(JSContext *cx, unsigned argc, JS::Value *vp)
 
 struct OutputContextData {
   JSContext *cx;
-  JSObject *self;
+  JS::Heap<JSObject *> self;
+  bool enqueue_failed;
+
+  OutputContextData(JSContext *cx, JSObject *self) : cx(cx), self(self), enqueue_failed(false) {}
 };
 
 void HTMLRewritingStream::finalize(JS::GCContext *gcx, JSObject *self) {
@@ -387,7 +390,7 @@ void HTMLRewritingStream::finalize(JS::GCContext *gcx, JSObject *self) {
 static void output_callback(const char *chunk, size_t chunk_len, void *user_data) {
   auto *ctx = static_cast<OutputContextData *>(user_data);
   JSContext *cx = ctx->cx;
-  JSObject *self = ctx->self;
+  JS::RootedObject self(cx, ctx->self);
 
   JS::RootedObject out_obj(cx, JS_NewUint8Array(cx, chunk_len));
   if (!out_obj) {
@@ -405,6 +408,7 @@ static void output_callback(const char *chunk, size_t chunk_len, void *user_data
   JS::RootedValue out_chunk(cx, JS::ObjectValue(*out_obj));
 
   if (!TransformStreamDefaultController::Enqueue(cx, controller, out_chunk)) {
+    ctx->enqueue_failed = true;
     return;
   }
 }
@@ -465,6 +469,13 @@ bool HTMLRewritingStream::transformAlgorithm(JSContext *cx, unsigned argc, JS::V
   if (err.data) {
     // Error may not be null-terminated
     JS_ReportErrorASCII(cx, "Error processing HTML: %s", std::string(err.data, err.len).c_str());
+    return false;
+  }
+
+  auto output_context = static_cast<OutputContextData *>(
+      JS::GetReservedSlot(self, HTMLRewritingStream::Slots::OutputContext).toPrivate());
+  if (output_context->enqueue_failed) {
+    JS_ReportErrorASCII(cx, "Error processing HTML: output stream enqueue failed");
     return false;
   }
 
