@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.35.1 (2025-09-29)
+
+### Fixed
+
+* Root HTML rewriter variables to ensure no GC ([#1202](https://github.com/fastly/js-compute-runtime/issues/1202)) ([6aaf9f3](https://github.com/fastly/js-compute-runtime/commit/6aaf9f391acccfb68c5a012d92bf324df04d4230))
+
 ## 3.35.0 (2025-09-26)
 
 ### Added
