@@ -33,9 +33,9 @@ To build from source, you need to have the following tools installed to successf
   ```sh
   sudo apt install binaryen
   ```
-- rust target wasm32-wasi
+- rust target wasm32-wasip1
   ```sh
-  rustup target add wasm32-wasi
+  rustup target add wasm32-wasip1
   ```
 - [cbindgen](https://github.com/eqrion/cbindgen#quick-start)
   ```sh
@@ -87,13 +87,17 @@ npm run build
   # then, restart shell or run:
   source $HOME/.cargo/env
   ```
-- rust target wasm32-wasi
+- rust target wasm32-wasip1
   ```sh
-  rustup target add wasm32-wasi
+  rustup target add wasm32-wasip1
   ```
 - [cbindgen](https://github.com/eqrion/cbindgen#quick-start)
   ```sh
   cargo install cbindgen
+  ```
+- [wasm-tools]
+  ```sh
+  cargo install --locked wasm-tools
   ```
 - [wasi-sdk, version 20](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-20),
   with alternate [install instructions](https://github.com/WebAssembly/wasi-sdk#install)
