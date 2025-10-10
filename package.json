@@ -52,7 +52,7 @@
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
     "tsd": "^0.31.1",
-    "typescript": "^5.5",
+    "typescript": "^5.9.0",
     "unified": "^11.0.5"
   },
   "dependencies": {
@@ -64,5 +64,13 @@
     "esbuild": "^0.25.0",
     "magic-string": "^0.30.12",
     "regexpu-core": "^6.1.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   }
 }
