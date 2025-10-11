@@ -390,7 +390,8 @@ import { expectError, expectType } from 'tsd';
   expectType<URLSearchParams>(
     new URLSearchParams({
       [Symbol.iterator]: function* () {
-        yield '';
+        yield ['', ''];
+        return;
       },
     }),
   );
