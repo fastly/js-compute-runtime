@@ -51,7 +51,7 @@
     "prettier": "^3.3.3",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
-    "tsd": "^0.31.1",
+    "tsd": "^0.33.0",
     "typescript": "^5.9.0",
     "unified": "^11.0.5"
   },
