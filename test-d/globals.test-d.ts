@@ -390,7 +390,8 @@ import { expectError, expectType } from 'tsd';
   expectType<URLSearchParams>(
     new URLSearchParams({
       [Symbol.iterator]: function* () {
-        yield '';
+        yield ['', ''];
+        return;
       },
     }),
   );
@@ -458,7 +459,7 @@ import { expectError, expectType } from 'tsd';
   expectError(new TextEncoder(''));
   const encoder = new TextEncoder();
   expectType<TextEncoder>(encoder);
-  expectType<(input?: string) => Uint8Array>(encoder.encode);
+  expectType<(input?: string) => Uint8Array<ArrayBuffer>>(encoder.encode);
   expectType<'utf-8'>(encoder.encoding);
   expectError((encoder.encoding = 'd'));
 }
@@ -484,7 +485,7 @@ import { expectError, expectType } from 'tsd';
   expectType<(address: string) => Geolocation>(
     fastly.getGeolocationForIpAddress,
   );
-  expectType<(path: string) => Uint8Array>(fastly.includeBytes);
+  expectType<(path: string) => Uint8Array<ArrayBuffer>>(fastly.includeBytes);
 }
 
 // CompressionStream
@@ -494,9 +495,9 @@ import { expectError, expectType } from 'tsd';
   let stream = new CompressionStream('deflate');
   stream = new CompressionStream('deflate-raw');
   stream = new CompressionStream('gzip');
-  expectType<ReadableStream<Uint8Array>>(stream.readable);
+  expectType<ReadableStream<Uint8Array<ArrayBuffer>>>(stream.readable);
   expectError((stream.readable = 'd'));
-  expectType<WritableStream<Uint8Array>>(stream.writable);
+  expectType<WritableStream<Uint8Array<ArrayBuffer>>>(stream.writable);
   expectError((stream.writable = 'd'));
 }
 
@@ -507,8 +508,8 @@ import { expectError, expectType } from 'tsd';
   let stream = new DecompressionStream('deflate');
   stream = new DecompressionStream('deflate-raw');
   stream = new DecompressionStream('gzip');
-  expectType<ReadableStream<Uint8Array>>(stream.readable);
+  expectType<ReadableStream<Uint8Array<ArrayBuffer>>>(stream.readable);
   expectError((stream.readable = 'd'));
-  expectType<WritableStream<Uint8Array>>(stream.writable);
+  expectType<WritableStream<Uint8Array<ArrayBuffer>>>(stream.writable);
   expectError((stream.writable = 'd'));
 }

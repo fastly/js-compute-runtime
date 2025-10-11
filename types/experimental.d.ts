@@ -46,7 +46,7 @@ declare module 'fastly:experimental' {
    * **Note**: Can only be used during build-time initialization, not when processing requests.
    * @experimental
    */
-  export function includeBytes(path: string): Uint8Array;
+  export function includeBytes(path: string): Uint8Array<ArrayBuffer>;
 
   /**
    * Whether or not to allow Dynamic Backends.
