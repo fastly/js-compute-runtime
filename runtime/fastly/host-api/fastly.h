@@ -39,6 +39,15 @@ typedef struct fastly_host_http_response {
   uint32_t f1;
 } fastly_host_http_response;
 
+typedef struct fastly_host_http_inspect_options {
+  const char *corp;
+  uint32_t corp_len;
+  const char *workspace;
+  uint32_t workspace_len;
+  const char *override_client_ip_ptr;
+  uint32_t override_client_ip_len;
+} fastly_host_http_inspect_options;
+
 typedef fastly_host_http_response fastly_world_tuple2_handle_handle;
 
 #define WASM_IMPORT(module, name) __attribute__((import_module(module), import_name(name)))
@@ -264,6 +273,13 @@ typedef enum BodyWriteEnd {
 #define CACHE_OVERRIDE_TTL (1u << 1)
 #define CACHE_OVERRIDE_STALE_WHILE_REVALIDATE (1u << 2)
 #define CACHE_OVERRIDE_PCI (1u << 3)
+
+typedef uint32_t req_inspect_config_options_mask;
+
+#define FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_RESERVED (1 << 0);
+#define FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_CORP (1 << 1);
+#define FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_WORKSPACE (1 << 2);
+#define FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_OVERRIDE_CLIENT_IP (1 << 3);
 
 WASM_IMPORT("fastly_abi", "init")
 int init(uint64_t abi_version);
@@ -628,6 +644,12 @@ WASM_IMPORT("fastly_http_req", "pending_req_wait_v2")
 int req_pending_req_wait_v2(uint32_t req_handle,
                             fastly_host_http_send_error_detail *send_error_detail,
                             uint32_t *resp_handle_out, uint32_t *resp_body_handle_out);
+
+WASM_IMPORT("fastly_http_req", "inspect")
+int req_inspect(uint32_t req_handle, uint32_t body_handle,
+                req_inspect_config_options_mask config_options_mask,
+                fastly_host_http_inspect_options *config, uint8_t *inspect_res_buf,
+                uint32_t inspect_res_buf_len, size_t *nwritten_out);
 
 // Module fastly_http_resp
 WASM_IMPORT("fastly_http_resp", "new")

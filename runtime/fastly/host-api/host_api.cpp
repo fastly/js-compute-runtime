@@ -2265,6 +2265,43 @@ Result<HostString> HttpReq::get_suggested_cache_key() const {
   return Result<HostString>::ok(make_host_string(str));
 }
 
+Result<HostString> Request::inspect(const InspectOptions *config) {
+  TRACE_CALL()
+  Result<HostString> res;
+  uint32_t inspect_opts_mask{0};
+  fastly::fastly_host_http_inspect_options opts;
+
+  if (config->corp != nullptr) {
+    inspect_opts_mask |= FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_CORP;
+    opts.corp = config->corp;
+    opts.corp_len = config->corp_len;
+  }
+
+  if (config->workspace != nullptr) {
+    inspect_opts_mask |= FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_WORKSPACE;
+    opts.workspace = config->workspace;
+    opts.workspace_len = config->workspace_len;
+  }
+
+  if (config->override_client_ip_ptr != nullptr) {
+    inspect_opts_mask |= FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_OVERRIDE_CLIENT_IP;
+    opts.override_client_ip_ptr = config->override_client_ip_ptr;
+    opts.override_client_ip_len = config->override_client_ip_len;
+  }
+
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string ret;
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 4));
+  if (!convert_result(fastly::req_inspect(this->req.handle, this->body.handle, inspect_opts_mask,
+                                          &opts, ret.ptr, HOSTCALL_BUFFER_LEN, &ret.len),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+  return res;
+}
+
 // HttpCacheEntry method implementations
 Result<HttpCacheEntry> HttpCacheEntry::lookup(const HttpReq &req, std::span<uint8_t> override_key) {
   TRACE_CALL()
