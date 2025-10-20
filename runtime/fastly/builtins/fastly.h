@@ -60,6 +60,7 @@ public:
   static bool defaultBackend_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool allowDynamicBackends_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool inspect(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 
 JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,

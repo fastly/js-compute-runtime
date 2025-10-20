@@ -374,7 +374,7 @@ struct TlsVersion {
   uint8_t value = 0;
 
   explicit TlsVersion(uint8_t raw);
-  explicit TlsVersion(){};
+  explicit TlsVersion() {};
 
   uint8_t get_version() const;
   double get_version_number() const;
@@ -513,6 +513,21 @@ struct CacheOverrideTag final {
 enum class FramingHeadersMode : uint8_t {
   Automatic,
   ManuallyFromHeaders,
+};
+
+class InspectOptions final {
+public:
+  uint8_t *corp = nullptr;
+  uint32_t corp_len = 0;
+  uint8_t *workspace = nullptr;
+  uint32_t workspace_len = 0;
+  uint8_t *override_client_ip_ptr = nullptr;
+  uint32_t override_client_ip_len = 0;
+  uint32_t req_handle;
+  uint32_t body_handle;
+
+  InspectOptions() = default;
+  explicit InspectOptions(uint32_t req, uint32_t body) : req_handle{req}, body_handle{body} {}
 };
 
 class HttpReq final : public HttpBase {
@@ -658,6 +673,8 @@ struct Request {
 
   Request() = default;
   Request(HttpReq req, HttpBody body) : req{req}, body{body} {}
+
+  Result<HostString> inspect(const InspectConfig *config);
 };
 
 class GeoIp final {
