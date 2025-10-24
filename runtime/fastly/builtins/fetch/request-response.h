@@ -289,7 +289,7 @@ public:
   /**
    * Base-level response creation handler, for both upstream and downstream requests.
    */
-  static JSObject *create(JSContext *cx, JS::HandleObject response,
+  staticeJSObject *create(JSContext *cx, JS::HandleObject response,
                           host_api::HttpResp response_handle, host_api::HttpBody body_handle,
                           bool is_upstream, JSObject *grip_upgrade_request,
                           JSObject *websocket_upgrade_request, JS::HandleString backend);
