@@ -2950,6 +2950,9 @@ Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupO
     os.request_headers = opts.request_headers.handle;
     options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS;
   }
+  if (opts.always_use_requested_range) {
+    options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_ALWAYS_USE_REQUESTED_RANGE;
+  }
 
   if (!convert_result(fastly::cache_lookup(reinterpret_cast<char *>(key_str.ptr), key_str.len,
                                            options_mask, &os, &handle),
@@ -2978,6 +2981,9 @@ Result<CacheHandle> CacheHandle::transaction_lookup(std::string_view key,
   if (opts.request_headers.is_valid()) {
     os.request_headers = opts.request_headers.handle;
     options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS;
+  }
+  if (opts.always_use_requested_range) {
+    options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_ALWAYS_USE_REQUESTED_RANGE;
   }
 
   if (!convert_result(fastly::cache_transaction_lookup(reinterpret_cast<char *>(key_str.ptr),
