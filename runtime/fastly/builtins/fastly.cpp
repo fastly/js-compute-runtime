@@ -309,6 +309,11 @@ bool Fastly::createWebsocketHandoff(JSContext *cx, unsigned argc, JS::Value *vp)
   }
   auto websocket_upgrade_request = &request_value.toObject();
 
+  RootedObject request(cx, websocket_upgrade_request);
+  if (!RequestOrResponse::commit_headers(cx, request)) {
+    return false;
+  }
+
   auto response_handle = host_api::HttpResp::make();
   if (auto *err = response_handle.to_err()) {
     HANDLE_ERROR(cx, *err);
