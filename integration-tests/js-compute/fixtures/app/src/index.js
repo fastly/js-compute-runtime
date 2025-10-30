@@ -28,6 +28,7 @@ import './geoip.js';
 import './headers.js';
 import './html-rewriter.js';
 import './include-bytes.js';
+import './image-optimizer.js';
 import './logger.js';
 import './manual-framing-headers.js';
 import './missing-backend.js';
@@ -94,12 +95,12 @@ async function app(event) {
       try {
         return (res = new Response(
           `The routeHandler for ${path} threw a [${error.constructor?.name ?? error.name}] error: ${error.message || error}` +
-            '\n' +
-            error.stack +
-            (fastly.debugMessages
-              ? '\n[DEBUG BUILD MESSAGES]:\n\n  - ' +
-                fastly.debugMessages.join('\n  - ')
-              : ''),
+          '\n' +
+          error.stack +
+          (fastly.debugMessages
+            ? '\n[DEBUG BUILD MESSAGES]:\n\n  - ' +
+            fastly.debugMessages.join('\n  - ')
+            : ''),
           { status: 500 },
         ));
       } catch (errRes) {

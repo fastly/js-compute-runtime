@@ -130,6 +130,14 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
             contents: `export const HTMLRewritingStream = globalThis.HTMLRewritingStream;`,
           };
         }
+        case 'image-optimizer': {
+          return {
+            contents: `
+            export const Region = globalThis.Region;
+            export const Format = globalThis.Format;
+            export const Auto = globalThis.Auto;`,
+          };
+        }
       }
     });
   },
