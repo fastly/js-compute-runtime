@@ -116,6 +116,7 @@ public:
   static void stop_dispatching(JSObject *self);
 
   static State state(JSObject *self);
+  static void mark_done(JSObject *self, bool streaming, uint16_t status_code);
   static void set_state(JSObject *self, State state);
   static bool response_started(JSObject *self);
 

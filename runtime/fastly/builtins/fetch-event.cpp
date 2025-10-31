@@ -698,8 +698,7 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   if (streaming) {
     ENGINE->incr_event_loop_interest();
   }
-  FetchEvent::set_state(event, streaming ? FetchEvent::State::responseStreaming
-                                         : FetchEvent::State::responseDone);
+  FetchEvent::mark_done(event, streaming, Response::status(response_obj));
   return start_response(cx, response_obj, streaming);
 }
 
@@ -737,7 +736,7 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // Step 3
-  if (state(self) != State::unhandled) {
+  if (state(self) != State::unhandled && state(self) != State::waitToRespond) {
     JS_ReportErrorUTF8(cx, "FetchEvent#respondWith can't be called twice on the same event");
     return false;
   }
@@ -921,6 +920,22 @@ FetchEvent::State FetchEvent::state(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   return static_cast<State>(
       JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::State)).toInt32());
+}
+
+void FetchEvent::mark_done(JSObject *self, bool streaming, uint16_t status_code) {
+  MOZ_ASSERT(is_instance(self));
+  auto new_state = [&] {
+    // 103: Early Hint
+    if (status_code == 103 && false) {
+      return State::unhandled;
+    }
+    if (streaming) {
+      return State::responseStreaming;
+    }
+    return State::responseDone;
+  }();
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::State),
+                      JS::Int32Value(static_cast<int32_t>(new_state)));
 }
 
 void FetchEvent::set_state(JSObject *self, State new_state) {
