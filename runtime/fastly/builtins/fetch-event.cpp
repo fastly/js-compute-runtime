@@ -976,7 +976,7 @@ void FetchEvent::mark_done(JSObject *self, bool streaming, uint16_t status_code)
   MOZ_ASSERT(is_instance(self));
   auto new_state = [&] {
     // 103: Early Hint
-    if (status_code == 103 && false) {
+    if (status_code == 103) {
       return State::unhandled;
     }
     if (streaming) {
