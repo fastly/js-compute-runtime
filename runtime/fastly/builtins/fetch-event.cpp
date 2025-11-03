@@ -767,6 +767,55 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool FetchEvent::sendEarlyHint(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+  MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
+
+  if (!is_dispatching(self)) {
+    JS_ReportErrorUTF8(cx, "FetchEvent#sendEarlyHint must be called synchronously from "
+                           "within a FetchEvent handler");
+    return false;
+  }
+  if (state(self) != State::unhandled && state(self) != State::waitToRespond) {
+    JS_ReportErrorUTF8(
+        cx, "FetchEvent#sendEarlyHint can't be called after the main response has been sent");
+    return false;
+  }
+
+  JS::RootedObject headers(cx, Headers::create(cx, args.get(0), Headers::HeadersGuard::None));
+  // Calling get_list() transitions to Mode::ContentOnly or Mode::CachedInContent.
+  if (!Headers::get_list(cx, headers)) {
+    return false;
+  }
+
+  auto response_handle = host_api::HttpResp::make();
+  if (auto *err = response_handle.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  // 103: Early Hint
+  response_handle.unwrap().set_status(103);
+  auto body_handle = host_api::HttpBody::make();
+  if (auto *err = body_handle.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  JS::RootedObject response_instance(
+      cx, JS_NewObjectWithGivenProto(cx, &Response::class_, Response::proto_obj));
+  if (!response_instance) {
+    return false;
+  }
+  RootedObject response_obj(cx, Response::create(cx, response_instance, response_handle.unwrap(),
+                                                 body_handle.unwrap(), false, nullptr, nullptr,
+                                                 nullptr));
+  RootedValue headers_val(cx, JS::ObjectValue(*headers));
+  JS_SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::Headers), headers_val);
+
+  args.rval().setUndefined();
+  return start_response(cx, response_obj, false);
+}
+
 bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
   MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
   set_state(self, State::responsedWithError);
@@ -848,6 +897,7 @@ const JSPropertySpec FetchEvent::static_properties[] = {
 const JSFunctionSpec FetchEvent::methods[] = {
     JS_FN("respondWith", respondWith, 1, JSPROP_ENUMERATE),
     JS_FN("waitUntil", waitUntil, 1, JSPROP_ENUMERATE),
+    JS_FN("sendEarlyHint", sendEarlyHint, 1, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
