@@ -48,8 +48,9 @@ static void log_hostcall(const char *func_name, ...) {
 
 #define MILLISECS_IN_NANOSECS 1000000
 #define SECS_IN_NANOSECS 1000000000
-
+#include <iostream>
 static bool convert_result(int res, fastly::fastly_host_error *err) {
+  std::cerr << "CONVENRT_RESULT: " << res << std::endl;
   if (res == 0)
     return true;
   switch (res) {
@@ -918,6 +919,7 @@ make_fastly_image_optimizer_error(fastly::fastly_image_optimizer_error_detail im
 }
 
 FastlyImageOptimizerError make_fastly_image_optimizer_error(fastly::fastly_host_error err) {
+  std::cerr << "MAKING IT " << static_cast<int>(err) << std::endl;
   return {err};
 }
 
@@ -1498,20 +1500,22 @@ HttpReq::send_image_optimizer(HttpBody body, std::string_view backend,
   fastly::fastly_image_optimizer_transform_config config{config_str.data(), config_str.size()};
   fastly::fastly_image_optimizer_error_detail io_err_out;
   uint32_t resp_handle_out = 0, body_handle_out = 0;
-  auto host_call_success =
-      true || convert_result(fastly::image_optimizer_transform_image_optimizer_request(
-                                 this->handle, body.handle,
-                                 reinterpret_cast<char *>(backend_str.ptr), backend_str.len, opts,
-                                 &config, &io_err_out, &resp_handle_out, &body_handle_out),
-                             &err);
-  if (host_call_success) {
+  std::cerr << "DOING IMAGE TRANSFORM: handle: " << this->handle << " body handle: " << body.handle
+            << " backend_str: " << backend_str.ptr << " backend_len: " << backend_str.len
+            << " opts: " << opts << " config: " << config.sdk_claims_opts
+            << " config_len: " << config.sdk_claims_opts_len << std::endl;
+  auto host_call_success = convert_result(
+      fastly::image_optimizer_transform_image_optimizer_request(
+          this->handle, body.handle, reinterpret_cast<char *>(backend_str.ptr), backend_str.len,
+          opts, &config, &io_err_out, &resp_handle_out, &body_handle_out),
+      &err);
+  if (!host_call_success) {
     res.emplace_err(make_fastly_image_optimizer_error(err));
   } else if (io_err_out.tag != FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_OK) {
     res.emplace_err(make_fastly_image_optimizer_error(io_err_out));
   } else {
     res.emplace(HttpResp(resp_handle_out), HttpBody(body_handle_out));
   }
-  res.emplace_err(make_fastly_image_optimizer_error(0));
 
   return res;
 }
@@ -3668,6 +3672,8 @@ const std::optional<std::string> FastlySendError::message() const {
 }
 
 const std::optional<std::string> FastlyImageOptimizerError::message() const {
+  if (is_host_error)
+    return std::nullopt;
   switch (err) {
   case ok:
     return std::nullopt;
