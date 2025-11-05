@@ -1494,24 +1494,26 @@ HttpReq::send_image_optimizer(HttpBody body, std::string_view backend,
   TRACE_CALL()
   FastlyResult<Response, FastlyImageOptimizerError> res;
 
-  fastly::fastly_host_error err = 0;
+  fastly::fastly_host_error err;
+  HttpReq::Handle orig_req_body_handle = INVALID_HANDLE;
   fastly::fastly_world_string backend_str = string_view_to_world_string(backend);
   auto opts = FASTLY_IMAGE_OPTIMIZER_SDK_CLAIMS_OPTS;
   fastly::fastly_image_optimizer_transform_config config{config_str.data(), config_str.size()};
-  fastly::fastly_image_optimizer_error_detail io_err_out;
-  uint32_t resp_handle_out = 0, body_handle_out = 0;
-  std::cerr << "DOING IMAGE TRANSFORM: handle: " << this->handle << " body handle: " << body.handle
-            << " backend_str: " << backend_str.ptr << " backend_len: " << backend_str.len
-            << " opts: " << opts << " config: " << config.sdk_claims_opts
+  fastly::fastly_image_optimizer_error_detail io_err_out{};
+  uint32_t resp_handle_out = INVALID_HANDLE, body_handle_out = INVALID_HANDLE;
+  std::cerr << "DOING IMAGE TRANSFORM: handle: " << this->handle
+            << " body handle: " << INVALID_HANDLE << " backend_str: " << backend_str.ptr
+            << " backend_len: " << backend_str.len << " opts: " << opts
+            << " config: " << config.sdk_claims_opts
             << " config_len: " << config.sdk_claims_opts_len << std::endl;
   auto host_call_success = convert_result(
       fastly::image_optimizer_transform_image_optimizer_request(
-          this->handle, body.handle, reinterpret_cast<char *>(backend_str.ptr), backend_str.len,
-          opts, &config, &io_err_out, &resp_handle_out, &body_handle_out),
+          this->handle, orig_req_body_handle, reinterpret_cast<char *>(backend_str.ptr),
+          backend_str.len, opts, &config, &io_err_out, &resp_handle_out, &body_handle_out),
       &err);
   if (!host_call_success) {
     res.emplace_err(make_fastly_image_optimizer_error(err));
-  } else if (io_err_out.tag != FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_OK) {
+  } else if (false && io_err_out.tag != FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_OK) {
     res.emplace_err(make_fastly_image_optimizer_error(io_err_out));
   } else {
     res.emplace(HttpResp(resp_handle_out), HttpBody(body_handle_out));
