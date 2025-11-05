@@ -242,7 +242,7 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionUpdateOptions(JSContext 
   }
   if (!surrogateKeys_val.isUndefined()) {
     JS::ForOfIterator it(cx);
-    if (!it.init(vary_val)) {
+    if (!it.init(surrogateKeys_val)) {
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
 
