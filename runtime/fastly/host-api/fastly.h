@@ -1103,7 +1103,7 @@ WASM_IMPORT("fastly_acl", "lookup")
 int acl_lookup(uint32_t acl_handle, const uint8_t *ip_octets, size_t ip_len,
                uint32_t *body_handle_out, fastly_acl_error *acl_error_out);
 
-typedef struct __attribute__((aligned(4))) fastly_image_optimizer_transform_config {
+typedef struct __attribute__((aligned(8))) fastly_image_optimizer_transform_config {
   const char *sdk_claims_opts;
   size_t sdk_claims_opts_len;
 } fastly_image_optimizer_transform_config;
@@ -1116,7 +1116,7 @@ typedef struct __attribute__((aligned(4))) fastly_image_optimizer_transform_conf
 #define FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_ERROR 2
 #define FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_WARNING 3
 
-typedef struct __attribute__((aligned(4))) fastly_image_optimizer_error_detail {
+typedef struct __attribute__((aligned(8))) fastly_image_optimizer_error_detail {
   uint32_t tag;
   const char *message;
   size_t message_len;
