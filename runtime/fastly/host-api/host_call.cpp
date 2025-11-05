@@ -48,7 +48,7 @@ void handle_kv_error(JSContext *cx, FastlyKVError err, const unsigned int err_ty
 
 void handle_image_optimizer_error(JSContext *cx, const FastlyImageOptimizerError &err, int line,
                                   const char *func) {
-  if (err.host_err == FASTLY_HOST_ERROR_UNSUPPORTED) {
+  if (err.is_host_error) {
     return handle_api_error(cx, err.host_err, line, func);
   }
 
