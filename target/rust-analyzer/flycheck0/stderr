@@ -1,0 +1,5 @@
+warning: only one of `license` or `license-file` is necessary
+`license` should be used if the package license can be expressed with a standard SPDX expression.
+`license-file` should be used if the package uses a non-standard license.
+See https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields for more information.
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.24s
