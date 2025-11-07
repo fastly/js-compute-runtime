@@ -1,9 +1,8 @@
 # Changelog
 
-## [3.35.2](https://github.com/fastly/js-compute-runtime/compare/v3.35.1...v3.35.2) (2025-11-07)
+## 3.35.2 (2025-11-07)
 
-
-### Bug Fixes
+### Fixed
 
 * **compute-file-server:** bump MSRV to fix ICU build issues ([#1221](https://github.com/fastly/js-compute-runtime/issues/1221)) ([379e511](https://github.com/fastly/js-compute-runtime/commit/379e51153e07962972b8a69e645e0f55912122d0))
 * surrogateKeys not being added when using CoreCache ([#1219](https://github.com/fastly/js-compute-runtime/issues/1219)) ([b0efe20](https://github.com/fastly/js-compute-runtime/commit/b0efe20c2f6f96755bb450d139e002797b376802))
