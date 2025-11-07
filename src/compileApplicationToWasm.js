@@ -40,7 +40,7 @@ export async function compileApplicationToWasm(
       );
       process.exit(1);
     }
-  } catch (error) {
+  } catch {
     console.error(
       `Error: The \`input\` path points to a non-existent file: ${input}`,
     );
@@ -64,7 +64,7 @@ export async function compileApplicationToWasm(
       );
       process.exit(1);
     }
-  } catch (error) {
+  } catch {
     console.error(
       `Error: The \`wasmEngine\` path points to a non-existent file: ${wasmEngine}`,
     );
