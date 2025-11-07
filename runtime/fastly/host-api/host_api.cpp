@@ -50,7 +50,6 @@ static void log_hostcall(const char *func_name, ...) {
 #define SECS_IN_NANOSECS 1000000000
 #include <iostream>
 static bool convert_result(int res, fastly::fastly_host_error *err) {
-  std::cerr << "CONVENRT_RESULT: " << res << std::endl;
   if (res == 0)
     return true;
   switch (res) {

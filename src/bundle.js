@@ -135,6 +135,7 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
             contents: `
             export const Region = globalThis.Region;
             export const Format = globalThis.Format;
+            export const Orient = globalThis.Orient;
             export const Auto = globalThis.Auto;`,
           };
         }
