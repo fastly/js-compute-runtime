@@ -1,14 +1,16 @@
 import { dirname, resolve, sep, normalize } from 'node:path';
 import { tmpdir, freemem } from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { mkdir, readFile, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, mkdtemp, writeFile, copyFile } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
-import { isFile } from './isFile.js';
-import { isFileOrDoesNotExist } from './isFileOrDoesNotExist.js';
 import wizer from '@bytecodealliance/wizer';
 import weval from '@bytecodealliance/weval';
-import { precompile } from './precompile.js';
+
+import { isFile } from './isFile.js';
+import { isFileOrDoesNotExist } from './isFileOrDoesNotExist.js';
+import { postbundle } from './postbundle.js';
 import { bundle } from './bundle.js';
+import { composeSourcemaps } from './composeSourcemaps.js';
 
 const maybeWindowsPath =
   process.platform === 'win32'
@@ -21,7 +23,7 @@ async function getTmpDir() {
   return await mkdtemp(normalize(tmpdir() + sep));
 }
 
-export async function compileApplicationToWasm(
+export async function compileApplicationToWasm({
   input,
   output,
   wasmEngine,
@@ -29,10 +31,13 @@ export async function compileApplicationToWasm(
   enableExperimentalHighResolutionTimeMethods = false,
   enableAOT = false,
   aotCache = '',
+  enableStackTraces,
+  excludeSources,
+  debugIntermediateFilesDir,
   moduleMode = false,
   doBundle = false,
   env,
-) {
+}) {
   try {
     if (!(await isFile(input))) {
       console.error(
@@ -97,28 +102,106 @@ export async function compileApplicationToWasm(
     process.exit(1);
   }
 
+  if (debugIntermediateFilesDir != null) {
+    try {
+      console.log(`Preparing \`debug-intermediate-files\` directory: ${debugIntermediateFilesDir}`);
+      await mkdir(debugIntermediateFilesDir, {
+        recursive: true,
+      });
+    } catch(error) {
+      console.error(
+        `Error: Failed to create the \`debug-intermediate-files\` (${debugIntermediateFilesDir}) directory`,
+        error.message
+      );
+      process.exit(1);
+    }
+  }
+
   let tmpDir;
   if (doBundle) {
-    let contents;
+    tmpDir = await getTmpDir();
+
+    const sourceMaps = [];
+
+    const bundleFilename = '__input_bundled.js';
+    const bundleOutputFilePath = resolve(tmpDir, bundleFilename);
+
+    // esbuild respects input source map, works if it's linked via sourceMappingURL
+    // either inline or as separate file
     try {
-      contents = await bundle(input, moduleMode);
+      await bundle(input, bundleOutputFilePath, {
+        moduleMode,
+        enableStackTraces,
+      });
     } catch (error) {
       console.error(`Error:`, error.message);
       process.exit(1);
     }
 
-    const precompiled = precompile(
-      contents.outputFiles[0].text,
-      undefined,
-      moduleMode,
+    if (debugIntermediateFilesDir != null) {
+      await copyFile(bundleOutputFilePath, resolve(debugIntermediateFilesDir, '__1_bundled.js'));
+      if (enableStackTraces) {
+        await copyFile(bundleOutputFilePath + '.map', resolve(debugIntermediateFilesDir, '__1_bundled.js.map'));
+      }
+    }
+    if (enableStackTraces) {
+      sourceMaps.push({f: bundleFilename, s: bundleOutputFilePath + '.map'});
+    }
+
+    const postbundleFilename = '__fastly_post_bundle.js';
+    const postbundleOutputFilepath = resolve(tmpDir, postbundleFilename);
+
+    await postbundle(
+      bundleOutputFilePath,
+      postbundleOutputFilepath,
+      {
+        moduleMode,
+        enableStackTraces,
+      },
     );
 
-    tmpDir = await getTmpDir();
-    const outPath = resolve(tmpDir, 'input.js');
-    await writeFile(outPath, precompiled);
+    if (debugIntermediateFilesDir != null) {
+      await copyFile(postbundleOutputFilepath, resolve(debugIntermediateFilesDir, '__2_postbundled.js'));
+      if (enableStackTraces) {
+        await copyFile(postbundleOutputFilepath + '.map', resolve(debugIntermediateFilesDir, '__2_postbundled.js.map'));
+      }
+    }
+    if (enableStackTraces) {
+      sourceMaps.push({f:postbundleFilename, s:postbundleOutputFilepath + '.map'});
+    }
 
-    // the bundled output is now the Wizer input
-    input = outPath;
+    if (enableStackTraces) {
+      // Compose source maps
+      const replaceSourceMapToken = "__FINAL_SOURCE_MAP__";
+      let excludePatterns = [
+        'forbid-entry:/**',
+        'node_modules/**',
+      ];
+      if (excludeSources) {
+        excludePatterns =
+          [() => true];
+      }
+      const composed = await composeSourcemaps(sourceMaps, excludePatterns);
+
+      const outputWithSourcemaps = '__fastly_bundle_with_sourcemaps.js';
+      const outputWithSourcemapsFilePath = resolve(tmpDir, outputWithSourcemaps);
+
+      const postBundleContent = await readFile(postbundleOutputFilepath, { encoding: 'utf-8' });
+      const outputWithSourcemapsContent = postBundleContent.replace(replaceSourceMapToken, () => JSON.stringify(composed));
+      await writeFile(outputWithSourcemapsFilePath, outputWithSourcemapsContent);
+
+      if (debugIntermediateFilesDir != null) {
+        await copyFile(outputWithSourcemapsFilePath, resolve(debugIntermediateFilesDir, 'fastly_bundle.js'));
+        await writeFile(resolve(debugIntermediateFilesDir, 'fastly_sourcemaps.json'), composed);
+      }
+
+      // the output with sourcemaps is now the Wizer input
+      input = outputWithSourcemapsFilePath;
+    } else {
+      // the bundled output is now the Wizer input
+      input = postbundleOutputFilepath;
+      await copyFile(postbundleOutputFilepath, resolve(debugIntermediateFilesDir, 'fastly_bundle.js'));
+    }
   }
 
   const spawnOpts = {
