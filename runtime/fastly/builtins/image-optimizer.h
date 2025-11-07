@@ -6,6 +6,7 @@
 #include "encode.h"
 #include "extension-api.h"
 #include <memory>
+#include <variant>
 
 #define HANDLE_IMAGE_OPTIMIZER_ERROR(cx, err)                                                      \
   ::host_api::handle_image_optimizer_error(cx, err, __LINE__, __func__)
@@ -54,11 +55,40 @@ public:
   };
   static std::optional<Brightness> to_brightness(JSContext *cx, JS::HandleValue val);
 
+  struct PixelsOrPercentage {
+    union {
+      int pixels;
+      double percentage;
+    };
+    bool is_percentage;
+  };
+  static std::optional<PixelsOrPercentage> to_pixels_or_percentage(JSContext *cx,
+                                                                   JS::HandleValue val);
+
+  struct Canvas {
+    struct Absolute {
+      PixelsOrPercentage width;
+      PixelsOrPercentage height;
+    };
+    struct Ratio {
+      double width_ratio;
+      double height_ratio;
+    };
+    struct Position {
+      // Absolute or offset
+      std::variant<PixelsOrPercentage, double> x;
+      std::variant<PixelsOrPercentage, double> y;
+    };
+
+    std::variant<Absolute, Ratio> size;
+    std::variant<Position, std::monostate> position;
+  };
+  static std::optional<Canvas> to_canvas(JSContext *cx, JS::HandleValue val);
+
   struct Color {
     host_api::HostString val;
   };
-  static std::optional<Color> to_color(JSContext *cx, JS::HandleValue val,
-                                       const std::string &field_name);
+  static std::optional<Color> to_color(JSContext *cx, JS::HandleValue val);
 
   struct Contrast {
     double value;
@@ -75,23 +105,16 @@ public:
   };
   static std::optional<Frame> to_frame(JSContext *cx, JS::HandleValue val);
 
-  struct PixelsOrPercentage {
-    union {
-      int pixels;
-      double percentage;
-    };
-    bool is_percentage;
-  };
-  static std::optional<PixelsOrPercentage>
-  to_pixels_or_percentage(JSContext *cx, JS::HandleValue val, const std::string &field_name);
-
   struct Height {
     PixelsOrPercentage value;
   };
   static std::optional<Height> to_height(JSContext *cx, JS::HandleValue val) {
-    auto ret = to_pixels_or_percentage(cx, val, "height");
-    if (!ret)
+    auto ret = to_pixels_or_percentage(cx, val);
+    if (!ret) {
+      api::throw_error(cx, api::Errors::TypeError, "imageOptimizerOptions", "height",
+                       "must be an integer pixel value or a string percentage value");
       return std::nullopt;
+    }
     return Height{*ret};
   }
 
@@ -121,9 +144,12 @@ public:
     PixelsOrPercentage value;
   };
   static std::optional<Width> to_width(JSContext *cx, JS::HandleValue val) {
-    auto ret = to_pixels_or_percentage(cx, val, "width");
-    if (!ret)
+    auto ret = to_pixels_or_percentage(cx, val);
+    if (!ret) {
+      api::throw_error(cx, api::Errors::TypeError, "imageOptimizerOptions", "width",
+                       "must be an integer pixel value or a string percentage value");
       return std::nullopt;
+    }
     return Width{*ret};
   }
 
@@ -131,9 +157,12 @@ public:
     Color color;
   };
   static std::optional<BGColor> to_bg_color(JSContext *cx, JS::HandleValue val) {
-    auto color = to_color(cx, val, "bgColor");
-    if (!color)
+    auto color = to_color(cx, val);
+    if (!color) {
+      api::throw_error(cx, api::Errors::TypeError, "imageOptimizerOptions", "bgColor",
+                       "must be a 3/6 character hex string or RGB(A) object");
       return std::nullopt;
+    }
     return BGColor{std::move(*color)};
   }
 
@@ -141,18 +170,19 @@ private:
   ImageOptimizerOptions(Region region, std::optional<Auto> auto_val,
                         std::optional<BGColor> bg_color, std::optional<Blur> blur,
                         std::optional<Brightness> brightness, std::optional<BWAlgorithm> bw,
-                        std::optional<Contrast> contrast, std::optional<Disable> disable,
-                        std::optional<Dpr> dpr, std::optional<Enable> enable,
-                        std::optional<Fit> fit, std::optional<Format> format,
-                        std::optional<Frame> frame, std::optional<Height> height,
-                        std::optional<Level> level, std::optional<Metadata> metadata,
-                        std::optional<Optimize> optimize, std::optional<Orient> orient,
-                        std::optional<Profile> profile, std::optional<ResizeFilter> resize_filter,
+                        std::optional<Canvas> canvas, std::optional<Contrast> contrast,
+                        std::optional<Disable> disable, std::optional<Dpr> dpr,
+                        std::optional<Enable> enable, std::optional<Fit> fit,
+                        std::optional<Format> format, std::optional<Frame> frame,
+                        std::optional<Height> height, std::optional<Level> level,
+                        std::optional<Metadata> metadata, std::optional<Optimize> optimize,
+                        std::optional<Orient> orient, std::optional<Profile> profile,
+                        std::optional<ResizeFilter> resize_filter,
                         std::optional<Saturation> saturation, std::optional<Sharpen> sharpen,
                         std::optional<Viewbox> viewbox, std::optional<Width> width)
       : region_(region), auto_(auto_val), bg_color_(std::move(bg_color)), blur_(blur), bw_(bw),
-        contrast_(contrast), disable_(disable), dpr_(dpr), enable_(enable), fit_(fit),
-        format_(format), frame_(frame), height_(height), level_(std::move(level)),
+        canvas_(canvas), contrast_(contrast), disable_(disable), dpr_(dpr), enable_(enable),
+        fit_(fit), format_(format), frame_(frame), height_(height), level_(std::move(level)),
         metadata_(metadata), optimize_(optimize), orient_(orient), profile_(profile),
         resizeFilter_(resize_filter), saturation_(saturation), sharpen_(sharpen), viewbox_(viewbox),
         width_(width) {}
@@ -162,6 +192,7 @@ private:
   std::optional<Blur> blur_;
   std::optional<Brightness> brightness_;
   std::optional<BWAlgorithm> bw_;
+  std::optional<Canvas> canvas_;
   std::optional<Contrast> contrast_;
   std::optional<Disable> disable_;
   std::optional<Dpr> dpr_;
@@ -213,6 +244,7 @@ inline std::string to_string(const ImageOptimizerOptions::Blur &blur) {
 inline std::string to_string(const ImageOptimizerOptions::Brightness &brightness) {
   return "brightness=" + std::to_string(brightness.value);
 }
+std::string to_string(const ImageOptimizerOptions::Canvas &canvas);
 inline std::string to_string(const ImageOptimizerOptions::Contrast &contrast) {
   return "contrast=" + std::to_string(contrast.value);
 }
