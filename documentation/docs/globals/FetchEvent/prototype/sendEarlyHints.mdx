@@ -1,0 +1,26 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# FetchEvent.sendEarlyHints()
+
+The **`sendEarlyHints()`** method allows you to send a [103 Early Hints](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/103) response back to the client which made the incoming request to your application.
+
+## Syntax
+
+```js
+sendEarlyHints(headers)
+```
+
+### Parameters
+
+- `headers`
+  - : Any headers you want to add to your response, contained
+        within a [`Headers`](../../globals/Headers/Headers.mdx) object or object literal of
+        [`String`](../../globals/String/String.mdx) key/value pairs.
+
+### Return value
+
+Always returns `undefined`.

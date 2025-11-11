@@ -7,7 +7,7 @@ routes.set('/early-hints/manual-response', (event) => {
 })
 
 routes.set('/early-hints/send-early-hint', (event) => {
-    event.sendEarlyHint({ link: '</style.css>; rel=preload; as=style' });
+    event.sendEarlyHints({ link: '</style.css>; rel=preload; as=style' });
     event.respondWith(new Response('ok'));
 })
 
