@@ -35,7 +35,7 @@ const debug = sdkVersion.endsWith('-debug');
     const store = new KVStore(KV_STORE_NAME);
     try {
       await store.delete('c');
-    } catch {}
+    } catch { }
     // bad metadata
     await store.put('a', 'b');
     const aEntry = await store.get('a');
@@ -43,6 +43,7 @@ const debug = sdkVersion.endsWith('-debug');
 
     for (let i = 0; i < 100; i++) {
       await store.put('c' + i, 'd', {
+        mode: 'overwrite',
         metadata: i % 2 === 0 ? '42' : new Uint8Array([42]),
       });
     }
@@ -61,7 +62,7 @@ const debug = sdkVersion.endsWith('-debug');
 
     await store.put('c5', 'cba', {
       mode: 'prepend',
-      metadata: new Uint8Array([0xf0, 0xf0]),
+      metadata: 'cbad',
     });
     const c5Entry = await store.get('c5');
     if (isRunningLocally()) {
