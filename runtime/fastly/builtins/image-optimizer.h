@@ -65,7 +65,7 @@ public:
   static std::optional<PixelsOrPercentage> to_pixels_or_percentage(JSContext *cx,
                                                                    JS::HandleValue val);
 
-  struct Canvas {
+  struct Size {
     struct Absolute {
       PixelsOrPercentage width;
       PixelsOrPercentage height;
@@ -74,14 +74,19 @@ public:
       double width_ratio;
       double height_ratio;
     };
-    struct Position {
-      // Absolute or offset
-      std::variant<PixelsOrPercentage, double> x;
-      std::variant<PixelsOrPercentage, double> y;
-    };
+    std::variant<Absolute, Ratio> value;
+  };
+  static std::optional<Size> to_size(JSContext *cx, JS::HandleValue val);
 
-    std::variant<Absolute, Ratio> size;
-    std::variant<Position, std::monostate> position;
+  struct Position {
+    // Absolute or offset
+    std::variant<PixelsOrPercentage, double> x;
+    std::variant<PixelsOrPercentage, double> y;
+  };
+  static std::optional<Position> to_position(JSContext *cx, JS::HandleValue val);
+  struct Canvas {
+    Size size;
+    std::optional<Position> position;
   };
   static std::optional<Canvas> to_canvas(JSContext *cx, JS::HandleValue val);
 
@@ -94,6 +99,24 @@ public:
     double value;
   };
   static std::optional<Contrast> to_contrast(JSContext *cx, JS::HandleValue val);
+
+  // Deduplicates between Crop and Precrop
+  struct CropSpec {
+    Size size;
+    std::optional<Position> position;
+    std::optional<CropMode> mode;
+  };
+  static std::optional<CropSpec> to_crop_spec(JSContext *cx, JS::HandleValue val);
+
+  struct Crop {
+    CropSpec value;
+  };
+  static std::optional<Crop> to_crop(JSContext *cx, JS::HandleValue val) {
+    auto value = to_crop_spec(cx, val);
+    if (!value)
+      return std::nullopt;
+    return Crop{*value};
+  }
 
   struct Dpr {
     double value;
@@ -123,6 +146,41 @@ public:
   };
   static std::optional<Level> to_level(JSContext *cx, JS::HandleValue val);
 
+  struct Sides {
+    PixelsOrPercentage top, right, bottom, left;
+  };
+  static std::optional<Sides> to_sides(JSContext *cx, JS::HandleValue val);
+
+  struct Pad {
+    Sides value;
+  };
+  static std::optional<Pad> to_pad(JSContext *cx, JS::HandleValue val) {
+    auto sides = to_sides(cx, val);
+    if (!sides) {
+      api::throw_error(
+          cx, api::Errors::TypeError, "imageOptimizerOptions", "trim",
+          "must be an object with top, right, bottom, and left elements, each being an "
+          "integer or a string percentage value");
+      return std::nullopt;
+    }
+    return Pad{*sides};
+  }
+
+  struct Precrop {
+    CropSpec value;
+  };
+  static std::optional<Precrop> to_precrop(JSContext *cx, JS::HandleValue val) {
+    auto value = to_crop_spec(cx, val);
+    if (!value)
+      return std::nullopt;
+    return Precrop{*value};
+  }
+
+  struct Quality {
+    uint32_t value;
+  };
+  static std::optional<Quality> to_quality(JSContext *cx, JS::HandleValue val);
+
   struct Saturation {
     double value;
   };
@@ -134,6 +192,27 @@ public:
     int32_t threshold;
   };
   static std::optional<Sharpen> to_sharpen(JSContext *cx, JS::HandleValue val);
+
+  struct Trim {
+    Sides value;
+  };
+  static std::optional<Trim> to_trim(JSContext *cx, JS::HandleValue val) {
+    auto sides = to_sides(cx, val);
+    if (!sides) {
+      api::throw_error(
+          cx, api::Errors::TypeError, "imageOptimizerOptions", "trim",
+          "must be an object with top, right, bottom, and left elements, each being an "
+          "integer or a string percentage value");
+      return std::nullopt;
+    }
+    return Trim{*sides};
+  }
+
+  struct TrimColor {
+    Color color;
+    std::optional<double> threshold;
+  };
+  static std::optional<TrimColor> to_trim_color(JSContext *cx, JS::HandleValue val);
 
   struct Viewbox {
     int32_t value;
@@ -167,25 +246,26 @@ public:
   }
 
 private:
-  ImageOptimizerOptions(Region region, std::optional<Auto> auto_val,
-                        std::optional<BGColor> bg_color, std::optional<Blur> blur,
-                        std::optional<Brightness> brightness, std::optional<BWAlgorithm> bw,
-                        std::optional<Canvas> canvas, std::optional<Contrast> contrast,
-                        std::optional<Disable> disable, std::optional<Dpr> dpr,
-                        std::optional<Enable> enable, std::optional<Fit> fit,
-                        std::optional<Format> format, std::optional<Frame> frame,
-                        std::optional<Height> height, std::optional<Level> level,
-                        std::optional<Metadata> metadata, std::optional<Optimize> optimize,
-                        std::optional<Orient> orient, std::optional<Profile> profile,
-                        std::optional<ResizeFilter> resize_filter,
-                        std::optional<Saturation> saturation, std::optional<Sharpen> sharpen,
-                        std::optional<Viewbox> viewbox, std::optional<Width> width)
+  ImageOptimizerOptions(
+      Region region, std::optional<Auto> auto_val, std::optional<BGColor> bg_color,
+      std::optional<Blur> blur, std::optional<Brightness> brightness, std::optional<BWAlgorithm> bw,
+      std::optional<Canvas> canvas, std::optional<Contrast> contrast, std::optional<Crop> crop,
+      std::optional<Disable> disable, std::optional<Dpr> dpr, std::optional<Enable> enable,
+      std::optional<Fit> fit, std::optional<Format> format, std::optional<Frame> frame,
+      std::optional<Height> height, std::optional<Level> level, std::optional<Metadata> metadata,
+      std::optional<Optimize> optimize, std::optional<Orient> orient, std::optional<Pad> pad,
+      std::optional<Precrop> precrop, std::optional<Profile> profile,
+      std::optional<Quality> quality, std::optional<ResizeFilter> resize_filter,
+      std::optional<Saturation> saturation, std::optional<Sharpen> sharpen,
+      std::optional<Trim> trim, std::optional<TrimColor> trim_color, std::optional<Viewbox> viewbox,
+      std::optional<Width> width)
       : region_(region), auto_(auto_val), bg_color_(std::move(bg_color)), blur_(blur), bw_(bw),
-        canvas_(canvas), contrast_(contrast), disable_(disable), dpr_(dpr), enable_(enable),
-        fit_(fit), format_(format), frame_(frame), height_(height), level_(std::move(level)),
-        metadata_(metadata), optimize_(optimize), orient_(orient), profile_(profile),
-        resizeFilter_(resize_filter), saturation_(saturation), sharpen_(sharpen), viewbox_(viewbox),
-        width_(width) {}
+        canvas_(canvas), contrast_(contrast), crop_(crop), disable_(disable), dpr_(dpr),
+        enable_(enable), fit_(fit), format_(format), frame_(frame), height_(height),
+        level_(std::move(level)), metadata_(metadata), optimize_(optimize), orient_(orient),
+        pad_(pad), precrop_(precrop), profile_(profile), quality_(quality),
+        resizeFilter_(resize_filter), saturation_(saturation), sharpen_(sharpen), trim_(trim),
+        trim_color_(std::move(trim_color)), viewbox_(viewbox), width_(width) {}
   Region region_;
   std::optional<Auto> auto_;
   std::optional<BGColor> bg_color_;
@@ -194,6 +274,7 @@ private:
   std::optional<BWAlgorithm> bw_;
   std::optional<Canvas> canvas_;
   std::optional<Contrast> contrast_;
+  std::optional<Crop> crop_;
   std::optional<Disable> disable_;
   std::optional<Dpr> dpr_;
   std::optional<Enable> enable_;
@@ -205,10 +286,15 @@ private:
   std::optional<Metadata> metadata_;
   std::optional<Optimize> optimize_;
   std::optional<Orient> orient_;
+  std::optional<Pad> pad_;
+  std::optional<Precrop> precrop_;
   std::optional<Profile> profile_;
+  std::optional<Quality> quality_;
   std::optional<ResizeFilter> resizeFilter_;
   std::optional<Saturation> saturation_;
   std::optional<Sharpen> sharpen_;
+  std::optional<Trim> trim_;
+  std::optional<TrimColor> trim_color_;
   std::optional<Viewbox> viewbox_;
   std::optional<Width> width_;
 };
@@ -244,9 +330,57 @@ inline std::string to_string(const ImageOptimizerOptions::Blur &blur) {
 inline std::string to_string(const ImageOptimizerOptions::Brightness &brightness) {
   return "brightness=" + std::to_string(brightness.value);
 }
-std::string to_string(const ImageOptimizerOptions::Canvas &canvas);
+inline std::string to_string(const ImageOptimizerOptions::PixelsOrPercentage &value) {
+  if (value.is_percentage) {
+    return std::to_string(value.percentage) + 'p';
+  }
+  return std::to_string(value.pixels);
+}
+inline std::string to_string(const ImageOptimizerOptions::Size &size) {
+  if (auto abs = std::get_if<ImageOptimizerOptions::Size::Absolute>(&size.value)) {
+    return to_string(abs->width) + ',' + to_string(abs->height);
+  }
+  auto ratio = std::get<ImageOptimizerOptions::Size::Ratio>(size.value);
+  return std::to_string(ratio.width_ratio) + ':' + std::to_string(ratio.height_ratio);
+}
+inline std::string to_string(const ImageOptimizerOptions::Position &position) {
+  std::string ret;
+  if (auto value = std::get_if<ImageOptimizerOptions::PixelsOrPercentage>(&position.x)) {
+    ret += 'x' + to_string(*value);
+  } else {
+    auto dbl = std::get<double>(position.x);
+    ret += "offset-x" + std::to_string(dbl);
+  }
+  if (auto value = std::get_if<ImageOptimizerOptions::PixelsOrPercentage>(&position.y)) {
+    ret += 'y' + to_string(*value);
+  } else {
+    auto dbl = std::get<double>(position.y);
+    ret += "offset-y" + std::to_string(dbl);
+  }
+  return ret;
+}
+inline std::string to_string(const ImageOptimizerOptions::Canvas &canvas) {
+  std::string ret = "canvas=" + to_string(canvas.size);
+  if (canvas.position) {
+    ret += ',' + to_string(*canvas.position);
+  }
+  return ret;
+}
 inline std::string to_string(const ImageOptimizerOptions::Contrast &contrast) {
   return "contrast=" + std::to_string(contrast.value);
+}
+inline std::string to_string(const ImageOptimizerOptions::CropSpec &crop) {
+  std::string ret = to_string(crop.size);
+  if (crop.position) {
+    ret += ',' + to_string(*crop.position);
+  }
+  if (crop.mode) {
+    ret += ',' + to_string(*crop.mode);
+  }
+  return ret;
+}
+inline std::string to_string(const ImageOptimizerOptions::Crop &crop) {
+  return "crop=" + to_string(crop.value);
 }
 inline std::string to_string(const ImageOptimizerOptions::Dpr &dpr) {
   return "dpr=" + std::to_string(dpr.value);
@@ -254,20 +388,37 @@ inline std::string to_string(const ImageOptimizerOptions::Dpr &dpr) {
 inline std::string to_string(const ImageOptimizerOptions::Frame &frame) {
   return "frame=" + std::to_string(frame.value);
 }
-inline std::string to_string(const ImageOptimizerOptions::PixelsOrPercentage &value) {
-  if (value.is_percentage) {
-    return std::to_string(value.percentage) + 'p';
-  }
-  return std::to_string(value.pixels);
-}
 inline std::string to_string(const ImageOptimizerOptions::Height &height) {
   return "height=" + to_string(height.value);
 }
 inline std::string to_string(const ImageOptimizerOptions::Level &level) {
   return "level=" + std::string(std::string_view(level.value));
 }
+inline std::string to_string(const ImageOptimizerOptions::Sides &sides) {
+  return to_string(sides.top) + ',' + to_string(sides.right) + ',' + to_string(sides.bottom) + ',' +
+         to_string(sides.left);
+}
+inline std::string to_string(const ImageOptimizerOptions::Pad &pad) {
+  return "pad=" + to_string(pad.value);
+}
+inline std::string to_string(const ImageOptimizerOptions::Precrop &precrop) {
+  return "precrop=" + to_string(precrop.value);
+}
+inline std::string to_string(const ImageOptimizerOptions::Quality &quality) {
+  return "quality=" + std::to_string(quality.value);
+}
 inline std::string to_string(const ImageOptimizerOptions::Saturation &saturation) {
   return "saturation=" + std::to_string(saturation.value);
+}
+inline std::string to_string(const ImageOptimizerOptions::Trim &trim) {
+  return "trim=" + to_string(trim.value);
+}
+inline std::string to_string(const ImageOptimizerOptions::TrimColor &trim_color) {
+  std::string ret = "trim-color=" + to_string(trim_color.color);
+  if (trim_color.threshold) {
+    ret += ",t" + std::to_string(*trim_color.threshold);
+  }
+  return ret;
 }
 inline std::string to_string(const ImageOptimizerOptions::Sharpen &sharpen) {
   return "sharpen=a" + std::to_string(sharpen.amount) + ",r" + std::to_string(sharpen.radius) +

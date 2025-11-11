@@ -164,20 +164,27 @@ std::unique_ptr<ImageOptimizerOptions> ImageOptimizerOptions::create(JSContext *
   TRY_CONVERT(brightness);
   TRY_CONVERT(canvas);
   TRY_CONVERT(contrast);
+  TRY_CONVERT(crop);
   TRY_CONVERT(dpr);
   TRY_CONVERT(frame);
   TRY_CONVERT(height);
   TRY_CONVERT(level);
+  TRY_CONVERT(pad);
+  TRY_CONVERT(precrop);
+  TRY_CONVERT(quality);
   TRY_CONVERT(saturation);
   TRY_CONVERT(sharpen);
+  TRY_CONVERT(trim);
+  TRY_CONVERT(trim_color);
   TRY_CONVERT(viewbox);
   TRY_CONVERT(width);
 
   return std::unique_ptr<ImageOptimizerOptions>{new ImageOptimizerOptions(
-      *region_opt, auto_opt, std::move(bg_color_opt), blur_opt, brightness_opt, bw_opt,
-      std::move(canvas_opt), contrast_opt, disable_opt, dpr_opt, enable_opt, fit_opt, format_opt,
-      frame_opt, height_opt, std::move(level_opt), metadata_opt, optimize_opt, orient_opt,
-      profile_opt, resize_filter_opt, saturation_opt, sharpen_opt, viewbox_opt, width_opt)};
+      *region_opt, auto_opt, std::move(bg_color_opt), blur_opt, brightness_opt, bw_opt, canvas_opt,
+      contrast_opt, crop_opt, disable_opt, dpr_opt, enable_opt, fit_opt, format_opt, frame_opt,
+      height_opt, std::move(level_opt), metadata_opt, optimize_opt, orient_opt, pad_opt,
+      precrop_opt, profile_opt, quality_opt, resize_filter_opt, saturation_opt, sharpen_opt,
+      trim_opt, std::move(trim_color_opt), viewbox_opt, width_opt)};
 }
 
 std::string ImageOptimizerOptions::to_string() const {
@@ -193,6 +200,7 @@ std::string ImageOptimizerOptions::to_string() const {
   append(brightness_);
   append(bw_);
   append(canvas_);
+  append(crop_);
   append(contrast_);
   append(disable_);
   append(dpr_);
@@ -205,22 +213,22 @@ std::string ImageOptimizerOptions::to_string() const {
   append(metadata_);
   append(optimize_);
   append(orient_);
+  append(pad_);
+  append(precrop_);
   append(profile_);
+  append(quality_);
   append(resizeFilter_);
   append(saturation_);
   append(sharpen_);
+  append(trim_);
+  append(trim_color_);
   append(viewbox_);
   append(width_);
   return ret;
 }
 
 // TODO
-// crop
 // pad
-// precrop
-// quality
-// trim
-// trimcolor
 
 fastly_image_optimizer_transform_config ImageOptimizerOptions::to_config() {
   fastly_image_optimizer_transform_config config;
@@ -229,6 +237,105 @@ fastly_image_optimizer_transform_config ImageOptimizerOptions::to_config() {
   config.sdk_claims_opts = host_str.ptr.release();
   config.sdk_claims_opts_len = host_str.len;
   return config;
+}
+
+std::optional<ImageOptimizerOptions::Size> ImageOptimizerOptions::to_size(JSContext *cx,
+                                                                          JS::HandleValue val) {
+  auto throw_error = [&](const char *object, const char *message) {
+    api::throw_error(cx, api::Errors::TypeError, "imageOptimizerOptions", object, message);
+    return std::nullopt;
+  };
+
+  if (val.isUndefined() || !val.isObject()) {
+    return throw_error("size", "be an object");
+  }
+
+  JS::RootedValue absolute_val(cx);
+  JS::RootedValue ratio_val(cx);
+  JS::RootedObject size_obj(cx, &val.toObject());
+  if (!JS_GetProperty(cx, size_obj, "absolute", &absolute_val) ||
+      !JS_GetProperty(cx, size_obj, "ratio", &ratio_val)) {
+    return std::nullopt;
+  }
+  if (!exactly_one_defined(absolute_val, ratio_val)) {
+    return throw_error("size", "have exactly one of the keys absolute or ratio");
+  }
+
+  JS::RootedValue width_val(cx);
+  JS::RootedValue height_val(cx);
+  if (!absolute_val.isUndefined()) {
+    if (!absolute_val.isObject()) {
+      return throw_error("size.absolute", "be an object");
+    }
+    JS::RootedObject absolute_obj(cx, &absolute_val.toObject());
+    if (!JS_GetProperty(cx, absolute_obj, "width", &width_val) ||
+        !JS_GetProperty(cx, absolute_obj, "height", &height_val)) {
+      return std::nullopt;
+    }
+    auto width = to_pixels_or_percentage(cx, width_val);
+    auto height = to_pixels_or_percentage(cx, height_val);
+    if (!width || !height) {
+      return throw_error(
+          "size.absolute",
+          "have width and height values who are absolute pixel integers or percentage strings");
+    }
+    return Size{Size::Absolute{*width, *height}};
+  } else {
+    if (!ratio_val.isObject()) {
+      return throw_error("size.ratio", "be an object");
+    }
+    JS::RootedObject ratio_obj(cx, &ratio_val.toObject());
+    if (!JS_GetProperty(cx, ratio_obj, "width", &width_val) ||
+        !JS_GetProperty(cx, ratio_obj, "height", &height_val)) {
+      return std::nullopt;
+    }
+    if (!width_val.isNumber() || !height_val.isNumber()) {
+      return throw_error("size.ratio", "have width and height number values");
+    }
+    return Size{Size::Ratio{width_val.toNumber(), height_val.toNumber()}};
+  }
+}
+
+std::optional<ImageOptimizerOptions::Position>
+ImageOptimizerOptions::to_position(JSContext *cx, JS::HandleValue val) {
+  auto throw_error = [&](const char *object, const char *message) {
+    api::throw_error(cx, api::Errors::TypeError, "imageOptimizerOptions", object, message);
+    return std::nullopt;
+  };
+  JS::RootedValue x_val(cx);
+  JS::RootedValue y_val(cx);
+  JS::RootedValue offset_x_val(cx);
+  JS::RootedValue offset_y_val(cx);
+
+  JS::RootedObject position_obj(cx, &val.toObject());
+  if (!JS_GetProperty(cx, position_obj, "x", &x_val) ||
+      !JS_GetProperty(cx, position_obj, "y", &y_val) ||
+      !JS_GetProperty(cx, position_obj, "offsetX", &offset_x_val) ||
+      !JS_GetProperty(cx, position_obj, "offsetY", &offset_y_val)) {
+    return std::nullopt;
+  }
+  if (!exactly_one_defined(x_val, offset_x_val) || !exactly_one_defined(y_val, offset_y_val)) {
+    return throw_error("position", "have exactly one of x/offsetX and exactly one of y/offsetY");
+  }
+
+  auto absolute_or_offset =
+      [&](JS::HandleValue absolute,
+          JS::HandleValue offset) -> std::optional<std::variant<PixelsOrPercentage, double>> {
+    if (!absolute.isUndefined()) {
+      return to_pixels_or_percentage(cx, absolute);
+    }
+    if (offset.isNumber()) {
+      return offset.toNumber();
+    }
+    return std::nullopt;
+  };
+  auto x = absolute_or_offset(x_val, offset_x_val);
+  auto y = absolute_or_offset(y_val, offset_y_val);
+  if (!x || !y) {
+    return throw_error("position", "have valid x and y components");
+  }
+
+  return ImageOptimizerOptions::Position{*x, *y};
 }
 
 std::optional<ImageOptimizerOptions::Canvas> ImageOptimizerOptions::to_canvas(JSContext *cx,
@@ -247,100 +354,60 @@ std::optional<ImageOptimizerOptions::Canvas> ImageOptimizerOptions::to_canvas(JS
       !JS_GetProperty(cx, canvas_obj, "position", &position_val)) {
     return std::nullopt;
   }
-  if (size_val.isUndefined() || !size_val.isObject()) {
-    return throw_error("canvas.size", "be an object");
-  }
-
-  JS::RootedValue absolute_val(cx);
-  JS::RootedValue ratio_val(cx);
-  JS::RootedObject size_obj(cx, &size_val.toObject());
-  if (!JS_GetProperty(cx, size_obj, "absolute", &absolute_val) ||
-      !JS_GetProperty(cx, size_obj, "ratio", &ratio_val)) {
-    return std::nullopt;
-  }
-  if (!exactly_one_defined(absolute_val, ratio_val)) {
-    return throw_error("canvas.size", "have exactly one of the keys absolute or ratio");
-  }
-
-  auto size = [&]() -> std::optional<std::variant<ImageOptimizerOptions::Canvas::Absolute,
-                                                  ImageOptimizerOptions::Canvas::Ratio>> {
-    JS::RootedValue width_val(cx);
-    JS::RootedValue height_val(cx);
-    if (!absolute_val.isUndefined()) {
-      if (!absolute_val.isObject()) {
-        return throw_error("canvas.size.absolute", "be an object");
-      }
-      JS::RootedObject absolute_obj(cx, &absolute_val.toObject());
-      if (!JS_GetProperty(cx, absolute_obj, "width", &width_val) ||
-          !JS_GetProperty(cx, absolute_obj, "height", &height_val)) {
-        return std::nullopt;
-      }
-      auto width = to_pixels_or_percentage(cx, width_val);
-      auto height = to_pixels_or_percentage(cx, height_val);
-      if (!width || !height) {
-        return throw_error(
-            "canvas.size.absolute",
-            "have width and height values who are absolute pixel integers or percentage strings");
-      }
-      return ImageOptimizerOptions::Canvas::Absolute{*width, *height};
-    } else {
-      if (!ratio_val.isObject()) {
-        return throw_error("canvas.size.ratio", "be an object");
-      }
-      JS::RootedObject ratio_obj(cx, &ratio_val.toObject());
-      if (!JS_GetProperty(cx, ratio_obj, "width", &width_val) ||
-          !JS_GetProperty(cx, ratio_obj, "height", &height_val)) {
-        return std::nullopt;
-      }
-      if (!width_val.isNumber() || !height_val.isNumber()) {
-        return throw_error("canvas.size.ratio", "have width and height number values");
-      }
-      return ImageOptimizerOptions::Canvas::Ratio{width_val.toNumber(), height_val.toNumber()};
-    }
-  }();
+  auto size = to_size(cx, size_val);
   if (!size) {
     return std::nullopt;
   }
 
   if (position_val.isUndefined()) {
-    return ImageOptimizerOptions::Canvas{*size, std::monostate{}};
+    return ImageOptimizerOptions::Canvas{*size, std::nullopt};
   }
-
-  JS::RootedValue x_val(cx);
-  JS::RootedValue y_val(cx);
-  JS::RootedValue offset_x_val(cx);
-  JS::RootedValue offset_y_val(cx);
-
-  JS::RootedObject position_obj(cx, &position_val.toObject());
-  if (!JS_GetProperty(cx, position_obj, "x", &x_val) ||
-      !JS_GetProperty(cx, position_obj, "y", &y_val) ||
-      !JS_GetProperty(cx, position_obj, "offsetX", &offset_x_val) ||
-      !JS_GetProperty(cx, position_obj, "offsetY", &offset_y_val)) {
+  auto position = to_position(cx, position_val);
+  if (!position) {
     return std::nullopt;
   }
-  if (!exactly_one_defined(x_val, offset_x_val) || !exactly_one_defined(y_val, offset_y_val)) {
-    return throw_error("canvas.position",
-                       "have exactly one of x/offsetX and exactly one of y/offsetY");
-  }
+  return ImageOptimizerOptions::Canvas{*size, *position};
+}
 
-  auto absolute_or_offset =
-      [&](JS::HandleValue absolute,
-          JS::HandleValue offset) -> std::optional<std::variant<PixelsOrPercentage, double>> {
-    if (!absolute.isUndefined()) {
-      return to_pixels_or_percentage(cx, absolute);
-    }
-    if (offset.isNumber()) {
-      return offset.toNumber();
-    }
+std::optional<ImageOptimizerOptions::CropSpec>
+ImageOptimizerOptions::to_crop_spec(JSContext *cx, JS::HandleValue val) {
+  auto throw_error = [&](const char *object, const char *message) {
+    api::throw_error(cx, api::Errors::TypeError, "imageOptimizerOptions", object, message);
     return std::nullopt;
   };
-  auto x = absolute_or_offset(x_val, offset_x_val);
-  auto y = absolute_or_offset(y_val, offset_y_val);
-  if (!x || !y) {
-    return throw_error("canvas.position", "have valid x and y components");
+  if (!val.isObject()) {
+    return throw_error("crop", "be an object");
+  }
+  JS::RootedValue size_val(cx);
+  JS::RootedValue position_val(cx);
+  JS::RootedValue mode_val(cx);
+  JS::RootedObject crop_obj(cx, &val.toObject());
+  if (!JS_GetProperty(cx, crop_obj, "size", &size_val) ||
+      !JS_GetProperty(cx, crop_obj, "position", &position_val) ||
+      !JS_GetProperty(cx, crop_obj, "mode", &mode_val)) {
+    return std::nullopt;
+  }
+  auto size = to_size(cx, size_val);
+  if (!size) {
+    return std::nullopt;
   }
 
-  return ImageOptimizerOptions::Canvas{*size, ImageOptimizerOptions::Canvas::Position{*x, *y}};
+  std::optional<Position> position = std::nullopt;
+  if (!position_val.isUndefined()) {
+    position = to_position(cx, position_val);
+    if (!position) {
+      return std::nullopt;
+    }
+  }
+
+  std::optional<CropMode> mode = std::nullopt;
+  if (!mode_val.isUndefined()) {
+    mode = to_crop_mode(cx, mode_val);
+    if (!mode) {
+      return std::nullopt;
+    }
+  }
+  return ImageOptimizerOptions::CropSpec{*size, position, mode};
 }
 
 std::optional<ImageOptimizerOptions::Brightness>
@@ -362,6 +429,15 @@ ImageOptimizerOptions::to_contrast(JSContext *cx, JS::HandleValue val) {
     return std::nullopt;
   }
   return Contrast{*num};
+}
+std::optional<ImageOptimizerOptions::Quality>
+ImageOptimizerOptions::to_quality(JSContext *cx, JS::HandleValue val) {
+  if (!val.isInt32() || val.toInt32() < 0 || val.toInt32() > 100) {
+    api::throw_error(cx, api::Errors::TypeError, "imageOptimizerOptions", "quality",
+                     "must be n integer between 0 and 100");
+    return std::nullopt;
+  }
+  return Quality(val.toInt32());
 }
 std::optional<ImageOptimizerOptions::Saturation>
 ImageOptimizerOptions::to_saturation(JSContext *cx, JS::HandleValue val) {
@@ -541,41 +617,103 @@ std::optional<ImageOptimizerOptions::Color> ImageOptimizerOptions::to_color(JSCo
   return Color{host_api::HostString(rep)};
 }
 
-template <typename... Ts> struct overload : Ts... {
-  using Ts::operator()...;
-};
-template <class... Ts> overload(Ts...) -> overload<Ts...>;
+std::optional<ImageOptimizerOptions::Sides> ImageOptimizerOptions::to_sides(JSContext *cx,
+                                                                            JS::HandleValue val) {
+  if (!val.isObject()) {
+    return std::nullopt;
+  }
 
-std::string to_string(const ImageOptimizerOptions::Canvas &canvas) {
-  std::string ret = "canvas=";
-  std::visit(overload(
-                 [&](ImageOptimizerOptions::Canvas::Absolute abs) {
-                   ret += to_string(abs.width) + ',' + to_string(abs.height);
-                 },
-                 [&](ImageOptimizerOptions::Canvas::Ratio ratio) {
-                   ret += ratio.width_ratio + ':' + ratio.height_ratio;
-                 }),
-             canvas.size);
-  std::visit(overload(
-                 [&](const ImageOptimizerOptions::Canvas::Position &pos) {
-                   ret += ',';
-                   std::visit(overload(
-                                  [&](ImageOptimizerOptions::PixelsOrPercentage x) {
-                                    ret += 'x' + to_string(x);
-                                  },
-                                  [&](double x) { ret += "offset-x" + std::to_string(x); }),
-                              pos.x);
-                   std::visit(overload(
-                                  [&](ImageOptimizerOptions::PixelsOrPercentage y) {
-                                    ret += 'y' + to_string(y);
-                                  },
-                                  [&](double y) { ret += "offset-y" + std::to_string(y); }),
-                              pos.y);
-                 },
-                 [](std::monostate) {}),
-             canvas.position);
+  JS::RootedValue top_val(cx);
+  JS::RootedValue bottom_val(cx);
+  JS::RootedValue left_val(cx);
+  JS::RootedValue right_val(cx);
+  JS::RootedObject sides_obj(cx, &val.toObject());
+  if (!JS_GetProperty(cx, sides_obj, "top", &top_val) ||
+      !JS_GetProperty(cx, sides_obj, "bottom", &bottom_val) ||
+      !JS_GetProperty(cx, sides_obj, "left", &left_val) ||
+      !JS_GetProperty(cx, sides_obj, "right", &right_val)) {
+    return std::nullopt;
+  }
 
-  return ret;
+  if (top_val.isUndefined() || bottom_val.isUndefined() || left_val.isUndefined() ||
+      right_val.isUndefined()) {
+    return std::nullopt;
+  }
+
+  auto top = to_pixels_or_percentage(cx, top_val);
+  auto bottom = to_pixels_or_percentage(cx, bottom_val);
+  auto left = to_pixels_or_percentage(cx, left_val);
+  auto right = to_pixels_or_percentage(cx, right_val);
+
+  if (!top || !bottom || !left || !right) {
+    return std::nullopt;
+  }
+
+  return Sides{
+      .top = *top,
+      .right = *right,
+      .bottom = *bottom,
+      .left = *left,
+  };
+}
+
+std::optional<ImageOptimizerOptions::TrimColor>
+ImageOptimizerOptions::to_trim_color(JSContext *cx, JS::HandleValue val) {
+  auto throw_error = [&]() {
+    api::throw_error(cx, api::Errors::TypeError, "imageOptimizerOptions", "trimColor",
+                     "must be either a color, or an object with color and threshold elements, "
+                     "where threshold is a number between 0 and 1");
+    return std::nullopt;
+  };
+
+  if (val.isString()) {
+    auto str = core::encode(cx, val);
+    // We also support "auto" as a color
+    if (str == std::string_view("auto")) {
+      return TrimColor{Color{std::move(str)}};
+    }
+
+    auto color = to_color(cx, val);
+    if (!color) {
+      return throw_error();
+    }
+    return TrimColor{*std::move(color), std::nullopt};
+  }
+
+  if (!val.isObject()) {
+    return throw_error();
+  }
+
+  JS::RootedValue color_val(cx);
+  JS::RootedValue threshold_val(cx);
+  JS::RootedObject trim_color_obj(cx, &val.toObject());
+  if (!JS_GetProperty(cx, trim_color_obj, "color", &color_val) ||
+      !JS_GetProperty(cx, trim_color_obj, "threshold", &threshold_val)) {
+    return std::nullopt;
+  }
+
+  // Could be an rgb(a) object
+  if (color_val.isUndefined()) {
+    auto color = to_color(cx, val);
+    if (!color) {
+      return throw_error();
+    }
+    return TrimColor{*std::move(color), std::nullopt};
+  }
+
+  auto color = to_color(cx, color_val);
+  if (!color) {
+    return throw_error();
+  }
+
+  std::optional<double> threshold = std::nullopt;
+  if (threshold_val.isNumber()) {
+    threshold = to_number_between_inclusive(threshold_val, 0, 1);
+    if (!threshold) {
+      return throw_error();
+    }
+  }
+  return TrimColor{*std::move(color), threshold};
 }
 
 #define FASTLY_BEGIN_IMAGE_OPTIMIZER_OPTION_TYPE(type, lowercase, str)                             \
