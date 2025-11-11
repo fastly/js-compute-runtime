@@ -3205,12 +3205,13 @@ bool Response::status_set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // If it _is_ a CandidateResponse, then support the status set, with validation
   bool valid_status = true;
-  uint16_t status;
+  uint16_t status = 0;
   if (!args[0].isNumber() || !JS::ToUint16(cx, args[0], &status)) {
     valid_status = false;
   }
   // Allow 103: Early Hints
-  if (!valid_status || status == 103 || status < 200 || status > 599) {
+  bool status_in_range = status == 103 || (status >= 200 && status < 600);
+  if (!valid_status || !status_in_range) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                               JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
     return false;
@@ -4313,7 +4314,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // 1.  If `init`["status"] is not in the range 200 to 599, inclusive, then
   // `throw` a ``RangeError``. (We allow 103 Early Hints as an extension)
-  if (status == 103 || status < 200 || status > 599) {
+  if (status != 103 && !(status >= 200 && status < 600)) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                               JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
     return false;

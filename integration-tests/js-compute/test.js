@@ -136,7 +136,7 @@ if (!local) {
   core.startGroup('Delete service if already exists');
   try {
     await zx`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
-  } catch {}
+  } catch { }
   core.endGroup();
   core.startGroup('Build and deploy service');
   await zx`npm i`;
@@ -170,13 +170,13 @@ await Promise.all([
       27,
       local
         ? [
-            // we expect it to take ~10 seconds to deploy, so focus on that time
-            6000, 3000, 1500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
-            500, 500, 500, 500, 500, 500, 500, 500, 500,
-            // after more than 20 seconds, means we have an unusually slow build, start backoff before timeout
-            1500,
-            3000, 6000, 12000, 24000,
-          ].values()
+          // we expect it to take ~10 seconds to deploy, so focus on that time
+          6000, 3000, 1500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+          500, 500, 500, 500, 500, 500, 500, 500, 500,
+          // after more than 20 seconds, means we have an unusually slow build, start backoff before timeout
+          1500,
+          3000, 6000, 12000, 24000,
+        ].values()
         : expBackoff('60s', '10s'),
       async () => {
         const response = await request(domain);
@@ -275,12 +275,12 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                 case 'first-chunk-only':
                   for await (const chunk of response.body) {
                     bodyChunks.push(chunk);
-                    response.body.on('error', () => {});
+                    response.body.on('error', () => { });
                     break;
                   }
                   break;
                 case 'none':
-                  response.body.on('error', () => {});
+                  response.body.on('error', () => { });
                   break;
                 case 'full':
                 default:
@@ -300,6 +300,24 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
           clearTimeout(downstreamTimeout);
           return bodyChunks;
         }
+        let onInfoHandler = test.downstream_info ? async (status, headers) => {
+          if (
+            test.downstream_info.status !== undefined &&
+            test.downstream_info.status != status
+          ) {
+            throw new Error(
+              `[DownstreamInfo: Status mismatch] Expected: ${configResponse.status} - Got: ${status}}`,
+            );
+          }
+          if (headers) {
+            compareHeaders(
+              configResponse.headers,
+              headers,
+              configResponse.headersExhaustive,
+            );
+          }
+        } : undefined;
+
         if (local) {
           if (test.environments.includes('viceroy')) {
             return (bail || !test.flake ? (_, __, fn) => fn() : retry)(
@@ -354,6 +372,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                     method: test.downstream_request.method || 'GET',
                     headers: test.downstream_request.headers || undefined,
                     body: test.downstream_request.body || undefined,
+                    onInfo: onInfoHandler
                   });
                   const bodyChunks = await getBodyChunks(response);
                   await compareDownstreamResponse(

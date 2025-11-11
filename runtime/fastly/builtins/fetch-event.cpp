@@ -795,6 +795,7 @@ bool FetchEvent::sendEarlyHint(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   // 103: Early Hint
   response_handle.unwrap().set_status(103);
+
   auto body_handle = host_api::HttpBody::make();
   if (auto *err = body_handle.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -811,6 +812,9 @@ bool FetchEvent::sendEarlyHint(JSContext *cx, unsigned argc, JS::Value *vp) {
                                                  nullptr));
   RootedValue headers_val(cx, JS::ObjectValue(*headers));
   JS_SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::Headers), headers_val);
+  JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::Status),
+                      JS::Int32Value(103));
+  RequestOrResponse::set_url(response_obj, JS_GetEmptyStringValue(cx));
 
   args.rval().setUndefined();
   return start_response(cx, response_obj, false);
