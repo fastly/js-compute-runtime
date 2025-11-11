@@ -794,7 +794,11 @@ bool FetchEvent::sendEarlyHint(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   // 103: Early Hint
-  response_handle.unwrap().set_status(103);
+  auto set_res = response_handle.unwrap().set_status(103);
+  if (auto *err = set_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
 
   auto body_handle = host_api::HttpBody::make();
   if (auto *err = body_handle.to_err()) {
@@ -811,7 +815,7 @@ bool FetchEvent::sendEarlyHint(JSContext *cx, unsigned argc, JS::Value *vp) {
                                                  body_handle.unwrap(), false, nullptr, nullptr,
                                                  nullptr));
   RootedValue headers_val(cx, JS::ObjectValue(*headers));
-  JS_SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::Headers), headers_val);
+  JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::Headers), headers_val);
   JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::Status),
                       JS::Int32Value(103));
   RequestOrResponse::set_url(response_obj, JS_GetEmptyStringValue(cx));
@@ -994,7 +998,6 @@ void FetchEvent::mark_done(JSObject *self, bool streaming, uint16_t status_code)
 
 void FetchEvent::set_state(JSObject *self, State new_state) {
   MOZ_ASSERT(is_instance(self));
-  MOZ_ASSERT((uint8_t)new_state > (uint8_t)state(self));
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::State),
                       JS::Int32Value(static_cast<int32_t>(new_state)));
 }
