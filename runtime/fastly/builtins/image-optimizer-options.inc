@@ -108,6 +108,8 @@ FASTLY_DEFINE_IMAGE_OPTIMIZER_OPTION(Lanczos3, "lanczos3")
 FASTLY_DEFINE_IMAGE_OPTIMIZER_OPTION(Lanczos, "lanczos")
 FASTLY_END_IMAGE_OPTIMIZER_OPTION_TYPE(ResizeFilter)
 
+// CropMode is not a "true" option, but we reuse some of this machinery to easily define the
+// constants
 FASTLY_BEGIN_IMAGE_OPTIMIZER_OPTION_TYPE(CropMode, crop_mode, "N/A")
 FASTLY_DEFINE_IMAGE_OPTIMIZER_OPTION(Smart, "smart")
 FASTLY_DEFINE_IMAGE_OPTIMIZER_OPTION(Safe, "safe")

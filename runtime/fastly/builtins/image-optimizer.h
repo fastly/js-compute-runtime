@@ -352,6 +352,7 @@ inline std::string to_string(const ImageOptimizerOptions::Position &position) {
     auto dbl = std::get<double>(position.x);
     ret += "offset-x" + std::to_string(dbl);
   }
+  ret += ',';
   if (auto value = std::get_if<ImageOptimizerOptions::PixelsOrPercentage>(&position.y)) {
     ret += 'y' + to_string(*value);
   } else {
@@ -376,7 +377,15 @@ inline std::string to_string(const ImageOptimizerOptions::CropSpec &crop) {
     ret += ',' + to_string(*crop.position);
   }
   if (crop.mode) {
-    ret += ',' + to_string(*crop.mode);
+    ret += ',';
+    switch (*crop.mode) {
+    case ImageOptimizerOptions::CropMode::Safe:
+      ret += "safe";
+      break;
+    case ImageOptimizerOptions::CropMode::Smart:
+      ret += "smart";
+      break;
+    }
   }
   return ret;
 }

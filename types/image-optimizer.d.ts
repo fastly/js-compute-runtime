@@ -158,7 +158,7 @@ declare module 'fastly:image-optimizer' {
          */
         disable?: 'upscale';
         /** 
-         * Ratio between physical pixels and logical pixels. 
+         * Ratio between physical pixels and logical pixels (1-10).
          */
         dpr?: number;
         /**
