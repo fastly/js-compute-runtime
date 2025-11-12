@@ -12,7 +12,6 @@
 #include "builtin.h"
 #include "encode.h"
 #include "extension-api.h"
-#include <iostream>
 
 using builtins::web::streams::NativeStreamSink;
 using builtins::web::streams::NativeStreamSource;
@@ -279,7 +278,6 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
           JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions))
               .toPrivate());
       auto config_str = config->to_string();
-      std::cerr << "sending config to image optimizer: " << config_str << std::endl;
       auto res = request_handle.send_image_optimizer(body, backend_chars, config_str);
       if (auto *err = res.to_err()) {
         HANDLE_IMAGE_OPTIMIZER_ERROR(cx, *err);

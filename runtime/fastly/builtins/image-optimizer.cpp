@@ -1,6 +1,5 @@
 #include "image-optimizer.h"
 #include "fastly.h"
-#include <iostream>
 
 namespace {
 std::optional<double> from_percentage(std::string_view sv) {

@@ -48,7 +48,7 @@ static void log_hostcall(const char *func_name, ...) {
 
 #define MILLISECS_IN_NANOSECS 1000000
 #define SECS_IN_NANOSECS 1000000000
-#include <iostream>
+
 static bool convert_result(int res, fastly::fastly_host_error *err) {
   if (res == 0)
     return true;
@@ -918,7 +918,6 @@ make_fastly_image_optimizer_error(fastly::fastly_image_optimizer_error_detail im
 }
 
 FastlyImageOptimizerError make_fastly_image_optimizer_error(fastly::fastly_host_error err) {
-  std::cerr << "MAKING IT " << static_cast<int>(err) << std::endl;
   return {err};
 }
 
@@ -1500,11 +1499,6 @@ HttpReq::send_image_optimizer(HttpBody body, std::string_view backend,
   fastly::fastly_image_optimizer_transform_config config{config_str.data(), config_str.size()};
   fastly::fastly_image_optimizer_error_detail io_err_out{};
   uint32_t resp_handle_out = INVALID_HANDLE, body_handle_out = INVALID_HANDLE;
-  std::cerr << "DOING IMAGE TRANSFORM: handle: " << this->handle
-            << " body handle: " << INVALID_HANDLE << " backend_str: " << backend_str.ptr
-            << " backend_len: " << backend_str.len << " opts: " << opts
-            << " config: " << config.sdk_claims_opts
-            << " config_len: " << config.sdk_claims_opts_len << std::endl;
   auto host_call_success = convert_result(
       fastly::image_optimizer_transform_image_optimizer_request(
           this->handle, orig_req_body_handle, reinterpret_cast<char *>(backend_str.ptr),
