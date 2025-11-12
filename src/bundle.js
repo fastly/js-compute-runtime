@@ -132,12 +132,10 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
         }
         case 'image-optimizer': {
           return {
-            contents: `
-            export const Region = globalThis.Region;
-            export const Format = globalThis.Format;
-            export const Orient = globalThis.Orient;
-            export const CropMode = globalThis.CropMode;
-            export const Auto = globalThis.Auto;`,
+            contents: `export const { 
+              Region, Auto, Format, BWAlgorithm, Disable, Enable, Fit, Metadata, 
+              Optimize, Orient, Profile, ResizeFilter, CropMode 
+            } = globalThis.fastly.imageOptimizer;`,
           };
         }
       }

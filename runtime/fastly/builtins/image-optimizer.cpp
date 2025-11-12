@@ -1,4 +1,5 @@
 #include "image-optimizer.h"
+#include "fastly.h"
 #include <iostream>
 
 namespace {
@@ -55,14 +56,14 @@ bool install(api::Engine *engine) {
   RootedObject image_optimizer_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
 
 #define FASTLY_BEGIN_IMAGE_OPTIMIZER_OPTION_TYPE(type, lowercase, str)                             \
-  if (!type::init_class_impl(engine->cx(), engine->global())) {                                    \
+  if (!type::init_class_impl(engine->cx(), image_optimizer_ns)) {                                  \
     return false;                                                                                  \
   }                                                                                                \
   RootedObject lowercase##_obj(                                                                    \
       engine->cx(),                                                                                \
       JS_GetConstructor(                                                                           \
           engine->cx(),                                                                            \
-          builtins::BuiltinNoConstructor<fastly::image_optimizer::type>::proto_obj));              \
+          builtins::BuiltinNoConstructor<::fastly::image_optimizer::type>::proto_obj));            \
   RootedValue lowercase##_val(engine->cx(), ObjectValue(*lowercase##_obj));                        \
   if (!JS_SetProperty(engine->cx(), image_optimizer_ns, #type, lowercase##_val)) {                 \
     return false;                                                                                  \
@@ -73,6 +74,14 @@ bool install(api::Engine *engine) {
 
   RootedValue image_optimizer_ns_val(engine->cx(), JS::ObjectValue(*image_optimizer_ns));
   if (!engine->define_builtin_module("fastly:image-optimizer", image_optimizer_ns_val)) {
+    return false;
+  }
+
+  RootedObject fastly(engine->cx());
+  if (!fastly::get_fastly_object(engine, &fastly)) {
+    return false;
+  }
+  if (!JS_SetProperty(engine->cx(), fastly, "imageOptimizer", image_optimizer_ns_val)) {
     return false;
   }
   return true;
